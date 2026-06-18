@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --ihss-primary-rgb: 30 58 138;   /* #1e3a8a */
+  --ihss-accent-rgb:  29 78 216;   /* #1d4ed8 */
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply text-gray-900 antialiased bg-gray-50;
+  }
+  input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.7; }
+}
+
+@layer components {
+  .input-field {
+    @apply block w-full border border-gray-300 rounded-xl text-sm px-4 py-2.5
+           focus:outline-none focus:ring-2 focus:ring-ihss-500 focus:border-ihss-500
+           transition-all duration-200;
+  }
+  .btn-primary {
+    @apply px-5 py-2.5 bg-ihss-700 hover:bg-ihss-800 text-white font-semibold text-sm
+           rounded-xl transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply px-5 py-2.5 border border-gray-300 text-gray-700 font-medium text-sm
+           rounded-xl hover:bg-gray-50 transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Animaciones para la Línea de Tiempo Visual */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes bounce-short {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.animate-bounce-short {
+  animation: bounce-short 1s ease-in-out infinite;
+}

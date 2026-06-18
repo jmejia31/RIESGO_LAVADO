@@ -1,0 +1,367 @@
+<!-- Gestión de Usuarios -->
+<div class="space-y-5">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Usuarios del Sistema (Riesgos)</h1>
+      <p class="text-sm text-gray-500 mt-0.5">{{ usuarios().length }} usuarios registrados</p>
+    </div>
+    <button (click)="prepararNuevo()"
+      class="flex items-center gap-2 px-5 py-2.5 bg-ihss-700 text-white font-semibold text-sm rounded-xl hover:bg-ihss-800 transition-colors">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    @if (cargando()) {
+      <div class="flex justify-center py-16">
+        <svg class="animate-spin w-7 h-7 text-ihss-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+    } @else {
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b">
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Email</th>
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Rol</th>
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Dominio</th>
+            <th class="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (u of usuarios(); track u.id) {
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-ihss-100 text-ihss-700 text-sm font-bold flex items-center justify-center">
+                    {{ u.nombre.charAt(0) }}{{ u.apellido.charAt(0) }}
+                  </div>
+                  <span class="font-medium text-gray-800">{{ u.nombre }} {{ u.apellido }}</span>
+                </div>
+              </td>
+              <td class="px-5 py-4 text-gray-600">{{ u.email }}</td>
+              <td class="px-5 py-4">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-ihss-50 text-ihss-700">
+                  {{ u.rol }}
+                </span>
+              </td>
+
+              <td class="px-5 py-4">
+                @if (u.dominio) {
+                  <div class="flex flex-col gap-0.5">
+                    <span class="inline-flex items-center gap-1 font-medium"
+                      [class]="u.esUsuarioDominio === 1 ? 'text-ihss-600' : 'text-gray-700'">
+                      @if (u.esUsuarioDominio === 1) {
+                        <svg class="w-3.5 h-3.5 text-ihss-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                      }
+                      {{ u.dominio }}
+                    </span>
+                    @if (u.usuarioDominio) {
+                      <span class="text-xs text-gray-500">{{ u.usuarioDominio }}</span>
+                    }
+                  </div>
+                } @else {
+                  <span class="text-gray-400 text-xs italic">N/A</span>
+                }
+              </td>
+              <td class="px-5 py-4 flex items-center gap-1">
+                <button (click)="prepararEdicion(u)"
+                  class="p-2 text-ihss-600 hover:bg-ihss-50 rounded-lg transition-colors"
+                  title="Editar Usuario">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                @if (u.esUsuarioDominio !== 1) {
+                  <button (click)="reiniciarPassword(u)"
+                    class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                    title="Reiniciar Contraseña">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m-5-3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2zm-6 3a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- Modal Crear Usuario -->
+  @if (mostrarForm()) {
+    <div class="fixed inset-0 bg-gray-900/40 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      (click)="cancelar()">
+      <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl animate-slide-in flex flex-col max-h-[90vh] overflow-hidden"
+        (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+          <div>
+            <h2 class="text-xl font-bold text-gray-900">{{ editando() ? 'Editar Usuario' : 'Crear Usuario' }}</h2>
+            <p class="text-sm text-gray-500 mt-0.5">{{ editando() ? 'Actualiza' : 'Ingresa' }} la información requerida del usuario.</p>
+          </div>
+          <button type="button" (click)="cancelar()" class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 bg-gray-50/30 custom-scrollbar">
+          @if (errorCatalogos()) {
+            <div class="mb-5 flex items-start gap-3 bg-orange-50 border border-orange-200 text-orange-800 text-sm rounded-2xl px-5 py-4">
+              <svg class="w-5 h-5 mt-0.5 shrink-0 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <div>
+                <p class="font-bold">Aviso del Sistema</p>
+                <p class="mt-0.5 text-orange-700">{{ errorCatalogos() }}</p>
+              </div>
+            </div>
+          }
+
+          <form [formGroup]="form" (ngSubmit)="guardar()" class="space-y-6">
+            
+            <!-- Bloque Información Personal -->
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Información Personal</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1.5">Nombre <span class="text-red-500">*</span></label>
+                  <input type="text" formControlName="nombre"
+                    class="w-full rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all bg-white shadow-sm"
+                    [class.border-red-300]="esInvalido('nombre')"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1.5">Apellido <span class="text-red-500">*</span></label>
+                  <input type="text" formControlName="apellido"
+                    class="w-full rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all bg-white shadow-sm"
+                    [class.border-red-300]="esInvalido('apellido')"/>
+                </div>
+              </div>
+              
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Email <span class="text-red-500">*</span></label>
+                <input type="email" formControlName="email"
+                  class="w-full rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all bg-white shadow-sm"
+                  [class.border-red-300]="esInvalido('email')"/>
+              </div>
+
+              @if (!esDominio) {
+                <div>
+                  <label class="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Contraseña <span class="font-normal text-gray-500">(opcional si no se desea cambiar)</span>
+                  </label>
+                  <input type="password" formControlName="password"
+                    placeholder="Mín. 8 caracteres, 1 mayúscula, 1 minúscula, 1 especial"
+                    class="w-full rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all bg-white shadow-sm"
+                    [class.border-red-300]="esInvalido('password')"/>
+                </div>
+              }
+            </div>
+
+            <hr class="border-gray-200">
+
+            <!-- Bloque Configuración de Acceso -->
+            <div class="space-y-4">
+              <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">Configuración de Acceso</h3>
+              
+              <!-- Toggle Dominio -->
+              <div class="flex items-center justify-between p-4 rounded-2xl bg-white border border-gray-200 shadow-sm transition-colors" [class.ring-2]="esDominio" [class.ring-ihss-500]="esDominio" [class.border-transparent]="esDominio">
+                <div class="flex flex-col">
+                  <span class="text-sm font-bold text-gray-900">Usuario de Active Directory</span>
+                  <span class="text-xs text-gray-500 mt-0.5">El usuario iniciará sesión con sus credenciales de dominio</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" class="sr-only peer" [checked]="esDominio" (change)="form.get('esUsuarioDominio')?.setValue($any($event.target).checked ? 1 : 0)">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ihss-600"></div>
+                </label>
+              </div>
+
+              <!-- Configuración AD si es dominio -->
+              @if (esDominio) {
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in p-4 rounded-2xl bg-ihss-50 border border-ihss-100">
+                  <div>
+                    <label class="block text-xs font-semibold text-ihss-800 mb-1.5">Código de Dominio <span class="text-red-500">*</span></label>
+                    <select formControlName="dominioId"
+                      class="w-full form-select rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 bg-white shadow-sm"
+                      [class.border-red-300]="esInvalido('dominioId')">
+                      <option [ngValue]="null">Seleccionar...</option>
+                      @for (d of listaDominios(); track d.domId) {
+                        <option [value]="d.domId">{{ d.domNombre }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-ihss-800 mb-1.5">Usuario de Dominio (Ej. jperez) <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                      <input type="text" formControlName="usuarioDominio"
+                        autocomplete="off"
+                        (blur)="validarAd()"
+                        class="w-full rounded-xl text-sm py-2.5 pl-3 pr-10 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 focus:outline-none transition-all bg-white shadow-sm"
+                        [class.border-red-400]="estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error'"
+                        [class.border-green-400]="estadoAd() === 'valido'"
+                        [class.border-gray-300]="estadoAd() === 'idle' || estadoAd() === 'verificando'"/>
+                      <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                        @if (estadoAd() === 'verificando') {
+                          <svg class="animate-spin w-4 h-4 text-ihss-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        }
+                        @if (estadoAd() === 'valido') {
+                          <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        }
+                        @if (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error') {
+                          <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                @if (estadoAd() !== 'idle' || resultadoAd()) {
+                  <div class="text-xs px-2 animate-fade-in -mt-2">
+                    @if (estadoAd() === 'verificando') {
+                      <p class="text-ihss-600 font-medium">Verificando conexión con el Directorio Activo...</p>
+                    }
+                    @if (estadoAd() === 'valido' && resultadoAd()) {
+                      <p class="text-green-600 font-semibold flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        {{ resultadoAd()?.nombreCompleto || 'Usuario verificado' }} (Cuenta Activa)
+                      </p>
+                    }
+                    @if (estadoAd() === 'no-existe') {
+                      <p class="text-red-600 font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        No se encontró este usuario en Active Directory.
+                      </p>
+                    }
+                    @if (estadoAd() === 'bloqueado') {
+                      <p class="text-red-600 font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/></svg>
+                        La cuenta está bloqueada en Active Directory.
+                      </p>
+                    }
+                    @if (estadoAd() === 'inactivo') {
+                      <p class="text-orange-600 font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        La cuenta está deshabilitada en Active Directory.
+                      </p>
+                    }
+                    @if (estadoAd() === 'error') {
+                      <p class="text-gray-600 font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                        Ocurrió un error al verificar en el servidor AD.
+                      </p>
+                    }
+                  </div>
+                }
+              }
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1.5">Rol asignado <span class="text-red-500">*</span></label>
+                <select formControlName="rolId"
+                  class="w-full form-select rounded-xl border-gray-300 text-sm py-2.5 px-3 border focus:ring-4 focus:ring-ihss-500/20 focus:border-ihss-500 bg-white shadow-sm font-medium text-gray-800"
+                  [class.border-red-300]="esInvalido('rolId')">
+                  <option [ngValue]="null">Seleccionar rol...</option>
+                  @for (r of roles(); track r.rolId) {
+                    <option [value]="r.rolId">{{ r.rolNombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Módulos de Acceso -->
+              <div class="space-y-2 mt-4">
+                <label class="block text-xs font-semibold text-gray-700 mb-2">Seleccione los módulos a los que tendrá acceso <span class="text-red-500">*</span></label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  @for (m of listaModulos(); track m.modId) {
+                    <label [for]="'mod_' + m.modId" 
+                           class="flex items-start gap-3 p-4 rounded-2xl border-2 transition-all cursor-pointer relative overflow-hidden group select-none shadow-sm hover:shadow-md"
+                           [class.border-ihss-500]="isModuloSelected(m.modId)"
+                           [class.bg-ihss-50]="isModuloSelected(m.modId)"
+                           [class.border-gray-200]="!isModuloSelected(m.modId)"
+                           [class.bg-white]="!isModuloSelected(m.modId)"
+                           [class.hover:border-ihss-300]="!isModuloSelected(m.modId)">
+                      
+                      <div class="pt-0.5 shrink-0">
+                        <div class="w-5 h-5 rounded flex items-center justify-center transition-colors border-2"
+                             [class.bg-ihss-600]="isModuloSelected(m.modId)"
+                             [class.border-ihss-600]="isModuloSelected(m.modId)"
+                             [class.border-gray-300]="!isModuloSelected(m.modId)">
+                          @if (isModuloSelected(m.modId)) {
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                          }
+                        </div>
+                        <input type="checkbox" [id]="'mod_' + m.modId"
+                               [checked]="isModuloSelected(m.modId)"
+                               (change)="onModuloChange(m.modId, $event)"
+                               class="sr-only"/>
+                      </div>
+                      <div class="flex flex-col flex-1">
+                        <span class="text-sm font-bold"
+                              [class.text-ihss-900]="isModuloSelected(m.modId)"
+                              [class.text-gray-800]="!isModuloSelected(m.modId)">{{ m.modNombre }}</span>
+                        @if (m.modDescripcion) {
+                          <span class="text-xs mt-1"
+                                [class.text-ihss-700]="isModuloSelected(m.modId)"
+                                [class.text-gray-500]="!isModuloSelected(m.modId)">{{ m.modDescripcion }}</span>
+                        }
+                      </div>
+                    </label>
+                  }
+                  @if (listaModulos().length === 0) {
+                    <div class="col-span-full p-4 rounded-xl bg-gray-100 border border-gray-200 text-center text-sm text-gray-500 italic">
+                      No hay módulos disponibles
+                    </div>
+                  }
+                </div>
+              </div>
+
+            </div>
+
+            @if (errorGuardar()) {
+              <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 text-sm rounded-2xl px-5 py-4">
+                <svg class="w-5 h-5 mt-0.5 shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <span>{{ errorGuardar() }}</span>
+              </div>
+            }
+
+            <!-- Footer Actions -->
+            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-8">
+              <button type="button" (click)="cancelar()"
+                class="px-6 py-2.5 border-2 border-gray-200 bg-white text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm">
+                Cancelar
+              </button>
+              <button type="submit"
+                [disabled]="guardando() || estadoAd() === 'verificando' || (esDominio && (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo'))"
+                class="px-8 py-2.5 bg-ihss-700 text-white rounded-xl text-sm font-bold hover:bg-ihss-800 hover:shadow-lg transition-all disabled:opacity-60 disabled:shadow-none disabled:cursor-not-allowed flex items-center gap-2">
+                @if (guardando()) { 
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Guardando... 
+                } @else { 
+                  {{ editando() ? 'Guardar Cambios' : 'Registrar Usuario' }} 
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

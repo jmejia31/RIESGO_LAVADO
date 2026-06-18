@@ -1,0 +1,430 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Oracle.ManagedDataAccess.Client;
+using RL.API.DTOs;
+using RL.API.Models;
+using RL.API.Repositories;
+
+namespace RL.API.Services;
+
+public interface IAuthService
+{
+    Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip);
+    Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip);
+    Task                    LogoutAsync(long usrId, string refreshToken);
+    Task<bool>              CambiarPasswordAsync(long usrId, CambiarPasswordDto dto);
+    Task<UsuarioInfoDto?>   CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor);
+    Task<bool>              ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto);
+    Task<List<UsuarioInfoDto>> ListarUsuariosAsync();
+    Task<bool>              ActualizarEstadoUsuarioAsync(string uid, bool activo);
+    Task<bool>              RecuperarPasswordAsync(string email);
+}
+
+public class AuthService : IAuthService
+{
+    private readonly IUsuarioRepository _usuarioRepo;
+    private readonly IAuditoriaRepository _auditoriaRepo;
+    private readonly IConfiguration _config;
+    private readonly IActivoDirectorioService _adService;
+    private readonly IConfiguracionRepository _configuracionRepo;
+    private readonly IEmailService _emailService;
+
+    public AuthService(IUsuarioRepository usuarioRepo, IAuditoriaRepository auditoriaRepo, IConfiguration config, IActivoDirectorioService adService, IConfiguracionRepository configuracionRepo, IEmailService emailService)
+    {
+        _usuarioRepo = usuarioRepo;
+        _auditoriaRepo = auditoriaRepo;
+        _config = config;
+        _adService = adService;
+        _configuracionRepo = configuracionRepo;
+        _emailService = emailService;
+    }
+
+    public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip)
+    {
+        // Obtener usuario (soporta email o login de dominio)
+        var usuario = await _usuarioRepo.ObtenerPorLoginAsync(dto.Email);
+        if (usuario == null) return null;
+
+        // Verificar si está bloqueado temporalmente
+        if (usuario.UsrFechaBloqueo != null)
+        {
+            var diff = DateTime.Now - usuario.UsrFechaBloqueo.Value;
+            if (diff.TotalMinutes < 1)
+            {
+                var minutosRestantes = 1.0 - diff.TotalMinutes;
+                var segundosRestantes = (int)(minutosRestantes * 60);
+                throw new InvalidOperationException($"Su cuenta está bloqueada temporalmente por demasiados intentos fallidos. Intente de nuevo en {segundosRestantes} segundos.");
+            }
+            else
+            {
+                // El bloqueo expiró, restablecer
+                await _usuarioRepo.RestablecerIntentosAsync(usuario.UsrId);
+                usuario.UsrIntentosFallidos = 0;
+                usuario.UsrFechaBloqueo = null;
+            }
+        }
+
+        bool loginValido = false;
+
+        // Si es local, validar contra BCrypt hash
+        if (usuario.EsUsuarioDominio == 0)
+        {
+            loginValido = BCrypt.Net.BCrypt.Verify(dto.Password, usuario.UsrPasswordHash);
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(usuario.UsuarioDominio) && !string.IsNullOrWhiteSpace(usuario.UsrDominio))
+            {
+                try
+                {
+                    loginValido = await _adService.AutenticarAsync(
+                        usuario.UsuarioDominio, usuario.UsrDominio, dto.Password);
+                }
+                catch (InvalidOperationException)
+                {
+                    loginValido = false;
+                }
+            }
+        }
+
+        if (!loginValido)
+        {
+            // Cargar configuración de intentos máximos
+            var configSistema = await _configuracionRepo.ObtenerConfigSistemaAsync();
+            int maxIntentos = configSistema?.MaxIntentos ?? 5;
+
+            int nuevosIntentos = usuario.UsrIntentosFallidos + 1;
+            if (nuevosIntentos >= maxIntentos)
+            {
+                await _usuarioRepo.RegistrarIntentoFallidoAsync(usuario.UsrId, nuevosIntentos, DateTime.Now);
+                throw new InvalidOperationException($"Ha superado el límite de {maxIntentos} intentos. Su cuenta ha sido bloqueada por 1 minuto.");
+            }
+            else
+            {
+                await _usuarioRepo.RegistrarIntentoFallidoAsync(usuario.UsrId, nuevosIntentos, null);
+                throw new InvalidOperationException($"Credenciales inválidas. Intento fallido {nuevosIntentos} de {maxIntentos}.");
+            }
+        }
+
+        // Si el login fue exitoso y tenía intentos fallidos acumulados, restablecerlos
+        if (usuario.UsrIntentosFallidos > 0)
+        {
+            await _usuarioRepo.RestablecerIntentosAsync(usuario.UsrId);
+        }
+
+        // Verificar si la clave provisional ha expirado
+        if (usuario.UsrDebeCambiarPass == 1 && usuario.UsrFechaClaveTemp != null)
+        {
+            var configSistema = await _configuracionRepo.ObtenerConfigSistemaAsync();
+            int validezMinutos = configSistema?.ValidezClaveTemp ?? 15;
+            var diff = DateTime.Now - usuario.UsrFechaClaveTemp.Value;
+            if (diff.TotalMinutes > validezMinutos)
+            {
+                throw new InvalidOperationException($"La clave provisional ha expirado (tiempo de validez: {validezMinutos} minutos). Por favor solicite una nueva.");
+            }
+        }
+
+        // Generar Tokens
+        var response = await GenerarTokensParaUsuarioAsync(usuario, ip);
+        
+        // Registrar Auditoría
+        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usuario.UsrId.ToString(), "LOGIN", null, null, usuario.UsrId, usuario.UsrEmail, ip, "Auth");
+
+        return response;
+    }
+
+
+
+    public async Task LogoutAsync(long usrId, string refreshToken)
+    {
+        await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
+        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usrId.ToString(), "LOGOUT", null, null, usrId, null, null, "Auth");
+    }
+
+    public async Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto)
+    {
+        var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
+        if (usuario == null || usuario.EsUsuarioDominio == 1) return false;
+
+        if (!BCrypt.Net.BCrypt.Verify(dto.PasswordActual, usuario.UsrPasswordHash))
+            return false;
+
+        string salt = BCrypt.Net.BCrypt.GenerateSalt();
+        string hash = BCrypt.Net.BCrypt.HashPassword(dto.NuevoPassword, salt);
+
+        bool ok = await _usuarioRepo.ActualizarPasswordAsync(usrId, hash, "BCRYPT");
+        if (ok)
+        {
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usrId.ToString(), "UPDATE", "Cambio contraseña", null, usrId, usuario.UsrEmail, null, "Auth");
+        }
+        return ok;
+    }
+
+    public async Task<UsuarioInfoDto?> CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor)
+    {
+        // Validar si el email ya existe
+        var existente = await _usuarioRepo.ObtenerPorEmailAsync(dto.Email);
+        if (existente != null)
+            throw new InvalidOperationException("El correo electrónico ya se encuentra registrado por otro usuario.");
+
+        // Password por defecto si viene vacío (genera una clave provisional aleatoria)
+        string plainPw = string.IsNullOrEmpty(dto.Password) ? GenerarPasswordProvisional(10) : dto.Password;
+        string salt = BCrypt.Net.BCrypt.GenerateSalt();
+        string hash = BCrypt.Net.BCrypt.HashPassword(plainPw, salt);
+
+        long newId = await _usuarioRepo.CrearAsync(dto, hash, "BCRYPT");
+        if (newId <= 0) return null;
+
+        // Registrar auditoría
+        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", newId.ToString(), "INSERT", null, Newtonsoft.Json.JsonConvert.SerializeObject(dto), creadoPor, dto.Email, null, "AdminUsuarios");
+
+        // Enviar correo si es usuario local
+        if (dto.EsUsuarioDominio == 0)
+        {
+            try
+            {
+                string asunto = "Nueva Cuenta de Usuario - SGRLA";
+                string cuerpo = $@"
+                    <h3>Estimado/a {dto.Nombre} {dto.Apellido},</h3>
+                    <p>Se ha creado una nueva cuenta para su usuario en el <strong>Sistema de Gestión de Riesgo de Lavado de Activos (SGRLA)</strong>.</p>
+                    <p>Su contraseña provisional de acceso es: <strong style='font-size: 16px; background-color: #f3f4f6; padding: 4px 8px; border-radius: 4px;'>{plainPw}</strong></p>
+                    <p style='color: #ef4444; font-weight: bold;'>IMPORTANTE: Al ingresar por primera vez al sistema con esta clave provisional, se le requerirá obligatoriamente que defina una nueva contraseña personal.</p>
+                    <p>Atentamente,<br>Soporte de TI / SGRLA</p>";
+
+                await _emailService.EnviarCorreoAsync(dto.Email, asunto, cuerpo, true);
+            }
+            catch (Exception ex)
+            {
+                // Registramos el error de envío de correo en los logs pero no impedimos la creación del usuario
+                // ya que la transacción de base de datos fue exitosa.
+                // Podríamos lanzar una advertencia o logearlo.
+            }
+        }
+
+        var creado = await _usuarioRepo.ObtenerPorIdAsync(newId);
+        return creado != null ? MapToDto(creado) : null;
+    }
+
+    public async Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto)
+    {
+        long id = Helpers.HashIdHelper.DecodeId(uid);
+        if (id <= 0) return false;
+
+        var existente = await _usuarioRepo.ObtenerPorIdAsync(id);
+        if (existente == null) return false;
+
+        // Verificar si el email ya existe en otro usuario
+        var otro = await _usuarioRepo.ObtenerPorEmailAsync(dto.Email);
+        if (otro != null && otro.UsrId != id)
+            throw new InvalidOperationException("El correo electrónico ya está registrado por otro usuario.");
+
+        string? hash = null;
+        string? salt = null;
+        if (!string.IsNullOrEmpty(dto.Password))
+        {
+            salt = BCrypt.Net.BCrypt.GenerateSalt();
+            hash = BCrypt.Net.BCrypt.HashPassword(dto.Password, salt);
+        }
+
+        bool ok = await _usuarioRepo.ActualizarAsync(id, dto, hash, salt);
+        if (ok)
+        {
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", Newtonsoft.Json.JsonConvert.SerializeObject(existente), Newtonsoft.Json.JsonConvert.SerializeObject(dto), null, dto.Email, null, "AdminUsuarios");
+        }
+        return ok;
+    }
+
+    public async Task<List<UsuarioInfoDto>> ListarUsuariosAsync()
+    {
+        return await _usuarioRepo.ListarAsync();
+    }
+
+    public async Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo)
+    {
+        long id = Helpers.HashIdHelper.DecodeId(uid);
+        if (id <= 0) return false;
+
+        var existente = await _usuarioRepo.ObtenerPorIdAsync(id);
+        if (existente == null) return false;
+
+        bool ok = await _usuarioRepo.ActualizarEstadoAsync(id, activo);
+        if (ok)
+        {
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", $"Estado anterior: {(existente.UsrActivo ? 1 : 0)}", $"Nuevo estado: {(activo ? 1 : 0)}", null, existente.UsrEmail, null, "AdminUsuarios");
+        }
+        return ok;
+    }
+
+    // ─── Métodos Auxiliares de Autenticación ───────────────────────────
+
+    private async Task<LoginResponseDto> GenerarTokensParaUsuarioAsync(Usuario usuario, string ip)
+    {
+        var secretKey = Encoding.UTF8.GetBytes(_config["Jwt:SecretKey"]!);
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, usuario.UsrId.ToString()),
+            new Claim(ClaimTypes.Name, $"{usuario.UsrNombre} {usuario.UsrApellido}"),
+            new Claim(ClaimTypes.GivenName, usuario.UsrNombre),
+            new Claim(ClaimTypes.Surname, usuario.UsrApellido),
+            new Claim(ClaimTypes.Email, usuario.UsrEmail),
+            new Claim(ClaimTypes.Role, usuario.Rol.RolNombre),
+            new Claim("rol_id", usuario.UsrRolId.ToString()),
+            new Claim("uid", Helpers.HashIdHelper.EncodeId(usuario.UsrId)),
+            new Claim("es_dom", usuario.EsUsuarioDominio.ToString()),
+            new Claim("dom_id", usuario.UsrDomId?.ToString() ?? ""),
+            new Claim("dominio", usuario.UsrDominio ?? ""),
+            new Claim("usr_dom", usuario.UsuarioDominio ?? ""),
+            new Claim("modulos", string.Join(",", usuario.ModulosIds ?? new List<int>())),
+            new Claim("debe_cambiar_pass", usuario.UsrDebeCambiarPass.ToString())
+        };
+
+        var expires = DateTime.UtcNow.AddMinutes(Convert.ToDouble(_config["Jwt:AccessTokenExpirationMinutes"] ?? "60"));
+        var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
+            claims: claims,
+            expires: expires,
+            signingCredentials: new SigningCredentials(new SymmetricSecurityKey(secretKey), SecurityAlgorithms.HmacSha256)
+        );
+
+        string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        string refreshToken = GenerarRefreshToken();
+
+        var refExp = DateTime.UtcNow.AddDays(Convert.ToDouble(_config["Jwt:RefreshTokenExpirationDays"] ?? "7"));
+        await _usuarioRepo.GuardarRefreshTokenAsync(usuario.UsrId, refreshToken, refExp, ip);
+
+        return new LoginResponseDto
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+            ExpiresAt = expires,
+            Usuario = MapToDto(usuario)
+        };
+    }
+
+    public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip)
+    {
+        // En una implementación clásica, decodificamos el token (incluso expirado)
+        // Pero para no complicar el descifrado del JWT en este paso, podemos consultar directamente en la base de datos de tokens.
+        // Dado que el repositorio tiene un método para verificar el token y retornar el valor si es válido, 
+        // pero requiere el usrId, crearemos un método alternativo en el que decodificamos el JWT expirado de forma no estricta
+        // para extraer el UsrId. 
+        // Para simplificar, asumiremos que en el flujo de refresh, el cliente nos manda el Refresh Token.
+        // Para encontrar el usuario sin el token JWT, podemos hacer una consulta a Oracle.
+        // Sin embargo, para cumplir 100% con la interfaz del repositorio, haremos lo siguiente:
+        // Buscaremos el token en la BD. Como la interfaz de UsuarioRepository nos pide ObtenerRefreshTokenAsync(usrId, token),
+        // ¿cómo obtenemos el usrId?
+        // En el DTO de RefreshTokenRequestDto, el cliente usualmente solo envía el RefreshToken.
+        // Para decodificar el Access Token y obtener el UsrId, podemos extraer las claims del token expirado del header.
+        // O bien, podemos buscar en la tabla directamente. 
+        // Agreguemos una consulta que extrae el UsrId buscando directamente en Oracle.
+        // Vamos a resolverlo elegantemente:
+        long usrId = await BuscarUsrIdPorRefreshTokenAsync(refreshToken);
+        if (usrId <= 0) return null;
+
+        var tokenDb = await _usuarioRepo.ObtenerRefreshTokenAsync(usrId, refreshToken);
+        if (tokenDb == null) return null;
+
+        var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
+        if (usuario == null) return null;
+
+        // Revocar token actual
+        await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
+
+        // Generar nuevos tokens
+        return await GenerarTokensParaUsuarioAsync(usuario, ip);
+    }
+
+    private async Task<long> BuscarUsrIdPorRefreshTokenAsync(string token)
+    {
+        // Dado que no queremos agregar un método a IUsuarioRepository para evitar sobrecomplicar,
+        // podemos hacer una consulta rápida usando la conexión de Oracle del DbContext.
+        // Para ello, crearemos una conexión local usando la cadena de conexión de Config.
+        var connectionString = _config.GetConnectionString("OracleDB")!;
+        using var conn = new OracleConnection(connectionString);
+        await conn.OpenAsync();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT RFT_USR_ID FROM RL_REFRESH_TOKENS WHERE RFT_TOKEN = :token AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
+        cmd.Parameters.Add(new OracleParameter("token", token));
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result != null ? Convert.ToInt64(result.ToString()) : 0;
+    }
+
+    private static string GenerarRefreshToken()
+    {
+        var randomNumber = new byte[64];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    public async Task<bool> RecuperarPasswordAsync(string email)
+    {
+        var usuario = await _usuarioRepo.ObtenerPorEmailAsync(email);
+        if (usuario == null)
+            throw new InvalidOperationException("El correo electrónico no corresponde a ningún usuario registrado.");
+
+        if (usuario.EsUsuarioDominio == 1)
+            throw new InvalidOperationException("Este usuario pertenece a Active Directory. Por favor, gestione su contraseña con el departamento de TI.");
+
+        string provisionalPw = GenerarPasswordProvisional(10);
+        string salt = BCrypt.Net.BCrypt.GenerateSalt();
+        string hash = BCrypt.Net.BCrypt.HashPassword(provisionalPw, salt);
+
+        bool ok = await _usuarioRepo.ForzarCambioPasswordAsync(usuario.UsrId, hash, "BCRYPT");
+        if (ok)
+        {
+            string asunto = "Clave Provisional de Acceso - SGRLA";
+            string cuerpo = $@"
+                <h3>Estimado/a {usuario.UsrNombre} {usuario.UsrApellido},</h3>
+                <p>Se ha solicitado una restauración de contraseña para su usuario en el <strong>Sistema de Gestión de Riesgo de Lavado de Activos (SGRLA)</strong>.</p>
+                <p>Su contraseña provisional de acceso es: <strong style='font-size: 16px; background-color: #f3f4f6; padding: 4px 8px; border-radius: 4px;'>{provisionalPw}</strong></p>
+                <p style='color: #ef4444; font-weight: bold;'>IMPORTANTE: Al ingresar por primera vez al sistema con esta clave provisional, se le requerirá obligatoriamente que defina una nueva contraseña personal.</p>
+                <p>Atentamente,<br>Soporte de TI / SGRLA</p>";
+
+            await _emailService.EnviarCorreoAsync(usuario.UsrEmail, asunto, cuerpo, true);
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usuario.UsrId.ToString(), "UPDATE", "Solicitud recuperación contraseña", null, usuario.UsrId, usuario.UsrEmail, null, "Auth");
+        }
+
+        return ok;
+    }
+
+    private static string GenerarPasswordProvisional(int longitud)
+    {
+        const string caracteresValidos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$";
+        var res = new StringBuilder();
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            byte[] uintBuffer = new byte[4];
+            while (res.Length < longitud)
+            {
+                rng.GetBytes(uintBuffer);
+                uint num = BitConverter.ToUInt32(uintBuffer, 0);
+                res.Append(caracteresValidos[(int)(num % (uint)caracteresValidos.Length)]);
+            }
+        }
+        return res.ToString();
+    }
+
+    private static UsuarioInfoDto MapToDto(Usuario u) => new()
+    {
+        Id = u.UsrId,
+        Nombre = u.UsrNombre,
+        Apellido = u.UsrApellido,
+        Email = u.UsrEmail,
+        Rol = u.Rol.RolNombre,
+        RolId = u.UsrRolId,
+        EsUsuarioDominio = u.EsUsuarioDominio,
+        UsuarioDominio = u.UsuarioDominio,
+        Dominio = u.UsrDominio,
+        DominioId = u.UsrDomId,
+        Dni = u.UsrDni,
+        ModulosIds = u.ModulosIds ?? new List<int>(),
+        DebeCambiarPassword = u.UsrDebeCambiarPass == 1
+    };
+}

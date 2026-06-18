@@ -1,0 +1,746 @@
+import { Component, OnInit, signal, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/services/configuracion.service';
+
+@Component({
+  selector: 'app-configuracion',
+  standalone: true,
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  template: `
+    <div class="max-w-6xl mx-auto space-y-6">
+      
+      <!-- Encabezado con Tabs -->
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-800">Panel de Configuración</h2>
+            <p class="text-sm text-gray-500">Administra los parámetros del sistema, apariencia visual y diapositivas de acceso.</p>
+          </div>
+          
+          <!-- Botón de guardar cambios rápidos para la pestaña sistema -->
+          @if (activeTab() === 'sistema') {
+            <button (click)="guardar()" [disabled]="guardando() || form.invalid"
+              class="px-6 py-2.5 bg-ihss-900 text-white rounded-xl font-medium shadow-sm hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ihss-600 transition-all disabled:opacity-50 flex items-center gap-2">
+              @if (guardando()) {
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Guardando...
+              } @else {
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Guardar Cambios
+              }
+            </button>
+          } @else {
+            <button (click)="abrirModalSlide()"
+              class="px-6 py-2.5 bg-ihss-900 text-white rounded-xl font-medium shadow-sm hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ihss-600 transition-all flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              Nuevo Slide
+            </button>
+          }
+        </div>
+
+        <!-- Barra de Tabs -->
+        <div class="flex border-b border-gray-200">
+          <button (click)="activeTab.set('sistema')"
+            [class]="activeTab() === 'sistema' ? 'border-ihss-900 text-ihss-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            </svg>
+            Parámetros del Sistema
+          </button>
+          <button (click)="activeTab.set('slides')"
+            [class]="activeTab() === 'slides' ? 'border-ihss-900 text-ihss-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Slides del Login (Carrusel)
+          </button>
+        </div>
+      </div>
+
+      <!-- Alertas Globales -->
+      @if (mensajeExito()) {
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 animate-fade-in">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-medium">{{ mensajeExito() }}</span>
+        </div>
+      }
+      @if (mensajeError()) {
+        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-3 animate-fade-in">
+          <svg class="w-5 h-5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-medium">{{ mensajeError() }}</span>
+        </div>
+      }
+
+      <!-- TAB 1: PARÁMETROS DEL SISTEMA -->
+      @if (activeTab() === 'sistema') {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+          
+          <!-- Formulario (Lado Izquierdo) -->
+          <div class="lg:col-span-2 space-y-6">
+            <form [formGroup]="form" class="space-y-6">
+              
+              <!-- Tarjeta: Apariencia Visual -->
+              <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+                <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-ihss-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                  </svg>
+                  Apariencia Visual
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Nombre de la Institución</label>
+                    <input type="text" formControlName="nombreInstitucion"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors"
+                      [class.border-red-500]="esInvalido('nombreInstitucion')" />
+                    @if (esInvalido('nombreInstitucion')) {
+                      <p class="text-xs text-red-500">Este campo es requerido.</p>
+                    }
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Nombre del Sistema</label>
+                    <input type="text" formControlName="nombreSistema"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors"
+                      [class.border-red-500]="esInvalido('nombreSistema')" />
+                    @if (esInvalido('nombreSistema')) {
+                      <p class="text-xs text-red-500">Este campo es requerido.</p>
+                    }
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">URL del Logo principal</label>
+                    <input type="text" formControlName="logoUrl"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" />
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">URL del Icono (Favicon/Mini)</label>
+                    <input type="text" formControlName="iconoUrl"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" />
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Color Primario</label>
+                    <div class="flex gap-2">
+                      <input type="color" formControlName="colorPrimario" class="w-12 h-10 p-1 bg-white border border-gray-200 rounded-xl cursor-pointer" />
+                      <input type="text" formControlName="colorPrimario"
+                        class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm font-mono uppercase" />
+                    </div>
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Color Secundario (Accento)</label>
+                    <div class="flex gap-2">
+                      <input type="color" formControlName="colorSecundario" class="w-12 h-10 p-1 bg-white border border-gray-200 rounded-xl cursor-pointer" />
+                      <input type="text" formControlName="colorSecundario"
+                        class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm font-mono uppercase" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tarjeta: Seguridad e Inactividad -->
+              <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+                <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-ihss-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Parámetros de Seguridad e Inactividad
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Timeout de Sesión (Minutos)</label>
+                    <input type="number" formControlName="timeoutSesion" min="1" max="1440"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors"
+                      [class.border-red-500]="esInvalido('timeoutSesion')" />
+                    @if (esInvalido('timeoutSesion')) {
+                      <p class="text-xs text-red-500">Debe ser un valor numérico entre 1 y 1440 minutos.</p>
+                    }
+                  </div>
+
+                  <div class="space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Máximo de Intentos Fallidos</label>
+                    <input type="number" formControlName="maxIntentos" min="1" max="20"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors"
+                      [class.border-red-500]="esInvalido('maxIntentos')" />
+                    @if (esInvalido('maxIntentos')) {
+                      <p class="text-xs text-red-500">Debe ser un valor numérico entre 1 y 20 intentos.</p>
+                    }
+                  </div>
+
+                  <div class="col-span-1 md:col-span-2 space-y-1">
+                    <label class="text-xs font-semibold text-gray-500 uppercase">Acuerdo Legal / Términos de Acceso</label>
+                    <textarea formControlName="acuerdoLegal" rows="5"
+                      class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"
+                      placeholder="Escriba los términos legales que el usuario debe aceptar al iniciar sesión..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          <!-- Tarjeta de Vista Previa (Lado Derecho) -->
+          <div class="space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6 sticky top-6">
+              <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">Vista Previa</h3>
+              
+              <!-- Simulación de Sidebar/Layout -->
+              <div class="border border-gray-200 rounded-xl overflow-hidden shadow-inner bg-gray-50">
+                
+                <!-- Barra Superior Simulada -->
+                <div class="bg-white border-b border-gray-200 px-3 py-2 flex items-center justify-between text-[10px]">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-400"></span>
+                    <span class="ml-2 text-gray-400 font-semibold truncate max-w-[120px]">{{ form.get('nombreSistema')?.value || 'SGRLA-IHSS' }}</span>
+                  </div>
+                  <span class="text-gray-400">admin&#64;ihss.hn</span>
+                </div>
+
+                <div class="flex h-48">
+                  <!-- Sidebar Simulado -->
+                  <div class="w-20 text-[8px] p-2 flex flex-col justify-between text-white"
+                    [style.backgroundColor]="form.get('colorPrimario')?.value || '#1e3a8a'">
+                    <div class="space-y-3">
+                      <!-- Logo / Identidad -->
+                      <div class="flex items-center gap-1">
+                        <div class="w-5 h-5 rounded bg-white/20 flex-shrink-0 flex items-center justify-center p-0.5 overflow-hidden">
+                          @if (form.get('iconoUrl')?.value || form.get('logoUrl')?.value) {
+                            <img [src]="form.get('iconoUrl')?.value || form.get('logoUrl')?.value" class="w-full h-full object-contain" />
+                          } @else {
+                            <span class="font-bold text-[8px]">IHSS</span>
+                          }
+                        </div>
+                        <span class="font-bold truncate text-[6px] opacity-80 leading-none">
+                          {{ form.get('nombreSistema')?.value || 'SGRLA-IHSS' }}
+                        </span>
+                      </div>
+
+                      <!-- Links -->
+                      <div class="space-y-1.5">
+                        <div class="h-3 rounded bg-white/25 flex items-center px-1">
+                          <span class="w-1.5 h-1.5 bg-white/50 rounded-full mr-1"></span>
+                          <span class="scale-[0.8] origin-left">Inicio</span>
+                        </div>
+                        <div class="h-3 rounded hover:bg-white/10 flex items-center px-1 opacity-60">
+                          <span class="w-1.5 h-1.5 bg-white/50 rounded-full mr-1"></span>
+                          <span class="scale-[0.8] origin-left">Usuarios</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Footer del Sidebar -->
+                    <div class="text-[5px] opacity-50 truncate">
+                      {{ form.get('nombreInstitucion')?.value || 'IHSS' }}
+                    </div>
+                  </div>
+
+                  <!-- Contenido Simulado -->
+                  <div class="flex-1 p-3 space-y-2 flex flex-col justify-between">
+                    <div class="space-y-2">
+                      <div class="h-2 w-12 bg-gray-200 rounded"></div>
+                      <div class="h-4 w-full bg-white border border-gray-200 rounded"></div>
+                      <div class="grid grid-cols-3 gap-1">
+                        <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
+                          <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                        </div>
+                        <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
+                          <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                        </div>
+                        <div class="h-8 bg-white border border-gray-200 rounded flex items-center justify-center">
+                          <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Botón Simulado -->
+                    <div class="flex justify-end">
+                      <div class="h-4 px-3 rounded text-[6px] font-bold text-white flex items-center"
+                        [style.backgroundColor]="form.get('colorSecundario')?.value || '#1d4ed8'">
+                        Acción
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-xs text-gray-500 space-y-2">
+                <p class="font-medium text-gray-700">Parámetros actuales:</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li>Timeout de sesión: <span class="font-bold text-gray-700">{{ form.get('timeoutSesion')?.value }} mins</span></li>
+                  <li>Intentos de login: <span class="font-bold text-gray-700">{{ form.get('maxIntentos')?.value }}</span></li>
+                  <li>Acuerdo legal: <span class="text-gray-700">{{ form.get('acuerdoLegal')?.value ? 'Configurado' : 'No configurado' }}</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      }
+
+      <!-- TAB 2: SLIDES DEL LOGIN (CARRUSEL) -->
+      @if (activeTab() === 'slides') {
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6 animate-fade-in">
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Slides Activos en el Carrusel</h3>
+            <p class="text-sm text-gray-500">Crea, edita, desactiva o reordena los slides visuales informativos que aparecen en la pantalla de inicio de sesión.</p>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-gray-200">
+            @if (cargandoSlides()) {
+              <div class="py-12 flex flex-col items-center justify-center gap-3">
+                <svg class="animate-spin h-8 w-8 text-ihss-900" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-sm font-medium text-gray-500">Cargando slides...</p>
+              </div>
+            } @else if (slides().length === 0) {
+              <div class="py-12 flex flex-col items-center justify-center gap-2">
+                <svg class="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-sm font-medium text-gray-500">No se encontraron slides en el carrusel.</p>
+              </div>
+            } @else {
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                  <tr>
+                    <th class="px-6 py-3 text-left">Vista Previa</th>
+                    <th class="px-6 py-3 text-left">Título / Descripción</th>
+                    <th class="px-6 py-3 text-center">Orden</th>
+                    <th class="px-6 py-3 text-center">Icono</th>
+                    <th class="px-6 py-3 text-center">Estado</th>
+                    <th class="px-6 py-3 text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
+                  @for (slide of slides(); track slide.id) {
+                    <tr class="hover:bg-gray-50/50 transition-colors">
+                      <td class="px-6 py-4">
+                        <div class="w-24 h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                          @if (slide.imagenUrl) {
+                            <img [src]="configService.resolverUrlImagen(slide.imagenUrl)" class="w-full h-full object-cover" onerror="this.src='assets/login/slide1.png'" />
+                          } @else {
+                            <span class="text-[10px] text-gray-400 font-semibold">Sin imagen</span>
+                          }
+                        </div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="font-bold text-gray-900 block">{{ slide.titulo || '(Sin título)' }}</span>
+                        <span class="text-xs text-gray-400 block max-w-sm truncate">{{ slide.descripcion || '(Sin descripción)' }}</span>
+                      </td>
+                      <td class="px-6 py-4 text-center font-bold text-gray-700">
+                        {{ slide.orden }}
+                      </td>
+                      <td class="px-6 py-4 text-center">
+                        @if (slide.imagenIcono) {
+                          <span class="inline-flex px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-600 font-mono">{{ slide.imagenIcono }}</span>
+                        } @else {
+                          <span class="text-gray-300 text-xs italic">Ninguno</span>
+                        }
+                      </td>
+                      <td class="px-6 py-4 text-center">
+                        <span [class]="slide.activo 
+                          ? 'inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600/10'
+                          : 'inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-500 ring-1 ring-gray-600/10'">
+                          {{ slide.activo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                          <button (click)="abrirModalSlide(slide)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-100" title="Editar Slide">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button (click)="eliminarSlide(slide.id)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100" title="Eliminar Slide">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Modal de Creación / Edición de Slide -->
+      @if (modalSlideAbierto()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModalSlide()"></div>
+
+          <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full border border-gray-100 flex flex-col">
+            <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+              <h3 class="text-lg font-bold text-gray-900">
+                {{ slideEditando() ? 'Editar Slide de Login' : 'Agregar Nuevo Slide' }}
+              </h3>
+              <button (click)="cerrarModalSlide()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <form [formGroup]="slideForm" (ngSubmit)="guardarSlide()" class="p-6 space-y-4">
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Ruta / URL de la Imagen *</label>
+                <div class="flex gap-2">
+                  <input type="text" formControlName="imagenUrl" placeholder="Ej. assets/login/slide1.png o /uploads/..."
+                    class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+                  
+                  <input type="file" #fileInput (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden" />
+                  
+                  <button type="button" (click)="fileInput.click()" [disabled]="subiendoImagen()"
+                    class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+                    @if (subiendoImagen()) {
+                      <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Subiendo...
+                    } @else {
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      Subir Imagen
+                    }
+                  </button>
+                </div>
+                @if (slideForm.get('imagenUrl')?.invalid && slideForm.get('imagenUrl')?.touched) {
+                  <p class="text-xs text-red-500">La URL de la imagen es obligatoria.</p>
+                }
+              </div>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-xs font-semibold text-gray-500 uppercase">Orden de Aparición *</label>
+                  <input type="number" formControlName="orden" min="1" max="99"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+                </div>
+                <div class="space-y-1">
+                  <label class="text-xs font-semibold text-gray-500 uppercase">Icono del Slide</label>
+                  <input type="text" formControlName="imagenIcono" placeholder="Ej. key, lock, shield"
+                    class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Título del Slide</label>
+                <input type="text" formControlName="titulo" placeholder="Título que se mostrará en pantalla"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+              </div>
+
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Descripción / Subtítulo</label>
+                <textarea formControlName="descripcion" rows="3" placeholder="Información detallada..."
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"></textarea>
+              </div>
+
+              <div class="flex items-center gap-2 py-2">
+                <input type="checkbox" id="slideActivo" formControlName="activo" class="w-4 h-4 text-ihss-600 border-gray-300 rounded focus:ring-ihss-500" />
+                <label for="slideActivo" class="text-sm text-gray-700 font-medium cursor-pointer">El slide está activo e informativo</label>
+              </div>
+
+              <!-- Vista previa rápida de la imagen en el modal -->
+              @if (slideForm.get('imagenUrl')?.value) {
+                <div class="pt-2">
+                  <span class="text-xs font-semibold text-gray-500 uppercase block mb-1">Vista Previa de Imagen</span>
+                  <div class="w-full h-32 rounded-xl border border-gray-200 overflow-hidden bg-gray-150 flex items-center justify-center shadow-inner">
+                    <img [src]="configService.resolverUrlImagen(slideForm.get('imagenUrl')?.value)" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+                  </div>
+                </div>
+              }
+
+              <div class="bg-gray-50 -mx-6 -mb-6 px-6 py-3 flex justify-end gap-2 border-t border-gray-200">
+                <button type="submit" [disabled]="slideForm.invalid || guardandoSlide()"
+                  class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+                  @if (guardandoSlide()) {
+                    Guardando...
+                  } @else {
+                    Guardar Slide
+                  }
+                </button>
+                <button type="button" (click)="cerrarModalSlide()" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+    </div>
+  `
+})
+export class ConfiguracionComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  public configService = inject(ConfiguracionService);
+
+  activeTab = signal<'sistema' | 'slides'>('sistema');
+
+  // Estado pestaña Configuración
+  form!: FormGroup;
+  guardando = signal(false);
+  mensajeExito = signal<string | null>(null);
+  mensajeError = signal<string | null>(null);
+
+  // Estado pestaña Slides
+  slides = signal<LoginSlide[]>([]);
+  cargandoSlides = signal(false);
+  modalSlideAbierto = signal(false);
+  slideForm!: FormGroup;
+  slideEditando = signal<LoginSlide | null>(null);
+  guardandoSlide = signal(false);
+  subiendoImagen = signal(false);
+
+  ngOnInit() {
+    this.construirForm();
+    this.construirSlideForm();
+    this.cargarConfiguracion();
+    this.cargarSlides();
+  }
+
+  construirForm() {
+    this.form = this.fb.group({
+      nombreInstitucion: ['', Validators.required],
+      nombreSistema: ['', Validators.required],
+      logoUrl: [''],
+      iconoUrl: [''],
+      colorPrimario: ['#1e3a8a', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+      colorSecundario: ['#1d4ed8', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
+      timeoutSesion: [30, [Validators.required, Validators.min(1), Validators.max(1440)]],
+      acuerdoLegal: [''],
+      maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]]
+    });
+  }
+
+  construirSlideForm() {
+    this.slideForm = this.fb.group({
+      imagenUrl: ['', Validators.required],
+      titulo: [''],
+      descripcion: [''],
+      orden: [1, [Validators.required, Validators.min(1)]],
+      activo: [true],
+      imagenIcono: ['']
+    });
+  }
+
+  cargarConfiguracion() {
+    const config = this.configService.configSistema();
+    if (config) {
+      this.form.patchValue(config);
+    } else {
+      this.configService.CargarConfiguracion().subscribe({
+        next: (cfg) => this.form.patchValue(cfg),
+        error: () => this.mostrarError('Error al cargar la configuración desde el servidor.')
+      });
+    }
+  }
+
+  cargarSlides() {
+    this.cargandoSlides.set(true);
+    this.configService.getTodosSlides().subscribe({
+      next: (data) => {
+        this.slides.set(data);
+        this.cargandoSlides.set(false);
+      },
+      error: () => {
+        this.slides.set([]);
+        this.cargandoSlides.set(false);
+      }
+    });
+  }
+
+  guardar() {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.mensajeExito.set(null);
+    this.mensajeError.set(null);
+    this.guardando.set(true);
+
+    const data: ConfigSistema = this.form.value;
+
+    this.configService.GuardarConfiguracion(data).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.mostrarExito('¡Configuración guardada y aplicada exitosamente!');
+        this.configService.CargarConfiguracion().subscribe();
+      },
+      error: (err) => {
+        this.guardando.set(false);
+        const msg = err?.error?.mensaje || 'Error al guardar los cambios en la base de datos.';
+        this.mostrarError(msg);
+      }
+    });
+  }
+
+  abrirModalSlide(slide?: LoginSlide) {
+    this.slideEditando.set(slide || null);
+    if (slide) {
+      this.slideForm.patchValue({
+        imagenUrl: slide.imagenUrl,
+        titulo: slide.titulo,
+        descripcion: slide.descripcion,
+        orden: slide.orden,
+        activo: slide.activo,
+        imagenIcono: slide.imagenIcono
+      });
+    } else {
+      this.slideForm.reset({
+        imagenUrl: '',
+        titulo: '',
+        descripcion: '',
+        orden: this.slides().length + 1,
+        activo: true,
+        imagenIcono: ''
+      });
+    }
+    this.modalSlideAbierto.set(true);
+  }
+
+  cerrarModalSlide() {
+    this.modalSlideAbierto.set(false);
+    this.slideEditando.set(null);
+    this.slideForm.reset();
+  }
+
+  guardarSlide() {
+    if (this.slideForm.invalid) return;
+
+    this.guardandoSlide.set(true);
+    const body: LoginSlide = {
+      ...this.slideForm.value,
+      id: this.slideEditando()?.id || 0
+    };
+
+    const request = this.slideEditando() 
+      ? this.configService.actualizarSlide(body.id, body)
+      : this.configService.crearSlide(body);
+
+    request.subscribe({
+      next: () => {
+        this.guardandoSlide.set(false);
+        this.mostrarExito(this.slideEditando() ? 'Slide actualizado exitosamente' : 'Slide creado exitosamente');
+        this.cerrarModalSlide();
+        this.cargarSlides();
+      },
+      error: (err) => {
+        this.guardandoSlide.set(false);
+        const msg = err?.error?.mensaje || 'Error al procesar la solicitud.';
+        this.mostrarError(msg);
+      }
+    });
+  }
+
+  eliminarSlide(id: number) {
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: '¿Está seguro de eliminar el slide?',
+        text: 'Esta acción no se puede deshacer y el slide se removerá del carrusel de login.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280'
+      }).then(res => {
+        if (res.isConfirmed) {
+          this.configService.eliminarSlide(id).subscribe({
+            next: () => {
+              this.mostrarExito('Slide eliminado de la base de datos');
+              this.cargarSlides();
+            },
+            error: (err) => {
+              const msg = err?.error?.mensaje || 'No se pudo eliminar el slide.';
+              this.mostrarError(msg);
+            }
+          });
+        }
+      });
+    });
+  }
+
+  ctrl(name: string) {
+    return this.form.get(name)!;
+  }
+
+  esInvalido(name: string) {
+    const c = this.ctrl(name);
+    return c.invalid && c.touched;
+  }
+
+  private mostrarExito(msg: string) {
+    this.mensajeExito.set(msg);
+    setTimeout(() => this.mensajeExito.set(null), 5000);
+  }
+
+  private mostrarError(msg: string) {
+    this.mensajeError.set(msg);
+    setTimeout(() => this.mensajeError.set(null), 7000);
+  }
+
+  onArchivoSeleccionado(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    this.subiendoImagen.set(true);
+    this.configService.subirImagen(file).subscribe({
+      next: (res) => {
+        this.subiendoImagen.set(false);
+        this.slideForm.patchValue({ imagenUrl: res.url });
+        this.slideForm.get('imagenUrl')?.markAsTouched();
+        
+        import('sweetalert2').then(Swal => {
+          Swal.default.fire({
+            title: '¡Imagen Subida!',
+            text: 'La imagen ha sido cargada y procesada exitosamente en el servidor.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        });
+      },
+      error: (err) => {
+        this.subiendoImagen.set(false);
+        const msg = err?.error?.mensaje || 'Error al subir el archivo de imagen.';
+        import('sweetalert2').then(Swal => {
+          Swal.default.fire({
+            title: 'Error de carga',
+            text: msg,
+            icon: 'error',
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#1e3a8a'
+          });
+        });
+      }
+    });
+  }
+}

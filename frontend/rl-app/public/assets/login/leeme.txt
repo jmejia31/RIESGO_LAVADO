@@ -1,0 +1,6 @@
+Coloque aquí las imágenes para el carrusel de inicio de sesión:
+- slide1.png
+- slide2.png
+- slide3.png
+
+Estas imágenes se servirán automáticamente en las rutas de activos configuradas (ej. assets/login/slide1.png).
