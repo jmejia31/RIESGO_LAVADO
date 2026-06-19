@@ -179,7 +179,7 @@ public class AuthService : IAuthService
         if (newId <= 0) return null;
 
         // Registrar auditoría
-        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", newId.ToString(), "INSERT", null, Newtonsoft.Json.JsonConvert.SerializeObject(dto), creadoPor, dto.Email, null, "AdminUsuarios");
+        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", newId.ToString(), "INSERT", null, Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuarioDto(dto)), creadoPor, dto.Email, null, "AdminUsuarios");
 
         // Enviar correo si es usuario local
         if (dto.EsUsuarioDominio == 0)
@@ -232,7 +232,7 @@ public class AuthService : IAuthService
         bool ok = await _usuarioRepo.ActualizarAsync(id, dto, hash, salt);
         if (ok)
         {
-            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", Newtonsoft.Json.JsonConvert.SerializeObject(existente), Newtonsoft.Json.JsonConvert.SerializeObject(dto), null, dto.Email, null, "AdminUsuarios");
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuario(existente)), Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuarioDto(dto)), null, dto.Email, null, "AdminUsuarios");
         }
         return ok;
     }
@@ -410,6 +410,56 @@ public class AuthService : IAuthService
         }
         return res.ToString();
     }
+
+    private static object AuditUsuarioDto(CrearUsuarioDto dto) => new
+    {
+        dto.Nombre,
+        dto.Apellido,
+        dto.Email,
+        dto.RolId,
+        dto.EmpleadoId,
+        dto.EsUsuarioDominio,
+        dto.UsuarioDominio,
+        dto.Dominio,
+        dto.DominioId,
+        dto.Dni,
+        dto.ModulosIds,
+        PasswordInformado = !string.IsNullOrEmpty(dto.Password)
+    };
+
+    private static object AuditUsuarioDto(ActualizarUsuarioDto dto) => new
+    {
+        dto.Nombre,
+        dto.Apellido,
+        dto.Email,
+        dto.RolId,
+        dto.EmpleadoId,
+        dto.EsUsuarioDominio,
+        dto.UsuarioDominio,
+        dto.Dominio,
+        dto.DominioId,
+        dto.Dni,
+        dto.ModulosIds,
+        PasswordInformado = !string.IsNullOrEmpty(dto.Password)
+    };
+
+    private static object AuditUsuario(Usuario u) => new
+    {
+        u.UsrId,
+        Nombre = u.UsrNombre,
+        Apellido = u.UsrApellido,
+        Email = u.UsrEmail,
+        RolId = u.UsrRolId,
+        EmpleadoId = u.UsrEmpleadoId,
+        Activo = u.UsrActivo,
+        u.EsUsuarioDominio,
+        u.UsuarioDominio,
+        DominioId = u.UsrDomId,
+        Dominio = u.UsrDominio,
+        Dni = u.UsrDni,
+        ModulosIds = u.ModulosIds ?? new List<int>(),
+        DebeCambiarPassword = u.UsrDebeCambiarPass == 1
+    };
 
     private static UsuarioInfoDto MapToDto(Usuario u) => new()
     {

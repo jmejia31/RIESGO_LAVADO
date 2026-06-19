@@ -23,4 +23,12 @@ namespace RL.API.DTOs
         public List<AuditoriaDto> Datos { get; set; } = new();
         public int TotalRegistros { get; set; }
     }
+
+    public class RegistrarExportacionAuditoriaDto
+    {
+        public string Tabla { get; set; } = string.Empty;
+        public string RegistroId { get; set; } = string.Empty;
+        public string Modulo { get; set; } = string.Empty;
+        public Dictionary<string, object?> Detalle { get; set; } = new();
+    }
 }

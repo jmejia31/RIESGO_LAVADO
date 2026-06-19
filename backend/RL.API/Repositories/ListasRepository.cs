@@ -583,7 +583,6 @@ namespace RL.API.Repositories
 
             return newId;
         }
-
         public async Task GuardarEvidenciaMetaAsync(long detalleId, string nombreArchivo, string tipoMime, string rutaArchivo, long usuarioId)
         {
             await using var conn = _db.CreateConnection();

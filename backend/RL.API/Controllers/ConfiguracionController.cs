@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Repositories;
+using System.Security.Claims;
 
 namespace RL.API.Controllers;
 
@@ -10,10 +11,12 @@ namespace RL.API.Controllers;
 public class ConfiguracionController : ControllerBase
 {
     private readonly IConfiguracionRepository _repo;
+    private readonly IAuditoriaRepository _auditoriaRepo;
 
-    public ConfiguracionController(IConfiguracionRepository repo)
+    public ConfiguracionController(IConfiguracionRepository repo, IAuditoriaRepository auditoriaRepo)
     {
         _repo = repo;
+        _auditoriaRepo = auditoriaRepo;
     }
 
     [HttpGet("sistema")]
@@ -42,7 +45,21 @@ public class ConfiguracionController : ControllerBase
     {
         if (config == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
 
+        var anterior = await _repo.ObtenerConfigSistemaAsync();
         var ok = await _repo.GuardarConfigSistemaAsync(config);
+        if (ok)
+        {
+            await _auditoriaRepo.RegistrarAsync(
+                "RL_CONFIG_SISTEMA",
+                "1",
+                "UPDATE",
+                Newtonsoft.Json.JsonConvert.SerializeObject(anterior),
+                Newtonsoft.Json.JsonConvert.SerializeObject(config),
+                ObtenerUsuarioId(),
+                null,
+                HttpContext.Connection.RemoteIpAddress?.ToString(),
+                "Configuracion");
+        }
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar la configuración" });
 
         return Ok(new { success = true, mensaje = "Configuración actualizada exitosamente" });
@@ -81,6 +98,7 @@ public class ConfiguracionController : ControllerBase
         var ok = await _repo.CrearSlideAsync(slide);
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo crear el slide" });
 
+        await RegistrarAuditoriaSlideAsync("INSERT", slide.Id.ToString(), null, slide);
         return Ok(new { success = true, mensaje = "Slide creado exitosamente" });
     }
 
@@ -89,11 +107,13 @@ public class ConfiguracionController : ControllerBase
     public async Task<IActionResult> ActualizarSlide(int id, [FromBody] Models.LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
+        var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);
         slide.Id = id;
 
         var ok = await _repo.ActualizarSlideAsync(slide);
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar el slide" });
 
+        await RegistrarAuditoriaSlideAsync("UPDATE", id.ToString(), anterior, slide);
         return Ok(new { success = true, mensaje = "Slide actualizado exitosamente" });
     }
 
@@ -101,9 +121,11 @@ public class ConfiguracionController : ControllerBase
     [Authorize(Roles = "ADMINISTRADOR")]
     public async Task<IActionResult> EliminarSlide(int id)
     {
+        var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);
         var ok = await _repo.EliminarSlideAsync(id);
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo eliminar el slide o no existe" });
 
+        await RegistrarAuditoriaSlideAsync("DELETE", id.ToString(), anterior, null);
         return Ok(new { success = true, mensaje = "Slide eliminado exitosamente" });
     }
 
@@ -135,5 +157,24 @@ public class ConfiguracionController : ControllerBase
 
         var urlRelativa = $"/uploads/{nombreUnico}";
         return Ok(new { success = true, url = urlRelativa });
+    }
+
+    private long ObtenerUsuarioId()
+    {
+        return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+    }
+
+    private async Task RegistrarAuditoriaSlideAsync(string accion, string registroId, Models.LoginSlide? anterior, Models.LoginSlide? nuevo)
+    {
+        await _auditoriaRepo.RegistrarAsync(
+            "RL_LOGIN_SLIDES",
+            registroId,
+            accion,
+            anterior == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(anterior),
+            nuevo == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(nuevo),
+            ObtenerUsuarioId(),
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            "Configuracion");
     }
 }

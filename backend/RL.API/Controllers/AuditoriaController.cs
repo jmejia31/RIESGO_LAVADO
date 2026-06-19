@@ -45,5 +45,22 @@ namespace RL.API.Controllers
                 return BadRequest(new { success = false, mensaje = "Error al obtener la bitácora: " + ex.Message });
             }
         }
+        [HttpPost("exportacion")]
+        public async Task<IActionResult> RegistrarExportacion([FromBody] RegistrarExportacionAuditoriaDto dto)
+        {
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Tabla) || string.IsNullOrWhiteSpace(dto.RegistroId))
+                return BadRequest(new { success = false, mensaje = "Datos de auditoria invalidos." });
+
+            var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var datos = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                Accion = "EXPORTACION_EXCEL",
+                dto.Detalle
+            });
+
+            await _repo.RegistrarAsync(dto.Tabla, dto.RegistroId, "VER", null, datos, usuarioId, null, ip, dto.Modulo);
+            return Ok(new { success = true, mensaje = "Auditoria de exportacion registrada." });
+        }
     }
 }

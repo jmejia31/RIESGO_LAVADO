@@ -18,10 +18,12 @@ namespace RL.API.Controllers
     public class ListasController : ControllerBase
     {
         private readonly IListasRepository _repo;
+        private readonly IAuditoriaRepository _auditoriaRepo;
 
-        public ListasController(IListasRepository repo)
+        public ListasController(IListasRepository repo, IAuditoriaRepository auditoriaRepo)
         {
             _repo = repo;
+            _auditoriaRepo = auditoriaRepo;
         }
 
         [HttpGet("juridicas")]
@@ -95,6 +97,15 @@ namespace RL.API.Controllers
             try
             {
                 var result = await _repo.ObtenerDetalleListaParaExportarAsync(id);
+                var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var auditoria = Newtonsoft.Json.JsonConvert.SerializeObject(new
+                {
+                    Accion = "EXPORTACION_EXCEL",
+                    TipoListaCautelaId = id,
+                    CantidadRegistros = result.Count
+                });
+                await _auditoriaRepo.RegistrarAsync("DNP_IHSS.LISTA_CAUTELA", id.ToString(), "VER", null, auditoria, usuarioId, null, ip, "ExportacionListas");
                 return Ok(new { success = true, datos = result });
             }
             catch (Exception ex)

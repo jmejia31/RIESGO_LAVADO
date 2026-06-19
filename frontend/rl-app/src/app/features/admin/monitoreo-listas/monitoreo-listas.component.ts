@@ -2143,6 +2143,18 @@ export class MonitoreoListasComponent implements OnInit {
 
       const fileName = `Reporte_Coincidencias_Empleado_${persona.identidad}.xlsx`;
       XLSX.writeFile(wb, fileName);
+      this.listasService.registrarAuditoriaExportacion(
+        'RL_LISTA_POSITIVOS',
+        persona.identidad,
+        'ExportacionMonitoreoListas',
+        {
+          accion: 'EXPORTACION_EXCEL',
+          tipo: 'empleado',
+          nombre: persona.nombre,
+          cantidadRegistros: this.detallesEmpleado().length,
+          archivo: fileName
+        }
+      ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
     } else {
       const persona = this.personaSeleccionada();
       if (!persona) return;
@@ -2195,6 +2207,18 @@ export class MonitoreoListasComponent implements OnInit {
 
       const fileName = `Reporte_Coincidencias_${persona.numeroIdentificacion}.xlsx`;
       XLSX.writeFile(wb, fileName);
+      this.listasService.registrarAuditoriaExportacion(
+        'RL_LISTA_POSITIVOS',
+        persona.numeroIdentificacion,
+        'ExportacionMonitoreoListas',
+        {
+          accion: 'EXPORTACION_EXCEL',
+          tipo: 'natural',
+          nombre: persona.nombre,
+          cantidadRegistros: this.detallesNatural().length,
+          archivo: fileName
+        }
+      ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
     }
   }
 
@@ -2263,6 +2287,18 @@ export class MonitoreoListasComponent implements OnInit {
 
     const fileName = `Reporte_${tipo.charAt(0).toUpperCase() + tipo.slice(1)}s_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
+    this.listasService.registrarAuditoriaExportacion(
+      'RL_LISTA_POSITIVOS',
+      tipo,
+      'ExportacionMonitoreoListas',
+      {
+        accion: 'EXPORTACION_EXCEL',
+        tipo,
+        titulo: title,
+        cantidadRegistros: rows.length,
+        archivo: fileName
+      }
+    ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
   }
 
   mathMin(a: number, b: number): number {

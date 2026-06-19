@@ -253,6 +253,17 @@ export class CoincidenciasPatronoComponent implements OnInit {
 
           const fileName = `Coincidencias_Patrono_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
           XLSX.writeFile(wb, fileName);
+          this.listasService.registrarAuditoriaExportacion(
+            'DNP_IHSS.REPORTE_COINCIDENCIAS',
+            f,
+            'ExportacionCoincidenciasPatrono',
+            {
+              accion: 'EXPORTACION_EXCEL',
+              fechaCoincidencia,
+              cantidadRegistros: registros.length,
+              archivo: fileName
+            }
+          ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
 
           Swal.default.fire({
             title: 'Éxito',
@@ -451,4 +462,3 @@ export class CoincidenciasPatronoComponent implements OnInit {
     });
   }
 }
-

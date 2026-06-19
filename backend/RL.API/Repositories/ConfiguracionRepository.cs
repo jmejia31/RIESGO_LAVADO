@@ -152,6 +152,7 @@ public class ConfiguracionRepository : IConfiguracionRepository
         idCmd.CommandText = "SELECT COALESCE(MAX(SGL_ID), 0) + 1 FROM RL_LOGIN_SLIDES";
         var nextIdObj = await idCmd.ExecuteScalarAsync();
         int nextId = Convert.ToInt32(nextIdObj);
+        slide.Id = nextId;
 
         await using var cmd = conn.CreateCommand();
         cmd.BindByName = true;

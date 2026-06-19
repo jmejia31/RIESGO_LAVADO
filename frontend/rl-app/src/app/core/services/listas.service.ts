@@ -184,6 +184,15 @@ export class ListasService {
     return this.http.post<any>(`${this.apiUrl}/positivos/${noDocumento}/reporte-impreso`, data);
   }
 
+  registrarAuditoriaExportacion(tabla: string, registroId: string, modulo: string, detalle: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/auditoria/exportacion`, {
+      tabla,
+      registroId,
+      modulo,
+      detalle
+    });
+  }
+
   crearTipoListaCautela(descripcion: string, tipoArchivo: string | null, cantidadColumnas: number | null): Observable<any> {
     return this.http.post<{ success: boolean; mensaje: string; datos: any }>(`${this.apiUrl}/tipos-listas-cautela`, { descripcion, tipoArchivo, cantidadColumnas });
   }
