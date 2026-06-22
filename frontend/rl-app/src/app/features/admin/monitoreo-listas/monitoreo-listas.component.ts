@@ -844,6 +844,26 @@ type FiltroTipo = 'juridica' | 'natural' | 'empleado';
               <!-- Columna Izquierda: Historial -->
               <div class="md:col-span-7 flex flex-col space-y-4 border-r border-gray-100 pr-0 md:pr-6">
                 <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Historial de Seguimientos</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] gap-2 items-end bg-gray-50 border border-gray-100 rounded-xl p-3">
+                  <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Desde</label>
+                    <input type="date" [ngModel]="filtroSeguimientoDesde()" (ngModelChange)="filtroSeguimientoDesde.set($event)"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 bg-white" />
+                  </div>
+                  <div>
+                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Hasta</label>
+                    <input type="date" [ngModel]="filtroSeguimientoHasta()" (ngModelChange)="filtroSeguimientoHasta.set($event)"
+                      class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 bg-white" />
+                  </div>
+                  <button (click)="aplicarFiltroSeguimientos()" [disabled]="cargandoSeguimiento()"
+                    class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-xs transition-colors disabled:opacity-50">
+                    Buscar
+                  </button>
+                  <button (click)="limpiarFiltroSeguimientos()" [disabled]="cargandoSeguimiento()"
+                    class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50">
+                    Limpiar
+                  </button>
+                </div>
                 
                 @if (cargandoSeguimiento()) {
                   <div class="flex-1 flex flex-col items-center justify-center py-10 gap-2">
@@ -1077,6 +1097,8 @@ export class MonitoreoListasComponent implements OnInit {
   cargandoSeguimiento = signal(false);
   listaSeguimientos = signal<Seguimiento[]>([]);
   formComentarioSeguimiento = signal<string>('');
+  filtroSeguimientoDesde = signal<string>('');
+  filtroSeguimientoHasta = signal<string>('');
   archivosSeleccionados = signal<File[]>([]);
   guardandoSeguimiento = signal(false);
 
@@ -2581,11 +2603,17 @@ export class MonitoreoListasComponent implements OnInit {
     this.seguimientoEditandoId.set(null);
     this.evidenciasExistentes.set([]);
     this.formComentarioSeguimiento.set('');
+    this.filtroSeguimientoDesde.set('');
+    this.filtroSeguimientoHasta.set('');
     this.archivosSeleccionados.set([]);
     this.modalSeguimientoAbierto.set(true);
-    this.cargandoSeguimiento.set(true);
 
-    this.listasService.getSeguimientos(docNum).subscribe({
+    this.cargarSeguimientos(docNum);
+  }
+
+  cargarSeguimientos(noDocumento: string) {
+    this.cargandoSeguimiento.set(true);
+    this.listasService.getSeguimientos(noDocumento, this.filtroSeguimientoDesde(), this.filtroSeguimientoHasta()).subscribe({
       next: (res) => {
         this.listaSeguimientos.set(res);
         this.cargandoSeguimiento.set(false);
@@ -2598,11 +2626,43 @@ export class MonitoreoListasComponent implements OnInit {
     });
   }
 
+  aplicarFiltroSeguimientos() {
+    const entidad = this.entidadSeleccionada();
+    if (!entidad) return;
+
+    const desde = this.filtroSeguimientoDesde();
+    const hasta = this.filtroSeguimientoHasta();
+    if (desde && hasta && desde > hasta) {
+      import('sweetalert2').then(Swal => {
+        Swal.default.fire({
+          title: 'Rango no valido',
+          text: 'La fecha desde no puede ser mayor que la fecha hasta.',
+          icon: 'warning',
+          confirmButtonColor: '#1d4ed8'
+        });
+      });
+      return;
+    }
+
+    this.cargarSeguimientos(entidad.noDocumento);
+  }
+
+  limpiarFiltroSeguimientos() {
+    const entidad = this.entidadSeleccionada();
+    this.filtroSeguimientoDesde.set('');
+    this.filtroSeguimientoHasta.set('');
+    if (entidad) {
+      this.cargarSeguimientos(entidad.noDocumento);
+    }
+  }
+
   cerrarModalSeguimiento() {
     this.modalSeguimientoAbierto.set(false);
     this.entidadSeleccionada.set(null);
     this.listaSeguimientos.set([]);
     this.formComentarioSeguimiento.set('');
+    this.filtroSeguimientoDesde.set('');
+    this.filtroSeguimientoHasta.set('');
     this.archivosSeleccionados.set([]);
     this.modoEdicion.set(false);
     this.seguimientoEditandoId.set(null);
@@ -2765,17 +2825,7 @@ export class MonitoreoListasComponent implements OnInit {
             confirmButtonColor: '#1d4ed8'
           });
 
-          this.cargandoSeguimiento.set(true);
-          this.listasService.getSeguimientos(entidad.noDocumento).subscribe({
-            next: (res) => {
-              this.listaSeguimientos.set(res);
-              this.cargandoSeguimiento.set(false);
-            },
-            error: () => {
-              this.listaSeguimientos.set([]);
-              this.cargandoSeguimiento.set(false);
-            }
-          });
+          this.cargarSeguimientos(entidad.noDocumento);
         },
         error: (err) => {
           this.guardandoSeguimiento.set(false);
@@ -2870,17 +2920,7 @@ export class MonitoreoListasComponent implements OnInit {
 
               const entidad = this.entidadSeleccionada();
               if (entidad) {
-                this.cargandoSeguimiento.set(true);
-                this.listasService.getSeguimientos(entidad.noDocumento).subscribe({
-                  next: (res) => {
-                    this.listaSeguimientos.set(res);
-                    this.cargandoSeguimiento.set(false);
-                  },
-                  error: () => {
-                    this.listaSeguimientos.set([]);
-                    this.cargandoSeguimiento.set(false);
-                  }
-                });
+                this.cargarSeguimientos(entidad.noDocumento);
               }
             },
             error: (err) => {

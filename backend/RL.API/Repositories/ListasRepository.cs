@@ -18,7 +18,7 @@ namespace RL.API.Repositories
         Task<List<TipoListaCautelaDto>> ObtenerTiposListasCautelaAsync();
         Task<bool> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId);
         Task<ExistingPositivoDto?> ObtenerPositivoPorDocumentoAsync(string noDocumento);
-        Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento);
+        Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null);
         Task<long> RegistrarSeguimientoAsync(long positivoId, string motivo, long usuarioId);
         Task GuardarEvidenciaMetaAsync(long detalleId, string nombreArchivo, string tipoMime, string rutaArchivo, long usuarioId);
         Task<long?> ObtenerPositivoIdPorDocumentoAsync(string noDocumento);
@@ -477,7 +477,7 @@ namespace RL.API.Repositories
             return null;
         }
 
-        public async Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento)
+        public async Task<List<SeguimientoDto>> ObtenerSeguimientosAsync(string noDocumento, DateTime? desde = null, DateTime? hasta = null)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
@@ -507,9 +507,25 @@ namespace RL.API.Repositories
                            d.DLL_FECHA_CREACION, d.DLL_USR_CREACION_ID, u.USR_EMAIL
                     FROM RL_DETALLE_LISTA d
                     LEFT JOIN RL_USUARIOS u ON d.DLL_USR_CREACION_ID = u.USR_ID
-                    WHERE d.DLL_LSP_POSITIVO_ID = :posId AND d.DLL_ESTADO_REGISTRO = 1
-                    ORDER BY d.DLL_FECHA_CREACION DESC";
+                    WHERE d.DLL_LSP_POSITIVO_ID = :posId AND d.DLL_ESTADO_REGISTRO = 1";
+                if (desde.HasValue)
+                {
+                    cmd.CommandText += " AND d.DLL_FECHA_CREACION >= :desde";
+                }
+                if (hasta.HasValue)
+                {
+                    cmd.CommandText += " AND d.DLL_FECHA_CREACION < :hasta";
+                }
+                cmd.CommandText += " ORDER BY d.DLL_FECHA_CREACION DESC";
                 cmd.Parameters.Add(new OracleParameter("posId", positivoId.Value));
+                if (desde.HasValue)
+                {
+                    cmd.Parameters.Add(new OracleParameter("desde", desde.Value.Date));
+                }
+                if (hasta.HasValue)
+                {
+                    cmd.Parameters.Add(new OracleParameter("hasta", hasta.Value.Date.AddDays(1)));
+                }
 
                 await using var reader = await cmd.ExecuteReaderAsync();
                 while (await reader.ReadAsync())

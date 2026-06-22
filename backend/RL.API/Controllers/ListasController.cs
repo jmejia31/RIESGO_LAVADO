@@ -189,9 +189,12 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("positivos/{noDocumento}/seguimientos")]
-        public async Task<IActionResult> ObtenerSeguimientos(string noDocumento)
+        public async Task<IActionResult> ObtenerSeguimientos(string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
         {
-            var result = await _repo.ObtenerSeguimientosAsync(noDocumento);
+            if (desde.HasValue && hasta.HasValue && desde.Value.Date > hasta.Value.Date)
+                return BadRequest(new { success = false, mensaje = "La fecha desde no puede ser mayor que la fecha hasta." });
+
+            var result = await _repo.ObtenerSeguimientosAsync(noDocumento, desde, hasta);
             return Ok(new { success = true, datos = result });
         }
 

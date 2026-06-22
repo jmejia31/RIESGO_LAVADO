@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, map } from 'rxjs';
 
@@ -137,8 +137,12 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
-  getSeguimientos(noDocumento: string): Observable<Seguimiento[]> {
-    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`)
+  getSeguimientos(noDocumento: string, desde?: string, hasta?: string): Observable<Seguimiento[]> {
+    let params = new HttpParams();
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+
+    return this.http.get<{ success: boolean; datos: Seguimiento[] }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`, { params })
       .pipe(map(res => res.datos));
   }
 
