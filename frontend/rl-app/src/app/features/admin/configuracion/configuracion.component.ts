@@ -392,7 +392,7 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
       <!-- Modal de Creación / Edición de Slide -->
       @if (modalSlideAbierto()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModalSlide()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full border border-gray-100 flex flex-col">
             <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
@@ -663,6 +663,7 @@ export class ConfiguracionComponent implements OnInit {
   eliminarSlide(id: number) {
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
+        allowOutsideClick: false,
         title: '¿Está seguro de eliminar el slide?',
         text: 'Esta acción no se puede deshacer y el slide se removerá del carrusel de login.',
         icon: 'warning',
@@ -720,6 +721,7 @@ export class ConfiguracionComponent implements OnInit {
         
         import('sweetalert2').then(Swal => {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: '¡Imagen Subida!',
             text: 'La imagen ha sido cargada y procesada exitosamente en el servidor.',
             icon: 'success',
@@ -733,6 +735,7 @@ export class ConfiguracionComponent implements OnInit {
         const msg = err?.error?.mensaje || 'Error al subir el archivo de imagen.';
         import('sweetalert2').then(Swal => {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error de carga',
             text: msg,
             icon: 'error',

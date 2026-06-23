@@ -43,6 +43,11 @@ namespace RL.API.DTOs
         public string MotivoIngreso { get; set; } = string.Empty;
 
         public int? TipoListaCautelaId { get; set; }
+
+        // Origen operativo del registro; permite identificar casos creados por noticia sin crear un modulo aparte.
+        [MaxLength(50)]
+        [RegularExpression("^(DNP_LISTAS|MANUAL_CUMPLIMIENTO|NOTICIA_PRENSA|OTRO)$", ErrorMessage = "El origen del registro no es valido")]
+        public string? OrigenRegistro { get; set; }
     }
 
     public class ExistingPositivoDto
@@ -50,5 +55,15 @@ namespace RL.API.DTOs
         public int TipoDocumentoId { get; set; }
         public string MotivoIngreso { get; set; } = string.Empty;
         public int? TipoListaCautelaId { get; set; }
+        public string? OrigenRegistro { get; set; }
+        public DateTime? FechaRegistroInterno { get; set; }
+    }
+
+    // DTO usado por eliminaciones logicas que deben quedar justificadas en auditoria.
+    public class MotivoEliminacionDto
+    {
+        [Required(ErrorMessage = "El motivo de eliminacion es requerido")]
+        [MaxLength(1000, ErrorMessage = "El motivo de eliminacion no debe superar los 1000 caracteres")]
+        public string MotivoEliminacion { get; set; } = string.Empty;
     }
 }

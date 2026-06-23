@@ -54,6 +54,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (razon === 'expirada') {
       import('sweetalert2').then(Swal => {
         Swal.default.fire({
+          allowOutsideClick: false,
           title: 'Sesión Expirada',
           text: 'Su sesión ha caducado por inactividad. Por favor, ingrese de nuevo.',
           icon: 'info',
@@ -130,6 +131,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   forzarCambioPassword(passwordActual: string) {
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
+        allowOutsideClick: false,
         title: 'Cambio de Contraseña Obligatorio',
         text: 'Por seguridad, debe cambiar la contraseña provisional que se le asignó.',
         icon: 'warning',
@@ -162,7 +164,6 @@ export class LoginComponent implements OnInit, OnDestroy {
           </div>
         `,
         focusConfirm: false,
-        allowOutsideClick: false,
         allowEscapeKey: false,
         confirmButtonText: 'Actualizar Contraseña',
         confirmButtonColor: '#1e3a8a',
@@ -228,6 +229,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       }).then((result) => {
         if (result.isConfirmed && result.value) {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: '¡Contraseña Actualizada!',
             text: 'Su contraseña ha sido cambiada con éxito. Iniciando sesión...',
             icon: 'success',
@@ -257,6 +259,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   abrirRecuperacionPassword() {
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
+        allowOutsideClick: false,
         title: 'Recuperar Contraseña',
         text: 'Ingrese su correo electrónico institucional para enviarle una clave provisional.',
         input: 'email',
@@ -288,6 +291,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       }).then((result) => {
         if (result.isConfirmed && result.value) {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: '¡Correo Enviado!',
             text: result.value.mensaje || 'Se ha enviado una clave provisional a su correo electrónico.',
             icon: 'success',

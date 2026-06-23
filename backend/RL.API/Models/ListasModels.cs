@@ -10,6 +10,7 @@ namespace RL.API.DTOs
         public string ListaCoincidencia { get; set; } = string.Empty;
         public DateTime? FechaEncontro { get; set; }
         public DateTime? FechaCalifico { get; set; }
+        public DateTime? FechaRegistroInterno { get; set; }
         public string EsProveedorIhss { get; set; } = string.Empty;
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }

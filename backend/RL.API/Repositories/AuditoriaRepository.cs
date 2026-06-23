@@ -10,7 +10,7 @@ namespace RL.API.Repositories;
 public interface IAuditoriaRepository
 {
     Task RegistrarAsync(string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo);
-    Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(int pagina, int limite, string? buscar, string? accion, string? modulo, DateTime? fechaInicio, DateTime? fechaFin);
+    Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin);
 }
 
 public class AuditoriaRepository : IAuditoriaRepository
@@ -72,7 +72,7 @@ public class AuditoriaRepository : IAuditoriaRepository
     }
 
     public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(
-        int pagina, int limite, string? buscar, string? accion, string? modulo, DateTime? fechaInicio, DateTime? fechaFin)
+        int pagina, int limite, string? buscar, string? accion, string? modulo, string? tabla, DateTime? fechaInicio, DateTime? fechaFin)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
@@ -90,6 +90,13 @@ public class AuditoriaRepository : IAuditoriaRepository
         {
             whereClauses.Add("AUD_MODULO = :moduloFilter");
             parameters.Add(new OracleParameter("moduloFilter", modulo));
+        }
+
+        if (!string.IsNullOrWhiteSpace(tabla))
+        {
+            // Filtro exacto de tabla para accesos rapidos como "documentos eliminados".
+            whereClauses.Add("AUD_TABLA = :tablaFilter");
+            parameters.Add(new OracleParameter("tablaFilter", tabla.Trim()));
         }
 
         if (fechaInicio.HasValue)
@@ -176,4 +183,3 @@ public class AuditoriaRepository : IAuditoriaRepository
         return (list, total);
     }
 }
-

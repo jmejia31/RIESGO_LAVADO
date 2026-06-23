@@ -33,7 +33,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           <!-- Acción -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Acción</label>
-            <select [(ngModel)]="filtroAccion" (change)="aplicarFiltros()"
+            <select [(ngModel)]="filtroAccion" (change)="onFiltroAccionChange()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
               <option value="">Todas</option>
               <option value="INSERT">INSERT (Crear)</option>
@@ -49,7 +49,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           <!-- Módulo -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Módulo</label>
-            <select [(ngModel)]="filtroModulo" (change)="aplicarFiltros()"
+            <select [(ngModel)]="filtroModulo" (change)="onFiltroModuloChange()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
               <option value="">Todos</option>
               <option value="Auth">Autenticación (Auth)</option>
@@ -75,15 +75,24 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
 
         </div>
 
-        <div class="flex justify-end gap-2">
-          <button (click)="limpiarFiltros()"
-            class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
-            Limpiar Filtros
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <button (click)="filtrarDocumentosEliminados()"
+            [class]="filtroDocumentosEliminadosActivo()
+              ? 'px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold text-xs transition-colors shadow-sm'
+              : 'px-4 py-2 border border-red-200 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs transition-colors'">
+            Documentos eliminados
           </button>
-          <button (click)="aplicarFiltros()"
-            class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors shadow-sm">
-            Buscar
-          </button>
+
+          <div class="flex justify-end gap-2">
+            <button (click)="limpiarFiltros()"
+              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
+              Limpiar Filtros
+            </button>
+            <button (click)="aplicarFiltros()"
+              class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors shadow-sm">
+              Buscar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -218,7 +227,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
       @if (modalDetalleAbierto()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
           
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModalDetalle()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-4xl w-full border border-gray-100 flex flex-col max-h-[90vh] z-50">
               
@@ -316,6 +325,7 @@ export class BitacoraComponent implements OnInit {
   filtroBuscar = '';
   filtroAccion = '';
   filtroModulo = '';
+  filtroTabla = '';
   filtroFechaInicio = '';
   filtroFechaFin = '';
 
@@ -414,6 +424,7 @@ export class BitacoraComponent implements OnInit {
       buscar: this.filtroBuscar || undefined,
       accion: this.filtroAccion || undefined,
       modulo: this.filtroModulo || undefined,
+      tabla: this.filtroTabla || undefined,
       fechaInicio: this.filtroFechaInicio || undefined,
       fechaFin: this.filtroFechaFin || undefined
     }).subscribe({
@@ -436,10 +447,41 @@ export class BitacoraComponent implements OnInit {
     this.cargarDatos();
   }
 
+  onFiltroAccionChange() {
+    if (this.filtroAccion !== 'DELETE') {
+      this.filtroTabla = '';
+    }
+    this.aplicarFiltros();
+  }
+
+  onFiltroModuloChange() {
+    if (this.filtroModulo !== 'MonitoreoListas') {
+      this.filtroTabla = '';
+    }
+    this.aplicarFiltros();
+  }
+
+  // Filtro rapido para evidencias inactivadas logicamente y auditadas como DELETE.
+  filtrarDocumentosEliminados() {
+    this.filtroBuscar = '';
+    this.filtroAccion = 'DELETE';
+    this.filtroModulo = 'MonitoreoListas';
+    this.filtroTabla = 'RL_DETALLE_EVIDENCIA';
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  filtroDocumentosEliminadosActivo(): boolean {
+    return this.filtroAccion === 'DELETE'
+      && this.filtroModulo === 'MonitoreoListas'
+      && this.filtroTabla === 'RL_DETALLE_EVIDENCIA';
+  }
+
   limpiarFiltros() {
     this.filtroBuscar = '';
     this.filtroAccion = '';
     this.filtroModulo = '';
+    this.filtroTabla = '';
     this.filtroFechaInicio = '';
     this.filtroFechaFin = '';
     this.paginaActual.set(1);

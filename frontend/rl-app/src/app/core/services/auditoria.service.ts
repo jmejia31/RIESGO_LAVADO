@@ -35,6 +35,7 @@ export class AuditoriaService {
     buscar?: string;
     accion?: string;
     modulo?: string;
+    tabla?: string;
     fechaInicio?: string;
     fechaFin?: string;
   }): Observable<AuditoriaPaginado> {
@@ -45,6 +46,7 @@ export class AuditoriaService {
     if (params.buscar) httpParams = httpParams.set('buscar', params.buscar);
     if (params.accion) httpParams = httpParams.set('accion', params.accion);
     if (params.modulo) httpParams = httpParams.set('modulo', params.modulo);
+    if (params.tabla) httpParams = httpParams.set('tabla', params.tabla);
     if (params.fechaInicio) httpParams = httpParams.set('fechaInicio', params.fechaInicio);
     if (params.fechaFin) httpParams = httpParams.set('fechaFin', params.fechaFin);
 

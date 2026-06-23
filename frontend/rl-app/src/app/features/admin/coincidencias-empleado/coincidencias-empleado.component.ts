@@ -174,6 +174,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         next: (registros) => {
           if (!registros || registros.length === 0) {
             Swal.default.fire({
+              allowOutsideClick: false,
               title: 'Información',
               text: 'No hay registros de coincidencias para esta fecha para exportar.',
               icon: 'info',
@@ -266,6 +267,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
           ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
 
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Éxito',
             text: `Se exportaron ${registros.length} registros exitosamente.`,
             icon: 'success',
@@ -275,6 +277,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         error: (err) => {
           console.error('Error al exportar:', err);
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: 'Ocurrió un error al intentar exportar las coincidencias.',
             icon: 'error',
@@ -316,6 +319,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               this.cargarResumen();
               
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Calificado',
                 text: `El registro ha sido calificado como ${desc}.`,
                 icon: 'success',
@@ -325,6 +329,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
             error: (err) => {
               console.error('Error al calificar:', err);
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Error',
                 text: 'No se pudo guardar la calificación del registro.',
                 icon: 'error',
@@ -433,11 +438,12 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               <div class="det-resumen">
                 ${detalleResaltado}
               </div>
-              <div class="det-footer">Fecha Hallazgo: ${this.formatearFechaCompleta(r.fechaEncontro)}</div>
+              <div class="det-footer">Fecha Coincidencia: ${this.formatearFechaCompleta(r.fechaEncontro)}</div>
             </div>
           `;
 
           Swal.default.fire({
+            allowOutsideClick: false,
             title: '🔎 Detalle de Coincidencia',
             html: htmlContent,
             width: 600,
@@ -452,6 +458,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         error: (err) => {
           console.error('Error al obtener detalle dinámico:', err);
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: 'Ocurrió un error al intentar consultar el detalle de coincidencias en la base de datos.',
             icon: 'error',

@@ -5,7 +5,9 @@ using RL.API.DTOs;
 using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -17,8 +19,9 @@ namespace RL.API.Controllers
     [Produces("application/json")]
     public class ListasController : ControllerBase
     {
-        private const long MaxEvidenceFileBytes = 10 * 1024 * 1024;
-        private static readonly Dictionary<string, string[]> AllowedEvidenceMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+        private const int DefaultEvidenceMaxMb = 10;
+        private const string DefaultEvidenceTypesText = "PDF, imagenes, Word, Excel";
+        private static readonly Dictionary<string, string[]> DefaultEvidenceMimeTypes = new(StringComparer.OrdinalIgnoreCase)
         {
             [".pdf"] = new[] { "application/pdf" },
             [".png"] = new[] { "image/png" },
@@ -32,16 +35,58 @@ namespace RL.API.Controllers
 
         private readonly IListasRepository _repo;
         private readonly IAuditoriaRepository _auditoriaRepo;
+        private readonly IConfiguration _configuration;
 
-        public ListasController(IListasRepository repo, IAuditoriaRepository auditoriaRepo)
+        public ListasController(IListasRepository repo, IAuditoriaRepository auditoriaRepo, IConfiguration configuration)
         {
             _repo = repo;
             _auditoriaRepo = auditoriaRepo;
+            _configuration = configuration;
         }
 
-        private static string? ValidarArchivosEvidencia(List<IFormFile>? archivos)
+        private int ObtenerMaximoMbEvidencia()
+        {
+            var maximoMb = _configuration.GetValue<int?>("Evidencias:MaxFileSizeMb") ?? DefaultEvidenceMaxMb;
+            return maximoMb > 0 ? maximoMb : DefaultEvidenceMaxMb;
+        }
+
+        private long ObtenerMaximoBytesEvidencia()
+        {
+            return ObtenerMaximoMbEvidencia() * 1024L * 1024L;
+        }
+
+        private Dictionary<string, string[]> ObtenerMimeTypesPermitidosEvidencia()
+        {
+            var configurados = _configuration
+                .GetSection("Evidencias:AllowedMimeTypes")
+                .Get<Dictionary<string, string[]>>();
+
+            if (configurados == null || configurados.Count == 0)
+            {
+                return new Dictionary<string, string[]>(DefaultEvidenceMimeTypes, StringComparer.OrdinalIgnoreCase);
+            }
+
+            return configurados
+                .Where(kv => !string.IsNullOrWhiteSpace(kv.Key) && kv.Value != null && kv.Value.Length > 0)
+                .ToDictionary(
+                    kv => kv.Key.StartsWith(".") ? kv.Key.ToLowerInvariant() : $".{kv.Key.ToLowerInvariant()}",
+                    kv => kv.Value,
+                    StringComparer.OrdinalIgnoreCase
+                );
+        }
+
+        private string ObtenerTiposPermitidosTextoEvidencia()
+        {
+            return _configuration["Evidencias:AllowedTypesText"] ?? DefaultEvidenceTypesText;
+        }
+
+        private string? ValidarArchivosEvidencia(List<IFormFile>? archivos)
         {
             if (archivos == null || archivos.Count == 0) return null;
+
+            var maximoMb = ObtenerMaximoMbEvidencia();
+            var maximoBytes = ObtenerMaximoBytesEvidencia();
+            var mimeTypesPermitidos = ObtenerMimeTypesPermitidosEvidencia();
 
             foreach (var file in archivos)
             {
@@ -55,11 +100,11 @@ namespace RL.API.Controllers
                 if (file.Length <= 0)
                     return $"El archivo {nombreOriginal} esta vacio.";
 
-                if (file.Length > MaxEvidenceFileBytes)
-                    return $"El archivo {nombreOriginal} supera el limite de 10 MB.";
+                if (file.Length > maximoBytes)
+                    return $"El archivo {nombreOriginal} supera el limite de {maximoMb} MB.";
 
                 var extension = Path.GetExtension(nombreOriginal);
-                if (string.IsNullOrWhiteSpace(extension) || !AllowedEvidenceMimeTypes.TryGetValue(extension, out var mimeTypes))
+                if (string.IsNullOrWhiteSpace(extension) || !mimeTypesPermitidos.TryGetValue(extension, out var mimeTypes))
                     return $"El archivo {nombreOriginal} tiene una extension no permitida.";
 
                 var contentType = file.ContentType?.Trim();
@@ -71,6 +116,25 @@ namespace RL.API.Controllers
             }
 
             return null;
+        }
+
+        [HttpGet("evidencias/politica")]
+        public IActionResult ObtenerPoliticaEvidencias()
+        {
+            var maximoMb = ObtenerMaximoMbEvidencia();
+            var mimeTypesPermitidos = ObtenerMimeTypesPermitidosEvidencia();
+
+            return Ok(new
+            {
+                success = true,
+                datos = new
+                {
+                    maximoMb,
+                    maximoBytes = ObtenerMaximoBytesEvidencia(),
+                    extensionesPermitidas = mimeTypesPermitidos.Keys.OrderBy(k => k).ToArray(),
+                    tiposPermitidosTexto = ObtenerTiposPermitidosTextoEvidencia()
+                }
+            });
         }
 
         private async Task GuardarArchivosEvidenciaAsync(long detalleId, List<IFormFile>? archivos, long usuarioId)
@@ -346,16 +410,21 @@ namespace RL.API.Controllers
         }
 
         [HttpDelete("evidencias/{evidenciaId}")]
-        public async Task<IActionResult> EliminarEvidencia(long evidenciaId)
+        public async Task<IActionResult> EliminarEvidencia(long evidenciaId, [FromBody] MotivoEliminacionDto? dto)
         {
+            // El motivo es obligatorio en backend para que la auditoria no dependa solo del frontend.
+            var motivoEliminacion = dto?.MotivoEliminacion?.Trim();
+            if (string.IsNullOrWhiteSpace(motivoEliminacion))
+                return BadRequest(new { success = false, mensaje = "El motivo de eliminacion es obligatorio." });
+
             var meta = await _repo.ObtenerEvidenciaPorIdAsync(evidenciaId);
             if (meta == null)
                 return NotFound(new { success = false, mensaje = "Evidencia no encontrada en la base de datos." });
 
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
-            // 1. Eliminar de base de datos y auditar
-            bool ok = await _repo.EliminarEvidenciaMetaAsync(evidenciaId, usuarioId);
+            // 1. Inactivar el registro y auditar el motivo de eliminacion.
+            bool ok = await _repo.EliminarEvidenciaMetaAsync(evidenciaId, usuarioId, motivoEliminacion);
             if (!ok)
                 return BadRequest(new { success = false, mensaje = "No se pudo eliminar el registro de evidencia." });
 
@@ -379,10 +448,15 @@ namespace RL.API.Controllers
         }
 
         [HttpDelete("seguimientos/{detalleId}")]
-        public async Task<IActionResult> EliminarSeguimiento(long detalleId)
+        public async Task<IActionResult> EliminarSeguimiento(long detalleId, [FromBody] MotivoEliminacionDto? dto)
         {
+            // El seguimiento tambien requiere justificacion para conservar trazabilidad LAFT.
+            var motivoEliminacion = dto?.MotivoEliminacion?.Trim();
+            if (string.IsNullOrWhiteSpace(motivoEliminacion))
+                return BadRequest(new { success = false, mensaje = "El motivo de eliminacion es obligatorio." });
+
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            bool ok = await _repo.EliminarSeguimientoLogicoAsync(detalleId, usuarioId);
+            bool ok = await _repo.EliminarSeguimientoLogicoAsync(detalleId, usuarioId, motivoEliminacion);
             return ok 
                 ? Ok(new { success = true, mensaje = "Seguimiento eliminado correctamente." })
                 : NotFound(new { success = false, mensaje = "No se encontró el seguimiento o ya fue eliminado." });

@@ -2,7 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ListasService, CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia } from '../../../core/services/listas.service';
+import { ListasService, CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../../../core/services/listas.service';
 import { ConfiguracionService } from '../../../core/services/configuracion.service';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -148,8 +148,9 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                       <th class="px-6 py-3 text-left">Nombre de la Empresa</th>
                       <th class="px-6 py-3 text-left">Lista Coincidencia</th>
                       <th class="px-6 py-3 text-left">Proveedor IHSS</th>
-                      <th class="px-6 py-3 text-left">Fecha Encontrado</th>
-                      <th class="px-6 py-3 text-left">Fecha Calificado</th>
+                      <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
+                      <th class="px-6 py-3 text-left">Fecha Calificación</th>
+                      <th class="px-6 py-3 text-left">Registro Interno</th>
                       <th class="px-6 py-3 text-center">Acciones</th>
                     </tr>
                   }
@@ -206,6 +207,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         </td>
                         <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaEncontro | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaCalifico | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaRegistroInterno | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-center">
                           <div class="flex items-center justify-center gap-2">
                             <!-- Registrar Motivo -->
@@ -509,7 +511,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       @if (modalDetalleAbierto()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
           
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModal()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-4xl w-full border border-gray-100 flex flex-col max-h-[90vh]">
               
@@ -662,7 +664,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       @if (pdfModalAbierto()) {
         <div class="fixed inset-0 z-[60] flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
           
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarPdfModal()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-5xl w-full border border-gray-100 flex flex-col max-h-[95vh]">
               
@@ -698,7 +700,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       @if (modalMotivoAbierto()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
           
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModalMotivo()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full border border-gray-100 flex flex-col z-50">
               
@@ -783,6 +785,17 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                   </select>
                 </div>
 
+                <!-- Origen del Registro -->
+                <div>
+                  <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Origen del Registro</label>
+                  <select [ngModel]="formOrigenRegistro()" (ngModelChange)="formOrigenRegistro.set($event)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
+                    @for (origen of origenesRegistro; track origen.valor) {
+                      <option [value]="origen.valor">{{ origen.etiqueta }}</option>
+                    }
+                  </select>
+                </div>
+
                 <!-- Motivo de Ingreso -->
                 <div>
                   <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Motivo de Ingreso</label>
@@ -813,7 +826,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
                         <span class="text-xs font-bold text-gray-700">Arrastra archivos aquí o haz clic</span>
-                        <span class="text-[10px] text-gray-400">PDF, imágenes, Word, Excel (Máx. 10MB)</span>
+                        <span class="text-[10px] text-gray-400">{{ politicaEvidencias().tiposPermitidosTexto }} (Máx. {{ politicaEvidencias().maximoMb }}MB)</span>
                       </div>
                     </div>
                   </div>
@@ -843,7 +856,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                   class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50">
                   Cancelar
                 </button>
-                <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formTipoDocId() || !formMotivo().trim()"
+                <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()"
                   class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   @if (guardandoMotivo()) {
                     <svg class="animate-spin -ml-1 mr-1.5 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -864,7 +877,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       <!-- Modal de Seguimiento -->
       @if (modalSeguimientoAbierto()) {
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
-          <div class="fixed inset-0 bg-gray-500/75 transition-opacity" (click)="cerrarModalSeguimiento()"></div>
+          <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-5xl w-full border border-gray-100 flex flex-col z-50 max-h-[90vh]">
             
@@ -1036,7 +1049,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
                       <span class="text-xs font-bold text-gray-700">Arrastra archivos aquí o haz clic</span>
-                      <span class="text-[10px] text-gray-400">PDF, imágenes, Word, Excel (Máx. 10MB c/u)</span>
+                      <span class="text-[10px] text-gray-400">{{ politicaEvidencias().tiposPermitidosTexto }} (Máx. {{ politicaEvidencias().maximoMb }}MB c/u)</span>
                     </div>
                   </div>
                 </div>
@@ -1127,6 +1140,19 @@ export class MonitoreoListasComponent implements OnInit {
   formTipoDocId = signal<number | null>(null);
   formMotivo = signal<string>('');
   listaTiposListasCautela = signal<TipoListaCautela[]>([]);
+  origenesRegistro = [
+    { valor: 'DNP_LISTAS', etiqueta: 'Coincidencia DNP / Listas' },
+    { valor: 'MANUAL_CUMPLIMIENTO', etiqueta: 'Registro manual de Cumplimiento' },
+    { valor: 'NOTICIA_PRENSA', etiqueta: 'Noticia / Prensa / Medio externo' },
+    { valor: 'OTRO', etiqueta: 'Otro' }
+  ];
+  formOrigenRegistro = signal<string>('DNP_LISTAS');
+  politicaEvidencias = signal<EvidenciaPolitica>({
+    maximoMb: 10,
+    maximoBytes: 10 * 1024 * 1024,
+    extensionesPermitidas: ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx', '.xls', '.xlsx'],
+    tiposPermitidosTexto: 'PDF, imágenes, Word, Excel'
+  });
   formTipoListaCautelaId = signal<number | null>(null);
   esRegistroManual = signal<boolean>(false);
   formManualNombre = signal<string>('');
@@ -1189,6 +1215,13 @@ export class MonitoreoListasComponent implements OnInit {
     this.listasService.getTiposListasCautela().subscribe({
       next: (res) => this.listaTiposListasCautela.set(res),
       error: (err) => console.error('Error al cargar tipos de listas de cautela:', err)
+    });
+    this.listasService.getPoliticaEvidencias().subscribe({
+      next: (res) => this.politicaEvidencias.set({
+        ...res,
+        extensionesPermitidas: res.extensionesPermitidas?.length ? res.extensionesPermitidas : this.politicaEvidencias().extensionesPermitidas
+      }),
+      error: (err) => console.warn('No se pudo cargar la política de evidencias; se usará la política por defecto.', err)
     });
   }
 
@@ -1376,7 +1409,7 @@ export class MonitoreoListasComponent implements OnInit {
     let colStyles: any;
 
     if (isEmpleado) {
-      tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Razón Social', 'Lista', 'Fecha Coincid.', 'Fecha Calific.']];
+      tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Razón Social', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']];
       tableBody = this.detallesEmpleado().map(det => [
         det.tipoCondicionActuaDesc,
         det.numeroPatrono,
@@ -1391,7 +1424,7 @@ export class MonitoreoListasComponent implements OnInit {
         3: { cellWidth: 35 }
       };
     } else {
-      tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Es PEP', 'Lista', 'Fecha Coincid.', 'Fecha Calific.']];
+      tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Es PEP', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']];
       tableBody = this.detallesNatural().map(det => [
         det.tipoCondicionActuaDesc,
         det.numeroPatronal,
@@ -1498,6 +1531,19 @@ export class MonitoreoListasComponent implements OnInit {
     return `${day}/${month}/${year}`;
   }
 
+  private formatDateOrNd(dateStr?: string | null): string {
+    return dateStr ? this.formatDate(dateStr) : 'N/D';
+  }
+
+  private obtenerEtiquetaOrigenRegistro(origen?: string | null): string {
+    return this.origenesRegistro.find(item => item.valor === origen)?.etiqueta || 'N/D';
+  }
+
+  // Fecha propia del alta en Riesgo Lavado; no reemplaza la fecha de coincidencia de DNP.
+  private obtenerFechaRegistroInterno(rowFecha?: string | null, positivo?: { fechaRegistroInterno?: string | null } | null): string | null {
+    return positivo?.fechaRegistroInterno || rowFecha || null;
+  }
+
   cerrarPdfModal() {
     this.pdfModalAbierto.set(false);
     this.pdfUrl.set(null);
@@ -1521,7 +1567,7 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   private agregarEncabezadoPdf(doc: jsPDF, titulo: string) {
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto HondureÃ±o de Seguridad Social';
+    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
     const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
 
     doc.setFillColor(15, 23, 42); // Slate 900
@@ -1538,7 +1584,7 @@ export class MonitoreoListasComponent implements OnInit {
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(203, 213, 225); // Slate 300
-    doc.text(`${sistema}  |  Fecha de GeneraciÃ³n: ${new Date().toLocaleString()}`, 14, 30);
+    doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
   }
 
   private agregarDatosMemo(doc: jsPDF, y: number, titulo: string, generalData: string[][]): number {
@@ -1620,7 +1666,7 @@ export class MonitoreoListasComponent implements OnInit {
 
       autoTable(doc, {
         startY: y,
-        head: [['Fecha', 'Usuario', 'Comentario / AcciÃ³n', 'Evidencias']],
+        head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
         body: seguimientosRows,
         headStyles: {
           fillColor: [15, 23, 42],
@@ -1790,7 +1836,8 @@ export class MonitoreoListasComponent implements OnInit {
     const generalData = [
       ['DNI / Identificación:', row.numeroIdentificacion || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
-      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', '']
+      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
     autoTable(doc, {
@@ -1840,7 +1887,7 @@ export class MonitoreoListasComponent implements OnInit {
     doc.line(14, y, 196, y);
     y += 6;
 
-    const tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Es PEP', 'Lista', 'Fecha Coincid.', 'Fecha Calific.']];
+    const tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Es PEP', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']];
     const tableBody = detalles.map(det => [
       det.tipoCondicionActuaDesc,
       det.numeroPatronal,
@@ -1991,7 +2038,8 @@ export class MonitoreoListasComponent implements OnInit {
     const generalData = [
       ['DNI / Identidad:', row.identidad || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
-      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', '']
+      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+      ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
     autoTable(doc, {
@@ -2041,7 +2089,7 @@ export class MonitoreoListasComponent implements OnInit {
     doc.line(14, y, 196, y);
     y += 6;
 
-    const tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Razón Social', 'Lista', 'Fecha Coincid.', 'Fecha Calific.']];
+    const tableHead = [['Condición Actúa', 'Nro Patronal', 'Empresa', 'Razón Social', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']];
     const tableBody = detalles.map(det => [
       det.tipoCondicionActuaDesc,
       det.numeroPatrono,
@@ -2138,7 +2186,8 @@ export class MonitoreoListasComponent implements OnInit {
       ['Número Patronal:', row.numeroPatrono || 'N/D', 'RTN:', row.rtn || 'N/D'],
       ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO'],
-      ['Fecha Encontrado:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificado:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D']
+      ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
+      ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)]
     ];
 
     autoTable(doc, {
@@ -2278,7 +2327,8 @@ export class MonitoreoListasComponent implements OnInit {
           ['Número Patronal', row.numeroPatrono || 'N/D', 'RTN', row.rtn || 'N/D'],
           ['Nombre / Razón Social', row.nombre || 'N/D', 'Proveedor IHSS', row.esProveedorIhss || 'No'],
           ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO'],
-          ['Fecha Encontrado', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificado', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
+          ['Fecha Coincidencia', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
+          ['Registro Interno', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.']
@@ -2320,7 +2370,8 @@ export class MonitoreoListasComponent implements OnInit {
           ['Información General de la Persona'],
           ['DNI / Identificación', row.numeroIdentificacion || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
           ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
-          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', ''],
+          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para esta persona.'],
@@ -2377,7 +2428,8 @@ export class MonitoreoListasComponent implements OnInit {
           ['Información General del Empleado'],
           ['DNI / Identidad', row.identidad || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
           ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
-          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', ''],
+          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+          ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este empleado.'],
@@ -2554,7 +2606,7 @@ export class MonitoreoListasComponent implements OnInit {
 
     if (tipo === 'juridica') {
       title = 'Reporte de Coincidencias Jurídicas';
-      headers = ['Número Patronal', 'RTN', 'Nombre Empresa', 'Lista Coincidencia', 'Proveedor IHSS', 'Fecha Encontrado', 'Fecha Calificado'];
+      headers = ['Número Patronal', 'RTN', 'Nombre Empresa', 'Lista Coincidencia', 'Proveedor IHSS', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
       rows = (dataFiltrada as CoincidenciaJuridica[]).map(item => [
         item.numeroPatrono,
         item.rtn,
@@ -2562,7 +2614,8 @@ export class MonitoreoListasComponent implements OnInit {
         item.listaCoincidencia,
         item.esProveedorIhss || 'No',
         item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
-        item.fechaCalifico ? this.formatDate(item.fechaCalifico) : ''
+        item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+        item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
       ]);
     } else if (tipo === 'natural') {
       title = 'Reporte de Coincidencias Naturales';
@@ -2634,6 +2687,7 @@ export class MonitoreoListasComponent implements OnInit {
     this.formSeguimientoComentario.set('');
     this.archivosSeguimiento.set([]);
     this.formTipoListaCautelaId.set(null);
+    this.formOrigenRegistro.set('DNP_LISTAS');
 
     let tipoPosId = 1; // 1 = JURÍDICO, 2 = NATURAL, 3 = EMPLEADO
     const tipo = this.tipoActivo();
@@ -2663,10 +2717,12 @@ export class MonitoreoListasComponent implements OnInit {
           this.formTipoDocId.set(existing.tipoDocumentoId);
           this.formMotivo.set(existing.motivoIngreso);
           this.formTipoListaCautelaId.set(existing.tipoListaCautelaId || null);
+          this.formOrigenRegistro.set(existing.origenRegistro || 'DNP_LISTAS');
         } else {
           this.formTipoDocId.set(null);
           this.formMotivo.set('');
           this.formTipoListaCautelaId.set(null);
+          this.formOrigenRegistro.set('DNP_LISTAS');
         }
         this.modalMotivoAbierto.set(true);
       },
@@ -2675,6 +2731,7 @@ export class MonitoreoListasComponent implements OnInit {
         this.formTipoDocId.set(null);
         this.formMotivo.set('');
         this.formTipoListaCautelaId.set(null);
+        this.formOrigenRegistro.set('DNP_LISTAS');
         this.modalMotivoAbierto.set(true);
       }
     });
@@ -2688,6 +2745,7 @@ export class MonitoreoListasComponent implements OnInit {
     this.formTipoDocId.set(null);
     this.formMotivo.set('');
     this.formTipoListaCautelaId.set(null);
+    this.formOrigenRegistro.set('MANUAL_CUMPLIMIENTO');
     this.formSeguimientoComentario.set('');
     this.archivosSeguimiento.set([]);
     this.entidadSeleccionada.set(null);
@@ -2700,12 +2758,47 @@ export class MonitoreoListasComponent implements OnInit {
     this.formTipoDocId.set(null);
     this.formMotivo.set('');
     this.formTipoListaCautelaId.set(null);
+    this.formOrigenRegistro.set('DNP_LISTAS');
     this.esRegistroManual.set(false);
     this.formManualNombre.set('');
     this.formManualNoDocumento.set('');
     this.formManualTipoPositivoId.set(null);
     this.formSeguimientoComentario.set('');
     this.archivosSeguimiento.set([]);
+  }
+
+  private obtenerExtensionesPermitidasEvidencia(): string[] {
+    return this.politicaEvidencias().extensionesPermitidas
+      .map(ext => ext.replace(/^\./, '').toLowerCase())
+      .filter(ext => !!ext);
+  }
+
+  private validarArchivoEvidencia(file: File): string | null {
+    const politica = this.politicaEvidencias();
+    const maximoBytes = politica.maximoBytes || (politica.maximoMb * 1024 * 1024);
+
+    if (file.size > maximoBytes) {
+      return `El archivo ${file.name} supera el límite de ${politica.maximoMb}MB.`;
+    }
+
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (!ext || !this.obtenerExtensionesPermitidasEvidencia().includes(ext)) {
+      return `El archivo ${file.name} no tiene una extensión permitida (${politica.tiposPermitidosTexto}).`;
+    }
+
+    return null;
+  }
+
+  private mostrarAdvertenciaArchivo(text: string) {
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        allowOutsideClick: false,
+        title: 'Archivo no permitido',
+        text,
+        icon: 'warning',
+        confirmButtonColor: '#1d4ed8'
+      });
+    });
   }
 
   onManualSeguimientoFileSelected(event: any) {
@@ -2715,30 +2808,9 @@ export class MonitoreoListasComponent implements OnInit {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
-        const sizeMb = file.size / (1024 * 1024);
-        if (sizeMb > 10) {
-          import('sweetalert2').then(Swal => {
-            Swal.default.fire({
-              title: 'Archivo muy grande',
-              text: `El archivo ${file.name} supera el límite de 10MB.`,
-              icon: 'warning',
-              confirmButtonColor: '#1d4ed8'
-            });
-          });
-          continue;
-        }
-
-        const ext = file.name.split('.').pop()?.toLowerCase();
-        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'xls', 'xlsx'];
-        if (!ext || !allowedExts.includes(ext)) {
-          import('sweetalert2').then(Swal => {
-            Swal.default.fire({
-              title: 'Formato no permitido',
-              text: `El archivo ${file.name} no tiene una extensión permitida (PDF, imágenes, Word, Excel).`,
-              icon: 'warning',
-              confirmButtonColor: '#1d4ed8'
-            });
-          });
+        const errorArchivo = this.validarArchivoEvidencia(file);
+        if (errorArchivo) {
+          this.mostrarAdvertenciaArchivo(errorArchivo);
           continue;
         }
 
@@ -2759,6 +2831,7 @@ export class MonitoreoListasComponent implements OnInit {
     const docId = this.formTipoDocId();
     const motivo = this.formMotivo().trim();
     const cautelaId = this.formTipoListaCautelaId();
+    const origenRegistro = this.formOrigenRegistro();
 
     let noDocumento = '';
     let nombreCompleto = '';
@@ -2771,6 +2844,7 @@ export class MonitoreoListasComponent implements OnInit {
       if (!noDocumento || !nombreCompleto || !tipoPositivoId) {
         import('sweetalert2').then(Swal => {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Campos requeridos',
             text: 'Por favor complete todos los campos obligatorios del registro manual.',
             icon: 'warning',
@@ -2787,11 +2861,12 @@ export class MonitoreoListasComponent implements OnInit {
       tipoPositivoId = entidad.tipoPositivoId;
     }
 
-    if (!docId || !cautelaId || !motivo) {
+    if (!docId || !cautelaId || !origenRegistro || !motivo) {
       import('sweetalert2').then(Swal => {
         Swal.default.fire({
+          allowOutsideClick: false,
           title: 'Campos requeridos',
-          text: 'Por favor seleccione el tipo de documento, el tipo de lista de cautela e ingrese el motivo.',
+          text: 'Por favor seleccione el tipo de documento, el tipo de lista de cautela, el origen del registro e ingrese el motivo.',
           icon: 'warning',
           confirmButtonColor: '#1d4ed8'
         });
@@ -2807,7 +2882,8 @@ export class MonitoreoListasComponent implements OnInit {
       noDocumento: noDocumento,
       nombreCompleto: nombreCompleto,
       motivoIngreso: motivo,
-      tipoListaCautelaId: Number(cautelaId)
+      tipoListaCautelaId: Number(cautelaId),
+      origenRegistro: origenRegistro
     };
 
     import('sweetalert2').then(Swal => {
@@ -2831,6 +2907,7 @@ export class MonitoreoListasComponent implements OnInit {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
                 Swal.default.fire({
+                  allowOutsideClick: false,
                   title: 'Registro Completo',
                   text: 'Se ha registrado el motivo y el primer seguimiento correctamente.',
                   icon: 'success',
@@ -2842,6 +2919,7 @@ export class MonitoreoListasComponent implements OnInit {
                 this.guardandoMotivo.set(false);
                 this.cerrarModalMotivo();
                 Swal.default.fire({
+                  allowOutsideClick: false,
                   title: 'Registro Parcial',
                   text: 'El motivo se registró con éxito, pero hubo un error al registrar el seguimiento: ' + (errSeg.error?.mensaje || 'Error desconocido'),
                   icon: 'warning',
@@ -2854,6 +2932,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.guardandoMotivo.set(false);
             this.cerrarModalMotivo();
             Swal.default.fire({
+              allowOutsideClick: false,
               title: 'Registro Exitoso',
               text: resp.mensaje || 'Se ha registrado el motivo correctamente.',
               icon: 'success',
@@ -2865,6 +2944,7 @@ export class MonitoreoListasComponent implements OnInit {
         error: (err) => {
           this.guardandoMotivo.set(false);
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: err.error?.mensaje || 'No se pudo guardar el registro.',
             icon: 'error',
@@ -2939,6 +3019,7 @@ export class MonitoreoListasComponent implements OnInit {
     if (desde && hasta && desde > hasta) {
       import('sweetalert2').then(Swal => {
         Swal.default.fire({
+          allowOutsideClick: false,
           title: 'Rango no valido',
           text: 'La fecha desde no puede ser mayor que la fecha hasta.',
           icon: 'warning',
@@ -2988,30 +3069,9 @@ export class MonitoreoListasComponent implements OnInit {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         
-        const sizeMb = file.size / (1024 * 1024);
-        if (sizeMb > 10) {
-          import('sweetalert2').then(Swal => {
-            Swal.default.fire({
-              title: 'Archivo muy grande',
-              text: `El archivo ${file.name} supera el límite de 10MB.`,
-              icon: 'warning',
-              confirmButtonColor: '#1d4ed8'
-            });
-          });
-          continue;
-        }
-
-        const ext = file.name.split('.').pop()?.toLowerCase();
-        const allowedExts = ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'xls', 'xlsx'];
-        if (!ext || !allowedExts.includes(ext)) {
-          import('sweetalert2').then(Swal => {
-            Swal.default.fire({
-              title: 'Formato no permitido',
-              text: `El archivo ${file.name} no tiene una extensión permitida (PDF, imágenes, Word, Excel).`,
-              icon: 'warning',
-              confirmButtonColor: '#1d4ed8'
-            });
-          });
+        const errorArchivo = this.validarArchivoEvidencia(file);
+        if (errorArchivo) {
+          this.mostrarAdvertenciaArchivo(errorArchivo);
           continue;
         }
 
@@ -3043,19 +3103,44 @@ export class MonitoreoListasComponent implements OnInit {
     this.archivosSeleccionados.set([]);
   }
 
+  // Centraliza el motivo obligatorio para eliminaciones logicas de monitoreo.
+  private async solicitarMotivoEliminacion(Swal: any, title: string, text: string): Promise<string | null> {
+    const result = await Swal.default.fire({
+      allowOutsideClick: false,
+      title,
+      text,
+      icon: 'warning',
+      input: 'textarea',
+      inputLabel: 'Motivo de eliminación',
+      inputPlaceholder: 'Escriba el motivo de la eliminación...',
+      inputAttributes: {
+        'aria-label': 'Motivo de eliminación'
+      },
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value: string) => {
+        const motivo = value?.trim();
+        if (!motivo) return 'Debe ingresar un motivo de eliminación.';
+        if (motivo.length > 1000) return 'El motivo no debe superar los 1000 caracteres.';
+        return null;
+      }
+    });
+
+    return result.isConfirmed ? String(result.value).trim() : null;
+  }
+
   eliminarEvidenciaExistente(evi: Evidencia) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: '¿Eliminar evidencia?',
-        text: `Se eliminará permanentemente el archivo ${evi.nombreArchivo}`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    import('sweetalert2').then(async Swal => {
+      const motivoEliminacion = await this.solicitarMotivoEliminacion(
+        Swal,
+        '¿Eliminar evidencia?',
+        `Se inactivará lógicamente el archivo ${evi.nombreArchivo}.`
+      );
+
+      if (motivoEliminacion) {
           Swal.default.fire({
             title: 'Eliminando...',
             allowOutsideClick: false,
@@ -3064,7 +3149,7 @@ export class MonitoreoListasComponent implements OnInit {
             }
           });
 
-          this.listasService.eliminarEvidencia(evi.evidenciaId).subscribe({
+          this.listasService.eliminarEvidencia(evi.evidenciaId, motivoEliminacion).subscribe({
             next: (resp) => {
               this.evidenciasExistentes.set(
                 this.evidenciasExistentes().filter(e => e.evidenciaId !== evi.evidenciaId)
@@ -3080,6 +3165,7 @@ export class MonitoreoListasComponent implements OnInit {
               );
 
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Eliminado',
                 text: resp.mensaje || 'Evidencia eliminada correctamente.',
                 icon: 'success',
@@ -3088,6 +3174,7 @@ export class MonitoreoListasComponent implements OnInit {
             },
             error: (err) => {
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar la evidencia.',
                 icon: 'error',
@@ -3095,8 +3182,7 @@ export class MonitoreoListasComponent implements OnInit {
               });
             }
           });
-        }
-      });
+      }
     });
   }
 
@@ -3131,6 +3217,7 @@ export class MonitoreoListasComponent implements OnInit {
           this.cancelarEdicion();
           
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Éxito',
             text: resp.mensaje || (editMode ? 'Seguimiento actualizado exitosamente.' : 'Seguimiento registrado exitosamente.'),
             icon: 'success',
@@ -3142,6 +3229,7 @@ export class MonitoreoListasComponent implements OnInit {
         error: (err) => {
           this.guardandoSeguimiento.set(false);
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: err.error?.mensaje || 'No se pudo guardar el seguimiento.',
             icon: 'error',
@@ -3186,6 +3274,7 @@ export class MonitoreoListasComponent implements OnInit {
         error: (err) => {
           Swal.default.close();
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: 'No se pudo cargar el archivo de evidencia.',
             icon: 'error',
@@ -3197,18 +3286,14 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   eliminarSeguimiento(seg: Seguimiento) {
-    import('sweetalert2').then(Swal => {
-      Swal.default.fire({
-        title: '¿Eliminar seguimiento?',
-        text: 'Esta acción realizará una eliminación lógica de la nota de seguimiento.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
+    import('sweetalert2').then(async Swal => {
+      const motivoEliminacion = await this.solicitarMotivoEliminacion(
+        Swal,
+        '¿Eliminar seguimiento?',
+        'Esta acción realizará una eliminación lógica de la nota de seguimiento.'
+      );
+
+      if (motivoEliminacion) {
           Swal.default.fire({
             title: 'Eliminando...',
             allowOutsideClick: false,
@@ -3217,13 +3302,14 @@ export class MonitoreoListasComponent implements OnInit {
             }
           });
 
-          this.listasService.eliminarSeguimiento(seg.detalleListaId).subscribe({
+          this.listasService.eliminarSeguimiento(seg.detalleListaId, motivoEliminacion).subscribe({
             next: (resp) => {
               if (this.modoEdicion() && this.seguimientoEditandoId() === seg.detalleListaId) {
                 this.cancelarEdicion();
               }
 
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Eliminado',
                 text: resp.mensaje || 'El seguimiento ha sido eliminado correctamente.',
                 icon: 'success',
@@ -3237,6 +3323,7 @@ export class MonitoreoListasComponent implements OnInit {
             },
             error: (err) => {
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar el seguimiento.',
                 icon: 'error',
@@ -3244,8 +3331,7 @@ export class MonitoreoListasComponent implements OnInit {
               });
             }
           });
-        }
-      });
+      }
     });
   }
 

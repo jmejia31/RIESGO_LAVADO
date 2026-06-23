@@ -28,12 +28,13 @@ namespace RL.API.Controllers
             [FromQuery] string? buscar = null,
             [FromQuery] string? accion = null,
             [FromQuery] string? modulo = null,
+            [FromQuery] string? tabla = null,
             [FromQuery] DateTime? fechaInicio = null,
             [FromQuery] DateTime? fechaFin = null)
         {
             try
             {
-                var (datos, total) = await _repo.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, fechaInicio, fechaFin);
+                var (datos, total) = await _repo.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
                 return Ok(new AuditoriaPaginadoDto
                 {
                     Datos = datos,

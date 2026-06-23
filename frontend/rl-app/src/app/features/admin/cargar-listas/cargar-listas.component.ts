@@ -85,6 +85,7 @@ export class CargarListasComponent implements OnInit {
     if (!this.archivoSeleccionado) {
       import('sweetalert2').then((Swal) => {
         Swal.default.fire({
+          allowOutsideClick: false,
           title: 'Archivo requerido',
           text: 'Por favor, seleccione un archivo para cargar.',
           icon: 'warning',
@@ -109,6 +110,7 @@ export class CargarListasComponent implements OnInit {
       this.listasService.uploadListaCautela(this.archivoSeleccionado!, tipoListaId).subscribe({
         next: (res) => {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Carga Exitosa',
             text: res.mensaje || 'Los registros fueron cargados exitosamente.',
             icon: 'success',
@@ -128,6 +130,7 @@ export class CargarListasComponent implements OnInit {
           console.error('Error en validación:', err);
           const msg = err.error?.mensaje || 'Error al validar el archivo. Asegúrese de que tenga el formato y las columnas correctas.';
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error de Validación',
             text: msg,
             icon: 'error',
@@ -165,6 +168,7 @@ export class CargarListasComponent implements OnInit {
         next: (registros) => {
           if (!registros || registros.length === 0) {
             Swal.default.fire({
+              allowOutsideClick: false,
               title: 'Información',
               text: 'No hay registros en esta lista para exportar.',
               icon: 'info',
@@ -246,6 +250,7 @@ export class CargarListasComponent implements OnInit {
           XLSX.writeFile(wb, fileName);
 
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Éxito',
             text: `Se exportaron ${registros.length} registros exitosamente.`,
             icon: 'success',
@@ -255,6 +260,7 @@ export class CargarListasComponent implements OnInit {
         error: (err) => {
           console.error('Error al exportar lista:', err);
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Error',
             text: 'Ocurrió un error al intentar exportar la lista de cautela.',
             icon: 'error',

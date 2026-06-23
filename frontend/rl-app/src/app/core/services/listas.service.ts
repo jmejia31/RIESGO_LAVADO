@@ -30,6 +30,22 @@ export interface RegistrarPositivoDto {
   nombreCompleto: string;
   motivoIngreso: string;
   tipoListaCautelaId?: number | null;
+  origenRegistro?: string | null;
+}
+
+export interface ExistingPositivo {
+  tipoDocumentoId: number;
+  motivoIngreso: string;
+  tipoListaCautelaId?: number | null;
+  origenRegistro?: string | null;
+  fechaRegistroInterno?: string | null;
+}
+
+export interface EvidenciaPolitica {
+  maximoMb: number;
+  maximoBytes: number;
+  extensionesPermitidas: string[];
+  tiposPermitidosTexto: string;
 }
 
 export interface CoincidenciaJuridica {
@@ -39,6 +55,7 @@ export interface CoincidenciaJuridica {
   listaCoincidencia: string;
   fechaEncontro?: string;
   fechaCalifico?: string;
+  fechaRegistroInterno?: string | null;
   esProveedorIhss?: string;
   tieneMotivo?: boolean;
   esManual?: boolean;
@@ -132,8 +149,13 @@ export class ListasService {
     return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos`, dto);
   }
 
-  getPositivoPorDocumento(noDocumento: string): Observable<{ tipoDocumentoId: number; motivoIngreso: string; tipoListaCautelaId?: number | null } | null> {
-    return this.http.get<{ success: boolean; datos: { tipoDocumentoId: number; motivoIngreso: string; tipoListaCautelaId?: number | null } | null }>(`${this.apiUrl}/positivos/${noDocumento}`)
+  getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
+    return this.http.get<{ success: boolean; datos: ExistingPositivo | null }>(`${this.apiUrl}/positivos/${noDocumento}`)
+      .pipe(map(res => res.datos));
+  }
+
+  getPoliticaEvidencias(): Observable<EvidenciaPolitica> {
+    return this.http.get<{ success: boolean; datos: EvidenciaPolitica }>(`${this.apiUrl}/evidencias/politica`)
       .pipe(map(res => res.datos));
   }
 
@@ -172,16 +194,20 @@ export class ListasService {
     return this.http.put<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, formData);
   }
 
-  eliminarEvidencia(evidenciaId: number): Observable<any> {
-    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/evidencias/${evidenciaId}`);
+  eliminarEvidencia(evidenciaId: number, motivoEliminacion: string): Observable<any> {
+    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/evidencias/${evidenciaId}`, {
+      body: { motivoEliminacion }
+    });
   }
 
   descargarEvidenciaBlob(evidenciaId: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/evidencias/${evidenciaId}`, { responseType: 'blob' });
   }
 
-  eliminarSeguimiento(detalleId: number): Observable<any> {
-    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`);
+  eliminarSeguimiento(detalleId: number, motivoEliminacion: string): Observable<any> {
+    return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, {
+      body: { motivoEliminacion }
+    });
   }
 
   registrarAuditoriaImpresion(noDocumento: string, data: any): Observable<any> {

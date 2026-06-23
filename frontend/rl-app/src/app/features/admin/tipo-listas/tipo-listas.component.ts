@@ -105,6 +105,7 @@ export class TipoListasComponent implements OnInit {
         
         import('sweetalert2').then((Swal) => {
           Swal.default.fire({
+            allowOutsideClick: false,
             title: 'Éxito',
             text: res.mensaje || 'Registro guardado correctamente.',
             icon: 'success',
@@ -127,6 +128,7 @@ export class TipoListasComponent implements OnInit {
   eliminar(item: TipoListaCautela) {
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
+        allowOutsideClick: false,
         title: '¿Estás seguro?',
         text: `Se eliminará el tipo de lista "${item.descripcion}". Esta acción no se puede deshacer.`,
         icon: 'warning',
@@ -141,6 +143,7 @@ export class TipoListasComponent implements OnInit {
             next: (res) => {
               this.cargar();
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Eliminado',
                 text: res.mensaje || 'El tipo de lista ha sido eliminado.',
                 icon: 'success',
@@ -149,6 +152,7 @@ export class TipoListasComponent implements OnInit {
             },
             error: (err) => {
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo eliminar el tipo de lista.',
                 icon: 'error',

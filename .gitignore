@@ -39,6 +39,7 @@ docs/_render_*/
 ~$*.docx
 ~$*.xlsx
 ~$*.pptx
+~WRL*.tmp
 
 # Local configuration with secrets
 backend/RL.API/appsettings.json

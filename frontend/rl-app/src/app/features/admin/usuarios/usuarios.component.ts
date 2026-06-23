@@ -261,6 +261,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
           ).subscribe({
             next: (resp) => {
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Contraseña Reiniciada',
                 text: `Se ha enviado la nueva clave provisional al correo electrónico del usuario.`,
                 icon: 'success',
@@ -269,6 +270,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
             },
             error: (err) => {
               Swal.default.fire({
+                allowOutsideClick: false,
                 title: 'Error',
                 text: err.error?.mensaje || 'No se pudo reiniciar la contraseña.',
                 icon: 'error',
