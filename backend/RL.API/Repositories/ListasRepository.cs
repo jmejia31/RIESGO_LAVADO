@@ -550,6 +550,7 @@ namespace RL.API.Repositories
                     SELECT EVI_ID, EVI_NOMBRE_ARCHIVO, EVI_TIPO_MIME 
                     FROM RL_DETALLE_EVIDENCIA 
                     WHERE EVI_DETALLE_ID = :detId
+                      AND EVI_ESTADO_REGISTRO = 1
                     ORDER BY EVI_ID ASC";
                 cmdEvi.Parameters.Add(new OracleParameter("detId", seg.DetalleListaId));
 
@@ -608,10 +609,11 @@ namespace RL.API.Repositories
             cmd.CommandText = @"
                 INSERT INTO RL_DETALLE_EVIDENCIA (
                     EVI_ID, EVI_DETALLE_ID, EVI_NOMBRE_ARCHIVO, 
-                    EVI_TIPO_MIME, EVI_RUTA_ARCHIVO, EVI_FECHA_CREACION, EVI_USR_CREACION_ID
+                    EVI_TIPO_MIME, EVI_RUTA_ARCHIVO, EVI_FECHA_CREACION, EVI_USR_CREACION_ID,
+                    EVI_ESTADO_REGISTRO
                 ) VALUES (
                     SEQ_RL_DETALLE_EVIDENCIA.NEXTVAL, :detId, :nombre, 
-                    :mime, :ruta, SYSDATE, :usrId
+                    :mime, :ruta, SYSDATE, :usrId, 1
                 ) RETURNING EVI_ID INTO :newId";
 
             cmd.Parameters.Add(new OracleParameter("detId", detalleId));
@@ -654,7 +656,11 @@ namespace RL.API.Repositories
             await conn.OpenAsync();
 
             await using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT EVI_NOMBRE_ARCHIVO, EVI_RUTA_ARCHIVO, EVI_TIPO_MIME FROM RL_DETALLE_EVIDENCIA WHERE EVI_ID = :eviId";
+            cmd.CommandText = @"
+                SELECT EVI_NOMBRE_ARCHIVO, EVI_RUTA_ARCHIVO, EVI_TIPO_MIME
+                FROM RL_DETALLE_EVIDENCIA
+                WHERE EVI_ID = :eviId
+                  AND EVI_ESTADO_REGISTRO = 1";
             cmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
 
             await using var reader = await cmd.ExecuteReaderAsync();
@@ -719,14 +725,20 @@ namespace RL.API.Repositories
             string? anteriorJson = null;
             await using (var getCmd = conn.CreateCommand())
             {
-                getCmd.CommandText = "SELECT EVI_NOMBRE_ARCHIVO, EVI_RUTA_ARCHIVO FROM RL_DETALLE_EVIDENCIA WHERE EVI_ID = :eviId";
+                getCmd.CommandText = @"
+                    SELECT EVI_NOMBRE_ARCHIVO, EVI_RUTA_ARCHIVO, EVI_TIPO_MIME, EVI_ESTADO_REGISTRO
+                    FROM RL_DETALLE_EVIDENCIA
+                    WHERE EVI_ID = :eviId
+                      AND EVI_ESTADO_REGISTRO = 1";
                 getCmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
                 await using var reader = await getCmd.ExecuteReaderAsync();
                 if (await reader.ReadAsync())
                 {
                     anteriorJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { 
                         Nombre = reader["EVI_NOMBRE_ARCHIVO"]?.ToString(), 
-                        Ruta = reader["EVI_RUTA_ARCHIVO"]?.ToString() 
+                        Ruta = reader["EVI_RUTA_ARCHIVO"]?.ToString(),
+                        TipoMime = reader["EVI_TIPO_MIME"]?.ToString(),
+                        Estado = Convert.ToInt32(reader["EVI_ESTADO_REGISTRO"])
                     });
                 }
             }
@@ -734,13 +746,26 @@ namespace RL.API.Repositories
             if (anteriorJson == null) return false;
 
             await using var cmd = conn.CreateCommand();
-            cmd.CommandText = "DELETE FROM RL_DETALLE_EVIDENCIA WHERE EVI_ID = :eviId";
+            cmd.CommandText = @"
+                UPDATE RL_DETALLE_EVIDENCIA
+                SET EVI_ESTADO_REGISTRO = 0,
+                    EVI_USR_INACTIVO_ID = :usrId,
+                    EVI_FECHA_INACTIVO = SYSDATE
+                WHERE EVI_ID = :eviId
+                  AND EVI_ESTADO_REGISTRO = 1";
+            cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
             cmd.Parameters.Add(new OracleParameter("eviId", evidenciaId));
 
             int rows = await cmd.ExecuteNonQueryAsync();
             if (rows > 0)
             {
-                await _auditoriaRepo.RegistrarAsync("RL_DETALLE_EVIDENCIA", evidenciaId.ToString(), "DELETE", anteriorJson, null, usuarioId, null, null, "MonitoreoListas");
+                var valNuevo = Newtonsoft.Json.JsonConvert.SerializeObject(new
+                {
+                    Estado = 0,
+                    UsrInactivoId = usuarioId,
+                    TipoEliminacion = "LOGICA"
+                });
+                await _auditoriaRepo.RegistrarAsync("RL_DETALLE_EVIDENCIA", evidenciaId.ToString(), "DELETE", anteriorJson, valNuevo, usuarioId, null, null, "MonitoreoListas");
                 return true;
             }
             return false;
@@ -1314,22 +1339,126 @@ namespace RL.API.Repositories
             return string.Empty;
         }
 
+        private async Task<int> ContarRegistrosListaCautelaAsync(OracleConnection conn, int tipoListaCautelaId)
+        {
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT COUNT(*) FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
+            cmd.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
+            var result = await cmd.ExecuteScalarAsync();
+            return result == null || result == DBNull.Value ? 0 : Convert.ToInt32(result);
+        }
+
+        private async Task ReemplazarRegistrosListaCautelaAsync(
+            OracleConnection conn,
+            OracleTransaction tx,
+            int tipoListaCautelaId,
+            long usuarioId,
+            List<long> listDataId,
+            List<string> listT1,
+            List<string> listT2,
+            List<string> listT3,
+            List<string> listT4,
+            List<string> listT5,
+            List<string> listT6,
+            List<string> listT7,
+            List<string> listT8,
+            List<string> listT9,
+            List<string> listT10,
+            List<string> listT11,
+            List<string> listResumen)
+        {
+            await using (var cmdDel = conn.CreateCommand())
+            {
+                cmdDel.Transaction = tx;
+                cmdDel.CommandText = "DELETE FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
+                cmdDel.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
+                await cmdDel.ExecuteNonQueryAsync();
+            }
+
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+                INSERT INTO DNP_IHSS.LISTA_CAUTELA (
+                    LISTA_CAUTELA_ID, TIPO_LISTA_CAUTELA_ID, DATA_ID, TEXTO1, TEXTO2, TEXTO3, TEXTO4, TEXTO5,
+                    TEXTO6, TEXTO7, TEXTO8, TEXTO9, TEXT10, TEXTO11,
+                    RESUMEN, USUARIO_CREO, FECHA_CREACION, ESTADO_REGISTRO
+                ) VALUES (
+                    DNP_IHSS.LISTA_CAUTELA_SEQ.NEXTVAL, :tipoLista, :dataId, :t1, :t2, :t3, :t4, :t5,
+                    :t6, :t7, :t8, :t9, :t10, :t11,
+                    :resumen, :usrLog, SYSDATE, 1
+                )";
+
+            cmd.ArrayBindCount = listDataId.Count;
+            cmd.Parameters.Add(new OracleParameter("tipoLista", OracleDbType.Int32) { Value = System.Linq.Enumerable.Repeat(tipoListaCautelaId, listDataId.Count).ToArray() });
+            cmd.Parameters.Add(new OracleParameter("dataId", OracleDbType.Int64) { Value = listDataId.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t1", OracleDbType.Varchar2) { Value = listT1.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t2", OracleDbType.Varchar2) { Value = listT2.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t3", OracleDbType.Varchar2) { Value = listT3.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t4", OracleDbType.Varchar2) { Value = listT4.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t5", OracleDbType.Varchar2) { Value = listT5.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t6", OracleDbType.Varchar2) { Value = listT6.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t7", OracleDbType.Varchar2) { Value = listT7.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t8", OracleDbType.Varchar2) { Value = listT8.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t9", OracleDbType.Varchar2) { Value = listT9.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t10", OracleDbType.Varchar2) { Value = listT10.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("t11", OracleDbType.Varchar2) { Value = listT11.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("resumen", OracleDbType.Varchar2) { Value = listResumen.ToArray() });
+            cmd.Parameters.Add(new OracleParameter("usrLog", OracleDbType.Int64) { Value = System.Linq.Enumerable.Repeat(usuarioId, listDataId.Count).ToArray() });
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private async Task RegistrarAuditoriaCargaListaAsync(OracleConnection conn, OracleTransaction tx, int tipoListaCautelaId, long usuarioId, string nombreArchivo, string extension, int registrosAnteriores, int registrosNuevos)
+        {
+            var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                Accion = "CARGA_LISTA_CAUTELA",
+                TipoListaCautelaId = tipoListaCautelaId,
+                NombreArchivo = nombreArchivo,
+                Extension = extension,
+                RegistrosAnteriores = registrosAnteriores,
+                RegistrosNuevos = registrosNuevos,
+                Resultado = "EXITOSO",
+                FechaCarga = DateTime.Now
+            });
+
+            await using var cmd = conn.CreateCommand();
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+                INSERT INTO RL_AUDITORIA (
+                    AUD_ID, AUD_TABLA, AUD_REGISTRO_ID, AUD_ACCION,
+                    AUD_DATOS_ANT, AUD_DATOS_NVO, AUD_USR_ID, AUD_USR_EMAIL,
+                    AUD_IP, AUD_FECHA, AUD_MODULO
+                ) VALUES (
+                    SEQ_RL_AUDITORIA.NEXTVAL, :tabla, :regId, :accion,
+                    :datosAnt, :datosNvo, :usrId, :email,
+                    :ip, SYSDATE, :modulo
+                )";
+            cmd.Parameters.Add(new OracleParameter("tabla", "DNP_IHSS.LISTA_CAUTELA"));
+            cmd.Parameters.Add(new OracleParameter("regId", tipoListaCautelaId.ToString()));
+            cmd.Parameters.Add(new OracleParameter("accion", "UPLOAD"));
+            cmd.Parameters.Add(new OracleParameter("datosAnt", DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("datosNvo", dataJson));
+            cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
+            cmd.Parameters.Add(new OracleParameter("email", DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("ip", DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("modulo", "CargaListas"));
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private static string ConstruirMensajeCargaExitosa(int registrosAnteriores, int registrosNuevos)
+            => $"Carga exitosa. Se reemplazaron {registrosAnteriores} registros anteriores por {registrosNuevos} registros nuevos.";
+
         public async Task<(bool Success, string Mensaje)> ProcesarArchivoCsvOfacAsync(Microsoft.AspNetCore.Http.IFormFile archivo, int tipoListaCautelaId, long usuarioId)
         {
             try
             {
                 await using var conn = _db.CreateConnection();
                 await conn.OpenAsync();
+                var registrosAnteriores = await ContarRegistrosListaCautelaAsync(conn, tipoListaCautelaId);
 
-                // 1. Eliminar registros existentes para la lista
-                await using (var cmdDel = conn.CreateCommand())
-                {
-                    cmdDel.CommandText = "DELETE FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
-                    cmdDel.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
-                    await cmdDel.ExecuteNonQueryAsync();
-                }
-
-                // 2. Procesar CSV e insertar
+                // 1. Procesar CSV y preparar registros antes de reemplazar la lista actual.
                 using var stream = archivo.OpenReadStream();
                 using var parser = new Microsoft.VisualBasic.FileIO.TextFieldParser(stream);
                 parser.TextFieldType = Microsoft.VisualBasic.FileIO.FieldType.Delimited;
@@ -1401,41 +1530,23 @@ namespace RL.API.Repositories
                     }
                 }
                 
-                if (listDataId.Count > 0)
+                if (listDataId.Count == 0)
+                    return (false, "No se cargo la lista porque el archivo no contiene registros validos.");
+
+                using var tx = conn.BeginTransaction();
+                try
                 {
-                    await using var cmd = conn.CreateCommand();
-                    cmd.CommandText = @"
-                        INSERT INTO DNP_IHSS.LISTA_CAUTELA (
-                            LISTA_CAUTELA_ID, TIPO_LISTA_CAUTELA_ID, DATA_ID, TEXTO1, TEXTO2, TEXTO3, TEXTO4, TEXTO5,
-                            TEXTO6, TEXTO7, TEXTO8, TEXTO9, TEXT10, TEXTO11,
-                            RESUMEN, USUARIO_CREO, FECHA_CREACION, ESTADO_REGISTRO
-                        ) VALUES (
-                            DNP_IHSS.LISTA_CAUTELA_SEQ.NEXTVAL, :tipoLista, :dataId, :t1, :t2, :t3, :t4, :t5,
-                            :t6, :t7, :t8, :t9, :t10, :t11,
-                            :resumen, :usrLog, SYSDATE, 1
-                        )";
-
-                    cmd.ArrayBindCount = listDataId.Count;
-                    cmd.Parameters.Add(new OracleParameter("tipoLista", OracleDbType.Int32) { Value = System.Linq.Enumerable.Repeat(tipoListaCautelaId, listDataId.Count).ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("dataId", OracleDbType.Int64) { Value = listDataId.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t1", OracleDbType.Varchar2) { Value = listT1.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t2", OracleDbType.Varchar2) { Value = listT2.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t3", OracleDbType.Varchar2) { Value = listT3.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t4", OracleDbType.Varchar2) { Value = listT4.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t5", OracleDbType.Varchar2) { Value = listT5.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t6", OracleDbType.Varchar2) { Value = listT6.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t7", OracleDbType.Varchar2) { Value = listT7.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t8", OracleDbType.Varchar2) { Value = listT8.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t9", OracleDbType.Varchar2) { Value = listT9.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t10", OracleDbType.Varchar2) { Value = listT10.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t11", OracleDbType.Varchar2) { Value = listT11.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("resumen", OracleDbType.Varchar2) { Value = listResumen.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("usrLog", OracleDbType.Int64) { Value = System.Linq.Enumerable.Repeat(usuarioId, listDataId.Count).ToArray() });
-
-                    await cmd.ExecuteNonQueryAsync();
+                    await ReemplazarRegistrosListaCautelaAsync(conn, tx, tipoListaCautelaId, usuarioId, listDataId, listT1, listT2, listT3, listT4, listT5, listT6, listT7, listT8, listT9, listT10, listT11, listResumen);
+                    await RegistrarAuditoriaCargaListaAsync(conn, tx, tipoListaCautelaId, usuarioId, archivo.FileName, System.IO.Path.GetExtension(archivo.FileName), registrosAnteriores, listDataId.Count);
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
                 }
 
-                return (true, "Proceso finalizado correctamente.");
+                return (true, ConstruirMensajeCargaExitosa(registrosAnteriores, listDataId.Count));
             }
             catch (Exception ex)
             {
@@ -1450,16 +1561,9 @@ namespace RL.API.Repositories
             {
                 await using var conn = _db.CreateConnection();
                 await conn.OpenAsync();
+                var registrosAnteriores = await ContarRegistrosListaCautelaAsync(conn, tipoListaCautelaId);
 
-                // 1. Eliminar registros existentes para la lista
-                await using (var cmdDel = conn.CreateCommand())
-                {
-                    cmdDel.CommandText = "DELETE FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
-                    cmdDel.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
-                    await cmdDel.ExecuteNonQueryAsync();
-                }
-
-                // 2. Procesar XML e insertar
+                // 1. Procesar XML y preparar registros antes de reemplazar la lista actual.
                 var docXml = new System.Xml.XmlDocument();
                 using (var stream = archivo.OpenReadStream())
                 {
@@ -1611,41 +1715,23 @@ namespace RL.API.Repositories
                     }
                 }
 
-                if (listDataId.Count > 0)
+                if (listDataId.Count == 0)
+                    return (false, "No se cargo la lista porque el archivo no contiene registros validos.");
+
+                using var tx = conn.BeginTransaction();
+                try
                 {
-                    await using var cmd = conn.CreateCommand();
-                    cmd.CommandText = @"
-                        INSERT INTO DNP_IHSS.LISTA_CAUTELA (
-                            LISTA_CAUTELA_ID, TIPO_LISTA_CAUTELA_ID, DATA_ID, TEXTO1, TEXTO2, TEXTO3, TEXTO4, TEXTO5,
-                            TEXTO6, TEXTO7, TEXTO8, TEXTO9, TEXT10, TEXTO11,
-                            RESUMEN, USUARIO_CREO, FECHA_CREACION, ESTADO_REGISTRO
-                        ) VALUES (
-                            DNP_IHSS.LISTA_CAUTELA_SEQ.NEXTVAL, :tipoLista, :dataId, :t1, :t2, :t3, :t4, :t5,
-                            :t6, :t7, :t8, :t9, :t10, :t11,
-                            :resumen, :usrLog, SYSDATE, 1
-                        )";
-
-                    cmd.ArrayBindCount = listDataId.Count;
-                    cmd.Parameters.Add(new OracleParameter("tipoLista", OracleDbType.Int32) { Value = System.Linq.Enumerable.Repeat(tipoListaCautelaId, listDataId.Count).ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("dataId", OracleDbType.Int64) { Value = listDataId.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t1", OracleDbType.Varchar2) { Value = listT1.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t2", OracleDbType.Varchar2) { Value = listT2.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t3", OracleDbType.Varchar2) { Value = listT3.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t4", OracleDbType.Varchar2) { Value = listT4.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t5", OracleDbType.Varchar2) { Value = listT5.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t6", OracleDbType.Varchar2) { Value = listT6.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t7", OracleDbType.Varchar2) { Value = listT7.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t8", OracleDbType.Varchar2) { Value = listT8.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t9", OracleDbType.Varchar2) { Value = listT9.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t10", OracleDbType.Varchar2) { Value = listT10.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t11", OracleDbType.Varchar2) { Value = listT11.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("resumen", OracleDbType.Varchar2) { Value = listResumen.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("usrLog", OracleDbType.Int64) { Value = System.Linq.Enumerable.Repeat(usuarioId, listDataId.Count).ToArray() });
-
-                    await cmd.ExecuteNonQueryAsync();
+                    await ReemplazarRegistrosListaCautelaAsync(conn, tx, tipoListaCautelaId, usuarioId, listDataId, listT1, listT2, listT3, listT4, listT5, listT6, listT7, listT8, listT9, listT10, listT11, listResumen);
+                    await RegistrarAuditoriaCargaListaAsync(conn, tx, tipoListaCautelaId, usuarioId, archivo.FileName, System.IO.Path.GetExtension(archivo.FileName), registrosAnteriores, listDataId.Count);
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
                 }
 
-                return (true, "Proceso finalizado correctamente.");
+                return (true, ConstruirMensajeCargaExitosa(registrosAnteriores, listDataId.Count));
             }
             catch (Exception ex)
             {
@@ -1660,16 +1746,9 @@ namespace RL.API.Repositories
             {
                 await using var conn = _db.CreateConnection();
                 await conn.OpenAsync();
+                var registrosAnteriores = await ContarRegistrosListaCautelaAsync(conn, tipoListaCautelaId);
 
-                // 1. Eliminar registros existentes para la lista
-                await using (var cmdDel = conn.CreateCommand())
-                {
-                    cmdDel.CommandText = "DELETE FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
-                    cmdDel.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
-                    await cmdDel.ExecuteNonQueryAsync();
-                }
-
-                // 2. Procesar Excel e insertar
+                // 1. Procesar Excel y preparar registros antes de reemplazar la lista actual.
                 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
                 using var stream = archivo.OpenReadStream();
                 using var excelReader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
@@ -1737,41 +1816,23 @@ namespace RL.API.Repositories
                     }
                 }
 
-                if (listDataId.Count > 0)
+                if (listDataId.Count == 0)
+                    return (false, "No se cargo la lista porque el archivo no contiene registros validos.");
+
+                using var tx = conn.BeginTransaction();
+                try
                 {
-                    await using var cmd = conn.CreateCommand();
-                    cmd.CommandText = @"
-                        INSERT INTO DNP_IHSS.LISTA_CAUTELA (
-                            LISTA_CAUTELA_ID, TIPO_LISTA_CAUTELA_ID, DATA_ID, TEXTO1, TEXTO2, TEXTO3, TEXTO4, TEXTO5,
-                            TEXTO6, TEXTO7, TEXTO8, TEXTO9, TEXT10, TEXTO11,
-                            RESUMEN, USUARIO_CREO, FECHA_CREACION, ESTADO_REGISTRO
-                        ) VALUES (
-                            DNP_IHSS.LISTA_CAUTELA_SEQ.NEXTVAL, :tipoLista, :dataId, :t1, :t2, :t3, :t4, :t5,
-                            :t6, :t7, :t8, :t9, :t10, :t11,
-                            :resumen, :usrLog, SYSDATE, 1
-                        )";
-
-                    cmd.ArrayBindCount = listDataId.Count;
-                    cmd.Parameters.Add(new OracleParameter("tipoLista", OracleDbType.Int32) { Value = System.Linq.Enumerable.Repeat(tipoListaCautelaId, listDataId.Count).ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("dataId", OracleDbType.Int64) { Value = listDataId.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t1", OracleDbType.Varchar2) { Value = listT1.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t2", OracleDbType.Varchar2) { Value = listT2.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t3", OracleDbType.Varchar2) { Value = listT3.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t4", OracleDbType.Varchar2) { Value = listT4.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t5", OracleDbType.Varchar2) { Value = listT5.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t6", OracleDbType.Varchar2) { Value = listT6.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t7", OracleDbType.Varchar2) { Value = listT7.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t8", OracleDbType.Varchar2) { Value = listT8.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t9", OracleDbType.Varchar2) { Value = listT9.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t10", OracleDbType.Varchar2) { Value = listT10.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t11", OracleDbType.Varchar2) { Value = listT11.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("resumen", OracleDbType.Varchar2) { Value = listResumen.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("usrLog", OracleDbType.Int64) { Value = System.Linq.Enumerable.Repeat(usuarioId, listDataId.Count).ToArray() });
-
-                    await cmd.ExecuteNonQueryAsync();
+                    await ReemplazarRegistrosListaCautelaAsync(conn, tx, tipoListaCautelaId, usuarioId, listDataId, listT1, listT2, listT3, listT4, listT5, listT6, listT7, listT8, listT9, listT10, listT11, listResumen);
+                    await RegistrarAuditoriaCargaListaAsync(conn, tx, tipoListaCautelaId, usuarioId, archivo.FileName, System.IO.Path.GetExtension(archivo.FileName), registrosAnteriores, listDataId.Count);
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
                 }
 
-                return (true, "Proceso finalizado correctamente.");
+                return (true, ConstruirMensajeCargaExitosa(registrosAnteriores, listDataId.Count));
             }
             catch (Exception ex)
             {
@@ -1797,16 +1858,9 @@ namespace RL.API.Repositories
             {
                 await using var conn = _db.CreateConnection();
                 await conn.OpenAsync();
+                var registrosAnteriores = await ContarRegistrosListaCautelaAsync(conn, tipoListaCautelaId);
 
-                // 1. Eliminar registros existentes para la lista
-                await using (var cmdDel = conn.CreateCommand())
-                {
-                    cmdDel.CommandText = "DELETE FROM DNP_IHSS.LISTA_CAUTELA WHERE TIPO_LISTA_CAUTELA_ID = :id";
-                    cmdDel.Parameters.Add(new OracleParameter("id", tipoListaCautelaId));
-                    await cmdDel.ExecuteNonQueryAsync();
-                }
-
-                // 2. Procesar Excel e insertar
+                // 1. Procesar Excel y preparar registros antes de reemplazar la lista actual.
                 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
                 using var stream = archivo.OpenReadStream();
                 using var excelReader = ExcelDataReader.ExcelReaderFactory.CreateReader(stream);
@@ -1890,41 +1944,23 @@ namespace RL.API.Repositories
                     }
                 }
 
-                if (listDataId.Count > 0)
+                if (listDataId.Count == 0)
+                    return (false, "No se cargo la lista porque el archivo no contiene registros validos.");
+
+                using var tx = conn.BeginTransaction();
+                try
                 {
-                    await using var cmd = conn.CreateCommand();
-                    cmd.CommandText = @"
-                        INSERT INTO DNP_IHSS.LISTA_CAUTELA (
-                            LISTA_CAUTELA_ID, TIPO_LISTA_CAUTELA_ID, DATA_ID, TEXTO1, TEXTO2, TEXTO3, TEXTO4, TEXTO5,
-                            TEXTO6, TEXTO7, TEXTO8, TEXTO9, TEXT10, TEXTO11,
-                            RESUMEN, USUARIO_CREO, FECHA_CREACION, ESTADO_REGISTRO
-                        ) VALUES (
-                            DNP_IHSS.LISTA_CAUTELA_SEQ.NEXTVAL, :tipoLista, :dataId, :t1, :t2, :t3, :t4, :t5,
-                            :t6, :t7, :t8, :t9, :t10, :t11,
-                            :resumen, :usrLog, SYSDATE, 1
-                        )";
-
-                    cmd.ArrayBindCount = listDataId.Count;
-                    cmd.Parameters.Add(new OracleParameter("tipoLista", OracleDbType.Int32) { Value = System.Linq.Enumerable.Repeat(tipoListaCautelaId, listDataId.Count).ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("dataId", OracleDbType.Int64) { Value = listDataId.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t1", OracleDbType.Varchar2) { Value = listT1.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t2", OracleDbType.Varchar2) { Value = listT2.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t3", OracleDbType.Varchar2) { Value = listT3.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t4", OracleDbType.Varchar2) { Value = listT4.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t5", OracleDbType.Varchar2) { Value = listT5.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t6", OracleDbType.Varchar2) { Value = listT6.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t7", OracleDbType.Varchar2) { Value = listT7.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t8", OracleDbType.Varchar2) { Value = listT8.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t9", OracleDbType.Varchar2) { Value = listT9.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t10", OracleDbType.Varchar2) { Value = listT10.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("t11", OracleDbType.Varchar2) { Value = listT11.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("resumen", OracleDbType.Varchar2) { Value = listResumen.ToArray() });
-                    cmd.Parameters.Add(new OracleParameter("usrLog", OracleDbType.Int64) { Value = System.Linq.Enumerable.Repeat(usuarioId, listDataId.Count).ToArray() });
-
-                    await cmd.ExecuteNonQueryAsync();
+                    await ReemplazarRegistrosListaCautelaAsync(conn, tx, tipoListaCautelaId, usuarioId, listDataId, listT1, listT2, listT3, listT4, listT5, listT6, listT7, listT8, listT9, listT10, listT11, listResumen);
+                    await RegistrarAuditoriaCargaListaAsync(conn, tx, tipoListaCautelaId, usuarioId, archivo.FileName, System.IO.Path.GetExtension(archivo.FileName), registrosAnteriores, listDataId.Count);
+                    tx.Commit();
+                }
+                catch
+                {
+                    tx.Rollback();
+                    throw;
                 }
 
-                return (true, "Proceso finalizado correctamente.");
+                return (true, ConstruirMensajeCargaExitosa(registrosAnteriores, listDataId.Count));
             }
             catch (Exception ex)
             {

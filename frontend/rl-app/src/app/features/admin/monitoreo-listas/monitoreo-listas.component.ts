@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { of, forkJoin } from 'rxjs';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
+type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string };
 
 @Component({
   selector: 'app-monitoreo-listas',
@@ -250,6 +251,20 @@ type FiltroTipo = 'juridica' | 'natural' | 'empleado';
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
+
+                            <!-- Exportar Ficha Excel -->
+                            <div class="relative group inline-block">
+                              <button (click)="exportarFichaExcelPatrono(row)"
+                                class="inline-flex items-center justify-center p-1.5 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-200">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 7H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V18a2 2 0 01-2 2z"/>
+                                </svg>
+                              </button>
+                              <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
+                                Exportar Ficha Excel
+                                <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
+                              </span>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -332,6 +347,20 @@ type FiltroTipo = 'juridica' | 'natural' | 'empleado';
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
+
+                            <!-- Exportar Ficha Excel -->
+                            <div class="relative group inline-block">
+                              <button (click)="exportarFichaExcelNatural(row)"
+                                class="inline-flex items-center justify-center p-1.5 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-200">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 7H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V18a2 2 0 01-2 2z"/>
+                                </svg>
+                              </button>
+                              <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
+                                Exportar Ficha Excel
+                                <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
+                              </span>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -411,6 +440,20 @@ type FiltroTipo = 'juridica' | 'natural' | 'empleado';
                               </button>
                               <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                                 Imprimir Reporte
+                                <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
+                              </span>
+                            </div>
+
+                            <!-- Exportar Ficha Excel -->
+                            <div class="relative group inline-block">
+                              <button (click)="exportarFichaExcelEmpleado(row)"
+                                class="inline-flex items-center justify-center p-1.5 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition-colors border border-green-200">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 7H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V18a2 2 0 01-2 2z"/>
+                                </svg>
+                              </button>
+                              <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
+                                Exportar Ficha Excel
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
@@ -1099,6 +1142,9 @@ export class MonitoreoListasComponent implements OnInit {
   formComentarioSeguimiento = signal<string>('');
   filtroSeguimientoDesde = signal<string>('');
   filtroSeguimientoHasta = signal<string>('');
+  reporteSeguimientoDocumento = signal<string>('');
+  reporteSeguimientoDesde = signal<string>('');
+  reporteSeguimientoHasta = signal<string>('');
   archivosSeleccionados = signal<File[]>([]);
   guardandoSeguimiento = signal(false);
 
@@ -1457,15 +1503,171 @@ export class MonitoreoListasComponent implements OnInit {
     this.pdfUrl.set(null);
   }
 
+  private obtenerRangoSeguimientoReporte(noDocumento?: string): RangoSeguimientoReporte {
+    const usaRangoAplicado = !noDocumento || this.reporteSeguimientoDocumento() === noDocumento;
+    const desde = usaRangoAplicado ? this.reporteSeguimientoDesde() : '';
+    const hasta = usaRangoAplicado ? this.reporteSeguimientoHasta() : '';
+
+    if (desde && hasta) {
+      return { desde, hasta, texto: `${this.formatDate(desde)} al ${this.formatDate(hasta)}` };
+    }
+    if (desde) {
+      return { desde, texto: `Desde ${this.formatDate(desde)}` };
+    }
+    if (hasta) {
+      return { hasta, texto: `Hasta ${this.formatDate(hasta)}` };
+    }
+    return { texto: 'Todos los seguimientos registrados' };
+  }
+
+  private agregarEncabezadoPdf(doc: jsPDF, titulo: string) {
+    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto HondureÃ±o de Seguridad Social';
+    const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
+
+    doc.setFillColor(15, 23, 42); // Slate 900
+    doc.rect(0, 0, 210, 38, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.text(institucion.toUpperCase(), 14, 15);
+
+    doc.setFontSize(18);
+    doc.text(titulo, 14, 23);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(203, 213, 225); // Slate 300
+    doc.text(`${sistema}  |  Fecha de GeneraciÃ³n: ${new Date().toLocaleString()}`, 14, 30);
+  }
+
+  private agregarDatosMemo(doc: jsPDF, y: number, titulo: string, generalData: string[][]): number {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text(titulo, 14, y);
+    y += 4;
+    doc.setDrawColor(226, 232, 240);
+    doc.line(14, y, 196, y);
+    y += 6;
+
+    autoTable(doc, {
+      startY: y,
+      body: generalData,
+      theme: 'plain',
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+        textColor: [51, 65, 85]
+      },
+      columnStyles: {
+        0: { fontStyle: 'bold', cellWidth: 40, textColor: [30, 41, 59] },
+        1: { cellWidth: 55 },
+        2: { fontStyle: 'bold', cellWidth: 45, textColor: [30, 41, 59] },
+        3: { cellWidth: 50 }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    return (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  private agregarMotivoPdf(doc: jsPDF, y: number, titulo: string, motivoTexto: string): number {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text(titulo, 14, y);
+    y += 4;
+    doc.line(14, y, 196, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(71, 85, 105);
+
+    const splitMotivo = doc.splitTextToSize(motivoTexto, 180);
+    doc.text(splitMotivo, 14, y);
+    return y + (splitMotivo.length * 5) + 10;
+  }
+
+  private agregarSeguimientosPdf(doc: jsPDF, y: number, titulo: string, seguimientos: Seguimiento[], mensajeVacio: string, rango: RangoSeguimientoReporte): number {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(30, 41, 59);
+    doc.text(titulo, 14, y);
+    y += 4;
+    doc.line(14, y, 196, y);
+    y += 6;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    doc.text(`Rango de seguimientos: ${rango.texto}`, 14, y);
+    y += 6;
+
+    if (seguimientos && seguimientos.length > 0) {
+      const seguimientosRows = seguimientos.map(seg => {
+        const evidenciasTexto = seg.evidencias && seg.evidencias.length > 0
+          ? seg.evidencias.map(e => e.nombreArchivo).join('\n')
+          : 'Sin evidencias';
+        return [
+          this.formatDate(seg.fechaCreacion),
+          seg.usrEmail || 'Sistema',
+          seg.motivoIngreso || '',
+          evidenciasTexto
+        ];
+      });
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Fecha', 'Usuario', 'Comentario / AcciÃ³n', 'Evidencias']],
+        body: seguimientosRows,
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontSize: 8.5,
+          fontStyle: 'bold'
+        },
+        bodyStyles: {
+          fontSize: 8,
+          textColor: [71, 85, 105]
+        },
+        columnStyles: {
+          0: { cellWidth: 25 },
+          1: { cellWidth: 35 },
+          2: { cellWidth: 80 },
+          3: { cellWidth: 42 }
+        },
+        theme: 'striped',
+        margin: { left: 14, right: 14 }
+      });
+      return (doc as any).lastAutoTable.finalY + 10;
+    }
+
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9.5);
+    doc.setTextColor(100, 116, 139);
+    doc.text(mensajeVacio, 14, y);
+    return y + 8;
+  }
+
+  private abrirPdf(doc: jsPDF) {
+    const blob = doc.output('blob');
+    const url = URL.createObjectURL(blob);
+    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+    this.pdfModalAbierto.set(true);
+  }
+
   imprimirReportePatrono(row: CoincidenciaJuridica) {
     this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
 
     const obsPositivo = row.tieneMotivo 
       ? this.listasService.getPositivoPorDocumento(row.numeroPatrono) 
       : of(null);
       
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.numeroPatrono) 
+      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsPositivo, obsSeguimientos]).subscribe({
@@ -1476,17 +1678,21 @@ export class MonitoreoListasComponent implements OnInit {
           numeroPatrono: row.numeroPatrono,
           listaCoincidencia: row.listaCoincidencia,
           tieneMotivo: row.tieneMotivo,
+          tipoReporte: 'PDF_PERFIL_FICHA',
+          rangoSeguimientoDesde: rangoSeguimiento.desde || null,
+          rangoSeguimientoHasta: rangoSeguimiento.hasta || null,
+          rangoSeguimientoTexto: rangoSeguimiento.texto,
           fechaGeneracion: new Date().toISOString()
         };
 
         this.listasService.registrarAuditoriaImpresion(row.numeroPatrono, auditoriaData).subscribe({
           next: () => {
-            this.generarPdfPatrono(row, positivo, seguimientos);
+            this.generarPdfPatrono(row, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           },
           error: (err) => {
             console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfPatrono(row, positivo, seguimientos);
+            this.generarPdfPatrono(row, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           }
         });
@@ -1500,13 +1706,14 @@ export class MonitoreoListasComponent implements OnInit {
 
   imprimirReporteNatural(row: CoincidenciaNatural) {
     this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
 
     const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
     const obsPositivo = row.tieneMotivo 
       ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion) 
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.numeroIdentificacion) 
+      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1516,17 +1723,21 @@ export class MonitoreoListasComponent implements OnInit {
           nombre: row.nombre,
           listaCoincidencia: row.listaCoincidencia,
           totalRepetidos: row.totalRepetidos,
+          tipoReporte: 'PDF_PERFIL_FICHA',
+          rangoSeguimientoDesde: rangoSeguimiento.desde || null,
+          rangoSeguimientoHasta: rangoSeguimiento.hasta || null,
+          rangoSeguimientoTexto: rangoSeguimiento.texto,
           fechaGeneracion: new Date().toISOString()
         };
 
         this.listasService.registrarAuditoriaImpresion(row.numeroIdentificacion, auditoriaData).subscribe({
           next: () => {
-            this.generarPdfNatural(row, detalles, positivo, seguimientos);
+            this.generarPdfNatural(row, detalles, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           },
           error: (err) => {
             console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfNatural(row, detalles, positivo, seguimientos);
+            this.generarPdfNatural(row, detalles, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           }
         });
@@ -1538,7 +1749,7 @@ export class MonitoreoListasComponent implements OnInit {
     });
   }
 
-  generarPdfNatural(row: CoincidenciaNatural, detalles: DetalleCoincidenciaNatural[], positivo: any, seguimientos: Seguimiento[]) {
+  generarPdfNatural(row: CoincidenciaNatural, detalles: DetalleCoincidenciaNatural[], positivo: any, seguimientos: Seguimiento[], rangoSeguimiento: RangoSeguimientoReporte) {
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -1682,73 +1893,28 @@ export class MonitoreoListasComponent implements OnInit {
 
     y = (doc as any).lastAutoTable.finalY + 10;
 
-    // Sección 4: Historial de Seguimiento
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
-    doc.text('4. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS', 14, y);
-    y += 4;
-    doc.line(14, y, 196, y);
-    y += 6;
+    this.agregarSeguimientosPdf(
+      doc,
+      y,
+      '4. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS',
+      seguimientos,
+      'No se registran acciones de seguimiento ni evidencias adicionales para esta persona.',
+      rangoSeguimiento
+    );
 
-    if (seguimientos && seguimientos.length > 0) {
-      const seguimientosRows = seguimientos.map(seg => {
-        const evidenciasTexto = seg.evidencias && seg.evidencias.length > 0
-          ? seg.evidencias.map(e => e.nombreArchivo).join('\n')
-          : 'Sin evidencias';
-        return [
-          this.formatDate(seg.fechaCreacion),
-          seg.usrEmail || 'Sistema',
-          seg.motivoIngreso || '',
-          evidenciasTexto
-        ];
-      });
-
-      autoTable(doc, {
-        startY: y,
-        head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
-        body: seguimientosRows,
-        headStyles: {
-          fillColor: [15, 23, 42],
-          textColor: [255, 255, 255],
-          fontSize: 8.5,
-          fontStyle: 'bold'
-        },
-        bodyStyles: {
-          fontSize: 8,
-          textColor: [71, 85, 105]
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 80 },
-          3: { cellWidth: 42 }
-        },
-        theme: 'striped',
-        margin: { left: 14, right: 14 }
-      });
-    } else {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(9.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('No se registran acciones de seguimiento ni evidencias adicionales para esta persona.', 14, y);
-    }
-
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.pdfModalAbierto.set(true);
+    this.abrirPdf(doc);
   }
 
   imprimirReporteEmpleado(row: CoincidenciaEmpleado) {
     this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
 
     const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
     const obsPositivo = row.tieneMotivo 
       ? this.listasService.getPositivoPorDocumento(row.identidad) 
       : of(null);
     const obsSeguimientos = row.tieneMotivo 
-      ? this.listasService.getSeguimientos(row.identidad) 
+      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
       : of([]);
 
     forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
@@ -1758,17 +1924,21 @@ export class MonitoreoListasComponent implements OnInit {
           nombre: row.nombre,
           listaCoincidencia: row.listaCoincidencia,
           totalRepetidos: row.totalRepetidos,
+          tipoReporte: 'PDF_PERFIL_FICHA',
+          rangoSeguimientoDesde: rangoSeguimiento.desde || null,
+          rangoSeguimientoHasta: rangoSeguimiento.hasta || null,
+          rangoSeguimientoTexto: rangoSeguimiento.texto,
           fechaGeneracion: new Date().toISOString()
         };
 
         this.listasService.registrarAuditoriaImpresion(row.identidad, auditoriaData).subscribe({
           next: () => {
-            this.generarPdfEmpleado(row, detalles, positivo, seguimientos);
+            this.generarPdfEmpleado(row, detalles, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           },
           error: (err) => {
             console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfEmpleado(row, detalles, positivo, seguimientos);
+            this.generarPdfEmpleado(row, detalles, positivo, seguimientos, rangoSeguimiento);
             this.cargando.set(false);
           }
         });
@@ -1780,7 +1950,7 @@ export class MonitoreoListasComponent implements OnInit {
     });
   }
 
-  generarPdfEmpleado(row: CoincidenciaEmpleado, detalles: DetalleCoincidenciaEmpleado[], positivo: any, seguimientos: Seguimiento[]) {
+  generarPdfEmpleado(row: CoincidenciaEmpleado, detalles: DetalleCoincidenciaEmpleado[], positivo: any, seguimientos: Seguimiento[], rangoSeguimiento: RangoSeguimientoReporte) {
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -1914,65 +2084,19 @@ export class MonitoreoListasComponent implements OnInit {
 
     y = (doc as any).lastAutoTable.finalY + 10;
 
-    // Sección 4: Historial de Seguimiento
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
-    doc.text('4. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS', 14, y);
-    y += 4;
-    doc.line(14, y, 196, y);
-    y += 6;
+    this.agregarSeguimientosPdf(
+      doc,
+      y,
+      '4. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS',
+      seguimientos,
+      'No se registran acciones de seguimiento ni evidencias adicionales para este empleado.',
+      rangoSeguimiento
+    );
 
-    if (seguimientos && seguimientos.length > 0) {
-      const seguimientosRows = seguimientos.map(seg => {
-        const evidenciasTexto = seg.evidencias && seg.evidencias.length > 0
-          ? seg.evidencias.map(e => e.nombreArchivo).join('\n')
-          : 'Sin evidencias';
-        return [
-          this.formatDate(seg.fechaCreacion),
-          seg.usrEmail || 'Sistema',
-          seg.motivoIngreso || '',
-          evidenciasTexto
-        ];
-      });
-
-      autoTable(doc, {
-        startY: y,
-        head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
-        body: seguimientosRows,
-        headStyles: {
-          fillColor: [15, 23, 42],
-          textColor: [255, 255, 255],
-          fontSize: 8.5,
-          fontStyle: 'bold'
-        },
-        bodyStyles: {
-          fontSize: 8,
-          textColor: [71, 85, 105]
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 80 },
-          3: { cellWidth: 42 }
-        },
-        theme: 'striped',
-        margin: { left: 14, right: 14 }
-      });
-    } else {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(9.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('No se registran acciones de seguimiento ni evidencias adicionales para este empleado.', 14, y);
-    }
-
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.pdfModalAbierto.set(true);
+    this.abrirPdf(doc);
   }
 
-  generarPdfPatrono(row: CoincidenciaJuridica, positivo: any, seguimientos: Seguimiento[]) {
+  generarPdfPatrono(row: CoincidenciaJuridica, positivo: any, seguimientos: Seguimiento[], rangoSeguimiento: RangoSeguimientoReporte) {
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -2055,62 +2179,237 @@ export class MonitoreoListasComponent implements OnInit {
     doc.text(splitMotivo, 14, y);
     y += (splitMotivo.length * 5) + 10;
 
-    // Sección 3: Historial de Seguimientos
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 41, 59);
-    doc.text('3. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS', 14, y);
-    y += 4;
-    doc.line(14, y, 196, y);
-    y += 6;
+    this.agregarSeguimientosPdf(
+      doc,
+      y,
+      '3. HISTORIAL DE SEGUIMIENTOS Y EVIDENCIAS',
+      seguimientos,
+      'No se registran acciones de seguimiento ni evidencias adicionales para este patrono.',
+      rangoSeguimiento
+    );
 
-    if (seguimientos && seguimientos.length > 0) {
-      const seguimientosRows = seguimientos.map(seg => {
-        const evidenciasTexto = seg.evidencias && seg.evidencias.length > 0
-          ? seg.evidencias.map(e => e.nombreArchivo).join('\n')
-          : 'Sin evidencias';
-        return [
-          this.formatDate(seg.fechaCreacion),
-          seg.usrEmail || 'Sistema',
-          seg.motivoIngreso || '',
-          evidenciasTexto
-        ];
-      });
+    this.abrirPdf(doc);
+  }
 
-      autoTable(doc, {
-        startY: y,
-        head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
-        body: seguimientosRows,
-        headStyles: {
-          fillColor: [15, 23, 42],
-          textColor: [255, 255, 255],
-          fontSize: 8.5,
-          fontStyle: 'bold'
-        },
-        bodyStyles: {
-          fontSize: 8,
-          textColor: [71, 85, 105]
-        },
-        columnStyles: {
-          0: { cellWidth: 25 },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 80 },
-          3: { cellWidth: 42 }
-        },
-        theme: 'striped',
-        margin: { left: 14, right: 14 }
+  private ajustarColumnasExcel(ws: XLSX.WorkSheet, data: any[][]) {
+    const maxLens = data.reduce((acc, row) => {
+      row.forEach((val, colIdx) => {
+        const len = val ? val.toString().length : 0;
+        if (!acc[colIdx] || len > acc[colIdx]) {
+          acc[colIdx] = len;
+        }
       });
-    } else {
-      doc.setFont('helvetica', 'italic');
-      doc.setFontSize(9.5);
-      doc.setTextColor(100, 116, 139);
-      doc.text('No se registran acciones de seguimiento ni evidencias adicionales para este patrono.', 14, y);
+      return acc;
+    }, [] as number[]);
+
+    ws['!cols'] = maxLens.map(len => ({ wch: Math.min(Math.max(len + 2, 10), 45) }));
+  }
+
+  private agregarSeguimientosExcel(data: any[][], seguimientos: Seguimiento[], rangoSeguimiento: RangoSeguimientoReporte) {
+    data.push([]);
+    data.push(['Historial de Seguimientos y Evidencias']);
+    data.push(['Rango de seguimientos:', rangoSeguimiento.texto]);
+    data.push(['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']);
+
+    if (!seguimientos || seguimientos.length === 0) {
+      data.push(['', '', 'No se registran acciones de seguimiento ni evidencias para el rango seleccionado.', '']);
+      return;
     }
 
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.pdfModalAbierto.set(true);
+    seguimientos.forEach(seg => {
+      data.push([
+        seg.fechaCreacion ? this.formatDate(seg.fechaCreacion) : '',
+        seg.usrEmail || 'Sistema',
+        seg.motivoIngreso || '',
+        seg.evidencias && seg.evidencias.length > 0
+          ? seg.evidencias.map(e => e.nombreArchivo).join(', ')
+          : 'Sin evidencias'
+      ]);
+    });
+  }
+
+  private escribirFichaExcel(data: any[][], sheetName: string, fileName: string) {
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    this.ajustarColumnasExcel(ws, data);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    XLSX.writeFile(wb, fileName);
+  }
+
+  private registrarAuditoriaFichaExcel(noDocumento: string, tipo: string, nombre: string, fileName: string, cantidadSeguimientos: number, rangoSeguimiento: RangoSeguimientoReporte) {
+    this.listasService.registrarAuditoriaExportacion(
+      'RL_LISTA_POSITIVOS',
+      noDocumento,
+      'ExportacionFichaPerfil',
+      {
+        accion: 'EXPORTACION_EXCEL',
+        tipoReporte: 'EXCEL_PERFIL_FICHA',
+        tipo,
+        nombre,
+        cantidadSeguimientos,
+        rangoSeguimientoDesde: rangoSeguimiento.desde || null,
+        rangoSeguimientoHasta: rangoSeguimiento.hasta || null,
+        rangoSeguimientoTexto: rangoSeguimiento.texto,
+        archivo: fileName
+      }
+    ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de ficha Excel', err) });
+  }
+
+  exportarFichaExcelPatrono(row: CoincidenciaJuridica) {
+    this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroPatrono);
+
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(row.numeroPatrono)
+      : of(null);
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(row.numeroPatrono, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      : of([]);
+
+    forkJoin([obsPositivo, obsSeguimientos]).subscribe({
+      next: ([positivo, seguimientos]) => {
+        const data: any[][] = [
+          ['Ficha de Perfil / Memorando'],
+          [this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social'],
+          [`Fecha de Generación: ${new Date().toLocaleString()}`],
+          [],
+          ['Información General del Patrono'],
+          ['Número Patronal', row.numeroPatrono || 'N/D', 'RTN', row.rtn || 'N/D'],
+          ['Nombre / Razón Social', row.nombre || 'N/D', 'Proveedor IHSS', row.esProveedorIhss || 'No'],
+          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO'],
+          ['Fecha Encontrado', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificado', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
+          [],
+          ['Motivo de Ingreso a Lista de Monitoreo'],
+          [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.']
+        ];
+
+        this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
+
+        const fileName = `Ficha_Patrono_${row.numeroPatrono}.xlsx`;
+        this.escribirFichaExcel(data, 'Ficha Patrono', fileName);
+        this.registrarAuditoriaFichaExcel(row.numeroPatrono, 'juridica', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        console.error('Error al exportar ficha Excel de patrono:', err);
+        this.cargando.set(false);
+      }
+    });
+  }
+
+  exportarFichaExcelNatural(row: CoincidenciaNatural) {
+    this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.numeroIdentificacion);
+
+    const obsDetalles = this.listasService.getDetalleNatural(row.numeroIdentificacion);
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(row.numeroIdentificacion)
+      : of(null);
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(row.numeroIdentificacion, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      : of([]);
+
+    forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
+      next: ([detalles, positivo, seguimientos]) => {
+        const data: any[][] = [
+          ['Ficha de Perfil / Memorando'],
+          [this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social'],
+          [`Fecha de Generación: ${new Date().toLocaleString()}`],
+          [],
+          ['Información General de la Persona'],
+          ['DNI / Identificación', row.numeroIdentificacion || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
+          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
+          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', ''],
+          [],
+          ['Motivo de Ingreso a Lista de Monitoreo'],
+          [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para esta persona.'],
+          [],
+          ['Detalle de Coincidencias Encontradas'],
+          ['Condición Actúa', 'Nro Patronal', 'Empresa', 'Es PEP', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']
+        ];
+
+        detalles.forEach(det => {
+          data.push([
+            det.tipoCondicionActuaDesc,
+            det.numeroPatronal,
+            det.nombreEmpresa,
+            (det.esPep === 'SI' || det.esPep === 'S') ? 'SÍ' : 'NO',
+            det.listaCoincidencia,
+            det.fechaCoincidencia ? this.formatDate(det.fechaCoincidencia) : '',
+            det.fechaCalifico ? this.formatDate(det.fechaCalifico) : ''
+          ]);
+        });
+
+        this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
+
+        const fileName = `Ficha_Natural_${row.numeroIdentificacion}.xlsx`;
+        this.escribirFichaExcel(data, 'Ficha Natural', fileName);
+        this.registrarAuditoriaFichaExcel(row.numeroIdentificacion, 'natural', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        console.error('Error al exportar ficha Excel de persona natural:', err);
+        this.cargando.set(false);
+      }
+    });
+  }
+
+  exportarFichaExcelEmpleado(row: CoincidenciaEmpleado) {
+    this.cargando.set(true);
+    const rangoSeguimiento = this.obtenerRangoSeguimientoReporte(row.identidad);
+
+    const obsDetalles = this.listasService.getDetalleEmpleado(row.identidad);
+    const obsPositivo = row.tieneMotivo
+      ? this.listasService.getPositivoPorDocumento(row.identidad)
+      : of(null);
+    const obsSeguimientos = row.tieneMotivo
+      ? this.listasService.getSeguimientos(row.identidad, rangoSeguimiento.desde, rangoSeguimiento.hasta)
+      : of([]);
+
+    forkJoin([obsDetalles, obsPositivo, obsSeguimientos]).subscribe({
+      next: ([detalles, positivo, seguimientos]) => {
+        const data: any[][] = [
+          ['Ficha de Perfil / Memorando'],
+          [this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social'],
+          [`Fecha de Generación: ${new Date().toLocaleString()}`],
+          [],
+          ['Información General del Empleado'],
+          ['DNI / Identidad', row.identidad || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
+          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
+          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', '', ''],
+          [],
+          ['Motivo de Ingreso a Lista de Monitoreo'],
+          [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este empleado.'],
+          [],
+          ['Detalle de Coincidencias Encontradas'],
+          ['Condición Actúa', 'Nro Patronal', 'Empresa', 'Razón Social', 'Lista', 'Fecha Coincidencia', 'Fecha Calificación']
+        ];
+
+        detalles.forEach(det => {
+          data.push([
+            det.tipoCondicionActuaDesc,
+            det.numeroPatrono,
+            det.nombreEmpresa,
+            det.razoSoci,
+            det.listaCoincidencia,
+            det.fechaCoincidencia ? this.formatDate(det.fechaCoincidencia) : '',
+            det.fechaCalifico ? this.formatDate(det.fechaCalifico) : ''
+          ]);
+        });
+
+        this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
+
+        const fileName = `Ficha_Empleado_${row.identidad}.xlsx`;
+        this.escribirFichaExcel(data, 'Ficha Empleado', fileName);
+        this.registrarAuditoriaFichaExcel(row.identidad, 'empleado', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        console.error('Error al exportar ficha Excel de empleado:', err);
+        this.cargando.set(false);
+      }
+    });
   }
 
   exportarExcel() {
@@ -2603,8 +2902,13 @@ export class MonitoreoListasComponent implements OnInit {
     this.seguimientoEditandoId.set(null);
     this.evidenciasExistentes.set([]);
     this.formComentarioSeguimiento.set('');
-    this.filtroSeguimientoDesde.set('');
-    this.filtroSeguimientoHasta.set('');
+    if (this.reporteSeguimientoDocumento() === docNum) {
+      this.filtroSeguimientoDesde.set(this.reporteSeguimientoDesde());
+      this.filtroSeguimientoHasta.set(this.reporteSeguimientoHasta());
+    } else {
+      this.filtroSeguimientoDesde.set('');
+      this.filtroSeguimientoHasta.set('');
+    }
     this.archivosSeleccionados.set([]);
     this.modalSeguimientoAbierto.set(true);
 
@@ -2644,6 +2948,9 @@ export class MonitoreoListasComponent implements OnInit {
       return;
     }
 
+    this.reporteSeguimientoDocumento.set(entidad.noDocumento);
+    this.reporteSeguimientoDesde.set(desde);
+    this.reporteSeguimientoHasta.set(hasta);
     this.cargarSeguimientos(entidad.noDocumento);
   }
 
@@ -2651,6 +2958,11 @@ export class MonitoreoListasComponent implements OnInit {
     const entidad = this.entidadSeleccionada();
     this.filtroSeguimientoDesde.set('');
     this.filtroSeguimientoHasta.set('');
+    if (entidad && this.reporteSeguimientoDocumento() === entidad.noDocumento) {
+      this.reporteSeguimientoDocumento.set('');
+      this.reporteSeguimientoDesde.set('');
+      this.reporteSeguimientoHasta.set('');
+    }
     if (entidad) {
       this.cargarSeguimientos(entidad.noDocumento);
     }

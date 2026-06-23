@@ -60,13 +60,13 @@ export const routes: Routes = [
             router.navigate(['/cargar-listas']);
             return false;
           }
-          if (ids.some(id => id > 7)) { // Dynamic fallback for any newly registered module like Coincidencias Patrono
-            const targetMod = auth.usuario()?.modulosIds?.find(id => id > 7);
-            if (targetMod) {
-              // We will just let it navigate to sin-acceso or handle it dynamically if we know the ID.
-              // Actually, since we'll query DB or we know Coincidencias Patrono is assigned, let's allow finding route:
-              // Let's add it explicitly if they have access to modulo > 7
-            }
+          if (ids.includes(8)) {
+            router.navigate(['/coincidencias-patrono']);
+            return false;
+          }
+          if (ids.includes(9)) {
+            router.navigate(['/coincidencias-empleado']);
+            return false;
           }
           router.navigate(['/sin-acceso']);
           return false;
@@ -105,12 +105,12 @@ export const routes: Routes = [
       {
         path: 'coincidencias-patrono',
         component: CoincidenciasPatronoComponent,
-        canActivate: [() => true] // We are currently allowing all admins
+        canActivate: [moduloGuard(8)]
       },
       {
         path: 'coincidencias-empleado',
         component: CoincidenciasEmpleadoComponent,
-        canActivate: [() => true]
+        canActivate: [moduloGuard(9)]
       },
       { path: '', redirectTo: 'home', pathMatch: 'full' }
     ]

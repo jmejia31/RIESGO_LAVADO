@@ -40,6 +40,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
               <option value="UPDATE">UPDATE (Modificar)</option>
               <option value="DELETE">DELETE (Eliminar)</option>
               <option value="VER">VER (Visualizar)</option>
+              <option value="UPLOAD">UPLOAD (Carga)</option>
               <option value="LOGIN">LOGIN</option>
               <option value="LOGOUT">LOGOUT</option>
             </select>
@@ -54,6 +55,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
               <option value="Auth">Autenticación (Auth)</option>
               <option value="AdminUsuarios">Gestión de Usuarios</option>
               <option value="MonitoreoListas">Monitoreo de Listas</option>
+              <option value="CargaListas">Carga de Listas</option>
             </select>
           </div>
 
@@ -456,6 +458,7 @@ export class BitacoraComponent implements OnInit {
       case 'UPDATE': return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10';
       case 'DELETE': return 'bg-red-50 text-red-700 ring-1 ring-red-600/10';
       case 'VER': return 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
+      case 'UPLOAD': return 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10';
       case 'LOGIN': return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/10';
       case 'LOGOUT': return 'bg-slate-50 text-slate-700 ring-1 ring-slate-600/10';
       default: return 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/10';

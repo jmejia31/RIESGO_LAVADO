@@ -17,6 +17,19 @@ namespace RL.API.Controllers
     [Produces("application/json")]
     public class ListasController : ControllerBase
     {
+        private const long MaxEvidenceFileBytes = 10 * 1024 * 1024;
+        private static readonly Dictionary<string, string[]> AllowedEvidenceMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            [".pdf"] = new[] { "application/pdf" },
+            [".png"] = new[] { "image/png" },
+            [".jpg"] = new[] { "image/jpeg", "image/pjpeg" },
+            [".jpeg"] = new[] { "image/jpeg", "image/pjpeg" },
+            [".doc"] = new[] { "application/msword", "application/octet-stream" },
+            [".docx"] = new[] { "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/octet-stream" },
+            [".xls"] = new[] { "application/vnd.ms-excel", "application/octet-stream" },
+            [".xlsx"] = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip", "application/octet-stream" }
+        };
+
         private readonly IListasRepository _repo;
         private readonly IAuditoriaRepository _auditoriaRepo;
 
@@ -24,6 +37,63 @@ namespace RL.API.Controllers
         {
             _repo = repo;
             _auditoriaRepo = auditoriaRepo;
+        }
+
+        private static string? ValidarArchivosEvidencia(List<IFormFile>? archivos)
+        {
+            if (archivos == null || archivos.Count == 0) return null;
+
+            foreach (var file in archivos)
+            {
+                var nombreOriginal = Path.GetFileName(file.FileName);
+                if (string.IsNullOrWhiteSpace(nombreOriginal))
+                    return "El nombre del archivo de evidencia no es valido.";
+
+                if (nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                    return $"El archivo {nombreOriginal} contiene caracteres no permitidos en el nombre.";
+
+                if (file.Length <= 0)
+                    return $"El archivo {nombreOriginal} esta vacio.";
+
+                if (file.Length > MaxEvidenceFileBytes)
+                    return $"El archivo {nombreOriginal} supera el limite de 10 MB.";
+
+                var extension = Path.GetExtension(nombreOriginal);
+                if (string.IsNullOrWhiteSpace(extension) || !AllowedEvidenceMimeTypes.TryGetValue(extension, out var mimeTypes))
+                    return $"El archivo {nombreOriginal} tiene una extension no permitida.";
+
+                var contentType = file.ContentType?.Trim();
+                if (string.IsNullOrWhiteSpace(contentType))
+                    return $"No se pudo identificar el tipo de contenido del archivo {nombreOriginal}.";
+
+                if (!Array.Exists(mimeTypes, mime => string.Equals(mime, contentType, StringComparison.OrdinalIgnoreCase)))
+                    return $"El archivo {nombreOriginal} tiene un tipo de contenido no permitido ({contentType}).";
+            }
+
+            return null;
+        }
+
+        private async Task GuardarArchivosEvidenciaAsync(long detalleId, List<IFormFile>? archivos, long usuarioId)
+        {
+            if (archivos == null || archivos.Count == 0) return;
+
+            var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Evidencias");
+            Directory.CreateDirectory(uploadDir);
+
+            foreach (var file in archivos)
+            {
+                var nombreOriginal = Path.GetFileName(file.FileName);
+                var extension = Path.GetExtension(nombreOriginal);
+                var uniqueName = $"{Guid.NewGuid():N}{extension}";
+                var filePath = Path.Combine(uploadDir, uniqueName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                await _repo.GuardarEvidenciaMetaAsync(detalleId, nombreOriginal, file.ContentType, uniqueName, usuarioId);
+            }
         }
 
         [HttpGet("juridicas")]
@@ -211,35 +281,17 @@ namespace RL.API.Controllers
             if (!positivoId.HasValue)
                 return NotFound(new { success = false, mensaje = "No se encontró un registro positivo activo para este documento." });
 
+            var errorArchivo = ValidarArchivosEvidencia(archivos);
+            if (errorArchivo != null)
+                return BadRequest(new { success = false, mensaje = errorArchivo });
+
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             // 1. Registrar el seguimiento
             long detalleId = await _repo.RegistrarSeguimientoAsync(positivoId.Value, motivoIngreso, usuarioId);
 
             // 2. Guardar archivos de evidencia físicamente y sus metadatos
-            if (archivos != null && archivos.Count > 0)
-            {
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Evidencias");
-                if (!Directory.Exists(uploadDir))
-                {
-                    Directory.CreateDirectory(uploadDir);
-                }
-
-                foreach (var file in archivos)
-                {
-                    if (file.Length == 0) continue;
-
-                    var uniqueName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                    var filePath = Path.Combine(uploadDir, uniqueName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    await _repo.GuardarEvidenciaMetaAsync(detalleId, file.FileName, file.ContentType, uniqueName, usuarioId);
-                }
-            }
+            await GuardarArchivosEvidenciaAsync(detalleId, archivos, usuarioId);
 
             return Ok(new { success = true, mensaje = "Seguimiento y evidencia registrados correctamente." });
         }
@@ -276,6 +328,10 @@ namespace RL.API.Controllers
             if (string.IsNullOrWhiteSpace(motivoIngreso))
                 return BadRequest(new { success = false, mensaje = "El comentario de seguimiento es obligatorio." });
 
+            var errorArchivo = ValidarArchivosEvidencia(archivos);
+            if (errorArchivo != null)
+                return BadRequest(new { success = false, mensaje = errorArchivo });
+
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             // 1. Actualizar el seguimiento
@@ -284,29 +340,7 @@ namespace RL.API.Controllers
                 return NotFound(new { success = false, mensaje = "No se encontró el seguimiento a actualizar." });
 
             // 2. Guardar nuevos archivos de evidencia físicamente y sus metadatos
-            if (archivos != null && archivos.Count > 0)
-            {
-                var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Evidencias");
-                if (!Directory.Exists(uploadDir))
-                {
-                    Directory.CreateDirectory(uploadDir);
-                }
-
-                foreach (var file in archivos)
-                {
-                    if (file.Length == 0) continue;
-
-                    var uniqueName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                    var filePath = Path.Combine(uploadDir, uniqueName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await file.CopyToAsync(stream);
-                    }
-
-                    await _repo.GuardarEvidenciaMetaAsync(detalleId, file.FileName, file.ContentType, uniqueName, usuarioId);
-                }
-            }
+            await GuardarArchivosEvidenciaAsync(detalleId, archivos, usuarioId);
 
             return Ok(new { success = true, mensaje = "Seguimiento actualizado correctamente." });
         }
@@ -325,7 +359,7 @@ namespace RL.API.Controllers
             if (!ok)
                 return BadRequest(new { success = false, mensaje = "No se pudo eliminar el registro de evidencia." });
 
-            // 2. Eliminar del disco físico
+            // 2. Conservar el archivo fisico; la eliminacion es solo logica.
             var uploadDir = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", "Evidencias");
             var filePath = Path.Combine(uploadDir, meta.Value.Ruta);
 
@@ -333,7 +367,7 @@ namespace RL.API.Controllers
             {
                 try
                 {
-                    System.IO.File.Delete(filePath);
+                    Serilog.Log.Information("Evidencia inactivada logicamente; archivo fisico conservado: {FilePath}", filePath);
                 }
                 catch (Exception ex)
                 {
