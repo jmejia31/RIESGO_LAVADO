@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 
 @Component({
   selector: 'app-sin-acceso',
@@ -15,8 +17,10 @@ import { RouterLink } from '@angular/router';
           </svg>
         </div>
         <h1 class="text-2xl font-bold text-gray-800 mb-2">Acceso Denegado</h1>
-        <p class="text-gray-500 mb-6">
-          No tiene permisos para acceder a este módulo. 
+        <p class="text-gray-500 mb-4">
+          {{ mensaje() }}
+        </p>
+        <p class="text-sm text-gray-400 mb-6">
           Contacte al administrador del sistema para solicitar acceso.
         </p>
         <a routerLink="/home"
@@ -27,4 +31,13 @@ import { RouterLink } from '@angular/router';
     </div>
   `
 })
-export class SinAccesoComponent {}
+export class SinAccesoComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly mensajeDefault = 'No tiene permisos para acceder a este modulo.';
+  private readonly mensajeParam = toSignal(
+    this.route.queryParamMap.pipe(map(params => params.get('mensaje'))),
+    { initialValue: null }
+  );
+
+  readonly mensaje = computed(() => this.mensajeParam() || this.mensajeDefault);
+}

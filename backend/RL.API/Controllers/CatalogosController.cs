@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RL.API.Security;
 using RL.API.Services;
 
 namespace RL.API.Controllers;
@@ -18,6 +19,7 @@ public class CatalogosController : ControllerBase
     }
 
     [HttpGet("roles")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> Roles()
     {
         var roles = await _service.ObtenerRolesAsync();
@@ -25,6 +27,7 @@ public class CatalogosController : ControllerBase
     }
 
     [HttpGet("dominios")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> Dominios()
     {
         var doms = await _service.ObtenerDominiosAsync();

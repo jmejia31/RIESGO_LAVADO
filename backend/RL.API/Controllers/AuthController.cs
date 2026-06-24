@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using RL.API.DTOs;
+using RL.API.Security;
 using RL.API.Services;
 
 namespace RL.API.Controllers;
@@ -110,6 +111,7 @@ public class AuthController : ControllerBase
     /// <summary>Crear nuevo usuario (solo Admin)</summary>
     [HttpPost("usuarios")]
     [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> CrearUsuario([FromBody] CrearUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -138,6 +140,7 @@ public class AuthController : ControllerBase
     /// <summary>Actualizar usuario existente (solo Admin)</summary>
     [HttpPut("usuarios/{uid}")]
     [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> ActualizarUsuario(string uid, [FromBody] ActualizarUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -164,6 +167,7 @@ public class AuthController : ControllerBase
     /// <summary>Listar todos los usuarios (solo Admin)</summary>
     [HttpGet("usuarios")]
     [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> ListarUsuarios()
     {
         var usuarios = await _authService.ListarUsuariosAsync();
@@ -173,6 +177,7 @@ public class AuthController : ControllerBase
     /// <summary>Activar o desactivar usuario (solo Admin)</summary>
     [HttpPut("usuarios/{uid}/estado")]
     [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> CambiarEstadoUsuario(string uid, [FromBody] EstadoUsuarioDto dto)
     {
         try
@@ -192,6 +197,7 @@ public class AuthController : ControllerBase
     /// <summary>Validar usuario en Active Directory</summary>
     [HttpGet("validar-dominio")]
     [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
     public async Task<IActionResult> ValidarDominio([FromQuery] string usuario, [FromQuery] string dominio = "")
     {
         if (string.IsNullOrWhiteSpace(usuario))

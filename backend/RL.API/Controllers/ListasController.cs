@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Repositories;
 using RL.API.DTOs;
+using RL.API.Security;
 using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
@@ -119,6 +120,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("evidencias/politica")]
+        [ModuloAuthorize(4)]
         public IActionResult ObtenerPoliticaEvidencias()
         {
             var maximoMb = ObtenerMaximoMbEvidencia();
@@ -161,6 +163,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("juridicas")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerJuridicas()
         {
             var result = await _repo.ObtenerJuridicasAsync();
@@ -168,6 +171,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("naturales")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerNaturales()
         {
             var result = await _repo.ObtenerNaturalesAsync();
@@ -175,6 +179,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("empleados")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerEmpleados()
         {
             var result = await _repo.ObtenerEmpleadosAsync();
@@ -182,6 +187,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("naturales/{numeroIdentificacion}/detalle")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleNatural(string numeroIdentificacion)
         {
             var result = await _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
@@ -189,6 +195,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("empleados/{numeroIdentificacion}/detalle")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerDetalleEmpleado(string numeroIdentificacion)
         {
             var result = await _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);
@@ -196,6 +203,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("tipos-documento")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerTiposDocumento()
         {
             var result = await _repo.ObtenerTiposDocumentoAsync();
@@ -203,14 +211,15 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("tipos-listas-cautela")]
+        [ModuloAuthorize(4, 6, 7)]
         public async Task<IActionResult> ObtenerTiposListasCautela()
         {
             var result = await _repo.ObtenerTiposListasCautelaAsync();
             return Ok(new { success = true, datos = result });
         }
 
-        [AllowAnonymous]
         [HttpGet("resumen")]
+        [ModuloAuthorize(7)]
         public async Task<IActionResult> ObtenerResumenListas()
         {
             try
@@ -226,6 +235,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("{id}/exportar")]
+        [ModuloAuthorize(7)]
         public async Task<IActionResult> ObtenerDetalleListaParaExportar(int id)
         {
             try
@@ -250,6 +260,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPost("tipos-listas-cautela")]
+        [ModuloAuthorize(6)]
         public async Task<IActionResult> CrearTipoListaCautela([FromBody] TipoListaCautelaDto dto)
         {
             if (!ModelState.IsValid)
@@ -266,6 +277,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPut("tipos-listas-cautela/{id}")]
+        [ModuloAuthorize(6)]
         public async Task<IActionResult> ActualizarTipoListaCautela(int id, [FromBody] TipoListaCautelaDto dto)
         {
             if (!ModelState.IsValid)
@@ -282,6 +294,7 @@ namespace RL.API.Controllers
         }
 
         [HttpDelete("tipos-listas-cautela/{id}")]
+        [ModuloAuthorize(6)]
         public async Task<IActionResult> EliminarTipoListaCautela(int id)
         {
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -303,6 +316,7 @@ namespace RL.API.Controllers
 
 
         [HttpPost("positivos")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> RegistrarPositivo([FromBody] RegistrarPositivoDto dto)
         {
             if (!ModelState.IsValid)
@@ -316,6 +330,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("positivos/{noDocumento}")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerPositivoPorDocumento(string noDocumento)
         {
             var result = await _repo.ObtenerPositivoPorDocumentoAsync(noDocumento);
@@ -323,6 +338,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("positivos/{noDocumento}/seguimientos")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerSeguimientos(string noDocumento, [FromQuery] DateTime? desde, [FromQuery] DateTime? hasta)
         {
             if (desde.HasValue && hasta.HasValue && desde.Value.Date > hasta.Value.Date)
@@ -333,6 +349,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPost("positivos/{noDocumento}/seguimientos")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> RegistrarSeguimiento(
             string noDocumento,
             [FromForm] string motivoIngreso,
@@ -361,6 +378,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("evidencias/{evidenciaId}")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> DescargarEvidencia(long evidenciaId)
         {
             var meta = await _repo.ObtenerEvidenciaPorIdAsync(evidenciaId);
@@ -384,6 +402,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPut("seguimientos/{detalleId}")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> ActualizarSeguimiento(
             long detalleId,
             [FromForm] string motivoIngreso,
@@ -410,6 +429,7 @@ namespace RL.API.Controllers
         }
 
         [HttpDelete("evidencias/{evidenciaId}")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> EliminarEvidencia(long evidenciaId, [FromBody] MotivoEliminacionDto? dto)
         {
             // El motivo es obligatorio en backend para que la auditoria no dependa solo del frontend.
@@ -448,6 +468,7 @@ namespace RL.API.Controllers
         }
 
         [HttpDelete("seguimientos/{detalleId}")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> EliminarSeguimiento(long detalleId, [FromBody] MotivoEliminacionDto? dto)
         {
             // El seguimiento tambien requiere justificacion para conservar trazabilidad LAFT.
@@ -463,6 +484,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPost("positivos/{noDocumento}/reporte-impreso")]
+        [ModuloAuthorize(4)]
         public async Task<IActionResult> RegistrarReporteImpreso(string noDocumento, [FromBody] System.Text.Json.JsonElement data)
         {
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -472,6 +494,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("coincidencias-patrono/resumen")]
+        [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerResumenCoincidenciasPatrono()
         {
             try
@@ -487,6 +510,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("coincidencias-patrono/detalle")]
+        [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerDetalleCoincidenciasPatrono([FromQuery] string fecha)
         {
             try
@@ -507,6 +531,7 @@ namespace RL.API.Controllers
         public record CalificarRequest(int TipoCalificacionId);
 
         [HttpPut("coincidencias-patrono/{id}/calificar")]
+        [ModuloAuthorize(8)]
         public async Task<IActionResult> CalificarCoincidencia(long id, [FromBody] CalificarRequest body)
         {
             try
@@ -531,6 +556,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("coincidencias-patrono/resumen-match")]
+        [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerResumenMatchLista([FromQuery] long dataId, [FromQuery] string nombre)
         {
             try
@@ -549,6 +575,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("coincidencias-empleado/resumen")]
+        [ModuloAuthorize(9)]
         public async Task<IActionResult> ObtenerResumenCoincidenciasEmpleado()
         {
             try
@@ -564,6 +591,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet("coincidencias-empleado/detalle")]
+        [ModuloAuthorize(9)]
         public async Task<IActionResult> ObtenerDetalleCoincidenciasEmpleado([FromQuery] string fecha)
         {
             try
@@ -582,6 +610,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPut("coincidencias-empleado/{id}/calificar")]
+        [ModuloAuthorize(9)]
         public async Task<IActionResult> CalificarCoincidenciaEmpleado(long id, [FromBody] CalificarRequest body)
         {
             try
@@ -612,6 +641,7 @@ namespace RL.API.Controllers
         }
 
         [HttpPost("cautela/upload")]
+        [ModuloAuthorize(7)]
         public async Task<IActionResult> UploadCautela([FromForm] UploadCautelaRequest request)
         {
             try

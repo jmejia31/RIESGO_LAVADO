@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Repositories;
 using RL.API.DTOs;
+using RL.API.Security;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ namespace RL.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [ModuloAuthorize(5)]
     [Produces("application/json")]
     public class AuditoriaController : ControllerBase
     {
