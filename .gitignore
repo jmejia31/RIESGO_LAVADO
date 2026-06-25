@@ -32,6 +32,7 @@ backend/RL.API/Uploads/
 backend/RL.API/wwwroot/uploads/
 
 # Codex/local generated artifacts
+.codex/
 .codex-remote-attachments/
 docs/_render_*/
 
