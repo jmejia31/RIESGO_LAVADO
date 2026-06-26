@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -15,7 +15,8 @@ type EstadoAd = 'idle' | 'verificando' | 'valido' | 'no-existe' | 'bloqueado' | 
   selector:    'app-usuarios',
   standalone:  true,
   imports:     [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './usuarios.component.html'
+  templateUrl: './usuarios.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
   usuarios     = signal<UsuarioInfoDto[]>([]);

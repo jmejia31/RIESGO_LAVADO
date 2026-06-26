@@ -1,4 +1,4 @@
-import { Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule }      from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -9,7 +9,8 @@ import { ConfiguracionService } from '../../../core/services/configuracion.servi
   selector:    'app-login',
   standalone:  true,
   imports:     [CommonModule, ReactiveFormsModule],
-  templateUrl: './login.component.html'
+  templateUrl: './login.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria.service';
@@ -7,6 +7,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
   selector: 'app-bitacora',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-full space-y-6">
       

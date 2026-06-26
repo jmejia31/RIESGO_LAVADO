@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService, TipoListaCautela } from '../../../core/services/listas.service';
@@ -7,7 +7,8 @@ import { ListasService, TipoListaCautela } from '../../../core/services/listas.s
   selector: 'app-tipo-listas',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './tipo-listas.component.html'
+  templateUrl: './tipo-listas.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class TipoListasComponent implements OnInit {
   listas = signal<TipoListaCautela[]>([]);

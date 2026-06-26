@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService, TipoListaCautela, ResumenLista } from '../../../core/services/listas.service';
@@ -9,7 +9,8 @@ import * as XLSX from 'xlsx';
   selector: 'app-cargar-listas',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  templateUrl: './cargar-listas.component.html'
+  templateUrl: './cargar-listas.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class CargarListasComponent implements OnInit {
   tiposListas = signal<TipoListaCautela[]>([]);

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService, CoincidenciaEmpleadoResumen, CoincidenciaEmpleadoDetalle } from '../../../core/services/listas.service';
@@ -9,7 +9,8 @@ import * as XLSX from 'xlsx';
   selector: 'app-coincidencias-empleado',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './coincidencias-empleado.component.html'
+  templateUrl: './coincidencias-empleado.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class CoincidenciasEmpleadoComponent implements OnInit {
   resumen = signal<CoincidenciaEmpleadoResumen[]>([]);

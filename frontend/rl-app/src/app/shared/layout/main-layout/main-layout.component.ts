@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +10,8 @@ import { Modulo } from '../../../core/models/catalogo.models';
   selector: 'app-main-layout',
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
-  templateUrl: './main-layout.component.html'
+  templateUrl: './main-layout.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager
 })
 export class MainLayoutComponent implements OnInit {
   sidebarAbierto = signal(true);

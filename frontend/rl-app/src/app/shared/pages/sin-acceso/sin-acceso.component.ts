@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
@@ -7,6 +7,7 @@ import { map } from 'rxjs';
   selector: 'app-sin-acceso',
   standalone: true,
   imports: [RouterLink],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
       <div class="text-center max-w-md">

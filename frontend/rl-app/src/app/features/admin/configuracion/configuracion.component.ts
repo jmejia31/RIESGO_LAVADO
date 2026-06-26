@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/services/configuracion.service';
@@ -7,6 +7,7 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
   selector: 'app-configuracion',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="max-w-6xl mx-auto space-y-6">
       
