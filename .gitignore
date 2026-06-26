@@ -35,6 +35,7 @@ backend/RL.API/wwwroot/uploads/
 .codex/
 .codex-remote-attachments/
 docs/_render_*/
+docs/Herramientas/*.msi
 
 # Office temporary files
 ~$*.docx

@@ -1068,7 +1068,7 @@ namespace RL.API.Repositories
                 {
                     string colName = reader.GetName(i);
                     object colVal = reader.GetValue(i);
-                    row[colName] = colVal == DBNull.Value ? null : colVal;
+                    row[colName] = colVal == DBNull.Value ? null! : colVal;
                 }
                 resultList.Add(row);
             }
@@ -1638,7 +1638,7 @@ namespace RL.API.Repositories
                 var listT11 = new List<string>();
                 var listResumen = new List<string>();
 
-                string Safe(string val) => string.IsNullOrWhiteSpace(val) ? "-0-" : val;
+                string Safe(string? val) => string.IsNullOrWhiteSpace(val) ? "-0-" : val;
 
                 // INDIVIDUALS
                 var individuals = docXml.SelectNodes("/CONSOLIDATED_LIST/INDIVIDUALS/INDIVIDUAL");
@@ -1658,40 +1658,45 @@ namespace RL.API.Repositories
                         string texto4 = Safe(nodo["LISTED_ON"]?.InnerText);
 
                         string texto5 = "-0-";
-                        if (nodo["DESIGNATION"] != null && nodo["DESIGNATION"].HasChildNodes)
+                        var designation = nodo["DESIGNATION"];
+                        if (designation != null && designation.HasChildNodes)
                         {
                             var ds = new List<string>();
-                            foreach (System.Xml.XmlNode child in nodo["DESIGNATION"].ChildNodes) ds.Add(child.InnerText);
+                            foreach (System.Xml.XmlNode child in designation.ChildNodes) ds.Add(child.InnerText);
                             texto5 = string.Join(", ", ds);
                         }
 
                         string texto6 = "-0-";
-                        if (nodo["INDIVIDUAL_ALIAS"] != null && nodo["INDIVIDUAL_ALIAS"].HasChildNodes)
+                        var individualAlias = nodo["INDIVIDUAL_ALIAS"];
+                        if (individualAlias != null && individualAlias.HasChildNodes)
                         {
-                            texto6 = nodo["INDIVIDUAL_ALIAS"].ChildNodes[0]?.InnerText ?? "-0-";
+                            texto6 = individualAlias.ChildNodes[0]?.InnerText ?? "-0-";
                         }
 
                         string texto7 = "-0-";
-                        if (nodo["INDIVIDUAL_DATE_OF_BIRTH"] != null && nodo["INDIVIDUAL_DATE_OF_BIRTH"].ChildNodes.Count > 1)
+                        var dateOfBirth = nodo["INDIVIDUAL_DATE_OF_BIRTH"];
+                        if (dateOfBirth != null && dateOfBirth.ChildNodes.Count > 1)
                         {
-                            t0 = nodo["INDIVIDUAL_DATE_OF_BIRTH"].ChildNodes[0]?.InnerText ?? "";
-                            t1 = nodo["INDIVIDUAL_DATE_OF_BIRTH"].ChildNodes[1]?.InnerText ?? "";
+                            t0 = dateOfBirth.ChildNodes[0]?.InnerText ?? "";
+                            t1 = dateOfBirth.ChildNodes[1]?.InnerText ?? "";
                             texto7 = $"{t0}, {t1}";
                         }
 
                         string texto8 = "-0-";
-                        if (nodo["INDIVIDUAL_PLACE_OF_BIRTH"] != null && nodo["INDIVIDUAL_PLACE_OF_BIRTH"].ChildNodes.Count > 1)
+                        var placeOfBirth = nodo["INDIVIDUAL_PLACE_OF_BIRTH"];
+                        if (placeOfBirth != null && placeOfBirth.ChildNodes.Count > 1)
                         {
-                            t0 = "CITY: " + (nodo["INDIVIDUAL_PLACE_OF_BIRTH"].ChildNodes[0]?.InnerText ?? "");
-                            t1 = "COUNTRY: " + (nodo["INDIVIDUAL_PLACE_OF_BIRTH"].ChildNodes[1]?.InnerText ?? "");
+                            t0 = "CITY: " + (placeOfBirth.ChildNodes[0]?.InnerText ?? "");
+                            t1 = "COUNTRY: " + (placeOfBirth.ChildNodes[1]?.InnerText ?? "");
                             texto8 = $"{t0}, {t1}";
                         }
 
                         string texto9 = "-0-";
-                        if (nodo["INDIVIDUAL_DOCUMENT"] != null && nodo["INDIVIDUAL_DOCUMENT"].ChildNodes.Count > 1)
+                        var individualDocument = nodo["INDIVIDUAL_DOCUMENT"];
+                        if (individualDocument != null && individualDocument.ChildNodes.Count > 1)
                         {
-                            t0 = nodo["INDIVIDUAL_DOCUMENT"].ChildNodes[0]?.InnerText ?? "";
-                            t1 = nodo["INDIVIDUAL_DOCUMENT"].ChildNodes[1]?.InnerText ?? "";
+                            t0 = individualDocument.ChildNodes[0]?.InnerText ?? "";
+                            t1 = individualDocument.ChildNodes[1]?.InnerText ?? "";
                             texto9 = $"{t0}, {t1}";
                         }
 
@@ -1732,18 +1737,20 @@ namespace RL.API.Repositories
                         string texto5 = "-0-";
 
                         string texto6 = "-0-";
-                        if (nodo["ENTITY_ALIAS"] != null && nodo["ENTITY_ALIAS"].ChildNodes.Count > 1)
+                        var entityAlias = nodo["ENTITY_ALIAS"];
+                        if (entityAlias != null && entityAlias.ChildNodes.Count > 1)
                         {
-                            texto6 = nodo["ENTITY_ALIAS"].ChildNodes[1]?.InnerText ?? "-0-";
+                            texto6 = entityAlias.ChildNodes[1]?.InnerText ?? "-0-";
                         }
 
                         string texto7 = "-0-";
 
                         string texto8 = "-0-";
-                        if (nodo["ENTITY_ADDRESS"] != null && nodo["ENTITY_ADDRESS"].ChildNodes.Count > 1)
+                        var entityAddress = nodo["ENTITY_ADDRESS"];
+                        if (entityAddress != null && entityAddress.ChildNodes.Count > 1)
                         {
-                            string t0 = "STREET: " + (nodo["ENTITY_ADDRESS"].ChildNodes[0]?.InnerText ?? "");
-                            string t1 = "CITY: " + (nodo["ENTITY_ADDRESS"].ChildNodes[1]?.InnerText ?? "");
+                            string t0 = "STREET: " + (entityAddress.ChildNodes[0]?.InnerText ?? "");
+                            string t1 = "CITY: " + (entityAddress.ChildNodes[1]?.InnerText ?? "");
                             texto8 = $"{t0}, {t1}";
                         }
 
@@ -1961,13 +1968,13 @@ namespace RL.API.Repositories
                         string texto6 = "-0-";
                         string texto7 = "-0-";
                         
-                        string depto = fieldCount > 5 && excelReader.GetValue(5) != null ? excelReader.GetValue(5).ToString() : "";
-                        string muni = fieldCount > 4 && excelReader.GetValue(4) != null ? excelReader.GetValue(4).ToString() : "";
+                        string depto = fieldCount > 5 && excelReader.GetValue(5) != null ? excelReader.GetValue(5)?.ToString() ?? "" : "";
+                        string muni = fieldCount > 4 && excelReader.GetValue(4) != null ? excelReader.GetValue(4)?.ToString() ?? "" : "";
                         string texto8 = $"DEPARTAMENTO: {depto}, MUNICIPIO: {muni}".ToUpper();
                         
                         string texto9 = fieldCount > 1 && excelReader.GetValue(1) != null ? excelReader.GetValue(1).ToString()!.ToUpper() : "";
                         
-                        string partido = fieldCount > 7 && excelReader.GetValue(7) != null ? excelReader.GetValue(7).ToString() : "";
+                        string partido = fieldCount > 7 && excelReader.GetValue(7) != null ? excelReader.GetValue(7)?.ToString() ?? "" : "";
                         string texto10 = $"PARTIDO: {partido}";
                         
                         string texto11 = "-0-";

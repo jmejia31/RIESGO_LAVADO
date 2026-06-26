@@ -200,7 +200,7 @@ public class AuthService : IAuthService
             {
                 // Registramos el error de envío de correo en los logs pero no impedimos la creación del usuario
                 // ya que la transacción de base de datos fue exitosa.
-                // Podríamos lanzar una advertencia o logearlo.
+                Serilog.Log.Warning(ex, "No se pudo enviar el correo de bienvenida al usuario {Email}", dto.Email);
             }
         }
 

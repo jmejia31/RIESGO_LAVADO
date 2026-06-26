@@ -7,6 +7,9 @@ using RL.API.Infrastructure;
 using RL.API.Middleware;
 using RL.API.Repositories;
 using RL.API.Services;
+using System.Runtime.Versioning;
+
+[assembly: SupportedOSPlatform("windows")]
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -13,7 +13,6 @@
     <!-- Oracle -->
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="MailKit" Version="4.17.0" />
-    <PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.4.0" />
 
     <!-- JWT -->
@@ -35,7 +34,6 @@
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
 
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.9" />
   </ItemGroup>
 
 </Project>

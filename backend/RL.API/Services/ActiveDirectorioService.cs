@@ -1,4 +1,5 @@
 using System.DirectoryServices.AccountManagement;
+using System.Runtime.Versioning;
 
 namespace RL.API.Services;
 
@@ -25,6 +26,7 @@ public class ConfigDominio
     public string? Password  { get; set; }
 }
 
+[SupportedOSPlatform("windows")]
 public class ActiveDirectorioService : IActivoDirectorioService
 {
     private readonly IConfiguration _config;

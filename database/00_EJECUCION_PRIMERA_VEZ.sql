@@ -1,0 +1,35 @@
+-- ============================================================
+-- SISTEMA DE GESTION DE RIESGO DE LAVADO DE ACTIVOS
+-- Script maestro: instalacion primera vez
+-- Uso: Ambiente nuevo o base vacia aprobada por DBA.
+-- Importante: No ejecutar sobre produccion con informacion real.
+-- ============================================================
+
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+
+PROMPT ============================================================
+PROMPT EJECUCION PRIMERA VEZ - AMBIENTE NUEVO
+PROMPT Valide respaldo y aprobacion DBA antes de continuar.
+PROMPT ============================================================
+
+@01_create_tables.sql
+@02_seed_data.sql
+@03_create_modules_table.sql
+@04_alter_config_sistema.sql
+@05_register_monitoreo_listas.sql
+@06_alter_usuarios_change_pass.sql
+@08_register_bitacora.sql
+@09_create_detalle_evidencia.sql
+@10_register_tipo_listas_module.sql
+@11_register_cargar_listas_module.sql
+@12_register_coincidencias_patrono_module.sql
+@13_create_calificaciones_coincidencias.sql
+@14_register_coincidencias_empleado_module.sql
+@15_update_detalle_evidencia_soft_delete.sql
+@16_alter_lista_positivos_origen_registro.sql
+
+PROMPT ============================================================
+PROMPT Instalacion primera vez finalizada.
+PROMPT ============================================================
+
+EXIT
