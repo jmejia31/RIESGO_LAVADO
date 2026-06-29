@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#9aa4b2"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.45"/></filter>
+    <style>
+      .bg{fill:#07090d}.panel{fill:#0d1117;stroke:#30363d;stroke-width:2;rx:24}.box{fill:#161b22;stroke:#6e7681;stroke-width:2;rx:10;filter:url(#shadow)}.blue{fill:#0f2632;stroke:#26a6c9;stroke-width:2;rx:10;filter:url(#shadow)}.green{fill:#0f2a1b;stroke:#22c55e;stroke-width:2;rx:10;filter:url(#shadow)}.orange{fill:#2a1f0f;stroke:#f0b429;stroke-width:2;rx:10;filter:url(#shadow)}.decision{fill:#1f2937;stroke:#38bdf8;stroke-width:2;filter:url(#shadow)}.title{fill:#fff;font-family:Segoe UI,Arial,sans-serif;font-size:34px;font-weight:700}.subtitle{fill:#9aa4b2;font-family:Segoe UI,Arial,sans-serif;font-size:18px}.text{fill:#fff;font-family:Segoe UI,Arial,sans-serif;font-size:18px;font-weight:600}.small{fill:#c9d1d9;font-family:Segoe UI,Arial,sans-serif;font-size:14px}.line{stroke:#9aa4b2;stroke-width:2.2;fill:none;marker-end:url(#arrow)}.label{fill:#facc15;font-family:Segoe UI,Arial,sans-serif;font-size:16px;font-weight:700}
+    </style>
+  </defs>
+  <rect class="bg" width="1400" height="900"/><rect class="panel" x="60" y="55" width="1280" height="790"/>
+  <text class="title" x="700" y="105" text-anchor="middle">Registro de una persona o entidad en seguimiento</text>
+  <text class="subtitle" x="700" y="135" text-anchor="middle">Proceso que evita duplicidad y deja el caso listo para control y evidencias</text>
+
+  <rect class="blue" x="120" y="210" width="260" height="75"/>
+  <text class="text" x="250" y="240" text-anchor="middle">Usuario identifica</text><text class="small" x="250" y="262" text-anchor="middle">persona, empresa o empleado</text>
+  <rect class="box" x="445" y="210" width="260" height="75"/>
+  <text class="text" x="575" y="240" text-anchor="middle">Completa formulario</text><text class="small" x="575" y="262" text-anchor="middle">datos básicos y motivo</text>
+  <rect class="box" x="770" y="210" width="260" height="75"/>
+  <text class="text" x="900" y="240" text-anchor="middle">Sistema revisa</text><text class="small" x="900" y="262" text-anchor="middle">si ya existe el registro</text>
+  <polygon class="decision" points="1135,195 1280,247 1135,299 990,247"/>
+  <text class="text" x="1135" y="242" text-anchor="middle">¿Ya</text><text class="text" x="1135" y="265" text-anchor="middle">existe?</text>
+
+  <rect class="orange" x="300" y="460" width="280" height="80"/>
+  <text class="text" x="440" y="492" text-anchor="middle">Actualiza registro</text><text class="small" x="440" y="516" text-anchor="middle">si ya estaba activo</text>
+  <rect class="green" x="820" y="460" width="280" height="80"/>
+  <text class="text" x="960" y="492" text-anchor="middle">Crea nuevo registro</text><text class="small" x="960" y="516" text-anchor="middle">si no existía</text>
+
+  <rect class="box" x="545" y="650" width="310" height="75"/>
+  <text class="text" x="700" y="680" text-anchor="middle">Caso listo para seguimiento</text><text class="small" x="700" y="702" text-anchor="middle">comentarios, evidencias y consultas</text>
+  <rect class="blue" x="545" y="775" width="310" height="55"/>
+  <text class="text" x="700" y="810" text-anchor="middle">Historial guardado</text>
+
+  <line class="line" x1="380" y1="247" x2="445" y2="247"/><line class="line" x1="705" y1="247" x2="770" y2="247"/><line class="line" x1="1030" y1="247" x2="990" y2="247"/>
+  <path class="line" d="M1040 280 C900 360 440 370 440 460"/><text class="label" x="805" y="374" text-anchor="middle">Sí</text>
+  <path class="line" d="M1230 280 C1230 360 960 370 960 460"/><text class="label" x="1155" y="374" text-anchor="middle">No</text>
+  <path class="line" d="M440 540 C440 610 620 610 650 650"/>
+  <path class="line" d="M960 540 C960 610 780 610 750 650"/>
+  <line class="line" x1="700" y1="725" x2="700" y2="775"/>
+</svg>
