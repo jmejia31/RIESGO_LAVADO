@@ -6,8 +6,19 @@ export const roleGuard = (roles: string[]): CanActivateFn => () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
 
+  if (!auth.usuario()) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  if (auth.requiereCambioPassword()) {
+    auth.cerrarSesionLocal();
+    router.navigate(['/login'], { queryParams: { razon: 'cambio-password' } });
+    return false;
+  }
+
   if (auth.tieneRol(roles)) return true;
 
-  router.navigate(['/login']); // Redirigir a login en caso de no poseer el rol
+  router.navigate(['/sin-acceso']);
   return false;
 };

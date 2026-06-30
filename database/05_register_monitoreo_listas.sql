@@ -10,7 +10,7 @@ BEGIN
   SELECT COUNT(*) INTO v_cnt FROM RL_MODULOS WHERE MOD_RUTA = '/monitoreo-listas';
   IF v_cnt = 0 THEN
     INSERT INTO RL_MODULOS (MOD_ID, MOD_NOMBRE, MOD_DESCRIPCION, MOD_RUTA, MOD_ICONO, MOD_SECCION, MOD_ACTIVO)
-    VALUES (SEQ_RL_MODULOS.NEXTVAL, 'Monitoreo de Listas', 'Reportes de coincidencias de listas para Jurídicas, Naturales y Empleados', '/monitoreo-listas', 'shield', 'Administración', 1);
+    VALUES (4, 'Monitoreo de Listas', 'Reportes de coincidencias de listas para Jurídicas, Naturales y Empleados', '/monitoreo-listas', 'shield', 'Administración', 1);
   END IF;
 END;
 /

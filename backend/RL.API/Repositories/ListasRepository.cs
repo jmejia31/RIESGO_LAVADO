@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.DTOs;
 using RL.API.Infrastructure;
@@ -37,7 +38,7 @@ namespace RL.API.Repositories
         Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoAsync(string fecha);
         Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasEmpleadoAsync();
         Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoAsync(string fecha);
-        Task<bool> CalificarCoincidenciaAsync(long reporteCoincidenciaId, int tipoCalificacionId, long usuarioId);
+        Task<bool> CalificarCoincidenciaAsync(long reporteCoincidenciaId, int tipoCalificacionId, long usuarioId, bool esEmpleado);
         Task<string> ObtenerResumenMatchListaAsync(long dataId, string nombre);
         Task<(bool EsValido, string Mensaje)> ValidarArchivoCautelaAsync(Microsoft.AspNetCore.Http.IFormFile archivo, int tipoListaCautelaId);
         Task<(bool Success, string Mensaje)> ProcesarArchivoCsvOfacAsync(Microsoft.AspNetCore.Http.IFormFile archivo, int tipoListaCautelaId, long usuarioId);
@@ -51,11 +52,13 @@ namespace RL.API.Repositories
     {
         private readonly OracleDbContext _db;
         private readonly IAuditoriaRepository _auditoriaRepo;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ListasRepository(OracleDbContext db, IAuditoriaRepository auditoriaRepo)
+        public ListasRepository(OracleDbContext db, IAuditoriaRepository auditoriaRepo, IHttpContextAccessor httpContextAccessor)
         {
             _db = db;
             _auditoriaRepo = auditoriaRepo;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasAsync()
@@ -129,6 +132,9 @@ namespace RL.API.Repositories
                            D.NOMBRE,
                            R.LISTA_CONCIDENCIA,
                            COUNT(*) AS TOTAL_REPETIDOS,
+                           MAX(R.FECHA_ENCONTRO) AS FECHA_ENCONTRO,
+                           MAX(R.FECHA_CALIFICO) AS FECHA_CALIFICO,
+                           (select min(lp.LSP_FECHA_CREACION) from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION and lp.LSP_ESTADO_REGISTRO = 1) as FECHA_REGISTRO_INTERNO,
                            NVL((select 1 from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION and lp.LSP_MOTIVO_INGRESO is not null and lp.LSP_ESTADO_REGISTRO = 1 and rownum = 1), 0) as TIENE_MOTIVO
                     FROM (
                         SELECT DISTINCT
@@ -144,13 +150,16 @@ namespace RL.API.Repositories
                            D.NOMBRE,
                            R.LISTA_CONCIDENCIA
                 )
-                SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
+                SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
                 UNION ALL
                 SELECT 
                     lp.LSP_NO_DOCUMENTO AS NUMERO_IDENTIFICACION,
                     lp.LSP_NOMBRE_COMPLETO AS NOMBRE,
                     NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL') AS LISTA_CONCIDENCIA,
                     0 AS TOTAL_REPETIDOS,
+                    CAST(NULL AS DATE) AS FECHA_ENCONTRO,
+                    CAST(NULL AS DATE) AS FECHA_CALIFICO,
+                    lp.LSP_FECHA_CREACION AS FECHA_REGISTRO_INTERNO,
                     1 AS TIENE_MOTIVO,
                     1 AS ES_MANUAL
                 FROM RL_LISTA_POSITIVOS lp
@@ -170,6 +179,9 @@ namespace RL.API.Repositories
                     Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
                     ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
                     TotalRepetidos = Convert.ToInt32(reader["TOTAL_REPETIDOS"]),
+                    FechaEncontro = reader["FECHA_ENCONTRO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_ENCONTRO"]),
+                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
+                    FechaRegistroInterno = reader["FECHA_REGISTRO_INTERNO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_REGISTRO_INTERNO"]),
                     TieneMotivo = Convert.ToInt32(reader["TIENE_MOTIVO"]) == 1,
                     EsManual = Convert.ToInt32(reader["ES_MANUAL"]) == 1
                 });
@@ -190,6 +202,9 @@ namespace RL.API.Repositories
                         TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO ,'[[:space:]]+',' ')) AS nombre,
                         R.lista_concidencia,
                         COUNT(*) AS total_repetidos,
+                        MAX(R.FECHA_ENCONTRO) AS FECHA_ENCONTRO,
+                        MAX(R.FECHA_CALIFICO) AS FECHA_CALIFICO,
+                        (select min(lp.LSP_FECHA_CREACION) from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.identidad and lp.LSP_ESTADO_REGISTRO = 1) as FECHA_REGISTRO_INTERNO,
                         NVL((select 1 from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.identidad and lp.LSP_MOTIVO_INGRESO is not null and lp.LSP_ESTADO_REGISTRO = 1 and rownum = 1), 0) as TIENE_MOTIVO
                     FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D
                     JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R
@@ -201,13 +216,16 @@ namespace RL.API.Repositories
                         TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO,'[[:space:]]+',' ')),
                         R.lista_concidencia
                 )
-                SELECT identidad, nombre, lista_concidencia, total_repetidos, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
+                SELECT identidad, nombre, lista_concidencia, total_repetidos, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
                 UNION ALL
                 SELECT 
                     lp.LSP_NO_DOCUMENTO AS identidad,
                     lp.LSP_NOMBRE_COMPLETO AS nombre,
                     NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL') AS lista_concidencia,
                     0 AS total_repetidos,
+                    CAST(NULL AS DATE) AS FECHA_ENCONTRO,
+                    CAST(NULL AS DATE) AS FECHA_CALIFICO,
+                    lp.LSP_FECHA_CREACION AS FECHA_REGISTRO_INTERNO,
                     1 AS TIENE_MOTIVO,
                     1 AS ES_MANUAL
                 FROM RL_LISTA_POSITIVOS lp
@@ -227,6 +245,9 @@ namespace RL.API.Repositories
                     Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
                     ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
                     TotalRepetidos = Convert.ToInt32(reader["TOTAL_REPETIDOS"]),
+                    FechaEncontro = reader["FECHA_ENCONTRO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_ENCONTRO"]),
+                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
+                    FechaRegistroInterno = reader["FECHA_REGISTRO_INTERNO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_REGISTRO_INTERNO"]),
                     TieneMotivo = Convert.ToInt32(reader["TIENE_MOTIVO"]) == 1,
                     EsManual = Convert.ToInt32(reader["ES_MANUAL"]) == 1
                 });
@@ -671,7 +692,7 @@ namespace RL.API.Repositories
             long newId = Convert.ToInt64(outParam.Value.ToString());
 
             // Auditoría
-            var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { DetalleId = detalleId, NombreArchivo = nombreArchivo, TipoMime = tipoMime, RutaArchivo = rutaArchivo });
+            var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { DetalleId = detalleId, NombreArchivo = nombreArchivo, TipoMime = tipoMime, NombreFisico = rutaArchivo });
             await _auditoriaRepo.RegistrarAsync("RL_DETALLE_EVIDENCIA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
         }
 
@@ -779,7 +800,7 @@ namespace RL.API.Repositories
                 {
                     anteriorJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { 
                         Nombre = reader["EVI_NOMBRE_ARCHIVO"]?.ToString(), 
-                        Ruta = reader["EVI_RUTA_ARCHIVO"]?.ToString(),
+                        NombreFisico = reader["EVI_RUTA_ARCHIVO"]?.ToString(),
                         TipoMime = reader["EVI_TIPO_MIME"]?.ToString(),
                         Estado = Convert.ToInt32(reader["EVI_ESTADO_REGISTRO"])
                     });
@@ -1214,7 +1235,7 @@ namespace RL.API.Repositories
             return list;
         }
 
-        public async Task<bool> CalificarCoincidenciaAsync(long reporteCoincidenciaId, int tipoCalificacionId, long usuarioId)
+        public async Task<bool> CalificarCoincidenciaAsync(long reporteCoincidenciaId, int tipoCalificacionId, long usuarioId, bool esEmpleado)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
@@ -1248,11 +1269,22 @@ namespace RL.API.Repositories
                 SET TIPO_CALIFICACION_ID = :tipoCalificacionId,
                     USUARIO_CALIFICO     = :usuarioId,
                     FECHA_CALIFICO       = SYSDATE
-                WHERE REPORTE_COINCIDENCIA_ID = :reporteId";
+                WHERE REPORTE_COINCIDENCIA_ID = :reporteId
+                  AND EXISTS (
+                      SELECT 1
+                      FROM DNP_IHSS.V_REPORTE_COINCIDENCIA V
+                      WHERE V.REPORTE_COINCIDENCIA_ID = :reporteIdVista
+                        AND (
+                            (:esEmpleado = 1 AND V.TIPO_PERSONA LIKE '%IHSS')
+                            OR (:esEmpleado = 0 AND V.TIPO_PERSONA NOT LIKE '%IHSS')
+                        )
+                  )";
 
             cmd.Parameters.Add(new OracleParameter("tipoCalificacionId", tipoCalificacionId));
             cmd.Parameters.Add(new OracleParameter("usuarioId",          usuarioId));
             cmd.Parameters.Add(new OracleParameter("reporteId",          reporteCoincidenciaId));
+            cmd.Parameters.Add(new OracleParameter("reporteIdVista",     reporteCoincidenciaId));
+            cmd.Parameters.Add(new OracleParameter("esEmpleado",         esEmpleado ? 1 : 0));
 
             int rows = await cmd.ExecuteNonQueryAsync();
             if (rows > 0)
@@ -1495,10 +1527,26 @@ namespace RL.API.Repositories
             cmd.Parameters.Add(new OracleParameter("datosNvo", dataJson));
             cmd.Parameters.Add(new OracleParameter("usrId", usuarioId));
             cmd.Parameters.Add(new OracleParameter("email", DBNull.Value));
-            cmd.Parameters.Add(new OracleParameter("ip", DBNull.Value));
+            cmd.Parameters.Add(new OracleParameter("ip", (object?)ObtenerIpCliente() ?? DBNull.Value));
             cmd.Parameters.Add(new OracleParameter("modulo", "CargaListas"));
 
             await cmd.ExecuteNonQueryAsync();
+        }
+
+        private string? ObtenerIpCliente()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context == null) return null;
+
+            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(forwardedFor))
+                return forwardedFor.Split(',')[0].Trim();
+
+            var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(realIp))
+                return realIp.Trim();
+
+            return context.Connection.RemoteIpAddress?.ToString();
         }
 
         private static string ConstruirMensajeCargaExitosa(int registrosAnteriores, int registrosNuevos)

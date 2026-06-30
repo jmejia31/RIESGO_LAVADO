@@ -43,6 +43,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPut("sistema")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
+    [AuditRequired("Cambio de configuracion del sistema")]
     public async Task<IActionResult> GuardarSistema([FromBody] Models.ConfigSistema config)
     {
         if (config == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
@@ -95,6 +96,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPost("slides")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
+    [AuditRequired("Creacion de slide de configuracion")]
     public async Task<IActionResult> CrearSlide([FromBody] Models.LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
@@ -109,6 +111,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPut("slides/{id}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
+    [AuditRequired("Edicion de slide de configuracion")]
     public async Task<IActionResult> ActualizarSlide(int id, [FromBody] Models.LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
@@ -125,6 +128,7 @@ public class ConfiguracionController : ControllerBase
     [HttpDelete("slides/{id}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
+    [AuditRequired("Eliminacion de slide de configuracion")]
     public async Task<IActionResult> EliminarSlide(int id)
     {
         var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);
@@ -138,6 +142,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPost("slides/upload")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
+    [AuditRequired("Carga de imagen de configuracion")]
     public async Task<IActionResult> SubirImagen(IFormFile archivo)
     {
         if (archivo == null || archivo.Length == 0)
@@ -163,6 +168,24 @@ public class ConfiguracionController : ControllerBase
         }
 
         var urlRelativa = $"/uploads/{nombreUnico}";
+        await _auditoriaRepo.RegistrarAsync(
+            "RL_LOGIN_SLIDES",
+            nombreUnico,
+            "UPLOAD",
+            null,
+            Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                NombreOriginal = archivo.FileName,
+                NombreGuardado = nombreUnico,
+                Url = urlRelativa,
+                TipoMime = archivo.ContentType,
+                TamanioBytes = archivo.Length
+            }),
+            ObtenerUsuarioId(),
+            null,
+            HttpContext.Connection.RemoteIpAddress?.ToString(),
+            "Configuracion");
+
         return Ok(new { success = true, url = urlRelativa });
     }
 

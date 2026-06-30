@@ -17,6 +17,12 @@ export class CargarListasComponent implements OnInit {
   resumenListas = signal<ResumenLista[]>([]);
   cargandoTipos = signal(true);
   cargandoResumen = signal(true);
+  procesandoCarga = signal(false);
+  exportandoTipoId = signal<number | null>(null);
+  errorTipos = signal<string | null>(null);
+  errorResumen = signal<string | null>(null);
+
+  private readonly extensionesPermitidas = ['csv', 'xlsx', 'xml'];
 
   form!: FormGroup;
 
@@ -40,6 +46,7 @@ export class CargarListasComponent implements OnInit {
 
   cargarTipos() {
     this.cargandoTipos.set(true);
+    this.errorTipos.set(null);
     this.listasService.getTiposListasCautela().subscribe({
       next: (datos) => {
         this.tiposListas.set(datos);
@@ -47,6 +54,8 @@ export class CargarListasComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar tipos de listas:', err);
+        this.tiposListas.set([]);
+        this.errorTipos.set(err?.error?.mensaje || 'No se pudieron cargar los tipos de listas disponibles.');
         this.cargandoTipos.set(false);
       }
     });
@@ -54,6 +63,7 @@ export class CargarListasComponent implements OnInit {
 
   cargarResumen() {
     this.cargandoResumen.set(true);
+    this.errorResumen.set(null);
     this.listasService.getResumenListas().subscribe({
       next: (datos) => {
         this.resumenListas.set(datos);
@@ -61,6 +71,8 @@ export class CargarListasComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar resumen de listas:', err);
+        this.resumenListas.set([]);
+        this.errorResumen.set(err?.error?.mensaje || 'No se pudo cargar el resumen de listas.');
         this.cargandoResumen.set(false);
       }
     });
@@ -70,11 +82,28 @@ export class CargarListasComponent implements OnInit {
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file) {
-      this.archivoSeleccionado = file;
-    } else {
+    if (!file) {
       this.archivoSeleccionado = null;
+      return;
     }
+
+    const extension = this.obtenerExtension(file.name);
+    if (!this.extensionesPermitidas.includes(extension)) {
+      this.archivoSeleccionado = null;
+      event.target.value = '';
+      import('sweetalert2').then((Swal) => {
+        Swal.default.fire({
+          allowOutsideClick: false,
+          title: 'Formato no permitido',
+          text: 'Solo se permiten archivos CSV, XLSX o XML para la carga de listas.',
+          icon: 'warning',
+          confirmButtonColor: '#1e3a8a'
+        });
+      });
+      return;
+    }
+
+    this.archivoSeleccionado = file;
   }
 
   cargarArchivo() {
@@ -97,6 +126,7 @@ export class CargarListasComponent implements OnInit {
     }
 
     const tipoListaId = parseInt(this.form.get('tipoListaId')?.value, 10);
+    this.procesandoCarga.set(true);
 
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
@@ -110,6 +140,7 @@ export class CargarListasComponent implements OnInit {
 
       this.listasService.uploadListaCautela(this.archivoSeleccionado!, tipoListaId).subscribe({
         next: (res) => {
+          this.procesandoCarga.set(false);
           Swal.default.fire({
             allowOutsideClick: false,
             title: 'Carga Exitosa',
@@ -128,6 +159,7 @@ export class CargarListasComponent implements OnInit {
           this.cargarResumen();
         },
         error: (err) => {
+          this.procesandoCarga.set(false);
           console.error('Error en validación:', err);
           const msg = err.error?.mensaje || 'Error al validar el archivo. Asegúrese de que tenga el formato y las columnas correctas.';
           Swal.default.fire({
@@ -155,6 +187,9 @@ export class CargarListasComponent implements OnInit {
       return;
     }
 
+    if (this.exportandoTipoId()) return;
+    this.exportandoTipoId.set(item.tipoListaCautelaId);
+
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
         title: 'Exportando',
@@ -167,6 +202,7 @@ export class CargarListasComponent implements OnInit {
 
       this.listasService.exportarLista(item.tipoListaCautelaId!).subscribe({
         next: (registros) => {
+          this.exportandoTipoId.set(null);
           if (!registros || registros.length === 0) {
             Swal.default.fire({
               allowOutsideClick: false,
@@ -247,7 +283,7 @@ export class CargarListasComponent implements OnInit {
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, item.lista);
 
-          const fileName = `${item.lista}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+          const fileName = `${this.nombreArchivoSeguro(item.lista)}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
           XLSX.writeFile(wb, fileName);
 
           Swal.default.fire({
@@ -259,11 +295,12 @@ export class CargarListasComponent implements OnInit {
           });
         },
         error: (err) => {
+          this.exportandoTipoId.set(null);
           console.error('Error al exportar lista:', err);
           Swal.default.fire({
             allowOutsideClick: false,
             title: 'Error',
-            text: 'Ocurrió un error al intentar exportar la lista de cautela.',
+            text: err?.error?.mensaje || 'Ocurrió un error al intentar exportar la lista de cautela.',
             icon: 'error',
             confirmButtonColor: '#1e3a8a'
           });
@@ -275,5 +312,19 @@ export class CargarListasComponent implements OnInit {
   esInvalido(name: string) {
     const c = this.form.get(name);
     return c ? c.invalid && c.touched : false;
+  }
+
+  private obtenerExtension(nombre: string): string {
+    const partes = nombre.split('.');
+    return partes.length > 1 ? partes.pop()!.toLowerCase() : '';
+  }
+
+  private nombreArchivoSeguro(nombre: string): string {
+    return (nombre || 'Lista_Cautela')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 80) || 'Lista_Cautela';
   }
 }

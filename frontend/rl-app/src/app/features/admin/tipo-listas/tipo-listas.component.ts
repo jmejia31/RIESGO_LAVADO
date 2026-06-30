@@ -17,6 +17,7 @@ export class TipoListasComponent implements OnInit {
   guardando = signal(false);
   editando = signal(false);
   errorGuardar = signal<string | null>(null);
+  errorCarga = signal<string | null>(null);
   idParaEditar = signal<number | null>(null);
 
   form!: FormGroup;
@@ -41,6 +42,7 @@ export class TipoListasComponent implements OnInit {
 
   cargar() {
     this.cargando.set(true);
+    this.errorCarga.set(null);
     this.listasService.getTiposListasCautela().subscribe({
       next: (datos) => {
         this.listas.set(datos);
@@ -48,6 +50,8 @@ export class TipoListasComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar tipos de listas:', err);
+        this.listas.set([]);
+        this.errorCarga.set(err?.error?.mensaje || 'No se pudieron cargar los tipos de listas de cautela.');
         this.cargando.set(false);
       }
     });

@@ -32,7 +32,7 @@ BEGIN
   SELECT COUNT(*) INTO v_cnt FROM RL_MODULOS WHERE MOD_RUTA = '/configuracion';
   IF v_cnt = 0 THEN
     INSERT INTO RL_MODULOS (MOD_ID, MOD_NOMBRE, MOD_DESCRIPCION, MOD_RUTA, MOD_ICONO, MOD_SECCION, MOD_ACTIVO)
-    VALUES (SEQ_RL_MODULOS.NEXTVAL, 'Configuración del Sistema', 'Configuración general, apariencia y slides del login', '/configuracion', 'cog', 'Administración', 1);
+    VALUES (3, 'Configuración del Sistema', 'Configuración general, apariencia y slides del login', '/configuracion', 'cog', 'Administración', 1);
   END IF;
 END;
 /

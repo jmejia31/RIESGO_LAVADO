@@ -17,9 +17,9 @@ public interface IAuthService
     Task                    LogoutAsync(long usrId, string refreshToken);
     Task<bool>              CambiarPasswordAsync(long usrId, CambiarPasswordDto dto);
     Task<UsuarioInfoDto?>   CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor);
-    Task<bool>              ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto);
+    Task<bool>              ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto, long actualizadoPor);
     Task<List<UsuarioInfoDto>> ListarUsuariosAsync();
-    Task<bool>              ActualizarEstadoUsuarioAsync(string uid, bool activo);
+    Task<bool>              ActualizarEstadoUsuarioAsync(string uid, bool activo, long actualizadoPor);
     Task<bool>              RecuperarPasswordAsync(string email);
 }
 
@@ -46,7 +46,11 @@ public class AuthService : IAuthService
     {
         // Obtener usuario (soporta email o login de dominio)
         var usuario = await _usuarioRepo.ObtenerPorLoginAsync(dto.Email);
-        if (usuario == null) return null;
+        if (usuario == null)
+        {
+            await AuditarLoginAsync(dto.Email, null, ip, "FALLIDO", "USUARIO_NO_ENCONTRADO");
+            return null;
+        }
 
         // Verificar si está bloqueado temporalmente
         if (usuario.UsrFechaBloqueo != null)
@@ -56,6 +60,7 @@ public class AuthService : IAuthService
             {
                 var minutosRestantes = 1.0 - diff.TotalMinutes;
                 var segundosRestantes = (int)(minutosRestantes * 60);
+                await AuditarLoginAsync(dto.Email, usuario, ip, "FALLIDO", "USUARIO_BLOQUEADO");
                 throw new InvalidOperationException($"Su cuenta está bloqueada temporalmente por demasiados intentos fallidos. Intente de nuevo en {segundosRestantes} segundos.");
             }
             else
@@ -100,11 +105,13 @@ public class AuthService : IAuthService
             if (nuevosIntentos >= maxIntentos)
             {
                 await _usuarioRepo.RegistrarIntentoFallidoAsync(usuario.UsrId, nuevosIntentos, DateTime.Now);
+                await AuditarLoginAsync(dto.Email, usuario, ip, "FALLIDO", "MAXIMO_INTENTOS");
                 throw new InvalidOperationException($"Ha superado el límite de {maxIntentos} intentos. Su cuenta ha sido bloqueada por 1 minuto.");
             }
             else
             {
                 await _usuarioRepo.RegistrarIntentoFallidoAsync(usuario.UsrId, nuevosIntentos, null);
+                await AuditarLoginAsync(dto.Email, usuario, ip, "FALLIDO", $"INTENTO_{nuevosIntentos}_DE_{maxIntentos}");
                 throw new InvalidOperationException($"Credenciales inválidas. Intento fallido {nuevosIntentos} de {maxIntentos}.");
             }
         }
@@ -123,6 +130,7 @@ public class AuthService : IAuthService
             var diff = DateTime.Now - usuario.UsrFechaClaveTemp.Value;
             if (diff.TotalMinutes > validezMinutos)
             {
+                await AuditarLoginAsync(dto.Email, usuario, ip, "FALLIDO", "CLAVE_PROVISIONAL_EXPIRADA");
                 throw new InvalidOperationException($"La clave provisional ha expirado (tiempo de validez: {validezMinutos} minutos). Por favor solicite una nueva.");
             }
         }
@@ -131,7 +139,7 @@ public class AuthService : IAuthService
         var response = await GenerarTokensParaUsuarioAsync(usuario, ip);
         
         // Registrar Auditoría
-        await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usuario.UsrId.ToString(), "LOGIN", null, null, usuario.UsrId, usuario.UsrEmail, ip, "Auth");
+        await AuditarLoginAsync(dto.Email, usuario, ip, "EXITOSO", null);
 
         return response;
     }
@@ -144,10 +152,34 @@ public class AuthService : IAuthService
         await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", usrId.ToString(), "LOGOUT", null, null, usrId, null, null, "Auth");
     }
 
+    private Task AuditarLoginAsync(string identificador, Usuario? usuario, string ip, string resultado, string? motivo)
+    {
+        var datos = Newtonsoft.Json.JsonConvert.SerializeObject(new
+        {
+            Resultado = resultado,
+            Motivo = motivo,
+            Identificador = identificador
+        });
+
+        return _auditoriaRepo.RegistrarAsync(
+            "RL_USUARIOS",
+            usuario?.UsrId.ToString() ?? identificador,
+            "LOGIN",
+            null,
+            datos,
+            usuario?.UsrId,
+            usuario?.UsrEmail ?? identificador,
+            ip,
+            "Auth");
+    }
+
     public async Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto)
     {
         var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
-        if (usuario == null || usuario.EsUsuarioDominio == 1) return false;
+        if (usuario == null) return false;
+
+        if (usuario.EsUsuarioDominio == 1)
+            throw new InvalidOperationException("Este usuario pertenece a Active Directory. La contrasena debe gestionarse con TI.");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.PasswordActual, usuario.UsrPasswordHash))
             return false;
@@ -208,7 +240,7 @@ public class AuthService : IAuthService
         return creado != null ? MapToDto(creado) : null;
     }
 
-    public async Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto)
+    public async Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto, long actualizadoPor)
     {
         long id = Helpers.HashIdHelper.DecodeId(uid);
         if (id <= 0) return false;
@@ -232,7 +264,7 @@ public class AuthService : IAuthService
         bool ok = await _usuarioRepo.ActualizarAsync(id, dto, hash, salt);
         if (ok)
         {
-            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuario(existente)), Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuarioDto(dto)), null, dto.Email, null, "AdminUsuarios");
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuario(existente)), Newtonsoft.Json.JsonConvert.SerializeObject(AuditUsuarioDto(dto)), actualizadoPor, dto.Email, null, "AdminUsuarios");
         }
         return ok;
     }
@@ -242,7 +274,7 @@ public class AuthService : IAuthService
         return await _usuarioRepo.ListarAsync();
     }
 
-    public async Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo)
+    public async Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo, long actualizadoPor)
     {
         long id = Helpers.HashIdHelper.DecodeId(uid);
         if (id <= 0) return false;
@@ -253,7 +285,7 @@ public class AuthService : IAuthService
         bool ok = await _usuarioRepo.ActualizarEstadoAsync(id, activo);
         if (ok)
         {
-            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", $"Estado anterior: {(existente.UsrActivo ? 1 : 0)}", $"Nuevo estado: {(activo ? 1 : 0)}", null, existente.UsrEmail, null, "AdminUsuarios");
+            await _auditoriaRepo.RegistrarAsync("RL_USUARIOS", id.ToString(), "UPDATE", $"Estado anterior: {(existente.UsrActivo ? 1 : 0)}", $"Nuevo estado: {(activo ? 1 : 0)}", actualizadoPor, existente.UsrEmail, null, "AdminUsuarios");
         }
         return ok;
     }
@@ -329,7 +361,11 @@ public class AuthService : IAuthService
         if (tokenDb == null) return null;
 
         var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
-        if (usuario == null) return null;
+        if (usuario == null || !usuario.UsrActivo)
+        {
+            await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
+            return null;
+        }
 
         // Revocar token actual
         await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);

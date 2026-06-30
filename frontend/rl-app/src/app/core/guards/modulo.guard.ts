@@ -13,6 +13,12 @@ export const moduloGuard = (moduloId: number): CanActivateFn => () => {
     return false;
   }
 
+  if (auth.requiereCambioPassword()) {
+    auth.cerrarSesionLocal();
+    router.navigate(['/login'], { queryParams: { razon: 'cambio-password' } });
+    return false;
+  }
+
   if (usr.modulosIds?.includes(moduloId)) {
     return true;
   }

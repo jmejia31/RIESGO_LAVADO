@@ -30,6 +30,8 @@ export class CoincidenciasPatronoComponent implements OnInit {
   // Búsqueda en el modal
   buscarTermDetalle = signal('');
   filtroCalificacion = signal<string>('Todas');
+  paginaDetalleActual = signal(1);
+  registrosDetallePorPagina = signal(25);
 
   protected readonly Math = Math;
 
@@ -52,6 +54,10 @@ export class CoincidenciasPatronoComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar resumen:', err);
         this.cargando.set(false);
+        this.mostrarError(
+          'Error',
+          'No se pudo cargar el resumen de coincidencias de patrono.'
+        );
       }
     });
   }
@@ -119,6 +125,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
     this.detalleRegistros.set([]);
     this.buscarTermDetalle.set('');
     this.filtroCalificacion.set('Todas');
+    this.paginaDetalleActual.set(1);
     
     this.listasService.getDetalleCoincidenciasPatrono(f).subscribe({
       next: (datos) => {
@@ -128,6 +135,10 @@ export class CoincidenciasPatronoComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar detalle:', err);
         this.cargandoDetalle.set(false);
+        this.mostrarError(
+          'Error',
+          'No se pudo cargar el detalle de coincidencias de patrono.'
+        );
       }
     });
   }
@@ -158,6 +169,36 @@ export class CoincidenciasPatronoComponent implements OnInit {
       return matchTerm && matchCalif;
     });
   });
+
+  totalPaginasDetalle = computed(() => {
+    const count = this.detalleFiltrado().length;
+    const size = this.registrosDetallePorPagina();
+    return Math.ceil(count / size) || 1;
+  });
+
+  detallePaginado = computed(() => {
+    const datos = this.detalleFiltrado();
+    const idx = (this.paginaDetalleActual() - 1) * this.registrosDetallePorPagina();
+    return datos.slice(idx, idx + this.registrosDetallePorPagina());
+  });
+
+  cambiarPaginaDetalle(p: number) {
+    if (p >= 1 && p <= this.totalPaginasDetalle()) {
+      this.paginaDetalleActual.set(p);
+    }
+  }
+
+  private mostrarError(title: string, text: string) {
+    import('sweetalert2').then((Swal) => {
+      Swal.default.fire({
+        allowOutsideClick: false,
+        title,
+        text,
+        icon: 'error',
+        confirmButtonColor: '#1e3a8a'
+      });
+    });
+  }
 
   imprimir(item: CoincidenciaPatronoResumen) {
     const f = item.fechaEncontro.split('T')[0];
@@ -254,7 +295,6 @@ export class CoincidenciasPatronoComponent implements OnInit {
           XLSX.utils.book_append_sheet(wb, ws, 'Coincidencias');
 
           const fileName = `Coincidencias_Patrono_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
-          XLSX.writeFile(wb, fileName);
           this.listasService.registrarAuditoriaExportacion(
             'DNP_IHSS.REPORTE_COINCIDENCIAS',
             f,
@@ -265,15 +305,29 @@ export class CoincidenciasPatronoComponent implements OnInit {
               cantidadRegistros: registros.length,
               archivo: fileName
             }
-          ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
-
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Éxito',
-            text: `Se exportaron ${registros.length} registros exitosamente.`,
-            icon: 'success',
-            confirmButtonColor: '#1e3a8a'
+          ).subscribe({
+            next: () => {
+              XLSX.writeFile(wb, fileName);
+              Swal.default.fire({
+                allowOutsideClick: false,
+                title: 'Exito',
+                text: `Se exportaron ${registros.length} registros exitosamente.`,
+                icon: 'success',
+                confirmButtonColor: '#1e3a8a'
+              });
+            },
+            error: err => {
+              console.error('No se pudo registrar auditoria de exportacion:', err);
+              Swal.default.fire({
+                allowOutsideClick: false,
+                title: 'Auditoria requerida',
+                text: 'No se pudo registrar la auditoria de exportacion. La exportacion fue cancelada.',
+                icon: 'error',
+                confirmButtonColor: '#1e3a8a'
+              });
+            }
           });
+
         },
         error: (err) => {
           console.error('Error al exportar:', err);

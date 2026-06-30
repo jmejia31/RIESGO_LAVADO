@@ -26,6 +26,7 @@ public class AuthController : ControllerBase
     /// <summary>Iniciar sesión</summary>
     [HttpPost("login")]
     [AllowAnonymous]
+    [AuditRequired("Login de usuario")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
         if (!ModelState.IsValid)
@@ -64,6 +65,7 @@ public class AuthController : ControllerBase
     /// <summary>Cerrar sesión</summary>
     [HttpPost("logout")]
     [Authorize]
+    [AuditRequired("Logout de usuario")]
     public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto dto)
     {
         var claimUsr = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -78,10 +80,23 @@ public class AuthController : ControllerBase
     /// <summary>Cambiar contraseña</summary>
     [HttpPut("password")]
     [Authorize]
+    [AuditRequired("Cambio de contrasena")]
     public async Task<IActionResult> CambiarPassword([FromBody] CambiarPasswordDto dto)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(new { success = false, errores = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
+
         var usrId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-        var ok    = await _authService.CambiarPasswordAsync(usrId, dto);
+        bool ok;
+
+        try
+        {
+            ok = await _authService.CambiarPasswordAsync(usrId, dto);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { success = false, mensaje = ex.Message });
+        }
 
         if (!ok)
             return BadRequest(new { success = false, mensaje = "Contraseña actual incorrecta" });
@@ -100,10 +115,24 @@ public class AuthController : ControllerBase
             datos = new
             {
                 id       = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                uid      = User.FindFirst("uid")?.Value,
                 nombre   = User.FindFirst(ClaimTypes.Name)?.Value,
+                nombres  = User.FindFirst(ClaimTypes.GivenName)?.Value,
+                apellido = User.FindFirst(ClaimTypes.Surname)?.Value,
                 email    = User.FindFirst(ClaimTypes.Email)?.Value,
                 rol      = User.FindFirst(ClaimTypes.Role)?.Value,
-                rolId    = User.FindFirst("rol_id")?.Value
+                rolId    = User.FindFirst("rol_id")?.Value,
+                esUsuarioDominio = User.FindFirst("es_dom")?.Value,
+                usuarioDominio = User.FindFirst("usr_dom")?.Value,
+                dominio = User.FindFirst("dominio")?.Value,
+                dominioId = User.FindFirst("dom_id")?.Value,
+                modulosIds = (User.FindFirst("modulos")?.Value ?? string.Empty)
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(id => int.TryParse(id, out var parsed) ? parsed : (int?)null)
+                    .Where(id => id.HasValue)
+                    .Select(id => id!.Value)
+                    .ToArray(),
+                debeCambiarPassword = User.FindFirst("debe_cambiar_pass")?.Value == "1"
             }
         });
     }
@@ -112,6 +141,7 @@ public class AuthController : ControllerBase
     [HttpPost("usuarios")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]
+    [AuditRequired("Creacion de usuario")]
     public async Task<IActionResult> CrearUsuario([FromBody] CrearUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -141,6 +171,7 @@ public class AuthController : ControllerBase
     [HttpPut("usuarios/{uid}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]
+    [AuditRequired("Edicion de usuario")]
     public async Task<IActionResult> ActualizarUsuario(string uid, [FromBody] ActualizarUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -148,7 +179,7 @@ public class AuthController : ControllerBase
 
         try
         {
-            var ok = await _authService.ActualizarUsuarioAsync(uid, dto);
+            var ok = await _authService.ActualizarUsuarioAsync(uid, dto, ObtenerUsuarioId());
             return ok
                 ? Ok(new { success = true, mensaje = "Usuario actualizado exitosamente" })
                 : NotFound(new { success = false, mensaje = "No se encontró el usuario o el ID es inválido" });
@@ -178,11 +209,12 @@ public class AuthController : ControllerBase
     [HttpPut("usuarios/{uid}/estado")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]
+    [AuditRequired("Cambio de estado de usuario")]
     public async Task<IActionResult> CambiarEstadoUsuario(string uid, [FromBody] EstadoUsuarioDto dto)
     {
         try
         {
-            var ok = await _authService.ActualizarEstadoUsuarioAsync(uid, dto.Activo);
+            var ok = await _authService.ActualizarEstadoUsuarioAsync(uid, dto.Activo, ObtenerUsuarioId());
             return ok
                 ? Ok(new { success = true, mensaje = $"Estado del usuario actualizado a {(dto.Activo ? "Activo" : "Inactivo")}" })
                 : NotFound(new { success = false, mensaje = "Usuario no encontrado" });
@@ -218,6 +250,7 @@ public class AuthController : ControllerBase
     /// <summary>Recuperar contraseña enviando clave provisional por correo</summary>
     [HttpPost("recuperar-password")]
     [AllowAnonymous]
+    [AuditRequired("Solicitud de recuperacion de contrasena")]
     public async Task<IActionResult> RecuperarPassword([FromBody] SolicitudRecuperacionDto dto)
     {
         if (!ModelState.IsValid)
@@ -239,6 +272,10 @@ public class AuthController : ControllerBase
             _logger.LogError(ex, "Error al recuperar contraseña para {Email}", dto.Email);
             return StatusCode(500, new { success = false, mensaje = "Ocurrió un error interno al procesar la solicitud." });
         }
+    }
+    private long ObtenerUsuarioId()
+    {
+        return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 }
 

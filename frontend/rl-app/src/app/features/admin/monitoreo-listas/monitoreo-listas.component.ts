@@ -81,7 +81,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
         
         <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
           <!-- Búsqueda -->
-          <div class="relative flex-1 max-w-md">
+          <div class="relative flex-1 min-w-[260px]">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -90,6 +90,26 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
             <input type="text" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
               placeholder="Buscar por coincidencia, nombre o número de identificación..."
               class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+              class="min-w-[170px] border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700">
+              <option value="todos">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="con_motivo">Con motivo</option>
+              <option value="manual">Manual</option>
+            </select>
+
+            <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="filtroFechaDesde.set($event); paginaActual.set(1)"
+              class="border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
+            <input type="date" [ngModel]="filtroFechaHasta()" (ngModelChange)="filtroFechaHasta.set($event); paginaActual.set(1)"
+              class="border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
+
+            <button (click)="limpiarFiltrosPrincipales()"
+              class="px-3 py-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 font-semibold text-xs transition-colors">
+              Limpiar
+            </button>
           </div>
 
           <!-- Acciones de exportación y límite -->
@@ -152,6 +172,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                       <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
                       <th class="px-6 py-3 text-left">Fecha Calificación</th>
                       <th class="px-6 py-3 text-left">Registro Interno</th>
+                      <th class="px-6 py-3 text-left">Estado</th>
                       <th class="px-6 py-3 text-center">Acciones</th>
                     </tr>
                   }
@@ -160,6 +181,10 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                     <tr>
                       <th class="px-6 py-3 text-left">Identificación</th>
                       <th class="px-6 py-3 text-left">Nombre Completo</th>
+                      <th class="px-6 py-3 text-left">Lista Coincidencia</th>
+                      <th class="px-6 py-3 text-left">Estado</th>
+                      <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
+                      <th class="px-6 py-3 text-left">Registro Interno</th>
                       <th class="px-6 py-3 text-center">Acciones</th>
                     </tr>
                   }
@@ -168,6 +193,10 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                     <tr>
                       <th class="px-6 py-3 text-left">Identidad</th>
                       <th class="px-6 py-3 text-left">Nombre Empleado</th>
+                      <th class="px-6 py-3 text-left">Lista Coincidencia</th>
+                      <th class="px-6 py-3 text-left">Estado</th>
+                      <th class="px-6 py-3 text-left">Fecha Coincidencia</th>
+                      <th class="px-6 py-3 text-left">Registro Interno</th>
                       <th class="px-6 py-3 text-center">Acciones</th>
                     </tr>
                   }
@@ -209,6 +238,11 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaEncontro | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaCalifico | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaRegistroInterno | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td class="px-6 py-4">
+                          <span [class]="obtenerClaseEstado(row)">
+                            {{ obtenerEstadoMonitoreo(row) }}
+                          </span>
+                        </td>
                         <td class="px-6 py-4 text-center">
                           <div class="flex items-center justify-center gap-2">
                             <!-- Registrar Motivo -->
@@ -288,6 +322,20 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                             }
                           </div>
                         </td>
+                        <td class="px-6 py-4">
+                          <span [class]="row.esManual
+                            ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20'
+                            : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10'">
+                            {{ row.listaCoincidencia }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span [class]="obtenerClaseEstado(row)">
+                            {{ obtenerEstadoMonitoreo(row) }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaEncontro | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaRegistroInterno | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-center">
                           <div class="flex items-center justify-center gap-2">
                             <!-- Ver Detalle -->
@@ -384,6 +432,20 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                             }
                           </div>
                         </td>
+                        <td class="px-6 py-4">
+                          <span [class]="row.esManual
+                            ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20'
+                            : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10'">
+                            {{ row.listaCoincidencia }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span [class]="obtenerClaseEstado(row)">
+                            {{ obtenerEstadoMonitoreo(row) }}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaEncontro | date:'dd/MM/yyyy HH:mm' }}</td>
+                        <td class="px-6 py-4 text-xs text-gray-500">{{ row.fechaRegistroInterno | date:'dd/MM/yyyy HH:mm' }}</td>
                         <td class="px-6 py-4 text-center">
                           <div class="flex items-center justify-center gap-2">
                             <!-- Ver Detalle -->
@@ -1120,6 +1182,9 @@ export class MonitoreoListasComponent implements OnInit {
   tipoActivo = signal<FiltroTipo>('juridica');
   cargando = signal(false);
   busqueda = signal('');
+  filtroEstado = signal<'todos' | 'pendiente' | 'con_motivo' | 'manual'>('todos');
+  filtroFechaDesde = signal<string>('');
+  filtroFechaHasta = signal<string>('');
 
   // Modal Detalle
   modalDetalleAbierto = signal(false);
@@ -1233,6 +1298,14 @@ export class MonitoreoListasComponent implements OnInit {
     this.cargarDatos();
   }
 
+  limpiarFiltrosPrincipales() {
+    this.busqueda.set('');
+    this.filtroEstado.set('todos');
+    this.filtroFechaDesde.set('');
+    this.filtroFechaHasta.set('');
+    this.paginaActual.set(1);
+  }
+
   cargarDatos() {
     this.cargando.set(true);
     const tipo = this.tipoActivo();
@@ -1259,34 +1332,82 @@ export class MonitoreoListasComponent implements OnInit {
   datosFiltrados = computed(() => {
     const query = this.busqueda().trim().toLowerCase();
     const tipo = this.tipoActivo();
+    const estado = this.filtroEstado();
+    const desde = this.filtroFechaDesde();
+    const hasta = this.filtroFechaHasta();
 
     if (tipo === 'juridica') {
       const data = this.juridicasRaw();
-      if (!query) return data;
-      return data.filter(item => 
-        item.nombre.toLowerCase().includes(query) ||
-        item.rtn.includes(query) ||
-        item.numeroPatrono.includes(query) ||
-        item.listaCoincidencia.toLowerCase().includes(query)
+      return data.filter(item =>
+        this.coincideTexto(item, query, [item.nombre, item.rtn, item.numeroPatrono, item.listaCoincidencia]) &&
+        this.coincideEstado(item, estado) &&
+        this.coincideFecha(item, desde, hasta)
       );
     } else if (tipo === 'natural') {
       const data = this.naturalesRaw();
-      if (!query) return data;
-      return data.filter(item => 
-        item.nombre.toLowerCase().includes(query) ||
-        item.numeroIdentificacion.includes(query) ||
-        item.listaCoincidencia.toLowerCase().includes(query)
+      return data.filter(item =>
+        this.coincideTexto(item, query, [item.nombre, item.numeroIdentificacion, item.listaCoincidencia]) &&
+        this.coincideEstado(item, estado) &&
+        this.coincideFecha(item, desde, hasta)
       );
     } else {
       const data = this.empleadosRaw();
-      if (!query) return data;
-      return data.filter(item => 
-        item.nombre.toLowerCase().includes(query) ||
-        item.identidad.includes(query) ||
-        item.listaCoincidencia.toLowerCase().includes(query)
+      return data.filter(item =>
+        this.coincideTexto(item, query, [item.nombre, item.identidad, item.listaCoincidencia]) &&
+        this.coincideEstado(item, estado) &&
+        this.coincideFecha(item, desde, hasta)
       );
     }
   });
+
+  private coincideTexto(item: unknown, query: string, valores: Array<string | null | undefined>): boolean {
+    if (!query) return true;
+    return valores.some(valor => (valor || '').toLowerCase().includes(query));
+  }
+
+  private coincideEstado(item: { tieneMotivo?: boolean; esManual?: boolean }, estado: string): boolean {
+    if (estado === 'todos') return true;
+    if (estado === 'manual') return !!item.esManual;
+    if (estado === 'con_motivo') return !!item.tieneMotivo;
+    if (estado === 'pendiente') return !item.tieneMotivo;
+    return true;
+  }
+
+  private coincideFecha(item: { fechaEncontro?: string | null; fechaRegistroInterno?: string | null }, desde: string, hasta: string): boolean {
+    if (!desde && !hasta) return true;
+
+    const fechaBase = item.fechaEncontro || item.fechaRegistroInterno;
+    if (!fechaBase) return false;
+
+    const fecha = new Date(fechaBase);
+    if (Number.isNaN(fecha.getTime())) return false;
+
+    if (desde) {
+      const min = new Date(`${desde}T00:00:00`);
+      if (fecha < min) return false;
+    }
+
+    if (hasta) {
+      const max = new Date(`${hasta}T23:59:59`);
+      if (fecha > max) return false;
+    }
+
+    return true;
+  }
+
+  obtenerEstadoMonitoreo(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
+    if (item.esManual) return 'Manual';
+    return item.tieneMotivo ? 'Con motivo' : 'Pendiente';
+  }
+
+  obtenerClaseEstado(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
+    if (item.esManual)
+      return 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20';
+
+    return item.tieneMotivo
+      ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10'
+      : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
+  }
 
   // Datos paginados reactivos por tipo
   juridicasPaginadas = computed(() => {
@@ -1738,9 +1859,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfPatrono(row, positivo, seguimientos, rangoSeguimiento);
-            this.cargando.set(false);
+            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
           }
         });
       },
@@ -1783,9 +1902,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfNatural(row, detalles, positivo, seguimientos, rangoSeguimiento);
-            this.cargando.set(false);
+            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
           }
         });
       },
@@ -1985,9 +2102,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            console.error('Error al registrar auditoría de impresión:', err);
-            this.generarPdfEmpleado(row, detalles, positivo, seguimientos, rangoSeguimiento);
-            this.cargando.set(false);
+            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
           }
         });
       },
@@ -2287,8 +2402,22 @@ export class MonitoreoListasComponent implements OnInit {
     XLSX.writeFile(wb, fileName);
   }
 
+  private manejarErrorAuditoriaObligatoria(err: unknown, operacion: string) {
+    console.error(`No se pudo registrar auditoria de ${operacion}:`, err);
+    this.cargando.set(false);
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        allowOutsideClick: false,
+        title: 'Auditoria requerida',
+        text: `No se pudo registrar la auditoria de ${operacion}. La operacion fue cancelada.`,
+        icon: 'error',
+        confirmButtonColor: '#1e3a8a'
+      });
+    });
+  }
+
   private registrarAuditoriaFichaExcel(noDocumento: string, tipo: string, nombre: string, fileName: string, cantidadSeguimientos: number, rangoSeguimiento: RangoSeguimientoReporte) {
-    this.listasService.registrarAuditoriaExportacion(
+    return this.listasService.registrarAuditoriaExportacion(
       'RL_LISTA_POSITIVOS',
       noDocumento,
       'ExportacionFichaPerfil',
@@ -2303,7 +2432,7 @@ export class MonitoreoListasComponent implements OnInit {
         rangoSeguimientoTexto: rangoSeguimiento.texto,
         archivo: fileName
       }
-    ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de ficha Excel', err) });
+    );
   }
 
   exportarFichaExcelPatrono(row: CoincidenciaJuridica) {
@@ -2338,9 +2467,13 @@ export class MonitoreoListasComponent implements OnInit {
         this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
 
         const fileName = `Ficha_Patrono_${row.numeroPatrono}.xlsx`;
-        this.escribirFichaExcel(data, 'Ficha Patrono', fileName);
-        this.registrarAuditoriaFichaExcel(row.numeroPatrono, 'juridica', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
-        this.cargando.set(false);
+        this.registrarAuditoriaFichaExcel(row.numeroPatrono, 'juridica', row.nombre, fileName, seguimientos.length, rangoSeguimiento).subscribe({
+          next: () => {
+            this.escribirFichaExcel(data, 'Ficha Patrono', fileName);
+            this.cargando.set(false);
+          },
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+        });
       },
       error: (err) => {
         console.error('Error al exportar ficha Excel de patrono:', err);
@@ -2396,9 +2529,13 @@ export class MonitoreoListasComponent implements OnInit {
         this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
 
         const fileName = `Ficha_Natural_${row.numeroIdentificacion}.xlsx`;
-        this.escribirFichaExcel(data, 'Ficha Natural', fileName);
-        this.registrarAuditoriaFichaExcel(row.numeroIdentificacion, 'natural', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
-        this.cargando.set(false);
+        this.registrarAuditoriaFichaExcel(row.numeroIdentificacion, 'natural', row.nombre, fileName, seguimientos.length, rangoSeguimiento).subscribe({
+          next: () => {
+            this.escribirFichaExcel(data, 'Ficha Natural', fileName);
+            this.cargando.set(false);
+          },
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+        });
       },
       error: (err) => {
         console.error('Error al exportar ficha Excel de persona natural:', err);
@@ -2454,9 +2591,13 @@ export class MonitoreoListasComponent implements OnInit {
         this.agregarSeguimientosExcel(data, seguimientos, rangoSeguimiento);
 
         const fileName = `Ficha_Empleado_${row.identidad}.xlsx`;
-        this.escribirFichaExcel(data, 'Ficha Empleado', fileName);
-        this.registrarAuditoriaFichaExcel(row.identidad, 'empleado', row.nombre, fileName, seguimientos.length, rangoSeguimiento);
-        this.cargando.set(false);
+        this.registrarAuditoriaFichaExcel(row.identidad, 'empleado', row.nombre, fileName, seguimientos.length, rangoSeguimiento).subscribe({
+          next: () => {
+            this.escribirFichaExcel(data, 'Ficha Empleado', fileName);
+            this.cargando.set(false);
+          },
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+        });
       },
       error: (err) => {
         console.error('Error al exportar ficha Excel de empleado:', err);
@@ -2516,7 +2657,6 @@ export class MonitoreoListasComponent implements OnInit {
       XLSX.utils.book_append_sheet(wb, ws, 'Detalle Coincidencias');
 
       const fileName = `Reporte_Coincidencias_Empleado_${persona.identidad}.xlsx`;
-      XLSX.writeFile(wb, fileName);
       this.listasService.registrarAuditoriaExportacion(
         'RL_LISTA_POSITIVOS',
         persona.identidad,
@@ -2528,7 +2668,10 @@ export class MonitoreoListasComponent implements OnInit {
           cantidadRegistros: this.detallesEmpleado().length,
           archivo: fileName
         }
-      ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
+      ).subscribe({
+        next: () => XLSX.writeFile(wb, fileName),
+        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+      });
     } else {
       const persona = this.personaSeleccionada();
       if (!persona) return;
@@ -2580,7 +2723,6 @@ export class MonitoreoListasComponent implements OnInit {
       XLSX.utils.book_append_sheet(wb, ws, 'Detalle Coincidencias');
 
       const fileName = `Reporte_Coincidencias_${persona.numeroIdentificacion}.xlsx`;
-      XLSX.writeFile(wb, fileName);
       this.listasService.registrarAuditoriaExportacion(
         'RL_LISTA_POSITIVOS',
         persona.numeroIdentificacion,
@@ -2592,7 +2734,10 @@ export class MonitoreoListasComponent implements OnInit {
           cantidadRegistros: this.detallesNatural().length,
           archivo: fileName
         }
-      ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
+      ).subscribe({
+        next: () => XLSX.writeFile(wb, fileName),
+        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+      });
     }
   }
 
@@ -2620,17 +2765,27 @@ export class MonitoreoListasComponent implements OnInit {
       ]);
     } else if (tipo === 'natural') {
       title = 'Reporte de Coincidencias Naturales';
-      headers = ['Número Identificación', 'Nombre Completo'];
+      headers = ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
       rows = (dataFiltrada as CoincidenciaNatural[]).map(item => [
         item.numeroIdentificacion,
-        item.nombre
+        item.nombre,
+        item.listaCoincidencia,
+        this.obtenerEstadoMonitoreo(item),
+        item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
+        item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+        item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
       ]);
     } else {
       title = 'Reporte de Coincidencias Empleados';
-      headers = ['Identidad', 'Nombre Empleado'];
+      headers = ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'];
       rows = (dataFiltrada as CoincidenciaEmpleado[]).map(item => [
         item.identidad,
-        item.nombre
+        item.nombre,
+        item.listaCoincidencia,
+        this.obtenerEstadoMonitoreo(item),
+        item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
+        item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+        item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
       ]);
     }
 
@@ -2661,7 +2816,6 @@ export class MonitoreoListasComponent implements OnInit {
     XLSX.utils.book_append_sheet(wb, ws, 'Coincidencias');
 
     const fileName = `Reporte_${tipo.charAt(0).toUpperCase() + tipo.slice(1)}s_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
     this.listasService.registrarAuditoriaExportacion(
       'RL_LISTA_POSITIVOS',
       tipo,
@@ -2673,7 +2827,10 @@ export class MonitoreoListasComponent implements OnInit {
         cantidadRegistros: rows.length,
         archivo: fileName
       }
-    ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
+    ).subscribe({
+      next: () => XLSX.writeFile(wb, fileName),
+      error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+    });
   }
 
   mathMin(a: number, b: number): number {
@@ -2833,6 +2990,8 @@ export class MonitoreoListasComponent implements OnInit {
     const motivo = this.formMotivo().trim();
     const cautelaId = this.formTipoListaCautelaId();
     const origenRegistro = this.formOrigenRegistro();
+    const comentarioSeg = this.formSeguimientoComentario().trim();
+    const archivosSeg = this.archivosSeguimiento();
 
     let noDocumento = '';
     let nombreCompleto = '';
@@ -2875,6 +3034,19 @@ export class MonitoreoListasComponent implements OnInit {
       return;
     }
 
+    if (archivosSeg.length > 0 && !comentarioSeg) {
+      import('sweetalert2').then(Swal => {
+        Swal.default.fire({
+          allowOutsideClick: false,
+          title: 'Seguimiento requerido',
+          text: 'Para adjuntar evidencias debe escribir una nota de seguimiento.',
+          icon: 'warning',
+          confirmButtonColor: '#1d4ed8'
+        });
+      });
+      return;
+    }
+
     this.guardandoMotivo.set(true);
 
     const dto: RegistrarPositivoDto = {
@@ -2899,9 +3071,6 @@ export class MonitoreoListasComponent implements OnInit {
 
       this.listasService.registrarPositivo(dto).subscribe({
         next: (resp) => {
-          const comentarioSeg = this.formSeguimientoComentario().trim();
-          const archivosSeg = this.archivosSeguimiento();
-          
           if (comentarioSeg) {
             this.listasService.registrarSeguimiento(noDocumento, comentarioSeg, archivosSeg).subscribe({
               next: () => {

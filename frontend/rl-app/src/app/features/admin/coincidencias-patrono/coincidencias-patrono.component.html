@@ -190,14 +190,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
             </span>
-            <input type="text" [ngModel]="buscarTermDetalle()" (ngModelChange)="buscarTermDetalle.set($event)"
+            <input type="text" [ngModel]="buscarTermDetalle()" (ngModelChange)="buscarTermDetalle.set($event); paginaDetalleActual.set(1)"
               placeholder="Buscar en el detalle..."
               class="w-full bg-white border border-gray-300 text-gray-700 text-xs rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all duration-200">
           </div>
 
           <div class="flex items-center gap-2">
             <span class="text-xs font-semibold text-gray-600 whitespace-nowrap">Calificación:</span>
-            <select [ngModel]="filtroCalificacion()" (ngModelChange)="filtroCalificacion.set($event)"
+            <select [ngModel]="filtroCalificacion()" (ngModelChange)="filtroCalificacion.set($event); paginaDetalleActual.set(1)"
               class="bg-white border border-gray-300 text-gray-700 text-xs rounded-xl py-2 px-3 focus:outline-none focus:ring-2 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all duration-200">
               <option value="Todas">Todas</option>
               <option value="Positivo">Positivo</option>
@@ -244,14 +244,14 @@
                   </td>
                 </tr>
               } @else {
-                @for (r of detalleFiltrado(); track r.reporteCoincidenciaId) {
+                @for (r of detallePaginado(); track r.reporteCoincidenciaId) {
                   <tr class="hover:bg-gray-50/50 transition-colors">
                     <td class="px-4 py-3">
                       <div class="flex items-center justify-center gap-1.5">
                         <!-- Positivo -->
                         <div class="relative group inline-block">
-                          <button (click)="calificar(r, 1)"
-                            class="p-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 ring-1 ring-inset ring-red-700/10 transition-colors">
+                          <button (click)="calificar(r, 1)" [disabled]="r.tipoCalificacion === 'Positivo'"
+                            class="p-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 ring-1 ring-inset ring-red-700/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
@@ -264,8 +264,8 @@
 
                         <!-- Falso Positivo -->
                         <div class="relative group inline-block">
-                          <button (click)="calificar(r, 2)"
-                            class="p-1 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 ring-1 ring-inset ring-yellow-700/10 transition-colors">
+                          <button (click)="calificar(r, 2)" [disabled]="r.tipoCalificacion === 'Falso Positivo'"
+                            class="p-1 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 ring-1 ring-inset ring-yellow-700/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
@@ -323,8 +323,23 @@
       </div>
 
       <!-- Pie del Modal -->
-      <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-xs text-gray-500">
-        <span>Total registros: {{ detalleFiltrado().length }}</span>
+      <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+        <span>
+          Mostrando {{ detalleFiltrado().length === 0 ? 0 : ((paginaDetalleActual() - 1) * registrosDetallePorPagina()) + 1 }}
+          al {{ Math.min(paginaDetalleActual() * registrosDetallePorPagina(), detalleFiltrado().length) }}
+          de {{ detalleFiltrado().length }} registros
+        </span>
+        <div class="flex items-center gap-2">
+          <button (click)="cambiarPaginaDetalle(paginaDetalleActual() - 1)" [disabled]="paginaDetalleActual() === 1"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed">
+            Anterior
+          </button>
+          <span class="font-semibold text-gray-700">Pag. {{ paginaDetalleActual() }} de {{ totalPaginasDetalle() }}</span>
+          <button (click)="cambiarPaginaDetalle(paginaDetalleActual() + 1)" [disabled]="paginaDetalleActual() === totalPaginasDetalle()"
+            class="px-3 py-1.5 rounded-lg border border-gray-300 text-gray-600 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed">
+            Siguiente
+          </button>
+        </div>
         <button (click)="cerrarModal()" class="px-4 py-2 rounded-xl bg-ihss-800 hover:bg-ihss-900 text-white font-medium transition-colors">
           Cerrar
         </button>

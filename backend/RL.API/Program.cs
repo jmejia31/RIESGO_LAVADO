@@ -114,6 +114,10 @@ builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IListasService, ListasService>();
+builder.Services.AddScoped<IEvidenciasService, EvidenciasService>();
+builder.Services.AddScoped<ICoincidenciasService, CoincidenciasService>();
+builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
 
 // ─── HttpContext ──────────────────────────────────────────
 builder.Services.AddHttpContextAccessor();

@@ -10,7 +10,7 @@ BEGIN
   SELECT COUNT(*) INTO v_cnt FROM RL_MODULOS WHERE MOD_RUTA = '/cargar-listas';
   IF v_cnt = 0 THEN
     INSERT INTO RL_MODULOS (MOD_ID, MOD_NOMBRE, MOD_DESCRIPCION, MOD_RUTA, MOD_ICONO, MOD_SECCION, MOD_ACTIVO)
-    VALUES (SEQ_RL_MODULOS.NEXTVAL, 'Cargar Listas', 'Carga de listas de cautela y resumen de registros cargados en DNP_IHSS.LISTA_CAUTELA', '/cargar-listas', 'upload', 'Listas de Cautela', 1);
+    VALUES (7, 'Cargar Listas', 'Carga de listas de cautela y resumen de registros cargados en DNP_IHSS.LISTA_CAUTELA', '/cargar-listas', 'upload', 'Listas de Cautela', 1);
   END IF;
 END;
 /

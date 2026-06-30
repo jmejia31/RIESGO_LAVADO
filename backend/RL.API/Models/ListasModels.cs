@@ -22,6 +22,9 @@ namespace RL.API.DTOs
         public string Nombre { get; set; } = string.Empty;
         public string ListaCoincidencia { get; set; } = string.Empty;
         public int TotalRepetidos { get; set; }
+        public DateTime? FechaEncontro { get; set; }
+        public DateTime? FechaCalifico { get; set; }
+        public DateTime? FechaRegistroInterno { get; set; }
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }
     }
@@ -32,6 +35,9 @@ namespace RL.API.DTOs
         public string Nombre { get; set; } = string.Empty;
         public string ListaCoincidencia { get; set; } = string.Empty;
         public int TotalRepetidos { get; set; }
+        public DateTime? FechaEncontro { get; set; }
+        public DateTime? FechaCalifico { get; set; }
+        public DateTime? FechaRegistroInterno { get; set; }
         public bool TieneMotivo { get; set; }
         public bool EsManual { get; set; }
     }

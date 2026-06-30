@@ -30,6 +30,8 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
   // Búsqueda en el modal
   buscarTermDetalle = signal('');
   filtroCalificacion = signal<string>('Todas');
+  paginaDetalleActual = signal(1);
+  registrosDetallePorPagina = signal(25);
 
   protected readonly Math = Math;
 
@@ -52,6 +54,10 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar resumen:', err);
         this.cargando.set(false);
+        this.mostrarError(
+          'Error',
+          'No se pudo cargar el resumen de coincidencias de empleado.'
+        );
       }
     });
   }
@@ -119,6 +125,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     this.detalleRegistros.set([]);
     this.buscarTermDetalle.set('');
     this.filtroCalificacion.set('Todas');
+    this.paginaDetalleActual.set(1);
     
     this.listasService.getDetalleCoincidenciasEmpleado(f).subscribe({
       next: (datos) => {
@@ -128,6 +135,10 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar detalle:', err);
         this.cargandoDetalle.set(false);
+        this.mostrarError(
+          'Error',
+          'No se pudo cargar el detalle de coincidencias de empleado.'
+        );
       }
     });
   }
@@ -158,6 +169,36 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
       return matchTerm && matchCalif;
     });
   });
+
+  totalPaginasDetalle = computed(() => {
+    const count = this.detalleFiltrado().length;
+    const size = this.registrosDetallePorPagina();
+    return Math.ceil(count / size) || 1;
+  });
+
+  detallePaginado = computed(() => {
+    const datos = this.detalleFiltrado();
+    const idx = (this.paginaDetalleActual() - 1) * this.registrosDetallePorPagina();
+    return datos.slice(idx, idx + this.registrosDetallePorPagina());
+  });
+
+  cambiarPaginaDetalle(p: number) {
+    if (p >= 1 && p <= this.totalPaginasDetalle()) {
+      this.paginaDetalleActual.set(p);
+    }
+  }
+
+  private mostrarError(title: string, text: string) {
+    import('sweetalert2').then((Swal) => {
+      Swal.default.fire({
+        allowOutsideClick: false,
+        title,
+        text,
+        icon: 'error',
+        confirmButtonColor: '#1e3a8a'
+      });
+    });
+  }
 
   imprimir(item: CoincidenciaEmpleadoResumen) {
     const f = item.fechaEncontro.split('T')[0];
@@ -196,7 +237,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
             'ID Reporte',
             'Identidad/DNI',
             'Nombre',
-            'Número Patrono',
+            'Numero Empleado',
             'Tipo Persona',
             'Lista de Coincidencia',
             'Calificación',
@@ -207,7 +248,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
           // Construcción de la matriz AOA (Array of Arrays)
           const excelData = [
-            ['REPORTE DIARIO DE COINCIDENCIAS - COINCIDENCIAS PATRONO'],
+            ['REPORTE DIARIO DE COINCIDENCIAS - COINCIDENCIAS EMPLEADO'],
             ['Institución:', institucion],
             ['Fecha de Coincidencias:', fechaCoincidencia],
             ['Fecha de Exportación:', fechaExport],
@@ -253,8 +294,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'Coincidencias');
 
-          const fileName = `Coincidencias_Patrono_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
-          XLSX.writeFile(wb, fileName);
+          const fileName = `Coincidencias_Empleado_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
           this.listasService.registrarAuditoriaExportacion(
             'DNP_IHSS.REPORTE_COINCIDENCIAS',
             f,
@@ -265,14 +305,27 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               cantidadRegistros: registros.length,
               archivo: fileName
             }
-          ).subscribe({ error: err => console.warn('No se pudo registrar auditoria de exportacion', err) });
-
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Éxito',
-            text: `Se exportaron ${registros.length} registros exitosamente.`,
-            icon: 'success',
-            confirmButtonColor: '#1e3a8a'
+          ).subscribe({
+            next: () => {
+              XLSX.writeFile(wb, fileName);
+              Swal.default.fire({
+                allowOutsideClick: false,
+                title: 'Exito',
+                text: `Se exportaron ${registros.length} registros exitosamente.`,
+                icon: 'success',
+                confirmButtonColor: '#1e3a8a'
+              });
+            },
+            error: err => {
+              console.error('No se pudo registrar auditoria de exportacion:', err);
+              Swal.default.fire({
+                allowOutsideClick: false,
+                title: 'Auditoria requerida',
+                text: 'No se pudo registrar la auditoria de exportacion. La exportacion fue cancelada.',
+                icon: 'error',
+                confirmButtonColor: '#1e3a8a'
+              });
+            }
           });
         },
         error: (err) => {
@@ -312,7 +365,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
             }
           });
 
-          this.listasService.calificarCoincidencia(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
+          this.listasService.calificarCoincidenciaEmpleado(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
             next: () => {
               // Actualizar localmente el tipoCalificacion
               r.tipoCalificacion = desc;
@@ -390,9 +443,9 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         }
       });
 
-      this.listasService.getResumenMatchLista(r.dataId, r.nombre).subscribe({
+      this.listasService.getResumenMatchListaEmpleado(r.dataId, r.nombre).subscribe({
         next: (detalleHtml) => {
-          // Extraer tokens del nombre del patrono (misma lógica que el backend)
+          // Extraer tokens del nombre del empleado (misma logica que el backend)
           const tokens = this.extraerTokens(r.nombre || '');
 
           // Resaltar las coincidencias en el detalle
@@ -423,7 +476,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               <div class="det-grid">
                 <div class="det-field"><strong>ID Reporte:</strong> ${r.reporteCoincidenciaId}</div>
                 <div class="det-field"><strong>DNI / Identidad:</strong> ${r.dni || '—'}</div>
-                <div class="det-field"><strong>N° Patrono:</strong> ${r.numeroPatrono || '—'}</div>
+                <div class="det-field"><strong>Nro. Empleado:</strong> ${r.numeroPatrono || '---'}</div>
                 <div class="det-field"><strong>Nacionalidad:</strong> ${r.nacionalidad || '—'}</div>
                 <div class="det-field"><strong>Tipo Persona:</strong> ${r.tipoPersona || '—'}</div>
                 <div class="det-field"><strong>Calificación:</strong> ${r.tipoCalificacion || 'Sin calificar'}</div>

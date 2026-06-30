@@ -3,6 +3,7 @@
 -- Script: 03_create_modules_table.sql
 -- Objetivo: Crear catalogo de modulos y accesos de usuario.
 -- Tipo: Idempotente, sin eliminacion de datos.
+-- Modulo registrado: 2 = Usuarios del Sistema.
 -- ============================================================
 
 DECLARE
@@ -44,10 +45,27 @@ DECLARE
       EXECUTE IMMEDIATE p_sql;
     END IF;
   END;
+
+  PROCEDURE advance_sequence_to_min(p_sequence_name IN VARCHAR2, p_min_value IN NUMBER) IS
+    v_last_number NUMBER;
+    v_increment   NUMBER;
+  BEGIN
+    SELECT LAST_NUMBER
+      INTO v_last_number
+      FROM USER_SEQUENCES
+     WHERE SEQUENCE_NAME = UPPER(p_sequence_name);
+
+    IF v_last_number < p_min_value THEN
+      v_increment := p_min_value - v_last_number;
+      EXECUTE IMMEDIATE 'ALTER SEQUENCE ' || p_sequence_name || ' INCREMENT BY ' || v_increment || ' NOCACHE';
+      EXECUTE IMMEDIATE 'SELECT ' || p_sequence_name || '.NEXTVAL FROM DUAL' INTO v_last_number;
+      EXECUTE IMMEDIATE 'ALTER SEQUENCE ' || p_sequence_name || ' INCREMENT BY 1 NOCACHE';
+    END IF;
+  END;
 BEGIN
   create_sequence_if_missing(
     'SEQ_RL_MODULOS',
-    'CREATE SEQUENCE SEQ_RL_MODULOS START WITH 1 INCREMENT BY 1 NOCACHE'
+    'CREATE SEQUENCE SEQ_RL_MODULOS START WITH 10 INCREMENT BY 1 NOCACHE'
   );
 
   create_table_if_missing(
@@ -84,6 +102,8 @@ BEGIN
     'FK_USM_MOD_ID',
     'ALTER TABLE RL_USUARIO_MODULOS ADD CONSTRAINT FK_USM_MOD_ID FOREIGN KEY (USM_MOD_ID) REFERENCES RL_MODULOS(MOD_ID) ON DELETE CASCADE'
   );
+
+  advance_sequence_to_min('SEQ_RL_MODULOS', 10);
 END;
 /
 
@@ -117,7 +137,7 @@ BEGIN
       MOD_SECCION,
       MOD_ACTIVO
     ) VALUES (
-      SEQ_RL_MODULOS.NEXTVAL,
+      2,
       'Usuarios del Sistema',
       'Administracion y gestion de usuarios',
       '/usuarios',
@@ -147,6 +167,24 @@ BEGIN
     IF v_count = 0 THEN
       INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID)
       VALUES (1, v_mod_id);
+    END IF;
+  END IF;
+
+  SELECT COUNT(*)
+    INTO v_count
+    FROM RL_USUARIOS
+   WHERE USR_ID = 2;
+
+  IF v_count > 0 THEN
+    SELECT COUNT(*)
+      INTO v_count
+      FROM RL_USUARIO_MODULOS
+     WHERE USM_USR_ID = 2
+       AND USM_MOD_ID = v_mod_id;
+
+    IF v_count = 0 THEN
+      INSERT INTO RL_USUARIO_MODULOS (USM_USR_ID, USM_MOD_ID)
+      VALUES (2, v_mod_id);
     END IF;
   END IF;
 END;

@@ -63,6 +63,17 @@ export class LoginComponent implements OnInit, OnDestroy {
           confirmButtonColor: '#1e3a8a'
         });
       });
+    } else if (razon === 'cambio-password') {
+      import('sweetalert2').then(Swal => {
+        Swal.default.fire({
+          allowOutsideClick: false,
+          title: 'Cambio de contraseña requerido',
+          text: 'Debe iniciar sesión y completar el cambio de contraseña provisional antes de acceder al sistema.',
+          icon: 'warning',
+          confirmButtonText: 'Entendido',
+          confirmButtonColor: '#1e3a8a'
+        });
+      });
     }
   }
 

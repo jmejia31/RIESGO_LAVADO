@@ -12,7 +12,6 @@ namespace RL.API.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
-    [ModuloAuthorize(5)]
     [Produces("application/json")]
     public class AuditoriaController : ControllerBase
     {
@@ -24,6 +23,7 @@ namespace RL.API.Controllers
         }
 
         [HttpGet]
+        [ModuloAuthorize(5)]
         public async Task<IActionResult> ObtenerBitacora(
             [FromQuery] int pagina = 1,
             [FromQuery] int limite = 10,
@@ -49,6 +49,8 @@ namespace RL.API.Controllers
             }
         }
         [HttpPost("exportacion")]
+        [ModuloAuthorize(4, 5, 7, 8, 9)]
+        [AuditRequired("Exportacion Excel/PDF o generacion de reporte")]
         public async Task<IActionResult> RegistrarExportacion([FromBody] RegistrarExportacionAuditoriaDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Tabla) || string.IsNullOrWhiteSpace(dto.RegistroId))
@@ -56,14 +58,35 @@ namespace RL.API.Controllers
 
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var accionDetalle = ObtenerAccionDetalle(dto);
             var datos = Newtonsoft.Json.JsonConvert.SerializeObject(new
             {
-                Accion = "EXPORTACION_EXCEL",
+                Accion = accionDetalle,
                 dto.Detalle
             });
 
             await _repo.RegistrarAsync(dto.Tabla, dto.RegistroId, "VER", null, datos, usuarioId, null, ip, dto.Modulo);
             return Ok(new { success = true, mensaje = "Auditoria de exportacion registrada." });
+        }
+
+        private static string ObtenerAccionDetalle(RegistrarExportacionAuditoriaDto dto)
+        {
+            if (dto.Detalle.TryGetValue("accion", out var accion) && accion != null)
+            {
+                var accionTexto = accion.ToString();
+                if (!string.IsNullOrWhiteSpace(accionTexto))
+                    return accionTexto;
+            }
+
+            if (dto.Detalle.TryGetValue("tipoReporte", out var tipoReporte) &&
+                tipoReporte?.ToString()?.Contains("PDF", StringComparison.OrdinalIgnoreCase) == true)
+                return "GENERACION_REPORTE_PDF";
+
+            if (dto.Detalle.TryGetValue("archivo", out var archivo) &&
+                archivo?.ToString()?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true)
+                return "EXPORTACION_PDF";
+
+            return "EXPORTACION_EXCEL";
         }
     }
 }

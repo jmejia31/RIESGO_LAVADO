@@ -35,6 +35,11 @@ export const routes: Routes = [
             router.navigate(['/login']);
             return false;
           }
+          if (auth.requiereCambioPassword()) {
+            auth.cerrarSesionLocal();
+            router.navigate(['/login'], { queryParams: { razon: 'cambio-password' } });
+            return false;
+          }
           const ids = usr.modulosIds ?? [];
           if (ids.includes(2)) {
             router.navigate(['/usuarios']);

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.DTOs;
 using RL.API.Infrastructure;
@@ -16,16 +18,20 @@ public interface IAuditoriaRepository
 public class AuditoriaRepository : IAuditoriaRepository
 {
     private readonly OracleDbContext _db;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuditoriaRepository(OracleDbContext db)
+    public AuditoriaRepository(OracleDbContext db, IHttpContextAccessor httpContextAccessor)
     {
         _db = db;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task RegistrarAsync(string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
+
+        ip = string.IsNullOrWhiteSpace(ip) ? ObtenerIpCliente() : ip;
 
         if (string.IsNullOrEmpty(email) && usrId.HasValue)
         {
@@ -69,6 +75,22 @@ public class AuditoriaRepository : IAuditoriaRepository
         cmd.Parameters.Add(new OracleParameter("modulo", (object?)modulo ?? DBNull.Value));
 
         await cmd.ExecuteNonQueryAsync();
+    }
+
+    private string? ObtenerIpCliente()
+    {
+        var context = _httpContextAccessor.HttpContext;
+        if (context == null) return null;
+
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(forwardedFor))
+            return forwardedFor.Split(',')[0].Trim();
+
+        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(realIp))
+            return realIp.Trim();
+
+        return context.Connection.RemoteIpAddress?.ToString();
     }
 
     public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(

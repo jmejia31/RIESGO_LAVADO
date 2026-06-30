@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
 import { HttpClient }  from '@angular/common/http';
 import { Router }      from '@angular/router';
-import { tap, catchError, EMPTY } from 'rxjs';
+import { tap, catchError, EMPTY, throwError } from 'rxjs';
 import { LoginRequest, LoginResponse, UsuarioInfo } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
 import { jwtDecode }   from 'jwt-decode';
@@ -73,7 +73,11 @@ export class AuthService {
 
   refreshToken() {
     const refreshToken = localStorage.getItem('refresh_token');
-    if (!refreshToken) return EMPTY;
+    if (!refreshToken) {
+      this.cerrarSesionLocal();
+      this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
+      return throwError(() => new Error('Refresh token no disponible.'));
+    }
 
     return this.http.post<{ success: boolean; datos: LoginResponse }>(
       `${this.API}/refresh`, { refreshToken }
@@ -84,7 +88,7 @@ export class AuthService {
       catchError(() => {
         this.limpiarSesion();
         this.router.navigate(['/login']);
-        return EMPTY;
+        return throwError(() => new Error('Refresh token invalido o expirado.'));
       })
     );
   }
@@ -96,6 +100,14 @@ export class AuthService {
   tieneRol(roles: string[]): boolean {
     const rolActual = this.rol();
     return roles.some(r => r.toUpperCase() === rolActual.toUpperCase());
+  }
+
+  requiereCambioPassword(): boolean {
+    return this._usuario()?.debeCambiarPassword === true;
+  }
+
+  cerrarSesionLocal() {
+    this.limpiarSesion();
   }
 
   private guardarSesion(datos: LoginResponse) {

@@ -26,6 +26,7 @@ PROMPT ============================================================
 @14_register_coincidencias_empleado_module.sql
 @15_update_detalle_evidencia_soft_delete.sql
 @16_alter_lista_positivos_origen_registro.sql
+@17_validate_module_ids.sql
 
 PROMPT ============================================================
 PROMPT Actualizaciones seguras finalizadas.

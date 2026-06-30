@@ -10,7 +10,7 @@ BEGIN
   SELECT COUNT(*) INTO v_cnt FROM RL_MODULOS WHERE MOD_RUTA = '/coincidencias-empleado';
   IF v_cnt = 0 THEN
     INSERT INTO RL_MODULOS (MOD_ID, MOD_NOMBRE, MOD_DESCRIPCION, MOD_RUTA, MOD_ICONO, MOD_SECCION, MOD_ACTIVO)
-    VALUES (SEQ_RL_MODULOS.NEXTVAL, 'Coincidencias Empleado', 'Visualización del resumen de coincidencias de empleados agrupadas por fecha', '/coincidencias-empleado', 'users', 'Listas de Cautela', 1);
+    VALUES (9, 'Coincidencias Empleado', 'Visualización del resumen de coincidencias de empleados agrupadas por fecha', '/coincidencias-empleado', 'users', 'Listas de Cautela', 1);
   END IF;
 END;
 /

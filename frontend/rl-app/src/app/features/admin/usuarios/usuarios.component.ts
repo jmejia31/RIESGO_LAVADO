@@ -25,6 +25,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   mostrarForm  = signal(false);
   guardando    = signal(false);
   errorGuardar = signal<string | null>(null);
+  errorListado = signal<string | null>(null);
   errorCatalogos = signal<string | null>(null);
   
   editando             = signal(false);
@@ -63,7 +64,10 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     });
     this.cat.modulos().subscribe({
       next: m => this.listaModulos.set(m),
-      error: e => console.error('Error cargando modulos:', e)
+      error: e => {
+        console.error('Error cargando modulos:', e);
+        this.errorCatalogos.set('Error al cargar los modulos del sistema.');
+      }
     });
   }
 
@@ -81,7 +85,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       esUsuarioDominio: [0],
       usuarioDominio:  [''],
       dominioId:       [null],
-      modulosIds:      [[]]
+      modulosIds:      [[], [Validators.required, Validators.minLength(1)]]
     });
 
     // Si el checkbox se marca: campo requerido + dispara validación AD al escribir
@@ -148,10 +152,15 @@ export class UsuariosComponent implements OnInit, OnDestroy {
 
   cargar() {
     this.cargando.set(true);
+    this.errorListado.set(null);
     this.http.get<{ success: boolean; datos: UsuarioInfoDto[] }>(`${environment.apiUrl}/auth/usuarios`)
       .subscribe({
         next:  r => { this.usuarios.set(r.datos); this.cargando.set(false); },
-        error: () => this.cargando.set(false)
+        error: (err) => {
+          this.usuarios.set([]);
+          this.errorListado.set(err?.error?.mensaje || 'No se pudo cargar el listado de usuarios.');
+          this.cargando.set(false);
+        }
       });
   }
 
@@ -298,6 +307,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     } else {
       ctrl?.setValue(currentIds.filter(id => id !== modId));
     }
+    ctrl?.markAsTouched();
+    ctrl?.updateValueAndValidity();
   }
 
   isModuloSelected(modId: number): boolean {

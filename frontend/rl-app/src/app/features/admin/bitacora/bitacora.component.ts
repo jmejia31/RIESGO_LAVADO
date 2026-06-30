@@ -76,8 +76,14 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
 
         </div>
 
+        @if (errorCarga()) {
+          <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+            {{ errorCarga() }}
+          </div>
+        }
+
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <button (click)="filtrarDocumentosEliminados()"
+          <button (click)="filtrarDocumentosEliminados()" [disabled]="cargando()"
             [class]="filtroDocumentosEliminadosActivo()
               ? 'px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold text-xs transition-colors shadow-sm'
               : 'px-4 py-2 border border-red-200 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs transition-colors'">
@@ -85,12 +91,12 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           </button>
 
           <div class="flex justify-end gap-2">
-            <button (click)="limpiarFiltros()"
-              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
+            <button (click)="limpiarFiltros()" [disabled]="cargando()"
+              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               Limpiar Filtros
             </button>
-            <button (click)="aplicarFiltros()"
-              class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors shadow-sm">
+            <button (click)="aplicarFiltros()" [disabled]="cargando()"
+              class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
               Buscar
             </button>
           </div>
@@ -321,6 +327,7 @@ export class BitacoraComponent implements OnInit {
   datos = signal<AuditoriaDto[]>([]);
   totalRegistros = signal(0);
   cargando = signal(false);
+  errorCarga = signal<string | null>(null);
 
   // Filtros vinculados
   filtroBuscar = '';
@@ -418,7 +425,10 @@ export class BitacoraComponent implements OnInit {
   }
 
   cargarDatos() {
+    if (!this.validarRangoFechas()) return;
+
     this.cargando.set(true);
+    this.errorCarga.set(null);
     this.auditoriaService.getBitacora({
       pagina: this.paginaActual(),
       limite: this.limite(),
@@ -438,6 +448,7 @@ export class BitacoraComponent implements OnInit {
         console.error('Error al cargar bitácora:', err);
         this.datos.set([]);
         this.totalRegistros.set(0);
+        this.errorCarga.set(err?.error?.mensaje || 'No se pudo cargar la bitacora con los filtros indicados.');
         this.cargando.set(false);
       }
     });
@@ -485,8 +496,19 @@ export class BitacoraComponent implements OnInit {
     this.filtroTabla = '';
     this.filtroFechaInicio = '';
     this.filtroFechaFin = '';
+    this.errorCarga.set(null);
     this.paginaActual.set(1);
     this.cargarDatos();
+  }
+
+  private validarRangoFechas(): boolean {
+    if (this.filtroFechaInicio && this.filtroFechaFin && this.filtroFechaInicio > this.filtroFechaFin) {
+      this.errorCarga.set('La fecha "Desde" no puede ser mayor que la fecha "Hasta".');
+      this.datos.set([]);
+      this.totalRegistros.set(0);
+      return false;
+    }
+    return true;
   }
 
   cambiarPagina(pagina: number) {

@@ -66,6 +66,9 @@ export interface CoincidenciaNatural {
   nombre: string;
   listaCoincidencia: string;
   totalRepetidos: number;
+  fechaEncontro?: string | null;
+  fechaCalifico?: string | null;
+  fechaRegistroInterno?: string | null;
   tieneMotivo?: boolean;
   esManual?: boolean;
 }
@@ -75,6 +78,9 @@ export interface CoincidenciaEmpleado {
   nombre: string;
   listaCoincidencia: string;
   totalRepetidos: number;
+  fechaEncontro?: string | null;
+  fechaCalifico?: string | null;
+  fechaRegistroInterno?: string | null;
   tieneMotivo?: boolean;
   esManual?: boolean;
 }
@@ -261,6 +267,11 @@ export class ListasService {
 
   getResumenMatchLista(dataId: number, nombre: string): Observable<string> {
     return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-patrono/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`)
+      .pipe(map(res => res.detalle));
+  }
+
+  getResumenMatchListaEmpleado(dataId: number, nombre: string): Observable<string> {
+    return this.http.get<{ success: boolean; detalle: string }>(`${this.apiUrl}/coincidencias-empleado/resumen-match?dataId=${dataId}&nombre=${encodeURIComponent(nombre)}`)
       .pipe(map(res => res.detalle));
   }
 

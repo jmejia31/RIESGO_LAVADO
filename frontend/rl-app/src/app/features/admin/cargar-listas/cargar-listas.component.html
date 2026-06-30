@@ -10,11 +10,16 @@
   <!-- Sección Cargar Listas -->
   <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
     <h3 class="text-lg font-bold text-gray-800 border-b border-gray-100 pb-3">Cargar Listas</h3>
+    @if (errorTipos()) {
+      <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+        {{ errorTipos() }}
+      </div>
+    }
     <form [formGroup]="form" class="flex flex-col sm:flex-row items-end gap-4 max-w-4xl">
       <div class="flex-1 w-full space-y-1">
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Seleccione Uno *</label>
-        <select formControlName="tipoListaId"
-          class="w-full px-4 py-2.5 rounded-xl border border-gray-200 transition-all text-sm outline-none focus:ring-2 focus:ring-ihss-100 focus:border-ihss-600 bg-white">
+        <select formControlName="tipoListaId" [disabled]="procesandoCarga() || cargandoTipos()"
+          class="min-w-[150px] w-full px-4 py-2.5 rounded-xl border border-gray-200 transition-all text-sm outline-none focus:ring-2 focus:ring-ihss-100 focus:border-ihss-600 bg-white">
           <option value="">-- Seleccione Uno --</option>
           @for (tipo of tiposListas(); track tipo.tipoListaCautelaId) {
             <option [value]="tipo.tipoListaCautelaId">{{ tipo.descripcion }}</option>
@@ -27,16 +32,21 @@
       
       <div class="flex-1 w-full space-y-1">
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Archivo a cargar *</label>
-        <input type="file" id="fileUploadInput" (change)="onFileSelected($event)" accept=".csv,.xlsx,.xml"
-          class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-ihss-50 file:text-ihss-700 hover:file:bg-ihss-100 transition-all">
+        <input type="file" id="fileUploadInput" (change)="onFileSelected($event)" accept=".csv,.xlsx,.xml" [disabled]="procesandoCarga()"
+          class="min-w-[370px] w-full px-3 py-2 rounded-xl border border-gray-200 text-sm bg-white file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-ihss-50 file:text-ihss-700 hover:file:bg-ihss-100 transition-all">
       </div>
 
-      <button type="button" (click)="cargarArchivo()"
-        class="inline-flex items-center gap-2 bg-ihss-600 hover:bg-ihss-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm text-sm w-full sm:w-auto justify-center">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-        </svg>
-        Validar y Cargar
+      <button type="button" (click)="cargarArchivo()" [disabled]="procesandoCarga() || form.invalid || !archivoSeleccionado"
+        class="inline-flex items-center gap-2 bg-ihss-600 hover:bg-ihss-700 disabled:bg-ihss-400 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm text-sm w-full sm:w-auto justify-center">
+        @if (procesandoCarga()) {
+          <div class="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
+          Procesando...
+        } @else {
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+          </svg>
+          Validar y Cargar
+        }
       </button>
     </form>
   </div>
@@ -54,6 +64,11 @@
         <p class="text-sm font-medium text-gray-500">Cargando resumen de listas...</p>
       </div>
     } @else {
+      @if (errorResumen()) {
+        <div class="mx-6 mt-6 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+          {{ errorResumen() }}
+        </div>
+      }
       <div class="p-6">
         <div class="overflow-x-auto rounded-xl border border-gray-200">
           <table class="w-full text-center border-collapse border border-gray-200">
@@ -76,8 +91,8 @@
                   </td>
                   <td class="px-6 py-3 border border-gray-200 font-semibold text-gray-900">{{ item.cantidadRegistros }}</td>
                   <td class="px-6 py-3 border border-gray-200 text-center">
-                    <button (click)="imprimir(item)"
-                      class="inline-flex items-center justify-center p-2 rounded-lg bg-ihss-700 text-white hover:bg-ihss-800 transition-all shadow-sm"
+                    <button (click)="imprimir(item)" [disabled]="exportandoTipoId() === item.tipoListaCautelaId || !item.cantidadRegistros"
+                      class="inline-flex items-center justify-center p-2 rounded-lg bg-ihss-700 text-white hover:bg-ihss-800 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Exportar a Excel">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

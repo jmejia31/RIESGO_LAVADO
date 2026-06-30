@@ -4,6 +4,8 @@ obj/
 dist/
 out/
 tmp/
+__pycache__/
+*.pyc
 
 # Frontend dependencies and caches
 node_modules/
