@@ -1,0 +1,266 @@
+{
+  "generatedAt": "2026-07-01T14:33:07.385Z",
+  "baseUrl": "http://localhost:5043/api",
+  "mode": "readonly",
+  "note": "No se ejecutaron operaciones POST/PUT/DELETE para evitar alterar datos existentes.",
+  "results": [
+    {
+      "name": "Swagger disponible",
+      "method": "GET",
+      "url": "http://localhost:5043/swagger/v1/swagger.json",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 85,
+      "summary": {
+        "openapi": "3.0.1",
+        "info": [
+          "title",
+          "description",
+          "version"
+        ],
+        "paths": [
+          "/api/Auditoria",
+          "/api/Auditoria/exportacion",
+          "/api/Auth/login",
+          "/api/Auth/refresh",
+          "/api/Auth/logout",
+          "/api/Auth/password",
+          "/api/Auth/perfil",
+          "/api/Auth/usuarios",
+          "/api/Auth/usuarios/{uid}",
+          "/api/Auth/usuarios/{uid}/estado"
+        ],
+        "components": [
+          "schemas",
+          "securitySchemes"
+        ],
+        "security": {
+          "type": "array",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "Configuración del sistema",
+      "method": "GET",
+      "url": "/api/configuracion/sistema",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 169,
+      "summary": {
+        "success": true,
+        "datos": [
+          "nombreInstitucion",
+          "nombreSistema",
+          "colorPrimario",
+          "colorSecundario",
+          "timeoutSesion",
+          "maxIntentos"
+        ]
+      }
+    },
+    {
+      "name": "Slides de login",
+      "method": "GET",
+      "url": "/api/configuracion/login",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 14,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 3
+        }
+      }
+    },
+    {
+      "name": "Perfil con token de prueba",
+      "method": "GET",
+      "url": "/api/auth/perfil",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 32,
+      "summary": {
+        "success": true,
+        "datos": [
+          "id",
+          "uid",
+          "nombre",
+          "email",
+          "rol",
+          "rolId",
+          "modulosIds",
+          "debeCambiarPassword"
+        ]
+      }
+    },
+    {
+      "name": "Acceso por módulo - usuarios",
+      "method": "GET",
+      "url": "/api/auth/usuarios",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 48,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 4
+        }
+      }
+    },
+    {
+      "name": "Consultar monitoreo - jurídicas",
+      "method": "GET",
+      "url": "/api/listas/juridicas",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 425,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 4
+        }
+      }
+    },
+    {
+      "name": "Consultar monitoreo - naturales",
+      "method": "GET",
+      "url": "/api/listas/naturales",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 1703,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 241
+        }
+      }
+    },
+    {
+      "name": "Consultar monitoreo - empleados",
+      "method": "GET",
+      "url": "/api/listas/empleados",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 234,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "Tipos de documento",
+      "method": "GET",
+      "url": "/api/listas/tipos-documento",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 26,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "Política de evidencias",
+      "method": "GET",
+      "url": "/api/listas/evidencias/politica",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 11,
+      "summary": {
+        "success": true,
+        "datos": [
+          "maximoMb",
+          "maximoBytes",
+          "extensionesPermitidas",
+          "tiposPermitidosTexto"
+        ]
+      }
+    },
+    {
+      "name": "Tipos de listas",
+      "method": "GET",
+      "url": "/api/listas/tipos-listas-cautela",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 9,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 6
+        }
+      }
+    },
+    {
+      "name": "Resumen de listas",
+      "method": "GET",
+      "url": "/api/listas/resumen",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 73,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 6
+        }
+      }
+    },
+    {
+      "name": "Bitácora",
+      "method": "GET",
+      "url": "/api/auditoria?pagina=1&limite=5",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 35,
+      "summary": {
+        "datos": {
+          "type": "array",
+          "count": 5
+        },
+        "totalRegistros": 294
+      }
+    },
+    {
+      "name": "Coincidencias patrono resumen",
+      "method": "GET",
+      "url": "/api/listas/coincidencias-patrono/resumen",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 47,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 518
+        }
+      }
+    },
+    {
+      "name": "Coincidencias empleado resumen",
+      "method": "GET",
+      "url": "/api/listas/coincidencias-empleado/resumen",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 17,
+      "summary": {
+        "success": true,
+        "datos": {
+          "type": "array",
+          "count": 27
+        }
+      }
+    }
+  ]
+}
