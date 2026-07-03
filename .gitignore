@@ -38,6 +38,7 @@ backend/RL.API/wwwroot/uploads/
 .codex-remote-attachments/
 docs/_render_*/
 docs/Herramientas/*.msi
+docs/**/Evidencia_DBA/*.log
 
 # Office temporary files
 ~$*.docx
