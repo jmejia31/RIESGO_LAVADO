@@ -59,7 +59,7 @@ La configuración real `backend/RL.API/appsettings.json` permanece ignorada. La 
 | API | Instancia preexistente activa; rutas inventariadas | `GET /api/Configuracion/sistema` respondió HTTP 200 | Contratos sin cambios |
 | Base de datos | Maestros e inventario existentes | Documentación raíz añadida; scripts intactos | Integridad conservada |
 | Documentación | Sin índice raíz mínimo | Documentación técnica raíz completa | Actualizada |
-| Git | Limpio en `main` | Rama aislada con cambios trazables | Pendiente commit/publicación al redactar este informe |
+| Git | Limpio en `main` | Rama `chore/limpieza-integral-segura` con commits publicados en remoto | Lista para integración a `main` tras validación final |
 
 ## Validación final
 
@@ -70,6 +70,7 @@ La configuración real `backend/RL.API/appsettings.json` permanece ignorada. La 
 | `npm test -- --watch=false` | Correcto; 1 archivo y 2 pruebas aprobadas |
 | `dotnet restore ... --configfile NuGet.Config` | Correcto usando cache aislada |
 | `dotnet build backend/RL.API/RL.API.csproj --no-restore` | Correcto; 0 advertencias y 0 errores |
+| Validación 2026-07-13 posterior a revisión de prompts | Frontend build correcto, pruebas Angular 2/2 correctas y backend build correcto con 0 advertencias/errores |
 | `dotnet test RIESGO_LAVADO.sln` | No hay proyectos .NET de pruebas que ejecutar |
 | Smoke test API | HTTP 200 en configuración pública de la instancia existente |
 | Maestros Oracle | Todas las referencias `@script.sql` existen; actualización segura no contiene DDL destructivo |
