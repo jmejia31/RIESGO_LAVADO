@@ -2,15 +2,29 @@
 bin/
 obj/
 dist/
+build/
 out/
 tmp/
+tmp_build/
+temp/
+publish/
+TestResults/
 __pycache__/
 *.pyc
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.swp
 
 # Frontend dependencies and caches
 node_modules/
-.angular/cache/
+.angular/
+.cache/
 coverage/
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -49,6 +63,11 @@ docs/**/*.log
 
 # Local configuration with secrets
 backend/RL.API/appsettings.json
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.Development.local.json
 
 # OS files
 .DS_Store
