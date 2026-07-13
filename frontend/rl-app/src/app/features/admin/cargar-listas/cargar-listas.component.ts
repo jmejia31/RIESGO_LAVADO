@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService, TipoListaCautela, ResumenLista } from '../../../core/services/listas.service';
 import { AuthService } from '../../../core/services/auth.service';
-import * as XLSX from 'xlsx';
+import * as XLSX from '../../../core/utils/excel-export.util';
 
 @Component({
   selector: 'app-cargar-listas',

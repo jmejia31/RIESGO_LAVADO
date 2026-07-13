@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import * as XLSX from '../../../core/utils/excel-export.util';
 import {
   EscalaRiesgo,
   MatrizRiesgoCriterio,

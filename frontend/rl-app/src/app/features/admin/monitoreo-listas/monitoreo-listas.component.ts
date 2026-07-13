@@ -6,7 +6,7 @@ import { ListasService, CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaE
 import { ConfiguracionService } from '../../../core/services/configuracion.service';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import * as XLSX from '../../../core/utils/excel-export.util';
 import { of, forkJoin } from 'rxjs';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';

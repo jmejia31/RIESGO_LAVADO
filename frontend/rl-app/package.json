@@ -26,8 +26,11 @@
     "jwt-decode": "^4.0.0",
     "rxjs": "~7.8.0",
     "sweetalert2": "^11.26.25",
-    "tslib": "^2.3.0",
-    "xlsx": "^0.18.5"
+    "tslib": "^2.3.0"
+  },
+  "overrides": {
+    "@babel/core": "7.29.7",
+    "esbuild": "0.28.1"
   },
   "devDependencies": {
     "@angular/build": "^22.0.4",

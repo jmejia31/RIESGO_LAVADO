@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService, CoincidenciaEmpleadoResumen, CoincidenciaEmpleadoDetalle } from '../../../core/services/listas.service';
 import { AuthService } from '../../../core/services/auth.service';
-import * as XLSX from 'xlsx';
+import * as XLSX from '../../../core/utils/excel-export.util';
 
 @Component({
   selector: 'app-coincidencias-empleado',
