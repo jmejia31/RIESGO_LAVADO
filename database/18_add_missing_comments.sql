@@ -6,6 +6,8 @@
 -- Responsable documental: Javier Mejía
 -- Reglas: solo COMMENT ON; sin cambios estructurales, sin DML, sin DROP, sin TRUNCATE, sin DELETE.
 -- Nota técnica SQLPlus: ejecutar con NLS_LANG=AMERICAN_AMERICA.WE8MSWIN1252.
+-- Proceso DBA: este script documenta objetos existentes para auditoría técnica.
+-- No modifica datos ni reglas de negocio; solo agrega descripciones a tablas y columnas.
 -- ============================================================
 
 SET DEFINE OFF;

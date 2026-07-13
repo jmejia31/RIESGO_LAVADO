@@ -34,7 +34,7 @@ import { map } from 'rxjs';
 })
 export class SinAccesoComponent {
   private readonly route = inject(ActivatedRoute);
-  private readonly mensajeDefault = 'No tiene permisos para acceder a este modulo.';
+  private readonly mensajeDefault = 'No tiene permisos para acceder a este módulo.';
   private readonly mensajeParam = toSignal(
     this.route.queryParamMap.pipe(map(params => params.get('mensaje'))),
     { initialValue: null }

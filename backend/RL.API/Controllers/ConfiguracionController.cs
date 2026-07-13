@@ -96,7 +96,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPost("slides")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
-    [AuditRequired("Creacion de slide de configuracion")]
+    [AuditRequired("Creación de slide de configuración")]
     public async Task<IActionResult> CrearSlide([FromBody] Models.LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
@@ -111,7 +111,7 @@ public class ConfiguracionController : ControllerBase
     [HttpPut("slides/{id}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
-    [AuditRequired("Edicion de slide de configuracion")]
+    [AuditRequired("Edición de slide de configuración")]
     public async Task<IActionResult> ActualizarSlide(int id, [FromBody] Models.LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
@@ -128,7 +128,7 @@ public class ConfiguracionController : ControllerBase
     [HttpDelete("slides/{id}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
-    [AuditRequired("Eliminacion de slide de configuracion")]
+    [AuditRequired("Eliminación de slide de configuración")]
     public async Task<IActionResult> EliminarSlide(int id)
     {
         var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);

@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { of, forkJoin } from 'rxjs';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
+type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
 type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string };
 
 @Component({
@@ -19,9 +20,84 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-full space-y-6">
+      <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-ihss-600">Sistema de gestion LA/FT</p>
+            <h2 class="mt-1 text-2xl font-bold text-gray-900">Monitoreo de Listas</h2>
+            <p class="mt-1 text-sm text-gray-500 max-w-3xl">
+              Visualiza coincidencias, registra motivos, gestiona seguimientos y conserva evidencia documental sin depender del modulo Matrices de Riesgos.
+            </p>
+          </div>
+          <button (click)="agregarPositivoManual()"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Crear positivo manual</span>
+          </button>
+        </div>
+
+        <div class="p-4 bg-gray-50/70 border-b border-gray-100">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button (click)="cambiarTipo('juridica')"
+              [class]="tipoActivo() === 'juridica' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
+              class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+              <span>
+                <span class="block text-sm">Personas juridicas</span>
+                <span class="block text-xs font-medium opacity-75">Patronos, empresas y proveedores</span>
+              </span>
+              <span class="text-lg font-bold">{{ juridicasRaw().length }}</span>
+            </button>
+
+            <button (click)="cambiarTipo('natural')"
+              [class]="tipoActivo() === 'natural' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
+              class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+              <span>
+                <span class="block text-sm">Personas naturales</span>
+                <span class="block text-xs font-medium opacity-75">Afiliados y terceros identificados</span>
+              </span>
+              <span class="text-lg font-bold">{{ naturalesRaw().length }}</span>
+            </button>
+
+            <button (click)="cambiarTipo('empleado')"
+              [class]="tipoActivo() === 'empleado' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
+              class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
+              <span>
+                <span class="block text-sm">Empleados</span>
+                <span class="block text-xs font-medium opacity-75">Control interno y seguimiento</span>
+              </span>
+              <span class="text-lg font-bold">{{ empleadosRaw().length }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-gray-100">
+          <div class="p-5">
+            <p class="text-xs font-semibold text-gray-500">Vista activa</p>
+            <p class="mt-2 text-2xl font-bold text-gray-900">{{ totalActual() }}</p>
+            <p class="text-xs text-gray-500">{{ etiquetaTipoActivo() }}</p>
+          </div>
+          <div class="p-5">
+            <p class="text-xs font-semibold text-gray-500">Pendientes</p>
+            <p class="mt-2 text-2xl font-bold text-amber-700">{{ pendientesActual() }}</p>
+            <p class="text-xs text-gray-500">Requieren motivo</p>
+          </div>
+          <div class="p-5">
+            <p class="text-xs font-semibold text-gray-500">Con motivo</p>
+            <p class="mt-2 text-2xl font-bold text-emerald-700">{{ conMotivoActual() }}</p>
+            <p class="text-xs text-gray-500">Listos para seguimiento</p>
+          </div>
+          <div class="p-5">
+            <p class="text-xs font-semibold text-gray-500">Cerrados / Pasivos</p>
+            <p class="mt-2 text-2xl font-bold text-slate-700">{{ cerradosPasivosActual() }}</p>
+            <p class="text-xs text-gray-500">Visibles solo con filtro</p>
+          </div>
+        </div>
+      </section>
       
       <!-- Encabezado -->
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 class="text-2xl font-bold text-gray-800">Monitoreo de Listas</h2>
           <p class="text-sm text-gray-500">Coincidencias en listas de riesgo clasificadas por categoría.</p>
@@ -36,7 +112,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       </div>
 
       <!-- Filtros en forma de Botones Grandes (Categorías) -->
-      <div class="grid grid-cols-3 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+      <div class="hidden grid-cols-3 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
         
         <!-- Botón Jurídicas -->
         <button (click)="cambiarTipo('juridica')"
@@ -77,11 +153,25 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
       </div>
 
       <!-- Buscador y Tabla de Contenido -->
-      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-        
-        <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
-          <!-- Búsqueda -->
-          <div class="relative flex-1 min-w-[260px]">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-5">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div class="min-w-0">
+            <h3 class="text-lg font-bold text-gray-900">Coincidencias y exportaciones</h3>
+            <p class="text-xs text-gray-500">Los filtros se aplican automáticamente; la exportación respeta la vista filtrada.</p>
+          </div>
+          <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
+            <button (click)="exportarListaPrincipal()" [disabled]="datosFiltrados().length === 0"
+              class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Exportar Excel</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 min-w-0">
+          <div class="relative min-w-0">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -92,47 +182,33 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
               class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
-            <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
-              class="min-w-[170px] border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700">
-              <option value="todos">Todos los estados</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="con_motivo">Con motivo</option>
-              <option value="manual">Manual</option>
-            </select>
+          <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700">
+            <option value="todos">Todos los registros</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="con_motivo">Con motivo</option>
+            <option value="cerrado_pasivo">Cerrado / Pasivo</option>
+          </select>
 
-            <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="filtroFechaDesde.set($event); paginaActual.set(1)"
-              class="border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
-            <input type="date" [ngModel]="filtroFechaHasta()" (ngModelChange)="filtroFechaHasta.set($event); paginaActual.set(1)"
-              class="border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
+          <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="filtroFechaDesde.set($event); paginaActual.set(1)"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
+          <input type="date" [ngModel]="filtroFechaHasta()" (ngModelChange)="filtroFechaHasta.set($event); paginaActual.set(1)"
+            class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
 
-            <button (click)="limpiarFiltrosPrincipales()"
-              class="px-3 py-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 font-semibold text-xs transition-colors">
-              Limpiar
-            </button>
-          </div>
+          <button (click)="limpiarFiltrosPrincipales()"
+            class="w-32 px-3 py-2 border border-gray-200 rounded-xl bg-white text-gray-600 hover:bg-gray-50 font-semibold text-sm transition-colors">
+            Limpiar
+          </button>
 
-          <!-- Acciones de exportación y límite -->
-          <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-            <button (click)="exportarListaPrincipal()" [disabled]="datosFiltrados().length === 0"
-              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Exportar Excel</span>
-            </button>
-
-            <span class="text-gray-300">|</span>
-
-            <span>Mostrar</span>
+          <label class="w-full">
+            <span class="sr-only">Registros por página</span>
             <select [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1)"
-              class="border border-gray-200 rounded-xl pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
-              <option [value]="10">10</option>
-              <option [value]="25">25</option>
-              <option [value]="50">50</option>
+              class="w-32 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors">
+              <option [value]="10">10 registros</option>
+              <option [value]="25">25 registros</option>
+              <option [value]="50">50 registros</option>
             </select>
-            <span>registros</span>
-          </div>
+          </label>
         </div>
 
         <!-- Tabla -->
@@ -160,7 +236,7 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
             } @else {
               
               <!-- Contenido según Tipo -->
-              <table class="min-w-full divide-y divide-gray-200">
+              <table class="min-w-[980px] w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                   
                   @if (tipoActivo() === 'juridica') {
@@ -214,17 +290,10 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         <td class="px-6 py-4 font-semibold text-gray-900">
                           <div class="flex items-center gap-2">
                             <span>{{ row.nombre }}</span>
-                            @if (row.esManual) {
-                              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20">
-                                Manual
-                              </span>
-                            }
                           </div>
                         </td>
                         <td class="px-6 py-4">
-                          <span [class]="row.esManual
-                            ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20'
-                            : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10'">
+                          <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
                             {{ row.listaCoincidencia }}
                           </span>
                         </td>
@@ -261,16 +330,16 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
 
                             <!-- Dar Seguimiento -->
                             <div class="relative group inline-block">
-                              <button (click)="darSeguimiento(row)" [disabled]="!row.tieneMotivo"
-                                [class]="row.tieneMotivo 
-                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer' 
+                              <button (click)="darSeguimiento(row)" [disabled]="!puedeDarSeguimiento(row)"
+                                [class]="puedeDarSeguimiento(row)
+                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer'
                                   : 'inline-flex items-center justify-center p-1.5 text-gray-400 bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed opacity-50'">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                                 </svg>
                               </button>
                               <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                                {{ row.tieneMotivo ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
+                                {{ puedeDarSeguimiento(row) ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
@@ -315,17 +384,10 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                          <td class="px-6 py-4 font-semibold text-gray-900">
                           <div class="flex items-center gap-2">
                             <span>{{ row.nombre }}</span>
-                            @if (row.esManual) {
-                              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20">
-                                Manual
-                              </span>
-                            }
                           </div>
                         </td>
                         <td class="px-6 py-4">
-                          <span [class]="row.esManual
-                            ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20'
-                            : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10'">
+                          <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
                             {{ row.listaCoincidencia }}
                           </span>
                         </td>
@@ -371,16 +433,16 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
 
                             <!-- Dar Seguimiento -->
                             <div class="relative group inline-block">
-                              <button (click)="darSeguimiento(row)" [disabled]="!row.tieneMotivo"
-                                [class]="row.tieneMotivo 
-                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer' 
+                              <button (click)="darSeguimiento(row)" [disabled]="!puedeDarSeguimiento(row)"
+                                [class]="puedeDarSeguimiento(row)
+                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer'
                                   : 'inline-flex items-center justify-center p-1.5 text-gray-400 bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed opacity-50'">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                                 </svg>
                               </button>
                               <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                                {{ row.tieneMotivo ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
+                                {{ puedeDarSeguimiento(row) ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
@@ -425,17 +487,10 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         <td class="px-6 py-4 font-semibold text-gray-900">
                           <div class="flex items-center gap-2">
                             <span>{{ row.nombre }}</span>
-                            @if (row.esManual) {
-                              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20">
-                                Manual
-                              </span>
-                            }
                           </div>
                         </td>
                         <td class="px-6 py-4">
-                          <span [class]="row.esManual
-                            ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20'
-                            : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10'">
+                          <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-red-50 text-red-700 ring-1 ring-red-600/10">
                             {{ row.listaCoincidencia }}
                           </span>
                         </td>
@@ -481,16 +536,16 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
 
                             <!-- Dar Seguimiento -->
                             <div class="relative group inline-block">
-                              <button (click)="darSeguimiento(row)" [disabled]="!row.tieneMotivo"
-                                [class]="row.tieneMotivo 
-                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer' 
+                              <button (click)="darSeguimiento(row)" [disabled]="!puedeDarSeguimiento(row)"
+                                [class]="puedeDarSeguimiento(row)
+                                  ? 'inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 cursor-pointer'
                                   : 'inline-flex items-center justify-center p-1.5 text-gray-400 bg-gray-100 rounded-lg border border-gray-200 cursor-not-allowed opacity-50'">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                                 </svg>
                               </button>
                               <span class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-bottom bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                                {{ row.tieneMotivo ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
+                                {{ puedeDarSeguimiento(row) ? 'Dar Seguimiento' : 'Debe registrar un motivo primero' }}
                                 <span class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900"></span>
                               </span>
                             </div>
@@ -806,9 +861,9 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                         class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-gray-500 text-sm focus:outline-none cursor-not-allowed" />
                     }
                   </div>
-                  <!-- Tipo de Lista -->
+                  <!-- Tipo de Persona -->
                   <div>
-                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Lista</label>
+                    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tipo de Persona</label>
                     @if (esRegistroManual()) {
                       <select [ngModel]="formManualTipoPositivoId()" (ngModelChange)="formManualTipoPositivoId.set(+$event || null)"
                         class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white">
@@ -862,9 +917,14 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                 <!-- Motivo de Ingreso -->
                 <div>
                   <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Motivo de Ingreso</label>
-                  <textarea [ngModel]="formMotivo()" (ngModelChange)="formMotivo.set($event)" rows="4"
+                  <textarea [ngModel]="formMotivo()" (ngModelChange)="actualizarMotivoIngreso($event)" rows="4" [attr.maxlength]="maxTextoTextarea"
                     placeholder="Escriba detalladamente el motivo de ingreso a la lista de positivos..."
                     class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors resize-none"></textarea>
+                  <div class="mt-1 flex justify-end">
+                    <span class="text-[11px] font-semibold" [class]="formMotivo().length >= 950 ? 'text-amber-600' : 'text-gray-400'">
+                      {{ formMotivo().length }}/{{ maxTextoTextarea }}
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Primer Seguimiento (Opcional) -->
@@ -873,9 +933,14 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                   
                   <div>
                     <label class="block text-xs font-semibold text-gray-500 mb-1">Nota o Comentario de Seguimiento</label>
-                    <textarea [ngModel]="formSeguimientoComentario()" (ngModelChange)="formSeguimientoComentario.set($event)" rows="3"
+                    <textarea [ngModel]="formSeguimientoComentario()" (ngModelChange)="actualizarComentarioSeguimientoInicial($event)" rows="3" [attr.maxlength]="maxTextoTextarea"
                       placeholder="Escriba un comentario inicial de seguimiento si lo desea..."
                       class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors resize-none"></textarea>
+                    <div class="mt-1 flex justify-end">
+                      <span class="text-[11px] font-semibold" [class]="formSeguimientoComentario().length >= 950 ? 'text-amber-600' : 'text-gray-400'">
+                        {{ formSeguimientoComentario().length }}/{{ maxTextoTextarea }}
+                      </span>
+                    </div>
                   </div>
 
                   <div>
@@ -966,18 +1031,14 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] gap-2 items-end bg-gray-50 border border-gray-100 rounded-xl p-3">
                   <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Desde</label>
-                    <input type="date" [ngModel]="filtroSeguimientoDesde()" (ngModelChange)="filtroSeguimientoDesde.set($event)"
+                    <input type="date" [ngModel]="filtroSeguimientoDesde()" (ngModelChange)="filtroSeguimientoDesde.set($event); programarFiltroSeguimientos()"
                       class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 bg-white" />
                   </div>
                   <div>
                     <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Hasta</label>
-                    <input type="date" [ngModel]="filtroSeguimientoHasta()" (ngModelChange)="filtroSeguimientoHasta.set($event)"
+                    <input type="date" [ngModel]="filtroSeguimientoHasta()" (ngModelChange)="filtroSeguimientoHasta.set($event); programarFiltroSeguimientos()"
                       class="w-full px-3 py-2 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-ihss-600 bg-white" />
                   </div>
-                  <button (click)="aplicarFiltroSeguimientos()" [disabled]="cargandoSeguimiento()"
-                    class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold text-xs transition-colors disabled:opacity-50">
-                    Buscar
-                  </button>
                   <button (click)="limpiarFiltroSeguimientos()" [disabled]="cargandoSeguimiento()"
                     class="px-3 py-2 border border-gray-200 bg-white text-gray-700 rounded-lg hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50">
                     Limpiar
@@ -1075,9 +1136,14 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
                 
                 <div class="flex flex-col">
                   <label class="block text-xs font-semibold text-gray-500 mb-1">Nota o Comentario</label>
-                  <textarea [ngModel]="formComentarioSeguimiento()" (ngModelChange)="formComentarioSeguimiento.set($event)" rows="5"
+                  <textarea [ngModel]="formComentarioSeguimiento()" (ngModelChange)="actualizarComentarioSeguimiento($event)" rows="5" [attr.maxlength]="maxTextoTextarea"
                     placeholder="Escriba los comentarios o acciones de seguimiento tomadas..."
                     class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors resize-none"></textarea>
+                  <div class="mt-1 flex justify-end">
+                    <span class="text-[11px] font-semibold" [class]="formComentarioSeguimiento().length >= 950 ? 'text-amber-600' : 'text-gray-400'">
+                      {{ formComentarioSeguimiento().length }}/{{ maxTextoTextarea }}
+                    </span>
+                  </div>
                 </div>
 
                 @if (modoEdicion() && evidenciasExistentes().length > 0) {
@@ -1178,11 +1244,13 @@ type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string }
 export class MonitoreoListasComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private configService = inject(ConfiguracionService);
+  private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
+  readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
   cargando = signal(false);
   busqueda = signal('');
-  filtroEstado = signal<'todos' | 'pendiente' | 'con_motivo' | 'manual'>('todos');
+  filtroEstado = signal<FiltroEstado>('todos');
   filtroFechaDesde = signal<string>('');
   filtroFechaHasta = signal<string>('');
 
@@ -1208,7 +1276,7 @@ export class MonitoreoListasComponent implements OnInit {
   listaTiposListasCautela = signal<TipoListaCautela[]>([]);
   origenesRegistro = [
     { valor: 'DNP_LISTAS', etiqueta: 'Coincidencia DNP / Listas' },
-    { valor: 'MANUAL_CUMPLIMIENTO', etiqueta: 'Registro manual de Cumplimiento' },
+    { valor: 'MANUAL_CUMPLIMIENTO', etiqueta: 'Registro manual Sección de Cumplimiento' },
     { valor: 'NOTICIA_PRENSA', etiqueta: 'Noticia / Prensa / Medio externo' },
     { valor: 'OTRO', etiqueta: 'Otro' }
   ];
@@ -1266,6 +1334,23 @@ export class MonitoreoListasComponent implements OnInit {
   naturalesRaw = signal<CoincidenciaNatural[]>([]);
   empleadosRaw = signal<CoincidenciaEmpleado[]>([]);
 
+  datosActivos = computed<Array<CoincidenciaJuridica | CoincidenciaNatural | CoincidenciaEmpleado>>(() => {
+    if (this.tipoActivo() === 'juridica') return this.juridicasRaw();
+    if (this.tipoActivo() === 'natural') return this.naturalesRaw();
+    return this.empleadosRaw();
+  });
+
+  etiquetaTipoActivo = computed(() => {
+    if (this.tipoActivo() === 'juridica') return 'Personas juridicas';
+    if (this.tipoActivo() === 'natural') return 'Personas naturales';
+    return 'Empleados';
+  });
+
+  totalActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item)).length);
+  pendientesActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length);
+  conMotivoActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length);
+  cerradosPasivosActual = computed(() => this.datosActivos().filter(item => this.esCerradoPasivo(item)).length);
+
   // Paginación
   paginaActual = signal(1);
   limite = signal(10);
@@ -1304,6 +1389,22 @@ export class MonitoreoListasComponent implements OnInit {
     this.filtroFechaDesde.set('');
     this.filtroFechaHasta.set('');
     this.paginaActual.set(1);
+  }
+
+  private limitarTexto(valor: string | null | undefined): string {
+    return (valor || '').slice(0, this.maxTextoTextarea);
+  }
+
+  actualizarMotivoIngreso(valor: string) {
+    this.formMotivo.set(this.limitarTexto(valor));
+  }
+
+  actualizarComentarioSeguimientoInicial(valor: string) {
+    this.formSeguimientoComentario.set(this.limitarTexto(valor));
+  }
+
+  actualizarComentarioSeguimiento(valor: string) {
+    this.formComentarioSeguimiento.set(this.limitarTexto(valor));
   }
 
   cargarDatos() {
@@ -1365,12 +1466,26 @@ export class MonitoreoListasComponent implements OnInit {
     return valores.some(valor => (valor || '').toLowerCase().includes(query));
   }
 
-  private coincideEstado(item: { tieneMotivo?: boolean; esManual?: boolean }, estado: string): boolean {
-    if (estado === 'todos') return true;
-    if (estado === 'manual') return !!item.esManual;
-    if (estado === 'con_motivo') return !!item.tieneMotivo;
-    if (estado === 'pendiente') return !item.tieneMotivo;
+  private coincideEstado(item: { tieneMotivo?: boolean; esManual?: boolean }, estado: FiltroEstado): boolean {
+    const cerradoPasivo = this.esCerradoPasivo(item);
+    if (estado === 'todos') return !cerradoPasivo;
+    if (estado === 'cerrado_pasivo') return cerradoPasivo;
+    if (cerradoPasivo) return false;
+    if (estado === 'con_motivo') return !!item.tieneMotivo && !item.esManual;
+    if (estado === 'pendiente') return !item.tieneMotivo || !!item.esManual;
     return true;
+  }
+
+  private esCerradoPasivo(item: unknown): boolean {
+    const estado = String(
+      (item as { estadoRegistro?: unknown; estado?: unknown; estatus?: unknown })?.estadoRegistro ??
+      (item as { estado?: unknown })?.estado ??
+      (item as { estatus?: unknown })?.estatus ??
+      ''
+    ).trim().toUpperCase();
+
+    const activo = (item as { activo?: unknown; esActivo?: unknown })?.activo ?? (item as { esActivo?: unknown })?.esActivo;
+    return estado === 'CERRADO' || estado === 'CERRADA' || estado === 'PASIVO' || estado === 'PASIVA' || estado === 'SUSPENDIDO' || estado === 'SUSPENDIDA' || activo === false || activo === 0;
   }
 
   private coincideFecha(item: { fechaEncontro?: string | null; fechaRegistroInterno?: string | null }, desde: string, hasta: string): boolean {
@@ -1396,17 +1511,29 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   obtenerEstadoMonitoreo(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
-    if (item.esManual) return 'Manual';
+    if (this.esCerradoPasivo(item)) return 'Cerrado / Pasivo';
+    if (item.esManual) return 'Pendiente';
     return item.tieneMotivo ? 'Con motivo' : 'Pendiente';
   }
 
-  obtenerClaseEstado(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
-    if (item.esManual)
-      return 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-500/20';
+  obtenerEstadoMonitoreoReporte(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
+    const estado = this.obtenerEstadoMonitoreo(item);
+    if (estado === 'Con motivo') return 'CON MOTIVO REGISTRADO';
+    if (estado === 'Cerrado / Pasivo') return 'CERRADO / PASIVO';
+    return 'PENDIENTE DE REGISTRO';
+  }
 
-    return item.tieneMotivo
+  obtenerClaseEstado(item: { tieneMotivo?: boolean; esManual?: boolean }): string {
+    if (this.esCerradoPasivo(item))
+      return 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 text-slate-700 ring-1 ring-slate-300';
+
+    return item.tieneMotivo && !item.esManual
       ? 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10'
       : 'inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
+  }
+
+  puedeDarSeguimiento(item: { tieneMotivo?: boolean; esManual?: boolean }): boolean {
+    return this.obtenerEstadoMonitoreo(item) === 'Con motivo';
   }
 
   // Datos paginados reactivos por tipo
@@ -1859,7 +1986,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
+            this.manejarErrorAuditoriaObligatoria(err, 'generación de reporte PDF');
           }
         });
       },
@@ -1902,7 +2029,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
+            this.manejarErrorAuditoriaObligatoria(err, 'generación de reporte PDF');
           }
         });
       },
@@ -1954,7 +2081,7 @@ export class MonitoreoListasComponent implements OnInit {
     const generalData = [
       ['DNI / Identificación:', row.numeroIdentificacion || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
-      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+      ['Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
       ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
@@ -2102,7 +2229,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.cargando.set(false);
           },
           error: (err) => {
-            this.manejarErrorAuditoriaObligatoria(err, 'generacion de reporte PDF');
+            this.manejarErrorAuditoriaObligatoria(err, 'generación de reporte PDF');
           }
         });
       },
@@ -2154,7 +2281,7 @@ export class MonitoreoListasComponent implements OnInit {
     const generalData = [
       ['DNI / Identidad:', row.identidad || 'N/D', 'Nombre Completo:', row.nombre || 'N/D'],
       ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Total de Coincidencias:', String(row.totalRepetidos || 0)],
-      ['Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+      ['Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno:', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
       ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
@@ -2301,7 +2428,7 @@ export class MonitoreoListasComponent implements OnInit {
     const generalData = [
       ['Número Patronal:', row.numeroPatrono || 'N/D', 'RTN:', row.rtn || 'N/D'],
       ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
-      ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO'],
+      ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
       ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
       ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)]
     ];
@@ -2408,7 +2535,7 @@ export class MonitoreoListasComponent implements OnInit {
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
         allowOutsideClick: false,
-        title: 'Auditoria requerida',
+        title: 'Auditoría requerida',
         text: `No se pudo registrar la auditoria de ${operacion}. La operacion fue cancelada.`,
         icon: 'error',
         confirmButtonColor: '#1e3a8a'
@@ -2456,7 +2583,7 @@ export class MonitoreoListasComponent implements OnInit {
           ['Información General del Patrono'],
           ['Número Patronal', row.numeroPatrono || 'N/D', 'RTN', row.rtn || 'N/D'],
           ['Nombre / Razón Social', row.nombre || 'N/D', 'Proveedor IHSS', row.esProveedorIhss || 'No'],
-          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO'],
+          ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row)],
           ['Fecha Coincidencia', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
           ['Registro Interno', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
           [],
@@ -2472,7 +2599,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.escribirFichaExcel(data, 'Ficha Patrono', fileName);
             this.cargando.set(false);
           },
-          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
       error: (err) => {
@@ -2503,8 +2630,8 @@ export class MonitoreoListasComponent implements OnInit {
           [],
           ['Información General de la Persona'],
           ['DNI / Identificación', row.numeroIdentificacion || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
-          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
-          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+          ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
+          ['Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
           ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
@@ -2534,7 +2661,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.escribirFichaExcel(data, 'Ficha Natural', fileName);
             this.cargando.set(false);
           },
-          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
       error: (err) => {
@@ -2565,8 +2692,8 @@ export class MonitoreoListasComponent implements OnInit {
           [],
           ['Información General del Empleado'],
           ['DNI / Identidad', row.identidad || 'N/D', 'Nombre Completo', row.nombre || 'N/D'],
-          ['Tipo de Lista', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
-          ['Estado Monitoreo', row.tieneMotivo ? 'CON MOTIVO REGISTRADO' : 'PENDIENTE DE REGISTRO', 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
+          ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Total de Coincidencias', String(row.totalRepetidos || 0)],
+          ['Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row), 'Registro Interno', this.formatDateOrNd(positivo?.fechaRegistroInterno)],
           ['Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', ''],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
@@ -2596,7 +2723,7 @@ export class MonitoreoListasComponent implements OnInit {
             this.escribirFichaExcel(data, 'Ficha Empleado', fileName);
             this.cargando.set(false);
           },
-          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion de ficha Excel')
+          error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
         });
       },
       error: (err) => {
@@ -2670,7 +2797,7 @@ export class MonitoreoListasComponent implements OnInit {
         }
       ).subscribe({
         next: () => XLSX.writeFile(wb, fileName),
-        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
       });
     } else {
       const persona = this.personaSeleccionada();
@@ -2736,7 +2863,7 @@ export class MonitoreoListasComponent implements OnInit {
         }
       ).subscribe({
         next: () => XLSX.writeFile(wb, fileName),
-        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+        error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
       });
     }
   }
@@ -2829,7 +2956,7 @@ export class MonitoreoListasComponent implements OnInit {
       }
     ).subscribe({
       next: () => XLSX.writeFile(wb, fileName),
-      error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportacion Excel')
+      error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
     });
   }
 
@@ -3205,6 +3332,11 @@ export class MonitoreoListasComponent implements OnInit {
     this.cargarSeguimientos(entidad.noDocumento);
   }
 
+  programarFiltroSeguimientos() {
+    if (this.filtroSeguimientoTimer) clearTimeout(this.filtroSeguimientoTimer);
+    this.filtroSeguimientoTimer = setTimeout(() => this.aplicarFiltroSeguimientos(), 350);
+  }
+
   limpiarFiltroSeguimientos() {
     const entidad = this.entidadSeleccionada();
     this.filtroSeguimientoDesde.set('');
@@ -3284,6 +3416,7 @@ export class MonitoreoListasComponent implements OnInit {
       inputLabel: 'Motivo de eliminación',
       inputPlaceholder: 'Escriba el motivo de la eliminación...',
       inputAttributes: {
+        maxlength: String(this.maxTextoTextarea),
         'aria-label': 'Motivo de eliminación'
       },
       showCancelButton: true,

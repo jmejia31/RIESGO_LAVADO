@@ -32,13 +32,14 @@ yarn-error.log*
 backend/RL.API/logs/
 backend/RL.API/Uploads/
 backend/RL.API/wwwroot/uploads/
+backend/RL.API/App_Data/
 
 # Codex/local generated artifacts
 .codex/
 .codex-remote-attachments/
 docs/_render_*/
 docs/Herramientas/*.msi
-docs/**/Evidencia_DBA/*.log
+docs/**/*.log
 
 # Office temporary files
 ~$*.docx

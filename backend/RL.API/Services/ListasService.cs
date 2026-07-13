@@ -50,6 +50,8 @@ public sealed class ListasService : IListasService
 
     public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerDetalleListaParaExportarAsync(int id, long usuarioId, string? ip)
     {
+        // Proceso de exportación: obtiene datos desde DNP/listas y registra auditoría
+        // con usuario, IP y cantidad de registros antes de entregar el resultado al frontend.
         var result = await _repo.ObtenerDetalleListaParaExportarAsync(id);
         var auditoria = JsonConvert.SerializeObject(new
         {
@@ -77,7 +79,7 @@ public sealed class ListasService : IListasService
         var ok = await _repo.ActualizarTipoListaCautelaAsync(id, dto.Descripcion, dto.TipoArchivo, dto.CantidadColumnas, usuarioId);
         return ok
             ? ServiceResult.Ok("Tipo de lista actualizado exitosamente.")
-            : ServiceResult.NotFound("No se encontro el tipo de lista a actualizar o no hubo cambios.");
+            : ServiceResult.NotFound("No se encontró el tipo de lista a actualizar o no hubo cambios.");
     }
 
     public async Task<ServiceResult> EliminarTipoListaCautelaAsync(int id, long usuarioId)
@@ -85,7 +87,7 @@ public sealed class ListasService : IListasService
         var ok = await _repo.EliminarTipoListaCautelaAsync(id, usuarioId);
         return ok
             ? ServiceResult.Ok("Tipo de lista eliminado exitosamente.")
-            : ServiceResult.NotFound("No se encontro el tipo de lista o ya fue eliminado.");
+            : ServiceResult.NotFound("No se encontró el tipo de lista o ya fue eliminado.");
     }
 
     public async Task<ServiceResult> RegistrarPositivoAsync(RegistrarPositivoDto dto, long creadoPorId)
@@ -111,6 +113,8 @@ public sealed class ListasService : IListasService
 
     public async Task<ServiceResult> ProcesarCargaCautelaAsync(IFormFile? archivo, int tipoListaCautelaId, long usuarioId)
     {
+        // Proceso de carga de listas: valida archivo, identifica el formato aprobado
+        // y delega el procesamiento al repositorio especializado sin mezclar reglas en el controlador.
         if (archivo == null || archivo.Length <= 0)
             return ServiceResult.BadRequest("Debe adjuntar un archivo de lista de cautela.");
 
@@ -144,6 +148,8 @@ public sealed class ListasService : IListasService
 
     private static string? ValidarPositivo(RegistrarPositivoDto dto)
     {
+        // Validación funcional de positivo manual: normaliza datos obligatorios y evita
+        // registrar orígenes o tipos no autorizados por el módulo de monitoreo.
         dto.NoDocumento = dto.NoDocumento?.Trim();
         dto.NombreCompleto = dto.NombreCompleto.Trim();
         dto.MotivoIngreso = dto.MotivoIngreso.Trim();
@@ -153,7 +159,7 @@ public sealed class ListasService : IListasService
             return "El tipo de documento es obligatorio.";
 
         if (dto.TipoPositivoId is < 1 or > 3)
-            return "El tipo de positivo no es valido.";
+            return "El tipo de positivo no es válido.";
 
         if (string.IsNullOrWhiteSpace(dto.NoDocumento))
             return "El numero de documento es obligatorio.";
@@ -166,6 +172,8 @@ public sealed class ListasService : IListasService
 
         if (string.IsNullOrWhiteSpace(dto.MotivoIngreso))
             return "El motivo de ingreso es obligatorio.";
+        if (dto.MotivoIngreso.Length > 1000)
+            return "El motivo de ingreso no debe superar los 1000 caracteres.";
 
         if (!dto.TipoListaCautelaId.HasValue || dto.TipoListaCautelaId <= 0)
             return "El tipo de lista de cautela es obligatorio.";
@@ -179,7 +187,7 @@ public sealed class ListasService : IListasService
         };
 
         if (string.IsNullOrWhiteSpace(dto.OrigenRegistro) || !origenesValidos.Contains(dto.OrigenRegistro))
-            return "El origen del registro no es valido.";
+            return "El origen del registro no es válido.";
 
         return null;
     }

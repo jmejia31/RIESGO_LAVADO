@@ -50,11 +50,11 @@ namespace RL.API.Controllers
         }
         [HttpPost("exportacion")]
         [ModuloAuthorize(4, 5, 7, 8, 9)]
-        [AuditRequired("Exportacion Excel/PDF o generacion de reporte")]
+        [AuditRequired("Exportación Excel/PDF o generación de reporte")]
         public async Task<IActionResult> RegistrarExportacion([FromBody] RegistrarExportacionAuditoriaDto dto)
         {
             if (dto == null || string.IsNullOrWhiteSpace(dto.Tabla) || string.IsNullOrWhiteSpace(dto.RegistroId))
-                return BadRequest(new { success = false, mensaje = "Datos de auditoria invalidos." });
+                return BadRequest(new { success = false, mensaje = "Datos de auditoría inválidos." });
 
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -66,7 +66,7 @@ namespace RL.API.Controllers
             });
 
             await _repo.RegistrarAsync(dto.Tabla, dto.RegistroId, "VER", null, datos, usuarioId, null, ip, dto.Modulo);
-            return Ok(new { success = true, mensaje = "Auditoria de exportacion registrada." });
+            return Ok(new { success = true, mensaje = "Auditoría de exportación registrada." });
         }
 
         private static string ObtenerAccionDetalle(RegistrarExportacionAuditoriaDto dto)

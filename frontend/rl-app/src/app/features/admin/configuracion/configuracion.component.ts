@@ -48,10 +48,10 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
         </div>
 
         <!-- Barra de Tabs -->
-        <div class="flex border-b border-gray-200">
+        <div class="flex border-b border-gray-200 overflow-x-auto custom-scrollbar">
           <button (click)="activeTab.set('sistema')"
             [class]="activeTab() === 'sistema' ? 'border-ihss-900 text-ihss-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2">
+            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2 whitespace-nowrap">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             </svg>
@@ -59,7 +59,7 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
           </button>
           <button (click)="activeTab.set('slides')"
             [class]="activeTab() === 'slides' ? 'border-ihss-900 text-ihss-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2">
+            class="py-4 px-6 border-b-2 font-medium text-sm transition-all flex items-center gap-2 whitespace-nowrap">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
@@ -188,7 +188,12 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
 
                   <div class="col-span-1 md:col-span-2 space-y-1">
                     <label class="text-xs font-semibold text-gray-500 uppercase">Acuerdo Legal / Términos de Acceso</label>
-                    <textarea formControlName="acuerdoLegal" rows="5"
+                    <div class="flex justify-end">
+                      <span class="text-xs font-medium text-gray-400">
+                        {{ longitudCampo(form, 'acuerdoLegal') }}/{{ maxTextoTextarea }}
+                      </span>
+                    </div>
+                    <textarea formControlName="acuerdoLegal" rows="5" [attr.maxlength]="maxTextoTextarea"
                       class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"
                       placeholder="Escriba los términos legales que el usuario debe aceptar al iniciar sesión..."></textarea>
                   </div>
@@ -459,7 +464,13 @@ import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/s
               <div class="space-y-1">
                 <label class="text-xs font-semibold text-gray-500 uppercase">Descripción / Subtítulo</label>
                 <textarea formControlName="descripcion" rows="3" placeholder="Información detallada..."
-                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"></textarea>
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"
+                  [attr.maxlength]="maxTextoTextarea"></textarea>
+                <div class="flex justify-end">
+                  <span class="text-xs font-medium text-gray-400">
+                    {{ longitudCampo(slideForm, 'descripcion') }}/{{ maxTextoTextarea }}
+                  </span>
+                </div>
               </div>
 
               <div class="flex items-center gap-2 py-2">
@@ -503,6 +514,7 @@ export class ConfiguracionComponent implements OnInit {
   public configService = inject(ConfiguracionService);
 
   activeTab = signal<'sistema' | 'slides'>('sistema');
+  readonly maxTextoTextarea = 1000;
 
   // Estado pestaña Configuración
   form!: FormGroup;
@@ -535,7 +547,7 @@ export class ConfiguracionComponent implements OnInit {
       colorPrimario: ['#1e3a8a', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       colorSecundario: ['#1d4ed8', [Validators.required, Validators.pattern(/^#[0-9a-fA-F]{6}$/)]],
       timeoutSesion: [30, [Validators.required, Validators.min(1), Validators.max(1440)]],
-      acuerdoLegal: [''],
+      acuerdoLegal: ['', [Validators.maxLength(this.maxTextoTextarea)]],
       maxIntentos: [5, [Validators.required, Validators.min(1), Validators.max(20)]]
     });
   }
@@ -544,11 +556,15 @@ export class ConfiguracionComponent implements OnInit {
     this.slideForm = this.fb.group({
       imagenUrl: ['', Validators.required],
       titulo: [''],
-      descripcion: [''],
+      descripcion: ['', [Validators.maxLength(this.maxTextoTextarea)]],
       orden: [1, [Validators.required, Validators.min(1)]],
       activo: [true],
       imagenIcono: ['']
     });
+  }
+
+  longitudCampo(form: FormGroup, control: string): number {
+    return String(form.get(control)?.value || '').length;
   }
 
   cargarConfiguracion() {

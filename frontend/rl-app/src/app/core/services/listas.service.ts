@@ -2,6 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Observable, map } from 'rxjs';
+import {
+  CONFIRMACION_BOTON_HEADER,
+  CONFIRMACION_CAMBIOS_HEADER,
+  CONFIRMACION_TEXTO_HEADER,
+  CONFIRMACION_TITULO_HEADER
+} from '../interceptors/confirmacion-cambios.interceptor';
 
 export interface TipoDocumento {
   tipoDocumentoId: number;
@@ -115,6 +121,10 @@ export interface DetalleCoincidenciaEmpleado {
 export class ListasService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/listas`;
+  private readonly sinConfirmacion = { [CONFIRMACION_CAMBIOS_HEADER]: '1' };
+
+  // Fachada HTTP del módulo de monitoreo de listas: centraliza consultas, evidencias,
+  // seguimientos, exportaciones y auditoría para que los componentes no construyan contratos REST.
 
   getJuridicas(): Observable<CoincidenciaJuridica[]> {
     return this.http.get<{ success: boolean; datos: CoincidenciaJuridica[] }>(`${this.apiUrl}/juridicas`)
@@ -152,7 +162,13 @@ export class ListasService {
   }
 
   registrarPositivo(dto: RegistrarPositivoDto): Observable<any> {
-    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos`, dto);
+    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos`, dto, {
+      headers: {
+        [CONFIRMACION_TITULO_HEADER]: 'Confirmar registro en monitoreo',
+        [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar el motivo de ingreso y registrar el control en lista de positivos?',
+        [CONFIRMACION_BOTON_HEADER]: 'Sí, guardar motivo'
+      }
+    });
   }
 
   getPositivoPorDocumento(noDocumento: string): Observable<ExistingPositivo | null> {
@@ -175,6 +191,7 @@ export class ListasService {
   }
 
   registrarSeguimiento(noDocumento: string, motivoIngreso: string, archivos: File[]): Observable<any> {
+    // Envío documental: usa FormData para conservar archivos y campos validados por backend.
     const formData = new FormData();
     formData.append('motivoIngreso', motivoIngreso);
     if (archivos && archivos.length > 0) {
@@ -182,7 +199,13 @@ export class ListasService {
         formData.append('archivos', file, file.name);
       });
     }
-    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`, formData);
+    return this.http.post<{ success: boolean; mensaje: string }>(`${this.apiUrl}/positivos/${noDocumento}/seguimientos`, formData, {
+      headers: {
+        [CONFIRMACION_TITULO_HEADER]: 'Confirmar seguimiento',
+        [CONFIRMACION_TEXTO_HEADER]: '¿Desea guardar la nota de seguimiento y sus evidencias?',
+        [CONFIRMACION_BOTON_HEADER]: 'Sí, guardar seguimiento'
+      }
+    });
   }
 
   getDescargaEvidenciaUrl(evidenciaId: number): string {
@@ -197,12 +220,19 @@ export class ListasService {
         formData.append('archivos', file, file.name);
       });
     }
-    return this.http.put<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, formData);
+    return this.http.put<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, formData, {
+      headers: {
+        [CONFIRMACION_TITULO_HEADER]: 'Confirmar cambios del seguimiento',
+        [CONFIRMACION_TEXTO_HEADER]: '¿Desea actualizar la nota de seguimiento y conservar el historial de auditoría?',
+        [CONFIRMACION_BOTON_HEADER]: 'Sí, actualizar'
+      }
+    });
   }
 
   eliminarEvidencia(evidenciaId: number, motivoEliminacion: string): Observable<any> {
     return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/evidencias/${evidenciaId}`, {
-      body: { motivoEliminacion }
+      body: { motivoEliminacion },
+      headers: this.sinConfirmacion
     });
   }
 
@@ -212,20 +242,26 @@ export class ListasService {
 
   eliminarSeguimiento(detalleId: number, motivoEliminacion: string): Observable<any> {
     return this.http.delete<{ success: boolean; mensaje: string }>(`${this.apiUrl}/seguimientos/${detalleId}`, {
-      body: { motivoEliminacion }
+      body: { motivoEliminacion },
+      headers: this.sinConfirmacion
     });
   }
 
   registrarAuditoriaImpresion(noDocumento: string, data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/positivos/${noDocumento}/reporte-impreso`, data);
+    return this.http.post<any>(`${this.apiUrl}/positivos/${noDocumento}/reporte-impreso`, data, {
+      headers: this.sinConfirmacion
+    });
   }
 
   registrarAuditoriaExportacion(tabla: string, registroId: string, modulo: string, detalle: any): Observable<any> {
+    // Auditoría explícita de exportación generada desde frontend cuando la acción no modifica datos.
     return this.http.post<any>(`${environment.apiUrl}/auditoria/exportacion`, {
       tabla,
       registroId,
       modulo,
       detalle
+    }, {
+      headers: this.sinConfirmacion
     });
   }
 

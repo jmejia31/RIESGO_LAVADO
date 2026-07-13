@@ -29,6 +29,8 @@ public class AuthController : ControllerBase
     [AuditRequired("Login de usuario")]
     public async Task<IActionResult> Login([FromBody] LoginRequestDto dto)
     {
+        // Punto de entrada de autenticación: el controlador valida contrato HTTP
+        // y delega intentos, bloqueo, tokens y auditoría al servicio.
         if (!ModelState.IsValid)
             return BadRequest(new { success = false, errores = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
 
@@ -80,7 +82,7 @@ public class AuthController : ControllerBase
     /// <summary>Cambiar contraseña</summary>
     [HttpPut("password")]
     [Authorize]
-    [AuditRequired("Cambio de contrasena")]
+    [AuditRequired("Cambio de contraseña")]
     public async Task<IActionResult> CambiarPassword([FromBody] CambiarPasswordDto dto)
     {
         if (!ModelState.IsValid)
@@ -141,9 +143,11 @@ public class AuthController : ControllerBase
     [HttpPost("usuarios")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]
-    [AuditRequired("Creacion de usuario")]
+    [AuditRequired("Creación de usuario")]
     public async Task<IActionResult> CrearUsuario([FromBody] CrearUsuarioDto dto)
     {
+        // Punto de entrada de administración de usuarios: mantiene autorización por rol y módulo;
+        // las reglas de negocio quedan en AuthService para evitar lógica crítica en el controlador.
         if (!ModelState.IsValid)
             return BadRequest(new { success = false, errores = ModelState.Values.SelectMany(v => v.Errors.Select(e => e.ErrorMessage)) });
 
@@ -171,7 +175,7 @@ public class AuthController : ControllerBase
     [HttpPut("usuarios/{uid}")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]
-    [AuditRequired("Edicion de usuario")]
+    [AuditRequired("Edición de usuario")]
     public async Task<IActionResult> ActualizarUsuario(string uid, [FromBody] ActualizarUsuarioDto dto)
     {
         if (!ModelState.IsValid)
@@ -250,7 +254,7 @@ public class AuthController : ControllerBase
     /// <summary>Recuperar contraseña enviando clave provisional por correo</summary>
     [HttpPost("recuperar-password")]
     [AllowAnonymous]
-    [AuditRequired("Solicitud de recuperacion de contrasena")]
+    [AuditRequired("Solicitud de recuperación de contraseña")]
     public async Task<IActionResult> RecuperarPassword([FromBody] SolicitudRecuperacionDto dto)
     {
         if (!ModelState.IsValid)

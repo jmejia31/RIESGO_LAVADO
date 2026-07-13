@@ -13,7 +13,8 @@ using System.Runtime.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── Serilog ───────────────────────────────────────────────
+// Proceso de arranque: configura la bitácora técnica del API antes de registrar servicios.
+// Los eventos funcionales y sensibles se registran por RL_AUDITORIA desde los servicios/repositorios.
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -23,7 +24,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
-// ─── Servicios ─────────────────────────────────────────────
+// Proceso HTTP: habilita controladores y serialización JSON para exponer contratos REST limpios.
 builder.Services.AddControllers()
     .AddNewtonsoftJson(opts =>
     {
@@ -33,7 +34,7 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 
-// ─── Swagger con JWT ───────────────────────────────────────
+// Proceso de documentación técnica: Swagger queda preparado para probar endpoints con JWT.
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -64,7 +65,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ─── JWT Authentication ────────────────────────────────────
+// Proceso de seguridad: valida emisor, audiencia, vigencia y firma del token JWT en cada solicitud protegida.
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var secretKey   = Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!);
 
@@ -84,7 +85,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// ─── CORS ──────────────────────────────────────────────────
+// Proceso de integración frontend-backend: limita los orígenes permitidos según configuración.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
 builder.Services.AddCors(options =>
 {
@@ -97,18 +98,19 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ─── DI - Infraestructura ─────────────────────────────────
+// Proceso de infraestructura: registra la conexión Oracle usada por repositorios y servicios.
 builder.Services.AddSingleton<OracleDbContext>(sp =>
     new OracleDbContext(builder.Configuration.GetConnectionString("OracleDB")!));
 
-// ─── DI - Repositorios ────────────────────────────────────
+// Proceso de persistencia: registra repositorios responsables de acceso a tablas y consultas Oracle.
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
 builder.Services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IListasRepository, ListasRepository>();
+builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
 
-// ─── DI - Servicios ───────────────────────────────────────
+// Proceso de negocio: registra servicios que concentran validaciones, auditoría y reglas funcionales.
 builder.Services.Configure<RL.API.Models.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -118,13 +120,14 @@ builder.Services.AddScoped<IListasService, ListasService>();
 builder.Services.AddScoped<IEvidenciasService, EvidenciasService>();
 builder.Services.AddScoped<ICoincidenciasService, CoincidenciasService>();
 builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
+builder.Services.AddScoped<IMatricesRiesgosAppService, MatricesRiesgosAppService>();
 
-// ─── HttpContext ──────────────────────────────────────────
+// Proceso de contexto: permite obtener IP, usuario y datos de solicitud para auditoría.
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// ─── Pipeline HTTP ─────────────────────────────────────────
+// Proceso de ejecución HTTP: aplica manejo de errores, CORS, archivos estáticos, autenticación y autorización.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

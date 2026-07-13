@@ -31,6 +31,9 @@ namespace RL.API.Controllers
             _coincidenciasService = coincidenciasService;
         }
 
+        // Este controlador funciona como frontera HTTP del módulo de listas.
+        // Las validaciones críticas, evidencias, auditoría y calificaciones se delegan a servicios.
+
         [HttpGet("evidencias/politica")]
         [ModuloAuthorize(4)]
         public IActionResult ObtenerPoliticaEvidencias()
@@ -123,7 +126,7 @@ namespace RL.API.Controllers
 
         [HttpGet("{id}/exportar")]
         [ModuloAuthorize(7)]
-        [AuditRequired("Exportacion de lista de cautela")]
+        [AuditRequired("Exportación de lista de cautela")]
         public async Task<IActionResult> ObtenerDetalleListaParaExportar(int id)
         {
             try
@@ -142,11 +145,11 @@ namespace RL.API.Controllers
 
         [HttpPost("tipos-listas-cautela")]
         [ModuloAuthorize(6)]
-        [AuditRequired("Creacion de tipo de lista de cautela")]
+        [AuditRequired("Creación de tipo de lista de cautela")]
         public async Task<IActionResult> CrearTipoListaCautela([FromBody] TipoListaCautelaDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { success = false, mensaje = "Datos invalidos o incompletos." });
+                return BadRequest(new { success = false, mensaje = "Datos inválidos o incompletos." });
 
             var result = await _listasService.CrearTipoListaCautelaAsync(dto, ObtenerUsuarioId());
             return result.Success
@@ -156,11 +159,11 @@ namespace RL.API.Controllers
 
         [HttpPut("tipos-listas-cautela/{id}")]
         [ModuloAuthorize(6)]
-        [AuditRequired("Edicion de tipo de lista de cautela")]
+        [AuditRequired("Edición de tipo de lista de cautela")]
         public async Task<IActionResult> ActualizarTipoListaCautela(int id, [FromBody] TipoListaCautelaDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { success = false, mensaje = "Datos invalidos o incompletos." });
+                return BadRequest(new { success = false, mensaje = "Datos inválidos o incompletos." });
 
             var result = await _listasService.ActualizarTipoListaCautelaAsync(id, dto, ObtenerUsuarioId());
             return Responder(result);
@@ -168,7 +171,7 @@ namespace RL.API.Controllers
 
         [HttpDelete("tipos-listas-cautela/{id}")]
         [ModuloAuthorize(6)]
-        [AuditRequired("Eliminacion de tipo de lista de cautela")]
+        [AuditRequired("Eliminación de tipo de lista de cautela")]
         public async Task<IActionResult> EliminarTipoListaCautela(int id)
         {
             try
@@ -179,7 +182,7 @@ namespace RL.API.Controllers
             catch (Exception ex)
             {
                 Serilog.Log.Error(ex, "Error al eliminar tipo de lista de cautela {Id}", id);
-                return BadRequest(new { success = false, mensaje = "No se puede eliminar el tipo de lista porque esta siendo referenciado por otros registros." });
+                return BadRequest(new { success = false, mensaje = "No se puede eliminar el tipo de lista porque está siendo referenciado por otros registros." });
             }
         }
 
@@ -189,7 +192,7 @@ namespace RL.API.Controllers
         public async Task<IActionResult> RegistrarPositivo([FromBody] RegistrarPositivoDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(new { success = false, mensaje = "Datos invalidos" });
+                return BadRequest(new { success = false, mensaje = "Datos inválidos" });
 
             var result = await _listasService.RegistrarPositivoAsync(dto, ObtenerUsuarioId());
             return Responder(result);
@@ -215,7 +218,7 @@ namespace RL.API.Controllers
 
         [HttpPost("positivos/{noDocumento}/seguimientos")]
         [ModuloAuthorize(4)]
-        [AuditRequired("Creacion de seguimiento y evidencias")]
+        [AuditRequired("Creación de seguimiento y evidencias")]
         public async Task<IActionResult> RegistrarSeguimiento(
             string noDocumento,
             [FromForm] string motivoIngreso,
@@ -239,7 +242,7 @@ namespace RL.API.Controllers
 
         [HttpPut("seguimientos/{detalleId}")]
         [ModuloAuthorize(4)]
-        [AuditRequired("Edicion de seguimiento y evidencias")]
+        [AuditRequired("Edición de seguimiento y evidencias")]
         public async Task<IActionResult> ActualizarSeguimiento(
             long detalleId,
             [FromForm] string motivoIngreso,
@@ -251,7 +254,7 @@ namespace RL.API.Controllers
 
         [HttpDelete("evidencias/{evidenciaId}")]
         [ModuloAuthorize(4)]
-        [AuditRequired("Eliminacion logica de evidencia")]
+        [AuditRequired("Eliminación lógica de evidencia")]
         public async Task<IActionResult> EliminarEvidencia(long evidenciaId, [FromBody] MotivoEliminacionDto? dto)
         {
             var result = await _evidenciasService.EliminarEvidenciaAsync(evidenciaId, dto?.MotivoEliminacion, ObtenerUsuarioId());
@@ -260,7 +263,7 @@ namespace RL.API.Controllers
 
         [HttpDelete("seguimientos/{detalleId}")]
         [ModuloAuthorize(4)]
-        [AuditRequired("Eliminacion logica de seguimiento")]
+        [AuditRequired("Eliminación lógica de seguimiento")]
         public async Task<IActionResult> EliminarSeguimiento(long detalleId, [FromBody] MotivoEliminacionDto? dto)
         {
             var result = await _evidenciasService.EliminarSeguimientoAsync(detalleId, dto?.MotivoEliminacion, ObtenerUsuarioId());
@@ -273,7 +276,7 @@ namespace RL.API.Controllers
         public async Task<IActionResult> RegistrarReporteImpreso(string noDocumento, [FromBody] System.Text.Json.JsonElement data)
         {
             await _evidenciasService.RegistrarReporteImpresoAsync(noDocumento, data.ToString(), ObtenerUsuarioId());
-            return Ok(new { success = true, mensaje = "Auditoria de reporte impreso registrada." });
+            return Ok(new { success = true, mensaje = "Auditoría de reporte impreso registrada." });
         }
 
         [HttpGet("coincidencias-patrono/resumen")]

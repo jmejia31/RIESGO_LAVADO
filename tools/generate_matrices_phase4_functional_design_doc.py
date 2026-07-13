@@ -157,7 +157,7 @@ def add_header_footer(doc: Document) -> None:
 
     footer_p = doc.sections[0].footer.paragraphs[0]
     footer_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = footer_p.add_run("Documento funcional aprobable antes de construcción")
+    run = footer_p.add_run("Documento funcional aprobado y cerrado como base para Fase 5")
     set_run_font(run, size=8, color=MUTED)
 
 
@@ -212,9 +212,9 @@ def add_title_block(doc: Document) -> None:
         ("Proyecto", "RIESGO_LAVADO - IHSS"),
         ("Módulo", "Matrices de Riesgos"),
         ("Fase", "Fase 4. Diseño funcional y experiencia de usuario"),
-        ("Versión", "1.1"),
+        ("Versión", "1.3"),
         ("Fecha", date.today().strftime("%d/%m/%Y")),
-        ("Estado", "Documento funcional alineado con modelo Oracle"),
+        ("Estado", "Fase 4 aprobada y cerrada con permisos por módulo"),
         ("Responsable", "Javier Mejía"),
         ("Fuente", "Plan de fases, análisis final maestro, Fase 1 aprobada, Fase 2 aprobada y Fase 3 ejecutada/validada"),
         ("Ubicación", "docs/3. Módulo Matrices de Riesgos/Fase 4 - Diseño funcional y experiencia de usuario"),
@@ -243,6 +243,8 @@ def build_document() -> None:
         [
             ("1.0", date.today().strftime("%d/%m/%Y"), "Creación de documento funcional de Fase 4: pantallas, flujos, roles, permisos, estados, navegación, validaciones, mensajes, wireframes textuales y criterios de aceptación.", "Javier Mejía", "Revisión funcional"),
             ("1.1", date.today().strftime("%d/%m/%Y"), "Alineación con Fase 3: el estado EN_EVALUACION queda respaldado por la restricción física CK_RL_MR_MAT_ESTADO mediante script incremental DBA 05.", "Javier Mejía", "Alineada para aprobación"),
+            ("1.2", date.today().strftime("%d/%m/%Y"), "Aprobación formal y cierre documental de Fase 4 como base funcional válida para iniciar Fase 5.", "Javier Mejía", "Aprobada y cerrada"),
+            ("1.3", date.today().strftime("%d/%m/%Y"), "Aclaración de regla institucional: los permisos se mantienen por módulo, conforme al esquema inicial del sistema; no se implementarán permisos por acción.", "Javier Mejía", "Aclaración cerrada"),
         ],
         [900, 1350, 5000, 1450, 660],
         header_fill=LIGHT_BLUE,
@@ -251,7 +253,7 @@ def build_document() -> None:
     doc.add_heading("1. Propósito de la fase", level=1)
     doc.add_paragraph(
         "La Fase 4 define cómo deberá operar el módulo Matrices de Riesgos desde la experiencia de usuario y el flujo funcional antes de construir pantallas, endpoints definitivos o lógica de cálculo. "
-        "Este documento convierte la metodología aprobada y el modelo Oracle ejecutado en una especificación funcional aprobable para continuar con contratos backend, seguridad y auditoría en Fase 5."
+        "Este documento convierte la metodología aprobada y el modelo Oracle ejecutado en una especificación funcional aprobada y cerrada para continuar con contratos backend, seguridad y auditoría en Fase 5."
     )
 
     doc.add_heading("2. Dependencias y reglas heredadas", level=1)
@@ -275,7 +277,7 @@ def build_document() -> None:
         doc,
         ["Tipo", "Definición"],
         [
-            ("Incluye", "Mapa de pantallas, flujo funcional por rol, estados de matriz, permisos por acción, rutas frontend, validaciones visibles, mensajes, wireframes textuales y criterios de aceptación."),
+            ("Incluye", "Mapa de pantallas, flujo funcional por rol, estados de matriz, acceso por módulo, rutas frontend, validaciones visibles, mensajes, wireframes textuales y criterios de aceptación."),
             ("Incluye", "Diseño funcional de submódulos: dashboard, listado, creación, evaluación, controles, planes de acción, evidencias, historial, reportes, parametrización metodológica y bandeja futura DNP."),
             ("No incluye", "Programación de componentes Angular, endpoints definitivos, DTOs finales, repositorios Oracle ni motor de cálculo productivo."),
             ("No incluye", "Cambio de ponderaciones institucionales 50/25/25 ni modificación retroactiva de matrices cerradas."),
@@ -382,10 +384,14 @@ def build_document() -> None:
         header_fill=LIGHT_GREEN,
     )
 
-    doc.add_heading("9. Permisos por acción", level=1)
+    doc.add_heading("9. Acceso por módulo y roles funcionales", level=1)
+    doc.add_paragraph(
+        "La regla institucional aprobada mantiene el esquema inicial del sistema: los permisos se administran por módulo mediante RL_MODULOS y RL_USUARIO_MODULOS. "
+        "No se implementarán permisos finos por acción. Las acciones listadas en esta sección describen el flujo funcional esperado por perfil operativo, pero no crean un nuevo modelo de autorización por botón, operación o acción individual."
+    )
     add_table(
         doc,
-        ["Acción", "Operativo", "Revisor", "Aprobador", "Admin. metodológico", "Consulta"],
+        ["Actividad funcional", "Operativo", "Revisor", "Aprobador", "Admin. metodológico", "Consulta"],
         [
             ("Consultar dashboard", "Sí", "Sí", "Sí", "Sí", "Sí"),
             ("Crear matriz", "Sí", "Opcional", "No", "No", "No"),
@@ -401,7 +407,7 @@ def build_document() -> None:
         [2300, 1100, 1100, 1100, 1600, 2160],
     )
 
-    doc.add_heading("10. Wireframes textuales aprobables", level=1)
+    doc.add_heading("10. Wireframes textuales aprobados", level=1)
     add_table(
         doc,
         ["Pantalla", "Estructura funcional esperada"],
@@ -425,7 +431,7 @@ def build_document() -> None:
         doc,
         ["Situación", "Validación", "Mensaje funcional sugerido"],
         [
-            ("Sin permiso", "Usuario no tiene MOD_ID 10 o acción no permitida.", "No tiene permiso para realizar esta acción en Matrices de Riesgos."),
+            ("Sin acceso al módulo", "Usuario no tiene MOD_ID 10 asignado.", "No tiene acceso al módulo Matrices de Riesgos."),
             ("Modelo no vigente", "No existe modelo APROBADO activo.", "No existe metodología vigente para crear matrices. Solicite revisión metodológica."),
             ("Variables incompletas", "Faltan valores obligatorios por factor.", "Complete todas las variables obligatorias antes de calcular."),
             ("Peso inválido", "La suma interna por factor no totaliza 100%.", "La ponderación interna del factor no es válida. Revise la metodología."),
@@ -511,25 +517,25 @@ def build_document() -> None:
         ["Criterio", "Estado esperado para cierre"],
         [
             ("Mapa de pantallas definido.", "Cumplido en este documento."),
-            ("Flujo funcional por rol definido.", "Cumplido en perfiles, permisos y flujo principal."),
+            ("Flujo funcional por rol definido.", "Cumplido en perfiles funcionales y flujo principal, sin crear permisos por acción."),
             ("Estados y acciones permitidas definidos.", "Cumplido con matriz de estados y alineación física de EN_EVALUACION en Fase 3."),
             ("Rutas frontend propuestas.", "Cumplido con mapa de navegación."),
             ("Validaciones visibles y mensajes definidos.", "Cumplido con catálogo funcional de mensajes."),
             ("Reportería mínima definida.", "Cumplido, incluyendo solidez de controles."),
             ("Integración DNP tratada como futura obligatoria.", "Cumplido sin autorizar escritura directa."),
             ("Backend sigue siendo única fuente de cálculo.", "Cumplido como regla funcional heredada."),
-            ("Listo para Fase 5.", "Alineado técnicamente; sujeto a aprobación formal de Javier Mejía."),
+            ("Listo para Fase 5.", "Cumplido: Fase 4 aprobada formalmente por Javier Mejía el 06/07/2026."),
         ],
         [4300, 5060],
         header_fill=LIGHT_GREEN,
     )
 
-    doc.add_heading("17. Pendientes controlados", level=1)
+    doc.add_heading("17. Pendientes controlados y reglas cerradas", level=1)
     add_table(
         doc,
         ["Pendiente", "Motivo", "Momento de definición"],
         [
-            ("Permisos finos por acción", "La base actual asigna módulo; los permisos por acción deben formalizarse si el negocio lo requiere.", "Fase 5."),
+            ("Permisos por módulo", "Regla cerrada: se mantiene el esquema inicial por módulo; no se implementan permisos finos por acción.", "Vigente para Fase 5 y fases posteriores."),
             ("DTOs definitivos", "Deben derivarse del contrato REST y no del diseño visual.", "Fase 5."),
             ("Fórmulas finales de cálculo", "La metodología está aprobada, pero el motor debe implementarse con casos controlados.", "Fase 6."),
             ("Diseño visual final", "Fase 4 define estructura funcional; implementación visual se construye en Angular.", "Fase 8."),
@@ -539,17 +545,35 @@ def build_document() -> None:
         header_fill=LIGHT_RED,
     )
 
-    doc.add_heading("18. Decisión de cierre", level=1)
+    doc.add_heading("18. Cierre formal de Fase 4", level=1)
+    add_table(
+        doc,
+        ["Campo", "Detalle"],
+        [
+            ("Estado de Fase 4", "Aprobada y cerrada."),
+            ("Responsable de aprobación", "Javier Mejía."),
+            ("Fecha de aprobación", "06/07/2026."),
+            ("Alcance aprobado", "Mapa de pantallas, flujo funcional, estados, acceso por módulo, rutas frontend, validaciones visibles, mensajes, reportería, DNP futuro y criterios de aceptación."),
+            ("Base técnica", "Fase 3 versión 1.9, modelo Oracle validado y CK_RL_MR_MAT_ESTADO alineado con EN_EVALUACION."),
+            ("Siguiente fase autorizada", "Fase 5. Contratos backend, seguridad y auditoría."),
+            ("Condición de control", "No modificar el diseño aprobado sin registrar nueva versión documental y aprobación correspondiente."),
+        ],
+        [2900, 6460],
+        header_fill=LIGHT_GREEN,
+    )
+
+    doc.add_heading("19. Decisión de cierre", level=1)
     doc.add_paragraph(
-        "La Fase 4 queda como documento funcional alineado con el modelo Oracle de Fase 3 y listo para revisión final. Una vez aprobada por Javier Mejía, servirá como base para iniciar Fase 5: contratos backend, seguridad y auditoría. "
-        "No se debe iniciar programación definitiva del módulo sin aprobar este diseño o registrar los cambios solicitados en una nueva versión del documento."
+        "La Fase 4 queda aprobada y cerrada como documento funcional alineado con el modelo Oracle de Fase 3 y con la regla institucional de permisos por módulo. "
+        "La versión 1.3 sirve como base formal para iniciar Fase 5: contratos backend, seguridad y auditoría. "
+        "No se debe modificar el diseño aprobado ni iniciar cambios fuera de alcance sin registrar una nueva versión del documento y obtener aprobación correspondiente."
     )
 
     props = doc.core_properties
     props.title = "Fase 4 - Diseño funcional y experiencia de usuario - Matrices de Riesgos"
     props.subject = "Sistema de Gestión de Riesgos LA/FT IHSS"
     props.keywords = "IHSS, SGRLA, Matrices de Riesgos, Fase 4, diseño funcional"
-    props.comments = "Documento funcional de Fase 4 alineado con Fase 3 para revisión y aprobación del módulo Matrices de Riesgos."
+    props.comments = "Documento funcional de Fase 4 aprobado y cerrado como base para Fase 5 del módulo Matrices de Riesgos, con permisos por módulo."
     props.author = "Javier Mejía"
     doc.save(OUT_FILE)
 

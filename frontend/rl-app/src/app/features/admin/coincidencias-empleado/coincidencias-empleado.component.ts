@@ -317,11 +317,11 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               });
             },
             error: err => {
-              console.error('No se pudo registrar auditoria de exportacion:', err);
+              console.error('No se pudo registrar auditoría de exportación:', err);
               Swal.default.fire({
                 allowOutsideClick: false,
-                title: 'Auditoria requerida',
-                text: 'No se pudo registrar la auditoria de exportacion. La exportacion fue cancelada.',
+                title: 'Auditoría requerida',
+                text: 'No se pudo registrar la auditoría de exportación. La exportación fue cancelada.',
                 icon: 'error',
                 confirmButtonColor: '#1e3a8a'
               });

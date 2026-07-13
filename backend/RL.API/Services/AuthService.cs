@@ -44,6 +44,8 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip)
     {
+        // Proceso de autenticación: soporta usuario local y usuario de dominio,
+        // controla intentos fallidos, valida clave provisional y audita cada resultado.
         // Obtener usuario (soporta email o login de dominio)
         var usuario = await _usuarioRepo.ObtenerPorLoginAsync(dto.Email);
         if (usuario == null)
@@ -175,11 +177,13 @@ public class AuthService : IAuthService
 
     public async Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto)
     {
+        // Proceso de cambio de contraseña local: valida la clave actual, genera hash BCrypt
+        // y registra auditoría del cambio cuando la actualización es exitosa.
         var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
         if (usuario == null) return false;
 
         if (usuario.EsUsuarioDominio == 1)
-            throw new InvalidOperationException("Este usuario pertenece a Active Directory. La contrasena debe gestionarse con TI.");
+            throw new InvalidOperationException("Este usuario pertenece a Active Directory. La contraseña debe gestionarse con TI.");
 
         if (!BCrypt.Net.BCrypt.Verify(dto.PasswordActual, usuario.UsrPasswordHash))
             return false;
@@ -197,6 +201,8 @@ public class AuthService : IAuthService
 
     public async Task<UsuarioInfoDto?> CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor)
     {
+        // Proceso de creación de usuario: valida duplicidad, genera contraseña provisional,
+        // persiste el usuario, audita la operación y notifica credenciales iniciales si aplica.
         // Validar si el email ya existe
         var existente = await _usuarioRepo.ObtenerPorEmailAsync(dto.Email);
         if (existente != null)

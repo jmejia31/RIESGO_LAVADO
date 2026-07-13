@@ -27,9 +27,11 @@ public sealed class CoincidenciasService : ICoincidenciasService
 
     public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoAsync(string? fecha)
     {
+        // Proceso de consulta de detalle: normaliza la fecha antes de consultar Oracle
+        // para mantener consistencia entre filtros de patronos y empleados.
         var fechaNormalizada = NormalizarFecha(fecha);
         if (fechaNormalizada == null)
-            return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parametro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
+            return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parámetro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
 
         var result = await _repo.ObtenerDetalleCoincidenciasPatronoAsync(fechaNormalizada);
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
@@ -41,7 +43,7 @@ public sealed class CoincidenciasService : ICoincidenciasService
     {
         var fechaNormalizada = NormalizarFecha(fecha);
         if (fechaNormalizada == null)
-            return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parametro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
+            return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parámetro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
 
         var result = await _repo.ObtenerDetalleCoincidenciasEmpleadoAsync(fechaNormalizada);
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
@@ -49,6 +51,8 @@ public sealed class CoincidenciasService : ICoincidenciasService
 
     public async Task<ServiceResult> CalificarAsync(long id, int tipoCalificacionId, long usuarioId, bool esEmpleado)
     {
+        // Proceso de calificación: valida la decisión permitida y delega la persistencia
+        // auditada al repositorio correspondiente para patrono o empleado.
         if (id <= 0)
             return ServiceResult.BadRequest("El identificador de coincidencia es obligatorio.");
 
@@ -58,13 +62,13 @@ public sealed class CoincidenciasService : ICoincidenciasService
         var ok = await _repo.CalificarCoincidenciaAsync(id, tipoCalificacionId, usuarioId, esEmpleado);
         return ok
             ? ServiceResult.Ok("Coincidencia calificada exitosamente.")
-            : ServiceResult.NotFound("No se encontro el registro de coincidencia especificado para este modulo.");
+            : ServiceResult.NotFound("No se encontró el registro de coincidencia especificado para este módulo.");
     }
 
     public async Task<ServiceResult<string>> ObtenerResumenMatchListaAsync(long dataId, string? nombre)
     {
         if (string.IsNullOrWhiteSpace(nombre))
-            return ServiceResult<string>.BadRequest("El parametro nombre es requerido.");
+            return ServiceResult<string>.BadRequest("El parámetro nombre es requerido.");
 
         var detail = await _repo.ObtenerResumenMatchListaAsync(dataId, nombre);
         return ServiceResult<string>.Ok(detail);

@@ -3,6 +3,9 @@
 -- Script maestro: instalacion primera vez
 -- Uso: Ambiente nuevo o base vacia aprobada por DBA.
 -- Importante: No ejecutar sobre produccion con informacion real.
+-- Proceso DBA: usar exclusivamente cuando la base no contiene informacion
+-- productiva. Este flujo puede crear estructura y datos iniciales, por eso
+-- no debe mezclarse con actualizaciones seguras de ambientes existentes.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK

@@ -809,7 +809,7 @@ namespace RL.API.Repositories
 
             if (anteriorJson == null) return false;
 
-            // Eliminacion logica: no se borra el archivo ni la fila; solo se marca inactiva.
+            // Eliminación lógica: no se borra el archivo ni la fila; solo se marca inactiva.
             await using var cmd = conn.CreateCommand();
             cmd.CommandText = @"
                 UPDATE RL_DETALLE_EVIDENCIA

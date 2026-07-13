@@ -65,8 +65,8 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.cat.modulos().subscribe({
       next: m => this.listaModulos.set(m),
       error: e => {
-        console.error('Error cargando modulos:', e);
-        this.errorCatalogos.set('Error al cargar los modulos del sistema.');
+        console.error('Error cargando módulos:', e);
+        this.errorCatalogos.set('Error al cargar los módulos del sistema.');
       }
     });
   }

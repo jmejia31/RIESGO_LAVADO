@@ -11,11 +11,11 @@ import { ConfiguracionService } from './configuracion.service';
 export class AuthService {
   private readonly API = `${environment.apiUrl}/auth`;
 
-  // ── Temporizador y oyentes de eventos para inactividad ──
+  // Proceso de inactividad: controla temporizador y oyentes para cerrar sesión por falta de uso.
   private inactivityTimer: any;
   private eventListeners: (() => void)[] = [];
 
-  // ── Estado reactivo con signals ──────────────────────────
+  // Proceso de sesión local: conserva token y usuario decodificado para guards, menú y pantallas.
   private _usuario   = signal<UsuarioInfo | null>(this.obtenerUsuarioDeToken(localStorage.getItem('access_token')));
   private _token     = signal<string | null>(localStorage.getItem('access_token'));
 
@@ -39,6 +39,7 @@ export class AuthService {
   }
 
   login(dto: LoginRequest) {
+    // Autenticación frontend: envía credenciales y guarda tokens solo cuando backend confirma éxito.
     return this.http.post<{ success: boolean; datos: LoginResponse }>(
       `${this.API}/login`, dto
     ).pipe(
@@ -72,6 +73,7 @@ export class AuthService {
   }
 
   refreshToken() {
+    // Renovación de sesión: usa refresh token y actualiza el estado local; si falla, limpia la sesión.
     const refreshToken = localStorage.getItem('refresh_token');
     if (!refreshToken) {
       this.cerrarSesionLocal();
@@ -88,7 +90,7 @@ export class AuthService {
       catchError(() => {
         this.limpiarSesion();
         this.router.navigate(['/login']);
-        return throwError(() => new Error('Refresh token invalido o expirado.'));
+        return throwError(() => new Error('Refresh token inválido o expirado.'));
       })
     );
   }
@@ -168,7 +170,7 @@ export class AuthService {
         clearTimeout(this.inactivityTimer);
       }
       
-      // Obtener el timeout configurado en la base de datos (por defecto 30 minutos)
+      // Obtener el timeout configurado en la base de datos (por defecto 30 minutos).
       const timeoutMinutos = this.configService.configSistema()?.timeoutSesion || 30;
       const timeoutMs = timeoutMinutos * 60 * 1000;
 
@@ -177,17 +179,17 @@ export class AuthService {
       }, timeoutMs);
     };
 
-    // Eventos que indican que el usuario está interactuando con la interfaz
+    // Eventos que indican que el usuario está interactuando con la interfaz.
     const eventos = ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'];
     
-    // Registrar oyentes de eventos y guardar su función de limpieza
+    // Registrar oyentes de eventos y guardar su función de limpieza.
     eventos.forEach(evt => {
       const handler = () => reiniciarTimer();
       window.addEventListener(evt, handler, { passive: true });
       this.eventListeners.push(() => window.removeEventListener(evt, handler));
     });
 
-    // Iniciar primer temporizador
+    // Iniciar primer temporizador.
     reiniciarTimer();
   }
 
@@ -196,7 +198,7 @@ export class AuthService {
       clearTimeout(this.inactivityTimer);
       this.inactivityTimer = null;
     }
-    // Desvincular todos los oyentes de eventos registrados
+    // Desvincular todos los oyentes de eventos registrados.
     this.eventListeners.forEach(removeFn => removeFn());
     this.eventListeners = [];
   }

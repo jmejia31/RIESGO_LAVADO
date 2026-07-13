@@ -1,0 +1,28 @@
+{
+  "executedAt": "2026-07-08T10:43:05",
+  "baseUrl": "http://127.0.0.1:5099/api/matrices-riesgos",
+  "status": 200,
+  "success": true,
+  "elapsedMs": 299,
+  "validacion": "RESIDUAL - Crítico debe requerir plan de acción en escalasRiesgo y escalasCatalogo.",
+  "escalasRiesgoCritico": [
+    {
+      "escalaId": 16,
+      "tipo": "RESIDUAL",
+      "nivel": "Crítico",
+      "valorMinimo": 4.21,
+      "valorMaximo": 5.0,
+      "requierePlanAccion": true
+    }
+  ],
+  "escalasCatalogoCritico": [
+    {
+      "escalaId": 16,
+      "tipo": "RESIDUAL",
+      "nivel": "Crítico",
+      "valorMinimo": 4.21,
+      "valorMaximo": 5.0,
+      "requierePlanAccion": true
+    }
+  ]
+}

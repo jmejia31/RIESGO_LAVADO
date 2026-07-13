@@ -25,7 +25,8 @@ public interface IEvidenciasService
 public sealed class EvidenciasService : IEvidenciasService
 {
     private const int DefaultEvidenceMaxMb = 10;
-    private const string DefaultEvidenceTypesText = "PDF, imagenes, Word, Excel";
+    private const int MaxTextoSeguimiento = 1000;
+    private const string DefaultEvidenceTypesText = "PDF, imágenes, Word, Excel";
     private const string DefaultEvidenceStoragePath = "App_Data/Evidencias";
     private const string LegacyEvidenceStoragePath = "Uploads/Evidencias";
 
@@ -77,6 +78,8 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public string? ValidarArchivos(List<IFormFile>? archivos)
     {
+        // Proceso de validación documental: controla nombre, tamaño, extensión,
+        // MIME y firma real del archivo antes de permitir su almacenamiento.
         if (archivos == null || archivos.Count == 0) return null;
 
         var maximoMb = ObtenerMaximoMb();
@@ -87,20 +90,20 @@ public sealed class EvidenciasService : IEvidenciasService
         {
             var nombreOriginal = Path.GetFileName(file.FileName);
             if (string.IsNullOrWhiteSpace(nombreOriginal))
-                return "El nombre del archivo de evidencia no es valido.";
+                return "El nombre del archivo de evidencia no es válido.";
 
             if (nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                 return $"El archivo {nombreOriginal} contiene caracteres no permitidos en el nombre.";
 
             if (file.Length <= 0)
-                return $"El archivo {nombreOriginal} esta vacio.";
+                return $"El archivo {nombreOriginal} está vacío.";
 
             if (file.Length > maximoBytes)
-                return $"El archivo {nombreOriginal} supera el limite de {maximoMb} MB.";
+                return $"El archivo {nombreOriginal} supera el límite de {maximoMb} MB.";
 
             var extension = Path.GetExtension(nombreOriginal);
             if (string.IsNullOrWhiteSpace(extension) || !mimeTypesPermitidos.TryGetValue(extension, out var mimeTypes))
-                return $"El archivo {nombreOriginal} tiene una extension no permitida.";
+                return $"El archivo {nombreOriginal} tiene una extensión no permitida.";
 
             extension = extension.ToLowerInvariant();
             var contentType = file.ContentType?.Trim();
@@ -119,6 +122,8 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task GuardarArchivosAsync(long detalleId, List<IFormFile>? archivos, long usuarioId)
     {
+        // Proceso de almacenamiento seguro: conserva el nombre original en metadata
+        // y guarda el archivo físico con GUID para evitar rutas públicas o nombres manipulables.
         if (archivos == null || archivos.Count == 0) return;
 
         var uploadDir = ObtenerDirectorioEvidencias();
@@ -144,12 +149,15 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task<ServiceResult> RegistrarSeguimientoAsync(string noDocumento, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId)
     {
+        motivoIngreso = motivoIngreso?.Trim();
         if (string.IsNullOrWhiteSpace(motivoIngreso))
             return ServiceResult.BadRequest("El comentario de seguimiento es obligatorio.");
+        if (motivoIngreso.Length > MaxTextoSeguimiento)
+            return ServiceResult.BadRequest("El comentario de seguimiento no debe superar los 1000 caracteres.");
 
         var positivoId = await _repo.ObtenerPositivoIdPorDocumentoAsync(noDocumento);
         if (!positivoId.HasValue)
-            return ServiceResult.NotFound("No se encontro un registro positivo activo para este documento.");
+            return ServiceResult.NotFound("No se encontró un registro positivo activo para este documento.");
 
         var errorArchivo = ValidarArchivos(archivos);
         if (errorArchivo != null)
@@ -163,8 +171,11 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task<ServiceResult> ActualizarSeguimientoAsync(long detalleId, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId)
     {
+        motivoIngreso = motivoIngreso?.Trim();
         if (string.IsNullOrWhiteSpace(motivoIngreso))
             return ServiceResult.BadRequest("El comentario de seguimiento es obligatorio.");
+        if (motivoIngreso.Length > MaxTextoSeguimiento)
+            return ServiceResult.BadRequest("El comentario de seguimiento no debe superar los 1000 caracteres.");
 
         var errorArchivo = ValidarArchivos(archivos);
         if (errorArchivo != null)
@@ -172,7 +183,7 @@ public sealed class EvidenciasService : IEvidenciasService
 
         var ok = await _repo.ActualizarSeguimientoAsync(detalleId, motivoIngreso, usuarioId);
         if (!ok)
-            return ServiceResult.NotFound("No se encontro el seguimiento a actualizar.");
+            return ServiceResult.NotFound("No se encontró el seguimiento a actualizar.");
 
         await GuardarArchivosAsync(detalleId, archivos, usuarioId);
         return ServiceResult.Ok("Seguimiento actualizado correctamente.");
@@ -180,13 +191,15 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task<ServiceResult<EvidenciaDescargaDto>> DescargarEvidenciaAsync(long evidenciaId, long usuarioId)
     {
+        // Proceso de visualización/descarga: resuelve la ruta física segura,
+        // audita el acceso sensible y entrega bytes sin exponer rutas directas.
         var meta = await _repo.ObtenerEvidenciaPorIdAsync(evidenciaId);
         if (meta == null)
             return ServiceResult<EvidenciaDescargaDto>.NotFound("Evidencia no encontrada.");
 
         var filePath = ObtenerRutaFisicaSegura(meta.Value.Ruta, permitirLegacy: true);
         if (filePath == null || !File.Exists(filePath))
-            return ServiceResult<EvidenciaDescargaDto>.NotFound("El archivo fisico no existe en el servidor.");
+            return ServiceResult<EvidenciaDescargaDto>.NotFound("El archivo físico no existe en el servidor.");
 
         var dataJson = JsonConvert.SerializeObject(new { NombreArchivo = meta.Value.Nombre, NombreFisico = meta.Value.Ruta, TipoOperacion = "DESCARGA_VISUALIZACION" });
         await _repo.RegistrarAuditoriaVisualizacionAsync(evidenciaId, dataJson, usuarioId);
@@ -197,9 +210,13 @@ public sealed class EvidenciasService : IEvidenciasService
 
     public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, string? motivoEliminacion, long usuarioId)
     {
+        // Proceso de eliminación lógica: exige motivo, conserva el archivo físico
+        // y actualiza solo la metadata para mantener evidencia trazable.
         motivoEliminacion = motivoEliminacion?.Trim();
+        if ((motivoEliminacion?.Length ?? 0) > MaxTextoSeguimiento)
+            return ServiceResult.BadRequest("El motivo de eliminacion no debe superar los 1000 caracteres.");
         if (string.IsNullOrWhiteSpace(motivoEliminacion))
-            return ServiceResult.BadRequest("El motivo de eliminacion es obligatorio.");
+            return ServiceResult.BadRequest("El motivo de eliminación es obligatorio.");
 
         var meta = await _repo.ObtenerEvidenciaPorIdAsync(evidenciaId);
         if (meta == null)
@@ -212,7 +229,7 @@ public sealed class EvidenciasService : IEvidenciasService
         var filePath = ObtenerRutaFisicaSegura(meta.Value.Ruta, permitirLegacy: true);
         if (filePath != null && File.Exists(filePath))
         {
-            Serilog.Log.Information("Evidencia inactivada logicamente; archivo fisico conservado: {FilePath}", filePath);
+            Serilog.Log.Information("Evidencia inactivada lógicamente; archivo físico conservado: {FilePath}", filePath);
         }
 
         return ServiceResult.Ok("Evidencia eliminada correctamente.");
@@ -221,13 +238,15 @@ public sealed class EvidenciasService : IEvidenciasService
     public async Task<ServiceResult> EliminarSeguimientoAsync(long detalleId, string? motivoEliminacion, long usuarioId)
     {
         motivoEliminacion = motivoEliminacion?.Trim();
+        if ((motivoEliminacion?.Length ?? 0) > MaxTextoSeguimiento)
+            return ServiceResult.BadRequest("El motivo de eliminacion no debe superar los 1000 caracteres.");
         if (string.IsNullOrWhiteSpace(motivoEliminacion))
-            return ServiceResult.BadRequest("El motivo de eliminacion es obligatorio.");
+            return ServiceResult.BadRequest("El motivo de eliminación es obligatorio.");
 
         var ok = await _repo.EliminarSeguimientoLogicoAsync(detalleId, usuarioId, motivoEliminacion);
         return ok
             ? ServiceResult.Ok("Seguimiento eliminado correctamente.")
-            : ServiceResult.NotFound("No se encontro el seguimiento o ya fue eliminado.");
+            : ServiceResult.NotFound("No se encontró el seguimiento o ya fue eliminado.");
     }
 
     public Task RegistrarReporteImpresoAsync(string noDocumento, string dataJson, long usuarioId)

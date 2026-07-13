@@ -26,6 +26,10 @@ export class MainLayoutComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.sidebarAbierto.set(false);
+    }
+
     this.configService.CargarConfiguracion().subscribe();
     this.catalogoService.modulos().subscribe({
       next:  mods => this.todosLosModulos.set(mods),
@@ -35,6 +39,12 @@ export class MainLayoutComponent implements OnInit {
 
   toggleSidebar() {
     this.sidebarAbierto.update(v => !v);
+  }
+
+  cerrarSidebarMovil() {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      this.sidebarAbierto.set(false);
+    }
   }
 
   /** Módulos que el usuario logueado tiene asignados */
@@ -53,6 +63,7 @@ export class MainLayoutComponent implements OnInit {
     // Mapeo local de rutas a secciones recomendadas para asegurar orden y limpieza visual
     const getSeccion = (ruta: string, defaultSec: string): string => {
       const r = ruta.toLowerCase();
+      if (r.includes('matrices-riesgos')) return 'Riesgos LA/FT';
       if (r.includes('tipo-listas') || r.includes('cargar-listas') || r.includes('coincidencias-patrono') || r.includes('coincidencias-empleado')) return 'Listas de Cautela';
       if (r.includes('monitoreo') || r.includes('listas')) return 'Monitoreo y Operación';
       if (r.includes('usuarios') || r.includes('roles') || r.includes('accesos')) return 'Seguridad y Accesos';
@@ -71,7 +82,7 @@ export class MainLayoutComponent implements OnInit {
     });
 
     // Definir un orden de prioridad para las secciones en el menú
-    const ordenSecciones = ['Monitoreo y Operación', 'Listas de Cautela', 'Seguridad y Accesos', 'Configuración del Sistema'];
+    const ordenSecciones = ['Riesgos LA/FT', 'Monitoreo y Operación', 'Listas de Cautela', 'Seguridad y Accesos', 'Configuración del Sistema'];
 
     return Array.from(seccionesMap.keys())
       .sort((a, b) => {

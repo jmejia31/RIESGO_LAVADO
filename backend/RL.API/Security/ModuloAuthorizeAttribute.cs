@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace RL.API.Security;
 
 /// <summary>
-/// Valida que el JWT tenga acceso a uno de los modulos requeridos por el endpoint.
+/// Valida que el JWT tenga acceso a uno de los módulos requeridos por el endpoint.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false)]
 public sealed class ModuloAuthorizeAttribute : Attribute, IAuthorizationFilter
@@ -19,6 +19,8 @@ public sealed class ModuloAuthorizeAttribute : Attribute, IAuthorizationFilter
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
+        // Proceso de autorización por módulo: el sistema no valida permisos por acción.
+        // Cada endpoint declara el MOD_ID permitido y se compara contra el claim "modulos" del JWT.
         var user = context.HttpContext.User;
         if (user?.Identity?.IsAuthenticated != true)
         {
@@ -36,7 +38,7 @@ public sealed class ModuloAuthorizeAttribute : Attribute, IAuthorizationFilter
         var modulosClaim = user.FindFirst("modulos")?.Value;
         if (string.IsNullOrWhiteSpace(modulosClaim))
         {
-            context.Result = CrearForbidden("No tiene modulos asignados para esta accion.");
+            context.Result = CrearForbidden("No tiene módulos asignados para esta acción.");
             return;
         }
 
@@ -49,7 +51,7 @@ public sealed class ModuloAuthorizeAttribute : Attribute, IAuthorizationFilter
 
         if (!_moduloIds.Any(modulosUsuario.Contains))
         {
-            context.Result = CrearForbidden("No tiene permiso para acceder a este modulo.");
+            context.Result = CrearForbidden("No tiene permiso para acceder a este módulo.");
         }
     }
 

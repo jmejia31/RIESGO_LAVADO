@@ -29,7 +29,7 @@ namespace RL.API.DTOs
         [Required(ErrorMessage = "El tipo de documento es requerido")]
         public int TipoDocumentoId { get; set; }
 
-        [Required(ErrorMessage = "El tipo de lista es requerido")]
+        [Required(ErrorMessage = "El tipo de persona es requerido")]
         public int TipoPositivoId { get; set; }
 
         public string? NoDocumento { get; set; }
@@ -39,12 +39,12 @@ namespace RL.API.DTOs
         public string NombreCompleto { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El motivo de ingreso es requerido")]
-        [MaxLength(4000)]
+        [MaxLength(1000, ErrorMessage = "El motivo de ingreso no debe superar los 1000 caracteres")]
         public string MotivoIngreso { get; set; } = string.Empty;
 
         public int? TipoListaCautelaId { get; set; }
 
-        // Origen operativo del registro; permite identificar casos creados por noticia sin crear un modulo aparte.
+        // Origen operativo del registro; permite identificar casos creados por noticia sin crear un módulo aparte.
         [MaxLength(50)]
         [RegularExpression("^(DNP_LISTAS|MANUAL_CUMPLIMIENTO|NOTICIA_PRENSA|OTRO)$", ErrorMessage = "El origen del registro no es valido")]
         public string? OrigenRegistro { get; set; }

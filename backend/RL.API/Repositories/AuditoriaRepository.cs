@@ -28,6 +28,8 @@ public class AuditoriaRepository : IAuditoriaRepository
 
     public async Task RegistrarAsync(string tabla, string registroId, string accion, string? datosAnt, string? datosNvo, long? usrId, string? email, string? ip, string? modulo)
     {
+        // Proceso central de auditoría: todo endpoint crítico debe llegar aquí con tabla,
+        // registro, acción, usuario, IP y módulo funcional para conservar trazabilidad.
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
@@ -48,7 +50,7 @@ public class AuditoriaRepository : IAuditoriaRepository
             }
             catch
             {
-                // Silently ignore to ensure audit log doesn't block main business logic execution
+                // La auditoría no debe bloquear la operación principal por una consulta auxiliar de correo.
             }
         }
 
@@ -116,7 +118,7 @@ public class AuditoriaRepository : IAuditoriaRepository
 
         if (!string.IsNullOrWhiteSpace(tabla))
         {
-            // Filtro exacto de tabla para accesos rapidos como "documentos eliminados".
+            // Filtro exacto de tabla para accesos rápidos como "documentos eliminados".
             whereClauses.Add("AUD_TABLA = :tablaFilter");
             parameters.Add(new OracleParameter("tablaFilter", tabla.Trim()));
         }
@@ -141,7 +143,7 @@ public class AuditoriaRepository : IAuditoriaRepository
 
         string whereSql = whereClauses.Count > 0 ? "WHERE " + string.Join(" AND ", whereClauses) : "";
 
-        // 1. Obtener total
+        // Consulta 1: obtiene el total para paginación sin traer todos los registros.
         int total = 0;
         await using (var countCmd = conn.CreateCommand())
         {
@@ -154,7 +156,7 @@ public class AuditoriaRepository : IAuditoriaRepository
             total = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
         }
 
-        // 2. Obtener datos paginados
+        // Consulta 2: devuelve la página solicitada ordenada por fecha e identificador de auditoría.
         var list = new List<AuditoriaDto>();
         await using (var queryCmd = conn.CreateCommand())
         {

@@ -3,6 +3,9 @@
 -- Script maestro: actualizaciones seguras
 -- Uso: Ambientes existentes con informacion que debe conservarse.
 -- Importante: No contiene scripts de reseteo ni borrado masivo.
+-- Proceso DBA: ejecutar solo despues de respaldo validado, ventana aprobada
+-- y revision del orden de scripts. Cada archivo incluido debe ser idempotente
+-- o estar documentado como correctivo seguro para ambientes existentes.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK

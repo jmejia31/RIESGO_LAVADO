@@ -21,12 +21,12 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
 
       <!-- Filtros Avanzados -->
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
           
           <!-- Búsqueda General -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Buscar</label>
-            <input type="text" [(ngModel)]="filtroBuscar" (keyup.enter)="aplicarFiltros()"
+            <input type="text" [(ngModel)]="filtroBuscar" (ngModelChange)="programarBusquedaAutomatica()"
               placeholder="Usuario, tabla, IP..."
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
           </div>
@@ -34,7 +34,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           <!-- Acción -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Acción</label>
-            <select [(ngModel)]="filtroAccion" (change)="onFiltroAccionChange()"
+            <select [(ngModel)]="filtroAccion" (ngModelChange)="onFiltroAccionChange()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
               <option value="">Todas</option>
               <option value="INSERT">INSERT (Crear)</option>
@@ -50,7 +50,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           <!-- Módulo -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Módulo</label>
-            <select [(ngModel)]="filtroModulo" (change)="onFiltroModuloChange()"
+            <select [(ngModel)]="filtroModulo" (ngModelChange)="onFiltroModuloChange()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
               <option value="">Todos</option>
               <option value="Auth">Autenticación (Auth)</option>
@@ -63,14 +63,14 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
           <!-- Fecha Inicio -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Desde</label>
-            <input type="date" [(ngModel)]="filtroFechaInicio" (change)="aplicarFiltros()"
+            <input type="date" [(ngModel)]="filtroFechaInicio" (ngModelChange)="programarBusquedaAutomatica()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white" />
           </div>
 
           <!-- Fecha Fin -->
           <div class="flex flex-col">
             <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Hasta</label>
-            <input type="date" [(ngModel)]="filtroFechaFin" (change)="aplicarFiltros()"
+            <input type="date" [(ngModel)]="filtroFechaFin" (ngModelChange)="programarBusquedaAutomatica()"
               class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white" />
           </div>
 
@@ -90,14 +90,10 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
             Documentos eliminados
           </button>
 
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end gap-2 w-full sm:w-auto">
             <button (click)="limpiarFiltros()" [disabled]="cargando()"
-              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
               Limpiar Filtros
-            </button>
-            <button (click)="aplicarFiltros()" [disabled]="cargando()"
-              class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-              Buscar
             </button>
           </div>
         </div>
@@ -124,7 +120,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
                 <p class="text-sm font-medium text-gray-500">No se encontraron registros en la bitácora.</p>
               </div>
             } @else {
-              <table class="min-w-full divide-y divide-gray-200">
+              <table class="min-w-[1120px] w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                   <tr>
                     <th class="px-6 py-3 text-left">Fecha y Hora</th>
@@ -185,11 +181,11 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
               </table>
 
               <!-- Paginación -->
-              <div class="px-6 py-4 flex items-center justify-between border-t border-gray-150 bg-gray-50/30">
+              <div class="px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-t border-gray-150 bg-gray-50/30">
                 <div class="text-xs text-gray-500">
                   Mostrando {{ (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalRegistros()) }} de {{ totalRegistros() }} registros
                 </div>
-                <div class="flex items-center gap-3 text-xs text-gray-500">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 text-xs text-gray-500">
                   <span>Mostrar</span>
                   <select [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1); cargarDatos()"
                     class="border border-gray-200 rounded-xl pl-3 pr-8 py-1 focus:outline-none bg-white">
@@ -198,7 +194,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
                     <option [value]="50">50</option>
                   </select>
 
-                  <div class="flex items-center gap-1">
+                  <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
                     <button (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
                       class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -238,7 +234,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
 
           <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-4xl w-full border border-gray-100 flex flex-col max-h-[90vh] z-50">
               
-              <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+              <div class="bg-gray-50 px-6 py-4 flex items-start justify-between gap-4 border-b border-gray-200">
                 <div>
                   <h3 class="text-lg font-bold text-gray-900">Detalle de Valores Auditados</h3>
                   <p class="text-xs text-gray-500">
@@ -323,6 +319,7 @@ import { AuditoriaService, AuditoriaDto } from '../../../core/services/auditoria
 })
 export class BitacoraComponent implements OnInit {
   private auditoriaService = inject(AuditoriaService);
+  private busquedaTimer: ReturnType<typeof setTimeout> | null = null;
 
   datos = signal<AuditoriaDto[]>([]);
   totalRegistros = signal(0);
@@ -459,21 +456,26 @@ export class BitacoraComponent implements OnInit {
     this.cargarDatos();
   }
 
+  programarBusquedaAutomatica() {
+    if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
+    this.busquedaTimer = setTimeout(() => this.aplicarFiltros(), 350);
+  }
+
   onFiltroAccionChange() {
     if (this.filtroAccion !== 'DELETE') {
       this.filtroTabla = '';
     }
-    this.aplicarFiltros();
+    this.programarBusquedaAutomatica();
   }
 
   onFiltroModuloChange() {
     if (this.filtroModulo !== 'MonitoreoListas') {
       this.filtroTabla = '';
     }
-    this.aplicarFiltros();
+    this.programarBusquedaAutomatica();
   }
 
-  // Filtro rapido para evidencias inactivadas logicamente y auditadas como DELETE.
+  // Filtro rápido para evidencias inactivadas lógicamente y auditadas como DELETE.
   filtrarDocumentosEliminados() {
     this.filtroBuscar = '';
     this.filtroAccion = 'DELETE';

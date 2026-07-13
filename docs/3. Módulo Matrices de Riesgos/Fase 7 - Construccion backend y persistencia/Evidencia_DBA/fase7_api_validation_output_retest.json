@@ -1,0 +1,1656 @@
+{
+  "testName": "PRUEBA_FASE_7_JAVIER_MEJIA_20260706_153016",
+  "matrizId": 2,
+  "success": true,
+  "evidence": [
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/metodologia/vigente",
+      "status": 200,
+      "elapsedMs": 86,
+      "response": {
+        "success": true,
+        "datos": {
+          "version": "1.0",
+          "pesoTotalEsperado": 100.0,
+          "puntajeMinimo": 1.0,
+          "puntajeMaximo": 5.0,
+          "mitigacionMaximaPct": 55.0,
+          "decimalesCalculo": 4,
+          "decimalesVisualizacion": 2,
+          "factoresInstitucionales": [
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "obligatorioGlobal": true
+            },
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "obligatorioGlobal": true
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "obligatorioGlobal": true
+            }
+          ],
+          "escalasRiesgo": [
+            {
+              "tipo": "RESIDUAL",
+              "nivel": "Muy bajo",
+              "color": "#00B050",
+              "valorMinimo": 1.0,
+              "valorMaximo": 1.8,
+              "requierePlanAccion": false
+            },
+            {
+              "tipo": "RESIDUAL",
+              "nivel": "Bajo",
+              "color": "#92D050",
+              "valorMinimo": 1.81,
+              "valorMaximo": 2.6,
+              "requierePlanAccion": false
+            },
+            {
+              "tipo": "RESIDUAL",
+              "nivel": "Medio",
+              "color": "#FFC000",
+              "valorMinimo": 2.61,
+              "valorMaximo": 3.4,
+              "requierePlanAccion": false
+            },
+            {
+              "tipo": "RESIDUAL",
+              "nivel": "Alto",
+              "color": "#FF6600",
+              "valorMinimo": 3.41,
+              "valorMaximo": 4.2,
+              "requierePlanAccion": true
+            },
+            {
+              "tipo": "RESIDUAL",
+              "nivel": "Cr�tico",
+              "color": "#FF0000",
+              "valorMinimo": 4.21,
+              "valorMaximo": 5.0,
+              "requierePlanAccion": true
+            }
+          ],
+          "criterios": [],
+          "mitigacionesPermitidas": [
+            0.0,
+            10.0,
+            25.0,
+            40.0,
+            55.0
+          ]
+        }
+      }
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 200,
+      "elapsedMs": 21,
+      "response": {
+        "success": true,
+        "datos": {
+          "totalMatrices": 1,
+          "totalCalculadas": 0,
+          "totalCerradas": 1,
+          "totalConPlanAccion": 0,
+          "porEstado": [
+            {
+              "nombre": "CERRADA",
+              "total": 1
+            }
+          ],
+          "porNivelResidual": [
+            {
+              "nombre": "SIN_CALCULO",
+              "total": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "",
+      "status": 200,
+      "elapsedMs": 697,
+      "response": {
+        "success": true,
+        "datos": {
+          "origenDatos": "PRUEBA_FASE_7",
+          "snapshotMetodo": "{\"Version\":\"1.0\",\"PesoTotalEsperado\":100.0,\"PuntajeMinimo\":1.0,\"PuntajeMaximo\":5.0,\"MitigacionMaximaPct\":55.0,\"DecimalesCalculo\":4,\"DecimalesVisualizacion\":2,\"FactoresInstitucionales\":[{\"Codigo\":\"PROVEEDORES\",\"Nombre\":\"Proveedores\",\"PesoInstitucional\":50.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"CLIENTES_PATRONOS\",\"Nombre\":\"Clientes/Patronos\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"EMPLEADOS\",\"Nombre\":\"Empleados\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true}],\"EscalasRiesgo\":[{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":true},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Cr�tico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":true}],\"Criterios\":[],\"MitigacionesPermitidas\":[0.0,10.0,25.0,40.0,55.0]}",
+          "detalles": [
+            {
+              "detalleId": 22,
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 2",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 23,
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 3",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 24,
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 4",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 25,
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 5",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 26,
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 6",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 27,
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 7",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 28,
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 8",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 29,
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 9",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 30,
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 10",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 31,
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 11",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 32,
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 12",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 33,
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 13",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 34,
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 14",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 35,
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 15",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 36,
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 16",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 37,
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 17",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 38,
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 18",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 39,
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 19",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 40,
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 20",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 41,
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 21",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 42,
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 22",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            }
+          ],
+          "controles": [
+            {
+              "controlId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "nombre": "Control de prueba Fase 7 - Proveedores",
+              "descripcion": "Control sin evidencia para validar que no mitigue indebidamente.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 5,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "nombre": "Control de prueba Fase 7 - Clientes Patronos",
+              "descripcion": "Control sin evidencia para prueba funcional.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 6,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "nombre": "Control de prueba Fase 7 - Empleados",
+              "descripcion": "Control sin evidencia para prueba funcional.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            }
+          ],
+          "resultados": [],
+          "matrizId": 2,
+          "modeloId": 2,
+          "modeloVersion": "1.0",
+          "sujetoTipo": "INSTITUCIONAL",
+          "sujetoIdExt": "PRUEBA_FASE_7_JAVIER_MEJIA_20260706_153016",
+          "documento": "FASE7-JM",
+          "nombreSujeto": "PRUEBA_FASE_7_JAVIER_MEJIA_20260706_153016",
+          "estado": "EN_EVALUACION",
+          "fechaEvaluacion": "2026-07-06T15:30:17",
+          "requierePlanAccion": false
+        },
+        "mensaje": "Matriz de riesgos creada correctamente."
+      }
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/2",
+      "status": 200,
+      "elapsedMs": 14,
+      "response": {
+        "success": true,
+        "datos": {
+          "origenDatos": "PRUEBA_FASE_7",
+          "snapshotMetodo": "{\"Version\":\"1.0\",\"PesoTotalEsperado\":100.0,\"PuntajeMinimo\":1.0,\"PuntajeMaximo\":5.0,\"MitigacionMaximaPct\":55.0,\"DecimalesCalculo\":4,\"DecimalesVisualizacion\":2,\"FactoresInstitucionales\":[{\"Codigo\":\"PROVEEDORES\",\"Nombre\":\"Proveedores\",\"PesoInstitucional\":50.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"CLIENTES_PATRONOS\",\"Nombre\":\"Clientes/Patronos\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"EMPLEADOS\",\"Nombre\":\"Empleados\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true}],\"EscalasRiesgo\":[{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":true},{\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Cr�tico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":true}],\"Criterios\":[],\"MitigacionesPermitidas\":[0.0,10.0,25.0,40.0,55.0]}",
+          "detalles": [
+            {
+              "detalleId": 22,
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 2",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 23,
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 3",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 24,
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 4",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 25,
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 5",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 26,
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 6",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 27,
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 7",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 28,
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 8",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 29,
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 9",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 30,
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 10",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 31,
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 11",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 32,
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 12",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 33,
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 13",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 34,
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 14",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 35,
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 15",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 36,
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 16",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 37,
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o funci�n",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 17",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 38,
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicaci�n geogr�fica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 18",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 39,
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 19",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 40,
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 20",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 41,
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relaci�n institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 21",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 42,
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor de prueba Fase 7 para variable 22",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Prueba funcional controlada Fase 7 - Javier Mej�a",
+              "fuenteDato": "PRUEBA_FASE_7",
+              "obligatoria": true
+            }
+          ],
+          "controles": [
+            {
+              "controlId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "nombre": "Control de prueba Fase 7 - Proveedores",
+              "descripcion": "Control sin evidencia para validar que no mitigue indebidamente.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 5,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "nombre": "Control de prueba Fase 7 - Clientes Patronos",
+              "descripcion": "Control sin evidencia para prueba funcional.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 6,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "nombre": "Control de prueba Fase 7 - Empleados",
+              "descripcion": "Control sin evidencia para prueba funcional.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Manual",
+              "procedimientos": "Documentado",
+              "calidad": "Moderado",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mej�a",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            }
+          ],
+          "resultados": [],
+          "matrizId": 2,
+          "modeloId": 2,
+          "modeloVersion": "1.0",
+          "sujetoTipo": "INSTITUCIONAL",
+          "sujetoIdExt": "PRUEBA_FASE_7_JAVIER_MEJIA_20260706_153016",
+          "documento": "FASE7-JM",
+          "nombreSujeto": "PRUEBA_FASE_7_JAVIER_MEJIA_20260706_153016",
+          "estado": "EN_EVALUACION",
+          "fechaEvaluacion": "2026-07-06T15:30:17",
+          "requierePlanAccion": false
+        }
+      }
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/2/calcular",
+      "status": 200,
+      "elapsedMs": 599,
+      "response": {
+        "success": true,
+        "datos": {
+          "versionCalculo": "F6-1.1",
+          "versionMetodologia": "1.0",
+          "puntajeInherente": 3.4,
+          "nivelInherente": "Medio",
+          "colorInherente": "#FFC000",
+          "mitigacionPct": 0.0,
+          "puntajeResidual": 3.4,
+          "nivelResidual": "Medio",
+          "colorResidual": "#FFC000",
+          "requierePlanAccion": false,
+          "explicacion": "Riesgo inherente 3.4 (Medio); mitigaci�n global 0%; riesgo residual 3.4 (Medio).",
+          "factores": [
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            }
+          ],
+          "advertencias": []
+        },
+        "mensaje": "Matriz calculada correctamente."
+      }
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/2/recalcular",
+      "status": 200,
+      "elapsedMs": 556,
+      "response": {
+        "success": true,
+        "datos": {
+          "versionCalculo": "F6-1.1",
+          "versionMetodologia": "1.0",
+          "puntajeInherente": 3.4,
+          "nivelInherente": "Medio",
+          "colorInherente": "#FFC000",
+          "mitigacionPct": 0.0,
+          "puntajeResidual": 3.4,
+          "nivelResidual": "Medio",
+          "colorResidual": "#FFC000",
+          "requierePlanAccion": false,
+          "explicacion": "Riesgo inherente 3.4 (Medio); mitigaci�n global 0%; riesgo residual 3.4 (Medio).",
+          "factores": [
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o funci�n",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicaci�n geogr�fica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Cr�tico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relaci�n institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            }
+          ],
+          "advertencias": []
+        },
+        "mensaje": "Matriz recalculada correctamente."
+      }
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/2/estado",
+      "status": 200,
+      "elapsedMs": 80,
+      "response": {
+        "success": true,
+        "mensaje": "Estado de la matriz actualizado correctamente."
+      }
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/2/historial",
+      "status": 200,
+      "elapsedMs": 16,
+      "response": {
+        "success": true,
+        "datos": [
+          {
+            "historialId": 9,
+            "matrizId": 2,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "2",
+            "accion": "CAMBIO_ESTADO",
+            "estadoAnterior": "CALCULADA",
+            "estadoNuevo": "EN_REVISION",
+            "motivo": "Cambio de estado de prueba Fase 7 - Javier Mej�a",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-06T15:30:19"
+          },
+          {
+            "historialId": 8,
+            "matrizId": 2,
+            "tabla": "RL_MR_RESULTADOS",
+            "registroId": "13",
+            "accion": "RECALCULO",
+            "estadoAnterior": "CALCULADA",
+            "estadoNuevo": "CALCULADA",
+            "motivo": "Recalculo de prueba funcional Fase 7 - Javier Mej�a",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-06T15:30:19"
+          },
+          {
+            "historialId": 7,
+            "matrizId": 2,
+            "tabla": "RL_MR_RESULTADOS",
+            "registroId": "9",
+            "accion": "CALCULO",
+            "estadoAnterior": "EN_EVALUACION",
+            "estadoNuevo": "CALCULADA",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-06T15:30:18"
+          },
+          {
+            "historialId": 6,
+            "matrizId": 2,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "2",
+            "accion": "CREACION",
+            "estadoNuevo": "EN_EVALUACION",
+            "motivo": "Creaci�n de matriz de riesgos.",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-06T15:30:17"
+          }
+        ]
+      }
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 200,
+      "elapsedMs": 41,
+      "response": {
+        "success": true,
+        "datos": {
+          "totalMatrices": 2,
+          "totalCalculadas": 0,
+          "totalCerradas": 1,
+          "totalConPlanAccion": 0,
+          "porEstado": [
+            {
+              "nombre": "CERRADA",
+              "total": 1
+            },
+            {
+              "nombre": "EN_REVISION",
+              "total": 1
+            }
+          ],
+          "porNivelResidual": [
+            {
+              "nombre": "Medio",
+              "total": 1
+            },
+            {
+              "nombre": "SIN_CALCULO",
+              "total": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/2/estado",
+      "status": 200,
+      "elapsedMs": 73,
+      "response": {
+        "success": true,
+        "mensaje": "Estado de la matriz actualizado correctamente."
+      }
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/2/recalcular",
+      "status": 400,
+      "elapsedMs": 5,
+      "response": {
+        "success": false,
+        "mensaje": "La matriz est� cerrada o inactiva y no puede recalcularse."
+      }
+    }
+  ]
+}

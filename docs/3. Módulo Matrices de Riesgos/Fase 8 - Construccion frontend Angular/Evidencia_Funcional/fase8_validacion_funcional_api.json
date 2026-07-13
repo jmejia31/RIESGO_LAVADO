@@ -1,0 +1,2961 @@
+{
+  "testName": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+  "executedAt": "2026-07-08T09:45:22",
+  "success": true,
+  "matrizId": 3,
+  "criterioId": 4,
+  "evidence": [
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/metodologia/vigente",
+      "status": 200,
+      "elapsedMs": 39,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "version": "1.0",
+          "pesoTotalEsperado": 100.0,
+          "puntajeMinimo": 1.0,
+          "puntajeMaximo": 5.0,
+          "mitigacionMaximaPct": 55.0,
+          "decimalesCalculo": 4,
+          "decimalesVisualizacion": 2,
+          "factoresInstitucionales": [
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "obligatorioGlobal": true
+            },
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "obligatorioGlobal": true
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "obligatorioGlobal": true
+            }
+          ],
+          "variables": [
+            {
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V01",
+              "nombre": "Perfil del sujeto evaluado",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V02",
+              "nombre": "Actividad, rubro o función",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V03",
+              "nombre": "Ubicación geográfica",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V04",
+              "nombre": "Antecedentes y coincidencias",
+              "pesoInterno": 20.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V05",
+              "nombre": "Comportamiento transaccional u operativo",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V06",
+              "nombre": "Canal, producto o relación institucional",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "codigo": "V07",
+              "nombre": "Control interno y evidencia disponible",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V01",
+              "nombre": "Perfil del sujeto evaluado",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V02",
+              "nombre": "Actividad, rubro o función",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V03",
+              "nombre": "Ubicación geográfica",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V04",
+              "nombre": "Antecedentes y coincidencias",
+              "pesoInterno": 20.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V05",
+              "nombre": "Comportamiento transaccional u operativo",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V06",
+              "nombre": "Canal, producto o relación institucional",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "codigo": "V07",
+              "nombre": "Control interno y evidencia disponible",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V01",
+              "nombre": "Perfil del sujeto evaluado",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V02",
+              "nombre": "Actividad, rubro o función",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V03",
+              "nombre": "Ubicación geográfica",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V04",
+              "nombre": "Antecedentes y coincidencias",
+              "pesoInterno": 20.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V05",
+              "nombre": "Comportamiento transaccional u operativo",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V06",
+              "nombre": "Canal, producto o relación institucional",
+              "pesoInterno": 10.0,
+              "obligatoria": true
+            },
+            {
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "codigo": "V07",
+              "nombre": "Control interno y evidencia disponible",
+              "pesoInterno": 15.0,
+              "obligatoria": true
+            }
+          ],
+          "escalasRiesgo": [
+            {
+              "escalaId": 12,
+              "tipo": "RESIDUAL",
+              "nivel": "Muy bajo",
+              "color": "#00B050",
+              "valorMinimo": 1.0,
+              "valorMaximo": 1.8,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 13,
+              "tipo": "RESIDUAL",
+              "nivel": "Bajo",
+              "color": "#92D050",
+              "valorMinimo": 1.81,
+              "valorMaximo": 2.6,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 14,
+              "tipo": "RESIDUAL",
+              "nivel": "Medio",
+              "color": "#FFC000",
+              "valorMinimo": 2.61,
+              "valorMaximo": 3.4,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 15,
+              "tipo": "RESIDUAL",
+              "nivel": "Alto",
+              "color": "#FF6600",
+              "valorMinimo": 3.41,
+              "valorMaximo": 4.2,
+              "requierePlanAccion": true
+            },
+            {
+              "escalaId": 16,
+              "tipo": "RESIDUAL",
+              "nivel": "Crítico",
+              "color": "#FF0000",
+              "valorMinimo": 4.21,
+              "valorMaximo": 5.0,
+              "requierePlanAccion": false
+            }
+          ],
+          "escalasCatalogo": [
+            {
+              "escalaId": 17,
+              "tipo": "CONTROL",
+              "nivel": "Sin control",
+              "color": "#C00000",
+              "valorMinimo": 0.0,
+              "valorMaximo": 0.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 18,
+              "tipo": "CONTROL",
+              "nivel": "Débil",
+              "color": "#FF0000",
+              "valorMinimo": 10.0,
+              "valorMaximo": 10.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 19,
+              "tipo": "CONTROL",
+              "nivel": "Moderado",
+              "color": "#FFC000",
+              "valorMinimo": 25.0,
+              "valorMaximo": 25.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 20,
+              "tipo": "CONTROL",
+              "nivel": "Fuerte",
+              "color": "#92D050",
+              "valorMinimo": 40.0,
+              "valorMaximo": 40.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 21,
+              "tipo": "CONTROL",
+              "nivel": "Muy fuerte",
+              "color": "#00B050",
+              "valorMinimo": 55.0,
+              "valorMaximo": 55.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 7,
+              "tipo": "INHERENTE",
+              "nivel": "Muy bajo",
+              "color": "#00B050",
+              "valorMinimo": 1.0,
+              "valorMaximo": 1.8,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 8,
+              "tipo": "INHERENTE",
+              "nivel": "Bajo",
+              "color": "#92D050",
+              "valorMinimo": 1.81,
+              "valorMaximo": 2.6,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 9,
+              "tipo": "INHERENTE",
+              "nivel": "Medio",
+              "color": "#FFC000",
+              "valorMinimo": 2.61,
+              "valorMaximo": 3.4,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 10,
+              "tipo": "INHERENTE",
+              "nivel": "Alto",
+              "color": "#FF6600",
+              "valorMinimo": 3.41,
+              "valorMaximo": 4.2,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 11,
+              "tipo": "INHERENTE",
+              "nivel": "Crítico",
+              "color": "#FF0000",
+              "valorMinimo": 4.21,
+              "valorMaximo": 5.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 12,
+              "tipo": "RESIDUAL",
+              "nivel": "Muy bajo",
+              "color": "#00B050",
+              "valorMinimo": 1.0,
+              "valorMaximo": 1.8,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 13,
+              "tipo": "RESIDUAL",
+              "nivel": "Bajo",
+              "color": "#92D050",
+              "valorMinimo": 1.81,
+              "valorMaximo": 2.6,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 14,
+              "tipo": "RESIDUAL",
+              "nivel": "Medio",
+              "color": "#FFC000",
+              "valorMinimo": 2.61,
+              "valorMaximo": 3.4,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 15,
+              "tipo": "RESIDUAL",
+              "nivel": "Alto",
+              "color": "#FF6600",
+              "valorMinimo": 3.41,
+              "valorMaximo": 4.2,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 16,
+              "tipo": "RESIDUAL",
+              "nivel": "Crítico",
+              "color": "#FF0000",
+              "valorMinimo": 4.21,
+              "valorMaximo": 5.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 2,
+              "tipo": "VARIABLE",
+              "nivel": "Muy bajo",
+              "color": "#00B050",
+              "valorMinimo": 1.0,
+              "valorMaximo": 1.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 3,
+              "tipo": "VARIABLE",
+              "nivel": "Bajo",
+              "color": "#92D050",
+              "valorMinimo": 2.0,
+              "valorMaximo": 2.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 4,
+              "tipo": "VARIABLE",
+              "nivel": "Medio",
+              "color": "#FFC000",
+              "valorMinimo": 3.0,
+              "valorMaximo": 3.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 5,
+              "tipo": "VARIABLE",
+              "nivel": "Alto",
+              "color": "#FF6600",
+              "valorMinimo": 4.0,
+              "valorMaximo": 4.0,
+              "requierePlanAccion": false
+            },
+            {
+              "escalaId": 6,
+              "tipo": "VARIABLE",
+              "nivel": "Crítico",
+              "color": "#FF0000",
+              "valorMinimo": 5.0,
+              "valorMaximo": 5.0,
+              "requierePlanAccion": false
+            }
+          ],
+          "criterios": [
+            {
+              "criterioId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "variableId": 2,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "escalaId": 7,
+              "valorDesde": 1.0,
+              "valorHasta": 1.0,
+              "puntaje": 2.0,
+              "descripcion": "Prueba"
+            }
+          ],
+          "mitigacionesPermitidas": [
+            0.0,
+            10.0,
+            25.0,
+            40.0,
+            55.0
+          ]
+        }
+      },
+      "step": "metodologia_vigente"
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/criterios",
+      "status": 200,
+      "elapsedMs": 254,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "criterioId": 4,
+          "factorId": 2,
+          "factorCodigo": "PROVEEDORES",
+          "factorNombre": "Proveedores",
+          "variableId": 2,
+          "variableCodigo": "V01",
+          "variableNombre": "Perfil del sujeto evaluado",
+          "valorDesde": 1.0,
+          "valorHasta": 2.5,
+          "puntaje": 2.0,
+          "descripcion": "Criterio funcional Fase 8 creado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "activo": true
+        },
+        "mensaje": "Criterio registrado correctamente."
+      },
+      "step": "crear_criterio"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/criterios/4",
+      "status": 200,
+      "elapsedMs": 684,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "criterioId": 4,
+          "factorId": 2,
+          "factorCodigo": "PROVEEDORES",
+          "factorNombre": "Proveedores",
+          "variableId": 2,
+          "variableCodigo": "V01",
+          "variableNombre": "Perfil del sujeto evaluado",
+          "valorDesde": 1.0,
+          "valorHasta": 2.5,
+          "puntaje": 2.25,
+          "descripcion": "Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "activo": true
+        },
+        "mensaje": "Criterio actualizado correctamente."
+      },
+      "step": "actualizar_criterio"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/criterios",
+      "status": 200,
+      "elapsedMs": 23,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": [
+          {
+            "criterioId": 3,
+            "factorId": 2,
+            "factorCodigo": "PROVEEDORES",
+            "factorNombre": "Proveedores",
+            "variableId": 2,
+            "variableCodigo": "V01",
+            "variableNombre": "Perfil del sujeto evaluado",
+            "escalaId": 7,
+            "escalaTipo": "INHERENTE",
+            "escalaNivel": "Muy bajo",
+            "valorDesde": 1.0,
+            "valorHasta": 1.0,
+            "puntaje": 2.0,
+            "descripcion": "Prueba",
+            "activo": true
+          },
+          {
+            "criterioId": 4,
+            "factorId": 2,
+            "factorCodigo": "PROVEEDORES",
+            "factorNombre": "Proveedores",
+            "variableId": 2,
+            "variableCodigo": "V01",
+            "variableNombre": "Perfil del sujeto evaluado",
+            "valorDesde": 1.0,
+            "valorHasta": 2.5,
+            "puntaje": 2.25,
+            "descripcion": "Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "activo": true
+          }
+        ]
+      },
+      "step": "listar_criterios_activos"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 200,
+      "elapsedMs": 18,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "totalMatrices": 2,
+          "totalCalculadas": 0,
+          "totalCerradas": 1,
+          "totalConPlanAccion": 0,
+          "porEstado": [
+            {
+              "nombre": "CERRADA",
+              "total": 1
+            },
+            {
+              "nombre": "INACTIVA",
+              "total": 1
+            }
+          ],
+          "porNivelResidual": [
+            {
+              "nombre": "Medio",
+              "total": 1
+            },
+            {
+              "nombre": "SIN_CALCULO",
+              "total": 1
+            }
+          ]
+        }
+      },
+      "step": "dashboard_antes"
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "",
+      "status": 200,
+      "elapsedMs": 2253,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "origenDatos": "PRUEBA_FASE_8",
+          "snapshotMetodo": "{\"Version\":\"1.0\",\"PesoTotalEsperado\":100.0,\"PuntajeMinimo\":1.0,\"PuntajeMaximo\":5.0,\"MitigacionMaximaPct\":55.0,\"DecimalesCalculo\":4,\"DecimalesVisualizacion\":2,\"FactoresInstitucionales\":[{\"Codigo\":\"PROVEEDORES\",\"Nombre\":\"Proveedores\",\"PesoInstitucional\":50.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"CLIENTES_PATRONOS\",\"Nombre\":\"Clientes/Patronos\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"EMPLEADOS\",\"Nombre\":\"Empleados\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true}],\"Variables\":[{\"VariableId\":2,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":5,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":6,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":7,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":8,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":9,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":10,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":11,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":12,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":13,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":14,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":15,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":16,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":17,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":18,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":19,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":20,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":21,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":22,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true}],\"EscalasRiesgo\":[{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":true},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"EscalasCatalogo\":[{\"EscalaId\":17,\"Tipo\":\"CONTROL\",\"Nivel\":\"Sin control\",\"Color\":\"#C00000\",\"ValorMinimo\":0.0,\"ValorMaximo\":0.0,\"RequierePlanAccion\":false},{\"EscalaId\":18,\"Tipo\":\"CONTROL\",\"Nivel\":\"Débil\",\"Color\":\"#FF0000\",\"ValorMinimo\":10.0,\"ValorMaximo\":10.0,\"RequierePlanAccion\":false},{\"EscalaId\":19,\"Tipo\":\"CONTROL\",\"Nivel\":\"Moderado\",\"Color\":\"#FFC000\",\"ValorMinimo\":25.0,\"ValorMaximo\":25.0,\"RequierePlanAccion\":false},{\"EscalaId\":20,\"Tipo\":\"CONTROL\",\"Nivel\":\"Fuerte\",\"Color\":\"#92D050\",\"ValorMinimo\":40.0,\"ValorMaximo\":40.0,\"RequierePlanAccion\":false},{\"EscalaId\":21,\"Tipo\":\"CONTROL\",\"Nivel\":\"Muy fuerte\",\"Color\":\"#00B050\",\"ValorMinimo\":55.0,\"ValorMaximo\":55.0,\"RequierePlanAccion\":false},{\"EscalaId\":7,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":8,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":9,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":10,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":11,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":2,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.0,\"RequierePlanAccion\":false},{\"EscalaId\":3,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":2.0,\"ValorMaximo\":2.0,\"RequierePlanAccion\":false},{\"EscalaId\":4,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":3.0,\"ValorMaximo\":3.0,\"RequierePlanAccion\":false},{\"EscalaId\":5,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":4.0,\"ValorMaximo\":4.0,\"RequierePlanAccion\":false},{\"EscalaId\":6,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":5.0,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"Criterios\":[{\"CriterioId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":7,\"ValorDesde\":1.0,\"ValorHasta\":1.0,\"Puntaje\":2.0,\"Descripcion\":\"Prueba\"},{\"CriterioId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":null,\"ValorDesde\":1.0,\"ValorHasta\":2.5,\"Puntaje\":2.25,\"Descripcion\":\"Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515\"}],\"MitigacionesPermitidas\":[0.0,10.0,25.0,40.0,55.0]}",
+          "detalles": [
+            {
+              "detalleId": 43,
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "1.50",
+              "puntaje": 2.25,
+              "puntajePonderado": 0.3375,
+              "justificacion": "Criterio aplicado desde catálogo Fase 8 - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 44,
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 3",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 45,
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 4",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 46,
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 5",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 47,
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 6",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 48,
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 7",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 49,
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 8",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 50,
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 9",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 51,
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 10",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 52,
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 11",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 53,
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 12",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 54,
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 13",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 55,
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 14",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 56,
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 15",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 57,
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 16",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 58,
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 17",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 59,
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 18",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 60,
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 19",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 61,
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 20",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 62,
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 21",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 63,
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 22",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            }
+          ],
+          "controles": [
+            {
+              "controlId": 7,
+              "nombre": "Control mitigante Fase 8 - PROVEEDORES",
+              "descripcion": "Control funcional de prueba para Proveedores.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 8,
+              "nombre": "Control mitigante Fase 8 - CLIENTES_PATRONOS",
+              "descripcion": "Control funcional de prueba para Clientes/Patronos.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 9,
+              "nombre": "Control mitigante Fase 8 - EMPLEADOS",
+              "descripcion": "Control funcional de prueba para Empleados.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            }
+          ],
+          "resultados": [],
+          "matrizId": 3,
+          "modeloId": 2,
+          "modeloVersion": "1.0",
+          "sujetoTipo": "INSTITUCIONAL",
+          "sujetoIdExt": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "documento": "FASE8-JM",
+          "nombreSujeto": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "estado": "EN_EVALUACION",
+          "fechaEvaluacion": "2026-07-08T09:45:16",
+          "requierePlanAccion": false
+        },
+        "mensaje": "Matriz de riesgos creada correctamente."
+      },
+      "step": "crear_matriz"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/3",
+      "status": 200,
+      "elapsedMs": 69,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "origenDatos": "PRUEBA_FASE_8",
+          "snapshotMetodo": "{\"Version\":\"1.0\",\"PesoTotalEsperado\":100.0,\"PuntajeMinimo\":1.0,\"PuntajeMaximo\":5.0,\"MitigacionMaximaPct\":55.0,\"DecimalesCalculo\":4,\"DecimalesVisualizacion\":2,\"FactoresInstitucionales\":[{\"Codigo\":\"PROVEEDORES\",\"Nombre\":\"Proveedores\",\"PesoInstitucional\":50.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"CLIENTES_PATRONOS\",\"Nombre\":\"Clientes/Patronos\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"EMPLEADOS\",\"Nombre\":\"Empleados\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true}],\"Variables\":[{\"VariableId\":2,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":5,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":6,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":7,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":8,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":9,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":10,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":11,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":12,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":13,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":14,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":15,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":16,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":17,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":18,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":19,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":20,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":21,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":22,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true}],\"EscalasRiesgo\":[{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":true},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"EscalasCatalogo\":[{\"EscalaId\":17,\"Tipo\":\"CONTROL\",\"Nivel\":\"Sin control\",\"Color\":\"#C00000\",\"ValorMinimo\":0.0,\"ValorMaximo\":0.0,\"RequierePlanAccion\":false},{\"EscalaId\":18,\"Tipo\":\"CONTROL\",\"Nivel\":\"Débil\",\"Color\":\"#FF0000\",\"ValorMinimo\":10.0,\"ValorMaximo\":10.0,\"RequierePlanAccion\":false},{\"EscalaId\":19,\"Tipo\":\"CONTROL\",\"Nivel\":\"Moderado\",\"Color\":\"#FFC000\",\"ValorMinimo\":25.0,\"ValorMaximo\":25.0,\"RequierePlanAccion\":false},{\"EscalaId\":20,\"Tipo\":\"CONTROL\",\"Nivel\":\"Fuerte\",\"Color\":\"#92D050\",\"ValorMinimo\":40.0,\"ValorMaximo\":40.0,\"RequierePlanAccion\":false},{\"EscalaId\":21,\"Tipo\":\"CONTROL\",\"Nivel\":\"Muy fuerte\",\"Color\":\"#00B050\",\"ValorMinimo\":55.0,\"ValorMaximo\":55.0,\"RequierePlanAccion\":false},{\"EscalaId\":7,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":8,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":9,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":10,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":11,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":2,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.0,\"RequierePlanAccion\":false},{\"EscalaId\":3,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":2.0,\"ValorMaximo\":2.0,\"RequierePlanAccion\":false},{\"EscalaId\":4,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":3.0,\"ValorMaximo\":3.0,\"RequierePlanAccion\":false},{\"EscalaId\":5,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":4.0,\"ValorMaximo\":4.0,\"RequierePlanAccion\":false},{\"EscalaId\":6,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":5.0,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"Criterios\":[{\"CriterioId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":7,\"ValorDesde\":1.0,\"ValorHasta\":1.0,\"Puntaje\":2.0,\"Descripcion\":\"Prueba\"},{\"CriterioId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":null,\"ValorDesde\":1.0,\"ValorHasta\":2.5,\"Puntaje\":2.25,\"Descripcion\":\"Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515\"}],\"MitigacionesPermitidas\":[0.0,10.0,25.0,40.0,55.0]}",
+          "detalles": [
+            {
+              "detalleId": 43,
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "1.50",
+              "puntaje": 2.25,
+              "puntajePonderado": 0.3375,
+              "justificacion": "Criterio aplicado desde catálogo Fase 8 - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 44,
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 3",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 45,
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 4",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 46,
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 5",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 47,
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 6",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 48,
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 7",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 49,
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 8",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 50,
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 9",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 51,
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 10",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 52,
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 11",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 53,
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 12",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 54,
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 13",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 55,
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 14",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 56,
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 15",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 57,
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 16",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 58,
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 17",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 59,
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 18",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 60,
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 19",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 61,
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 20",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 62,
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 21",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 63,
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 22",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            }
+          ],
+          "controles": [
+            {
+              "controlId": 7,
+              "nombre": "Control mitigante Fase 8 - PROVEEDORES",
+              "descripcion": "Control funcional de prueba para Proveedores.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 8,
+              "nombre": "Control mitigante Fase 8 - CLIENTES_PATRONOS",
+              "descripcion": "Control funcional de prueba para Clientes/Patronos.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 9,
+              "nombre": "Control mitigante Fase 8 - EMPLEADOS",
+              "descripcion": "Control funcional de prueba para Empleados.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            }
+          ],
+          "resultados": [],
+          "matrizId": 3,
+          "modeloId": 2,
+          "modeloVersion": "1.0",
+          "sujetoTipo": "INSTITUCIONAL",
+          "sujetoIdExt": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "documento": "FASE8-JM",
+          "nombreSujeto": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "estado": "EN_EVALUACION",
+          "fechaEvaluacion": "2026-07-08T09:45:16",
+          "requierePlanAccion": false
+        }
+      },
+      "step": "detalle_matriz_creada"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "?buscar=PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+      "status": 200,
+      "elapsedMs": 17,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": [
+          {
+            "matrizId": 3,
+            "modeloId": 2,
+            "modeloVersion": "1.0",
+            "sujetoTipo": "INSTITUCIONAL",
+            "sujetoIdExt": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "documento": "FASE8-JM",
+            "nombreSujeto": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "estado": "EN_EVALUACION",
+            "fechaEvaluacion": "2026-07-08T09:45:16",
+            "requierePlanAccion": false
+          }
+        ]
+      },
+      "step": "buscar_matriz_listado"
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/3/calcular",
+      "status": 200,
+      "elapsedMs": 989,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "versionCalculo": "F6-1.1",
+          "versionMetodologia": "1.0",
+          "puntajeInherente": 3.4188,
+          "nivelInherente": "Alto",
+          "colorInherente": "#FF6600",
+          "mitigacionPct": 0.0,
+          "puntajeResidual": 3.4188,
+          "nivelResidual": "Alto",
+          "colorResidual": "#FF6600",
+          "requierePlanAccion": true,
+          "explicacion": "Riesgo inherente 3.4188 (Alto); mitigación global 0%; riesgo residual 3.4188 (Alto).",
+          "factores": [
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "puntajeInherente": 3.4375,
+              "nivelInherente": "Alto",
+              "colorInherente": "#FF6600",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4375,
+              "nivelResidual": "Alto",
+              "colorResidual": "#FF6600",
+              "requierePlanAccion": true,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.25,
+                  "puntajePonderado": 0.3375,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            }
+          ],
+          "advertencias": []
+        },
+        "mensaje": "Matriz calculada correctamente."
+      },
+      "step": "calcular_matriz"
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/3/recalcular",
+      "status": 200,
+      "elapsedMs": 1797,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "versionCalculo": "F6-1.1",
+          "versionMetodologia": "1.0",
+          "puntajeInherente": 3.4188,
+          "nivelInherente": "Alto",
+          "colorInherente": "#FF6600",
+          "mitigacionPct": 0.0,
+          "puntajeResidual": 3.4188,
+          "nivelResidual": "Alto",
+          "colorResidual": "#FF6600",
+          "requierePlanAccion": true,
+          "explicacion": "Riesgo inherente 3.4188 (Alto); mitigación global 0%; riesgo residual 3.4188 (Alto).",
+          "factores": [
+            {
+              "codigo": "CLIENTES_PATRONOS",
+              "nombre": "Clientes/Patronos",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "EMPLEADOS",
+              "nombre": "Empleados",
+              "pesoInstitucional": 25.0,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "colorInherente": "#FFC000",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "colorResidual": "#FFC000",
+              "requierePlanAccion": false,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.3,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            },
+            {
+              "codigo": "PROVEEDORES",
+              "nombre": "Proveedores",
+              "pesoInstitucional": 50.0,
+              "puntajeInherente": 3.4375,
+              "nivelInherente": "Alto",
+              "colorInherente": "#FF6600",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4375,
+              "nivelResidual": "Alto",
+              "colorResidual": "#FF6600",
+              "requierePlanAccion": true,
+              "variables": [
+                {
+                  "codigo": "V01",
+                  "nombre": "Perfil del sujeto evaluado",
+                  "pesoInterno": 15.0,
+                  "puntaje": 2.25,
+                  "puntajePonderado": 0.3375,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V02",
+                  "nombre": "Actividad, rubro o función",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V03",
+                  "nombre": "Ubicación geográfica",
+                  "pesoInterno": 10.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.4,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                },
+                {
+                  "codigo": "V04",
+                  "nombre": "Antecedentes y coincidencias",
+                  "pesoInterno": 20.0,
+                  "puntaje": 5.0,
+                  "puntajePonderado": 1.0,
+                  "nivel": "Crítico",
+                  "color": "#FF0000"
+                },
+                {
+                  "codigo": "V05",
+                  "nombre": "Comportamiento transaccional u operativo",
+                  "pesoInterno": 15.0,
+                  "puntaje": 3.0,
+                  "puntajePonderado": 0.45,
+                  "nivel": "Medio",
+                  "color": "#FFC000"
+                },
+                {
+                  "codigo": "V06",
+                  "nombre": "Canal, producto o relación institucional",
+                  "pesoInterno": 10.0,
+                  "puntaje": 2.0,
+                  "puntajePonderado": 0.2,
+                  "nivel": "Bajo",
+                  "color": "#92D050"
+                },
+                {
+                  "codigo": "V07",
+                  "nombre": "Control interno y evidencia disponible",
+                  "pesoInterno": 15.0,
+                  "puntaje": 4.0,
+                  "puntajePonderado": 0.6,
+                  "nivel": "Alto",
+                  "color": "#FF6600"
+                }
+              ]
+            }
+          ],
+          "advertencias": []
+        },
+        "mensaje": "Matriz recalculada correctamente."
+      },
+      "step": "recalcular_matriz"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/3/estado",
+      "status": 200,
+      "elapsedMs": 272,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "mensaje": "Estado de la matriz actualizado correctamente."
+      },
+      "step": "cambiar_estado_en_revision"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/3/estado",
+      "status": 400,
+      "elapsedMs": 41,
+      "expected": [
+        400
+      ],
+      "response": {
+        "success": false,
+        "mensaje": "La matriz ya tiene ese estado registrado con el mismo motivo. No se generÃ³ un nuevo historial."
+      },
+      "step": "bloquear_motivo_duplicado"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/3/estado",
+      "status": 200,
+      "elapsedMs": 293,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "mensaje": "Estado de la matriz actualizado correctamente."
+      },
+      "step": "cambiar_estado_aprobada"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/3/estado",
+      "status": 200,
+      "elapsedMs": 420,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "mensaje": "Estado de la matriz actualizado correctamente."
+      },
+      "step": "cambiar_estado_cerrada"
+    },
+    {
+      "ok": true,
+      "method": "POST",
+      "path": "/3/recalcular",
+      "status": 400,
+      "elapsedMs": 29,
+      "expected": [
+        400
+      ],
+      "response": {
+        "success": false,
+        "mensaje": "La matriz estÃ¡ cerrada o inactiva y no puede recalcularse."
+      },
+      "step": "bloquear_recalculo_cerrada"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/3/historial",
+      "status": 200,
+      "elapsedMs": 11,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": [
+          {
+            "historialId": 30,
+            "matrizId": 3,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "3",
+            "accion": "CAMBIO_ESTADO",
+            "estadoAnterior": "APROBADA",
+            "estadoNuevo": "CERRADA",
+            "motivo": "Cierre funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:22"
+          },
+          {
+            "historialId": 29,
+            "matrizId": 3,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "3",
+            "accion": "CAMBIO_ESTADO",
+            "estadoAnterior": "EN_REVISION",
+            "estadoNuevo": "APROBADA",
+            "motivo": "Aprobación funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:21"
+          },
+          {
+            "historialId": 28,
+            "matrizId": 3,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "3",
+            "accion": "CAMBIO_ESTADO",
+            "estadoAnterior": "CALCULADA",
+            "estadoNuevo": "EN_REVISION",
+            "motivo": "Cambio a revisión funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:21"
+          },
+          {
+            "historialId": 27,
+            "matrizId": 3,
+            "tabla": "RL_MR_RESULTADOS",
+            "registroId": "21",
+            "accion": "RECALCULO",
+            "estadoAnterior": "CALCULADA",
+            "estadoNuevo": "CALCULADA",
+            "motivo": "Recálculo funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:20"
+          },
+          {
+            "historialId": 26,
+            "matrizId": 3,
+            "tabla": "RL_MR_RESULTADOS",
+            "registroId": "17",
+            "accion": "CALCULO",
+            "estadoAnterior": "EN_EVALUACION",
+            "estadoNuevo": "CALCULADA",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:19"
+          },
+          {
+            "historialId": 25,
+            "matrizId": 3,
+            "tabla": "RL_MR_MATRICES",
+            "registroId": "3",
+            "accion": "CREACION",
+            "estadoNuevo": "EN_EVALUACION",
+            "motivo": "CreaciÃ³n de matriz de riesgos.",
+            "usuarioId": 1,
+            "usuarioEmail": "javier.mejia@ihss.hn",
+            "ip": "127.0.0.1",
+            "fecha": "2026-07-08T09:45:17"
+          }
+        ]
+      },
+      "step": "historial"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/3",
+      "status": 200,
+      "elapsedMs": 54,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "origenDatos": "PRUEBA_FASE_8",
+          "motivoEstado": "Cierre funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "snapshotMetodo": "{\"Version\":\"1.0\",\"PesoTotalEsperado\":100.0,\"PuntajeMinimo\":1.0,\"PuntajeMaximo\":5.0,\"MitigacionMaximaPct\":55.0,\"DecimalesCalculo\":4,\"DecimalesVisualizacion\":2,\"FactoresInstitucionales\":[{\"Codigo\":\"PROVEEDORES\",\"Nombre\":\"Proveedores\",\"PesoInstitucional\":50.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"CLIENTES_PATRONOS\",\"Nombre\":\"Clientes/Patronos\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true},{\"Codigo\":\"EMPLEADOS\",\"Nombre\":\"Empleados\",\"PesoInstitucional\":25.0,\"ObligatorioGlobal\":true}],\"Variables\":[{\"VariableId\":2,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":5,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":6,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":7,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":8,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":9,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":10,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":11,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":12,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":13,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":14,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":15,\"FactorId\":3,\"FactorCodigo\":\"CLIENTES_PATRONOS\",\"FactorNombre\":\"Clientes/Patronos\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":16,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V01\",\"Nombre\":\"Perfil del sujeto evaluado\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":17,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V02\",\"Nombre\":\"Actividad, rubro o función\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":18,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V03\",\"Nombre\":\"Ubicación geográfica\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":19,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V04\",\"Nombre\":\"Antecedentes y coincidencias\",\"PesoInterno\":20.0,\"Obligatoria\":true},{\"VariableId\":20,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V05\",\"Nombre\":\"Comportamiento transaccional u operativo\",\"PesoInterno\":15.0,\"Obligatoria\":true},{\"VariableId\":21,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V06\",\"Nombre\":\"Canal, producto o relación institucional\",\"PesoInterno\":10.0,\"Obligatoria\":true},{\"VariableId\":22,\"FactorId\":4,\"FactorCodigo\":\"EMPLEADOS\",\"FactorNombre\":\"Empleados\",\"Codigo\":\"V07\",\"Nombre\":\"Control interno y evidencia disponible\",\"PesoInterno\":15.0,\"Obligatoria\":true}],\"EscalasRiesgo\":[{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":true},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"EscalasCatalogo\":[{\"EscalaId\":17,\"Tipo\":\"CONTROL\",\"Nivel\":\"Sin control\",\"Color\":\"#C00000\",\"ValorMinimo\":0.0,\"ValorMaximo\":0.0,\"RequierePlanAccion\":false},{\"EscalaId\":18,\"Tipo\":\"CONTROL\",\"Nivel\":\"Débil\",\"Color\":\"#FF0000\",\"ValorMinimo\":10.0,\"ValorMaximo\":10.0,\"RequierePlanAccion\":false},{\"EscalaId\":19,\"Tipo\":\"CONTROL\",\"Nivel\":\"Moderado\",\"Color\":\"#FFC000\",\"ValorMinimo\":25.0,\"ValorMaximo\":25.0,\"RequierePlanAccion\":false},{\"EscalaId\":20,\"Tipo\":\"CONTROL\",\"Nivel\":\"Fuerte\",\"Color\":\"#92D050\",\"ValorMinimo\":40.0,\"ValorMaximo\":40.0,\"RequierePlanAccion\":false},{\"EscalaId\":21,\"Tipo\":\"CONTROL\",\"Nivel\":\"Muy fuerte\",\"Color\":\"#00B050\",\"ValorMinimo\":55.0,\"ValorMaximo\":55.0,\"RequierePlanAccion\":false},{\"EscalaId\":7,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":8,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":9,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":10,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":11,\"Tipo\":\"INHERENTE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":12,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.8,\"RequierePlanAccion\":false},{\"EscalaId\":13,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":1.81,\"ValorMaximo\":2.6,\"RequierePlanAccion\":false},{\"EscalaId\":14,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":2.61,\"ValorMaximo\":3.4,\"RequierePlanAccion\":false},{\"EscalaId\":15,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":3.41,\"ValorMaximo\":4.2,\"RequierePlanAccion\":false},{\"EscalaId\":16,\"Tipo\":\"RESIDUAL\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":4.21,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false},{\"EscalaId\":2,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Muy bajo\",\"Color\":\"#00B050\",\"ValorMinimo\":1.0,\"ValorMaximo\":1.0,\"RequierePlanAccion\":false},{\"EscalaId\":3,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Bajo\",\"Color\":\"#92D050\",\"ValorMinimo\":2.0,\"ValorMaximo\":2.0,\"RequierePlanAccion\":false},{\"EscalaId\":4,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Medio\",\"Color\":\"#FFC000\",\"ValorMinimo\":3.0,\"ValorMaximo\":3.0,\"RequierePlanAccion\":false},{\"EscalaId\":5,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Alto\",\"Color\":\"#FF6600\",\"ValorMinimo\":4.0,\"ValorMaximo\":4.0,\"RequierePlanAccion\":false},{\"EscalaId\":6,\"Tipo\":\"VARIABLE\",\"Nivel\":\"Crítico\",\"Color\":\"#FF0000\",\"ValorMinimo\":5.0,\"ValorMaximo\":5.0,\"RequierePlanAccion\":false}],\"Criterios\":[{\"CriterioId\":3,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":7,\"ValorDesde\":1.0,\"ValorHasta\":1.0,\"Puntaje\":2.0,\"Descripcion\":\"Prueba\"},{\"CriterioId\":4,\"FactorId\":2,\"FactorCodigo\":\"PROVEEDORES\",\"FactorNombre\":\"Proveedores\",\"VariableId\":2,\"VariableCodigo\":\"V01\",\"VariableNombre\":\"Perfil del sujeto evaluado\",\"EscalaId\":null,\"ValorDesde\":1.0,\"ValorHasta\":2.5,\"Puntaje\":2.25,\"Descripcion\":\"Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515\"}],\"MitigacionesPermitidas\":[0.0,10.0,25.0,40.0,55.0]}",
+          "detalles": [
+            {
+              "detalleId": 43,
+              "variableId": 2,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "1.50",
+              "puntaje": 2.25,
+              "puntajePonderado": 0.3375,
+              "justificacion": "Criterio aplicado desde catálogo Fase 8 - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 44,
+              "variableId": 3,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 3",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 45,
+              "variableId": 4,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 4",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 46,
+              "variableId": 5,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 5",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 47,
+              "variableId": 6,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 6",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 48,
+              "variableId": 7,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 7",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 49,
+              "variableId": 8,
+              "factorId": 2,
+              "factorCodigo": "PROVEEDORES",
+              "factorNombre": "Proveedores",
+              "factorPesoInstitucional": 50.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 8",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 50,
+              "variableId": 9,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 9",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 51,
+              "variableId": 10,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 10",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 52,
+              "variableId": 11,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 11",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 53,
+              "variableId": 12,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 12",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 54,
+              "variableId": 13,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 13",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 55,
+              "variableId": 14,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 14",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 56,
+              "variableId": 15,
+              "factorId": 3,
+              "factorCodigo": "CLIENTES_PATRONOS",
+              "factorNombre": "Clientes/Patronos",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 15",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 57,
+              "variableId": 16,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V01",
+              "variableNombre": "Perfil del sujeto evaluado",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 16",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.3,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 58,
+              "variableId": 17,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V02",
+              "variableNombre": "Actividad, rubro o función",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 17",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 59,
+              "variableId": 18,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V03",
+              "variableNombre": "Ubicación geográfica",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 18",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.4,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 60,
+              "variableId": 19,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V04",
+              "variableNombre": "Antecedentes y coincidencias",
+              "variablePesoInterno": 20.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 19",
+              "puntaje": 5.0,
+              "puntajePonderado": 1.0,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 61,
+              "variableId": 20,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V05",
+              "variableNombre": "Comportamiento transaccional u operativo",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 20",
+              "puntaje": 3.0,
+              "puntajePonderado": 0.45,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 62,
+              "variableId": 21,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V06",
+              "variableNombre": "Canal, producto o relación institucional",
+              "variablePesoInterno": 10.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 21",
+              "puntaje": 2.0,
+              "puntajePonderado": 0.2,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            },
+            {
+              "detalleId": 63,
+              "variableId": 22,
+              "factorId": 4,
+              "factorCodigo": "EMPLEADOS",
+              "factorNombre": "Empleados",
+              "factorPesoInstitucional": 25.0,
+              "variableCodigo": "V07",
+              "variableNombre": "Control interno y evidencia disponible",
+              "variablePesoInterno": 15.0,
+              "valorCapturado": "Valor funcional Fase 8 variable 22",
+              "puntaje": 4.0,
+              "puntajePonderado": 0.6,
+              "justificacion": "Captura funcional controlada Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fuenteDato": "PRUEBA_FASE_8",
+              "obligatoria": true
+            }
+          ],
+          "controles": [
+            {
+              "controlId": 7,
+              "nombre": "Control mitigante Fase 8 - PROVEEDORES",
+              "descripcion": "Control funcional de prueba para Proveedores.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 8,
+              "nombre": "Control mitigante Fase 8 - CLIENTES_PATRONOS",
+              "descripcion": "Control funcional de prueba para Clientes/Patronos.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            },
+            {
+              "controlId": 9,
+              "nombre": "Control mitigante Fase 8 - EMPLEADOS",
+              "descripcion": "Control funcional de prueba para Empleados.",
+              "periodicidad": "Mensual",
+              "oportunidad": "Preventivo",
+              "automatizacion": "Semiautomatizado",
+              "procedimientos": "Implementado",
+              "calidad": "Bueno",
+              "efectividadPct": 25.0,
+              "responsable": "Javier Mejía",
+              "estado": "ACTIVO",
+              "evidenciaObligatoria": true,
+              "tieneEvidencia": false
+            }
+          ],
+          "resultados": [
+            {
+              "resultadoId": 24,
+              "factorId": 2,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": true,
+              "puntajeInherente": 3.4375,
+              "nivelInherente": "Alto",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4375,
+              "nivelResidual": "Alto",
+              "requierePlanAccion": true,
+              "motivoRecalculo": "Recálculo funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fechaCalculo": "2026-07-08T09:45:20"
+            },
+            {
+              "resultadoId": 23,
+              "factorId": 4,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": true,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "requierePlanAccion": false,
+              "motivoRecalculo": "Recálculo funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fechaCalculo": "2026-07-08T09:45:20"
+            },
+            {
+              "resultadoId": 22,
+              "factorId": 3,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": true,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "requierePlanAccion": false,
+              "motivoRecalculo": "Recálculo funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fechaCalculo": "2026-07-08T09:45:20"
+            },
+            {
+              "resultadoId": 21,
+              "tipoResultado": "INSTITUCIONAL",
+              "versionCalculo": "F6-1.1",
+              "esVigente": true,
+              "puntajeInherente": 3.4188,
+              "nivelInherente": "Alto",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4188,
+              "nivelResidual": "Alto",
+              "requierePlanAccion": true,
+              "motivoRecalculo": "Recálculo funcional Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+              "fechaCalculo": "2026-07-08T09:45:20"
+            },
+            {
+              "resultadoId": 20,
+              "factorId": 2,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": false,
+              "puntajeInherente": 3.4375,
+              "nivelInherente": "Alto",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4375,
+              "nivelResidual": "Alto",
+              "requierePlanAccion": true,
+              "fechaCalculo": "2026-07-08T09:45:19"
+            },
+            {
+              "resultadoId": 19,
+              "factorId": 4,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": false,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "requierePlanAccion": false,
+              "fechaCalculo": "2026-07-08T09:45:19"
+            },
+            {
+              "resultadoId": 18,
+              "factorId": 3,
+              "tipoResultado": "FACTOR",
+              "versionCalculo": "F6-1.1",
+              "esVigente": false,
+              "puntajeInherente": 3.4,
+              "nivelInherente": "Medio",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4,
+              "nivelResidual": "Medio",
+              "requierePlanAccion": false,
+              "fechaCalculo": "2026-07-08T09:45:19"
+            },
+            {
+              "resultadoId": 17,
+              "tipoResultado": "INSTITUCIONAL",
+              "versionCalculo": "F6-1.1",
+              "esVigente": false,
+              "puntajeInherente": 3.4188,
+              "nivelInherente": "Alto",
+              "mitigacionPct": 0.0,
+              "puntajeResidual": 3.4188,
+              "nivelResidual": "Alto",
+              "requierePlanAccion": true,
+              "fechaCalculo": "2026-07-08T09:45:19"
+            }
+          ],
+          "matrizId": 3,
+          "modeloId": 2,
+          "modeloVersion": "1.0",
+          "sujetoTipo": "INSTITUCIONAL",
+          "sujetoIdExt": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "documento": "FASE8-JM",
+          "nombreSujeto": "PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+          "estado": "CERRADA",
+          "fechaEvaluacion": "2026-07-08T09:45:16",
+          "puntajeInherente": 3.4188,
+          "nivelInherente": "Alto",
+          "puntajeResidual": 3.4188,
+          "nivelResidual": "Alto",
+          "requierePlanAccion": true
+        }
+      },
+      "step": "detalle_matriz_final"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/dashboard",
+      "status": 200,
+      "elapsedMs": 25,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": {
+          "totalMatrices": 3,
+          "totalCalculadas": 0,
+          "totalCerradas": 2,
+          "totalConPlanAccion": 1,
+          "porEstado": [
+            {
+              "nombre": "CERRADA",
+              "total": 2
+            },
+            {
+              "nombre": "INACTIVA",
+              "total": 1
+            }
+          ],
+          "porNivelResidual": [
+            {
+              "nombre": "Alto",
+              "total": 1
+            },
+            {
+              "nombre": "Medio",
+              "total": 1
+            },
+            {
+              "nombre": "SIN_CALCULO",
+              "total": 1
+            }
+          ]
+        }
+      },
+      "step": "dashboard_despues"
+    },
+    {
+      "ok": true,
+      "method": "PUT",
+      "path": "/criterios/4/inactivar",
+      "status": 200,
+      "elapsedMs": 119,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "mensaje": "Criterio inactivado correctamente."
+      },
+      "step": "inactivar_criterio_prueba"
+    },
+    {
+      "ok": true,
+      "method": "GET",
+      "path": "/criterios?incluirInactivos=true",
+      "status": 200,
+      "elapsedMs": 13,
+      "expected": [
+        200
+      ],
+      "response": {
+        "success": true,
+        "datos": [
+          {
+            "criterioId": 3,
+            "factorId": 2,
+            "factorCodigo": "PROVEEDORES",
+            "factorNombre": "Proveedores",
+            "variableId": 2,
+            "variableCodigo": "V01",
+            "variableNombre": "Perfil del sujeto evaluado",
+            "escalaId": 7,
+            "escalaTipo": "INHERENTE",
+            "escalaNivel": "Muy bajo",
+            "valorDesde": 1.0,
+            "valorHasta": 1.0,
+            "puntaje": 2.0,
+            "descripcion": "Prueba",
+            "activo": true
+          },
+          {
+            "criterioId": 2,
+            "factorId": 2,
+            "factorCodigo": "PROVEEDORES",
+            "factorNombre": "Proveedores",
+            "variableId": 2,
+            "variableCodigo": "V01",
+            "variableNombre": "Perfil del sujeto evaluado",
+            "escalaId": 7,
+            "escalaTipo": "INHERENTE",
+            "escalaNivel": "Muy bajo",
+            "valorDesde": 1.0,
+            "valorHasta": 2.0,
+            "puntaje": 3.0,
+            "descripcion": "ghhkgdk",
+            "activo": false,
+            "motivoInactivo": "ghgfhgf"
+          },
+          {
+            "criterioId": 4,
+            "factorId": 2,
+            "factorCodigo": "PROVEEDORES",
+            "factorNombre": "Proveedores",
+            "variableId": 2,
+            "variableCodigo": "V01",
+            "variableNombre": "Perfil del sujeto evaluado",
+            "valorDesde": 1.0,
+            "valorHasta": 2.5,
+            "puntaje": 2.25,
+            "descripcion": "Criterio funcional Fase 8 actualizado por Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515",
+            "activo": false,
+            "motivoInactivo": "Inactivación controlada de criterio de prueba Fase 8 - Javier Mejía - PRUEBA_FASE_8_JAVIER_MEJIA_20260708_094515"
+          },
+          {
+            "criterioId": 1,
+            "factorId": 4,
+            "factorCodigo": "EMPLEADOS",
+            "factorNombre": "Empleados",
+            "variableId": 22,
+            "variableCodigo": "V07",
+            "variableNombre": "Control interno y evidencia disponible",
+            "escalaId": 7,
+            "escalaTipo": "INHERENTE",
+            "escalaNivel": "Muy bajo",
+            "valorDesde": 1.0,
+            "valorHasta": 1.8,
+            "puntaje": 2.8,
+            "descripcion": "Prueba",
+            "activo": false,
+            "motivoInactivo": "prueba"
+          }
+        ]
+      },
+      "step": "listar_criterios_incluyendo_inactivos"
+    }
+  ]
+}
