@@ -16,7 +16,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Completada |
 | 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Completada |
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Completada |
-| 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Pendiente |
+| 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Completada |
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Pendiente |
 
 ## Orden de migración frontend
@@ -70,6 +70,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Se conservaron rutas, IDs de módulo, SQL, respuestas públicas y reglas de cálculo existentes.
 - Se añadieron pruebas estructurales de rutas y autorización para ambos módulos.
 
+### Resultado de la fase 6
+
+- Los scripts históricos `01` a `18` permanecen en la raíz para conservar los puntos de ejecución usados por instalaciones existentes.
+- `19_matrices_riesgos` quedó documentado como paquete modular activo con un único punto de entrada y orden interno explícito.
+- Se añadió una validación automática del orden exacto de los maestros, includes relativos, cobertura del manifiesto y alcance completo de los paquetes.
+- El flujo de actualización segura queda protegido contra `DROP TABLE`, `TRUNCATE` y `DELETE FROM`, incluyendo sus dependencias recursivas.
+- `17_validate_module_ids.sql` continúa como último paso y se verifica automáticamente que sea de solo lectura.
+- La validación contra Oracle confirmó en modo lectura que los módulos `2` a `10` existen, están activos y conservan las rutas esperadas.
+
 ## Controles obligatorios por fase
 
 ```powershell
@@ -83,6 +92,7 @@ Además:
 
 - verificar `git diff --check`;
 - ejecutar `tools/validate_repository_structure.ps1`;
+- ejecutar `tools/validate_database_scripts.ps1` cuando se modifique `database` o sus puntos de entrada;
 - comprobar que no cambien rutas HTTP ni IDs `2` a `10` salvo aprobación explícita;
 - validar Oracle en modo lectura cuando el cambio toque contratos de persistencia; y
 - mantener `main` como única rama local/remota, según la política solicitada para este repositorio.

@@ -56,6 +56,8 @@ $requiredPaths = @(
     'database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql',
     'database/00_MANIFIESTO_SCRIPTS_APROBADOS.md',
     'database/19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql',
+    'database/19_matrices_riesgos/README.md',
+    'tools/validate_database_scripts.ps1',
     "docs/$documentationDirectoryName/ARCHITECTURE.md",
     "docs/$documentationDirectoryName/ESTRUCTURA_OBJETIVO.md",
     "docs/$documentationDirectoryName/PLAN_REORGANIZACION.md"
@@ -155,6 +157,14 @@ foreach ($entrypoint in $sqlEntrypoints) {
                 $errors.Add("Include SQL inexistente: $entrypoint -> $($Matches[1])")
             }
         }
+    }
+}
+
+$databaseValidator = Join-Path $RepositoryRoot 'tools/validate_database_scripts.ps1'
+if (Test-Path -LiteralPath $databaseValidator) {
+    $databaseErrors = @(& $databaseValidator -RepositoryRoot $RepositoryRoot -PassThru)
+    foreach ($databaseError in $databaseErrors) {
+        $errors.Add("Base de datos: $databaseError")
     }
 }
 

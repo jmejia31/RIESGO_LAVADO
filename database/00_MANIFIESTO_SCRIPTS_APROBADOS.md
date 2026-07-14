@@ -91,3 +91,13 @@ Despues de ejecutar scripts, confirmar:
 ```
 
 Si falla, no continuar con nuevos modulos hasta alinear `RL_MODULOS` y `RL_USUARIO_MODULOS` con los IDs `2` a `10` esperados por backend y Angular.
+
+## Validacion automatizada del inventario
+
+Antes de confirmar cambios en `database`, ejecutar desde la raiz del repositorio:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
+```
+
+El validador exige el orden aprobado de ambos maestros y del paquete 19, comprueba todos los `@@include`, verifica que cada script activo sea alcanzable y rechaza operaciones destructivas dentro del flujo de actualizacion segura.

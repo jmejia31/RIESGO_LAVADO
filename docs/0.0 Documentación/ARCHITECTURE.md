@@ -36,7 +36,7 @@ La estructura heredada continúa organizada principalmente por tipo para los mó
 
 ## Datos e integraciones
 
-Oracle conserva usuarios, permisos, configuración, auditoría, listas, evidencias y matrices. Active Directory autentica dominios configurados; SMTP soporta recuperación/notificaciones. Los archivos cargados se almacenan fuera de Git bajo rutas configurables.
+Oracle conserva usuarios, permisos, configuración, auditoría, listas, evidencias y matrices. Los scripts históricos permanecen en la raíz de `database` por compatibilidad y los módulos nuevos se incorporan como paquetes numerados con un único `00_APLICAR_*.sql`. Los dos maestros resuelven dependencias mediante `@@`, terminan en una validación de solo lectura y su grafo se comprueba con `tools/validate_database_scripts.ps1`. Active Directory autentica dominios configurados; SMTP soporta recuperación/notificaciones. Los archivos cargados se almacenan fuera de Git bajo rutas configurables.
 
 ## Decisiones de seguridad
 

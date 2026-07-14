@@ -45,6 +45,7 @@ La plantilla debe copiarse o ajustarse con un sufijo real de fecha/hora antes de
 
 Antes de ejecutar:
 
+- Ejecutar `powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1` desde la raiz del repositorio.
 - Confirmar respaldo vigente de la base.
 - Confirmar usuario Oracle y esquema destino.
 - Confirmar permisos sobre tablas propias `RL_*` y lecturas necesarias hacia `DNP_IHSS`.

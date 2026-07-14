@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 6 de reorganización - 2026-07-14
+
+- Se preservaron en la raíz los scripts Oracle históricos para mantener compatibilidad con instalaciones existentes.
+- Se documentó `19_matrices_riesgos` como paquete modular con punto de entrada y orden interno únicos.
+- Se añadió un validador del grafo de includes, orden de maestros, cobertura del manifiesto y cierre de solo lectura.
+- Se blindó estáticamente el flujo de actualización segura contra operaciones destructivas alcanzables de forma recursiva.
+- Se validaron en Oracle, sin escrituras, los módulos activos y las rutas reservadas del `2` al `10`.
+
 ### Fase 5 de reorganización - 2026-07-14
 
 - Se migraron Listas y Matrices de Riesgos a módulos verticales bajo `Features`.

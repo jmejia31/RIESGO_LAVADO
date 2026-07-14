@@ -13,6 +13,18 @@ El sistema usa Oracle mediante `Oracle.ManagedDataAccess.Core`. Los scripts acti
 
 El inventario, orden interno, objetos afectados e idempotencia están en `database/00_MANIFIESTO_SCRIPTS_APROBADOS.md`. El paquete activo `database/19_matrices_riesgos` crea y parametriza el módulo de matrices desde ambos maestros. El script `17_validate_module_ids.sql`, ejecutado al final, verifica la alineación de los módulos 2 a 10.
 
+Los scripts históricos `01` a `18` permanecen en la raíz por compatibilidad. Los módulos posteriores se agregan como directorios numerados, con un único archivo `00_APLICAR_*.sql` invocado desde ambos maestros.
+
+## Validación estática
+
+Antes de entregar cualquier cambio de base de datos, ejecutar:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
+```
+
+El control comprueba el orden exacto de los maestros, la existencia y resolución relativa de cada `@@include`, la cobertura del manifiesto, la integridad de los paquetes modulares y el cierre con `17_validate_module_ids.sql`. También rechaza `DROP TABLE`, `TRUNCATE` y `DELETE FROM` si son alcanzables desde `00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql`.
+
 ## Procedimiento
 
 1. Identificar esquema y versión instalada.
