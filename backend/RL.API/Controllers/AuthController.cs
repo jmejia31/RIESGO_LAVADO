@@ -246,8 +246,13 @@ public class AuthController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning("Error validando usuario AD '{Usuario}': {Msg}", usuario, ex.Message);
-            return StatusCode(503, new { success = false, mensaje = ex.Message });
+            _logger.LogWarning(ex, "Error validando usuario AD '{Usuario}'", usuario);
+            return StatusCode(503, new
+            {
+                success = false,
+                mensaje = "No fue posible consultar Active Directory en este momento.",
+                traceId = HttpContext.TraceIdentifier
+            });
         }
     }
 

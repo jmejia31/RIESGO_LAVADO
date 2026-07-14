@@ -396,6 +396,11 @@ public sealed class MatricesRiesgosController : ControllerBase
 
     private IActionResult Error500(Exception ex)
     {
-        return StatusCode(500, new { success = false, mensaje = "Error interno en Matrices de Riesgos.", detalle = ex.Message });
+        return StatusCode(500, new
+        {
+            success = false,
+            mensaje = "Error interno en Matrices de Riesgos.",
+            traceId = HttpContext.TraceIdentifier
+        });
     }
 }

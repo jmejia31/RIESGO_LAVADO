@@ -1,7 +1,7 @@
 -- ============================================================
 -- Sistema de Gestión de Riesgos LA/FT - IHSS
 -- Fase 3. Modelo de datos y arquitectura Oracle
--- Script: 04_F3_fix_encoding_textos_oracle.sql
+-- Script: 04_fix_encoding_textos_oracle.sql
 -- Objetivo: Corregir codificación de tildes y caracteres especiales en comentarios y textos descriptivos RL_MR_*.
 -- Clasificación: Correctivo aprobado para cierre DBA controlado.
 -- Responsable documental: Javier Mejía

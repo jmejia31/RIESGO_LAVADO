@@ -4,7 +4,7 @@ Este directorio queda organizado para diferenciar instalacion inicial y actualiz
 
 ## Reglas de cierre
 
-- Solo se consideran aprobados los scripts numerados en la raiz de `database` y documentados en `00_MANIFIESTO_SCRIPTS_APROBADOS.md`.
+- Solo se consideran aprobados los scripts numerados y paquetes modulares llamados por los maestros y documentados en `00_MANIFIESTO_SCRIPTS_APROBADOS.md`.
 - Los scripts experimentales deben permanecer en `_experimental_no_ejecutar` y no deben ser llamados por scripts maestros.
 - Los utilitarios de apoyo deben permanecer en `_utilitarios` y ejecutarse manualmente solo con aprobacion DBA.
 - No ejecutar scripts de instalacion inicial sobre una base con datos reales sin respaldo y aprobacion DBA.
@@ -63,4 +63,4 @@ Despues de ejecutar:
 @17_validate_module_ids.sql
 ```
 
-Si la validacion falla, no avanzar al siguiente modulo hasta corregir `RL_MODULOS` y `RL_USUARIO_MODULOS` con apoyo DBA.
+Si la validacion falla, no avanzar al siguiente modulo hasta corregir `RL_MODULOS` y `RL_USUARIO_MODULOS` con apoyo DBA. La validacion final cubre los modulos 2 a 10, incluido Matrices de Riesgos.

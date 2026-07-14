@@ -19,4 +19,4 @@ Los contratos detallados se derivan de los DTO y atributos en `backend/RL.API/Co
 
 ## Errores y seguridad
 
-`ErrorHandlingMiddleware` normaliza excepciones no controladas. Los endpoints aplican roles, módulos y auditoría según su sensibilidad. No incluir tokens, contraseñas, cadenas Oracle ni contenido sensible de evidencias en registros o ejemplos.
+`ErrorHandlingMiddleware` normaliza excepciones no controladas, registra el detalle técnico y responde únicamente un mensaje genérico con `traceId`. Los endpoints aplican roles, módulos y auditoría según su sensibilidad. No incluir tokens, contraseñas, cadenas Oracle ni contenido sensible de evidencias en registros o ejemplos.

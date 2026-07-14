@@ -238,7 +238,7 @@ def build_doc() -> None:
             ("Restricción", "CK_RL_MR_MAT_ESTADO."),
             ("Estado incorporado", "EN_EVALUACION."),
             ("Tipo de acción", "Cambio estructural controlado sobre restricción CHECK; sin eliminación de datos."),
-            ("Script ejecutado", "05_F3_align_estado_en_evaluacion_matrices.sql."),
+            ("Script ejecutado", "database/19_matrices_riesgos/05_align_estado_en_evaluacion.sql."),
             ("Responsable", "Javier Mejía."),
             ("Resultado", "Restricción alineada correctamente; EN_EVALUACION presente; sin objetos inválidos reportados."),
         ],

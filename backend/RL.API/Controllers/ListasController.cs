@@ -444,7 +444,12 @@ namespace RL.API.Controllers
             catch (Exception ex)
             {
                 Serilog.Log.Error(ex, "Error en UploadCautela para el tipoListaCautelaId {Id}", request?.TipoListaCautelaId);
-                return StatusCode(500, new { success = false, mensaje = "Ocurrio un error al procesar la carga del archivo.", detalle = ex.Message });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    mensaje = "Ocurrió un error al procesar la carga del archivo.",
+                    traceId = HttpContext.TraceIdentifier
+                });
             }
         }
 
@@ -462,7 +467,12 @@ namespace RL.API.Controllers
 
         private IActionResult Error500(Exception ex)
         {
-            return StatusCode(500, new { success = false, mensaje = ex.Message, detalle = ex.ToString() });
+            return StatusCode(500, new
+            {
+                success = false,
+                mensaje = "Ocurrió un error interno al procesar la solicitud.",
+                traceId = HttpContext.TraceIdentifier
+            });
         }
     }
 }

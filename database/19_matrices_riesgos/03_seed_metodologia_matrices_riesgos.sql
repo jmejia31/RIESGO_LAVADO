@@ -1,9 +1,9 @@
 -- ============================================================
 -- Sistema de Gestión de Riesgos LA/FT - IHSS
 -- Fase 3. Modelo de datos y arquitectura Oracle
--- Script: 03_F3_seed_metodologia_matrices_riesgos.sql
+-- Script: 03_seed_metodologia_matrices_riesgos.sql
 -- Objetivo: Parametrización inicial de metodología base para Matrices de Riesgos.
--- Clasificación: Aprobable para revisión DBA. No ejecutar en producción sin aprobación.
+-- Clasificación: Script activo idempotente. Ejecutar con respaldo y aprobación DBA.
 -- Responsable documental: Javier Mejía
 -- Reglas: idempotente por modelo/factor/variable/escala, sin DROP, sin TRUNCATE, sin DELETE.
 -- ============================================================

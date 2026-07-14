@@ -1,9 +1,9 @@
 -- ============================================================
 -- Sistema de Gestión de Riesgos LA/FT - IHSS
 -- Fase 3. Modelo de datos y arquitectura Oracle
--- Script: 01_F3_create_rl_mr_estructura.sql
+-- Script: 01_create_rl_mr_estructura.sql
 -- Objetivo: Crear estructura inicial RL_MR_* para Matrices de Riesgos.
--- Clasificación: Aprobable para revisión DBA. No ejecutar en producción sin aprobación.
+-- Clasificación: Script activo idempotente. Ejecutar con respaldo y aprobación DBA.
 -- Responsable documental: Javier Mejía
 -- Reglas: idempotente cuando el objeto no existe, sin DROP, sin TRUNCATE, sin DELETE.
 -- ============================================================

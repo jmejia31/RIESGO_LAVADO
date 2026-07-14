@@ -1,7 +1,7 @@
 -- ============================================================
 -- Sistema de Gestión de Riesgos LA/FT - IHSS
 -- Fase 3. Modelo de datos y arquitectura Oracle
--- Script: 02_F3_register_modulo_matrices_riesgos.sql
+-- Script: 02_register_modulo_matrices_riesgos.sql
 -- Objetivo: Registrar el módulo Matrices de Riesgos en RL_MODULOS.
 -- Clasificación: Aprobado, ejecutado y validado en cierre DBA controlado.
 -- Responsable documental: Javier Mejía

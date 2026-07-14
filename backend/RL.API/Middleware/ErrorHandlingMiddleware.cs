@@ -23,11 +23,11 @@ public class ErrorHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Excepción no controlada en la petición HTTP.");
-            await HandleExceptionAsync(context, ex);
+            await HandleExceptionAsync(context);
         }
     }
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception exception)
+    private static Task HandleExceptionAsync(HttpContext context)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -36,7 +36,7 @@ public class ErrorHandlingMiddleware
         {
             success = false,
             mensaje = "Ocurrió un error interno en el servidor. Por favor intente más tarde.",
-            detalle = exception.Message
+            traceId = context.TraceIdentifier
         };
 
         var json = JsonConvert.SerializeObject(response);

@@ -9,7 +9,7 @@ Aplicación institucional para administrar usuarios, configuración, listas de c
 - `database`: scripts Oracle SQL/PLSQL de instalación, actualización, validación y respaldo.
 - `docs`: documentación funcional, técnica, evidencias y entregables históricos.
 
-El navegador consume `/api`; la API aplica autenticación/autorización y delega negocio a servicios y persistencia a repositorios Oracle. Consulte [ARCHITECTURE.md](ARCHITECTURE.md).
+El navegador consume `/api`; la API aplica autenticación/autorización y delega negocio a servicios y persistencia a repositorios Oracle. Consulte la [arquitectura](docs/0.0%20Documentación/ARCHITECTURE.md).
 
 ## Requisitos previos
 
@@ -49,7 +49,7 @@ La interfaz queda normalmente en `http://localhost:4200`; Swagger está disponib
 
 - Instalación nueva aprobada: `database/00_EJECUCION_PRIMERA_VEZ.sql`.
 - Actualización de un esquema existente: `database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql`.
-- Orden, dependencias y precauciones: [DATABASE.md](DATABASE.md) y `database/00_MANIFIESTO_SCRIPTS_APROBADOS.md`.
+- Orden, dependencias y precauciones: [guía de base de datos](docs/0.0%20Documentación/DATABASE.md) y `database/00_MANIFIESTO_SCRIPTS_APROBADOS.md`.
 
 Nunca ejecute el flujo de primera instalación sobre datos productivos. Todo cambio requiere respaldo, prueba previa y aprobación DBA.
 
@@ -63,18 +63,18 @@ npm run build
 npm test -- --watch=false
 ```
 
-Actualmente la solución no contiene un proyecto .NET de pruebas; `dotnet test` valida la solución pero no descubre casos. Angular contiene pruebas Vitest.
+La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.Tests`; Angular contiene pruebas Vitest. Toda modificación funcional debe mantener ambas suites aprobadas.
 
 ## Despliegue y seguridad
 
-Consulte [DEPLOYMENT.md](DEPLOYMENT.md) antes de publicar y [SECURITY.md](SECURITY.md) para el manejo de secretos, archivos cargados, JWT y reporte de vulnerabilidades. No versionar compilaciones, logs, datos de ejecución, evidencias cargadas ni configuración local.
+Consulte [despliegue](docs/0.0%20Documentación/DEPLOYMENT.md) antes de publicar y [seguridad](docs/0.0%20Documentación/SECURITY.md) para el manejo de secretos, archivos cargados, JWT y reporte de vulnerabilidades. No versionar compilaciones, logs, datos de ejecución, evidencias cargadas ni configuración local.
 
 ## Documentación
 
-- [ARCHITECTURE.md](ARCHITECTURE.md): componentes, límites y flujos.
-- [API.md](API.md): superficies REST y autenticación.
-- [DATABASE.md](DATABASE.md): ejecución Oracle y reversión.
-- [CONTRIBUTING.md](CONTRIBUTING.md): flujo de contribución.
-- [CHANGELOG.md](CHANGELOG.md): cambios relevantes.
-- [CLEANUP_REPORT.md](CLEANUP_REPORT.md): evidencia de la limpieza integral.
+- [Arquitectura](docs/0.0%20Documentación/ARCHITECTURE.md): componentes, límites y flujos.
+- [API](docs/0.0%20Documentación/API.md): superficies REST y autenticación.
+- [Base de datos](docs/0.0%20Documentación/DATABASE.md): ejecución Oracle y reversión.
+- [Contribución](docs/0.0%20Documentación/CONTRIBUTING.md): flujo de contribución.
+- [Cambios](docs/0.0%20Documentación/CHANGELOG.md): cambios relevantes.
+- [Informe de limpieza](docs/0.0%20Documentación/CLEANUP_REPORT.md): evidencia de la limpieza integral.
 - `docs/`: documentación modular, funcional e histórica.

@@ -23,7 +23,7 @@ Los módulos 2 a 10 corresponden a usuarios, configuración, monitoreo, bitácor
 - `Services`: reglas funcionales, validaciones y coordinación.
 - `Repositories`: consultas y comandos Oracle.
 - `DTOs` y `Models`: contratos de transporte y representación.
-- `Security` y `Middleware`: autorización por módulo, auditoría y manejo uniforme de errores.
+- `Security` y `Middleware`: autorización por módulo, marcadores de operaciones auditables y manejo uniforme de errores. La auditoría se persiste explícitamente desde servicios o repositorios dentro de la transacción funcional.
 - `Infrastructure/OracleDbContext.cs`: creación de conexiones Oracle.
 
 `Program.cs` compone dependencias, JWT, CORS, Swagger, Serilog y el pipeline HTTP. Los contratos públicos no deben cambiarse sin versionado y coordinación con el frontend.

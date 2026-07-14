@@ -11,7 +11,7 @@ El sistema usa Oracle mediante `Oracle.ManagedDataAccess.Core`. Los scripts acti
 | Esquema nuevo | `database/00_EJECUCION_PRIMERA_VEZ.sql` | Base vacía, respaldo y aprobación DBA |
 | Esquema existente | `database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql` | Respaldo validado, revisión de scripts y ventana aprobada |
 
-El inventario, orden interno, objetos afectados e idempotencia están en `database/00_MANIFIESTO_SCRIPTS_APROBADOS.md`. El script `17_validate_module_ids.sql` verifica la alineación de módulos base. Los scripts de matrices ubicados en documentación deben seguir su propio paquete aprobado y no se incorporan automáticamente a los maestros de `database`.
+El inventario, orden interno, objetos afectados e idempotencia están en `database/00_MANIFIESTO_SCRIPTS_APROBADOS.md`. El paquete activo `database/19_matrices_riesgos` crea y parametriza el módulo de matrices desde ambos maestros. El script `17_validate_module_ids.sql`, ejecutado al final, verifica la alineación de los módulos 2 a 10.
 
 ## Procedimiento
 

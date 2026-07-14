@@ -45,7 +45,13 @@ namespace RL.API.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(new { success = false, mensaje = "Error al obtener la bitácora: " + ex.Message });
+                Serilog.Log.Error(ex, "Error al obtener la bitácora");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    mensaje = "Ocurrió un error interno al consultar la bitácora.",
+                    traceId = HttpContext.TraceIdentifier
+                });
             }
         }
         [HttpPost("exportacion")]

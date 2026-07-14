@@ -40,6 +40,7 @@ BEGIN
   assert_module(7, '/cargar-listas', 'Cargar Listas');
   assert_module(8, '/coincidencias-patrono', 'Coincidencias Patrono');
   assert_module(9, '/coincidencias-empleado', 'Coincidencias Empleado');
+  assert_module(10, '/matrices-riesgos', 'Matrices de Riesgos');
 
   IF v_errors > 0 THEN
     RAISE_APPLICATION_ERROR(-20080, 'Validacion de modulos fallida. Revise RL_MODULOS y RL_USUARIO_MODULOS antes de continuar.');
@@ -51,5 +52,5 @@ END;
 
 SELECT MOD_ID, MOD_NOMBRE, MOD_RUTA, MOD_SECCION, MOD_ACTIVO
   FROM RL_MODULOS
- WHERE MOD_ID BETWEEN 2 AND 9
+ WHERE MOD_ID BETWEEN 2 AND 10
  ORDER BY MOD_ID;

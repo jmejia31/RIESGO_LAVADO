@@ -208,7 +208,7 @@ def build_document() -> None:
         doc,
         ["Archivo", "Descripción"],
         [
-            ("04_F3_fix_encoding_textos_oracle.sql", "Script correctivo aprobado ubicado en Scripts Aprobables."),
+            ("database/19_matrices_riesgos/04_fix_encoding_textos_oracle.sql", "Script correctivo activo incluido en el paquete maestro de matrices."),
             ("05_fix_encoding_textos_oracle_cp1252_*.log", "Log de ejecución exitosa del correctivo de codificación."),
             ("06_validacion_final_encoding_*.log", "Log de validación final sin caracteres dañados."),
         ],

@@ -2,8 +2,8 @@
 -- Proyecto: SGRLA IHSS
 -- Modulo: Matrices de Riesgos
 -- Fase: 3. Modelo de datos y arquitectura Oracle
--- Script: 05_F3_align_estado_en_evaluacion_matrices.sql
--- Tipo: Aprobable / incremental controlado
+-- Script: 05_align_estado_en_evaluacion.sql
+-- Tipo: Script activo / incremental controlado
 -- Responsable: Javier Mejia
 -- Objetivo:
 --   Alinear la restriccion fisica CK_RL_MR_MAT_ESTADO con el flujo funcional
