@@ -72,6 +72,8 @@ Consulte [despliegue](docs/0.0%20Documentación/DEPLOYMENT.md) antes de publicar
 ## Documentación
 
 - [Arquitectura](docs/0.0%20Documentación/ARCHITECTURE.md): componentes, límites y flujos.
+- [Estructura objetivo](docs/0.0%20Documentación/ESTRUCTURA_OBJETIVO.md): organización híbrida por funcionalidad y responsabilidad.
+- [Plan de reorganización](docs/0.0%20Documentación/PLAN_REORGANIZACION.md): fases, orden, controles y reversión.
 - [API](docs/0.0%20Documentación/API.md): superficies REST y autenticación.
 - [Base de datos](docs/0.0%20Documentación/DATABASE.md): ejecución Oracle y reversión.
 - [Contribución](docs/0.0%20Documentación/CONTRIBUTING.md): flujo de contribución.

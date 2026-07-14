@@ -1,5 +1,7 @@
 # Arquitectura
 
+> La estructura actual se migrará gradualmente hacia la arquitectura híbrida definida en [ESTRUCTURA_OBJETIVO.md](ESTRUCTURA_OBJETIVO.md). El orden y los controles de esa migración están en [PLAN_REORGANIZACION.md](PLAN_REORGANIZACION.md).
+
 ## Contexto
 
 El sistema implementa una arquitectura web de tres capas desplegables: SPA Angular, API REST ASP.NET Core y Oracle. La API es el único componente que accede a la base de datos y a integraciones institucionales.
@@ -15,6 +17,8 @@ El sistema implementa una arquitectura web de tres capas desplegables: SPA Angul
 
 Los módulos 2 a 10 corresponden a usuarios, configuración, monitoreo, bitácora, tipos y carga de listas, coincidencias y matrices. El token JWT se adjunta mediante interceptor; los guards validan sesión, rol y módulo.
 
+La estructura actual ya separa `core`, `features` y `shared`, pero todavía conserva servicios y modelos funcionales dentro de `core`. La migración objetivo hará que cada feature sea propietario de su acceso HTTP, modelos y componentes.
+
 ## Backend
 
 `backend/RL.API` mantiene estas responsabilidades:
@@ -27,6 +31,8 @@ Los módulos 2 a 10 corresponden a usuarios, configuración, monitoreo, bitácor
 - `Infrastructure/OracleDbContext.cs`: creación de conexiones Oracle.
 
 `Program.cs` compone dependencias, JWT, CORS, Swagger, Serilog y el pipeline HTTP. Los contratos públicos no deben cambiarse sin versionado y coordinación con el frontend.
+
+La estructura actual está organizada principalmente por tipo. La migración objetivo agrupará controladores, contratos, aplicación, dominio y persistencia dentro de módulos funcionales, manteniendo una única API desplegable.
 
 ## Datos e integraciones
 

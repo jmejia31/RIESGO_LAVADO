@@ -4,6 +4,13 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 1 de reorganización - 2026-07-14
+
+- Se aprobó la arquitectura híbrida por funcionalidad y responsabilidad para backend, frontend y Oracle.
+- Se documentaron rutas objetivo, dependencias permitidas, convenciones de archivos y criterios para código compartido.
+- Se definió el plan de migración en fases con controles y reversión por commit.
+- Se añadió `tools/validate_repository_structure.ps1` para detectar rutas obligatorias ausentes, artefactos rastreados e includes SQL rotos.
+
 ### Cierre técnico previo a reorganización - 2026-07-14
 
 - Se centralizó el paquete Oracle activo de matrices bajo `database/19_matrices_riesgos`.
