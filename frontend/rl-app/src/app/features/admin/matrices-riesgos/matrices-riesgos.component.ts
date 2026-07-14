@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from '../../../core/utils/excel-export.util';
 import { MatricesRiesgosService } from './data-access/matrices-riesgos.service';
+import { MatricesReporteTablaComponent } from './components/matrices-reporte-tabla/matrices-reporte-tabla.component';
 import {
   EscalaRiesgo,
   MatrizRiesgoCriterio,
@@ -48,7 +49,7 @@ interface ModalOperacion {
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MatricesReporteTablaComponent],
   templateUrl: './matrices-riesgos.component.html',
   styles: [`
     :host {

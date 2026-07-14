@@ -27,6 +27,10 @@ $requiredPaths = @(
     'frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts',
+    'frontend/rl-app/src/app/features/admin/bitacora/bitacora.component.html',
+    'frontend/rl-app/src/app/features/admin/configuracion/configuracion.component.html',
+    'frontend/rl-app/src/app/features/admin/monitoreo-listas/monitoreo-listas.component.html',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-reporte-tabla/matrices-reporte-tabla.component.ts',
     'database/00_EJECUCION_PRIMERA_VEZ.sql',
     'database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql',
     'database/00_MANIFIESTO_SCRIPTS_APROBADOS.md',
@@ -49,6 +53,27 @@ $forbiddenTrackedPattern = '(^|/)(bin|obj|dist|logs|Uploads|App_Data|tmp|tmp_bui
 foreach ($file in $trackedFiles) {
     if ($file -match $forbiddenTrackedPattern) {
         $errors.Add("Artefacto de ejecución rastreado por Git: $file")
+    }
+}
+
+$largeComponents = @(
+    'frontend/rl-app/src/app/features/admin/bitacora/bitacora.component.ts',
+    'frontend/rl-app/src/app/features/admin/configuracion/configuracion.component.ts',
+    'frontend/rl-app/src/app/features/admin/monitoreo-listas/monitoreo-listas.component.ts'
+)
+foreach ($component in $largeComponents) {
+    $componentPath = Join-Path $RepositoryRoot $component
+    if ((Test-Path -LiteralPath $componentPath) -and (Get-Content -Raw -LiteralPath $componentPath) -match 'template\s*:\s*`') {
+        $errors.Add("Componente grande con plantilla inline: $component")
+    }
+}
+
+$routesPath = Join-Path $RepositoryRoot 'frontend/rl-app/src/app/app.routes.ts'
+if (Test-Path -LiteralPath $routesPath) {
+    $routesContent = Get-Content -Raw -LiteralPath $routesPath
+    $lazyRouteCount = ([regex]::Matches($routesContent, 'loadComponent\s*:')).Count
+    if ($lazyRouteCount -lt 12) {
+        $errors.Add("Las pantallas enrutadas deben usar carga diferida. Encontradas: $lazyRouteCount; esperadas: 12 o mas.")
     }
 }
 

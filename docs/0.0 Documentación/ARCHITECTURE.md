@@ -17,7 +17,7 @@ El sistema implementa una arquitectura web de tres capas desplegables: SPA Angul
 
 Los módulos 2 a 10 corresponden a usuarios, configuración, monitoreo, bitácora, tipos y carga de listas, coincidencias y matrices. El token JWT se adjunta mediante interceptor; los guards validan sesión, rol y módulo.
 
-La estructura actual separa `core`, `features` y `shared`. Desde la fase 2, `core` conserva autenticación y configuración global, mientras usuarios, bitácora, listas y matrices de riesgos son propietarios de su acceso HTTP y sus modelos. La división de componentes y la carga diferida corresponden a la fase siguiente.
+La estructura actual separa `core`, `features` y `shared`. `core` conserva autenticación y configuración global, mientras usuarios, bitácora, listas y matrices de riesgos son propietarios de su acceso HTTP y sus modelos. Desde la fase 3, las pantallas se cargan bajo demanda, las plantillas grandes están separadas de la lógica TypeScript y matrices de riesgos comenzó su división en componentes presentacionales.
 
 ## Backend
 

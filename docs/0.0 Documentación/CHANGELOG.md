@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 3 de reorganización - 2026-07-14
+
+- Se extrajeron a HTML las plantillas inline de monitoreo de listas, configuración y bitácora.
+- Se creó un componente presentacional para la tabla de matrices filtradas.
+- Se migraron las pantallas a carga diferida con `loadComponent`, preservando URLs y guards.
+- El paquete inicial de producción se redujo de aproximadamente `1.25 MB` a `375 KB`.
+- Se añadieron pruebas y validaciones estructurales para carga diferida y plantillas externas.
+
 ### Fase 2 de reorganización - 2026-07-14
 
 - Se agruparon autenticación, configuración y catálogos globales por responsabilidad dentro de `core`.

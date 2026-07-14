@@ -13,7 +13,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 0 | Cierre técnico, seguridad, Oracle y pruebas base | Bajo | Completada en `4811290` |
 | 1 | Gobierno de estructura, responsabilidades, nombres y validación del repositorio | Bajo | Completada |
 | 2 | Frontend: mover modelos y servicios específicos a sus features | Medio | Completada |
-| 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Pendiente |
+| 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Completada |
 | 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Pendiente |
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Pendiente |
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Pendiente |
@@ -36,6 +36,14 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Listas y matrices de riesgos ahora poseen carpetas independientes de `data-access` y `models`.
 - Se eliminaron las ubicaciones genéricas rastreadas `core/services` y `core/models`.
 - No se modificaron rutas Angular, endpoints, IDs de módulo ni lógica de componentes.
+
+### Resultado de la fase 3
+
+- Las plantillas de monitoreo de listas, configuración y bitácora quedaron separadas de su lógica TypeScript.
+- La tabla de matrices filtradas se convirtió en un componente presentacional con entradas explícitas.
+- Las pantallas enrutadas usan `loadComponent`; se conservaron URLs, guards e IDs de módulo.
+- El paquete inicial de producción se redujo de aproximadamente `1.25 MB` a `375 KB`; las pantallas se descargan bajo demanda.
+- Se añadieron pruebas de rutas diferidas y del componente extraído, además de reglas estructurales para evitar regresiones.
 
 ## Orden de migración backend
 

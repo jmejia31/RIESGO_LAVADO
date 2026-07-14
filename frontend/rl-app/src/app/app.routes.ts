@@ -1,33 +1,29 @@
 import { inject } from '@angular/core';
 import { Routes, Router } from '@angular/router';
-import { LoginComponent } from './features/auth/login/login.component';
-import { UsuariosComponent } from './features/admin/usuarios/usuarios.component';
-import { ConfiguracionComponent } from './features/admin/configuracion/configuracion.component';
-import { MonitoreoListasComponent } from './features/admin/monitoreo-listas/monitoreo-listas.component';
-import { BitacoraComponent } from './features/admin/bitacora/bitacora.component';
-import { TipoListasComponent } from './features/admin/tipo-listas/tipo-listas.component';
-import { CargarListasComponent } from './features/admin/cargar-listas/cargar-listas.component';
-import { CoincidenciasPatronoComponent } from './features/admin/coincidencias-patrono/coincidencias-patrono.component';
-import { CoincidenciasEmpleadoComponent } from './features/admin/coincidencias-empleado/coincidencias-empleado.component';
-import { MatricesRiesgosComponent } from './features/admin/matrices-riesgos/matrices-riesgos.component';
-import { MainLayoutComponent } from './shared/layout/main-layout/main-layout.component';
-import { SinAccesoComponent } from './shared/pages/sin-acceso/sin-acceso.component';
 import { authGuard } from './core/guards/auth.guard';
 import { moduloGuard } from './core/guards/modulo.guard';
 import { AuthService } from './core/auth/auth.service';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
+  {
+    path: 'login',
+    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
   // Proceso de acceso denegado: requiere sesión activa, pero no permiso de módulo específico.
-  { path: 'sin-acceso', component: SinAccesoComponent, canActivate: [authGuard] },
+  {
+    path: 'sin-acceso',
+    loadComponent: () => import('./shared/pages/sin-acceso/sin-acceso.component').then(m => m.SinAccesoComponent),
+    canActivate: [authGuard]
+  },
   {
     path: '',
-    component: MainLayoutComponent,
+    loadComponent: () => import('./shared/layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     canActivate: [authGuard],
     children: [
       {
         path: 'home',
-        component: SinAccesoComponent, // Ruta técnica: redirige al primer módulo autorizado del usuario.
+        // Ruta técnica: redirige al primer módulo autorizado del usuario.
+        loadComponent: () => import('./shared/pages/sin-acceso/sin-acceso.component').then(m => m.SinAccesoComponent),
         canActivate: [() => {
           const auth = inject(AuthService);
           const router = inject(Router);
@@ -84,47 +80,47 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        component: UsuariosComponent,
+        loadComponent: () => import('./features/admin/usuarios/usuarios.component').then(m => m.UsuariosComponent),
         canActivate: [moduloGuard(2)]
       },
       {
         path: 'configuracion',
-        component: ConfiguracionComponent,
+        loadComponent: () => import('./features/admin/configuracion/configuracion.component').then(m => m.ConfiguracionComponent),
         canActivate: [moduloGuard(3)]
       },
       {
         path: 'monitoreo-listas',
-        component: MonitoreoListasComponent,
+        loadComponent: () => import('./features/admin/monitoreo-listas/monitoreo-listas.component').then(m => m.MonitoreoListasComponent),
         canActivate: [moduloGuard(4)]
       },
       {
         path: 'bitacora',
-        component: BitacoraComponent,
+        loadComponent: () => import('./features/admin/bitacora/bitacora.component').then(m => m.BitacoraComponent),
         canActivate: [moduloGuard(5)]
       },
       {
         path: 'tipo-listas',
-        component: TipoListasComponent,
+        loadComponent: () => import('./features/admin/tipo-listas/tipo-listas.component').then(m => m.TipoListasComponent),
         canActivate: [moduloGuard(6)]
       },
       {
         path: 'cargar-listas',
-        component: CargarListasComponent,
+        loadComponent: () => import('./features/admin/cargar-listas/cargar-listas.component').then(m => m.CargarListasComponent),
         canActivate: [moduloGuard(7)]
       },
       {
         path: 'coincidencias-patrono',
-        component: CoincidenciasPatronoComponent,
+        loadComponent: () => import('./features/admin/coincidencias-patrono/coincidencias-patrono.component').then(m => m.CoincidenciasPatronoComponent),
         canActivate: [moduloGuard(8)]
       },
       {
         path: 'coincidencias-empleado',
-        component: CoincidenciasEmpleadoComponent,
+        loadComponent: () => import('./features/admin/coincidencias-empleado/coincidencias-empleado.component').then(m => m.CoincidenciasEmpleadoComponent),
         canActivate: [moduloGuard(9)]
       },
       {
         path: 'matrices-riesgos',
-        component: MatricesRiesgosComponent,
+        loadComponent: () => import('./features/admin/matrices-riesgos/matrices-riesgos.component').then(m => m.MatricesRiesgosComponent),
         canActivate: [moduloGuard(10)]
       },
       { path: '', redirectTo: 'home', pathMatch: 'full' }

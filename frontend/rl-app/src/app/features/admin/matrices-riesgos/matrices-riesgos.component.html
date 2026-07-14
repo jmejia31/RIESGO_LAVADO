@@ -819,57 +819,9 @@
         </div>
       </section>
 
-      <section class="overflow-x-auto rounded-xl border border-gray-200">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-200">
-          <div>
-            <h4 class="font-bold text-gray-900">Matrices filtradas</h4>
-            <p class="text-xs text-gray-500">Detalle principal de las matrices que coinciden con los filtros activos.</p>
-          </div>
-          <span class="text-xs font-bold text-gray-500">{{ obtenerMatricesReporte().length }} registro(s)</span>
-        </div>
-        <table class="min-w-[980px] w-full divide-y divide-gray-200 text-sm table-fixed">
-          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th class="px-4 py-3 text-left w-[28%]">Sujeto</th>
-              <th class="px-4 py-3 text-left w-[12%]">Documento</th>
-              <th class="px-4 py-3 text-left w-[12%]">Tipo</th>
-              <th class="px-4 py-3 text-left w-[12%]">Estado</th>
-              <th class="px-4 py-3 text-left w-[14%]">Inherente</th>
-              <th class="px-4 py-3 text-left w-[14%]">Residual</th>
-              <th class="px-4 py-3 text-left w-[8%]">Plan</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr *ngFor="let matriz of obtenerMatricesReporte()">
-              <td class="px-4 py-3">
-                <p class="rl-clamp-2 font-semibold text-gray-900" [title]="matriz.nombreSujeto">{{ matriz.nombreSujeto }}</p>
-                <p class="text-xs text-gray-500">ID {{ matriz.matrizId }} · {{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</p>
-              </td>
-              <td class="px-4 py-3 break-words [overflow-wrap:anywhere]">{{ matriz.documento || '-' }}</td>
-              <td class="px-4 py-3">{{ matriz.sujetoTipo }}</td>
-              <td class="px-4 py-3">{{ matriz.estado }}</td>
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center gap-2">
-                  <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelInherente)"></span>
-                  {{ matriz.puntajeInherente ?? '-' }} {{ matriz.nivelInherente || '' }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="inline-flex items-center gap-2">
-                  <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelResidual)"></span>
-                  {{ matriz.puntajeResidual ?? '-' }} {{ matriz.nivelResidual || '' }}
-                </span>
-              </td>
-              <td class="px-4 py-3">{{ matriz.requierePlanAccion ? 'Sí' : 'No' }}</td>
-            </tr>
-            <tr *ngIf="obtenerMatricesReporte().length === 0">
-              <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">
-                No hay matrices con los filtros aplicados.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      <app-matrices-reporte-tabla
+        [matrices]="obtenerMatricesReporte()"
+        [escalas]="escalasRiesgoOrdenadas()" />
 
       <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
         <div class="overflow-x-auto rounded-xl border border-gray-200">
