@@ -1,4 +1,4 @@
-namespace RL.API.DTOs;
+namespace RL.API.Features.MatricesRiesgos.Domain;
 
 public sealed class MatrizCalculoRequestDto
 {

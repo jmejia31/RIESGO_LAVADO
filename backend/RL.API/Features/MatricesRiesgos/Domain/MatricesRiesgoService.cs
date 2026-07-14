@@ -1,16 +1,11 @@
-using RL.API.DTOs;
+using RL.API.Services;
 
-namespace RL.API.Services;
+namespace RL.API.Features.MatricesRiesgos.Domain;
 
 /// <summary>
 /// Motor puro de cálculo de Matrices de Riesgos.
 /// La metodología se recibe como datos para evitar pesos, escalas o mitigaciones fijas en código.
 /// </summary>
-public interface IMatricesRiesgoService
-{
-    ServiceResult<MatrizCalculoResultadoDto> Calcular(MatrizCalculoRequestDto request);
-}
-
 public sealed class MatricesRiesgoService : IMatricesRiesgoService
 {
     private const string VersionCalculo = "F6-1.1";

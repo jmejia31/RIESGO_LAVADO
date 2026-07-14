@@ -15,7 +15,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 2 | Frontend: mover modelos y servicios específicos a sus features | Medio | Completada |
 | 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Completada |
 | 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Completada |
-| 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Pendiente |
+| 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Completada |
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Pendiente |
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Pendiente |
 
@@ -60,6 +60,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - `Application` coordina el caso de uso mediante una abstracción; `Persistence` implementa Oracle y `Domain` contiene `Modulo`.
 - La composición de dependencias continúa centralizada en `Program.cs` sin crear proyectos ni servicios desplegables adicionales.
 - Se añadieron pruebas unitarias del servicio y los contratos públicos del controlador.
+
+### Resultado de la fase 5
+
+- `Listas` quedó agrupado bajo `Features/Listas` con controlador, contratos, aplicación y persistencia.
+- Carga de listas, coincidencias y evidencias conservan servicios separados dentro del límite funcional de Listas.
+- `MatricesRiesgos` quedó agrupado bajo `Features/MatricesRiesgos` con contratos HTTP, orquestación, dominio de cálculo y persistencia Oracle.
+- Las interfaces se separaron de sus implementaciones y el motor de cálculo puro permanece aislado de ASP.NET Core y Oracle.
+- Se conservaron rutas, IDs de módulo, SQL, respuestas públicas y reglas de cálculo existentes.
+- Se añadieron pruebas estructurales de rutas y autorización para ambos módulos.
 
 ## Controles obligatorios por fase
 

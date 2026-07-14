@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RL.API.DTOs;
+using RL.API.Features.Listas.Application;
+using RL.API.Features.Listas.Contracts;
 using RL.API.Security;
 using RL.API.Services;
 using System;
@@ -9,7 +10,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace RL.API.Controllers
+namespace RL.API.Features.Listas
 {
     [ApiController]
     [Route("api/[controller]")]

@@ -1,11 +1,10 @@
-using RL.API.DTOs;
-using RL.API.Services;
+using RL.API.Features.MatricesRiesgos.Domain;
 using System.Runtime.Versioning;
 using Xunit;
 
 [assembly: SupportedOSPlatform("windows")]
 
-namespace RL.API.Tests.Services;
+namespace RL.API.Tests.Features.MatricesRiesgos;
 
 public sealed class MatricesRiesgoServiceTests
 {

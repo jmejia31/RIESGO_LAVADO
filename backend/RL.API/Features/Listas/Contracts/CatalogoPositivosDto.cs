@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace RL.API.DTOs
+namespace RL.API.Features.Listas.Contracts
 {
     public class TipoDocumentoDto
     {

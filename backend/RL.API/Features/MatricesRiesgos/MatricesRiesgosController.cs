@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RL.API.DTOs;
+using RL.API.Features.MatricesRiesgos.Application;
+using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Security;
 using RL.API.Services;
 using System.Security.Claims;
 
-namespace RL.API.Controllers;
+namespace RL.API.Features.MatricesRiesgos;
 
 [ApiController]
 [Authorize]

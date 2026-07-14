@@ -32,7 +32,7 @@ La estructura actual separa `core`, `features` y `shared`. `core` conserva auten
 
 `Program.cs` compone dependencias, JWT, CORS, Swagger, Serilog y el pipeline HTTP. Los contratos públicos no deben cambiarse sin versionado y coordinación con el frontend.
 
-La estructura heredada continúa organizada principalmente por tipo, pero `Features/Catalogos` funciona desde la fase 4 como módulo vertical piloto. Su controlador depende de `Application`, el caso de uso depende de una abstracción y `Persistence` contiene la implementación Oracle. Los módulos restantes migrarán gradualmente con el mismo límite, manteniendo una única API desplegable.
+La estructura heredada continúa organizada principalmente por tipo para los módulos aún no migrados. `Features/Catalogos`, `Features/Listas` y `Features/MatricesRiesgos` funcionan como módulos verticales: sus controladores dependen de `Application`, los casos de uso dependen de abstracciones y `Persistence` contiene Oracle. En Matrices de Riesgos, `Domain` conserva el motor de cálculo puro. La API continúa siendo un único desplegable.
 
 ## Datos e integraciones
 

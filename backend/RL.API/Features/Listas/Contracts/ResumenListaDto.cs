@@ -1,6 +1,6 @@
 using System;
 
-namespace RL.API.DTOs
+namespace RL.API.Features.Listas.Contracts
 {
     public class ResumenListaDto
     {

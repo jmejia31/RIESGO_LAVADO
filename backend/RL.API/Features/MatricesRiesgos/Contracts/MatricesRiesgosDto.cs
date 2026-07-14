@@ -1,4 +1,4 @@
-namespace RL.API.DTOs;
+namespace RL.API.Features.MatricesRiesgos.Contracts;
 
 public sealed class MatrizRiesgoFiltroDto
 {

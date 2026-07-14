@@ -1,26 +1,12 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using RL.API.Repositories;
+using RL.API.Features.Listas.Contracts;
+using RL.API.Features.Listas.Persistence;
+using RL.API.Services;
 using System.IO.Compression;
 
-namespace RL.API.Services;
-
-public sealed record EvidenciaPoliticaDto(int MaximoMb, long MaximoBytes, string[] ExtensionesPermitidas, string TiposPermitidosTexto);
-public sealed record EvidenciaDescargaDto(byte[] Bytes, string Mime, string Nombre);
-
-public interface IEvidenciasService
-{
-    EvidenciaPoliticaDto ObtenerPolitica();
-    string? ValidarArchivos(List<IFormFile>? archivos);
-    Task GuardarArchivosAsync(long detalleId, List<IFormFile>? archivos, long usuarioId);
-    Task<ServiceResult> RegistrarSeguimientoAsync(string noDocumento, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId);
-    Task<ServiceResult> ActualizarSeguimientoAsync(long detalleId, string? motivoIngreso, List<IFormFile>? archivos, long usuarioId);
-    Task<ServiceResult<EvidenciaDescargaDto>> DescargarEvidenciaAsync(long evidenciaId, long usuarioId);
-    Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, string? motivoEliminacion, long usuarioId);
-    Task<ServiceResult> EliminarSeguimientoAsync(long detalleId, string? motivoEliminacion, long usuarioId);
-    Task RegistrarReporteImpresoAsync(string noDocumento, string dataJson, long usuarioId);
-}
+namespace RL.API.Features.Listas.Application;
 
 public sealed class EvidenciasService : IEvidenciasService
 {

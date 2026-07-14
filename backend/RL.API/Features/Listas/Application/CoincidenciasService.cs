@@ -1,18 +1,9 @@
-using RL.API.DTOs;
-using RL.API.Repositories;
+using RL.API.Features.Listas.Contracts;
+using RL.API.Features.Listas.Persistence;
+using RL.API.Services;
 using System.Globalization;
 
-namespace RL.API.Services;
-
-public interface ICoincidenciasService
-{
-    Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenPatronoAsync();
-    Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoAsync(string? fecha);
-    Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenEmpleadoAsync();
-    Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetalleEmpleadoAsync(string? fecha);
-    Task<ServiceResult> CalificarAsync(long id, int tipoCalificacionId, long usuarioId, bool esEmpleado);
-    Task<ServiceResult<string>> ObtenerResumenMatchListaAsync(long dataId, string? nombre);
-}
+namespace RL.API.Features.Listas.Application;
 
 public sealed class CoincidenciasService : ICoincidenciasService
 {

@@ -27,6 +27,20 @@ $requiredPaths = @(
     'backend/RL.API/Features/Catalogos/Persistence/ICatalogoRepository.cs',
     'backend/RL.API/Features/Catalogos/Persistence/CatalogoRepository.cs',
     'backend/RL.API.Tests/Features/Catalogos/CatalogosModuleTests.cs',
+    'backend/RL.API/Features/Listas/ListasController.cs',
+    'backend/RL.API/Features/Listas/Application/IListasService.cs',
+    'backend/RL.API/Features/Listas/Application/ListasService.cs',
+    'backend/RL.API/Features/Listas/Persistence/IListasRepository.cs',
+    'backend/RL.API/Features/Listas/Persistence/ListasRepository.cs',
+    'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Domain/IMatricesRiesgoService.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Domain/MatricesRiesgoService.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs',
+    'backend/RL.API.Tests/Features/ModuleBoundariesTests.cs',
+    'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgoServiceTests.cs',
     'frontend/rl-app/package.json',
     'frontend/rl-app/src/app/core/auth/auth.service.ts',
     'frontend/rl-app/src/app/core/configuration/configuracion.service.ts',
@@ -91,15 +105,27 @@ foreach ($file in $trackedFiles) {
     }
 }
 
-$legacyCatalogosPaths = @(
+$legacyBackendPaths = @(
     'backend/RL.API/Controllers/CatalogosController.cs',
+    'backend/RL.API/Controllers/ListasController.cs',
+    'backend/RL.API/Controllers/MatricesRiesgosController.cs',
     'backend/RL.API/Services/CatalogoService.cs',
+    'backend/RL.API/Services/ListasService.cs',
+    'backend/RL.API/Services/CoincidenciasService.cs',
+    'backend/RL.API/Services/EvidenciasService.cs',
+    'backend/RL.API/Services/MatricesRiesgosAppService.cs',
+    'backend/RL.API/Services/MatricesRiesgoService.cs',
     'backend/RL.API/Repositories/CatalogoRepository.cs',
-    'backend/RL.API/Models/Modulo.cs'
+    'backend/RL.API/Repositories/ListasRepository.cs',
+    'backend/RL.API/Repositories/MatricesRiesgosRepository.cs',
+    'backend/RL.API/Models/Modulo.cs',
+    'backend/RL.API/Models/ListasModels.cs',
+    'backend/RL.API/DTOs/MatricesRiesgosDto.cs',
+    'backend/RL.API/DTOs/MatricesRiesgoCalculoDto.cs'
 )
-foreach ($legacyPath in $legacyCatalogosPaths) {
+foreach ($legacyPath in $legacyBackendPaths) {
     if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyPath)) {
-        $errors.Add("Archivo de Catalogos en ubicacion heredada: $legacyPath")
+        $errors.Add("Archivo backend en ubicacion heredada: $legacyPath")
     }
 }
 

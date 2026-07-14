@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 5 de reorganización - 2026-07-14
+
+- Se migraron Listas y Matrices de Riesgos a módulos verticales bajo `Features`.
+- Se separaron contratos, interfaces, aplicación, dominio de cálculo y persistencia Oracle.
+- Se conservaron endpoints, autorizaciones, SQL y reglas funcionales existentes.
+- Se actualizaron las pruebas del motor de cálculo y se añadieron pruebas de límites HTTP.
+- Se amplió el validador para impedir el regreso de ambos módulos a carpetas heredadas por tipo.
+
 ### Fase 4 de reorganización - 2026-07-14
 
 - Se migró Catálogos a un módulo vertical con `Application`, `Domain` y `Persistence`.
