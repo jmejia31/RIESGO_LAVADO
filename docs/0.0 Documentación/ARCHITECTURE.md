@@ -32,7 +32,7 @@ La estructura actual separa `core`, `features` y `shared`. `core` conserva auten
 
 `Program.cs` compone dependencias, JWT, CORS, Swagger, Serilog y el pipeline HTTP. Los contratos públicos no deben cambiarse sin versionado y coordinación con el frontend.
 
-La estructura actual está organizada principalmente por tipo. La migración objetivo agrupará controladores, contratos, aplicación, dominio y persistencia dentro de módulos funcionales, manteniendo una única API desplegable.
+La estructura heredada continúa organizada principalmente por tipo, pero `Features/Catalogos` funciona desde la fase 4 como módulo vertical piloto. Su controlador depende de `Application`, el caso de uso depende de una abstracción y `Persistence` contiene la implementación Oracle. Los módulos restantes migrarán gradualmente con el mismo límite, manteniendo una única API desplegable.
 
 ## Datos e integraciones
 

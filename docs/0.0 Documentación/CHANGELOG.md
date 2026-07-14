@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 4 de reorganización - 2026-07-14
+
+- Se migró Catálogos a un módulo vertical con `Application`, `Domain` y `Persistence`.
+- Se conservaron las rutas, autorizaciones y respuestas públicas del controlador.
+- Se añadieron pruebas del servicio y de los contratos públicos de roles y módulos.
+- Se amplió el validador para impedir que Catálogos regrese a las carpetas heredadas por tipo.
+- Se incorporó la actualización proporcionada por el usuario al documento funcional de gestión de riesgos.
+
 ### Fase 3 de reorganización - 2026-07-14
 
 - Se extrajeron a HTML las plantillas inline de monitoreo de listas, configuración y bitácora.

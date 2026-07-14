@@ -1,14 +1,7 @@
-using RL.API.Models;
-using RL.API.Repositories;
+using RL.API.Features.Catalogos.Domain;
+using RL.API.Features.Catalogos.Persistence;
 
-namespace RL.API.Services;
-
-public interface ICatalogoService
-{
-    Task<List<KeyValuePair<int, string>>> ObtenerRolesAsync();
-    Task<List<KeyValuePair<int, string>>> ObtenerDominiosAsync();
-    Task<List<Modulo>> ObtenerModulosAsync();
-}
+namespace RL.API.Features.Catalogos.Application;
 
 public class CatalogoService : ICatalogoService
 {

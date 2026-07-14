@@ -5,6 +5,8 @@ using Serilog;
 using System.Text;
 using RL.API.Infrastructure;
 using RL.API.Middleware;
+using RL.API.Features.Catalogos.Application;
+using RL.API.Features.Catalogos.Persistence;
 using RL.API.Repositories;
 using RL.API.Services;
 using System.Runtime.Versioning;

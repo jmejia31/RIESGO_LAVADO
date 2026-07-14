@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RL.API.Features.Catalogos.Application;
 using RL.API.Security;
-using RL.API.Services;
 
-namespace RL.API.Controllers;
+namespace RL.API.Features.Catalogos;
 
 [ApiController]
 [Route("api/[controller]")]

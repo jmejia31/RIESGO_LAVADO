@@ -14,7 +14,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 1 | Gobierno de estructura, responsabilidades, nombres y validación del repositorio | Bajo | Completada |
 | 2 | Frontend: mover modelos y servicios específicos a sus features | Medio | Completada |
 | 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Completada |
-| 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Pendiente |
+| 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Completada |
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Pendiente |
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Pendiente |
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Pendiente |
@@ -52,6 +52,14 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 3. `Auth` y `Usuarios`, conservando JWT y Active Directory como integraciones explícitas.
 4. `Listas`, separando carga, monitoreo, coincidencias y evidencias.
 5. `MatricesRiesgos`, separando cálculo puro, casos de uso, reportes y persistencia.
+
+### Resultado de la fase 4
+
+- `Catalogos` quedó migrado como módulo vertical piloto bajo `Features/Catalogos`.
+- El controlador conserva `api/Catalogos`, autorización y contratos de respuesta existentes.
+- `Application` coordina el caso de uso mediante una abstracción; `Persistence` implementa Oracle y `Domain` contiene `Modulo`.
+- La composición de dependencias continúa centralizada en `Program.cs` sin crear proyectos ni servicios desplegables adicionales.
+- Se añadieron pruebas unitarias del servicio y los contratos públicos del controlador.
 
 ## Controles obligatorios por fase
 

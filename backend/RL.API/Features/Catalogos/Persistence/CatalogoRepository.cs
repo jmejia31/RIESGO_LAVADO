@@ -1,15 +1,8 @@
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Catalogos.Domain;
 using RL.API.Infrastructure;
-using RL.API.Models;
 
-namespace RL.API.Repositories;
-
-public interface ICatalogoRepository
-{
-    Task<List<KeyValuePair<int, string>>> ObtenerRolesAsync();
-    Task<List<KeyValuePair<int, string>>> ObtenerDominiosAsync();
-    Task<List<Modulo>> ObtenerModulosAsync();
-}
+namespace RL.API.Features.Catalogos.Persistence;
 
 public class CatalogoRepository : ICatalogoRepository
 {

@@ -1,4 +1,4 @@
-namespace RL.API.Models;
+namespace RL.API.Features.Catalogos.Domain;
 
 public class Modulo
 {

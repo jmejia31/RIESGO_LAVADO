@@ -20,6 +20,13 @@ $requiredPaths = @(
     'RIESGO_LAVADO.sln',
     'backend/RL.API/RL.API.csproj',
     'backend/RL.API.Tests/RL.API.Tests.csproj',
+    'backend/RL.API/Features/Catalogos/CatalogosController.cs',
+    'backend/RL.API/Features/Catalogos/Application/ICatalogoService.cs',
+    'backend/RL.API/Features/Catalogos/Application/CatalogoService.cs',
+    'backend/RL.API/Features/Catalogos/Domain/Modulo.cs',
+    'backend/RL.API/Features/Catalogos/Persistence/ICatalogoRepository.cs',
+    'backend/RL.API/Features/Catalogos/Persistence/CatalogoRepository.cs',
+    'backend/RL.API.Tests/Features/Catalogos/CatalogosModuleTests.cs',
     'frontend/rl-app/package.json',
     'frontend/rl-app/src/app/core/auth/auth.service.ts',
     'frontend/rl-app/src/app/core/configuration/configuracion.service.ts',
@@ -81,6 +88,18 @@ $legacyFrontendPattern = '^frontend/rl-app/src/app/core/(models|services)/'
 foreach ($file in $trackedFiles) {
     if ($file -match $legacyFrontendPattern) {
         $errors.Add("Archivo frontend en carpeta generica heredada: $file")
+    }
+}
+
+$legacyCatalogosPaths = @(
+    'backend/RL.API/Controllers/CatalogosController.cs',
+    'backend/RL.API/Services/CatalogoService.cs',
+    'backend/RL.API/Repositories/CatalogoRepository.cs',
+    'backend/RL.API/Models/Modulo.cs'
+)
+foreach ($legacyPath in $legacyCatalogosPaths) {
+    if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyPath)) {
+        $errors.Add("Archivo de Catalogos en ubicacion heredada: $legacyPath")
     }
 }
 
