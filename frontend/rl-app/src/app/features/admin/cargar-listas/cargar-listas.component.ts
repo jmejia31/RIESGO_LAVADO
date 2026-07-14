@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ListasService, TipoListaCautela, ResumenLista } from '../../../core/services/listas.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { ListasService } from '../listas/data-access/listas.service';
+import { ResumenLista, TipoListaCautela } from '../listas/models/listas.models';
+import { AuthService } from '../../../core/auth/auth.service';
 import * as XLSX from '../../../core/utils/excel-export.util';
 
 @Component({

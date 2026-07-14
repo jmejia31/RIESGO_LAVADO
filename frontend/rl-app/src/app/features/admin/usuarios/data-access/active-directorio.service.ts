@@ -1,15 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-
-export interface ResultadoValidacionAd {
-  existe:        boolean;
-  bloqueado:     boolean;
-  activo:        boolean;
-  nombreCompleto?: string;
-  mensaje:       string;
-}
+import { environment } from '../../../../../environments/environment';
+import { ResultadoValidacionAd } from '../models/active-directorio.models';
 
 @Injectable({ providedIn: 'root' })
 export class ActiveDirectorioService {

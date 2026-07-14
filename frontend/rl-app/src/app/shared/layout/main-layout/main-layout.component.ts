@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-import { ConfiguracionService } from '../../../core/services/configuracion.service';
-import { CatalogoService } from '../../../core/services/catalogo.service';
-import { Modulo } from '../../../core/models/catalogo.models';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
+import { CatalogoService } from '../../../core/configuration/catalogo.service';
+import { Modulo } from '../../../core/configuration/catalogo.models';
 
 @Component({
   selector: 'app-main-layout',

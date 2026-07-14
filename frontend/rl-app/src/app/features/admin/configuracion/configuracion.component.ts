@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ConfiguracionService, ConfigSistema, LoginSlide } from '../../../core/services/configuracion.service';
+import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
+import { ConfigSistema, LoginSlide } from '../../../core/configuration/configuracion.models';
 
 @Component({
   selector: 'app-configuracion',

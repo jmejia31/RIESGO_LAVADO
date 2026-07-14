@@ -1,7 +1,7 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject }   from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../auth/auth.service';
 import { Router }      from '@angular/router';
 
 const obtenerMensaje403 = (error: HttpErrorResponse): string => {

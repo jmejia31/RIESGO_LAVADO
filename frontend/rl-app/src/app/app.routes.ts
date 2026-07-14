@@ -14,7 +14,7 @@ import { MainLayoutComponent } from './shared/layout/main-layout/main-layout.com
 import { SinAccesoComponent } from './shared/pages/sin-acceso/sin-acceso.component';
 import { authGuard } from './core/guards/auth.guard';
 import { moduloGuard } from './core/guards/modulo.guard';
-import { AuthService } from './core/services/auth.service';
+import { AuthService } from './core/auth/auth.service';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },

@@ -21,6 +21,12 @@ $requiredPaths = @(
     'backend/RL.API/RL.API.csproj',
     'backend/RL.API.Tests/RL.API.Tests.csproj',
     'frontend/rl-app/package.json',
+    'frontend/rl-app/src/app/core/auth/auth.service.ts',
+    'frontend/rl-app/src/app/core/configuration/configuracion.service.ts',
+    'frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.ts',
+    'frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts',
     'database/00_EJECUCION_PRIMERA_VEZ.sql',
     'database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql',
     'database/00_MANIFIESTO_SCRIPTS_APROBADOS.md',
@@ -43,6 +49,13 @@ $forbiddenTrackedPattern = '(^|/)(bin|obj|dist|logs|Uploads|App_Data|tmp|tmp_bui
 foreach ($file in $trackedFiles) {
     if ($file -match $forbiddenTrackedPattern) {
         $errors.Add("Artefacto de ejecución rastreado por Git: $file")
+    }
+}
+
+$legacyFrontendPattern = '^frontend/rl-app/src/app/core/(models|services)/'
+foreach ($file in $trackedFiles) {
+    if ($file -match $legacyFrontendPattern) {
+        $errors.Add("Archivo frontend en carpeta generica heredada: $file")
     }
 }
 

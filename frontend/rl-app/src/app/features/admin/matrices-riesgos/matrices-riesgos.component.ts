@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from '../../../core/utils/excel-export.util';
+import { MatricesRiesgosService } from './data-access/matrices-riesgos.service';
 import {
   EscalaRiesgo,
   MatrizRiesgoCriterio,
@@ -15,11 +16,10 @@ import {
   MatrizRiesgoReporteFiltro,
   MatrizRiesgoResumen,
   MatricesRiesgoReporte,
-  MatricesRiesgosService,
   MetodologiaMatrices,
   VariableMetodologia
-} from '../../../core/services/matrices-riesgos.service';
-import { ConfiguracionService } from '../../../core/services/configuracion.service';
+} from './models/matrices-riesgos.models';
+import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'reportes';
 type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio';

@@ -1,6 +1,6 @@
 import { inject }        from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService }   from '../services/auth.service';
+import { AuthService }   from '../auth/auth.service';
 
 export const moduloGuard = (moduloId: number): CanActivateFn => () => {
   // Proceso de autorización frontend: valida el módulo asignado en el JWT.

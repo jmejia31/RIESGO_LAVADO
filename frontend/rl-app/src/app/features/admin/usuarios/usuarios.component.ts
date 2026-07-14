@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subscription } from 'rxjs';
-import { UsuarioInfo as UsuarioInfoDto } from '../../../core/models/auth.models';
-import { CatalogoService } from '../../../core/services/catalogo.service';
+import { UsuarioInfo as UsuarioInfoDto } from '../../../core/auth/auth.models';
+import { CatalogoService } from '../../../core/configuration/catalogo.service';
 import { environment } from '../../../../environments/environment';
-import { Rol, Dominio, Modulo } from '../../../core/models/catalogo.models';
-import { ActiveDirectorioService, ResultadoValidacionAd } from '../../../core/services/active-directorio.service';
+import { Rol, Dominio, Modulo } from '../../../core/configuration/catalogo.models';
+import { ActiveDirectorioService } from './data-access/active-directorio.service';
+import { ResultadoValidacionAd } from './models/active-directorio.models';
 
 type EstadoAd = 'idle' | 'verificando' | 'valido' | 'no-existe' | 'bloqueado' | 'inactivo' | 'error';
 

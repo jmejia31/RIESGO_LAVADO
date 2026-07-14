@@ -1,26 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../../environments/environment';
 import { Observable } from 'rxjs';
-
-export interface AuditoriaDto {
-  audId: number;
-  tabla: string;
-  registroId: string;
-  accion: string;
-  datosAnt?: string;
-  datosNvo?: string;
-  usrId?: number;
-  usrEmail?: string;
-  ip?: string;
-  fecha: string;
-  modulo?: string;
-}
-
-export interface AuditoriaPaginado {
-  datos: AuditoriaDto[];
-  totalRegistros: number;
-}
+import { AuditoriaDto, AuditoriaPaginado } from '../models/auditoria.models';
 
 @Injectable({
   providedIn: 'root'

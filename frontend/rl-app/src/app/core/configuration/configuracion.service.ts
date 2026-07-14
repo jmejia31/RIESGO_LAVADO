@@ -2,28 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { map, tap } from 'rxjs';
-
-export interface LoginSlide {
-  id: number;
-  imagenUrl: string;
-  titulo?: string;
-  descripcion?: string;
-  orden: number;
-  activo: boolean;
-  imagenIcono?: string;
-}
-
-export interface ConfigSistema {
-  nombreInstitucion: string;
-  nombreSistema: string;
-  logoUrl?: string;
-  iconoUrl?: string;
-  colorPrimario?: string;
-  colorSecundario?: string;
-  timeoutSesion: number;
-  acuerdoLegal?: string;
-  maxIntentos?: number;
-}
+import { ConfigSistema, LoginSlide } from './configuracion.models';
 
 @Injectable({
   providedIn: 'root'

@@ -2,10 +2,10 @@ import { Injectable, signal, computed, effect } from '@angular/core';
 import { HttpClient }  from '@angular/common/http';
 import { Router }      from '@angular/router';
 import { tap, catchError, EMPTY, throwError } from 'rxjs';
-import { LoginRequest, LoginResponse, UsuarioInfo } from '../models/auth.models';
+import { LoginRequest, LoginResponse, UsuarioInfo } from './auth.models';
 import { environment } from '../../../environments/environment';
 import { jwtDecode }   from 'jwt-decode';
-import { ConfiguracionService } from './configuracion.service';
+import { ConfiguracionService } from '../configuration/configuracion.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

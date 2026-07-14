@@ -12,7 +12,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 |---:|---|---|---|
 | 0 | Cierre técnico, seguridad, Oracle y pruebas base | Bajo | Completada en `4811290` |
 | 1 | Gobierno de estructura, responsabilidades, nombres y validación del repositorio | Bajo | Completada |
-| 2 | Frontend: mover modelos y servicios específicos a sus features | Medio | Pendiente |
+| 2 | Frontend: mover modelos y servicios específicos a sus features | Medio | Completada |
 | 3 | Frontend: dividir componentes grandes y preparar rutas diferidas | Medio/alto | Pendiente |
 | 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Pendiente |
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Pendiente |
@@ -28,6 +28,14 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 5. `matrices-riesgos`.
 
 En cada módulo se mueven primero modelos y `data-access`; después se dividen componentes. No se mezclan ambos trabajos en un solo commit cuando el componente supera 500 líneas.
+
+### Resultado de la fase 2
+
+- Autenticación, configuración global y catálogos quedaron agrupados por responsabilidad dentro de `core`.
+- Active Directory y auditoría quedaron bajo las funcionalidades de usuarios y bitácora.
+- Listas y matrices de riesgos ahora poseen carpetas independientes de `data-access` y `models`.
+- Se eliminaron las ubicaciones genéricas rastreadas `core/services` y `core/models`.
+- No se modificaron rutas Angular, endpoints, IDs de módulo ni lógica de componentes.
 
 ## Orden de migración backend
 

@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 2 de reorganización - 2026-07-14
+
+- Se agruparon autenticación, configuración y catálogos globales por responsabilidad dentro de `core`.
+- Se movieron los servicios de Active Directory y auditoría a las funcionalidades de usuarios y bitácora.
+- Se crearon límites `data-access` y `models` para listas y matrices de riesgos.
+- Se actualizaron los imports sin cambiar rutas Angular, endpoints ni contratos HTTP.
+- Se amplió el validador para impedir el regreso de archivos a `core/services` y `core/models`.
+
 ### Fase 1 de reorganización - 2026-07-14
 
 - Se aprobó la arquitectura híbrida por funcionalidad y responsabilidad para backend, frontend y Oracle.
