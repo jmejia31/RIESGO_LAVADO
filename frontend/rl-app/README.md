@@ -22,9 +22,11 @@ La aplicacion queda disponible normalmente en `http://localhost:4200`. El ambien
 ```powershell
 npm run build
 npm test -- --watch=false
+npm run test:coverage
+npm run e2e
 ```
 
-El build de produccion se genera en `dist/`, ignorado por Git. Las pruebas unitarias usan Vitest mediante el builder oficial de Angular.
+El build de produccion se genera en `dist/`, ignorado por Git. Las pruebas unitarias usan Vitest mediante el builder oficial de Angular; la cobertura se genera en `coverage/` y los recorridos E2E usan Playwright con Edge local.
 
 ## Convenciones
 

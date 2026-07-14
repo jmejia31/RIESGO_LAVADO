@@ -59,9 +59,14 @@ $requiredPaths = @(
     'database/19_matrices_riesgos/README.md',
     'tools/validate_database_scripts.ps1',
     'tools/validate_documentation_links.ps1',
+    'tools/run_quality_gates.ps1',
+    'backend/RL.API.Tests/coverage.runsettings',
+    'frontend/rl-app/playwright.config.ts',
+    'frontend/rl-app/e2e/login-and-routing.spec.ts',
     "docs/$documentationDirectoryName/ARCHITECTURE.md",
     "docs/$documentationDirectoryName/ESTRUCTURA_OBJETIVO.md",
     "docs/$documentationDirectoryName/PLAN_REORGANIZACION.md"
+    "docs/$documentationDirectoryName/QUALITY.md"
 )
 
 foreach ($path in $requiredPaths) {

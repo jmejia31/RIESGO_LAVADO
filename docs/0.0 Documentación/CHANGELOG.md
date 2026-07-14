@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 8 de calidad - 2026-07-14
+
+- Se añadió cobertura Backend con Coverlet y Frontend con V8 sobre el código completo de ambos componentes.
+- Se definieron pisos iniciales anti-regresión sin presentar la cobertura baja actual como objetivo suficiente.
+- Se incorporó Playwright 1.61.1 con cinco escenarios E2E no destructivos de login y enrutamiento.
+- Se creó un ejecutor E2E que inicia y detiene Angular de forma controlada en Windows.
+- Se añadió `tools/run_quality_gates.ps1` para ejecutar pruebas, cobertura, umbrales y E2E en una sola puerta.
+- La auditoría npm posterior a la instalación informó cero vulnerabilidades.
+
 ### Fase 7 de reorganización - 2026-07-14
 
 - Se completó la limpieza y validación integral del repositorio sobre `main`.

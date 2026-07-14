@@ -24,6 +24,7 @@ cd ../..
 powershell -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
 powershell -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
 powershell -ExecutionPolicy Bypass -File tools/validate_documentation_links.ps1
+powershell -ExecutionPolicy Bypass -File tools/run_quality_gates.ps1
 ```
 
 No confirmar `node_modules`, `bin`, `obj`, `dist`, logs, cargas, evidencias de ejecución locales ni `appsettings.json`. Las migraciones o actualizaciones Oracle deben ser idempotentes cuando sea posible, incluir validación y documentar respaldo/reversión.

@@ -23,6 +23,9 @@ node_modules/
 .angular/
 .cache/
 coverage/
+playwright-report/
+test-results/
+blob-report/
 logs/
 *.log
 npm-debug.log*

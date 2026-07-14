@@ -30,9 +30,10 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
 | Backend | 4 | 10 | Calculo de matrices, Catalogos, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
-| Frontend | 3 | 6 | Arranque, `router-outlet`, rutas diferidas, guards/IDs de modulo y presentacion de resultados de matrices |
+| Frontend unitario | 3 | 6 | Arranque, `router-outlet`, rutas diferidas, guards/IDs de modulo y presentacion de resultados de matrices |
+| Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
-El colector de .NET genera evidencia `.coverage` dentro de `TestResults`, que esta ignorada. No se declara un porcentaje de lineas porque el repositorio no incorpora una herramienta de conversion ni un umbral aprobado. La cobertura se reporta por casos y capacidades verificadas para no presentar una cifra incompleta como garantia de calidad.
+La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos anti-regresion automatizados. La linea base completa sigue siendo baja y se documenta en `QUALITY.md`; no debe interpretarse como objetivo suficiente ni reducirse para aprobar cambios.
 
 ## Validaciones finales
 
@@ -41,6 +42,8 @@ El colector de .NET genera evidencia `.coverage` dentro de `TestResults`, que es
 | `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 10/10 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial aproximado de 375 KB |
 | `npm test -- --watch=false` | 6/6 pruebas Frontend |
+| `npm run e2e` | 5/5 recorridos Playwright no destructivos |
+| `tools/run_quality_gates.ps1` | Cobertura Backend/Frontend sobre sus arboles completos y pisos anti-regresion aprobados |
 | `tools/validate_repository_structure.ps1` | Estructura, artefactos, SQL y documentacion correctos |
 | `tools/validate_database_scripts.ps1` | 19 scripts raiz, un paquete modular y flujo seguro consistente |
 | `tools/validate_documentation_links.ps1` | Documentos y enlaces Markdown locales existentes |
@@ -50,8 +53,8 @@ El colector de .NET genera evidencia `.coverage` dentro de `TestResults`, que es
 
 ## Riesgos residuales conocidos
 
-- No existe una suite E2E de navegador; las rutas se cubren estructuralmente y con pruebas unitarias.
-- No existe un umbral cuantitativo de cobertura de lineas o ramas.
+- La suite E2E inicial no cubre sesiones autenticadas ni operaciones que escriben datos; requiere un ambiente aislado con credenciales efimeras.
+- Los pisos cuantitativos de cobertura existen, pero reflejan una linea base baja que debe incrementarse antes de migrar modulos sensibles.
 - `Auth`, `Usuarios`, `Configuracion` y `Auditoria` conservan parte de la organizacion heredada del Backend; migrarlos exige fases funcionales separadas por su relacion con JWT, Active Directory y auditoria transaccional.
 - Las dependencias deben revisarse periodicamente en una tarea dedicada; no se aplican actualizaciones forzadas durante una reorganizacion estructural.
 

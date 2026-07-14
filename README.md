@@ -63,6 +63,7 @@ npm run build
 npm test -- --watch=false
 cd ../..
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_quality_gates.ps1
 ```
 
 La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.Tests`; Angular contiene pruebas Vitest. Toda modificación funcional debe mantener ambas suites aprobadas.
@@ -79,6 +80,7 @@ Consulte [despliegue](docs/0.0%20Documentación/DEPLOYMENT.md) antes de publicar
 - [API](docs/0.0%20Documentación/API.md): superficies REST y autenticación.
 - [Base de datos](docs/0.0%20Documentación/DATABASE.md): ejecución Oracle y reversión.
 - [Contribución](docs/0.0%20Documentación/CONTRIBUTING.md): flujo de contribución.
+- [Calidad](docs/0.0%20Documentación/QUALITY.md): cobertura, pisos anti-regresión y pruebas E2E.
 - [Cambios](docs/0.0%20Documentación/CHANGELOG.md): cambios relevantes.
 - [Informe de limpieza](docs/0.0%20Documentación/CLEANUP_REPORT.md): evidencia de la limpieza integral.
 - `docs/`: documentación modular, funcional e histórica.

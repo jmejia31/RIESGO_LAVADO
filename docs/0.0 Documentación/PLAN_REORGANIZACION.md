@@ -18,6 +18,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Completada |
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Completada |
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Completada |
+| 8 | Calidad: cobertura reproducible y suite E2E inicial no destructiva | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -87,6 +88,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Se añadió una validación automática de enlaces Markdown locales y se integró al control estructural.
 - El README del frontend quedó alineado con Angular 22, Node y npm declarados por el proyecto.
 - Se registraron explícitamente los riesgos residuales y los módulos heredados que requieren futuras fases funcionales independientes.
+
+### Resultado de la fase 8
+
+- Backend genera cobertura Cobertura mediante `coverlet.collector`; Frontend genera HTML y resumen JSON mediante V8.
+- Se añadieron pisos anti-regresión sobre todo `RL.API` y `src/app`, documentando claramente que la línea base todavía es baja.
+- Playwright ejecuta cinco recorridos E2E de login y enrutamiento sin credenciales ni escrituras sobre la API.
+- El ejecutor E2E administra el ciclo de vida de Angular en Windows y termina el servidor creado por la prueba.
+- `tools/run_quality_gates.ps1` concentra pruebas, cobertura, umbrales y E2E en una sola puerta reproducible.
+- La instalación de dependencias Frontend terminó con cero vulnerabilidades reportadas por npm.
 
 ## Controles obligatorios por fase
 
