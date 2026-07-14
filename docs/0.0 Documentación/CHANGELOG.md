@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 7 de reorganización - 2026-07-14
+
+- Se completó la limpieza y validación integral del repositorio sobre `main`.
+- Se actualizó el informe final con las suites Backend/Frontend y los riesgos residuales conocidos.
+- Se añadió validación automática de enlaces Markdown locales y se incorporó al control estructural.
+- Se actualizó el README del frontend para reflejar Angular CLI 22 y el flujo real de trabajo.
+- Se verificó que Git no rastree artefactos, configuración local ni patrones de secretos de alta confianza.
+
 ### Fase 6 de reorganización - 2026-07-14
 
 - Se preservaron en la raíz los scripts Oracle históricos para mantener compatibilidad con instalaciones existentes.

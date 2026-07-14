@@ -15,13 +15,15 @@ Si en el futuro se habilita nuevamente trabajo con ramas, usar ramas temáticas 
 ```powershell
 dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config
 dotnet build RIESGO_LAVADO.sln --no-restore
-dotnet test RIESGO_LAVADO.sln --no-build --no-restore
+dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore
 cd frontend/rl-app
 npm ci
 npm run build
 npm test -- --watch=false
 cd ../..
 powershell -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
+powershell -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
+powershell -ExecutionPolicy Bypass -File tools/validate_documentation_links.ps1
 ```
 
 No confirmar `node_modules`, `bin`, `obj`, `dist`, logs, cargas, evidencias de ejecución locales ni `appsettings.json`. Las migraciones o actualizaciones Oracle deben ser idempotentes cuando sea posible, incluir validación y documentar respaldo/reversión.

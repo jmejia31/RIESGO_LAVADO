@@ -57,10 +57,12 @@ Nunca ejecute el flujo de primera instalación sobre datos productivos. Todo cam
 
 ```powershell
 dotnet build RIESGO_LAVADO.sln --no-restore
-dotnet test RIESGO_LAVADO.sln --no-build --no-restore
+dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore
 cd frontend/rl-app
 npm run build
 npm test -- --watch=false
+cd ../..
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
 ```
 
 La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.Tests`; Angular contiene pruebas Vitest. Toda modificación funcional debe mantener ambas suites aprobadas.

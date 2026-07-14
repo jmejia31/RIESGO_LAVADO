@@ -17,7 +17,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 4 | Backend: crear módulos verticales comenzando por un piloto pequeño | Medio | Completada |
 | 5 | Backend: dividir Listas y Matrices de Riesgos | Alto | Completada |
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Completada |
-| 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Pendiente |
+| 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Completada |
 
 ## Orden de migración frontend
 
@@ -78,6 +78,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - El flujo de actualización segura queda protegido contra `DROP TABLE`, `TRUNCATE` y `DELETE FROM`, incluyendo sus dependencias recursivas.
 - `17_validate_module_ids.sql` continúa como último paso y se verifica automáticamente que sea de solo lectura.
 - La validación contra Oracle confirmó en modo lectura que los módulos `2` a `10` existen, están activos y conservan las rutas esperadas.
+
+### Resultado de la fase 7
+
+- Se actualizó el informe de cierre con el estado real de Git, Backend, Frontend, Oracle y documentación.
+- Se confirmó que Git no rastrea compilaciones, dependencias, resultados de pruebas, configuración local ni patrones de secretos de alta confianza.
+- Se documentaron 10 pruebas Backend y 6 pruebas Frontend por capacidad cubierta, sin declarar porcentajes de línea no verificables.
+- Se añadió una validación automática de enlaces Markdown locales y se integró al control estructural.
+- El README del frontend quedó alineado con Angular 22, Node y npm declarados por el proyecto.
+- Se registraron explícitamente los riesgos residuales y los módulos heredados que requieren futuras fases funcionales independientes.
 
 ## Controles obligatorios por fase
 

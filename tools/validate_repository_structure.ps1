@@ -58,6 +58,7 @@ $requiredPaths = @(
     'database/19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql',
     'database/19_matrices_riesgos/README.md',
     'tools/validate_database_scripts.ps1',
+    'tools/validate_documentation_links.ps1',
     "docs/$documentationDirectoryName/ARCHITECTURE.md",
     "docs/$documentationDirectoryName/ESTRUCTURA_OBJETIVO.md",
     "docs/$documentationDirectoryName/PLAN_REORGANIZACION.md"
@@ -165,6 +166,14 @@ if (Test-Path -LiteralPath $databaseValidator) {
     $databaseErrors = @(& $databaseValidator -RepositoryRoot $RepositoryRoot -PassThru)
     foreach ($databaseError in $databaseErrors) {
         $errors.Add("Base de datos: $databaseError")
+    }
+}
+
+$documentationValidator = Join-Path $RepositoryRoot 'tools/validate_documentation_links.ps1'
+if (Test-Path -LiteralPath $documentationValidator) {
+    $documentationErrors = @(& $documentationValidator -RepositoryRoot $RepositoryRoot -PassThru)
+    foreach ($documentationError in $documentationErrors) {
+        $errors.Add("Documentacion: $documentationError")
     }
 }
 

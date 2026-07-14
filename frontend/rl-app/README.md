@@ -1,59 +1,37 @@
-# RlApp
+# Frontend SGRLA-IHSS
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.9.
+Aplicacion web Angular 22 del Sistema de Gestion de Riesgo de Lavado de Activos. La interfaz se organiza en `core`, `features` y `shared`; las pantallas enrutadas se cargan bajo demanda y consumen la API mediante `/api` en produccion.
 
-## Development server
+## Requisitos
 
-To start a local development server, run:
+- Node.js `24.18.0`.
+- npm `11.12.1`.
+- Angular CLI `22.0.4`, instalado localmente por `npm ci`.
 
-```bash
-ng serve
+## Desarrollo
+
+```powershell
+npm ci
+npm start
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+La aplicacion queda disponible normalmente en `http://localhost:4200`. El ambiente de desarrollo consume `http://localhost:5043/api`.
 
-## Code scaffolding
+## Compilacion y pruebas
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+```powershell
+npm run build
+npm test -- --watch=false
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+El build de produccion se genera en `dist/`, ignorado por Git. Las pruebas unitarias usan Vitest mediante el builder oficial de Angular.
 
-```bash
-ng generate --help
-```
+## Convenciones
 
-## Building
+- Funcionalidades en `src/app/features`.
+- Autenticacion y configuracion global en `src/app/core`.
+- Layout y elementos transversales en `src/app/shared`.
+- Rutas principales y permisos por modulo en `src/app/app.routes.ts`.
+- No versionar `node_modules`, `.angular`, `dist`, `coverage` ni configuracion local.
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+La documentacion general, arquitectura y proceso de contribucion se encuentran en el `README.md` de la raiz del repositorio.
