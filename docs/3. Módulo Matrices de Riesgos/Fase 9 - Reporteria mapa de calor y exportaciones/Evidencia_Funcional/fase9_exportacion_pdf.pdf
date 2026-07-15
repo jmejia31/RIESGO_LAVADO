@@ -1,0 +1,103 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 1629 >>
+stream
+BT
+/F1 9 Tf
+45 750 Td
+12 TL
+(INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL) Tj T*
+(REPORTE DE MATRICES DE RIESGOS) Tj T*
+(SGRLA-IHSS | Fecha de Generación: 15/07/2026 11:52) Tj T*
+() Tj T*
+(1. FILTROS APLICADOS) Tj T*
+(- Búsqueda general: Todos) Tj T*
+(- Estado: Todos) Tj T*
+(- Tipo de sujeto: Todos) Tj T*
+(- Nivel residual: Todos) Tj T*
+(- Versión metodología: Todos) Tj T*
+(- Responsable: Todos) Tj T*
+(- Fecha inicio: Todos) Tj T*
+(- Fecha fin: Todos) Tj T*
+() Tj T*
+(2. RESUMEN EJECUTIVO) Tj T*
+(- Total matrices: 2) Tj T*
+(- Calculadas: 2) Tj T*
+(- Cerradas: 0) Tj T*
+(- Alto / Crítico: 1) Tj T*
+(- Plan requerido: 1) Tj T*
+(- Planes vencidos: 0) Tj T*
+() Tj T*
+(3. DISTRIBUCIÓN POR ESTADO) Tj T*
+(- CALCULADA: 2) Tj T*
+() Tj T*
+(4. DISTRIBUCIÓN POR NIVEL RESIDUAL) Tj T*
+(- Crítico: 1) Tj T*
+(- Muy bajo: 1) Tj T*
+() Tj T*
+(5. MAPA INHERENTE PERSISTIDO) Tj T*
+(- Muy bajo | Total 1 | Promedio 1.0000) Tj T*
+(- Crítico | Total 1 | Promedio 5.0000) Tj T*
+() Tj T*
+(6. MAPA RESIDUAL PERSISTIDO) Tj T*
+(- Muy bajo | Total 1 | Promedio 1.0000) Tj T*
+(- Crítico | Total 1 | Promedio 5.0000) Tj T*
+() Tj T*
+(7. MATRICES FILTRADAS) Tj T*
+(- 6 | Alex Morales | CALCULADA | Residual 5.00 Crítico | Plan Sí | Fecha 15/07/2026) Tj T*
+(- 5 | Proveedor de servicios ABC | CALCULADA | Residual 1.00 Muy bajo | Plan No | Fecha 09/07/2) Tj T*
+(026) Tj T*
+() Tj T*
+(8. RESULTADOS POR FACTOR) Tj T*
+(- PROVEEDORES Proveedores | Matrices 2 | Residual 3.0000) Tj T*
+() Tj T*
+(9. MATRICES ALTO / CRÍTICO) Tj T*
+(- 6 | Alex Morales | CALCULADA | Residual 5.00 Crítico | Plan Sí) Tj T*
+() Tj T*
+ET
+
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 109 >>
+stream
+BT
+/F1 9 Tf
+45 750 Td
+12 TL
+(10. PLANES DE ACCIÓN) Tj T*
+(- SIN_PLAN | Total 0 | Vencidos 0) Tj T*
+ET
+
+endstream
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000216 00000 n 
+0000000342 00000 n 
+0000002023 00000 n 
+0000002149 00000 n 
+trailer
+<< /Size 8 /Root 1 0 R >>
+startxref
+2309
+%%EOF

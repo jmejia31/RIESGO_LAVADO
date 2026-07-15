@@ -1,0 +1,244 @@
+<html><head><meta charset="utf-8" />
+<style>
+body{font-family:Arial,sans-serif;color:#111827} h1{font-size:20px;margin:0;color:#16337a} h2{font-size:15px;margin:18px 0 8px;color:#111827} p{margin:4px 0;font-size:12px} table{border-collapse:collapse;margin:8px 0 18px;width:100%} th{background:#1f3f91;color:#fff;font-weight:bold;text-align:left} th,td{border:1px solid #cbd5e1;padding:7px;font-size:12px;vertical-align:top} .meta td:first-child,.totales td:first-child{font-weight:bold;background:#f8fafc}.num{text-align:right}.alto{color:#c2410c;font-weight:bold}.critico{color:#b91c1c;font-weight:bold}.ok{color:#047857;font-weight:bold}.muted{color:#64748b}</style>
+</head><body>
+<h1>SGRLA-IHSS - Reporte de Matrices de Riesgos</h1>
+<p class="muted">Instituto Hondureño de Seguridad Social</p>
+<p>Fecha de generación: 15/07/2026 11:52</p>
+<h2>Filtros aplicados</h2>
+<table class="meta">
+<tr>
+<th>Filtro</th>
+<th>Valor</th>
+</tr>
+<tr>
+<td>B&#250;squeda general</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Estado</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Tipo de sujeto</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Nivel residual</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Versi&#243;n metodolog&#237;a</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Responsable</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Fecha inicio</td>
+<td>Todos</td>
+</tr>
+<tr>
+<td>Fecha fin</td>
+<td>Todos</td>
+</tr>
+</table>
+<h2>Resumen ejecutivo</h2>
+<table class="totales">
+<tr>
+<th>Indicador</th>
+<th>Valor</th>
+</tr>
+<tr>
+<td>Total matrices</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Calculadas</td>
+<td>2</td>
+</tr>
+<tr>
+<td>Cerradas</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Alto / Cr&#237;tico</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Plan requerido</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Planes vencidos</td>
+<td>0</td>
+</tr>
+</table>
+<h2>Distribuci&#243;n por estado</h2>
+<table>
+<tr>
+<th>Estado</th>
+<th>Total</th>
+</tr>
+<tr>
+<td>CALCULADA</td>
+<td>2</td>
+</tr>
+</table>
+<h2>Distribuci&#243;n por nivel residual</h2>
+<table>
+<tr>
+<th>Nivel</th>
+<th>Total</th>
+</tr>
+<tr>
+<td>Cr&#237;tico</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Muy bajo</td>
+<td>1</td>
+</tr>
+</table>
+<h2>Distribuci&#243;n por sujeto</h2>
+<table>
+<tr>
+<th>Sujeto</th>
+<th>Total</th>
+</tr>
+<tr>
+<td>PROVEEDOR</td>
+<td>2</td>
+</tr>
+</table>
+<h2>Mapa inherente persistido</h2>
+<table>
+<tr>
+<th>Nivel</th>
+<th>Total</th>
+<th>Promedio</th>
+</tr>
+<tr>
+<td>Muy bajo</td>
+<td>1</td>
+<td>1.0000</td>
+</tr>
+<tr>
+<td>Cr&#237;tico</td>
+<td>1</td>
+<td>5.0000</td>
+</tr>
+</table>
+<h2>Mapa residual persistido</h2>
+<table>
+<tr>
+<th>Nivel</th>
+<th>Total</th>
+<th>Promedio</th>
+</tr>
+<tr>
+<td>Muy bajo</td>
+<td>1</td>
+<td>1.0000</td>
+</tr>
+<tr>
+<td>Cr&#237;tico</td>
+<td>1</td>
+<td>5.0000</td>
+</tr>
+</table>
+<h2>Matrices filtradas</h2>
+<table>
+<tr>
+<th>ID</th>
+<th>Sujeto</th>
+<th>Documento</th>
+<th>Tipo</th>
+<th>Estado</th>
+<th>Inherente</th>
+<th>Residual</th>
+<th>Plan</th>
+<th>Fecha</th>
+</tr>
+<tr>
+<td>6</td>
+<td>Alex Morales</td>
+<td>419846494</td>
+<td>PROVEEDOR</td>
+<td>CALCULADA</td>
+<td>5.00 Cr&#237;tico</td>
+<td>5.00 Cr&#237;tico</td>
+<td>S&#237;</td>
+<td>15/07/2026</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Proveedor de servicios ABC</td>
+<td>0801200015463</td>
+<td>PROVEEDOR</td>
+<td>CALCULADA</td>
+<td>1.00 Muy bajo</td>
+<td>1.00 Muy bajo</td>
+<td>No</td>
+<td>09/07/2026</td>
+</tr>
+</table>
+<h2>Resultados por factor</h2>
+<table>
+<tr>
+<th>Factor</th>
+<th>Matrices</th>
+<th>Promedio inherente</th>
+<th>Promedio residual</th>
+<th>Alto/Cr&#237;tico</th>
+<th>Plan requerido</th>
+</tr>
+<tr>
+<td>PROVEEDORES - Proveedores</td>
+<td>2</td>
+<td>3.0000</td>
+<td>3.0000</td>
+<td>1</td>
+<td>1</td>
+</tr>
+</table>
+<h2>Matrices Alto / Cr&#237;tico</h2>
+<table>
+<tr>
+<th>ID</th>
+<th>Sujeto</th>
+<th>Documento</th>
+<th>Tipo</th>
+<th>Estado</th>
+<th>Inherente</th>
+<th>Residual</th>
+<th>Plan</th>
+<th>Fecha</th>
+</tr>
+<tr>
+<td>6</td>
+<td>Alex Morales</td>
+<td>419846494</td>
+<td>PROVEEDOR</td>
+<td>CALCULADA</td>
+<td>5.00 Cr&#237;tico</td>
+<td>5.00 Cr&#237;tico</td>
+<td>S&#237;</td>
+<td>15/07/2026</td>
+</tr>
+</table>
+<h2>Planes de acci&#243;n</h2>
+<table>
+<tr>
+<th>Estado</th>
+<th>Total</th>
+<th>Vencidos</th>
+</tr>
+<tr>
+<td>SIN_PLAN</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</table>
+</body></html>

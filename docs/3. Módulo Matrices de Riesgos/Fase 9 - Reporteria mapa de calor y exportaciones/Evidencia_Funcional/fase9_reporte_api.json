@@ -1,0 +1,134 @@
+﻿{
+    "success":  true,
+    "datos":  {
+                  "fechaGeneracion":  "2026-07-15T11:52:40.1707302-06:00",
+                  "filtro":  {
+
+                             },
+                  "totales":  {
+                                  "totalMatrices":  2,
+                                  "totalCalculadas":  2,
+                                  "totalCerradas":  0,
+                                  "totalAltoCritico":  1,
+                                  "totalPlanAccionRequerido":  1,
+                                  "totalPlanesVencidos":  0
+                              },
+                  "porEstado":  [
+                                    {
+                                        "nombre":  "CALCULADA",
+                                        "total":  2
+                                    }
+                                ],
+                  "porNivelResidual":  [
+                                           {
+                                               "nombre":  "Crítico",
+                                               "total":  1
+                                           },
+                                           {
+                                               "nombre":  "Muy bajo",
+                                               "total":  1
+                                           }
+                                       ],
+                  "porSujetoTipo":  [
+                                        {
+                                            "nombre":  "PROVEEDOR",
+                                            "total":  2
+                                        }
+                                    ],
+                  "porFactor":  [
+                                    {
+                                        "factorId":  2,
+                                        "factorCodigo":  "PROVEEDORES",
+                                        "factorNombre":  "Proveedores",
+                                        "totalMatrices":  2,
+                                        "promedioInherente":  3.0,
+                                        "promedioResidual":  3.0,
+                                        "totalAltoCritico":  1,
+                                        "totalPlanAccionRequerido":  1
+                                    }
+                                ],
+                  "mapaInherente":  [
+                                        {
+                                            "nivel":  "Muy bajo",
+                                            "total":  1,
+                                            "promedio":  1.0
+                                        },
+                                        {
+                                            "nivel":  "Crítico",
+                                            "total":  1,
+                                            "promedio":  5.0
+                                        }
+                                    ],
+                  "mapaResidual":  [
+                                       {
+                                           "nivel":  "Muy bajo",
+                                           "total":  1,
+                                           "promedio":  1.0
+                                       },
+                                       {
+                                           "nivel":  "Crítico",
+                                           "total":  1,
+                                           "promedio":  5.0
+                                       }
+                                   ],
+                  "matricesFiltradas":  [
+                                            {
+                                                "matrizId":  6,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "PROVEEDOR",
+                                                "sujetoIdExt":  "056469849849",
+                                                "documento":  "419846494",
+                                                "nombreSujeto":  "Alex Morales",
+                                                "estado":  "CALCULADA",
+                                                "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                                "puntajeInherente":  5.0,
+                                                "nivelInherente":  "Crítico",
+                                                "puntajeResidual":  5.0,
+                                                "nivelResidual":  "Crítico",
+                                                "requierePlanAccion":  true
+                                            },
+                                            {
+                                                "matrizId":  5,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "PROVEEDOR",
+                                                "sujetoIdExt":  "PROV-0001",
+                                                "documento":  "0801200015463",
+                                                "nombreSujeto":  "Proveedor de servicios ABC",
+                                                "estado":  "CALCULADA",
+                                                "fechaEvaluacion":  "2026-07-09T13:11:00",
+                                                "puntajeInherente":  1.0,
+                                                "nivelInherente":  "Muy bajo",
+                                                "puntajeResidual":  1.0,
+                                                "nivelResidual":  "Muy bajo",
+                                                "requierePlanAccion":  false
+                                            }
+                                        ],
+                  "matricesCriticas":  [
+                                           {
+                                               "matrizId":  6,
+                                               "modeloId":  2,
+                                               "modeloVersion":  "1.0",
+                                               "sujetoTipo":  "PROVEEDOR",
+                                               "sujetoIdExt":  "056469849849",
+                                               "documento":  "419846494",
+                                               "nombreSujeto":  "Alex Morales",
+                                               "estado":  "CALCULADA",
+                                               "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                               "puntajeInherente":  5.0,
+                                               "nivelInherente":  "Crítico",
+                                               "puntajeResidual":  5.0,
+                                               "nivelResidual":  "Crítico",
+                                               "requierePlanAccion":  true
+                                           }
+                                       ],
+                  "planesAccion":  [
+                                       {
+                                           "estado":  "SIN_PLAN",
+                                           "total":  0,
+                                           "vencidos":  0
+                                       }
+                                   ]
+              }
+}
