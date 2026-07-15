@@ -27,6 +27,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 14 | Calidad Frontend: confirmación de cambios y contratos HTTP de Listas/Matrices | Medio | Completada |
 | 15 | Calidad Frontend: coordinación y recuperación ante errores en Listas/Matrices | Medio | Completada |
 | 16 | Calidad Frontend: validaciones y escrituras simuladas de Listas/Matrices | Medio | Completada |
+| 17 | Calidad Frontend: política documental y eliminaciones lógicas simuladas | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -178,6 +179,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - La creación válida verifica el contrato enviado y el cálculo automático `FACTOR`; también se cubren errores de creación.
 - Los criterios exigen campos obligatorios y el recálculo requiere un motivo antes de ejecutar la operación simulada.
 - La suite Frontend alcanzó 70 pruebas en trece archivos; la cobertura llegó a 19.28% de sentencias, 14.49% de ramas, 15.21% de funciones y 18.91% de líneas.
+
+### Resultado de la fase 17
+
+- La política documental quedó cubierta para archivos válidos, exceso de tamaño y extensiones no autorizadas.
+- Las eliminaciones de evidencias y seguimientos verifican cancelación, motivo obligatorio, actualización local, refresco y conservación ante error.
+- Matrices impide reutilizar motivos de cambio de estado y prueba un cambio válido con refresco del registro.
+- La eliminación lógica de matrices limpia selección e historial; la inactivación y eliminación de criterios conservan sus flujos de éxito y error.
+- Todas las confirmaciones y escrituras usan modales y servicios simulados; no se elimina información real.
+- La suite Frontend alcanzó 82 pruebas en trece archivos; la cobertura llegó a 22.27% de sentencias, 16.69% de ramas, 19.04% de funciones y 22.15% de líneas.
 
 ## Controles obligatorios por fase
 

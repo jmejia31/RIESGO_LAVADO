@@ -23,7 +23,11 @@ describe('MatricesRiesgosComponent', () => {
       calcular: vi.fn(() => of({})),
       recalcular: vi.fn(() => of({})),
       crearCriterio: vi.fn(() => of({ criterioId: 1 })),
-      actualizarCriterio: vi.fn(() => of({ criterioId: 1 }))
+      actualizarCriterio: vi.fn(() => of({ criterioId: 1 })),
+      cambiarEstado: vi.fn(() => of({ success: true })),
+      eliminarMatriz: vi.fn(() => of({ success: true })),
+      inactivarCriterio: vi.fn(() => of({ success: true })),
+      eliminarCriterio: vi.fn(() => of({ success: true }))
     };
 
     await TestBed.configureTestingModule({
@@ -202,6 +206,88 @@ describe('MatricesRiesgosComponent', () => {
 
     expect(service['recalcular']).toHaveBeenCalledWith(18, 'Actualizacion anual', 'FACTOR');
     expect(component.mensaje()).toBe('Matriz recalculada correctamente.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('rechaza un rango de criterio cuyo valor inicial supera al final', () => {
+    component.criteriosForm = {
+      variableId: 3, escalaId: null, valorDesde: 10, valorHasta: 5,
+      puntaje: 4, descripcion: 'Rango invalido'
+    };
+
+    component.guardarCriterio();
+
+    expect(component.error()).toBe('El valor desde no puede ser mayor que el valor hasta.');
+    expect(service['crearCriterio']).not.toHaveBeenCalled();
+  });
+
+  it('impide reutilizar el mismo motivo en un cambio de estado', () => {
+    const matriz = { matrizId: 18, sujetoTipo: 'PROVEEDOR' } as never;
+    component.historial.set([{
+      historialId: 1, accion: 'CAMBIO_ESTADO', motivo: 'Revision anual'
+    }] as never);
+    component.cambiarEstado(matriz, 'APROBADA');
+    component.actualizarModalMotivo(' revision anual ');
+
+    component.confirmarModal();
+
+    expect(component.modalError()).toContain('Este motivo ya fue utilizado');
+    expect(service['cambiarEstado']).not.toHaveBeenCalled();
+  });
+
+  it('cambia el estado con un motivo nuevo y refresca la matriz', () => {
+    const matriz = { matrizId: 18, sujetoTipo: 'PROVEEDOR' } as never;
+    component.cambiarEstado(matriz, 'APROBADA');
+    component.actualizarModalMotivo('Aprobacion del comite');
+
+    component.confirmarModal();
+
+    expect(service['cambiarEstado']).toHaveBeenCalledWith(18, 'APROBADA', 'Aprobacion del comite');
+    expect(component.mensaje()).toBe('Estado actualizado correctamente.');
+    expect(component.modalOperacion()).toBeNull();
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('elimina logicamente una matriz y limpia su seleccion', () => {
+    const matriz = { matrizId: 25, sujetoTipo: 'INSTITUCIONAL' } as never;
+    component.matrizSeleccionada.set({ matrizId: 25 } as never);
+    component.historial.set([{ historialId: 3 }] as never);
+    component.eliminarMatriz(matriz);
+    component.actualizarModalMotivo('Registro creado por error');
+
+    component.confirmarModal();
+
+    expect(service['eliminarMatriz']).toHaveBeenCalledWith(25, 'Registro creado por error');
+    expect(component.matrizSeleccionada()).toBeNull();
+    expect(component.historial()).toEqual([]);
+    expect(component.mensaje()).toBe('Matriz eliminada correctamente.');
+    expect(component.modalOperacion()).toBeNull();
+  });
+
+  it('inactiva un criterio con motivo y recarga el catalogo', () => {
+    const criterio = { criterioId: 7, variableId: 3, activo: true } as never;
+    component.inactivarCriterio(criterio);
+    component.actualizarModalMotivo('Criterio fuera de vigencia');
+
+    component.confirmarModal();
+
+    expect(service['inactivarCriterio']).toHaveBeenCalledWith(7, 'Criterio fuera de vigencia');
+    expect(service['listarCriterios']).toHaveBeenCalled();
+    expect(component.mensaje()).toBe('Criterio inactivado correctamente.');
+    expect(component.modalOperacion()).toBeNull();
+  });
+
+  it('mantiene abierto el modal si falla la eliminacion de un criterio', () => {
+    service['eliminarCriterio'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Criterio en uso' } })));
+    const criterio = { criterioId: 9, variableId: 3, activo: false } as never;
+    component.eliminarCriterio(criterio);
+    component.actualizarModalMotivo('Depuracion del catalogo');
+
+    component.confirmarModal();
+
+    expect(service['eliminarCriterio']).toHaveBeenCalledWith(9, 'Depuracion del catalogo');
+    expect(component.modalError()).toBe('Criterio en uso');
+    expect(component.modalOperacion()?.tipo).toBe('eliminarCriterio');
     expect(component.guardando()).toBe(false);
   });
 });

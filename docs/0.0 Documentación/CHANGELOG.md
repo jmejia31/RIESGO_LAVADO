@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 17 de calidad Frontend - 2026-07-15
+
+- Se cubrió la política documental para tamaño máximo, extensiones autorizadas y archivos válidos.
+- Se probaron cancelación, éxito y error de eliminaciones lógicas simuladas de evidencias y seguimientos.
+- Se caracterizaron motivos únicos, cambios de estado, eliminación de matrices y mantenimiento de criterios.
+- La suite Frontend aumentó de 70 a 82 pruebas en trece archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 22.27% de sentencias, 16.69% de ramas, 19.04% de funciones y 22.15% de líneas.
+- Se elevaron los pisos anti-regresión sin modificar código productivo ni eliminar datos reales.
+
 ### Fase 16 de calidad Frontend - 2026-07-15
 
 - Se cubrieron validaciones previas y escrituras simuladas de registros manuales y seguimientos de Listas.

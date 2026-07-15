@@ -32,7 +32,9 @@ describe('MonitoreoListasComponent', () => {
       getSeguimientos: vi.fn(() => of([])),
       registrarPositivo: vi.fn(() => of({ mensaje: 'Registrado' })),
       registrarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento registrado' })),
-      actualizarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento actualizado' }))
+      actualizarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento actualizado' })),
+      eliminarEvidencia: vi.fn(() => of({ mensaje: 'Evidencia eliminada' })),
+      eliminarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento eliminado' }))
     };
     fire.mockReset();
 
@@ -201,6 +203,96 @@ describe('MonitoreoListasComponent', () => {
     expect(component.modoEdicion()).toBe(true);
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
       title: 'Error', text: 'Actualizacion rechazada'
+    }));
+  });
+
+  it('acepta archivos permitidos y rechaza los que superan el tamano maximo', async () => {
+    component.politicaEvidencias.set({
+      maximoMb: 0.000005,
+      maximoBytes: 5,
+      extensionesPermitidas: ['.pdf'],
+      tiposPermitidosTexto: 'PDF'
+    });
+    const valido = new File(['1234'], 'soporte.pdf', { type: 'application/pdf' });
+    const grande = new File(['123456'], 'grande.pdf', { type: 'application/pdf' });
+
+    component.onFileSelected({ target: { files: [valido, grande] } });
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
+    expect(component.archivosSeleccionados()).toEqual([valido]);
+    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ title: 'Archivo no permitido' }));
+  });
+
+  it('rechaza archivos cuya extension no esta autorizada', async () => {
+    const extensionInvalida = new File(['12'], 'nota.txt', { type: 'text/plain' });
+
+    component.onFileSelected({ target: { files: [extensionInvalida] } });
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
+    expect(component.archivosSeleccionados()).toEqual([]);
+    expect(fire).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'Archivo no permitido',
+      text: expect.stringContaining('no tiene una extensión permitida')
+    }));
+  });
+
+  it('cancela la eliminacion de evidencia sin invocar el servicio', async () => {
+    fire.mockResolvedValueOnce({ isConfirmed: false } as never);
+
+    component.eliminarEvidenciaExistente({ evidenciaId: 8, nombreArchivo: 'soporte.pdf' } as never);
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalledOnce());
+    expect(service['eliminarEvidencia']).not.toHaveBeenCalled();
+  });
+
+  it('elimina logicamente una evidencia y la retira de las colecciones locales', async () => {
+    const eliminada = { evidenciaId: 8, nombreArchivo: 'duplicada.pdf' };
+    const conservada = { evidenciaId: 9, nombreArchivo: 'vigente.pdf' };
+    component.evidenciasExistentes.set([eliminada, conservada] as never);
+    component.listaSeguimientos.set([{
+      detalleListaId: 4, motivoIngreso: 'Revision', evidencias: [eliminada, conservada]
+    }] as never);
+    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Archivo duplicado' } as never);
+
+    component.eliminarEvidenciaExistente(eliminada as never);
+
+    await vi.waitFor(() => expect(service['eliminarEvidencia']).toHaveBeenCalledOnce());
+    expect(service['eliminarEvidencia']).toHaveBeenCalledWith(8, 'Archivo duplicado');
+    expect(component.evidenciasExistentes()).toEqual([conservada]);
+    expect(component.listaSeguimientos()[0].evidencias).toEqual([conservada]);
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Eliminado' }));
+  });
+
+  it('elimina un seguimiento, cancela su edicion y refresca el historial', async () => {
+    const seguimiento = { detalleListaId: 44, motivoIngreso: 'Nota anterior' };
+    component.entidadSeleccionada.set({ noDocumento: '0801', nombreCompleto: 'Ana', tipoPositivoId: 2 });
+    component.modoEdicion.set(true);
+    component.seguimientoEditandoId.set(44);
+    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Registro sustituido' } as never);
+
+    component.eliminarSeguimiento(seguimiento as never);
+
+    await vi.waitFor(() => expect(service['eliminarSeguimiento']).toHaveBeenCalledOnce());
+    expect(service['eliminarSeguimiento']).toHaveBeenCalledWith(44, 'Registro sustituido');
+    expect(component.modoEdicion()).toBe(false);
+    expect(component.seguimientoEditandoId()).toBeNull();
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '');
+  });
+
+  it('conserva el seguimiento si la eliminacion logica es rechazada', async () => {
+    service['eliminarSeguimiento'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Seguimiento protegido' } })));
+    const seguimiento = { detalleListaId: 55, motivoIngreso: 'Nota protegida' };
+    component.modoEdicion.set(true);
+    component.seguimientoEditandoId.set(55);
+    fire.mockResolvedValueOnce({ isConfirmed: true, value: 'Depuracion' } as never);
+
+    component.eliminarSeguimiento(seguimiento as never);
+
+    await vi.waitFor(() => expect(service['eliminarSeguimiento']).toHaveBeenCalledOnce());
+    expect(component.modoEdicion()).toBe(true);
+    expect(component.seguimientoEditandoId()).toBe(55);
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'Error', text: 'Seguimiento protegido'
     }));
   });
 });
