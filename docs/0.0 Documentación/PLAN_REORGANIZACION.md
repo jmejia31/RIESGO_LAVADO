@@ -28,6 +28,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 15 | Calidad Frontend: coordinación y recuperación ante errores en Listas/Matrices | Medio | Completada |
 | 16 | Calidad Frontend: validaciones y escrituras simuladas de Listas/Matrices | Medio | Completada |
 | 17 | Calidad Frontend: política documental y eliminaciones lógicas simuladas | Medio | Completada |
+| 18 | Calidad Frontend: descargas, exportaciones y edición completa de matrices | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -188,6 +189,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - La eliminación lógica de matrices limpia selección e historial; la inactivación y eliminación de criterios conservan sus flujos de éxito y error.
 - Todas las confirmaciones y escrituras usan modales y servicios simulados; no se elimina información real.
 - La suite Frontend alcanzó 82 pruebas en trece archivos; la cobertura llegó a 22.27% de sentencias, 16.69% de ramas, 19.04% de funciones y 22.15% de líneas.
+
+### Resultado de la fase 18
+
+- La descarga de evidencias quedó cubierta para visualización PDF, descarga por enlace y error del servicio.
+- `Blob`, URLs temporales, `window.open`, enlaces y modales se simulan para evitar archivos o ventanas reales.
+- La exportación de matrices verifica selección del generador EXCEL/PDF, filtros, mensajes e indicador ante éxito o error.
+- La edición reconstruye el formulario y sus variables desde el detalle persistido, actualiza la matriz y ejecuta el recálculo automático `FACTOR`.
+- También se conserva el formulario y se informa el error cuando el detalle no puede cargarse.
+- La suite Frontend alcanzó 91 pruebas en trece archivos; la cobertura llegó a 23.74% de sentencias, 18.12% de ramas, 20.74% de funciones y 23.61% de líneas.
 
 ## Controles obligatorios por fase
 

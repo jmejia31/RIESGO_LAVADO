@@ -27,7 +27,8 @@ describe('MatricesRiesgosComponent', () => {
       cambiarEstado: vi.fn(() => of({ success: true })),
       eliminarMatriz: vi.fn(() => of({ success: true })),
       inactivarCriterio: vi.fn(() => of({ success: true })),
-      eliminarCriterio: vi.fn(() => of({ success: true }))
+      eliminarCriterio: vi.fn(() => of({ success: true })),
+      exportarReporte: vi.fn(() => of(new Blob()))
     };
 
     await TestBed.configureTestingModule({
@@ -46,6 +47,7 @@ describe('MatricesRiesgosComponent', () => {
 
   afterEach(() => {
     fixture.destroy();
+    vi.restoreAllMocks();
     TestBed.resetTestingModule();
   });
 
@@ -289,5 +291,107 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.modalError()).toBe('Criterio en uso');
     expect(component.modalOperacion()?.tipo).toBe('eliminarCriterio');
     expect(component.guardando()).toBe(false);
+  });
+
+  it.each([
+    ['EXCEL', 'generarExcelReporte'],
+    ['PDF', 'generarPdfReporte']
+  ] as const)('exporta un reporte %s usando el generador correspondiente', (formato, metodo) => {
+    const generar = vi.fn();
+    (component as any)[metodo] = generar;
+    component.reporteFiltro.set({ estado: 'APROBADA' });
+    const archivo = new Blob(['reporte'], { type: 'application/octet-stream' });
+    service['exportarReporte'].mockReturnValue(of(archivo));
+
+    component.exportarReporte(formato);
+
+    expect(service['exportarReporte']).toHaveBeenCalledWith({ estado: 'APROBADA' }, formato);
+    expect(generar).toHaveBeenCalledOnce();
+    expect(component.mensaje()).toBe(`Reporte ${formato} generado correctamente.`);
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('recupera el indicador si falla la exportacion del reporte', () => {
+    service['exportarReporte'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Exportacion no disponible' } })));
+
+    component.exportarReporte('PDF');
+
+    expect(component.error()).toBe('Exportacion no disponible');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('carga el detalle y reconstruye las variables para editar una matriz', () => {
+    component.metodologia.set({
+      variables: [{
+        variableId: 4, factorId: 2, factorCodigo: 'PROVEEDORES',
+        factorNombre: 'Proveedores', nombre: 'Pais de origen'
+      }],
+      escalasCatalogo: [], escalasRiesgo: []
+    } as never);
+    const detalle = {
+      matrizId: 40,
+      sujetoTipo: 'PROVEEDOR',
+      sujetoIdExt: 'PR-40',
+      documento: 'RTN-40',
+      nombreSujeto: 'Proveedor Cuarenta',
+      origenDatos: 'CAPTURA',
+      detalles: [{
+        variableId: 4, puntaje: 5, valorCapturado: 'HN',
+        justificacion: 'Pais evaluado', fuenteDato: 'CAPTURA'
+      }]
+    };
+    service['obtener'].mockReturnValue(of(detalle));
+
+    component.editarMatriz({ matrizId: 40 } as never);
+
+    expect(service['obtener']).toHaveBeenCalledWith(40);
+    expect(component.matrizEditandoId()).toBe(40);
+    expect(component.nuevaMatriz).toEqual({
+      sujetoTipo: 'PROVEEDOR', sujetoIdExt: 'PR-40', documento: 'RTN-40',
+      nombreSujeto: 'Proveedor Cuarenta', origenDatos: 'CAPTURA'
+    });
+    expect(component.capturasVariables()).toEqual([expect.objectContaining({
+      variableId: 4, puntaje: 5, valorCapturado: 'HN'
+    })]);
+    expect(component.tab()).toBe('nueva');
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('actualiza y recalcula una matriz cargada en modo edicion', () => {
+    component.metodologia.set({
+      variables: [{
+        variableId: 4, factorId: 2, factorCodigo: 'PROVEEDORES',
+        factorNombre: 'Proveedores', nombre: 'Pais de origen'
+      }],
+      escalasCatalogo: [], escalasRiesgo: []
+    } as never);
+    const detalle = {
+      matrizId: 41, sujetoTipo: 'PROVEEDOR', sujetoIdExt: 'PR-41', documento: 'RTN-41',
+      nombreSujeto: 'Proveedor Editado', origenDatos: 'CAPTURA',
+      detalles: [{ variableId: 4, puntaje: 4, valorCapturado: 'HN', justificacion: '', fuenteDato: 'CAPTURA' }]
+    };
+    service['obtener'].mockReturnValue(of(detalle));
+    service['actualizar'].mockReturnValue(of(detalle));
+
+    component.editarMatriz({ matrizId: 41 } as never);
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Actualizado';
+    component.crearMatriz();
+
+    expect(service['actualizar']).toHaveBeenCalledWith(41, expect.objectContaining({
+      nombreSujeto: 'Proveedor Actualizado'
+    }));
+    expect(service['calcular']).toHaveBeenCalledWith(41, 'FACTOR');
+    expect(component.mensaje()).toBe('Matriz actualizada y recalculada automáticamente.');
+    expect(component.matrizEditandoId()).toBeNull();
+  });
+
+  it('conserva el formulario y muestra el error si no puede cargar la edicion', () => {
+    service['obtener'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Matriz bloqueada' } })));
+
+    component.editarMatriz({ matrizId: 42 } as never);
+
+    expect(component.error()).toBe('Matriz bloqueada');
+    expect(component.matrizEditandoId()).toBeNull();
+    expect(component.cargando()).toBe(false);
   });
 });

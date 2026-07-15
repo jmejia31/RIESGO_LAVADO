@@ -7,7 +7,7 @@ import { ListasService } from '../listas/data-access/listas.service';
 import { MonitoreoListasComponent } from './monitoreo-listas.component';
 
 vi.mock('sweetalert2', () => ({
-  default: { fire: vi.fn(), showLoading: vi.fn() }
+  default: { fire: vi.fn(), showLoading: vi.fn(), close: vi.fn() }
 }));
 
 describe('MonitoreoListasComponent', () => {
@@ -15,6 +15,9 @@ describe('MonitoreoListasComponent', () => {
   let component: MonitoreoListasComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
   const fire = vi.mocked(Swal.fire);
+  const close = vi.mocked(Swal.close);
+  let createObjectUrl: ReturnType<typeof vi.fn>;
+  let revokeObjectUrl: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     service = {
@@ -34,9 +37,15 @@ describe('MonitoreoListasComponent', () => {
       registrarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento registrado' })),
       actualizarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento actualizado' })),
       eliminarEvidencia: vi.fn(() => of({ mensaje: 'Evidencia eliminada' })),
-      eliminarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento eliminado' }))
+      eliminarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento eliminado' })),
+      descargarEvidenciaBlob: vi.fn(() => of(new Blob()))
     };
     fire.mockReset();
+    close.mockReset();
+    createObjectUrl = vi.fn(() => 'blob:evidencia-prueba');
+    revokeObjectUrl = vi.fn();
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: createObjectUrl });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: revokeObjectUrl });
 
     await TestBed.configureTestingModule({
       imports: [MonitoreoListasComponent],
@@ -55,6 +64,7 @@ describe('MonitoreoListasComponent', () => {
 
   afterEach(() => {
     fixture.destroy();
+    vi.restoreAllMocks();
     TestBed.resetTestingModule();
   });
 
@@ -293,6 +303,53 @@ describe('MonitoreoListasComponent', () => {
     expect(component.seguimientoEditandoId()).toBe(55);
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
       title: 'Error', text: 'Seguimiento protegido'
+    }));
+  });
+
+  it('abre una evidencia PDF usando una URL temporal simulada', async () => {
+    const archivo = new Blob(['pdf'], { type: 'application/pdf' });
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
+    service['descargarEvidenciaBlob'].mockReturnValue(of(archivo));
+
+    component.descargarEvidencia({
+      evidenciaId: 71, nombreArchivo: 'evidencia.pdf', tipoMime: 'application/pdf'
+    } as never);
+
+    await vi.waitFor(() => expect(service['descargarEvidenciaBlob']).toHaveBeenCalledOnce());
+    expect(service['descargarEvidenciaBlob']).toHaveBeenCalledWith(71);
+    expect(createObjectUrl).toHaveBeenCalledWith(archivo);
+    expect(abrir).toHaveBeenCalledWith('blob:evidencia-prueba', '_blank');
+    expect(close).toHaveBeenCalled();
+  });
+
+  it('descarga una evidencia no visualizable mediante un enlace temporal', async () => {
+    const archivo = new Blob(['doc'], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const abrir = vi.spyOn(window, 'open').mockImplementation(() => null);
+    service['descargarEvidenciaBlob'].mockReturnValue(of(archivo));
+
+    component.descargarEvidencia({
+      evidenciaId: 72, nombreArchivo: 'informe.docx', tipoMime: archivo.type
+    } as never);
+
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(createObjectUrl).toHaveBeenCalledWith(archivo);
+    expect(abrir).not.toHaveBeenCalled();
+    expect(close).toHaveBeenCalled();
+  });
+
+  it('muestra un error controlado cuando no puede descargar la evidencia', async () => {
+    service['descargarEvidenciaBlob'].mockReturnValue(throwError(() => new Error('Descarga no disponible')));
+
+    component.descargarEvidencia({
+      evidenciaId: 73, nombreArchivo: 'fallida.pdf', tipoMime: 'application/pdf'
+    } as never);
+
+    await vi.waitFor(() => expect(service['descargarEvidenciaBlob']).toHaveBeenCalledOnce());
+    expect(createObjectUrl).not.toHaveBeenCalled();
+    expect(close).toHaveBeenCalled();
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'Error', text: 'No se pudo cargar el archivo de evidencia.'
     }));
   });
 });

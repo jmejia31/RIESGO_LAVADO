@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 18 de calidad Frontend - 2026-07-15
+
+- Se cubrieron visualización, descarga por enlace y error de evidencias mediante APIs de navegador simuladas.
+- Se probaron exportaciones EXCEL/PDF de matrices sin generar archivos reales.
+- Se caracterizó la carga, reconstrucción, actualización y recálculo de matrices en modo edición.
+- La suite Frontend aumentó de 82 a 91 pruebas en trece archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 23.74% de sentencias, 18.12% de ramas, 20.74% de funciones y 23.61% de líneas.
+- Se elevaron los pisos anti-regresión sin modificar código productivo ni abrir archivos o ventanas reales.
+
 ### Fase 17 de calidad Frontend - 2026-07-15
 
 - Se cubrió la política documental para tamaño máximo, extensiones autorizadas y archivos válidos.
