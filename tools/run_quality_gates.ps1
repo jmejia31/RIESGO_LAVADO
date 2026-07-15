@@ -9,10 +9,10 @@ $backendThresholds = @{
     Branches = 6.7
 }
 $frontendThresholds = @{
-    Statements = 23.7
-    Branches = 18.1
-    Functions = 20.7
-    Lines = 23.6
+    Statements = 28.3
+    Branches = 24.8
+    Functions = 26.5
+    Lines = 28.3
 }
 $failures = [System.Collections.Generic.List[string]]::new()
 

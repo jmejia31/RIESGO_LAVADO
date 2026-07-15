@@ -29,6 +29,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 16 | Calidad Frontend: validaciones y escrituras simuladas de Listas/Matrices | Medio | Completada |
 | 17 | Calidad Frontend: política documental y eliminaciones lógicas simuladas | Medio | Completada |
 | 18 | Calidad Frontend: descargas, exportaciones y edición completa de matrices | Medio | Completada |
+| 19 | Calidad Frontend: exportaciones auditadas de monitoreo y edición de criterios | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -198,6 +199,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - La edición reconstruye el formulario y sus variables desde el detalle persistido, actualiza la matriz y ejecuta el recálculo automático `FACTOR`.
 - También se conserva el formulario y se informa el error cuando el detalle no puede cargarse.
 - La suite Frontend alcanzó 91 pruebas en trece archivos; la cobertura llegó a 23.74% de sentencias, 18.12% de ramas, 20.74% de funciones y 23.61% de líneas.
+
+### Resultado de la fase 19
+
+- La exportación de la lista principal y la ficha de patrono exige una auditoría exitosa antes de generar el archivo.
+- Los fallos de auditoría cancelan la exportación, recuperan el indicador y muestran un mensaje controlado.
+- El generador Excel se ejecuta con `Blob`, URL y enlace interceptados; no se escribe ningún archivo real.
+- Los criterios quedaron cubiertos para creación con normalización, carga en edición, actualización y conservación del formulario ante rechazo.
+- La suite Frontend alcanzó 99 pruebas en trece archivos; la cobertura llegó a 28.31% de sentencias, 24.80% de ramas, 26.59% de funciones y 28.30% de líneas.
+- Finalizada esta fase, el cierre recomendado continúa con fortalecimiento Backend y una auditoría integral final.
 
 ## Controles obligatorios por fase
 

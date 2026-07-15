@@ -394,4 +394,56 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.matrizEditandoId()).toBeNull();
     expect(component.cargando()).toBe(false);
   });
+
+  it('crea un criterio valido normalizando los valores numericos', () => {
+    component.criteriosForm = {
+      variableId: 6, escalaId: 2, valorDesde: 1, valorHasta: 10,
+      puntaje: 4, descripcion: '  Riesgo elevado  '
+    };
+
+    component.guardarCriterio();
+
+    expect(service['crearCriterio']).toHaveBeenCalledWith({
+      variableId: 6, escalaId: 2, valorDesde: 1, valorHasta: 10,
+      puntaje: 4, descripcion: 'Riesgo elevado'
+    });
+    expect(component.mensaje()).toBe('Criterio registrado correctamente.');
+    expect(component.criterioEditandoId()).toBeNull();
+    expect(component.criteriosForm.variableId).toBe(0);
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('carga un criterio en el formulario y lo actualiza por su identificador', () => {
+    const criterio = {
+      criterioId: 13, variableId: 6, escalaId: 2, valorDesde: 11,
+      valorHasta: 20, puntaje: 5, descripcion: 'Riesgo critico', activo: true
+    } as never;
+
+    component.editarCriterio(criterio);
+    component.criteriosForm.descripcion = 'Riesgo crítico actualizado';
+    component.guardarCriterio();
+
+    expect(service['actualizarCriterio']).toHaveBeenCalledWith(13, expect.objectContaining({
+      variableId: 6, puntaje: 5, descripcion: 'Riesgo crítico actualizado'
+    }));
+    expect(component.mensaje()).toBe('Criterio actualizado correctamente.');
+    expect(component.criterioEditandoId()).toBeNull();
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('conserva el criterio en edicion cuando el servicio rechaza la actualizacion', () => {
+    service['actualizarCriterio'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Rango superpuesto' } })));
+    const criterio = {
+      criterioId: 14, variableId: 6, escalaId: null, valorDesde: 1,
+      valorHasta: 5, puntaje: 2, descripcion: 'Rango existente', activo: true
+    } as never;
+    component.editarCriterio(criterio);
+
+    component.guardarCriterio();
+
+    expect(component.error()).toBe('Rango superpuesto');
+    expect(component.criterioEditandoId()).toBe(14);
+    expect(component.criteriosForm.descripcion).toBe('Rango existente');
+    expect(component.guardando()).toBe(false);
+  });
 });

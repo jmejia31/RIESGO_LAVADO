@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 19 de calidad Frontend - 2026-07-15
+
+- Se cubrieron exportaciones de lista principal y ficha de patrono condicionadas a auditoría obligatoria.
+- Se verificó que los fallos de auditoría cancelen el archivo y recuperen el estado de la pantalla.
+- Se probaron creación, edición, actualización y error de criterios de matrices.
+- La suite Frontend aumentó de 91 a 99 pruebas en trece archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 28.31% de sentencias, 24.80% de ramas, 26.59% de funciones y 28.30% de líneas.
+- Se elevaron los pisos anti-regresión sin escribir archivos ni registrar auditorías reales.
+
 ### Fase 18 de calidad Frontend - 2026-07-15
 
 - Se cubrieron visualización, descarga por enlace y error de evidencias mediante APIs de navegador simuladas.

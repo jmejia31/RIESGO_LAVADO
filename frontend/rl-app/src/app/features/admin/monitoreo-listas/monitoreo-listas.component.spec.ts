@@ -38,7 +38,11 @@ describe('MonitoreoListasComponent', () => {
       actualizarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento actualizado' })),
       eliminarEvidencia: vi.fn(() => of({ mensaje: 'Evidencia eliminada' })),
       eliminarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento eliminado' })),
-      descargarEvidenciaBlob: vi.fn(() => of(new Blob()))
+      descargarEvidenciaBlob: vi.fn(() => of(new Blob())),
+      getPositivoPorDocumento: vi.fn(() => of(null)),
+      getDetalleNatural: vi.fn(() => of([])),
+      getDetalleEmpleado: vi.fn(() => of([])),
+      registrarAuditoriaExportacion: vi.fn(() => of({ success: true }))
     };
     fire.mockReset();
     close.mockReset();
@@ -351,5 +355,101 @@ describe('MonitoreoListasComponent', () => {
     expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
       title: 'Error', text: 'No se pudo cargar el archivo de evidencia.'
     }));
+  });
+
+  it('no exporta la lista principal cuando no existen resultados filtrados', () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    component.juridicasRaw.set([]);
+
+    component.exportarListaPrincipal();
+
+    expect(service['registrarAuditoriaExportacion']).not.toHaveBeenCalled();
+    expect(click).not.toHaveBeenCalled();
+  });
+
+  it('audita y exporta la lista principal juridica con los datos filtrados', () => {
+    let nombreDescarga = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombreDescarga = this.download;
+    });
+    component.juridicasRaw.set([{
+      numeroPatrono: 'P-100', rtn: '08019000123456', nombre: 'Empresa Segura',
+      listaCoincidencia: 'Lista Uno', esProveedorIhss: 'Si', fechaEncontro: '2026-07-10'
+    }] as never);
+
+    component.exportarListaPrincipal();
+
+    expect(service['registrarAuditoriaExportacion']).toHaveBeenCalledWith(
+      'RL_LISTA_POSITIVOS',
+      'juridica',
+      'ExportacionMonitoreoListas',
+      expect.objectContaining({ tipo: 'juridica', cantidadRegistros: 1 })
+    );
+    expect(click).toHaveBeenCalledOnce();
+    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\d{4}-\d{2}-\d{2}\.xls$/);
+  });
+
+  it('cancela la exportacion principal si no puede registrar la auditoria', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    service['registrarAuditoriaExportacion'].mockReturnValue(throwError(() => new Error('Auditoria fuera de linea')));
+    component.juridicasRaw.set([{
+      numeroPatrono: 'P-101', rtn: '08019000123457', nombre: 'Empresa Dos', listaCoincidencia: 'Lista Uno'
+    }] as never);
+
+    component.exportarListaPrincipal();
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    expect(click).not.toHaveBeenCalled();
+    expect(component.cargando()).toBe(false);
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
+    expect(consoleError).toHaveBeenCalled();
+  });
+
+  it('genera una ficha de patrono solamente despues de auditarla', () => {
+    let nombreDescarga = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombreDescarga = this.download;
+    });
+    service['getPositivoPorDocumento'].mockReturnValue(of({
+      motivoIngreso: 'Coincidencia validada', origenRegistro: 'DNP_LISTAS'
+    }));
+    service['getSeguimientos'].mockReturnValue(of([{
+      detalleListaId: 1, motivoIngreso: 'Revision mensual', fechaCreacion: '2026-07-10', evidencias: []
+    }]));
+    const patrono = {
+      numeroPatrono: 'P-200', rtn: '08019000123458', nombre: 'Patrono Auditado',
+      listaCoincidencia: 'Lista Dos', tieneMotivo: true
+    } as never;
+
+    component.exportarFichaExcelPatrono(patrono);
+
+    expect(service['registrarAuditoriaExportacion']).toHaveBeenCalledWith(
+      'RL_LISTA_POSITIVOS',
+      'P-200',
+      'ExportacionFichaPerfil',
+      expect.objectContaining({ tipo: 'juridica', cantidadSeguimientos: 1 })
+    );
+    expect(click).toHaveBeenCalledOnce();
+    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xls');
+    expect(component.cargando()).toBe(false);
+  });
+
+  it('no genera la ficha de patrono cuando falla su auditoria obligatoria', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    service['registrarAuditoriaExportacion'].mockReturnValue(throwError(() => new Error('Auditoria rechazada')));
+    const patrono = {
+      numeroPatrono: 'P-201', rtn: '08019000123459', nombre: 'Patrono Restringido',
+      listaCoincidencia: 'Lista Dos', tieneMotivo: false
+    } as never;
+
+    component.exportarFichaExcelPatrono(patrono);
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    expect(click).not.toHaveBeenCalled();
+    expect(component.cargando()).toBe(false);
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Auditoría requerida' }));
+    expect(consoleError).toHaveBeenCalled();
   });
 });
