@@ -25,6 +25,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 12 | Cierre Backend: encapsular refresh tokens y eliminar carpetas heredadas | Medio | Completada |
 | 13 | Calidad Frontend: guards, interceptor JWT y servicios HTTP críticos | Medio | Completada |
 | 14 | Calidad Frontend: confirmación de cambios y contratos HTTP de Listas/Matrices | Medio | Completada |
+| 15 | Calidad Frontend: coordinación y recuperación ante errores en Listas/Matrices | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -158,6 +159,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Las pruebas usan `HttpTestingController` y un modal simulado; no realizan solicitudes reales ni modifican datos.
 - La suite Frontend alcanzó 46 pruebas en once archivos y mantuvo los cinco recorridos E2E no destructivos.
 - La cobertura Frontend alcanzó 8.27% de sentencias, 8.92% de ramas, 7.35% de funciones y 7.23% de líneas.
+
+### Resultado de la fase 15
+
+- `MonitoreoListasComponent` quedó cubierto para carga por tipo de persona, cambio de vista, catálogos, política documental y seguimientos.
+- `MatricesRiesgosComponent` quedó cubierto para filtros, listado, reporte, selección de matriz, historial y carga inicial de metodología.
+- Se caracterizaron fallos HTTP de ambos servicios y la recuperación de indicadores, colecciones y mensajes en los componentes.
+- Las plantillas y servicios externos se sustituyen durante las pruebas; no se accede a la API, Oracle ni archivos reales.
+- La suite Frontend alcanzó 60 pruebas en trece archivos y mantuvo los cinco recorridos E2E no destructivos.
+- La cobertura Frontend alcanzó 13.89% de sentencias, 10.41% de ramas, 10.74% de funciones y 13.17% de líneas.
 
 ## Controles obligatorios por fase
 

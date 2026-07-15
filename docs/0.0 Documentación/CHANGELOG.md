@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 15 de calidad Frontend - 2026-07-15
+
+- Se probaron la coordinación y recuperación ante errores de `MonitoreoListasComponent` y `MatricesRiesgosComponent`.
+- Se cubrieron cargas por tipo, filtros, catálogos, política documental, seguimientos, reportes, selección e historial.
+- Se verificó la propagación de errores HTTP desde los servicios sin realizar solicitudes reales.
+- La suite Frontend aumentó de 46 a 60 pruebas en trece archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 13.89% de sentencias, 10.41% de ramas, 10.74% de funciones y 13.17% de líneas.
+- Se elevaron los pisos anti-regresión y el validador exige las dos nuevas suites de componentes.
+
 ### Fase 14 de calidad Frontend - 2026-07-15
 
 - Se cubrió el interceptor de confirmación para aceptación, cancelación, exclusiones y limpieza de cabeceras internas.

@@ -31,7 +31,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
 | Backend | 7 | 30 | Calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
-| Frontend unitario | 11 | 46 | Arranque, rutas diferidas, guards, interceptores JWT/confirmacion, sesion local, configuracion, bitacora y contratos HTTP de Listas/Matrices |
+| Frontend unitario | 13 | 60 | Arranque, rutas diferidas, guards, interceptores JWT/confirmacion, sesion local, configuracion, bitacora, contratos HTTP y coordinacion de Listas/Matrices |
 | Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
 La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos anti-regresion automatizados. La linea base completa sigue siendo baja y se documenta en `QUALITY.md`; no debe interpretarse como objetivo suficiente ni reducirse para aprobar cambios.
@@ -42,7 +42,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 |---|---|
 | `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 30/30 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial aproximado de 375 KB |
-| `npm test -- --watch=false` | 46/46 pruebas Frontend |
+| `npm test -- --watch=false` | 60/60 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |
 | `tools/run_quality_gates.ps1` | Cobertura Backend/Frontend sobre sus arboles completos y pisos anti-regresion aprobados |
 | `tools/validate_repository_structure.ps1` | Estructura, artefactos, SQL y documentacion correctos |

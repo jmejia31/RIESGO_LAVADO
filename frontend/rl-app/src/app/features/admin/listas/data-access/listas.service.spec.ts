@@ -83,4 +83,14 @@ describe('ListasService', () => {
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     request.flush({ success: true });
   });
+
+  it('propaga un error HTTP de consulta para que el componente pueda recuperarse', () => {
+    const error = vi.fn();
+    service.getJuridicas().subscribe({ error });
+
+    const request = http.expectOne(`${apiUrl}/juridicas`);
+    request.flush({ mensaje: 'Servicio no disponible' }, { status: 503, statusText: 'Unavailable' });
+
+    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 503 }));
+  });
 });

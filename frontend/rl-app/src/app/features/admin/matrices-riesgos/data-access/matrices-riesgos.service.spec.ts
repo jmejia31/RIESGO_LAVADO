@@ -82,4 +82,14 @@ describe('MatricesRiesgosService', () => {
     request.flush({ success: true, datos: criterios });
     expect(result).toHaveBeenCalledWith(criterios);
   });
+
+  it('propaga errores HTTP del listado al coordinador de la pantalla', () => {
+    const error = vi.fn();
+    service.listar({ estado: 'ACTIVA' } as never).subscribe({ error });
+
+    const request = http.expectOne(req => req.url === apiUrl);
+    request.flush({ mensaje: 'Consulta rechazada' }, { status: 500, statusText: 'Server Error' });
+
+    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));
+  });
 });
