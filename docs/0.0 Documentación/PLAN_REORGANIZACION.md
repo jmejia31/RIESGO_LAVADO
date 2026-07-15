@@ -23,6 +23,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 10 | Backend: migrar Auditoría como módulo vertical y capacidad transversal | Medio/alto | Completada |
 | 11 | Backend: migrar Auth y Usuarios como contexto de Identidad | Alto | Completada |
 | 12 | Cierre Backend: encapsular refresh tokens y eliminar carpetas heredadas | Medio | Completada |
+| 13 | Calidad Frontend: guards, interceptor JWT y servicios HTTP críticos | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -138,6 +139,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - `ServiceResult` se movió de la carpeta heredada `Services` a `Shared/Results` sin cambiar su contrato.
 - `Controllers`, `DTOs`, `Models`, `Repositories` y `Services` quedaron sin archivos; el validador rechaza genéricamente cualquier reintroducción.
 - La cobertura Backend alcanzó 7.11% de líneas y 6.78% de ramas, con pisos elevados a 7.1% y 6.7%.
+
+### Resultado de la fase 13
+
+- Se añadieron ocho pruebas de guards para sesión, cambio obligatorio de contraseña, roles y módulos.
+- El interceptor JWT quedó cubierto para adjuntar token, solicitudes anónimas, renovación ante `401` y redirección segura ante `403`.
+- `AuthService` quedó probado con login, claims JWT, almacenamiento local, renovación y contratos de contraseña.
+- `ConfiguracionService` valida defaults, señales, colores institucionales y resolución de imágenes; `AuditoriaService` valida paginación y filtros.
+- La suite Frontend pasó de 6 a 31 pruebas en ocho archivos, sin solicitudes reales ni escrituras sobre la API.
+- La cobertura Frontend alcanzó 5.85% de sentencias, 6.79% de ramas, 4.47% de funciones y 4.91% de líneas.
 
 ## Controles obligatorios por fase
 

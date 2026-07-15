@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 13 de calidad Frontend - 2026-07-15
+
+- Se agregaron pruebas unitarias para los guards de autenticación, roles y módulos.
+- Se cubrió el interceptor JWT al adjuntar tokens, renovar sesiones y manejar respuestas `401`/`403`.
+- Se probaron `AuthService`, `ConfiguracionService` y `AuditoriaService` con `HttpTestingController`.
+- La suite Frontend aumentó de 6 a 31 pruebas en ocho archivos.
+- La cobertura Frontend subió a 5.85% de sentencias, 6.79% de ramas, 4.47% de funciones y 4.91% de líneas.
+- Se elevaron los pisos anti-regresión y el validador exige las cinco nuevas suites.
+
 ### Fase 12 de cierre arquitectónico - 2026-07-15
 
 - Se encapsuló en `UsuarioRepository` la consulta Oracle que localiza refresh tokens vigentes.

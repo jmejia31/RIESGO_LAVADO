@@ -18,10 +18,10 @@ Para omitir temporalmente E2E durante trabajo unitario local puede usarse `-Skip
 |---|---|---:|---:|
 | Backend | Lineas | 7.11% | 7.1% |
 | Backend | Ramas | 6.78% | 6.7% |
-| Frontend | Sentencias | 0.95% | 0.9% |
-| Frontend | Ramas | 1.71% | 1.7% |
-| Frontend | Funciones | 0.53% | 0.5% |
-| Frontend | Lineas | 0.53% | 0.5% |
+| Frontend | Sentencias | 5.85% | 5.8% |
+| Frontend | Ramas | 6.79% | 6.7% |
+| Frontend | Funciones | 4.47% | 4.4% |
+| Frontend | Lineas | 4.91% | 4.9% |
 
 Estos valores son pisos iniciales contra regresiones, no objetivos suficientes de calidad. Son bajos porque la medicion incluye todo `RL.API` y todo `src/app`, no solo los archivos cargados por las pruebas. Los pisos no deben reducirse para hacer pasar un cambio; cada fase funcional debe agregar pruebas y elevarlos de manera gradual.
 
@@ -53,6 +53,6 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 ## Siguiente incremento recomendado
 
 - Backend: ampliar escenarios de Active Directory/SMTP en un ambiente controlado y cubrir persistencia Oracle mediante pruebas de integración aisladas.
-- Frontend: guards, interceptor de autenticacion y servicios HTTP con `HttpTestingController`.
+- Frontend: interceptor de confirmacion de cambios, ramas de error de sesion y servicios HTTP de Listas/Matrices.
 - E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
 - Mantener los recorridos que crean o modifican datos fuera de la suite no destructiva hasta disponer de datos semilla y limpieza transaccional aprobada.
