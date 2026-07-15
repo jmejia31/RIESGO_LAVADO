@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Configuracion.Persistence;
 using RL.API.DTOs;
 using RL.API.Models;
 using RL.API.Repositories;

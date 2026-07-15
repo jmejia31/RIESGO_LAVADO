@@ -1,4 +1,4 @@
-namespace RL.API.Models;
+namespace RL.API.Features.Configuracion.Contracts;
 
 public class ConfigSistema
 {

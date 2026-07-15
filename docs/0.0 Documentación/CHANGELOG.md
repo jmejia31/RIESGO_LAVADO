@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 9 de reorganización - 2026-07-15
+
+- Se migró `Configuracion` a un módulo vertical con `Application`, `Contracts` y `Persistence`.
+- Se preservaron rutas REST, autorización por rol y módulo 3, respuestas públicas, SQL Oracle y reglas de carga de imágenes.
+- Se trasladó la coordinación de auditoría desde el controlador a `ConfiguracionService` sin cambiar sus datos funcionales.
+- Se agregaron cinco pruebas de caracterización; la suite Backend alcanzó 15/15 casos aprobados.
+- La cobertura Backend subió a 3.88% de líneas y 3.21% de ramas, elevando sus pisos anti-regresión.
+- Se amplió el validador estructural para exigir el nuevo módulo y rechazar las ubicaciones heredadas.
+
 ### Fase 8 de calidad - 2026-07-14
 
 - Se añadió cobertura Backend con Coverlet y Frontend con V8 sobre el código completo de ambos componentes.

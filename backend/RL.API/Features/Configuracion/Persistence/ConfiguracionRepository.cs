@@ -1,19 +1,8 @@
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Configuracion.Contracts;
 using RL.API.Infrastructure;
-using RL.API.Models;
 
-namespace RL.API.Repositories;
-
-public interface IConfiguracionRepository
-{
-    Task<ConfigSistema?> ObtenerConfigSistemaAsync();
-    Task<List<LoginSlide>> ObtenerSlidesAsync();
-    Task<List<LoginSlide>> ObtenerTodosSlidesAsync();
-    Task<bool> GuardarConfigSistemaAsync(ConfigSistema config);
-    Task<bool> CrearSlideAsync(LoginSlide slide);
-    Task<bool> ActualizarSlideAsync(LoginSlide slide);
-    Task<bool> EliminarSlideAsync(int id);
-}
+namespace RL.API.Features.Configuracion.Persistence;
 
 public class ConfiguracionRepository : IConfiguracionRepository
 {

@@ -1,30 +1,29 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RL.API.Repositories;
+using RL.API.Features.Configuracion.Application;
+using RL.API.Features.Configuracion.Contracts;
 using RL.API.Security;
 using System.Security.Claims;
 
-namespace RL.API.Controllers;
+namespace RL.API.Features.Configuracion;
 
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
 public class ConfiguracionController : ControllerBase
 {
-    private readonly IConfiguracionRepository _repo;
-    private readonly IAuditoriaRepository _auditoriaRepo;
+    private readonly IConfiguracionService _service;
 
-    public ConfiguracionController(IConfiguracionRepository repo, IAuditoriaRepository auditoriaRepo)
+    public ConfiguracionController(IConfiguracionService service)
     {
-        _repo = repo;
-        _auditoriaRepo = auditoriaRepo;
+        _service = service;
     }
 
     [HttpGet("sistema")]
     [AllowAnonymous]
     public async Task<IActionResult> Sistema()
     {
-        var config = await _repo.ObtenerConfigSistemaAsync();
+        var config = await _service.ObtenerConfigSistemaAsync();
         if (config == null) return NotFound(new { success = false, mensaje = "Configuración no encontrada" });
 
         return Ok(new { success = true, datos = new {
@@ -44,25 +43,11 @@ public class ConfiguracionController : ControllerBase
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
     [AuditRequired("Cambio de configuracion del sistema")]
-    public async Task<IActionResult> GuardarSistema([FromBody] Models.ConfigSistema config)
+    public async Task<IActionResult> GuardarSistema([FromBody] ConfigSistema config)
     {
         if (config == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
 
-        var anterior = await _repo.ObtenerConfigSistemaAsync();
-        var ok = await _repo.GuardarConfigSistemaAsync(config);
-        if (ok)
-        {
-            await _auditoriaRepo.RegistrarAsync(
-                "RL_CONFIG_SISTEMA",
-                "1",
-                "UPDATE",
-                Newtonsoft.Json.JsonConvert.SerializeObject(anterior),
-                Newtonsoft.Json.JsonConvert.SerializeObject(config),
-                ObtenerUsuarioId(),
-                null,
-                HttpContext.Connection.RemoteIpAddress?.ToString(),
-                "Configuracion");
-        }
+        var ok = await _service.GuardarConfigSistemaAsync(config, ObtenerUsuarioId(), ObtenerIp());
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar la configuración" });
 
         return Ok(new { success = true, mensaje = "Configuración actualizada exitosamente" });
@@ -72,7 +57,7 @@ public class ConfiguracionController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> LoginSlides()
     {
-        var slides = await _repo.ObtenerSlidesAsync();
+        var slides = await _service.ObtenerSlidesAsync();
         return Ok(new { success = true, datos = slides.Select(s => new {
             id = s.Id,
             imagenUrl = s.ImagenUrl,
@@ -89,7 +74,7 @@ public class ConfiguracionController : ControllerBase
     [ModuloAuthorize(3)]
     public async Task<IActionResult> TodosSlides()
     {
-        var slides = await _repo.ObtenerTodosSlidesAsync();
+        var slides = await _service.ObtenerTodosSlidesAsync();
         return Ok(new { success = true, datos = slides });
     }
 
@@ -97,14 +82,13 @@ public class ConfiguracionController : ControllerBase
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
     [AuditRequired("Creación de slide de configuración")]
-    public async Task<IActionResult> CrearSlide([FromBody] Models.LoginSlide slide)
+    public async Task<IActionResult> CrearSlide([FromBody] LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
         
-        var ok = await _repo.CrearSlideAsync(slide);
+        var ok = await _service.CrearSlideAsync(slide, ObtenerUsuarioId(), ObtenerIp());
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo crear el slide" });
 
-        await RegistrarAuditoriaSlideAsync("INSERT", slide.Id.ToString(), null, slide);
         return Ok(new { success = true, mensaje = "Slide creado exitosamente" });
     }
 
@@ -112,16 +96,12 @@ public class ConfiguracionController : ControllerBase
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(3)]
     [AuditRequired("Edición de slide de configuración")]
-    public async Task<IActionResult> ActualizarSlide(int id, [FromBody] Models.LoginSlide slide)
+    public async Task<IActionResult> ActualizarSlide(int id, [FromBody] LoginSlide slide)
     {
         if (slide == null) return BadRequest(new { success = false, mensaje = "Datos inválidos" });
-        var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);
-        slide.Id = id;
-
-        var ok = await _repo.ActualizarSlideAsync(slide);
+        var ok = await _service.ActualizarSlideAsync(id, slide, ObtenerUsuarioId(), ObtenerIp());
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo actualizar el slide" });
 
-        await RegistrarAuditoriaSlideAsync("UPDATE", id.ToString(), anterior, slide);
         return Ok(new { success = true, mensaje = "Slide actualizado exitosamente" });
     }
 
@@ -131,11 +111,9 @@ public class ConfiguracionController : ControllerBase
     [AuditRequired("Eliminación de slide de configuración")]
     public async Task<IActionResult> EliminarSlide(int id)
     {
-        var anterior = (await _repo.ObtenerTodosSlidesAsync()).FirstOrDefault(s => s.Id == id);
-        var ok = await _repo.EliminarSlideAsync(id);
+        var ok = await _service.EliminarSlideAsync(id, ObtenerUsuarioId(), ObtenerIp());
         if (!ok) return BadRequest(new { success = false, mensaje = "No se pudo eliminar el slide o no existe" });
 
-        await RegistrarAuditoriaSlideAsync("DELETE", id.ToString(), anterior, null);
         return Ok(new { success = true, mensaje = "Slide eliminado exitosamente" });
     }
 
@@ -168,23 +146,14 @@ public class ConfiguracionController : ControllerBase
         }
 
         var urlRelativa = $"/uploads/{nombreUnico}";
-        await _auditoriaRepo.RegistrarAsync(
-            "RL_LOGIN_SLIDES",
+        await _service.RegistrarCargaImagenAsync(
+            archivo.FileName,
             nombreUnico,
-            "UPLOAD",
-            null,
-            Newtonsoft.Json.JsonConvert.SerializeObject(new
-            {
-                NombreOriginal = archivo.FileName,
-                NombreGuardado = nombreUnico,
-                Url = urlRelativa,
-                TipoMime = archivo.ContentType,
-                TamanioBytes = archivo.Length
-            }),
+            urlRelativa,
+            archivo.ContentType,
+            archivo.Length,
             ObtenerUsuarioId(),
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString(),
-            "Configuracion");
+            ObtenerIp());
 
         return Ok(new { success = true, url = urlRelativa });
     }
@@ -194,17 +163,5 @@ public class ConfiguracionController : ControllerBase
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 
-    private async Task RegistrarAuditoriaSlideAsync(string accion, string registroId, Models.LoginSlide? anterior, Models.LoginSlide? nuevo)
-    {
-        await _auditoriaRepo.RegistrarAsync(
-            "RL_LOGIN_SLIDES",
-            registroId,
-            accion,
-            anterior == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(anterior),
-            nuevo == null ? null : Newtonsoft.Json.JsonConvert.SerializeObject(nuevo),
-            ObtenerUsuarioId(),
-            null,
-            HttpContext.Connection.RemoteIpAddress?.ToString(),
-            "Configuracion");
-    }
+    private string? ObtenerIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
 }

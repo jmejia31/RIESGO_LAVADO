@@ -19,6 +19,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 6 | Base de datos: empaquetar módulos históricos sin romper maestros | Medio | Completada |
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Completada |
 | 8 | Calidad: cobertura reproducible y suite E2E inicial no destructiva | Medio | Completada |
+| 9 | Backend: migrar Configuración a módulo vertical con pruebas de caracterización | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -97,6 +98,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - El ejecutor E2E administra el ciclo de vida de Angular en Windows y termina el servidor creado por la prueba.
 - `tools/run_quality_gates.ps1` concentra pruebas, cobertura, umbrales y E2E en una sola puerta reproducible.
 - La instalación de dependencias Frontend terminó con cero vulnerabilidades reportadas por npm.
+
+### Resultado de la fase 9
+
+- `Configuracion` quedó agrupado bajo `Features/Configuracion` con controlador, contratos, aplicación y persistencia.
+- El controlador depende exclusivamente de `IConfiguracionService`; la aplicación coordina persistencia y auditoría mediante abstracciones.
+- Se conservaron `api/Configuracion`, las respuestas públicas, el rol `ADMINISTRADOR`, el módulo `3`, el SQL Oracle y la escritura de imágenes.
+- Se incorporaron cinco pruebas de caracterización para contratos públicos, límites HTTP y auditoría ante éxito o fallo de persistencia.
+- El Backend alcanzó 15 pruebas y la cobertura global subió a 3.88% de líneas y 3.21% de ramas.
+- El validador estructural exige el nuevo módulo e impide que sus archivos regresen a `Controllers`, `Repositories` o `Models` heredados.
 
 ## Controles obligatorios por fase
 

@@ -7,6 +7,8 @@ using RL.API.Infrastructure;
 using RL.API.Middleware;
 using RL.API.Features.Catalogos.Application;
 using RL.API.Features.Catalogos.Persistence;
+using RL.API.Features.Configuracion.Application;
+using RL.API.Features.Configuracion.Persistence;
 using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Persistence;
 using RL.API.Features.MatricesRiesgos.Application;
@@ -122,6 +124,7 @@ builder.Services.Configure<RL.API.Models.SmtpSettings>(builder.Configuration.Get
 builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
+builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IListasService, ListasService>();
 builder.Services.AddScoped<IEvidenciasService, EvidenciasService>();

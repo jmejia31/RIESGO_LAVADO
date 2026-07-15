@@ -16,8 +16,8 @@ Para omitir temporalmente E2E durante trabajo unitario local puede usarse `-Skip
 
 | Componente | Metrica | Resultado fase 8 | Piso automatico |
 |---|---|---:|---:|
-| Backend | Lineas | 3.01% | 3.0% |
-| Backend | Ramas | 2.95% | 2.9% |
+| Backend | Lineas | 3.88% | 3.8% |
+| Backend | Ramas | 3.21% | 3.2% |
 | Frontend | Sentencias | 0.95% | 0.9% |
 | Frontend | Ramas | 1.71% | 1.7% |
 | Frontend | Funciones | 0.53% | 0.5% |
@@ -52,7 +52,7 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 
 ## Siguiente incremento recomendado
 
-- Backend: casos de uso de `Configuracion` y `Auditoria` antes de reorganizarlos.
+- Backend: casos de uso de `Auditoria` antes de reorganizarlo; ampliar las ramas de fallo de `Configuracion`.
 - Frontend: guards, interceptor de autenticacion y servicios HTTP con `HttpTestingController`.
 - E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
 - Mantener los recorridos que crean o modifican datos fuera de la suite no destructiva hasta disponer de datos semilla y limpieza transaccional aprobada.

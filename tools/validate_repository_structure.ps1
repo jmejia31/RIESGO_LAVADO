@@ -27,6 +27,14 @@ $requiredPaths = @(
     'backend/RL.API/Features/Catalogos/Persistence/ICatalogoRepository.cs',
     'backend/RL.API/Features/Catalogos/Persistence/CatalogoRepository.cs',
     'backend/RL.API.Tests/Features/Catalogos/CatalogosModuleTests.cs',
+    'backend/RL.API/Features/Configuracion/ConfiguracionController.cs',
+    'backend/RL.API/Features/Configuracion/Application/IConfiguracionService.cs',
+    'backend/RL.API/Features/Configuracion/Application/ConfiguracionService.cs',
+    'backend/RL.API/Features/Configuracion/Contracts/ConfigSistema.cs',
+    'backend/RL.API/Features/Configuracion/Contracts/LoginSlide.cs',
+    'backend/RL.API/Features/Configuracion/Persistence/IConfiguracionRepository.cs',
+    'backend/RL.API/Features/Configuracion/Persistence/ConfiguracionRepository.cs',
+    'backend/RL.API.Tests/Features/Configuracion/ConfiguracionModuleCharacterizationTests.cs',
     'backend/RL.API/Features/Listas/ListasController.cs',
     'backend/RL.API/Features/Listas/Application/IListasService.cs',
     'backend/RL.API/Features/Listas/Application/ListasService.cs',
@@ -65,7 +73,7 @@ $requiredPaths = @(
     'frontend/rl-app/e2e/login-and-routing.spec.ts',
     "docs/$documentationDirectoryName/ARCHITECTURE.md",
     "docs/$documentationDirectoryName/ESTRUCTURA_OBJETIVO.md",
-    "docs/$documentationDirectoryName/PLAN_REORGANIZACION.md"
+    "docs/$documentationDirectoryName/PLAN_REORGANIZACION.md",
     "docs/$documentationDirectoryName/QUALITY.md"
 )
 
@@ -115,6 +123,7 @@ foreach ($file in $trackedFiles) {
 
 $legacyBackendPaths = @(
     'backend/RL.API/Controllers/CatalogosController.cs',
+    'backend/RL.API/Controllers/ConfiguracionController.cs',
     'backend/RL.API/Controllers/ListasController.cs',
     'backend/RL.API/Controllers/MatricesRiesgosController.cs',
     'backend/RL.API/Services/CatalogoService.cs',
@@ -124,9 +133,12 @@ $legacyBackendPaths = @(
     'backend/RL.API/Services/MatricesRiesgosAppService.cs',
     'backend/RL.API/Services/MatricesRiesgoService.cs',
     'backend/RL.API/Repositories/CatalogoRepository.cs',
+    'backend/RL.API/Repositories/ConfiguracionRepository.cs',
     'backend/RL.API/Repositories/ListasRepository.cs',
     'backend/RL.API/Repositories/MatricesRiesgosRepository.cs',
     'backend/RL.API/Models/Modulo.cs',
+    'backend/RL.API/Models/ConfigSistema.cs',
+    'backend/RL.API/Models/LoginSlide.cs',
     'backend/RL.API/Models/ListasModels.cs',
     'backend/RL.API/DTOs/MatricesRiesgosDto.cs',
     'backend/RL.API/DTOs/MatricesRiesgoCalculoDto.cs'
