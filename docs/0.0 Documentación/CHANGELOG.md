@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 14 de calidad Frontend - 2026-07-15
+
+- Se cubrió el interceptor de confirmación para aceptación, cancelación, exclusiones y limpieza de cabeceras internas.
+- Se probaron los contratos HTTP principales de `ListasService` y `MatricesRiesgosService` sin acceder a la API real.
+- La suite Frontend aumentó de 31 a 46 pruebas en once archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 8.27% de sentencias, 8.92% de ramas, 7.35% de funciones y 7.23% de líneas.
+- Se elevaron los pisos anti-regresión y el validador exige las tres nuevas suites.
+
 ### Fase 13 de calidad Frontend - 2026-07-15
 
 - Se agregaron pruebas unitarias para los guards de autenticación, roles y módulos.
