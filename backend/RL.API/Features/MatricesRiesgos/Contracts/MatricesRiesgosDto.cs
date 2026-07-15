@@ -47,6 +47,8 @@ public sealed class MatrizRiesgoDetalleDto : MatrizRiesgoResumenDto
     public List<MatrizRiesgoVariableDetalleDto> Detalles { get; set; } = new();
     public List<MatrizRiesgoControlDto> Controles { get; set; } = new();
     public List<MatrizRiesgoResultadoPersistidoDto> Resultados { get; set; } = new();
+    public List<MatrizRiesgoPlanAccionDto> PlanesAccion { get; set; } = new();
+    public List<MatrizRiesgoEvidenciaDto> Evidencias { get; set; } = new();
 }
 
 public sealed class MatrizRiesgoVariableDetalleDto
@@ -200,6 +202,82 @@ public sealed class MatrizRiesgoCriterioRequestDto
 public sealed class MatrizRiesgoInactivarRequestDto
 {
     public string Motivo { get; set; } = string.Empty;
+}
+
+public sealed class MatrizRiesgoPlanAccionDto
+{
+    public long PlanId { get; set; }
+    public long MatrizId { get; set; }
+    public long? ResultadoId { get; set; }
+    public string Actividad { get; set; } = string.Empty;
+    public string Responsable { get; set; } = string.Empty;
+    public string? Periodicidad { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public string? MedioPrueba { get; set; }
+    public string? Observaciones { get; set; }
+    public string Estado { get; set; } = string.Empty;
+    public string? MotivoCierre { get; set; }
+    public DateTime FechaCreacion { get; set; }
+    public DateTime? FechaCierre { get; set; }
+    public bool Vencido { get; set; }
+}
+
+public sealed class MatrizRiesgoPlanAccionRequestDto
+{
+    public long? ResultadoId { get; set; }
+    public string Actividad { get; set; } = string.Empty;
+    public string Responsable { get; set; } = string.Empty;
+    public string? Periodicidad { get; set; }
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+    public string? MedioPrueba { get; set; }
+    public string? Observaciones { get; set; }
+}
+
+public sealed class MatrizRiesgoPlanEstadoRequestDto
+{
+    public string Estado { get; set; } = string.Empty;
+    public string Motivo { get; set; } = string.Empty;
+}
+
+public sealed class MatrizRiesgoEvidenciaDto
+{
+    public long EvidenciaId { get; set; }
+    public long MatrizId { get; set; }
+    public long? ControlId { get; set; }
+    public long? PlanId { get; set; }
+    public string NombreOriginal { get; set; } = string.Empty;
+    public string NombreFisico { get; set; } = string.Empty;
+    public string? TipoMime { get; set; }
+    public string? Extension { get; set; }
+    public long TamanoBytes { get; set; }
+    public string RutaFisica { get; set; } = string.Empty;
+    public string? HashSha256 { get; set; }
+    public bool Activa { get; set; }
+    public string? MotivoInactivo { get; set; }
+    public DateTime FechaCreacion { get; set; }
+}
+
+public sealed class MatrizRiesgoEvidenciaRegistroDto
+{
+    public long MatrizId { get; set; }
+    public long? ControlId { get; set; }
+    public long? PlanId { get; set; }
+    public string NombreOriginal { get; set; } = string.Empty;
+    public string NombreFisico { get; set; } = string.Empty;
+    public string? TipoMime { get; set; }
+    public string? Extension { get; set; }
+    public long TamanoBytes { get; set; }
+    public string RutaFisica { get; set; } = string.Empty;
+    public string? HashSha256 { get; set; }
+}
+
+public sealed class MatrizRiesgoEvidenciaDescargaDto
+{
+    public string NombreArchivo { get; set; } = string.Empty;
+    public string ContentType { get; set; } = "application/octet-stream";
+    public byte[] Contenido { get; set; } = Array.Empty<byte>();
 }
 
 public sealed class MatricesRiesgoDashboardDto

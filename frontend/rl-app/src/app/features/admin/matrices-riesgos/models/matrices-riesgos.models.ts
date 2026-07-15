@@ -95,6 +95,8 @@ export interface MatrizRiesgoDetalle extends MatrizRiesgoResumen {
   detalles: MatrizRiesgoVariableDetalle[];
   controles: MatrizRiesgoControl[];
   resultados: MatrizRiesgoResultado[];
+  planesAccion: MatrizRiesgoPlanAccion[];
+  evidencias: MatrizRiesgoEvidencia[];
 }
 
 export interface MatrizRiesgoVariableDetalle {
@@ -256,4 +258,49 @@ export interface MatrizRiesgoCriterioRequest {
   valorHasta?: number | null;
   puntaje: number;
   descripcion: string;
+}
+
+export interface MatrizRiesgoPlanAccion {
+  planId: number;
+  matrizId: number;
+  resultadoId?: number | null;
+  actividad: string;
+  responsable: string;
+  periodicidad?: string | null;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
+  medioPrueba?: string | null;
+  observaciones?: string | null;
+  estado: string;
+  motivoCierre?: string | null;
+  fechaCreacion: string;
+  fechaCierre?: string | null;
+  vencido: boolean;
+}
+
+export interface MatrizRiesgoPlanAccionRequest {
+  resultadoId?: number | null;
+  actividad: string;
+  responsable: string;
+  periodicidad?: string | null;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
+  medioPrueba?: string | null;
+  observaciones?: string | null;
+}
+
+export interface MatrizRiesgoEvidencia {
+  evidenciaId: number;
+  matrizId: number;
+  controlId?: number | null;
+  planId?: number | null;
+  nombreOriginal: string;
+  nombreFisico: string;
+  tipoMime?: string | null;
+  extension?: string | null;
+  tamanoBytes: number;
+  hashSha256?: string | null;
+  activa: boolean;
+  motivoInactivo?: string | null;
+  fechaCreacion: string;
 }

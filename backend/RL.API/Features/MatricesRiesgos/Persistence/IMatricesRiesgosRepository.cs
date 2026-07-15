@@ -18,6 +18,17 @@ public interface IMatricesRiesgosRepository
     Task<bool> CambiarEstadoAsync(long matrizId, string estado, string motivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> EliminarMatrizAsync(long matrizId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<List<MatrizRiesgoHistorialDto>> ObtenerHistorialAsync(long matrizId);
+    Task<List<MatrizRiesgoPlanAccionDto>> ListarPlanesAsync(long matrizId);
+    Task<long> CrearPlanAsync(long matrizId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> CambiarEstadoPlanAsync(long matrizId, long planId, string estado, string motivo, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> InactivarPlanAsync(long matrizId, long planId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> TienePlanTratadoParaCierreAsync(long matrizId);
+    Task<List<MatrizRiesgoEvidenciaDto>> ListarEvidenciasAsync(long matrizId);
+    Task<long> RegistrarEvidenciaAsync(MatrizRiesgoEvidenciaRegistroDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    Task<MatrizRiesgoEvidenciaDto?> ObtenerEvidenciaAsync(long matrizId, long evidenciaId);
+    Task RegistrarDescargaEvidenciaAsync(long matrizId, long evidenciaId, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> InactivarEvidenciaAsync(long matrizId, long evidenciaId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<List<MatrizRiesgoCriterioDto>> ListarCriteriosAsync(bool incluirInactivos);
     Task<long> CrearCriterioAsync(MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> ActualizarCriterioAsync(long criterioId, MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);

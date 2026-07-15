@@ -10,8 +10,11 @@ import {
   MatrizRiesgoCriterioRequest,
   MatrizRiesgoDashboard,
   MatrizRiesgoDetalle,
+  MatrizRiesgoEvidencia,
   MatrizRiesgoFiltro,
   MatrizRiesgoHistorial,
+  MatrizRiesgoPlanAccion,
+  MatrizRiesgoPlanAccionRequest,
   MatrizRiesgoReporteFiltro,
   MatrizRiesgoResumen,
   MetodologiaMatrices
@@ -94,6 +97,54 @@ export class MatricesRiesgosService {
   historial(id: number): Observable<MatrizRiesgoHistorial[]> {
     return this.http.get<ApiResponse<MatrizRiesgoHistorial[]>>(`${this.apiUrl}/${id}/historial`)
       .pipe(map(res => res.datos));
+  }
+
+  listarPlanes(id: number): Observable<MatrizRiesgoPlanAccion[]> {
+    return this.http.get<ApiResponse<MatrizRiesgoPlanAccion[]>>(`${this.apiUrl}/${id}/planes`)
+      .pipe(map(res => res.datos));
+  }
+
+  crearPlan(id: number, dto: MatrizRiesgoPlanAccionRequest): Observable<MatrizRiesgoPlanAccion> {
+    return this.http.post<ApiResponse<MatrizRiesgoPlanAccion>>(`${this.apiUrl}/${id}/planes`, dto, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  actualizarPlan(id: number, planId: number, dto: MatrizRiesgoPlanAccionRequest): Observable<MatrizRiesgoPlanAccion> {
+    return this.http.put<ApiResponse<MatrizRiesgoPlanAccion>>(`${this.apiUrl}/${id}/planes/${planId}`, dto, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  cambiarEstadoPlan(id: number, planId: number, estado: string, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/planes/${planId}/estado`, { estado, motivo }, this.confirmado);
+  }
+
+  inactivarPlan(id: number, planId: number, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/planes/${planId}/inactivar`, { motivo }, this.confirmado);
+  }
+
+  listarEvidencias(id: number): Observable<MatrizRiesgoEvidencia[]> {
+    return this.http.get<ApiResponse<MatrizRiesgoEvidencia[]>>(`${this.apiUrl}/${id}/evidencias`)
+      .pipe(map(res => res.datos));
+  }
+
+  cargarEvidencia(id: number, archivo: File, controlId?: number | null, planId?: number | null): Observable<MatrizRiesgoEvidencia> {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    if (controlId) form.append('controlId', String(controlId));
+    if (planId) form.append('planId', String(planId));
+    return this.http.post<ApiResponse<MatrizRiesgoEvidencia>>(`${this.apiUrl}/${id}/evidencias`, form, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  descargarEvidencia(id: number, evidenciaId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${id}/evidencias/${evidenciaId}/descargar`, {
+      responseType: 'blob',
+      headers: this.confirmado.headers
+    });
+  }
+
+  inactivarEvidencia(id: number, evidenciaId: number, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/evidencias/${evidenciaId}/inactivar`, { motivo }, this.confirmado);
   }
 
   listarCriterios(incluirInactivos = false): Observable<MatrizRiesgoCriterio[]> {

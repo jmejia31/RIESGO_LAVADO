@@ -53,6 +53,11 @@
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Criterios
     </button>
+    <button type="button" (click)="tab.set('planes')"
+      [ngClass]="tab() === 'planes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
+      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+      Planes y evidencias
+    </button>
     <button type="button" (click)="tab.set('reportes'); cargarReporte()"
       [ngClass]="tab() === 'reportes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
@@ -669,6 +674,211 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-container *ngIf="tab() === 'planes'">
+    <section class="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.6fr)] gap-5 min-w-0">
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Planes de acción</h3>
+          <p class="text-xs text-gray-500">Tratamiento obligatorio para matrices con residual Alto o Crítico.</p>
+        </div>
+
+        <label class="space-y-1 block">
+          <span class="text-xs font-bold uppercase text-gray-500">Matriz</span>
+          <select [ngModel]="matrizSeleccionada()?.matrizId || null" (ngModelChange)="seleccionarMatrizParaPlanes($event)"
+            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+            <option [ngValue]="null">Seleccione una matriz</option>
+            <ng-container *ngFor="let matriz of matrices()">
+              <option [ngValue]="matriz.matrizId">{{ matriz.nombreSujeto }} · {{ matriz.estado }}</option>
+            </ng-container>
+          </select>
+        </label>
+
+        <div *ngIf="matrizSeleccionada()" class="rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm">
+          <p class="font-bold text-gray-900">{{ matrizSeleccionada()?.nombreSujeto }}</p>
+          <p class="text-xs text-gray-500">{{ matrizSeleccionada()?.sujetoTipo }} · {{ matrizSeleccionada()?.documento || matrizSeleccionada()?.sujetoIdExt || 'Sin documento' }}</p>
+          <p class="mt-2 text-xs font-semibold"
+            [ngClass]="matrizSeleccionada()?.requierePlanAccion ? 'text-amber-700' : 'text-emerald-700'">
+            {{ matrizSeleccionada()?.requierePlanAccion ? 'Requiere plan de acción.' : 'No requiere plan obligatorio por nivel residual.' }}
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="font-bold text-gray-900">{{ planEditandoId() ? 'Editar plan' : 'Nuevo plan' }}</h4>
+          <label class="block space-y-1">
+            <span class="text-xs font-bold uppercase text-gray-500">Actividad</span>
+            <textarea rows="3" [(ngModel)]="planForm.actividad" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
+          </label>
+          <label class="block space-y-1">
+            <span class="text-xs font-bold uppercase text-gray-500">Responsable</span>
+            <input type="text" [(ngModel)]="planForm.responsable" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label class="space-y-1">
+              <span class="text-xs font-bold uppercase text-gray-500">Fecha inicio</span>
+              <input type="date" [(ngModel)]="planForm.fechaInicio" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            </label>
+            <label class="space-y-1">
+              <span class="text-xs font-bold uppercase text-gray-500">Fecha fin</span>
+              <input type="date" [(ngModel)]="planForm.fechaFin" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            </label>
+          </div>
+          <label class="block space-y-1">
+            <span class="text-xs font-bold uppercase text-gray-500">Medio de prueba</span>
+            <input type="text" [(ngModel)]="planForm.medioPrueba" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+          </label>
+          <label class="block space-y-1">
+            <span class="text-xs font-bold uppercase text-gray-500">Observaciones</span>
+            <textarea rows="2" [(ngModel)]="planForm.observaciones" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
+          </label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button type="button" (click)="guardarPlanAccion()" [disabled]="guardando() || !matrizSeleccionada()"
+              class="px-4 py-2 rounded-xl bg-ihss-900 text-white text-sm font-bold disabled:opacity-50">
+              {{ planEditandoId() ? 'Guardar cambios' : 'Guardar plan' }}
+            </button>
+            <button type="button" (click)="limpiarFormularioPlan()" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700">
+              Limpiar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-5 min-w-0">
+        <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-bold text-gray-900">Seguimiento de planes</h3>
+              <p class="text-xs text-gray-500">Estados, responsables, fechas compromiso e historial quedan auditados.</p>
+            </div>
+            <span class="text-xs font-bold text-gray-500">{{ planesAccion().length }} plan(es)</span>
+          </div>
+          <div class="overflow-x-auto border border-gray-200 rounded-xl">
+            <table class="min-w-[920px] w-full table-fixed divide-y divide-gray-200 text-sm">
+              <colgroup>
+                <col class="w-[32%]" />
+                <col class="w-[18%]" />
+                <col class="w-[14%]" />
+                <col class="w-[12%]" />
+                <col class="w-[24%]" />
+              </colgroup>
+              <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                  <th class="px-4 py-3 text-left">Actividad</th>
+                  <th class="px-4 py-3 text-left">Responsable</th>
+                  <th class="px-4 py-3 text-left">Estado</th>
+                  <th class="px-4 py-3 text-left">Fecha fin</th>
+                  <th class="px-4 py-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr *ngFor="let plan of planesAccion()">
+                  <td class="px-4 py-3">
+                    <p class="rl-clamp-2 font-semibold text-gray-900" [title]="plan.actividad">{{ plan.actividad }}</p>
+                    <p class="rl-clamp-2 text-xs text-gray-500" [title]="plan.medioPrueba || ''">{{ plan.medioPrueba || 'Sin medio de prueba' }}</p>
+                  </td>
+                  <td class="px-4 py-3">{{ plan.responsable }}</td>
+                  <td class="px-4 py-3">
+                    <span class="rounded-full px-2 py-1 text-xs font-bold"
+                      [ngClass]="plan.estado === 'CERRADO' ? 'bg-emerald-50 text-emerald-700' : plan.vencido || plan.estado === 'VENCIDO' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'">
+                      {{ plan.vencido && plan.estado !== 'CERRADO' ? 'VENCIDO' : plan.estado }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ plan.fechaFin ? (plan.fechaFin | date:'dd/MM/yyyy') : '-' }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap justify-end gap-1.5">
+                      <button type="button" (click)="editarPlan(plan)" class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold">Editar</button>
+                      <button *ngFor="let estado of estadosPlan" type="button" (click)="cambiarEstadoPlan(plan, estado)"
+                        [disabled]="plan.estado === estado || guardando()"
+                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold disabled:opacity-40">
+                        {{ estado }}
+                      </button>
+                      <button type="button" (click)="inactivarPlan(plan)" [disabled]="guardando() || plan.estado === 'INACTIVO'"
+                        class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
+                        Inactivar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="planesAccion().length === 0">
+                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay planes registrados para la matriz seleccionada.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
+          <div>
+            <h3 class="text-lg font-bold text-gray-900">Evidencias documentales</h3>
+            <p class="text-xs text-gray-500">Archivos protegidos con nombre físico seguro, metadatos y eliminación lógica.</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-[1fr_180px_180px_auto] gap-3 items-end">
+            <label class="space-y-1">
+              <span class="text-xs font-bold uppercase text-gray-500">Archivo</span>
+              <input type="file" (change)="seleccionarArchivoEvidencia($event)" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            </label>
+            <label class="space-y-1">
+              <span class="text-xs font-bold uppercase text-gray-500">Plan</span>
+              <select [(ngModel)]="evidenciaPlanId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+                <option [ngValue]="null">Sin plan</option>
+                <option *ngFor="let plan of planesAccion()" [ngValue]="plan.planId">Plan {{ plan.planId }}</option>
+              </select>
+            </label>
+            <label class="space-y-1">
+              <span class="text-xs font-bold uppercase text-gray-500">Control</span>
+              <select [(ngModel)]="evidenciaControlId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+                <option [ngValue]="null">Sin control</option>
+                <option *ngFor="let control of matrizSeleccionada()?.controles || []" [ngValue]="control.controlId">{{ control.nombre }}</option>
+              </select>
+            </label>
+            <button type="button" (click)="cargarEvidencia()" [disabled]="guardando() || !matrizSeleccionada() || !evidenciaArchivo"
+              class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
+              Cargar
+            </button>
+          </div>
+          <div class="overflow-x-auto border border-gray-200 rounded-xl">
+            <table class="min-w-[760px] w-full table-fixed divide-y divide-gray-200 text-sm">
+              <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                <tr>
+                  <th class="px-4 py-3 text-left">Archivo</th>
+                  <th class="px-4 py-3 text-left">Vínculo</th>
+                  <th class="px-4 py-3 text-left">Fecha</th>
+                  <th class="px-4 py-3 text-left">Estado</th>
+                  <th class="px-4 py-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                <tr *ngFor="let evidencia of evidencias()">
+                  <td class="px-4 py-3">
+                    <p class="rl-clamp-2 font-semibold text-gray-900" [title]="evidencia.nombreOriginal">{{ evidencia.nombreOriginal }}</p>
+                    <p class="text-xs text-gray-500">{{ (evidencia.tamanoBytes / 1024) | number:'1.0-0' }} KB</p>
+                  </td>
+                  <td class="px-4 py-3 text-xs text-gray-600">Plan {{ evidencia.planId || '-' }} · Control {{ evidencia.controlId || '-' }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ evidencia.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="px-4 py-3">{{ evidencia.activa ? 'Activa' : 'Inactiva' }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <button type="button" (click)="descargarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
+                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold disabled:opacity-50">
+                        Descargar
+                      </button>
+                      <button type="button" (click)="inactivarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
+                        class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
+                        Inactivar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="evidencias().length === 0">
+                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay evidencias registradas para la matriz seleccionada.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </section>
   </ng-container>

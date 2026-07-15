@@ -41,6 +41,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         matriz.Detalles = await ObtenerDetallesMatrizAsync(conn, null, matrizId, matriz.ModeloId);
         matriz.Controles = await ObtenerControlesMatrizAsync(conn, null, matrizId);
         matriz.Resultados = await ObtenerResultadosMatrizAsync(conn, null, matrizId);
+        matriz.PlanesAccion = await ObtenerPlanesMatrizAsync(conn, null, matrizId);
+        matriz.Evidencias = await ObtenerEvidenciasMatrizAsync(conn, null, matrizId);
         return matriz;
     }
 
@@ -488,6 +490,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             if (await ExisteMotivoCambioEstadoAsync(conn, tx, matrizId, motivoNormalizado))
                 throw new InvalidOperationException("El motivo indicado ya fue utilizado en un cambio de estado de esta matriz.");
+
+            if (estadoNuevo == "CERRADA" && matriz.RequierePlanAccion && !await TienePlanTratadoParaCierreAsync(conn, tx, matrizId))
+                throw new InvalidOperationException("No se puede cerrar la matriz porque requiere plan de acción y no tiene un plan cerrado o una justificación aprobada.");
+
             await using (var cmd = conn.CreateCommand())
             {
                 cmd.BindByName = true;
@@ -630,6 +636,332 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.Parameters.Add(Param("matrizId", matrizId));
         cmd.Parameters.Add(Param("motivo", motivo));
         return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    public async Task<List<MatrizRiesgoPlanAccionDto>> ListarPlanesAsync(long matrizId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await ObtenerPlanesMatrizAsync(conn, null, matrizId);
+    }
+
+    public async Task<long> CrearPlanAsync(long matrizId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var matriz = await ObtenerMatrizBaseAsync(conn, tx, matrizId) ?? throw new InvalidOperationException("No se encontró la matriz de riesgos.");
+            if (matriz.Estado is "CERRADA" or "INACTIVA")
+                throw new InvalidOperationException("No se pueden crear planes en una matriz cerrada o inactiva.");
+            if (dto.ResultadoId.HasValue && !await ExisteResultadoMatrizAsync(conn, tx, matrizId, dto.ResultadoId.Value))
+                throw new InvalidOperationException("El resultado seleccionado no pertenece a la matriz.");
+            if (await ExistePlanDuplicadoAsync(conn, tx, matrizId, dto.Actividad, dto.Responsable, null))
+                throw new InvalidOperationException("Ya existe un plan activo con la misma actividad y responsable para esta matriz.");
+
+            var planId = await NextValAsync(conn, tx, "SEQ_RL_MR_PLANES_ACCION");
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    INSERT INTO RL_MR_PLANES_ACCION (
+                        MRPA_ID, MRPA_MATRIZ_ID, MRPA_RESULTADO_ID, MRPA_ACTIVIDAD,
+                        MRPA_RESPONSABLE, MRPA_PERIODICIDAD, MRPA_FECHA_INICIO,
+                        MRPA_FECHA_FIN, MRPA_MEDIO_PRUEBA, MRPA_OBSERVACIONES,
+                        MRPA_ESTADO, MRPA_USR_CREACION_ID, MRPA_FECHA_CREACION
+                    ) VALUES (
+                        :id, :matrizId, :resultadoId, :actividad,
+                        :responsable, :periodicidad, :fechaInicio,
+                        :fechaFin, :medioPrueba, :observaciones,
+                        'PENDIENTE', :usuarioId, SYSDATE
+                    )";
+                cmd.Parameters.Add(Param("id", planId));
+                cmd.Parameters.Add(Param("matrizId", matrizId));
+                cmd.Parameters.Add(Param("resultadoId", dto.ResultadoId));
+                cmd.Parameters.Add(Param("actividad", dto.Actividad));
+                cmd.Parameters.Add(Param("responsable", dto.Responsable));
+                cmd.Parameters.Add(Param("periodicidad", dto.Periodicidad));
+                cmd.Parameters.Add(Param("fechaInicio", dto.FechaInicio));
+                cmd.Parameters.Add(Param("fechaFin", dto.FechaFin));
+                cmd.Parameters.Add(Param("medioPrueba", dto.MedioPrueba));
+                cmd.Parameters.Add(Param("observaciones", dto.Observaciones));
+                cmd.Parameters.Add(Param("usuarioId", usuarioId));
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            var datos = JsonConvert.SerializeObject(dto);
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_PLANES_ACCION", planId.ToString(), "CREACION_PLAN", null, "PENDIENTE", "Registro de plan de acción.", null, datos, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_PLANES_ACCION", planId.ToString(), "INSERT", null, datos, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return planId;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<bool> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var anterior = await ObtenerPlanAuditoriaAsync(conn, tx, matrizId, planId);
+            if (anterior == null)
+                return false;
+
+            if (await MatrizEstaCerradaOInactivaAsync(conn, tx, matrizId))
+                throw new InvalidOperationException("No se pueden editar planes en una matriz cerrada o inactiva.");
+            if (dto.ResultadoId.HasValue && !await ExisteResultadoMatrizAsync(conn, tx, matrizId, dto.ResultadoId.Value))
+                throw new InvalidOperationException("El resultado seleccionado no pertenece a la matriz.");
+            if (await ExistePlanDuplicadoAsync(conn, tx, matrizId, dto.Actividad, dto.Responsable, planId))
+                throw new InvalidOperationException("Ya existe otro plan activo con la misma actividad y responsable para esta matriz.");
+
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_PLANES_ACCION
+                       SET MRPA_RESULTADO_ID = :resultadoId,
+                           MRPA_ACTIVIDAD = :actividad,
+                           MRPA_RESPONSABLE = :responsable,
+                           MRPA_PERIODICIDAD = :periodicidad,
+                           MRPA_FECHA_INICIO = :fechaInicio,
+                           MRPA_FECHA_FIN = :fechaFin,
+                           MRPA_MEDIO_PRUEBA = :medioPrueba,
+                           MRPA_OBSERVACIONES = :observaciones
+                     WHERE MRPA_ID = :planId
+                       AND MRPA_MATRIZ_ID = :matrizId
+                       AND MRPA_ESTADO <> 'INACTIVO'";
+                cmd.Parameters.Add(Param("resultadoId", dto.ResultadoId));
+                cmd.Parameters.Add(Param("actividad", dto.Actividad));
+                cmd.Parameters.Add(Param("responsable", dto.Responsable));
+                cmd.Parameters.Add(Param("periodicidad", dto.Periodicidad));
+                cmd.Parameters.Add(Param("fechaInicio", dto.FechaInicio));
+                cmd.Parameters.Add(Param("fechaFin", dto.FechaFin));
+                cmd.Parameters.Add(Param("medioPrueba", dto.MedioPrueba));
+                cmd.Parameters.Add(Param("observaciones", dto.Observaciones));
+                cmd.Parameters.Add(Param("planId", planId));
+                cmd.Parameters.Add(Param("matrizId", matrizId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            var nuevo = JsonConvert.SerializeObject(dto);
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_PLANES_ACCION", planId.ToString(), "EDICION_PLAN", null, null, "Actualización de plan de acción.", anterior, nuevo, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_PLANES_ACCION", planId.ToString(), "UPDATE", anterior, nuevo, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<bool> CambiarEstadoPlanAsync(long matrizId, long planId, string estado, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var plan = await ObtenerPlanAsync(conn, tx, matrizId, planId);
+            if (plan == null)
+                return false;
+
+            var estadoNuevo = estado.Trim().ToUpperInvariant();
+            var datosAnt = JsonConvert.SerializeObject(plan);
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_PLANES_ACCION
+                       SET MRPA_ESTADO = :estado,
+                           MRPA_MOTIVO_CIERRE = CASE WHEN :estadoCierre IN ('CERRADO','VENCIDO') THEN :motivo ELSE MRPA_MOTIVO_CIERRE END,
+                           MRPA_USR_CIERRE_ID = CASE WHEN :estadoCierre = 'CERRADO' THEN :usuarioId ELSE MRPA_USR_CIERRE_ID END,
+                           MRPA_FECHA_CIERRE = CASE WHEN :estadoCierre = 'CERRADO' THEN SYSDATE ELSE MRPA_FECHA_CIERRE END
+                     WHERE MRPA_ID = :planId
+                       AND MRPA_MATRIZ_ID = :matrizId
+                       AND MRPA_ESTADO <> 'INACTIVO'";
+                cmd.Parameters.Add(Param("estado", estadoNuevo));
+                cmd.Parameters.Add(Param("estadoCierre", estadoNuevo));
+                cmd.Parameters.Add(Param("motivo", motivo));
+                cmd.Parameters.Add(Param("usuarioId", usuarioId));
+                cmd.Parameters.Add(Param("planId", planId));
+                cmd.Parameters.Add(Param("matrizId", matrizId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            var datosNvo = JsonConvert.SerializeObject(new { EstadoAnterior = plan.Estado, EstadoNuevo = estadoNuevo, Motivo = motivo });
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_PLANES_ACCION", planId.ToString(), "CAMBIO_ESTADO_PLAN", plan.Estado, estadoNuevo, motivo, datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_PLANES_ACCION", planId.ToString(), "UPDATE", datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<bool> InactivarPlanAsync(long matrizId, long planId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        return await CambiarEstadoPlanAsync(matrizId, planId, "INACTIVO", motivo, usuarioId, usuarioEmail, ip);
+    }
+
+    public async Task<bool> TienePlanTratadoParaCierreAsync(long matrizId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await TienePlanTratadoParaCierreAsync(conn, null, matrizId);
+    }
+
+    public async Task<List<MatrizRiesgoEvidenciaDto>> ListarEvidenciasAsync(long matrizId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await ObtenerEvidenciasMatrizAsync(conn, null, matrizId);
+    }
+
+    public async Task<long> RegistrarEvidenciaAsync(MatrizRiesgoEvidenciaRegistroDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var matriz = await ObtenerMatrizBaseAsync(conn, tx, dto.MatrizId) ?? throw new InvalidOperationException("No se encontró la matriz de riesgos.");
+            if (matriz.Estado is "CERRADA" or "INACTIVA")
+                throw new InvalidOperationException("No se pueden cargar evidencias en una matriz cerrada o inactiva.");
+            if (dto.ControlId.HasValue && !await ExisteControlMatrizAsync(conn, tx, dto.MatrizId, dto.ControlId.Value))
+                throw new InvalidOperationException("El control seleccionado no pertenece a la matriz.");
+            if (dto.PlanId.HasValue && !await ExistePlanActivoMatrizAsync(conn, tx, dto.MatrizId, dto.PlanId.Value))
+                throw new InvalidOperationException("El plan seleccionado no pertenece a la matriz o está inactivo.");
+
+            var evidenciaId = await NextValAsync(conn, tx, "SEQ_RL_MR_EVIDENCIAS");
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    INSERT INTO RL_MR_EVIDENCIAS (
+                        MREV_ID, MREV_MATRIZ_ID, MREV_CONTROL_ID, MREV_PLAN_ID,
+                        MREV_NOMBRE_ORIGINAL, MREV_NOMBRE_FISICO, MREV_TIPO_MIME,
+                        MREV_EXTENSION, MREV_TAMANO_BYTES, MREV_RUTA_FISICA,
+                        MREV_HASH_SHA256, MREV_ESTADO_REGISTRO, MREV_USR_CREACION_ID,
+                        MREV_FECHA_CREACION
+                    ) VALUES (
+                        :id, :matrizId, :controlId, :planId,
+                        :nombreOriginal, :nombreFisico, :tipoMime,
+                        :extension, :tamanoBytes, :rutaFisica,
+                        :hashSha256, 1, :usuarioId, SYSDATE
+                    )";
+                cmd.Parameters.Add(Param("id", evidenciaId));
+                cmd.Parameters.Add(Param("matrizId", dto.MatrizId));
+                cmd.Parameters.Add(Param("controlId", dto.ControlId));
+                cmd.Parameters.Add(Param("planId", dto.PlanId));
+                cmd.Parameters.Add(Param("nombreOriginal", dto.NombreOriginal));
+                cmd.Parameters.Add(Param("nombreFisico", dto.NombreFisico));
+                cmd.Parameters.Add(Param("tipoMime", dto.TipoMime));
+                cmd.Parameters.Add(Param("extension", dto.Extension));
+                cmd.Parameters.Add(Param("tamanoBytes", dto.TamanoBytes));
+                cmd.Parameters.Add(Param("rutaFisica", dto.RutaFisica));
+                cmd.Parameters.Add(Param("hashSha256", dto.HashSha256));
+                cmd.Parameters.Add(Param("usuarioId", usuarioId));
+                await cmd.ExecuteNonQueryAsync();
+            }
+
+            var datos = JsonConvert.SerializeObject(dto);
+            await RegistrarHistorialAsync(conn, tx, dto.MatrizId, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "CARGA_EVIDENCIA", null, "ACTIVA", "Carga de evidencia documental.", null, datos, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "INSERT", null, datos, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return evidenciaId;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<MatrizRiesgoEvidenciaDto?> ObtenerEvidenciaAsync(long matrizId, long evidenciaId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await ObtenerEvidenciaAsync(conn, null, matrizId, evidenciaId);
+    }
+
+    public async Task RegistrarDescargaEvidenciaAsync(long matrizId, long evidenciaId, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+        var datos = JsonConvert.SerializeObject(new { EvidenciaId = evidenciaId, MatrizId = matrizId, Accion = "DESCARGA_EVIDENCIA" });
+        await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "DESCARGA_EVIDENCIA", null, null, "Descarga o visualización de evidencia.", null, datos, usuarioId, usuarioEmail, ip);
+        await RegistrarAuditoriaAsync(conn, tx, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "VER", null, datos, usuarioId, usuarioEmail, ip);
+        tx.Commit();
+    }
+
+    public async Task<bool> InactivarEvidenciaAsync(long matrizId, long evidenciaId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var evidencia = await ObtenerEvidenciaAsync(conn, tx, matrizId, evidenciaId);
+            if (evidencia == null || !evidencia.Activa)
+                return false;
+
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_EVIDENCIAS
+                       SET MREV_ESTADO_REGISTRO = 0,
+                           MREV_MOTIVO_INACTIVO = :motivo,
+                           MREV_USR_INACTIVO_ID = :usuarioId,
+                           MREV_FECHA_INACTIVO = SYSDATE
+                     WHERE MREV_ID = :evidenciaId
+                       AND MREV_MATRIZ_ID = :matrizId
+                       AND MREV_ESTADO_REGISTRO = 1";
+                cmd.Parameters.Add(Param("motivo", motivo));
+                cmd.Parameters.Add(Param("usuarioId", usuarioId));
+                cmd.Parameters.Add(Param("evidenciaId", evidenciaId));
+                cmd.Parameters.Add(Param("matrizId", matrizId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            var datosAnt = JsonConvert.SerializeObject(evidencia);
+            var datosNvo = JsonConvert.SerializeObject(new { Motivo = motivo, EstadoRegistro = 0 });
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "ELIMINACION_LOGICA_EVIDENCIA", "ACTIVA", "INACTIVA", motivo, datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_EVIDENCIAS", evidenciaId.ToString(), "DELETE", datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
     }
 
     public async Task<List<MatrizRiesgoCriterioDto>> ListarCriteriosAsync(bool incluirInactivos)
@@ -1350,6 +1682,190 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             });
         }
         return result;
+    }
+
+    private async Task<List<MatrizRiesgoPlanAccionDto>> ObtenerPlanesMatrizAsync(OracleConnection conn, OracleTransaction? tx, long matrizId)
+    {
+        var result = new List<MatrizRiesgoPlanAccionDto>();
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT MRPA_ID, MRPA_MATRIZ_ID, MRPA_RESULTADO_ID, MRPA_ACTIVIDAD,
+                   MRPA_RESPONSABLE, MRPA_PERIODICIDAD, MRPA_FECHA_INICIO,
+                   MRPA_FECHA_FIN, MRPA_MEDIO_PRUEBA, MRPA_OBSERVACIONES,
+                   MRPA_ESTADO, MRPA_MOTIVO_CIERRE, MRPA_FECHA_CREACION,
+                   MRPA_FECHA_CIERRE
+              FROM RL_MR_PLANES_ACCION
+             WHERE MRPA_MATRIZ_ID = :matrizId
+             ORDER BY CASE MRPA_ESTADO WHEN 'PENDIENTE' THEN 1 WHEN 'EN_PROCESO' THEN 2 WHEN 'VENCIDO' THEN 3 WHEN 'CERRADO' THEN 4 ELSE 5 END,
+                      MRPA_FECHA_CREACION DESC, MRPA_ID DESC";
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var fechaFin = reader["MRPA_FECHA_FIN"] == DBNull.Value ? (DateTime?)null : ToDate(reader["MRPA_FECHA_FIN"]);
+            var estado = reader["MRPA_ESTADO"].ToString() ?? string.Empty;
+            result.Add(new MatrizRiesgoPlanAccionDto
+            {
+                PlanId = ToLong(reader["MRPA_ID"]),
+                MatrizId = ToLong(reader["MRPA_MATRIZ_ID"]),
+                ResultadoId = reader["MRPA_RESULTADO_ID"] == DBNull.Value ? null : ToLong(reader["MRPA_RESULTADO_ID"]),
+                Actividad = reader["MRPA_ACTIVIDAD"].ToString() ?? string.Empty,
+                Responsable = reader["MRPA_RESPONSABLE"].ToString() ?? string.Empty,
+                Periodicidad = ToNullableString(reader["MRPA_PERIODICIDAD"]),
+                FechaInicio = reader["MRPA_FECHA_INICIO"] == DBNull.Value ? null : ToDate(reader["MRPA_FECHA_INICIO"]),
+                FechaFin = fechaFin,
+                MedioPrueba = ToNullableString(reader["MRPA_MEDIO_PRUEBA"]),
+                Observaciones = ToNullableString(reader["MRPA_OBSERVACIONES"]),
+                Estado = estado,
+                MotivoCierre = ToNullableString(reader["MRPA_MOTIVO_CIERRE"]),
+                FechaCreacion = ToDate(reader["MRPA_FECHA_CREACION"]),
+                FechaCierre = reader["MRPA_FECHA_CIERRE"] == DBNull.Value ? null : ToDate(reader["MRPA_FECHA_CIERRE"]),
+                Vencido = fechaFin.HasValue && fechaFin.Value.Date < DateTime.Today && estado is not ("CERRADO" or "INACTIVO")
+            });
+        }
+        return result;
+    }
+
+    private async Task<List<MatrizRiesgoEvidenciaDto>> ObtenerEvidenciasMatrizAsync(OracleConnection conn, OracleTransaction? tx, long matrizId)
+    {
+        var result = new List<MatrizRiesgoEvidenciaDto>();
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT MREV_ID, MREV_MATRIZ_ID, MREV_CONTROL_ID, MREV_PLAN_ID,
+                   MREV_NOMBRE_ORIGINAL, MREV_NOMBRE_FISICO, MREV_TIPO_MIME,
+                   MREV_EXTENSION, MREV_TAMANO_BYTES, MREV_RUTA_FISICA,
+                   MREV_HASH_SHA256, MREV_ESTADO_REGISTRO, MREV_MOTIVO_INACTIVO,
+                   MREV_FECHA_CREACION
+              FROM RL_MR_EVIDENCIAS
+             WHERE MREV_MATRIZ_ID = :matrizId
+             ORDER BY MREV_ESTADO_REGISTRO DESC, MREV_FECHA_CREACION DESC, MREV_ID DESC";
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            result.Add(MapEvidencia(reader));
+        return result;
+    }
+
+    private async Task<MatrizRiesgoPlanAccionDto?> ObtenerPlanAsync(OracleConnection conn, OracleTransaction? tx, long matrizId, long planId)
+    {
+        return (await ObtenerPlanesMatrizAsync(conn, tx, matrizId)).FirstOrDefault(x => x.PlanId == planId);
+    }
+
+    private async Task<bool> ExistePlanActivoMatrizAsync(OracleConnection conn, OracleTransaction tx, long matrizId, long planId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_PLANES_ACCION
+             WHERE MRPA_ID = :planId
+               AND MRPA_MATRIZ_ID = :matrizId
+               AND MRPA_ESTADO <> 'INACTIVO'";
+        cmd.Parameters.Add(Param("planId", planId));
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> ExistePlanDuplicadoAsync(OracleConnection conn, OracleTransaction tx, long matrizId, string actividad, string responsable, long? excluirPlanId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_PLANES_ACCION
+             WHERE MRPA_MATRIZ_ID = :matrizId
+               AND MRPA_ESTADO <> 'INACTIVO'
+               AND UPPER(TRIM(MRPA_ACTIVIDAD)) = UPPER(TRIM(:actividad))
+               AND UPPER(TRIM(MRPA_RESPONSABLE)) = UPPER(TRIM(:responsable))
+               AND (:excluirPlanId IS NULL OR MRPA_ID <> :excluirPlanId)";
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        cmd.Parameters.Add(Param("actividad", actividad));
+        cmd.Parameters.Add(Param("responsable", responsable));
+        cmd.Parameters.Add(Param("excluirPlanId", excluirPlanId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> ExisteResultadoMatrizAsync(OracleConnection conn, OracleTransaction tx, long matrizId, long resultadoId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_RESULTADOS
+             WHERE MRR_ID = :resultadoId
+               AND MRR_MATRIZ_ID = :matrizId";
+        cmd.Parameters.Add(Param("resultadoId", resultadoId));
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> ExisteControlMatrizAsync(OracleConnection conn, OracleTransaction tx, long matrizId, long controlId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_CONTROLES
+             WHERE MRCTRL_ID = :controlId
+               AND MRCTRL_MATRIZ_ID = :matrizId";
+        cmd.Parameters.Add(Param("controlId", controlId));
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<string?> ObtenerPlanAuditoriaAsync(OracleConnection conn, OracleTransaction tx, long matrizId, long planId)
+    {
+        var plan = await ObtenerPlanAsync(conn, tx, matrizId, planId);
+        return plan == null ? null : JsonConvert.SerializeObject(plan);
+    }
+
+    private async Task<MatrizRiesgoEvidenciaDto?> ObtenerEvidenciaAsync(OracleConnection conn, OracleTransaction? tx, long matrizId, long evidenciaId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT MREV_ID, MREV_MATRIZ_ID, MREV_CONTROL_ID, MREV_PLAN_ID,
+                   MREV_NOMBRE_ORIGINAL, MREV_NOMBRE_FISICO, MREV_TIPO_MIME,
+                   MREV_EXTENSION, MREV_TAMANO_BYTES, MREV_RUTA_FISICA,
+                   MREV_HASH_SHA256, MREV_ESTADO_REGISTRO, MREV_MOTIVO_INACTIVO,
+                   MREV_FECHA_CREACION
+              FROM RL_MR_EVIDENCIAS
+             WHERE MREV_ID = :evidenciaId
+               AND MREV_MATRIZ_ID = :matrizId";
+        cmd.Parameters.Add(Param("evidenciaId", evidenciaId));
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        await using var reader = await cmd.ExecuteReaderAsync();
+        return await reader.ReadAsync() ? MapEvidencia(reader) : null;
+    }
+
+    private static MatrizRiesgoEvidenciaDto MapEvidencia(OracleDataReader reader)
+    {
+        return new MatrizRiesgoEvidenciaDto
+        {
+            EvidenciaId = ToLong(reader["MREV_ID"]),
+            MatrizId = ToLong(reader["MREV_MATRIZ_ID"]),
+            ControlId = reader["MREV_CONTROL_ID"] == DBNull.Value ? null : ToLong(reader["MREV_CONTROL_ID"]),
+            PlanId = reader["MREV_PLAN_ID"] == DBNull.Value ? null : ToLong(reader["MREV_PLAN_ID"]),
+            NombreOriginal = reader["MREV_NOMBRE_ORIGINAL"].ToString() ?? string.Empty,
+            NombreFisico = reader["MREV_NOMBRE_FISICO"].ToString() ?? string.Empty,
+            TipoMime = ToNullableString(reader["MREV_TIPO_MIME"]),
+            Extension = ToNullableString(reader["MREV_EXTENSION"]),
+            TamanoBytes = ToLong(reader["MREV_TAMANO_BYTES"]),
+            RutaFisica = reader["MREV_RUTA_FISICA"].ToString() ?? string.Empty,
+            HashSha256 = ToNullableString(reader["MREV_HASH_SHA256"]),
+            Activa = ToInt(reader["MREV_ESTADO_REGISTRO"]) == 1,
+            MotivoInactivo = ToNullableString(reader["MREV_MOTIVO_INACTIVO"]),
+            FechaCreacion = ToDate(reader["MREV_FECHA_CREACION"])
+        };
     }
 
     private async Task<List<MatrizRiesgoControlDto>> ObtenerControlesMatrizAsync(OracleConnection conn, OracleTransaction? tx, long matrizId)
@@ -2089,6 +2605,31 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             });
         }
         return result;
+    }
+
+    private async Task<bool> TienePlanTratadoParaCierreAsync(OracleConnection conn, OracleTransaction? tx, long matrizId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_PLANES_ACCION
+             WHERE MRPA_MATRIZ_ID = :matrizId
+               AND MRPA_ESTADO = 'CERRADO'
+               AND TRIM(NVL(MRPA_MOTIVO_CIERRE, '')) IS NOT NULL";
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> MatrizEstaCerradaOInactivaAsync(OracleConnection conn, OracleTransaction tx, long matrizId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = "SELECT COUNT(*) FROM RL_MR_MATRICES WHERE MRMAT_ID = :matrizId AND MRMAT_ESTADO IN ('CERRADA','INACTIVA')";
+        cmd.Parameters.Add(Param("matrizId", matrizId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
     }
 
     private async Task<long> NextValAsync(OracleConnection conn, OracleTransaction tx, string sequenceName)

@@ -279,6 +279,152 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("{id:long}/planes")]
+    public async Task<IActionResult> ListarPlanes(long id)
+    {
+        try
+        {
+            var result = await _service.ListarPlanesAsync(id);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al listar planes de acción de matriz {MatrizId}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPost("{id:long}/planes")]
+    [AuditRequired("Creación de plan de acción de matriz de riesgos")]
+    public async Task<IActionResult> CrearPlan(long id, [FromBody] MatrizRiesgoPlanAccionRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.CrearPlanAsync(id, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al crear plan de acción de matriz {MatrizId}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("{id:long}/planes/{planId:long}")]
+    [AuditRequired("Actualización de plan de acción de matriz de riesgos")]
+    public async Task<IActionResult> ActualizarPlan(long id, long planId, [FromBody] MatrizRiesgoPlanAccionRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.ActualizarPlanAsync(id, planId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar plan {PlanId} de matriz {MatrizId}", planId, id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("{id:long}/planes/{planId:long}/estado")]
+    [AuditRequired("Cambio de estado de plan de acción de matriz de riesgos")]
+    public async Task<IActionResult> CambiarEstadoPlan(long id, long planId, [FromBody] MatrizRiesgoPlanEstadoRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.CambiarEstadoPlanAsync(id, planId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al cambiar estado del plan {PlanId} de matriz {MatrizId}", planId, id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("{id:long}/planes/{planId:long}/inactivar")]
+    [AuditRequired("Inactivación de plan de acción de matriz de riesgos")]
+    public async Task<IActionResult> InactivarPlan(long id, long planId, [FromBody] MatrizRiesgoInactivarRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.InactivarPlanAsync(id, planId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al inactivar plan {PlanId} de matriz {MatrizId}", planId, id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpGet("{id:long}/evidencias")]
+    public async Task<IActionResult> ListarEvidencias(long id)
+    {
+        try
+        {
+            var result = await _service.ListarEvidenciasAsync(id);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al listar evidencias de matriz {MatrizId}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPost("{id:long}/evidencias")]
+    [Consumes("multipart/form-data")]
+    [AuditRequired("Carga de evidencia de matriz de riesgos")]
+    public async Task<IActionResult> CargarEvidencia(long id, [FromForm] long? controlId, [FromForm] long? planId, [FromForm] IFormFile? archivo)
+    {
+        try
+        {
+            var result = await _service.CargarEvidenciaAsync(id, controlId, planId, archivo, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al cargar evidencia de matriz {MatrizId}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpGet("{id:long}/evidencias/{evidenciaId:long}/descargar")]
+    [AuditRequired("Descarga de evidencia de matriz de riesgos")]
+    public async Task<IActionResult> DescargarEvidencia(long id, long evidenciaId)
+    {
+        try
+        {
+            var result = await _service.DescargarEvidenciaAsync(id, evidenciaId, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            if (!result.Success || result.Data == null)
+                return StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+
+            return File(result.Data.Contenido, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al descargar evidencia {EvidenciaId} de matriz {MatrizId}", evidenciaId, id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("{id:long}/evidencias/{evidenciaId:long}/inactivar")]
+    [AuditRequired("Eliminación lógica de evidencia de matriz de riesgos")]
+    public async Task<IActionResult> InactivarEvidencia(long id, long evidenciaId, [FromBody] MatrizRiesgoInactivarRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.InactivarEvidenciaAsync(id, evidenciaId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al inactivar evidencia {EvidenciaId} de matriz {MatrizId}", evidenciaId, id);
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("criterios")]
     public async Task<IActionResult> ListarCriterios([FromQuery] bool incluirInactivos = false)
     {

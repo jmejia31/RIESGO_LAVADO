@@ -13,7 +13,10 @@ import {
   MatrizRiesgoCrearRequest,
   MatrizRiesgoDetalle,
   MatrizRiesgoDashboard,
+  MatrizRiesgoEvidencia,
   MatrizRiesgoHistorial,
+  MatrizRiesgoPlanAccion,
+  MatrizRiesgoPlanAccionRequest,
   MatrizRiesgoReporteFiltro,
   MatrizRiesgoResumen,
   MatricesRiesgoReporte,
@@ -22,8 +25,8 @@ import {
 } from './models/matrices-riesgos.models';
 import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
 
-type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'reportes';
-type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio';
+type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
+type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
   variableId: number;
@@ -43,6 +46,8 @@ interface ModalOperacion {
   estado?: string;
   matriz?: MatrizRiesgoResumen;
   criterio?: MatrizRiesgoCriterio;
+  plan?: MatrizRiesgoPlanAccion;
+  evidencia?: MatrizRiesgoEvidencia;
   tono: 'normal' | 'advertencia' | 'peligro';
 }
 
@@ -113,6 +118,8 @@ export class MatricesRiesgosComponent implements OnInit {
   readonly matrizSeleccionada = signal<MatrizRiesgoDetalle | null>(null);
   readonly historial = signal<MatrizRiesgoHistorial[]>([]);
   readonly criterios = signal<MatrizRiesgoCriterio[]>([]);
+  readonly planesAccion = signal<MatrizRiesgoPlanAccion[]>([]);
+  readonly evidencias = signal<MatrizRiesgoEvidencia[]>([]);
   readonly matrizEditandoId = signal<number | null>(null);
   readonly matricesDuplicadas = signal<MatrizRiesgoResumen[]>([]);
   readonly buscandoDuplicados = signal(false);
@@ -157,11 +164,28 @@ export class MatricesRiesgosComponent implements OnInit {
     descripcion: ''
   };
 
+  planForm: MatrizRiesgoPlanAccionRequest = {
+    resultadoId: null,
+    actividad: '',
+    responsable: 'Javier Mejía',
+    periodicidad: '',
+    fechaInicio: '',
+    fechaFin: '',
+    medioPrueba: '',
+    observaciones: ''
+  };
+
+  readonly planEditandoId = signal<number | null>(null);
+  evidenciaArchivo: File | null = null;
+  evidenciaPlanId: number | null = null;
+  evidenciaControlId: number | null = null;
+
   readonly criterioEditandoId = signal<number | null>(null);
   readonly capturasVariables = signal<CapturaVariable[]>([]);
 
   readonly estadosDisponibles = ['BORRADOR', 'EN_EVALUACION', 'CALCULADA', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'CERRADA', 'INACTIVA'];
   readonly estadosGestionables = ['EN_REVISION', 'OBSERVADA', 'APROBADA', 'CERRADA', 'INACTIVA'];
+  readonly estadosPlan = ['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO'];
   readonly tiposSujeto = [
     { valor: 'PROVEEDOR', texto: 'Proveedor' },
     { valor: 'CLIENTE_PATRONO', texto: 'Cliente / Patrono' },
@@ -437,6 +461,8 @@ export class MatricesRiesgosComponent implements OnInit {
     this.service.obtener(id).subscribe({
       next: matriz => {
         this.matrizSeleccionada.set(matriz);
+        this.planesAccion.set(matriz.planesAccion ?? []);
+        this.evidencias.set(matriz.evidencias ?? []);
         this.cargarHistorial(id);
         this.cargando.set(false);
       },
@@ -451,6 +477,35 @@ export class MatricesRiesgosComponent implements OnInit {
     this.service.historial(id).subscribe({
       next: datos => this.historial.set(this.deduplicarHistorial(datos)),
       error: () => this.historial.set([])
+    });
+  }
+
+  seleccionarMatrizParaPlanes(id: number | string | null): void {
+    const matrizId = id === null || id === '' ? null : Number(id);
+    if (!matrizId) {
+      this.matrizSeleccionada.set(null);
+      this.planesAccion.set([]);
+      this.evidencias.set([]);
+      this.limpiarFormularioPlan();
+      return;
+    }
+
+    this.seleccionarMatriz(matrizId);
+    this.cargarPlanesYEvidencias(matrizId);
+  }
+
+  cargarPlanesYEvidencias(matrizId?: number): void {
+    const id = matrizId ?? this.matrizSeleccionada()?.matrizId;
+    if (!id) return;
+
+    this.service.listarPlanes(id).subscribe({
+      next: datos => this.planesAccion.set(datos),
+      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los planes de acción.'))
+    });
+
+    this.service.listarEvidencias(id).subscribe({
+      next: datos => this.evidencias.set(datos),
+      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar las evidencias.'))
     });
   }
 
@@ -695,8 +750,231 @@ export class MatricesRiesgosComponent implements OnInit {
       case 'eliminarCriterio':
         this.ejecutarEliminacionCriterio(operacion.criterio!, motivo);
         break;
+      case 'estadoPlan':
+        this.ejecutarCambioEstadoPlan(operacion.plan!, operacion.estado!, motivo);
+        break;
+      case 'inactivarPlan':
+        this.ejecutarInactivacionPlan(operacion.plan!, motivo);
+        break;
+      case 'inactivarEvidencia':
+        this.ejecutarInactivacionEvidencia(operacion.evidencia!, motivo);
+        break;
     }
   }
+
+  guardarPlanAccion(): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz) {
+      this.error.set('Seleccione una matriz antes de registrar el plan de acción.');
+      return;
+    }
+
+    if (!this.planForm.actividad.trim() || !this.planForm.responsable.trim()) {
+      this.error.set('La actividad y el responsable del plan son obligatorios.');
+      return;
+    }
+
+    this.guardando.set(true);
+    const dto: MatrizRiesgoPlanAccionRequest = {
+      resultadoId: this.planForm.resultadoId || null,
+      actividad: this.planForm.actividad.trim(),
+      responsable: this.planForm.responsable.trim(),
+      periodicidad: this.planForm.periodicidad || null,
+      fechaInicio: this.planForm.fechaInicio || null,
+      fechaFin: this.planForm.fechaFin || null,
+      medioPrueba: this.planForm.medioPrueba || null,
+      observaciones: this.planForm.observaciones || null
+    };
+
+    const planId = this.planEditandoId();
+    const request = planId
+      ? this.service.actualizarPlan(matriz.matrizId, planId, dto)
+      : this.service.crearPlan(matriz.matrizId, dto);
+
+    request.subscribe({
+      next: () => {
+        this.mensaje.set(planId ? 'Plan de acción actualizado correctamente.' : 'Plan de acción registrado correctamente.');
+        this.limpiarFormularioPlan();
+        this.cargarPlanesYEvidencias(matriz.matrizId);
+        this.cargarReporte();
+        this.guardando.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el plan de acción.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  editarPlan(plan: MatrizRiesgoPlanAccion): void {
+    this.planEditandoId.set(plan.planId);
+    this.planForm = {
+      resultadoId: plan.resultadoId ?? null,
+      actividad: plan.actividad,
+      responsable: plan.responsable,
+      periodicidad: plan.periodicidad || '',
+      fechaInicio: plan.fechaInicio ? plan.fechaInicio.substring(0, 10) : '',
+      fechaFin: plan.fechaFin ? plan.fechaFin.substring(0, 10) : '',
+      medioPrueba: plan.medioPrueba || '',
+      observaciones: plan.observaciones || ''
+    };
+  }
+
+  limpiarFormularioPlan(): void {
+    this.planEditandoId.set(null);
+    this.planForm = {
+      resultadoId: null,
+      actividad: '',
+      responsable: 'Javier Mejía',
+      periodicidad: '',
+      fechaInicio: '',
+      fechaFin: '',
+      medioPrueba: '',
+      observaciones: ''
+    };
+  }
+
+  cambiarEstadoPlan(plan: MatrizRiesgoPlanAccion, estado: string): void {
+    this.abrirModal({
+      tipo: 'estadoPlan',
+      titulo: 'Cambiar estado del plan',
+      descripcion: `Ingrese el motivo obligatorio para cambiar el plan ${plan.planId} al estado ${estado}.`,
+      textoConfirmar: 'Cambiar estado',
+      requiereMotivo: true,
+      estado,
+      plan,
+      tono: estado === 'CERRADO' ? 'normal' : 'advertencia'
+    });
+  }
+
+  inactivarPlan(plan: MatrizRiesgoPlanAccion): void {
+    this.abrirModal({
+      tipo: 'inactivarPlan',
+      titulo: 'Inactivar plan',
+      descripcion: `Ingrese el motivo obligatorio para inactivar el plan ${plan.planId}.`,
+      textoConfirmar: 'Inactivar',
+      requiereMotivo: true,
+      plan,
+      tono: 'peligro'
+    });
+  }
+
+  seleccionarArchivoEvidencia(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.evidenciaArchivo = input.files?.item(0) ?? null;
+  }
+
+  cargarEvidencia(): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz || !this.evidenciaArchivo) {
+      this.error.set('Seleccione una matriz y un archivo de evidencia.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.cargarEvidencia(matriz.matrizId, this.evidenciaArchivo, this.evidenciaControlId, this.evidenciaPlanId).subscribe({
+      next: () => {
+        this.mensaje.set('Evidencia registrada correctamente.');
+        this.evidenciaArchivo = null;
+        this.evidenciaPlanId = null;
+        this.evidenciaControlId = null;
+        this.cargarPlanesYEvidencias(matriz.matrizId);
+        this.seleccionarMatriz(matriz.matrizId);
+        this.guardando.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la evidencia.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  descargarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz) return;
+
+    this.guardando.set(true);
+    this.service.descargarEvidencia(matriz.matrizId, evidencia.evidenciaId).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = evidencia.nombreOriginal;
+        link.click();
+        URL.revokeObjectURL(url);
+        this.mensaje.set('Evidencia descargada correctamente.');
+        this.guardando.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo descargar la evidencia.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  inactivarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
+    this.abrirModal({
+      tipo: 'inactivarEvidencia',
+      titulo: 'Inactivar evidencia',
+      descripcion: `Ingrese el motivo obligatorio para inactivar la evidencia ${evidencia.evidenciaId}. El archivo físico se conserva.`,
+      textoConfirmar: 'Inactivar',
+      requiereMotivo: true,
+      evidencia,
+      tono: 'peligro'
+    });
+  }
+
+  private ejecutarCambioEstadoPlan(plan: MatrizRiesgoPlanAccion, estado: string, motivo: string): void {
+    const matrizId = this.matrizSeleccionada()?.matrizId;
+    if (!matrizId) return;
+
+    this.guardando.set(true);
+    this.service.cambiarEstadoPlan(matrizId, plan.planId, estado, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Estado del plan actualizado correctamente.');
+        this.cargarPlanesYEvidencias(matrizId);
+        this.cargarReporte();
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo cambiar el estado del plan.')
+    });
+  }
+
+  private ejecutarInactivacionPlan(plan: MatrizRiesgoPlanAccion, motivo: string): void {
+    const matrizId = this.matrizSeleccionada()?.matrizId;
+    if (!matrizId) return;
+
+    this.guardando.set(true);
+    this.service.inactivarPlan(matrizId, plan.planId, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Plan de acción inactivado correctamente.');
+        this.cargarPlanesYEvidencias(matrizId);
+        this.cargarReporte();
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo inactivar el plan.')
+    });
+  }
+
+  private ejecutarInactivacionEvidencia(evidencia: MatrizRiesgoEvidencia, motivo: string): void {
+    const matrizId = this.matrizSeleccionada()?.matrizId;
+    if (!matrizId) return;
+
+    this.guardando.set(true);
+    this.service.inactivarEvidencia(matrizId, evidencia.evidenciaId, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Evidencia inactivada correctamente.');
+        this.cargarPlanesYEvidencias(matrizId);
+        this.seleccionarMatriz(matrizId);
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo inactivar la evidencia.')
+    });
+  }
+
   guardarCriterio(): void {
     if (!this.criteriosForm.variableId || !this.criteriosForm.descripcion.trim()) {
       this.error.set('La variable y la descripción del criterio son obligatorias.');
