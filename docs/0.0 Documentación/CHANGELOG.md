@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 21 de auditoría integral y cierre - 2026-07-15
+
+- Se confirmó `main` como única rama local/remota real, sincronizada antes de iniciar el cierre.
+- Se auditaron estructura, archivos rastreados, artefactos, secretos, documentación, SQL e integridad Git.
+- `appsettings.Development.json` se retiró del seguimiento y se añadió a `.gitignore`, conservando intacta la copia local.
+- NuGet y npm reportaron cero vulnerabilidades conocidas sin modificar versiones de dependencias.
+- Se aprobaron 56/56 pruebas Backend, 99/99 pruebas Frontend, 5/5 E2E y el build productivo de 374.97 KB.
+- Se preservaron los documentos Word, incluido el entregable de usuario, y se cerró el plan sin fases de reorganización pendientes.
+
 ### Fase 20 de calidad Backend - 2026-07-15
 
 - Se cubrieron reglas de aplicación de Listas para positivos, seguimientos, exportaciones auditadas y procesamiento de cargas.

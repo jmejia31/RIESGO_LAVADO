@@ -66,6 +66,7 @@ docs/**/*.log
 
 # Local configuration with secrets
 backend/RL.API/appsettings.json
+backend/RL.API/appsettings.Development.json
 .env
 .env.*
 !.env.example

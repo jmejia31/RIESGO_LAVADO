@@ -52,7 +52,7 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 
 ## Siguiente incremento recomendado
 
-- Cierre: ejecutar una auditoría integral final de Git, estructura, pruebas, cobertura, documentación y ramas.
+- Reorganización: no quedan fases pendientes; conservar las puertas actuales en cada cambio futuro.
 - Backend: mantener las 56 pruebas y agregar casos junto con cada cambio funcional; dejar Active Directory/SMTP para un ambiente controlado.
 - Frontend: mantener la línea base de 99 pruebas y agregar nuevos casos junto con cada cambio funcional futuro.
 - E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
