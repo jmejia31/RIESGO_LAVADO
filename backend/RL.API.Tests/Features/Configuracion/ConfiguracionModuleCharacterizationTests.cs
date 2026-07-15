@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RL.API.DTOs;
+using RL.API.Features.Auditoria.Contracts;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Features.Configuracion.Persistence;
-using RL.API.Repositories;
 using RL.API.Security;
 using Xunit;
 

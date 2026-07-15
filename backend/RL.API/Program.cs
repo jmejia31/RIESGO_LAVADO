@@ -5,6 +5,8 @@ using Serilog;
 using System.Text;
 using RL.API.Infrastructure;
 using RL.API.Middleware;
+using RL.API.Features.Auditoria.Application;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Catalogos.Application;
 using RL.API.Features.Catalogos.Persistence;
 using RL.API.Features.Configuracion.Application;
@@ -123,6 +125,7 @@ builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository
 builder.Services.Configure<RL.API.Models.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
 builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();

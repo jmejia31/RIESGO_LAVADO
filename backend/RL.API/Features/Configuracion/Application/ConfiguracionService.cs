@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Features.Configuracion.Persistence;
-using RL.API.Repositories;
 
 namespace RL.API.Features.Configuracion.Application;
 

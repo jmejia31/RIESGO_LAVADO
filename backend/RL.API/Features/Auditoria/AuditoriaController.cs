@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RL.API.Repositories;
-using RL.API.DTOs;
+using RL.API.Features.Auditoria.Application;
+using RL.API.Features.Auditoria.Contracts;
 using RL.API.Security;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace RL.API.Controllers
+namespace RL.API.Features.Auditoria
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -15,11 +15,11 @@ namespace RL.API.Controllers
     [Produces("application/json")]
     public class AuditoriaController : ControllerBase
     {
-        private readonly IAuditoriaRepository _repo;
+        private readonly IAuditoriaService _service;
 
-        public AuditoriaController(IAuditoriaRepository repo)
+        public AuditoriaController(IAuditoriaService service)
         {
-            _repo = repo;
+            _service = service;
         }
 
         [HttpGet]
@@ -36,7 +36,7 @@ namespace RL.API.Controllers
         {
             try
             {
-                var (datos, total) = await _repo.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
+                var (datos, total) = await _service.ObtenerBitacoraPaginadaAsync(pagina, limite, buscar, accion, modulo, tabla, fechaInicio, fechaFin);
                 return Ok(new AuditoriaPaginadoDto
                 {
                     Datos = datos,
@@ -64,35 +64,9 @@ namespace RL.API.Controllers
 
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var accionDetalle = ObtenerAccionDetalle(dto);
-            var datos = Newtonsoft.Json.JsonConvert.SerializeObject(new
-            {
-                Accion = accionDetalle,
-                dto.Detalle
-            });
-
-            await _repo.RegistrarAsync(dto.Tabla, dto.RegistroId, "VER", null, datos, usuarioId, null, ip, dto.Modulo);
+            await _service.RegistrarExportacionAsync(dto, usuarioId, ip);
             return Ok(new { success = true, mensaje = "Auditoría de exportación registrada." });
         }
 
-        private static string ObtenerAccionDetalle(RegistrarExportacionAuditoriaDto dto)
-        {
-            if (dto.Detalle.TryGetValue("accion", out var accion) && accion != null)
-            {
-                var accionTexto = accion.ToString();
-                if (!string.IsNullOrWhiteSpace(accionTexto))
-                    return accionTexto;
-            }
-
-            if (dto.Detalle.TryGetValue("tipoReporte", out var tipoReporte) &&
-                tipoReporte?.ToString()?.Contains("PDF", StringComparison.OrdinalIgnoreCase) == true)
-                return "GENERACION_REPORTE_PDF";
-
-            if (dto.Detalle.TryGetValue("archivo", out var archivo) &&
-                archivo?.ToString()?.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) == true)
-                return "EXPORTACION_PDF";
-
-            return "EXPORTACION_EXCEL";
-        }
     }
 }

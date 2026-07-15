@@ -20,6 +20,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 7 | Limpieza final, documentación, cobertura y validación integral | Bajo | Completada |
 | 8 | Calidad: cobertura reproducible y suite E2E inicial no destructiva | Medio | Completada |
 | 9 | Backend: migrar Configuración a módulo vertical con pruebas de caracterización | Medio | Completada |
+| 10 | Backend: migrar Auditoría como módulo vertical y capacidad transversal | Medio/alto | Completada |
 
 ## Orden de migración frontend
 
@@ -107,6 +108,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Se incorporaron cinco pruebas de caracterización para contratos públicos, límites HTTP y auditoría ante éxito o fallo de persistencia.
 - El Backend alcanzó 15 pruebas y la cobertura global subió a 3.88% de líneas y 3.21% de ramas.
 - El validador estructural exige el nuevo módulo e impide que sus archivos regresen a `Controllers`, `Repositories` o `Models` heredados.
+
+### Resultado de la fase 10
+
+- `Auditoria` quedó agrupado bajo `Features/Auditoria` con controlador, contratos, aplicación y persistencia.
+- El controlador depende exclusivamente de `IAuditoriaService`; la clasificación de exportaciones y su registro se trasladaron a la capa de aplicación.
+- `IAuditoriaRepository` permanece como puerto transversal consumido por `Auth`, `Configuracion` y `Listas`, con una única implementación Oracle propiedad del módulo.
+- Se conservaron `api/Auditoria`, los módulos autorizados `4`, `5`, `7`, `8` y `9`, filtros, paginación, respuesta segura, SQL e identificación de IP.
+- Se incorporaron ocho casos de caracterización; el Backend alcanzó 23 pruebas y 4.62% de líneas y 4.36% de ramas.
+- El validador estructural exige el módulo e impide que sus archivos regresen a `Controllers`, `Repositories` o `DTOs` heredados.
 
 ## Controles obligatorios por fase
 

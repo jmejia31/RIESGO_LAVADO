@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 10 de reorganización - 2026-07-15
+
+- Se migró `Auditoria` a un módulo vertical con `Application`, `Contracts` y `Persistence`.
+- Se preservaron ruta REST, módulos autorizados, filtros, paginación, SQL Oracle, resolución de IP y respuesta segura con `traceId`.
+- Se trasladó la clasificación y registro de exportaciones desde el controlador a `AuditoriaService`.
+- Se mantuvo `IAuditoriaRepository` como puerto transversal para los módulos que producen eventos auditables.
+- Se agregaron ocho casos de caracterización; la suite Backend alcanzó 23/23 pruebas aprobadas.
+- La cobertura Backend subió a 4.62% de líneas y 4.36% de ramas, elevando sus pisos anti-regresión.
+
 ### Fase 9 de reorganización - 2026-07-15
 
 - Se migró `Configuracion` a un módulo vertical con `Application`, `Contracts` y `Persistence`.

@@ -27,6 +27,13 @@ $requiredPaths = @(
     'backend/RL.API/Features/Catalogos/Persistence/ICatalogoRepository.cs',
     'backend/RL.API/Features/Catalogos/Persistence/CatalogoRepository.cs',
     'backend/RL.API.Tests/Features/Catalogos/CatalogosModuleTests.cs',
+    'backend/RL.API/Features/Auditoria/AuditoriaController.cs',
+    'backend/RL.API/Features/Auditoria/Application/IAuditoriaService.cs',
+    'backend/RL.API/Features/Auditoria/Application/AuditoriaService.cs',
+    'backend/RL.API/Features/Auditoria/Contracts/AuditoriaDto.cs',
+    'backend/RL.API/Features/Auditoria/Persistence/IAuditoriaRepository.cs',
+    'backend/RL.API/Features/Auditoria/Persistence/AuditoriaRepository.cs',
+    'backend/RL.API.Tests/Features/Auditoria/AuditoriaModuleCharacterizationTests.cs',
     'backend/RL.API/Features/Configuracion/ConfiguracionController.cs',
     'backend/RL.API/Features/Configuracion/Application/IConfiguracionService.cs',
     'backend/RL.API/Features/Configuracion/Application/ConfiguracionService.cs',
@@ -122,6 +129,7 @@ foreach ($file in $trackedFiles) {
 }
 
 $legacyBackendPaths = @(
+    'backend/RL.API/Controllers/AuditoriaController.cs',
     'backend/RL.API/Controllers/CatalogosController.cs',
     'backend/RL.API/Controllers/ConfiguracionController.cs',
     'backend/RL.API/Controllers/ListasController.cs',
@@ -133,6 +141,7 @@ $legacyBackendPaths = @(
     'backend/RL.API/Services/MatricesRiesgosAppService.cs',
     'backend/RL.API/Services/MatricesRiesgoService.cs',
     'backend/RL.API/Repositories/CatalogoRepository.cs',
+    'backend/RL.API/Repositories/AuditoriaRepository.cs',
     'backend/RL.API/Repositories/ConfiguracionRepository.cs',
     'backend/RL.API/Repositories/ListasRepository.cs',
     'backend/RL.API/Repositories/MatricesRiesgosRepository.cs',
@@ -141,7 +150,8 @@ $legacyBackendPaths = @(
     'backend/RL.API/Models/LoginSlide.cs',
     'backend/RL.API/Models/ListasModels.cs',
     'backend/RL.API/DTOs/MatricesRiesgosDto.cs',
-    'backend/RL.API/DTOs/MatricesRiesgoCalculoDto.cs'
+    'backend/RL.API/DTOs/MatricesRiesgoCalculoDto.cs',
+    'backend/RL.API/DTOs/AuditoriaDto.cs'
 )
 foreach ($legacyPath in $legacyBackendPaths) {
     if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyPath)) {

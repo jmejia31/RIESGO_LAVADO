@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Infrastructure;
-using RL.API.Repositories;
 
 namespace RL.API.Features.Listas.Persistence
 {

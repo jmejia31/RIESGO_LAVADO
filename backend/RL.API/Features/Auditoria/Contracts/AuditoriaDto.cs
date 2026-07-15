@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace RL.API.DTOs
+namespace RL.API.Features.Auditoria.Contracts
 {
     public class AuditoriaDto
     {
