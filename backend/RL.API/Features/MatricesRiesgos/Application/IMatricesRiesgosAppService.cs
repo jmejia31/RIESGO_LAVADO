@@ -1,6 +1,6 @@
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
-using RL.API.Services;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
 

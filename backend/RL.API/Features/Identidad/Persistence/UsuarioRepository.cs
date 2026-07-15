@@ -282,6 +282,18 @@ public class UsuarioRepository : IUsuarioRepository
         return rows > 0;
     }
 
+    public async Task<long?> BuscarUsuarioIdPorRefreshTokenAsync(string token)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT RFT_USR_ID FROM RL_REFRESH_TOKENS WHERE RFT_TOKEN = :token AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
+        cmd.Parameters.Add(new OracleParameter("token", token));
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result == null || result == DBNull.Value ? null : Convert.ToInt64(result);
+    }
+
     public async Task<string?> ObtenerRefreshTokenAsync(long usrId, string token)
     {
         await using var conn = _db.CreateConnection();

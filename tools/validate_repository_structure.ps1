@@ -72,6 +72,7 @@ $requiredPaths = @(
     'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs',
     'backend/RL.API.Tests/Features/ModuleBoundariesTests.cs',
     'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgoServiceTests.cs',
+    'backend/RL.API/Shared/Results/ServiceResult.cs',
     'frontend/rl-app/package.json',
     'frontend/rl-app/src/app/core/auth/auth.service.ts',
     'frontend/rl-app/src/app/core/configuration/configuracion.service.ts',
@@ -155,6 +156,7 @@ $legacyBackendPaths = @(
     'backend/RL.API/Services/AuthService.cs',
     'backend/RL.API/Services/ActiveDirectorioService.cs',
     'backend/RL.API/Services/EmailService.cs',
+    'backend/RL.API/Services/ServiceResult.cs',
     'backend/RL.API/Services/ListasService.cs',
     'backend/RL.API/Services/CoincidenciasService.cs',
     'backend/RL.API/Services/EvidenciasService.cs',
@@ -181,6 +183,25 @@ $legacyBackendPaths = @(
 foreach ($legacyPath in $legacyBackendPaths) {
     if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyPath)) {
         $errors.Add("Archivo backend en ubicacion heredada: $legacyPath")
+    }
+}
+
+$legacyBackendDirectories = @(
+    'backend/RL.API/Controllers',
+    'backend/RL.API/DTOs',
+    'backend/RL.API/Models',
+    'backend/RL.API/Repositories',
+    'backend/RL.API/Services'
+)
+foreach ($legacyDirectory in $legacyBackendDirectories) {
+    $legacyDirectoryPath = Join-Path $RepositoryRoot $legacyDirectory
+    if (-not (Test-Path -LiteralPath $legacyDirectoryPath)) {
+        continue
+    }
+
+    foreach ($legacyFile in Get-ChildItem -LiteralPath $legacyDirectoryPath -Recurse -File) {
+        $relativeFile = $legacyFile.FullName.Substring($RepositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+        $errors.Add("Archivo backend en carpeta heredada por tipo: $relativeFile")
     }
 }
 

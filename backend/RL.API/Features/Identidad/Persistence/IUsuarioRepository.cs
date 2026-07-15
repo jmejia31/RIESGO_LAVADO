@@ -11,6 +11,7 @@ public interface IUsuarioRepository
     Task<long> CrearAsync(CrearUsuarioDto dto, string hash, string salt);
     Task<bool> ActualizarPasswordAsync(long usrId, string hash, string salt);
     Task<bool> ForzarCambioPasswordAsync(long usrId, string hash, string salt);
+    Task<long?> BuscarUsuarioIdPorRefreshTokenAsync(string token);
     Task<string?> ObtenerRefreshTokenAsync(long usrId, string token);
     Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip);
     Task RevocarRefreshTokenAsync(string token);

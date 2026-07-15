@@ -1,7 +1,7 @@
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
-using RL.API.Services;
+using RL.API.Shared.Results;
 using System.Net;
 using System.Text;
 

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Features.Listas.Persistence;
-using RL.API.Services;
+using RL.API.Shared.Results;
 using System.IO.Compression;
 
 namespace RL.API.Features.Listas.Application;

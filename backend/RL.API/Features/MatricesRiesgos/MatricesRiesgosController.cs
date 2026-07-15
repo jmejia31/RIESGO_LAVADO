@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Security;
-using RL.API.Services;
+using RL.API.Shared.Results;
 using System.Security.Claims;
 
 namespace RL.API.Features.MatricesRiesgos;

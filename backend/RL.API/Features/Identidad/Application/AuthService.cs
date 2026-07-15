@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Persistence;
 using RL.API.Features.Identidad.Contracts;
@@ -336,28 +335,14 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip)
     {
-        // En una implementación clásica, decodificamos el token (incluso expirado)
-        // Pero para no complicar el descifrado del JWT en este paso, podemos consultar directamente en la base de datos de tokens.
-        // Dado que el repositorio tiene un método para verificar el token y retornar el valor si es válido, 
-        // pero requiere el usrId, crearemos un método alternativo en el que decodificamos el JWT expirado de forma no estricta
-        // para extraer el UsrId. 
-        // Para simplificar, asumiremos que en el flujo de refresh, el cliente nos manda el Refresh Token.
-        // Para encontrar el usuario sin el token JWT, podemos hacer una consulta a Oracle.
-        // Sin embargo, para cumplir 100% con la interfaz del repositorio, haremos lo siguiente:
-        // Buscaremos el token en la BD. Como la interfaz de UsuarioRepository nos pide ObtenerRefreshTokenAsync(usrId, token),
-        // ¿cómo obtenemos el usrId?
-        // En el DTO de RefreshTokenRequestDto, el cliente usualmente solo envía el RefreshToken.
-        // Para decodificar el Access Token y obtener el UsrId, podemos extraer las claims del token expirado del header.
-        // O bien, podemos buscar en la tabla directamente. 
-        // Agreguemos una consulta que extrae el UsrId buscando directamente en Oracle.
-        // Vamos a resolverlo elegantemente:
-        long usrId = await BuscarUsrIdPorRefreshTokenAsync(refreshToken);
-        if (usrId <= 0) return null;
+        // La aplicación coordina la rotación; la localización y validación temporal del token pertenecen a persistencia.
+        var usrId = await _usuarioRepo.BuscarUsuarioIdPorRefreshTokenAsync(refreshToken);
+        if (!usrId.HasValue || usrId.Value <= 0) return null;
 
-        var tokenDb = await _usuarioRepo.ObtenerRefreshTokenAsync(usrId, refreshToken);
+        var tokenDb = await _usuarioRepo.ObtenerRefreshTokenAsync(usrId.Value, refreshToken);
         if (tokenDb == null) return null;
 
-        var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId);
+        var usuario = await _usuarioRepo.ObtenerPorIdAsync(usrId.Value);
         if (usuario == null || !usuario.UsrActivo)
         {
             await _usuarioRepo.RevocarRefreshTokenAsync(refreshToken);
@@ -369,23 +354,6 @@ public class AuthService : IAuthService
 
         // Generar nuevos tokens
         return await GenerarTokensParaUsuarioAsync(usuario, ip);
-    }
-
-    private async Task<long> BuscarUsrIdPorRefreshTokenAsync(string token)
-    {
-        // Dado que no queremos agregar un método a IUsuarioRepository para evitar sobrecomplicar,
-        // podemos hacer una consulta rápida usando la conexión de Oracle del DbContext.
-        // Para ello, crearemos una conexión local usando la cadena de conexión de Config.
-        var connectionString = _config.GetConnectionString("OracleDB")!;
-        using var conn = new OracleConnection(connectionString);
-        await conn.OpenAsync();
-
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT RFT_USR_ID FROM RL_REFRESH_TOKENS WHERE RFT_TOKEN = :token AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
-        cmd.Parameters.Add(new OracleParameter("token", token));
-
-        var result = await cmd.ExecuteScalarAsync();
-        return result != null ? Convert.ToInt64(result.ToString()) : 0;
     }
 
     private static string GenerarRefreshToken()

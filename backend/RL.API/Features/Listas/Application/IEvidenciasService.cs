@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using RL.API.Features.Listas.Contracts;
-using RL.API.Services;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.Listas.Application;
 

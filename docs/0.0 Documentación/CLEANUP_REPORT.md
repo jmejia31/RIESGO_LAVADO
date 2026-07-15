@@ -14,6 +14,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 - Frontend organizado de forma hibrida en `core`, `features` y `shared`, con pantallas enrutadas mediante carga diferida.
 - Backend con modulos verticales para `Auditoria`, `Catalogos`, `Configuracion`, `Identidad`, `Listas` y `MatricesRiesgos`; Auth, Usuarios, Active Directory y SMTP pertenecen ahora al contexto de Identidad.
+- Las carpetas heredadas por tipo `Controllers`, `DTOs`, `Models`, `Repositories` y `Services` no contienen archivos y su reaparicion queda bloqueada por validacion automatica.
 - Oracle mantiene los scripts historicos `01` a `18` en la raiz y los modulos nuevos como paquetes numerados con un unico punto de entrada.
 - Documentacion tecnica centralizada en `docs/0.0 Documentacion` y enlazada desde el README principal.
 
@@ -29,7 +30,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
-| Backend | 7 | 27 | Calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
+| Backend | 7 | 30 | Calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
 | Frontend unitario | 3 | 6 | Arranque, `router-outlet`, rutas diferidas, guards/IDs de modulo y presentacion de resultados de matrices |
 | Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
@@ -39,7 +40,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 | Validacion | Resultado esperado de cierre |
 |---|---|
-| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 27/27 pruebas Backend |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 30/30 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial aproximado de 375 KB |
 | `npm test -- --watch=false` | 6/6 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |

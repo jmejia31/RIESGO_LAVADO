@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Features.Listas.Persistence;
-using RL.API.Services;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.Listas.Application;
 

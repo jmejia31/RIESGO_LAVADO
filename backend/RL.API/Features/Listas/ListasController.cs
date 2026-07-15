@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Security;
-using RL.API.Services;
+using RL.API.Shared.Results;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;

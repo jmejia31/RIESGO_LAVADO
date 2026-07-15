@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 12 de cierre arquitectónico - 2026-07-15
+
+- Se encapsuló en `UsuarioRepository` la consulta Oracle que localiza refresh tokens vigentes.
+- Se agregaron pruebas de rotación, token inexistente y revocación para usuarios inactivos.
+- Se movió `ServiceResult` a `Shared/Results` y se actualizaron Listas y Matrices de Riesgos.
+- Se vaciaron las carpetas heredadas `Controllers`, `DTOs`, `Models`, `Repositories` y `Services`.
+- El validador estructural ahora impide genéricamente reintroducir archivos en esas carpetas.
+- La suite Backend alcanzó 30/30 pruebas y 7.11% de líneas y 6.78% de ramas.
+
 ### Fase 11 de reorganización - 2026-07-15
 
 - Se migraron Auth y Usuarios al módulo vertical `Features/Identidad`.

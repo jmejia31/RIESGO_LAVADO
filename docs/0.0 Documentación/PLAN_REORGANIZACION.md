@@ -22,6 +22,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 9 | Backend: migrar Configuración a módulo vertical con pruebas de caracterización | Medio | Completada |
 | 10 | Backend: migrar Auditoría como módulo vertical y capacidad transversal | Medio/alto | Completada |
 | 11 | Backend: migrar Auth y Usuarios como contexto de Identidad | Alto | Completada |
+| 12 | Cierre Backend: encapsular refresh tokens y eliminar carpetas heredadas | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -128,6 +129,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Cuatro pruebas de caracterización verifican permisos HTTP, perfil, JWT firmado y control de intentos; el Backend alcanzó 27 pruebas.
 - La cobertura global Backend subió a 6.93% de líneas y 6.41% de ramas, con pisos anti-regresión elevados.
 - `Controllers`, `Repositories` y `DTOs` ya no contienen archivos heredados; `Services` conserva únicamente infraestructura compartida aún consumida por Listas y Matrices.
+
+### Resultado de la fase 12
+
+- La búsqueda Oracle del propietario de un refresh token se trasladó desde `AuthService` a `IUsuarioRepository` y `UsuarioRepository`.
+- La capa de aplicación coordina validación, revocación y rotación sin crear conexiones Oracle ni conocer SQL.
+- Tres pruebas nuevas cubren rotación exitosa, token inexistente y revocación cuando el usuario está inactivo; el Backend alcanzó 30 pruebas.
+- `ServiceResult` se movió de la carpeta heredada `Services` a `Shared/Results` sin cambiar su contrato.
+- `Controllers`, `DTOs`, `Models`, `Repositories` y `Services` quedaron sin archivos; el validador rechaza genéricamente cualquier reintroducción.
+- La cobertura Backend alcanzó 7.11% de líneas y 6.78% de ramas, con pisos elevados a 7.1% y 6.7%.
 
 ## Controles obligatorios por fase
 

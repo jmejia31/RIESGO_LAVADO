@@ -16,8 +16,8 @@ Para omitir temporalmente E2E durante trabajo unitario local puede usarse `-Skip
 
 | Componente | Metrica | Resultado fase 8 | Piso automatico |
 |---|---|---:|---:|
-| Backend | Lineas | 6.93% | 6.9% |
-| Backend | Ramas | 6.41% | 6.4% |
+| Backend | Lineas | 7.11% | 7.1% |
+| Backend | Ramas | 6.78% | 6.7% |
 | Frontend | Sentencias | 0.95% | 0.9% |
 | Frontend | Ramas | 1.71% | 1.7% |
 | Frontend | Funciones | 0.53% | 0.5% |
@@ -52,7 +52,7 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 
 ## Siguiente incremento recomendado
 
-- Backend: cubrir rotación de refresh token mediante un puerto Oracle comprobable y ampliar escenarios de Active Directory/SMTP en un ambiente controlado.
+- Backend: ampliar escenarios de Active Directory/SMTP en un ambiente controlado y cubrir persistencia Oracle mediante pruebas de integración aisladas.
 - Frontend: guards, interceptor de autenticacion y servicios HTTP con `HttpTestingController`.
 - E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
 - Mantener los recorridos que crean o modifican datos fuera de la suite no destructiva hasta disponer de datos semilla y limpieza transaccional aprobada.

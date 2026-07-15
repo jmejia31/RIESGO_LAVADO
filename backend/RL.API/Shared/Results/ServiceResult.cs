@@ -1,4 +1,4 @@
-namespace RL.API.Services;
+namespace RL.API.Shared.Results;
 
 public sealed record ServiceResult(bool Success, string? Message = null, int StatusCode = 200)
 {

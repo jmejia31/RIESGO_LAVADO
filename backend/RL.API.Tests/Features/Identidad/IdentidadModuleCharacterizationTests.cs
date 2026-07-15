@@ -102,6 +102,62 @@ public sealed class IdentidadModuleCharacterizationTests
         Assert.Contains(auditoria.Registros, item => item.Accion == "LOGIN" && item.DatosNuevos!.Contains("INTENTO_2_DE_5", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public async Task AuthService_RefreshValido_RevocaYRotaToken()
+    {
+        const string tokenAnterior = "refresh-token-anterior";
+        var usuario = CrearUsuarioLocal("ClaveSegura123!");
+        var repository = new UsuarioRepositoryFake
+        {
+            UsuarioIdPorRefreshToken = usuario.UsrId,
+            RefreshTokenValido = tokenAnterior,
+            UsuarioPorId = usuario
+        };
+        var service = CrearServicio(repository, new AuditoriaRepositoryFake(), new ConfiguracionRepositoryFake());
+
+        var response = await service.RefreshTokenAsync(tokenAnterior, "127.0.0.10");
+
+        Assert.NotNull(response);
+        Assert.Equal(new[] { tokenAnterior }, repository.TokensRevocados);
+        Assert.Equal(response.RefreshToken, repository.RefreshTokenGuardado);
+        Assert.NotEqual(tokenAnterior, response.RefreshToken);
+        Assert.Equal(usuario.UsrId, response.Usuario.Id);
+    }
+
+    [Fact]
+    public async Task AuthService_RefreshInexistente_NoRevocaNiGeneraToken()
+    {
+        var repository = new UsuarioRepositoryFake();
+        var service = CrearServicio(repository, new AuditoriaRepositoryFake(), new ConfiguracionRepositoryFake());
+
+        var response = await service.RefreshTokenAsync("token-inexistente", "127.0.0.11");
+
+        Assert.Null(response);
+        Assert.Empty(repository.TokensRevocados);
+        Assert.Null(repository.RefreshTokenGuardado);
+    }
+
+    [Fact]
+    public async Task AuthService_RefreshDeUsuarioInactivo_RevocaTokenSinRotarlo()
+    {
+        const string tokenAnterior = "refresh-token-inactivo";
+        var usuario = CrearUsuarioLocal("ClaveSegura123!");
+        usuario.UsrActivo = false;
+        var repository = new UsuarioRepositoryFake
+        {
+            UsuarioIdPorRefreshToken = usuario.UsrId,
+            RefreshTokenValido = tokenAnterior,
+            UsuarioPorId = usuario
+        };
+        var service = CrearServicio(repository, new AuditoriaRepositoryFake(), new ConfiguracionRepositoryFake());
+
+        var response = await service.RefreshTokenAsync(tokenAnterior, "127.0.0.12");
+
+        Assert.Null(response);
+        Assert.Equal(new[] { tokenAnterior }, repository.TokensRevocados);
+        Assert.Null(repository.RefreshTokenGuardado);
+    }
+
     private static AuthController CrearController(IAuthService auth, IActivoDirectorioService ad)
     {
         var controller = new AuthController(auth, ad, NullLogger<AuthController>.Instance)
@@ -182,19 +238,24 @@ public sealed class IdentidadModuleCharacterizationTests
     private sealed class UsuarioRepositoryFake : IUsuarioRepository
     {
         public Usuario? UsuarioPorLogin { get; init; }
+        public Usuario? UsuarioPorId { get; init; }
+        public long? UsuarioIdPorRefreshToken { get; init; }
+        public string? RefreshTokenValido { get; init; }
         public string? RefreshTokenGuardado { get; private set; }
         public DateTime? RefreshTokenExpira { get; private set; }
         public (int Intentos, DateTime? Bloqueo)? UltimoIntentoFallido { get; private set; }
+        public List<string> TokensRevocados { get; } = new();
 
         public Task<Usuario?> ObtenerPorEmailAsync(string email) => Task.FromResult<Usuario?>(null);
         public Task<Usuario?> ObtenerPorLoginAsync(string identifier) => Task.FromResult(UsuarioPorLogin);
-        public Task<Usuario?> ObtenerPorIdAsync(long id) => Task.FromResult<Usuario?>(null);
+        public Task<Usuario?> ObtenerPorIdAsync(long id) => Task.FromResult(UsuarioPorId);
         public Task<long> CrearAsync(CrearUsuarioDto dto, string hash, string salt) => Task.FromResult(0L);
         public Task<bool> ActualizarPasswordAsync(long usrId, string hash, string salt) => Task.FromResult(false);
         public Task<bool> ForzarCambioPasswordAsync(long usrId, string hash, string salt) => Task.FromResult(false);
-        public Task<string?> ObtenerRefreshTokenAsync(long usrId, string token) => Task.FromResult<string?>(null);
+        public Task<long?> BuscarUsuarioIdPorRefreshTokenAsync(string token) => Task.FromResult(UsuarioIdPorRefreshToken);
+        public Task<string?> ObtenerRefreshTokenAsync(long usrId, string token) => Task.FromResult(token == RefreshTokenValido ? token : null);
         public Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip) { RefreshTokenGuardado = token; RefreshTokenExpira = expira; return Task.CompletedTask; }
-        public Task RevocarRefreshTokenAsync(string token) => Task.CompletedTask;
+        public Task RevocarRefreshTokenAsync(string token) { TokensRevocados.Add(token); return Task.CompletedTask; }
         public Task RevocarTodosTokensAsync(long usrId) => Task.CompletedTask;
         public Task<List<UsuarioInfoDto>> ListarAsync() => Task.FromResult(new List<UsuarioInfoDto>());
         public Task<bool> ActualizarAsync(long id, ActualizarUsuarioDto dto, string? hash, string? salt) => Task.FromResult(false);

@@ -20,7 +20,6 @@ using RL.API.Features.Listas.Persistence;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
-using RL.API.Services;
 using System.Runtime.Versioning;
 
 [assembly: SupportedOSPlatform("windows")]
