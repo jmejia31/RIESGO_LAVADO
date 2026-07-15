@@ -17,7 +17,13 @@ describe('MatricesRiesgosComponent', () => {
       listar: vi.fn(() => of([])),
       listarCriterios: vi.fn(() => of([])),
       obtener: vi.fn(() => of({})),
-      historial: vi.fn(() => of([]))
+      historial: vi.fn(() => of([])),
+      crear: vi.fn(() => of({ matrizId: 1, sujetoTipo: 'PROVEEDOR' })),
+      actualizar: vi.fn(() => of({ matrizId: 1, sujetoTipo: 'PROVEEDOR' })),
+      calcular: vi.fn(() => of({})),
+      recalcular: vi.fn(() => of({})),
+      crearCriterio: vi.fn(() => of({ criterioId: 1 })),
+      actualizarCriterio: vi.fn(() => of({ criterioId: 1 }))
     };
 
     await TestBed.configureTestingModule({
@@ -110,5 +116,92 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['dashboard']).not.toHaveBeenCalled();
     expect(service['reporte']).not.toHaveBeenCalled();
     expect(service['listar']).not.toHaveBeenCalled();
+  });
+
+  it('bloquea la creacion cuando no existen variables configuradas', () => {
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Uno';
+
+    component.crearMatriz();
+
+    expect(component.error()).toBe('No existen variables configuradas para el tipo de sujeto seleccionado.');
+    expect(service['crear']).not.toHaveBeenCalled();
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('bloquea una matriz duplicada antes de escribir', () => {
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Uno';
+    component.capturasVariables.set([{
+      variableId: 1, criterioId: null, puntaje: 4, valorCapturado: '',
+      justificacion: 'Evaluacion', fuenteDato: 'CAPTURA'
+    }] as never);
+    component.matricesDuplicadas.set([{ matrizId: 9, nombreSujeto: 'Proveedor Uno' }] as never);
+
+    component.crearMatriz();
+
+    expect(component.error()).toContain('Ya existe una matriz activa');
+    expect(service['crear']).not.toHaveBeenCalled();
+  });
+
+  it('crea una matriz valida y solicita su calculo automatico', () => {
+    const matrizCreada = { matrizId: 31, sujetoTipo: 'PROVEEDOR', nombreSujeto: 'Proveedor Uno' };
+    service['crear'].mockReturnValue(of(matrizCreada));
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Uno';
+    component.nuevaMatriz.documento = 'RTN-01';
+    component.capturasVariables.set([{
+      variableId: 1, criterioId: null, puntaje: 3, valorCapturado: '3',
+      justificacion: 'Evaluacion inicial', fuenteDato: 'CAPTURA'
+    }] as never);
+
+    component.crearMatriz();
+
+    expect(service['crear']).toHaveBeenCalledWith(expect.objectContaining({
+      nombreSujeto: 'Proveedor Uno', documento: 'RTN-01'
+    }));
+    expect(service['calcular']).toHaveBeenCalledWith(31, 'FACTOR');
+    expect(component.mensaje()).toBe('Matriz creada y calculada automáticamente.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('recupera el formulario cuando la creacion de la matriz falla', () => {
+    service['crear'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Documento duplicado' } })));
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Uno';
+    component.capturasVariables.set([{
+      variableId: 1, criterioId: null, puntaje: 3, valorCapturado: '',
+      justificacion: '', fuenteDato: 'CAPTURA'
+    }] as never);
+
+    component.crearMatriz();
+
+    expect(component.error()).toBe('Documento duplicado');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('valida los campos obligatorios de un criterio antes de escribir', () => {
+    component.criteriosForm = {
+      variableId: 0, escalaId: null, valorDesde: null, valorHasta: null,
+      puntaje: 2, descripcion: ''
+    };
+
+    component.guardarCriterio();
+
+    expect(component.error()).toBe('La variable y la descripción del criterio son obligatorias.');
+    expect(service['crearCriterio']).not.toHaveBeenCalled();
+  });
+
+  it('exige motivo para recalcular y ejecuta la operacion al completarlo', () => {
+    const matriz = { matrizId: 18, sujetoTipo: 'PROVEEDOR' } as never;
+    component.recalcularMatriz(matriz);
+
+    component.confirmarModal();
+
+    expect(component.modalError()).toBe('El motivo es obligatorio para completar esta acción.');
+    expect(service['recalcular']).not.toHaveBeenCalled();
+
+    component.actualizarModalMotivo('Actualizacion anual');
+    component.confirmarModal();
+
+    expect(service['recalcular']).toHaveBeenCalledWith(18, 'Actualizacion anual', 'FACTOR');
+    expect(component.mensaje()).toBe('Matriz recalculada correctamente.');
+    expect(component.guardando()).toBe(false);
   });
 });

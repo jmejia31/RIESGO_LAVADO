@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 16 de calidad Frontend - 2026-07-15
+
+- Se cubrieron validaciones previas y escrituras simuladas de registros manuales y seguimientos de Listas.
+- Se probaron bloqueos por matrices incompletas o duplicadas, creación con cálculo automático y errores controlados.
+- Se caracterizaron campos obligatorios de criterios y el motivo requerido para recalcular matrices.
+- La suite Frontend aumentó de 60 a 70 pruebas en trece archivos y conservó 5/5 recorridos E2E.
+- La cobertura Frontend subió a 19.28% de sentencias, 14.49% de ramas, 15.21% de funciones y 18.91% de líneas.
+- Se elevaron los pisos anti-regresión sin modificar código productivo ni acceder a datos reales.
+
 ### Fase 15 de calidad Frontend - 2026-07-15
 
 - Se probaron la coordinación y recuperación ante errores de `MonitoreoListasComponent` y `MatricesRiesgosComponent`.

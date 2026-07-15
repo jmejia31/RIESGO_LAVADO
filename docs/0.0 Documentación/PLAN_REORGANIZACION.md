@@ -26,6 +26,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 13 | Calidad Frontend: guards, interceptor JWT y servicios HTTP críticos | Medio | Completada |
 | 14 | Calidad Frontend: confirmación de cambios y contratos HTTP de Listas/Matrices | Medio | Completada |
 | 15 | Calidad Frontend: coordinación y recuperación ante errores en Listas/Matrices | Medio | Completada |
+| 16 | Calidad Frontend: validaciones y escrituras simuladas de Listas/Matrices | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -168,6 +169,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Las plantillas y servicios externos se sustituyen durante las pruebas; no se accede a la API, Oracle ni archivos reales.
 - La suite Frontend alcanzó 60 pruebas en trece archivos y mantuvo los cinco recorridos E2E no destructivos.
 - La cobertura Frontend alcanzó 13.89% de sentencias, 10.41% de ramas, 10.74% de funciones y 13.17% de líneas.
+
+### Resultado de la fase 16
+
+- Listas valida campos del registro manual antes de escribir y prueba el alta correcta de un positivo mediante un servicio simulado.
+- El alta y la actualización de seguimientos quedaron caracterizadas para éxito, refresco del historial y recuperación ante errores.
+- Matrices bloquea formularios sin variables y registros duplicados antes de invocar el servicio.
+- La creación válida verifica el contrato enviado y el cálculo automático `FACTOR`; también se cubren errores de creación.
+- Los criterios exigen campos obligatorios y el recálculo requiere un motivo antes de ejecutar la operación simulada.
+- La suite Frontend alcanzó 70 pruebas en trece archivos; la cobertura llegó a 19.28% de sentencias, 14.49% de ramas, 15.21% de funciones y 18.91% de líneas.
 
 ## Controles obligatorios por fase
 

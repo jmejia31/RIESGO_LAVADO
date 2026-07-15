@@ -1,14 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
+import Swal from 'sweetalert2';
 import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
 import { ListasService } from '../listas/data-access/listas.service';
 import { MonitoreoListasComponent } from './monitoreo-listas.component';
+
+vi.mock('sweetalert2', () => ({
+  default: { fire: vi.fn(), showLoading: vi.fn() }
+}));
 
 describe('MonitoreoListasComponent', () => {
   let fixture: ComponentFixture<MonitoreoListasComponent>;
   let component: MonitoreoListasComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;
+  const fire = vi.mocked(Swal.fire);
 
   beforeEach(async () => {
     service = {
@@ -23,8 +29,12 @@ describe('MonitoreoListasComponent', () => {
         extensionesPermitidas: [],
         tiposPermitidosTexto: 'Archivos permitidos'
       })),
-      getSeguimientos: vi.fn(() => of([]))
+      getSeguimientos: vi.fn(() => of([])),
+      registrarPositivo: vi.fn(() => of({ mensaje: 'Registrado' })),
+      registrarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento registrado' })),
+      actualizarSeguimiento: vi.fn(() => of({ mensaje: 'Seguimiento actualizado' }))
     };
+    fire.mockReset();
 
     await TestBed.configureTestingModule({
       imports: [MonitoreoListasComponent],
@@ -121,5 +131,76 @@ describe('MonitoreoListasComponent', () => {
     expect(component.listaTiposDocumento()).toEqual(tiposDocumento);
     expect(component.listaTiposListasCautela()).toEqual(tiposLista);
     expect(component.politicaEvidencias().extensionesPermitidas).toContain('.pdf');
+  });
+
+  it('bloquea un registro manual incompleto antes de invocar el servicio', async () => {
+    component.agregarPositivoManual();
+    component.formManualNombre.set('Persona Manual');
+
+    component.guardarMotivo();
+
+    await vi.waitFor(() => expect(fire).toHaveBeenCalled());
+    expect(service['registrarPositivo']).not.toHaveBeenCalled();
+    expect(component.guardandoMotivo()).toBe(false);
+    expect(fire).toHaveBeenCalledWith(expect.objectContaining({ title: 'Campos requeridos' }));
+  });
+
+  it('registra un positivo manual valido y refresca la lista', async () => {
+    component.agregarPositivoManual();
+    component.formManualNombre.set('Persona Manual');
+    component.formManualNoDocumento.set('0801199900010');
+    component.formManualTipoPositivoId.set(2);
+    component.formTipoDocId.set(1);
+    component.formTipoListaCautelaId.set(3);
+    component.formMotivo.set('Revision de cumplimiento');
+
+    component.guardarMotivo();
+
+    await vi.waitFor(() => expect(service['registrarPositivo']).toHaveBeenCalledOnce());
+    expect(service['registrarPositivo']).toHaveBeenCalledWith({
+      tipoDocumentoId: 1,
+      tipoPositivoId: 2,
+      noDocumento: '0801199900010',
+      nombreCompleto: 'Persona Manual',
+      motivoIngreso: 'Revision de cumplimiento',
+      tipoListaCautelaId: 3,
+      origenRegistro: 'MANUAL_CUMPLIMIENTO'
+    });
+    expect(component.guardandoMotivo()).toBe(false);
+    expect(component.modalMotivoAbierto()).toBe(false);
+    expect(service['getJuridicas']).toHaveBeenCalled();
+  });
+
+  it('registra un seguimiento nuevo y recarga su historial', async () => {
+    component.entidadSeleccionada.set({ noDocumento: '0801', nombreCompleto: 'Ana', tipoPositivoId: 2 });
+    component.formComentarioSeguimiento.set('Seguimiento mensual');
+    const evidencia = new File(['contenido'], 'soporte.pdf', { type: 'application/pdf' });
+    component.archivosSeleccionados.set([evidencia]);
+
+    component.guardarSeguimiento();
+
+    await vi.waitFor(() => expect(service['registrarSeguimiento']).toHaveBeenCalledOnce());
+    expect(service['registrarSeguimiento']).toHaveBeenCalledWith('0801', 'Seguimiento mensual', [evidencia]);
+    expect(service['getSeguimientos']).toHaveBeenCalledWith('0801', '', '');
+    expect(component.guardandoSeguimiento()).toBe(false);
+    expect(component.modoEdicion()).toBe(false);
+  });
+
+  it('recupera el indicador y conserva la edicion cuando falla una actualizacion', async () => {
+    service['actualizarSeguimiento'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Actualizacion rechazada' } })));
+    component.entidadSeleccionada.set({ noDocumento: '0801', nombreCompleto: 'Ana', tipoPositivoId: 2 });
+    component.formComentarioSeguimiento.set('Nota corregida');
+    component.modoEdicion.set(true);
+    component.seguimientoEditandoId.set(44);
+
+    component.guardarSeguimiento();
+
+    await vi.waitFor(() => expect(service['actualizarSeguimiento']).toHaveBeenCalledOnce());
+    expect(service['actualizarSeguimiento']).toHaveBeenCalledWith(44, 'Nota corregida', []);
+    expect(component.guardandoSeguimiento()).toBe(false);
+    expect(component.modoEdicion()).toBe(true);
+    expect(fire).toHaveBeenLastCalledWith(expect.objectContaining({
+      title: 'Error', text: 'Actualizacion rechazada'
+    }));
   });
 });
