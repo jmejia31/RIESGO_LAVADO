@@ -16,8 +16,8 @@ Para omitir temporalmente E2E durante trabajo unitario local puede usarse `-Skip
 
 | Componente | Metrica | Resultado actual | Piso automatico |
 |---|---|---:|---:|
-| Backend | Lineas | 7.11% | 7.1% |
-| Backend | Ramas | 6.78% | 6.7% |
+| Backend | Lineas | 13.79% | 13.7% |
+| Backend | Ramas | 13.10% | 13.0% |
 | Frontend | Sentencias | 28.31% | 28.3% |
 | Frontend | Ramas | 24.80% | 24.8% |
 | Frontend | Funciones | 26.59% | 26.5% |
@@ -52,7 +52,8 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 
 ## Siguiente incremento recomendado
 
-- Backend: ampliar la capa de aplicación de Listas/Matrices mediante pruebas unitarias y de caracterización sin Oracle real; dejar Active Directory/SMTP para un ambiente controlado.
+- Cierre: ejecutar una auditoría integral final de Git, estructura, pruebas, cobertura, documentación y ramas.
+- Backend: mantener las 56 pruebas y agregar casos junto con cada cambio funcional; dejar Active Directory/SMTP para un ambiente controlado.
 - Frontend: mantener la línea base de 99 pruebas y agregar nuevos casos junto con cada cambio funcional futuro.
 - E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
 - Mantener los recorridos que crean o modifican datos fuera de la suite no destructiva hasta disponer de datos semilla y limpieza transaccional aprobada.

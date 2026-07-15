@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 20 de calidad Backend - 2026-07-15
+
+- Se cubrieron reglas de aplicación de Listas para positivos, seguimientos, exportaciones auditadas y procesamiento de cargas.
+- Se probaron creación, actualización, cálculo, estados, exportaciones y criterios de Matrices de Riesgos.
+- Los repositorios, la auditoría y el motor de cálculo se sustituyeron por interfaces simuladas sin paquetes nuevos ni conexiones externas.
+- La suite Backend aumentó de 30 a 56 pruebas en nueve archivos y mantuvo 99/99 pruebas Frontend y 5/5 recorridos E2E.
+- La cobertura Backend subió a 13.79% de líneas y 13.10% de ramas.
+- Se elevaron los pisos anti-regresión a 13.7% y 13.0% sin modificar código productivo ni datos Oracle.
+
 ### Fase 19 de calidad Frontend - 2026-07-15
 
 - Se cubrieron exportaciones de lista principal y ficha de patrono condicionadas a auditoría obligatoria.

@@ -30,7 +30,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
-| Backend | 7 | 30 | Calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
+| Backend | 9 | 56 | Aplicacion de Listas/Matrices, calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
 | Frontend unitario | 13 | 99 | Arranque, rutas diferidas, guards, interceptores JWT/confirmación, sesión local, configuración, bitácora, contratos HTTP, política documental, descargas, exportaciones auditadas y edición/escrituras simuladas de Listas/Matrices |
 | Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
@@ -40,7 +40,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 | Validacion | Resultado esperado de cierre |
 |---|---|
-| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 30/30 pruebas Backend |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 56/56 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial aproximado de 375 KB |
 | `npm test -- --watch=false` | 99/99 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |

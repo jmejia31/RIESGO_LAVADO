@@ -30,6 +30,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 17 | Calidad Frontend: política documental y eliminaciones lógicas simuladas | Medio | Completada |
 | 18 | Calidad Frontend: descargas, exportaciones y edición completa de matrices | Medio | Completada |
 | 19 | Calidad Frontend: exportaciones auditadas de monitoreo y edición de criterios | Medio | Completada |
+| 20 | Calidad Backend: aplicación de Listas y Matrices sin dependencias externas | Medio | Completada |
 
 ## Orden de migración frontend
 
@@ -208,6 +209,16 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Los criterios quedaron cubiertos para creación con normalización, carga en edición, actualización y conservación del formulario ante rechazo.
 - La suite Frontend alcanzó 99 pruebas en trece archivos; la cobertura llegó a 28.31% de sentencias, 24.80% de ramas, 26.59% de funciones y 28.30% de líneas.
 - Finalizada esta fase, el cierre recomendado continúa con fortalecimiento Backend y una auditoría integral final.
+
+### Resultado de la fase 20
+
+- Se incorporó un doble genérico de interfaces basado en `DispatchProxy`, reutilizable por pruebas unitarias sin paquetes adicionales.
+- `ListasService` quedó cubierto para validación y normalización de positivos, rangos de seguimiento, auditoría de exportaciones y selección segura del procesador de cargas.
+- `MatricesRiesgosAppService` quedó cubierto para creación, actualización, cálculo, estados, exportaciones y mantenimiento de criterios.
+- Los repositorios, el motor de cálculo y la auditoría se simulan; no se conecta a Oracle ni se escriben datos o archivos reales.
+- La suite Backend aumentó de 30 a 56 pruebas en nueve archivos y conservó 99/99 pruebas Frontend y 5/5 recorridos E2E.
+- La cobertura Backend alcanzó 13.79% de líneas y 13.10% de ramas; los pisos anti-regresión subieron a 13.7% y 13.0%.
+- Finalizada esta fase, resta la auditoría integral de cierre de la reorganización.
 
 ## Controles obligatorios por fase
 
