@@ -11,12 +11,15 @@ using RL.API.Features.Catalogos.Application;
 using RL.API.Features.Catalogos.Persistence;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Persistence;
+using RL.API.Features.Identidad.Application;
+using RL.API.Features.Identidad.Integrations.ActiveDirectory;
+using RL.API.Features.Identidad.Integrations.Email;
+using RL.API.Features.Identidad.Persistence;
 using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Persistence;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
-using RL.API.Repositories;
 using RL.API.Services;
 using System.Runtime.Versioning;
 
@@ -122,7 +125,7 @@ builder.Services.AddScoped<IListasRepository, ListasRepository>();
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
 
 // Proceso de negocio: registra servicios que concentran validaciones, auditoría y reglas funcionales.
-builder.Services.Configure<RL.API.Models.SmtpSettings>(builder.Configuration.GetSection("Smtp"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
 builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();

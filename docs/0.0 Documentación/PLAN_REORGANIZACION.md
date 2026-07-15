@@ -21,6 +21,7 @@ Cada fase debe terminar con código compilable, pruebas aprobadas, árbol Git li
 | 8 | Calidad: cobertura reproducible y suite E2E inicial no destructiva | Medio | Completada |
 | 9 | Backend: migrar Configuración a módulo vertical con pruebas de caracterización | Medio | Completada |
 | 10 | Backend: migrar Auditoría como módulo vertical y capacidad transversal | Medio/alto | Completada |
+| 11 | Backend: migrar Auth y Usuarios como contexto de Identidad | Alto | Completada |
 
 ## Orden de migración frontend
 
@@ -117,6 +118,16 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Se conservaron `api/Auditoria`, los módulos autorizados `4`, `5`, `7`, `8` y `9`, filtros, paginación, respuesta segura, SQL e identificación de IP.
 - Se incorporaron ocho casos de caracterización; el Backend alcanzó 23 pruebas y 4.62% de líneas y 4.36% de ramas.
 - El validador estructural exige el módulo e impide que sus archivos regresen a `Controllers`, `Repositories` o `DTOs` heredados.
+
+### Resultado de la fase 11
+
+- Auth y Usuarios quedaron agrupados bajo `Features/Identidad` con controlador, aplicación, contratos, dominio y persistencia.
+- Active Directory y SMTP quedaron declarados como integraciones explícitas dentro del contexto de Identidad.
+- Se conservaron `api/Auth`, los endpoints anónimos, el rol `ADMINISTRADOR`, el módulo `2`, claims JWT, vigencias, BCrypt, bloqueo y recuperación de contraseña.
+- `UsuarioRepository` conserva sus consultas y comandos Oracle; solo se separó su interfaz y se actualizó el namespace.
+- Cuatro pruebas de caracterización verifican permisos HTTP, perfil, JWT firmado y control de intentos; el Backend alcanzó 27 pruebas.
+- La cobertura global Backend subió a 6.93% de líneas y 6.41% de ramas, con pisos anti-regresión elevados.
+- `Controllers`, `Repositories` y `DTOs` ya no contienen archivos heredados; `Services` conserva únicamente infraestructura compartida aún consumida por Listas y Matrices.
 
 ## Controles obligatorios por fase
 

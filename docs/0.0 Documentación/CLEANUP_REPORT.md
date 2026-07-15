@@ -13,7 +13,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 ## Estado final de la estructura
 
 - Frontend organizado de forma hibrida en `core`, `features` y `shared`, con pantallas enrutadas mediante carga diferida.
-- Backend con modulos verticales para `Auditoria`, `Catalogos`, `Configuracion`, `Listas` y `MatricesRiesgos`; los modulos heredados restantes se conservan por tipo hasta que exista una fase funcional especifica para migrarlos.
+- Backend con modulos verticales para `Auditoria`, `Catalogos`, `Configuracion`, `Identidad`, `Listas` y `MatricesRiesgos`; Auth, Usuarios, Active Directory y SMTP pertenecen ahora al contexto de Identidad.
 - Oracle mantiene los scripts historicos `01` a `18` en la raiz y los modulos nuevos como paquetes numerados con un unico punto de entrada.
 - Documentacion tecnica centralizada en `docs/0.0 Documentacion` y enlazada desde el README principal.
 
@@ -29,7 +29,7 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
-| Backend | 6 | 23 | Calculo de matrices, Catalogos, Configuracion, Auditoria, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
+| Backend | 7 | 27 | Calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
 | Frontend unitario | 3 | 6 | Arranque, `router-outlet`, rutas diferidas, guards/IDs de modulo y presentacion de resultados de matrices |
 | Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
@@ -39,7 +39,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 | Validacion | Resultado esperado de cierre |
 |---|---|
-| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 23/23 pruebas Backend |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 27/27 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial aproximado de 375 KB |
 | `npm test -- --watch=false` | 6/6 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |
@@ -55,7 +55,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 - La suite E2E inicial no cubre sesiones autenticadas ni operaciones que escriben datos; requiere un ambiente aislado con credenciales efimeras.
 - Los pisos cuantitativos de cobertura existen, pero reflejan una linea base baja que debe incrementarse antes de migrar modulos sensibles.
-- `Auth` y `Usuarios` conservan parte de la organizacion heredada del Backend; migrarlos exige fases funcionales separadas por su relacion con JWT y Active Directory.
+- Active Directory y SMTP dependen de servicios institucionales externos; sus fallos controlados están caracterizados, pero las conexiones reales requieren un ambiente de integración autorizado.
 - Las dependencias deben revisarse periodicamente en una tarea dedicada; no se aplican actualizaciones forzadas durante una reorganizacion estructural.
 
 ## Conclusion

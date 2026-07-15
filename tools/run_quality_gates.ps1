@@ -5,8 +5,8 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $backendThresholds = @{
-    Lines = 4.6
-    Branches = 4.3
+    Lines = 6.9
+    Branches = 6.4
 }
 $frontendThresholds = @{
     Statements = 0.9

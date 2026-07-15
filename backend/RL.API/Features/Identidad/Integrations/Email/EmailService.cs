@@ -2,14 +2,8 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using RL.API.Models;
 
-namespace RL.API.Services;
-
-public interface IEmailService
-{
-    Task EnviarCorreoAsync(string destinatario, string asunto, string cuerpo, bool esHtml = true);
-}
+namespace RL.API.Features.Identidad.Integrations.Email;
 
 public class EmailService : IEmailService
 {

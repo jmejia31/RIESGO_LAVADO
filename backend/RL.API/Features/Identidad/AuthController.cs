@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using RL.API.DTOs;
+using RL.API.Features.Identidad.Application;
+using RL.API.Features.Identidad.Contracts;
+using RL.API.Features.Identidad.Integrations.ActiveDirectory;
 using RL.API.Security;
-using RL.API.Services;
 
-namespace RL.API.Controllers;
+namespace RL.API.Features.Identidad;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -286,9 +287,4 @@ public class AuthController : ControllerBase
     {
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
-}
-
-public class EstadoUsuarioDto
-{
-    public bool Activo { get; set; }
 }

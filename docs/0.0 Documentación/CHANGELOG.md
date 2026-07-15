@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fase 11 de reorganización - 2026-07-15
+
+- Se migraron Auth y Usuarios al módulo vertical `Features/Identidad`.
+- Se separaron aplicación, contratos, dominio, persistencia e integraciones de Active Directory y correo SMTP.
+- Se preservaron rutas REST, permisos, claims y vigencias JWT, BCrypt, bloqueo por intentos, recuperación de contraseña y SQL Oracle.
+- Se agregaron cuatro pruebas de caracterización con emisión real de JWT y validación del control de intentos.
+- La suite Backend alcanzó 27/27 pruebas y la cobertura subió a 6.93% de líneas y 6.41% de ramas.
+- El validador estructural exige el nuevo contexto y rechaza las nueve ubicaciones heredadas.
+
 ### Fase 10 de reorganización - 2026-07-15
 
 - Se migró `Auditoria` a un módulo vertical con `Application`, `Contracts` y `Persistence`.

@@ -1,4 +1,4 @@
-namespace RL.API.Models;
+namespace RL.API.Features.Identidad.Integrations.Email;
 
 public class SmtpSettings
 {
