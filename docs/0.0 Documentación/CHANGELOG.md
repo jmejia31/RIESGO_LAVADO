@@ -4,6 +4,14 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Estandarización integral de módulos - 2026-07-16
+
+- Backend quedó organizado por módulos con `Application`, `Contracts` y `Persistence`, y capas opcionales únicamente cuando contienen lógica real.
+- Seguridad, Oracle e identificadores compartidos se ubicaron en `Core/Security`, `Infrastructure/Database` y `Shared/Identifiers`.
+- Las páginas Angular se consolidaron bajo `pages`; las cinco capacidades de Listas quedaron dentro de un único módulo Frontend.
+- Se retiraron carpetas heredadas y vacías, se preservaron los directorios de ejecución con datos locales y se reforzó el validador estructural.
+- Las rutas HTTP, nombres públicos, contratos API y scripts Oracle permanecieron sin cambios.
+
 ### Reorganización de Contracts de Matrices de Riesgos - 2026-07-16
 
 - Los 30 DTO del módulo se conservaron sin cambios de nombre, propiedades o namespace público.

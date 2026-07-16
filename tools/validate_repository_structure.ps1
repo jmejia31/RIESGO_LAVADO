@@ -15,15 +15,33 @@ function Assert-RepositoryPath {
     }
 }
 
+function Assert-NonEmptyDirectory {
+    param([string]$RelativePath)
+
+    $absolutePath = Join-Path $RepositoryRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $absolutePath -PathType Container)) {
+        $errors.Add("Falta la carpeta obligatoria: $RelativePath")
+        return
+    }
+
+    if (-not (Get-ChildItem -LiteralPath $absolutePath -Recurse -File | Select-Object -First 1)) {
+        $errors.Add("Carpeta obligatoria sin archivos: $RelativePath")
+    }
+}
+
 $requiredPaths = @(
     'README.md',
     'RIESGO_LAVADO.sln',
     'backend/RL.API/RL.API.csproj',
     'backend/RL.API.Tests/RL.API.Tests.csproj',
+    'backend/RL.API/Core/Security/AuditRequiredAttribute.cs',
+    'backend/RL.API/Core/Security/ModuloAuthorizeAttribute.cs',
+    'backend/RL.API/Infrastructure/Database/OracleDbContext.cs',
+    'backend/RL.API/Shared/Identifiers/HashIdHelper.cs',
     'backend/RL.API/Features/Catalogos/CatalogosController.cs',
     'backend/RL.API/Features/Catalogos/Application/ICatalogoService.cs',
     'backend/RL.API/Features/Catalogos/Application/CatalogoService.cs',
-    'backend/RL.API/Features/Catalogos/Domain/Modulo.cs',
+    'backend/RL.API/Features/Catalogos/Contracts/Modulo.cs',
     'backend/RL.API/Features/Catalogos/Persistence/ICatalogoRepository.cs',
     'backend/RL.API/Features/Catalogos/Persistence/CatalogoRepository.cs',
     'backend/RL.API.Tests/Features/Catalogos/CatalogosModuleTests.cs',
@@ -93,15 +111,28 @@ $requiredPaths = @(
     'frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.ts',
     'frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.spec.ts',
     'frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts',
-    'frontend/rl-app/src/app/features/admin/monitoreo-listas/monitoreo-listas.component.spec.ts',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.spec.ts',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts',
-    'frontend/rl-app/src/app/features/admin/matrices-riesgos/matrices-riesgos.component.spec.ts',
-    'frontend/rl-app/src/app/features/admin/bitacora/bitacora.component.html',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts',
+    'frontend/rl-app/src/app/features/admin/bitacora/pages/bitacora/bitacora.component.ts',
+    'frontend/rl-app/src/app/features/admin/bitacora/pages/bitacora/bitacora.component.html',
     'frontend/rl-app/src/app/features/admin/bitacora/data-access/auditoria.service.spec.ts',
-    'frontend/rl-app/src/app/features/admin/configuracion/configuracion.component.html',
-    'frontend/rl-app/src/app/features/admin/monitoreo-listas/monitoreo-listas.component.html',
+    'frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.ts',
+    'frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.html',
+    'frontend/rl-app/src/app/features/admin/usuarios/pages/usuarios/usuarios.component.ts',
+    'frontend/rl-app/src/app/features/admin/usuarios/pages/usuarios/usuarios.component.html',
+    'frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html',
+    'frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/tipo-listas/tipo-listas.component.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.ts',
+    'frontend/rl-app/src/app/features/auth/pages/login/login.component.ts',
+    'frontend/rl-app/src/app/features/auth/pages/login/login.component.html',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-reporte-tabla/matrices-reporte-tabla.component.ts',
     'database/00_EJECUCION_PRIMERA_VEZ.sql',
     'database/00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql',
@@ -124,6 +155,49 @@ foreach ($path in $requiredPaths) {
     Assert-RepositoryPath $path
 }
 
+$backendModules = @('Auditoria', 'Catalogos', 'Configuracion', 'Identidad', 'Listas', 'MatricesRiesgos')
+foreach ($module in $backendModules) {
+    foreach ($layer in @('Application', 'Contracts', 'Persistence')) {
+        Assert-NonEmptyDirectory "backend/RL.API/Features/$module/$layer"
+    }
+}
+
+$frontendModules = @(
+    'frontend/rl-app/src/app/features/auth',
+    'frontend/rl-app/src/app/features/admin/bitacora',
+    'frontend/rl-app/src/app/features/admin/configuracion',
+    'frontend/rl-app/src/app/features/admin/listas',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos',
+    'frontend/rl-app/src/app/features/admin/usuarios'
+)
+foreach ($module in $frontendModules) {
+    Assert-NonEmptyDirectory "$module/pages"
+    $modulePath = Join-Path $RepositoryRoot $module
+    foreach ($rootFile in Get-ChildItem -LiteralPath $modulePath -File) {
+        $relativeFile = $rootFile.FullName.Substring($RepositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+        $errors.Add("Archivo frontend suelto en raiz de modulo: $relativeFile")
+    }
+}
+
+$sourceRoots = @(
+    'backend/RL.API/Core',
+    'backend/RL.API/Infrastructure',
+    'backend/RL.API/Features',
+    'backend/RL.API/Shared',
+    'frontend/rl-app/src/app/core',
+    'frontend/rl-app/src/app/features',
+    'frontend/rl-app/src/app/shared'
+)
+foreach ($sourceRoot in $sourceRoots) {
+    $sourceRootPath = Join-Path $RepositoryRoot $sourceRoot
+    foreach ($directory in Get-ChildItem -LiteralPath $sourceRootPath -Directory -Recurse) {
+        if (-not (Get-ChildItem -LiteralPath $directory.FullName -Force | Select-Object -First 1)) {
+            $relativeDirectory = $directory.FullName.Substring($RepositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
+            $errors.Add("Carpeta fuente vacia: $relativeDirectory")
+        }
+    }
+}
+
 $trackedFiles = @(git -C $RepositoryRoot ls-files)
 if ($LASTEXITCODE -ne 0) {
     throw 'No fue posible consultar los archivos rastreados por Git.'
@@ -137,9 +211,9 @@ foreach ($file in $trackedFiles) {
 }
 
 $largeComponents = @(
-    'frontend/rl-app/src/app/features/admin/bitacora/bitacora.component.ts',
-    'frontend/rl-app/src/app/features/admin/configuracion/configuracion.component.ts',
-    'frontend/rl-app/src/app/features/admin/monitoreo-listas/monitoreo-listas.component.ts'
+    'frontend/rl-app/src/app/features/admin/bitacora/pages/bitacora/bitacora.component.ts',
+    'frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.ts',
+    'frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.ts'
 )
 foreach ($component in $largeComponents) {
     $componentPath = Join-Path $RepositoryRoot $component
@@ -157,10 +231,36 @@ if (Test-Path -LiteralPath $routesPath) {
     }
 }
 
-$legacyFrontendPattern = '^frontend/rl-app/src/app/core/(models|services)/'
+$legacyFrontendPatterns = @(
+    '^frontend/rl-app/src/app/core/(models|services)/',
+    '^frontend/rl-app/src/app/features/auth/login/',
+    '^frontend/rl-app/src/app/features/admin/(cargar-listas|coincidencias-empleado|coincidencias-patrono|monitoreo-listas|tipo-listas)/',
+    '^frontend/rl-app/src/app/features/admin/(bitacora|configuracion|usuarios|matrices-riesgos)/[^/]+$'
+)
 foreach ($file in $trackedFiles) {
-    if ($file -match $legacyFrontendPattern) {
-        $errors.Add("Archivo frontend en carpeta generica heredada: $file")
+    foreach ($legacyFrontendPattern in $legacyFrontendPatterns) {
+        if ($file -match $legacyFrontendPattern) {
+            if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $file) -PathType Leaf) {
+                $errors.Add("Archivo frontend en carpeta heredada: $file")
+            }
+            break
+        }
+    }
+}
+
+$legacyFrontendDirectories = @(
+    'frontend/rl-app/src/app/core/models',
+    'frontend/rl-app/src/app/core/services',
+    'frontend/rl-app/src/app/features/auth/login',
+    'frontend/rl-app/src/app/features/admin/cargar-listas',
+    'frontend/rl-app/src/app/features/admin/coincidencias-empleado',
+    'frontend/rl-app/src/app/features/admin/coincidencias-patrono',
+    'frontend/rl-app/src/app/features/admin/monitoreo-listas',
+    'frontend/rl-app/src/app/features/admin/tipo-listas'
+)
+foreach ($legacyDirectory in $legacyFrontendDirectories) {
+    if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyDirectory) -PathType Container) {
+        $errors.Add("Carpeta frontend heredada: $legacyDirectory")
     }
 }
 
@@ -198,6 +298,7 @@ $legacyBackendPaths = @(
     'backend/RL.API/DTOs/MatricesRiesgoCalculoDto.cs',
     'backend/RL.API/DTOs/AuditoriaDto.cs',
     'backend/RL.API/DTOs/AuthDTOs.cs'
+    'backend/RL.API/Infrastructure/OracleDbContext.cs'
 )
 foreach ($legacyPath in $legacyBackendPaths) {
     if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyPath)) {
@@ -210,17 +311,14 @@ $legacyBackendDirectories = @(
     'backend/RL.API/DTOs',
     'backend/RL.API/Models',
     'backend/RL.API/Repositories',
-    'backend/RL.API/Services'
+    'backend/RL.API/Services',
+    'backend/RL.API/Security',
+    'backend/RL.API/Helpers'
 )
 foreach ($legacyDirectory in $legacyBackendDirectories) {
     $legacyDirectoryPath = Join-Path $RepositoryRoot $legacyDirectory
-    if (-not (Test-Path -LiteralPath $legacyDirectoryPath)) {
-        continue
-    }
-
-    foreach ($legacyFile in Get-ChildItem -LiteralPath $legacyDirectoryPath -Recurse -File) {
-        $relativeFile = $legacyFile.FullName.Substring($RepositoryRoot.Length).TrimStart('\', '/').Replace('\', '/')
-        $errors.Add("Archivo backend en carpeta heredada por tipo: $relativeFile")
+    if (Test-Path -LiteralPath $legacyDirectoryPath -PathType Container) {
+        $errors.Add("Carpeta backend heredada por tipo: $legacyDirectory")
     }
 }
 

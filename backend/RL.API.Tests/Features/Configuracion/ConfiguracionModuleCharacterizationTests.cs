@@ -6,7 +6,7 @@ using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Features.Configuracion.Persistence;
-using RL.API.Security;
+using RL.API.Core.Security;
 using Xunit;
 
 namespace RL.API.Tests.Features.Configuracion;

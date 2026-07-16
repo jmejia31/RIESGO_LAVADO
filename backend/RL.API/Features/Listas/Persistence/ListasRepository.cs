@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
-using RL.API.Infrastructure;
+using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.Listas.Persistence
 {

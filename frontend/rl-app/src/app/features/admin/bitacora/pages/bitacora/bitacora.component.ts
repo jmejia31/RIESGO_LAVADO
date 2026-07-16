@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuditoriaService } from './data-access/auditoria.service';
-import { AuditoriaDto } from './models/auditoria.models';
+import { AuditoriaService } from '../../data-access/auditoria.service';
+import { AuditoriaDto } from '../../models/auditoria.models';
 
 @Component({
   selector: 'app-bitacora',

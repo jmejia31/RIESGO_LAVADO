@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Contracts;
-using RL.API.Security;
+using RL.API.Core.Security;
 using RL.API.Shared.Results;
 using System;
 using System.Collections.Generic;

@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Catalogos;
 using RL.API.Features.Catalogos.Application;
-using RL.API.Features.Catalogos.Domain;
+using RL.API.Features.Catalogos.Contracts;
 using RL.API.Features.Catalogos.Persistence;
 using Xunit;
 

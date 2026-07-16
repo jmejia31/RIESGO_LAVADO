@@ -32,7 +32,7 @@ public class UsuarioInfoDto
     public long Id { get; set; }
 
     [JsonProperty("uid")]
-    public string Uid => RL.API.Helpers.HashIdHelper.EncodeId(Id);
+    public string Uid => RL.API.Shared.Identifiers.HashIdHelper.EncodeId(Id);
 
     [JsonProperty("nombre")]
     public string Nombre { get; set; } = string.Empty;

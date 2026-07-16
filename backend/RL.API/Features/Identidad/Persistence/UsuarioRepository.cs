@@ -1,7 +1,7 @@
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Identidad.Contracts;
 using RL.API.Features.Identidad.Domain;
-using RL.API.Infrastructure;
+using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.Identidad.Persistence;
 

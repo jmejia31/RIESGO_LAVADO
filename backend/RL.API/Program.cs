@@ -3,7 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
-using RL.API.Infrastructure;
+using RL.API.Infrastructure.Database;
 using RL.API.Middleware;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;

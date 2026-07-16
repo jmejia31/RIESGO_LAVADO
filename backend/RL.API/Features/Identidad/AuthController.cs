@@ -4,7 +4,7 @@ using System.Security.Claims;
 using RL.API.Features.Identidad.Application;
 using RL.API.Features.Identidad.Contracts;
 using RL.API.Features.Identidad.Integrations.ActiveDirectory;
-using RL.API.Security;
+using RL.API.Core.Security;
 
 namespace RL.API.Features.Identidad;
 

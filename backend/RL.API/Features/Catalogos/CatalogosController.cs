@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Catalogos.Application;
-using RL.API.Security;
+using RL.API.Core.Security;
 
 namespace RL.API.Features.Catalogos;
 

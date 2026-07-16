@@ -1,6 +1,6 @@
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Configuracion.Contracts;
-using RL.API.Infrastructure;
+using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.Configuracion.Persistence;
 

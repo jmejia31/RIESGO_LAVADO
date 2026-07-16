@@ -10,6 +10,7 @@ using RL.API.Features.Identidad.Domain;
 using RL.API.Features.Identidad.Integrations.ActiveDirectory;
 using RL.API.Features.Identidad.Integrations.Email;
 using RL.API.Features.Identidad.Persistence;
+using RL.API.Shared.Identifiers;
 
 namespace RL.API.Features.Identidad.Application;
 
@@ -238,7 +239,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto, long actualizadoPor)
     {
-        long id = Helpers.HashIdHelper.DecodeId(uid);
+        long id = HashIdHelper.DecodeId(uid);
         if (id <= 0) return false;
 
         var existente = await _usuarioRepo.ObtenerPorIdAsync(id);
@@ -272,7 +273,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo, long actualizadoPor)
     {
-        long id = Helpers.HashIdHelper.DecodeId(uid);
+        long id = HashIdHelper.DecodeId(uid);
         if (id <= 0) return false;
 
         var existente = await _usuarioRepo.ObtenerPorIdAsync(id);
@@ -300,7 +301,7 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Email, usuario.UsrEmail),
             new Claim(ClaimTypes.Role, usuario.Rol.RolNombre),
             new Claim("rol_id", usuario.UsrRolId.ToString()),
-            new Claim("uid", Helpers.HashIdHelper.EncodeId(usuario.UsrId)),
+            new Claim("uid", HashIdHelper.EncodeId(usuario.UsrId)),
             new Claim("es_dom", usuario.EsUsuarioDominio.ToString()),
             new Claim("dom_id", usuario.UsrDomId?.ToString() ?? ""),
             new Claim("dominio", usuario.UsrDominio ?? ""),

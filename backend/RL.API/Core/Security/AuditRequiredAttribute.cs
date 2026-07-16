@@ -1,4 +1,4 @@
-namespace RL.API.Security;
+namespace RL.API.Core.Security;
 
 /// <summary>
 /// Marca operaciones cuya auditoría funcional es obligatoria.

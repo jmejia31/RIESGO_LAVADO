@@ -18,7 +18,7 @@ using RL.API.Features.Identidad.Domain;
 using RL.API.Features.Identidad.Integrations.ActiveDirectory;
 using RL.API.Features.Identidad.Integrations.Email;
 using RL.API.Features.Identidad.Persistence;
-using RL.API.Security;
+using RL.API.Core.Security;
 using Xunit;
 
 namespace RL.API.Tests.Features.Identidad;

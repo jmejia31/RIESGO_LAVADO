@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from '../../../core/utils/excel-export.util';
-import { MatricesRiesgosService } from './data-access/matrices-riesgos.service';
-import { MatricesReporteTablaComponent } from './components/matrices-reporte-tabla/matrices-reporte-tabla.component';
+import * as XLSX from '../../../../../core/utils/excel-export.util';
+import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { MatricesReporteTablaComponent } from '../../components/matrices-reporte-tabla/matrices-reporte-tabla.component';
 import {
   EscalaRiesgo,
   MatrizRiesgoCriterio,
@@ -22,8 +22,8 @@ import {
   MatricesRiesgoReporte,
   MetodologiaMatrices,
   VariableMetodologia
-} from './models/matrices-riesgos.models';
-import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
+} from '../../models/matrices-riesgos.models';
+import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
 type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'inactivarEvidencia';

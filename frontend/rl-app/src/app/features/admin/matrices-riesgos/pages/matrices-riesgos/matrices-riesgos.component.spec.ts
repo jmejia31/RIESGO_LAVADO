@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
-import { MatricesRiesgosService } from './data-access/matrices-riesgos.service';
+import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
+import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
 describe('MatricesRiesgosComponent', () => {

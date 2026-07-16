@@ -8,7 +8,7 @@ using RL.API.Features.Auditoria;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Contracts;
 using RL.API.Features.Auditoria.Persistence;
-using RL.API.Security;
+using RL.API.Core.Security;
 using Xunit;
 
 namespace RL.API.Tests.Features.Auditoria;

@@ -7,7 +7,7 @@ import { AuthService } from './core/auth/auth.service';
 export const routes: Routes = [
   {
     path: 'login',
-    loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () => import('./features/auth/pages/login/login.component').then(m => m.LoginComponent)
   },
   // Proceso de acceso denegado: requiere sesión activa, pero no permiso de módulo específico.
   {
@@ -80,47 +80,47 @@ export const routes: Routes = [
       },
       {
         path: 'usuarios',
-        loadComponent: () => import('./features/admin/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+        loadComponent: () => import('./features/admin/usuarios/pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
         canActivate: [moduloGuard(2)]
       },
       {
         path: 'configuracion',
-        loadComponent: () => import('./features/admin/configuracion/configuracion.component').then(m => m.ConfiguracionComponent),
+        loadComponent: () => import('./features/admin/configuracion/pages/configuracion/configuracion.component').then(m => m.ConfiguracionComponent),
         canActivate: [moduloGuard(3)]
       },
       {
         path: 'monitoreo-listas',
-        loadComponent: () => import('./features/admin/monitoreo-listas/monitoreo-listas.component').then(m => m.MonitoreoListasComponent),
+        loadComponent: () => import('./features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component').then(m => m.MonitoreoListasComponent),
         canActivate: [moduloGuard(4)]
       },
       {
         path: 'bitacora',
-        loadComponent: () => import('./features/admin/bitacora/bitacora.component').then(m => m.BitacoraComponent),
+        loadComponent: () => import('./features/admin/bitacora/pages/bitacora/bitacora.component').then(m => m.BitacoraComponent),
         canActivate: [moduloGuard(5)]
       },
       {
         path: 'tipo-listas',
-        loadComponent: () => import('./features/admin/tipo-listas/tipo-listas.component').then(m => m.TipoListasComponent),
+        loadComponent: () => import('./features/admin/listas/pages/tipo-listas/tipo-listas.component').then(m => m.TipoListasComponent),
         canActivate: [moduloGuard(6)]
       },
       {
         path: 'cargar-listas',
-        loadComponent: () => import('./features/admin/cargar-listas/cargar-listas.component').then(m => m.CargarListasComponent),
+        loadComponent: () => import('./features/admin/listas/pages/cargar-listas/cargar-listas.component').then(m => m.CargarListasComponent),
         canActivate: [moduloGuard(7)]
       },
       {
         path: 'coincidencias-patrono',
-        loadComponent: () => import('./features/admin/coincidencias-patrono/coincidencias-patrono.component').then(m => m.CoincidenciasPatronoComponent),
+        loadComponent: () => import('./features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component').then(m => m.CoincidenciasPatronoComponent),
         canActivate: [moduloGuard(8)]
       },
       {
         path: 'coincidencias-empleado',
-        loadComponent: () => import('./features/admin/coincidencias-empleado/coincidencias-empleado.component').then(m => m.CoincidenciasEmpleadoComponent),
+        loadComponent: () => import('./features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component').then(m => m.CoincidenciasEmpleadoComponent),
         canActivate: [moduloGuard(9)]
       },
       {
         path: 'matrices-riesgos',
-        loadComponent: () => import('./features/admin/matrices-riesgos/matrices-riesgos.component').then(m => m.MatricesRiesgosComponent),
+        loadComponent: () => import('./features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component').then(m => m.MatricesRiesgosComponent),
         canActivate: [moduloGuard(10)]
       },
       { path: '', redirectTo: 'home', pathMatch: 'full' }

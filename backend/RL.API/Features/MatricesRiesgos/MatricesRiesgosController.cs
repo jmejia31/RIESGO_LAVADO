@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
-using RL.API.Security;
+using RL.API.Core.Security;
 using RL.API.Shared.Results;
 using System.Security.Claims;
 

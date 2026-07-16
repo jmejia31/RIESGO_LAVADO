@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
-using RL.API.Security;
+using RL.API.Core.Security;
 using System.Security.Claims;
 
 namespace RL.API.Features.Configuracion;

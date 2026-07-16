@@ -2,7 +2,7 @@
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
-using RL.API.Infrastructure;
+using RL.API.Infrastructure.Database;
 using System.Data;
 using System.Globalization;
 using System.Text;

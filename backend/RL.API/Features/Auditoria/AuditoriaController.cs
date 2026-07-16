@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Contracts;
-using RL.API.Security;
+using RL.API.Core.Security;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;

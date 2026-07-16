@@ -32,31 +32,26 @@ No deben aparecer en la raíz archivos temporales, evidencias de ejecución, bin
 
 ```text
 backend/RL.API/
-├── App/
-│   ├── DependencyInjection/
-│   └── Configuration/
 ├── Core/
-│   ├── Security/
-│   ├── Errors/
-│   └── Abstractions/
+│   └── Security/                     Autorización y marcadores auditables
 ├── Infrastructure/
-│   ├── Database/
-│   ├── ActiveDirectory/
-│   ├── Email/
-│   └── Storage/
+│   └── Database/                     Acceso técnico compartido a Oracle
 ├── Features/
-│   ├── Auth/
-│   ├── Usuarios/
-│   ├── Configuracion/
 │   ├── Auditoria/
 │   ├── Catalogos/
+│   ├── Configuracion/
+│   ├── Identidad/
 │   ├── Listas/
 │   └── MatricesRiesgos/
 ├── Middleware/
+├── Shared/
+│   ├── Identifiers/
+│   └── Results/
+├── Properties/
 └── Program.cs
 ```
 
-Cada módulo dentro de `Features` crea solamente las carpetas que necesite:
+Cada módulo dentro de `Features` usa como base `Application`, `Contracts` y `Persistence`. `Domain` e `Integrations` se crean únicamente cuando contienen código real; no se mantienen carpetas vacías para simular capas.
 
 ```text
 Features/MatricesRiesgos/
@@ -102,37 +97,37 @@ Se prefiere un tipo público principal por archivo. Los DTO pequeños pueden agr
 frontend/rl-app/src/app/
 ├── core/
 │   ├── auth/
+│   ├── configuration/
 │   ├── guards/
 │   ├── interceptors/
-│   ├── configuration/
-│   └── http/
-├── shared/
-│   ├── components/
-│   ├── directives/
-│   ├── pipes/
-│   ├── models/
 │   └── utils/
+├── shared/
+│   ├── layout/
+│   └── pages/
 ├── features/
 │   ├── auth/
-│   ├── usuarios/
-│   ├── configuracion/
-│   ├── auditoria/
-│   ├── listas/
-│   └── matrices-riesgos/
+│   │   └── pages/login/
+│   └── admin/
+│       ├── bitacora/
+│       ├── configuracion/
+│       ├── listas/
+│       ├── matrices-riesgos/
+│       └── usuarios/
 ├── app.config.ts
 └── app.routes.ts
 ```
 
-Estructura interna recomendada para una funcionalidad:
+Estructura interna estándar para una funcionalidad:
 
 ```text
-features/matrices-riesgos/
+features/admin/matrices-riesgos/
 ├── pages/                  Componentes asociados a rutas
 ├── components/             Componentes visuales propios del módulo
 ├── data-access/            Servicios HTTP, adaptación de respuestas y estado remoto
-├── models/                 Tipos y contratos TypeScript del módulo
-└── utils/                  Funciones puras exclusivas del módulo
+└── models/                 Tipos y contratos TypeScript del módulo
 ```
+
+`pages` es obligatoria para módulos con navegación. `components`, `data-access`, `models` y `utils` solo existen cuando tienen archivos con una responsabilidad real.
 
 ### Reglas de dependencia del frontend
 

@@ -1,20 +1,20 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ListasService } from '../listas/data-access/listas.service';
-import { CoincidenciaEmpleadoDetalle, CoincidenciaEmpleadoResumen } from '../listas/models/listas.models';
-import { AuthService } from '../../../core/auth/auth.service';
-import * as XLSX from '../../../core/utils/excel-export.util';
+import { ListasService } from '../../data-access/listas.service';
+import { CoincidenciaPatronoDetalle, CoincidenciaPatronoResumen } from '../../models/listas.models';
+import { AuthService } from '../../../../../core/auth/auth.service';
+import * as XLSX from '../../../../../core/utils/excel-export.util';
 
 @Component({
-  selector: 'app-coincidencias-empleado',
+  selector: 'app-coincidencias-patrono',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './coincidencias-empleado.component.html',
+  templateUrl: './coincidencias-patrono.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
-export class CoincidenciasEmpleadoComponent implements OnInit {
-  resumen = signal<CoincidenciaEmpleadoResumen[]>([]);
+export class CoincidenciasPatronoComponent implements OnInit {
+  resumen = signal<CoincidenciaPatronoResumen[]>([]);
   cargando = signal(true);
   
   // Búsqueda y paginación
@@ -26,7 +26,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
   mostrarModal = signal(false);
   cargandoDetalle = signal(false);
   fechaSeleccionada = signal('');
-  detalleRegistros = signal<CoincidenciaEmpleadoDetalle[]>([]);
+  detalleRegistros = signal<CoincidenciaPatronoDetalle[]>([]);
   
   // Búsqueda en el modal
   buscarTermDetalle = signal('');
@@ -47,7 +47,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
   cargarResumen() {
     this.cargando.set(true);
-    this.listasService.getResumenCoincidenciasEmpleado().subscribe({
+    this.listasService.getResumenCoincidenciasPatrono().subscribe({
       next: (datos) => {
         this.resumen.set(datos);
         this.cargando.set(false);
@@ -57,7 +57,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         this.cargando.set(false);
         this.mostrarError(
           'Error',
-          'No se pudo cargar el resumen de coincidencias de empleado.'
+          'No se pudo cargar el resumen de coincidencias de patrono.'
         );
       }
     });
@@ -118,7 +118,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     }
   }
 
-  verDetalles(item: CoincidenciaEmpleadoResumen) {
+  verDetalles(item: CoincidenciaPatronoResumen) {
     const f = item.fechaEncontro.split('T')[0];
     this.fechaSeleccionada.set(f);
     this.mostrarModal.set(true);
@@ -128,7 +128,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     this.filtroCalificacion.set('Todas');
     this.paginaDetalleActual.set(1);
     
-    this.listasService.getDetalleCoincidenciasEmpleado(f).subscribe({
+    this.listasService.getDetalleCoincidenciasPatrono(f).subscribe({
       next: (datos) => {
         this.detalleRegistros.set(datos);
         this.cargandoDetalle.set(false);
@@ -138,7 +138,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         this.cargandoDetalle.set(false);
         this.mostrarError(
           'Error',
-          'No se pudo cargar el detalle de coincidencias de empleado.'
+          'No se pudo cargar el detalle de coincidencias de patrono.'
         );
       }
     });
@@ -201,7 +201,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     });
   }
 
-  imprimir(item: CoincidenciaEmpleadoResumen) {
+  imprimir(item: CoincidenciaPatronoResumen) {
     const f = item.fechaEncontro.split('T')[0];
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
@@ -213,7 +213,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         }
       });
 
-      this.listasService.getDetalleCoincidenciasEmpleado(f).subscribe({
+      this.listasService.getDetalleCoincidenciasPatrono(f).subscribe({
         next: (registros) => {
           if (!registros || registros.length === 0) {
             Swal.default.fire({
@@ -238,7 +238,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
             'ID Reporte',
             'Identidad/DNI',
             'Nombre',
-            'Numero Empleado',
+            'Número Patrono',
             'Tipo Persona',
             'Lista de Coincidencia',
             'Calificación',
@@ -249,7 +249,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
           // Construcción de la matriz AOA (Array of Arrays)
           const excelData = [
-            ['REPORTE DIARIO DE COINCIDENCIAS - COINCIDENCIAS EMPLEADO'],
+            ['REPORTE DIARIO DE COINCIDENCIAS - COINCIDENCIAS PATRONO'],
             ['Institución:', institucion],
             ['Fecha de Coincidencias:', fechaCoincidencia],
             ['Fecha de Exportación:', fechaExport],
@@ -295,11 +295,11 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
           const wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, 'Coincidencias');
 
-          const fileName = `Coincidencias_Empleado_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
+          const fileName = `Coincidencias_Patrono_${fechaCoincidencia.replace(/\//g, '-')}_Export.xlsx`;
           this.listasService.registrarAuditoriaExportacion(
             'DNP_IHSS.REPORTE_COINCIDENCIAS',
             f,
-            'ExportacionCoincidenciasEmpleado',
+            'ExportacionCoincidenciasPatrono',
             {
               accion: 'EXPORTACION_EXCEL',
               fechaCoincidencia,
@@ -328,6 +328,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               });
             }
           });
+
         },
         error: (err) => {
           console.error('Error al exportar:', err);
@@ -343,7 +344,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     });
   }
 
-  calificar(r: CoincidenciaEmpleadoDetalle, tipoCalificacionId: number) {
+  calificar(r: CoincidenciaPatronoDetalle, tipoCalificacionId: number) {
     const desc = tipoCalificacionId === 1 ? 'Positivo' : 'Falso Positivo';
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
@@ -366,7 +367,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
             }
           });
 
-          this.listasService.calificarCoincidenciaEmpleado(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
+          this.listasService.calificarCoincidencia(r.reporteCoincidenciaId, tipoCalificacionId).subscribe({
             next: () => {
               // Actualizar localmente el tipoCalificacion
               r.tipoCalificacion = desc;
@@ -433,7 +434,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
     }).join('');
   }
 
-  mostrarDetalleRegistro(r: CoincidenciaEmpleadoDetalle) {
+  mostrarDetalleRegistro(r: CoincidenciaPatronoDetalle) {
     import('sweetalert2').then((Swal) => {
       Swal.default.fire({
         title: 'Obteniendo detalles...',
@@ -444,9 +445,9 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         }
       });
 
-      this.listasService.getResumenMatchListaEmpleado(r.dataId, r.nombre).subscribe({
+      this.listasService.getResumenMatchLista(r.dataId, r.nombre).subscribe({
         next: (detalleHtml) => {
-          // Extraer tokens del nombre del empleado (misma logica que el backend)
+          // Extraer tokens del nombre del patrono (misma lógica que el backend)
           const tokens = this.extraerTokens(r.nombre || '');
 
           // Resaltar las coincidencias en el detalle
@@ -477,7 +478,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
               <div class="det-grid">
                 <div class="det-field"><strong>ID Reporte:</strong> ${r.reporteCoincidenciaId}</div>
                 <div class="det-field"><strong>DNI / Identidad:</strong> ${r.dni || '—'}</div>
-                <div class="det-field"><strong>Nro. Empleado:</strong> ${r.numeroPatrono || '---'}</div>
+                <div class="det-field"><strong>N° Patrono:</strong> ${r.numeroPatrono || '—'}</div>
                 <div class="det-field"><strong>Nacionalidad:</strong> ${r.nacionalidad || '—'}</div>
                 <div class="det-field"><strong>Tipo Persona:</strong> ${r.tipoPersona || '—'}</div>
                 <div class="det-field"><strong>Calificación:</strong> ${r.tipoCalificacion || 'Sin calificar'}</div>

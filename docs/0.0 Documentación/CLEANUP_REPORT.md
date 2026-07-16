@@ -2,7 +2,7 @@
 
 Fecha: 2026-07-15
 
-Ultima revalidacion: 2026-07-16, fortalecimiento de la Fase 10 de Matrices de Riesgos
+Ultima revalidacion: 2026-07-16, estandarización integral de módulos
 
 Rama: `main`
 
@@ -18,7 +18,8 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 - Frontend organizado de forma hibrida en `core`, `features` y `shared`, con pantallas enrutadas mediante carga diferida.
 - Backend con modulos verticales para `Auditoria`, `Catalogos`, `Configuracion`, `Identidad`, `Listas` y `MatricesRiesgos`; Auth, Usuarios, Active Directory y SMTP pertenecen ahora al contexto de Identidad.
-- Las carpetas heredadas por tipo `Controllers`, `DTOs`, `Models`, `Repositories` y `Services` no contienen archivos y su reaparicion queda bloqueada por validacion automatica.
+- Las carpetas heredadas por tipo `Controllers`, `DTOs`, `Models`, `Repositories`, `Services`, `Security` y `Helpers` fueron eliminadas y su reaparición queda bloqueada por validación automática.
+- Se retiraron 20 directorios físicos vacíos de código, pruebas y documentación; `.agents` se conserva por pertenecer al entorno operativo de Codex.
 - Oracle mantiene los scripts historicos `01` a `18` en la raiz y los modulos nuevos como paquetes numerados con un unico punto de entrada.
 - Documentacion tecnica centralizada en `docs/0.0 Documentacion` y enlazada desde el README principal.
 
@@ -46,11 +47,11 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 | Validacion | Resultado auditado de cierre |
 |---|---|
 | `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 71/71 pruebas Backend |
-| `npm run build` | Build de produccion; paquete inicial de 374.97 KB |
+| `npm run build` | Build de producción; paquete inicial de 375.22 KB |
 | `npm test -- --watch=false` | 115/115 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |
 | `tools/run_quality_gates.ps1` | Backend 15.31%/16.10%; Frontend 29.66%/26.05%/28.35%/29.79%; pisos aprobados |
-| `tools/validate_repository_structure.ps1` | 96 rutas y 340 archivos controlados correctos |
+| `tools/validate_repository_structure.ps1` | 119 rutas obligatorias y 350 archivos rastreados revisados |
 | `tools/validate_database_scripts.ps1` | 19 scripts raiz, un paquete modular y 22 scripts alcanzables desde actualización segura |
 | `tools/validate_documentation_links.ps1` | 18 documentos Markdown y 16 enlaces locales correctos |
 | `dotnet list ... --vulnerable` | 0 paquetes Backend vulnerables reportados |

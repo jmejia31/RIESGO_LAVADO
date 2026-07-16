@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ListasService } from '../listas/data-access/listas.service';
-import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../listas/models/listas.models';
-import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
+import { ListasService } from '../../data-access/listas.service';
+import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../../models/listas.models';
+import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from '../../../core/utils/excel-export.util';
+import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { of, forkJoin } from 'rxjs';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';

@@ -23,10 +23,10 @@ La arquitectura real es modular por funcionalidad en frontend, por controladores
 
 Para nuevos modulos se debe replicar el patron observado:
 
-1. Crear o extender un controlador en `C:\RIESGO_LAVADO\backend\RL.API\Controllers`.
-2. Crear o extender un repositorio en `C:\RIESGO_LAVADO\backend\RL.API\Repositories`.
-3. Crear DTOs en `C:\RIESGO_LAVADO\backend\RL.API\DTOs` cuando haya contratos de entrada/salida.
-4. Crear modelos en `C:\RIESGO_LAVADO\backend\RL.API\Models` solo si representan estructuras reutilizables.
+1. Crear o extender el controlador dentro de `C:\RIESGO_LAVADO\backend\RL.API\Features\<Modulo>`.
+2. Crear casos de uso en `Application` y persistencia Oracle en `Persistence` dentro del mismo módulo.
+3. Crear DTOs en `Contracts` cuando haya contratos de entrada/salida.
+4. Crear tipos en `Domain` solo cuando representen reglas o estructuras puras de negocio.
 5. Registrar dependencias en `C:\RIESGO_LAVADO\backend\RL.API\Program.cs` cuando se cree una nueva interfaz/repositorio/servicio.
 6. Usar respuestas JSON con el patron `{ success, datos, mensaje }`.
 7. Usar `OracleDbContext` para abrir conexiones y `OracleParameter` para parametros.
@@ -82,16 +82,16 @@ Archivos directos y dependencias inmediatas:
 
 | Capa | Archivo | Funcion |
 |---|---|---|
-| Frontend | `frontend\rl-app\src\app\features\admin\monitoreo-listas\monitoreo-listas.component.ts` | Vista principal, filtros, tablas, modales, PDF, Excel, motivos, seguimientos y evidencias. |
+| Frontend | `frontend\rl-app\src\app\features\admin\listas\pages\monitoreo-listas\monitoreo-listas.component.ts` | Vista principal, filtros, tablas, modales, PDF, Excel, motivos, seguimientos y evidencias. |
 | Frontend | `frontend\rl-app\src\app\core\services\listas.service.ts` | Contrato HTTP del modulo de listas. |
 | Frontend | `frontend\rl-app\src\app\app.routes.ts` | Ruta `/monitoreo-listas` y guard de modulo. |
-| Backend | `backend\RL.API\Controllers\ListasController.cs` | Endpoints REST del modulo de listas, positivos, seguimientos, evidencia, carga y calificacion. |
-| Backend | `backend\RL.API\Repositories\ListasRepository.cs` | Consultas Oracle, reglas de persistencia, auditoria y procesamiento de archivos. |
-| Backend | `backend\RL.API\DTOs\CatalogoPositivosDto.cs` | DTOs de tipos de documento, tipos de lista y registro positivo. |
-| Backend | `backend\RL.API\DTOs\SeguimientoDto.cs` | DTOs de seguimiento y evidencia. |
-| Backend | `backend\RL.API\DTOs\ResumenListaDto.cs` | DTO de resumen de listas cargadas. |
-| Backend | `backend\RL.API\DTOs\CoincidenciaPatronoDto.cs` | DTOs de resumen/detalle de coincidencias patrono/empleado. |
-| Backend | `backend\RL.API\Models\ListasModels.cs` | Modelos de coincidencias juridicas, naturales, empleados y detalles. |
+| Backend | `backend\RL.API\Features\Listas\ListasController.cs` | Endpoints REST del módulo de listas, positivos, seguimientos, evidencia, carga y calificación. |
+| Backend | `backend\RL.API\Features\Listas\Persistence\ListasRepository.cs` | Consultas Oracle, reglas de persistencia, auditoría y procesamiento de archivos. |
+| Backend | `backend\RL.API\Features\Listas\Contracts\CatalogoPositivosDto.cs` | DTOs de tipos de documento, tipos de lista y registro positivo. |
+| Backend | `backend\RL.API\Features\Listas\Contracts\SeguimientoDto.cs` | DTOs de seguimiento y evidencia. |
+| Backend | `backend\RL.API\Features\Listas\Contracts\ResumenListaDto.cs` | DTO de resumen de listas cargadas. |
+| Backend | `backend\RL.API\Features\Listas\Contracts\CoincidenciaPatronoDto.cs` | DTOs de resumen/detalle de coincidencias patrono/empleado. |
+| Backend | `backend\RL.API\Features\Listas\Contracts\ListasModels.cs` | Contratos de coincidencias jurídicas, naturales, empleados y detalles. |
 | Base de datos | `database\05_register_monitoreo_listas.sql` | Registro del modulo Monitoreo de Listas. |
 | Base de datos | `database\09_create_detalle_evidencia.sql` | Tabla de metadatos de evidencia fisica para seguimientos. |
 | Base de datos | `database\10_register_tipo_listas_module.sql` | Registro del modulo Tipo Listas. |
@@ -134,7 +134,7 @@ El Modulo 2 debe replicar la estructura transversal de Monitoreo de Listas, pero
 
 | Archivo probable | Proposito |
 |---|---|
-| `frontend\rl-app\src\app\features\admin\matrices-riesgos\matrices-riesgos.component.ts` | Vista principal del modulo. |
+| `frontend\rl-app\src\app\features\admin\matrices-riesgos\pages\matrices-riesgos\matrices-riesgos.component.ts` | Vista principal del módulo. |
 | `frontend\rl-app\src\app\core\services\matrices-riesgos.service.ts` | Consumo HTTP del modulo. |
 | `frontend\rl-app\src\app\app.routes.ts` | Nueva ruta `/matrices-riesgos` protegida por `moduloGuard`. |
 
@@ -142,10 +142,10 @@ El Modulo 2 debe replicar la estructura transversal de Monitoreo de Listas, pero
 
 | Archivo probable | Proposito |
 |---|---|
-| `backend\RL.API\Controllers\MatricesRiesgosController.cs` | Endpoints del modulo. |
-| `backend\RL.API\Repositories\MatricesRiesgosRepository.cs` | Consultas y persistencia Oracle. |
+| `backend\RL.API\Features\MatricesRiesgos\MatricesRiesgosController.cs` | Endpoints del módulo. |
+| `backend\RL.API\Features\MatricesRiesgos\Persistence\MatricesRiesgosRepository.cs` | Consultas y persistencia Oracle. |
 | `backend\RL.API\Features\MatricesRiesgos\Contracts\` | Contratos agrupados por matrices, planes de acción, evidencias y reportería. |
-| `backend\RL.API\Models\MatricesRiesgosModels.cs` | Modelos si se requieren estructuras reutilizables. |
+| `backend\RL.API\Features\MatricesRiesgos\Domain\` | Cálculos y reglas puras del módulo. |
 | `backend\RL.API\Program.cs` | Registro de interfaz/repositorio/servicio. |
 
 ### Base de datos probable

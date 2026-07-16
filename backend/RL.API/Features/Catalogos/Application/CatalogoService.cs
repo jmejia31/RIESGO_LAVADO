@@ -1,4 +1,4 @@
-using RL.API.Features.Catalogos.Domain;
+using RL.API.Features.Catalogos.Contracts;
 using RL.API.Features.Catalogos.Persistence;
 
 namespace RL.API.Features.Catalogos.Application;

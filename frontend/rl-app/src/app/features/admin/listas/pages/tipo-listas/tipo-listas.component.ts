@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ListasService } from '../listas/data-access/listas.service';
-import { TipoListaCautela } from '../listas/models/listas.models';
+import { ListasService } from '../../data-access/listas.service';
+import { TipoListaCautela } from '../../models/listas.models';
 
 @Component({
   selector: 'app-tipo-listas',

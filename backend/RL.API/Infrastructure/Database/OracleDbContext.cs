@@ -1,6 +1,6 @@
 using Oracle.ManagedDataAccess.Client;
 
-namespace RL.API.Infrastructure;
+namespace RL.API.Infrastructure.Database;
 
 /// <summary>
 /// Contexto de conexión a Oracle 11g — fábrica de conexiones

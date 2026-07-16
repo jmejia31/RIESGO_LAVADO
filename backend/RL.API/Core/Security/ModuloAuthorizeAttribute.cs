@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace RL.API.Security;
+namespace RL.API.Core.Security;
 
 /// <summary>
 /// Valida que el JWT tenga acceso a uno de los módulos requeridos por el endpoint.

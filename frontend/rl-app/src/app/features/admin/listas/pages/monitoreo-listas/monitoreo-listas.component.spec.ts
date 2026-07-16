@@ -2,8 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DomSanitizer } from '@angular/platform-browser';
 import { of, throwError } from 'rxjs';
 import Swal from 'sweetalert2';
-import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
-import { ListasService } from '../listas/data-access/listas.service';
+import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
+import { ListasService } from '../../data-access/listas.service';
 import { MonitoreoListasComponent } from './monitoreo-listas.component';
 
 vi.mock('sweetalert2', () => ({

@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace RL.API.Helpers;
+namespace RL.API.Shared.Identifiers;
 
 public static class HashIdHelper
 {

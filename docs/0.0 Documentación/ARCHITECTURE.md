@@ -11,7 +11,7 @@ El sistema implementa una arquitectura web de tres capas desplegables: SPA Angul
 `frontend/rl-app/src/app` se organiza en:
 
 - `core`: modelos, servicios HTTP, guards e interceptores de autenticación y confirmación.
-- `features`: pantallas por capacidad funcional.
+- `features`: módulos por capacidad funcional; cada pantalla enrutada vive bajo `pages`.
 - `shared`: layout y páginas transversales.
 - `app.routes.ts`: rutas y permisos por identificador de módulo.
 
@@ -23,18 +23,17 @@ La estructura actual separa `core`, `features` y `shared`. `core` conserva auten
 
 `backend/RL.API` mantiene estas responsabilidades:
 
-- `Controllers`: contratos HTTP, autorización y códigos de respuesta.
-- `Services`: reglas funcionales, validaciones y coordinación.
-- `Repositories`: consultas y comandos Oracle.
-- `DTOs` y `Models`: contratos de transporte y representación.
-- `Security` y `Middleware`: autorización por módulo, marcadores de operaciones auditables y manejo uniforme de errores. La auditoría se persiste explícitamente desde servicios o repositorios dentro de la transacción funcional.
-- `Infrastructure/OracleDbContext.cs`: creación de conexiones Oracle.
+- `Features/<Modulo>`: controlador y capas `Application`, `Contracts` y `Persistence`; `Domain` e `Integrations` se agregan solo cuando existe una responsabilidad real.
+- `Core/Security`: autorización por módulo y marcadores de operaciones auditables.
+- `Infrastructure/Database`: creación de conexiones Oracle.
+- `Middleware`: manejo uniforme de errores HTTP.
+- `Shared/Identifiers` y `Shared/Results`: utilidades transversales con consumidores reales.
 
 `Program.cs` compone dependencias, JWT, CORS, Swagger, Serilog y el pipeline HTTP. Los contratos públicos no deben cambiarse sin versionado y coordinación con el frontend.
 
 `Features/Auditoria`, `Features/Catalogos`, `Features/Configuracion`, `Features/Identidad`, `Features/Listas` y `Features/MatricesRiesgos` funcionan como módulos verticales: sus controladores dependen de `Application`, los casos de uso dependen de abstracciones y `Persistence` contiene Oracle. Auditoría es una capacidad transversal: su implementación pertenece al módulo y otros módulos dependen únicamente de `IAuditoriaRepository` para registrar eventos. Identidad agrupa Auth y Usuarios; Active Directory y SMTP aparecen bajo `Integrations`, separados de contratos, dominio y persistencia. La localización y vigencia de refresh tokens pertenecen a `Persistence`; `Application` solo coordina su rotación. En Matrices de Riesgos, `Domain` conserva el motor de cálculo puro. Los resultados técnicos reutilizables viven en `Shared/Results`. La API continúa siendo un único desplegable.
 
-Las carpetas heredadas por tipo `Controllers`, `DTOs`, `Models`, `Repositories` y `Services` no contienen archivos y están protegidas por el validador estructural. El código nuevo debe pertenecer a un módulo funcional, a `Infrastructure`, `Middleware`, `Security`, `Helpers` o a una responsabilidad transversal explícita bajo `Shared`.
+Las carpetas heredadas por tipo `Controllers`, `DTOs`, `Models`, `Repositories`, `Services`, `Security` y `Helpers` fueron retiradas y su reaparición queda bloqueada por el validador estructural. El código nuevo debe pertenecer a un módulo funcional o a una responsabilidad transversal explícita bajo `Core`, `Infrastructure`, `Middleware` o `Shared`.
 
 ## Datos e integraciones
 

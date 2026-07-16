@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Listas;
 using RL.API.Features.MatricesRiesgos;
-using RL.API.Security;
+using RL.API.Core.Security;
 using Xunit;
 
 namespace RL.API.Tests.Features;
