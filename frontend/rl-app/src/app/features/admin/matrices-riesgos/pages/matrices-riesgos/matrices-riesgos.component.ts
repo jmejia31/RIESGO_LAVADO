@@ -1,6 +1,8 @@
 ﻿import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { OnDestroy } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
@@ -51,6 +53,18 @@ interface ModalOperacion {
   tono: 'normal' | 'advertencia' | 'peligro';
 }
 
+interface EvidenciaPreview {
+  nombre: string;
+  tipoMime: string;
+  tamanoBytes: number;
+  url: string | null;
+  urlSegura: SafeResourceUrl | null;
+  tipoVista: 'imagen' | 'pdf' | 'texto' | 'generico';
+  texto?: string;
+  cargando: boolean;
+  error?: string;
+}
+
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
@@ -93,9 +107,10 @@ interface ModalOperacion {
   `],
   changeDetection: ChangeDetectionStrategy.Default
 })
-export class MatricesRiesgosComponent implements OnInit {
+export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly configService = inject(ConfiguracionService);
+  private readonly sanitizer = inject(DomSanitizer);
   private reporteFiltroTimer: ReturnType<typeof setTimeout> | null = null;
   private matricesFiltroTimer: ReturnType<typeof setTimeout> | null = null;
   private duplicadosTimer: ReturnType<typeof setTimeout> | null = null;
@@ -107,6 +122,7 @@ export class MatricesRiesgosComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly modalOperacion = signal<ModalOperacion | null>(null);
+  readonly evidenciaPreview = signal<EvidenciaPreview | null>(null);
   readonly modalMotivo = signal('');
   readonly modalError = signal<string | null>(null);
   modalMotivoTexto = '';
@@ -271,6 +287,10 @@ export class MatricesRiesgosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarTodo();
+  }
+
+  ngOnDestroy(): void {
+    this.cerrarVistaPreviaEvidencia();
   }
 
   actualizarModulo(): void {
@@ -864,6 +884,15 @@ export class MatricesRiesgosComponent implements OnInit {
     this.evidenciaArchivo = input.files?.item(0) ?? null;
   }
 
+  vistaPreviaArchivoSeleccionado(): void {
+    if (!this.evidenciaArchivo) {
+      this.error.set('Seleccione un archivo para visualizar.');
+      return;
+    }
+    if (!this.validarTamanoVistaPrevia(this.evidenciaArchivo.size)) return;
+    void this.crearVistaPreviaDesdeBlob(this.evidenciaArchivo, this.evidenciaArchivo.name, this.evidenciaArchivo.type);
+  }
+
   cargarEvidencia(): void {
     const matriz = this.matrizSeleccionada();
     if (!matriz || !this.evidenciaArchivo) {
@@ -910,6 +939,53 @@ export class MatricesRiesgosComponent implements OnInit {
         this.guardando.set(false);
       }
     });
+  }
+
+  vistaPreviaEvidencia(evidencia: MatrizRiesgoEvidencia): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz || !evidencia.activa) return;
+    if (!this.validarTamanoVistaPrevia(evidencia.tamanoBytes)) return;
+
+    this.cerrarVistaPreviaEvidencia();
+    this.evidenciaPreview.set({
+      nombre: evidencia.nombreOriginal,
+      tipoMime: evidencia.tipoMime || 'application/octet-stream',
+      tamanoBytes: evidencia.tamanoBytes,
+      url: null,
+      urlSegura: null,
+      tipoVista: this.tipoVistaPorMime(evidencia.tipoMime || '', evidencia.nombreOriginal),
+      cargando: true
+    });
+
+    this.service.descargarEvidencia(matriz.matrizId, evidencia.evidenciaId).subscribe({
+      next: blob => {
+        void this.crearVistaPreviaDesdeBlob(blob, evidencia.nombreOriginal, blob.type || evidencia.tipoMime || 'application/octet-stream');
+      },
+      error: err => {
+        this.evidenciaPreview.update(actual => actual ? {
+          ...actual,
+          cargando: false,
+          error: this.obtenerMensajeError(err, 'No se pudo generar la vista previa de la evidencia.')
+        } : actual);
+      }
+    });
+  }
+
+  cerrarVistaPreviaEvidencia(): void {
+    const actual = this.evidenciaPreview();
+    if (actual?.url) {
+      URL.revokeObjectURL(actual.url);
+    }
+    this.evidenciaPreview.set(null);
+  }
+
+  descargarVistaPreviaActual(): void {
+    const actual = this.evidenciaPreview();
+    if (!actual?.url) return;
+    const link = document.createElement('a');
+    link.href = actual.url;
+    link.download = actual.nombre;
+    link.click();
   }
 
   inactivarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
@@ -1723,6 +1799,48 @@ export class MatricesRiesgosComponent implements OnInit {
     a.download = nombre;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  private async crearVistaPreviaDesdeBlob(blob: Blob, nombre: string, tipoMime: string): Promise<void> {
+    this.cerrarVistaPreviaEvidencia();
+    const mime = tipoMime || blob.type || 'application/octet-stream';
+    const url = URL.createObjectURL(blob);
+    const tipoVista = this.tipoVistaPorMime(mime, nombre);
+    const preview: EvidenciaPreview = {
+      nombre,
+      tipoMime: mime,
+      tamanoBytes: blob.size,
+      url,
+      urlSegura: this.sanitizer.bypassSecurityTrustResourceUrl(url),
+      tipoVista,
+      cargando: false
+    };
+
+    if (tipoVista === 'texto') {
+      try {
+        preview.texto = await blob.text();
+      } catch {
+        preview.error = 'No se pudo leer el contenido de texto del archivo.';
+      }
+    }
+
+    this.evidenciaPreview.set(preview);
+  }
+
+  private tipoVistaPorMime(tipoMime: string, nombre: string): EvidenciaPreview['tipoVista'] {
+    const mime = `${tipoMime || ''}`.toLowerCase();
+    const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
+    if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'].includes(extension)) return 'imagen';
+    if (mime === 'application/pdf' || extension === 'pdf') return 'pdf';
+    if (mime.startsWith('text/') || ['txt', 'csv', 'json', 'xml', 'log'].includes(extension)) return 'texto';
+    return 'generico';
+  }
+
+  private validarTamanoVistaPrevia(tamanoBytes: number): boolean {
+    const maxBytes = 10 * 1024 * 1024;
+    if (tamanoBytes <= maxBytes) return true;
+    this.error.set('La vista previa solo está disponible para archivos de hasta 10 MB.');
+    return false;
   }
 
   private fechaArchivo(): string {

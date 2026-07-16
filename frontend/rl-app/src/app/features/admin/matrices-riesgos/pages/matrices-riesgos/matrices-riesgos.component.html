@@ -819,6 +819,9 @@
             <label class="space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Archivo</span>
               <input type="file" (change)="seleccionarArchivoEvidencia($event)" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+              <span *ngIf="evidenciaArchivo" class="block text-xs text-gray-500">
+                {{ evidenciaArchivo.name }} · {{ (evidenciaArchivo.size / 1024) | number:'1.0-0' }} KB
+              </span>
             </label>
             <label class="space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Plan</span>
@@ -837,6 +840,10 @@
             <button type="button" (click)="cargarEvidencia()" [disabled]="guardando() || !matrizSeleccionada() || !evidenciaArchivo"
               class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
               Cargar
+            </button>
+            <button type="button" (click)="vistaPreviaArchivoSeleccionado()" [disabled]="!evidenciaArchivo || guardando()"
+              class="md:col-start-1 md:col-span-1 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-50">
+              Vista previa
             </button>
           </div>
           <div class="overflow-x-auto border border-gray-200 rounded-xl">
@@ -861,6 +868,10 @@
                   <td class="px-4 py-3">{{ evidencia.activa ? 'Activa' : 'Inactiva' }}</td>
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap justify-end gap-2">
+                      <button type="button" (click)="vistaPreviaEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
+                        class="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold disabled:opacity-50">
+                        Vista previa
+                      </button>
                       <button type="button" (click)="descargarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
                         class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold disabled:opacity-50">
                         Descargar
@@ -1094,6 +1105,66 @@
         </div>
       </section>
     </section>
+  </ng-container>
+
+  <ng-container *ngIf="evidenciaPreview() as preview">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 px-4 py-6 backdrop-blur-sm">
+      <div class="w-full max-w-5xl max-h-[92vh] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
+        (click)="$event.stopPropagation()">
+        <div class="px-5 py-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Vista previa de evidencia</p>
+            <h3 class="mt-1 text-lg font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
+              {{ preview.nombre }}
+            </h3>
+            <p class="mt-1 text-xs text-gray-500">
+              {{ preview.tipoMime || 'Tipo no definido' }} · {{ (preview.tamanoBytes / 1024) | number:'1.0-0' }} KB
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2 sm:justify-end">
+            <button type="button" (click)="descargarVistaPreviaActual()" [disabled]="!preview.url"
+              class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:opacity-50">
+              Descargar
+            </button>
+            <button type="button" (click)="cerrarVistaPreviaEvidencia()"
+              class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-bold">
+              Cerrar
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 bg-gray-50 overflow-auto max-h-[calc(92vh-120px)]">
+          <div *ngIf="preview.cargando" class="min-h-[360px] flex items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white text-sm font-semibold text-gray-500">
+            Preparando vista previa...
+          </div>
+
+          <div *ngIf="!preview.cargando && preview.error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {{ preview.error }}
+          </div>
+
+          <ng-container *ngIf="!preview.cargando && !preview.error">
+            <img *ngIf="preview.tipoVista === 'imagen' && preview.url" [src]="preview.url" [alt]="preview.nombre"
+              class="mx-auto max-h-[68vh] max-w-full rounded-xl border border-gray-200 bg-white object-contain shadow-sm" />
+
+            <iframe *ngIf="preview.tipoVista === 'pdf' && preview.urlSegura" [src]="preview.urlSegura"
+              class="h-[68vh] w-full rounded-xl border border-gray-200 bg-white"
+              title="Vista previa PDF"></iframe>
+
+            <pre *ngIf="preview.tipoVista === 'texto'"
+              class="max-h-[68vh] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-800">{{ preview.texto }}</pre>
+
+            <div *ngIf="preview.tipoVista === 'generico'" class="space-y-3">
+              <object *ngIf="preview.urlSegura" [data]="preview.urlSegura" [type]="preview.tipoMime"
+                class="h-[62vh] w-full rounded-xl border border-gray-200 bg-white">
+              </object>
+              <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                La vista previa se muestra con el visor disponible del navegador. Si el tipo de archivo no puede representarse directamente, utilice Descargar para abrirlo con la aplicación correspondiente.
+              </div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
   </ng-container>
 
   <ng-container *ngIf="modalOperacion()">
