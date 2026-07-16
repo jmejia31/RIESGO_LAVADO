@@ -59,7 +59,7 @@ interface EvidenciaPreview {
   tamanoBytes: number;
   url: string | null;
   urlSegura: SafeResourceUrl | null;
-  tipoVista: 'imagen' | 'pdf' | 'texto' | 'generico';
+  tipoVista: 'imagen' | 'pdf' | 'texto' | 'office' | 'generico';
   texto?: string;
   cargando: boolean;
   error?: string;
@@ -1803,7 +1803,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   private async crearVistaPreviaDesdeBlob(blob: Blob, nombre: string, tipoMime: string): Promise<void> {
     this.cerrarVistaPreviaEvidencia();
-    const mime = tipoMime || blob.type || 'application/octet-stream';
+    if (!blob.size) {
+      this.evidenciaPreview.set({
+        nombre,
+        tipoMime: tipoMime || 'application/octet-stream',
+        tamanoBytes: 0,
+        url: null,
+        urlSegura: null,
+        tipoVista: 'generico',
+        cargando: false,
+        error: 'El archivo no contiene datos para mostrar en vista previa.'
+      });
+      return;
+    }
+
+    const mimeDetectado = await this.detectarMimeVistaPrevia(blob, nombre, tipoMime || blob.type);
+    const mime = mimeDetectado || tipoMime || blob.type || 'application/octet-stream';
     const url = URL.createObjectURL(blob);
     const tipoVista = this.tipoVistaPorMime(mime, nombre);
     const preview: EvidenciaPreview = {
@@ -1833,7 +1848,50 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'].includes(extension)) return 'imagen';
     if (mime === 'application/pdf' || extension === 'pdf') return 'pdf';
     if (mime.startsWith('text/') || ['txt', 'csv', 'json', 'xml', 'log'].includes(extension)) return 'texto';
+    if ([
+      'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'
+    ].includes(extension) || mime.includes('word') || mime.includes('excel') || mime.includes('spreadsheet') || mime.includes('presentation') || mime.includes('officedocument')) {
+      return 'office';
+    }
     return 'generico';
+  }
+
+  private async detectarMimeVistaPrevia(blob: Blob, nombre: string, tipoMime?: string): Promise<string> {
+    const mime = `${tipoMime || blob.type || ''}`.toLowerCase();
+    if (mime && mime !== 'application/octet-stream') return mime;
+
+    const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
+    const porExtension: Record<string, string> = {
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif',
+      webp: 'image/webp',
+      bmp: 'image/bmp',
+      pdf: 'application/pdf',
+      txt: 'text/plain',
+      csv: 'text/csv',
+      json: 'application/json',
+      xml: 'text/xml',
+      log: 'text/plain',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ppt: 'application/vnd.ms-powerpoint',
+      pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    };
+    if (porExtension[extension]) return porExtension[extension];
+
+    const bytes = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
+    const firma = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+    if (firma.startsWith('89 50 4e 47')) return 'image/png';
+    if (firma.startsWith('ff d8 ff')) return 'image/jpeg';
+    if (firma.startsWith('47 49 46 38')) return 'image/gif';
+    if (firma.startsWith('25 50 44 46')) return 'application/pdf';
+    if (firma.startsWith('50 4b 03 04')) return 'application/zip';
+
+    return mime || 'application/octet-stream';
   }
 
   private validarTamanoVistaPrevia(tamanoBytes: number): boolean {
