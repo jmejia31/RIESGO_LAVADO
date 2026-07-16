@@ -23,6 +23,7 @@ public interface IMatricesRiesgosRepository
     Task<bool> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> CambiarEstadoPlanAsync(long matrizId, long planId, string estado, string motivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> InactivarPlanAsync(long matrizId, long planId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> ReactivarPlanAsync(long matrizId, long planId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> TienePlanTratadoParaCierreAsync(long matrizId);
     Task<List<MatrizRiesgoEvidenciaDto>> ListarEvidenciasAsync(long matrizId);
     Task<long> RegistrarEvidenciaAsync(MatrizRiesgoEvidenciaRegistroDto dto, long usuarioId, string? usuarioEmail, string? ip);

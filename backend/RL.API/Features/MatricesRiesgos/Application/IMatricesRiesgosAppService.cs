@@ -23,6 +23,7 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult<MatrizRiesgoPlanAccionDto>> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult> CambiarEstadoPlanAsync(long matrizId, long planId, MatrizRiesgoPlanEstadoRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult> InactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    Task<ServiceResult> ReactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult<List<MatrizRiesgoEvidenciaDto>>> ListarEvidenciasAsync(long matrizId);
     Task<ServiceResult<MatrizRiesgoEvidenciaDto>> CargarEvidenciaAsync(long matrizId, long? controlId, long? planId, IFormFile? archivo, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult<MatrizRiesgoEvidenciaDescargaDto>> DescargarEvidenciaAsync(long matrizId, long evidenciaId, long usuarioId, string? usuarioEmail, string? ip);

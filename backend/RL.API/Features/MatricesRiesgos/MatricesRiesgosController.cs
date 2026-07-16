@@ -358,6 +358,22 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpPut("{id:long}/planes/{planId:long}/reactivar")]
+    [AuditRequired("Reactivacion de plan de accion de matriz de riesgos")]
+    public async Task<IActionResult> ReactivarPlan(long id, long planId, [FromBody] MatrizRiesgoInactivarRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.ReactivarPlanAsync(id, planId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al reactivar plan {PlanId} de matriz {MatrizId}", planId, id);
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("{id:long}/evidencias")]
     public async Task<IActionResult> ListarEvidencias(long id)
     {

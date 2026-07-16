@@ -379,6 +379,25 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ok ? ServiceResult.Ok("Plan de acción inactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción activo.");
     }
 
+    public async Task<ServiceResult> ReactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        if (matrizId <= 0 || planId <= 0)
+            return ServiceResult.BadRequest("La matriz y el plan son obligatorios.");
+
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
+            return ServiceResult.BadRequest("El motivo de reactivación del plan es obligatorio.");
+
+        try
+        {
+            var ok = await _repo.ReactivarPlanAsync(matrizId, planId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
+            return ok ? ServiceResult.Ok("Plan de acción reactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción inactivo.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.BadRequest(ex.Message);
+        }
+    }
+
     public async Task<ServiceResult<List<MatrizRiesgoEvidenciaDto>>> ListarEvidenciasAsync(long matrizId)
     {
         if (matrizId <= 0)

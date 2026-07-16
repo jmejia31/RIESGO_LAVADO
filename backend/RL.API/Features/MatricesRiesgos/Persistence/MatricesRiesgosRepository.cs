@@ -823,6 +823,54 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return await CambiarEstadoPlanAsync(matrizId, planId, "INACTIVO", motivo, usuarioId, usuarioEmail, ip);
     }
 
+    public async Task<bool> ReactivarPlanAsync(long matrizId, long planId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            if (await MatrizEstaCerradaOInactivaAsync(conn, tx, matrizId))
+                throw new InvalidOperationException("No se pueden reactivar planes en una matriz cerrada o inactiva.");
+
+            var plan = await ObtenerPlanAsync(conn, tx, matrizId, planId);
+            if (plan == null || plan.Estado != "INACTIVO")
+                return false;
+
+            var datosAnt = JsonConvert.SerializeObject(plan);
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_PLANES_ACCION
+                       SET MRPA_ESTADO = 'PENDIENTE',
+                           MRPA_MOTIVO_CIERRE = NULL,
+                           MRPA_USR_CIERRE_ID = NULL,
+                           MRPA_FECHA_CIERRE = NULL
+                     WHERE MRPA_ID = :planId
+                       AND MRPA_MATRIZ_ID = :matrizId
+                       AND MRPA_ESTADO = 'INACTIVO'";
+                cmd.Parameters.Add(Param("planId", planId));
+                cmd.Parameters.Add(Param("matrizId", matrizId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            var datosNvo = JsonConvert.SerializeObject(new { EstadoAnterior = plan.Estado, EstadoNuevo = "PENDIENTE", Motivo = motivo });
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_PLANES_ACCION", planId.ToString(), "REACTIVACION_PLAN", plan.Estado, "PENDIENTE", motivo, datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_PLANES_ACCION", planId.ToString(), "UPDATE", datosAnt, datosNvo, usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
     public async Task<bool> TienePlanTratadoParaCierreAsync(long matrizId)
     {
         await using var conn = _db.CreateConnection();

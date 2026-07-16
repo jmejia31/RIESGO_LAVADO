@@ -28,7 +28,7 @@ import {
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
-type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'inactivarEvidencia';
+type ModalTipo = 'calcular' | 'recalcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
   variableId: number;
@@ -778,6 +778,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       case 'inactivarPlan':
         this.ejecutarInactivacionPlan(operacion.plan!, motivo);
         break;
+      case 'reactivarPlan':
+        this.ejecutarReactivacionPlan(operacion.plan!, motivo);
+        break;
       case 'inactivarEvidencia':
         this.ejecutarInactivacionEvidencia(operacion.evidencia!, motivo);
         break;
@@ -878,6 +881,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       requiereMotivo: true,
       plan,
       tono: 'peligro'
+    });
+  }
+
+  reactivarPlan(plan: MatrizRiesgoPlanAccion): void {
+    this.abrirModal({
+      tipo: 'reactivarPlan',
+      titulo: 'Reactivar plan',
+      descripcion: `Ingrese el motivo obligatorio para reactivar el plan ${plan.planId}. El estado volverá a PENDIENTE.`,
+      textoConfirmar: 'Reactivar',
+      requiereMotivo: true,
+      plan,
+      tono: 'normal'
     });
   }
 
@@ -1033,6 +1048,23 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.cerrarModal();
       },
       error: err => this.finalizarAccionConError(err, 'No se pudo inactivar el plan.')
+    });
+  }
+
+  private ejecutarReactivacionPlan(plan: MatrizRiesgoPlanAccion, motivo: string): void {
+    const matrizId = this.matrizSeleccionada()?.matrizId;
+    if (!matrizId) return;
+
+    this.guardando.set(true);
+    this.service.reactivarPlan(matrizId, plan.planId, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Plan de acción reactivado correctamente.');
+        this.cargarPlanesYEvidencias(matrizId);
+        this.cargarReporte();
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo reactivar el plan.')
     });
   }
 

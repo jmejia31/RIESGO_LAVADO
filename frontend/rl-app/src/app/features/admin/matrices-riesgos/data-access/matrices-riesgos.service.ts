@@ -122,6 +122,10 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/planes/${planId}/inactivar`, { motivo }, this.confirmado);
   }
 
+  reactivarPlan(id: number, planId: number, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/planes/${planId}/reactivar`, { motivo }, this.confirmado);
+  }
+
   listarEvidencias(id: number): Observable<MatrizRiesgoEvidencia[]> {
     return this.http.get<ApiResponse<MatrizRiesgoEvidencia[]>>(`${this.apiUrl}/${id}/evidencias`)
       .pipe(map(res => res.datos));
