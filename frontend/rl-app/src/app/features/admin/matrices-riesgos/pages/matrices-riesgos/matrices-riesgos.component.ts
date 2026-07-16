@@ -93,10 +93,12 @@ interface EvidenciaPreview {
 
     .rl-clamp-2 {
       -webkit-line-clamp: 2;
+      line-clamp: 2;
     }
 
     .rl-clamp-3 {
       -webkit-line-clamp: 3;
+      line-clamp: 3;
     }
 
     @media (max-width: 768px) {

@@ -815,46 +815,53 @@
             <h3 class="text-lg font-bold text-gray-900">Evidencias documentales</h3>
             <p class="text-xs text-gray-500">Archivos protegidos con nombre físico seguro, metadatos y eliminación lógica.</p>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-[1fr_180px_180px_auto] gap-3 items-end">
-            <label class="space-y-1">
+          <div class="space-y-3">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <label class="min-w-0 space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Archivo</span>
-              <input type="file" (change)="seleccionarArchivoEvidencia($event)" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-              <span *ngIf="evidenciaArchivo" class="block text-xs text-gray-500">
+              <label class="flex min-h-[42px] w-full cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                Seleccionar archivo
+                <input type="file" (change)="seleccionarArchivoEvidencia($event)" class="sr-only" />
+              </label>
+              <span *ngIf="evidenciaArchivo" class="block max-w-full truncate text-xs text-gray-500" [title]="evidenciaArchivo.name">
                 {{ evidenciaArchivo.name }} · {{ (evidenciaArchivo.size / 1024) | number:'1.0-0' }} KB
               </span>
             </label>
-            <label class="space-y-1">
+            <label class="min-w-0 space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Plan</span>
               <select [(ngModel)]="evidenciaPlanId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
                 <option [ngValue]="null">Sin plan</option>
                 <option *ngFor="let plan of planesAccion()" [ngValue]="plan.planId">Plan {{ plan.planId }}</option>
               </select>
             </label>
-            <label class="space-y-1">
+            <label class="min-w-0 space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Control</span>
               <select [(ngModel)]="evidenciaControlId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
                 <option [ngValue]="null">Sin control</option>
                 <option *ngFor="let control of matrizSeleccionada()?.controles || []" [ngValue]="control.controlId">{{ control.nombre }}</option>
               </select>
             </label>
-            <button type="button" (click)="cargarEvidencia()" [disabled]="guardando() || !matrizSeleccionada() || !evidenciaArchivo"
-              class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
-              Cargar
-            </button>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
             <button type="button" (click)="vistaPreviaArchivoSeleccionado()" [disabled]="!evidenciaArchivo || guardando()"
-              class="md:col-start-1 md:col-span-1 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-50">
+              class="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-50">
               Vista previa
             </button>
+            <button type="button" (click)="cargarEvidencia()" [disabled]="guardando() || !matrizSeleccionada() || !evidenciaArchivo"
+              class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
+              Cargar
+            </button>
+            </div>
           </div>
           <div class="overflow-x-auto border border-gray-200 rounded-xl">
-            <table class="min-w-[760px] w-full table-fixed divide-y divide-gray-200 text-sm">
+            <table class="min-w-[680px] w-full table-fixed divide-y divide-gray-200 text-sm">
               <thead class="bg-gray-50 text-xs uppercase text-gray-500">
                 <tr>
-                  <th class="px-4 py-3 text-left">Archivo</th>
-                  <th class="px-4 py-3 text-left">Vínculo</th>
-                  <th class="px-4 py-3 text-left">Fecha</th>
-                  <th class="px-4 py-3 text-left">Estado</th>
-                  <th class="px-4 py-3 text-right">Acciones</th>
+                  <th class="w-[28%] px-4 py-3 text-left">Archivo</th>
+                  <th class="w-[20%] px-4 py-3 text-left">Vínculo</th>
+                  <th class="w-[18%] px-4 py-3 text-left">Fecha</th>
+                  <th class="w-[12%] px-4 py-3 text-left">Estado</th>
+                  <th class="w-[22%] px-4 py-3 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-gray-100">
@@ -863,7 +870,7 @@
                     <p class="rl-clamp-2 font-semibold text-gray-900" [title]="evidencia.nombreOriginal">{{ evidencia.nombreOriginal }}</p>
                     <p class="text-xs text-gray-500">{{ (evidencia.tamanoBytes / 1024) | number:'1.0-0' }} KB</p>
                   </td>
-                  <td class="px-4 py-3 text-xs text-gray-600">Plan {{ evidencia.planId || '-' }} · Control {{ evidencia.controlId || '-' }}</td>
+                  <td class="px-4 py-3 text-xs text-gray-600 break-words [overflow-wrap:anywhere]">Plan {{ evidencia.planId || '-' }} · Control {{ evidencia.controlId || '-' }}</td>
                   <td class="px-4 py-3 whitespace-nowrap">{{ evidencia.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
                   <td class="px-4 py-3">{{ evidencia.activa ? 'Activa' : 'Inactiva' }}</td>
                   <td class="px-4 py-3">
