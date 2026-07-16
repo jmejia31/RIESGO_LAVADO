@@ -392,11 +392,11 @@ public sealed class MatricesRiesgosController : ControllerBase
     [HttpPost("{id:long}/evidencias")]
     [Consumes("multipart/form-data")]
     [AuditRequired("Carga de evidencia de matriz de riesgos")]
-    public async Task<IActionResult> CargarEvidencia(long id, [FromForm] long? controlId, [FromForm] long? planId, [FromForm] IFormFile? archivo)
+    public async Task<IActionResult> CargarEvidencia(long id, [FromForm] MatrizRiesgoEvidenciaUploadFormDto form)
     {
         try
         {
-            var result = await _service.CargarEvidenciaAsync(id, controlId, planId, archivo, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            var result = await _service.CargarEvidenciaAsync(id, form.ControlId, form.PlanId, form.Archivo, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
             return Responder(result);
         }
         catch (Exception ex)

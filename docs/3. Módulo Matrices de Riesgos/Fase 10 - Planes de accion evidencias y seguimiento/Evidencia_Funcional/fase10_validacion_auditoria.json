@@ -1,0 +1,21 @@
+{
+  "fase": "Fase 10 - Planes de acción, evidencias y seguimiento",
+  "estado_tecnico": "Validación DBA estática y auditoría completada",
+  "fecha_validacion": "2026-07-16",
+  "fuente": "Endpoint de auditoría del sistema",
+  "usuario_prueba": "francisco.perez@ihss.hn",
+  "responsable": "Javier Mejía",
+  "auditoria": [
+    {
+      "tabla": "RL_MR_PLANES_ACCION",
+      "registros_detectados": 13,
+      "resultado": "Correcto"
+    },
+    {
+      "tabla": "RL_MR_EVIDENCIAS",
+      "registros_detectados": 24,
+      "resultado": "Correcto"
+    }
+  ],
+  "observacion": "La evidencia confirma trazabilidad de operaciones de planes y evidencias. La validación no modifica estructuras Oracle aprobadas."
+}

@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Http;
 
 namespace RL.API.Features.MatricesRiesgos.Contracts;
 
@@ -40,4 +41,11 @@ public sealed class MatrizRiesgoEvidenciaDescargaDto
     public string NombreArchivo { get; set; } = string.Empty;
     public string ContentType { get; set; } = "application/octet-stream";
     public byte[] Contenido { get; set; } = Array.Empty<byte>();
+}
+
+public sealed class MatrizRiesgoEvidenciaUploadFormDto
+{
+    public long? ControlId { get; set; }
+    public long? PlanId { get; set; }
+    public IFormFile? Archivo { get; set; }
 }

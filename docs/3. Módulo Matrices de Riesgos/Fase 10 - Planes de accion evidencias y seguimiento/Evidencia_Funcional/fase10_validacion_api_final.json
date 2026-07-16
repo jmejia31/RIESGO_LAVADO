@@ -1,0 +1,93 @@
+{
+  "fase": "Fase 10 - Planes de acción, evidencias y seguimiento",
+  "estado_tecnico": "Validación funcional API completada",
+  "fecha_validacion": "2026-07-16",
+  "ambiente": "Local de pruebas RIESGO_LAVADO",
+  "usuario_prueba": "francisco.perez@ihss.hn",
+  "responsable": "Javier Mejía",
+  "matriz_validada": {
+    "id": 6,
+    "estado_inicial": "CALCULADA",
+    "nivel_residual": "Alto",
+    "requiere_plan_accion": true
+  },
+  "plan_prueba": {
+    "id": 2,
+    "flujo_validado": [
+      "crear",
+      "editar",
+      "cambiar_estado",
+      "inactivar",
+      "reactivar",
+      "inactivar_para_cierre_limpio"
+    ],
+    "resultado": "Correcto"
+  },
+  "evidencia_prueba": {
+    "id": 5,
+    "flujo_validado": [
+      "cargar",
+      "listar",
+      "descargar",
+      "inactivar_logicamente"
+    ],
+    "resultado": "Correcto"
+  },
+  "validaciones": [
+    {
+      "prueba": "Listar planes de matriz",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Bloquear cierre de matriz con plan requerido pendiente",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Crear plan de acción",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Editar plan de acción",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Cambiar estado de plan",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Inactivar plan con motivo obligatorio",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Reactivar plan con motivo obligatorio",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Cargar evidencia menor a 10 MB",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Listar evidencias activas",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Descargar evidencia",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Inactivar evidencia con motivo obligatorio",
+      "resultado": "Correcto"
+    },
+    {
+      "prueba": "Consultar historial funcional",
+      "resultado": "Correcto"
+    }
+  ],
+  "restricciones_confirmadas": [
+    "Sin integración con Monitoreo de Listas",
+    "Sin escritura hacia DNP",
+    "Sin uso de CONTROL_ALMACEN.PROVEEDOR",
+    "Sin cambios a permisos por acción",
+    "El frontend no calcula riesgo"
+  ]
+}
