@@ -4,6 +4,15 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Cierre formal de la Fase 10 de Matrices de Riesgos - 2026-07-16
+
+- Se cubrieron reactivacion de planes y vista previa documental; las suites alcanzaron 77/77 Backend, 123/123 Frontend y 6/6 E2E.
+- Se agrego un E2E autenticado y autorizado del modulo 10 con identidad efimera y API simulada, sin credenciales ni escrituras Oracle.
+- La cobertura quedo en 15.35%/16.36% Backend y 31.07%/26.97%/29.94%/31.26% Frontend, elevando los pisos anti-regresion.
+- GitHub Actions ejecuta restauracion, dependencias, navegador y la puerta integral en cada cambio de `main` y pull request.
+- Se incorporaron matriz de trazabilidad, politica de retencion, indice de evidencias y un script DBA reproducible de solo lectura.
+- El documento oficial pasa a version 1.2, estado aprobada y cerrada, conforme a la autorizacion expresa del responsable del proyecto.
+
 ### Estandarización integral de módulos - 2026-07-16
 
 - Backend quedó organizado por módulos con `Application`, `Contracts` y `Persistence`, y capas opcionales únicamente cuando contienen lógica real.
@@ -26,7 +35,7 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 - Se eliminaron responsables personales precargados de los formularios de controles y planes.
 - Se añadieron 15 pruebas Backend y 16 Frontend; las suites alcanzaron 71/71, 115/115 y 5/5 E2E.
 - La cobertura subió a 15.31%/16.10% Backend y 29.66%/26.05%/28.35%/29.79% Frontend, elevando todos los pisos.
-- Permanecen pendientes las pruebas API/DBA, navegación, capturas y aprobación formal indicadas por el documento de Fase 10.
+- Estos pendientes quedaron resueltos en el cierre formal: evidencia API/auditoria, validacion DBA reproducible, navegacion autenticada, trazabilidad documental y aprobacion registrada.
 
 ### Fase 21 de auditoría integral y cierre - 2026-07-15
 

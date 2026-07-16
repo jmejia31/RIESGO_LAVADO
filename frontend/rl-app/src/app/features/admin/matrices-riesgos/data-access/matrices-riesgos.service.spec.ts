@@ -135,6 +135,16 @@ describe('MatricesRiesgosService', () => {
     request.flush({ success: true });
   });
 
+  it('reactiva un plan con confirmacion y motivo', () => {
+    service.reactivarPlan(12, 4, 'Reapertura autorizada').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/12/planes/4/reactivar`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ motivo: 'Reapertura autorizada' });
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true });
+  });
+
   it('lista las evidencias de una matriz', () => {
     const evidencias = [{ evidenciaId: 8, nombreOriginal: 'reporte.pdf' }];
     const result = vi.fn();

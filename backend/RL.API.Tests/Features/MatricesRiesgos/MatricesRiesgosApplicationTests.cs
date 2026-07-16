@@ -277,6 +277,76 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Equal("Plan sustituido", call.Arguments[2]);
     }
 
+    [Theory]
+    [InlineData(0, 44, "Reapertura autorizada")]
+    [InlineData(12, 0, "Reapertura autorizada")]
+    [InlineData(12, 44, " ")]
+    public async Task ReactivarPlan_DatosInvalidos_RechazaSinEscribir(long matrizId, long planId, string motivo)
+    {
+        var service = CrearServicio(out var repo, out _);
+
+        var result = await service.ReactivarPlanAsync(matrizId, planId, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = motivo
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.ReactivarPlanAsync)));
+    }
+
+    [Fact]
+    public async Task ReactivarPlan_MotivoValido_RecortaYDelega()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ReactivarPlanAsync), _ => Task.FromResult(true));
+
+        var result = await service.ReactivarPlanAsync(12, 44, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = " Reapertura autorizada "
+        }, 7, "analista@ihss.hn", "127.0.0.1");
+
+        Assert.True(result.Success);
+        var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.ReactivarPlanAsync)));
+        Assert.Equal(12L, call.Arguments[0]);
+        Assert.Equal(44L, call.Arguments[1]);
+        Assert.Equal("Reapertura autorizada", call.Arguments[2]);
+        Assert.Equal(7L, call.Arguments[3]);
+        Assert.Equal("analista@ihss.hn", call.Arguments[4]);
+        Assert.Equal("127.0.0.1", call.Arguments[5]);
+    }
+
+    [Fact]
+    public async Task ReactivarPlan_NoEncontrado_DevuelveNotFound()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ReactivarPlanAsync), _ => Task.FromResult(false));
+
+        var result = await service.ReactivarPlanAsync(12, 44, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = "Reapertura autorizada"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(404, result.StatusCode);
+    }
+
+    [Fact]
+    public async Task ReactivarPlan_ReglaRepositorioInvalida_DevuelveBadRequest()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ReactivarPlanAsync), _ => throw new InvalidOperationException("El plan ya se encuentra activo."));
+
+        var result = await service.ReactivarPlanAsync(12, 44, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = "Reapertura autorizada"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Equal("El plan ya se encuentra activo.", result.Message);
+    }
+
     [Fact]
     public async Task ListarEvidencias_MatrizExistente_RetornaColeccion()
     {

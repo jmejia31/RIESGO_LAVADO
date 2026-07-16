@@ -2,6 +2,8 @@
   "fase": "Fase 10 - Planes de acción, evidencias y seguimiento",
   "estado_tecnico": "Validación funcional API completada",
   "fecha_validacion": "2026-07-16",
+  "commit_base_validacion": "072a470e94fd14da3d3c9c8a0a9cd80052cbaeda",
+  "tipo_evidencia": "Prueba funcional de API ejecutada en ambiente local controlado",
   "ambiente": "Local de pruebas RIESGO_LAVADO",
   "usuario_prueba": "francisco.perez@ihss.hn",
   "responsable": "Javier Mejía",
@@ -89,5 +91,6 @@
     "Sin uso de CONTROL_ALMACEN.PROVEEDOR",
     "Sin cambios a permisos por acción",
     "El frontend no calcula riesgo"
-  ]
+  ],
+  "alcance": "La evidencia registra el resultado funcional observado. La comprobación independiente de estructuras y consistencia Oracle se reproduce con Evidencia_DBA/fase10_validacion_dba_readonly.sql."
 }

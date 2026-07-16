@@ -237,8 +237,8 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - La carga valida extensión, MIME y firma real, calcula SHA-256 y elimina archivos parciales cuando la persistencia falla.
 - Los formularios dejaron de precargar nombres personales como responsables de controles o planes.
 - Se añadieron 15 pruebas Backend y 16 Frontend para cierre condicionado, planes, evidencias, contratos HTTP y coordinación de pantalla.
-- Las suites alcanzaron 71 pruebas Backend, 115 Frontend y 5 E2E; la cobertura recuperó y superó todos los pisos anti-regresión.
-- La Fase 10 funcional conserva como pendientes controlados la prueba API/DBA en Oracle, la prueba navegada, capturas y aprobación formal.
+- El cierre final alcanzó 77 pruebas Backend, 123 Frontend y 6 E2E; la cobertura recuperó y elevó todos los pisos anti-regresión.
+- La Fase 10 quedó aprobada y cerrada con evidencia API/auditoría, validación DBA reproducible de solo lectura, recorrido autenticado simulado, trazabilidad y política de retención. La ejecución contra ambientes institucionales sigue su proceso operativo externo.
 
 ## Controles obligatorios por fase
 

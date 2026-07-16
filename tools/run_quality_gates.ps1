@@ -5,14 +5,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $backendThresholds = @{
-    Lines = 15.1
-    Branches = 16.0
+    Lines = 15.3
+    Branches = 16.3
 }
 $frontendThresholds = @{
-    Statements = 29.6
-    Branches = 26.0
-    Functions = 28.3
-    Lines = 29.7
+    Statements = 31.0
+    Branches = 26.9
+    Functions = 29.9
+    Lines = 31.2
 }
 $failures = [System.Collections.Generic.List[string]]::new()
 
@@ -32,6 +32,7 @@ $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.c
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'
 $frontendRoot = Join-Path $RepositoryRoot 'frontend/rl-app'
+$npmCommand = if (Get-Command 'npm.cmd' -ErrorAction SilentlyContinue) { 'npm.cmd' } else { 'npm' }
 
 Write-Host '=== Cobertura Backend ===' -ForegroundColor Cyan
 & dotnet test $backendProject `
@@ -62,7 +63,7 @@ Assert-Minimum 'Backend ramas' $backendBranchPct $backendThresholds.Branches
 Write-Host '=== Cobertura Frontend ===' -ForegroundColor Cyan
 Push-Location $frontendRoot
 try {
-    & npm.cmd run test:coverage
+    & $npmCommand run test:coverage
     if ($LASTEXITCODE -ne 0) {
         throw "Las pruebas o la recoleccion de cobertura Frontend fallaron con codigo $LASTEXITCODE"
     }
@@ -85,7 +86,7 @@ try {
 
     if (-not $SkipE2E) {
         Write-Host '=== Pruebas E2E ===' -ForegroundColor Cyan
-        & npm.cmd run e2e
+        & $npmCommand run e2e
         if ($LASTEXITCODE -ne 0) {
             throw "Las pruebas E2E fallaron con codigo $LASTEXITCODE"
         }

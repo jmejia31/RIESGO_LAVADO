@@ -25,6 +25,50 @@ async function stubPublicConfiguration(page: Page) {
   }));
 }
 
+function createUnsignedAccessToken() {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
+    nameid: '27',
+    uid: 'e2e.matrices',
+    email: 'e2e.matrices@ihss.hn',
+    given_name: 'Prueba',
+    family_name: 'E2E',
+    role: 'ADMINISTRADOR',
+    rol_id: '1',
+    modulos: '10',
+    debe_cambiar_pass: '0',
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  })}.`;
+}
+
+async function stubAuthenticatedMatrices(page: Page) {
+  const accessToken = createUnsignedAccessToken();
+  await page.addInitScript(token => {
+    localStorage.setItem('access_token', token);
+    localStorage.setItem('refresh_token', 'refresh-e2e-local');
+    localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
+  }, accessToken);
+
+  await page.route('**/api/matrices-riesgos/**', route => {
+    const path = new URL(route.request().url()).pathname;
+    let datos: unknown = [];
+    if (path.endsWith('/metodologia/vigente')) {
+      datos = { factores: [], variables: [], escalasCatalogo: [], escalasRiesgo: [], controlesMitigacion: [] };
+    } else if (path.endsWith('/dashboard')) {
+      datos = { totalMatrices: 0, porNivelResidual: [] };
+    } else if (path.endsWith('/reportes')) {
+      datos = { totales: { totalMatrices: 0 }, porEstado: [], porNivelInherente: [], porNivelResidual: [], porFactor: [], matricesCriticas: [] };
+    }
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
+  });
+
+  await page.route('**/api/matrices-riesgos*', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] }),
+  }));
+}
+
 test.beforeEach(async ({ page }) => {
   await stubPublicConfiguration(page);
 });
@@ -76,4 +120,15 @@ test('redirige rutas desconocidas al login', async ({ page }) => {
 
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole('heading', { name: 'Prevención de Lavado' })).toBeVisible();
+});
+
+test('abre Matrices de Riesgos con una sesion autenticada y autorizada', async ({ page }) => {
+  await stubAuthenticatedMatrices(page);
+
+  await page.goto('/matrices-riesgos');
+
+  await expect(page).toHaveURL(/\/matrices-riesgos$/);
+  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await page.getByRole('button', { name: 'Matrices', exact: true }).click();
+  await expect(page.getByText('No hay matrices registradas.')).toBeVisible();
 });

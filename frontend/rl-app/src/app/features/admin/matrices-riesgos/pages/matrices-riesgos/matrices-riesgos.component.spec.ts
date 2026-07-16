@@ -23,6 +23,7 @@ describe('MatricesRiesgosComponent', () => {
       actualizarPlan: vi.fn(() => of({ planId: 1 })),
       cambiarEstadoPlan: vi.fn(() => of({ success: true })),
       inactivarPlan: vi.fn(() => of({ success: true })),
+      reactivarPlan: vi.fn(() => of({ success: true })),
       listarEvidencias: vi.fn(() => of([])),
       cargarEvidencia: vi.fn(() => of({ evidenciaId: 1 })),
       descargarEvidencia: vi.fn(() => of(new Blob())),
@@ -57,6 +58,7 @@ describe('MatricesRiesgosComponent', () => {
   afterEach(() => {
     fixture.destroy();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     TestBed.resetTestingModule();
   });
 
@@ -231,6 +233,36 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.mensaje()).toBe('Estado del plan actualizado correctamente.');
   });
 
+  it('reactiva un plan inactivo con motivo y refresca los indicadores', () => {
+    const plan = { planId: 7, matrizId: 12, estado: 'PENDIENTE', activo: false } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.reactivarPlan(plan);
+    component.actualizarModalMotivo('Reapertura autorizada');
+
+    component.confirmarModal();
+
+    expect(service['reactivarPlan']).toHaveBeenCalledWith(12, 7, 'Reapertura autorizada');
+    expect(service['listarPlanes']).toHaveBeenCalledWith(12);
+    expect(service['reporte']).toHaveBeenCalled();
+    expect(component.modalOperacion()).toBeNull();
+    expect(component.mensaje()).toBe('Plan de acción reactivado correctamente.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('conserva el modal y muestra el error cuando falla la reactivacion del plan', () => {
+    service['reactivarPlan'].mockReturnValue(throwError(() => ({ error: { mensaje: 'El plan ya se encuentra activo.' } })));
+    const plan = { planId: 7, matrizId: 12, activo: false } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.reactivarPlan(plan);
+    component.actualizarModalMotivo('Reapertura autorizada');
+
+    component.confirmarModal();
+
+    expect(component.modalError()).toBe('El plan ya se encuentra activo.');
+    expect(component.modalOperacion()?.tipo).toBe('reactivarPlan');
+    expect(component.guardando()).toBe(false);
+  });
+
   it('inactiva una evidencia con motivo y refresca el detalle', () => {
     const evidencia = { evidenciaId: 8, matrizId: 12, activa: true } as never;
     component.matrizSeleccionada.set({ matrizId: 12 } as never);
@@ -244,6 +276,81 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['obtener']).toHaveBeenCalledWith(12);
     expect(component.modalOperacion()).toBeNull();
     expect(component.mensaje()).toBe('Evidencia inactivada correctamente.');
+  });
+
+  it('rechaza la vista previa cuando no hay archivo o supera 10 MB', () => {
+    component.vistaPreviaArchivoSeleccionado();
+    expect(component.error()).toBe('Seleccione un archivo para visualizar.');
+
+    component.error.set(null);
+    component.evidenciaArchivo = new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'grande.pdf', { type: 'application/pdf' });
+    component.vistaPreviaArchivoSeleccionado();
+
+    expect(component.error()).toContain('hasta 10 MB');
+    expect(component.evidenciaPreview()).toBeNull();
+  });
+
+  it('genera y cierra la vista previa de un archivo de texto seleccionado', async () => {
+    const createObjectURL = vi.fn(() => 'blob:preview-texto');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
+    component.evidenciaArchivo = new File(['contenido de auditoria'], 'auditoria.log', { type: 'text/plain' });
+
+    component.vistaPreviaArchivoSeleccionado();
+    await fixture.whenStable();
+
+    expect(component.evidenciaPreview()).toEqual(expect.objectContaining({
+      nombre: 'auditoria.log', tipoVista: 'texto', texto: 'contenido de auditoria',
+      url: 'blob:preview-texto', cargando: false
+    }));
+    component.cerrarVistaPreviaEvidencia();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:preview-texto');
+    expect(component.evidenciaPreview()).toBeNull();
+  });
+
+  it('obtiene una evidencia activa y prepara su vista previa PDF', async () => {
+    const createObjectURL = vi.fn(() => 'blob:preview-pdf');
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
+    const evidencia = {
+      evidenciaId: 8, matrizId: 12, activa: true, nombreOriginal: 'informe.pdf',
+      tipoMime: 'application/pdf', tamanoBytes: 8
+    } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    service['descargarEvidencia'].mockReturnValue(of(new Blob(['%PDF-1.7'], { type: 'application/pdf' })));
+
+    component.vistaPreviaEvidencia(evidencia);
+    await fixture.whenStable();
+
+    expect(service['descargarEvidencia']).toHaveBeenCalledWith(12, 8);
+    expect(component.evidenciaPreview()).toEqual(expect.objectContaining({
+      nombre: 'informe.pdf', tipoVista: 'pdf', url: 'blob:preview-pdf', cargando: false
+    }));
+  });
+
+  it('expone un error controlado si no puede generar la vista previa almacenada', () => {
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    service['descargarEvidencia'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Archivo no disponible' } })));
+
+    component.vistaPreviaEvidencia({
+      evidenciaId: 8, activa: true, nombreOriginal: 'informe.pdf',
+      tipoMime: 'application/pdf', tamanoBytes: 8
+    } as never);
+
+    expect(component.evidenciaPreview()).toEqual(expect.objectContaining({
+      nombre: 'informe.pdf', cargando: false, error: 'Archivo no disponible'
+    }));
+  });
+
+  it('descarga desde la vista previa usando el nombre original', () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    component.evidenciaPreview.set({
+      nombre: 'informe.pdf', tipoMime: 'application/pdf', tamanoBytes: 8,
+      url: 'blob:preview-pdf', urlSegura: null, tipoVista: 'pdf', cargando: false
+    });
+
+    component.descargarVistaPreviaActual();
+
+    expect(click).toHaveBeenCalledOnce();
   });
 
   it('detiene la carga inicial y no consulta dependencias si falla la metodologia', () => {

@@ -1,7 +1,8 @@
 {
   "fase": "Fase 10 - Planes de acción, evidencias y seguimiento",
-  "estado_tecnico": "Validación DBA estática y auditoría completada",
+  "estado_tecnico": "Validación funcional de auditoría completada",
   "fecha_validacion": "2026-07-16",
+  "commit_base_validacion": "072a470e94fd14da3d3c9c8a0a9cd80052cbaeda",
   "fuente": "Endpoint de auditoría del sistema",
   "usuario_prueba": "francisco.perez@ihss.hn",
   "responsable": "Javier Mejía",
@@ -17,5 +18,6 @@
       "resultado": "Correcto"
     }
   ],
-  "observacion": "La evidencia confirma trazabilidad de operaciones de planes y evidencias. La validación no modifica estructuras Oracle aprobadas."
+  "observacion": "La evidencia confirma trazabilidad funcional observada mediante el endpoint del sistema. No equivale por sí sola a una certificación DBA independiente ni modifica estructuras Oracle aprobadas.",
+  "validacion_dba_reproducible": "../Evidencia_DBA/fase10_validacion_dba_readonly.sql"
 }

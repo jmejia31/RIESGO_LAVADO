@@ -16,12 +16,12 @@ Para omitir temporalmente E2E durante trabajo unitario local puede usarse `-Skip
 
 | Componente | Metrica | Resultado actual | Piso automatico |
 |---|---|---:|---:|
-| Backend | Lineas | 15.31% | 15.1% |
-| Backend | Ramas | 16.10% | 16.0% |
-| Frontend | Sentencias | 29.66% | 29.6% |
-| Frontend | Ramas | 26.05% | 26.0% |
-| Frontend | Funciones | 28.35% | 28.3% |
-| Frontend | Lineas | 29.79% | 29.7% |
+| Backend | Lineas | 15.35% | 15.3% |
+| Backend | Ramas | 16.36% | 16.3% |
+| Frontend | Sentencias | 31.07% | 31.0% |
+| Frontend | Ramas | 26.97% | 26.9% |
+| Frontend | Funciones | 29.94% | 29.9% |
+| Frontend | Lineas | 31.26% | 31.2% |
 
 Estos valores son pisos iniciales contra regresiones, no objetivos suficientes de calidad. Son bajos porque la medicion incluye todo `RL.API` y todo `src/app`, no solo los archivos cargados por las pruebas. Los pisos no deben reducirse para hacer pasar un cambio; cada fase funcional debe agregar pruebas y elevarlos de manera gradual.
 
@@ -29,15 +29,16 @@ Los reportes se generan bajo `backend/RL.API.Tests/TestResults` y `frontend/rl-a
 
 ## Suite E2E inicial
 
-La suite `frontend/rl-app/e2e/login-and-routing.spec.ts` ejecuta cinco escenarios no destructivos:
+La suite `frontend/rl-app/e2e/login-and-routing.spec.ts` ejecuta seis escenarios no destructivos:
 
 1. Renderizado del formulario institucional de acceso.
 2. Validacion de campos obligatorios sin enviar credenciales.
 3. Alternancia segura de visibilidad de la contrasena.
 4. Redireccion de una ruta protegida cuando no existe sesion.
 5. Redireccion de una ruta desconocida.
+6. Apertura autenticada y autorizada de Matrices de Riesgos con JWT efimero y API simulada.
 
-Las respuestas publicas de configuracion se simulan dentro del navegador para que los tests no dependan de Oracle ni escriban datos. No se incluyen usuarios, contrasenas o tokens reales.
+Las respuestas de configuracion y del escenario autenticado se simulan dentro del navegador para que los tests no dependan de Oracle ni escriban datos. No se incluyen usuarios, contrasenas o tokens reales.
 
 ## Navegador E2E
 
@@ -53,7 +54,7 @@ El ejecutor `scripts/run-e2e.mjs` inicia Angular en `127.0.0.1:4200`, espera que
 ## Siguiente incremento recomendado
 
 - Reorganización: no quedan fases pendientes; conservar las puertas actuales en cada cambio futuro.
-- Backend: mantener las 71 pruebas y agregar casos junto con cada cambio funcional; dejar Active Directory/SMTP para un ambiente controlado.
-- Frontend: mantener la línea base de 115 pruebas y agregar nuevos casos junto con cada cambio funcional futuro.
-- E2E: acceso autenticado mediante un ambiente de pruebas y credenciales efimeras administradas fuera de Git.
+- Backend: mantener las 77 pruebas y agregar casos junto con cada cambio funcional; dejar Active Directory/SMTP para un ambiente controlado.
+- Frontend: mantener la línea base de 123 pruebas y agregar nuevos casos junto con cada cambio funcional futuro.
+- E2E: conservar el recorrido autenticado simulado y agregar un recorrido contra ambiente de integracion cuando existan credenciales efimeras administradas fuera de Git.
 - Mantener los recorridos que crean o modifican datos fuera de la suite no destructiva hasta disponer de datos semilla y limpieza transaccional aprobada.

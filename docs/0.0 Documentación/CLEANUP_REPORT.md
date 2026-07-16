@@ -36,9 +36,9 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
-| Backend | 9 | 71 | Aplicacion de Listas/Matrices, planes de accion, evidencias protegidas, calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
-| Frontend unitario | 13 | 115 | Arranque, rutas diferidas, guards, interceptores JWT/confirmación, sesión local, configuración, bitácora, contratos HTTP, planes, evidencias, política documental, descargas, exportaciones auditadas y edición/escrituras simuladas de Listas/Matrices |
-| Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
+| Backend | 9 | 77 | Aplicacion de Listas/Matrices, reactivacion de planes, evidencias protegidas, calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
+| Frontend unitario | 13 | 123 | Arranque, rutas diferidas, guards, interceptores JWT/confirmacion, sesion local, configuracion, bitacora, contratos HTTP, planes, reactivacion, vista previa, politica documental, descargas, exportaciones auditadas y edicion/escrituras simuladas de Listas/Matrices |
+| Frontend E2E | 1 | 6 | Login, validacion local, visibilidad de contrasena, redireccion y acceso autenticado autorizado a Matrices sin escrituras reales |
 
 La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos anti-regresion automatizados. La linea base completa sigue siendo baja y se documenta en `QUALITY.md`; no debe interpretarse como objetivo suficiente ni reducirse para aprobar cambios.
 
@@ -46,11 +46,11 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 | Validacion | Resultado auditado de cierre |
 |---|---|
-| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 71/71 pruebas Backend |
-| `npm run build` | Build de producción; paquete inicial de 375.22 KB |
-| `npm test -- --watch=false` | 115/115 pruebas Frontend |
-| `npm run e2e` | 5/5 recorridos Playwright no destructivos |
-| `tools/run_quality_gates.ps1` | Backend 15.31%/16.10%; Frontend 29.66%/26.05%/28.35%/29.79%; pisos aprobados |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 77/77 pruebas Backend |
+| `npm run build` | Build de producción; paquete inicial de 375.65 KB |
+| `npm test -- --watch=false` | 123/123 pruebas Frontend |
+| `npm run e2e` | 6/6 recorridos Playwright no destructivos |
+| `tools/run_quality_gates.ps1` | Backend 15.35%/16.36%; Frontend 31.07%/26.97%/29.94%/31.26%; pisos aprobados |
 | `tools/validate_repository_structure.ps1` | 119 rutas obligatorias y 350 archivos rastreados revisados |
 | `tools/validate_database_scripts.ps1` | 19 scripts raiz, un paquete modular y 22 scripts alcanzables desde actualización segura |
 | `tools/validate_documentation_links.ps1` | 18 documentos Markdown y 16 enlaces locales correctos |
@@ -64,7 +64,7 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 ## Riesgos residuales conocidos
 
-- La suite E2E inicial no cubre sesiones autenticadas ni operaciones que escriben datos; requiere un ambiente aislado con credenciales efimeras.
+- La suite E2E cubre una sesion autenticada y autorizada con API simulada, pero no operaciones que escriben en Oracle; estas requieren un ambiente aislado, datos semilla y credenciales efimeras.
 - Los pisos cuantitativos de cobertura existen, pero reflejan una linea base baja que debe incrementarse antes de migrar modulos sensibles.
 - Active Directory y SMTP dependen de servicios institucionales externos; sus fallos controlados están caracterizados, pero las conexiones reales requieren un ambiente de integración autorizado.
 - Las dependencias no presentan avisos conocidos en la auditoria de cierre, pero deben revisarse periodicamente porque los registros de vulnerabilidades cambian con el tiempo.
