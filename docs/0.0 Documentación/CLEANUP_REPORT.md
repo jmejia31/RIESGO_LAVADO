@@ -2,6 +2,8 @@
 
 Fecha: 2026-07-15
 
+Ultima revalidacion: 2026-07-16, fortalecimiento de la Fase 10 de Matrices de Riesgos
+
 Rama: `main`
 
 Base de la fase 7: `9d723ce`
@@ -33,8 +35,8 @@ La fase final revisa el estado acumulado de la reorganizacion: Git, estructura d
 
 | Componente | Archivos de prueba | Casos | Capacidades verificadas |
 |---|---:|---:|---|
-| Backend | 9 | 56 | Aplicacion de Listas/Matrices, calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
-| Frontend unitario | 13 | 99 | Arranque, rutas diferidas, guards, interceptores JWT/confirmación, sesión local, configuración, bitácora, contratos HTTP, política documental, descargas, exportaciones auditadas y edición/escrituras simuladas de Listas/Matrices |
+| Backend | 9 | 71 | Aplicacion de Listas/Matrices, planes de accion, evidencias protegidas, calculo de matrices, Catalogos, Configuracion, Auditoria, JWT/Identidad, rotacion de refresh tokens, manejo uniforme de errores y limites HTTP/autorizacion de modulos |
+| Frontend unitario | 13 | 115 | Arranque, rutas diferidas, guards, interceptores JWT/confirmación, sesión local, configuración, bitácora, contratos HTTP, planes, evidencias, política documental, descargas, exportaciones auditadas y edición/escrituras simuladas de Listas/Matrices |
 | Frontend E2E | 1 | 5 | Login, validacion local, visibilidad de contrasena y redireccion de rutas protegidas/desconocidas |
 
 La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos anti-regresion automatizados. La linea base completa sigue siendo baja y se documenta en `QUALITY.md`; no debe interpretarse como objetivo suficiente ni reducirse para aprobar cambios.
@@ -43,11 +45,11 @@ La fase 8 incorporo medicion Cobertura para .NET y V8 para Angular, con pisos an
 
 | Validacion | Resultado auditado de cierre |
 |---|---|
-| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 56/56 pruebas Backend |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 71/71 pruebas Backend |
 | `npm run build` | Build de produccion; paquete inicial de 374.97 KB |
-| `npm test -- --watch=false` | 99/99 pruebas Frontend |
+| `npm test -- --watch=false` | 115/115 pruebas Frontend |
 | `npm run e2e` | 5/5 recorridos Playwright no destructivos |
-| `tools/run_quality_gates.ps1` | Backend 13.79%/13.10%; Frontend 28.31%/24.80%/26.59%/28.30%; pisos aprobados |
+| `tools/run_quality_gates.ps1` | Backend 15.31%/16.10%; Frontend 29.66%/26.05%/28.35%/29.79%; pisos aprobados |
 | `tools/validate_repository_structure.ps1` | 96 rutas y 340 archivos controlados correctos |
 | `tools/validate_database_scripts.ps1` | 19 scripts raiz, un paquete modular y 22 scripts alcanzables desde actualización segura |
 | `tools/validate_documentation_links.ps1` | 18 documentos Markdown y 16 enlaces locales correctos |

@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace RL.API.Features.MatricesRiesgos.Contracts;
 
 public sealed class MatrizRiesgoFiltroDto
@@ -252,6 +254,7 @@ public sealed class MatrizRiesgoEvidenciaDto
     public string? TipoMime { get; set; }
     public string? Extension { get; set; }
     public long TamanoBytes { get; set; }
+    [JsonIgnore]
     public string RutaFisica { get; set; } = string.Empty;
     public string? HashSha256 { get; set; }
     public bool Activa { get; set; }

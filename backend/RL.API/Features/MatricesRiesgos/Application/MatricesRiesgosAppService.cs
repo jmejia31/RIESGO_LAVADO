@@ -54,6 +54,30 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         ".xlsx"
     };
 
+    private static readonly Dictionary<string, byte[][]> FirmasEvidenciaPermitidas = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".pdf"] = new[] { new byte[] { 0x25, 0x50, 0x44, 0x46 } },
+        [".png"] = new[] { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } },
+        [".jpg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
+        [".jpeg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
+        [".doc"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
+        [".xls"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
+        [".docx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } },
+        [".xlsx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } }
+    };
+
+    private static readonly Dictionary<string, string[]> MimeTypesEvidenciaPermitidos = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".pdf"] = new[] { "application/pdf" },
+        [".png"] = new[] { "image/png" },
+        [".jpg"] = new[] { "image/jpeg", "image/pjpeg" },
+        [".jpeg"] = new[] { "image/jpeg", "image/pjpeg" },
+        [".doc"] = new[] { "application/msword", "application/octet-stream" },
+        [".docx"] = new[] { "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/octet-stream" },
+        [".xls"] = new[] { "application/vnd.ms-excel", "application/octet-stream" },
+        [".xlsx"] = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip", "application/octet-stream" }
+    };
+
     private readonly IMatricesRiesgosRepository _repo;
     private readonly IMatricesRiesgoService _motorCalculo;
     private readonly IConfiguration? _configuration;
@@ -380,31 +404,33 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         var extension = Path.GetExtension(archivo!.FileName).ToLowerInvariant();
         var nombreFisico = $"{Guid.NewGuid():N}{extension}";
         var directorio = ObtenerDirectorioEvidenciasMatrices();
-        Directory.CreateDirectory(directorio);
         var rutaFisica = Path.Combine(directorio, nombreFisico);
-
-        await using (var stream = new FileStream(rutaFisica, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-        {
-            await archivo.CopyToAsync(stream);
-        }
-
-        var registro = new MatrizRiesgoEvidenciaRegistroDto
-        {
-            MatrizId = matrizId,
-            ControlId = controlId,
-            PlanId = planId,
-            NombreOriginal = Path.GetFileName(archivo.FileName),
-            NombreFisico = nombreFisico,
-            TipoMime = archivo.ContentType,
-            Extension = extension,
-            TamanoBytes = archivo.Length,
-            RutaFisica = rutaFisica,
-            HashSha256 = await CalcularHashSha256Async(rutaFisica)
-        };
+        var evidenciaRegistrada = false;
 
         try
         {
+            Directory.CreateDirectory(directorio);
+            await using (var stream = new FileStream(rutaFisica, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                await archivo.CopyToAsync(stream);
+            }
+
+            var registro = new MatrizRiesgoEvidenciaRegistroDto
+            {
+                MatrizId = matrizId,
+                ControlId = controlId,
+                PlanId = planId,
+                NombreOriginal = Path.GetFileName(archivo.FileName),
+                NombreFisico = nombreFisico,
+                TipoMime = archivo.ContentType,
+                Extension = extension,
+                TamanoBytes = archivo.Length,
+                RutaFisica = rutaFisica,
+                HashSha256 = await CalcularHashSha256Async(rutaFisica)
+            };
+
             var evidenciaId = await _repo.RegistrarEvidenciaAsync(registro, usuarioId, usuarioEmail, ip);
+            evidenciaRegistrada = true;
             var evidencia = await _repo.ObtenerEvidenciaAsync(matrizId, evidenciaId);
             return evidencia == null
                 ? ServiceResult<MatrizRiesgoEvidenciaDto>.NotFound("La evidencia fue registrada, pero no pudo consultarse.")
@@ -412,8 +438,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
         catch
         {
-            if (File.Exists(rutaFisica))
-                File.Delete(rutaFisica);
+            if (!evidenciaRegistrada)
+                EliminarArchivoSilenciosamente(rutaFisica);
             throw;
         }
     }
@@ -424,10 +450,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (evidencia == null || !evidencia.Activa)
             return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.NotFound("No se encontró la evidencia activa.");
 
-        if (!File.Exists(evidencia.RutaFisica))
+        var rutaSegura = ObtenerRutaEvidenciaSegura(evidencia.RutaFisica);
+        if (rutaSegura == null || !File.Exists(rutaSegura))
             return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.NotFound("El archivo físico no existe en el almacenamiento protegido.");
 
-        var contenido = await File.ReadAllBytesAsync(evidencia.RutaFisica);
+        var contenido = await File.ReadAllBytesAsync(rutaSegura);
         await _repo.RegistrarDescargaEvidenciaAsync(matrizId, evidenciaId, usuarioId, usuarioEmail, ip);
 
         return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.Ok(new MatrizRiesgoEvidenciaDescargaDto
@@ -557,6 +584,15 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (string.IsNullOrWhiteSpace(dto.Responsable))
             return "El responsable del plan de acción es obligatorio.";
 
+        if (dto.Actividad.Length > 2000)
+            return "La actividad del plan no debe superar los 2000 caracteres.";
+
+        if (dto.Responsable.Length > 150)
+            return "El responsable del plan no debe superar los 150 caracteres.";
+
+        if (dto.Periodicidad?.Length > 80 || dto.MedioPrueba?.Length > 1000 || dto.Observaciones?.Length > 1500)
+            return "La periodicidad, el medio de prueba o las observaciones superan la longitud permitida.";
+
         if (dto.FechaInicio.HasValue && dto.FechaFin.HasValue && dto.FechaFin.Value.Date < dto.FechaInicio.Value.Date)
             return "La fecha de finalización no puede ser menor que la fecha de inicio.";
 
@@ -572,11 +608,17 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return "El archivo de evidencia es obligatorio.";
 
         var maxMb = _configuration?.GetValue<int?>("Evidencias:MaxFileSizeMb") ?? 10;
+        if (maxMb <= 0)
+            maxMb = 10;
         var maxBytes = maxMb * 1024L * 1024L;
         if (archivo.Length > maxBytes)
             return $"El archivo supera el tamaño máximo permitido de {maxMb} MB.";
 
-        var extension = Path.GetExtension(archivo.FileName);
+        var nombreOriginal = Path.GetFileName(archivo.FileName);
+        if (string.IsNullOrWhiteSpace(nombreOriginal) || nombreOriginal.Length > 255 || nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            return "El nombre del archivo de evidencia no es válido.";
+
+        var extension = Path.GetExtension(nombreOriginal).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(extension) || !ExtensionesEvidenciaPermitidas.Contains(extension))
             return "La extensión del archivo no está permitida para evidencias.";
 
@@ -584,23 +626,82 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             .GetSection($"Evidencias:AllowedMimeTypes:{extension.ToLowerInvariant()}")
             .Get<string[]>();
 
-        if (tiposPermitidos is { Length: > 0 } && !tiposPermitidos.Contains(archivo.ContentType, StringComparer.OrdinalIgnoreCase))
+        if (tiposPermitidos is not { Length: > 0 })
+            tiposPermitidos = MimeTypesEvidenciaPermitidos[extension];
+
+        if (string.IsNullOrWhiteSpace(archivo.ContentType) || !tiposPermitidos.Contains(archivo.ContentType.Trim(), StringComparer.OrdinalIgnoreCase))
             return "El tipo MIME del archivo no coincide con la extensión permitida.";
+
+        if ((_configuration?.GetValue<bool?>("Evidencias:ValidateFileSignature") ?? true) && !TieneFirmaEvidenciaPermitida(archivo, extension))
+            return "El contenido del archivo no coincide con la firma real de su extensión.";
 
         return null;
     }
 
     private string ObtenerDirectorioEvidenciasMatrices()
     {
-        var configurado = _configuration?["MatricesRiesgos:Evidencias:StoragePath"]
-            ?? _configuration?["Evidencias:StoragePath"]
-            ?? "App_Data/Evidencias/MatricesRiesgos";
+        var rutaEspecifica = _configuration?["MatricesRiesgos:Evidencias:StoragePath"];
+        if (!string.IsNullOrWhiteSpace(rutaEspecifica))
+            return ResolverRutaAlmacenamiento(rutaEspecifica);
 
-        if (Path.IsPathRooted(configurado))
-            return configurado;
+        var rutaBase = _configuration?["Evidencias:StoragePath"] ?? "App_Data/Evidencias";
+        return ResolverRutaAlmacenamiento(Path.Combine(rutaBase, "MatricesRiesgos"));
+    }
 
+    private string ResolverRutaAlmacenamiento(string ruta)
+    {
+        if (Path.IsPathRooted(ruta))
+            return Path.GetFullPath(ruta);
         var raiz = _environment?.ContentRootPath ?? AppContext.BaseDirectory;
-        return Path.GetFullPath(Path.Combine(raiz, configurado, "MatricesRiesgos"));
+        return Path.GetFullPath(Path.Combine(raiz, ruta));
+    }
+
+    private string? ObtenerRutaEvidenciaSegura(string rutaRegistrada)
+    {
+        if (string.IsNullOrWhiteSpace(rutaRegistrada))
+            return null;
+
+        try
+        {
+            var directorio = Path.GetFullPath(ObtenerDirectorioEvidenciasMatrices());
+            var candidata = Path.GetFullPath(rutaRegistrada);
+            var prefijo = directorio.EndsWith(Path.DirectorySeparatorChar) ? directorio : directorio + Path.DirectorySeparatorChar;
+            return candidata.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase) ? candidata : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static bool TieneFirmaEvidenciaPermitida(IFormFile archivo, string extension)
+    {
+        if (!FirmasEvidenciaPermitidas.TryGetValue(extension, out var firmas))
+            return false;
+
+        Span<byte> buffer = stackalloc byte[8];
+        using var stream = archivo.OpenReadStream();
+        var leidos = stream.Read(buffer);
+        foreach (var firma in firmas)
+        {
+            if (leidos >= firma.Length && buffer[..firma.Length].SequenceEqual(firma))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static void EliminarArchivoSilenciosamente(string rutaFisica)
+    {
+        try
+        {
+            if (File.Exists(rutaFisica))
+                File.Delete(rutaFisica);
+        }
+        catch
+        {
+            // La excepción original conserva prioridad; el archivo queda sujeto a limpieza operativa.
+        }
     }
 
     private static async Task<string> CalcularHashSha256Async(string rutaFisica)

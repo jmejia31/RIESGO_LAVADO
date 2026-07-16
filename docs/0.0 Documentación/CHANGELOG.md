@@ -4,6 +4,16 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Fortalecimiento de la Fase 10 de Matrices de Riesgos - 2026-07-16
+
+- Se ocultaron las rutas físicas de evidencias en JSON y se limitaron las descargas al almacenamiento protegido.
+- Se aplicó validación de firma real, MIME, extensión, tamaño, nombre y longitudes Oracle antes de almacenar archivos o planes.
+- Las cargas incompletas eliminan archivos parciales y conservan el archivo cuando la metadata ya fue confirmada en Oracle.
+- Se eliminaron responsables personales precargados de los formularios de controles y planes.
+- Se añadieron 15 pruebas Backend y 16 Frontend; las suites alcanzaron 71/71, 115/115 y 5/5 E2E.
+- La cobertura subió a 15.31%/16.10% Backend y 29.66%/26.05%/28.35%/29.79% Frontend, elevando todos los pisos.
+- Permanecen pendientes las pruebas API/DBA, navegación, capturas y aprobación formal indicadas por el documento de Fase 10.
+
 ### Fase 21 de auditoría integral y cierre - 2026-07-15
 
 - Se confirmó `main` como única rama local/remota real, sincronizada antes de iniciar el cierre.

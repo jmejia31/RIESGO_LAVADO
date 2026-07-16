@@ -5,14 +5,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $backendThresholds = @{
-    Lines = 13.7
-    Branches = 13.0
+    Lines = 15.1
+    Branches = 16.0
 }
 $frontendThresholds = @{
-    Statements = 28.3
-    Branches = 24.8
-    Functions = 26.5
-    Lines = 28.3
+    Statements = 29.6
+    Branches = 26.0
+    Functions = 28.3
+    Lines = 29.7
 }
 $failures = [System.Collections.Generic.List[string]]::new()
 

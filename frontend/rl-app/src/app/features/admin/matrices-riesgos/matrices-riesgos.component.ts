@@ -151,7 +151,7 @@ export class MatricesRiesgosComponent implements OnInit {
     procedimientos: '',
     calidad: '',
     efectividadPct: 0,
-    responsable: 'Javier Mejía',
+    responsable: '',
     evidenciaObligatoria: false
   };
 
@@ -167,7 +167,7 @@ export class MatricesRiesgosComponent implements OnInit {
   planForm: MatrizRiesgoPlanAccionRequest = {
     resultadoId: null,
     actividad: '',
-    responsable: 'Javier Mejía',
+    responsable: '',
     periodicidad: '',
     fechaInicio: '',
     fechaFin: '',
@@ -825,7 +825,7 @@ export class MatricesRiesgosComponent implements OnInit {
     this.planForm = {
       resultadoId: null,
       actividad: '',
-      responsable: 'Javier Mejía',
+      responsable: '',
       periodicidad: '',
       fechaInicio: '',
       fechaFin: '',
@@ -1767,7 +1767,7 @@ export class MatricesRiesgosComponent implements OnInit {
       procedimientos: '',
       calidad: '',
       efectividadPct: this.mitigacionesPermitidasOrdenadas()[0] ?? 0,
-      responsable: 'Javier Mejía',
+      responsable: '',
       evidenciaObligatoria: false
     };
     this.prepararCapturaVariables();

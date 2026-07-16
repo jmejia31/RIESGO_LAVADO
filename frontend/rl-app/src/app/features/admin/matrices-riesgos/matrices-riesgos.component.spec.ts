@@ -18,6 +18,15 @@ describe('MatricesRiesgosComponent', () => {
       listarCriterios: vi.fn(() => of([])),
       obtener: vi.fn(() => of({})),
       historial: vi.fn(() => of([])),
+      listarPlanes: vi.fn(() => of([])),
+      crearPlan: vi.fn(() => of({ planId: 1 })),
+      actualizarPlan: vi.fn(() => of({ planId: 1 })),
+      cambiarEstadoPlan: vi.fn(() => of({ success: true })),
+      inactivarPlan: vi.fn(() => of({ success: true })),
+      listarEvidencias: vi.fn(() => of([])),
+      cargarEvidencia: vi.fn(() => of({ evidenciaId: 1 })),
+      descargarEvidencia: vi.fn(() => of(new Blob())),
+      inactivarEvidencia: vi.fn(() => of({ success: true })),
       crear: vi.fn(() => of({ matrizId: 1, sujetoTipo: 'PROVEEDOR' })),
       actualizar: vi.fn(() => of({ matrizId: 1, sujetoTipo: 'PROVEEDOR' })),
       calcular: vi.fn(() => of({})),
@@ -110,6 +119,131 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.matrizSeleccionada()).toEqual(matriz);
     expect(component.historial()).toEqual(historial);
     expect(component.cargando()).toBe(false);
+  });
+
+  it('mantiene vacio el responsable al iniciar y limpiar formularios', () => {
+    expect(component.planForm.responsable).toBe('');
+    expect(component.nuevoControl.responsable).toBe('');
+
+    component.planForm.responsable = 'Responsable temporal';
+    component.limpiarFormularioPlan();
+
+    expect(component.planForm.responsable).toBe('');
+  });
+
+  it('carga planes y evidencias de la matriz seleccionada', () => {
+    const planes = [{ planId: 3, actividad: 'Seguimiento' }];
+    const evidencias = [{ evidenciaId: 8, nombreOriginal: 'reporte.pdf' }];
+    service['listarPlanes'].mockReturnValue(of(planes));
+    service['listarEvidencias'].mockReturnValue(of(evidencias));
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+
+    component.cargarPlanesYEvidencias();
+
+    expect(service['listarPlanes']).toHaveBeenCalledWith(12);
+    expect(service['listarEvidencias']).toHaveBeenCalledWith(12);
+    expect(component.planesAccion()).toEqual(planes);
+    expect(component.evidencias()).toEqual(evidencias);
+  });
+
+  it('exige actividad y responsable antes de crear un plan', () => {
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.planForm.actividad = '';
+    component.planForm.responsable = '';
+
+    component.guardarPlanAccion();
+
+    expect(component.error()).toContain('actividad y el responsable');
+    expect(service['crearPlan']).not.toHaveBeenCalled();
+  });
+
+  it('crea un plan normalizado y refresca planes y reporte', () => {
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.planForm = {
+      resultadoId: null,
+      actividad: '  Revisar expediente  ',
+      responsable: '  Cumplimiento  ',
+      periodicidad: 'Mensual',
+      fechaInicio: '2026-07-16',
+      fechaFin: '2026-08-16',
+      medioPrueba: 'Informe',
+      observaciones: ''
+    };
+
+    component.guardarPlanAccion();
+
+    expect(service['crearPlan']).toHaveBeenCalledWith(12, expect.objectContaining({
+      actividad: 'Revisar expediente', responsable: 'Cumplimiento'
+    }));
+    expect(service['listarPlanes']).toHaveBeenCalledWith(12);
+    expect(service['reporte']).toHaveBeenCalled();
+    expect(component.planForm.responsable).toBe('');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('carga un plan en edicion y actualiza por su identificador', () => {
+    const plan = {
+      planId: 7, matrizId: 12, actividad: 'Seguimiento', responsable: 'Cumplimiento',
+      periodicidad: 'Mensual', fechaInicio: '2026-07-01T00:00:00', fechaFin: null,
+      medioPrueba: 'Informe', observaciones: null
+    } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+
+    component.editarPlan(plan);
+    component.planForm.actividad = 'Seguimiento actualizado';
+    component.guardarPlanAccion();
+
+    expect(service['actualizarPlan']).toHaveBeenCalledWith(12, 7, expect.objectContaining({
+      actividad: 'Seguimiento actualizado', responsable: 'Cumplimiento'
+    }));
+    expect(component.planEditandoId()).toBeNull();
+    expect(component.mensaje()).toBe('Plan de acción actualizado correctamente.');
+  });
+
+  it('carga una evidencia y limpia sus vinculos temporales', () => {
+    const archivo = new File(['%PDF-1.7'], 'reporte.pdf', { type: 'application/pdf' });
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.evidenciaArchivo = archivo;
+    component.evidenciaControlId = 3;
+    component.evidenciaPlanId = 7;
+    service['obtener'].mockReturnValue(of({ matrizId: 12, planesAccion: [], evidencias: [] }));
+
+    component.cargarEvidencia();
+
+    expect(service['cargarEvidencia']).toHaveBeenCalledWith(12, archivo, 3, 7);
+    expect(component.evidenciaArchivo).toBeNull();
+    expect(component.evidenciaControlId).toBeNull();
+    expect(component.evidenciaPlanId).toBeNull();
+    expect(component.mensaje()).toBe('Evidencia registrada correctamente.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('cambia el estado de un plan con motivo y cierra el modal', () => {
+    const plan = { planId: 7, matrizId: 12, estado: 'PENDIENTE' } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.cambiarEstadoPlan(plan, 'CERRADO');
+    component.actualizarModalMotivo('Evidencia aprobada');
+
+    component.confirmarModal();
+
+    expect(service['cambiarEstadoPlan']).toHaveBeenCalledWith(12, 7, 'CERRADO', 'Evidencia aprobada');
+    expect(component.modalOperacion()).toBeNull();
+    expect(component.mensaje()).toBe('Estado del plan actualizado correctamente.');
+  });
+
+  it('inactiva una evidencia con motivo y refresca el detalle', () => {
+    const evidencia = { evidenciaId: 8, matrizId: 12, activa: true } as never;
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    service['obtener'].mockReturnValue(of({ matrizId: 12, planesAccion: [], evidencias: [] }));
+    component.inactivarEvidencia(evidencia);
+    component.actualizarModalMotivo('Documento sustituido');
+
+    component.confirmarModal();
+
+    expect(service['inactivarEvidencia']).toHaveBeenCalledWith(12, 8, 'Documento sustituido');
+    expect(service['obtener']).toHaveBeenCalledWith(12);
+    expect(component.modalOperacion()).toBeNull();
+    expect(component.mensaje()).toBe('Evidencia inactivada correctamente.');
   });
 
   it('detiene la carga inicial y no consulta dependencias si falla la metodologia', () => {

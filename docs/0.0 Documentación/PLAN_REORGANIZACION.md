@@ -231,6 +231,15 @@ En cada módulo se mueven primero modelos y `data-access`; después se dividen c
 - Se aprobaron 56/56 pruebas Backend, 99/99 pruebas Frontend, 5/5 recorridos E2E y el build productivo de 374.97 KB iniciales.
 - La reorganización queda finalizada; los incrementos posteriores corresponden a mantenimiento o nuevas funcionalidades, no a fases pendientes de este plan.
 
+### Mantenimiento posterior: fortalecimiento de la Fase 10 de Matrices de Riesgos
+
+- Se eliminó la exposición de rutas físicas de evidencias en los contratos JSON y se confinó la descarga al directorio protegido configurado.
+- La carga valida extensión, MIME y firma real, calcula SHA-256 y elimina archivos parciales cuando la persistencia falla.
+- Los formularios dejaron de precargar nombres personales como responsables de controles o planes.
+- Se añadieron 15 pruebas Backend y 16 Frontend para cierre condicionado, planes, evidencias, contratos HTTP y coordinación de pantalla.
+- Las suites alcanzaron 71 pruebas Backend, 115 Frontend y 5 E2E; la cobertura recuperó y superó todos los pisos anti-regresión.
+- La Fase 10 funcional conserva como pendientes controlados la prueba API/DBA en Oracle, la prueba navegada, capturas y aprobación formal.
+
 ## Controles obligatorios por fase
 
 ```powershell

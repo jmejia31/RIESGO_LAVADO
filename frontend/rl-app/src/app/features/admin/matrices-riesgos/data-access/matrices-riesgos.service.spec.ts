@@ -83,6 +83,106 @@ describe('MatricesRiesgosService', () => {
     expect(result).toHaveBeenCalledWith(criterios);
   });
 
+  it('lista los planes de una matriz', () => {
+    const planes = [{ planId: 4, actividad: 'Revisar expediente' }];
+    const result = vi.fn();
+    service.listarPlanes(12).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/12/planes`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: planes });
+    expect(result).toHaveBeenCalledWith(planes);
+  });
+
+  it('crea un plan con confirmacion previa y extrae la respuesta', () => {
+    const dto = { actividad: 'Revisar expediente', responsable: 'Cumplimiento' };
+    const result = vi.fn();
+    service.crearPlan(12, dto).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/12/planes`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(dto);
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: { planId: 4, ...dto } });
+    expect(result).toHaveBeenCalledWith(expect.objectContaining({ planId: 4 }));
+  });
+
+  it('actualiza y cambia el estado de un plan con motivo', () => {
+    const dto = { actividad: 'Seguimiento mensual', responsable: 'Cumplimiento' } as never;
+    service.actualizarPlan(12, 4, dto).subscribe();
+    service.cambiarEstadoPlan(12, 4, 'CERRADO', 'Evidencia aprobada').subscribe();
+
+    const update = http.expectOne(`${apiUrl}/12/planes/4`);
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual(dto);
+    expect(update.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    update.flush({ success: true, datos: { planId: 4 } });
+
+    const estado = http.expectOne(`${apiUrl}/12/planes/4/estado`);
+    expect(estado.request.method).toBe('PUT');
+    expect(estado.request.body).toEqual({ estado: 'CERRADO', motivo: 'Evidencia aprobada' });
+    expect(estado.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    estado.flush({ success: true });
+  });
+
+  it('inactiva un plan con confirmacion y motivo', () => {
+    service.inactivarPlan(12, 4, 'Plan sustituido').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/12/planes/4/inactivar`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ motivo: 'Plan sustituido' });
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true });
+  });
+
+  it('lista las evidencias de una matriz', () => {
+    const evidencias = [{ evidenciaId: 8, nombreOriginal: 'reporte.pdf' }];
+    const result = vi.fn();
+    service.listarEvidencias(12).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/12/evidencias`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: evidencias });
+    expect(result).toHaveBeenCalledWith(evidencias);
+  });
+
+  it('carga evidencia como FormData vinculada a plan y control', () => {
+    const archivo = new File(['%PDF-1.7'], 'reporte.pdf', { type: 'application/pdf' });
+    service.cargarEvidencia(12, archivo, 3, 4).subscribe();
+
+    const request = http.expectOne(`${apiUrl}/12/evidencias`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    const form = request.request.body as FormData;
+    expect(form.get('archivo')).toBe(archivo);
+    expect(form.get('controlId')).toBe('3');
+    expect(form.get('planId')).toBe('4');
+    request.flush({ success: true, datos: { evidenciaId: 8 } });
+  });
+
+  it('descarga una evidencia como blob auditado', () => {
+    const result = vi.fn();
+    service.descargarEvidencia(12, 8).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/12/evidencias/8/descargar`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    const archivo = new Blob(['reporte'], { type: 'application/pdf' });
+    request.flush(archivo);
+    expect(result).toHaveBeenCalledWith(archivo);
+  });
+
+  it('inactiva una evidencia con confirmacion y motivo', () => {
+    service.inactivarEvidencia(12, 8, 'Documento sustituido').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/12/evidencias/8/inactivar`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ motivo: 'Documento sustituido' });
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true });
+  });
+
   it('propaga errores HTTP del listado al coordinador de la pantalla', () => {
     const error = vi.fn();
     service.listar({ estado: 'ACTIVA' } as never).subscribe({ error });
