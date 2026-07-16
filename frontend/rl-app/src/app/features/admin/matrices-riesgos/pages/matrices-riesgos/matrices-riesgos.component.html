@@ -5,7 +5,7 @@
         <p class="text-xs font-bold uppercase tracking-wide text-emerald-700"> </p>
         <h2 class="text-2xl font-bold text-gray-900">Matrices de Riesgos</h2>
         <p class="text-sm text-gray-500">
-          Evaluación LA/FT con metodología vigente desde base de datos y cálculo centralizado en backend.
+          Evalúe proveedores, clientes/patronos, empleados o la institución completa con los criterios aprobados por Cumplimiento.
         </p>
       </div>
 
@@ -94,9 +94,9 @@
         <div class="flex items-center justify-between gap-3 mb-5">
           <div>
             <h3 class="text-lg font-bold text-gray-900">Mapa de calor</h3>
-            <p class="text-xs text-gray-500">Visualización de probabilidad e impacto; la clasificación oficial proviene del backend.</p>
+            <p class="text-xs text-gray-500">Ubicación visual del riesgo según probabilidad e impacto para priorizar la atención.</p>
           </div>
-          <span class="text-xs font-semibold text-gray-500">Metodología {{ metodologia()?.version || 'No disponible' }}</span>
+          <span class="text-xs font-semibold text-gray-500">Versión de criterios {{ metodologia()?.version || 'No disponible' }}</span>
         </div>
 
         <div class="mx-auto flex max-w-[360px] gap-2">
@@ -338,7 +338,7 @@
         <p *ngIf="matrizEditandoId()" class="mt-2 text-xs font-semibold text-amber-700">
           Editando matriz {{ matrizEditandoId() }}. Al guardar, los resultados anteriores quedan no vigentes y el sistema recalcula automáticamente.
         </p>
-        <p class="text-xs text-gray-500">Los puntajes son enviados al backend; la ponderación y clasificación no se calculan en Angular.</p>
+        <p class="text-xs text-gray-500">Seleccione el tipo de sujeto, complete sus variables requeridas y guarde para obtener la evaluación de riesgo.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -554,7 +554,7 @@
       <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
         <div>
           <h3 class="text-lg font-bold text-gray-900">{{ criterioEditandoId() ? 'Editar criterio' : 'Nuevo criterio' }}</h3>
-          <p class="text-xs text-gray-500">Catálogo administrable consumido por el backend desde RL_MR_CRITERIOS.</p>
+          <p class="text-xs text-gray-500">Defina los rangos que guían la selección de puntajes durante la captura de matrices.</p>
         </div>
         <label class="block space-y-1">
           <span class="text-xs font-bold uppercase text-gray-500">Variable</span>
@@ -751,7 +751,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <h3 class="text-lg font-bold text-gray-900">Seguimiento de planes</h3>
-              <p class="text-xs text-gray-500">Estados, responsables, fechas compromiso e historial quedan auditados.</p>
+              <p class="text-xs text-gray-500">Controle compromisos, responsables y fechas para reducir riesgos altos o críticos.</p>
             </div>
             <span class="text-xs font-bold text-gray-500">{{ planesAccion().length }} plan(es)</span>
           </div>
@@ -821,7 +821,7 @@
         <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
           <div>
             <h3 class="text-lg font-bold text-gray-900">Evidencias documentales</h3>
-            <p class="text-xs text-gray-500">Archivos protegidos con nombre físico seguro, metadatos y eliminación lógica.</p>
+            <p class="text-xs text-gray-500">Adjunte documentos de soporte para planes, controles o decisiones de la matriz seleccionada.</p>
           </div>
           <div class="space-y-3">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -910,7 +910,7 @@
       <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
           <h3 class="text-lg font-bold text-gray-900">Reportería y exportaciones</h3>
-          <p class="text-xs text-gray-500">Los filtros se aplican automáticamente; los datos provienen de resultados persistidos y cada exportación queda auditada.</p>
+          <p class="text-xs text-gray-500">Consulte resultados filtrados y genere salidas oficiales en Excel o PDF.</p>
         </div>
         <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
           <button type="button" (click)="exportarReporte('EXCEL')" [disabled]="guardando() || cargandoReporte()"
@@ -1015,7 +1015,7 @@
 
       <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
         <div class="rounded-2xl border border-gray-100 p-5">
-          <h4 class="font-bold text-gray-900 mb-3">Mapa inherente persistido</h4>
+          <h4 class="font-bold text-gray-900 mb-3">Riesgo inherente por nivel</h4>
           <div class="space-y-3">
             <ng-container *ngFor="let nivel of reporte()?.mapaInherente || []">
               <div>
@@ -1033,7 +1033,7 @@
         </div>
 
         <div class="rounded-2xl border border-gray-100 p-5">
-          <h4 class="font-bold text-gray-900 mb-3">Mapa residual persistido</h4>
+          <h4 class="font-bold text-gray-900 mb-3">Riesgo residual por nivel</h4>
           <div class="space-y-3">
             <ng-container *ngFor="let nivel of reporte()?.mapaResidual || []">
               <div>

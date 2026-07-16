@@ -201,6 +201,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
         try
         {
+            // Orquestación del cálculo: arma la solicitud desde datos persistidos,
+            // ejecuta el motor aprobado y luego guarda resultado, historial y auditoría.
             var solicitud = await _repo.PrepararSolicitudCalculoAsync(matrizId, dto.TipoCalculo, dto.MotivoCalculo, esRecalculo);
             if (solicitud == null)
                 return ServiceResult<MatrizCalculoResultadoDto>.NotFound("No se encontró la matriz de riesgos.");
@@ -237,6 +239,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             if (estado == "CERRADA")
             {
+                // El cierre exige gestión documentada cuando el residual requiere plan.
+                // Así se evita cerrar riesgos altos/críticos sin tratamiento.
                 var matriz = await _repo.ObtenerMatrizAsync(matrizId);
                 if (matriz == null)
                     return ServiceResult.NotFound("No se encontró la matriz de riesgos.");

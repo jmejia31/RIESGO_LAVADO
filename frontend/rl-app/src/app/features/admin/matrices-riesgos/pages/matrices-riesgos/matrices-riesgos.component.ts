@@ -310,6 +310,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.error.set(null);
     this.mensaje.set(null);
 
+    // Carga base del módulo: la metodología define variables, criterios,
+    // escalas y mitigaciones antes de consultar matrices, reportes y catálogos.
     this.service.metodologiaVigente().subscribe({
       next: metodologia => {
         this.metodologia.set(metodologia);
@@ -370,16 +372,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private programarCargaReporte(): void {
+    // Evita llamadas repetidas mientras el usuario escribe o cambia filtros.
     if (this.reporteFiltroTimer) clearTimeout(this.reporteFiltroTimer);
     this.reporteFiltroTimer = setTimeout(() => this.cargarReporte(), 350);
   }
 
   private programarCargaMatrices(): void {
+    // Mantiene la búsqueda automática sin saturar el API por cada pulsación.
     if (this.matricesFiltroTimer) clearTimeout(this.matricesFiltroTimer);
     this.matricesFiltroTimer = setTimeout(() => this.cargarMatrices(), 300);
   }
 
   private programarBusquedaDuplicadosMatriz(): void {
+    // En edición no se valida contra sí misma; la duplicidad solo bloquea altas nuevas.
     if (this.matrizEditandoId()) {
       this.matricesDuplicadas.set([]);
       return;
@@ -535,6 +540,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const dto = this.construirDtoMatriz();
     if (!dto) return;
 
+    // Control preventivo de duplicidad: identificador externo o documento no deben
+    // crear una segunda matriz activa para el mismo sujeto evaluado.
     if (!this.matrizEditandoId() && this.matricesDuplicadas().length > 0) {
       this.error.set('Ya existe una matriz activa con el mismo identificador externo o documento. Revise el registro existente antes de crear otro.');
       return;
@@ -582,6 +589,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return null;
     }
 
+    // Solo se envían las variables que corresponden al tipo de sujeto seleccionado.
+    // La ponderación y clasificación final se conservan en el proceso de cálculo del API.
     const detalles = this.capturasVariables()
       .map(x => ({
         variableId: x.variableId,
@@ -629,6 +638,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.service.obtener(matriz.matrizId).subscribe({
       next: detalle => {
+        // La edición reconstruye la captura con las variables vigentes del tipo
+        // de sujeto, conserva valores registrados y recalcula al guardar.
         this.matrizEditandoId.set(detalle.matrizId);
         this.nuevaMatriz = {
           sujetoTipo: detalle.sujetoTipo,
@@ -666,7 +677,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.abrirModal({
       tipo: 'calcular',
       titulo: 'Calcular matriz',
-      descripcion: `Se calculará la matriz ${matriz.matrizId}. El resultado será generado por el motor backend aprobado.`,
+      descripcion: `Se evaluará la matriz ${matriz.matrizId} con los criterios vigentes. Revise que la información capturada esté completa antes de continuar.`,
       textoConfirmar: 'Calcular',
       requiereMotivo: false,
       matriz,
@@ -678,7 +689,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.abrirModal({
       tipo: 'recalcular',
       titulo: 'Recalcular matriz',
-      descripcion: `Ingrese el motivo para recalcular la matriz ${matriz.matrizId}. Este motivo quedará registrado en historial y auditoría.`,
+      descripcion: `Ingrese el motivo de la nueva evaluación para la matriz ${matriz.matrizId}. El resultado anterior quedará como referencia histórica.`,
       textoConfirmar: 'Recalcular',
       requiereMotivo: true,
       matriz,
@@ -703,7 +714,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.abrirModal({
       tipo: 'eliminarMatriz',
       titulo: 'Eliminar matriz',
-      descripcion: `Ingrese el motivo obligatorio para eliminar la matriz ${matriz.matrizId}. La eliminación será lógica y conservará historial, auditoría y trazabilidad.`,
+      descripcion: `Ingrese el motivo obligatorio para retirar la matriz ${matriz.matrizId} de la operación diaria. La información se conservará para consulta histórica.`,
       textoConfirmar: 'Eliminar matriz',
       requiereMotivo: true,
       matriz,
@@ -1436,6 +1447,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private validarCapturasContraCriterios(): string | null {
+    // Si el usuario selecciona un criterio, el puntaje debe coincidir con ese
+    // rango para evitar evaluaciones manuales inconsistentes.
     for (const captura of this.capturasVariables()) {
       if (captura.puntaje === null || captura.puntaje === undefined) continue;
 
@@ -1472,6 +1485,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private deduplicarHistorial(datos: MatrizRiesgoHistorial[]): MatrizRiesgoHistorial[] {
+    // Limpia repeticiones visuales causadas por reintentos rápidos sin eliminar
+    // trazabilidad real en base de datos.
     const vistos = new Set<string>();
     return datos.filter(item => {
       const fecha = item.fecha ? new Date(item.fecha) : null;
@@ -1499,6 +1514,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.error.set('No hay datos de reportería para exportar.');
       return;
     }
+    // La exportación usa exactamente el reporte vigente para que coincida con
+    // lo que el usuario filtró en pantalla.
     const matricesFiltradas = this.obtenerMatricesReporte(reporte);
 
     const wb = XLSX.utils.book_new();
@@ -1591,11 +1608,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       ['Tipo de sujeto', 'Total'],
       ...reporte.porSujetoTipo.map(x => [x.nombre, x.total]),
       [],
-      ['Mapa inherente persistido'],
+      ['Riesgo inherente por nivel'],
       ['Nivel', 'Total', 'Promedio'],
       ...reporte.mapaInherente.map(x => [x.nivel, x.total, x.promedio]),
       [],
-      ['Mapa residual persistido'],
+      ['Riesgo residual por nivel'],
       ['Nivel', 'Total', 'Promedio'],
       ...reporte.mapaResidual.map(x => [x.nivel, x.total, x.promedio])
     ]);

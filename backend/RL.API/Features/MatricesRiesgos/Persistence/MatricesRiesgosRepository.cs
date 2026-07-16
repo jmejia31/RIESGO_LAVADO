@@ -235,6 +235,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
+            // La matriz queda amarrada al modelo vigente y conserva snapshot de metodología
+            // para que cambios futuros de criterios no alteren evaluaciones históricas.
             var modelo = await ObtenerModeloVigenteAsync(conn, tx) ?? throw new InvalidOperationException("No existe una metodología aprobada vigente para Matrices de Riesgos.");
             var metodologia = await ConstruirMetodologiaAsync(conn, tx, modelo.ModeloId, modelo.Version);
             if (await ExisteMatrizDuplicadaAsync(conn, tx, dto, null))
@@ -304,6 +306,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             if (matriz == null)
                 return false;
 
+            // Las matrices cerradas o retiradas se protegen contra cambios retroactivos.
             if (matriz.Estado is "CERRADA" or "INACTIVA")
                 throw new InvalidOperationException("La matriz cerrada o inactiva no puede editarse.");
 
@@ -376,6 +379,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         var detalles = await ObtenerDetallesMatrizAsync(conn, null, matrizId, matriz.ModeloId);
         var controles = await ObtenerControlesMatrizAsync(conn, null, matrizId);
 
+        // Se transforma la persistencia Oracle al contrato del motor de cálculo.
+        // Los controles solo viajan por factor y el motor decide su mitigación real.
         return new MatrizCalculoRequestDto
         {
             TipoCalculo = string.IsNullOrWhiteSpace(tipoCalculo) ? "GLOBAL" : tipoCalculo.Trim().ToUpperInvariant(),
@@ -427,6 +432,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             if (matriz.Estado is "CERRADA" or "INACTIVA")
                 throw new InvalidOperationException("La matriz está cerrada o inactiva y no puede recalcularse.");
 
+            // Cada cálculo deja sin vigencia los resultados anteriores y crea nuevos
+            // registros para sostener trazabilidad completa de recálculos.
             await InactivarResultadosVigentesAsync(conn, tx, matrizId);
             var snapshot = JsonConvert.SerializeObject(resultado);
             var resultadoInstitucionalId = await InsertarResultadoAsync(conn, tx, matrizId, null, "INSTITUCIONAL", resultado.VersionCalculo, resultado.PuntajeInherente, resultado.NivelInherente, resultado.MitigacionPct, resultado.PuntajeResidual, resultado.NivelResidual, resultado.RequierePlanAccion, motivoCalculo, null, snapshot, usuarioId);

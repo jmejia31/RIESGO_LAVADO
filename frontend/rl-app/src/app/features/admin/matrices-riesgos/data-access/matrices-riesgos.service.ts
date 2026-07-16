@@ -27,10 +27,13 @@ type ApiMessage = { success: boolean; mensaje?: string };
 export class MatricesRiesgosService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/matrices-riesgos`;
+  // Header obligatorio para operaciones sensibles: activa el interceptor de confirmación
+  // y deja explícito que la acción modifica datos o genera una salida auditada.
   private readonly confirmado = {
     headers: new HttpHeaders({ [CONFIRMACION_CAMBIOS_HEADER]: '1' })
   };
 
+  // Catálogos y consultas: no modifican datos, solo alimentan paneles, captura y filtros.
   metodologiaVigente(): Observable<MetodologiaMatrices> {
     return this.http.get<ApiResponse<MetodologiaMatrices>>(`${this.apiUrl}/metodologia/vigente`)
       .pipe(map(res => res.datos));
@@ -55,6 +58,7 @@ export class MatricesRiesgosService {
     });
   }
 
+  // Matrices: altas y ediciones quedan centralizadas para que el componente no construya rutas REST.
   listar(filtro: MatrizRiesgoFiltro): Observable<MatrizRiesgoResumen[]> {
     const params = this.construirParams(filtro);
     return this.http.get<ApiResponse<MatrizRiesgoResumen[]>>(this.apiUrl, { params })
@@ -76,6 +80,7 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
+  // Acciones críticas de cálculo y estado: siempre viajan con confirmación y motivo cuando aplica.
   calcular(id: number, tipoCalculo = 'GLOBAL'): Observable<unknown> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/${id}/calcular`, { tipoCalculo }, this.confirmado)
       .pipe(map(res => res.datos));
@@ -99,6 +104,7 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
+  // Planes de acción: permiten seguimiento operativo sin alterar la metodología aprobada.
   listarPlanes(id: number): Observable<MatrizRiesgoPlanAccion[]> {
     return this.http.get<ApiResponse<MatrizRiesgoPlanAccion[]>>(`${this.apiUrl}/${id}/planes`)
       .pipe(map(res => res.datos));
@@ -126,6 +132,7 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/planes/${planId}/reactivar`, { motivo }, this.confirmado);
   }
 
+  // Evidencias: se envían como FormData y se descargan desde API para evitar rutas públicas directas.
   listarEvidencias(id: number): Observable<MatrizRiesgoEvidencia[]> {
     return this.http.get<ApiResponse<MatrizRiesgoEvidencia[]>>(`${this.apiUrl}/${id}/evidencias`)
       .pipe(map(res => res.datos));
@@ -151,6 +158,7 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(`${this.apiUrl}/${id}/evidencias/${evidenciaId}/inactivar`, { motivo }, this.confirmado);
   }
 
+  // Criterios: catálogo administrable que guía la captura; no debe duplicar rangos activos.
   listarCriterios(incluirInactivos = false): Observable<MatrizRiesgoCriterio[]> {
     const params = new HttpParams().set('incluirInactivos', incluirInactivos);
     return this.http.get<ApiResponse<MatrizRiesgoCriterio[]>>(`${this.apiUrl}/criterios`, { params })

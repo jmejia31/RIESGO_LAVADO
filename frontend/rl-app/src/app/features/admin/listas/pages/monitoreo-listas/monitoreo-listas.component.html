@@ -2,10 +2,10 @@
   <section class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="p-6 border-b border-gray-100 flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
       <div class="min-w-0">
-        <p class="text-xs font-bold uppercase tracking-[0.18em] text-ihss-600">Sistema de gestion LA/FT</p>
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-ihss-600">Sistema de gestión LA/FT</p>
         <h2 class="mt-1 text-2xl font-bold text-gray-900">Monitoreo de Listas</h2>
         <p class="mt-1 text-sm text-gray-500 max-w-3xl">
-          Visualiza coincidencias, registra motivos, gestiona seguimientos y conserva evidencia documental sin depender del modulo Matrices de Riesgos.
+          Revise coincidencias en listas de cautela, registre motivos, dé seguimiento y conserve evidencia documental.
         </p>
       </div>
       <button (click)="agregarPositivoManual()"
@@ -23,7 +23,7 @@
           [class]="tipoActivo() === 'juridica' ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'"
           class="flex items-center justify-between gap-3 p-4 rounded-xl font-semibold transition-all duration-200 text-left">
           <span>
-            <span class="block text-sm">Personas juridicas</span>
+            <span class="block text-sm">Personas jurídicas</span>
             <span class="block text-xs font-medium opacity-75">Patronos, empresas y proveedores</span>
           </span>
           <span class="text-lg font-bold">{{ juridicasRaw().length }}</span>
@@ -136,7 +136,7 @@
     <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div class="min-w-0">
         <h3 class="text-lg font-bold text-gray-900">Coincidencias y exportaciones</h3>
-        <p class="text-xs text-gray-500">Los filtros se aplican automáticamente; la exportación respeta la vista filtrada.</p>
+        <p class="text-xs text-gray-500">La búsqueda se actualiza automáticamente y la exportación respeta la vista filtrada.</p>
       </div>
       <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
         <button (click)="exportarListaPrincipal()" [disabled]="datosFiltrados().length === 0"

@@ -1310,13 +1310,13 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   private manejarErrorAuditoriaObligatoria(err: unknown, operacion: string) {
-    console.error(`No se pudo registrar auditoria de ${operacion}:`, err);
+    console.error(`No se pudo registrar auditoría de ${operacion}:`, err);
     this.cargando.set(false);
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
         allowOutsideClick: false,
         title: 'Auditoría requerida',
-        text: `No se pudo registrar la auditoria de ${operacion}. La operacion fue cancelada.`,
+        text: `No se pudo registrar la auditoría de ${operacion}. La operación fue cancelada.`,
         icon: 'error',
         confirmButtonColor: '#1e3a8a'
       });
@@ -2185,7 +2185,7 @@ export class MonitoreoListasComponent implements OnInit {
     this.archivosSeleccionados.set([]);
   }
 
-  // Centraliza el motivo obligatorio para eliminaciones logicas de monitoreo.
+  // Centraliza el motivo obligatorio para eliminaciones lógicas de monitoreo.
   private async solicitarMotivoEliminacion(Swal: any, title: string, text: string): Promise<string | null> {
     const result = await Swal.default.fire({
       allowOutsideClick: false,

@@ -446,7 +446,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
 
       this.listasService.getResumenMatchListaEmpleado(r.dataId, r.nombre).subscribe({
         next: (detalleHtml) => {
-          // Extraer tokens del nombre del empleado (misma logica que el backend)
+          // Extraer tokens del nombre del empleado (misma lógica que el backend).
           const tokens = this.extraerTokens(r.nombre || '');
 
           // Resaltar las coincidencias en el detalle
