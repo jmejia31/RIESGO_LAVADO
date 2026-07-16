@@ -4,6 +4,12 @@ Todos los cambios notables se documentan en este archivo. El proyecto sigue cate
 
 ## [No publicado]
 
+### Reorganización de Contracts de Matrices de Riesgos - 2026-07-16
+
+- Los 30 DTO del módulo se conservaron sin cambios de nombre, propiedades o namespace público.
+- El archivo monolítico `MatricesRiesgosDto.cs` se separó en contratos de matrices, planes de acción, evidencias y reportería.
+- El validador estructural ahora exige las seis ubicaciones nuevas para impedir regresiones de organización.
+
 ### Fortalecimiento de la Fase 10 de Matrices de Riesgos - 2026-07-16
 
 - Se ocultaron las rutas físicas de evidencias en JSON y se limitaron las descargas al almacenamiento protegido.

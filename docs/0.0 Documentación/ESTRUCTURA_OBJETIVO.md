@@ -62,6 +62,10 @@ Cada módulo dentro de `Features` crea solamente las carpetas que necesite:
 Features/MatricesRiesgos/
 ├── MatricesRiesgosController.cs       Contrato HTTP del módulo
 ├── Contracts/                         Request, response y DTO públicos
+│   ├── Matrices/                      Matrices, criterios y solicitudes
+│   ├── PlanesAccion/                  Planes y cambios de estado
+│   ├── Evidencias/                    Registro, consulta y descarga
+│   └── Reporteria/                    Dashboard, reportes y exportaciones
 ├── Application/                       Casos de uso y validaciones funcionales
 ├── Domain/                            Cálculos y reglas puras sin Oracle/HTTP
 └── Persistence/                       Repositorios y consultas Oracle del módulo

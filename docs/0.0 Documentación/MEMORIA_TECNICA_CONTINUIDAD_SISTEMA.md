@@ -144,7 +144,7 @@ El Modulo 2 debe replicar la estructura transversal de Monitoreo de Listas, pero
 |---|---|
 | `backend\RL.API\Controllers\MatricesRiesgosController.cs` | Endpoints del modulo. |
 | `backend\RL.API\Repositories\MatricesRiesgosRepository.cs` | Consultas y persistencia Oracle. |
-| `backend\RL.API\DTOs\MatricesRiesgosDto.cs` | Contratos de factores, variables, puntuaciones y resultados. |
+| `backend\RL.API\Features\MatricesRiesgos\Contracts\` | Contratos agrupados por matrices, planes de acción, evidencias y reportería. |
 | `backend\RL.API\Models\MatricesRiesgosModels.cs` | Modelos si se requieren estructuras reutilizables. |
 | `backend\RL.API\Program.cs` | Registro de interfaz/repositorio/servicio. |
 
