@@ -993,9 +993,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   inactivarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
     this.abrirModal({
       tipo: 'inactivarEvidencia',
-      titulo: 'Inactivar evidencia',
-      descripcion: `Ingrese el motivo obligatorio para inactivar la evidencia ${evidencia.evidenciaId}. El archivo físico se conserva.`,
-      textoConfirmar: 'Inactivar',
+      titulo: 'Eliminar evidencia',
+      descripcion: `Ingrese el motivo obligatorio para eliminar lógicamente la evidencia ${evidencia.evidenciaId}. El archivo físico se conserva.`,
+      textoConfirmar: 'Eliminar',
       requiereMotivo: true,
       evidencia,
       tono: 'peligro'

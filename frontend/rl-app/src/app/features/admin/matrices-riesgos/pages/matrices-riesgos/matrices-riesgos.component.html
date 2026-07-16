@@ -879,13 +879,9 @@
                         class="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold disabled:opacity-50">
                         Vista previa
                       </button>
-                      <button type="button" (click)="descargarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
-                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold disabled:opacity-50">
-                        Descargar
-                      </button>
                       <button type="button" (click)="inactivarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
                         class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
-                        Inactivar
+                        Eliminar
                       </button>
                     </div>
                   </td>
