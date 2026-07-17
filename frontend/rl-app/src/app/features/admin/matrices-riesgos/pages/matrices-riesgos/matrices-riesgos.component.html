@@ -141,6 +141,26 @@
   </ng-container>
 
   <ng-container *ngIf="tab() === 'matrices'">
+    <ng-template #historialMatriz>
+      <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+        <p class="text-xs font-bold uppercase text-gray-400 mb-3">Historial</p>
+        <div class="space-y-2 max-h-72 overflow-auto pr-1">
+          <ng-container *ngFor="let item of historial()">
+            <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
+              <p class="rl-clamp-2 font-semibold text-gray-800" [title]="item.accion + ' ' + item.tabla">
+                {{ item.accion }} <span class="text-gray-400">{{ item.tabla }}</span>
+              </p>
+              <p class="text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
+                {{ item.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ item.usuarioEmail || 'Usuario' }}
+              </p>
+              <p *ngIf="item.motivo" class="text-xs text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">{{ item.motivo }}</p>
+            </div>
+          </ng-container>
+          <p *ngIf="historial().length === 0" class="text-sm text-gray-500">Seleccione una matriz para consultar historial.</p>
+        </div>
+      </section>
+    </ng-template>
+
     <section class="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(340px,0.95fr)] gap-5 min-w-0">
       <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0">
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px] gap-3 min-w-0">
@@ -233,6 +253,10 @@
             </tbody>
           </table>
         </div>
+
+        <ng-container *ngIf="mostrarHistorialDebajoListado()">
+          <ng-container *ngTemplateOutlet="historialMatriz"></ng-container>
+        </ng-container>
       </div>
 
       <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden self-start">
@@ -327,19 +351,9 @@
               </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Historial</p>
-              <div class="space-y-2 max-h-72 overflow-auto pr-1">
-                    <ng-container *ngFor="let item of historial()">
-                      <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
-                        <p class="rl-clamp-2 font-semibold text-gray-800" [title]="item.accion + ' ' + item.tabla">{{ item.accion }} <span class="text-gray-400">{{ item.tabla }}</span></p>
-                        <p class="text-xs text-gray-500 break-words [overflow-wrap:anywhere]">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ item.usuarioEmail || 'Usuario' }}</p>
-                        <p *ngIf="item.motivo" class="text-xs text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">{{ item.motivo }}</p>
-                      </div>
-                    </ng-container>
-                    <p *ngIf="historial().length === 0" class="text-sm text-gray-500">Seleccione una matriz para consultar historial.</p>
-              </div>
-            </section>
+            <ng-container *ngIf="!mostrarHistorialDebajoListado()">
+              <ng-container *ngTemplateOutlet="historialMatriz"></ng-container>
+            </ng-container>
           </div>
         <ng-template #noMatrizSeleccionada>
           <p class="text-sm text-gray-500">Seleccione una matriz del listado para ver su detalle.</p>

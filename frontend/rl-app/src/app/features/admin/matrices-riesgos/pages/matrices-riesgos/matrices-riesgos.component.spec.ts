@@ -458,6 +458,23 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.puedeEliminarMatriz({ estado: 'INACTIVA' } as never)).toBe(false);
   });
 
+  it('reposiciona el historial debajo del listado cuando hay pocas matrices', () => {
+    component.matrizSeleccionada.set({ matrizId: 1 } as never);
+    component.matrices.set([
+      { matrizId: 1, nombreSujeto: 'Proveedor Uno' },
+      { matrizId: 2, nombreSujeto: 'Proveedor Dos' }
+    ] as never);
+
+    expect(component.mostrarHistorialDebajoListado()).toBe(true);
+
+    component.matrices.set(Array.from({ length: 5 }, (_, index) => ({
+      matrizId: index + 1,
+      nombreSujeto: `Matriz ${index + 1}`
+    })) as never);
+
+    expect(component.mostrarHistorialDebajoListado()).toBe(false);
+  });
+
   it('rechaza un rango de criterio cuyo valor inicial supera al final', () => {
     component.criteriosForm = {
       variableId: 3, escalaId: null, valorDesde: 10, valorHasta: 5,

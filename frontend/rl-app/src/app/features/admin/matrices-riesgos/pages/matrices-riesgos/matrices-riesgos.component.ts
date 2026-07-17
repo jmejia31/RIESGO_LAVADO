@@ -289,6 +289,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }));
   });
 
+  readonly mostrarHistorialDebajoListado = computed(() => {
+    // Con pocos registros, el historial se coloca bajo el listado para aprovechar el espacio central.
+    // Cuando la lista crece, permanece en el panel de detalle para evitar desplazamientos largos.
+    return !!this.matrizSeleccionada() && this.matrices().length > 0 && this.matrices().length <= 4;
+  });
+
   ngOnInit(): void {
     this.cargarTodo();
   }
