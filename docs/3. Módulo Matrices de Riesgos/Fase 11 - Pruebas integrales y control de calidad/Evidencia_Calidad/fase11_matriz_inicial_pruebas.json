@@ -1,0 +1,121 @@
+{
+  "fase": "Fase 11 - Pruebas integrales y control de calidad",
+  "fecha_ejecucion": "2026-07-17",
+  "hora_ejecucion": "09:47",
+  "responsable": "Javier Mejía",
+  "estado": "Matriz inicial de pruebas ejecutada",
+  "repositorio": "main sincronizada con origin/main antes de documentar la matriz",
+  "quality_gates": {
+    "backend": {
+      "tests": 77,
+      "passed": 77,
+      "failed": 0,
+      "lineas": 15.35,
+      "ramas": 16.36
+    },
+    "frontend": {
+      "test_files": 13,
+      "tests": 124,
+      "passed": 124,
+      "failed": 0,
+      "statements": 31.59,
+      "branches": 27.57,
+      "functions": 30.38,
+      "lines": 31.73
+    },
+    "e2e": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "browser": "Chromium"
+    }
+  },
+  "matriz": [
+    {
+      "id": "F11-01",
+      "escenario": "Autenticación y acceso por módulo",
+      "objetivo": "Confirmar login, rutas protegidas y acceso autorizado al módulo Matrices de Riesgos.",
+      "evidencia": "E2E login-and-routing.spec.ts: formulario de acceso, campos obligatorios, contraseña visible/no visible, redirección sin sesión y apertura autorizada de Matrices de Riesgos.",
+      "resultado": "Aprobado",
+      "observacion": "Permisos conservados por módulo mediante sesión autenticada con módulo 10."
+    },
+    {
+      "id": "F11-02",
+      "escenario": "Creación y edición de matrices por tipo de sujeto",
+      "objetivo": "Validar captura, bloqueo de duplicados por identificador/documento, edición, actualización y recálculo automático.",
+      "evidencia": "Pruebas frontend y backend de creación válida, bloqueo de duplicados, reconstrucción de edición, actualización y recálculo.",
+      "resultado": "Aprobado",
+      "observacion": "La validación de duplicados se aplica en creación; la edición respeta el identificador de la matriz en curso."
+    },
+    {
+      "id": "F11-03",
+      "escenario": "Cálculo por factor e institucional",
+      "objetivo": "Confirmar cálculo por factor para proveedor, cliente/patrono y empleado, y cálculo institucional/global cuando aplique.",
+      "evidencia": "Pruebas backend MatricesRiesgoService y MatricesRiesgosApplication: motor F6, pesos 50/25/25, variables internas al 100%, mitigación y recálculo.",
+      "resultado": "Aprobado",
+      "observacion": "El frontend no calcula ponderaciones, escalas ni nivel de riesgo."
+    },
+    {
+      "id": "F11-04",
+      "escenario": "Escenarios de riesgo Muy bajo, Bajo, Medio, Alto y Crítico",
+      "objetivo": "Validar clasificación de riesgo por rangos aprobados y bandera de plan de acción para Alto/Crítico.",
+      "evidencia": "Pruebas backend de clasificación, escalas residuales y requerimiento de plan de acción.",
+      "resultado": "Aprobado",
+      "observacion": "Se mantiene clasificación sobre valor interno y visualización funcional a dos decimales."
+    },
+    {
+      "id": "F11-05",
+      "escenario": "Planes de acción",
+      "objetivo": "Validar creación, edición, cambio de estado, inactivación y reactivación de planes con motivo.",
+      "evidencia": "Pruebas frontend del servicio y componente: crear plan, editar, cambiar estado, inactivar/reactivar y refrescar indicadores.",
+      "resultado": "Aprobado",
+      "observacion": "Acciones sensibles usan motivo obligatorio y confirmación."
+    },
+    {
+      "id": "F11-06",
+      "escenario": "Evidencias documentales",
+      "objetivo": "Validar carga, vista previa, descarga auditada e inactivación lógica de evidencias.",
+      "evidencia": "Pruebas frontend: carga FormData, límite de 10 MB para vista previa, vista previa de archivo local/almacenado, descarga desde vista previa e inactivación con motivo.",
+      "resultado": "Aprobado",
+      "observacion": "La vista previa no sustituye validaciones backend de archivo protegido."
+    },
+    {
+      "id": "F11-07",
+      "escenario": "Reportería y exportaciones",
+      "objetivo": "Confirmar reporte consolidado, filtros, PDF, Excel y auditoría de exportación.",
+      "evidencia": "Pruebas frontend del servicio de reportes y evidencia Fase 9: JSON, PDF, Excel y registros en auditoría.",
+      "resultado": "Aprobado",
+      "observacion": "Las exportaciones se generan desde backend con datos persistidos."
+    },
+    {
+      "id": "F11-08",
+      "escenario": "Auditoría e historial",
+      "objetivo": "Validar trazabilidad funcional y auditoría de operaciones críticas.",
+      "evidencia": "Pruebas backend y frontend relacionadas con historial, auditoría, cambios de estado, cálculo, recálculo, planes, evidencias y exportaciones.",
+      "resultado": "Aprobado",
+      "observacion": "Las acciones funcionales quedan en historial; la auditoría respeta acciones permitidas por la tabla central."
+    },
+    {
+      "id": "F11-09",
+      "escenario": "Rendimiento básico",
+      "objetivo": "Confirmar que la aplicación compila y ejecuta pruebas dentro de tiempos aceptables para validación local.",
+      "evidencia": "Quality gate ejecutado el 17/07/2026: backend 77 pruebas, frontend 124 pruebas y e2e 6 pruebas sin fallos.",
+      "resultado": "Aprobado con control",
+      "observacion": "Pendiente recomendado para QA ampliado: medir tiempos reales con volumen mayor de datos y red institucional."
+    },
+    {
+      "id": "F11-10",
+      "escenario": "Experiencia visual y no desbordes",
+      "objetivo": "Validar navegación base, textos comprensibles, ausencia de fallos visuales críticos y patrón responsive.",
+      "evidencia": "E2E abre Matrices de Riesgos con sesión autorizada; pruebas de componentes cubren modales, listados, reportes, evidencias y acciones sensibles.",
+      "resultado": "Aprobado con control",
+      "observacion": "Pendiente recomendado para cierre total: recorrido visual manual con capturas en resoluciones desktop y portátil."
+    }
+  ],
+  "controles": [
+    "No se modificó DNP.",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR.",
+    "No se cambió la política de permisos por módulo.",
+    "No se conectó Monitoreo de Listas con Matrices de Riesgos."
+  ]
+}
