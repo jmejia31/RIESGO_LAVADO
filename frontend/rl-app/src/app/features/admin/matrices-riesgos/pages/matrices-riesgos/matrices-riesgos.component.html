@@ -152,7 +152,7 @@
             class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
             <option value="">Todos los estados</option>
             <ng-container *ngFor="let estado of estadosDisponibles">
-              <option [value]="estado">{{ estado }}</option>
+              <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
             </ng-container>
           </select>
           <select [ngModel]="filtroSujetoTipo()" (ngModelChange)="actualizarFiltroMatrices('sujetoTipo', $event)"
@@ -194,7 +194,7 @@
                     <p class="rl-clamp-2 mt-1 text-xs text-gray-500 max-w-full" [title]="matriz.sujetoTipo + ' ' + (matriz.documento || '')">{{ matriz.sujetoTipo }} {{ matriz.documento || '' }}</p>
                   </td>
                   <td class="px-4 py-3 align-middle">
-                    <span class="inline-flex max-w-full px-2 py-1 rounded-full bg-gray-100 text-xs font-bold text-gray-700 truncate">{{ matriz.estado }}</span>
+                    <span class="inline-flex max-w-full px-2 py-1 rounded-full bg-gray-100 text-xs font-bold text-gray-700 truncate">{{ estadoEtiqueta(matriz.estado) }}</span>
                   </td>
                   <td class="px-4 py-3 align-middle">
                     <span class="inline-flex items-center gap-2">
@@ -214,11 +214,6 @@
                         class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap"
                         [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
                         Calcular
-                      </button>
-                      <button *ngIf="matriz.puntajeResidual" type="button" (click)="recalcularMatriz(matriz)"
-                        class="px-3 py-1.5 rounded-lg bg-amber-500 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
-                        Recalcular
                       </button>
                       <button type="button" (click)="eliminarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
@@ -298,14 +293,14 @@
             <div>
               <p class="text-xs font-bold uppercase text-gray-400 mb-2">Cambiar estado</p>
               <p class="mb-2 text-xs text-gray-500">
-                El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre o inactivación.
+                El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre, inactivación o activación.
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <ng-container *ngFor="let estado of estadosGestionables">
+                <ng-container *ngFor="let estado of estadosGestionablesParaMatriz(matrizSeleccionada()?.estado)">
                   <button type="button" (click)="cambiarEstado(matrizSeleccionada()!, estado)"
                     class="px-2.5 py-1 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 truncate"
                     [disabled]="guardando() || estado === matrizSeleccionada()?.estado">
-                    {{ estado }}
+                    {{ textoBotonEstado(matrizSeleccionada()!, estado) }}
                   </button>
                 </ng-container>
               </div>
@@ -382,7 +377,7 @@
           <button *ngFor="let matriz of matricesDuplicadas()" type="button" (click)="seleccionarMatriz(matriz.matrizId); tab.set('matrices')"
             class="block w-full text-left rounded-lg border border-amber-200 bg-white/70 px-3 py-2 hover:bg-white">
             <span class="font-semibold">{{ matriz.nombreSujeto }}</span>
-            <span class="text-xs"> · {{ matriz.documento || matriz.sujetoIdExt || 'sin documento' }} · {{ matriz.estado }}</span>
+            <span class="text-xs"> · {{ matriz.documento || matriz.sujetoIdExt || 'sin documento' }} · {{ estadoEtiqueta(matriz.estado) }}</span>
           </button>
         </div>
       </div>
@@ -692,7 +687,7 @@
             class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
             <option [ngValue]="null">Seleccione una matriz</option>
             <ng-container *ngFor="let matriz of matrices()">
-              <option [ngValue]="matriz.matrizId">{{ matriz.nombreSujeto }} · {{ matriz.estado }}</option>
+              <option [ngValue]="matriz.matrizId">{{ matriz.nombreSujeto }} · {{ estadoEtiqueta(matriz.estado) }}</option>
             </ng-container>
           </select>
         </label>
@@ -933,7 +928,7 @@
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los estados</option>
           <ng-container *ngFor="let estado of estadosDisponibles">
-            <option [value]="estado">{{ estado }}</option>
+            <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
           </ng-container>
         </select>
         <select [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
@@ -1099,7 +1094,7 @@
                   <p class="rl-clamp-2 font-semibold text-gray-900" [title]="matriz.nombreSujeto">{{ matriz.nombreSujeto }}</p>
                   <p class="text-xs text-gray-500">{{ matriz.sujetoTipo }}</p>
                 </td>
-                <td class="px-4 py-3">{{ matriz.estado }}</td>
+                <td class="px-4 py-3">{{ estadoEtiqueta(matriz.estado) }}</td>
                 <td class="px-4 py-3">
                   <span class="inline-flex items-center gap-2">
                     <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelResidual)"></span>

@@ -122,6 +122,11 @@ public sealed class MatricesRiesgosApplicationTests
     public async Task CambiarEstado_NormalizaEstadoYDelegaMotivo()
     {
         var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ => Task.FromResult<MatrizRiesgoDetalleDto?>(new MatrizRiesgoDetalleDto
+        {
+            MatrizId = 15,
+            Estado = "CALCULADA"
+        }));
         repo.On(nameof(IMatricesRiesgosRepository.CambiarEstadoAsync), _ => Task.FromResult(true));
 
         var result = await service.CambiarEstadoAsync(15, new MatrizRiesgoCambiarEstadoRequestDto
@@ -134,6 +139,27 @@ public sealed class MatricesRiesgosApplicationTests
         var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.CambiarEstadoAsync)));
         Assert.Equal("APROBADA", call.Arguments[1]);
         Assert.Equal("Aprobación del comité", call.Arguments[2]);
+    }
+
+    [Fact]
+    public async Task CambiarEstado_MatrizInactivaSoloPermiteActivarARevision()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ => Task.FromResult<MatrizRiesgoDetalleDto?>(new MatrizRiesgoDetalleDto
+        {
+            MatrizId = 15,
+            Estado = "INACTIVA"
+        }));
+
+        var result = await service.CambiarEstadoAsync(15, new MatrizRiesgoCambiarEstadoRequestDto
+        {
+            Estado = "APROBADA",
+            Motivo = "Activación incorrecta"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Contains("inactiva", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CambiarEstadoAsync)));
     }
 
     [Fact]

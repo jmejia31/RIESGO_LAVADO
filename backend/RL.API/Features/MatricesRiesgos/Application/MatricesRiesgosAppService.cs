@@ -23,11 +23,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     private static readonly HashSet<string> EstadosPermitidos = new(StringComparer.OrdinalIgnoreCase)
     {
-        "BORRADOR",
-        "EN_EVALUACION",
-        "CALCULADA",
         "EN_REVISION",
-        "OBSERVADA",
         "APROBADA",
         "CERRADA",
         "INACTIVA"
@@ -230,21 +226,26 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
         var estado = dto.Estado?.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(estado) || !EstadosPermitidos.Contains(estado))
-            return ServiceResult.BadRequest("El estado solicitado no es válido para Matrices de Riesgos.");
+            return ServiceResult.BadRequest("El estado solicitado no es válido para la gestión operativa de Matrices de Riesgos.");
 
         if (string.IsNullOrWhiteSpace(dto.Motivo))
             return ServiceResult.BadRequest("El motivo del cambio de estado es obligatorio.");
 
         try
         {
+            // Regla operativa Fase 11: el cálculo/recálculo se ejecuta al guardar,
+            // por eso la API solo permite estados de revisión, aprobación, cierre e inactivación.
+            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
+            if (matriz == null)
+                return ServiceResult.NotFound("No se encontró la matriz de riesgos.");
+
+            if (matriz.Estado.Equals("INACTIVA", StringComparison.OrdinalIgnoreCase) && estado != "EN_REVISION")
+                return ServiceResult.BadRequest("Una matriz inactiva solo puede activarse nuevamente al estado En Revisión.");
+
             if (estado == "CERRADA")
             {
                 // El cierre exige gestión documentada cuando el residual requiere plan.
                 // Así se evita cerrar riesgos altos/críticos sin tratamiento.
-                var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-                if (matriz == null)
-                    return ServiceResult.NotFound("No se encontró la matriz de riesgos.");
-
                 if (matriz.RequierePlanAccion && !await _repo.TienePlanTratadoParaCierreAsync(matrizId))
                     return ServiceResult.BadRequest("No se puede cerrar la matriz porque requiere plan de acción y no tiene un plan cerrado o una justificación aprobada.");
             }

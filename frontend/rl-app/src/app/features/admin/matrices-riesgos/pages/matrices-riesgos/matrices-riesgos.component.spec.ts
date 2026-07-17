@@ -435,20 +435,18 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['crearCriterio']).not.toHaveBeenCalled();
   });
 
-  it('exige motivo para recalcular y ejecuta la operacion al completarlo', () => {
-    const matriz = { matrizId: 18, sujetoTipo: 'PROVEEDOR' } as never;
-    component.recalcularMatriz(matriz);
+  it('limita una matriz inactiva a la accion visible de activar', () => {
+    const matriz = { matrizId: 18, estado: 'INACTIVA', sujetoTipo: 'PROVEEDOR' } as never;
 
+    expect(component.estadosGestionablesParaMatriz('INACTIVA')).toEqual(['EN_REVISION']);
+    expect(component.textoBotonEstado(matriz, 'EN_REVISION')).toBe('Activar');
+
+    component.cambiarEstado(matriz, 'EN_REVISION');
+    component.actualizarModalMotivo('Reactivar para revision');
     component.confirmarModal();
 
-    expect(component.modalError()).toBe('El motivo es obligatorio para completar esta acción.');
-    expect(service['recalcular']).not.toHaveBeenCalled();
-
-    component.actualizarModalMotivo('Actualizacion anual');
-    component.confirmarModal();
-
-    expect(service['recalcular']).toHaveBeenCalledWith(18, 'Actualizacion anual', 'FACTOR');
-    expect(component.mensaje()).toBe('Matriz recalculada correctamente.');
+    expect(service['cambiarEstado']).toHaveBeenCalledWith(18, 'EN_REVISION', 'Reactivar para revision');
+    expect(component.mensaje()).toBe('Estado actualizado correctamente.');
     expect(component.guardando()).toBe(false);
   });
 
