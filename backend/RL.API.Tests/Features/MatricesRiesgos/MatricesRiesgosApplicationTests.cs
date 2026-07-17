@@ -200,6 +200,26 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Fact]
+    public async Task EliminarMatriz_Aprobada_RechazaSinInactivar()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ => Task.FromResult<MatrizRiesgoDetalleDto?>(new MatrizRiesgoDetalleDto
+        {
+            MatrizId = 15,
+            Estado = "APROBADA"
+        }));
+
+        var result = await service.EliminarMatrizAsync(15, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = "Registro duplicado"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Contains("aprobada", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.EliminarMatrizAsync)));
+    }
+
+    [Fact]
     public async Task ListarPlanes_MatrizInexistente_DevuelveNotFound()
     {
         var service = CrearServicio(out var repo, out _);

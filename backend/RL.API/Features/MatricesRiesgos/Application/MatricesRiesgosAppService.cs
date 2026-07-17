@@ -271,6 +271,15 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
         try
         {
+            // La eliminación lógica solo aplica a registros todavía operativos.
+            // Una matriz aprobada, cerrada o inactiva ya forma parte del expediente auditable.
+            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
+            if (matriz == null)
+                return ServiceResult.NotFound("No se encontró la matriz de riesgos.");
+
+            if (matriz.Estado is "APROBADA" or "CERRADA" or "INACTIVA")
+                return ServiceResult.BadRequest("La matriz no puede eliminarse porque ya fue aprobada, cerrada o se encuentra inactiva.");
+
             var ok = await _repo.EliminarMatrizAsync(matrizId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
             return ok
                 ? ServiceResult.Ok("Matriz eliminada correctamente.")

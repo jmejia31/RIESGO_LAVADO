@@ -1303,6 +1303,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       : this.estadosGestionables;
   }
 
+  puedeEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
+    const estado = (matriz.estado ?? '').toUpperCase();
+    // La eliminación lógica solo queda disponible antes del cierre operativo.
+    // Una matriz aprobada, cerrada o ya inactiva forma parte del expediente y debe conservarse.
+    return !['APROBADA', 'CERRADA', 'INACTIVA'].includes(estado);
+  }
+
+  mensajeBloqueoEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
+    return this.puedeEliminarMatriz(matriz)
+      ? 'Eliminar matriz'
+      : 'La matriz no puede eliminarse porque ya fue aprobada, cerrada o se encuentra inactiva.';
+  }
+
   textoBotonEstado(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle, estado: string): string {
     return matriz.estado === 'INACTIVA' && estado === 'EN_REVISION'
       ? 'Activar'

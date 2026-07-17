@@ -450,6 +450,14 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.guardando()).toBe(false);
   });
 
+  it('bloquea eliminacion de matrices aprobadas, cerradas o inactivas', () => {
+    expect(component.puedeEliminarMatriz({ estado: 'EN_REVISION' } as never)).toBe(true);
+    expect(component.puedeEliminarMatriz({ estado: 'CALCULADA' } as never)).toBe(true);
+    expect(component.puedeEliminarMatriz({ estado: 'APROBADA' } as never)).toBe(false);
+    expect(component.puedeEliminarMatriz({ estado: 'CERRADA' } as never)).toBe(false);
+    expect(component.puedeEliminarMatriz({ estado: 'INACTIVA' } as never)).toBe(false);
+  });
+
   it('rechaza un rango de criterio cuyo valor inicial supera al final', () => {
     component.criteriosForm = {
       variableId: 3, escalaId: null, valorDesde: 10, valorHasta: 5,

@@ -217,7 +217,8 @@
                       </button>
                       <button type="button" (click)="eliminarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando()">
+                        [disabled]="guardando() || !puedeEliminarMatriz(matriz)"
+                        [title]="mensajeBloqueoEliminarMatriz(matriz)">
                         Eliminar
                       </button>
                     </div>
@@ -234,32 +235,49 @@
         </div>
       </div>
 
-      <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden">
-        <h3 class="text-lg font-bold text-gray-900">Detalle</h3>
-        <div *ngIf="matrizSeleccionada(); else noMatrizSeleccionada" class="space-y-3 text-sm">
-            <div>
+      <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden self-start">
+        <div class="flex items-center justify-between gap-3">
+          <h3 class="text-lg font-bold text-gray-900">Detalle</h3>
+          <span *ngIf="matrizSeleccionada()" class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
+            {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
+          </span>
+        </div>
+        <div *ngIf="matrizSeleccionada(); else noMatrizSeleccionada" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-3 text-sm">
+            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
               <p class="text-xs font-bold uppercase text-gray-400">Sujeto evaluado</p>
-              <p class="rl-clamp-3 font-semibold text-gray-900" [title]="matrizSeleccionada()?.nombreSujeto || ''">{{ matrizSeleccionada()?.nombreSujeto }}</p>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="rounded-xl bg-gray-50 p-3 min-w-0">
-                <p class="text-xs text-gray-500">Inherente</p>
+              <p class="rl-clamp-3 mt-1 font-semibold text-gray-900" [title]="matrizSeleccionada()?.nombreSujeto || ''">{{ matrizSeleccionada()?.nombreSujeto }}</p>
+              <p class="mt-2 text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
+                {{ matrizSeleccionada()?.sujetoTipo }} · {{ matrizSeleccionada()?.documento || matrizSeleccionada()?.sujetoIdExt || 'Sin documento' }}
+              </p>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm min-w-0">
+              <p class="text-xs font-bold uppercase text-gray-400">Riesgo inherente</p>
+              <div class="mt-2 flex items-center gap-2">
+                <span class="h-3 w-3 rounded-full shrink-0" [style.background]="colorNivel(matrizSeleccionada()?.nivelInherente)"></span>
                 <p class="font-bold break-words [overflow-wrap:anywhere]">{{ matrizSeleccionada()?.puntajeInherente ?? '-' }} {{ matrizSeleccionada()?.nivelInherente || '' }}</p>
               </div>
-              <div class="rounded-xl bg-gray-50 p-3 min-w-0">
-                <p class="text-xs text-gray-500">Residual</p>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm min-w-0">
+              <p class="text-xs font-bold uppercase text-gray-400">Riesgo residual</p>
+              <div class="mt-2 flex items-center gap-2">
+                <span class="h-3 w-3 rounded-full shrink-0" [style.background]="colorNivel(matrizSeleccionada()?.nivelResidual)"></span>
                 <p class="font-bold break-words [overflow-wrap:anywhere]">{{ matrizSeleccionada()?.puntajeResidual ?? '-' }} {{ matrizSeleccionada()?.nivelResidual || '' }}</p>
               </div>
-            </div>
-            <div *ngIf="matrizSeleccionada()?.requierePlanAccion"
-              class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-700">
+            </section>
+
+            <section *ngIf="matrizSeleccionada()?.requierePlanAccion"
+              class="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm text-xs font-semibold text-amber-800 min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
               Esta matriz requiere plan de acción por nivel residual Alto o Crítico.
-            </div>
-            <div *ngIf="(matrizSeleccionada()?.resultados?.length || 0) > 0">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-2">Resultados vigentes</p>
-              <div class="space-y-2 max-h-56 overflow-auto pr-1">
+            </section>
+
+            <section *ngIf="(matrizSeleccionada()?.resultados?.length || 0) > 0"
+              class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Resultados vigentes</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
                 <ng-container *ngFor="let resultado of matrizSeleccionada()?.resultados">
-                  <div *ngIf="resultado.esVigente" class="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                  <div *ngIf="resultado.esVigente" class="rounded-xl border border-gray-100 bg-gray-50 p-3 min-w-0">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <p class="font-semibold text-gray-800">{{ resultado.tipoResultado }}</p>
                       <span class="rounded-full px-2 py-1 text-[11px] font-bold"
@@ -267,49 +285,53 @@
                         {{ resultado.nivelResidual }}
                       </span>
                     </div>
-                    <p class="mt-1 text-xs text-gray-600">
+                    <p class="mt-1 text-xs text-gray-600 break-words [overflow-wrap:anywhere]">
                       Inherente {{ resultado.puntajeInherente }} / Residual {{ resultado.puntajeResidual }} / Mitigación {{ resultado.mitigacionPct }}%
                     </p>
                   </div>
                 </ng-container>
               </div>
-            </div>
-            <div *ngIf="(matrizSeleccionada()?.controles?.length || 0) > 0">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-2">Controles mitigantes</p>
-              <div class="space-y-2 max-h-48 overflow-auto pr-1">
+            </section>
+
+            <section *ngIf="(matrizSeleccionada()?.controles?.length || 0) > 0"
+              class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Controles mitigantes</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-2 max-h-52 overflow-auto pr-1">
                 <ng-container *ngFor="let control of matrizSeleccionada()?.controles">
-                  <div class="rounded-xl border border-gray-100 p-3">
+                  <div class="rounded-xl border border-gray-100 bg-gray-50 p-3 min-w-0">
                     <div class="flex flex-wrap items-center justify-between gap-2">
                       <p class="rl-clamp-2 font-semibold text-gray-800" [title]="control.nombre">{{ control.nombre }}</p>
                       <span class="text-xs font-bold text-emerald-700">{{ control.efectividadPct }}%</span>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
                       {{ control.factorCodigo || 'General' }} · {{ control.estado }} · Evidencia {{ control.tieneEvidencia ? 'registrada' : 'pendiente' }}
                     </p>
                   </div>
                 </ng-container>
               </div>
-            </div>
-            <div>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
               <p class="text-xs font-bold uppercase text-gray-400 mb-2">Cambiar estado</p>
-              <p class="mb-2 text-xs text-gray-500">
+              <p class="mb-3 text-xs text-gray-500">
                 El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre, inactivación o activación.
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <ng-container *ngFor="let estado of estadosGestionablesParaMatriz(matrizSeleccionada()?.estado)">
                   <button type="button" (click)="cambiarEstado(matrizSeleccionada()!, estado)"
-                    class="px-2.5 py-1 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 truncate"
+                    class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 truncate"
                     [disabled]="guardando() || estado === matrizSeleccionada()?.estado">
                     {{ textoBotonEstado(matrizSeleccionada()!, estado) }}
                   </button>
                 </ng-container>
               </div>
-            </div>
-            <div>
-              <p class="text-xs font-bold uppercase text-gray-400 mb-2">Historial</p>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
+              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Historial</p>
               <div class="space-y-2 max-h-72 overflow-auto pr-1">
                     <ng-container *ngFor="let item of historial()">
-                      <div class="rounded-xl border border-gray-100 p-3">
+                      <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
                         <p class="rl-clamp-2 font-semibold text-gray-800" [title]="item.accion + ' ' + item.tabla">{{ item.accion }} <span class="text-gray-400">{{ item.tabla }}</span></p>
                         <p class="text-xs text-gray-500 break-words [overflow-wrap:anywhere]">{{ item.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ item.usuarioEmail || 'Usuario' }}</p>
                         <p *ngIf="item.motivo" class="text-xs text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">{{ item.motivo }}</p>
@@ -317,7 +339,7 @@
                     </ng-container>
                     <p *ngIf="historial().length === 0" class="text-sm text-gray-500">Seleccione una matriz para consultar historial.</p>
               </div>
-            </div>
+            </section>
           </div>
         <ng-template #noMatrizSeleccionada>
           <p class="text-sm text-gray-500">Seleccione una matriz del listado para ver su detalle.</p>
