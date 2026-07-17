@@ -25,6 +25,10 @@ export class MonitoreoListasComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly tiposMonitoreo: FiltroTipo[] = ['juridica', 'natural', 'empleado'];
+  private readonly tiposCargados = new Set<FiltroTipo>();
+  private readonly tiposEnCarga = new Set<FiltroTipo>();
+  private precargaSolicitada = false;
   readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
@@ -160,7 +164,7 @@ export class MonitoreoListasComponent implements OnInit {
     this.tipoActivo.set(tipo);
     this.busqueda.set('');
     this.paginaActual.set(1);
-    this.cargarDatos();
+    this.cargarDatos({ tipo, force: false });
   }
 
   limpiarFiltrosPrincipales() {
@@ -187,26 +191,63 @@ export class MonitoreoListasComponent implements OnInit {
     this.formComentarioSeguimiento.set(this.limitarTexto(valor));
   }
 
-  cargarDatos() {
-    this.cargando.set(true);
-    const tipo = this.tipoActivo();
+  cargarDatos(options: { tipo?: FiltroTipo; force?: boolean; mostrarLoader?: boolean } = {}) {
+    const tipo = options.tipo ?? this.tipoActivo();
+    const force = options.force ?? true;
+    const mostrarLoader = options.mostrarLoader ?? true;
+
+    if (!force && this.tiposCargados.has(tipo)) {
+      this.cargando.set(false);
+      return;
+    }
+
+    if (this.tiposEnCarga.has(tipo)) {
+      if (mostrarLoader && tipo === this.tipoActivo() && !this.tiposCargados.has(tipo)) {
+        this.cargando.set(true);
+      }
+      return;
+    }
+
+    this.tiposEnCarga.add(tipo);
+    if (mostrarLoader && tipo === this.tipoActivo()) {
+      this.cargando.set(true);
+    }
+
+    const terminarCarga = () => {
+      this.tiposEnCarga.delete(tipo);
+      if (tipo === this.tipoActivo()) {
+        this.cargando.set(false);
+      }
+      this.precargarTiposRestantes();
+    };
 
     if (tipo === 'juridica') {
       this.listasService.getJuridicas().subscribe({
-        next: (res) => { this.juridicasRaw.set(res); this.cargando.set(false); },
-        error: () => { this.juridicasRaw.set([]); this.cargando.set(false); }
+        next: (res) => { this.juridicasRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
+        error: () => { this.juridicasRaw.set([]); terminarCarga(); }
       });
     } else if (tipo === 'natural') {
       this.listasService.getNaturales().subscribe({
-        next: (res) => { this.naturalesRaw.set(res); this.cargando.set(false); },
-        error: () => { this.naturalesRaw.set([]); this.cargando.set(false); }
+        next: (res) => { this.naturalesRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
+        error: () => { this.naturalesRaw.set([]); terminarCarga(); }
       });
     } else if (tipo === 'empleado') {
       this.listasService.getEmpleados().subscribe({
-        next: (res) => { this.empleadosRaw.set(res); this.cargando.set(false); },
-        error: () => { this.empleadosRaw.set([]); this.cargando.set(false); }
+        next: (res) => { this.empleadosRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
+        error: () => { this.empleadosRaw.set([]); terminarCarga(); }
       });
     }
+  }
+
+  private precargarTiposRestantes() {
+    if (this.precargaSolicitada) return;
+    this.precargaSolicitada = true;
+
+    setTimeout(() => {
+      this.tiposMonitoreo
+        .filter(tipo => tipo !== this.tipoActivo())
+        .forEach(tipo => this.cargarDatos({ tipo, force: false, mostrarLoader: false }));
+    }, 0);
   }
 
   // Filtrado reactivo en memoria

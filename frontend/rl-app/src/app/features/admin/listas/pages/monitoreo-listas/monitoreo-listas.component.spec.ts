@@ -98,6 +98,20 @@ describe('MonitoreoListasComponent', () => {
     expect(component.naturalesRaw()).toEqual(naturales);
   });
 
+  it('reutiliza datos cargados al volver a la misma categoria sin consultar nuevamente la API', () => {
+    const naturales = [{ numeroIdentificacion: '0801', nombre: 'Ana' }];
+    service['getNaturales'].mockReturnValue(of(naturales));
+
+    component.cambiarTipo('natural');
+    component.busqueda.set('ana');
+    component.cambiarTipo('natural');
+
+    expect(service['getNaturales']).toHaveBeenCalledOnce();
+    expect(component.naturalesRaw()).toEqual(naturales);
+    expect(component.busqueda()).toBe('');
+    expect(component.cargando()).toBe(false);
+  });
+
   it('limpia resultados de empleados y detiene la carga cuando el servicio falla', () => {
     component.tipoActivo.set('empleado');
     component.empleadosRaw.set([{ identidad: '01' }] as never);
