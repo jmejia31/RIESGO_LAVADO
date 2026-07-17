@@ -1,0 +1,39 @@
+{
+  "fase": "Fase 11 - Pruebas integrales y control de calidad",
+  "fecha_validacion": "2026-07-17",
+  "responsable": "Javier Mejía",
+  "estado": "Validación inicial de quality gates completada",
+  "repositorio": "main sincronizada con origin/main antes de iniciar la fase",
+  "backend": {
+    "tests": 77,
+    "passed": 77,
+    "failed": 0,
+    "skipped": 0,
+    "lineas": 15.35,
+    "ramas": 16.36,
+    "coverage_file": "C:\\RIESGO_LAVADO\\backend\\RL.API.Tests\\TestResults\\quality-gates\\773678ed-5749-4e2c-8591-1996c88002bf\\coverage.cobertura.xml"
+  },
+  "frontend": {
+    "test_files": 13,
+    "tests": 123,
+    "passed": 123,
+    "failed": 0,
+    "statements": 31.07,
+    "branches": 26.97,
+    "functions": 29.94,
+    "lines": 31.26,
+    "coverage_file": "C:\\RIESGO_LAVADO\\frontend\\rl-app\\coverage\\rl-app\\coverage-summary.json"
+  },
+  "e2e": {
+    "tests": 6,
+    "passed": 6,
+    "failed": 0,
+    "browser": "Chromium"
+  },
+  "resultado_general": "Correcto",
+  "observaciones": [
+    "La Fase 11 queda iniciada con puertas de calidad aprobadas.",
+    "No se marca como cerrada hasta completar matriz integral de escenarios funcionales, seguridad, auditoría, base de datos y experiencia de usuario.",
+    "No se modificó DNP, CONTROL_ALMACEN.PROVEEDOR ni la política de permisos por módulo."
+  ]
+}
