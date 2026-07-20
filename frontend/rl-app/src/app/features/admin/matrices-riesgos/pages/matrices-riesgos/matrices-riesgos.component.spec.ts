@@ -87,6 +87,25 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.cargando()).toBe(false);
   });
 
+  it('actualiza el modulo limpiando seleccion, planes y evidencias visibles', () => {
+    component.matrizSeleccionada.set({ matrizId: 12 } as never);
+    component.planesAccion.set([{ planId: 1 }] as never);
+    component.evidencias.set([{ evidenciaId: 2 }] as never);
+    component.historial.set([{ historialId: 3 }] as never);
+    component.evidenciaPlanId = 1;
+    component.evidenciaControlId = 2;
+
+    component.actualizarModulo();
+
+    expect(component.matrizSeleccionada()).toBeNull();
+    expect(component.planesAccion()).toEqual([]);
+    expect(component.evidencias()).toEqual([]);
+    expect(component.historial()).toEqual([]);
+    expect(component.evidenciaPlanId).toBeNull();
+    expect(component.evidenciaControlId).toBeNull();
+    expect(service['metodologiaVigente']).toHaveBeenCalled();
+  });
+
   it('carga el reporte usando el filtro vigente', () => {
     const reporte = { totales: { totalMatrices: 3 } };
     component.reporteFiltro.set({ estado: 'ACTIVA' });
@@ -97,6 +116,20 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['reporte']).toHaveBeenCalledWith({ estado: 'ACTIVA' });
     expect(component.reporte()).toEqual(reporte);
     expect(component.cargandoReporte()).toBe(false);
+  });
+
+  it('ver inactivos muestra solo criterios desactivados', () => {
+    const criterios = [
+      { criterioId: 1, activo: true },
+      { criterioId: 2, activo: false }
+    ];
+    service['listarCriterios'].mockReturnValue(of(criterios));
+    component.incluirCriteriosInactivos.set(true);
+
+    component.cargarCriterios();
+
+    expect(service['listarCriterios']).toHaveBeenCalledWith(true);
+    expect(component.criterios()).toEqual([{ criterioId: 2, activo: false }]);
   });
 
   it('conserva un error controlado y detiene la carga si falla el reporte', () => {
@@ -166,8 +199,8 @@ describe('MatricesRiesgosComponent', () => {
       actividad: '  Revisar expediente  ',
       responsable: '  Cumplimiento  ',
       periodicidad: 'Mensual',
-      fechaInicio: '2026-07-16',
-      fechaFin: '2026-08-16',
+      fechaInicio: component.fechaActualIso,
+      fechaFin: component.fechaActualIso,
       medioPrueba: 'Informe',
       observaciones: ''
     };
@@ -186,7 +219,7 @@ describe('MatricesRiesgosComponent', () => {
   it('carga un plan en edicion y actualiza por su identificador', () => {
     const plan = {
       planId: 7, matrizId: 12, actividad: 'Seguimiento', responsable: 'Cumplimiento',
-      periodicidad: 'Mensual', fechaInicio: '2026-07-01T00:00:00', fechaFin: null,
+      periodicidad: 'Mensual', fechaInicio: `${component.fechaActualIso}T00:00:00`, fechaFin: null,
       medioPrueba: 'Informe', observaciones: null
     } as never;
     component.matrizSeleccionada.set({ matrizId: 12 } as never);
@@ -275,7 +308,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['inactivarEvidencia']).toHaveBeenCalledWith(12, 8, 'Documento sustituido');
     expect(service['obtener']).toHaveBeenCalledWith(12);
     expect(component.modalOperacion()).toBeNull();
-    expect(component.mensaje()).toBe('Evidencia inactivada correctamente.');
+    expect(component.mensaje()).toBe('Evidencia eliminada correctamente.');
   });
 
   it('rechaza la vista previa cuando no hay archivo o supera 10 MB', () => {
@@ -543,7 +576,7 @@ describe('MatricesRiesgosComponent', () => {
 
     expect(service['inactivarCriterio']).toHaveBeenCalledWith(7, 'Criterio fuera de vigencia');
     expect(service['listarCriterios']).toHaveBeenCalled();
-    expect(component.mensaje()).toBe('Criterio inactivado correctamente.');
+    expect(component.mensaje()).toBe('Criterio desactivado correctamente.');
     expect(component.modalOperacion()).toBeNull();
   });
 

@@ -103,14 +103,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public async Task<ServiceResult<MatricesRiesgoReporteDto>> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro)
     {
-        NormalizarFiltroReporte(filtro);
+        var errorFiltro = NormalizarFiltroReporte(filtro);
+        if (errorFiltro != null)
+            return ServiceResult<MatricesRiesgoReporteDto>.BadRequest(errorFiltro);
+
         var reporte = await _repo.ObtenerReporteAsync(filtro);
         return ServiceResult<MatricesRiesgoReporteDto>.Ok(reporte);
     }
 
     public async Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip)
     {
-        NormalizarFiltroReporte(filtro);
+        var errorFiltro = NormalizarFiltroReporte(filtro);
+        if (errorFiltro != null)
+            return ServiceResult<MatrizRiesgoExportacionDto>.BadRequest(errorFiltro);
+
         var formatoNormalizado = string.IsNullOrWhiteSpace(formato) ? "EXCEL" : formato.Trim().ToUpperInvariant();
         if (formatoNormalizado != "EXCEL" && formatoNormalizado != "PDF")
             return ServiceResult<MatrizRiesgoExportacionDto>.BadRequest("El formato de exportación debe ser EXCEL o PDF.");
@@ -387,10 +393,10 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("La matriz y el plan son obligatorios.");
 
         if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de inactivación del plan es obligatorio.");
+            return ServiceResult.BadRequest("El motivo de desactivación del plan es obligatorio.");
 
         var ok = await _repo.InactivarPlanAsync(matrizId, planId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-        return ok ? ServiceResult.Ok("Plan de acción inactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción activo.");
+        return ok ? ServiceResult.Ok("Plan de acción desactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción activo.");
     }
 
     public async Task<ServiceResult> ReactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
@@ -507,7 +513,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("El motivo de eliminación lógica de la evidencia es obligatorio.");
 
         var ok = await _repo.InactivarEvidenciaAsync(matrizId, evidenciaId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-        return ok ? ServiceResult.Ok("Evidencia inactivada correctamente.") : ServiceResult.NotFound("No se encontró la evidencia activa.");
+        return ok ? ServiceResult.Ok("Evidencia eliminada correctamente.") : ServiceResult.NotFound("No se encontró la evidencia activa.");
     }
 
     public async Task<ServiceResult<List<MatrizRiesgoCriterioDto>>> ListarCriteriosAsync(bool incluirInactivos)
@@ -568,11 +574,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("El identificador del criterio es obligatorio.");
 
         if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de inactivación del criterio es obligatorio.");
+            return ServiceResult.BadRequest("El motivo de desactivación del criterio es obligatorio.");
 
         var ok = await _repo.InactivarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
         return ok
-            ? ServiceResult.Ok("Criterio inactivado correctamente.")
+            ? ServiceResult.Ok("Criterio desactivado correctamente.")
             : ServiceResult.NotFound("No se encontró el criterio activo.");
     }
 
@@ -593,7 +599,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
         catch (Oracle.ManagedDataAccess.Client.OracleException ex) when (ex.Number == 2292)
         {
-            return ServiceResult.BadRequest("El criterio ya está relacionado con información histórica y no puede eliminarse físicamente. Puede inactivarlo para conservar la trazabilidad.");
+            return ServiceResult.BadRequest("El criterio ya está relacionado con información histórica y no puede eliminarse físicamente. Puede desactivarlo para conservar la trazabilidad.");
         }
     }
 
@@ -617,14 +623,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (string.IsNullOrWhiteSpace(dto.Responsable))
             return "El responsable del plan de acción es obligatorio.";
 
-        if (dto.Actividad.Length > 2000)
-            return "La actividad del plan no debe superar los 2000 caracteres.";
+        if (dto.Actividad.Length > 1500)
+            return "La actividad del plan no debe superar los 1500 caracteres.";
 
-        if (dto.Responsable.Length > 150)
-            return "El responsable del plan no debe superar los 150 caracteres.";
+        if (dto.Responsable.Length > 300)
+            return "El responsable del plan no debe superar los 300 caracteres.";
 
-        if (dto.Periodicidad?.Length > 80 || dto.MedioPrueba?.Length > 1000 || dto.Observaciones?.Length > 1500)
+        if (dto.Periodicidad?.Length > 80 || dto.MedioPrueba?.Length > 300 || dto.Observaciones?.Length > 1500)
             return "La periodicidad, el medio de prueba o las observaciones superan la longitud permitida.";
+
+        if (dto.FechaInicio.HasValue && dto.FechaInicio.Value.Date < DateTime.Today)
+            return "La fecha de inicio no puede ser menor a la fecha actual.";
+
+        if (dto.FechaFin.HasValue && dto.FechaFin.Value.Date < DateTime.Today)
+            return "La fecha final no puede ser menor a la fecha actual.";
 
         if (dto.FechaInicio.HasValue && dto.FechaFin.HasValue && dto.FechaFin.Value.Date < dto.FechaInicio.Value.Date)
             return "La fecha de finalización no puede ser menor que la fecha de inicio.";
@@ -780,6 +792,16 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                 if (string.IsNullOrWhiteSpace(control.Nombre))
                     return "Cada control debe tener nombre.";
 
+                control.Nombre = control.Nombre.Trim();
+                control.Descripcion = control.Descripcion?.Trim();
+                control.Responsable = control.Responsable?.Trim();
+
+                if (control.Descripcion?.Length > 1500)
+                    return "La descripción del control no debe superar los 1500 caracteres.";
+
+                if (control.Responsable?.Length > 300)
+                    return "El responsable del control no debe superar los 300 caracteres.";
+
                 if (control.EfectividadPct < 0 || control.EfectividadPct > 100)
                     return "La efectividad del control debe estar entre 0% y 100%.";
             }
@@ -788,10 +810,10 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return null;
     }
 
-    private static void NormalizarFiltroReporte(MatrizRiesgoReporteFiltroDto filtro)
+    private static string? NormalizarFiltroReporte(MatrizRiesgoReporteFiltroDto filtro)
     {
         if (filtro == null)
-            return;
+            return null;
 
         filtro.Buscar = filtro.Buscar?.Trim();
         filtro.Estado = filtro.Estado?.Trim().ToUpperInvariant();
@@ -799,6 +821,24 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         filtro.NivelResidual = filtro.NivelResidual?.Trim();
         filtro.ModeloVersion = filtro.ModeloVersion?.Trim();
         filtro.Responsable = filtro.Responsable?.Trim();
+
+        var fechaMinima = new DateTime(2000, 1, 1);
+        if (filtro.FechaInicio.HasValue && filtro.FechaInicio.Value.Date < fechaMinima)
+            return "La fecha de inicio del reporte no puede ser menor al 01/01/2000.";
+
+        if (filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date < fechaMinima)
+            return "La fecha final del reporte no puede ser menor al 01/01/2000.";
+
+        if (filtro.FechaInicio.HasValue && filtro.FechaInicio.Value.Date > DateTime.Today)
+            return "La fecha de inicio del reporte no puede ser mayor a la fecha actual.";
+
+        if (filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date > DateTime.Today)
+            return "La fecha final del reporte no puede ser mayor a la fecha actual.";
+
+        if (filtro.FechaInicio.HasValue && filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date < filtro.FechaInicio.Value.Date)
+            return "La fecha final del reporte no puede ser menor que la fecha de inicio.";
+
+        return null;
     }
 
     private static MatrizRiesgoExportacionDto ConstruirExcelReporte(MatricesRiesgoReporteDto reporte)

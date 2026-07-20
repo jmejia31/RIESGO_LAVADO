@@ -338,7 +338,7 @@
             <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
               <p class="text-xs font-bold uppercase text-gray-400 mb-2">Cambiar estado</p>
               <p class="mb-3 text-xs text-gray-500">
-                El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre, inactivación o activación.
+                El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre, desactivación o activación.
               </p>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <ng-container *ngFor="let estado of estadosGestionablesParaMatriz(matrizSeleccionada()?.estado)">
@@ -536,7 +536,7 @@
           </label>
           <label class="space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Responsable</span>
-            <input type="text" [(ngModel)]="nuevoControl.responsable" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            <input type="text" [(ngModel)]="nuevoControl.responsable" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
           </label>
           <label class="space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Periodicidad</span>
@@ -563,7 +563,7 @@
             Evidencia obligatoria
           </label>
         </div>
-        <textarea [(ngModel)]="nuevoControl.descripcion" rows="2" placeholder="Descripción del control"
+        <textarea [(ngModel)]="nuevoControl.descripcion" maxlength="1500" rows="2" placeholder="Descripción del control"
           class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
       </div>
 
@@ -621,7 +621,7 @@
         </div>
         <label class="block space-y-1">
           <span class="text-xs font-bold uppercase text-gray-500">Descripción</span>
-          <textarea rows="4" [(ngModel)]="criteriosForm.descripcion" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
+          <textarea rows="4" [(ngModel)]="criteriosForm.descripcion" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
         </label>
         <div class="flex gap-2">
           <button type="button" (click)="guardarCriterio()" [disabled]="guardando()"
@@ -687,7 +687,7 @@
                       </button>
                       <button type="button" (click)="inactivarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
                         class="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold disabled:opacity-50">
-                        Inactivar
+                        Desactivar
                       </button>
                       <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando()"
                         class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
@@ -741,29 +741,29 @@
           <h4 class="font-bold text-gray-900">{{ planEditandoId() ? 'Editar plan' : 'Nuevo plan' }}</h4>
           <label class="block space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Actividad</span>
-            <textarea rows="3" [(ngModel)]="planForm.actividad" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
+            <textarea rows="3" [(ngModel)]="planForm.actividad" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
           </label>
           <label class="block space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Responsable</span>
-            <input type="text" [(ngModel)]="planForm.responsable" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            <input type="text" [(ngModel)]="planForm.responsable" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
           </label>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label class="space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Fecha inicio</span>
-              <input type="date" [(ngModel)]="planForm.fechaInicio" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+              <input type="date" [(ngModel)]="planForm.fechaInicio" [min]="fechaActualIso" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
             </label>
             <label class="space-y-1">
               <span class="text-xs font-bold uppercase text-gray-500">Fecha fin</span>
-              <input type="date" [(ngModel)]="planForm.fechaFin" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+              <input type="date" [(ngModel)]="planForm.fechaFin" [min]="fechaMinimaFinPlan()" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
             </label>
           </div>
           <label class="block space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Medio de prueba</span>
-            <input type="text" [(ngModel)]="planForm.medioPrueba" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+            <input type="text" [(ngModel)]="planForm.medioPrueba" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
           </label>
           <label class="block space-y-1">
             <span class="text-xs font-bold uppercase text-gray-500">Observaciones</span>
-            <textarea rows="2" [(ngModel)]="planForm.observaciones" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
+            <textarea rows="2" [(ngModel)]="planForm.observaciones" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
           </label>
           <div class="flex flex-col sm:flex-row gap-2">
             <button type="button" (click)="guardarPlanAccion()" [disabled]="guardando() || !matrizSeleccionada()"
@@ -829,7 +829,7 @@
                         </button>
                         <button type="button" (click)="inactivarPlan(plan)" [disabled]="guardando()"
                           class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
-                          Inactivar
+                          Desactivar
                         </button>
                       </ng-container>
                       <ng-template #planInactivoAcciones>
@@ -852,7 +852,7 @@
         <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
           <div>
             <h3 class="text-lg font-bold text-gray-900">Evidencias documentales</h3>
-            <p class="text-xs text-gray-500">Adjunte documentos de soporte para planes, controles o decisiones de la matriz seleccionada.</p>
+            <p class="text-xs text-gray-500">Adjunte documentos de soporte para planes, controles mitigantes o decisiones de la matriz seleccionada.</p>
           </div>
           <div class="space-y-3">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -874,9 +874,9 @@
               </select>
             </label>
             <label class="min-w-0 space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Control</span>
+              <span class="text-xs font-bold uppercase text-gray-500">Control mitigante</span>
               <select [(ngModel)]="evidenciaControlId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-                <option [ngValue]="null">Sin control</option>
+                <option [ngValue]="null">Sin control mitigante</option>
                 <option *ngFor="let control of matrizSeleccionada()?.controles || []" [ngValue]="control.controlId">{{ control.nombre }}</option>
               </select>
             </label>
@@ -983,9 +983,13 @@
         </select>
         <input type="date" [ngModel]="reporteFiltro().fechaInicio || ''"
           (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
+          [min]="fechaMinimaReporteInicio"
+          [max]="fechaActualIso"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
         <input type="date" [ngModel]="reporteFiltro().fechaFin || ''"
           (ngModelChange)="actualizarFiltroReporte('fechaFin', $event)"
+          [min]="fechaMinimaReporteInicio"
+          [max]="fechaActualIso"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
         <input type="text" [ngModel]="reporteFiltro().responsable || ''"
           (ngModelChange)="actualizarFiltroReporte('responsable', $event)"

@@ -206,6 +206,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly estadosDisponibles = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
   readonly estadosGestionables = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
   readonly estadosPlan = ['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO'];
+  readonly fechaActualIso = this.fechaLocalIso(new Date());
+  readonly fechaMinimaReporteInicio = '2000-01-01';
   readonly tiposSujeto = [
     { valor: 'PROVEEDOR', texto: 'Proveedor' },
     { valor: 'CLIENTE_PATRONO', texto: 'Cliente / Patrono' },
@@ -309,7 +311,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.matricesDuplicadas.set([]);
     this.matrizSeleccionada.set(null);
     this.historial.set([]);
+    this.planesAccion.set([]);
+    this.evidencias.set([]);
+    this.evidenciaArchivo = null;
+    this.evidenciaPlanId = null;
+    this.evidenciaControlId = null;
+    this.cerrarVistaPreviaEvidencia();
     this.limpiarFormularioMatriz();
+    this.limpiarFormularioPlan();
     this.cargarTodo();
   }
 
@@ -363,7 +372,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   actualizarFiltroReporte(campo: keyof MatrizRiesgoReporteFiltro, valor: string): void {
-    this.reporteFiltro.set({ ...this.reporteFiltro(), [campo]: valor?.trim?.() ?? valor });
+    const valorLimpio = valor?.trim?.() ?? valor;
+    const filtroNuevo = { ...this.reporteFiltro(), [campo]: valorLimpio || undefined };
+    const errorFecha = this.validarFechasReporte(filtroNuevo);
+    if (errorFecha) {
+      this.error.set(errorFecha);
+      return;
+    }
+
+    this.reporteFiltro.set(filtroNuevo);
     this.programarCargaReporte();
   }
 
@@ -484,7 +501,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarCriterios(): void {
     this.service.listarCriterios(this.incluirCriteriosInactivos()).subscribe({
       next: datos => {
-        this.criterios.set(datos);
+        const verInactivos = this.incluirCriteriosInactivos();
+        this.criterios.set(verInactivos ? datos.filter(c => !c.activo) : datos.filter(c => c.activo));
         this.aplicarCriteriosAutomaticos();
       },
       error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los criterios.'))
@@ -531,7 +549,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cargarPlanesYEvidencias(matrizId?: number): void {
     const id = matrizId ?? this.matrizSeleccionada()?.matrizId;
-    if (!id) return;
+    if (!id) {
+      this.planesAccion.set([]);
+      this.evidencias.set([]);
+      return;
+    }
 
     this.service.listarPlanes(id).subscribe({
       next: datos => this.planesAccion.set(datos),
@@ -698,11 +720,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const inactivandoMatriz = estado === 'INACTIVA';
     this.abrirModal({
       tipo: 'estado',
-      titulo: activandoMatriz ? 'Activar matriz' : inactivandoMatriz ? 'Inactivar matriz' : 'Cambiar estado',
+      titulo: activandoMatriz ? 'Activar matriz' : inactivandoMatriz ? 'Desactivar matriz' : 'Cambiar estado',
       descripcion: activandoMatriz
         ? `Ingrese el motivo obligatorio para activar la matriz ${matriz.matrizId}. El estado volverá a En Revisión.`
         : `Ingrese el motivo obligatorio para cambiar la matriz ${matriz.matrizId} al estado ${this.estadoEtiqueta(estado)}.`,
-      textoConfirmar: activandoMatriz ? 'Activar' : inactivandoMatriz ? 'Inactivar' : 'Cambiar estado',
+      textoConfirmar: activandoMatriz ? 'Activar' : inactivandoMatriz ? 'Desactivar' : 'Cambiar estado',
       requiereMotivo: true,
       matriz,
       estado,
@@ -807,6 +829,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const errorFormulario = this.validarFormularioPlan();
+    if (errorFormulario) {
+      this.error.set(errorFormulario);
+      return;
+    }
+
     this.guardando.set(true);
     const dto: MatrizRiesgoPlanAccionRequest = {
       resultadoId: this.planForm.resultadoId || null,
@@ -867,6 +895,60 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     };
   }
 
+  fechaMinimaFinPlan(): string {
+    // La fecha final del plan no puede ser anterior a hoy ni anterior a la fecha de inicio elegida.
+    return this.planForm.fechaInicio && this.planForm.fechaInicio > this.fechaActualIso
+      ? this.planForm.fechaInicio
+      : this.fechaActualIso;
+  }
+
+  private validarFormularioPlan(): string | null {
+    const actividad = this.planForm.actividad.trim();
+    const responsable = this.planForm.responsable.trim();
+    const medioPrueba = (this.planForm.medioPrueba || '').trim();
+    const observaciones = (this.planForm.observaciones || '').trim();
+
+    if (actividad.length > 1500) return 'La actividad no debe superar los 1500 caracteres.';
+    if (observaciones.length > 1500) return 'Las observaciones no deben superar los 1500 caracteres.';
+    if (medioPrueba.length > 300) return 'El medio de prueba no debe superar los 300 caracteres.';
+    if (responsable.length > 300) return 'El responsable no debe superar los 300 caracteres.';
+
+    if (this.planForm.fechaInicio && this.planForm.fechaInicio < this.fechaActualIso) {
+      return 'La fecha de inicio no puede ser menor a la fecha actual.';
+    }
+    if (this.planForm.fechaFin && this.planForm.fechaFin < this.fechaActualIso) {
+      return 'La fecha final no puede ser menor a la fecha actual.';
+    }
+    if (this.planForm.fechaInicio && this.planForm.fechaFin && this.planForm.fechaFin < this.planForm.fechaInicio) {
+      return 'La fecha final no puede ser menor que la fecha de inicio.';
+    }
+
+    return null;
+  }
+
+  private validarFechasReporte(filtro: MatrizRiesgoReporteFiltro): string | null {
+    const fechaInicio = filtro.fechaInicio || '';
+    const fechaFin = filtro.fechaFin || '';
+
+    if (fechaInicio && fechaInicio < this.fechaMinimaReporteInicio) {
+      return 'La fecha de inicio del reporte no puede ser menor al 01/01/2000.';
+    }
+    if (fechaInicio && fechaInicio > this.fechaActualIso) {
+      return 'La fecha de inicio del reporte no puede ser mayor a la fecha actual.';
+    }
+    if (fechaFin && fechaFin > this.fechaActualIso) {
+      return 'La fecha final del reporte no puede ser mayor a la fecha actual.';
+    }
+    if (fechaFin && fechaFin < this.fechaMinimaReporteInicio) {
+      return 'La fecha final del reporte no puede ser menor al 01/01/2000.';
+    }
+    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
+      return 'La fecha final del reporte no puede ser menor que la fecha de inicio.';
+    }
+
+    return null;
+  }
+
   cambiarEstadoPlan(plan: MatrizRiesgoPlanAccion, estado: string): void {
     this.abrirModal({
       tipo: 'estadoPlan',
@@ -883,9 +965,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   inactivarPlan(plan: MatrizRiesgoPlanAccion): void {
     this.abrirModal({
       tipo: 'inactivarPlan',
-      titulo: 'Inactivar plan',
-      descripcion: `Ingrese el motivo obligatorio para inactivar el plan ${plan.planId}.`,
-      textoConfirmar: 'Inactivar',
+      titulo: 'Desactivar plan',
+      descripcion: `Ingrese el motivo obligatorio para desactivar el plan ${plan.planId}.`,
+      textoConfirmar: 'Desactivar',
       requiereMotivo: true,
       plan,
       tono: 'peligro'
@@ -1049,13 +1131,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.service.inactivarPlan(matrizId, plan.planId, motivo).subscribe({
       next: () => {
-        this.mensaje.set('Plan de acción inactivado correctamente.');
+        this.mensaje.set('Plan de acción desactivado correctamente.');
         this.cargarPlanesYEvidencias(matrizId);
         this.cargarReporte();
         this.guardando.set(false);
         this.cerrarModal();
       },
-      error: err => this.finalizarAccionConError(err, 'No se pudo inactivar el plan.')
+      error: err => this.finalizarAccionConError(err, 'No se pudo desactivar el plan.')
     });
   }
 
@@ -1083,13 +1165,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.service.inactivarEvidencia(matrizId, evidencia.evidenciaId, motivo).subscribe({
       next: () => {
-        this.mensaje.set('Evidencia inactivada correctamente.');
+        this.mensaje.set('Evidencia eliminada correctamente.');
         this.cargarPlanesYEvidencias(matrizId);
         this.seleccionarMatriz(matrizId);
         this.guardando.set(false);
         this.cerrarModal();
       },
-      error: err => this.finalizarAccionConError(err, 'No se pudo inactivar la evidencia.')
+      error: err => this.finalizarAccionConError(err, 'No se pudo eliminar la evidencia.')
     });
   }
 
@@ -1150,9 +1232,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   inactivarCriterio(criterio: MatrizRiesgoCriterio): void {
     this.abrirModal({
       tipo: 'inactivarCriterio',
-      titulo: 'Inactivar criterio',
-      descripcion: `Ingrese el motivo obligatorio para inactivar el criterio ${criterio.criterioId}.`,
-      textoConfirmar: 'Inactivar',
+      titulo: 'Desactivar criterio',
+      descripcion: `Ingrese el motivo obligatorio para desactivar el criterio ${criterio.criterioId}.`,
+      textoConfirmar: 'Desactivar',
       requiereMotivo: true,
       criterio,
       tono: 'peligro'
@@ -1381,12 +1463,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.service.inactivarCriterio(criterio.criterioId, motivo).subscribe({
       next: () => {
-        this.mensaje.set('Criterio inactivado correctamente.');
+        this.mensaje.set('Criterio desactivado correctamente.');
         this.cargarCriterios();
         this.guardando.set(false);
         this.cerrarModal();
       },
-      error: err => this.finalizarAccionConError(err, 'No se pudo inactivar el criterio.')
+      error: err => this.finalizarAccionConError(err, 'No se pudo desactivar el criterio.')
     });
   }
 
@@ -1985,6 +2067,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   private fechaArchivo(): string {
     return new Date().toISOString().slice(0, 19).replace(/-/g, '').replace(/:/g, '').replace('T', '');
+  }
+
+  private fechaLocalIso(fecha: Date): string {
+    const anio = fecha.getFullYear();
+    const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
+    const dia = `${fecha.getDate()}`.padStart(2, '0');
+    return `${anio}-${mes}-${dia}`;
   }
 
   private formatearFecha(valor: string | Date | null | undefined): string {

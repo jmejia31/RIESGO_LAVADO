@@ -264,11 +264,29 @@ public sealed class MatricesRiesgosApplicationTests
         {
             Actividad = "Revisar expediente",
             Responsable = "Cumplimiento",
-            FechaInicio = new DateTime(2026, 7, 20),
-            FechaFin = new DateTime(2026, 7, 10)
+            FechaInicio = DateTime.Today.AddDays(5),
+            FechaFin = DateTime.Today.AddDays(2)
         }, 7, null, null);
 
         Assert.False(result.Success);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CrearPlanAsync)));
+    }
+
+    [Fact]
+    public async Task CrearPlan_FechaInicioPasada_RechazaSinEscribir()
+    {
+        var service = CrearServicio(out var repo, out _);
+
+        var result = await service.CrearPlanAsync(12, new MatrizRiesgoPlanAccionRequestDto
+        {
+            Actividad = "Revisar expediente",
+            Responsable = "Cumplimiento",
+            FechaInicio = DateTime.Today.AddDays(-1),
+            FechaFin = DateTime.Today.AddDays(5)
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Contains("fecha de inicio", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CrearPlanAsync)));
     }
 
@@ -591,6 +609,21 @@ public sealed class MatricesRiesgosApplicationTests
         var service = CrearServicio(out var repo, out _);
 
         var result = await service.ExportarReporteAsync(new MatrizRiesgoReporteFiltroDto(), "CSV", 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Empty(repo.Invocations);
+    }
+
+    [Fact]
+    public async Task ExportarReporte_FechaFinalFutura_NoConsultaRepositorio()
+    {
+        var service = CrearServicio(out var repo, out _);
+
+        var result = await service.ExportarReporteAsync(new MatrizRiesgoReporteFiltroDto
+        {
+            FechaFin = DateTime.Today.AddDays(1)
+        }, "PDF", 7, null, null);
 
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
