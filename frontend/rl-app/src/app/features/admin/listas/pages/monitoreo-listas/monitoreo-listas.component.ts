@@ -13,6 +13,7 @@ import { of, forkJoin } from 'rxjs';
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
 type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string };
+type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | CoincidenciaEmpleado;
 
 @Component({
   selector: 'app-monitoreo-listas',
@@ -113,10 +114,16 @@ export class MonitoreoListasComponent implements OnInit {
     return new Set(list.filter(x => x !== '')).size;
   });
 
-  // Datos crudos de la API
+  // Datos crudos de la API; cada colección conserva su origen para evitar mezclar reglas entre tipos de sujeto.
   juridicasRaw = signal<CoincidenciaJuridica[]>([]);
   naturalesRaw = signal<CoincidenciaNatural[]>([]);
   empleadosRaw = signal<CoincidenciaEmpleado[]>([]);
+
+  datosConsolidados = computed<MonitoreoRegistro[]>(() => [
+    ...this.juridicasRaw(),
+    ...this.naturalesRaw(),
+    ...this.empleadosRaw()
+  ]);
 
   datosActivos = computed<Array<CoincidenciaJuridica | CoincidenciaNatural | CoincidenciaEmpleado>>(() => {
     if (this.tipoActivo() === 'juridica') return this.juridicasRaw();
@@ -125,7 +132,7 @@ export class MonitoreoListasComponent implements OnInit {
   });
 
   etiquetaTipoActivo = computed(() => {
-    if (this.tipoActivo() === 'juridica') return 'Personas juridicas';
+    if (this.tipoActivo() === 'juridica') return 'Personas jurídicas';
     if (this.tipoActivo() === 'natural') return 'Personas naturales';
     return 'Empleados';
   });
@@ -134,6 +141,33 @@ export class MonitoreoListasComponent implements OnInit {
   pendientesActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length);
   conMotivoActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length);
   cerradosPasivosActual = computed(() => this.datosActivos().filter(item => this.esCerradoPasivo(item)).length);
+  positivosManualesActual = computed(() => this.datosActivos().filter(item => !!item.esManual && !this.esCerradoPasivo(item)).length);
+
+  totalGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item)).length);
+  pendientesGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length);
+  conMotivoGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length);
+  positivosManualesGeneral = computed(() => this.datosConsolidados().filter(item => !!item.esManual && !this.esCerradoPasivo(item)).length);
+  cerradosPasivosGeneral = computed(() => this.datosConsolidados().filter(item => this.esCerradoPasivo(item)).length);
+
+  resumenListasActual = computed(() => {
+    const resumen = new Map<string, number>();
+    this.datosActivos().forEach(item => {
+      const lista = (item.listaCoincidencia || 'Sin lista').trim();
+      resumen.set(lista, (resumen.get(lista) || 0) + 1);
+    });
+
+    return Array.from(resumen.entries())
+      .map(([lista, total]) => ({ lista, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
+  });
+
+  hayFiltrosPrincipalesActivos = computed(() =>
+    !!this.busqueda().trim() ||
+    this.filtroEstado() !== 'todos' ||
+    !!this.filtroFechaDesde() ||
+    !!this.filtroFechaHasta()
+  );
 
   // Paginación
   paginaActual = signal(1);
@@ -1778,6 +1812,136 @@ export class MonitoreoListasComponent implements OnInit {
     ).subscribe({
       next: () => XLSX.writeFile(wb, fileName),
       error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
+    });
+  }
+
+  private obtenerResumenFiltrosPrincipales(): string {
+    const filtros = [
+      `Tipo: ${this.etiquetaTipoActivo()}`,
+      `Estado: ${this.obtenerEtiquetaEstadoFiltro(this.filtroEstado())}`,
+      this.busqueda().trim() ? `Búsqueda: ${this.busqueda().trim()}` : 'Búsqueda: Sin texto',
+      this.filtroFechaDesde() ? `Desde: ${this.formatDate(this.filtroFechaDesde())}` : 'Desde: Sin fecha',
+      this.filtroFechaHasta() ? `Hasta: ${this.formatDate(this.filtroFechaHasta())}` : 'Hasta: Sin fecha'
+    ];
+    return filtros.join(' | ');
+  }
+
+  private obtenerEtiquetaEstadoFiltro(estado: FiltroEstado): string {
+    if (estado === 'pendiente') return 'Pendiente';
+    if (estado === 'con_motivo') return 'Con motivo';
+    if (estado === 'cerrado_pasivo') return 'Cerrado / Pasivo';
+    return 'Todos los registros';
+  }
+
+  private construirReporteListaPrincipalPdf(): { title: string; headers: string[]; rows: string[][] } | null {
+    const tipo = this.tipoActivo();
+    const dataFiltrada = this.datosFiltrados();
+    if (dataFiltrada.length === 0) return null;
+
+    if (tipo === 'juridica') {
+      return {
+        title: 'Reporte de Coincidencias Jurídicas',
+        headers: ['Número Patronal', 'RTN', 'Nombre Empresa', 'Lista Coincidencia', 'Proveedor IHSS', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
+        rows: (dataFiltrada as CoincidenciaJuridica[]).map(item => [
+          item.numeroPatrono || '',
+          item.rtn || '',
+          item.nombre || '',
+          item.listaCoincidencia || '',
+          item.esProveedorIhss || 'No',
+          this.obtenerEstadoMonitoreo(item),
+          item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
+          item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+          item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
+        ])
+      };
+    }
+
+    if (tipo === 'natural') {
+      return {
+        title: 'Reporte de Coincidencias Naturales',
+        headers: ['Número Identificación', 'Nombre Completo', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
+        rows: (dataFiltrada as CoincidenciaNatural[]).map(item => [
+          item.numeroIdentificacion || '',
+          item.nombre || '',
+          item.listaCoincidencia || '',
+          this.obtenerEstadoMonitoreo(item),
+          item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
+          item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+          item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
+        ])
+      };
+    }
+
+    return {
+      title: 'Reporte de Coincidencias Empleados',
+      headers: ['Identidad', 'Nombre Empleado', 'Lista Coincidencia', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
+      rows: (dataFiltrada as CoincidenciaEmpleado[]).map(item => [
+        item.identidad || '',
+        item.nombre || '',
+        item.listaCoincidencia || '',
+        this.obtenerEstadoMonitoreo(item),
+        item.fechaEncontro ? this.formatDate(item.fechaEncontro) : '',
+        item.fechaCalifico ? this.formatDate(item.fechaCalifico) : '',
+        item.fechaRegistroInterno ? this.formatDate(item.fechaRegistroInterno) : ''
+      ])
+    };
+  }
+
+  exportarPdfListaPrincipal() {
+    const reporte = this.construirReporteListaPrincipalPdf();
+    if (!reporte) return;
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    this.agregarEncabezadoPdf(doc, reporte.title);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(71, 85, 105);
+    const filtros = doc.splitTextToSize(`Filtros aplicados: ${this.obtenerResumenFiltrosPrincipales()}`, 265);
+    doc.text(filtros, 14, 48);
+
+    autoTable(doc, {
+      startY: 58,
+      head: [reporte.headers],
+      body: reporte.rows,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [15, 23, 42],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 8
+      },
+      styles: {
+        fontSize: 7.5,
+        cellPadding: 2,
+        overflow: 'linebreak',
+        valign: 'middle'
+      },
+      margin: { left: 14, right: 14 },
+      didDrawPage: () => {
+        const page = doc.getNumberOfPages();
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`Página ${page}`, 270, 200, { align: 'right' });
+      }
+    });
+
+    const fileName = `Reporte_Monitoreo_Listas_${this.tipoActivo()}_${new Date().toISOString().split('T')[0]}.pdf`;
+    this.listasService.registrarAuditoriaExportacion(
+      'RL_LISTA_POSITIVOS',
+      this.tipoActivo(),
+      'ExportacionMonitoreoListas',
+      {
+        accion: 'EXPORTACION_PDF',
+        tipo: this.tipoActivo(),
+        titulo: reporte.title,
+        filtros: this.obtenerResumenFiltrosPrincipales(),
+        cantidadRegistros: reporte.rows.length,
+        archivo: fileName
+      }
+    ).subscribe({
+      next: () => doc.save(fileName),
+      error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación PDF')
     });
   }
 
