@@ -3,7 +3,7 @@
   "modulo": "Módulo 3. Matrices de Riesgos",
   "responsable": "Javier Mejía",
   "fecha_validacion": "20/07/2026",
-  "estado": "Validación técnica final completada; pendiente aprobación formal",
+  "estado": "Fase 11 aprobada y cerrada",
   "rama": "main",
   "resultados": {
     "backend": {
@@ -47,5 +47,8 @@
     "Realizar recorrido visual manual con capturas finales si el equipo requiere evidencia gráfica adicional.",
     "Ejecutar prueba de rendimiento con mayor volumen de registros en red institucional si el ambiente lo permite.",
     "Revisar dependencias npm transitivas en una rama separada de mantenimiento, sin mezclarlo con Fase 11."
-  ]
+  ],
+  "fecha_cierre_formal": "20/07/2026",
+  "aprobado_por": "Javier Mejía",
+  "decision_final": "Se aprueba formalmente el cierre de Fase 11 y se autoriza continuidad según el plan vigente del módulo."
 }
