@@ -2261,7 +2261,7 @@ export class MonitoreoListasComponent implements OnInit {
       const motivoEliminacion = await this.solicitarMotivoEliminacion(
         Swal,
         '¿Eliminar evidencia?',
-        `Se inactivará lógicamente el archivo ${evi.nombreArchivo}.`
+        `Se eliminará lógicamente el archivo ${evi.nombreArchivo}.`
       );
 
       if (motivoEliminacion) {
