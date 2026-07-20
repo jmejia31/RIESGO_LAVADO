@@ -462,6 +462,25 @@ export class MonitoreoListasComponent implements OnInit {
     this.detallesEmpleado.set([]);
   }
 
+  // Normaliza la lectura del sujeto mostrado en el modal de detalle, sin mezclar reglas entre natural y empleado.
+  detalleSujetoActual(): CoincidenciaNatural | CoincidenciaEmpleado | null {
+    return this.tipoActivo() === 'empleado'
+      ? this.personaSeleccionadaEmpleado()
+      : this.personaSeleccionada();
+  }
+
+  detalleSujetoDocumento(): string {
+    const sujeto = this.detalleSujetoActual();
+    if (!sujeto) return 'N/D';
+    return this.tipoActivo() === 'empleado'
+      ? (sujeto as CoincidenciaEmpleado).identidad || 'N/D'
+      : (sujeto as CoincidenciaNatural).numeroIdentificacion || 'N/D';
+  }
+
+  detalleSujetoFecha(): string {
+    return this.detalleSujetoActual()?.fechaEncontro || '';
+  }
+
   verPdf() {
     const isEmpleado = this.tipoActivo() === 'empleado';
     const personaNatural = this.personaSeleccionada();

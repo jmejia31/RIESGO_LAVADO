@@ -668,11 +668,11 @@
 
       <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
 
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-4xl w-full border border-gray-100 flex flex-col max-h-[90vh]">
+      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-6xl w-full border border-gray-100 flex flex-col max-h-[90vh]">
 
            <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Detalle de Coincidencias</h3>
+              <h3 class="text-lg font-bold text-gray-900">Detalle de coincidencia</h3>
               <p class="text-xs text-gray-500">
                 @if (tipoActivo() === 'empleado') {
                   Empleado IHSS: {{ personaSeleccionadaEmpleado()?.nombre }} (Identidad: {{ personaSeleccionadaEmpleado()?.identidad }})
@@ -705,6 +705,58 @@
                 <p class="text-sm font-medium text-gray-500">No se encontraron registros detallados para esta coincidencia.</p>
               </div>
             } @else {
+              <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Sujeto identificado</p>
+                  <h4 class="mt-2 text-sm font-bold text-gray-900 break-words">{{ detalleSujetoActual()?.nombre || 'N/D' }}</h4>
+                  <p class="mt-1 text-xs text-gray-500">{{ tipoActivo() === 'empleado' ? 'Identidad' : 'Identificación' }}: {{ detalleSujetoDocumento() }}</p>
+                </article>
+
+                <article class="rounded-xl border border-red-100 bg-red-50 p-4 shadow-sm">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-red-700">Lista de coincidencia</p>
+                  <h4 class="mt-2 text-sm font-bold text-red-800 break-words">{{ detalleSujetoActual()?.listaCoincidencia || 'Sin lista' }}</h4>
+                  <p class="mt-1 text-xs text-red-700/80">Fuente registrada en Monitoreo de Listas</p>
+                </article>
+
+                <article class="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Estado operativo</p>
+                  <span class="mt-2 inline-flex" [class]="obtenerClaseEstado(detalleSujetoActual() || {})">
+                    {{ obtenerEstadoMonitoreo(detalleSujetoActual() || {}) }}
+                  </span>
+                  <p class="mt-2 text-xs text-gray-500">Última coincidencia: {{ detalleSujetoFecha() ? (detalleSujetoFecha() | date:'dd/MM/yyyy') : 'N/D' }}</p>
+                </article>
+
+                <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Resumen operativo</p>
+                  <p class="mt-2 text-2xl font-bold text-blue-800">{{ totalCoincidencias() }}</p>
+                  <p class="text-xs text-blue-700/80">Coincidencia(s) detalladas</p>
+                </article>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <article class="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Empresas relacionadas</p>
+                  <p class="mt-2 text-xl font-bold text-gray-900">{{ empresasUnicas() }}</p>
+                </article>
+                @if (tipoActivo() !== 'empleado') {
+                  <article class="rounded-xl border border-red-100 bg-white p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Coincidencias PEP</p>
+                    <p class="mt-2 text-xl font-bold" [class]="coincidenciasPep() > 0 ? 'text-red-600' : 'text-gray-900'">{{ coincidenciasPep() }}</p>
+                  </article>
+                } @else {
+                  <article class="rounded-xl border border-gray-200 bg-white p-4">
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Tipo de relación</p>
+                    <p class="mt-2 text-xl font-bold text-gray-900">Empleado IHSS</p>
+                  </article>
+                }
+                <article class="rounded-xl border border-emerald-100 bg-white p-4">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Acción recomendada</p>
+                  <p class="mt-2 text-sm font-semibold text-gray-900">
+                    {{ puedeDarSeguimiento(detalleSujetoActual() || {}) ? 'Continuar seguimiento documental.' : 'Registrar motivo antes de seguimiento.' }}
+                  </p>
+                </article>
+              </div>
+
               <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-96">
                 <table class="min-w-full divide-y divide-gray-200">
                   <thead class="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky top-0">
@@ -766,30 +818,6 @@
                 </table>
               </div>
 
-              <!-- Resumen al pie de la tabla -->
-              <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-200 text-sm">
-                <div class="flex flex-col">
-                  <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Coincidencias</span>
-                  <span class="text-lg font-bold text-gray-900">{{ totalCoincidencias() }}</span>
-                </div>
-                @if (tipoActivo() !== 'empleado') {
-                  <div class="flex flex-col">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Coincidencias PEP</span>
-                    <span class="text-lg font-bold" [class]="coincidenciasPep() > 0 ? 'text-red-600' : 'text-gray-900'">
-                      {{ coincidenciasPep() }}
-                    </span>
-                  </div>
-                } @else {
-                  <div class="flex flex-col">
-                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo Relación</span>
-                    <span class="text-lg font-bold text-gray-900">IHSS</span>
-                  </div>
-                }
-                <div class="flex flex-col">
-                  <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Empresas Relacionadas</span>
-                  <span class="text-lg font-bold text-gray-900">{{ empresasUnicas() }}</span>
-                </div>
-              </div>
             }
           </div>
 
