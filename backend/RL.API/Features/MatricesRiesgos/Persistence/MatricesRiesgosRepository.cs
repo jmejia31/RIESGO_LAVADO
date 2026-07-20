@@ -56,8 +56,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         if (!string.IsNullOrWhiteSpace(filtro.Estado))
         {
-            where.Add("m.MRMAT_ESTADO = :estado");
-            parameters.Add(new OracleParameter("estado", filtro.Estado.Trim().ToUpperInvariant()));
+            if (filtro.Estado.Trim().Equals("EN_REVISION", StringComparison.OrdinalIgnoreCase))
+            {
+                // CALCULADA queda como compatibilidad histórica; para operación diaria se presenta como En Revisión.
+                where.Add("m.MRMAT_ESTADO IN ('EN_REVISION', 'CALCULADA')");
+            }
+            else
+            {
+                where.Add("m.MRMAT_ESTADO = :estado");
+                parameters.Add(new OracleParameter("estado", filtro.Estado.Trim().ToUpperInvariant()));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.SujetoTipo))
@@ -130,11 +138,15 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using (var cmd = conn.CreateCommand())
         {
             cmd.CommandText = @"
-                SELECT COUNT(*) TOTAL,
-                       SUM(CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 1 ELSE 0 END) CALCULADAS,
-                       SUM(CASE WHEN MRMAT_ESTADO = 'CERRADA' THEN 1 ELSE 0 END) CERRADAS
-                  FROM RL_MR_MATRICES
-                 WHERE MRMAT_ESTADO_REGISTRO = 1";
+                SELECT COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                       COUNT(DISTINCT CASE WHEN r.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
+                       COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS
+                  FROM RL_MR_MATRICES m
+                  LEFT JOIN RL_MR_RESULTADOS r
+                    ON r.MRR_MATRIZ_ID = m.MRMAT_ID
+                   AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
+                   AND r.MRR_ES_VIGENTE = 1
+                 WHERE m.MRMAT_ESTADO_REGISTRO = 1";
 
             await using var reader = await cmd.ExecuteReaderAsync();
             if (await reader.ReadAsync())
@@ -145,7 +157,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
         }
 
-        dashboard.PorEstado = await ObtenerConteosAsync(conn, "SELECT MRMAT_ESTADO NOMBRE, COUNT(*) TOTAL FROM RL_MR_MATRICES WHERE MRMAT_ESTADO_REGISTRO = 1 GROUP BY MRMAT_ESTADO ORDER BY MRMAT_ESTADO");
+        dashboard.PorEstado = await ObtenerConteosAsync(conn, "SELECT CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END NOMBRE, COUNT(*) TOTAL FROM RL_MR_MATRICES WHERE MRMAT_ESTADO_REGISTRO = 1 GROUP BY CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END ORDER BY NOMBRE");
         dashboard.PorNivelResidual = await ObtenerConteosAsync(conn, @"
             SELECT NVL(MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NOMBRE, COUNT(*) TOTAL
               FROM RL_MR_MATRICES m
@@ -186,7 +198,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         };
 
         reporte.Totales = await ObtenerTotalesReporteAsync(conn, filtro);
-        reporte.PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "m.MRMAT_ESTADO");
+        reporte.PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE m.MRMAT_ESTADO END");
         reporte.PorNivelResidual = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')");
         reporte.PorSujetoTipo = await ObtenerConteosReporteAsync(conn, filtro, "m.MRMAT_SUJETO_TIPO");
         reporte.PorFactor = await ObtenerFactoresReporteAsync(conn, filtro);
@@ -260,7 +272,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     ) VALUES (
                         :id, :modeloId, :sujetoTipo, :sujetoIdExt,
                         :documento, :nombreSujeto, :origenDatos,
-                        'EN_EVALUACION', SYSDATE, :snapshotMetodo,
+                        'EN_REVISION', SYSDATE, :snapshotMetodo,
                         :usuarioId, SYSDATE, 1
                     )";
                 cmd.Parameters.Add(Param("id", matrizId));
@@ -281,7 +293,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             foreach (var control in dto.Controles)
                 await InsertarControlAsync(conn, tx, matrizId, modelo.ModeloId, control, usuarioId);
 
-            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_MATRICES", matrizId.ToString(), "CREACION", null, "EN_EVALUACION", "Creación de matriz de riesgos.", null, JsonConvert.SerializeObject(dto), usuarioId, usuarioEmail, ip);
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_MATRICES", matrizId.ToString(), "CREACION", null, "EN_REVISION", "Creación de matriz de riesgos.", null, JsonConvert.SerializeObject(dto), usuarioId, usuarioEmail, ip);
             await RegistrarAuditoriaAsync(conn, tx, "RL_MR_MATRICES", matrizId.ToString(), "INSERT", null, JsonConvert.SerializeObject(dto), usuarioId, usuarioEmail, ip);
 
             tx.Commit();
@@ -315,7 +327,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await ValidarVariablesPorTipoSujetoAsync(conn, tx, modelo.ModeloId, dto);
 
             var datosAnteriores = JsonConvert.SerializeObject(matriz);
-            var estadoNuevo = matriz.Estado.Equals("BORRADOR", StringComparison.OrdinalIgnoreCase) ? "BORRADOR" : "EN_EVALUACION";
+            var estadoNuevo = "EN_REVISION";
 
             await using (var cmd = conn.CreateCommand())
             {
@@ -339,7 +351,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 cmd.Parameters.Add(Param("nombreSujeto", dto.NombreSujeto.Trim()));
                 cmd.Parameters.Add(Param("origenDatos", string.IsNullOrWhiteSpace(dto.OrigenDatos) ? "CAPTURA" : dto.OrigenDatos.Trim().ToUpperInvariant()));
                 cmd.Parameters.Add(Param("estadoNuevo", estadoNuevo));
-                cmd.Parameters.Add(Param("motivo", "Edición de datos de matriz; requiere recalcular resultados."));
+                cmd.Parameters.Add(Param("motivo", "Edición de datos de matriz; queda en revisión con cálculo actualizado."));
                 cmd.Parameters.Add(Param("usuarioId", usuarioId));
                 cmd.Parameters.Add(Param("matrizId", matrizId));
                 await cmd.ExecuteNonQueryAsync();
@@ -351,7 +363,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await InactivarResultadosVigentesAsync(conn, tx, matrizId);
 
             var datosNuevos = JsonConvert.SerializeObject(dto);
-            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_MATRICES", matrizId.ToString(), "EDICION", matriz.Estado, estadoNuevo, "Edición de datos de matriz; resultados anteriores quedan no vigentes.", datosAnteriores, datosNuevos, usuarioId, usuarioEmail, ip);
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_MATRICES", matrizId.ToString(), "EDICION", matriz.Estado, estadoNuevo, "Edición de datos de matriz; el sistema recalcula y deja la matriz en revisión.", datosAnteriores, datosNuevos, usuarioId, usuarioEmail, ip);
             await RegistrarAuditoriaAsync(conn, tx, "RL_MR_MATRICES", matrizId.ToString(), "UPDATE", datosAnteriores, datosNuevos, usuarioId, usuarioEmail, ip);
 
             tx.Commit();
@@ -444,17 +456,20 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 await InsertarResultadoAsync(conn, tx, matrizId, factorId, "FACTOR", resultado.VersionCalculo, factor.PuntajeInherente, factor.NivelInherente, factor.MitigacionPct, factor.PuntajeResidual, factor.NivelResidual, factor.RequierePlanAccion, motivoCalculo, null, JsonConvert.SerializeObject(factor), usuarioId);
             }
 
+            var estadoResultado = "EN_REVISION";
+
             await using (var cmd = conn.CreateCommand())
             {
                 cmd.BindByName = true;
                 cmd.Transaction = tx;
                 cmd.CommandText = @"
                     UPDATE RL_MR_MATRICES
-                       SET MRMAT_ESTADO = 'CALCULADA',
+                       SET MRMAT_ESTADO = :estadoResultado,
                            MRMAT_MOTIVO_ESTADO = :motivo,
                            MRMAT_USR_MODIF_ID = :usuarioId,
                            MRMAT_FECHA_MODIF = SYSDATE
                      WHERE MRMAT_ID = :matrizId";
+                cmd.Parameters.Add(Param("estadoResultado", estadoResultado));
                 cmd.Parameters.Add(Param("motivo", string.IsNullOrWhiteSpace(motivoCalculo) ? "Cálculo de matriz de riesgos." : motivoCalculo));
                 cmd.Parameters.Add(Param("usuarioId", usuarioId));
                 cmd.Parameters.Add(Param("matrizId", matrizId));
@@ -462,7 +477,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             var accion = esRecalculo ? "RECALCULO" : "CALCULO";
-            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_RESULTADOS", resultadoInstitucionalId.ToString(), accion, matriz.Estado, "CALCULADA", motivoCalculo, null, snapshot, usuarioId, usuarioEmail, ip);
+            await RegistrarHistorialAsync(conn, tx, matrizId, "RL_MR_RESULTADOS", resultadoInstitucionalId.ToString(), accion, matriz.Estado, estadoResultado, motivoCalculo, null, snapshot, usuarioId, usuarioEmail, ip);
             await RegistrarAuditoriaAsync(conn, tx, "RL_MR_RESULTADOS", resultadoInstitucionalId.ToString(), "INSERT", null, snapshot, usuarioId, usuarioEmail, ip);
 
             tx.Commit();
@@ -1679,7 +1694,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             Documento = ToNullableString(reader["MRMAT_DOCUMENTO"]),
             NombreSujeto = reader["MRMAT_NOMBRE_SUJETO"].ToString() ?? string.Empty,
             OrigenDatos = reader["MRMAT_ORIGEN_DATOS"].ToString() ?? string.Empty,
-            Estado = reader["MRMAT_ESTADO"].ToString() ?? string.Empty,
+            Estado = NormalizarEstadoFuncional(reader["MRMAT_ESTADO"].ToString()),
             FechaEvaluacion = ToDate(reader["MRMAT_FECHA_EVALUACION"]),
             MotivoEstado = ToNullableString(reader["MRMAT_MOTIVO_ESTADO"]),
             SnapshotMetodo = ToNullableString(reader["MRMAT_SNAPSHOT_METODO"]),
@@ -2243,8 +2258,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.BindByName = true;
         cmd.CommandText = $@"
             SELECT COUNT(*) TOTAL,
-                   SUM(CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 1 ELSE 0 END) CALCULADAS,
-                   SUM(CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN 1 ELSE 0 END) CERRADAS,
+                   COUNT(DISTINCT CASE WHEN ri.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
+                   COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS,
                    SUM(CASE WHEN UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')) IN ('ALTO','CRITICO','CRÍTICO') THEN 1 ELSE 0 END) ALTO_CRITICO,
                    SUM(CASE WHEN ri.MRR_REQUIERE_PLAN = 1 THEN 1 ELSE 0 END) PLAN_REQUERIDO,
                    0 PLANES_VENCIDOS
@@ -2544,8 +2559,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     {
         if (!string.IsNullOrWhiteSpace(filtro.Estado))
         {
-            where.Add("m.MRMAT_ESTADO = :repEstado");
-            parameters.Add(new OracleParameter("repEstado", filtro.Estado.Trim().ToUpperInvariant()));
+            if (filtro.Estado.Trim().Equals("EN_REVISION", StringComparison.OrdinalIgnoreCase))
+            {
+                // Compatibilidad con matrices calculadas antes de simplificar estados operativos.
+                where.Add("m.MRMAT_ESTADO IN ('EN_REVISION', 'CALCULADA')");
+            }
+            else
+            {
+                where.Add("m.MRMAT_ESTADO = :repEstado");
+                parameters.Add(new OracleParameter("repEstado", filtro.Estado.Trim().ToUpperInvariant()));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.SujetoTipo))
@@ -2767,7 +2790,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             SujetoIdExt = ToNullableString(reader["MRMAT_SUJETO_ID_EXT"]),
             Documento = ToNullableString(reader["MRMAT_DOCUMENTO"]),
             NombreSujeto = reader["MRMAT_NOMBRE_SUJETO"].ToString() ?? string.Empty,
-            Estado = reader["MRMAT_ESTADO"].ToString() ?? string.Empty,
+            Estado = NormalizarEstadoFuncional(reader["MRMAT_ESTADO"].ToString()),
             FechaEvaluacion = ToDate(reader["MRMAT_FECHA_EVALUACION"]),
             PuntajeInherente = ToNullableDecimal(reader["MRR_PUNTAJE_INHERENTE"]),
             NivelInherente = ToNullableString(reader["MRR_NIVEL_INHERENTE"]),
@@ -2791,6 +2814,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     }
 
     private static string? ToNullableString(object value) => value == DBNull.Value ? null : value?.ToString();
+    private static string NormalizarEstadoFuncional(string? estado)
+    {
+        var normalizado = (estado ?? string.Empty).Trim().ToUpperInvariant();
+        return normalizado == "CALCULADA" ? "EN_REVISION" : normalizado;
+    }
+
     private static int ToInt(object? value) => value == null || value == DBNull.Value ? 0 : Convert.ToInt32(value);
     private static long ToLong(object? value) => value == null || value == DBNull.Value ? 0 : Convert.ToInt64(value);
     private static decimal ToDecimal(object value) => value == DBNull.Value ? 0m : Convert.ToDecimal(value);

@@ -1291,7 +1291,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const etiquetas: Record<string, string> = {
       BORRADOR: 'Borrador',
       EN_EVALUACION: 'En evaluación',
-      CALCULADA: 'Calculada',
+      CALCULADA: 'En Revisión',
       EN_REVISION: 'En Revisión',
       OBSERVADA: 'Observada',
       APROBADA: 'Aprobada',

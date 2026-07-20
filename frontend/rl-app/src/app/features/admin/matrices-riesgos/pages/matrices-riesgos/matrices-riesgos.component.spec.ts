@@ -65,14 +65,14 @@ describe('MatricesRiesgosComponent', () => {
   it('lista matrices con los filtros activos y finaliza la carga', () => {
     const matrices = [{ matrizId: 7, nombreSujeto: 'Proveedor Uno' }];
     component.filtroBuscar.set('Proveedor');
-    component.filtroEstado.set('CALCULADA');
+    component.filtroEstado.set('EN_REVISION');
     component.filtroSujetoTipo.set('PROVEEDOR');
     service['listar'].mockReturnValue(of(matrices));
 
     component.cargarMatrices();
 
     expect(service['listar']).toHaveBeenCalledWith({
-      buscar: 'Proveedor', estado: 'CALCULADA', sujetoTipo: 'PROVEEDOR'
+      buscar: 'Proveedor', estado: 'EN_REVISION', sujetoTipo: 'PROVEEDOR'
     });
     expect(component.matrices()).toEqual(matrices);
     expect(component.cargando()).toBe(false);
@@ -456,6 +456,10 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.puedeEliminarMatriz({ estado: 'APROBADA' } as never)).toBe(false);
     expect(component.puedeEliminarMatriz({ estado: 'CERRADA' } as never)).toBe(false);
     expect(component.puedeEliminarMatriz({ estado: 'INACTIVA' } as never)).toBe(false);
+  });
+
+  it('presenta el estado tecnico calculada como en revision', () => {
+    expect(component.estadoEtiqueta('CALCULADA')).toBe('En Revisión');
   });
 
   it('reposiciona el historial debajo del listado cuando hay pocas matrices', () => {
