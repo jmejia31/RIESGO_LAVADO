@@ -691,6 +691,39 @@ export class MonitoreoListasComponent implements OnInit {
     doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
   }
 
+  // Encabezado exclusivo del reporte principal en orientación horizontal; evita reutilizar el formato de ficha individual.
+  private agregarEncabezadoReporteMonitoreoPdf(doc: jsPDF, titulo: string): number {
+    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
+    const sistema = this.configService.configSistema()?.nombreSistema || 'SGRLA-IHSS';
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 34, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text(institucion.toUpperCase(), 14, 12);
+
+    doc.setFontSize(17);
+    doc.text(titulo, 14, 22);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(203, 213, 225);
+    doc.text(`${sistema} | Generado: ${new Date().toLocaleString()}`, 14, 29);
+
+    doc.setFillColor(239, 246, 255);
+    doc.roundedRect(14, 42, pageWidth - 28, 13, 2, 2, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(30, 64, 175);
+    const filtros = doc.splitTextToSize(`Filtros aplicados: ${this.obtenerResumenFiltrosPrincipales()}`, pageWidth - 38);
+    doc.text(filtros, 19, 50);
+
+    return 64;
+  }
+
   private agregarDatosMemo(doc: jsPDF, y: number, titulo: string, generalData: string[][]): number {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
@@ -1892,37 +1925,81 @@ export class MonitoreoListasComponent implements OnInit {
     if (!reporte) return;
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    this.agregarEncabezadoPdf(doc, reporte.title);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const startY = this.agregarEncabezadoReporteMonitoreoPdf(doc, reporte.title);
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(71, 85, 105);
-    const filtros = doc.splitTextToSize(`Filtros aplicados: ${this.obtenerResumenFiltrosPrincipales()}`, 265);
-    doc.text(filtros, 14, 48);
+    const resumen = [
+      ['Registros filtrados', String(reporte.rows.length), 'Coincidencias visibles en la vista actual'],
+      ['Pendientes', String(this.datosFiltrados().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length), 'Requieren motivo o revisión'],
+      ['Con motivo', String(this.datosFiltrados().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length), 'Con sustento registrado'],
+      ['Cerrados / pasivos', String(this.datosFiltrados().filter(item => this.esCerradoPasivo(item)).length), 'Registros no activos']
+    ];
+    const resumenTabla = [
+      [...resumen[0], ...resumen[1]],
+      [...resumen[2], ...resumen[3]]
+    ];
 
     autoTable(doc, {
-      startY: 58,
+      startY,
+      body: resumenTabla,
+      theme: 'plain',
+      styles: {
+        fontSize: 8,
+        cellPadding: 2.5,
+        valign: 'middle',
+        lineColor: [226, 232, 240],
+        lineWidth: 0.1
+      },
+      columnStyles: {
+        0: { cellWidth: 66, fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+        1: { cellWidth: 14, fillColor: [248, 250, 252], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' },
+        2: { cellWidth: 58, fillColor: [248, 250, 252], textColor: [71, 85, 105] },
+        3: { cellWidth: 66, fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: 'bold' },
+        4: { cellWidth: 14, fillColor: [248, 250, 252], textColor: [30, 64, 175], fontStyle: 'bold', halign: 'center' },
+        5: { cellWidth: 58, fillColor: [248, 250, 252], textColor: [71, 85, 105] }
+      },
+      margin: { left: 14, right: 14 }
+    });
+
+    const tableStartY = ((doc as any).lastAutoTable?.finalY || startY) + 10;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(15, 23, 42);
+    doc.text('Detalle de coincidencias filtradas', 14, tableStartY - 3);
+
+    autoTable(doc, {
+      startY: tableStartY,
       head: [reporte.headers],
       body: reporte.rows,
       theme: 'striped',
       headStyles: {
-        fillColor: [15, 23, 42],
+        fillColor: [30, 64, 175],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 8
+        fontSize: 7.4,
+        halign: 'left',
+        minCellHeight: 7
       },
       styles: {
-        fontSize: 7.5,
-        cellPadding: 2,
+        fontSize: 7.2,
+        cellPadding: 2.2,
         overflow: 'linebreak',
-        valign: 'middle'
+        valign: 'middle',
+        textColor: [30, 41, 59],
+        lineColor: [226, 232, 240],
+        lineWidth: 0.1
       },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
       margin: { left: 14, right: 14 },
+      tableWidth: pageWidth - 28,
       didDrawPage: () => {
         const page = doc.getNumberOfPages();
+        doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(100, 116, 139);
-        doc.text(`Página ${page}`, 270, 200, { align: 'right' });
+        doc.text(`Página ${page}`, pageWidth - 14, pageHeight - 10, { align: 'right' });
       }
     });
 
