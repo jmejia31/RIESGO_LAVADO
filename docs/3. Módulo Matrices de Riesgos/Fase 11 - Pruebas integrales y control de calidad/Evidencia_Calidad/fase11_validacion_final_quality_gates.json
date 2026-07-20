@@ -1,0 +1,51 @@
+{
+  "documento": "Fase 11 - Pruebas integrales y control de calidad",
+  "modulo": "Módulo 3. Matrices de Riesgos",
+  "responsable": "Javier Mejía",
+  "fecha_validacion": "20/07/2026",
+  "estado": "Validación técnica final completada; pendiente aprobación formal",
+  "rama": "main",
+  "resultados": {
+    "backend": {
+      "comando": "dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release",
+      "pruebas": 81,
+      "fallidas": 0,
+      "resultado": "Aprobado"
+    },
+    "frontend": {
+      "comando": "npm run test:coverage",
+      "pruebas": 129,
+      "fallidas": 0,
+      "resultado": "Aprobado",
+      "cobertura": {
+        "sentencias": "32.07%",
+        "ramas": "28.23%",
+        "funciones": "30.73%",
+        "lineas": "32.27%"
+      }
+    },
+    "build_frontend": {
+      "comando": "npm run build",
+      "resultado": "Aprobado"
+    },
+    "e2e": {
+      "comando": "npm run e2e",
+      "pruebas": 6,
+      "fallidas": 0,
+      "resultado": "Aprobado"
+    }
+  },
+  "controles_confirmados": [
+    "No se modificó DNP.",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR.",
+    "No se cambió la política de permisos por módulo.",
+    "No se conectó Monitoreo de Listas con Matrices de Riesgos.",
+    "El frontend no calcula ponderaciones, escalas ni niveles de riesgo.",
+    "Las operaciones sensibles conservan motivo obligatorio y auditoría cuando aplica."
+  ],
+  "pendientes_no_bloqueantes": [
+    "Realizar recorrido visual manual con capturas finales si el equipo requiere evidencia gráfica adicional.",
+    "Ejecutar prueba de rendimiento con mayor volumen de registros en red institucional si el ambiente lo permite.",
+    "Revisar dependencias npm transitivas en una rama separada de mantenimiento, sin mezclarlo con Fase 11."
+  ]
+}
