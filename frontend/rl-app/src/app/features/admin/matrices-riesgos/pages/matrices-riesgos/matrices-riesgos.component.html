@@ -76,7 +76,7 @@
         <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalMatrices ?? 0 }}</p>
       </div>
       <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-bold uppercase text-gray-400">Calculadas</p>
+        <p class="text-xs font-bold uppercase text-gray-400">Evaluadas</p>
         <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalCalculadas ?? 0 }}</p>
       </div>
       <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
@@ -227,13 +227,8 @@
                     <div class="flex flex-wrap justify-end gap-2">
                       <button type="button" (click)="editarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
+                        [disabled]="guardando() || !puedeEditarMatriz(matriz)">
                         Editar
-                      </button>
-                      <button *ngIf="!matriz.puntajeResidual" type="button" (click)="calcularMatriz(matriz)"
-                        class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
-                        Calcular
                       </button>
                       <button type="button" (click)="eliminarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"

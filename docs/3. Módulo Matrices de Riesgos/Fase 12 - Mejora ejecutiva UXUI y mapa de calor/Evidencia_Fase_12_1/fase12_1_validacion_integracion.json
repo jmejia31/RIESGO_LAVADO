@@ -1,0 +1,11 @@
+{
+  "fase": "12.1 - Orden funcional y reglas",
+  "fecha": "2026-07-21T15:11:58+00:00",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "integracion_politica_estados": true,
+  "boton_calcular_manual_retirado": true,
+  "kpi_estado_tecnico_retirado": true,
+  "pruebas_frontend": "Fallidas",
+  "build_angular": "Aprobado",
+  "resultado": "Requiere correccion"
+}

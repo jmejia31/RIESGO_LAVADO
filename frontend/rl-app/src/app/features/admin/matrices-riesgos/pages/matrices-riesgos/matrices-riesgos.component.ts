@@ -26,9 +26,16 @@ import {
   VariableMetodologia
 } from '../../models/matrices-riesgos.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
+import {
+  ESTADOS_MATRIZ_VISIBLES,
+  etiquetaEstadoMatriz,
+  puedeEditarMatriz as puedeEditarMatrizPorEstado,
+  puedeEliminarMatriz as puedeEliminarMatrizPorEstado,
+  transicionesPermitidasMatriz
+} from '../../domain/matrices-riesgos-estados.policy';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
-type ModalTipo = 'calcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
+type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
   variableId: number;
@@ -201,10 +208,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly criterioEditandoId = signal<number | null>(null);
   readonly capturasVariables = signal<CapturaVariable[]>([]);
 
-  // Estados visibles para operación diaria. Los estados técnicos de cálculo
-  // quedan fuera de filtros y botones porque el sistema recalcula al guardar.
-  readonly estadosDisponibles = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
-  readonly estadosGestionables = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
+  // Estados funcionales aprobados para la operación diaria.
+  // Los estados técnicos se normalizan mediante una única política de dominio.
+  readonly estadosDisponibles = [...ESTADOS_MATRIZ_VISIBLES];
   readonly estadosPlan = ['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO'];
   readonly fechaActualIso = this.fechaLocalIso(new Date());
   readonly fechaMinimaReporteInicio = '2000-01-01';
@@ -703,18 +709,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  calcularMatriz(matriz: MatrizRiesgoResumen): void {
-    this.abrirModal({
-      tipo: 'calcular',
-      titulo: 'Calcular matriz',
-      descripcion: `Se evaluará la matriz ${matriz.matrizId} con los criterios vigentes. Revise que la información capturada esté completa antes de continuar.`,
-      textoConfirmar: 'Calcular',
-      requiereMotivo: false,
-      matriz,
-      tono: 'normal'
-    });
-  }
-
   cambiarEstado(matriz: MatrizRiesgoResumen, estado: string): void {
     const activandoMatriz = matriz.estado === 'INACTIVA' && estado === 'EN_REVISION';
     const inactivandoMatriz = estado === 'INACTIVA';
@@ -787,9 +781,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.modalError.set(null);
     switch (operacion.tipo) {
-      case 'calcular':
-        this.ejecutarCalculo(operacion.matriz!);
-        break;
       case 'estado':
         this.ejecutarCambioEstado(operacion.matriz!, operacion.estado!, motivo);
         break;
@@ -1369,39 +1360,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   estadoEtiqueta(estado?: string | null): string {
-    const normalizado = (estado ?? '').trim().toUpperCase();
-    const etiquetas: Record<string, string> = {
-      BORRADOR: 'Borrador',
-      EN_EVALUACION: 'En evaluación',
-      CALCULADA: 'En Revisión',
-      EN_REVISION: 'En Revisión',
-      OBSERVADA: 'Observada',
-      APROBADA: 'Aprobada',
-      CERRADA: 'Cerrada',
-      INACTIVA: 'Inactiva'
-    };
-    return etiquetas[normalizado] ?? (estado || '-');
+    return etiquetaEstadoMatriz(estado);
   }
 
-  estadosGestionablesParaMatriz(estadoActual?: string | null): string[] {
-    // Si la matriz está inactiva, la única acción visible es activarla.
-    // El estado operativo de reactivación es En Revisión para obligar revisión posterior.
-    return (estadoActual ?? '').toUpperCase() === 'INACTIVA'
-      ? ['EN_REVISION']
-      : this.estadosGestionables;
+  estadosGestionablesParaMatriz(estadoActual?: string | null): readonly string[] {
+    return transicionesPermitidasMatriz(estadoActual);
+  }
+
+  puedeEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
+    return puedeEditarMatrizPorEstado(matriz.estado);
   }
 
   puedeEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
-    const estado = (matriz.estado ?? '').toUpperCase();
-    // La eliminación lógica solo queda disponible antes del cierre operativo.
-    // Una matriz aprobada, cerrada o ya inactiva forma parte del expediente y debe conservarse.
-    return !['APROBADA', 'CERRADA', 'INACTIVA'].includes(estado);
+    return puedeEliminarMatrizPorEstado(matriz.estado);
   }
 
   mensajeBloqueoEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
     return this.puedeEliminarMatriz(matriz)
       ? 'Eliminar matriz'
-      : 'La matriz no puede eliminarse porque ya fue aprobada, cerrada o se encuentra inactiva.';
+      : 'La matriz solo puede eliminarse mientras se encuentra En Revisión.';
   }
 
   textoBotonEstado(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle, estado: string): string {
@@ -1423,14 +1400,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (operacion.requiereMotivo && !motivo) return false;
     if (operacion.tipo === 'estado' && this.existeMotivoCambioEstado(motivo)) return false;
     return true;
-  }
-
-  private ejecutarCalculo(matriz: MatrizRiesgoResumen): void {
-    this.guardando.set(true);
-    this.service.calcular(matriz.matrizId, this.tipoCalculoParaSujeto(matriz.sujetoTipo)).subscribe({
-      next: () => this.refrescarDespuesAccion(matriz.matrizId, 'Matriz calculada correctamente.'),
-      error: err => this.finalizarAccionConError(err, 'No se pudo calcular la matriz.')
-    });
   }
 
   private ejecutarCambioEstado(matriz: MatrizRiesgoResumen, estado: string, motivo: string): void {
