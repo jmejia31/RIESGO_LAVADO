@@ -1,0 +1,60 @@
+{
+  "fase": "12.4 - Reporteria, pruebas integrales y cierre",
+  "fecha": "2026-07-21",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "commit_funcional": "135b8885a324c268686193525b70cb9f2bfec33a",
+  "workflow_integracion": {
+    "id": 29863646296,
+    "nombre": "Fase 12.4 Integracion robusta",
+    "resultado": "success"
+  },
+  "resultado_funcional": {
+    "dashboard_y_reporteria_comparten_filtros": true,
+    "excel_descargado_desde_backend": true,
+    "pdf_descargado_desde_backend": true,
+    "se_elimino_doble_generacion_en_frontend": true,
+    "incluye_matrices_sin_evaluacion": true,
+    "incluye_mapa_transicion_inherente_residual": true,
+    "incluye_todos_los_tipos_sujeto": [
+      "PROVEEDOR",
+      "CLIENTE_PATRONO",
+      "EMPLEADO",
+      "AREA",
+      "PROCESO",
+      "CASO_POSITIVO",
+      "INSTITUCIONAL"
+    ]
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 84,
+      "fallidas": 0,
+      "omitidas": 0,
+      "cobertura_lineas_pct": 15.44,
+      "cobertura_ramas_pct": 17.39
+    },
+    "frontend": {
+      "archivos_aprobados": 14,
+      "pruebas_aprobadas": 146,
+      "fallidas": 0,
+      "cobertura_sentencias_pct": 32.53,
+      "cobertura_ramas_pct": 27.94,
+      "cobertura_funciones_pct": 31.66,
+      "cobertura_lineas_pct": 32.79
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    },
+    "build_angular": "aprobado",
+    "quality_gates": "aprobados"
+  },
+  "restricciones_respetadas": {
+    "dnp_sin_modificaciones": true,
+    "control_almacen_proveedor_sin_modificaciones": true,
+    "monitoreo_listas_sin_integracion_con_matrices": true,
+    "calculo_riesgo_permanece_en_backend": true,
+    "sin_datos_quemados": true
+  },
+  "estado": "Validacion integral aprobada; pendiente control oficial independiente y aprobacion formal de Javier"
+}
