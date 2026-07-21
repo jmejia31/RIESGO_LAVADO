@@ -1,11 +1,49 @@
 {
   "fase": "12.1 - Orden funcional y reglas",
-  "fecha": "2026-07-21T15:11:58+00:00",
+  "fecha_validacion": "2026-07-21T15:29:26+00:00",
   "rama": "fase-12-mejora-ejecutiva-matrices",
+  "estado": "Validación técnica completada",
   "integracion_politica_estados": true,
+  "estados_funcionales": [
+    "EN_REVISION",
+    "APROBADA",
+    "CERRADA",
+    "INACTIVA"
+  ],
   "boton_calcular_manual_retirado": true,
+  "recalculo_automatico_conservado": true,
   "kpi_estado_tecnico_retirado": true,
-  "pruebas_frontend": "Fallidas",
-  "build_angular": "Aprobado",
-  "resultado": "Requiere correccion"
+  "acciones_por_estado_centralizadas": true,
+  "pruebas_frontend": {
+    "archivos": 14,
+    "pruebas": 137,
+    "aprobadas": 137,
+    "fallidas": 0,
+    "resultado": "Aprobado"
+  },
+  "cobertura_frontend": {
+    "sentencias": 31.64,
+    "ramas": 27.03,
+    "funciones": 30.26,
+    "lineas": 31.96
+  },
+  "build_angular": {
+    "resultado": "Aprobado",
+    "tamano_inicial_kb": 377.45,
+    "transferencia_estimada_kb": 94.03
+  },
+  "workflow_validacion": {
+    "run_id": 29844134979,
+    "artifact_id": 8500605813,
+    "resultado": "Correcto"
+  },
+  "restricciones_confirmadas": [
+    "No se modificó DNP.",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR.",
+    "No se conectó Monitoreo de Listas con Matrices de Riesgos.",
+    "No se trasladó cálculo de riesgo al frontend.",
+    "No se modificó main."
+  ],
+  "resultado_general": "Correcto",
+  "decision": "Fase 12.1 completada técnicamente; habilitada la continuidad de Fase 12.2."
 }
