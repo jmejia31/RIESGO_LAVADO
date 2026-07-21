@@ -1,0 +1,42 @@
+name: Fase 12.3 Inventario
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventario:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout rama
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-mejora-ejecutiva-matrices
+          fetch-depth: 0
+
+      - name: Inventariar estructura y conceptos
+        shell: bash
+        run: |
+          find backend frontend database db scripts docs -type f 2>/dev/null | sort > fase12_3_archivos.txt
+          grep -RniE --exclude-dir=.git --exclude='*.docx' --exclude='*.pdf' --exclude='*.xls' --exclude='*.xlsx' \
+            'probabilidad|impacto|heatmap|mapa de calor|MatrizCalculoResultadoDto|PuntajeInherente|PuntajeResidual|MRR_PUNTAJE|MRR_NIVEL' \
+            backend frontend database db scripts docs 2>/dev/null > fase12_3_coincidencias.txt || true
+          grep -RniE --exclude-dir=.git \
+            'CREATE TABLE RL_MR_|ALTER TABLE RL_MR_|MRR_|MRMAT_|MRD_' \
+            database db scripts docs 2>/dev/null > fase12_3_esquema_oracle.txt || true
+
+      - name: Publicar inventario
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-3-inventario-${{ github.run_id }}
+          path: |
+            fase12_3_archivos.txt
+            fase12_3_coincidencias.txt
+            fase12_3_esquema_oracle.txt
+          retention-days: 3
