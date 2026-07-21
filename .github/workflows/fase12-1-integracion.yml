@@ -43,18 +43,39 @@ jobs:
         working-directory: frontend/rl-app
         run: npm ci
 
-      - name: Pruebas frontend
+      - name: Pruebas frontend con diagnostico
+        id: frontend_tests
         working-directory: frontend/rl-app
-        run: npm run test:coverage
+        shell: bash
+        run: |
+          set +e
+          npm run test:coverage 2>&1 | tee /tmp/fase12_1_frontend_tests.log
+          codigo=${PIPESTATUS[0]}
+          echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Build Angular
+      - name: Build Angular con diagnostico
+        id: angular_build
         working-directory: frontend/rl-app
-        run: npm run build
+        shell: bash
+        run: |
+          set +e
+          npm run build 2>&1 | tee /tmp/fase12_1_angular_build.log
+          codigo=${PIPESTATUS[0]}
+          echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Generar evidencia
+      - name: Guardar diagnostico y evidencia
         shell: pwsh
         run: |
-          $ruta = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1/fase12_1_validacion_integracion.json"
+          $base = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1"
+          $testsSalida = Get-Content "/tmp/fase12_1_frontend_tests.log" -Raw
+          $buildSalida = Get-Content "/tmp/fase12_1_angular_build.log" -Raw
+          $testsSalida | Set-Content -Path "$base/fase12_1_frontend_tests.log" -Encoding UTF8
+          $buildSalida | Set-Content -Path "$base/fase12_1_angular_build.log" -Encoding UTF8
+
+          $testsOk = "${{ steps.frontend_tests.outputs.exit_code }}" -eq "0"
+          $buildOk = "${{ steps.angular_build.outputs.exit_code }}" -eq "0"
           $obj = [ordered]@{
             fase = "12.1 - Orden funcional y reglas"
             fecha = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssK")
@@ -62,13 +83,13 @@ jobs:
             integracion_politica_estados = $true
             boton_calcular_manual_retirado = $true
             kpi_estado_tecnico_retirado = $true
-            pruebas_frontend = "Aprobadas"
-            build_angular = "Aprobado"
-            resultado = "Correcto"
+            pruebas_frontend = $(if ($testsOk) { "Aprobadas" } else { "Fallidas" })
+            build_angular = $(if ($buildOk) { "Aprobado" } else { "Fallido" })
+            resultado = $(if ($testsOk -and $buildOk) { "Correcto" } else { "Requiere correccion" })
           }
-          $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $ruta -Encoding UTF8
+          $obj | ConvertTo-Json -Depth 5 | Set-Content -Path "$base/fase12_1_validacion_integracion.json" -Encoding UTF8
 
-      - name: Commit de integracion validada
+      - name: Commit de integracion y diagnostico
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -78,4 +99,12 @@ jobs:
           else
             git commit -m "feat(matrices): integra reglas operativas fase 12.1"
             git push origin HEAD:fase-12-mejora-ejecutiva-matrices
+          fi
+
+      - name: Validar resultado final
+        shell: bash
+        run: |
+          if [ "${{ steps.frontend_tests.outputs.exit_code }}" != "0" ] || [ "${{ steps.angular_build.outputs.exit_code }}" != "0" ]; then
+            echo "La integración requiere corrección. Revise la evidencia versionada."
+            exit 1
           fi
