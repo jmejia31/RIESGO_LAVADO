@@ -1,0 +1,18 @@
+{
+  "ajuste": "Mapa de calor navegable y cobertura total de matrices",
+  "estado": "validado_ci",
+  "reglas": [
+    "Todas las matrices operativas se conservan mediante LEFT JOIN",
+    "Las matrices sin ambos niveles se agrupan como SIN_CALCULO",
+    "Cualquier cuadrante puede seleccionarse, incluso con total cero",
+    "La selección muestra un panel inmediato con registros y acceso al detalle",
+    "El resultado INSTITUCIONAL se mantiene como consolidado por matriz y no como tipo de sujeto"
+  ],
+  "quality_gates": "aprobados",
+  "validaciones": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  }
+}

@@ -46,6 +46,19 @@ interface CapturaVariable {
   fuenteDato: string;
 }
 
+interface CeldaMapaVista {
+  nivelInherente: string;
+  etiquetaInherente: string;
+  nivelResidual: string;
+  etiquetaResidual: string;
+  total: number;
+  promedioInherente: number;
+  promedioResidual: number;
+  color: string;
+  colorBorde: string;
+  colorTexto: string;
+}
+
 interface ModalOperacion {
   tipo: ModalTipo;
   titulo: string;
@@ -137,6 +150,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   modalMotivoTexto = '';
 
   readonly dashboard = signal<MatrizRiesgoDashboard | null>(null);
+  readonly seleccionMapa = signal<CeldaMapaVista | null>(null);
+  readonly matricesCuadrante = signal<MatrizRiesgoResumen[]>([]);
+  readonly cargandoCuadrante = signal(false);
   readonly reporte = signal<MatricesRiesgoReporte | null>(null);
   readonly metodologia = signal<MetodologiaMatrices | null>(null);
   readonly matrices = signal<MatrizRiesgoResumen[]>([]);
@@ -285,52 +301,86 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.construirResumenNiveles(this.dashboard()?.porNivelResidual ?? [])
   );
 
+  readonly nivelesMapa = computed(() => [
+    ...this.escalasRiesgoOrdenadas().map(escala => ({ valor: escala.nivel, etiqueta: escala.nivel })),
+    { valor: 'SIN_CALCULO', etiqueta: 'Sin evaluar' }
+  ]);
+
   readonly heatmapFilas = computed(() => {
-    const nivelesAsc = this.escalasRiesgoOrdenadas();
-    const filas = [...nivelesAsc].reverse();
+    const niveles = this.nivelesMapa();
+    const nivelesRiesgo = niveles.filter(nivel => nivel.valor !== 'SIN_CALCULO');
+    const sinEvaluar = niveles.find(nivel => nivel.valor === 'SIN_CALCULO')!;
+    const filas = [...nivelesRiesgo].reverse().concat(sinEvaluar);
     const datos = new Map((this.dashboard()?.mapaTransicion ?? []).map(celda => [
       `${this.normalizarNivelMapa(celda.nivelInherente)}|${this.normalizarNivelMapa(celda.nivelResidual)}`,
       celda
     ]));
 
     return filas.map(inherente => ({
-      nivelInherente: inherente.nivel,
-      celdas: nivelesAsc.map(residual => {
-        const dato = datos.get(`${this.normalizarNivelMapa(inherente.nivel)}|${this.normalizarNivelMapa(residual.nivel)}`);
+      nivelInherente: inherente.valor,
+      etiquetaInherente: inherente.etiqueta,
+      celdas: niveles.map(residual => {
+        const dato = datos.get(`${this.normalizarNivelMapa(inherente.valor)}|${this.normalizarNivelMapa(residual.valor)}`);
         return {
-          nivelInherente: inherente.nivel,
-          nivelResidual: residual.nivel,
+          nivelInherente: inherente.valor,
+          etiquetaInherente: inherente.etiqueta,
+          nivelResidual: residual.valor,
+          etiquetaResidual: residual.etiqueta,
           total: dato?.total ?? 0,
           promedioInherente: dato?.promedioInherente ?? 0,
           promedioResidual: dato?.promedioResidual ?? 0,
-          color: this.colorMapaTransicion(inherente.nivel, residual.nivel),
-          colorBorde: this.colorNivel(inherente.nivel),
-          colorTexto: this.colorTextoMapa(inherente.nivel, residual.nivel)
-        };
+          color: this.colorMapaTransicion(inherente.valor, residual.valor),
+          colorBorde: this.colorNivel(inherente.valor),
+          colorTexto: this.colorTextoMapa(inherente.valor, residual.valor)
+        } satisfies CeldaMapaVista;
       })
     }));
   });
 
-  readonly nivelesMapaColumnas = computed(() => this.escalasRiesgoOrdenadas().map(nivel => nivel.nivel));
+  readonly nivelesMapaColumnas = computed(() => this.nivelesMapa());
 
-  seleccionarCeldaMapa(celda: { nivelInherente: string; nivelResidual: string }): void {
-    this.reporteFiltro.update(filtro => ({
-      ...filtro,
+  seleccionarCeldaMapa(celda: CeldaMapaVista): void {
+    this.seleccionMapa.set(celda);
+    this.matricesCuadrante.set([]);
+    this.cargandoCuadrante.set(true);
+
+    const filtroCuadrante: MatrizRiesgoReporteFiltro = {
+      ...this.reporteFiltro(),
       nivelInherente: celda.nivelInherente,
       nivelResidual: celda.nivelResidual
-    }));
-    this.cargarDashboard();
-    this.cargarReporte();
+    };
+
+    this.service.dashboard(filtroCuadrante).subscribe({
+      next: datos => {
+        this.matricesCuadrante.set(datos.matricesFiltradas ?? []);
+        this.cargandoCuadrante.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudieron consultar las matrices del cuadrante.'));
+        this.matricesCuadrante.set([]);
+        this.cargandoCuadrante.set(false);
+      }
+    });
   }
 
   limpiarSeleccionMapa(): void {
-    this.reporteFiltro.update(filtro => ({
-      ...filtro,
-      nivelInherente: undefined,
-      nivelResidual: undefined
-    }));
-    this.cargarDashboard();
-    this.cargarReporte();
+    this.seleccionMapa.set(null);
+    this.matricesCuadrante.set([]);
+    this.cargandoCuadrante.set(false);
+  }
+
+  esCeldaMapaSeleccionada(celda: CeldaMapaVista): boolean {
+    const seleccion = this.seleccionMapa();
+    return !!seleccion
+      && this.normalizarNivelMapa(seleccion.nivelInherente) === this.normalizarNivelMapa(celda.nivelInherente)
+      && this.normalizarNivelMapa(seleccion.nivelResidual) === this.normalizarNivelMapa(celda.nivelResidual);
+  }
+
+  textoPromedioCelda(celda: CeldaMapaVista): string {
+    if (celda.nivelInherente === 'SIN_CALCULO' || celda.nivelResidual === 'SIN_CALCULO') {
+      return 'Nivel pendiente';
+    }
+    return `${celda.promedioInherente.toFixed(2)} → ${celda.promedioResidual.toFixed(2)}`;
   }
 
   abrirMatrizDesdeDashboard(matrizId: number): void {
@@ -373,6 +423,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.error.set(null);
     this.mensaje.set(null);
     this.matricesDuplicadas.set([]);
+    this.limpiarSeleccionMapa();
     this.matrizSeleccionada.set(null);
     this.historial.set([]);
     this.planesAccion.set([]);
@@ -444,6 +495,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.limpiarSeleccionMapa();
     this.reporteFiltro.set(filtroNuevo);
     this.programarCargaReporte();
   }
@@ -456,6 +508,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   limpiarFiltrosReporte(): void {
+    this.limpiarSeleccionMapa();
     this.reporteFiltro.set({});
     this.cargarDashboard();
     this.cargarReporte();
@@ -1452,8 +1505,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   colorMapaTransicion(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
+      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
+      return '#cbd5e1';
+    }
+
     // Paleta visual diagonal inspirada en el mapa institucional de referencia.
-    // Los niveles ya vienen calculados desde backend; aqui solo se representa su intensidad.
+    // Los niveles ya vienen calculados desde backend; aquí solo se representa su intensidad.
     const paleta = ['#4ade80', '#86efac', '#bef264', '#fde047', '#facc15', '#fb923c', '#f97316', '#ef4444', '#dc2626'];
     const niveles = this.escalasRiesgoOrdenadas();
     const maximo = Math.max(1, niveles.length - 1);
@@ -1464,6 +1522,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   colorTextoMapa(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
+      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
+      return '#334155';
+    }
     const color = this.colorMapaTransicion(nivelInherente, nivelResidual);
     return ['#f97316', '#ef4444', '#dc2626'].includes(color) ? '#ffffff' : '#0f172a';
   }

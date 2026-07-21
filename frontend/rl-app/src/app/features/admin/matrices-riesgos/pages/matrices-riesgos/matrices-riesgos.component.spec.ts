@@ -117,12 +117,56 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.colorTextoMapa('Crítico', 'Crítico')).toBe('#ffffff');
   });
 
-  it('aplica los niveles de una celda como filtros del dashboard', () => {
-    component.seleccionarCeldaMapa({ nivelInherente: 'Alto', nivelResidual: 'Medio' });
+  it('consulta y muestra las matrices del cuadrante sin colapsar el mapa principal', () => {
+    const matriz = { matrizId: 31, nombreSujeto: 'Proveedor del cuadrante' };
+    service['dashboard'].mockReturnValue(of({ matricesFiltradas: [matriz] }));
+    const celda = {
+      nivelInherente: 'Alto', etiquetaInherente: 'Alto',
+      nivelResidual: 'Medio', etiquetaResidual: 'Medio',
+      total: 1, promedioInherente: 4.2, promedioResidual: 3.1,
+      color: '#f97316', colorBorde: '#f97316', colorTexto: '#ffffff'
+    };
 
-    expect(component.reporteFiltro()).toEqual(expect.objectContaining({ nivelInherente: 'Alto', nivelResidual: 'Medio' }));
-    expect(service['dashboard']).toHaveBeenCalled();
-    expect(service['reporte']).toHaveBeenCalled();
+    component.seleccionarCeldaMapa(celda);
+
+    expect(component.seleccionMapa()).toEqual(celda);
+    expect(component.reporteFiltro()).toEqual({});
+    expect(service['dashboard']).toHaveBeenCalledWith({ nivelInherente: 'Alto', nivelResidual: 'Medio' });
+    expect(component.matricesCuadrante()).toEqual([matriz]);
+    expect(component.cargandoCuadrante()).toBe(false);
+  });
+
+  it('incluye matrices sin nivel completo en la fila y columna Sin evaluar', () => {
+    component.metodologia.set({
+      escalasRiesgo: [{ nivel: 'Bajo', valorMinimo: 1, color: '#22c55e' }]
+    } as never);
+    component.dashboard.set({
+      totalMatrices: 2,
+      mapaTransicion: [
+        { nivelInherente: 'SIN_CALCULO', nivelResidual: 'Bajo', total: 2, promedioInherente: 0, promedioResidual: 2 }
+      ],
+      porNivelInherente: [], porNivelResidual: []
+    } as never);
+
+    const fila = component.heatmapFilas().find(item => item.nivelInherente === 'SIN_CALCULO');
+    const celda = fila?.celdas.find(item => item.nivelResidual === 'Bajo');
+
+    expect(component.nivelesMapaColumnas().some(item => item.valor === 'SIN_CALCULO')).toBe(true);
+    expect(celda).toEqual(expect.objectContaining({ total: 2, etiquetaInherente: 'Sin evaluar' }));
+  });
+
+  it('permite seleccionar un cuadrante vacío y muestra resultado vacío controlado', () => {
+    service['dashboard'].mockReturnValue(of({ matricesFiltradas: [] }));
+    component.seleccionarCeldaMapa({
+      nivelInherente: 'Bajo', etiquetaInherente: 'Bajo',
+      nivelResidual: 'Crítico', etiquetaResidual: 'Crítico',
+      total: 0, promedioInherente: 0, promedioResidual: 0,
+      color: '#facc15', colorBorde: '#22c55e', colorTexto: '#0f172a'
+    });
+
+    expect(service['dashboard']).toHaveBeenCalledWith({ nivelInherente: 'Bajo', nivelResidual: 'Crítico' });
+    expect(component.seleccionMapa()?.total).toBe(0);
+    expect(component.matricesCuadrante()).toEqual([]);
   });
 
   it('lista matrices con los filtros activos y finaliza la carga', () => {

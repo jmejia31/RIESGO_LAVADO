@@ -770,6 +770,29 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Equal("Medio", recibido.NivelResidual);
     }
 
+
+    [Fact]
+    public async Task Dashboard_SinCalculo_ConservaFiltroEspecialParaRepositorio()
+    {
+        var service = CrearServicio(out var repo, out _);
+        MatrizRiesgoReporteFiltroDto? recibido = null;
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerDashboardAsync), args =>
+        {
+            recibido = Assert.IsType<MatrizRiesgoReporteFiltroDto>(args[0]);
+            return Task.FromResult(new MatricesRiesgoDashboardDto());
+        });
+
+        var result = await service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+        {
+            NivelInherente = " SIN_CALCULO ",
+            NivelResidual = " SIN_CALCULO "
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal("SIN_CALCULO", recibido?.NivelInherente);
+        Assert.Equal("SIN_CALCULO", recibido?.NivelResidual);
+    }
+
     private static MatricesRiesgosAppService CrearServicio(out InterfaceStub repoStub, out InterfaceStub motorStub, IConfiguration? configuration = null)
     {
         var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);

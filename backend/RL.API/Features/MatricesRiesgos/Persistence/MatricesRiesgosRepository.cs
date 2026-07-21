@@ -2360,11 +2360,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var cmd = conn.CreateCommand();
         cmd.BindByName = true;
         cmd.CommandText = $@"
-            SELECT COUNT(*) TOTAL,
-                   COUNT(DISTINCT CASE WHEN ri.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
+            SELECT COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   COUNT(DISTINCT CASE
+                       WHEN ri.MRR_ID IS NOT NULL
+                        AND ri.MRR_NIVEL_INHERENTE IS NOT NULL
+                        AND ri.MRR_NIVEL_RESIDUAL IS NOT NULL
+                       THEN m.MRMAT_ID
+                   END) CALCULADAS,
                    COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS,
-                   SUM(CASE WHEN UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')) IN ('ALTO','CRITICO','CRÍTICO') THEN 1 ELSE 0 END) ALTO_CRITICO,
-                   SUM(CASE WHEN ri.MRR_REQUIERE_PLAN = 1 THEN 1 ELSE 0 END) PLAN_REQUERIDO,
+                   COUNT(DISTINCT CASE WHEN UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')) IN ('ALTO','CRITICO','CRÍTICO') THEN m.MRMAT_ID END) ALTO_CRITICO,
+                   COUNT(DISTINCT CASE WHEN ri.MRR_REQUIERE_PLAN = 1 THEN m.MRMAT_ID END) PLAN_REQUERIDO,
                    0 PLANES_VENCIDOS
               FROM RL_MR_MATRICES m
               JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
@@ -2504,7 +2509,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     {
         var nivelCol = tipo.Equals("INHERENTE", StringComparison.OrdinalIgnoreCase) ? "ri.MRR_NIVEL_INHERENTE" : "ri.MRR_NIVEL_RESIDUAL";
         var puntajeCol = tipo.Equals("INHERENTE", StringComparison.OrdinalIgnoreCase) ? "ri.MRR_PUNTAJE_INHERENTE" : "ri.MRR_PUNTAJE_RESIDUAL";
-        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1", "ri.MRR_ES_VIGENTE = 1", "ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'" };
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
         var parameters = new List<OracleParameter>();
         AgregarFiltrosReporte(filtro, where, parameters);
 
@@ -2512,15 +2517,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.BindByName = true;
         cmd.CommandText = $@"
             SELECT NVL({nivelCol}, 'SIN_CALCULO') NIVEL,
-                   COUNT(*) TOTAL,
-                   ROUND(AVG(NVL({puntajeCol}, 0)), 4) PROMEDIO
+                   COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   ROUND(AVG({puntajeCol}), 4) PROMEDIO
               FROM RL_MR_MATRICES m
               JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
-              JOIN RL_MR_RESULTADOS ri
+              LEFT JOIN RL_MR_RESULTADOS ri
                 ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+               AND ri.MRR_ES_VIGENTE = 1
+               AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
              WHERE {string.Join(" AND ", where)}
              GROUP BY NVL({nivelCol}, 'SIN_CALCULO')
-             ORDER BY MIN(NVL({puntajeCol}, 0))";
+             ORDER BY MIN(NVL({puntajeCol}, -1))";
 
         foreach (var parameter in parameters)
             cmd.Parameters.Add(parameter);
@@ -2542,12 +2549,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     private async Task<List<MatrizRiesgoMapaTransicionDto>> ObtenerMapaTransicionDashboardAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
     {
-        var where = new List<string>
-        {
-            "m.MRMAT_ESTADO_REGISTRO = 1",
-            "ri.MRR_ES_VIGENTE = 1",
-            "ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'"
-        };
+        // INSTITUCIONAL identifica el resultado consolidado de la matriz, no el tipo de sujeto.
+        // El LEFT JOIN conserva absolutamente todas las matrices operativas; las que no tienen
+        // ambos niveles completos se agrupan explícitamente como SIN_CALCULO.
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
         var parameters = new List<OracleParameter>();
         AgregarFiltrosReporte(filtro, where, parameters);
 
@@ -2556,18 +2561,20 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.CommandText = $@"
             SELECT NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO') NIVEL_INHERENTE,
                    NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NIVEL_RESIDUAL,
-                   COUNT(*) TOTAL,
-                   ROUND(AVG(NVL(ri.MRR_PUNTAJE_INHERENTE, 0)), 4) PROMEDIO_INHERENTE,
-                   ROUND(AVG(NVL(ri.MRR_PUNTAJE_RESIDUAL, 0)), 4) PROMEDIO_RESIDUAL
+                   COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   ROUND(AVG(ri.MRR_PUNTAJE_INHERENTE), 4) PROMEDIO_INHERENTE,
+                   ROUND(AVG(ri.MRR_PUNTAJE_RESIDUAL), 4) PROMEDIO_RESIDUAL
               FROM RL_MR_MATRICES m
               JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
-              JOIN RL_MR_RESULTADOS ri
+              LEFT JOIN RL_MR_RESULTADOS ri
                 ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+               AND ri.MRR_ES_VIGENTE = 1
+               AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
              WHERE {string.Join(" AND ", where)}
              GROUP BY NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO'),
                       NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')
-             ORDER BY MIN(ri.MRR_PUNTAJE_INHERENTE) DESC,
-                      MIN(ri.MRR_PUNTAJE_RESIDUAL)";
+             ORDER BY MIN(NVL(ri.MRR_PUNTAJE_INHERENTE, -1)) DESC,
+                      MIN(NVL(ri.MRR_PUNTAJE_RESIDUAL, -1))";
 
         foreach (var parameter in parameters)
             cmd.Parameters.Add(parameter);
@@ -2770,14 +2777,30 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         if (!string.IsNullOrWhiteSpace(filtro.NivelInherente))
         {
-            where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_INHERENTE, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelInherente");
-            parameters.Add(new OracleParameter("repNivelInherente", NormalizarTexto(filtro.NivelInherente)));
+            var nivelInherente = NormalizarTexto(filtro.NivelInherente);
+            if (nivelInherente == "SIN_CALCULO")
+            {
+                where.Add("ri.MRR_NIVEL_INHERENTE IS NULL");
+            }
+            else
+            {
+                where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_INHERENTE, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelInherente");
+                parameters.Add(new OracleParameter("repNivelInherente", nivelInherente));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.NivelResidual))
         {
-            where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelResidual");
-            parameters.Add(new OracleParameter("repNivelResidual", NormalizarTexto(filtro.NivelResidual)));
+            var nivelResidual = NormalizarTexto(filtro.NivelResidual);
+            if (nivelResidual == "SIN_CALCULO")
+            {
+                where.Add("ri.MRR_NIVEL_RESIDUAL IS NULL");
+            }
+            else
+            {
+                where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelResidual");
+                parameters.Add(new OracleParameter("repNivelResidual", nivelResidual));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.ModeloVersion))

@@ -107,7 +107,31 @@ async function stubAuthenticatedMatrices(page: Page) {
     if (path.endsWith('/metodologia/vigente')) {
       datos = metodologiaMatrices;
     } else if (path.endsWith('/dashboard')) {
-      datos = dashboardEjecutivo;
+      const url = new URL(route.request().url());
+      const nivelInherente = url.searchParams.get('nivelInherente');
+      const nivelResidual = url.searchParams.get('nivelResidual');
+      const coincideCuadrante = nivelInherente === 'Alto' && nivelResidual === 'Medio';
+      datos = nivelInherente || nivelResidual
+        ? {
+            ...dashboardEjecutivo,
+            filtro: { nivelInherente, nivelResidual },
+            matricesFiltradas: coincideCuadrante ? [{
+              matrizId: 91,
+              modeloId: 1,
+              modeloVersion: '2026.1',
+              sujetoTipo: 'PROVEEDOR',
+              documento: '0801-E2E',
+              nombreSujeto: 'Proveedor cuadrante E2E',
+              estado: 'APROBADA',
+              fechaEvaluacion: '2026-07-21T10:00:00Z',
+              puntajeInherente: 4.5,
+              nivelInherente: 'Alto',
+              puntajeResidual: 3.2,
+              nivelResidual: 'Medio',
+              requierePlanAccion: false,
+            }] : [],
+          }
+        : dashboardEjecutivo;
     } else if (path.endsWith('/reportes')) {
       datos = {
         totales: { totalMatrices: 12 },
@@ -212,7 +236,20 @@ test('muestra el dashboard ejecutivo y filtra al seleccionar una celda real del 
 
   await page.getByTitle('Inherente Alto / Residual Medio: 3 matrices').click();
   await filteredRequest;
-  await expect(page.getByRole('button', { name: 'Quitar selección del mapa' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Matrices del cuadrante seleccionado' })).toBeVisible();
+  await expect(page.getByText('Proveedor cuadrante E2E')).toBeVisible();
+  await expect(page.getByText('Inherente Alto / Residual Medio')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Limpiar selección del mapa' }).first()).toBeVisible();
 
-  await page.screenshot({ path: 'test-results/fase12-3-dashboard-ejecutivo.png', fullPage: true });
+  const emptyRequest = page.waitForRequest(request => {
+    const url = new URL(request.url());
+    return url.pathname.endsWith('/api/matrices-riesgos/dashboard')
+      && url.searchParams.get('nivelInherente') === 'Bajo'
+      && url.searchParams.get('nivelResidual') === 'Crítico';
+  });
+  await page.getByTitle('Inherente Bajo / Residual Crítico: 0 matrices').click();
+  await emptyRequest;
+  await expect(page.getByText('No existen matrices en esta combinación de riesgo inherente y residual.')).toBeVisible();
+
+  await page.screenshot({ path: 'test-results/fase12-mapa-cuadrante-detalle.png', fullPage: true });
 });
