@@ -1,0 +1,1 @@
+Segundo activador para asegurar el evento pull_request del documento maestro.
