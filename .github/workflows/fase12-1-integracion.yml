@@ -1,24 +1,20 @@
-name: Fase 12.1 Integracion
+name: Fase 12.1 Validacion
 
 on:
-  push:
-    branches:
-      - fase-12-mejora-ejecutiva-matrices
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: fase12-1-integracion-${{ github.ref }}
+  group: fase12-1-validacion-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  integrar:
-    if: github.actor != 'github-actions[bot]'
+  validar:
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -36,145 +32,96 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/rl-app/package-lock.json
 
-      - name: Verificar o aplicar integracion Fase 12.1
+      - name: Verificar integración Fase 12.1
         shell: bash
         run: |
           componente="frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts"
           plantilla="frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html"
-          if grep -q "matrices-riesgos-estados.policy" "$componente" \
-             && ! grep -q '(click)="calcularMatriz(matriz)"' "$plantilla" \
-             && grep -q '>Evaluadas</p>' "$plantilla"; then
-            echo "La integración 12.1 ya está aplicada; se continúa con validación."
-          else
-            node tools/fase12_1_integrar_reglas.mjs
-          fi
+          grep -q "matrices-riesgos-estados.policy" "$componente"
+          ! grep -q '(click)="calcularMatriz(matriz)"' "$plantilla"
+          grep -q '>Evaluadas</p>' "$plantilla"
+          grep -q '!puedeEditarMatriz(matriz)' "$plantilla"
+          grep -q '!puedeEliminarMatriz(matriz)' "$plantilla"
 
       - name: Instalar dependencias frontend
         working-directory: frontend/rl-app
         run: npm ci
 
-      - name: Pruebas frontend con diagnostico
+      - name: Ejecutar pruebas frontend
         id: frontend_tests
         working-directory: frontend/rl-app
         shell: bash
         run: |
           set +e
-          npm run test:coverage 2>&1 | tee /tmp/fase12_1_frontend_tests.txt
-          codigo=${PIPESTATUS[0]}
+          npm run test:coverage > ../../../../fase12_1_frontend_tests.txt 2>&1
+          codigo=$?
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Build Angular con diagnostico
+      - name: Ejecutar build Angular
         id: angular_build
         working-directory: frontend/rl-app
         shell: bash
         run: |
           set +e
-          npm run build 2>&1 | tee /tmp/fase12_1_angular_build.txt
-          codigo=${PIPESTATUS[0]}
+          npm run build > ../../../../fase12_1_angular_build.txt 2>&1
+          codigo=$?
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Guardar diagnostico y evidencia
-        shell: pwsh
-        run: |
-          $base = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1"
-          Copy-Item "/tmp/fase12_1_frontend_tests.txt" "$base/fase12_1_frontend_tests.txt" -Force
-          Copy-Item "/tmp/fase12_1_angular_build.txt" "$base/fase12_1_angular_build.txt" -Force
-
-          $testsOk = "${{ steps.frontend_tests.outputs.exit_code }}" -eq "0"
-          $buildOk = "${{ steps.angular_build.outputs.exit_code }}" -eq "0"
-          if ($testsOk) { $estadoTests = "Aprobadas" } else { $estadoTests = "Fallidas" }
-          if ($buildOk) { $estadoBuild = "Aprobado" } else { $estadoBuild = "Fallido" }
-          if ($testsOk -and $buildOk) { $resultado = "Correcto" } else { $resultado = "Requiere correccion" }
-
-          $obj = [ordered]@{
-            fase = "12.1 - Orden funcional y reglas"
-            fecha = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssK")
-            rama = "fase-12-mejora-ejecutiva-matrices"
-            integracion_politica_estados = $true
-            boton_calcular_manual_retirado = $true
-            kpi_estado_tecnico_retirado = $true
-            pruebas_frontend = $estadoTests
-            build_angular = $estadoBuild
-            resultado = $resultado
-          }
-          $obj | ConvertTo-Json -Depth 5 | Set-Content -Path "$base/fase12_1_validacion_integracion.json" -Encoding UTF8
-
-      - name: Publicar integracion atomica por API GitHub
+      - name: Generar resultado JSON
+        shell: python
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          TARGET_BRANCH: fase-12-mejora-ejecutiva-matrices
-        shell: bash
+          TEST_EXIT_CODE: ${{ steps.frontend_tests.outputs.exit_code }}
+          BUILD_EXIT_CODE: ${{ steps.angular_build.outputs.exit_code }}
         run: |
-          python - <<'PY'
-          import base64
           import json
           import os
-          import subprocess
-          import urllib.error
-          import urllib.parse
-          import urllib.request
+          from datetime import datetime, timezone
 
-          repo = os.environ['REPOSITORY']
-          token = os.environ['GITHUB_TOKEN']
-          branch = os.environ['TARGET_BRANCH']
-          api = 'https://api.github.com'
+          tests_ok = os.environ.get('TEST_EXIT_CODE') == '0'
+          build_ok = os.environ.get('BUILD_EXIT_CODE') == '0'
+          resultado = {
+              'fase': '12.1 - Orden funcional y reglas',
+              'fecha': datetime.now(timezone.utc).isoformat(),
+              'rama': 'fase-12-mejora-ejecutiva-matrices',
+              'integracion_politica_estados': True,
+              'boton_calcular_manual_retirado': True,
+              'kpi_estado_tecnico_retirado': True,
+              'pruebas_frontend': 'Aprobadas' if tests_ok else 'Fallidas',
+              'build_angular': 'Aprobado' if build_ok else 'Fallido',
+              'resultado': 'Correcto' if tests_ok and build_ok else 'Requiere correccion',
+              'exit_code_pruebas': int(os.environ.get('TEST_EXIT_CODE', '-1')),
+              'exit_code_build': int(os.environ.get('BUILD_EXIT_CODE', '-1')),
+          }
+          with open('fase12_1_validacion_integracion.json', 'w', encoding='utf-8') as archivo:
+              json.dump(resultado, archivo, ensure_ascii=False, indent=2)
 
-          def request(method, endpoint, payload=None):
-              data = None if payload is None else json.dumps(payload).encode('utf-8')
-              req = urllib.request.Request(
-                  f'{api}{endpoint}', data=data, method=method,
-                  headers={
-                      'Authorization': f'Bearer {token}',
-                      'Accept': 'application/vnd.github+json',
-                      'X-GitHub-Api-Version': '2022-11-28',
-                      'Content-Type': 'application/json',
-                  },
-              )
-              try:
-                  with urllib.request.urlopen(req) as response:
-                      return json.loads(response.read().decode('utf-8'))
-              except urllib.error.HTTPError as exc:
-                  body = exc.read().decode('utf-8', errors='replace')
-                  raise RuntimeError(f'GitHub API {method} {endpoint}: {exc.code} {body}') from exc
+      - name: Empaquetar código integrado
+        shell: bash
+        run: |
+          mkdir -p fase12_1_codigo
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/domain/matrices-riesgos-estados.policy.ts fase12_1_codigo/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/domain/matrices-riesgos-estados.policy.spec.ts fase12_1_codigo/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts fase12_1_codigo/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html fase12_1_codigo/
 
-          changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
-          untracked = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], text=True).splitlines()
-          prefixes = (
-              'frontend/rl-app/src/app/features/admin/matrices-riesgos/',
-              'docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1/',
-          )
-          files = sorted({path for path in changed + untracked if path.startswith(prefixes)})
-          if not files:
-              print('No hay archivos de integración pendientes.')
-              raise SystemExit(0)
-
-          parent = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-          base_tree = request('GET', f'/repos/{repo}/git/commits/{parent}')['tree']['sha']
-          entries = []
-          for file_path in files:
-              with open(file_path, 'rb') as handle:
-                  encoded = base64.b64encode(handle.read()).decode('ascii')
-              blob = request('POST', f'/repos/{repo}/git/blobs', {'content': encoded, 'encoding': 'base64'})
-              entries.append({'path': file_path, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']})
-
-          tree = request('POST', f'/repos/{repo}/git/trees', {'base_tree': base_tree, 'tree': entries})
-          commit = request('POST', f'/repos/{repo}/git/commits', {
-              'message': 'test(matrices): valida integracion funcional fase 12.1',
-              'tree': tree['sha'],
-              'parents': [parent],
-          })
-          encoded_branch = urllib.parse.quote(branch, safe='')
-          request('PATCH', f'/repos/{repo}/git/refs/heads/{encoded_branch}', {'sha': commit['sha'], 'force': False})
-          print(f"Commit publicado: {commit['sha']}")
-          PY
+      - name: Publicar artefacto de diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-1-validacion-${{ github.run_id }}
+          path: |
+            fase12_1_validacion_integracion.json
+            fase12_1_frontend_tests.txt
+            fase12_1_angular_build.txt
+            fase12_1_codigo/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Validar resultado final
         shell: bash
         run: |
+          cat fase12_1_validacion_integracion.json
           if [ "${{ steps.frontend_tests.outputs.exit_code }}" != "0" ] || [ "${{ steps.angular_build.outputs.exit_code }}" != "0" ]; then
-            echo "La integración requiere corrección. Revise la evidencia versionada."
             exit 1
           fi
