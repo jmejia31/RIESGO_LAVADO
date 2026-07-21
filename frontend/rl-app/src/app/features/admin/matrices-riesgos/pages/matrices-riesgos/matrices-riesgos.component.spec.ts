@@ -100,6 +100,23 @@ describe('MatricesRiesgosComponent', () => {
     expect(celda).toEqual(expect.objectContaining({ total: 3, promedioInherente: 4.5, promedioResidual: 2.5 }));
   });
 
+  it('aplica una paleta diagonal verde a rojo sin recalcular niveles de riesgo', () => {
+    component.metodologia.set({
+      escalasRiesgo: [
+        { nivel: 'Muy bajo', valorMinimo: 1 },
+        { nivel: 'Bajo', valorMinimo: 2 },
+        { nivel: 'Medio', valorMinimo: 3 },
+        { nivel: 'Alto', valorMinimo: 4 },
+        { nivel: 'Crítico', valorMinimo: 5 }
+      ]
+    } as never);
+
+    expect(component.colorMapaTransicion('Muy bajo', 'Muy bajo')).toBe('#4ade80');
+    expect(component.colorMapaTransicion('Medio', 'Medio')).toBe('#facc15');
+    expect(component.colorMapaTransicion('Crítico', 'Crítico')).toBe('#dc2626');
+    expect(component.colorTextoMapa('Crítico', 'Crítico')).toBe('#ffffff');
+  });
+
   it('aplica los niveles de una celda como filtros del dashboard', () => {
     component.seleccionarCeldaMapa({ nivelInherente: 'Alto', nivelResidual: 'Medio' });
 

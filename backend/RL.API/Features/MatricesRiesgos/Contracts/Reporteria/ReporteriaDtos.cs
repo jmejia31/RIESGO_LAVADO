@@ -19,11 +19,13 @@ public sealed class MatricesRiesgoDashboardDto
     public MatrizRiesgoReporteFiltroDto Filtro { get; set; } = new();
     public int TotalMatrices { get; set; }
     public int TotalCalculadas { get; set; }
+    public int TotalSinCalculo { get; set; }
     public int TotalCerradas { get; set; }
     public int TotalConPlanAccion { get; set; }
     public int TotalAltoCritico { get; set; }
     public int TotalPlanesVencidos { get; set; }
     public List<MatrizRiesgoConteoDto> PorEstado { get; set; } = new();
+    public List<MatrizRiesgoConteoDto> PorSujetoTipo { get; set; } = new();
     public List<MatrizRiesgoConteoDto> PorNivelInherente { get; set; } = new();
     public List<MatrizRiesgoConteoDto> PorNivelResidual { get; set; } = new();
     public List<MatrizRiesgoMapaTransicionDto> MapaTransicion { get; set; } = new();

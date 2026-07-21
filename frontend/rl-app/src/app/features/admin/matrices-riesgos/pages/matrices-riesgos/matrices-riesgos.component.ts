@@ -300,7 +300,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           total: dato?.total ?? 0,
           promedioInherente: dato?.promedioInherente ?? 0,
           promedioResidual: dato?.promedioResidual ?? 0,
-          color: residual.color || this.colorNivel(residual.nivel)
+          color: this.colorMapaTransicion(inherente.nivel, residual.nivel),
+          colorBorde: this.colorNivel(inherente.nivel),
+          colorTexto: this.colorTextoMapa(inherente.nivel, residual.nivel)
         };
       })
     }));
@@ -1436,6 +1438,28 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (normalizado.includes('MEDIO')) return '#facc15';
     if (normalizado.includes('BAJO')) return '#22c55e';
     return '#94a3b8';
+  }
+
+  colorMapaTransicion(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    // Paleta visual diagonal inspirada en el mapa institucional de referencia.
+    // Los niveles ya vienen calculados desde backend; aqui solo se representa su intensidad.
+    const paleta = ['#4ade80', '#86efac', '#bef264', '#fde047', '#facc15', '#fb923c', '#f97316', '#ef4444', '#dc2626'];
+    const niveles = this.escalasRiesgoOrdenadas();
+    const maximo = Math.max(1, niveles.length - 1);
+    const indiceInherente = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelInherente)));
+    const indiceResidual = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelResidual)));
+    const posicion = Math.round(((indiceInherente + indiceResidual) / (maximo * 2)) * (paleta.length - 1));
+    return paleta[Math.max(0, Math.min(paleta.length - 1, posicion))];
+  }
+
+  colorTextoMapa(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    const color = this.colorMapaTransicion(nivelInherente, nivelResidual);
+    return ['#f97316', '#ef4444', '#dc2626'].includes(color) ? '#ffffff' : '#0f172a';
+  }
+
+  tipoSujetoEtiqueta(tipo?: string | null): string {
+    const normalizado = `${tipo ?? ''}`.trim().toUpperCase();
+    return this.tiposSujeto.find(item => item.valor === normalizado)?.texto ?? normalizado.replaceAll('_', ' ');
   }
 
   estadoEtiqueta(estado?: string | null): string {

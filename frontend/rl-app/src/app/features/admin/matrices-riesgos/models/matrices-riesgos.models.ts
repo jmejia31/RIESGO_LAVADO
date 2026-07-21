@@ -192,11 +192,13 @@ export interface MatrizRiesgoDashboard {
   filtro: MatrizRiesgoReporteFiltro;
   totalMatrices: number;
   totalCalculadas: number;
+  totalSinCalculo: number;
   totalCerradas: number;
   totalConPlanAccion: number;
   totalAltoCritico: number;
   totalPlanesVencidos: number;
   porEstado: { nombre: string; total: number }[];
+  porSujetoTipo: { nombre: string; total: number }[];
   porNivelInherente: { nombre: string; total: number }[];
   porNivelResidual: { nombre: string; total: number }[];
   mapaTransicion: MatrizRiesgoMapaTransicion[];
