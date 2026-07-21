@@ -1,0 +1,86 @@
+name: Corregir y validar mapa de calor Fase 12
+
+on:
+  pull_request:
+    branches: [fase-12-mejora-ejecutiva-matrices]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fase12-heatmap-fix
+  cancel-in-progress: false
+
+jobs:
+  integrar-validar-publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout rama objetivo
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-mejora-ejecutiva-matrices
+          fetch-depth: 0
+
+      - name: Aplicar corrección controlada
+        run: python tools/fase12_heatmap_fix.py
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+
+      - name: Restore backend
+        run: dotnet restore RIESGO_LAVADO.sln
+
+      - name: Install frontend dependencies
+        working-directory: frontend/rl-app
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        working-directory: frontend/rl-app
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar Quality Gates completos
+        shell: pwsh
+        run: ./tools/run_quality_gates.ps1
+
+      - name: Consolidar evidencia aprobada
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_4/fase12_mapa_navegable_ajuste.json')
+          data = json.loads(p.read_text(encoding='utf-8'))
+          data['estado'] = 'validado_ci'
+          data['quality_gates'] = 'aprobados'
+          data['validaciones'] = {
+              'backend': 'aprobado',
+              'frontend': 'aprobado',
+              'build_angular': 'aprobado',
+              'e2e': 'aprobado'
+          }
+          p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
+      - name: Publicar commit productivo limpio
+        shell: bash
+        run: |
+          rm -f tools/fase12_heatmap_fix.py
+          rm -f .github/workflows/fase12-heatmap-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix(matrices): hace navegable el mapa e incluye todas las matrices"
+          git pull --rebase origin fase-12-mejora-ejecutiva-matrices
+          git push origin HEAD:fase-12-mejora-ejecutiva-matrices
