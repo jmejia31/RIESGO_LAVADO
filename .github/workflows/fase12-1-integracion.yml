@@ -68,7 +68,7 @@ jobs:
       - name: Guardar diagnostico y evidencia
         shell: pwsh
         run: |
-          $base = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1"
+          $base = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1"
           $testsSalida = Get-Content "/tmp/fase12_1_frontend_tests.log" -Raw
           $buildSalida = Get-Content "/tmp/fase12_1_angular_build.log" -Raw
           $testsSalida | Set-Content -Path "$base/fase12_1_frontend_tests.log" -Encoding UTF8
@@ -76,6 +76,10 @@ jobs:
 
           $testsOk = "${{ steps.frontend_tests.outputs.exit_code }}" -eq "0"
           $buildOk = "${{ steps.angular_build.outputs.exit_code }}" -eq "0"
+          if ($testsOk) { $estadoTests = "Aprobadas" } else { $estadoTests = "Fallidas" }
+          if ($buildOk) { $estadoBuild = "Aprobado" } else { $estadoBuild = "Fallido" }
+          if ($testsOk -and $buildOk) { $resultado = "Correcto" } else { $resultado = "Requiere correccion" }
+
           $obj = [ordered]@{
             fase = "12.1 - Orden funcional y reglas"
             fecha = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssK")
@@ -83,9 +87,9 @@ jobs:
             integracion_politica_estados = $true
             boton_calcular_manual_retirado = $true
             kpi_estado_tecnico_retirado = $true
-            pruebas_frontend = $(if ($testsOk) { "Aprobadas" } else { "Fallidas" })
-            build_angular = $(if ($buildOk) { "Aprobado" } else { "Fallido" })
-            resultado = $(if ($testsOk -and $buildOk) { "Correcto" } else { "Requiere correccion" })
+            pruebas_frontend = $estadoTests
+            build_angular = $estadoBuild
+            resultado = $resultado
           }
           $obj | ConvertTo-Json -Depth 5 | Set-Content -Path "$base/fase12_1_validacion_integracion.json" -Encoding UTF8
 
@@ -93,7 +97,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/rl-app/src/app/features/admin/matrices-riesgos "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1"
+          git add frontend/rl-app/src/app/features/admin/matrices-riesgos "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1"
           if git diff --cached --quiet; then
             echo "No hay cambios pendientes."
           else
