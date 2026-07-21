@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -35,7 +35,7 @@ import {
 } from '../../domain/matrices-riesgos-estados.policy';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
-type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
+type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'reactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
   variableId: number;
@@ -508,7 +508,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarCriterios(this.incluirCriteriosInactivos()).subscribe({
       next: datos => {
         const verInactivos = this.incluirCriteriosInactivos();
-        this.criterios.set(verInactivos ? datos.filter(c => !c.activo) : datos.filter(c => c.activo));
+        this.criterios.set(verInactivos ? datos : datos.filter(c => c.activo));
         this.aplicarCriteriosAutomaticos();
       },
       error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los criterios.'))
@@ -789,6 +789,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         break;
       case 'inactivarCriterio':
         this.ejecutarInactivacionCriterio(operacion.criterio!, motivo);
+        break;
+      case 'reactivarCriterio':
+        this.ejecutarReactivacionCriterio(operacion.criterio!, motivo);
         break;
       case 'eliminarCriterio':
         this.ejecutarEliminacionCriterio(operacion.criterio!, motivo);
@@ -1178,6 +1181,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const solapamiento = this.validarSolapamientoCriterio();
+    if (solapamiento) {
+      this.error.set(solapamiento);
+      return;
+    }
+
     this.guardando.set(true);
     const dto: MatrizRiesgoCriterioRequest = {
       variableId: Number(this.criteriosForm.variableId),
@@ -1229,6 +1238,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       requiereMotivo: true,
       criterio,
       tono: 'peligro'
+    });
+  }
+
+
+  reactivarCriterio(criterio: MatrizRiesgoCriterio): void {
+    this.abrirModal({
+      tipo: 'reactivarCriterio',
+      titulo: 'Activar criterio',
+      descripcion: `Ingrese el motivo obligatorio para activar el criterio ${criterio.criterioId}. Se validará que su rango no se superponga con criterios activos.`,
+      textoConfirmar: 'Activar',
+      requiereMotivo: true,
+      criterio,
+      tono: 'normal'
     });
   }
 
@@ -1441,6 +1463,20 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  private ejecutarReactivacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
+    this.guardando.set(true);
+    this.service.reactivarCriterio(criterio.criterioId, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Criterio activado correctamente.');
+        this.cargarCriterios();
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo activar el criterio.')
+    });
+  }
+
   private ejecutarEliminacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
     this.guardando.set(true);
     this.service.eliminarCriterio(criterio.criterioId, motivo).subscribe({
@@ -1454,6 +1490,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: err => this.finalizarAccionConError(err, 'No se pudo eliminar el criterio.')
     });
+  }
+
+
+  private validarSolapamientoCriterio(): string | null {
+    const variableId = Number(this.criteriosForm.variableId);
+    if (!variableId) return null;
+
+    const desdeNuevo = this.criteriosForm.valorDesde ?? Number.NEGATIVE_INFINITY;
+    const hastaNuevo = this.criteriosForm.valorHasta ?? Number.POSITIVE_INFINITY;
+    const editandoId = this.criterioEditandoId();
+    const conflicto = this.criterios().find(criterio => {
+      if (!criterio.activo || criterio.variableId !== variableId || criterio.criterioId === editandoId) return false;
+      const desdeExistente = criterio.valorDesde ?? Number.NEGATIVE_INFINITY;
+      const hastaExistente = criterio.valorHasta ?? Number.POSITIVE_INFINITY;
+      return desdeExistente <= hastaNuevo && hastaExistente >= desdeNuevo;
+    });
+
+    return conflicto
+      ? `El rango se superpone con el criterio activo ${conflicto.criterioId} (${conflicto.valorDesde ?? '-∞'} a ${conflicto.valorHasta ?? '∞'}).`
+      : null;
   }
 
   private prepararCapturaVariables(): void {

@@ -179,6 +179,10 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/inactivar`, { motivo }, this.confirmado);
   }
 
+  reactivarCriterio(id: number, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/reactivar`, { motivo }, this.confirmado);
+  }
+
   eliminarCriterio(id: number, motivo: string): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/eliminar`, { motivo }, this.confirmado);
   }

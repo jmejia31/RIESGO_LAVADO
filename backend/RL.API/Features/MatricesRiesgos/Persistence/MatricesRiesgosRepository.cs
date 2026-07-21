@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -1053,7 +1053,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             var modelo = await ObtenerModeloVigenteAsync(conn, tx) ?? throw new InvalidOperationException("No existe una metodología aprobada vigente para Matrices de Riesgos.");
             await ValidarVariableYEscalaCriterioAsync(conn, tx, modelo.ModeloId, dto.VariableId, dto.EscalaId);
             if (await ExisteCriterioDuplicadoAsync(conn, tx, modelo.ModeloId, dto, null))
-                throw new InvalidOperationException("Ya existe un criterio activo con la misma variable, escala y rango.");
+                throw new InvalidOperationException("Ya existe un criterio activo cuyo rango se superpone para la misma variable.");
 
             var criterioId = await NextValAsync(conn, tx, "SEQ_RL_MR_CRITERIOS");
             await using (var cmd = conn.CreateCommand())
@@ -1106,7 +1106,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 return false;
 
             if (await ExisteCriterioDuplicadoAsync(conn, tx, modelo.ModeloId, dto, criterioId))
-                throw new InvalidOperationException("Ya existe un criterio activo con la misma variable, escala y rango.");
+                throw new InvalidOperationException("Ya existe un criterio activo cuyo rango se superpone para la misma variable.");
 
             await using (var cmd = conn.CreateCommand())
             {
@@ -1185,6 +1185,56 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
     }
 
+
+    public async Task<bool> ReactivarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var anterior = await ObtenerCriterioAuditoriaAsync(conn, tx, criterioId);
+            if (anterior == null)
+                return false;
+
+            if (await ExisteSolapamientoParaReactivacionAsync(conn, tx, criterioId))
+                throw new InvalidOperationException("El criterio no puede activarse porque su rango se superpone con otro criterio activo de la misma variable.");
+
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_CRITERIOS
+                       SET MRC_ESTADO_REGISTRO = 1,
+                           MRC_MOTIVO_INACTIVO = NULL
+                     WHERE MRC_ID = :criterioId
+                       AND MRC_ESTADO_REGISTRO = 0";
+                cmd.Parameters.Add(Param("criterioId", criterioId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_CRITERIOS", criterioId.ToString(), "UPDATE", anterior,
+                JsonConvert.SerializeObject(new { Motivo = motivo.Trim(), EstadoRegistro = 1 }), usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<bool> CriterioTieneUsoHistoricoAsync(long criterioId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await CriterioTieneUsoHistoricoAsync(conn, null, criterioId);
+    }
+
     public async Task<bool> EliminarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
     {
         await using var conn = _db.CreateConnection();
@@ -1196,6 +1246,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             var anterior = await ObtenerCriterioAuditoriaAsync(conn, tx, criterioId);
             if (anterior == null)
                 return false;
+
+            if (await CriterioTieneUsoHistoricoAsync(conn, tx, criterioId))
+                throw new InvalidOperationException("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente.");
 
             await RegistrarAuditoriaAsync(
                 conn,
@@ -1576,9 +1629,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
              WHERE f.MRF_MODELO_ID = :modeloId
                AND c.MRC_ESTADO_REGISTRO = 1
                AND c.MRC_VARIABLE_ID = :variableId
-               AND NVL(c.MRC_ESCALA_ID, -1) = NVL(:escalaId, -1)
-               AND NVL(c.MRC_VALOR_DESDE, -999999999) = NVL(:valorDesde, -999999999)
-               AND NVL(c.MRC_VALOR_HASTA, 999999999) = NVL(:valorHasta, 999999999)
+               AND NVL(c.MRC_VALOR_DESDE, -999999999) <= NVL(:valorHasta, 999999999)
+               AND NVL(c.MRC_VALOR_HASTA, 999999999) >= NVL(:valorDesde, -999999999)
                AND (:criterioIdExcluir IS NULL OR c.MRC_ID <> :criterioIdExcluir)";
         cmd.Parameters.Add(Param("modeloId", modeloId));
         cmd.Parameters.Add(Param("variableId", dto.VariableId));
@@ -1586,6 +1638,51 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.Parameters.Add(Param("valorDesde", dto.ValorDesde));
         cmd.Parameters.Add(Param("valorHasta", dto.ValorHasta));
         cmd.Parameters.Add(Param("criterioIdExcluir", criterioIdExcluir));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+
+    private async Task<bool> ExisteSolapamientoParaReactivacionAsync(OracleConnection conn, OracleTransaction tx, long criterioId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_CRITERIOS objetivo
+              JOIN RL_MR_CRITERIOS activo
+                ON activo.MRC_VARIABLE_ID = objetivo.MRC_VARIABLE_ID
+               AND activo.MRC_ESTADO_REGISTRO = 1
+               AND activo.MRC_ID <> objetivo.MRC_ID
+               AND NVL(activo.MRC_VALOR_DESDE, -999999999) <= NVL(objetivo.MRC_VALOR_HASTA, 999999999)
+               AND NVL(activo.MRC_VALOR_HASTA, 999999999) >= NVL(objetivo.MRC_VALOR_DESDE, -999999999)
+             WHERE objetivo.MRC_ID = :criterioId
+               AND objetivo.MRC_ESTADO_REGISTRO = 0";
+        cmd.Parameters.Add(Param("criterioId", criterioId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> CriterioTieneUsoHistoricoAsync(OracleConnection conn, OracleTransaction? tx, long criterioId)
+    {
+        var token = $"\"CriterioId\":{criterioId}";
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM (
+                    SELECT 1
+                      FROM RL_MR_MATRICES
+                     WHERE MRMAT_SNAPSHOT_METODO IS NOT NULL
+                       AND DBMS_LOB.INSTR(MRMAT_SNAPSHOT_METODO, :token) > 0
+                    UNION ALL
+                    SELECT 1
+                      FROM RL_MR_RESULTADOS
+                     WHERE MRR_SNAPSHOT_CALCULO IS NOT NULL
+                       AND DBMS_LOB.INSTR(MRR_SNAPSHOT_CALCULO, :token) > 0
+                   )
+             WHERE ROWNUM = 1";
+        cmd.Parameters.Add(Param("token", token));
         return ToInt(await cmd.ExecuteScalarAsync()) > 0;
     }
 
@@ -1619,15 +1716,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     private async Task ValidarVariablesPorTipoSujetoAsync(OracleConnection conn, OracleTransaction tx, long modeloId, MatrizRiesgoCrearRequestDto dto)
     {
+        var detalles = dto.Detalles ?? new List<MatrizRiesgoDetalleRequestDto>();
+        var variablesEnviadas = detalles.Select(d => d.VariableId).ToList();
+        if (variablesEnviadas.Count != variablesEnviadas.Distinct().Count())
+            throw new InvalidOperationException("No se permite registrar la misma variable más de una vez en una matriz.");
+
         var factorPermitido = FactorCodigoPorTipoSujeto(dto.SujetoTipo);
-        if (string.IsNullOrWhiteSpace(factorPermitido))
+        var esInstitucional = dto.SujetoTipo.Equals("INSTITUCIONAL", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(factorPermitido) && !esInstitucional)
             return;
 
-        var variables = dto.Detalles.Select(d => d.VariableId).Distinct().ToList();
-        if (variables.Count == 0)
-            throw new InvalidOperationException("Debe registrar variables para evaluar la matriz.");
-
-        foreach (var variableId in variables)
+        foreach (var variableId in variablesEnviadas)
         {
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
@@ -1643,9 +1742,37 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmd.Parameters.Add(Param("variableId", variableId));
             cmd.Parameters.Add(Param("modeloId", modeloId));
             var codigo = (await cmd.ExecuteScalarAsync())?.ToString();
-            if (!string.Equals(codigo, factorPermitido, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(codigo))
+                throw new InvalidOperationException($"La variable {variableId} no pertenece a la metodología vigente.");
+            if (!esInstitucional && !string.Equals(codigo, factorPermitido, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException($"La variable {variableId} no corresponde al tipo de sujeto {dto.SujetoTipo}.");
         }
+
+        var obligatorias = new List<long>();
+        await using (var cmd = conn.CreateCommand())
+        {
+            cmd.BindByName = true;
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+                SELECT v.MRV_ID
+                  FROM RL_MR_VARIABLES v
+                  JOIN RL_MR_FACTORES f ON f.MRF_ID = v.MRV_FACTOR_ID
+                 WHERE f.MRF_MODELO_ID = :modeloId
+                   AND f.MRF_ESTADO_REGISTRO = 1
+                   AND v.MRV_ESTADO_REGISTRO = 1
+                   AND v.MRV_OBLIGATORIA = 1
+                   AND (:factorCodigo IS NULL OR f.MRF_CODIGO = :factorCodigo)
+                 ORDER BY v.MRV_ID";
+            cmd.Parameters.Add(Param("modeloId", modeloId));
+            cmd.Parameters.Add(Param("factorCodigo", esInstitucional ? null : factorPermitido));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                obligatorias.Add(ToLong(reader["MRV_ID"]));
+        }
+
+        var faltantes = obligatorias.Except(variablesEnviadas).ToList();
+        if (faltantes.Count > 0)
+            throw new InvalidOperationException($"Faltan variables obligatorias para {dto.SujetoTipo}: {string.Join(", ", faltantes)}.");
     }
 
     private static string? FactorCodigoPorTipoSujeto(string? sujetoTipo)

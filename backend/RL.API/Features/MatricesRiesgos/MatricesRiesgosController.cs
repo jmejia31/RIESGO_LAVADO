@@ -504,6 +504,23 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+
+    [HttpPut("criterios/{criterioId:long}/reactivar")]
+    [AuditRequired("Reactivacion de criterio de matriz de riesgos")]
+    public async Task<IActionResult> ReactivarCriterio(long criterioId, [FromBody] MatrizRiesgoInactivarRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.ReactivarCriterioAsync(criterioId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al reactivar criterio de Matrices de Riesgos {CriterioId}", criterioId);
+            return Error500(ex);
+        }
+    }
+
     [HttpPut("criterios/{criterioId:long}/eliminar")]
     [AuditRequired("Eliminacion de criterio de matriz de riesgos")]
     public async Task<IActionResult> EliminarCriterio(long criterioId, [FromBody] MatrizRiesgoInactivarRequestDto dto)

@@ -193,6 +193,17 @@ describe('MatricesRiesgosService', () => {
     request.flush({ success: true });
   });
 
+
+  it('reactiva un criterio con confirmacion y motivo', () => {
+    service.reactivarCriterio(9, 'Rango nuevamente vigente').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/criterios/9/reactivar`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ motivo: 'Rango nuevamente vigente' });
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true });
+  });
+
   it('propaga errores HTTP del listado al coordinador de la pantalla', () => {
     const error = vi.fn();
     service.listar({ estado: 'ACTIVA' } as never).subscribe({ error });

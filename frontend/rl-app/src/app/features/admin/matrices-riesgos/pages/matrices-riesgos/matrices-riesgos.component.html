@@ -635,7 +635,7 @@
           <h3 class="text-lg font-bold text-gray-900">Criterios registrados</h3>
           <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
             <input type="checkbox" [ngModel]="incluirCriteriosInactivos()" (ngModelChange)="incluirCriteriosInactivos.set($event); cargarCriterios()" />
-            Ver inactivos
+            Incluir inactivos
           </label>
         </div>
         <div class="overflow-x-auto border border-gray-200 rounded-xl max-w-full">
@@ -676,15 +676,21 @@
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap justify-end gap-1.5">
-                      <button type="button" (click)="editarCriterio(criterio)"
-                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50">
+                      <button type="button" (click)="editarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
+                        title="Los criterios inactivos deben activarse antes de editarlos"
+                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50">
                         Editar
                       </button>
-                      <button type="button" (click)="inactivarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
+                      <button *ngIf="criterio.activo" type="button" (click)="inactivarCriterio(criterio)" [disabled]="guardando()"
                         class="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold disabled:opacity-50">
                         Desactivar
                       </button>
-                      <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando()"
+                      <button *ngIf="!criterio.activo" type="button" (click)="reactivarCriterio(criterio)" [disabled]="guardando()"
+                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50">
+                        Activar
+                      </button>
+                      <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando() || criterio.activo"
+                        title="Primero desactive el criterio. La eliminación solo procede si no tiene uso histórico."
                         class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
                         Eliminar
                       </button>

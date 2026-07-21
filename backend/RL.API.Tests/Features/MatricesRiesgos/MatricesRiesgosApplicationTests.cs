@@ -687,6 +687,39 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Equal("Fuera de vigencia", call.Arguments[1]);
     }
 
+
+    [Fact]
+    public async Task ReactivarCriterio_MotivoValido_RecortaYDelega()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ReactivarCriterioAsync), _ => Task.FromResult(true));
+
+        var result = await service.ReactivarCriterioAsync(35, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = " Reactivación autorizada "
+        }, 7, null, null);
+
+        Assert.True(result.Success);
+        var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.ReactivarCriterioAsync)));
+        Assert.Equal("Reactivación autorizada", call.Arguments[1]);
+    }
+
+    [Fact]
+    public async Task EliminarCriterio_ConUsoHistorico_RechazaSinEliminar()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.CriterioTieneUsoHistoricoAsync), _ => Task.FromResult(true));
+
+        var result = await service.EliminarCriterioAsync(35, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = "Depuración de catálogo"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Contains("históric", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.EliminarCriterioAsync)));
+    }
+
     private static MatricesRiesgosAppService CrearServicio(out InterfaceStub repoStub, out InterfaceStub motorStub, IConfiguration? configuration = null)
     {
         var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);

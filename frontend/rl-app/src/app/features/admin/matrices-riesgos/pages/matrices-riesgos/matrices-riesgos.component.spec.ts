@@ -37,6 +37,7 @@ describe('MatricesRiesgosComponent', () => {
       cambiarEstado: vi.fn(() => of({ success: true })),
       eliminarMatriz: vi.fn(() => of({ success: true })),
       inactivarCriterio: vi.fn(() => of({ success: true })),
+      reactivarCriterio: vi.fn(() => of({ success: true })),
       eliminarCriterio: vi.fn(() => of({ success: true })),
       exportarReporte: vi.fn(() => of(new Blob()))
     };
@@ -118,7 +119,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.cargandoReporte()).toBe(false);
   });
 
-  it('ver inactivos muestra solo criterios desactivados', () => {
+  it('incluir inactivos conserva criterios activos e inactivos', () => {
     const criterios = [
       { criterioId: 1, activo: true },
       { criterioId: 2, activo: false }
@@ -129,7 +130,37 @@ describe('MatricesRiesgosComponent', () => {
     component.cargarCriterios();
 
     expect(service['listarCriterios']).toHaveBeenCalledWith(true);
-    expect(component.criterios()).toEqual([{ criterioId: 2, activo: false }]);
+    expect(component.criterios()).toEqual(criterios);
+  });
+
+
+  it('bloquea un criterio cuando el rango se superpone con otro activo', () => {
+    component.criterios.set([{ criterioId: 4, variableId: 2, activo: true, valorDesde: 10, valorHasta: 20 }] as never);
+    component.criteriosForm = {
+      variableId: 2,
+      escalaId: null,
+      valorDesde: 15,
+      valorHasta: 25,
+      puntaje: 4,
+      descripcion: 'Rango solapado'
+    };
+
+    component.guardarCriterio();
+
+    expect(component.error()).toContain('se superpone');
+    expect(service['crearCriterio']).not.toHaveBeenCalled();
+  });
+
+  it('reactiva un criterio inactivo con motivo', () => {
+    const criterio = { criterioId: 9, activo: false } as never;
+    component.reactivarCriterio(criterio);
+    component.actualizarModalMotivo('Rango nuevamente vigente');
+
+    component.confirmarModal();
+
+    expect(service['reactivarCriterio']).toHaveBeenCalledWith(9, 'Rango nuevamente vigente');
+    expect(component.mensaje()).toBe('Criterio activado correctamente.');
+    expect(component.modalOperacion()).toBeNull();
   });
 
   it('conserva un error controlado y detiene la carga si falla el reporte', () => {

@@ -582,6 +582,28 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult.NotFound("No se encontró el criterio activo.");
     }
 
+
+    public async Task<ServiceResult> ReactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        if (criterioId <= 0)
+            return ServiceResult.BadRequest("El identificador del criterio es obligatorio.");
+
+        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
+            return ServiceResult.BadRequest("El motivo de reactivación del criterio es obligatorio.");
+
+        try
+        {
+            var ok = await _repo.ReactivarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
+            return ok
+                ? ServiceResult.Ok("Criterio activado correctamente.")
+                : ServiceResult.NotFound("No se encontró el criterio inactivo.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.BadRequest(ex.Message);
+        }
+    }
+
     public async Task<ServiceResult> EliminarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
     {
         if (criterioId <= 0)
@@ -589,6 +611,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
         if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
             return ServiceResult.BadRequest("El motivo de eliminación del criterio es obligatorio.");
+
+        if (await _repo.CriterioTieneUsoHistoricoAsync(criterioId))
+            return ServiceResult.BadRequest("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente. Desactívelo para conservar la trazabilidad.");
 
         try
         {

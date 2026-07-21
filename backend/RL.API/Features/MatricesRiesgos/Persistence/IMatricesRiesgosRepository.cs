@@ -34,5 +34,7 @@ public interface IMatricesRiesgosRepository
     Task<long> CrearCriterioAsync(MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> ActualizarCriterioAsync(long criterioId, MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<bool> InactivarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> ReactivarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
+    Task<bool> CriterioTieneUsoHistoricoAsync(long criterioId);
     Task<bool> EliminarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip);
 }
