@@ -1634,7 +1634,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                AND (:criterioIdExcluir IS NULL OR c.MRC_ID <> :criterioIdExcluir)";
         cmd.Parameters.Add(Param("modeloId", modeloId));
         cmd.Parameters.Add(Param("variableId", dto.VariableId));
-        cmd.Parameters.Add(Param("escalaId", dto.EscalaId));
         cmd.Parameters.Add(Param("valorDesde", dto.ValorDesde));
         cmd.Parameters.Add(Param("valorHasta", dto.ValorHasta));
         cmd.Parameters.Add(Param("criterioIdExcluir", criterioIdExcluir));

@@ -612,15 +612,19 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
             return ServiceResult.BadRequest("El motivo de eliminación del criterio es obligatorio.");
 
-        if (await _repo.CriterioTieneUsoHistoricoAsync(criterioId))
-            return ServiceResult.BadRequest("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente. Desactívelo para conservar la trazabilidad.");
-
         try
         {
+            if (await _repo.CriterioTieneUsoHistoricoAsync(criterioId))
+                return ServiceResult.BadRequest("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente. Desactívelo para conservar la trazabilidad.");
+
             var ok = await _repo.EliminarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
             return ok
                 ? ServiceResult.Ok("Criterio eliminado correctamente.")
                 : ServiceResult.NotFound("No se encontró el criterio.");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.BadRequest(ex.Message);
         }
         catch (Oracle.ManagedDataAccess.Client.OracleException ex) when (ex.Number == 2292)
         {
