@@ -31,6 +31,21 @@ jobs:
             'CREATE TABLE RL_MR_|ALTER TABLE RL_MR_|MRR_|MRMAT_|MRD_' \
             database db scripts docs 2>/dev/null > fase12_3_esquema_oracle.txt || true
 
+          mkdir -p fase12_3_fuentes/backend fase12_3_fuentes/frontend
+          cp backend/RL.API/Features/MatricesRiesgos/Contracts/Reporteria/ReporteriaDtos.cs fase12_3_fuentes/backend/
+          cp backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs fase12_3_fuentes/backend/
+          cp backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs fase12_3_fuentes/backend/
+          cp backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs fase12_3_fuentes/backend/
+          cp backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs fase12_3_fuentes/backend/
+          cp backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs fase12_3_fuentes/backend/
+          cp backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs fase12_3_fuentes/backend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts fase12_3_fuentes/frontend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts fase12_3_fuentes/frontend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.spec.ts fase12_3_fuentes/frontend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts fase12_3_fuentes/frontend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html fase12_3_fuentes/frontend/
+          cp frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts fase12_3_fuentes/frontend/
+
       - name: Publicar inventario
         uses: actions/upload-artifact@v4
         with:
@@ -39,4 +54,5 @@ jobs:
             fase12_3_archivos.txt
             fase12_3_coincidencias.txt
             fase12_3_esquema_oracle.txt
+            fase12_3_fuentes/
           retention-days: 3
