@@ -25,7 +25,24 @@ jobs:
           fetch-depth: 0
 
       - name: Aplicar corrección controlada
-        run: python tools/fase12_heatmap_fix.py
+        id: integrar
+        shell: bash
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python tools/fase12_heatmap_fix.py 2>&1 | tee fase12_heatmap_integracion.log
+
+      - name: Publicar diagnóstico del integrador
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-heatmap-diagnostico
+          path: fase12_heatmap_integracion.log
+          if-no-files-found: error
+
+      - name: Detener si la integración falló
+        if: steps.integrar.outcome != 'success'
+        run: exit 1
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -76,6 +93,7 @@ jobs:
       - name: Publicar commit productivo limpio
         shell: bash
         run: |
+          rm -f fase12_heatmap_integracion.log
           rm -f tools/fase12_heatmap_fix.py
           rm -f .github/workflows/fase12-heatmap-fix.yml
           rm -f "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_4/ACTIVAR_CORRECCION_MAPA.tmp"
