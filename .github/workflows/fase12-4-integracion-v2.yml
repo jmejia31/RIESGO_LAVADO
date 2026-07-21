@@ -47,7 +47,9 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Aplicar integración
-        run: python3 tools/fase12_4_integrar.py
+        run: |
+          python3 tools/fase12_4_integrar.py
+          python3 tools/fase12_4_corregir_prueba_html.py
 
       - name: Ejecutar quality gates completos
         shell: pwsh
@@ -69,6 +71,7 @@ jobs:
           rm -f .github/workflows/fase12-4-integracion.yml
           rm -f .github/workflows/fase12-4-integracion-v2.yml
           rm -f tools/fase12_4_integrar.py
+          rm -f tools/fase12_4_corregir_prueba_html.py
           rm -f tools/fase12_4_trigger.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
