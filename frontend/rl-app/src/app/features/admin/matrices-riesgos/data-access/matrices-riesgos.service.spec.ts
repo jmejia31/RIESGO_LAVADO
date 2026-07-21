@@ -20,6 +20,20 @@ describe('MatricesRiesgosService', () => {
     TestBed.resetTestingModule();
   });
 
+
+  it('consulta el dashboard ejecutivo con filtros reales', () => {
+    const result = vi.fn();
+    service.dashboard({ sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO' }).subscribe(result);
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/dashboard`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('sujetoTipo')).toBe('PROVEEDOR');
+    expect(request.request.params.get('nivelInherente')).toBe('ALTO');
+    expect(request.request.params.get('nivelResidual')).toBe('MEDIO');
+    request.flush({ success: true, datos: { totalMatrices: 2 } });
+    expect(result).toHaveBeenCalledWith({ totalMatrices: 2 });
+  });
+
   it('construye el reporte omitiendo filtros vacios', () => {
     const result = vi.fn();
     service.reporte({ estado: 'ACTIVA', busqueda: '', fechaDesde: undefined } as never).subscribe(result);

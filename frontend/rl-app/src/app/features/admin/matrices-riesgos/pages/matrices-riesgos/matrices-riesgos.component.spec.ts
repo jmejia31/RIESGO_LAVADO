@@ -63,6 +63,51 @@ describe('MatricesRiesgosComponent', () => {
     TestBed.resetTestingModule();
   });
 
+
+  it('consulta el dashboard con los filtros ejecutivos activos', () => {
+    component.reporteFiltro.set({ sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO' });
+    service['dashboard'].mockReturnValue(of({ totalMatrices: 2 }));
+
+    component.cargarDashboard();
+
+    expect(service['dashboard']).toHaveBeenCalledWith({
+      sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO'
+    });
+    expect(component.dashboard()).toEqual({ totalMatrices: 2 });
+  });
+
+  it('construye el mapa de transición con conteos reales del backend', () => {
+    component.metodologia.set({
+      escalasRiesgo: [
+        { nivel: 'Bajo', valorMinimo: 1, color: '#22c55e' },
+        { nivel: 'Medio', valorMinimo: 2, color: '#facc15' },
+        { nivel: 'Alto', valorMinimo: 3, color: '#f97316' }
+      ]
+    } as never);
+    component.dashboard.set({
+      totalMatrices: 4,
+      mapaTransicion: [
+        { nivelInherente: 'Alto', nivelResidual: 'Medio', total: 3, promedioInherente: 4.5, promedioResidual: 2.5 }
+      ],
+      porNivelInherente: [],
+      porNivelResidual: []
+    } as never);
+
+    const celda = component.heatmapFilas()
+      .find(fila => fila.nivelInherente === 'Alto')?.celdas
+      .find(item => item.nivelResidual === 'Medio');
+
+    expect(celda).toEqual(expect.objectContaining({ total: 3, promedioInherente: 4.5, promedioResidual: 2.5 }));
+  });
+
+  it('aplica los niveles de una celda como filtros del dashboard', () => {
+    component.seleccionarCeldaMapa({ nivelInherente: 'Alto', nivelResidual: 'Medio' });
+
+    expect(component.reporteFiltro()).toEqual(expect.objectContaining({ nivelInherente: 'Alto', nivelResidual: 'Medio' }));
+    expect(service['dashboard']).toHaveBeenCalled();
+    expect(service['reporte']).toHaveBeenCalled();
+  });
+
   it('lista matrices con los filtros activos y finaliza la carga', () => {
     const matrices = [{ matrizId: 7, nombreSujeto: 'Proveedor Uno' }];
     component.filtroBuscar.set('Proveedor');

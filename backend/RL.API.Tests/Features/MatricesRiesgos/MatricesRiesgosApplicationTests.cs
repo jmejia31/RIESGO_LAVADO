@@ -720,6 +720,35 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.EliminarCriterioAsync)));
     }
 
+
+    [Fact]
+    public async Task Dashboard_NormalizaFiltrosYDelegaAlRepositorio()
+    {
+        var service = CrearServicio(out var repo, out _);
+        MatrizRiesgoReporteFiltroDto? recibido = null;
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerDashboardAsync), args =>
+        {
+            recibido = Assert.IsType<MatrizRiesgoReporteFiltroDto>(args[0]);
+            return Task.FromResult(new MatricesRiesgoDashboardDto { TotalMatrices = 4 });
+        });
+
+        var result = await service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+        {
+            Estado = " aprobada ",
+            SujetoTipo = " proveedor ",
+            NivelInherente = " Alto ",
+            NivelResidual = " Medio "
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(4, result.Data?.TotalMatrices);
+        Assert.NotNull(recibido);
+        Assert.Equal("APROBADA", recibido!.Estado);
+        Assert.Equal("PROVEEDOR", recibido.SujetoTipo);
+        Assert.Equal("Alto", recibido.NivelInherente);
+        Assert.Equal("Medio", recibido.NivelResidual);
+    }
+
     private static MatricesRiesgosAppService CrearServicio(out InterfaceStub repoStub, out InterfaceStub motorStub, IConfiguration? configuration = null)
     {
         var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);

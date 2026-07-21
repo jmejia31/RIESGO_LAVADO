@@ -7,6 +7,7 @@ export interface MatrizRiesgoFiltro {
 }
 
 export interface MatrizRiesgoReporteFiltro extends MatrizRiesgoFiltro {
+  nivelInherente?: string;
   nivelResidual?: string;
   modeloVersion?: string;
   responsable?: string;
@@ -178,13 +179,30 @@ export interface MatrizRiesgoCrearRequest {
   controles: MatrizRiesgoControlRequest[];
 }
 
+export interface MatrizRiesgoMapaTransicion {
+  nivelInherente: string;
+  nivelResidual: string;
+  total: number;
+  promedioInherente: number;
+  promedioResidual: number;
+}
+
 export interface MatrizRiesgoDashboard {
+  fechaGeneracion: string;
+  filtro: MatrizRiesgoReporteFiltro;
   totalMatrices: number;
   totalCalculadas: number;
   totalCerradas: number;
   totalConPlanAccion: number;
+  totalAltoCritico: number;
+  totalPlanesVencidos: number;
   porEstado: { nombre: string; total: number }[];
+  porNivelInherente: { nombre: string; total: number }[];
   porNivelResidual: { nombre: string; total: number }[];
+  mapaTransicion: MatrizRiesgoMapaTransicion[];
+  matricesCriticas: MatrizRiesgoResumen[];
+  matricesFiltradas: MatrizRiesgoResumen[];
+  planesAccion: { estado: string; total: number; vencidos: number }[];
 }
 
 export interface MatricesRiesgoReporte {

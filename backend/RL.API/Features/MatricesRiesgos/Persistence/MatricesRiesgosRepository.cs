@@ -129,60 +129,33 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return result;
     }
 
-    public async Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync()
+    public async Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        var dashboard = new MatricesRiesgoDashboardDto();
-        await using (var cmd = conn.CreateCommand())
+        filtro ??= new MatrizRiesgoReporteFiltroDto();
+        var totales = await ObtenerTotalesReporteAsync(conn, filtro);
+        var matricesFiltradas = await ObtenerMatricesDashboardAsync(conn, filtro);
+
+        return new MatricesRiesgoDashboardDto
         {
-            cmd.CommandText = @"
-                SELECT COUNT(DISTINCT m.MRMAT_ID) TOTAL,
-                       COUNT(DISTINCT CASE WHEN r.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
-                       COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS
-                  FROM RL_MR_MATRICES m
-                  LEFT JOIN RL_MR_RESULTADOS r
-                    ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-                   AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-                   AND r.MRR_ES_VIGENTE = 1
-                 WHERE m.MRMAT_ESTADO_REGISTRO = 1";
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                dashboard.TotalMatrices = ToInt(reader["TOTAL"]);
-                dashboard.TotalCalculadas = ToInt(reader["CALCULADAS"]);
-                dashboard.TotalCerradas = ToInt(reader["CERRADAS"]);
-            }
-        }
-
-        dashboard.PorEstado = await ObtenerConteosAsync(conn, "SELECT CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END NOMBRE, COUNT(*) TOTAL FROM RL_MR_MATRICES WHERE MRMAT_ESTADO_REGISTRO = 1 GROUP BY CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END ORDER BY NOMBRE");
-        dashboard.PorNivelResidual = await ObtenerConteosAsync(conn, @"
-            SELECT NVL(MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NOMBRE, COUNT(*) TOTAL
-              FROM RL_MR_MATRICES m
-              LEFT JOIN RL_MR_RESULTADOS r
-                ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-               AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-               AND r.MRR_ES_VIGENTE = 1
-             WHERE m.MRMAT_ESTADO_REGISTRO = 1
-             GROUP BY NVL(MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')
-             ORDER BY NOMBRE");
-        await using (var cmd = conn.CreateCommand())
-        {
-            cmd.CommandText = @"
-                SELECT COUNT(*)
-                  FROM RL_MR_MATRICES m
-                  JOIN RL_MR_RESULTADOS r
-                    ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-                   AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-                   AND r.MRR_ES_VIGENTE = 1
-                 WHERE m.MRMAT_ESTADO_REGISTRO = 1
-                   AND r.MRR_REQUIERE_PLAN = 1";
-            dashboard.TotalConPlanAccion = ToInt(await cmd.ExecuteScalarAsync());
-        }
-
-        return dashboard;
+            FechaGeneracion = DateTime.Now,
+            Filtro = filtro,
+            TotalMatrices = totales.TotalMatrices,
+            TotalCalculadas = totales.TotalCalculadas,
+            TotalCerradas = totales.TotalCerradas,
+            TotalConPlanAccion = totales.TotalPlanAccionRequerido,
+            TotalAltoCritico = totales.TotalAltoCritico,
+            TotalPlanesVencidos = totales.TotalPlanesVencidos,
+            PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE m.MRMAT_ESTADO END"),
+            PorNivelInherente = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO')"),
+            PorNivelResidual = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')"),
+            MapaTransicion = await ObtenerMapaTransicionDashboardAsync(conn, filtro),
+            MatricesCriticas = await ObtenerMatricesCriticasReporteAsync(conn, filtro),
+            MatricesFiltradas = matricesFiltradas,
+            PlanesAccion = await ObtenerPlanesAccionReporteAsync(conn, filtro)
+        };
     }
 
     public async Task<MatricesRiesgoReporteDto> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro)
@@ -2563,6 +2536,94 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return result;
     }
 
+    private async Task<List<MatrizRiesgoMapaTransicionDto>> ObtenerMapaTransicionDashboardAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
+    {
+        var where = new List<string>
+        {
+            "m.MRMAT_ESTADO_REGISTRO = 1",
+            "ri.MRR_ES_VIGENTE = 1",
+            "ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'"
+        };
+        var parameters = new List<OracleParameter>();
+        AgregarFiltrosReporte(filtro, where, parameters);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.CommandText = $@"
+            SELECT NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO') NIVEL_INHERENTE,
+                   NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NIVEL_RESIDUAL,
+                   COUNT(*) TOTAL,
+                   ROUND(AVG(NVL(ri.MRR_PUNTAJE_INHERENTE, 0)), 4) PROMEDIO_INHERENTE,
+                   ROUND(AVG(NVL(ri.MRR_PUNTAJE_RESIDUAL, 0)), 4) PROMEDIO_RESIDUAL
+              FROM RL_MR_MATRICES m
+              JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
+              JOIN RL_MR_RESULTADOS ri
+                ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+             WHERE {string.Join(" AND ", where)}
+             GROUP BY NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO'),
+                      NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')
+             ORDER BY MIN(ri.MRR_PUNTAJE_INHERENTE) DESC,
+                      MIN(ri.MRR_PUNTAJE_RESIDUAL)";
+
+        foreach (var parameter in parameters)
+            cmd.Parameters.Add(parameter);
+
+        var result = new List<MatrizRiesgoMapaTransicionDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add(new MatrizRiesgoMapaTransicionDto
+            {
+                NivelInherente = reader["NIVEL_INHERENTE"].ToString() ?? string.Empty,
+                NivelResidual = reader["NIVEL_RESIDUAL"].ToString() ?? string.Empty,
+                Total = ToInt(reader["TOTAL"]),
+                PromedioInherente = ToDecimal(reader["PROMEDIO_INHERENTE"]),
+                PromedioResidual = ToDecimal(reader["PROMEDIO_RESIDUAL"])
+            });
+        }
+
+        return result;
+    }
+
+    private async Task<List<MatrizRiesgoResumenDto>> ObtenerMatricesDashboardAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
+    {
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
+        var parameters = new List<OracleParameter>();
+        AgregarFiltrosReporte(filtro, where, parameters);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.CommandText = $@"
+            SELECT *
+              FROM (
+                    SELECT m.MRMAT_ID, m.MRMAT_MODELO_ID, mo.MRM_VERSION, m.MRMAT_SUJETO_TIPO,
+                           m.MRMAT_SUJETO_ID_EXT, m.MRMAT_DOCUMENTO, m.MRMAT_NOMBRE_SUJETO,
+                           m.MRMAT_ESTADO, m.MRMAT_FECHA_EVALUACION,
+                           ri.MRR_PUNTAJE_INHERENTE, ri.MRR_NIVEL_INHERENTE,
+                           ri.MRR_PUNTAJE_RESIDUAL, ri.MRR_NIVEL_RESIDUAL, ri.MRR_REQUIERE_PLAN
+                      FROM RL_MR_MATRICES m
+                      JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
+                      LEFT JOIN RL_MR_RESULTADOS ri
+                        ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+                       AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
+                       AND ri.MRR_ES_VIGENTE = 1
+                     WHERE {string.Join(" AND ", where)}
+                     ORDER BY NVL(ri.MRR_PUNTAJE_RESIDUAL, -1) DESC,
+                              m.MRMAT_FECHA_EVALUACION DESC,
+                              m.MRMAT_ID DESC
+                   )
+             WHERE ROWNUM <= 25";
+
+        foreach (var parameter in parameters)
+            cmd.Parameters.Add(parameter);
+
+        var result = new List<MatrizRiesgoResumenDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            result.Add(MapResumen(reader));
+        return result;
+    }
+
     private async Task<List<MatrizRiesgoResumenDto>> ObtenerMatricesCriticasReporteAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
     {
         var where = new List<string>
@@ -2701,6 +2762,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         {
             where.Add("m.MRMAT_SUJETO_TIPO = :repSujetoTipo");
             parameters.Add(new OracleParameter("repSujetoTipo", filtro.SujetoTipo.Trim().ToUpperInvariant()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtro.NivelInherente))
+        {
+            where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_INHERENTE, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelInherente");
+            parameters.Add(new OracleParameter("repNivelInherente", NormalizarTexto(filtro.NivelInherente)));
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.NivelResidual))

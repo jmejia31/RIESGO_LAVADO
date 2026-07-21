@@ -274,28 +274,81 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return [...new Set(valores.map(valor => Number(valor)))].sort((a, b) => a - b);
   });
 
-  readonly resumenNiveles = computed(() => {
-    const totalMatrices = this.dashboard()?.totalMatrices ?? 0;
-    const conteos = new Map((this.dashboard()?.porNivelResidual ?? []).map((x: { nombre: string; total: number }) => [x.nombre.toUpperCase(), x.total]));
-    return this.escalasRiesgoOrdenadas().map(e => ({
-      ...e,
-      total: conteos.get(e.nivel.toUpperCase()) ?? 0,
-      porcentaje: totalMatrices > 0 ? ((conteos.get(e.nivel.toUpperCase()) ?? 0) / totalMatrices) * 100 : 0
-    }));
-  });
+  readonly resumenNivelesInherente = computed(() =>
+    this.construirResumenNiveles(this.dashboard()?.porNivelInherente ?? [])
+  );
+
+  readonly resumenNivelesResidual = computed(() =>
+    this.construirResumenNiveles(this.dashboard()?.porNivelResidual ?? [])
+  );
 
   readonly heatmapFilas = computed(() => {
-    const niveles = this.escalasRiesgoOrdenadas();
-    const colores = niveles.length > 0 ? niveles.map(n => n.color || this.colorNivel(n.nivel)) : ['#4caf50', '#8bc34a', '#ffc107', '#ff9800', '#f44336'];
-    const etiquetas = ['Frecuente', 'Probable', 'Ocasional', 'Posible', 'Improbable'];
-    return etiquetas.map((frecuencia, fila) => ({
-      frecuencia,
-      celdas: [0, 1, 2, 3, 4].map(col => {
-        const idx = Math.min(4, Math.max(0, fila + col - 2));
-        return { color: colores[idx] ?? '#e5e7eb', nivel: niveles[idx]?.nivel ?? 'Sin escala' };
+    const nivelesAsc = this.escalasRiesgoOrdenadas();
+    const filas = [...nivelesAsc].reverse();
+    const datos = new Map((this.dashboard()?.mapaTransicion ?? []).map(celda => [
+      `${this.normalizarNivelMapa(celda.nivelInherente)}|${this.normalizarNivelMapa(celda.nivelResidual)}`,
+      celda
+    ]));
+
+    return filas.map(inherente => ({
+      nivelInherente: inherente.nivel,
+      celdas: nivelesAsc.map(residual => {
+        const dato = datos.get(`${this.normalizarNivelMapa(inherente.nivel)}|${this.normalizarNivelMapa(residual.nivel)}`);
+        return {
+          nivelInherente: inherente.nivel,
+          nivelResidual: residual.nivel,
+          total: dato?.total ?? 0,
+          promedioInherente: dato?.promedioInherente ?? 0,
+          promedioResidual: dato?.promedioResidual ?? 0,
+          color: residual.color || this.colorNivel(residual.nivel)
+        };
       })
     }));
   });
+
+  readonly nivelesMapaColumnas = computed(() => this.escalasRiesgoOrdenadas().map(nivel => nivel.nivel));
+
+  seleccionarCeldaMapa(celda: { nivelInherente: string; nivelResidual: string }): void {
+    this.reporteFiltro.update(filtro => ({
+      ...filtro,
+      nivelInherente: celda.nivelInherente,
+      nivelResidual: celda.nivelResidual
+    }));
+    this.cargarDashboard();
+    this.cargarReporte();
+  }
+
+  limpiarSeleccionMapa(): void {
+    this.reporteFiltro.update(filtro => ({
+      ...filtro,
+      nivelInherente: undefined,
+      nivelResidual: undefined
+    }));
+    this.cargarDashboard();
+    this.cargarReporte();
+  }
+
+  abrirMatrizDesdeDashboard(matrizId: number): void {
+    this.tab.set('matrices');
+    this.seleccionarMatriz(matrizId);
+  }
+
+  private construirResumenNiveles(conteosOrigen: { nombre: string; total: number }[]) {
+    const totalMatrices = this.dashboard()?.totalMatrices ?? 0;
+    const conteos = new Map(conteosOrigen.map(x => [this.normalizarNivelMapa(x.nombre), x.total]));
+    return this.escalasRiesgoOrdenadas().map(escala => {
+      const total = conteos.get(this.normalizarNivelMapa(escala.nivel)) ?? 0;
+      return {
+        ...escala,
+        total,
+        porcentaje: totalMatrices > 0 ? (total / totalMatrices) * 100 : 0
+      };
+    });
+  }
+
+  private normalizarNivelMapa(nivel?: string | null): string {
+    return `${nivel ?? ''}`.trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  }
 
   readonly mostrarHistorialDebajoListado = computed(() => {
     // Con pocos registros, el historial se coloca bajo el listado para aprovechar el espacio central.
@@ -357,7 +410,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarDashboard(): void {
-    this.service.dashboard().subscribe({
+    this.service.dashboard(this.reporteFiltro()).subscribe({
       next: datos => this.dashboard.set(datos),
       error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el dashboard.'))
     });
@@ -399,13 +452,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   limpiarFiltrosReporte(): void {
     this.reporteFiltro.set({});
+    this.cargarDashboard();
     this.cargarReporte();
   }
 
   private programarCargaReporte(): void {
     // Evita llamadas repetidas mientras el usuario escribe o cambia filtros.
     if (this.reporteFiltroTimer) clearTimeout(this.reporteFiltroTimer);
-    this.reporteFiltroTimer = setTimeout(() => this.cargarReporte(), 350);
+    this.reporteFiltroTimer = setTimeout(() => {
+      this.cargarDashboard();
+      this.cargarReporte();
+    }, 350);
   }
 
   private programarCargaMatrices(): void {

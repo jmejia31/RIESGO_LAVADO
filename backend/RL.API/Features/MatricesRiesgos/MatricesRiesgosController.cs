@@ -40,11 +40,31 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpGet("dashboard")]
-    public async Task<IActionResult> ObtenerDashboard()
+    public async Task<IActionResult> ObtenerDashboard(
+        [FromQuery] string? buscar = null,
+        [FromQuery] string? estado = null,
+        [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
+        [FromQuery] string? nivelResidual = null,
+        [FromQuery] string? modeloVersion = null,
+        [FromQuery] string? responsable = null,
+        [FromQuery] DateTime? fechaInicio = null,
+        [FromQuery] DateTime? fechaFin = null)
     {
         try
         {
-            var result = await _service.ObtenerDashboardAsync();
+            var result = await _service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+            {
+                Buscar = buscar,
+                Estado = estado,
+                SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
+                NivelResidual = nivelResidual,
+                ModeloVersion = modeloVersion,
+                Responsable = responsable,
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin
+            });
             return Responder(result);
         }
         catch (Exception ex)
@@ -59,6 +79,7 @@ public sealed class MatricesRiesgosController : ControllerBase
         [FromQuery] string? buscar = null,
         [FromQuery] string? estado = null,
         [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
         [FromQuery] string? nivelResidual = null,
         [FromQuery] string? modeloVersion = null,
         [FromQuery] string? responsable = null,
@@ -72,6 +93,7 @@ public sealed class MatricesRiesgosController : ControllerBase
                 Buscar = buscar,
                 Estado = estado,
                 SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
                 NivelResidual = nivelResidual,
                 ModeloVersion = modeloVersion,
                 Responsable = responsable,
@@ -94,6 +116,7 @@ public sealed class MatricesRiesgosController : ControllerBase
         [FromQuery] string? buscar = null,
         [FromQuery] string? estado = null,
         [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
         [FromQuery] string? nivelResidual = null,
         [FromQuery] string? modeloVersion = null,
         [FromQuery] string? responsable = null,
@@ -107,6 +130,7 @@ public sealed class MatricesRiesgosController : ControllerBase
                 Buscar = buscar,
                 Estado = estado,
                 SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
                 NivelResidual = nivelResidual,
                 ModeloVersion = modeloVersion,
                 Responsable = responsable,

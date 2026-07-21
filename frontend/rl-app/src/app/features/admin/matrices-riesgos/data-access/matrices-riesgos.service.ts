@@ -39,8 +39,8 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
-  dashboard(): Observable<MatrizRiesgoDashboard> {
-    return this.http.get<ApiResponse<MatrizRiesgoDashboard>>(`${this.apiUrl}/dashboard`)
+  dashboard(filtro: MatrizRiesgoReporteFiltro = {}): Observable<MatrizRiesgoDashboard> {
+    return this.http.get<ApiResponse<MatrizRiesgoDashboard>>(`${this.apiUrl}/dashboard`, { params: this.construirParams(filtro) })
       .pipe(map(res => res.datos));
   }
 

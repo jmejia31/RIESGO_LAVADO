@@ -5,6 +5,7 @@ public sealed class MatrizRiesgoReporteFiltroDto
     public string? Buscar { get; set; }
     public string? Estado { get; set; }
     public string? SujetoTipo { get; set; }
+    public string? NivelInherente { get; set; }
     public string? NivelResidual { get; set; }
     public string? ModeloVersion { get; set; }
     public string? Responsable { get; set; }
@@ -14,12 +15,30 @@ public sealed class MatrizRiesgoReporteFiltroDto
 
 public sealed class MatricesRiesgoDashboardDto
 {
+    public DateTime FechaGeneracion { get; set; } = DateTime.Now;
+    public MatrizRiesgoReporteFiltroDto Filtro { get; set; } = new();
     public int TotalMatrices { get; set; }
     public int TotalCalculadas { get; set; }
     public int TotalCerradas { get; set; }
     public int TotalConPlanAccion { get; set; }
+    public int TotalAltoCritico { get; set; }
+    public int TotalPlanesVencidos { get; set; }
     public List<MatrizRiesgoConteoDto> PorEstado { get; set; } = new();
+    public List<MatrizRiesgoConteoDto> PorNivelInherente { get; set; } = new();
     public List<MatrizRiesgoConteoDto> PorNivelResidual { get; set; } = new();
+    public List<MatrizRiesgoMapaTransicionDto> MapaTransicion { get; set; } = new();
+    public List<MatrizRiesgoResumenDto> MatricesCriticas { get; set; } = new();
+    public List<MatrizRiesgoResumenDto> MatricesFiltradas { get; set; } = new();
+    public List<MatrizRiesgoPlanAccionReporteDto> PlanesAccion { get; set; } = new();
+}
+
+public sealed class MatrizRiesgoMapaTransicionDto
+{
+    public string NivelInherente { get; set; } = string.Empty;
+    public string NivelResidual { get; set; } = string.Empty;
+    public int Total { get; set; }
+    public decimal PromedioInherente { get; set; }
+    public decimal PromedioResidual { get; set; }
 }
 
 public sealed class MatrizRiesgoConteoDto

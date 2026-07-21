@@ -8,7 +8,7 @@ public interface IMatricesRiesgosRepository
     Task<MetodologiaCalculoDto?> ObtenerMetodologiaVigenteAsync();
     Task<MatrizRiesgoDetalleDto?> ObtenerMatrizAsync(long matrizId);
     Task<List<MatrizRiesgoResumenDto>> ListarMatricesAsync(MatrizRiesgoFiltroDto filtro);
-    Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync();
+    Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task<MatricesRiesgoReporteDto> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task RegistrarExportacionReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip);
     Task<long> CrearMatrizAsync(MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);

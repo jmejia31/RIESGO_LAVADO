@@ -95,9 +95,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult<MetodologiaCalculoDto>.Ok(metodologia);
     }
 
-    public async Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync()
+    public async Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro)
     {
-        var dashboard = await _repo.ObtenerDashboardAsync();
+        filtro ??= new MatrizRiesgoReporteFiltroDto();
+        var errorFiltro = NormalizarFiltroReporte(filtro);
+        if (errorFiltro != null)
+            return ServiceResult<MatricesRiesgoDashboardDto>.BadRequest(errorFiltro);
+
+        var dashboard = await _repo.ObtenerDashboardAsync(filtro);
         return ServiceResult<MatricesRiesgoDashboardDto>.Ok(dashboard);
     }
 
@@ -847,6 +852,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         filtro.Buscar = filtro.Buscar?.Trim();
         filtro.Estado = filtro.Estado?.Trim().ToUpperInvariant();
         filtro.SujetoTipo = filtro.SujetoTipo?.Trim().ToUpperInvariant();
+        filtro.NivelInherente = filtro.NivelInherente?.Trim();
         filtro.NivelResidual = filtro.NivelResidual?.Trim();
         filtro.ModeloVersion = filtro.ModeloVersion?.Trim();
         filtro.Responsable = filtro.Responsable?.Trim();
@@ -1035,6 +1041,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             new[] { "Búsqueda general", ValorFiltro(filtro.Buscar) },
             new[] { "Estado", ValorFiltro(filtro.Estado) },
             new[] { "Tipo de sujeto", ValorFiltro(filtro.SujetoTipo) },
+            new[] { "Nivel inherente", ValorFiltro(filtro.NivelInherente) },
             new[] { "Nivel residual", ValorFiltro(filtro.NivelResidual) },
             new[] { "Versión metodología", ValorFiltro(filtro.ModeloVersion) },
             new[] { "Responsable", ValorFiltro(filtro.Responsable) },
