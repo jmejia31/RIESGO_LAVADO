@@ -1,0 +1,1 @@
+Reintento controlado con conservación de log completo.
