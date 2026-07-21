@@ -23,7 +23,7 @@ jobs:
       - name: Inventariar estructura y conceptos
         shell: bash
         run: |
-          find backend frontend database db scripts docs -type f 2>/dev/null | sort > fase12_3_archivos.txt
+          { find backend frontend database db scripts docs -type f 2>/dev/null || true; } | sort > fase12_3_archivos.txt
           grep -RniE --exclude-dir=.git --exclude='*.docx' --exclude='*.pdf' --exclude='*.xls' --exclude='*.xlsx' \
             'probabilidad|impacto|heatmap|mapa de calor|MatrizCalculoResultadoDto|PuntajeInherente|PuntajeResidual|MRR_PUNTAJE|MRR_NIVEL' \
             backend frontend database db scripts docs 2>/dev/null > fase12_3_coincidencias.txt || true
