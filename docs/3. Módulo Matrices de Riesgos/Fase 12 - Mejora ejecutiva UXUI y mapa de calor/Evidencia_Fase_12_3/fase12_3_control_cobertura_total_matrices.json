@@ -1,0 +1,31 @@
+{
+  "fase": "12.3 - Dashboard ejecutivo y mapa de calor funcional",
+  "fecha": "2026-07-21",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "alcance": "Modulo Matrices de Riesgos",
+  "cobertura_dashboard": {
+    "incluye_todas_las_matrices_activas": true,
+    "incluye_todos_los_tipos_de_sujeto": true,
+    "muestra_matrices_sin_evaluacion": true,
+    "kpi_sin_evaluar": true,
+    "distribucion_por_tipo_de_sujeto": true
+  },
+  "mapa_calor": {
+    "fuente": "RL_MR_RESULTADOS",
+    "resultado_consolidado_por_matriz": "MRR_TIPO_RESULTADO = INSTITUCIONAL",
+    "resultado_vigente": "MRR_ES_VIGENTE = 1",
+    "interpretacion": "INSTITUCIONAL identifica el resultado consolidado de la matriz y no limita el tipo de sujeto",
+    "evita_duplicacion_por_resultados_factor": true,
+    "transicion": "Nivel inherente -> Nivel residual",
+    "paleta": ["verde", "amarillo", "naranja", "rojo"],
+    "datos_quemados": false,
+    "calculo_en_frontend": false
+  },
+  "restricciones_respetadas": {
+    "dnp_sin_modificar": true,
+    "control_almacen_proveedor_sin_modificar": true,
+    "monitoreo_listas_sin_integrar": true,
+    "motor_calculo_permanece_backend": true
+  },
+  "objetivo_commit": "Activar Quality Gates oficiales sobre la rama limpia posterior al ajuste y retiro de auxiliares temporales."
+}
