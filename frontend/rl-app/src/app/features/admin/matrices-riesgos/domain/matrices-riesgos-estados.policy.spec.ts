@@ -47,22 +47,22 @@ describe('Política operativa de estados de Matrices de Riesgos', () => {
   });
 
   it('impide saltos de estado no autorizados', () => {
-    expect(esTransicionMatrizPermitida('EN_REVISION', 'CERRADA')).toBeFalse();
-    expect(esTransicionMatrizPermitida('APROBADA', 'EN_REVISION')).toBeFalse();
-    expect(esTransicionMatrizPermitida('CERRADA', 'INACTIVA')).toBeFalse();
+    expect(esTransicionMatrizPermitida('EN_REVISION', 'CERRADA')).toBe(false);
+    expect(esTransicionMatrizPermitida('APROBADA', 'EN_REVISION')).toBe(false);
+    expect(esTransicionMatrizPermitida('CERRADA', 'INACTIVA')).toBe(false);
   });
 
   it('permite edición y eliminación únicamente en En Revisión', () => {
-    expect(puedeEditarMatriz('CALCULADA')).toBeTrue();
-    expect(puedeEditarMatriz('APROBADA')).toBeFalse();
-    expect(puedeEliminarMatriz('EN_REVISION')).toBeTrue();
-    expect(puedeEliminarMatriz('CERRADA')).toBeFalse();
+    expect(puedeEditarMatriz('CALCULADA')).toBe(true);
+    expect(puedeEditarMatriz('APROBADA')).toBe(false);
+    expect(puedeEliminarMatriz('EN_REVISION')).toBe(true);
+    expect(puedeEliminarMatriz('CERRADA')).toBe(false);
   });
 
   it('permite tratamiento en revisión o aprobada, pero no en cerrada o inactiva', () => {
-    expect(puedeGestionarTratamientoMatriz('EN_REVISION')).toBeTrue();
-    expect(puedeGestionarTratamientoMatriz('APROBADA')).toBeTrue();
-    expect(puedeGestionarTratamientoMatriz('CERRADA')).toBeFalse();
-    expect(puedeGestionarTratamientoMatriz('INACTIVA')).toBeFalse();
+    expect(puedeGestionarTratamientoMatriz('EN_REVISION')).toBe(true);
+    expect(puedeGestionarTratamientoMatriz('APROBADA')).toBe(true);
+    expect(puedeGestionarTratamientoMatriz('CERRADA')).toBe(false);
+    expect(puedeGestionarTratamientoMatriz('INACTIVA')).toBe(false);
   });
 });
