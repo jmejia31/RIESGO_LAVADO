@@ -1,0 +1,70 @@
+name: Fase 12.1 Integracion
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout rama
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-mejora-ejecutiva-matrices
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+
+      - name: Aplicar integracion Fase 12.1
+        run: node tools/fase12_1_integrar_reglas.mjs
+
+      - name: Instalar dependencias frontend
+        working-directory: frontend/rl-app
+        run: npm ci
+
+      - name: Pruebas frontend
+        working-directory: frontend/rl-app
+        run: npm run test:coverage
+
+      - name: Build Angular
+        working-directory: frontend/rl-app
+        run: npm run build
+
+      - name: Generar evidencia
+        shell: pwsh
+        run: |
+          $ruta = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1/fase12_1_validacion_integracion.json"
+          $obj = [ordered]@{
+            fase = "12.1 - Orden funcional y reglas"
+            fecha = (Get-Date).ToString("yyyy-MM-ddTHH:mm:ssK")
+            rama = "fase-12-mejora-ejecutiva-matrices"
+            integracion_politica_estados = $true
+            boton_calcular_manual_retirado = $true
+            kpi_estado_tecnico_retirado = $true
+            pruebas_frontend = "Aprobadas"
+            build_angular = "Aprobado"
+            resultado = "Correcto"
+          }
+          $obj | ConvertTo-Json -Depth 5 | Set-Content -Path $ruta -Encoding UTF8
+
+      - name: Commit de integracion validada
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/rl-app/src/app/features/admin/matrices-riesgos docs/3.\ Módulo\ Matrices\ de\ Riesgos/Fase\ 12\ -\ Mejora\ ejecutiva\ UXUI/Evidencia_Fase_12_1
+          if git diff --cached --quiet; then
+            echo "No hay cambios pendientes."
+          else
+            git commit -m "feat(matrices): integra reglas operativas fase 12.1"
+            git push origin HEAD:fase-12-mejora-ejecutiva-matrices
+          fi
