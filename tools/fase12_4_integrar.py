@@ -17,7 +17,7 @@ replace_once(
     dto_path,
     "    public List<MatrizRiesgoMapaNivelDto> MapaResidual { get; set; } = new();\n    public List<MatrizRiesgoResumenDto> MatricesFiltradas { get; set; } = new();",
     "    public List<MatrizRiesgoMapaNivelDto> MapaResidual { get; set; } = new();\n    public List<MatrizRiesgoMapaTransicionDto> MapaTransicion { get; set; } = new();\n    public List<MatrizRiesgoResumenDto> MatricesFiltradas { get; set; } = new();",
-    "public List<MatrizRiesgoMapaTransicionDto> MapaTransicion"
+    "public List<MatrizRiesgoMapaNivelDto> MapaResidual { get; set; } = new();\n    public List<MatrizRiesgoMapaTransicionDto> MapaTransicion"
 )
 replace_once(
     dto_path,
@@ -83,7 +83,7 @@ replace_once(
     models_path,
     "  mapaResidual: { nivel: string; total: number; promedio: number }[];\n  matricesFiltradas:",
     "  mapaResidual: { nivel: string; total: number; promedio: number }[];\n  mapaTransicion: MatrizRiesgoMapaTransicion[];\n  matricesFiltradas:",
-    "  mapaTransicion: MatrizRiesgoMapaTransicion[];"
+    "mapaResidual: { nivel: string; total: number; promedio: number }[];\n  mapaTransicion: MatrizRiesgoMapaTransicion[];"
 )
 
 # Todos los tipos de sujeto administrados por backend deben aparecer en filtros/captura.
