@@ -1,0 +1,72 @@
+FASE 12.3 - RESUMEN DE VALIDACION LOCAL
+Modulo: Matrices de Riesgos
+Rama validada: fase-12-mejora-ejecutiva-matrices
+Fecha de validacion: 21/07/2026
+
+1. Sincronizacion
+- Rama local validada contra origin/fase-12-mejora-ejecutiva-matrices.
+- Commit funcional confirmado: fb5a611 feat(matrices): implementa dashboard ejecutivo y mapa funcional fase 12.3.
+- No se realizo merge hacia main.
+- No se sobrescribieron cambios remotos.
+
+2. Pruebas backend
+- Restore de solucion: correcto.
+- Pruebas backend ejecutadas en Release para evitar bloqueo de binarios Debug por procesos locales.
+- Resultado: 84 aprobadas, 0 fallidas, 0 omitidas.
+- Evidencia: backend_tests_release.log y backend_tests_release.trx.
+
+3. Pruebas frontend
+- Pruebas unitarias frontend con cobertura: correctas.
+- Resultado: 144 pruebas aprobadas, 0 fallidas, 14 archivos de prueba aprobados.
+- Build Angular: correcto.
+- E2E: 7 aprobadas, 0 fallidas.
+- Evidencia: frontend_tests.log, frontend_build.log y frontend_e2e.log.
+
+4. Validacion Oracle y API real
+- Backend levantado con configuracion local vigente para validar contra Oracle.
+- Endpoint validado: GET /api/matrices-riesgos/dashboard.
+- La informacion proviene de Oracle y usa resultados persistidos en RL_MR_RESULTADOS.
+- Se confirmo uso de resultados institucionales vigentes mediante MRR_TIPO_RESULTADO = 'INSTITUCIONAL' y MRR_ES_VIGENTE = 1.
+- No se insertaron datos permanentes de prueba.
+- No se realizaron cambios estructurales en Oracle.
+
+5. Resultados contrastados API / Oracle
+- Total de matrices activas: 3.
+- Total de matrices evaluadas: 3.
+- Total de matrices cerradas: 0.
+- Total de matrices Alto/Critico: 2.
+- Total con plan requerido: 2.
+- Total de planes vencidos: 0.
+- Transiciones inherente/residual: 3.
+
+6. Validacion del mapa funcional
+- El mapa representa la transicion Nivel inherente -> Nivel residual.
+- Las celdas se alimentan con datos reales del endpoint validado contra Oracle.
+- Se confirmaron celdas:
+  - Critico -> Critico: total 1, promedio inherente 4.85, promedio residual 4.85.
+  - Alto -> Alto: total 1, promedio inherente 3.6, promedio residual 3.6.
+  - Muy bajo -> Muy bajo: total 1, promedio inherente 1.0, promedio residual 1.0.
+- Al seleccionar una celda se aplican filtros de nivel inherente y nivel residual.
+- Angular no calcula riesgo ni determina niveles; consume resultados entregados por backend.
+- No se detectaron datos quemados en codigo productivo para el dashboard o mapa.
+
+7. Capturas generadas
+- fase12_3_dashboard.png
+- fase12_3_mapa_datos.png
+- fase12_3_mapa_celda_seleccionada.png
+- fase12_3_dashboard_responsive.png
+
+8. Restricciones respetadas
+- No se modifico DNP.
+- No se modifico CONTROL_ALMACEN.PROVEEDOR.
+- No se modifico Monitoreo de Listas.
+- No se cambio la politica de permisos por modulo.
+- No se modifico el motor de calculo.
+- No se modifico la estructura de base de datos.
+
+9. Defectos encontrados
+- No se detectaron defectos de codigo productivo que requirieran correccion.
+- Ajuste realizado solo sobre el script de evidencia para capturar pantallas con Chrome local y consumir los JSON reales generados por la API.
+
+10. Pendiente para cierre funcional
+- Revision visual y aprobacion funcional de la evidencia por Javier Mejia.
