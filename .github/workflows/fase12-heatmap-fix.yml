@@ -24,6 +24,29 @@ jobs:
           ref: fase-12-mejora-ejecutiva-matrices
           fetch-depth: 0
 
+      - name: Ajustar anclaje único del panel de cuadrante
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('tools/fase12_heatmap_fix.py')
+          text = p.read_text(encoding='utf-8')
+          old = '''html = replace_once(
+              html,
+              \'''    <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">\''',
+              detail_section + \'''
+              <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">\''',
+              'panel inmediato del cuadrante'
+          )'''
+          new = '''target_section = \'''    <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">\'''
+          if target_section not in html:
+              raise RuntimeError('panel inmediato del cuadrante: no se encontró la sección objetivo.')
+          html = html.replace(target_section, detail_section + '\\n' + target_section, 1)'''
+          if old not in text:
+              raise SystemExit('No se encontró el bloque de anclaje que debe corregirse.')
+          p.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
+
       - name: Aplicar corrección controlada
         id: integrar
         shell: bash
