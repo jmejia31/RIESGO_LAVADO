@@ -1,0 +1,115 @@
+e Oracle y cálculo ejecutado exclusivamente en backend.',
+    'La reportería PDF y Excel utiliza los mismos filtros, totales y mapa de transición del dashboard.',
+    'Angular descarga exactamente el archivo generado por el backend; se eliminó la doble generación local.',
+    'La rama final quedó sin workflows ni scripts temporales de integración.'
+]: add_bullet(doc,item)
+
+add_heading(doc, 'Estado por subfase', level=1, number='6.')
+phase_rows=[
+    ('12.1','Orden funcional y reglas','Completada','Estados, recálculo automático y políticas de operación.'),
+    ('12.2','Captura y criterios','Completada','Variables, criterios, rangos, auditoría y controles.'),
+    ('12.3','Dashboard y mapa de calor','Completada','Todos los tipos, matrices sin evaluar, mapa funcional y paleta institucional.'),
+    ('12.4','Reportería, pruebas y cierre','Completada','Coherencia PDF/Excel, descarga backend y Quality Gates finales.')
+]
+tbl=add_table(doc,['Subfase','Nombre','Estado','Resultado'],phase_rows,widths=[0.65,1.85,1.0,3.1],font_size=8.2)
+for r in tbl.rows[1:]: add_status_chip(r.cells[2],'COMPLETADA',GREEN)
+
+p = doc.add_paragraph(); p.add_run().add_break(WD_BREAK.PAGE)
+
+# Functional design
+add_section_banner(doc, 'RESULTADO FUNCIONAL', 'Dashboard ejecutivo, cobertura total y mapa de calor')
+add_heading(doc, 'Cobertura de matrices y tipos de sujeto', level=1, number='7.')
+add_body(doc, 'El dashboard y la reportería contemplan las matrices activas existentes para todos los tipos de sujeto habilitados. Las matrices sin resultado consolidado se mantienen visibles en los KPI y listados mediante el indicador “Sin evaluar”; no se ubican en una celda del mapa hasta contar con niveles inherente y residual.')
+subject_rows=[
+    ('PROVEEDOR','Proveedor','Incluido'),('CLIENTE_PATRONO','Cliente / Patrono','Incluido'),('EMPLEADO','Empleado','Incluido'),('AREA','Área','Incluido'),('PROCESO','Proceso','Incluido'),('CASO_POSITIVO','Caso positivo','Incluido'),('INSTITUCIONAL','Institucional','Incluido')
+]
+t=add_table(doc,['Código','Etiqueta funcional','Cobertura'],subject_rows,widths=[1.45,3.4,1.3],font_size=8.5)
+for r in t.rows[1:]: add_status_chip(r.cells[2],'INCLUIDO',GREEN)
+
+add_heading(doc, 'Aclaración sobre el resultado consolidado', level=1, number='8.')
+add_callout(doc, 'REGLA DE CONSOLIDACIÓN',
+            "MRR_TIPO_RESULTADO = 'INSTITUCIONAL' identifica el resultado consolidado general de una matriz. No restringe el tipo de sujeto a institucional. Mantener un único resultado consolidado vigente por matriz evita duplicar el conteo ejecutivo por cada resultado de factor.", BLUE, LIGHT_BLUE)
+
+p = doc.add_paragraph(); p.add_run().add_break(WD_BREAK.PAGE)
+add_heading(doc, 'Mapa de calor funcional', level=1, number='9.')
+for item in [
+    'Eje vertical: nivel de riesgo inherente.',
+    'Eje horizontal: nivel de riesgo residual.',
+    'Cada matriz se contabiliza una sola vez mediante su resultado consolidado vigente.',
+    'Selección de celda: aplica filtros por nivel inherente y residual al dashboard y a la reportería.',
+    'Paleta aprobada: verde → amarillo → naranja → rojo, con incremento diagonal de severidad.',
+    'Los resultados por factor permanecen disponibles en el detalle y en la reportería técnica.'
+]: add_bullet(doc,item)
+
+# Heatmap conceptual table
+levels=['MUY BAJO','BAJO','MEDIO','ALTO','CRÍTICO']
+heat=doc.add_table(rows=6, cols=6); heat.alignment=WD_TABLE_ALIGNMENT.CENTER
+heat.cell(0,0).text='Inherente ↓ / Residual →'
+for i,l in enumerate(levels,1): heat.cell(0,i).text=l
+for i,l in enumerate(reversed(levels),1): heat.cell(i,0).text=l
+palette=[['FEE2E2','FECACA','FDBA74','FB923C','EF4444'],['FEF3C7','FDE68A','FCD34D','FB923C','F87171'],['DCFCE7','FEF3C7','FDE68A','FBBF24','FB923C'],['BBF7D0','D9F99D','FEF3C7','FDE68A','FCD34D'],['86EFAC','BBF7D0','DCFCE7','FEF3C7','FDE68A']]
+for r in range(6):
+    for c in range(6):
+        cell=heat.cell(r,c); cell.vertical_alignment=WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        p=cell.paragraphs[0]; p.alignment=WD_ALIGN_PARAGRAPH.CENTER
+        for run in p.runs: set_run_font(run,bold=(r==0 or c==0),color=NAVY if (r==0 or c==0) else DARK,size=7.2)
+        if r==0 or c==0: set_cell_shading(cell,LIGHT_BLUE)
+        else: set_cell_shading(cell,palette[r-1][c-1])
+set_table_borders(heat,color='C8D2DC',size='5')
+
+p = doc.add_paragraph(); p.add_run().add_break(WD_BREAK.PAGE)
+
+# Reporting
+add_section_banner(doc, 'REPORTERÍA Y EXPORTACIONES', 'Coherencia entre dashboard, API, PDF y Excel')
+add_heading(doc, 'Corrección estructural de Fase 12.4', level=1, number='10.')
+add_body(doc, 'Antes del ajuste, el backend generaba y auditaba un archivo filtrado, pero Angular descartaba el blob recibido y construía un archivo local distinto. Esta doble generación fue eliminada. La interfaz ahora descarga exactamente el archivo producido por el API, preservando filtros, contenido, nomenclatura y trazabilidad.')
+
+flow_rows=[
+    ('1','Usuario define filtros','Buscar, estado, sujeto, fechas, niveles, versión y responsable.'),
+    ('2','Angular envía solicitud','POST /api/matrices-riesgos/reportes/exportar con el formato solicitado.'),
+    ('3','Backend obtiene reporte','Consulta Oracle con los mismos filtros del dashboard.'),
+    ('4','Backend construye archivo','Genera PDF o Excel con resumen, distribuciones, mapa y listados.'),
+    ('5','Auditoría registra exportación','Formato, usuario, correo, IP, fecha y filtros.'),
+    ('6','Angular descarga el blob','No recalcula ni reconstruye el contenido.'),
+]
+add_table(doc,['Paso','Proceso','Control'],flow_rows,widths=[0.5,2.0,4.1],font_size=8.3)
+
+add_heading(doc, 'Contenido alineado', level=1, number='11.')
+content_rows=[
+    ('Filtros aplicados','PDF / Excel','Alineado'),
+    ('Total de matrices','Dashboard / PDF / Excel','Alineado'),
+    ('Matrices evaluadas','Dashboard / PDF / Excel','Alineado'),
+    ('Matrices sin evaluar','Dashboard / PDF / Excel','Alineado'),
+    ('Distribución por estado','Dashboard / PDF / Excel','Alineado'),
+    ('Distribución por sujeto','Dashboard / Excel','Alineado'),
+    ('Mapa inherente y residual','PDF / Excel','Alineado'),
+    ('Mapa de transición inherente → residual','Dashboard / PDF / Excel','Alineado'),
+    ('Matrices filtradas y críticas','Dashboard / PDF / Excel','Alineado'),
+    ('Planes de acción','Dashboard / PDF / Excel','Alineado')
+]
+t=add_table(doc,['Elemento','Salidas','Estado'],content_rows,widths=[2.6,2.5,1.2],font_size=8.2)
+for r in t.rows[1:]: add_status_chip(r.cells[2],'ALINEADO',GREEN)
+
+# La auditoría de exportaciones ya queda documentada en el flujo anterior.
+
+# QA
+add_section_banner(doc, 'PRUEBAS INTEGRALES Y QUALITY GATES', 'Resultados automatizados de la rama final')
+add_heading(doc, 'Resultado de validación', level=1, number='12.')
+qa_rows=[
+    ('Backend .NET','84','0','0','Aprobado'),
+    ('Frontend unitarias','146','0','—','Aprobado'),
+    ('Archivos de prueba frontend','14','0','—','Aprobado'),
+    ('E2E Playwright','7','0','—','Aprobado'),
+    ('Build Angular','Correcto','0','—','Aprobado'),
+    ('Quality Gates oficiales','Ejecución 29864022238','0','—','Aprobado')
+]
+t=add_table(doc,['Componente','Aprobadas / resultado','Fallidas','Omitidas','Estado'],qa_rows,widths=[1.65,2.0,0.8,0.75,1.2],font_size=8.1)
+for r in t.rows[1:]: add_status_chip(r.cells[4],'APROBADO',GREEN)
+
+add_heading(doc, 'Cobertura registrada', level=1, number='13.')
+coverage_rows=[
+    ('Backend','Líneas','15.44%'),('Backend','Ramas','17.39%'),('Frontend','Sentencias','32.53%'),('Frontend','Ramas','27.94%'),('Frontend','Funciones','31.66%'),('Frontend','Líneas','32.79%')
+]
+add_table(doc,['Capa','Métrica','Cobertura'],coverage_rows,widths=[2.0,2.2,1.4],font_size=8.7)
+add_callout(doc, 'INTERPRETACIÓN DE COBERTURA',
+            'Los porcentajes se registran como línea base objetiva de cobertura. El cierre técnico se sustenta en la aprobación de las pruebas funcionales incorporadas, el build, los escenarios E2E y los Quality Gates. El incremento de cobertura global puede continuar como 
