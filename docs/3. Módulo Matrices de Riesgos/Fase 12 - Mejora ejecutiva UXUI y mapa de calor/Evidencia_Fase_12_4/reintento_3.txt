@@ -1,0 +1,1 @@
+Reintento posterior al ajuste de validación del contenido HTML de Excel.
