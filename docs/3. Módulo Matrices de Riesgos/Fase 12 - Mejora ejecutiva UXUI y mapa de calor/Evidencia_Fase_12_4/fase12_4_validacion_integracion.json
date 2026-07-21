@@ -8,6 +8,11 @@
     "nombre": "Fase 12.4 Integracion robusta",
     "resultado": "success"
   },
+  "workflow_control_oficial": {
+    "id": 29864022238,
+    "nombre": "Quality Gates",
+    "resultado": "success"
+  },
   "resultado_funcional": {
     "dashboard_y_reporteria_comparten_filtros": true,
     "excel_descargado_desde_backend": true,
@@ -56,5 +61,5 @@
     "calculo_riesgo_permanece_en_backend": true,
     "sin_datos_quemados": true
   },
-  "estado": "Validacion integral aprobada; pendiente control oficial independiente y aprobacion formal de Javier"
+  "estado": "Validacion tecnica final aprobada; lista para aprobacion formal de Javier y posterior integracion a main"
 }
