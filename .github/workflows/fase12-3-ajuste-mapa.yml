@@ -1,0 +1,78 @@
+name: Fase 12.3 Ajuste mapa completo
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fase12-3-ajuste-mapa-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ajustar-validar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout rama
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-mejora-ejecutiva-matrices
+          fetch-depth: 0
+
+      - name: Aplicar ajuste funcional y visual
+        run: python tools/fase12_3_ajustar_mapa_todas_matrices.py
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restaurar backend
+        run: dotnet restore backend/RL.API.Tests/RL.API.Tests.csproj --disable-parallel
+
+      - name: Probar backend
+        run: dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+
+      - name: Instalar frontend
+        working-directory: frontend/rl-app
+        run: npm ci
+
+      - name: Probar frontend
+        working-directory: frontend/rl-app
+        run: npm run test:coverage
+
+      - name: Compilar Angular
+        working-directory: frontend/rl-app
+        run: npm run build
+
+      - name: Publicar ajuste validado en la rama
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            backend/RL.API/Features/MatricesRiesgos/Contracts/Reporteria/ReporteriaDtos.cs \
+            backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs \
+            frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts \
+            frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts \
+            frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html \
+            frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts
+          if git diff --cached --quiet; then
+            echo "No hay cambios pendientes para publicar."
+            exit 0
+          fi
+          git commit -m "fix(matrices): muestra todas las matrices y mejora colores del mapa"
+          git push origin HEAD:fase-12-mejora-ejecutiva-matrices
