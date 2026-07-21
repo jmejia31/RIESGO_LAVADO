@@ -4,13 +4,16 @@ on:
   push:
     branches:
       - fase-12-mejora-ejecutiva-matrices
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: fase12-1-integracion
+  group: fase12-1-integracion-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
