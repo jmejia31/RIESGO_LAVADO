@@ -1,0 +1,163 @@
+    r2 = p2.add_run(subtitle)
+        set_run_font(r2, color='DCE8F6', size=8.5)
+    doc.add_paragraph().paragraph_format.space_after = Pt(0)
+
+
+doc = Document()
+sec = doc.sections[0]
+sec.top_margin = Inches(0.65)
+sec.bottom_margin = Inches(0.6)
+sec.left_margin = Inches(0.72)
+sec.right_margin = Inches(0.72)
+sec.header_distance = Inches(0.25)
+sec.footer_distance = Inches(0.25)
+
+# Metadata
+props = doc.core_properties
+props.title = 'Cierre Técnico Fase 12 - Matrices de Riesgos'
+props.subject = 'Sistema de Gestión de Riesgos de Lavado de Activos y Financiamiento del Terrorismo - IHSS'
+props.author = 'Proyecto SGRLA/FT - IHSS'
+props.keywords = 'IHSS, LAFT, Matrices de Riesgos, Fase 12, Cierre Técnico'
+props.comments = 'Documento maestro de cierre técnico pendiente de aprobación formal.'
+
+# Base styles
+styles = doc.styles
+normal = styles['Normal']
+normal.font.name = 'Aptos'
+normal._element.rPr.rFonts.set(qn('w:eastAsia'), 'Aptos')
+normal.font.size = Pt(9.5)
+normal.font.color.rgb = RGBColor.from_string(DARK)
+for idx, size in [(1,17),(2,13),(3,11)]:
+    st = styles[f'Heading {idx}']
+    st.font.name = 'Aptos Display'
+    st._element.rPr.rFonts.set(qn('w:eastAsia'), 'Aptos Display')
+    st.font.size = Pt(size)
+    st.font.bold = True
+    st.font.color.rgb = RGBColor.from_string(NAVY)
+    st.paragraph_format.space_before = Pt(8)
+    st.paragraph_format.space_after = Pt(5)
+
+# Header/footer except cover
+header = sec.header
+p = header.paragraphs[0]
+p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+r = p.add_run('IHSS  |  Sistema de Gestión de Riesgos LA/FT  |  Módulo Matrices de Riesgos')
+set_run_font(r, bold=True, color=NAVY, size=8)
+# bottom border header
+pPr = p._p.get_or_add_pPr()
+pBdr = OxmlElement('w:pBdr')
+bottom = OxmlElement('w:bottom')
+bottom.set(qn('w:val'),'single'); bottom.set(qn('w:sz'),'6'); bottom.set(qn('w:space'),'1'); bottom.set(qn('w:color'),MID_GRAY)
+pBdr.append(bottom); pPr.append(pBdr)
+footer = sec.footer
+fp = footer.paragraphs[0]
+fp.text = ''
+footer_table = footer.add_table(rows=1, cols=2, width=Inches(6.8))
+footer_table.alignment = WD_TABLE_ALIGNMENT.CENTER
+footer_table.autofit = False
+footer_table.cell(0,0).width = Inches(4.9)
+footer_table.cell(0,1).width = Inches(1.9)
+for c in footer_table.rows[0].cells:
+    set_cell_margins(c, top=0, start=0, bottom=0, end=0)
+left_p = footer_table.cell(0,0).paragraphs[0]
+left_r = left_p.add_run('Documento de cierre técnico - Uso institucional')
+set_run_font(left_r, color='667085', size=8)
+right_p = footer_table.cell(0,1).paragraphs[0]
+add_page_number(right_p)
+
+# COVER
+for _ in range(2): doc.add_paragraph()
+p = doc.add_paragraph()
+p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL')
+set_run_font(r, bold=True, color=NAVY, size=14)
+p2 = doc.add_paragraph()
+p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p2.add_run('SISTEMA DE GESTIÓN DE RIESGOS DE LAVADO DE ACTIVOS\nY FINANCIAMIENTO DEL TERRORISMO')
+set_run_font(r, bold=True, color=BLUE, size=11)
+
+bar = doc.add_table(rows=1, cols=1)
+bar.alignment = WD_TABLE_ALIGNMENT.CENTER
+cell = bar.cell(0,0)
+set_cell_shading(cell, NAVY)
+set_cell_margins(cell, top=220, start=250, bottom=220, end=250)
+p = cell.paragraphs[0]; p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('CIERRE TÉCNICO DE LA FASE 12')
+set_run_font(r, bold=True, color=WHITE, size=22)
+p = cell.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+r = p.add_run('Mejora ejecutiva UX/UI, dashboard, mapa de calor, reportería y control de calidad')
+set_run_font(r, color='DCE8F6', size=10)
+
+p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before = Pt(18)
+r = p.add_run('MÓDULO 2 - MATRICES DE RIESGOS')
+set_run_font(r, bold=True, color=GREEN, size=14)
+
+meta = doc.add_table(rows=5, cols=2)
+meta.alignment = WD_TABLE_ALIGNMENT.CENTER
+meta.autofit = False
+cover_meta = [
+    ('Documento', 'Cierre Técnico Fase 12 - Versión Única para Aprobación'),
+    ('Versión', '1.0'),
+    ('Fecha de emisión', '21 de julio de 2026'),
+    ('Rama validada', 'fase-12-mejora-ejecutiva-matrices'),
+    ('Estado', 'VALIDACIÓN TÉCNICA APROBADA - PENDIENTE APROBACIÓN FORMAL')
+]
+for i,(a,b) in enumerate(cover_meta):
+    meta.cell(i,0).width = Inches(1.7); meta.cell(i,1).width = Inches(4.9)
+    set_cell_shading(meta.cell(i,0), LIGHT_BLUE)
+    p = meta.cell(i,0).paragraphs[0]; r=p.add_run(a); set_run_font(r,bold=True,color=NAVY,size=9)
+    p = meta.cell(i,1).paragraphs[0]; r=p.add_run(b); set_run_font(r,bold=(i==4),color=GREEN if i==4 else DARK,size=9)
+set_table_borders(meta)
+
+p = doc.add_paragraph(); p.alignment=WD_ALIGN_PARAGRAPH.CENTER; p.paragraph_format.space_before=Pt(22)
+r = p.add_run('Preparado para revisión y aprobación de Javier Mejía')
+set_run_font(r, color='667085', size=9)
+r.italic = True
+
+# New page
+p = doc.add_paragraph(); p.add_run().add_break(WD_BREAK.PAGE)
+
+# DOCUMENT CONTROL
+add_section_banner(doc, 'CONTROL DEL DOCUMENTO Y APROBACIÓN', 'Documento maestro de cierre técnico de la Fase 12')
+add_heading(doc, 'Control documental', level=1, number='1.')
+control_rows = [
+    ('Código documental', 'SGRLA-IHSS-MR-F12-CT-001'),
+    ('Nombre', 'Cierre Técnico Fase 12 - Matrices de Riesgos'),
+    ('Versión', '1.0'),
+    ('Fecha', '21/07/2026'),
+    ('Clasificación', 'Uso institucional'),
+    ('Responsable funcional', 'Javier Mejía'),
+    ('Repositorio', 'jmejia31/RIESGO_LAVADO'),
+    ('Pull Request', '#2 - Fase 12 — Matrices de Riesgos técnicamente completada'),
+    ('Estado de integración', 'No fusionado a main; PR conservado en borrador')
+]
+add_table(doc, ['Campo','Valor'], control_rows, widths=[1.85,4.75], font_size=8.7)
+
+add_heading(doc, 'Decisión ejecutiva', level=1, number='2.')
+add_callout(doc, 'RESULTADO TÉCNICO',
+            'La Fase 12 se encuentra técnicamente completa y validada. El código productivo, las pruebas automatizadas, el build Angular y los escenarios E2E aprobaron los Quality Gates. No se realizó fusión a main. El único paso pendiente es la aprobación formal de Javier Mejía y, posteriormente, la integración controlada del PR #2.', GREEN, LIGHT_GREEN)
+
+add_heading(doc, 'Firmas de aprobación', level=1, number='3.')
+appr = doc.add_table(rows=4, cols=3)
+appr.alignment = WD_TABLE_ALIGNMENT.CENTER
+headers=['Rol','Nombre / firma','Fecha']
+for i,h in enumerate(headers):
+    c=appr.cell(0,i); set_cell_shading(c,NAVY); p=c.paragraphs[0];p.alignment=WD_ALIGN_PARAGRAPH.CENTER;r=p.add_run(h);set_run_font(r,bold=True,color=WHITE,size=8.5)
+rows=[('Responsable funcional','Javier Mejía','____ / ____ / 2026'),('Aprobación institucional','____________________________','____ / ____ / 2026'),('Aprobación técnica','____________________________','____ / ____ / 2026')]
+for ri,row in enumerate(rows,1):
+    for ci,val in enumerate(row):
+        p=appr.cell(ri,ci).paragraphs[0]; p.alignment=WD_ALIGN_PARAGRAPH.CENTER; r=p.add_run(val); set_run_font(r,color=DARK,size=8.5)
+        if ci==1: appr.cell(ri,ci).paragraphs[0].paragraph_format.space_after=Pt(18)
+set_table_borders(appr)
+
+# Executive summary
+add_section_banner(doc, 'RESUMEN EJECUTIVO', 'Alcance consolidado y decisión de cierre')
+add_heading(doc, 'Objetivo de la Fase 12', level=1, number='4.')
+add_body(doc, 'La Fase 12 tuvo como objetivo elevar el Módulo de Matrices de Riesgos a un nivel ejecutivo, coherente y controlado, fortaleciendo reglas funcionales, captura de criterios, dashboard, mapa de calor, reportería y pruebas integrales, sin alterar las restricciones institucionales previamente aprobadas.')
+
+add_heading(doc, 'Resultado consolidado', level=1, number='5.')
+for item in [
+    'Se normalizaron los estados visibles y las transiciones operativas de las matrices.',
+    'Se consolidó la captura por tipo de sujeto, con validaciones de variables, criterios y rangos.',
+    'El dashboard muestra todas las matrices activas y todos los tipos de sujeto, incluyendo matrices aún sin evaluación.',
+    'El mapa de calor representa la transición entre nivel inherente y nivel residual con datos reales provenientes d
