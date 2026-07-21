@@ -218,6 +218,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     { valor: 'PROVEEDOR', texto: 'Proveedor' },
     { valor: 'CLIENTE_PATRONO', texto: 'Cliente / Patrono' },
     { valor: 'EMPLEADO', texto: 'Empleado' },
+    { valor: 'AREA', texto: 'Área' },
+    { valor: 'PROCESO', texto: 'Proceso' },
+    { valor: 'CASO_POSITIVO', texto: 'Caso positivo' },
     { valor: 'INSTITUCIONAL', texto: 'Institucional' }
   ];
 
@@ -530,11 +533,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.service.exportarReporte(this.reporteFiltro(), formato).subscribe({
       next: blob => {
-        if (formato === 'EXCEL') {
-          this.generarExcelReporte();
-        } else {
-          this.generarPdfReporte();
-        }
+        this.descargarArchivoReporte(blob, formato);
         this.mensaje.set(`Reporte ${formato} generado correctamente.`);
         this.guardando.set(false);
       },
@@ -543,6 +542,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.guardando.set(false);
       }
     });
+  }
+
+  private descargarArchivoReporte(blob: Blob, formato: 'EXCEL' | 'PDF'): void {
+    const extension = formato === 'PDF' ? 'pdf' : 'xls';
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Reporte_Matrices_Riesgos_${this.fechaArchivo()}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   cargarMatrices(): void {

@@ -892,6 +892,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             new[] { "Total matrices", reporte.Totales.TotalMatrices.ToString() },
             new[] { "Calculadas", reporte.Totales.TotalCalculadas.ToString() },
+            new[] { "Sin evaluar", reporte.Totales.TotalSinCalculo.ToString() },
             new[] { "Cerradas", reporte.Totales.TotalCerradas.ToString() },
             new[] { "Alto / Crítico", reporte.Totales.TotalAltoCritico.ToString() },
             new[] { "Plan requerido", reporte.Totales.TotalPlanAccionRequerido.ToString() },
@@ -905,6 +906,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             reporte.MapaInherente.Select(x => new[] { x.Nivel, x.Total.ToString(), x.Promedio.ToString("0.0000") }));
         AgregarTablaHtml(sb, "Mapa residual persistido", new[] { "Nivel", "Total", "Promedio" },
             reporte.MapaResidual.Select(x => new[] { x.Nivel, x.Total.ToString(), x.Promedio.ToString("0.0000") }));
+        AgregarTablaHtml(sb, "Mapa de transición inherente a residual", new[] { "Nivel inherente", "Nivel residual", "Total", "Promedio inherente", "Promedio residual" },
+            reporte.MapaTransicion.Select(x => new[] { x.NivelInherente, x.NivelResidual, x.Total.ToString(), x.PromedioInherente.ToString("0.0000"), x.PromedioResidual.ToString("0.0000") }));
         AgregarTablaHtml(sb, "Matrices filtradas", new[] { "ID", "Sujeto", "Documento", "Tipo", "Estado", "Inherente", "Residual", "Plan", "Fecha" },
             reporte.MatricesFiltradas.Select(x => new[]
             {
@@ -971,6 +974,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             "2. RESUMEN EJECUTIVO",
             $" - Total matrices: {reporte.Totales.TotalMatrices}",
             $" - Calculadas: {reporte.Totales.TotalCalculadas}",
+            $" - Sin evaluar: {reporte.Totales.TotalSinCalculo}",
             $" - Cerradas: {reporte.Totales.TotalCerradas}",
             $" - Alto / Crítico: {reporte.Totales.TotalAltoCritico}",
             $" - Plan requerido: {reporte.Totales.TotalPlanAccionRequerido}",
@@ -990,16 +994,19 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         lineas.Add("6. MAPA RESIDUAL PERSISTIDO");
         lineas.AddRange(reporte.MapaResidual.Select(x => $" - {QuitarSaltos(x.Nivel)} | Total {x.Total} | Promedio {x.Promedio:0.0000}"));
         lineas.Add("");
-        lineas.Add("7. MATRICES FILTRADAS");
+        lineas.Add("7. MAPA DE TRANSICIÓN INHERENTE A RESIDUAL");
+        lineas.AddRange(reporte.MapaTransicion.Select(x => $" - {QuitarSaltos(x.NivelInherente)} -> {QuitarSaltos(x.NivelResidual)} | Total {x.Total} | Promedio inherente {x.PromedioInherente:0.0000} | Promedio residual {x.PromedioResidual:0.0000}"));
+        lineas.Add("");
+        lineas.Add("8. MATRICES FILTRADAS");
         lineas.AddRange(reporte.MatricesFiltradas.Select(x => $" - {x.MatrizId} | {QuitarSaltos(x.NombreSujeto)} | {QuitarSaltos(x.Estado)} | Residual {FormatoResultado(x.PuntajeResidual, x.NivelResidual)} | Plan {(x.RequierePlanAccion ? "Sí" : "No")} | Fecha {x.FechaEvaluacion:dd/MM/yyyy}"));
         lineas.Add("");
-        lineas.Add("8. RESULTADOS POR FACTOR");
+        lineas.Add("9. RESULTADOS POR FACTOR");
         lineas.AddRange(reporte.PorFactor.Select(x => $" - {QuitarSaltos(x.FactorCodigo)} {QuitarSaltos(x.FactorNombre)} | Matrices {x.TotalMatrices} | Residual {x.PromedioResidual:0.0000}"));
         lineas.Add("");
-        lineas.Add("9. MATRICES ALTO / CRÍTICO");
+        lineas.Add("10. MATRICES ALTO / CRÍTICO");
         lineas.AddRange(reporte.MatricesCriticas.Select(x => $" - {x.MatrizId} | {QuitarSaltos(x.NombreSujeto)} | {QuitarSaltos(x.Estado)} | Residual {x.PuntajeResidual:0.00} {QuitarSaltos(x.NivelResidual)} | Plan {(x.RequierePlanAccion ? "Sí" : "No")}"));
         lineas.Add("");
-        lineas.Add("10. PLANES DE ACCIÓN");
+        lineas.Add("11. PLANES DE ACCIÓN");
         lineas.AddRange(reporte.PlanesAccion.Select(x => $" - {QuitarSaltos(x.Estado)} | Total {x.Total} | Vencidos {x.Vencidos}"));
 
         return new MatrizRiesgoExportacionDto

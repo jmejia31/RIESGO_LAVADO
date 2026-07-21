@@ -173,12 +173,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         };
 
         reporte.Totales = await ObtenerTotalesReporteAsync(conn, filtro);
+        reporte.Totales.TotalSinCalculo = Math.Max(0, reporte.Totales.TotalMatrices - reporte.Totales.TotalCalculadas);
         reporte.PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE m.MRMAT_ESTADO END");
         reporte.PorNivelResidual = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')");
         reporte.PorSujetoTipo = await ObtenerConteosReporteAsync(conn, filtro, "m.MRMAT_SUJETO_TIPO");
         reporte.PorFactor = await ObtenerFactoresReporteAsync(conn, filtro);
         reporte.MapaInherente = await ObtenerMapaNivelReporteAsync(conn, filtro, "INHERENTE");
         reporte.MapaResidual = await ObtenerMapaNivelReporteAsync(conn, filtro, "RESIDUAL");
+        reporte.MapaTransicion = await ObtenerMapaTransicionDashboardAsync(conn, filtro);
         reporte.MatricesFiltradas = await ObtenerMatricesFiltradasReporteAsync(conn, filtro);
         reporte.MatricesCriticas = await ObtenerMatricesCriticasReporteAsync(conn, filtro);
         reporte.PlanesAccion = await ObtenerPlanesAccionReporteAsync(conn, filtro);

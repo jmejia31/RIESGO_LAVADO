@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Text;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -587,7 +588,14 @@ public sealed class MatricesRiesgosApplicationTests
     public async Task ExportarReporte_FormatoValido_GeneraContenidoYRegistraAuditoria(string formato, string contentType)
     {
         var service = CrearServicio(out var repo, out _);
-        var reporte = new MatricesRiesgoReporteDto();
+        var reporte = new MatricesRiesgoReporteDto
+        {
+            Totales = new MatricesRiesgoReporteTotalesDto { TotalMatrices = 3, TotalCalculadas = 2, TotalSinCalculo = 1 },
+            MapaTransicion = new List<MatrizRiesgoMapaTransicionDto>
+            {
+                new() { NivelInherente = "ALTO", NivelResidual = "MEDIO", Total = 2, PromedioInherente = 4.5m, PromedioResidual = 2.5m }
+            }
+        };
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerReporteAsync), _ => Task.FromResult(reporte));
         repo.On(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync), _ => Task.CompletedTask);
         var filtro = new MatrizRiesgoReporteFiltroDto { Estado = " aprobada ", SujetoTipo = " proveedor " };
@@ -597,6 +605,19 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.True(result.Success);
         Assert.Equal(contentType, result.Data!.ContentType);
         Assert.NotEmpty(result.Data.Contenido);
+        Assert.EndsWith(formato == "PDF" ? ".pdf" : ".xls", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        if (formato == "PDF")
+        {
+            Assert.StartsWith("%PDF-1.4", Encoding.Latin1.GetString(result.Data.Contenido));
+        }
+        else
+        {
+            var contenido = System.Net.WebUtility.HtmlDecode(Encoding.UTF8.GetString(result.Data.Contenido));
+            Assert.Contains("Sin evaluar", contenido, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("Mapa de transición inherente a residual", contenido, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("ALTO", contenido, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("MEDIO", contenido, StringComparison.OrdinalIgnoreCase);
+        }
         Assert.Equal("APROBADA", filtro.Estado);
         Assert.Equal("PROVEEDOR", filtro.SujetoTipo);
         var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));

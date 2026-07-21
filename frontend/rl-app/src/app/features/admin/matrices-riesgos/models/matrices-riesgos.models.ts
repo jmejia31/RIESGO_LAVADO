@@ -213,6 +213,7 @@ export interface MatricesRiesgoReporte {
   totales: {
     totalMatrices: number;
     totalCalculadas: number;
+    totalSinCalculo: number;
     totalCerradas: number;
     totalAltoCritico: number;
     totalPlanAccionRequerido: number;
@@ -233,6 +234,7 @@ export interface MatricesRiesgoReporte {
   }[];
   mapaInherente: { nivel: string; total: number; promedio: number }[];
   mapaResidual: { nivel: string; total: number; promedio: number }[];
+  mapaTransicion: MatrizRiesgoMapaTransicion[];
   matricesFiltradas: MatrizRiesgoResumen[];
   matricesCriticas: MatrizRiesgoResumen[];
   planesAccion: { estado: string; total: number; vencidos: number }[];

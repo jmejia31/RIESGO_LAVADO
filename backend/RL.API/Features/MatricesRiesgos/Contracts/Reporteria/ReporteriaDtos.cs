@@ -60,6 +60,7 @@ public sealed class MatricesRiesgoReporteDto
     public List<MatrizRiesgoFactorReporteDto> PorFactor { get; set; } = new();
     public List<MatrizRiesgoMapaNivelDto> MapaInherente { get; set; } = new();
     public List<MatrizRiesgoMapaNivelDto> MapaResidual { get; set; } = new();
+    public List<MatrizRiesgoMapaTransicionDto> MapaTransicion { get; set; } = new();
     public List<MatrizRiesgoResumenDto> MatricesFiltradas { get; set; } = new();
     public List<MatrizRiesgoResumenDto> MatricesCriticas { get; set; } = new();
     public List<MatrizRiesgoPlanAccionReporteDto> PlanesAccion { get; set; } = new();
@@ -69,6 +70,7 @@ public sealed class MatricesRiesgoReporteTotalesDto
 {
     public int TotalMatrices { get; set; }
     public int TotalCalculadas { get; set; }
+    public int TotalSinCalculo { get; set; }
     public int TotalCerradas { get; set; }
     public int TotalAltoCritico { get; set; }
     public int TotalPlanAccionRequerido { get; set; }

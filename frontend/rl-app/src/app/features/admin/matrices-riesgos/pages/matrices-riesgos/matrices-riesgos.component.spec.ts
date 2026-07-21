@@ -687,12 +687,8 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.guardando()).toBe(false);
   });
 
-  it.each([
-    ['EXCEL', 'generarExcelReporte'],
-    ['PDF', 'generarPdfReporte']
-  ] as const)('exporta un reporte %s usando el generador correspondiente', (formato, metodo) => {
-    const generar = vi.fn();
-    (component as any)[metodo] = generar;
+  it.each(['EXCEL', 'PDF'] as const)('exporta un reporte %s descargando exactamente el archivo del backend', formato => {
+    const descargar = vi.spyOn(component as any, 'descargarArchivoReporte').mockImplementation(() => undefined);
     component.reporteFiltro.set({ estado: 'APROBADA' });
     const archivo = new Blob(['reporte'], { type: 'application/octet-stream' });
     service['exportarReporte'].mockReturnValue(of(archivo));
@@ -700,9 +696,15 @@ describe('MatricesRiesgosComponent', () => {
     component.exportarReporte(formato);
 
     expect(service['exportarReporte']).toHaveBeenCalledWith({ estado: 'APROBADA' }, formato);
-    expect(generar).toHaveBeenCalledOnce();
+    expect(descargar).toHaveBeenCalledWith(archivo, formato);
     expect(component.mensaje()).toBe(`Reporte ${formato} generado correctamente.`);
     expect(component.guardando()).toBe(false);
+  });
+
+  it('expone todos los tipos de sujeto permitidos por backend', () => {
+    expect(component.tiposSujeto.map(item => item.valor)).toEqual([
+      'PROVEEDOR', 'CLIENTE_PATRONO', 'EMPLEADO', 'AREA', 'PROCESO', 'CASO_POSITIVO', 'INSTITUCIONAL'
+    ]);
   });
 
   it('recupera el indicador si falla la exportacion del reporte', () => {
