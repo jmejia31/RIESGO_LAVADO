@@ -1,0 +1,65 @@
+{
+  "fase": "12.2 - Captura y criterios",
+  "fecha_validacion": "2026-07-21T16:03:23Z",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "estado": "Validación técnica completada",
+  "commits_principales": {
+    "implementacion": "b7044b695127bea20188fc4eab9f3d6ebb170fda",
+    "ajustes_finales": "78badf4140361e6760fafbf0c3209d30267790e2",
+    "nuget_portable": "f0fd83ad25d65e3109e8d95c217c7c9ec8591df0"
+  },
+  "controles_funcionales": {
+    "variables_obligatorias_por_tipo_sujeto": true,
+    "variables_no_repetidas": true,
+    "institucional_con_variables_globales": true,
+    "rangos_activos_no_solapados": true,
+    "reactivacion_criterios_con_motivo_y_auditoria": true,
+    "eliminacion_fisica_solo_sin_uso_historico": true,
+    "recalculo_automatico_en_backend": true
+  },
+  "validacion": {
+    "backend": {
+      "pruebas": 83,
+      "aprobadas": 83,
+      "fallidas": 0,
+      "resultado": "Aprobado"
+    },
+    "frontend": {
+      "archivos_prueba": 14,
+      "pruebas": 140,
+      "aprobadas": 140,
+      "fallidas": 0,
+      "resultado": "Aprobado"
+    },
+    "cobertura_frontend": {
+      "sentencias": 32.03,
+      "ramas": 27.50,
+      "funciones": 30.56,
+      "lineas": 32.42
+    },
+    "build_angular": {
+      "resultado": "Aprobado",
+      "tamano_inicial_kb": 377.45,
+      "transferencia_estimada_kb": 94.01
+    },
+    "quality_gates_oficiales": {
+      "run_id": 29846724619,
+      "resultado": "Aprobado",
+      "e2e": "Aprobado"
+    },
+    "workflow_especifico": {
+      "run_id": 29846724601,
+      "artifact_id": 8501665588,
+      "resultado": "Aprobado"
+    }
+  },
+  "restricciones_confirmadas": [
+    "No se modificó DNP.",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR.",
+    "No se conectó Monitoreo de Listas con Matrices de Riesgos.",
+    "No se trasladó el cálculo de riesgo al frontend.",
+    "No se modificó main."
+  ],
+  "resultado_general": "Correcto",
+  "decision": "Fase 12.2 completada técnicamente; habilitada la continuidad de Fase 12.3."
+}
