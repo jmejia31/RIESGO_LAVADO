@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run test:coverage > ../../../../fase12_1_frontend_tests.txt 2>&1
+          npm run test:coverage > "$GITHUB_WORKSPACE/fase12_1_frontend_tests.txt" 2>&1
           codigo=$?
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
@@ -64,7 +64,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run build > ../../../../fase12_1_angular_build.txt 2>&1
+          npm run build > "$GITHUB_WORKSPACE/fase12_1_angular_build.txt" 2>&1
           codigo=$?
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
