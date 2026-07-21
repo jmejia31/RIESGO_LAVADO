@@ -25,15 +25,31 @@ jobs:
           ref: fase-12-mejora-ejecutiva-matrices
           fetch-depth: 0
 
-      - name: Aplicar integracion Fase 12.2
-        run: python tools/fase12_2_integrar_captura_criterios.py
+      - name: Verificar o aplicar integracion Fase 12.2
+        shell: bash
+        run: |
+          app="backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs"
+          repo="backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs"
+          componente="frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts"
+          servicio="frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts"
+
+          if grep -q "ReactivarCriterioAsync" "$app" \
+             && grep -q "CriterioTieneUsoHistoricoAsync" "$repo" \
+             && grep -q "validarSolapamientoCriterio" "$componente" \
+             && grep -q "reactivarCriterio" "$servicio"; then
+            echo "La implementación principal de 12.2 ya está integrada."
+          else
+            python tools/fase12_2_integrar_captura_criterios.py
+          fi
+
+          python tools/fase12_2_ajustes_postintegracion.py
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
 
-      - name: Diagnosticar NuGet y restaurar backend
+      - name: Restaurar backend
         id: backend_restore
         shell: bash
         env:
@@ -45,21 +61,10 @@ jobs:
             dotnet --info
             echo "=== NUGET SOURCES ==="
             dotnet nuget list source
-            echo "=== CONECTIVIDAD NUGET ==="
-            curl -I --connect-timeout 20 --max-time 40 https://api.nuget.org/v3/index.json || true
             echo "=== RESTORE ==="
-            codigo=1
-            for intento in 1 2 3; do
-              echo "Intento de restore $intento/3"
-              timeout 240s dotnet restore backend/RL.API.Tests/RL.API.Tests.csproj --disable-parallel --force-evaluate
-              codigo=$?
-              if [ "$codigo" = "0" ]; then
-                break
-              fi
-              sleep $((intento * 10))
-            done
-            echo "RESTORE_EXIT_CODE=$codigo"
+            dotnet restore backend/RL.API.Tests/RL.API.Tests.csproj --disable-parallel --force-evaluate
           } > "$GITHUB_WORKSPACE/fase12_2_backend_restore.txt" 2>&1
+          codigo=$?
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
 
@@ -111,7 +116,7 @@ jobs:
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
 
-      - name: Generar evidencia de ejecución
+      - name: Generar evidencia de ejecucion
         shell: python
         env:
           RESTORE_EXIT_CODE: ${{ steps.backend_restore.outputs.exit_code }}
@@ -121,6 +126,7 @@ jobs:
         run: |
           import json
           import os
+          import re
           from datetime import datetime, timezone
           from pathlib import Path
 
@@ -130,26 +136,43 @@ jobs:
           backend_ok = os.environ.get('BACKEND_EXIT_CODE') == '0'
           frontend_ok = os.environ.get('FRONTEND_EXIT_CODE') == '0'
           build_ok = os.environ.get('BUILD_EXIT_CODE') == '0'
+
+          def leer(nombre):
+              ruta = Path(nombre)
+              return ruta.read_text(encoding='utf-8', errors='replace') if ruta.exists() else ''
+
+          backend_log = leer('fase12_2_backend_tests.txt')
+          frontend_log = leer('fase12_2_frontend_tests.txt')
+          backend_match = re.search(r'(\d+)\s+passed', backend_log, re.IGNORECASE)
+          frontend_match = re.search(r'Tests\s+(\d+)\s+passed', frontend_log, re.IGNORECASE)
+
           resultado = {
               'fase': '12.2 - Captura y criterios',
               'fecha': datetime.now(timezone.utc).isoformat(),
               'rama': 'fase-12-mejora-ejecutiva-matrices',
+              'estado': 'Validación técnica completada' if restore_ok and backend_ok and frontend_ok and build_ok else 'Requiere corrección',
               'variables_obligatorias_por_sujeto': True,
               'institucional_variables_globales': True,
               'rangos_solapados_bloqueados': True,
               'reactivacion_criterios_auditada': True,
               'eliminacion_historica_protegida': True,
-              'restore_backend': 'Aprobado' if restore_ok else 'Fallo de infraestructura',
-              'backend': 'Aprobado' if backend_ok else ('No ejecutado' if not restore_ok else 'Fallido'),
-              'frontend': 'Aprobado' if frontend_ok else 'Fallido',
+              'restore_backend': 'Aprobado' if restore_ok else 'Fallido',
+              'backend': {
+                  'resultado': 'Aprobado' if backend_ok else 'Fallido',
+                  'pruebas_aprobadas_detectadas': int(backend_match.group(1)) if backend_match else None,
+              },
+              'frontend': {
+                  'resultado': 'Aprobado' if frontend_ok else 'Fallido',
+                  'pruebas_aprobadas_detectadas': int(frontend_match.group(1)) if frontend_match else None,
+              },
               'build_angular': 'Aprobado' if build_ok else 'Fallido',
-              'resultado': 'Correcto' if restore_ok and backend_ok and frontend_ok and build_ok else 'Requiere corrección o reintento de infraestructura',
+              'resultado_general': 'Correcto' if restore_ok and backend_ok and frontend_ok and build_ok else 'Requiere corrección',
           }
           (base / 'fase12_2_validacion_automatizada.json').write_text(
               json.dumps(resultado, ensure_ascii=False, indent=2), encoding='utf-8'
           )
 
-      - name: Publicar artefacto de diagnóstico
+      - name: Publicar artefacto de diagnostico
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -166,15 +189,17 @@ jobs:
       - name: Validar resultados antes de publicar
         shell: bash
         run: |
-          if [ "${{ steps.backend_restore.outputs.exit_code }}" != "0" ] || \
-             [ "${{ steps.backend_tests.outputs.exit_code }}" != "0" ] || \
-             [ "${{ steps.frontend_tests.outputs.exit_code }}" != "0" ] || \
-             [ "${{ steps.angular_build.outputs.exit_code }}" != "0" ]; then
-            echo "Fase 12.2 requiere corrección o reintento; se conserva artefacto de diagnóstico."
-            exit 1
-          fi
+          echo "restore=${{ steps.backend_restore.outputs.exit_code }}"
+          echo "backend=${{ steps.backend_tests.outputs.exit_code }}"
+          echo "frontend=${{ steps.frontend_tests.outputs.exit_code }}"
+          echo "build=${{ steps.angular_build.outputs.exit_code }}"
 
-      - name: Publicar commit atomico en rama
+          test "${{ steps.backend_restore.outputs.exit_code }}" = "0"
+          test "${{ steps.backend_tests.outputs.exit_code }}" = "0"
+          test "${{ steps.frontend_tests.outputs.exit_code }}" = "0"
+          test "${{ steps.angular_build.outputs.exit_code }}" = "0"
+
+      - name: Publicar ajustes y evidencia en rama
         env:
           GITHUB_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
@@ -239,7 +264,7 @@ jobs:
 
           tree = request('POST', f'/repos/{repo}/git/trees', {'base_tree': base_tree, 'tree': entries})
           commit = request('POST', f'/repos/{repo}/git/commits', {
-              'message': 'feat(matrices): implementa captura y criterios fase 12.2',
+              'message': 'fix(matrices): valida y ajusta captura y criterios fase 12.2',
               'tree': tree['sha'],
               'parents': [parent],
           })
