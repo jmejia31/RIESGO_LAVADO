@@ -4,6 +4,8 @@
   "commit_funcional": "2fdc74c5008d1b8471d371e8c4d6fe5599eb2aa0",
   "ejecucion_integracion": 29872614998,
   "resultado_integracion": "success",
+  "ejecucion_quality_gate_oficial": 29872849460,
+  "resultado_quality_gate_oficial": "success",
   "alcance": [
     "Todas las matrices operativas permanecen en el mapa mediante LEFT JOIN",
     "Las matrices sin niveles completos se muestran como Sin evaluar",
@@ -12,5 +14,5 @@
     "Cada registro permite abrir el detalle completo de la matriz",
     "La selección del mapa no destruye ni reemplaza los filtros ejecutivos generales"
   ],
-  "validacion_oficial": "pendiente_ejecucion_por_commit_propietario"
+  "validacion_oficial": "aprobada"
 }
