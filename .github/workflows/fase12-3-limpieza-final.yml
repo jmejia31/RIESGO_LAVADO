@@ -1,0 +1,40 @@
+name: Fase 12.3 Limpieza final
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fase12-3-limpieza-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  limpiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout rama
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-mejora-ejecutiva-matrices
+          fetch-depth: 0
+
+      - name: Retirar auxiliares temporales
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f --ignore-unmatch \
+            tools/fase12_3_frontend_component.py \
+            tools/fase12_3_frontend_contracts.py \
+            tools/fase12_3_frontend_html.py \
+            tools/fase12_3_frontend_tests_evidence.py \
+            tools/fase12_3_repository.py \
+            .github/workflows/fase12-3-limpieza-final.yml
+          git commit -m "chore(matrices): limpia auxiliares temporales fase 12.3"
+          git push origin HEAD:fase-12-mejora-ejecutiva-matrices
