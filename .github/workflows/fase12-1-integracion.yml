@@ -36,8 +36,18 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/rl-app/package-lock.json
 
-      - name: Aplicar integracion Fase 12.1
-        run: node tools/fase12_1_integrar_reglas.mjs
+      - name: Verificar o aplicar integracion Fase 12.1
+        shell: bash
+        run: |
+          componente="frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts"
+          plantilla="frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html"
+          if grep -q "matrices-riesgos-estados.policy" "$componente" \
+             && ! grep -q '(click)="calcularMatriz(matriz)"' "$plantilla" \
+             && grep -q '>Evaluadas</p>' "$plantilla"; then
+            echo "La integración 12.1 ya está aplicada; se continúa con validación."
+          else
+            node tools/fase12_1_integrar_reglas.mjs
+          fi
 
       - name: Instalar dependencias frontend
         working-directory: frontend/rl-app
@@ -49,7 +59,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run test:coverage 2>&1 | tee /tmp/fase12_1_frontend_tests.log
+          npm run test:coverage 2>&1 | tee /tmp/fase12_1_frontend_tests.txt
           codigo=${PIPESTATUS[0]}
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
@@ -60,7 +70,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run build 2>&1 | tee /tmp/fase12_1_angular_build.log
+          npm run build 2>&1 | tee /tmp/fase12_1_angular_build.txt
           codigo=${PIPESTATUS[0]}
           echo "exit_code=$codigo" >> "$GITHUB_OUTPUT"
           exit 0
@@ -69,10 +79,8 @@ jobs:
         shell: pwsh
         run: |
           $base = "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1"
-          $testsSalida = Get-Content "/tmp/fase12_1_frontend_tests.log" -Raw
-          $buildSalida = Get-Content "/tmp/fase12_1_angular_build.log" -Raw
-          $testsSalida | Set-Content -Path "$base/fase12_1_frontend_tests.log" -Encoding UTF8
-          $buildSalida | Set-Content -Path "$base/fase12_1_angular_build.log" -Encoding UTF8
+          Copy-Item "/tmp/fase12_1_frontend_tests.txt" "$base/fase12_1_frontend_tests.txt" -Force
+          Copy-Item "/tmp/fase12_1_angular_build.txt" "$base/fase12_1_angular_build.txt" -Force
 
           $testsOk = "${{ steps.frontend_tests.outputs.exit_code }}" -eq "0"
           $buildOk = "${{ steps.angular_build.outputs.exit_code }}" -eq "0"
@@ -117,9 +125,7 @@ jobs:
           def request(method, endpoint, payload=None):
               data = None if payload is None else json.dumps(payload).encode('utf-8')
               req = urllib.request.Request(
-                  f'{api}{endpoint}',
-                  data=data,
-                  method=method,
+                  f'{api}{endpoint}', data=data, method=method,
                   headers={
                       'Authorization': f'Bearer {token}',
                       'Accept': 'application/vnd.github+json',
@@ -135,9 +141,7 @@ jobs:
                   raise RuntimeError(f'GitHub API {method} {endpoint}: {exc.code} {body}') from exc
 
           changed = subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines()
-          untracked = subprocess.check_output(
-              ['git', 'ls-files', '--others', '--exclude-standard'], text=True
-          ).splitlines()
+          untracked = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], text=True).splitlines()
           prefixes = (
               'frontend/rl-app/src/app/features/admin/matrices-riesgos/',
               'docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_1/',
@@ -148,39 +152,23 @@ jobs:
               raise SystemExit(0)
 
           parent = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
-          commit_data = request('GET', f'/repos/{repo}/git/commits/{parent}')
-          base_tree = commit_data['tree']['sha']
-
-          tree_entries = []
+          base_tree = request('GET', f'/repos/{repo}/git/commits/{parent}')['tree']['sha']
+          entries = []
           for file_path in files:
               with open(file_path, 'rb') as handle:
                   encoded = base64.b64encode(handle.read()).decode('ascii')
-              blob = request('POST', f'/repos/{repo}/git/blobs', {
-                  'content': encoded,
-                  'encoding': 'base64',
-              })
-              tree_entries.append({
-                  'path': file_path,
-                  'mode': '100644',
-                  'type': 'blob',
-                  'sha': blob['sha'],
-              })
+              blob = request('POST', f'/repos/{repo}/git/blobs', {'content': encoded, 'encoding': 'base64'})
+              entries.append({'path': file_path, 'mode': '100644', 'type': 'blob', 'sha': blob['sha']})
 
-          tree = request('POST', f'/repos/{repo}/git/trees', {
-              'base_tree': base_tree,
-              'tree': tree_entries,
-          })
-          new_commit = request('POST', f'/repos/{repo}/git/commits', {
-              'message': 'feat(matrices): integra reglas operativas fase 12.1',
+          tree = request('POST', f'/repos/{repo}/git/trees', {'base_tree': base_tree, 'tree': entries})
+          commit = request('POST', f'/repos/{repo}/git/commits', {
+              'message': 'test(matrices): valida integracion funcional fase 12.1',
               'tree': tree['sha'],
               'parents': [parent],
           })
           encoded_branch = urllib.parse.quote(branch, safe='')
-          request('PATCH', f'/repos/{repo}/git/refs/heads/{encoded_branch}', {
-              'sha': new_commit['sha'],
-              'force': False,
-          })
-          print(f"Commit publicado: {new_commit['sha']}")
+          request('PATCH', f'/repos/{repo}/git/refs/heads/{encoded_branch}', {'sha': commit['sha'], 'force': False})
+          print(f"Commit publicado: {commit['sha']}")
           PY
 
       - name: Validar resultado final
