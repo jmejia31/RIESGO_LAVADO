@@ -1,13 +1,21 @@
 name: Fase 12.1 Integracion
 
 on:
+  push:
+    branches:
+      - fase-12-mejora-ejecutiva-matrices
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: fase12-1-integracion
+  cancel-in-progress: false
+
 jobs:
   integrar:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -61,7 +69,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/rl-app/src/app/features/admin/matrices-riesgos docs/3.\ Módulo\ Matrices\ de\ Riesgos/Fase\ 12\ -\ Mejora\ ejecutiva\ UXUI/Evidencia_Fase_12_1
+          git add frontend/rl-app/src/app/features/admin/matrices-riesgos "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI/Evidencia_Fase_12_1"
           if git diff --cached --quiet; then
             echo "No hay cambios pendientes."
           else
