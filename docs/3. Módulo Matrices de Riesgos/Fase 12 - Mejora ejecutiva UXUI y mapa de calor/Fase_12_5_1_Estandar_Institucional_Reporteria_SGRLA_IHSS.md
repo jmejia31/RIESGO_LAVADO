@@ -2,7 +2,7 @@
 
 ## Estado
 
-**En implementación y validación técnica.** Esta subfase define el patrón común; no sustituye todavía los generadores de Monitoreo de Listas ni Matrices de Riesgos.
+**Completada y validada técnicamente.** Esta subfase define el patrón común; no sustituye todavía los generadores de Monitoreo de Listas ni Matrices de Riesgos. La adopción concreta se realizará en 12.5.2 y 12.5.3.
 
 ## Inventario automatizado
 
@@ -13,6 +13,8 @@
 - Posibles textos con caracteres dañados: **174**.
 
 El detalle se conserva en `Evidencia_Fase_12_5_1/inventario_reporteria.json`.
+
+Los 174 hallazgos de codificación son candidatos de revisión y se concentran principalmente en evidencia histórica y documentación anterior. No significan que existan 174 defectos activos en la interfaz. Su limpieza se ejecutará de forma controlada en 12.5.4, preservando el contenido probatorio original cuando corresponda.
 
 ## Referencias visuales aprobadas
 
@@ -61,6 +63,16 @@ La fuente compartida comienza en:
 
 `backend/RL.API/Infrastructure/Reporting/InstitutionalReportStandard.cs`
 
+El estándar centraliza:
+
+- Institución y nombre del sistema.
+- Formatos de fecha y hora.
+- Paleta institucional.
+- Resolución de orientación vertical u horizontal.
+- Regla preventiva para mover una fila completa a la página siguiente.
+- Etiquetado uniforme de páginas.
+- Metadatos y políticas de tabla.
+
 En 12.5.2 y 12.5.3 se agregarán adaptadores concretos para el motor PDF y el motor Excel realmente utilizados por el repositorio. Monitoreo y Matrices seguirán separados funcionalmente; únicamente compartirán identidad y reglas documentales.
 
 ## Política de migración
@@ -71,11 +83,23 @@ En 12.5.2 y 12.5.3 se agregarán adaptadores concretos para el motor PDF y el mo
 4. Prohibir nuevas implementaciones locales de encabezados, paletas o paginación.
 5. Validar visualmente cada PDF renderizado y cada archivo Excel.
 
+## Validación
+
+- Commit funcional: `526dbb6c70739531a465a2a752dc60ff88ef910f`.
+- Ejecución controlada: `29940191670`.
+- Resultado: backend, frontend, build Angular y E2E aprobados.
+- Pruebas nuevas: paleta institucional, orientación, no partición de filas y validación de metadatos.
+- Auxiliares temporales eliminados del commit productivo.
+
 ## Criterios de salida de 12.5.1
 
-- Inventario generado.
-- Estándar documentado.
-- Paleta y reglas centralizadas en backend.
-- Política de orientación y no partición probada.
-- Sin cambios funcionales en Monitoreo o Matrices.
-- Quality Gates aprobados.
+- Inventario generado: **cumplido**.
+- Estándar documentado: **cumplido**.
+- Paleta y reglas centralizadas en backend: **cumplido**.
+- Política de orientación y no partición probada: **cumplido**.
+- Sin cambios funcionales en Monitoreo o Matrices: **cumplido**.
+- Quality Gates aprobados: **cumplido**.
+
+## Próxima subfase
+
+**12.5.2 — Normalización de Monitoreo de Listas.** Se utilizará este estándar para corregir PDF horizontal, PDF vertical, vista previa y Excel del módulo patrón antes de migrar Matrices de Riesgos.
