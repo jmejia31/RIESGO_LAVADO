@@ -87,16 +87,8 @@ describe('MatricesRiesgosService', () => {
     expect(result).toHaveBeenCalledWith(detalle);
   });
 
-  it('recalcula con motivo, tipo de calculo y confirmacion previa', () => {
-    service.recalcular(14, 'Cambio de criterios', 'PARCIAL').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/14/recalcular`);
-    expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({
-      tipoCalculo: 'PARCIAL', motivoCalculo: 'Cambio de criterios'
-    });
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: { nivel: 'ALTO' } });
+  it('no expone un endpoint publico de recalculo separado', () => {
+    expect('recalcular' in (service as unknown as Record<string, unknown>)).toBe(false);
   });
 
   it('consulta criterios activos e inactivos mediante un parametro explicito', () => {

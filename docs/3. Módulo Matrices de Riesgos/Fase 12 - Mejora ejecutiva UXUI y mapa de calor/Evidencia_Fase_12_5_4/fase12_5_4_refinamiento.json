@@ -1,0 +1,48 @@
+{
+  "fase": "12.5.4",
+  "estado": "validado_ci",
+  "diagnostico": {
+    "archivos_texto_analizados": 311,
+    "consumidores_funcionales_recalcular": 0,
+    "referencias_activas_retiradas": [
+      "endpoint backend /{id}/recalcular",
+      "método no utilizado MatricesRiesgosService.recalcular",
+      "prueba aislada del método retirado"
+    ],
+    "capacidad_calculo_automatico_preservada": true
+  },
+  "refinamientos_ux": [
+    "estado específico de exportación para Excel, PDF ejecutivo y ficha individual",
+    "prevención de solicitudes duplicadas de exportación",
+    "ayuda contextual para edición bloqueada por estado",
+    "regiones ARIA para errores, confirmaciones y carga",
+    "navegación identificada y estado de sección activa",
+    "etiquetas accesibles para filtros",
+    "semántica de diálogo para vista previa y acciones sensibles",
+    "etiqueta descriptiva del módulo y mapa con aria-label"
+  ],
+  "codificacion": {
+    "codigo_activo_corregido": [
+      "tools/polish_repository_policy_doc.py"
+    ],
+    "evidencia_historica_modificada": false,
+    "decision": "Las evidencias históricas se preservan byte a byte; no se aplican correcciones masivas."
+  },
+  "restricciones": [
+    "No modificar DNP",
+    "No tocar CONTROL_ALMACEN.PROVEEDOR",
+    "No integrar Monitoreo de Listas con Matrices de Riesgos",
+    "No modificar el motor de cálculo de riesgo",
+    "No fusionar a main"
+  ],
+  "ejecucion_controlada": {
+    "run_id": 29952077957,
+    "resultado": "success"
+  },
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  }
+}

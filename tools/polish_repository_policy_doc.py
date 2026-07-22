@@ -9,7 +9,7 @@ DOC = ROOT / "docs" / "7. Politica de Repositorio" / "Politica_Repositorio_SGRLA
 
 REPLACEMENTS = {
     "Paquete full vigente por módulo, separado cliente/desarrollador.": "Paquete completo vigente por módulo, separado entre cliente y desarrollador.",
-    "Paquete full vigente por mÃ³dulo, separado cliente/desarrollador.": "Paquete completo vigente por módulo, separado entre cliente y desarrollador.",
+    "Paquete full vigente por m\u00c3\u00b3dulo, separado cliente/desarrollador.": "Paquete completo vigente por módulo, separado entre cliente y desarrollador.",
     "9. Checklist previo a commit o subida": "9. Lista de verificación previa a commit o subida",
     "La versión final fue aprobada o esta marcada claramente como pendiente de aprobación.": "La versión final fue aprobada o está marcada claramente como pendiente de aprobación.",
     "Establecer una política clara para mantener el repositorio ordenado, evitar duplicados, controlar documentos finales y asegurar que cada entrega conserve separación entre información de cliente y documentación técnica para desarrolladores.": "Establecer una política clara para mantener el repositorio ordenado, evitar duplicados, controlar documentos finales y asegurar que cada entrega conserve separación entre la información para cliente y la documentación técnica para desarrolladores.",

@@ -633,6 +633,12 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.estadoEtiqueta('CALCULADA')).toBe('En Revisión');
   });
 
+  it('explica por que una matriz cerrada no puede editarse', () => {
+    const matriz = { estado: 'CERRADA' } as never;
+    expect(component.puedeEditarMatriz(matriz)).toBe(false);
+    expect(component.mensajeBloqueoEditarMatriz(matriz)).toContain('En Revisión');
+  });
+
   it('reposiciona el historial debajo del listado cuando hay pocas matrices', () => {
     component.matrizSeleccionada.set({ matrizId: 1 } as never);
     component.matrices.set([
@@ -744,6 +750,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(descargar).toHaveBeenCalledWith(archivo, formato);
     expect(component.mensaje()).toBe(`Reporte ${formato} generado correctamente.`);
     expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
   });
 
   it('descarga la ficha individual generada por backend', async () => {
@@ -760,6 +767,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(nombreDescarga).toMatch(/^Ficha_Matriz_Riesgo_88_\d{14}\.pdf$/);
     expect(component.mensaje()).toBe('Ficha individual PDF generada correctamente.');
     expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
   });
 
   it('expone todos los tipos de sujeto permitidos por backend', () => {
@@ -775,6 +783,7 @@ describe('MatricesRiesgosComponent', () => {
 
     expect(component.error()).toBe('Exportacion no disponible');
     expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
   });
 
   it('carga el detalle y reconstruye las variables para editar una matriz', () => {

@@ -87,14 +87,10 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
-  // Acciones críticas de cálculo y estado: siempre viajan con confirmación y motivo cuando aplica.
+  // El cálculo se ejecuta después de crear o editar. Angular no expone una operación
+  // separada de recálculo; el backend conserva la única ruta auditada de cálculo.
   calcular(id: number, tipoCalculo = 'GLOBAL'): Observable<unknown> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/${id}/calcular`, { tipoCalculo }, this.confirmado)
-      .pipe(map(res => res.datos));
-  }
-
-  recalcular(id: number, motivoCalculo: string, tipoCalculo = 'GLOBAL'): Observable<unknown> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/${id}/recalcular`, { tipoCalculo, motivoCalculo }, this.confirmado)
       .pipe(map(res => res.datos));
   }
 

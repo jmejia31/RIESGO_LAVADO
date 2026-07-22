@@ -138,6 +138,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly cargando = signal(false);
   readonly cargandoReporte = signal(false);
   readonly guardando = signal(false);
+  readonly exportando = signal<'EXCEL' | 'PDF' | 'FICHA' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly modalOperacion = signal<ModalOperacion | null>(null);
@@ -580,15 +581,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   exportarReporte(formato: 'EXCEL' | 'PDF'): void {
+    if (this.exportando()) return;
+
+    // La API es la fuente única del archivo. Angular únicamente coordina la
+    // descarga y mantiene un estado visible para impedir solicitudes duplicadas.
+    this.exportando.set(formato);
     this.guardando.set(true);
     this.service.exportarReporte(this.reporteFiltro(), formato).subscribe({
       next: blob => {
         this.descargarArchivoReporte(blob, formato);
         this.mensaje.set(`Reporte ${formato} generado correctamente.`);
+        this.exportando.set(null);
         this.guardando.set(false);
       },
       error: err => {
         this.error.set(this.obtenerMensajeError(err, 'No se pudo exportar el reporte.'));
+        this.exportando.set(null);
         this.guardando.set(false);
       }
     });
@@ -612,7 +620,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.error.set('Seleccione una matriz para generar su ficha individual.');
       return;
     }
+    if (this.exportando()) return;
 
+    this.exportando.set('FICHA');
     this.guardando.set(true);
     this.service.exportarFicha(matriz.matrizId).subscribe({
       next: blob => {
@@ -625,10 +635,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         link.remove();
         URL.revokeObjectURL(url);
         this.mensaje.set('Ficha individual PDF generada correctamente.');
+        this.exportando.set(null);
         this.guardando.set(false);
       },
       error: err => {
         this.error.set(this.obtenerMensajeError(err, 'No se pudo generar la ficha individual.'));
+        this.exportando.set(null);
         this.guardando.set(false);
       }
     });
@@ -1570,6 +1582,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   puedeEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
     return puedeEditarMatrizPorEstado(matriz.estado);
+  }
+
+  mensajeBloqueoEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
+    return this.puedeEditarMatriz(matriz)
+      ? 'Editar matriz'
+      : 'La matriz solo puede editarse mientras se encuentra En Revisión.';
   }
 
   puedeEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {

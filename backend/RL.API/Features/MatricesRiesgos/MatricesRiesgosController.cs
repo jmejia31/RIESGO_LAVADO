@@ -243,6 +243,8 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    // La Fase 12.5.4 retiró el endpoint público /recalcular. La creación y la edición
+    // conservan el cálculo automático mediante esta única operación auditada.
     [HttpPost("{id:long}/calcular")]
     [AuditRequired("Cálculo de matriz de riesgos")]
     public async Task<IActionResult> Calcular(long id, [FromBody] MatrizRiesgoCalcularRequestDto dto)
@@ -259,21 +261,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    [HttpPost("{id:long}/recalcular")]
-    [AuditRequired("Recálculo de matriz de riesgos")]
-    public async Task<IActionResult> Recalcular(long id, [FromBody] MatrizRiesgoCalcularRequestDto dto)
-    {
-        try
-        {
-            var result = await _service.CalcularAsync(id, dto ?? new MatrizRiesgoCalcularRequestDto(), esRecalculo: true, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
-            return Responder(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al recalcular matriz de riesgos {MatrizId}", id);
-            return Error500(ex);
-        }
-    }
 
     [HttpPut("{id:long}/estado")]
     [AuditRequired("Cambio de estado de matriz de riesgos")]
