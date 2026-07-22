@@ -6,8 +6,8 @@ import { ListasService } from '../../data-access/listas.service';
 import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../../models/listas.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
+import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
 import { of, forkJoin } from 'rxjs';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
@@ -494,24 +494,12 @@ export class MonitoreoListasComponent implements OnInit {
       format: 'a4'
     });
 
-    // Encabezado
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(31, 41, 55); // Gray 800
-    doc.text(institucion, 14, 15);
-
-    doc.setFontSize(16);
-    doc.text('Monitoreo de Listas de Riesgo', 14, 22);
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(107, 114, 128); // Gray 500
-    doc.text(isEmpleado ? 'Reporte Detallado de Coincidencias - Empleado IHSS' : 'Reporte Detallado de Coincidencias - Persona Natural', 14, 28);
-    
-    // Línea separadora
-    doc.setDrawColor(229, 231, 235); // Gray 200
-    doc.line(14, 32, 196, 32);
+    this.agregarEncabezadoPdf(
+      doc,
+      isEmpleado
+        ? 'REPORTE DETALLADO DE COINCIDENCIAS - EMPLEADO IHSS'
+        : 'REPORTE DETALLADO DE COINCIDENCIAS - PERSONA NATURAL'
+    );
 
     // Información de la persona
     doc.setFont('helvetica', 'bold');
@@ -562,7 +550,7 @@ export class MonitoreoListasComponent implements OnInit {
       };
     }
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: 50,
       head: tableHead,
       body: tableBody,
@@ -578,7 +566,7 @@ export class MonitoreoListasComponent implements OnInit {
       columnStyles: colStyles,
       theme: 'striped',
       margin: { top: 50 },
-      didParseCell: (data) => {
+      didParseCell: (data: any) => {
         if (data.row.section === 'body') {
           if (!isEmpleado) {
             // Columna Es PEP
@@ -640,6 +628,7 @@ export class MonitoreoListasComponent implements OnInit {
     }
 
     // Generar Blob y abrir modal de visualización
+    agregarPiesInstitucionalesPdf(doc);
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
@@ -689,61 +678,21 @@ export class MonitoreoListasComponent implements OnInit {
     return { texto: 'Todos los seguimientos registrados' };
   }
 
-  private agregarEncabezadoPdf(doc: jsPDF, titulo: string) {
+  private agregarEncabezadoPdf(doc: jsPDF, titulo: string): number {
     const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
-
-    doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(0, 0, 210, 38, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 15);
-
-    doc.setFontSize(18);
-    doc.text(titulo, 14, 23);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225); // Slate 300
-    doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
+    const sistema = this.configService.configSistema()?.nombreSistema || 'SGRLA-IHSS';
+    return agregarEncabezadoInstitucionalPdf(doc, titulo, institucion, sistema);
   }
 
   // Encabezado exclusivo del reporte principal en orientación horizontal; evita reutilizar el formato de ficha individual.
   private agregarEncabezadoReporteMonitoreoPdf(doc: jsPDF, titulo: string): number {
     const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
     const sistema = this.configService.configSistema()?.nombreSistema || 'SGRLA-IHSS';
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, pageWidth, 34, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 12);
-
-    doc.setFontSize(17);
-    doc.text(titulo, 14, 22);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`${sistema} | Generado: ${new Date().toLocaleString()}`, 14, 29);
-
-    doc.setFillColor(239, 246, 255);
-    doc.roundedRect(14, 42, pageWidth - 28, 13, 2, 2, 'F');
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(30, 64, 175);
-    const filtros = doc.splitTextToSize(`Filtros aplicados: ${this.obtenerResumenFiltrosPrincipales()}`, pageWidth - 38);
-    doc.text(filtros, 19, 50);
-
-    return 64;
+    return agregarEncabezadoInstitucionalPdf(doc, titulo, institucion, sistema, this.obtenerResumenFiltrosPrincipales());
   }
 
   private agregarDatosMemo(doc: jsPDF, y: number, titulo: string, generalData: string[][]): number {
+    y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59);
@@ -753,7 +702,7 @@ export class MonitoreoListasComponent implements OnInit {
     doc.line(14, y, 196, y);
     y += 6;
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       body: generalData,
       theme: 'plain',
@@ -775,6 +724,7 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   private agregarMotivoPdf(doc: jsPDF, y: number, titulo: string, motivoTexto: string): number {
+    y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59);
@@ -793,6 +743,7 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   private agregarSeguimientosPdf(doc: jsPDF, y: number, titulo: string, seguimientos: Seguimiento[], mensajeVacio: string, rango: RangoSeguimientoReporte): number {
+    y = asegurarEspacioSeccionPdf(doc, y, 30);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
     doc.setTextColor(30, 41, 59);
@@ -820,7 +771,7 @@ export class MonitoreoListasComponent implements OnInit {
         ];
       });
 
-      autoTable(doc, {
+      autoTableInstitucional(doc, {
         startY: y,
         head: [['Fecha', 'Usuario', 'Comentario / Acción', 'Evidencias']],
         body: seguimientosRows,
@@ -854,6 +805,8 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   private abrirPdf(doc: jsPDF) {
+    agregarPiesInstitucionalesPdf(doc);
+    agregarPiesInstitucionalesPdf(doc);
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
@@ -954,25 +907,7 @@ export class MonitoreoListasComponent implements OnInit {
       format: 'a4'
     });
 
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
-
-    // Banner de encabezado
-    doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(0, 0, 210, 38, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 15);
-
-    doc.setFontSize(18);
-    doc.text('REPORTE INTEGRAL DE PERSONA NATURAL', 14, 23);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225); // Slate 300
-    doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
+    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PERSONA NATURAL');
 
     // Información General
     let y = 48;
@@ -992,7 +927,7 @@ export class MonitoreoListasComponent implements OnInit {
       ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       body: generalData,
       theme: 'plain',
@@ -1050,7 +985,7 @@ export class MonitoreoListasComponent implements OnInit {
       det.fechaCalifico ? this.formatDate(det.fechaCalifico) : ''
     ]);
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       head: tableHead,
       body: tableBody,
@@ -1068,7 +1003,7 @@ export class MonitoreoListasComponent implements OnInit {
       },
       theme: 'striped',
       margin: { left: 14, right: 14 },
-      didParseCell: (data) => {
+      didParseCell: (data: any) => {
         if (data.row.section === 'body') {
           if (data.column.index === 3) {
             const rawVal = (data.row.raw as any)[3];
@@ -1154,25 +1089,7 @@ export class MonitoreoListasComponent implements OnInit {
       format: 'a4'
     });
 
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
-
-    // Banner de encabezado
-    doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(0, 0, 210, 38, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 15);
-
-    doc.setFontSize(18);
-    doc.text('REPORTE INTEGRAL DE EMPLEADO IHSS', 14, 23);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225); // Slate 300
-    doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
+    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE EMPLEADO IHSS');
 
     // Información General
     let y = 48;
@@ -1192,7 +1109,7 @@ export class MonitoreoListasComponent implements OnInit {
       ['Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro), '', '']
     ];
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       body: generalData,
       theme: 'plain',
@@ -1250,7 +1167,7 @@ export class MonitoreoListasComponent implements OnInit {
       det.fechaCalifico ? this.formatDate(det.fechaCalifico) : ''
     ]);
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       head: tableHead,
       body: tableBody,
@@ -1269,7 +1186,7 @@ export class MonitoreoListasComponent implements OnInit {
       },
       theme: 'striped',
       margin: { left: 14, right: 14 },
-      didParseCell: (data) => {
+      didParseCell: (data: any) => {
         if (data.row.section === 'body') {
           if (data.column.index === 4) {
             data.cell.styles.fillColor = [254, 242, 242];
@@ -1301,25 +1218,7 @@ export class MonitoreoListasComponent implements OnInit {
       format: 'a4'
     });
 
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'Sistema de Monitoreo RIESGO IHSS';
-
-    // Banner de encabezado
-    doc.setFillColor(15, 23, 42); // Slate 900
-    doc.rect(0, 0, 210, 38, 'F');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 15);
-
-    doc.setFontSize(18);
-    doc.text('REPORTE INTEGRAL DE PATRONO', 14, 23);
-
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(203, 213, 225); // Slate 300
-    doc.text(`${sistema}  |  Fecha de Generación: ${new Date().toLocaleString()}`, 14, 30);
+    this.agregarEncabezadoPdf(doc, 'REPORTE INTEGRAL DE PATRONO');
 
     // Grid de Información General del Patrono
     let y = 48;
@@ -1340,7 +1239,7 @@ export class MonitoreoListasComponent implements OnInit {
       ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)]
     ];
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: y,
       body: generalData,
       theme: 'plain',
@@ -1959,7 +1858,7 @@ export class MonitoreoListasComponent implements OnInit {
       [...resumen[2], ...resumen[3]]
     ];
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY,
       body: resumenTabla,
       theme: 'plain',
@@ -1988,7 +1887,7 @@ export class MonitoreoListasComponent implements OnInit {
     doc.setTextColor(15, 23, 42);
     doc.text('Detalle de coincidencias filtradas', 14, tableStartY - 3);
 
-    autoTable(doc, {
+    autoTableInstitucional(doc, {
       startY: tableStartY,
       head: [reporte.headers],
       body: reporte.rows,
