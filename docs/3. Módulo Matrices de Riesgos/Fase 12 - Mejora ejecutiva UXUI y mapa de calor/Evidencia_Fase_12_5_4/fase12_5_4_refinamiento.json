@@ -1,6 +1,7 @@
 {
   "fase": "12.5.4",
-  "estado": "validado_ci",
+  "estado": "implementacion_publicada_pendiente_control_independiente",
+  "commit_funcional": "0bdc15193a795046bd63d4a685f856f902e21337",
   "diagnostico": {
     "archivos_texto_analizados": 311,
     "consumidores_funcionales_recalcular": 0,
@@ -9,7 +10,9 @@
       "método no utilizado MatricesRiesgosService.recalcular",
       "prueba aislada del método retirado"
     ],
-    "capacidad_calculo_automatico_preservada": true
+    "capacidad_calculo_automatico_preservada": true,
+    "logica_interna_calculo_preservada": true,
+    "auditoria_calculo_preservada": true
   },
   "refinamientos_ux": [
     "estado específico de exportación para Excel, PDF ejecutivo y ficha individual",
@@ -28,21 +31,46 @@
     "evidencia_historica_modificada": false,
     "decision": "Las evidencias históricas se preservan byte a byte; no se aplican correcciones masivas."
   },
-  "restricciones": [
-    "No modificar DNP",
-    "No tocar CONTROL_ALMACEN.PROVEEDOR",
-    "No integrar Monitoreo de Listas con Matrices de Riesgos",
-    "No modificar el motor de cálculo de riesgo",
-    "No fusionar a main"
-  ],
   "ejecucion_controlada": {
     "run_id": 29952077957,
     "resultado": "success"
   },
-  "quality_gates": {
+  "pruebas": {
+    "backend": {
+      "aprobadas": 95,
+      "fallidas": 0,
+      "omitidas": 0
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 156,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    }
+  },
+  "cobertura": {
+    "backend_lineas_pct": 20.50,
+    "backend_ramas_pct": 20.42,
+    "frontend_sentencias_pct": 36.59,
+    "frontend_ramas_pct": 30.24,
+    "frontend_funciones_pct": 33.68,
+    "frontend_lineas_pct": 37.06
+  },
+  "quality_gates_controlados": {
     "backend": "aprobado",
     "frontend": "aprobado",
     "build_angular": "aprobado",
     "e2e": "aprobado"
-  }
+  },
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró Monitoreo de Listas con Matrices de Riesgos",
+    "No se modificó el motor de cálculo de riesgo",
+    "No se fusionó a main"
+  ],
+  "siguiente_fase": "12.5.5 - Pruebas, evidencia y cierre"
 }
