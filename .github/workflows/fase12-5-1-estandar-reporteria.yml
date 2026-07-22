@@ -27,6 +27,10 @@ jobs:
       - name: Generar inventario y estándar compartido
         run: python tools/fase12_5_1_estandar_reporteria.py
 
+      - name: Ajustar import explícito de Xunit
+        shell: bash
+        run: sed -i '1i using Xunit;' backend/RL.API.Tests/Infrastructure/Reporting/InstitutionalReportStandardTests.cs
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -94,7 +98,7 @@ jobs:
           rm -f fase12_5_1_quality.log
           rm -f tools/fase12_5_1_estandar_reporteria.py
           rm -f .github/workflows/fase12-5-1-estandar-reporteria.yml
-          rm -f "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_1/ACTIVAR.tmp"
+          rm -f "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_1/ACTIVAR"*.tmp
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
