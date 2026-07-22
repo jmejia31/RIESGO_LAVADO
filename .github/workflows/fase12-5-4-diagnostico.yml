@@ -1,0 +1,31 @@
+name: Fase 12.5.4 Diagnóstico Técnico
+
+on:
+  pull_request:
+    branches: [fase-12-mejora-ejecutiva-matrices]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnosticar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout rama técnica
+        uses: actions/checkout@v4
+        with:
+          ref: fase-12-5-4-refinamiento-ejecucion
+          fetch-depth: 0
+
+      - name: Ejecutar inventario técnico
+        run: python tools/fase12_5_4_diagnostico.py
+
+      - name: Publicar diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-5-4-diagnostico
+          path: docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_4/fase12_5_4_diagnostico.json
+          if-no-files-found: error
