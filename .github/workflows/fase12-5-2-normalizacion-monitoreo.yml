@@ -42,11 +42,12 @@ jobs:
         if: steps.transformacion.outcome != 'success'
         run: exit 1
 
-      - name: Corregir tipado estricto del adaptador
+      - name: Corregir tipado estricto y pruebas de exportación
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
+
           util = Path('frontend/rl-app/src/app/core/reporting/institutional-report.util.ts')
           text = util.read_text(encoding='utf-8')
           for prop in ('didDrawPage', 'margin', 'styles', 'headStyles', 'alternateRowStyles'):
@@ -57,6 +58,26 @@ jobs:
           text = component.read_text(encoding='utf-8')
           text = text.replace('didParseCell: (data) =>', 'didParseCell: (data: any) =>')
           component.write_text(text, encoding='utf-8')
+
+          spec = Path('frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts')
+          text = spec.read_text(encoding='utf-8')
+          text = text.replace(
+              "it('audita y exporta la lista principal juridica con los datos filtrados', () => {",
+              "it('audita y exporta la lista principal juridica con los datos filtrados', async () => {"
+          )
+          text = text.replace(
+              "it('genera una ficha de patrono solamente despues de auditarla', () => {",
+              "it('genera una ficha de patrono solamente despues de auditarla', async () => {"
+          )
+          text = text.replace(
+              "    expect(click).toHaveBeenCalledOnce();\n    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\\d{4}-\\d{2}-\\d{2}\\.xls$/);",
+              "    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());\n    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\\d{4}-\\d{2}-\\d{2}\\.xlsx$/);"
+          )
+          text = text.replace(
+              "    expect(click).toHaveBeenCalledOnce();\n    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xls');",
+              "    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());\n    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xlsx');"
+          )
+          spec.write_text(text, encoding='utf-8')
           PY
 
       - name: Setup .NET
