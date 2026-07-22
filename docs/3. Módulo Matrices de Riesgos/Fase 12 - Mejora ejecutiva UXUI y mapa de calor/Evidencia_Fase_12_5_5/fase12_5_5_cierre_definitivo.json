@@ -1,6 +1,6 @@
 {
   "fase": "12.5.5",
-  "estado": "control_final_generado_pendiente_revision_visual_manual",
+  "estado": "maquetacion_final_generada_pendiente_revision_visual_manual",
   "rama": "fase-12-mejora-ejecutiva-matrices",
   "ejecucion_controlada": {
     "run_id": 29955226359,
@@ -69,9 +69,9 @@
   ],
   "documento_maestro": {
     "archivo": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx",
-    "tamano_bytes": 52514,
+    "tamano_bytes": 52266,
     "estructura_openxml_valida": true,
-    "sha256": "6256c55a1d28fd0f1319ef82fe9f4f5d788f17fa93fc3cd644acd237a273c876",
+    "sha256": "a6e26cd0703a50ec7dcd22f9c3cdd5ae19e479a31ffa9c3a5187d90bf8c0f0b7",
     "checksum_file": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256",
     "actualizacion_fase_12_5_incorporada": true
   },
@@ -91,7 +91,7 @@
     "No se fusionó a main"
   ],
   "aprobacion_formal": "pendiente_javier_mejia",
-  "siguiente_paso": "Revisión visual manual final y Quality Gate independiente",
+  "siguiente_paso": "Revisión visual manual definitiva y cierre de evidencia",
   "render_visual_generado": {
     "documento_maestro_paginas": 13,
     "reporte_ejecutivo_paginas": 2,
@@ -105,6 +105,13 @@
     "documento_maestro_version": "1.1",
     "metricas_historicas_reconciliadas": true,
     "trazabilidad_12_5_actualizada": true,
+    "revision_visual_manual": "pendiente_revision_asistente"
+  },
+  "maquetacion_final": {
+    "run_id": 29956818761,
+    "anchos_xlsx_institucionales": true,
+    "palabras_categoricas_sin_cortes": "pendiente_verificacion_render",
+    "bloques_documentales_sin_redundancia": true,
     "revision_visual_manual": "pendiente_revision_asistente"
   }
 }

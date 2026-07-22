@@ -202,17 +202,65 @@ public sealed class InstitutionalXlsxWorkbook
 
     private static decimal[] CalculateWidths(InstitutionalXlsxSheet sheet)
     {
+        // Anchos institucionales para columnas recurrentes. El objetivo es evitar
+        // cortes de palabras en tipos, estados y niveles cuando la hoja se ajusta
+        // a una página de ancho, sin sobredimensionar las columnas descriptivas.
+        var preferredWidths = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ID"] = 8m,
+            ["Sujeto"] = 30m,
+            ["Documento"] = 18m,
+            ["Tipo"] = 15m,
+            ["Estado"] = 15m,
+            ["Puntaje inherente"] = 14m,
+            ["Nivel inherente"] = 14m,
+            ["Puntaje residual"] = 14m,
+            ["Nivel residual"] = 14m,
+            ["Plan requerido"] = 14m,
+            ["Fecha"] = 12m,
+            ["Código"] = 10m,
+            ["Factor"] = 16m,
+            ["Matrices"] = 10m,
+            ["Promedio inherente"] = 17m,
+            ["Promedio residual"] = 17m,
+            ["Alto / Crítico"] = 14m,
+            ["Total"] = 11m,
+            ["Vencidos"] = 12m
+        };
+
         var widths = new decimal[sheet.Headers.Count];
         for (var column = 0; column < widths.Length; column++)
         {
-            var maximum = sheet.Headers[column].Length;
+            var header = sheet.Headers[column];
+            if (preferredWidths.TryGetValue(header, out var preferred))
+            {
+                widths[column] = preferred;
+                continue;
+            }
+
+            var maximum = header.Length;
             foreach (var row in sheet.Rows)
             {
                 if (column < row.Count)
                     maximum = Math.Max(maximum, Convert.ToString(row[column], CultureInfo.InvariantCulture)?.Length ?? 0);
             }
-            widths[column] = Math.Clamp(maximum + 2, 10, 48);
+            widths[column] = Math.Clamp(maximum + 2, 10, 34);
         }
+
+        // Las hojas pequeñas deben conservar una anchura visual suficiente para
+        // que títulos y valores no se compriman en una columna excesivamente estrecha.
+        if (widths.Length > 0 && widths.Length <= 4)
+        {
+            const decimal minimumTotalWidth = 60m;
+            var currentTotal = widths.Sum();
+            if (currentTotal < minimumTotalWidth)
+            {
+                var extraPerColumn = (minimumTotalWidth - currentTotal) / widths.Length;
+                for (var column = 0; column < widths.Length; column++)
+                    widths[column] += extraPerColumn;
+            }
+        }
+
         return widths;
     }
 
