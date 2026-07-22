@@ -10,6 +10,7 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task<ServiceResult<MatricesRiesgoReporteDto>> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip);
+    Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarFichaAsync(long matrizId, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult<List<MatrizRiesgoResumenDto>>> ListarAsync(MatrizRiesgoFiltroDto filtro);
     Task<ServiceResult<MatrizRiesgoDetalleDto>> ObtenerAsync(long matrizId);
     Task<ServiceResult<MatrizRiesgoDetalleDto>> CrearAsync(MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);

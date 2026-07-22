@@ -60,6 +60,19 @@ describe('MatricesRiesgosService', () => {
     expect(result).toHaveBeenCalledWith(archivo);
   });
 
+  it('exporta la ficha individual como blob auditado', () => {
+    const result = vi.fn();
+    service.exportarFicha(14).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/14/reportes/ficha`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    const archivo = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    request.flush(archivo);
+    expect(result).toHaveBeenCalledWith(archivo);
+  });
+
   it('actualiza una matriz y extrae el detalle de la respuesta', () => {
     const dto = { nombre: 'Matriz institucional' } as never;
     const detalle = { id: 14, nombre: 'Matriz institucional' };

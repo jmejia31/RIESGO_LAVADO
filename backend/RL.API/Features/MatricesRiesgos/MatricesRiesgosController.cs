@@ -150,6 +150,25 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("{id:long}/reportes/ficha")]
+    [AuditRequired("Exportación de ficha individual de matriz de riesgos")]
+    public async Task<IActionResult> ExportarFicha(long id)
+    {
+        try
+        {
+            var result = await _service.ExportarFichaAsync(id, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            if (!result.Success || result.Data == null)
+                return StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+
+            return File(result.Data.Contenido, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al exportar ficha individual de Matrices de Riesgos {MatrizId}", id);
+            return Error500(ex);
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> Listar(
         [FromQuery] string? buscar = null,

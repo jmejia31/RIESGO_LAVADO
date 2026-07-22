@@ -339,11 +339,17 @@
       </div>
 
       <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden self-start">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <h3 class="text-lg font-bold text-gray-900">Detalle</h3>
-          <span *ngIf="matrizSeleccionada()" class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
-            {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
-          </span>
+          <div *ngIf="matrizSeleccionada()" class="flex flex-wrap items-center justify-end gap-2">
+            <button type="button" (click)="exportarFichaMatriz()" [disabled]="guardando()"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">
+              Ficha PDF
+            </button>
+            <span class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
+              {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
+            </span>
+          </div>
         </div>
         <div *ngIf="matrizSeleccionada(); else noMatrizSeleccionada" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-3 text-sm">
             <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
@@ -1031,11 +1037,11 @@
         <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
           <button type="button" (click)="exportarReporte('EXCEL')" [disabled]="guardando() || cargandoReporte()"
             class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
-            Exportar Excel
+            Exportar Excel (.xlsx)
           </button>
           <button type="button" (click)="exportarReporte('PDF')" [disabled]="guardando() || cargandoReporte()"
             class="w-full sm:w-auto px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-bold disabled:opacity-50">
-            Generar PDF
+            Generar PDF ejecutivo
           </button>
         </div>
       </div>

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Text;
+using System.IO.Compression;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -583,7 +584,7 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Theory]
-    [InlineData("EXCEL", "application/vnd.ms-excel")]
+    [InlineData("EXCEL", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [InlineData("PDF", "application/pdf")]
     public async Task ExportarReporte_FormatoValido_GeneraContenidoYRegistraAuditoria(string formato, string contentType)
     {
@@ -605,23 +606,66 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.True(result.Success);
         Assert.Equal(contentType, result.Data!.ContentType);
         Assert.NotEmpty(result.Data.Contenido);
-        Assert.EndsWith(formato == "PDF" ? ".pdf" : ".xls", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        Assert.EndsWith(formato == "PDF" ? ".pdf" : ".xlsx", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
         if (formato == "PDF")
         {
-            Assert.StartsWith("%PDF-1.4", Encoding.Latin1.GetString(result.Data.Contenido));
+            var contenido = Encoding.Latin1.GetString(result.Data.Contenido);
+            Assert.StartsWith("%PDF-1.4", contenido);
+            Assert.Contains("/MediaBox [0 0 841.89 595.28]", contenido, StringComparison.Ordinal);
+            Assert.DoesNotContain("/BaseFont /Courier", contenido, StringComparison.Ordinal);
         }
         else
         {
-            var contenido = System.Net.WebUtility.HtmlDecode(Encoding.UTF8.GetString(result.Data.Contenido));
-            Assert.Contains("Sin evaluar", contenido, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("Mapa de transición inherente a residual", contenido, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("ALTO", contenido, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("MEDIO", contenido, StringComparison.OrdinalIgnoreCase);
+            using var stream = new MemoryStream(result.Data.Contenido);
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+            Assert.NotNull(archive.GetEntry("[Content_Types].xml"));
+            Assert.NotNull(archive.GetEntry("xl/workbook.xml"));
+            Assert.NotNull(archive.GetEntry("xl/styles.xml"));
+            Assert.True(archive.Entries.Count(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.Ordinal)) >= 5);
         }
         Assert.Equal("APROBADA", filtro.Estado);
         Assert.Equal("PROVEEDOR", filtro.SujetoTipo);
         var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
         Assert.Equal(formato, call.Arguments[1]);
+    }
+
+    [Fact]
+    public async Task ExportarFicha_MatrizValida_GeneraPdfVerticalYRegistraAuditoria()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ =>
+            Task.FromResult<MatrizRiesgoDetalleDto?>(new MatrizRiesgoDetalleDto
+            {
+                MatrizId = 44,
+                NombreSujeto = "Proveedor de prueba",
+                SujetoTipo = "PROVEEDOR",
+                Estado = "APROBADA"
+            }));
+        repo.On(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync), _ => Task.CompletedTask);
+
+        var result = await service.ExportarFichaAsync(44, 7, "a@ihss.hn", "127.0.0.1");
+
+        Assert.True(result.Success);
+        Assert.Equal("application/pdf", result.Data!.ContentType);
+        Assert.EndsWith(".pdf", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        var contenido = Encoding.Latin1.GetString(result.Data.Contenido);
+        Assert.StartsWith("%PDF-1.4", contenido);
+        Assert.Contains("/MediaBox [0 0 595.28 841.89]", contenido, StringComparison.Ordinal);
+        Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
+    }
+
+    [Fact]
+    public async Task ExportarFicha_MatrizInexistente_NoAudita()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ =>
+            Task.FromResult<MatrizRiesgoDetalleDto?>(null));
+
+        var result = await service.ExportarFichaAsync(404, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(404, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
     }
 
     [Fact]

@@ -39,7 +39,8 @@ describe('MatricesRiesgosComponent', () => {
       inactivarCriterio: vi.fn(() => of({ success: true })),
       reactivarCriterio: vi.fn(() => of({ success: true })),
       eliminarCriterio: vi.fn(() => of({ success: true })),
-      exportarReporte: vi.fn(() => of(new Blob()))
+      exportarReporte: vi.fn(() => of(new Blob())),
+      exportarFicha: vi.fn(() => of(new Blob(['%PDF-1.4'], { type: 'application/pdf' })))
     };
 
     await TestBed.configureTestingModule({
@@ -742,6 +743,22 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['exportarReporte']).toHaveBeenCalledWith({ estado: 'APROBADA' }, formato);
     expect(descargar).toHaveBeenCalledWith(archivo, formato);
     expect(component.mensaje()).toBe(`Reporte ${formato} generado correctamente.`);
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('descarga la ficha individual generada por backend', async () => {
+    let nombreDescarga = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombreDescarga = this.download;
+    });
+    component.matrizSeleccionada.set({ matrizId: 88, nombreSujeto: 'Matriz individual' } as never);
+
+    component.exportarFichaMatriz();
+
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(service['exportarFicha']).toHaveBeenCalledWith(88);
+    expect(nombreDescarga).toMatch(/^Ficha_Matriz_Riesgo_88_\d{14}\.pdf$/);
+    expect(component.mensaje()).toBe('Ficha individual PDF generada correctamente.');
     expect(component.guardando()).toBe(false);
   });
 

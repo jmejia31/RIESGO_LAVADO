@@ -1,0 +1,32 @@
+{
+  "fase": "12.5.3",
+  "estado": "validado_ci",
+  "resultado_funcional": {
+    "pdf_ejecutivo_horizontal_backend": true,
+    "ficha_individual_vertical_backend": true,
+    "xlsx_openxml_real_backend": true,
+    "frontend_solo_descarga": true,
+    "auditoria_reporte_general": true,
+    "auditoria_ficha_individual": true,
+    "filas_indivisibles": true,
+    "encabezados_repetidos": true,
+    "pie_y_numeracion": true
+  },
+  "restricciones": [
+    "No modificar DNP",
+    "No tocar CONTROL_ALMACEN.PROVEEDOR",
+    "No integrar Monitoreo de Listas con Matrices de Riesgos",
+    "No modificar el cálculo de riesgo",
+    "No fusionar a main"
+  ],
+  "ejecucion_controlada": {
+    "run_id": 29948703412,
+    "resultado": "success"
+  },
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  }
+}

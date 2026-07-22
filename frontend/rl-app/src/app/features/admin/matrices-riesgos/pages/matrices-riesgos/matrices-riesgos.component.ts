@@ -3,9 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { OnDestroy } from '@angular/core';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesReporteTablaComponent } from '../../components/matrices-reporte-tabla/matrices-reporte-tabla.component';
 import {
@@ -598,7 +595,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private descargarArchivoReporte(blob: Blob, formato: 'EXCEL' | 'PDF'): void {
-    const extension = formato === 'PDF' ? 'pdf' : 'xls';
+    const extension = formato === 'PDF' ? 'pdf' : 'xlsx';
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -607,6 +604,34 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     link.click();
     link.remove();
     URL.revokeObjectURL(url);
+  }
+
+  exportarFichaMatriz(): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz) {
+      this.error.set('Seleccione una matriz para generar su ficha individual.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.exportarFicha(matriz.matrizId).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ficha_Matriz_Riesgo_${matriz.matrizId}_${this.fechaArchivo()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        this.mensaje.set('Ficha individual PDF generada correctamente.');
+        this.guardando.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo generar la ficha individual.'));
+        this.guardando.set(false);
+      }
+    });
   }
 
   cargarMatrices(): void {
@@ -1800,339 +1825,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private generarExcelReporte(): void {
-    const reporte = this.reporte();
-    if (!reporte) {
-      this.error.set('No hay datos de reportería para exportar.');
-      return;
-    }
-    // La exportación usa exactamente el reporte vigente para que coincida con
-    // lo que el usuario filtró en pantalla.
-    const matricesFiltradas = this.obtenerMatricesReporte(reporte);
-
-    const wb = XLSX.utils.book_new();
-    this.agregarHojaExcel(wb, 'Reporte', [
-      ['INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL'],
-      ['REPORTE DE MATRICES DE RIESGOS'],
-      ['SGRLA-IHSS'],
-      ['Fecha de generación', this.formatearFechaHora(reporte.fechaGeneracion)],
-      [],
-      ['1. FILTROS APLICADOS'],
-      ['Búsqueda general', reporte.filtro?.buscar || 'Todos'],
-      ['Estado', reporte.filtro?.estado || 'Todos'],
-      ['Tipo de sujeto', reporte.filtro?.sujetoTipo || 'Todos'],
-      ['Nivel residual', reporte.filtro?.nivelResidual || 'Todos'],
-      ['Responsable', reporte.filtro?.responsable || 'Todos'],
-      ['Fecha inicio', reporte.filtro?.fechaInicio || 'Todos'],
-      ['Fecha fin', reporte.filtro?.fechaFin || 'Todos'],
-      [],
-      ['2. RESUMEN EJECUTIVO'],
-      ['Indicador', 'Valor'],
-      ['Total matrices', reporte.totales.totalMatrices],
-      ['Calculadas', reporte.totales.totalCalculadas],
-      ['Cerradas', reporte.totales.totalCerradas],
-      ['Alto / Crítico', reporte.totales.totalAltoCritico],
-      ['Plan requerido', reporte.totales.totalPlanAccionRequerido],
-      ['Planes vencidos', reporte.totales.totalPlanesVencidos],
-      [],
-      ['3. DISTRIBUCIÓN POR ESTADO'],
-      ['Estado', 'Total'],
-      ...reporte.porEstado.map(x => [x.nombre, x.total]),
-      [],
-      ['4. DISTRIBUCIÓN POR NIVEL RESIDUAL'],
-      ['Nivel', 'Total'],
-      ...reporte.porNivelResidual.map(x => [x.nombre, x.total]),
-      [],
-      ['5. MATRICES FILTRADAS'],
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...matricesFiltradas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ]),
-      [],
-      ['6. RESULTADOS POR FACTOR'],
-      ['Factor', 'Matrices', 'Promedio inherente', 'Promedio residual', 'Alto / Crítico', 'Plan requerido'],
-      ...reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        x.totalMatrices,
-        x.promedioInherente,
-        x.promedioResidual,
-        x.totalAltoCritico,
-        x.totalPlanAccionRequerido
-      ]),
-      [],
-      ['7. MATRICES ALTO / CRÍTICO'],
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...reporte.matricesCriticas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ]),
-      [],
-      ['8. PLANES DE ACCIÓN'],
-      ['Estado', 'Total', 'Vencidos'],
-      ...reporte.planesAccion.map(x => [x.estado, x.total, x.vencidos])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Distribuciones', [
-      ['Distribución por estado'],
-      ['Estado', 'Total'],
-      ...reporte.porEstado.map(x => [x.nombre, x.total]),
-      [],
-      ['Distribución por nivel residual'],
-      ['Nivel', 'Total'],
-      ...reporte.porNivelResidual.map(x => [x.nombre, x.total]),
-      [],
-      ['Distribución por sujeto'],
-      ['Tipo de sujeto', 'Total'],
-      ...reporte.porSujetoTipo.map(x => [x.nombre, x.total]),
-      [],
-      ['Riesgo inherente por nivel'],
-      ['Nivel', 'Total', 'Promedio'],
-      ...reporte.mapaInherente.map(x => [x.nivel, x.total, x.promedio]),
-      [],
-      ['Riesgo residual por nivel'],
-      ['Nivel', 'Total', 'Promedio'],
-      ...reporte.mapaResidual.map(x => [x.nivel, x.total, x.promedio])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Factores', [
-      ['Factor', 'Matrices', 'Promedio inherente', 'Promedio residual', 'Alto / Crítico', 'Plan requerido'],
-      ...reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        x.totalMatrices,
-        x.promedioInherente,
-        x.promedioResidual,
-        x.totalAltoCritico,
-        x.totalPlanAccionRequerido
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Matrices Filtradas', [
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...matricesFiltradas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Matrices Alto Critico', [
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...reporte.matricesCriticas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        `${x.puntajeInherente ?? '-'} ${x.nivelInherente ?? ''}`.trim(),
-        `${x.puntajeResidual ?? '-'} ${x.nivelResidual ?? ''}`.trim(),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Planes Accion', [
-      ['Estado', 'Total', 'Vencidos'],
-      ...reporte.planesAccion.map(x => [x.estado, x.total, x.vencidos])
-    ]);
-
-    XLSX.writeFile(wb, `Reporte_Matrices_Riesgos_${this.fechaArchivo()}.xlsx`);
-  }
-
-  private generarPdfReporte(): void {
-    const reporte = this.reporte();
-    if (!reporte) {
-      this.error.set('No hay datos de reportería para generar el PDF.');
-      return;
-    }
-    const matricesFiltradas = this.obtenerMatricesReporte(reporte);
-
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    let y = this.agregarEncabezadoReportePdf(doc, 'REPORTE DE MATRICES DE RIESGOS');
-
-    y = this.agregarTablaReportePdf(doc, y, '1. FILTROS APLICADOS', [
-      ['Búsqueda general', reporte.filtro?.buscar || 'Todos', 'Estado', reporte.filtro?.estado || 'Todos'],
-      ['Tipo de sujeto', reporte.filtro?.sujetoTipo || 'Todos', 'Nivel residual', reporte.filtro?.nivelResidual || 'Todos'],
-      ['Responsable', reporte.filtro?.responsable || 'Todos', 'Rango fecha', `${reporte.filtro?.fechaInicio || 'Todos'} - ${reporte.filtro?.fechaFin || 'Todos'}`]
-    ]);
-
-    y = this.agregarTablaReportePdf(doc, y, '2. RESUMEN EJECUTIVO', [
-      ['Total matrices', `${reporte.totales.totalMatrices}`, 'Calculadas', `${reporte.totales.totalCalculadas}`],
-      ['Cerradas', `${reporte.totales.totalCerradas}`, 'Alto / Crítico', `${reporte.totales.totalAltoCritico}`],
-      ['Plan requerido', `${reporte.totales.totalPlanAccionRequerido}`, 'Planes vencidos', `${reporte.totales.totalPlanesVencidos}`]
-    ]);
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '3. MATRICES FILTRADAS', ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Residual', 'Plan', 'Fecha'],
-      this.filasMatrizReporteCompleta(matricesFiltradas));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '4. RESULTADOS POR FACTOR', ['Factor', 'Matrices', 'Inherente', 'Residual', 'Alto/Crítico', 'Plan'],
-      reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        `${x.totalMatrices}`,
-        `${x.promedioInherente}`,
-        `${x.promedioResidual}`,
-        `${x.totalAltoCritico}`,
-        `${x.totalPlanAccionRequerido}`
-      ]));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '5. MATRICES ALTO / CRÍTICO', ['ID', 'Sujeto', 'Estado', 'Residual', 'Plan', 'Fecha'],
-      this.filasMatrizReporte(reporte.matricesCriticas));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '6. MAPA INHERENTE PERSISTIDO', ['Nivel', 'Total', 'Promedio'],
-      reporte.mapaInherente.map(x => [x.nivel, `${x.total}`, `${x.promedio}`]));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '7. MAPA RESIDUAL PERSISTIDO', ['Nivel', 'Total', 'Promedio'],
-      reporte.mapaResidual.map(x => [x.nivel, `${x.total}`, `${x.promedio}`]));
-
-    this.agregarPiePaginaPdf(doc);
-    doc.save(`Reporte_Matrices_Riesgos_${this.fechaArchivo()}.pdf`);
-  }
-
-  private agregarEncabezadoReportePdf(doc: jsPDF, titulo: string): number {
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'SGRLA-IHSS';
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 38, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 14);
-    doc.setFontSize(17);
-    doc.text(titulo, 14, 23);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`${sistema} | Fecha de Generación: ${new Date().toLocaleString('es-HN')}`, 14, 30);
-    return 48;
-  }
-
-  private agregarTablaReportePdf(doc: jsPDF, y: number, titulo: string, filas: string[][]): number {
-    y = this.asegurarEspacioSeccionPdf(doc, y, filas.length);
-    this.agregarTituloSeccionPdf(doc, y, titulo);
-    autoTable(doc, {
-      startY: y + 6,
-      body: filas,
-      theme: 'plain',
-      styles: { fontSize: 8.5, cellPadding: 2, textColor: [51, 65, 85] },
-      columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 35, textColor: [30, 41, 59] },
-        1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 35, textColor: [30, 41, 59] },
-        3: { cellWidth: 55 }
-      },
-      margin: { left: 14, right: 14 }
-    });
-    return (doc as any).lastAutoTable.finalY + 9;
-  }
-
-  private agregarAutoTablaReportePdf(doc: jsPDF, y: number, titulo: string, encabezados: string[], filas: string[][]): number {
-    y = this.asegurarEspacioSeccionPdf(doc, y, filas.length);
-    this.agregarTituloSeccionPdf(doc, y, titulo);
-    autoTable(doc, {
-      startY: y + 6,
-      head: [encabezados],
-      body: filas.length ? filas : [[`Sin registros para mostrar.`, ...Array(encabezados.length - 1).fill('')]],
-      theme: 'grid',
-      headStyles: { fillColor: [31, 63, 145], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 7.8, textColor: [15, 23, 42] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 14, right: 14 },
-      rowPageBreak: 'avoid',
-      styles: { overflow: 'linebreak', cellPadding: 2 }
-    });
-    return (doc as any).lastAutoTable.finalY + 9;
-  }
-
-  private asegurarEspacioSeccionPdf(doc: jsPDF, y: number, filas: number): number {
-    const altoMinimo = filas <= 4 ? 18 + Math.max(filas, 1) * 9 : 36;
-    if (y + altoMinimo > 278) {
-      doc.addPage();
-      return 18;
-    }
-    return y;
-  }
-
-  private agregarTituloSeccionPdf(doc: jsPDF, y: number, titulo: string): void {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59);
-    doc.text(titulo, 14, y);
-    doc.setDrawColor(226, 232, 240);
-    doc.line(14, y + 2, 196, y + 2);
-  }
-
-  private agregarPiePaginaPdf(doc: jsPDF): void {
-    const paginas = doc.getNumberOfPages();
-    for (let i = 1; i <= paginas; i++) {
-      doc.setPage(i);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Página ${i} de ${paginas}`, 176, 287);
-    }
-  }
-
-  private filasMatrizReporte(matrices: MatrizRiesgoResumen[]): string[][] {
-    return matrices.map(x => [
-      `${x.matrizId}`,
-      x.nombreSujeto || '',
-      x.estado || '',
-      this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-      x.requierePlanAccion ? 'Sí' : 'No',
-      this.formatearFecha(x.fechaEvaluacion)
-    ]);
-  }
-
-  private filasMatrizReporteCompleta(matrices: MatrizRiesgoResumen[]): string[][] {
-    return matrices.map(x => [
-      `${x.matrizId}`,
-      x.nombreSujeto || '',
-      x.documento || '-',
-      x.sujetoTipo || '-',
-      x.estado || '',
-      this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-      x.requierePlanAccion ? 'Sí' : 'No',
-      this.formatearFecha(x.fechaEvaluacion)
-    ]);
-  }
 
   obtenerMatricesReporte(reporte: MatricesRiesgoReporte | null = this.reporte()): MatrizRiesgoResumen[] {
     return reporte?.matricesFiltradas ?? [];
-  }
-
-  private agregarHojaExcel(wb: XLSX.WorkBook, nombre: string, data: unknown[][]): void {
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = this.calcularAnchosExcel(data);
-    XLSX.utils.book_append_sheet(wb, ws, nombre);
-  }
-
-  private calcularAnchosExcel(data: unknown[][]): XLSX.ColInfo[] {
-    const columnas = data.reduce((max, fila) => Math.max(max, fila.length), 0);
-    return Array.from({ length: columnas }, (_, index) => {
-      const ancho = data.reduce((max, fila) => Math.max(max, `${fila[index] ?? ''}`.length), 10);
-      return { wch: Math.min(Math.max(ancho + 2, 12), 48) };
-    });
   }
 
   private descargarBlob(blob: Blob, nombre: string): void {

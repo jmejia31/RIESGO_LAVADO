@@ -58,6 +58,13 @@ export class MatricesRiesgosService {
     });
   }
 
+  exportarFicha(matrizId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${matrizId}/reportes/ficha`, {
+      responseType: 'blob',
+      headers: this.confirmado.headers
+    });
+  }
+
   // Matrices: altas y ediciones quedan centralizadas para que el componente no construya rutas REST.
   listar(filtro: MatrizRiesgoFiltro): Observable<MatrizRiesgoResumen[]> {
     const params = this.construirParams(filtro);
