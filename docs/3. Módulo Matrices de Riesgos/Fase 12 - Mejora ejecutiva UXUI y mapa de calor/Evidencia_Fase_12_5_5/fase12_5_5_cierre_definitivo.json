@@ -1,0 +1,102 @@
+{
+  "fase": "12.5.5",
+  "estado": "cierre_tecnico_generado_pendiente_revision_visual_manual",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "ejecucion_controlada": {
+    "run_id": 29955226359,
+    "resultado": "success"
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 96,
+      "fallidas": 0,
+      "omitidas": 0,
+      "total": 96
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 156,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    },
+    "build_angular": "aprobado"
+  },
+  "cobertura": {
+    "backend_lineas_pct": 20.56,
+    "backend_ramas_pct": 20.86,
+    "frontend_sentencias_pct": 36.59,
+    "frontend_ramas_pct": 30.24,
+    "frontend_funciones_pct": 33.68,
+    "frontend_lineas_pct": 37.06
+  },
+  "artefactos_reporteria": [
+    {
+      "tipo": "PDF",
+      "archivo": "reporte_ejecutivo_matrices.pdf",
+      "tamano_bytes": 18012,
+      "sha256": "0eabc28ab24e83c468d011f6a5a1f16f545d200c0dc62fa1d53aaf513024e20f",
+      "paginas": 2,
+      "texto_extraido_caracteres": 1741,
+      "estructura_pdf_valida": true
+    },
+    {
+      "tipo": "XLSX",
+      "archivo": "reporte_matrices.xlsx",
+      "tamano_bytes": 9877,
+      "sha256": "95d382fb0ebd2b91bee17a3e352eabca75dcb383d21a141f67f14d25871ae2b2",
+      "hojas": [
+        "Resumen",
+        "Matrices",
+        "Factores",
+        "Mapa transición",
+        "Matrices críticas",
+        "Planes"
+      ],
+      "openxml_valido": true
+    },
+    {
+      "tipo": "PDF",
+      "archivo": "ficha_individual_matriz.pdf",
+      "tamano_bytes": 14643,
+      "sha256": "b68b58da6e2b3257042d755af3a2d1ee75c5ee75d525488701340a87ab3ca0db",
+      "paginas": 1,
+      "texto_extraido_caracteres": 1499,
+      "estructura_pdf_valida": true
+    }
+  ],
+  "documento_maestro": {
+    "archivo": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx",
+    "tamano_bytes": 52079,
+    "estructura_openxml_valida": true,
+    "sha256": "2a1ecfb73cdd57cda7d4f89e35cd1ae59d5ee5fa925131d62650bd597a5ded05",
+    "checksum_file": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256",
+    "actualizacion_fase_12_5_incorporada": true
+  },
+  "oracle": {
+    "conexion_institucional_disponible_en_runner": false,
+    "resultado": "Validación Oracle real no ejecutada en CI por ausencia de conectividad, credenciales y autorización institucional; dependencia externa documentada.",
+    "scripts_validados": [
+      "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_3/fase12_3_validacion_oracle.sql",
+      "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_3/fase12_3_validacion_niveles_oracle.sql"
+    ]
+  },
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró funcionalmente Monitoreo de Listas con Matrices de Riesgos",
+    "No se modificó el motor de cálculo de riesgo",
+    "No se fusionó a main"
+  ],
+  "aprobacion_formal": "pendiente_javier_mejia",
+  "siguiente_paso": "Revisión visual manual, checksum final y aprobación formal",
+  "render_visual_generado": {
+    "documento_maestro_paginas": 13,
+    "reporte_ejecutivo_paginas": 2,
+    "ficha_individual_paginas": 1,
+    "xlsx_paginas_renderizadas": 9,
+    "revision_visual_manual": "pendiente_revision_asistente"
+  }
+}
