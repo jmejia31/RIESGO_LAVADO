@@ -1,7 +1,8 @@
 {
   "fase": "12.5.4",
-  "estado": "implementacion_publicada_pendiente_control_independiente",
+  "estado": "validacion_tecnica_final_aprobada",
   "commit_funcional": "0bdc15193a795046bd63d4a685f856f902e21337",
+  "commit_control_documental": "3f2fe175aacb0a98931402c77f6649e281825c0d",
   "diagnostico": {
     "archivos_texto_analizados": 311,
     "consumidores_funcionales_recalcular": 0,
@@ -35,6 +36,10 @@
     "run_id": 29952077957,
     "resultado": "success"
   },
+  "quality_gate_independiente": {
+    "run_id": 29952843226,
+    "resultado": "success"
+  },
   "pruebas": {
     "backend": {
       "aprobadas": 95,
@@ -59,7 +64,7 @@
     "frontend_funciones_pct": 33.68,
     "frontend_lineas_pct": 37.06
   },
-  "quality_gates_controlados": {
+  "quality_gates": {
     "backend": "aprobado",
     "frontend": "aprobado",
     "build_angular": "aprobado",
