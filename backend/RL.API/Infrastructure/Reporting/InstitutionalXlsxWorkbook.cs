@@ -157,6 +157,7 @@ public sealed class InstitutionalXlsxWorkbook
         var orientation = sheet.Orientation == InstitutionalReportOrientation.Landscape ? "landscape" : "portrait";
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+               "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
                $"<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"4\" topLeftCell=\"A5\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>" +
                $"<cols>{columns}</cols><sheetData>{rows}</sheetData>" +
                $"<mergeCells count=\"2\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/></mergeCells>" +

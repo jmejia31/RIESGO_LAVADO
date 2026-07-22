@@ -202,7 +202,7 @@ public sealed class MatricesRiesgosReportRendererTests
             ["Puntaje"] = 4m,
             ["PuntajePonderado"] = 1.20m,
             ["Justificacion"] = "Proveedor con operación regional y exposición transfronteriza controlada.",
-            ["FuenteDato"] = "Expediente institucional"
+            ["FuenteDato"] = "Expediente IHSS"
         });
         AddListItem(detalle, "Controles", new Dictionary<string, object?>
         {
@@ -287,6 +287,16 @@ public sealed class MatricesRiesgosReportRendererTests
         foreach (var hoja in new[] { "Resumen", "Matrices", "Factores", "Mapa transición", "Matrices críticas", "Planes" })
         {
             Assert.Contains(hoja, workbookXml);
+        }
+
+        foreach (var worksheet in zip.Entries.Where(entry =>
+                     entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                     && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)))
+        {
+            using var sheetReader = new StreamReader(worksheet.Open(), Encoding.UTF8);
+            var sheetXml = sheetReader.ReadToEnd();
+            Assert.Contains("<pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/>", sheetXml);
+            Assert.Contains("fitToWidth=\"1\"", sheetXml);
         }
     }
 
