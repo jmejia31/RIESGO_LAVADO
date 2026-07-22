@@ -51,8 +51,24 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Ejecutar Quality Gates completos
+        id: quality
+        continue-on-error: true
         shell: pwsh
-        run: ./tools/run_quality_gates.ps1
+        run: ./tools/run_quality_gates.ps1 *> fase12_5_1_quality.log
+
+      - name: Publicar diagnóstico
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-5-1-diagnostico
+          path: |
+            fase12_5_1_quality.log
+            docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_1/inventario_reporteria.json
+          if-no-files-found: error
+
+      - name: Detener si Quality Gates fallaron
+        if: steps.quality.outcome != 'success'
+        run: exit 1
 
       - name: Registrar validación aprobada
         shell: bash
@@ -75,6 +91,7 @@ jobs:
       - name: Publicar commit limpio
         shell: bash
         run: |
+          rm -f fase12_5_1_quality.log
           rm -f tools/fase12_5_1_estandar_reporteria.py
           rm -f .github/workflows/fase12-5-1-estandar-reporteria.yml
           rm -f "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_1/ACTIVAR.tmp"
