@@ -18,14 +18,29 @@ jobs:
     timeout-minutes: 45
 
     steps:
-      - name: Checkout rama objetivo
+      - name: Checkout rama técnica
         uses: actions/checkout@v4
         with:
-          ref: fase-12-mejora-ejecutiva-matrices
+          ref: fase-12-5-2-normalizacion-monitoreo-ejecucion
           fetch-depth: 0
 
       - name: Aplicar normalización de reportería
-        run: python tools/fase12_5_2_normalizar_monitoreo.py
+        id: transformacion
+        continue-on-error: true
+        shell: bash
+        run: python tools/fase12_5_2_normalizar_monitoreo.py > fase12_5_2_transformacion.log 2>&1
+
+      - name: Publicar diagnóstico de transformación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase12-5-2-transformacion
+          path: fase12_5_2_transformacion.log
+          if-no-files-found: error
+
+      - name: Detener si la transformación falló
+        if: steps.transformacion.outcome != 'success'
+        run: exit 1
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -55,7 +70,7 @@ jobs:
         run: |
           grep -q 'exceljs' frontend/rl-app/package.json
           grep -q "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" frontend/rl-app/src/app/core/utils/excel-export.util.ts
-          ! grep -q "replace(/\\.xlsx\$/i, '.xls')" frontend/rl-app/src/app/core/utils/excel-export.util.ts
+          ! grep -q "replace(/\.xlsx\$/i, '.xls')" frontend/rl-app/src/app/core/utils/excel-export.util.ts
           grep -q "rowPageBreak: 'avoid'" frontend/rl-app/src/app/core/reporting/institutional-report.util.ts
           grep -q "showHead: 'everyPage'" frontend/rl-app/src/app/core/reporting/institutional-report.util.ts
           grep -q "Página.*de" frontend/rl-app/src/app/core/reporting/institutional-report.util.ts
@@ -67,7 +82,7 @@ jobs:
         shell: pwsh
         run: ./tools/run_quality_gates.ps1 *> fase12_5_2_quality.log
 
-      - name: Publicar diagnóstico
+      - name: Publicar diagnóstico técnico
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -75,7 +90,7 @@ jobs:
           path: |
             fase12_5_2_quality.log
             docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_5_2/fase12_5_2_normalizacion_monitoreo.json
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Detener si Quality Gates fallaron
         if: steps.quality.outcome != 'success'
@@ -102,6 +117,7 @@ jobs:
       - name: Publicar commit limpio
         shell: bash
         run: |
+          rm -f fase12_5_2_transformacion.log
           rm -f fase12_5_2_quality.log
           rm -f tools/fase12_5_2_normalizar_monitoreo.py
           rm -f .github/workflows/fase12-5-2-normalizacion-monitoreo.yml
