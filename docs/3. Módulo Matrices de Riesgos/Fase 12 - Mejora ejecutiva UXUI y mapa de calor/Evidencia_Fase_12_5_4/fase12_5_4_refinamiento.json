@@ -3,6 +3,8 @@
   "estado": "validacion_tecnica_final_aprobada",
   "commit_funcional": "0bdc15193a795046bd63d4a685f856f902e21337",
   "commit_control_documental": "3f2fe175aacb0a98931402c77f6649e281825c0d",
+  "commit_validacion_documental": "9f0427f37b2800473bfe511945d4f912b31c90c2",
+  "commit_control_accesibilidad": "1c1b1815f1feb24aa9242c8377a9f47671fb4a8f",
   "diagnostico": {
     "archivos_texto_analizados": 311,
     "consumidores_funcionales_recalcular": 0,
@@ -21,7 +23,7 @@
     "ayuda contextual para edición bloqueada por estado",
     "regiones ARIA para errores, confirmaciones y carga",
     "navegación identificada y estado de sección activa",
-    "etiquetas accesibles para filtros",
+    "etiquetas accesibles para todos los filtros del panel y de reportería",
     "semántica de diálogo para vista previa y acciones sensibles",
     "etiqueta descriptiva del módulo y mapa con aria-label"
   ],
@@ -39,6 +41,15 @@
   "quality_gate_independiente": {
     "run_id": 29952843226,
     "resultado": "success"
+  },
+  "quality_gate_control_documental": {
+    "run_id": 29953050256,
+    "resultado": "success"
+  },
+  "control_accesibilidad": {
+    "run_id": 29953486513,
+    "resultado": "success",
+    "controles_completados": 4
   },
   "pruebas": {
     "backend": {
