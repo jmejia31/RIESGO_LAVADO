@@ -42,6 +42,28 @@ jobs:
         if: steps.transformacion.outcome != 'success'
         run: exit 1
 
+      - name: Retirar generadores locales heredados
+        shell: bash
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          path = Path('frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts')
+          text = path.read_text(encoding='utf-8')
+          pattern = r"\n  private generarExcelReporte\(\): void \{.*?\n  private descargarBlob\(blob: Blob, nombre: string\): void \{"
+          replacement = """
+
+  obtenerMatricesReporte(reporte: MatricesRiesgoReporte | null = this.reporte()): MatrizRiesgoResumen[] {
+    return reporte?.matricesFiltradas ?? [];
+  }
+
+  private descargarBlob(blob: Blob, nombre: string): void {"""
+          updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+          if count != 1:
+              raise SystemExit(f'No se retiró el bloque local heredado: {count}')
+          path.write_text(updated, encoding='utf-8')
+          PY
+
       - name: Verificar arquitectura documental
         shell: bash
         run: |
@@ -54,6 +76,8 @@ jobs:
           ! grep -q 'CrearPdfSimple' backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs
           ! grep -q "from 'jspdf'" frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts
           ! grep -q "from 'jspdf-autotable'" frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts
+          ! grep -q 'generarExcelReporte' frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts
+          ! grep -q 'generarPdfReporte' frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts
           ! grep -q " : 'xls'" frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts
           grep -q 'exportarFicha' frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts
 
