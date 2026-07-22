@@ -1056,28 +1056,28 @@
           (ngModelChange)="actualizarFiltroReporte('buscar', $event)"
           placeholder="Buscar sujeto, documento, estado, nivel, factor o responsable"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <select [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
+        <select aria-label="Filtrar reporte por estado" [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los estados</option>
           <ng-container *ngFor="let estado of estadosDisponibles">
             <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
           </ng-container>
         </select>
-        <select [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
+        <select aria-label="Filtrar reporte por tipo de sujeto" [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los sujetos</option>
           <ng-container *ngFor="let tipo of tiposSujeto">
             <option [value]="tipo.valor">{{ tipo.texto }}</option>
           </ng-container>
         </select>
-        <select [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
+        <select aria-label="Filtrar reporte por nivel residual" [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los niveles</option>
           <ng-container *ngFor="let escala of escalasRiesgoOrdenadas()">
             <option [value]="escala.nivel">{{ escala.nivel }}</option>
           </ng-container>
         </select>
-        <input type="date" [ngModel]="reporteFiltro().fechaInicio || ''"
+        <input type="date" aria-label="Fecha inicial del reporte" [ngModel]="reporteFiltro().fechaInicio || ''"
           (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
           [min]="fechaMinimaReporteInicio"
           [max]="fechaActualIso"
