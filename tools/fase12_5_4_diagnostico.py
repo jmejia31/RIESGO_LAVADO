@@ -25,6 +25,18 @@ RECALCULAR_PATTERNS = {
 MOJIBAKE_TOKENS = ["Ã", "Â", "â€", "â€™", "â€œ", "â€\u009d", "ï¿½", "�"]
 
 
+def corregir_verificador_aplicacion() -> None:
+    """Ajusta el control para detectar la ruta HTTP real, no su comentario documental."""
+    path = ROOT / "tools/fase12_5_4_aplicar.py"
+    text = path.read_text(encoding="utf-8")
+    old = '"controller_endpoint_removed": "/recalcular" not in (ROOT / "backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs").read_text(encoding="utf-8"),'
+    new = '"controller_endpoint_removed": \'[HttpPost("{id:long}/recalcular")]\' not in (ROOT / "backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs").read_text(encoding="utf-8"),'
+    if old in text:
+        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+    elif new not in text:
+        raise RuntimeError("No se pudo localizar la verificación del endpoint público.")
+
+
 def is_text_file(path: Path) -> bool:
     return path.is_file() and path.suffix.lower() in TEXT_EXTENSIONS and not any(part in EXCLUDED_PARTS for part in path.parts)
 
@@ -73,6 +85,8 @@ def scan_mojibake(path: Path, text: str) -> list[dict[str, object]]:
 
 
 def main() -> None:
+    corregir_verificador_aplicacion()
+
     recalcular: list[dict[str, object]] = []
     mojibake: list[dict[str, object]] = []
     todos: list[str] = []
