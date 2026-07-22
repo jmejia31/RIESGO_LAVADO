@@ -9,8 +9,8 @@ permissions:
   contents: write
 
 concurrency:
-  group: fase12-5-4-refinamiento
-  cancel-in-progress: false
+  group: fase12-5-4-refinamiento-v2
+  cancel-in-progress: true
 
 jobs:
   refinar-validar-publicar:
