@@ -9,6 +9,8 @@ export interface WorkSheet {
   '!cols'?: ColInfo[];
   '!headerRows'?: number[];
   '!sectionRows'?: number[];
+  '!keyValueRows'?: number[];
+  '!paragraphRows'?: number[];
   '!autoFilterRow'?: number;
 }
 
@@ -94,6 +96,8 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
     worksheet.rowCount
   );
   const sectionSet = new Set(sectionRows);
+  const keyValueRows = normalizarFilas(source['!keyValueRows'] ?? [], worksheet.rowCount);
+  const paragraphRows = normalizarFilas(source['!paragraphRows'] ?? [], worksheet.rowCount);
 
   // Cuerpo: sólo las celdas que realmente existen reciben formato. Esto evita
   // que Excel pinte columnas vacías hasta XFD o más allá del documento real.
@@ -136,6 +140,37 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
       };
     }
     row.height = 21;
+  }
+
+  // Filas de información general: mantienen el aspecto de ficha del PDF.
+  // Las columnas impares son etiquetas en negrita y las pares son valores normales.
+  for (const rowIndex of keyValueRows) {
+    const row = worksheet.getRow(rowIndex);
+    const usedColumns = Math.max(1, data[rowIndex - 1]?.length ?? 1);
+    for (let column = 1; column <= usedColumns; column++) {
+      const cell = row.getCell(column);
+      const esEtiqueta = column % 2 === 1;
+      cell.font = {
+        name: 'Arial',
+        size: 10,
+        bold: esEtiqueta,
+        color: { argb: esEtiqueta ? NAVY : BODY }
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      cell.border = bordeInstitucional();
+    }
+    row.height = 22;
+  }
+
+  // Los textos explicativos se muestran como párrafos, no como títulos o cabeceras.
+  for (const rowIndex of paragraphRows) {
+    if (maxColumns > 1) worksheet.mergeCells(rowIndex, 1, rowIndex, maxColumns);
+    const row = worksheet.getRow(rowIndex);
+    const cell = row.getCell(1);
+    cell.font = { name: 'Arial', size: 10, bold: false, color: { argb: BODY } };
+    cell.alignment = { vertical: 'top', horizontal: 'left', wrapText: true };
+    cell.border = {};
+    row.height = 30;
   }
 
   // Todas las cabeceras tabulares usan el mismo azul y texto blanco, pero sólo
