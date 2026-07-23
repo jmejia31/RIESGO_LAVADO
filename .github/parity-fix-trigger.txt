@@ -1,0 +1,1 @@
+Activar la corrección puntual para que el Excel jurídico utilice exactamente el mismo modelo de columnas y filas que el PDF.
