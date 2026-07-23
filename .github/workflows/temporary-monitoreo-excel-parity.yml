@@ -5,10 +5,6 @@ on:
     branches: [fase-12-mejora-ejecutiva-matrices]
     paths:
       - .github/parity-fix-trigger.txt
-  pull_request:
-    branches: [fase-12-mejora-ejecutiva-matrices]
-    paths:
-      - .github/parity-fix-trigger.txt
 
 permissions:
   contents: write
@@ -18,10 +14,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  patch-validate-publish:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+  patch-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 50
+    timeout-minutes: 10
 
     steps:
       - name: Checkout rama obligatoria
@@ -30,7 +25,7 @@ jobs:
           ref: fase-12-mejora-ejecutiva-matrices
           fetch-depth: 0
 
-      - name: Aplicar corrección mínima y regresión
+      - name: Aplicar corrección mínima y prueba de regresión
         shell: python
         run: |
           from pathlib import Path
@@ -110,7 +105,7 @@ jobs:
           if "headers = ['Número Patronal', 'RTN'" in component:
               raise SystemExit('La exportación Excel aún conserva el constructor duplicado anterior.')
           if component.count('construirReporteListaPrincipal()') != 3:
-              raise SystemExit('El modelo compartido no quedó conectado exactamente a Excel, definición y PDF.')
+              raise SystemExit('El modelo compartido no quedó conectado a Excel, su definición y PDF.')
 
           component_path.write_text(component, encoding='utf-8')
 
@@ -170,121 +165,14 @@ jobs:
           if 'mantiene en Excel juridico las mismas columnas y valores del detalle PDF' not in spec:
               spec = spec.replace(marker, regression + marker)
           if spec.count('mantiene en Excel juridico las mismas columnas y valores del detalle PDF') != 1:
-              raise SystemExit('La regresión de paridad no quedó incorporada exactamente una vez.')
+              raise SystemExit('La regresión no quedó incorporada exactamente una vez.')
           spec_path.write_text(spec, encoding='utf-8')
 
-      - name: Verificar alcance del cambio
+      - name: Verificar y publicar exclusivamente en Fase 12
         shell: bash
         run: |
           git diff --check
           test "$(git diff --name-only | sort | tr '\n' ' ')" = "frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.ts "
-          git diff --stat
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.x
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24.18.0
-          cache: npm
-          cache-dependency-path: frontend/rl-app/package-lock.json
-
-      - name: Restore backend
-        run: dotnet restore RIESGO_LAVADO.sln
-
-      - name: Install frontend dependencies
-        working-directory: frontend/rl-app
-        run: npm ci
-
-      - name: Install Playwright Chromium
-        working-directory: frontend/rl-app
-        run: npx playwright install --with-deps chromium
-
-      - name: Ejecutar backend frontend build y E2E
-        shell: pwsh
-        run: ./tools/run_quality_gates.ps1
-
-      - name: Generar archivo Excel real de revisión
-        working-directory: frontend/rl-app
-        shell: bash
-        run: |
-          mkdir -p ../../artifacts/reporteria
-          cat > scripts/generar-paridad-juridicas-temp.mjs <<'EOF'
-          import ExcelJS from 'exceljs';
-
-          const workbook = new ExcelJS.Workbook();
-          workbook.creator = 'SGRLA-IHSS';
-          workbook.company = 'Instituto Hondureño de Seguridad Social';
-          workbook.created = new Date('2026-07-23T12:00:00');
-
-          const sheet = workbook.addWorksheet('Coincidencias', {
-            views: [{ state: 'frozen', ySplit: 5 }],
-            pageSetup: {
-              paperSize: 9,
-              orientation: 'landscape',
-              fitToPage: true,
-              fitToWidth: 1,
-              fitToHeight: 0,
-              margins: { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 }
-            }
-          });
-
-          const rows = [
-            ['Reporte de Coincidencias Jurídicas'],
-            ['Instituto Hondureño de Seguridad Social'],
-            ['Fecha de Generación: 23/07/2026'],
-            [],
-            ['Número Patronal', 'RTN', 'Nombre Empresa', 'Lista Coincidencia', 'Proveedor IHSS', 'Estado', 'Fecha Coincidencia', 'Fecha Calificación', 'Registro Interno'],
-            ['201200601751', '05019006500703', 'TECPROFIRE S DE R.L. DE C.V.', 'OFAC', 'No', 'Pendiente', '21/05/2026', '14/06/2026', ''],
-            ['101202303461', '08019022435322', 'INVERSIONES A M 504 S DE R L', 'OFAC', 'No', 'Pendiente', '19/12/2023', '01/06/2026', ''],
-            ['101202303441', '08019021289810', 'HELIOS S A', 'OFAC', 'No', 'Con motivo', '19/12/2023', '01/06/2026', '07/06/2026'],
-            ['101196100011', '101196100011', 'IHSS', 'OFAC', 'No', 'Pendiente', '', '', '08/06/2026']
-          ];
-          rows.forEach(row => sheet.addRow(row));
-
-          sheet.mergeCells('A1:I1');
-          sheet.getRow(1).height = 28;
-          sheet.getRow(1).eachCell({ includeEmpty: true }, cell => {
-            cell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123B63' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'left' };
-          });
-          sheet.getRow(5).height = 30;
-          sheet.getRow(5).eachCell(cell => {
-            cell.font = { name: 'Arial', size: 9, bold: true, color: { argb: 'FFFFFFFF' } };
-            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF123B63' } };
-            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          });
-          for (let rowIndex = 6; rowIndex <= sheet.rowCount; rowIndex++) {
-            sheet.getRow(rowIndex).eachCell(cell => {
-              cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1F2937' } };
-              cell.alignment = { vertical: 'top', wrapText: true };
-              cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
-            });
-          }
-          sheet.columns = [18, 18, 34, 20, 18, 18, 20, 20, 18].map(width => ({ width }));
-          sheet.autoFilter = { from: 'A5', to: 'I9' };
-          sheet.pageSetup.printArea = 'A1:I9';
-          sheet.pageSetup.printTitlesRow = '5:5';
-
-          await workbook.xlsx.writeFile('../../artifacts/reporteria/Reporte_Juridicas_2026-07-23_CORREGIDO.xlsx');
-          EOF
-          node scripts/generar-paridad-juridicas-temp.mjs
-          rm scripts/generar-paridad-juridicas-temp.mjs
-
-      - name: Publicar evidencia del Excel
-        uses: actions/upload-artifact@v4
-        with:
-          name: reporte-juridicas-excel-corregido
-          path: artifacts/reporteria/Reporte_Juridicas_2026-07-23_CORREGIDO.xlsx
-          if-no-files-found: error
-
-      - name: Confirmar corrección únicamente en la rama obligatoria
-        shell: bash
-        run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/temporary-monitoreo-excel-parity.yml
