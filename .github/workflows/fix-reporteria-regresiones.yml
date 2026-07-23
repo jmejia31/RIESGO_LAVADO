@@ -125,6 +125,25 @@ jobs:
         if: steps.transformar.outcome == 'failure'
         run: exit 1
 
+      - name: Compatibilizar artefactos de prueba con Angular
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          archivos = [
+              Path('frontend/rl-app/src/app/core/reporting/institutional-report.util.spec.ts'),
+              Path('frontend/rl-app/src/app/core/utils/excel-export.util.spec.ts')
+          ]
+          for path in archivos:
+              text = path.read_text(encoding='utf-8')
+              text = text.replace("import { mkdirSync, writeFileSync } from 'node:fs';", "// @ts-ignore: Vitest ejecuta este archivo en Node.js.\nimport { mkdirSync, writeFileSync } from 'node:fs';")
+              text = text.replace("import { resolve } from 'node:path';", "// @ts-ignore: Vitest ejecuta este archivo en Node.js.\nimport { resolve } from 'node:path';")
+              text = text.replace("process.env['REPORTERIA_REGRESION_OUTPUT_DIR']", "(globalThis as any).process?.env?.['REPORTERIA_REGRESION_OUTPUT_DIR']")
+              text = text.replace("Buffer.from(doc.output('arraybuffer'))", "new Uint8Array(doc.output('arraybuffer'))")
+              text = text.replace("Buffer.from(buffer)", "new Uint8Array(buffer as ArrayBuffer)")
+              path.write_text(text, encoding='utf-8')
+          PY
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
