@@ -1326,8 +1326,14 @@ export class MonitoreoListasComponent implements OnInit {
     });
   }
 
-  private escribirFichaExcel(data: any[][], sheetName: string, fileName: string) {
+  private escribirFichaExcel(
+    data: any[][],
+    sheetName: string,
+    fileName: string,
+    opciones: Partial<XLSX.WorkSheet> = {}
+  ) {
     const ws = XLSX.utils.aoa_to_sheet(data);
+    Object.assign(ws, opciones);
     this.ajustarColumnasExcel(ws, data);
 
     const wb = XLSX.utils.book_new();
@@ -1387,11 +1393,11 @@ export class MonitoreoListasComponent implements OnInit {
           [`Fecha de Generación: ${new Date().toLocaleString()}`],
           [],
           ['Información General del Patrono'],
-          ['Número Patronal', row.numeroPatrono || 'N/D', 'RTN', row.rtn || 'N/D'],
-          ['Nombre / Razón Social', row.nombre || 'N/D', 'Proveedor IHSS', row.esProveedorIhss || 'No'],
-          ['Lista Coincidencia', row.listaCoincidencia || 'N/D', 'Estado Monitoreo', this.obtenerEstadoMonitoreoReporte(row)],
-          ['Fecha Coincidencia', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
-          ['Registro Interno', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
+          ['Número Patronal:', row.numeroPatrono || 'N/D', 'RTN:', row.rtn || 'N/D'],
+          ['Nombre / Razón Social:', row.nombre || 'N/D', 'Proveedor IHSS:', row.esProveedorIhss || 'No'],
+          ['Lista de Coincidencia:', row.listaCoincidencia || 'N/D', 'Estado Monitoreo:', this.obtenerEstadoMonitoreoReporte(row)],
+          ['Fecha Coincidencia:', row.fechaEncontro ? this.formatDate(row.fechaEncontro) : 'N/D', 'Fecha Calificación:', row.fechaCalifico ? this.formatDate(row.fechaCalifico) : 'N/D'],
+          ['Registro Interno:', this.formatDateOrNd(this.obtenerFechaRegistroInterno(row.fechaRegistroInterno, positivo)), 'Origen del Registro:', this.obtenerEtiquetaOrigenRegistro(positivo?.origenRegistro)],
           [],
           ['Motivo de Ingreso a Lista de Monitoreo'],
           [positivo?.motivoIngreso || 'No se ha registrado un motivo de ingreso inicial en el sistema para este patrono.']
@@ -1402,7 +1408,13 @@ export class MonitoreoListasComponent implements OnInit {
         const fileName = `Ficha_Patrono_${row.numeroPatrono}.xlsx`;
         this.registrarAuditoriaFichaExcel(row.numeroPatrono, 'juridica', row.nombre, fileName, seguimientos.length, rangoSeguimiento).subscribe({
           next: () => {
-            this.escribirFichaExcel(data, 'Ficha Patrono', fileName);
+            this.escribirFichaExcel(data, 'Ficha Patrono', fileName, {
+              '!headerRows': [17],
+              '!sectionRows': [5, 12, 15],
+              '!keyValueRows': [6, 7, 8, 9, 10],
+              '!paragraphRows': [13],
+              '!autoFilterRow': 17
+            });
             this.cargando.set(false);
           },
           error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación de ficha Excel')
