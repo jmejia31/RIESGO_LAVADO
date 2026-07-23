@@ -1,0 +1,97 @@
+name: Corrección global de reportería Excel y PDF
+
+on:
+  pull_request:
+    branches: [fase-12-mejora-ejecutiva-matrices]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-reporteria-regresiones-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  corregir-validar-publicar:
+    if: github.event.pull_request.head.ref == 'fix-reporteria-estandar-global-20260723'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      REPORTERIA_REGRESION_OUTPUT_DIR: ${{ github.workspace }}/artifacts/reporteria
+      FASE12_5_5_OUTPUT_DIR: ${{ github.workspace }}/artifacts/reporteria
+
+    steps:
+      - name: Checkout de la rama técnica
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Aplicar correcciones institucionales
+        run: python tools/fix_reporteria_regresiones.py
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+
+      - name: Restaurar backend
+        run: dotnet restore RIESGO_LAVADO.sln
+
+      - name: Instalar frontend
+        working-directory: frontend/rl-app
+        run: npm ci
+
+      - name: Instalar Chromium para E2E
+        working-directory: frontend/rl-app
+        run: npx playwright install --with-deps chromium
+
+      - name: Ejecutar Quality Gates completos
+        shell: pwsh
+        run: ./tools/run_quality_gates.ps1
+
+      - name: Confirmar artefactos reales de regresión
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s artifacts/reporteria/reporte_matrices.xlsx
+          test -s artifacts/reporteria/reporte_ejecutivo_matrices.pdf
+          test -s artifacts/reporteria/monitoreo_juridicas_estandar.xlsx
+          test -s artifacts/reporteria/monitoreo_ficha_natural_estandar.xlsx
+          test -s artifacts/reporteria/monitoreo_detalle_continuacion.pdf
+          find artifacts/reporteria -maxdepth 1 -type f -printf '%f %s bytes\n' | sort
+
+      - name: Publicar artefactos para revisión visual
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporteria-regresion-validada
+          path: artifacts/reporteria/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Retirar automatización temporal
+        run: |
+          rm -f tools/fix_reporteria_regresiones.py
+          rm -f .github/workflows/fix-reporteria-regresiones.yml
+
+      - name: Publicar commit limpio en la rama técnica
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No hay cambios para publicar."
+            exit 0
+          fi
+          git commit -m "fix(reporteria): corrige Excel y paginación PDF global"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
