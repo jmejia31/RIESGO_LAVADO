@@ -1,6 +1,10 @@
 name: Corrección controlada de paridad Excel PDF
 
 on:
+  push:
+    branches: [fase-12-mejora-ejecutiva-matrices]
+    paths:
+      - .github/parity-fix-trigger.txt
   pull_request:
     branches: [fase-12-mejora-ejecutiva-matrices]
     paths:
@@ -15,7 +19,7 @@ concurrency:
 
 jobs:
   patch-validate-publish:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 50
 
@@ -258,9 +262,7 @@ jobs:
             sheet.getRow(rowIndex).eachCell(cell => {
               cell.font = { name: 'Arial', size: 9, color: { argb: 'FF1F2937' } };
               cell.alignment = { vertical: 'top', wrapText: true };
-              cell.border = {
-                bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }
-              };
+              cell.border = { bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
             });
           }
           sheet.columns = [18, 18, 34, 20, 18, 18, 20, 20, 18].map(width => ({ width }));
@@ -286,6 +288,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git rm .github/workflows/temporary-monitoreo-excel-parity.yml
+          git rm .github/parity-fix-trigger.txt
           git add frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.ts
           git add frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts
           git commit -m 'fix(monitoreo): alinear columnas Excel y PDF jurídicas'
