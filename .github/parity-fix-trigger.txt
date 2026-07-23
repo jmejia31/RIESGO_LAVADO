@@ -1,1 +1,0 @@
-Ejecutar ahora la corrección puntual de paridad entre Excel y PDF para coincidencias jurídicas.
