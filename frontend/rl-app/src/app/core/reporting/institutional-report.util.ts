@@ -13,6 +13,8 @@ export const COLORES_REPORTE_INSTITUCIONAL = {
   filterText: [30, 64, 175] as [number, number, number]
 };
 
+export const MARGEN_SUPERIOR_TABLA_CONTINUACION_MM = 20;
+
 interface ReporteMetaInterna {
   institucion: string;
   sistema: string;
@@ -87,9 +89,21 @@ export function agregarEncabezadoInstitucionalPdf(
   return 64;
 }
 
+export function resolverMargenesTablaInstitucional(margin?: Record<string, number>): Record<string, number> {
+  return {
+    bottom: 19,
+    left: 14,
+    right: 14,
+    ...(margin ?? {}),
+    // startY gobierna la primera página. En páginas siguientes el margen superior
+    // siempre queda junto al encabezado compacto y nunca hereda valores como 50 mm.
+    top: MARGEN_SUPERIOR_TABLA_CONTINUACION_MM
+  };
+}
+
 export function autoTableInstitucional(doc: jsPDF, options: Record<string, any>): void {
   const originalDidDrawPage = options['didDrawPage'];
-  const margin = { top: 24, bottom: 19, left: 14, right: 14, ...(options['margin'] ?? {}) };
+  const margin = resolverMargenesTablaInstitucional(options['margin']);
 
   autoTable(doc, {
     ...options,
@@ -106,17 +120,18 @@ export function autoTableInstitucional(doc: jsPDF, options: Record<string, any>)
       ...(options['styles'] ?? {})
     },
     headStyles: {
+      ...(options['headStyles'] ?? {}),
       fillColor: COLORES_REPORTE_INSTITUCIONAL.navy,
       textColor: COLORES_REPORTE_INSTITUCIONAL.white,
-      fontStyle: 'bold',
-      ...(options['headStyles'] ?? {})
+      fontStyle: 'bold'
     },
     alternateRowStyles: {
-      fillColor: COLORES_REPORTE_INSTITUCIONAL.alternate,
-      ...(options['alternateRowStyles'] ?? {})
+      ...(options['alternateRowStyles'] ?? {}),
+      fillColor: COLORES_REPORTE_INSTITUCIONAL.alternate
     },
     didDrawPage: (data: any) => {
-      if (data.pageNumber > 1) dibujarEncabezadoCompacto(doc);
+      const actualPage = doc.getCurrentPageInfo().pageNumber;
+      if (actualPage > 1) dibujarEncabezadoCompacto(doc);
       if (typeof originalDidDrawPage === 'function') originalDidDrawPage(data);
     }
   } as any);

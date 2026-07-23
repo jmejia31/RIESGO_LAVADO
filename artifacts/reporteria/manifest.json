@@ -1,0 +1,21 @@
+﻿{
+  "fase": "12.5.5",
+  "origen": "MatricesRiesgosReportRenderer",
+  "archivos": [
+    {
+      "archivo": "ficha_individual_matriz.pdf",
+      "tamano_bytes": 15515,
+      "sha256": "fa4bcc4c2b0b3b946d4c87e08d12d28b658cdd39685b619ed925185464fde477"
+    },
+    {
+      "archivo": "reporte_ejecutivo_matrices.pdf",
+      "tamano_bytes": 18032,
+      "sha256": "b86879b39776ad01c688cce77fe680b765f1b9565a2ad3c9d8f34054a23208d1"
+    },
+    {
+      "archivo": "reporte_matrices.xlsx",
+      "tamano_bytes": 10269,
+      "sha256": "a48193e537c3794060e9c14cd411e690fd8b5ec9ffccda11e76c6a973eca29cc"
+    }
+  ]
+}

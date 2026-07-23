@@ -158,10 +158,12 @@ public sealed class InstitutionalXlsxWorkbook
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
                "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
+               $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +
                $"<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"4\" topLeftCell=\"A5\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>" +
+               "<sheetFormatPr defaultRowHeight=\"18\"/>" +
                $"<cols>{columns}</cols><sheetData>{rows}</sheetData>" +
-               $"<mergeCells count=\"2\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/></mergeCells>" +
                $"<autoFilter ref=\"A4:{lastColumn}{lastRow}\"/>" +
+               $"<mergeCells count=\"2\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/></mergeCells>" +
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.35\" right=\"0.35\" top=\"0.65\" bottom=\"0.55\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +

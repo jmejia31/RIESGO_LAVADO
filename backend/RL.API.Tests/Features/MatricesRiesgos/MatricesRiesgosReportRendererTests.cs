@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Xml.Linq;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using Xunit;
@@ -297,6 +298,16 @@ public sealed class MatricesRiesgosReportRendererTests
             var sheetXml = sheetReader.ReadToEnd();
             Assert.Contains("<pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/>", sheetXml);
             Assert.Contains("fitToWidth=\"1\"", sheetXml);
+
+            var document = XDocument.Parse(sheetXml);
+            var children = document.Root!.Elements().Select(element => element.Name.LocalName).ToList();
+            var autoFilterIndex = children.IndexOf("autoFilter");
+            var mergeCellsIndex = children.IndexOf("mergeCells");
+            Assert.True(autoFilterIndex >= 0, $"{worksheet.FullName} no contiene autoFilter.");
+            Assert.True(mergeCellsIndex >= 0, $"{worksheet.FullName} no contiene mergeCells.");
+            Assert.True(autoFilterIndex < mergeCellsIndex,
+                $"{worksheet.FullName} no respeta el orden OpenXML: autoFilter debe preceder a mergeCells.");
+            Assert.NotEmpty(document.Root.Descendants().Where(element => element.Name.LocalName == "row"));
         }
     }
 

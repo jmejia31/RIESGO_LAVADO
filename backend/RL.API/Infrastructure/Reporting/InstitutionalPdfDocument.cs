@@ -42,13 +42,23 @@ public sealed class InstitutionalPdfDocument
 
     public void AddSection(string title)
     {
-        AsegurarEspacio(28m);
+        const decimal topSpacing = 12m;
+        const decimal bottomSpacing = 10m;
+        var requiereSeparacion = _current.CursorY > BodyTop + 0.5m;
+        AsegurarEspacio((requiereSeparacion ? topSpacing : 0m) + 30m);
+
+        // Si AsegurarEspacio abrió una página nueva, el título inicia en el margen
+        // institucional. En caso contrario se conserva una sangría vertical clara
+        // respecto de la tabla o bloque anterior.
+        if (_current.CursorY > BodyTop + 0.5m)
+            _current.CursorY += topSpacing;
+
         DrawText(Sanitizar(title).ToUpperInvariant(), MarginLeft, _current.CursorY, 11m, bold: true,
             InstitutionalReportStandard.Palette.Navy);
         _current.CursorY += 15m;
         DrawLine(MarginLeft, _current.CursorY, _pageWidth - MarginRight, _current.CursorY,
             InstitutionalReportStandard.Palette.Border, 0.7m);
-        _current.CursorY += 8m;
+        _current.CursorY += bottomSpacing;
     }
 
     public void AddParagraph(string text)
