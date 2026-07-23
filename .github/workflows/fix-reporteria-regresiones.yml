@@ -149,8 +149,26 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Ejecutar Quality Gates completos
+        id: quality
+        continue-on-error: true
         shell: pwsh
-        run: ./tools/run_quality_gates.ps1
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/diagnostico | Out-Null
+          ./tools/run_quality_gates.ps1 *>&1 | Tee-Object -FilePath artifacts/diagnostico/quality-gates.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Publicar diagnóstico de Quality Gates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporteria-quality-gates-diagnostico
+          path: artifacts/diagnostico/quality-gates.log
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Detener si los Quality Gates fallaron
+        if: steps.quality.outcome == 'failure'
+        run: exit 1
 
       - name: Confirmar artefactos reales de regresión
         shell: bash
