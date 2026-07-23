@@ -39,18 +39,19 @@ jobs:
           fin = s.index('# 2) Espaciado institucional uniforme', inicio)
           bloque = '''# 1) Corrige el orden OpenXML exigido por Excel Desktop.
           text = xlsx_backend.read_text(encoding='utf-8')
-          sheet_pr = '               "<sheetPr><pageSetUpPr fitToPage=\\"1\\" autoPageBreaks=\\"0\\"/></sheetPr>" +\\n'
-          sheet_views = '               $"<sheetViews><sheetView workbookViewId=\\"0\\"><pane ySplit=\\"4\\" topLeftCell=\\"A5\\" activePane=\\"bottomLeft\\" state=\\"frozen\\"/></sheetView></sheetViews>" +\\n'
-          merge_line = '               $"<mergeCells count=\\"2\\"><mergeCell ref=\\"A1:{lastColumn}1\\"/><mergeCell ref=\\"A2:{lastColumn}2\\"/></mergeCells>" +\\n'
-          filter_line = '               $"<autoFilter ref=\\"A4:{lastColumn}{lastRow}\\"/>" +\\n'
+          sheet_pr = '"<sheetPr><pageSetUpPr fitToPage=\\"1\\" autoPageBreaks=\\"0\\"/></sheetPr>" +'
+          sheet_views = '$"<sheetViews><sheetView workbookViewId=\\"0\\"><pane ySplit=\\"4\\" topLeftCell=\\"A5\\" activePane=\\"bottomLeft\\" state=\\"frozen\\"/></sheetView></sheetViews>" +'
+          merge_line = '$"<mergeCells count=\\"2\\"><mergeCell ref=\\"A1:{lastColumn}1\\"/><mergeCell ref=\\"A2:{lastColumn}2\\"/></mergeCells>" +'
+          filter_line = '$"<autoFilter ref=\\"A4:{lastColumn}{lastRow}\\"/>" +'
 
           for fragment, description in ((sheet_pr, 'sheetPr'), (sheet_views, 'sheetViews'), (merge_line, 'mergeCells'), (filter_line, 'autoFilter')):
               if fragment not in text:
                   raise RuntimeError(f'No se encontró el fragmento {description} de WorksheetXml.')
 
-          text = text.replace(sheet_pr, sheet_pr + '               $"<dimension ref=\\"A1:{lastColumn}{lastRow}\\"/>" +\\n', 1)
-          text = text.replace(sheet_views, sheet_views + '               "<sheetFormatPr defaultRowHeight=\\"18\\"/>" +\\n', 1)
-          text = text.replace(merge_line + filter_line, filter_line + merge_line, 1)
+          text = text.replace(sheet_pr, sheet_pr + '\\n               $"<dimension ref=\\"A1:{lastColumn}{lastRow}\\"/>" +', 1)
+          text = text.replace(sheet_views, sheet_views + '\\n               "<sheetFormatPr defaultRowHeight=\\"18\\"/>" +', 1)
+          # El orden de SpreadsheetML exige autoFilter antes de mergeCells.
+          text = text.replace(merge_line + '\\n               ' + filter_line, filter_line + '\\n               ' + merge_line, 1)
           xlsx_backend.write_text(text, encoding='utf-8')
 
           '''
