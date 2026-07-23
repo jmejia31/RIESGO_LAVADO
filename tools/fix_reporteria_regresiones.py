@@ -533,6 +533,8 @@ export function agregarPiesInstitucionalesPdf(doc: jsPDF): void {
 ''', encoding='utf-8')
 
 pdf_front_tests.write_text(r'''import { describe, expect, it } from 'vitest';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { jsPDF } from 'jspdf';
 import {
   agregarEncabezadoInstitucionalPdf,
@@ -584,6 +586,14 @@ describe('estándar institucional de reportería', () => {
       body: Array.from({ length: 80 }, (_, index) => [`ID-${index}`, `Persona ${index}`, 'Texto institucional de prueba'])
     });
     expect(doc.getNumberOfPages()).toBeGreaterThan(1);
+    agregarPiesInstitucionalesPdf(doc);
+
+    const outputDir = process.env['REPORTERIA_REGRESION_OUTPUT_DIR'];
+    if (outputDir) {
+      mkdirSync(outputDir, { recursive: true });
+      const bytes = Buffer.from(doc.output('arraybuffer'));
+      writeFileSync(resolve(outputDir, 'monitoreo_detalle_continuacion.pdf'), bytes);
+    }
   });
 
   it('agrega numeración una sola vez aunque se finalice dos veces', () => {
@@ -597,6 +607,8 @@ describe('estándar institucional de reportería', () => {
 ''', encoding='utf-8')
 
 excel_front_tests.write_text(r'''import { describe, expect, it } from 'vitest';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { construirLibroInstitucional, utils } from './excel-export.util';
 
 function fillColor(cell: any): string | undefined {
@@ -604,7 +616,7 @@ function fillColor(cell: any): string | undefined {
 }
 
 describe('generador Excel institucional', () => {
-  it('limita títulos y cabeceras a las columnas realmente utilizadas', () => {
+  it('limita títulos y cabeceras a las columnas realmente utilizadas', async () => {
     const data = [
       ['Reporte de Coincidencias Jurídicas'],
       ['Instituto Hondureño de Seguridad Social'],
@@ -624,9 +636,16 @@ describe('generador Excel institucional', () => {
     expect(worksheet.getCell('H5').font.color?.argb).toBe('FFFFFFFF');
     expect(fillColor(worksheet.getCell('I5'))).not.toBe('FF123B63');
     expect((worksheet.autoFilter as any).to.column).toBe(8);
+
+    const outputDir = process.env['REPORTERIA_REGRESION_OUTPUT_DIR'];
+    if (outputDir) {
+      mkdirSync(outputDir, { recursive: true });
+      const buffer = await worksheet.workbook.xlsx.writeBuffer();
+      writeFileSync(resolve(outputDir, 'monitoreo_juridicas_estandar.xlsx'), Buffer.from(buffer));
+    }
   });
 
-  it('reconoce múltiples cabeceras de una ficha sin pintar columnas vacías', () => {
+  it('reconoce múltiples cabeceras de una ficha sin pintar columnas vacías', async () => {
     const data = [
       ['Ficha de Perfil / Memorando'],
       ['Instituto Hondureño de Seguridad Social'],
@@ -653,6 +672,13 @@ describe('generador Excel institucional', () => {
     expect(fillColor(worksheet.getCell('H10'))).not.toBe('FF123B63');
     expect((worksheet.autoFilter as any).from.row).toBe(10);
     expect((worksheet.autoFilter as any).to.column).toBe(7);
+
+    const outputDir = process.env['REPORTERIA_REGRESION_OUTPUT_DIR'];
+    if (outputDir) {
+      mkdirSync(outputDir, { recursive: true });
+      const buffer = await worksheet.workbook.xlsx.writeBuffer();
+      writeFileSync(resolve(outputDir, 'monitoreo_ficha_natural_estandar.xlsx'), Buffer.from(buffer));
+    }
   });
 });
 ''', encoding='utf-8')
