@@ -28,16 +28,17 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Robustecer anclaje OpenXML del integrador
+      - name: Robustecer anclajes del integrador
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('tools/fix_reporteria_regresiones.py')
           s = p.read_text(encoding='utf-8')
+
           inicio = s.index('# 1) Corrige el orden OpenXML exigido por Excel Desktop.')
           fin = s.index('# 2) Espaciado institucional uniforme', inicio)
-          bloque = r'''# 1) Corrige el orden OpenXML exigido por Excel Desktop.
+          bloque_openxml = r'''# 1) Corrige el orden OpenXML exigido por Excel Desktop.
           text = xlsx_backend.read_text(encoding='utf-8')
           lines = text.splitlines()
 
@@ -49,7 +50,6 @@ jobs:
 
           sheet_pr_index = unique_index('<sheetPr><pageSetUpPr')
           lines.insert(sheet_pr_index + 1, r'               $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +')
-
           sheet_views_index = unique_index('<sheetViews><sheetView')
           lines.insert(sheet_views_index + 1, r'               "<sheetFormatPr defaultRowHeight=\"18\"/>" +')
 
@@ -61,11 +61,42 @@ jobs:
           filter_line = lines.pop(filter_index)
           insert_at = min(merge_index, filter_index)
           lines[insert_at:insert_at] = [filter_line, merge_line]
-
           xlsx_backend.write_text('\n'.join(lines) + ('\n' if text.endswith('\n') else ''), encoding='utf-8')
 
           '''
-          p.write_text(s[:inicio] + bloque + s[fin:], encoding='utf-8')
+          s = s[:inicio] + bloque_openxml + s[fin:]
+
+          inicio = s.index('# 5) Fortalece la prueba backend')
+          bloque_prueba = r'''# 5) Fortalece la prueba backend con validación del orden de nodos OpenXML.
+          text = renderer_tests.read_text(encoding='utf-8')
+          if 'using System.Xml.Linq;' not in text:
+              text = text.replace('using System.Text.Json;\n', 'using System.Text.Json;\nusing System.Xml.Linq;\n', 1)
+
+          lines = text.splitlines()
+          anchors = [index for index, line in enumerate(lines) if 'Assert.Contains("fitToWidth=' in line]
+          if len(anchors) != 1:
+              raise RuntimeError(f'Se esperaba un anclaje fitToWidth en la prueba backend, encontrados: {len(anchors)}.')
+
+          insert_at = anchors[0] + 1
+          validation = [
+              '',
+              '            var document = XDocument.Parse(sheetXml);',
+              '            var children = document.Root!.Elements().Select(element => element.Name.LocalName).ToList();',
+              '            var autoFilterIndex = children.IndexOf("autoFilter");',
+              '            var mergeCellsIndex = children.IndexOf("mergeCells");',
+              '            Assert.True(autoFilterIndex >= 0, $"{worksheet.FullName} no contiene autoFilter.");',
+              '            Assert.True(mergeCellsIndex >= 0, $"{worksheet.FullName} no contiene mergeCells.");',
+              '            Assert.True(autoFilterIndex < mergeCellsIndex,',
+              '                $"{worksheet.FullName} no respeta el orden OpenXML: autoFilter debe preceder a mergeCells.");',
+              '            Assert.NotEmpty(document.Root.Descendants().Where(element => element.Name.LocalName == "row"));'
+          ]
+          lines[insert_at:insert_at] = validation
+          renderer_tests.write_text('\n'.join(lines) + ('\n' if text.endswith('\n') else ''), encoding='utf-8')
+
+          print('Correcciones de reportería aplicadas.')
+          '''
+          s = s[:inicio] + bloque_prueba
+          p.write_text(s, encoding='utf-8')
           PY
           python -m py_compile tools/fix_reporteria_regresiones.py
 
