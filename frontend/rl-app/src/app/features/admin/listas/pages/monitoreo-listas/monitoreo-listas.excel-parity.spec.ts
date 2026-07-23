@@ -57,7 +57,7 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
     TestBed.resetTestingModule();
   });
 
-  it('exporta las nueve columnas juridicas del mismo modelo utilizado por el PDF', async () => {
+  it('exporta filtros, resumen y las nueve columnas juridicas del mismo modelo utilizado por el PDF', async () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     component.juridicasRaw.set([{
       numeroPatrono: 'P-150',
@@ -73,15 +73,30 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
     }] as never);
 
     const instancia = component as unknown as {
-      construirReporteListaPrincipalPdf(): { headers: string[]; rows: string[][] };
+      construirReporteListaPrincipalPdf(): { title: string; headers: string[]; rows: string[][] };
+      construirDatosExcelListaPrincipal(reporte: {
+        title: string;
+        headers: string[];
+        rows: string[][];
+      }): string[][];
     };
     const reportePdf = instancia.construirReporteListaPrincipalPdf();
+    const dataExcel = instancia.construirDatosExcelListaPrincipal(reportePdf);
     const constructorCompartido = vi.spyOn(instancia, 'construirReporteListaPrincipalPdf');
 
     component.exportarListaPrincipal();
 
     expect(constructorCompartido).toHaveBeenCalledOnce();
-    expect(reportePdf.headers).toEqual([
+    expect(dataExcel[4][0]).toContain('Filtros aplicados: Tipo: Personas jurídicas');
+    expect(dataExcel[6]).toEqual([
+      'Registros filtrados', '1', 'Coincidencias visibles en la vista actual',
+      'Pendientes', '0', 'Requieren motivo o revisión'
+    ]);
+    expect(dataExcel[7]).toEqual([
+      'Con motivo', '1', 'Con sustento registrado',
+      'Cerrados / pasivos', '0', 'Registros no activos'
+    ]);
+    expect(dataExcel[10]).toEqual([
       'Número Patronal',
       'RTN',
       'Nombre Empresa',
@@ -92,7 +107,7 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
       'Fecha Calificación',
       'Registro Interno'
     ]);
-    expect(reportePdf.rows[0]).toEqual([
+    expect(dataExcel[11]).toEqual([
       'P-150',
       '08019000123460',
       'Empresa con Estado',
@@ -107,7 +122,10 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
       'RL_LISTA_POSITIVOS',
       'juridica',
       'ExportacionMonitoreoListas',
-      expect.objectContaining({ cantidadRegistros: 1 })
+      expect.objectContaining({
+        cantidadRegistros: 1,
+        filtros: expect.stringContaining('Tipo: Personas jurídicas')
+      })
     );
     await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
   });

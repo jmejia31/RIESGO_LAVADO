@@ -11,12 +11,27 @@ type ReporteListaPrincipal = {
   rows: string[][];
 };
 
+type RegistroMonitoreo = {
+  tieneMotivo?: boolean;
+  esManual?: boolean;
+};
+
+type InstanciaInternaMonitoreo = {
+  configService: { configSistema(): { nombreInstitucion?: string } | null };
+  listasService: ListasService;
+  construirReporteListaPrincipalPdf(): ReporteListaPrincipal | null;
+  obtenerResumenFiltrosPrincipales(): string;
+  datosFiltrados(): RegistroMonitoreo[];
+  esCerradoPasivo(item: RegistroMonitoreo): boolean;
+  manejarErrorAuditoriaObligatoria(error: unknown, operacion: string): void;
+};
+
 /**
  * Adaptador del componente de Monitoreo de Listas.
  *
  * Conserva la implementación funcional aprobada y garantiza que Excel y PDF
- * consuman exactamente el mismo modelo de encabezados y filas del reporte
- * principal, evitando divergencias entre formatos.
+ * consuman exactamente el mismo modelo de reporte: filtros, resumen,
+ * encabezados y filas de detalle.
  */
 @Component({
   selector: 'app-monitoreo-listas',
@@ -30,27 +45,46 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     super(listasService);
   }
 
-  override exportarListaPrincipal(): void {
-    const instancia = this as unknown as {
-      configService: { configSistema(): { nombreInstitucion?: string } | null };
-      listasService: ListasService;
-      construirReporteListaPrincipalPdf(): ReporteListaPrincipal | null;
-      manejarErrorAuditoriaObligatoria(error: unknown, operacion: string): void;
-    };
+  private construirDatosExcelListaPrincipal(reporte: ReporteListaPrincipal): string[][] {
+    const instancia = this as unknown as InstanciaInternaMonitoreo;
+    const datosFiltrados = instancia.datosFiltrados();
+    const pendientes = datosFiltrados.filter(item =>
+      !instancia.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)
+    ).length;
+    const conMotivo = datosFiltrados.filter(item =>
+      !instancia.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual
+    ).length;
+    const cerradosPasivos = datosFiltrados.filter(item => instancia.esCerradoPasivo(item)).length;
 
+    return [
+      [reporte.title],
+      [instancia.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social'],
+      [`SGRLA-IHSS | Generado: ${new Date().toLocaleString()}`],
+      [],
+      [`Filtros aplicados: ${instancia.obtenerResumenFiltrosPrincipales()}`],
+      [],
+      [
+        'Registros filtrados', String(reporte.rows.length), 'Coincidencias visibles en la vista actual',
+        'Pendientes', String(pendientes), 'Requieren motivo o revisión'
+      ],
+      [
+        'Con motivo', String(conMotivo), 'Con sustento registrado',
+        'Cerrados / pasivos', String(cerradosPasivos), 'Registros no activos'
+      ],
+      [],
+      ['Detalle de coincidencias filtradas'],
+      reporte.headers,
+      ...reporte.rows
+    ];
+  }
+
+  override exportarListaPrincipal(): void {
+    const instancia = this as unknown as InstanciaInternaMonitoreo;
     const tipo = this.tipoActivo();
     const reporte = instancia.construirReporteListaPrincipalPdf();
     if (!reporte) return;
 
-    const dataExcel = [
-      [reporte.title],
-      [instancia.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social'],
-      [`Fecha de Generación: ${this.formatDate(new Date().toISOString())}`],
-      [],
-      reporte.headers,
-      ...reporte.rows
-    ];
-
+    const dataExcel = this.construirDatosExcelListaPrincipal(reporte);
     const ws = XLSX.utils.aoa_to_sheet(dataExcel);
     const maxLens = dataExcel.reduce((acc, row) => {
       row.forEach((val, colIdx) => {
@@ -75,6 +109,7 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
         accion: 'EXPORTACION_EXCEL',
         tipo,
         titulo: reporte.title,
+        filtros: instancia.obtenerResumenFiltrosPrincipales(),
         cantidadRegistros: reporte.rows.length,
         archivo: fileName
       }
