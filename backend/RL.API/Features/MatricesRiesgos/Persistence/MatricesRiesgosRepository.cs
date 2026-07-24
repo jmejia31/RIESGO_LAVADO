@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -129,60 +129,35 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return result;
     }
 
-    public async Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync()
+    public async Task<MatricesRiesgoDashboardDto> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        var dashboard = new MatricesRiesgoDashboardDto();
-        await using (var cmd = conn.CreateCommand())
+        filtro ??= new MatrizRiesgoReporteFiltroDto();
+        var totales = await ObtenerTotalesReporteAsync(conn, filtro);
+        var matricesFiltradas = await ObtenerMatricesDashboardAsync(conn, filtro);
+
+        return new MatricesRiesgoDashboardDto
         {
-            cmd.CommandText = @"
-                SELECT COUNT(DISTINCT m.MRMAT_ID) TOTAL,
-                       COUNT(DISTINCT CASE WHEN r.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
-                       COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS
-                  FROM RL_MR_MATRICES m
-                  LEFT JOIN RL_MR_RESULTADOS r
-                    ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-                   AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-                   AND r.MRR_ES_VIGENTE = 1
-                 WHERE m.MRMAT_ESTADO_REGISTRO = 1";
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-            if (await reader.ReadAsync())
-            {
-                dashboard.TotalMatrices = ToInt(reader["TOTAL"]);
-                dashboard.TotalCalculadas = ToInt(reader["CALCULADAS"]);
-                dashboard.TotalCerradas = ToInt(reader["CERRADAS"]);
-            }
-        }
-
-        dashboard.PorEstado = await ObtenerConteosAsync(conn, "SELECT CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END NOMBRE, COUNT(*) TOTAL FROM RL_MR_MATRICES WHERE MRMAT_ESTADO_REGISTRO = 1 GROUP BY CASE WHEN MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE MRMAT_ESTADO END ORDER BY NOMBRE");
-        dashboard.PorNivelResidual = await ObtenerConteosAsync(conn, @"
-            SELECT NVL(MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NOMBRE, COUNT(*) TOTAL
-              FROM RL_MR_MATRICES m
-              LEFT JOIN RL_MR_RESULTADOS r
-                ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-               AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-               AND r.MRR_ES_VIGENTE = 1
-             WHERE m.MRMAT_ESTADO_REGISTRO = 1
-             GROUP BY NVL(MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')
-             ORDER BY NOMBRE");
-        await using (var cmd = conn.CreateCommand())
-        {
-            cmd.CommandText = @"
-                SELECT COUNT(*)
-                  FROM RL_MR_MATRICES m
-                  JOIN RL_MR_RESULTADOS r
-                    ON r.MRR_MATRIZ_ID = m.MRMAT_ID
-                   AND r.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
-                   AND r.MRR_ES_VIGENTE = 1
-                 WHERE m.MRMAT_ESTADO_REGISTRO = 1
-                   AND r.MRR_REQUIERE_PLAN = 1";
-            dashboard.TotalConPlanAccion = ToInt(await cmd.ExecuteScalarAsync());
-        }
-
-        return dashboard;
+            FechaGeneracion = DateTime.Now,
+            Filtro = filtro,
+            TotalMatrices = totales.TotalMatrices,
+            TotalCalculadas = totales.TotalCalculadas,
+            TotalSinCalculo = Math.Max(0, totales.TotalMatrices - totales.TotalCalculadas),
+            TotalCerradas = totales.TotalCerradas,
+            TotalConPlanAccion = totales.TotalPlanAccionRequerido,
+            TotalAltoCritico = totales.TotalAltoCritico,
+            TotalPlanesVencidos = totales.TotalPlanesVencidos,
+            PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE m.MRMAT_ESTADO END"),
+            PorSujetoTipo = await ObtenerConteosReporteAsync(conn, filtro, "m.MRMAT_SUJETO_TIPO"),
+            PorNivelInherente = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO')"),
+            PorNivelResidual = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')"),
+            MapaTransicion = await ObtenerMapaTransicionDashboardAsync(conn, filtro),
+            MatricesCriticas = await ObtenerMatricesCriticasReporteAsync(conn, filtro),
+            MatricesFiltradas = matricesFiltradas,
+            PlanesAccion = await ObtenerPlanesAccionReporteAsync(conn, filtro)
+        };
     }
 
     public async Task<MatricesRiesgoReporteDto> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro)
@@ -198,12 +173,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         };
 
         reporte.Totales = await ObtenerTotalesReporteAsync(conn, filtro);
+        reporte.Totales.TotalSinCalculo = Math.Max(0, reporte.Totales.TotalMatrices - reporte.Totales.TotalCalculadas);
         reporte.PorEstado = await ObtenerConteosReporteAsync(conn, filtro, "CASE WHEN m.MRMAT_ESTADO = 'CALCULADA' THEN 'EN_REVISION' ELSE m.MRMAT_ESTADO END");
         reporte.PorNivelResidual = await ObtenerConteosReporteAsync(conn, filtro, "NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')");
         reporte.PorSujetoTipo = await ObtenerConteosReporteAsync(conn, filtro, "m.MRMAT_SUJETO_TIPO");
         reporte.PorFactor = await ObtenerFactoresReporteAsync(conn, filtro);
         reporte.MapaInherente = await ObtenerMapaNivelReporteAsync(conn, filtro, "INHERENTE");
         reporte.MapaResidual = await ObtenerMapaNivelReporteAsync(conn, filtro, "RESIDUAL");
+        reporte.MapaTransicion = await ObtenerMapaTransicionDashboardAsync(conn, filtro);
         reporte.MatricesFiltradas = await ObtenerMatricesFiltradasReporteAsync(conn, filtro);
         reporte.MatricesCriticas = await ObtenerMatricesCriticasReporteAsync(conn, filtro);
         reporte.PlanesAccion = await ObtenerPlanesAccionReporteAsync(conn, filtro);
@@ -1053,7 +1030,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             var modelo = await ObtenerModeloVigenteAsync(conn, tx) ?? throw new InvalidOperationException("No existe una metodología aprobada vigente para Matrices de Riesgos.");
             await ValidarVariableYEscalaCriterioAsync(conn, tx, modelo.ModeloId, dto.VariableId, dto.EscalaId);
             if (await ExisteCriterioDuplicadoAsync(conn, tx, modelo.ModeloId, dto, null))
-                throw new InvalidOperationException("Ya existe un criterio activo con la misma variable, escala y rango.");
+                throw new InvalidOperationException("Ya existe un criterio activo cuyo rango se superpone para la misma variable.");
 
             var criterioId = await NextValAsync(conn, tx, "SEQ_RL_MR_CRITERIOS");
             await using (var cmd = conn.CreateCommand())
@@ -1106,7 +1083,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 return false;
 
             if (await ExisteCriterioDuplicadoAsync(conn, tx, modelo.ModeloId, dto, criterioId))
-                throw new InvalidOperationException("Ya existe un criterio activo con la misma variable, escala y rango.");
+                throw new InvalidOperationException("Ya existe un criterio activo cuyo rango se superpone para la misma variable.");
 
             await using (var cmd = conn.CreateCommand())
             {
@@ -1185,6 +1162,56 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
     }
 
+
+    public async Task<bool> ReactivarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        try
+        {
+            var anterior = await ObtenerCriterioAuditoriaAsync(conn, tx, criterioId);
+            if (anterior == null)
+                return false;
+
+            if (await ExisteSolapamientoParaReactivacionAsync(conn, tx, criterioId))
+                throw new InvalidOperationException("El criterio no puede activarse porque su rango se superpone con otro criterio activo de la misma variable.");
+
+            await using (var cmd = conn.CreateCommand())
+            {
+                cmd.BindByName = true;
+                cmd.Transaction = tx;
+                cmd.CommandText = @"
+                    UPDATE RL_MR_CRITERIOS
+                       SET MRC_ESTADO_REGISTRO = 1,
+                           MRC_MOTIVO_INACTIVO = NULL
+                     WHERE MRC_ID = :criterioId
+                       AND MRC_ESTADO_REGISTRO = 0";
+                cmd.Parameters.Add(Param("criterioId", criterioId));
+                if (await cmd.ExecuteNonQueryAsync() == 0)
+                    return false;
+            }
+
+            await RegistrarAuditoriaAsync(conn, tx, "RL_MR_CRITERIOS", criterioId.ToString(), "UPDATE", anterior,
+                JsonConvert.SerializeObject(new { Motivo = motivo.Trim(), EstadoRegistro = 1 }), usuarioId, usuarioEmail, ip);
+            tx.Commit();
+            return true;
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
+    }
+
+    public async Task<bool> CriterioTieneUsoHistoricoAsync(long criterioId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        return await CriterioTieneUsoHistoricoAsync(conn, null, criterioId);
+    }
+
     public async Task<bool> EliminarCriterioAsync(long criterioId, string motivo, long usuarioId, string? usuarioEmail, string? ip)
     {
         await using var conn = _db.CreateConnection();
@@ -1196,6 +1223,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             var anterior = await ObtenerCriterioAuditoriaAsync(conn, tx, criterioId);
             if (anterior == null)
                 return false;
+
+            if (await CriterioTieneUsoHistoricoAsync(conn, tx, criterioId))
+                throw new InvalidOperationException("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente.");
 
             await RegistrarAuditoriaAsync(
                 conn,
@@ -1576,16 +1606,59 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
              WHERE f.MRF_MODELO_ID = :modeloId
                AND c.MRC_ESTADO_REGISTRO = 1
                AND c.MRC_VARIABLE_ID = :variableId
-               AND NVL(c.MRC_ESCALA_ID, -1) = NVL(:escalaId, -1)
-               AND NVL(c.MRC_VALOR_DESDE, -999999999) = NVL(:valorDesde, -999999999)
-               AND NVL(c.MRC_VALOR_HASTA, 999999999) = NVL(:valorHasta, 999999999)
+               AND NVL(c.MRC_VALOR_DESDE, -999999999) <= NVL(:valorHasta, 999999999)
+               AND NVL(c.MRC_VALOR_HASTA, 999999999) >= NVL(:valorDesde, -999999999)
                AND (:criterioIdExcluir IS NULL OR c.MRC_ID <> :criterioIdExcluir)";
         cmd.Parameters.Add(Param("modeloId", modeloId));
         cmd.Parameters.Add(Param("variableId", dto.VariableId));
-        cmd.Parameters.Add(Param("escalaId", dto.EscalaId));
         cmd.Parameters.Add(Param("valorDesde", dto.ValorDesde));
         cmd.Parameters.Add(Param("valorHasta", dto.ValorHasta));
         cmd.Parameters.Add(Param("criterioIdExcluir", criterioIdExcluir));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+
+    private async Task<bool> ExisteSolapamientoParaReactivacionAsync(OracleConnection conn, OracleTransaction tx, long criterioId)
+    {
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM RL_MR_CRITERIOS objetivo
+              JOIN RL_MR_CRITERIOS activo
+                ON activo.MRC_VARIABLE_ID = objetivo.MRC_VARIABLE_ID
+               AND activo.MRC_ESTADO_REGISTRO = 1
+               AND activo.MRC_ID <> objetivo.MRC_ID
+               AND NVL(activo.MRC_VALOR_DESDE, -999999999) <= NVL(objetivo.MRC_VALOR_HASTA, 999999999)
+               AND NVL(activo.MRC_VALOR_HASTA, 999999999) >= NVL(objetivo.MRC_VALOR_DESDE, -999999999)
+             WHERE objetivo.MRC_ID = :criterioId
+               AND objetivo.MRC_ESTADO_REGISTRO = 0";
+        cmd.Parameters.Add(Param("criterioId", criterioId));
+        return ToInt(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
+    private async Task<bool> CriterioTieneUsoHistoricoAsync(OracleConnection conn, OracleTransaction? tx, long criterioId)
+    {
+        var token = $"\"CriterioId\":{criterioId}";
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = tx;
+        cmd.CommandText = @"
+            SELECT COUNT(*)
+              FROM (
+                    SELECT 1
+                      FROM RL_MR_MATRICES
+                     WHERE MRMAT_SNAPSHOT_METODO IS NOT NULL
+                       AND DBMS_LOB.INSTR(MRMAT_SNAPSHOT_METODO, :token) > 0
+                    UNION ALL
+                    SELECT 1
+                      FROM RL_MR_RESULTADOS
+                     WHERE MRR_SNAPSHOT_CALCULO IS NOT NULL
+                       AND DBMS_LOB.INSTR(MRR_SNAPSHOT_CALCULO, :token) > 0
+                   )
+             WHERE ROWNUM = 1";
+        cmd.Parameters.Add(Param("token", token));
         return ToInt(await cmd.ExecuteScalarAsync()) > 0;
     }
 
@@ -1619,15 +1692,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     private async Task ValidarVariablesPorTipoSujetoAsync(OracleConnection conn, OracleTransaction tx, long modeloId, MatrizRiesgoCrearRequestDto dto)
     {
+        var detalles = dto.Detalles ?? new List<MatrizRiesgoDetalleRequestDto>();
+        var variablesEnviadas = detalles.Select(d => d.VariableId).ToList();
+        if (variablesEnviadas.Count != variablesEnviadas.Distinct().Count())
+            throw new InvalidOperationException("No se permite registrar la misma variable más de una vez en una matriz.");
+
         var factorPermitido = FactorCodigoPorTipoSujeto(dto.SujetoTipo);
-        if (string.IsNullOrWhiteSpace(factorPermitido))
+        var esInstitucional = dto.SujetoTipo.Equals("INSTITUCIONAL", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(factorPermitido) && !esInstitucional)
             return;
 
-        var variables = dto.Detalles.Select(d => d.VariableId).Distinct().ToList();
-        if (variables.Count == 0)
-            throw new InvalidOperationException("Debe registrar variables para evaluar la matriz.");
-
-        foreach (var variableId in variables)
+        foreach (var variableId in variablesEnviadas)
         {
             await using var cmd = conn.CreateCommand();
             cmd.BindByName = true;
@@ -1643,9 +1718,37 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmd.Parameters.Add(Param("variableId", variableId));
             cmd.Parameters.Add(Param("modeloId", modeloId));
             var codigo = (await cmd.ExecuteScalarAsync())?.ToString();
-            if (!string.Equals(codigo, factorPermitido, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(codigo))
+                throw new InvalidOperationException($"La variable {variableId} no pertenece a la metodología vigente.");
+            if (!esInstitucional && !string.Equals(codigo, factorPermitido, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException($"La variable {variableId} no corresponde al tipo de sujeto {dto.SujetoTipo}.");
         }
+
+        var obligatorias = new List<long>();
+        await using (var cmd = conn.CreateCommand())
+        {
+            cmd.BindByName = true;
+            cmd.Transaction = tx;
+            cmd.CommandText = @"
+                SELECT v.MRV_ID
+                  FROM RL_MR_VARIABLES v
+                  JOIN RL_MR_FACTORES f ON f.MRF_ID = v.MRV_FACTOR_ID
+                 WHERE f.MRF_MODELO_ID = :modeloId
+                   AND f.MRF_ESTADO_REGISTRO = 1
+                   AND v.MRV_ESTADO_REGISTRO = 1
+                   AND v.MRV_OBLIGATORIA = 1
+                   AND (:factorCodigo IS NULL OR f.MRF_CODIGO = :factorCodigo)
+                 ORDER BY v.MRV_ID";
+            cmd.Parameters.Add(Param("modeloId", modeloId));
+            cmd.Parameters.Add(Param("factorCodigo", esInstitucional ? null : factorPermitido));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+                obligatorias.Add(ToLong(reader["MRV_ID"]));
+        }
+
+        var faltantes = obligatorias.Except(variablesEnviadas).ToList();
+        if (faltantes.Count > 0)
+            throw new InvalidOperationException($"Faltan variables obligatorias para {dto.SujetoTipo}: {string.Join(", ", faltantes)}.");
     }
 
     private static string? FactorCodigoPorTipoSujeto(string? sujetoTipo)
@@ -2257,11 +2360,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var cmd = conn.CreateCommand();
         cmd.BindByName = true;
         cmd.CommandText = $@"
-            SELECT COUNT(*) TOTAL,
-                   COUNT(DISTINCT CASE WHEN ri.MRR_ID IS NOT NULL THEN m.MRMAT_ID END) CALCULADAS,
+            SELECT COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   COUNT(DISTINCT CASE
+                       WHEN ri.MRR_ID IS NOT NULL
+                        AND ri.MRR_NIVEL_INHERENTE IS NOT NULL
+                        AND ri.MRR_NIVEL_RESIDUAL IS NOT NULL
+                       THEN m.MRMAT_ID
+                   END) CALCULADAS,
                    COUNT(DISTINCT CASE WHEN m.MRMAT_ESTADO = 'CERRADA' THEN m.MRMAT_ID END) CERRADAS,
-                   SUM(CASE WHEN UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')) IN ('ALTO','CRITICO','CRÍTICO') THEN 1 ELSE 0 END) ALTO_CRITICO,
-                   SUM(CASE WHEN ri.MRR_REQUIERE_PLAN = 1 THEN 1 ELSE 0 END) PLAN_REQUERIDO,
+                   COUNT(DISTINCT CASE WHEN UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')) IN ('ALTO','CRITICO','CRÍTICO') THEN m.MRMAT_ID END) ALTO_CRITICO,
+                   COUNT(DISTINCT CASE WHEN ri.MRR_REQUIERE_PLAN = 1 THEN m.MRMAT_ID END) PLAN_REQUERIDO,
                    0 PLANES_VENCIDOS
               FROM RL_MR_MATRICES m
               JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
@@ -2401,7 +2509,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     {
         var nivelCol = tipo.Equals("INHERENTE", StringComparison.OrdinalIgnoreCase) ? "ri.MRR_NIVEL_INHERENTE" : "ri.MRR_NIVEL_RESIDUAL";
         var puntajeCol = tipo.Equals("INHERENTE", StringComparison.OrdinalIgnoreCase) ? "ri.MRR_PUNTAJE_INHERENTE" : "ri.MRR_PUNTAJE_RESIDUAL";
-        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1", "ri.MRR_ES_VIGENTE = 1", "ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'" };
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
         var parameters = new List<OracleParameter>();
         AgregarFiltrosReporte(filtro, where, parameters);
 
@@ -2409,15 +2517,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.BindByName = true;
         cmd.CommandText = $@"
             SELECT NVL({nivelCol}, 'SIN_CALCULO') NIVEL,
-                   COUNT(*) TOTAL,
-                   ROUND(AVG(NVL({puntajeCol}, 0)), 4) PROMEDIO
+                   COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   ROUND(AVG({puntajeCol}), 4) PROMEDIO
               FROM RL_MR_MATRICES m
               JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
-              JOIN RL_MR_RESULTADOS ri
+              LEFT JOIN RL_MR_RESULTADOS ri
                 ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+               AND ri.MRR_ES_VIGENTE = 1
+               AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
              WHERE {string.Join(" AND ", where)}
              GROUP BY NVL({nivelCol}, 'SIN_CALCULO')
-             ORDER BY MIN(NVL({puntajeCol}, 0))";
+             ORDER BY MIN(NVL({puntajeCol}, -1))";
 
         foreach (var parameter in parameters)
             cmd.Parameters.Add(parameter);
@@ -2434,6 +2544,94 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             });
         }
 
+        return result;
+    }
+
+    private async Task<List<MatrizRiesgoMapaTransicionDto>> ObtenerMapaTransicionDashboardAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
+    {
+        // INSTITUCIONAL identifica el resultado consolidado de la matriz, no el tipo de sujeto.
+        // El LEFT JOIN conserva absolutamente todas las matrices operativas; las que no tienen
+        // ambos niveles completos se agrupan explícitamente como SIN_CALCULO.
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
+        var parameters = new List<OracleParameter>();
+        AgregarFiltrosReporte(filtro, where, parameters);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.CommandText = $@"
+            SELECT NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO') NIVEL_INHERENTE,
+                   NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO') NIVEL_RESIDUAL,
+                   COUNT(DISTINCT m.MRMAT_ID) TOTAL,
+                   ROUND(AVG(ri.MRR_PUNTAJE_INHERENTE), 4) PROMEDIO_INHERENTE,
+                   ROUND(AVG(ri.MRR_PUNTAJE_RESIDUAL), 4) PROMEDIO_RESIDUAL
+              FROM RL_MR_MATRICES m
+              JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
+              LEFT JOIN RL_MR_RESULTADOS ri
+                ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+               AND ri.MRR_ES_VIGENTE = 1
+               AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
+             WHERE {string.Join(" AND ", where)}
+             GROUP BY NVL(ri.MRR_NIVEL_INHERENTE, 'SIN_CALCULO'),
+                      NVL(ri.MRR_NIVEL_RESIDUAL, 'SIN_CALCULO')
+             ORDER BY MIN(NVL(ri.MRR_PUNTAJE_INHERENTE, -1)) DESC,
+                      MIN(NVL(ri.MRR_PUNTAJE_RESIDUAL, -1))";
+
+        foreach (var parameter in parameters)
+            cmd.Parameters.Add(parameter);
+
+        var result = new List<MatrizRiesgoMapaTransicionDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            result.Add(new MatrizRiesgoMapaTransicionDto
+            {
+                NivelInherente = reader["NIVEL_INHERENTE"].ToString() ?? string.Empty,
+                NivelResidual = reader["NIVEL_RESIDUAL"].ToString() ?? string.Empty,
+                Total = ToInt(reader["TOTAL"]),
+                PromedioInherente = ToDecimal(reader["PROMEDIO_INHERENTE"]),
+                PromedioResidual = ToDecimal(reader["PROMEDIO_RESIDUAL"])
+            });
+        }
+
+        return result;
+    }
+
+    private async Task<List<MatrizRiesgoResumenDto>> ObtenerMatricesDashboardAsync(OracleConnection conn, MatrizRiesgoReporteFiltroDto filtro)
+    {
+        var where = new List<string> { "m.MRMAT_ESTADO_REGISTRO = 1" };
+        var parameters = new List<OracleParameter>();
+        AgregarFiltrosReporte(filtro, where, parameters);
+
+        await using var cmd = conn.CreateCommand();
+        cmd.BindByName = true;
+        cmd.CommandText = $@"
+            SELECT *
+              FROM (
+                    SELECT m.MRMAT_ID, m.MRMAT_MODELO_ID, mo.MRM_VERSION, m.MRMAT_SUJETO_TIPO,
+                           m.MRMAT_SUJETO_ID_EXT, m.MRMAT_DOCUMENTO, m.MRMAT_NOMBRE_SUJETO,
+                           m.MRMAT_ESTADO, m.MRMAT_FECHA_EVALUACION,
+                           ri.MRR_PUNTAJE_INHERENTE, ri.MRR_NIVEL_INHERENTE,
+                           ri.MRR_PUNTAJE_RESIDUAL, ri.MRR_NIVEL_RESIDUAL, ri.MRR_REQUIERE_PLAN
+                      FROM RL_MR_MATRICES m
+                      JOIN RL_MR_MODELOS mo ON mo.MRM_ID = m.MRMAT_MODELO_ID
+                      LEFT JOIN RL_MR_RESULTADOS ri
+                        ON ri.MRR_MATRIZ_ID = m.MRMAT_ID
+                       AND ri.MRR_TIPO_RESULTADO = 'INSTITUCIONAL'
+                       AND ri.MRR_ES_VIGENTE = 1
+                     WHERE {string.Join(" AND ", where)}
+                     ORDER BY NVL(ri.MRR_PUNTAJE_RESIDUAL, -1) DESC,
+                              m.MRMAT_FECHA_EVALUACION DESC,
+                              m.MRMAT_ID DESC
+                   )
+             WHERE ROWNUM <= 25";
+
+        foreach (var parameter in parameters)
+            cmd.Parameters.Add(parameter);
+
+        var result = new List<MatrizRiesgoResumenDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            result.Add(MapResumen(reader));
         return result;
     }
 
@@ -2577,10 +2775,32 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             parameters.Add(new OracleParameter("repSujetoTipo", filtro.SujetoTipo.Trim().ToUpperInvariant()));
         }
 
+        if (!string.IsNullOrWhiteSpace(filtro.NivelInherente))
+        {
+            var nivelInherente = NormalizarTexto(filtro.NivelInherente);
+            if (nivelInherente == "SIN_CALCULO")
+            {
+                where.Add("ri.MRR_NIVEL_INHERENTE IS NULL");
+            }
+            else
+            {
+                where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_INHERENTE, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelInherente");
+                parameters.Add(new OracleParameter("repNivelInherente", nivelInherente));
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(filtro.NivelResidual))
         {
-            where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelResidual");
-            parameters.Add(new OracleParameter("repNivelResidual", NormalizarTexto(filtro.NivelResidual)));
+            var nivelResidual = NormalizarTexto(filtro.NivelResidual);
+            if (nivelResidual == "SIN_CALCULO")
+            {
+                where.Add("ri.MRR_NIVEL_RESIDUAL IS NULL");
+            }
+            else
+            {
+                where.Add("TRANSLATE(UPPER(NVL(ri.MRR_NIVEL_RESIDUAL, '')), 'ÁÉÍÓÚ', 'AEIOU') = :repNivelResidual");
+                parameters.Add(new OracleParameter("repNivelResidual", nivelResidual));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(filtro.ModeloVersion))

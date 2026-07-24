@@ -1,0 +1,92 @@
+{
+  "fase": "12.5.4",
+  "estado": "validacion_tecnica_final_aprobada",
+  "commit_funcional": "0bdc15193a795046bd63d4a685f856f902e21337",
+  "commit_control_documental": "3f2fe175aacb0a98931402c77f6649e281825c0d",
+  "commit_validacion_documental": "9f0427f37b2800473bfe511945d4f912b31c90c2",
+  "commit_control_accesibilidad": "1c1b1815f1feb24aa9242c8377a9f47671fb4a8f",
+  "diagnostico": {
+    "archivos_texto_analizados": 311,
+    "consumidores_funcionales_recalcular": 0,
+    "referencias_activas_retiradas": [
+      "endpoint backend /{id}/recalcular",
+      "método no utilizado MatricesRiesgosService.recalcular",
+      "prueba aislada del método retirado"
+    ],
+    "capacidad_calculo_automatico_preservada": true,
+    "logica_interna_calculo_preservada": true,
+    "auditoria_calculo_preservada": true
+  },
+  "refinamientos_ux": [
+    "estado específico de exportación para Excel, PDF ejecutivo y ficha individual",
+    "prevención de solicitudes duplicadas de exportación",
+    "ayuda contextual para edición bloqueada por estado",
+    "regiones ARIA para errores, confirmaciones y carga",
+    "navegación identificada y estado de sección activa",
+    "etiquetas accesibles para todos los filtros del panel y de reportería",
+    "semántica de diálogo para vista previa y acciones sensibles",
+    "etiqueta descriptiva del módulo y mapa con aria-label"
+  ],
+  "codificacion": {
+    "codigo_activo_corregido": [
+      "tools/polish_repository_policy_doc.py"
+    ],
+    "evidencia_historica_modificada": false,
+    "decision": "Las evidencias históricas se preservan byte a byte; no se aplican correcciones masivas."
+  },
+  "ejecucion_controlada": {
+    "run_id": 29952077957,
+    "resultado": "success"
+  },
+  "quality_gate_independiente": {
+    "run_id": 29952843226,
+    "resultado": "success"
+  },
+  "quality_gate_control_documental": {
+    "run_id": 29953050256,
+    "resultado": "success"
+  },
+  "control_accesibilidad": {
+    "run_id": 29953486513,
+    "resultado": "success",
+    "controles_completados": 4
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 95,
+      "fallidas": 0,
+      "omitidas": 0
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 156,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    }
+  },
+  "cobertura": {
+    "backend_lineas_pct": 20.50,
+    "backend_ramas_pct": 20.42,
+    "frontend_sentencias_pct": 36.59,
+    "frontend_ramas_pct": 30.24,
+    "frontend_funciones_pct": 33.68,
+    "frontend_lineas_pct": 37.06
+  },
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  },
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró Monitoreo de Listas con Matrices de Riesgos",
+    "No se modificó el motor de cálculo de riesgo",
+    "No se fusionó a main"
+  ],
+  "siguiente_fase": "12.5.5 - Pruebas, evidencia y cierre"
+}

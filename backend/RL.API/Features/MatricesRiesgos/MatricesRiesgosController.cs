@@ -40,11 +40,31 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpGet("dashboard")]
-    public async Task<IActionResult> ObtenerDashboard()
+    public async Task<IActionResult> ObtenerDashboard(
+        [FromQuery] string? buscar = null,
+        [FromQuery] string? estado = null,
+        [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
+        [FromQuery] string? nivelResidual = null,
+        [FromQuery] string? modeloVersion = null,
+        [FromQuery] string? responsable = null,
+        [FromQuery] DateTime? fechaInicio = null,
+        [FromQuery] DateTime? fechaFin = null)
     {
         try
         {
-            var result = await _service.ObtenerDashboardAsync();
+            var result = await _service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+            {
+                Buscar = buscar,
+                Estado = estado,
+                SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
+                NivelResidual = nivelResidual,
+                ModeloVersion = modeloVersion,
+                Responsable = responsable,
+                FechaInicio = fechaInicio,
+                FechaFin = fechaFin
+            });
             return Responder(result);
         }
         catch (Exception ex)
@@ -59,6 +79,7 @@ public sealed class MatricesRiesgosController : ControllerBase
         [FromQuery] string? buscar = null,
         [FromQuery] string? estado = null,
         [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
         [FromQuery] string? nivelResidual = null,
         [FromQuery] string? modeloVersion = null,
         [FromQuery] string? responsable = null,
@@ -72,6 +93,7 @@ public sealed class MatricesRiesgosController : ControllerBase
                 Buscar = buscar,
                 Estado = estado,
                 SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
                 NivelResidual = nivelResidual,
                 ModeloVersion = modeloVersion,
                 Responsable = responsable,
@@ -94,6 +116,7 @@ public sealed class MatricesRiesgosController : ControllerBase
         [FromQuery] string? buscar = null,
         [FromQuery] string? estado = null,
         [FromQuery] string? sujetoTipo = null,
+        [FromQuery] string? nivelInherente = null,
         [FromQuery] string? nivelResidual = null,
         [FromQuery] string? modeloVersion = null,
         [FromQuery] string? responsable = null,
@@ -107,6 +130,7 @@ public sealed class MatricesRiesgosController : ControllerBase
                 Buscar = buscar,
                 Estado = estado,
                 SujetoTipo = sujetoTipo,
+                NivelInherente = nivelInherente,
                 NivelResidual = nivelResidual,
                 ModeloVersion = modeloVersion,
                 Responsable = responsable,
@@ -122,6 +146,25 @@ public sealed class MatricesRiesgosController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al exportar reporte de Matrices de Riesgos");
+            return Error500(ex);
+        }
+    }
+
+    [HttpGet("{id:long}/reportes/ficha")]
+    [AuditRequired("Exportación de ficha individual de matriz de riesgos")]
+    public async Task<IActionResult> ExportarFicha(long id)
+    {
+        try
+        {
+            var result = await _service.ExportarFichaAsync(id, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            if (!result.Success || result.Data == null)
+                return StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+
+            return File(result.Data.Contenido, result.Data.ContentType, result.Data.NombreArchivo);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al exportar ficha individual de Matrices de Riesgos {MatrizId}", id);
             return Error500(ex);
         }
     }
@@ -200,6 +243,8 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    // La Fase 12.5.4 retiró el endpoint público /recalcular. La creación y la edición
+    // conservan el cálculo automático mediante esta única operación auditada.
     [HttpPost("{id:long}/calcular")]
     [AuditRequired("Cálculo de matriz de riesgos")]
     public async Task<IActionResult> Calcular(long id, [FromBody] MatrizRiesgoCalcularRequestDto dto)
@@ -216,21 +261,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    [HttpPost("{id:long}/recalcular")]
-    [AuditRequired("Recálculo de matriz de riesgos")]
-    public async Task<IActionResult> Recalcular(long id, [FromBody] MatrizRiesgoCalcularRequestDto dto)
-    {
-        try
-        {
-            var result = await _service.CalcularAsync(id, dto ?? new MatrizRiesgoCalcularRequestDto(), esRecalculo: true, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
-            return Responder(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al recalcular matriz de riesgos {MatrizId}", id);
-            return Error500(ex);
-        }
-    }
 
     [HttpPut("{id:long}/estado")]
     [AuditRequired("Cambio de estado de matriz de riesgos")]
@@ -500,6 +530,23 @@ public sealed class MatricesRiesgosController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al inactivar criterio de Matrices de Riesgos {CriterioId}", criterioId);
+            return Error500(ex);
+        }
+    }
+
+
+    [HttpPut("criterios/{criterioId:long}/reactivar")]
+    [AuditRequired("Reactivacion de criterio de matriz de riesgos")]
+    public async Task<IActionResult> ReactivarCriterio(long criterioId, [FromBody] MatrizRiesgoInactivarRequestDto dto)
+    {
+        try
+        {
+            var result = await _service.ReactivarCriterioAsync(criterioId, dto, ObtenerUsuarioId(), ObtenerUsuarioEmail(), ObtenerIp());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al reactivar criterio de Matrices de Riesgos {CriterioId}", criterioId);
             return Error500(ex);
         }
     }

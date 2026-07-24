@@ -1,11 +1,8 @@
-﻿import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { OnDestroy } from '@angular/core';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesReporteTablaComponent } from '../../components/matrices-reporte-tabla/matrices-reporte-tabla.component';
 import {
@@ -26,9 +23,16 @@ import {
   VariableMetodologia
 } from '../../models/matrices-riesgos.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
+import {
+  ESTADOS_MATRIZ_VISIBLES,
+  etiquetaEstadoMatriz,
+  puedeEditarMatriz as puedeEditarMatrizPorEstado,
+  puedeEliminarMatriz as puedeEliminarMatrizPorEstado,
+  transicionesPermitidasMatriz
+} from '../../domain/matrices-riesgos-estados.policy';
 
 type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
-type ModalTipo = 'calcular' | 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
+type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'reactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
   variableId: number;
@@ -37,6 +41,19 @@ interface CapturaVariable {
   valorCapturado: string;
   justificacion: string;
   fuenteDato: string;
+}
+
+interface CeldaMapaVista {
+  nivelInherente: string;
+  etiquetaInherente: string;
+  nivelResidual: string;
+  etiquetaResidual: string;
+  total: number;
+  promedioInherente: number;
+  promedioResidual: number;
+  color: string;
+  colorBorde: string;
+  colorTexto: string;
 }
 
 interface ModalOperacion {
@@ -121,6 +138,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly cargando = signal(false);
   readonly cargandoReporte = signal(false);
   readonly guardando = signal(false);
+  readonly exportando = signal<'EXCEL' | 'PDF' | 'FICHA' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly modalOperacion = signal<ModalOperacion | null>(null);
@@ -130,6 +148,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   modalMotivoTexto = '';
 
   readonly dashboard = signal<MatrizRiesgoDashboard | null>(null);
+  readonly seleccionMapa = signal<CeldaMapaVista | null>(null);
+  readonly matricesCuadrante = signal<MatrizRiesgoResumen[]>([]);
+  readonly cargandoCuadrante = signal(false);
   readonly reporte = signal<MatricesRiesgoReporte | null>(null);
   readonly metodologia = signal<MetodologiaMatrices | null>(null);
   readonly matrices = signal<MatrizRiesgoResumen[]>([]);
@@ -201,10 +222,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly criterioEditandoId = signal<number | null>(null);
   readonly capturasVariables = signal<CapturaVariable[]>([]);
 
-  // Estados visibles para operación diaria. Los estados técnicos de cálculo
-  // quedan fuera de filtros y botones porque el sistema recalcula al guardar.
-  readonly estadosDisponibles = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
-  readonly estadosGestionables = ['EN_REVISION', 'APROBADA', 'CERRADA', 'INACTIVA'];
+  // Estados funcionales aprobados para la operación diaria.
+  // Los estados técnicos se normalizan mediante una única política de dominio.
+  readonly estadosDisponibles = [...ESTADOS_MATRIZ_VISIBLES];
   readonly estadosPlan = ['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO'];
   readonly fechaActualIso = this.fechaLocalIso(new Date());
   readonly fechaMinimaReporteInicio = '2000-01-01';
@@ -212,6 +232,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     { valor: 'PROVEEDOR', texto: 'Proveedor' },
     { valor: 'CLIENTE_PATRONO', texto: 'Cliente / Patrono' },
     { valor: 'EMPLEADO', texto: 'Empleado' },
+    { valor: 'AREA', texto: 'Área' },
+    { valor: 'PROCESO', texto: 'Proceso' },
+    { valor: 'CASO_POSITIVO', texto: 'Caso positivo' },
     { valor: 'INSTITUCIONAL', texto: 'Institucional' }
   ];
 
@@ -268,28 +291,117 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return [...new Set(valores.map(valor => Number(valor)))].sort((a, b) => a - b);
   });
 
-  readonly resumenNiveles = computed(() => {
-    const totalMatrices = this.dashboard()?.totalMatrices ?? 0;
-    const conteos = new Map((this.dashboard()?.porNivelResidual ?? []).map((x: { nombre: string; total: number }) => [x.nombre.toUpperCase(), x.total]));
-    return this.escalasRiesgoOrdenadas().map(e => ({
-      ...e,
-      total: conteos.get(e.nivel.toUpperCase()) ?? 0,
-      porcentaje: totalMatrices > 0 ? ((conteos.get(e.nivel.toUpperCase()) ?? 0) / totalMatrices) * 100 : 0
-    }));
-  });
+  readonly resumenNivelesInherente = computed(() =>
+    this.construirResumenNiveles(this.dashboard()?.porNivelInherente ?? [])
+  );
+
+  readonly resumenNivelesResidual = computed(() =>
+    this.construirResumenNiveles(this.dashboard()?.porNivelResidual ?? [])
+  );
+
+  readonly nivelesMapa = computed(() => [
+    ...this.escalasRiesgoOrdenadas().map(escala => ({ valor: escala.nivel, etiqueta: escala.nivel })),
+    { valor: 'SIN_CALCULO', etiqueta: 'Sin evaluar' }
+  ]);
 
   readonly heatmapFilas = computed(() => {
-    const niveles = this.escalasRiesgoOrdenadas();
-    const colores = niveles.length > 0 ? niveles.map(n => n.color || this.colorNivel(n.nivel)) : ['#4caf50', '#8bc34a', '#ffc107', '#ff9800', '#f44336'];
-    const etiquetas = ['Frecuente', 'Probable', 'Ocasional', 'Posible', 'Improbable'];
-    return etiquetas.map((frecuencia, fila) => ({
-      frecuencia,
-      celdas: [0, 1, 2, 3, 4].map(col => {
-        const idx = Math.min(4, Math.max(0, fila + col - 2));
-        return { color: colores[idx] ?? '#e5e7eb', nivel: niveles[idx]?.nivel ?? 'Sin escala' };
+    const niveles = this.nivelesMapa();
+    const nivelesRiesgo = niveles.filter(nivel => nivel.valor !== 'SIN_CALCULO');
+    const sinEvaluar = niveles.find(nivel => nivel.valor === 'SIN_CALCULO')!;
+    const filas = [...nivelesRiesgo].reverse().concat(sinEvaluar);
+    const datos = new Map((this.dashboard()?.mapaTransicion ?? []).map(celda => [
+      `${this.normalizarNivelMapa(celda.nivelInherente)}|${this.normalizarNivelMapa(celda.nivelResidual)}`,
+      celda
+    ]));
+
+    return filas.map(inherente => ({
+      nivelInherente: inherente.valor,
+      etiquetaInherente: inherente.etiqueta,
+      celdas: niveles.map(residual => {
+        const dato = datos.get(`${this.normalizarNivelMapa(inherente.valor)}|${this.normalizarNivelMapa(residual.valor)}`);
+        return {
+          nivelInherente: inherente.valor,
+          etiquetaInherente: inherente.etiqueta,
+          nivelResidual: residual.valor,
+          etiquetaResidual: residual.etiqueta,
+          total: dato?.total ?? 0,
+          promedioInherente: dato?.promedioInherente ?? 0,
+          promedioResidual: dato?.promedioResidual ?? 0,
+          color: this.colorMapaTransicion(inherente.valor, residual.valor),
+          colorBorde: this.colorNivel(inherente.valor),
+          colorTexto: this.colorTextoMapa(inherente.valor, residual.valor)
+        } satisfies CeldaMapaVista;
       })
     }));
   });
+
+  readonly nivelesMapaColumnas = computed(() => this.nivelesMapa());
+
+  seleccionarCeldaMapa(celda: CeldaMapaVista): void {
+    this.seleccionMapa.set(celda);
+    this.matricesCuadrante.set([]);
+    this.cargandoCuadrante.set(true);
+
+    const filtroCuadrante: MatrizRiesgoReporteFiltro = {
+      ...this.reporteFiltro(),
+      nivelInherente: celda.nivelInherente,
+      nivelResidual: celda.nivelResidual
+    };
+
+    this.service.dashboard(filtroCuadrante).subscribe({
+      next: datos => {
+        this.matricesCuadrante.set(datos.matricesFiltradas ?? []);
+        this.cargandoCuadrante.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudieron consultar las matrices del cuadrante.'));
+        this.matricesCuadrante.set([]);
+        this.cargandoCuadrante.set(false);
+      }
+    });
+  }
+
+  limpiarSeleccionMapa(): void {
+    this.seleccionMapa.set(null);
+    this.matricesCuadrante.set([]);
+    this.cargandoCuadrante.set(false);
+  }
+
+  esCeldaMapaSeleccionada(celda: CeldaMapaVista): boolean {
+    const seleccion = this.seleccionMapa();
+    return !!seleccion
+      && this.normalizarNivelMapa(seleccion.nivelInherente) === this.normalizarNivelMapa(celda.nivelInherente)
+      && this.normalizarNivelMapa(seleccion.nivelResidual) === this.normalizarNivelMapa(celda.nivelResidual);
+  }
+
+  textoPromedioCelda(celda: CeldaMapaVista): string {
+    if (celda.nivelInherente === 'SIN_CALCULO' || celda.nivelResidual === 'SIN_CALCULO') {
+      return 'Nivel pendiente';
+    }
+    return `${celda.promedioInherente.toFixed(2)} → ${celda.promedioResidual.toFixed(2)}`;
+  }
+
+  abrirMatrizDesdeDashboard(matrizId: number): void {
+    this.tab.set('matrices');
+    this.seleccionarMatriz(matrizId);
+  }
+
+  private construirResumenNiveles(conteosOrigen: { nombre: string; total: number }[]) {
+    const totalMatrices = this.dashboard()?.totalMatrices ?? 0;
+    const conteos = new Map(conteosOrigen.map(x => [this.normalizarNivelMapa(x.nombre), x.total]));
+    return this.escalasRiesgoOrdenadas().map(escala => {
+      const total = conteos.get(this.normalizarNivelMapa(escala.nivel)) ?? 0;
+      return {
+        ...escala,
+        total,
+        porcentaje: totalMatrices > 0 ? (total / totalMatrices) * 100 : 0
+      };
+    });
+  }
+
+  private normalizarNivelMapa(nivel?: string | null): string {
+    return `${nivel ?? ''}`.trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+  }
 
   readonly mostrarHistorialDebajoListado = computed(() => {
     // Con pocos registros, el historial se coloca bajo el listado para aprovechar el espacio central.
@@ -309,6 +421,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.error.set(null);
     this.mensaje.set(null);
     this.matricesDuplicadas.set([]);
+    this.limpiarSeleccionMapa();
     this.matrizSeleccionada.set(null);
     this.historial.set([]);
     this.planesAccion.set([]);
@@ -351,7 +464,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarDashboard(): void {
-    this.service.dashboard().subscribe({
+    this.service.dashboard(this.reporteFiltro()).subscribe({
       next: datos => this.dashboard.set(datos),
       error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el dashboard.'))
     });
@@ -380,6 +493,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    this.limpiarSeleccionMapa();
     this.reporteFiltro.set(filtroNuevo);
     this.programarCargaReporte();
   }
@@ -392,14 +506,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   limpiarFiltrosReporte(): void {
+    this.limpiarSeleccionMapa();
     this.reporteFiltro.set({});
+    this.cargarDashboard();
     this.cargarReporte();
   }
 
   private programarCargaReporte(): void {
     // Evita llamadas repetidas mientras el usuario escribe o cambia filtros.
     if (this.reporteFiltroTimer) clearTimeout(this.reporteFiltroTimer);
-    this.reporteFiltroTimer = setTimeout(() => this.cargarReporte(), 350);
+    this.reporteFiltroTimer = setTimeout(() => {
+      this.cargarDashboard();
+      this.cargarReporte();
+    }, 350);
   }
 
   private programarCargaMatrices(): void {
@@ -462,19 +581,66 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   exportarReporte(formato: 'EXCEL' | 'PDF'): void {
+    if (this.exportando()) return;
+
+    // La API es la fuente única del archivo. Angular únicamente coordina la
+    // descarga y mantiene un estado visible para impedir solicitudes duplicadas.
+    this.exportando.set(formato);
     this.guardando.set(true);
     this.service.exportarReporte(this.reporteFiltro(), formato).subscribe({
       next: blob => {
-        if (formato === 'EXCEL') {
-          this.generarExcelReporte();
-        } else {
-          this.generarPdfReporte();
-        }
+        this.descargarArchivoReporte(blob, formato);
         this.mensaje.set(`Reporte ${formato} generado correctamente.`);
+        this.exportando.set(null);
         this.guardando.set(false);
       },
       error: err => {
         this.error.set(this.obtenerMensajeError(err, 'No se pudo exportar el reporte.'));
+        this.exportando.set(null);
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  private descargarArchivoReporte(blob: Blob, formato: 'EXCEL' | 'PDF'): void {
+    const extension = formato === 'PDF' ? 'pdf' : 'xlsx';
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Reporte_Matrices_Riesgos_${this.fechaArchivo()}.${extension}`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  exportarFichaMatriz(): void {
+    const matriz = this.matrizSeleccionada();
+    if (!matriz) {
+      this.error.set('Seleccione una matriz para generar su ficha individual.');
+      return;
+    }
+    if (this.exportando()) return;
+
+    this.exportando.set('FICHA');
+    this.guardando.set(true);
+    this.service.exportarFicha(matriz.matrizId).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Ficha_Matriz_Riesgo_${matriz.matrizId}_${this.fechaArchivo()}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        this.mensaje.set('Ficha individual PDF generada correctamente.');
+        this.exportando.set(null);
+        this.guardando.set(false);
+      },
+      error: err => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo generar la ficha individual.'));
+        this.exportando.set(null);
         this.guardando.set(false);
       }
     });
@@ -502,7 +668,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarCriterios(this.incluirCriteriosInactivos()).subscribe({
       next: datos => {
         const verInactivos = this.incluirCriteriosInactivos();
-        this.criterios.set(verInactivos ? datos.filter(c => !c.activo) : datos.filter(c => c.activo));
+        this.criterios.set(verInactivos ? datos : datos.filter(c => c.activo));
         this.aplicarCriteriosAutomaticos();
       },
       error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los criterios.'))
@@ -703,18 +869,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  calcularMatriz(matriz: MatrizRiesgoResumen): void {
-    this.abrirModal({
-      tipo: 'calcular',
-      titulo: 'Calcular matriz',
-      descripcion: `Se evaluará la matriz ${matriz.matrizId} con los criterios vigentes. Revise que la información capturada esté completa antes de continuar.`,
-      textoConfirmar: 'Calcular',
-      requiereMotivo: false,
-      matriz,
-      tono: 'normal'
-    });
-  }
-
   cambiarEstado(matriz: MatrizRiesgoResumen, estado: string): void {
     const activandoMatriz = matriz.estado === 'INACTIVA' && estado === 'EN_REVISION';
     const inactivandoMatriz = estado === 'INACTIVA';
@@ -787,9 +941,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.modalError.set(null);
     switch (operacion.tipo) {
-      case 'calcular':
-        this.ejecutarCalculo(operacion.matriz!);
-        break;
       case 'estado':
         this.ejecutarCambioEstado(operacion.matriz!, operacion.estado!, motivo);
         break;
@@ -798,6 +949,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         break;
       case 'inactivarCriterio':
         this.ejecutarInactivacionCriterio(operacion.criterio!, motivo);
+        break;
+      case 'reactivarCriterio':
+        this.ejecutarReactivacionCriterio(operacion.criterio!, motivo);
         break;
       case 'eliminarCriterio':
         this.ejecutarEliminacionCriterio(operacion.criterio!, motivo);
@@ -1187,6 +1341,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const solapamiento = this.validarSolapamientoCriterio();
+    if (solapamiento) {
+      this.error.set(solapamiento);
+      return;
+    }
+
     this.guardando.set(true);
     const dto: MatrizRiesgoCriterioRequest = {
       variableId: Number(this.criteriosForm.variableId),
@@ -1238,6 +1398,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       requiereMotivo: true,
       criterio,
       tono: 'peligro'
+    });
+  }
+
+
+  reactivarCriterio(criterio: MatrizRiesgoCriterio): void {
+    this.abrirModal({
+      tipo: 'reactivarCriterio',
+      titulo: 'Activar criterio',
+      descripcion: `Ingrese el motivo obligatorio para activar el criterio ${criterio.criterioId}. Se validará que su rango no se superponga con criterios activos.`,
+      textoConfirmar: 'Activar',
+      requiereMotivo: true,
+      criterio,
+      tono: 'normal'
     });
   }
 
@@ -1368,40 +1541,63 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return '#94a3b8';
   }
 
-  estadoEtiqueta(estado?: string | null): string {
-    const normalizado = (estado ?? '').trim().toUpperCase();
-    const etiquetas: Record<string, string> = {
-      BORRADOR: 'Borrador',
-      EN_EVALUACION: 'En evaluación',
-      CALCULADA: 'En Revisión',
-      EN_REVISION: 'En Revisión',
-      OBSERVADA: 'Observada',
-      APROBADA: 'Aprobada',
-      CERRADA: 'Cerrada',
-      INACTIVA: 'Inactiva'
-    };
-    return etiquetas[normalizado] ?? (estado || '-');
+  colorMapaTransicion(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
+      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
+      return '#cbd5e1';
+    }
+
+    // Paleta visual diagonal inspirada en el mapa institucional de referencia.
+    // Los niveles ya vienen calculados desde backend; aquí solo se representa su intensidad.
+    const paleta = ['#4ade80', '#86efac', '#bef264', '#fde047', '#facc15', '#fb923c', '#f97316', '#ef4444', '#dc2626'];
+    const niveles = this.escalasRiesgoOrdenadas();
+    const maximo = Math.max(1, niveles.length - 1);
+    const indiceInherente = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelInherente)));
+    const indiceResidual = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelResidual)));
+    const posicion = Math.round(((indiceInherente + indiceResidual) / (maximo * 2)) * (paleta.length - 1));
+    return paleta[Math.max(0, Math.min(paleta.length - 1, posicion))];
   }
 
-  estadosGestionablesParaMatriz(estadoActual?: string | null): string[] {
-    // Si la matriz está inactiva, la única acción visible es activarla.
-    // El estado operativo de reactivación es En Revisión para obligar revisión posterior.
-    return (estadoActual ?? '').toUpperCase() === 'INACTIVA'
-      ? ['EN_REVISION']
-      : this.estadosGestionables;
+  colorTextoMapa(nivelInherente?: string | null, nivelResidual?: string | null): string {
+    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
+      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
+      return '#334155';
+    }
+    const color = this.colorMapaTransicion(nivelInherente, nivelResidual);
+    return ['#f97316', '#ef4444', '#dc2626'].includes(color) ? '#ffffff' : '#0f172a';
+  }
+
+  tipoSujetoEtiqueta(tipo?: string | null): string {
+    const normalizado = `${tipo ?? ''}`.trim().toUpperCase();
+    return this.tiposSujeto.find(item => item.valor === normalizado)?.texto ?? normalizado.replaceAll('_', ' ');
+  }
+
+  estadoEtiqueta(estado?: string | null): string {
+    return etiquetaEstadoMatriz(estado);
+  }
+
+  estadosGestionablesParaMatriz(estadoActual?: string | null): readonly string[] {
+    return transicionesPermitidasMatriz(estadoActual);
+  }
+
+  puedeEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
+    return puedeEditarMatrizPorEstado(matriz.estado);
+  }
+
+  mensajeBloqueoEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
+    return this.puedeEditarMatriz(matriz)
+      ? 'Editar matriz'
+      : 'La matriz solo puede editarse mientras se encuentra En Revisión.';
   }
 
   puedeEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
-    const estado = (matriz.estado ?? '').toUpperCase();
-    // La eliminación lógica solo queda disponible antes del cierre operativo.
-    // Una matriz aprobada, cerrada o ya inactiva forma parte del expediente y debe conservarse.
-    return !['APROBADA', 'CERRADA', 'INACTIVA'].includes(estado);
+    return puedeEliminarMatrizPorEstado(matriz.estado);
   }
 
   mensajeBloqueoEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
     return this.puedeEliminarMatriz(matriz)
       ? 'Eliminar matriz'
-      : 'La matriz no puede eliminarse porque ya fue aprobada, cerrada o se encuentra inactiva.';
+      : 'La matriz solo puede eliminarse mientras se encuentra En Revisión.';
   }
 
   textoBotonEstado(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle, estado: string): string {
@@ -1423,14 +1619,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (operacion.requiereMotivo && !motivo) return false;
     if (operacion.tipo === 'estado' && this.existeMotivoCambioEstado(motivo)) return false;
     return true;
-  }
-
-  private ejecutarCalculo(matriz: MatrizRiesgoResumen): void {
-    this.guardando.set(true);
-    this.service.calcular(matriz.matrizId, this.tipoCalculoParaSujeto(matriz.sujetoTipo)).subscribe({
-      next: () => this.refrescarDespuesAccion(matriz.matrizId, 'Matriz calculada correctamente.'),
-      error: err => this.finalizarAccionConError(err, 'No se pudo calcular la matriz.')
-    });
   }
 
   private ejecutarCambioEstado(matriz: MatrizRiesgoResumen, estado: string, motivo: string): void {
@@ -1472,6 +1660,20 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
+
+  private ejecutarReactivacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
+    this.guardando.set(true);
+    this.service.reactivarCriterio(criterio.criterioId, motivo).subscribe({
+      next: () => {
+        this.mensaje.set('Criterio activado correctamente.');
+        this.cargarCriterios();
+        this.guardando.set(false);
+        this.cerrarModal();
+      },
+      error: err => this.finalizarAccionConError(err, 'No se pudo activar el criterio.')
+    });
+  }
+
   private ejecutarEliminacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
     this.guardando.set(true);
     this.service.eliminarCriterio(criterio.criterioId, motivo).subscribe({
@@ -1485,6 +1687,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: err => this.finalizarAccionConError(err, 'No se pudo eliminar el criterio.')
     });
+  }
+
+
+  private validarSolapamientoCriterio(): string | null {
+    const variableId = Number(this.criteriosForm.variableId);
+    if (!variableId) return null;
+
+    const desdeNuevo = this.criteriosForm.valorDesde ?? Number.NEGATIVE_INFINITY;
+    const hastaNuevo = this.criteriosForm.valorHasta ?? Number.POSITIVE_INFINITY;
+    const editandoId = this.criterioEditandoId();
+    const conflicto = this.criterios().find(criterio => {
+      if (!criterio.activo || criterio.variableId !== variableId || criterio.criterioId === editandoId) return false;
+      const desdeExistente = criterio.valorDesde ?? Number.NEGATIVE_INFINITY;
+      const hastaExistente = criterio.valorHasta ?? Number.POSITIVE_INFINITY;
+      return desdeExistente <= hastaNuevo && hastaExistente >= desdeNuevo;
+    });
+
+    return conflicto
+      ? `El rango se superpone con el criterio activo ${conflicto.criterioId} (${conflicto.valorDesde ?? '-∞'} a ${conflicto.valorHasta ?? '∞'}).`
+      : null;
   }
 
   private prepararCapturaVariables(): void {
@@ -1621,339 +1843,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private generarExcelReporte(): void {
-    const reporte = this.reporte();
-    if (!reporte) {
-      this.error.set('No hay datos de reportería para exportar.');
-      return;
-    }
-    // La exportación usa exactamente el reporte vigente para que coincida con
-    // lo que el usuario filtró en pantalla.
-    const matricesFiltradas = this.obtenerMatricesReporte(reporte);
-
-    const wb = XLSX.utils.book_new();
-    this.agregarHojaExcel(wb, 'Reporte', [
-      ['INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL'],
-      ['REPORTE DE MATRICES DE RIESGOS'],
-      ['SGRLA-IHSS'],
-      ['Fecha de generación', this.formatearFechaHora(reporte.fechaGeneracion)],
-      [],
-      ['1. FILTROS APLICADOS'],
-      ['Búsqueda general', reporte.filtro?.buscar || 'Todos'],
-      ['Estado', reporte.filtro?.estado || 'Todos'],
-      ['Tipo de sujeto', reporte.filtro?.sujetoTipo || 'Todos'],
-      ['Nivel residual', reporte.filtro?.nivelResidual || 'Todos'],
-      ['Responsable', reporte.filtro?.responsable || 'Todos'],
-      ['Fecha inicio', reporte.filtro?.fechaInicio || 'Todos'],
-      ['Fecha fin', reporte.filtro?.fechaFin || 'Todos'],
-      [],
-      ['2. RESUMEN EJECUTIVO'],
-      ['Indicador', 'Valor'],
-      ['Total matrices', reporte.totales.totalMatrices],
-      ['Calculadas', reporte.totales.totalCalculadas],
-      ['Cerradas', reporte.totales.totalCerradas],
-      ['Alto / Crítico', reporte.totales.totalAltoCritico],
-      ['Plan requerido', reporte.totales.totalPlanAccionRequerido],
-      ['Planes vencidos', reporte.totales.totalPlanesVencidos],
-      [],
-      ['3. DISTRIBUCIÓN POR ESTADO'],
-      ['Estado', 'Total'],
-      ...reporte.porEstado.map(x => [x.nombre, x.total]),
-      [],
-      ['4. DISTRIBUCIÓN POR NIVEL RESIDUAL'],
-      ['Nivel', 'Total'],
-      ...reporte.porNivelResidual.map(x => [x.nombre, x.total]),
-      [],
-      ['5. MATRICES FILTRADAS'],
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...matricesFiltradas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ]),
-      [],
-      ['6. RESULTADOS POR FACTOR'],
-      ['Factor', 'Matrices', 'Promedio inherente', 'Promedio residual', 'Alto / Crítico', 'Plan requerido'],
-      ...reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        x.totalMatrices,
-        x.promedioInherente,
-        x.promedioResidual,
-        x.totalAltoCritico,
-        x.totalPlanAccionRequerido
-      ]),
-      [],
-      ['7. MATRICES ALTO / CRÍTICO'],
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...reporte.matricesCriticas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ]),
-      [],
-      ['8. PLANES DE ACCIÓN'],
-      ['Estado', 'Total', 'Vencidos'],
-      ...reporte.planesAccion.map(x => [x.estado, x.total, x.vencidos])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Distribuciones', [
-      ['Distribución por estado'],
-      ['Estado', 'Total'],
-      ...reporte.porEstado.map(x => [x.nombre, x.total]),
-      [],
-      ['Distribución por nivel residual'],
-      ['Nivel', 'Total'],
-      ...reporte.porNivelResidual.map(x => [x.nombre, x.total]),
-      [],
-      ['Distribución por sujeto'],
-      ['Tipo de sujeto', 'Total'],
-      ...reporte.porSujetoTipo.map(x => [x.nombre, x.total]),
-      [],
-      ['Riesgo inherente por nivel'],
-      ['Nivel', 'Total', 'Promedio'],
-      ...reporte.mapaInherente.map(x => [x.nivel, x.total, x.promedio]),
-      [],
-      ['Riesgo residual por nivel'],
-      ['Nivel', 'Total', 'Promedio'],
-      ...reporte.mapaResidual.map(x => [x.nivel, x.total, x.promedio])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Factores', [
-      ['Factor', 'Matrices', 'Promedio inherente', 'Promedio residual', 'Alto / Crítico', 'Plan requerido'],
-      ...reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        x.totalMatrices,
-        x.promedioInherente,
-        x.promedioResidual,
-        x.totalAltoCritico,
-        x.totalPlanAccionRequerido
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Matrices Filtradas', [
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...matricesFiltradas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        this.formatearResultado(x.puntajeInherente, x.nivelInherente),
-        this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Matrices Alto Critico', [
-      ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Inherente', 'Residual', 'Plan requerido', 'Fecha'],
-      ...reporte.matricesCriticas.map(x => [
-        x.matrizId,
-        x.nombreSujeto,
-        x.documento || '',
-        x.sujetoTipo,
-        x.estado,
-        `${x.puntajeInherente ?? '-'} ${x.nivelInherente ?? ''}`.trim(),
-        `${x.puntajeResidual ?? '-'} ${x.nivelResidual ?? ''}`.trim(),
-        x.requierePlanAccion ? 'Sí' : 'No',
-        this.formatearFecha(x.fechaEvaluacion)
-      ])
-    ]);
-
-    this.agregarHojaExcel(wb, 'Planes Accion', [
-      ['Estado', 'Total', 'Vencidos'],
-      ...reporte.planesAccion.map(x => [x.estado, x.total, x.vencidos])
-    ]);
-
-    XLSX.writeFile(wb, `Reporte_Matrices_Riesgos_${this.fechaArchivo()}.xlsx`);
-  }
-
-  private generarPdfReporte(): void {
-    const reporte = this.reporte();
-    if (!reporte) {
-      this.error.set('No hay datos de reportería para generar el PDF.');
-      return;
-    }
-    const matricesFiltradas = this.obtenerMatricesReporte(reporte);
-
-    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    let y = this.agregarEncabezadoReportePdf(doc, 'REPORTE DE MATRICES DE RIESGOS');
-
-    y = this.agregarTablaReportePdf(doc, y, '1. FILTROS APLICADOS', [
-      ['Búsqueda general', reporte.filtro?.buscar || 'Todos', 'Estado', reporte.filtro?.estado || 'Todos'],
-      ['Tipo de sujeto', reporte.filtro?.sujetoTipo || 'Todos', 'Nivel residual', reporte.filtro?.nivelResidual || 'Todos'],
-      ['Responsable', reporte.filtro?.responsable || 'Todos', 'Rango fecha', `${reporte.filtro?.fechaInicio || 'Todos'} - ${reporte.filtro?.fechaFin || 'Todos'}`]
-    ]);
-
-    y = this.agregarTablaReportePdf(doc, y, '2. RESUMEN EJECUTIVO', [
-      ['Total matrices', `${reporte.totales.totalMatrices}`, 'Calculadas', `${reporte.totales.totalCalculadas}`],
-      ['Cerradas', `${reporte.totales.totalCerradas}`, 'Alto / Crítico', `${reporte.totales.totalAltoCritico}`],
-      ['Plan requerido', `${reporte.totales.totalPlanAccionRequerido}`, 'Planes vencidos', `${reporte.totales.totalPlanesVencidos}`]
-    ]);
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '3. MATRICES FILTRADAS', ['ID', 'Sujeto', 'Documento', 'Tipo', 'Estado', 'Residual', 'Plan', 'Fecha'],
-      this.filasMatrizReporteCompleta(matricesFiltradas));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '4. RESULTADOS POR FACTOR', ['Factor', 'Matrices', 'Inherente', 'Residual', 'Alto/Crítico', 'Plan'],
-      reporte.porFactor.map(x => [
-        `${x.factorCodigo} - ${x.factorNombre}`,
-        `${x.totalMatrices}`,
-        `${x.promedioInherente}`,
-        `${x.promedioResidual}`,
-        `${x.totalAltoCritico}`,
-        `${x.totalPlanAccionRequerido}`
-      ]));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '5. MATRICES ALTO / CRÍTICO', ['ID', 'Sujeto', 'Estado', 'Residual', 'Plan', 'Fecha'],
-      this.filasMatrizReporte(reporte.matricesCriticas));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '6. MAPA INHERENTE PERSISTIDO', ['Nivel', 'Total', 'Promedio'],
-      reporte.mapaInherente.map(x => [x.nivel, `${x.total}`, `${x.promedio}`]));
-
-    y = this.agregarAutoTablaReportePdf(doc, y, '7. MAPA RESIDUAL PERSISTIDO', ['Nivel', 'Total', 'Promedio'],
-      reporte.mapaResidual.map(x => [x.nivel, `${x.total}`, `${x.promedio}`]));
-
-    this.agregarPiePaginaPdf(doc);
-    doc.save(`Reporte_Matrices_Riesgos_${this.fechaArchivo()}.pdf`);
-  }
-
-  private agregarEncabezadoReportePdf(doc: jsPDF, titulo: string): number {
-    const institucion = this.configService.configSistema()?.nombreInstitucion || 'Instituto Hondureño de Seguridad Social';
-    const sistema = this.configService.configSistema()?.nombreSistema || 'SGRLA-IHSS';
-
-    doc.setFillColor(15, 23, 42);
-    doc.rect(0, 0, 210, 38, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    doc.setTextColor(255, 255, 255);
-    doc.text(institucion.toUpperCase(), 14, 14);
-    doc.setFontSize(17);
-    doc.text(titulo, 14, 23);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.setTextColor(203, 213, 225);
-    doc.text(`${sistema} | Fecha de Generación: ${new Date().toLocaleString('es-HN')}`, 14, 30);
-    return 48;
-  }
-
-  private agregarTablaReportePdf(doc: jsPDF, y: number, titulo: string, filas: string[][]): number {
-    y = this.asegurarEspacioSeccionPdf(doc, y, filas.length);
-    this.agregarTituloSeccionPdf(doc, y, titulo);
-    autoTable(doc, {
-      startY: y + 6,
-      body: filas,
-      theme: 'plain',
-      styles: { fontSize: 8.5, cellPadding: 2, textColor: [51, 65, 85] },
-      columnStyles: {
-        0: { fontStyle: 'bold', cellWidth: 35, textColor: [30, 41, 59] },
-        1: { cellWidth: 55 },
-        2: { fontStyle: 'bold', cellWidth: 35, textColor: [30, 41, 59] },
-        3: { cellWidth: 55 }
-      },
-      margin: { left: 14, right: 14 }
-    });
-    return (doc as any).lastAutoTable.finalY + 9;
-  }
-
-  private agregarAutoTablaReportePdf(doc: jsPDF, y: number, titulo: string, encabezados: string[], filas: string[][]): number {
-    y = this.asegurarEspacioSeccionPdf(doc, y, filas.length);
-    this.agregarTituloSeccionPdf(doc, y, titulo);
-    autoTable(doc, {
-      startY: y + 6,
-      head: [encabezados],
-      body: filas.length ? filas : [[`Sin registros para mostrar.`, ...Array(encabezados.length - 1).fill('')]],
-      theme: 'grid',
-      headStyles: { fillColor: [31, 63, 145], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold' },
-      bodyStyles: { fontSize: 7.8, textColor: [15, 23, 42] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
-      margin: { left: 14, right: 14 },
-      rowPageBreak: 'avoid',
-      styles: { overflow: 'linebreak', cellPadding: 2 }
-    });
-    return (doc as any).lastAutoTable.finalY + 9;
-  }
-
-  private asegurarEspacioSeccionPdf(doc: jsPDF, y: number, filas: number): number {
-    const altoMinimo = filas <= 4 ? 18 + Math.max(filas, 1) * 9 : 36;
-    if (y + altoMinimo > 278) {
-      doc.addPage();
-      return 18;
-    }
-    return y;
-  }
-
-  private agregarTituloSeccionPdf(doc: jsPDF, y: number, titulo: string): void {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59);
-    doc.text(titulo, 14, y);
-    doc.setDrawColor(226, 232, 240);
-    doc.line(14, y + 2, 196, y + 2);
-  }
-
-  private agregarPiePaginaPdf(doc: jsPDF): void {
-    const paginas = doc.getNumberOfPages();
-    for (let i = 1; i <= paginas; i++) {
-      doc.setPage(i);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 116, 139);
-      doc.text(`Página ${i} de ${paginas}`, 176, 287);
-    }
-  }
-
-  private filasMatrizReporte(matrices: MatrizRiesgoResumen[]): string[][] {
-    return matrices.map(x => [
-      `${x.matrizId}`,
-      x.nombreSujeto || '',
-      x.estado || '',
-      this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-      x.requierePlanAccion ? 'Sí' : 'No',
-      this.formatearFecha(x.fechaEvaluacion)
-    ]);
-  }
-
-  private filasMatrizReporteCompleta(matrices: MatrizRiesgoResumen[]): string[][] {
-    return matrices.map(x => [
-      `${x.matrizId}`,
-      x.nombreSujeto || '',
-      x.documento || '-',
-      x.sujetoTipo || '-',
-      x.estado || '',
-      this.formatearResultado(x.puntajeResidual, x.nivelResidual),
-      x.requierePlanAccion ? 'Sí' : 'No',
-      this.formatearFecha(x.fechaEvaluacion)
-    ]);
-  }
 
   obtenerMatricesReporte(reporte: MatricesRiesgoReporte | null = this.reporte()): MatrizRiesgoResumen[] {
     return reporte?.matricesFiltradas ?? [];
-  }
-
-  private agregarHojaExcel(wb: XLSX.WorkBook, nombre: string, data: unknown[][]): void {
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    ws['!cols'] = this.calcularAnchosExcel(data);
-    XLSX.utils.book_append_sheet(wb, ws, nombre);
-  }
-
-  private calcularAnchosExcel(data: unknown[][]): XLSX.ColInfo[] {
-    const columnas = data.reduce((max, fila) => Math.max(max, fila.length), 0);
-    return Array.from({ length: columnas }, (_, index) => {
-      const ancho = data.reduce((max, fila) => Math.max(max, `${fila[index] ?? ''}`.length), 10);
-      return { wch: Math.min(Math.max(ancho + 2, 12), 48) };
-    });
   }
 
   private descargarBlob(blob: Blob, nombre: string): void {

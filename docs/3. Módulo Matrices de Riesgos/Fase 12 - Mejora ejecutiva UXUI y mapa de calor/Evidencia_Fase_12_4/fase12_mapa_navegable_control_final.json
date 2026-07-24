@@ -1,0 +1,18 @@
+{
+  "fecha": "2026-07-21",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "commit_funcional": "2fdc74c5008d1b8471d371e8c4d6fe5599eb2aa0",
+  "ejecucion_integracion": 29872614998,
+  "resultado_integracion": "success",
+  "ejecucion_quality_gate_oficial": 29872849460,
+  "resultado_quality_gate_oficial": "success",
+  "alcance": [
+    "Todas las matrices operativas permanecen en el mapa mediante LEFT JOIN",
+    "Las matrices sin niveles completos se muestran como Sin evaluar",
+    "Todos los cuadrantes son seleccionables, incluso cuando su total es cero",
+    "La selección muestra una tabla inmediata con las matrices del cuadrante",
+    "Cada registro permite abrir el detalle completo de la matriz",
+    "La selección del mapa no destruye ni reemplaza los filtros ejecutivos generales"
+  ],
+  "validacion_oficial": "aprobada"
+}

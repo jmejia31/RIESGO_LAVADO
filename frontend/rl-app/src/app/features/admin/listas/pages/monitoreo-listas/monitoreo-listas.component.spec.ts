@@ -381,7 +381,7 @@ describe('MonitoreoListasComponent', () => {
     expect(click).not.toHaveBeenCalled();
   });
 
-  it('audita y exporta la lista principal juridica con los datos filtrados', () => {
+  it('audita y exporta la lista principal juridica con los datos filtrados', async () => {
     let nombreDescarga = '';
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
       nombreDescarga = this.download;
@@ -399,8 +399,8 @@ describe('MonitoreoListasComponent', () => {
       'ExportacionMonitoreoListas',
       expect.objectContaining({ tipo: 'juridica', cantidadRegistros: 1 })
     );
-    expect(click).toHaveBeenCalledOnce();
-    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\d{4}-\d{2}-\d{2}\.xls$/);
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\d{4}-\d{2}-\d{2}\.xlsx$/);
   });
 
   it('cancela la exportacion principal si no puede registrar la auditoria', async () => {
@@ -420,7 +420,7 @@ describe('MonitoreoListasComponent', () => {
     expect(consoleError).toHaveBeenCalled();
   });
 
-  it('genera una ficha de patrono solamente despues de auditarla', () => {
+  it('genera una ficha de patrono solamente despues de auditarla', async () => {
     let nombreDescarga = '';
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
       nombreDescarga = this.download;
@@ -444,8 +444,8 @@ describe('MonitoreoListasComponent', () => {
       'ExportacionFichaPerfil',
       expect.objectContaining({ tipo: 'juridica', cantidadSeguimientos: 1 })
     );
-    expect(click).toHaveBeenCalledOnce();
-    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xls');
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xlsx');
     expect(component.cargando()).toBe(false);
   });
 

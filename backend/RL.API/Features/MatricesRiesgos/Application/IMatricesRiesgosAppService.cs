@@ -7,9 +7,10 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 public interface IMatricesRiesgosAppService
 {
     Task<ServiceResult<MetodologiaCalculoDto>> ObtenerMetodologiaVigenteAsync();
-    Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync();
+    Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task<ServiceResult<MatricesRiesgoReporteDto>> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro);
     Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip);
+    Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarFichaAsync(long matrizId, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult<List<MatrizRiesgoResumenDto>>> ListarAsync(MatrizRiesgoFiltroDto filtro);
     Task<ServiceResult<MatrizRiesgoDetalleDto>> ObtenerAsync(long matrizId);
     Task<ServiceResult<MatrizRiesgoDetalleDto>> CrearAsync(MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
@@ -32,5 +33,6 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult<MatrizRiesgoCriterioDto>> CrearCriterioAsync(MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult<MatrizRiesgoCriterioDto>> ActualizarCriterioAsync(long criterioId, MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult> InactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    Task<ServiceResult> ReactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
     Task<ServiceResult> EliminarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
 }

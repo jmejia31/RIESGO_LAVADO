@@ -1,0 +1,1501 @@
+{
+  "fase": "12.5.1",
+  "objetivo": "Inventario y estándar institucional compartido de reportería",
+  "archivos_detectados": 60,
+  "por_modulo": {
+    "Monitoreo de Listas": 23,
+    "Matrices de Riesgos": 19,
+    "Compartido/Otros": 18
+  },
+  "archivos": [
+    {
+      "archivo": "backend/RL.API.Tests/Features/Auditoria/AuditoriaModuleCharacterizationTests.cs",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 172
+    },
+    {
+      "archivo": "backend/RL.API/Features/Auditoria/Application/AuditoriaService.cs",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 57
+    },
+    {
+      "archivo": "backend/RL.API/Features/Auditoria/AuditoriaController.cs",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 72
+    },
+    {
+      "archivo": "backend/RL.API/RL.API.csproj",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel"
+      ],
+      "lineas": 39
+    },
+    {
+      "archivo": "backend/RL.API/appsettings.example.json",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 78
+    },
+    {
+      "archivo": "docs/0.0 Documentación/API.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 22
+    },
+    {
+      "archivo": "docs/0.0 Documentación/CHANGELOG.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 245
+    },
+    {
+      "archivo": "docs/0.0 Documentación/ESTRUCTURA_OBJETIVO.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 199
+    },
+    {
+      "archivo": "docs/0.0 Documentación/MEMORIA_TECNICA_CONTINUIDAD_SISTEMA.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "jspdf",
+        "pdf",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 198
+    },
+    {
+      "archivo": "docs/0.0 Documentación/PLAN_REORGANIZACION.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 263
+    },
+    {
+      "archivo": "docs/0.0 Documentación/QUALITY.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 60
+    },
+    {
+      "archivo": "docs/0.0 Documentación/SECURITY.md",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 22
+    },
+    {
+      "archivo": "frontend/rl-app/angular.json",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 105
+    },
+    {
+      "archivo": "frontend/rl-app/e2e/login-and-routing.spec.ts",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 255
+    },
+    {
+      "archivo": "frontend/rl-app/package-lock.json",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "autotable",
+        "jspdf",
+        "pdf",
+        "xls"
+      ],
+      "lineas": 10705
+    },
+    {
+      "archivo": "frontend/rl-app/package.json",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "autotable",
+        "jspdf",
+        "pdf"
+      ],
+      "lineas": 54
+    },
+    {
+      "archivo": "frontend/rl-app/playwright.config.ts",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 28
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/core/utils/excel-export.util.ts",
+      "modulo": "Compartido/Otros",
+      "coincidencias": [
+        "excel",
+        "reporte",
+        "workbook",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 109
+    },
+    {
+      "archivo": "backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte",
+        "xls"
+      ],
+      "lineas": 841
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 37
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 1189
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/Contracts/Reporteria/ReporteriaDtos.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 111
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 610
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 40
+    },
+    {
+      "archivo": "backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 3084
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 10 - Planes de accion evidencias y seguimiento/MATRIZ_TRAZABILIDAD_FASE10.md",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "pdf"
+      ],
+      "lineas": 17
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 11 - Pruebas integrales y control de calidad/Evidencia_Calidad/fase11_matriz_inicial_pruebas.json",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 121
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_4/fase12_4_validacion_integracion.json",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 65
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 9 - Reporteria mapa de calor y exportaciones/Evidencia_Funcional/fase9_auditoria_exportaciones_api.json",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 125
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-reporte-tabla/matrices-reporte-tabla.component.spec.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 26
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-reporte-tabla/matrices-reporte-tabla.component.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 27
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.spec.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "exportar",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 230
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 199
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 328
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 1374
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 889
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts",
+      "modulo": "Matrices de Riesgos",
+      "coincidencias": [
+        "autotable",
+        "excel",
+        "exportar",
+        "jspdf",
+        "pdf",
+        "reporte",
+        "workbook",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 2345
+    },
+    {
+      "archivo": "backend/RL.API.Tests/Features/Listas/ListasApplicationTests.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 172
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Application/EvidenciasService.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "pdf",
+        "reporte",
+        "workbook",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 377
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Application/IEvidenciasService.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 18
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Application/IListasService.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "exportar"
+      ],
+      "lineas": 25
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Application/ListasService.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 174
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Contracts/CoincidenciaPatronoDto.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 26
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/ListasController.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 479
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Persistence/IListasRepository.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 44
+    },
+    {
+      "archivo": "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 2042
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.spec.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "pdf"
+      ],
+      "lineas": 96
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/data-access/listas.service.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 245
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/models/listas.models.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "reporte"
+      ],
+      "lineas": 145
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.html",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 117
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 331
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.html",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 352
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 526
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.html",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte"
+      ],
+      "lineas": 352
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 527
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte"
+      ],
+      "lineas": 1306
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.spec.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "excel",
+        "exportar",
+        "pdf",
+        "reporte",
+        "xls"
+      ],
+      "lineas": 469
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "autotable",
+        "excel",
+        "exportar",
+        "jspdf",
+        "pdf",
+        "reporte",
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 2730
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/tipo-listas/tipo-listas.component.html",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 170
+    },
+    {
+      "archivo": "frontend/rl-app/src/app/features/admin/listas/pages/tipo-listas/tipo-listas.component.ts",
+      "modulo": "Monitoreo de Listas",
+      "coincidencias": [
+        "xls",
+        "xlsx"
+      ],
+      "lineas": 182
+    }
+  ],
+  "caracteres_danados": [
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 77,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 123,
+      "texto": "\"snapshotMetodo\": \"{\\\"Version\\\":\\\"1.0\\\",\\\"PesoTotalEsperado\\\":100.0,\\\"PuntajeMinimo\\\":1.0,\\\"PuntajeMaximo\\\":5.0,\\\"MitigacionMaximaPct\\\":55.0,\\\"DecimalesCalculo\\\":4,\\\"DecimalesVisualizacion\\\":2,\\\"FactoresInstitucionales\\\":[{\\\"Codigo\\\":\\\"PROV"
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 138,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 150,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 155,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 167,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 172,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 189,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 206,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 218,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 223,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 240,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 257,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 269,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 274,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 286,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 291,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 308,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 325,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 337,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 342,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 359,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 376,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 388,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 393,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 405,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 410,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 427,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 444,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 456,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 461,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 478,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 496,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 513,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 530,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 561,
+      "texto": "\"snapshotMetodo\": \"{\\\"Version\\\":\\\"1.0\\\",\\\"PesoTotalEsperado\\\":100.0,\\\"PuntajeMinimo\\\":1.0,\\\"PuntajeMaximo\\\":5.0,\\\"MitigacionMaximaPct\\\":55.0,\\\"DecimalesCalculo\\\":4,\\\"DecimalesVisualizacion\\\":2,\\\"FactoresInstitucionales\\\":[{\\\"Codigo\\\":\\\"PROV"
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 576,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 588,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 593,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 605,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 610,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 627,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 644,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 656,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 661,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 678,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 695,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 707,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 712,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 724,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 729,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 746,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 763,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 775,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 780,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 797,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 814,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 826,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 831,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 843,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 848,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 865,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 882,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 894,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 899,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 916,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 934,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 951,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 968,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 1040,
+      "texto": "\"motivo\": \"Cambio de estado de prueba Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 1053,
+      "texto": "\"motivo\": \"Creaci�n de matriz de riesgos.\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output.json",
+      "linea": 1109,
+      "texto": "\"mensaje\": \"La matriz est� cerrada o inactiva y no puede recalcularse.\""
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 77,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 133,
+      "texto": "\"snapshotMetodo\": \"{\\\"Version\\\":\\\"1.0\\\",\\\"PesoTotalEsperado\\\":100.0,\\\"PuntajeMinimo\\\":1.0,\\\"PuntajeMaximo\\\":5.0,\\\"MitigacionMaximaPct\\\":55.0,\\\"DecimalesCalculo\\\":4,\\\"DecimalesVisualizacion\\\":2,\\\"FactoresInstitucionales\\\":[{\\\"Codigo\\\":\\\"PROV"
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 148,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 160,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 165,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 177,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 182,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 199,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 216,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 228,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 233,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 250,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 267,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 279,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 284,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 296,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 301,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 318,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 335,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 347,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 352,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 369,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 386,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 398,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 403,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 415,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 420,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 437,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 454,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 466,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 471,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 488,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 506,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 523,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 540,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 571,
+      "texto": "\"snapshotMetodo\": \"{\\\"Version\\\":\\\"1.0\\\",\\\"PesoTotalEsperado\\\":100.0,\\\"PuntajeMinimo\\\":1.0,\\\"PuntajeMaximo\\\":5.0,\\\"MitigacionMaximaPct\\\":55.0,\\\"DecimalesCalculo\\\":4,\\\"DecimalesVisualizacion\\\":2,\\\"FactoresInstitucionales\\\":[{\\\"Codigo\\\":\\\"PROV"
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 586,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 598,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 603,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 615,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 620,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 637,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 654,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 666,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 671,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 688,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 705,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 717,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 722,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 734,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 739,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 756,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 773,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 785,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 790,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 807,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 824,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 836,
+      "texto": "\"variableNombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 841,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 853,
+      "texto": "\"variableNombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 858,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 875,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 892,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 904,
+      "texto": "\"variableNombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 909,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 926,
+      "texto": "\"justificacion\": \"Prueba funcional controlada Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 944,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 961,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 978,
+      "texto": "\"responsable\": \"Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1017,
+      "texto": "\"explicacion\": \"Riesgo inherente 3.4 (Medio); mitigaci�n global 0%; riesgo residual 3.4 (Medio).\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1043,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1052,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1065,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1079,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1121,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1130,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1143,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1157,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1199,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1208,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1221,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1235,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1278,
+      "texto": "\"explicacion\": \"Riesgo inherente 3.4 (Medio); mitigaci�n global 0%; riesgo residual 3.4 (Medio).\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1304,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1313,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1326,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1340,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1382,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1391,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1404,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1418,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1460,
+      "texto": "\"nombre\": \"Actividad, rubro o funci�n\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1469,
+      "texto": "\"nombre\": \"Ubicaci�n geogr�fica\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1482,
+      "texto": "\"nivel\": \"Cr�tico\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1496,
+      "texto": "\"nombre\": \"Canal, producto o relaci�n institucional\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1548,
+      "texto": "\"motivo\": \"Cambio de estado de prueba Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1562,
+      "texto": "\"motivo\": \"Recalculo de prueba funcional Fase 7 - Javier Mej�a\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1588,
+      "texto": "\"motivo\": \"Creaci�n de matriz de riesgos.\","
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 7 - Construccion backend y persistencia/Evidencia_DBA/fase7_api_validation_output_retest.json",
+      "linea": 1652,
+      "texto": "\"mensaje\": \"La matriz est� cerrada o inactiva y no puede recalcularse.\""
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 8 - Construccion frontend Angular/Evidencia_Funcional/fase8_validacion_funcional_api.json",
+      "linea": 2115,
+      "texto": "\"mensaje\": \"La matriz ya tiene ese estado registrado con el mismo motivo. No se generÃ³ un nuevo historial.\""
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 8 - Construccion frontend Angular/Evidencia_Funcional/fase8_validacion_funcional_api.json",
+      "linea": 2160,
+      "texto": "\"mensaje\": \"La matriz estÃ¡ cerrada o inactiva y no puede recalcularse.\""
+    },
+    {
+      "archivo": "docs/3. Módulo Matrices de Riesgos/Fase 8 - Construccion frontend Angular/Evidencia_Funcional/fase8_validacion_funcional_api.json",
+      "linea": 2252,
+      "texto": "\"motivo\": \"CreaciÃ³n de matriz de riesgos.\","
+    }
+  ],
+  "reglas_aprobadas": {
+    "fuente_unica_backend": true,
+    "pdf_horizontal_y_vertical_mismo_encabezado": true,
+    "excel_xlsx_real": true,
+    "filas_no_partidas": true,
+    "encabezados_tabla_repetidos": true,
+    "fechas_no_partidas": true,
+    "frontend_no_regenera_documentos": true
+  },
+  "estado": "validado_ci",
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "fase": "12.5.2",
+  "objetivo": "Normalización institucional de Monitoreo de Listas",
+  "estado": "validado_ci",
+  "cambios": {
+    "pdf_estandar_compartido": true,
+    "pdf_vertical_horizontal_mismo_encabezado": true,
+    "filas_indivisibles": true,
+    "encabezados_repetidos": true,
+    "pies_y_numeracion": true,
+    "excel_openxml_real": true,
+    "excel_autofiltro": true,
+    "excel_panel_congelado": true,
+    "excel_configuracion_impresion": true,
+    "vista_previa_mismo_formato": true
+  },
+  "metricas_transformacion": {
+    "auto_tables_originales": 10,
+    "auto_tables_institucionales": 10,
+    "encabezados_compartidos": 2,
+    "pies_compartidos": 3
+  },
+  "dependencia_excel": "exceljs@4.4.0",
+  "restricciones": [
+    "No modificar DNP",
+    "No tocar CONTROL_ALMACEN.PROVEEDOR",
+    "No integrar Monitoreo de Listas con Matrices de Riesgos",
+    "No fusionar a main"
+  ],
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  }
+}

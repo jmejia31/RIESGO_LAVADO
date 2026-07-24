@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System.Text;
+using System.IO.Compression;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -582,12 +584,19 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Theory]
-    [InlineData("EXCEL", "application/vnd.ms-excel")]
+    [InlineData("EXCEL", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
     [InlineData("PDF", "application/pdf")]
     public async Task ExportarReporte_FormatoValido_GeneraContenidoYRegistraAuditoria(string formato, string contentType)
     {
         var service = CrearServicio(out var repo, out _);
-        var reporte = new MatricesRiesgoReporteDto();
+        var reporte = new MatricesRiesgoReporteDto
+        {
+            Totales = new MatricesRiesgoReporteTotalesDto { TotalMatrices = 3, TotalCalculadas = 2, TotalSinCalculo = 1 },
+            MapaTransicion = new List<MatrizRiesgoMapaTransicionDto>
+            {
+                new() { NivelInherente = "ALTO", NivelResidual = "MEDIO", Total = 2, PromedioInherente = 4.5m, PromedioResidual = 2.5m }
+            }
+        };
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerReporteAsync), _ => Task.FromResult(reporte));
         repo.On(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync), _ => Task.CompletedTask);
         var filtro = new MatrizRiesgoReporteFiltroDto { Estado = " aprobada ", SujetoTipo = " proveedor " };
@@ -597,10 +606,66 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.True(result.Success);
         Assert.Equal(contentType, result.Data!.ContentType);
         Assert.NotEmpty(result.Data.Contenido);
+        Assert.EndsWith(formato == "PDF" ? ".pdf" : ".xlsx", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        if (formato == "PDF")
+        {
+            var contenido = Encoding.Latin1.GetString(result.Data.Contenido);
+            Assert.StartsWith("%PDF-1.4", contenido);
+            Assert.Contains("/MediaBox [0 0 841.89 595.28]", contenido, StringComparison.Ordinal);
+            Assert.DoesNotContain("/BaseFont /Courier", contenido, StringComparison.Ordinal);
+        }
+        else
+        {
+            using var stream = new MemoryStream(result.Data.Contenido);
+            using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+            Assert.NotNull(archive.GetEntry("[Content_Types].xml"));
+            Assert.NotNull(archive.GetEntry("xl/workbook.xml"));
+            Assert.NotNull(archive.GetEntry("xl/styles.xml"));
+            Assert.True(archive.Entries.Count(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.Ordinal)) >= 5);
+        }
         Assert.Equal("APROBADA", filtro.Estado);
         Assert.Equal("PROVEEDOR", filtro.SujetoTipo);
         var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
         Assert.Equal(formato, call.Arguments[1]);
+    }
+
+    [Fact]
+    public async Task ExportarFicha_MatrizValida_GeneraPdfVerticalYRegistraAuditoria()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ =>
+            Task.FromResult<MatrizRiesgoDetalleDto?>(new MatrizRiesgoDetalleDto
+            {
+                MatrizId = 44,
+                NombreSujeto = "Proveedor de prueba",
+                SujetoTipo = "PROVEEDOR",
+                Estado = "APROBADA"
+            }));
+        repo.On(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync), _ => Task.CompletedTask);
+
+        var result = await service.ExportarFichaAsync(44, 7, "a@ihss.hn", "127.0.0.1");
+
+        Assert.True(result.Success);
+        Assert.Equal("application/pdf", result.Data!.ContentType);
+        Assert.EndsWith(".pdf", result.Data.NombreArchivo, StringComparison.OrdinalIgnoreCase);
+        var contenido = Encoding.Latin1.GetString(result.Data.Contenido);
+        Assert.StartsWith("%PDF-1.4", contenido);
+        Assert.Contains("/MediaBox [0 0 595.28 841.89]", contenido, StringComparison.Ordinal);
+        Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
+    }
+
+    [Fact]
+    public async Task ExportarFicha_MatrizInexistente_NoAudita()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMatrizAsync), _ =>
+            Task.FromResult<MatrizRiesgoDetalleDto?>(null));
+
+        var result = await service.ExportarFichaAsync(404, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(404, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.RegistrarExportacionReporteAsync)));
     }
 
     [Fact]
@@ -685,6 +750,91 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.True(result.Success);
         var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.InactivarCriterioAsync)));
         Assert.Equal("Fuera de vigencia", call.Arguments[1]);
+    }
+
+
+    [Fact]
+    public async Task ReactivarCriterio_MotivoValido_RecortaYDelega()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ReactivarCriterioAsync), _ => Task.FromResult(true));
+
+        var result = await service.ReactivarCriterioAsync(35, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = " Reactivación autorizada "
+        }, 7, null, null);
+
+        Assert.True(result.Success);
+        var call = Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.ReactivarCriterioAsync)));
+        Assert.Equal("Reactivación autorizada", call.Arguments[1]);
+    }
+
+    [Fact]
+    public async Task EliminarCriterio_ConUsoHistorico_RechazaSinEliminar()
+    {
+        var service = CrearServicio(out var repo, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.CriterioTieneUsoHistoricoAsync), _ => Task.FromResult(true));
+
+        var result = await service.EliminarCriterioAsync(35, new MatrizRiesgoInactivarRequestDto
+        {
+            Motivo = "Depuración de catálogo"
+        }, 7, null, null);
+
+        Assert.False(result.Success);
+        Assert.Contains("históric", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.EliminarCriterioAsync)));
+    }
+
+
+    [Fact]
+    public async Task Dashboard_NormalizaFiltrosYDelegaAlRepositorio()
+    {
+        var service = CrearServicio(out var repo, out _);
+        MatrizRiesgoReporteFiltroDto? recibido = null;
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerDashboardAsync), args =>
+        {
+            recibido = Assert.IsType<MatrizRiesgoReporteFiltroDto>(args[0]);
+            return Task.FromResult(new MatricesRiesgoDashboardDto { TotalMatrices = 4 });
+        });
+
+        var result = await service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+        {
+            Estado = " aprobada ",
+            SujetoTipo = " proveedor ",
+            NivelInherente = " Alto ",
+            NivelResidual = " Medio "
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal(4, result.Data?.TotalMatrices);
+        Assert.NotNull(recibido);
+        Assert.Equal("APROBADA", recibido!.Estado);
+        Assert.Equal("PROVEEDOR", recibido.SujetoTipo);
+        Assert.Equal("Alto", recibido.NivelInherente);
+        Assert.Equal("Medio", recibido.NivelResidual);
+    }
+
+
+    [Fact]
+    public async Task Dashboard_SinCalculo_ConservaFiltroEspecialParaRepositorio()
+    {
+        var service = CrearServicio(out var repo, out _);
+        MatrizRiesgoReporteFiltroDto? recibido = null;
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerDashboardAsync), args =>
+        {
+            recibido = Assert.IsType<MatrizRiesgoReporteFiltroDto>(args[0]);
+            return Task.FromResult(new MatricesRiesgoDashboardDto());
+        });
+
+        var result = await service.ObtenerDashboardAsync(new MatrizRiesgoReporteFiltroDto
+        {
+            NivelInherente = " SIN_CALCULO ",
+            NivelResidual = " SIN_CALCULO "
+        });
+
+        Assert.True(result.Success);
+        Assert.Equal("SIN_CALCULO", recibido?.NivelInherente);
+        Assert.Equal("SIN_CALCULO", recibido?.NivelResidual);
     }
 
     private static MatricesRiesgosAppService CrearServicio(out InterfaceStub repoStub, out InterfaceStub motorStub, IConfiguration? configuration = null)

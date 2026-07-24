@@ -1,0 +1,64 @@
+{
+  "fase": "12.5.3",
+  "estado": "validacion_tecnica_final_aprobada",
+  "commit_funcional": "42200b08a0c3a29669b446feddcffccc02d9831c",
+  "commit_control_documental": "954631e3e16dc59dd2d75a72c0c443ae6b150e6a",
+  "ejecucion_controlada": {
+    "run_id": 29948703412,
+    "resultado": "success"
+  },
+  "quality_gate_independiente": {
+    "run_id": 29950119252,
+    "resultado": "success"
+  },
+  "resultado_funcional": {
+    "pdf_ejecutivo_horizontal_backend": true,
+    "ficha_individual_vertical_backend": true,
+    "xlsx_openxml_real_backend": true,
+    "frontend_solo_descarga": true,
+    "auditoria_reporte_general": true,
+    "auditoria_ficha_individual": true,
+    "filas_indivisibles": true,
+    "encabezados_repetidos": true,
+    "pie_y_numeracion": true,
+    "generadores_frontend_heredados_eliminados": true
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 95,
+      "fallidas": 0,
+      "omitidas": 0
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 155,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    }
+  },
+  "cobertura": {
+    "backend_lineas_pct": 20.48,
+    "backend_ramas_pct": 20.41,
+    "frontend_sentencias_pct": 36.48,
+    "frontend_ramas_pct": 30.22,
+    "frontend_funciones_pct": 33.64,
+    "frontend_lineas_pct": 36.92
+  },
+  "quality_gates": {
+    "backend": "aprobado",
+    "frontend": "aprobado",
+    "build_angular": "aprobado",
+    "e2e": "aprobado"
+  },
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró Monitoreo de Listas con Matrices de Riesgos",
+    "No se modificó el cálculo de riesgo",
+    "No se fusionó a main"
+  ],
+  "siguiente_fase": "12.5.4 - Refinamiento UX, documental y técnico"
+}

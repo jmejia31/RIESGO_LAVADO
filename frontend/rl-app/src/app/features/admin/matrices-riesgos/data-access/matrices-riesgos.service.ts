@@ -39,8 +39,8 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
-  dashboard(): Observable<MatrizRiesgoDashboard> {
-    return this.http.get<ApiResponse<MatrizRiesgoDashboard>>(`${this.apiUrl}/dashboard`)
+  dashboard(filtro: MatrizRiesgoReporteFiltro = {}): Observable<MatrizRiesgoDashboard> {
+    return this.http.get<ApiResponse<MatrizRiesgoDashboard>>(`${this.apiUrl}/dashboard`, { params: this.construirParams(filtro) })
       .pipe(map(res => res.datos));
   }
 
@@ -53,6 +53,13 @@ export class MatricesRiesgosService {
     const params = this.construirParams({ ...filtro, formato });
     return this.http.get(`${this.apiUrl}/reportes/exportar`, {
       params,
+      responseType: 'blob',
+      headers: this.confirmado.headers
+    });
+  }
+
+  exportarFicha(matrizId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${matrizId}/reportes/ficha`, {
       responseType: 'blob',
       headers: this.confirmado.headers
     });
@@ -80,14 +87,10 @@ export class MatricesRiesgosService {
       .pipe(map(res => res.datos));
   }
 
-  // Acciones críticas de cálculo y estado: siempre viajan con confirmación y motivo cuando aplica.
+  // El cálculo se ejecuta después de crear o editar. Angular no expone una operación
+  // separada de recálculo; el backend conserva la única ruta auditada de cálculo.
   calcular(id: number, tipoCalculo = 'GLOBAL'): Observable<unknown> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/${id}/calcular`, { tipoCalculo }, this.confirmado)
-      .pipe(map(res => res.datos));
-  }
-
-  recalcular(id: number, motivoCalculo: string, tipoCalculo = 'GLOBAL'): Observable<unknown> {
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/${id}/recalcular`, { tipoCalculo, motivoCalculo }, this.confirmado)
       .pipe(map(res => res.datos));
   }
 
@@ -177,6 +180,10 @@ export class MatricesRiesgosService {
 
   inactivarCriterio(id: number, motivo: string): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/inactivar`, { motivo }, this.confirmado);
+  }
+
+  reactivarCriterio(id: number, motivo: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/reactivar`, { motivo }, this.confirmado);
   }
 
   eliminarCriterio(id: number, motivo: string): Observable<ApiMessage> {

@@ -1,0 +1,12 @@
+﻿VALIDACION_API_FASE_12_3
+Backend: http://127.0.0.1:5099
+TotalMatrices=3
+TotalEvaluadas=3
+TotalCerradas=0
+TotalAltoCritico=2
+TotalPlanRequerido=2
+TotalPlanesVencidos=0
+Transiciones=3
+MatricesCriticas=2
+MatricesFiltradas=3
+CeldaValidada=Crítico -> Crítico; Total=1; PromInh=4.85; PromRes=4.85

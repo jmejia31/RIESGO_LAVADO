@@ -1,0 +1,96 @@
+﻿{
+    "success":  true,
+    "datos":  {
+                  "fechaGeneracion":  "2026-07-21T11:13:24.9963935-06:00",
+                  "filtro":  {
+                                 "nivelInherente":  "Crítico",
+                                 "nivelResidual":  "Crítico"
+                             },
+                  "totalMatrices":  1,
+                  "totalCalculadas":  1,
+                  "totalCerradas":  0,
+                  "totalConPlanAccion":  1,
+                  "totalAltoCritico":  1,
+                  "totalPlanesVencidos":  0,
+                  "porEstado":  [
+                                    {
+                                        "nombre":  "EN_REVISION",
+                                        "total":  1
+                                    }
+                                ],
+                  "porNivelInherente":  [
+                                            {
+                                                "nombre":  "Crítico",
+                                                "total":  1
+                                            }
+                                        ],
+                  "porNivelResidual":  [
+                                           {
+                                               "nombre":  "Crítico",
+                                               "total":  1
+                                           }
+                                       ],
+                  "mapaTransicion":  [
+                                         {
+                                             "nivelInherente":  "Crítico",
+                                             "nivelResidual":  "Crítico",
+                                             "total":  1,
+                                             "promedioInherente":  4.85,
+                                             "promedioResidual":  4.85
+                                         }
+                                     ],
+                  "matricesCriticas":  [
+                                           {
+                                               "matrizId":  6,
+                                               "modeloId":  2,
+                                               "modeloVersion":  "1.0",
+                                               "sujetoTipo":  "PROVEEDOR",
+                                               "sujetoIdExt":  "056469849849",
+                                               "documento":  "419846494",
+                                               "nombreSujeto":  "Pruebas de Funcionalidad",
+                                               "estado":  "EN_REVISION",
+                                               "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                               "puntajeInherente":  4.85,
+                                               "nivelInherente":  "Crítico",
+                                               "puntajeResidual":  4.85,
+                                               "nivelResidual":  "Crítico",
+                                               "requierePlanAccion":  true
+                                           }
+                                       ],
+                  "matricesFiltradas":  [
+                                            {
+                                                "matrizId":  6,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "PROVEEDOR",
+                                                "sujetoIdExt":  "056469849849",
+                                                "documento":  "419846494",
+                                                "nombreSujeto":  "Pruebas de Funcionalidad",
+                                                "estado":  "EN_REVISION",
+                                                "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                                "puntajeInherente":  4.85,
+                                                "nivelInherente":  "Crítico",
+                                                "puntajeResidual":  4.85,
+                                                "nivelResidual":  "Crítico",
+                                                "requierePlanAccion":  true
+                                            }
+                                        ],
+                  "planesAccion":  [
+                                       {
+                                           "estado":  "CERRADO",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       },
+                                       {
+                                           "estado":  "INACTIVO",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       },
+                                       {
+                                           "estado":  "PENDIENTE",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       }
+                                   ]
+              }
+}

@@ -20,6 +20,20 @@ describe('MatricesRiesgosService', () => {
     TestBed.resetTestingModule();
   });
 
+
+  it('consulta el dashboard ejecutivo con filtros reales', () => {
+    const result = vi.fn();
+    service.dashboard({ sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO' }).subscribe(result);
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/dashboard`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('sujetoTipo')).toBe('PROVEEDOR');
+    expect(request.request.params.get('nivelInherente')).toBe('ALTO');
+    expect(request.request.params.get('nivelResidual')).toBe('MEDIO');
+    request.flush({ success: true, datos: { totalMatrices: 2 } });
+    expect(result).toHaveBeenCalledWith({ totalMatrices: 2 });
+  });
+
   it('construye el reporte omitiendo filtros vacios', () => {
     const result = vi.fn();
     service.reporte({ estado: 'ACTIVA', busqueda: '', fechaDesde: undefined } as never).subscribe(result);
@@ -46,6 +60,19 @@ describe('MatricesRiesgosService', () => {
     expect(result).toHaveBeenCalledWith(archivo);
   });
 
+  it('exporta la ficha individual como blob auditado', () => {
+    const result = vi.fn();
+    service.exportarFicha(14).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/14/reportes/ficha`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.responseType).toBe('blob');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    const archivo = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+    request.flush(archivo);
+    expect(result).toHaveBeenCalledWith(archivo);
+  });
+
   it('actualiza una matriz y extrae el detalle de la respuesta', () => {
     const dto = { nombre: 'Matriz institucional' } as never;
     const detalle = { id: 14, nombre: 'Matriz institucional' };
@@ -60,16 +87,8 @@ describe('MatricesRiesgosService', () => {
     expect(result).toHaveBeenCalledWith(detalle);
   });
 
-  it('recalcula con motivo, tipo de calculo y confirmacion previa', () => {
-    service.recalcular(14, 'Cambio de criterios', 'PARCIAL').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/14/recalcular`);
-    expect(request.request.method).toBe('POST');
-    expect(request.request.body).toEqual({
-      tipoCalculo: 'PARCIAL', motivoCalculo: 'Cambio de criterios'
-    });
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: { nivel: 'ALTO' } });
+  it('no expone un endpoint publico de recalculo separado', () => {
+    expect('recalcular' in (service as unknown as Record<string, unknown>)).toBe(false);
   });
 
   it('consulta criterios activos e inactivos mediante un parametro explicito', () => {
@@ -189,6 +208,17 @@ describe('MatricesRiesgosService', () => {
     const request = http.expectOne(`${apiUrl}/12/evidencias/8/inactivar`);
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toEqual({ motivo: 'Documento sustituido' });
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true });
+  });
+
+
+  it('reactiva un criterio con confirmacion y motivo', () => {
+    service.reactivarCriterio(9, 'Rango nuevamente vigente').subscribe();
+
+    const request = http.expectOne(`${apiUrl}/criterios/9/reactivar`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ motivo: 'Rango nuevamente vigente' });
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     request.flush({ success: true });
   });

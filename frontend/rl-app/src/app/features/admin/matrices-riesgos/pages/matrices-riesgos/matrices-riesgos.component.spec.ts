@@ -37,8 +37,10 @@ describe('MatricesRiesgosComponent', () => {
       cambiarEstado: vi.fn(() => of({ success: true })),
       eliminarMatriz: vi.fn(() => of({ success: true })),
       inactivarCriterio: vi.fn(() => of({ success: true })),
+      reactivarCriterio: vi.fn(() => of({ success: true })),
       eliminarCriterio: vi.fn(() => of({ success: true })),
-      exportarReporte: vi.fn(() => of(new Blob()))
+      exportarReporte: vi.fn(() => of(new Blob())),
+      exportarFicha: vi.fn(() => of(new Blob(['%PDF-1.4'], { type: 'application/pdf' })))
     };
 
     await TestBed.configureTestingModule({
@@ -60,6 +62,112 @@ describe('MatricesRiesgosComponent', () => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
     TestBed.resetTestingModule();
+  });
+
+
+  it('consulta el dashboard con los filtros ejecutivos activos', () => {
+    component.reporteFiltro.set({ sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO' });
+    service['dashboard'].mockReturnValue(of({ totalMatrices: 2 }));
+
+    component.cargarDashboard();
+
+    expect(service['dashboard']).toHaveBeenCalledWith({
+      sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO'
+    });
+    expect(component.dashboard()).toEqual({ totalMatrices: 2 });
+  });
+
+  it('construye el mapa de transición con conteos reales del backend', () => {
+    component.metodologia.set({
+      escalasRiesgo: [
+        { nivel: 'Bajo', valorMinimo: 1, color: '#22c55e' },
+        { nivel: 'Medio', valorMinimo: 2, color: '#facc15' },
+        { nivel: 'Alto', valorMinimo: 3, color: '#f97316' }
+      ]
+    } as never);
+    component.dashboard.set({
+      totalMatrices: 4,
+      mapaTransicion: [
+        { nivelInherente: 'Alto', nivelResidual: 'Medio', total: 3, promedioInherente: 4.5, promedioResidual: 2.5 }
+      ],
+      porNivelInherente: [],
+      porNivelResidual: []
+    } as never);
+
+    const celda = component.heatmapFilas()
+      .find(fila => fila.nivelInherente === 'Alto')?.celdas
+      .find(item => item.nivelResidual === 'Medio');
+
+    expect(celda).toEqual(expect.objectContaining({ total: 3, promedioInherente: 4.5, promedioResidual: 2.5 }));
+  });
+
+  it('aplica una paleta diagonal verde a rojo sin recalcular niveles de riesgo', () => {
+    component.metodologia.set({
+      escalasRiesgo: [
+        { nivel: 'Muy bajo', valorMinimo: 1 },
+        { nivel: 'Bajo', valorMinimo: 2 },
+        { nivel: 'Medio', valorMinimo: 3 },
+        { nivel: 'Alto', valorMinimo: 4 },
+        { nivel: 'Crítico', valorMinimo: 5 }
+      ]
+    } as never);
+
+    expect(component.colorMapaTransicion('Muy bajo', 'Muy bajo')).toBe('#4ade80');
+    expect(component.colorMapaTransicion('Medio', 'Medio')).toBe('#facc15');
+    expect(component.colorMapaTransicion('Crítico', 'Crítico')).toBe('#dc2626');
+    expect(component.colorTextoMapa('Crítico', 'Crítico')).toBe('#ffffff');
+  });
+
+  it('consulta y muestra las matrices del cuadrante sin colapsar el mapa principal', () => {
+    const matriz = { matrizId: 31, nombreSujeto: 'Proveedor del cuadrante' };
+    service['dashboard'].mockReturnValue(of({ matricesFiltradas: [matriz] }));
+    const celda = {
+      nivelInherente: 'Alto', etiquetaInherente: 'Alto',
+      nivelResidual: 'Medio', etiquetaResidual: 'Medio',
+      total: 1, promedioInherente: 4.2, promedioResidual: 3.1,
+      color: '#f97316', colorBorde: '#f97316', colorTexto: '#ffffff'
+    };
+
+    component.seleccionarCeldaMapa(celda);
+
+    expect(component.seleccionMapa()).toEqual(celda);
+    expect(component.reporteFiltro()).toEqual({});
+    expect(service['dashboard']).toHaveBeenCalledWith({ nivelInherente: 'Alto', nivelResidual: 'Medio' });
+    expect(component.matricesCuadrante()).toEqual([matriz]);
+    expect(component.cargandoCuadrante()).toBe(false);
+  });
+
+  it('incluye matrices sin nivel completo en la fila y columna Sin evaluar', () => {
+    component.metodologia.set({
+      escalasRiesgo: [{ nivel: 'Bajo', valorMinimo: 1, color: '#22c55e' }]
+    } as never);
+    component.dashboard.set({
+      totalMatrices: 2,
+      mapaTransicion: [
+        { nivelInherente: 'SIN_CALCULO', nivelResidual: 'Bajo', total: 2, promedioInherente: 0, promedioResidual: 2 }
+      ],
+      porNivelInherente: [], porNivelResidual: []
+    } as never);
+
+    const fila = component.heatmapFilas().find(item => item.nivelInherente === 'SIN_CALCULO');
+    const celda = fila?.celdas.find(item => item.nivelResidual === 'Bajo');
+
+    expect(component.nivelesMapaColumnas().some(item => item.valor === 'SIN_CALCULO')).toBe(true);
+    expect(celda).toEqual(expect.objectContaining({ total: 2, etiquetaInherente: 'Sin evaluar' }));
+  });
+
+  it('permite seleccionar un cuadrante vacío y muestra resultado vacío controlado', () => {
+    service['dashboard'].mockReturnValue(of({ matricesFiltradas: [] }));
+    component.seleccionarCeldaMapa({
+      nivelInherente: 'Bajo', etiquetaInherente: 'Bajo',
+      nivelResidual: 'Crítico', etiquetaResidual: 'Crítico',
+      total: 0, promedioInherente: 0, promedioResidual: 0,
+      color: '#facc15', colorBorde: '#22c55e', colorTexto: '#0f172a'
+    });
+
+    expect(service['dashboard']).toHaveBeenCalledWith({ nivelInherente: 'Bajo', nivelResidual: 'Crítico' });
+    expect(component.seleccionMapa()?.total).toBe(0);
+    expect(component.matricesCuadrante()).toEqual([]);
   });
 
   it('lista matrices con los filtros activos y finaliza la carga', () => {
@@ -118,7 +226,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.cargandoReporte()).toBe(false);
   });
 
-  it('ver inactivos muestra solo criterios desactivados', () => {
+  it('incluir inactivos conserva criterios activos e inactivos', () => {
     const criterios = [
       { criterioId: 1, activo: true },
       { criterioId: 2, activo: false }
@@ -129,7 +237,37 @@ describe('MatricesRiesgosComponent', () => {
     component.cargarCriterios();
 
     expect(service['listarCriterios']).toHaveBeenCalledWith(true);
-    expect(component.criterios()).toEqual([{ criterioId: 2, activo: false }]);
+    expect(component.criterios()).toEqual(criterios);
+  });
+
+
+  it('bloquea un criterio cuando el rango se superpone con otro activo', () => {
+    component.criterios.set([{ criterioId: 4, variableId: 2, activo: true, valorDesde: 10, valorHasta: 20 }] as never);
+    component.criteriosForm = {
+      variableId: 2,
+      escalaId: null,
+      valorDesde: 15,
+      valorHasta: 25,
+      puntaje: 4,
+      descripcion: 'Rango solapado'
+    };
+
+    component.guardarCriterio();
+
+    expect(component.error()).toContain('se superpone');
+    expect(service['crearCriterio']).not.toHaveBeenCalled();
+  });
+
+  it('reactiva un criterio inactivo con motivo', () => {
+    const criterio = { criterioId: 9, activo: false } as never;
+    component.reactivarCriterio(criterio);
+    component.actualizarModalMotivo('Rango nuevamente vigente');
+
+    component.confirmarModal();
+
+    expect(service['reactivarCriterio']).toHaveBeenCalledWith(9, 'Rango nuevamente vigente');
+    expect(component.mensaje()).toBe('Criterio activado correctamente.');
+    expect(component.modalOperacion()).toBeNull();
   });
 
   it('conserva un error controlado y detiene la carga si falla el reporte', () => {
@@ -495,6 +633,12 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.estadoEtiqueta('CALCULADA')).toBe('En Revisión');
   });
 
+  it('explica por que una matriz cerrada no puede editarse', () => {
+    const matriz = { estado: 'CERRADA' } as never;
+    expect(component.puedeEditarMatriz(matriz)).toBe(false);
+    expect(component.mensajeBloqueoEditarMatriz(matriz)).toContain('En Revisión');
+  });
+
   it('reposiciona el historial debajo del listado cuando hay pocas matrices', () => {
     component.matrizSeleccionada.set({ matrizId: 1 } as never);
     component.matrices.set([
@@ -594,12 +738,8 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.guardando()).toBe(false);
   });
 
-  it.each([
-    ['EXCEL', 'generarExcelReporte'],
-    ['PDF', 'generarPdfReporte']
-  ] as const)('exporta un reporte %s usando el generador correspondiente', (formato, metodo) => {
-    const generar = vi.fn();
-    (component as any)[metodo] = generar;
+  it.each(['EXCEL', 'PDF'] as const)('exporta un reporte %s descargando exactamente el archivo del backend', formato => {
+    const descargar = vi.spyOn(component as any, 'descargarArchivoReporte').mockImplementation(() => undefined);
     component.reporteFiltro.set({ estado: 'APROBADA' });
     const archivo = new Blob(['reporte'], { type: 'application/octet-stream' });
     service['exportarReporte'].mockReturnValue(of(archivo));
@@ -607,9 +747,33 @@ describe('MatricesRiesgosComponent', () => {
     component.exportarReporte(formato);
 
     expect(service['exportarReporte']).toHaveBeenCalledWith({ estado: 'APROBADA' }, formato);
-    expect(generar).toHaveBeenCalledOnce();
+    expect(descargar).toHaveBeenCalledWith(archivo, formato);
     expect(component.mensaje()).toBe(`Reporte ${formato} generado correctamente.`);
     expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
+  });
+
+  it('descarga la ficha individual generada por backend', async () => {
+    let nombreDescarga = '';
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      nombreDescarga = this.download;
+    });
+    component.matrizSeleccionada.set({ matrizId: 88, nombreSujeto: 'Matriz individual' } as never);
+
+    component.exportarFichaMatriz();
+
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(service['exportarFicha']).toHaveBeenCalledWith(88);
+    expect(nombreDescarga).toMatch(/^Ficha_Matriz_Riesgo_88_\d{14}\.pdf$/);
+    expect(component.mensaje()).toBe('Ficha individual PDF generada correctamente.');
+    expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
+  });
+
+  it('expone todos los tipos de sujeto permitidos por backend', () => {
+    expect(component.tiposSujeto.map(item => item.valor)).toEqual([
+      'PROVEEDOR', 'CLIENTE_PATRONO', 'EMPLEADO', 'AREA', 'PROCESO', 'CASO_POSITIVO', 'INSTITUCIONAL'
+    ]);
   });
 
   it('recupera el indicador si falla la exportacion del reporte', () => {
@@ -619,6 +783,7 @@ describe('MatricesRiesgosComponent', () => {
 
     expect(component.error()).toBe('Exportacion no disponible');
     expect(component.guardando()).toBe(false);
+    expect(component.exportando()).toBeNull();
   });
 
   it('carga el detalle y reconstruye las variables para editar una matriz', () => {

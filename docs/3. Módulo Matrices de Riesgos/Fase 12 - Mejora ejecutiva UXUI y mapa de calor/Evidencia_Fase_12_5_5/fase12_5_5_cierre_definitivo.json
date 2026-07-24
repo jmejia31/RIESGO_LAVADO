@@ -1,0 +1,129 @@
+{
+  "fase": "12.5.5",
+  "estado": "cierre_tecnico_final_aprobado",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "commit_maquetacion_final": "1a24211f8dbb65345dcd227630a6ce7f28941913",
+  "ejecucion_controlada": {
+    "run_id": 29955226359,
+    "resultado": "success"
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 96,
+      "fallidas": 0,
+      "omitidas": 0,
+      "total": 96
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 156,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    },
+    "build_angular": "aprobado"
+  },
+  "cobertura": {
+    "backend_lineas_pct": 20.56,
+    "backend_ramas_pct": 20.86,
+    "frontend_sentencias_pct": 36.59,
+    "frontend_ramas_pct": 30.24,
+    "frontend_funciones_pct": 33.68,
+    "frontend_lineas_pct": 37.06
+  },
+  "artefactos_reporteria": [
+    {
+      "tipo": "PDF",
+      "archivo": "reporte_ejecutivo_matrices.pdf",
+      "tamano_bytes": 18012,
+      "sha256": "0eabc28ab24e83c468d011f6a5a1f16f545d200c0dc62fa1d53aaf513024e20f",
+      "paginas": 2,
+      "texto_extraido_caracteres": 1764,
+      "estructura_pdf_valida": true,
+      "revision_visual_manual": "aprobada"
+    },
+    {
+      "tipo": "XLSX",
+      "archivo": "reporte_matrices.xlsx",
+      "tamano_bytes": 10063,
+      "sha256": "0fef6893a5e8ca1cf556aca0214bd9248fea76686f777a4abc8d79940af97f88",
+      "hojas": [
+        "Resumen",
+        "Matrices",
+        "Factores",
+        "Mapa transición",
+        "Matrices críticas",
+        "Planes"
+      ],
+      "openxml_valido": true,
+      "artifact_tool_importacion": "aprobada",
+      "errores_formula_detectados": 0,
+      "revision_visual_manual": "aprobada"
+    },
+    {
+      "tipo": "PDF",
+      "archivo": "ficha_individual_matriz.pdf",
+      "tamano_bytes": 14565,
+      "sha256": "2cf4968bdb961f0f8e3aaca9572b5a82a9da128f99db00e7014f1a53c219e984",
+      "paginas": 1,
+      "texto_extraido_caracteres": 1514,
+      "estructura_pdf_valida": true,
+      "revision_visual_manual": "aprobada"
+    }
+  ],
+  "documento_maestro": {
+    "archivo": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx",
+    "version": "1.1",
+    "tamano_bytes": 52266,
+    "estructura_openxml_valida": true,
+    "sha256": "a6e26cd0703a50ec7dcd22f9c3cdd5ae19e479a31ffa9c3a5187d90bf8c0f0b7",
+    "checksum_file": "Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256",
+    "actualizacion_fase_12_5_incorporada": true,
+    "paginas_renderizadas": 13,
+    "revision_visual_manual": "aprobada"
+  },
+  "oracle": {
+    "conexion_institucional_disponible_en_runner": false,
+    "resultado": "Validación Oracle real no ejecutada en CI por ausencia de conectividad, credenciales y autorización institucional; dependencia externa documentada.",
+    "scripts_validados": [
+      "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_3/fase12_3_validacion_oracle.sql",
+      "docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Evidencia_Fase_12_3/fase12_3_validacion_niveles_oracle.sql"
+    ]
+  },
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró funcionalmente Monitoreo de Listas con Matrices de Riesgos",
+    "No se modificó el motor de cálculo de riesgo",
+    "No se fusionó a main"
+  ],
+  "aprobacion_formal": "pendiente_javier_mejia",
+  "siguiente_paso": "Aprobación formal de Javier Mejía; validación Oracle institucional cuando exista entorno autorizado; integración a main únicamente con autorización expresa.",
+  "render_visual_generado": {
+    "documento_maestro_paginas": 13,
+    "reporte_ejecutivo_paginas": 2,
+    "ficha_individual_paginas": 1,
+    "xlsx_paginas_renderizadas": 6,
+    "total_paginas_inspeccionadas": 22,
+    "revision_visual_manual": "aprobada"
+  },
+  "control_final": {
+    "run_id": 29956060218,
+    "resultado": "success",
+    "ajuste_xlsx_fit_to_page": true,
+    "documento_maestro_version": "1.1",
+    "metricas_historicas_reconciliadas": true,
+    "trazabilidad_12_5_actualizada": true,
+    "revision_visual_manual": "aprobada"
+  },
+  "maquetacion_final": {
+    "run_id": 29956818761,
+    "resultado": "success",
+    "anchos_xlsx_institucionales": true,
+    "palabras_categoricas_sin_cortes": true,
+    "bloques_documentales_sin_redundancia": true,
+    "revision_visual_manual": "aprobada"
+  }
+}

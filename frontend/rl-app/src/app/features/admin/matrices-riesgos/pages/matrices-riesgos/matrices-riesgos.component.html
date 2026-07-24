@@ -2,7 +2,7 @@
   <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
-        <p class="text-xs font-bold uppercase tracking-wide text-emerald-700"> </p>
+        <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Módulo 2 · Gestión y evaluación</p>
         <h2 class="text-2xl font-bold text-gray-900">Matrices de Riesgos</h2>
         <p class="text-sm text-gray-500">
           Evalúe proveedores, clientes/patronos, empleados o la institución completa con los criterios aprobados por Cumplimiento.
@@ -24,118 +24,203 @@
     </div>
   </section>
 
-  <div *ngIf="error()" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
+  <div *ngIf="error()" role="alert" aria-live="assertive" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
     {{ error() }}
   </div>
 
-  <div *ngIf="mensaje()" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium">
+  <div *ngIf="mensaje()" role="status" aria-live="polite" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium">
     {{ mensaje() }}
   </div>
 
-  <nav class="bg-white border border-gray-100 rounded-2xl shadow-sm p-2 flex flex-wrap gap-2">
-    <button type="button" (click)="tab.set('dashboard')"
+  <nav aria-label="Secciones de Matrices de Riesgos" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-2 flex flex-wrap gap-2">
+    <button type="button" (click)="tab.set('dashboard')" [attr.aria-current]="tab() === 'dashboard' ? 'page' : null"
       [ngClass]="tab() === 'dashboard' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Panel
     </button>
-    <button type="button" (click)="tab.set('matrices')"
+    <button type="button" (click)="tab.set('matrices')" [attr.aria-current]="tab() === 'matrices' ? 'page' : null"
       [ngClass]="tab() === 'matrices' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Matrices
     </button>
-    <button type="button" (click)="iniciarNuevaMatriz()"
+    <button type="button" (click)="iniciarNuevaMatriz()" [attr.aria-current]="tab() === 'nueva' ? 'page' : null"
       [ngClass]="tab() === 'nueva' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Captura
     </button>
-    <button type="button" (click)="tab.set('criterios')"
+    <button type="button" (click)="tab.set('criterios')" [attr.aria-current]="tab() === 'criterios' ? 'page' : null"
       [ngClass]="tab() === 'criterios' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Criterios
     </button>
-    <button type="button" (click)="tab.set('planes')"
+    <button type="button" (click)="tab.set('planes')" [attr.aria-current]="tab() === 'planes' ? 'page' : null"
       [ngClass]="tab() === 'planes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Planes y evidencias
     </button>
-    <button type="button" (click)="tab.set('reportes'); cargarReporte()"
+    <button type="button" (click)="tab.set('reportes'); cargarReporte()" [attr.aria-current]="tab() === 'reportes' ? 'page' : null"
       [ngClass]="tab() === 'reportes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
       class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
       Reportes
     </button>
   </nav>
 
-  <div *ngIf="cargando()" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
+  <div *ngIf="cargando()" role="status" aria-live="polite" aria-busy="true" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
     Cargando información del módulo de Matrices de Riesgos...
   </div>
 
   <ng-container *ngIf="tab() === 'dashboard'">
-    <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-      <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-bold uppercase text-gray-400">Matrices</p>
-        <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalMatrices ?? 0 }}</p>
+    <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 space-y-4">
+      <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+        <div>
+          <h3 class="text-lg font-bold text-gray-900">Panel ejecutivo de Matrices</h3>
+          <p class="text-xs text-gray-500">Incluye todas las matrices activas y todos los tipos de sujeto. El backend consolida un único resultado vigente por matriz para evitar duplicaciones por factor.</p>
+        </div>
+        <button *ngIf="reporteFiltrosActivos()" type="button" (click)="limpiarFiltrosReporte()"
+          class="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+          Limpiar filtros
+        </button>
       </div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-bold uppercase text-gray-400">Calculadas</p>
-        <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalCalculadas ?? 0 }}</p>
-      </div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-bold uppercase text-gray-400">Cerradas</p>
-        <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalCerradas ?? 0 }}</p>
-      </div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm">
-        <p class="text-xs font-bold uppercase text-gray-400">Plan requerido</p>
-        <p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalConPlanAccion ?? 0 }}</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+        <select aria-label="Filtrar panel por tipo de sujeto" [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+          <option value="">Todos los sujetos</option>
+          <option *ngFor="let tipo of tiposSujeto" [value]="tipo.valor">{{ tipo.texto }}</option>
+        </select>
+        <select aria-label="Filtrar por estado" [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+          <option value="">Todos los estados</option>
+          <option *ngFor="let estado of estadosDisponibles" [value]="estado">{{ estadoEtiqueta(estado) }}</option>
+        </select>
+        <select aria-label="Filtrar por nivel inherente" [ngModel]="reporteFiltro().nivelInherente || ''" (ngModelChange)="actualizarFiltroReporte('nivelInherente', $event)"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+          <option value="">Todo riesgo inherente</option>
+          <option *ngFor="let nivel of escalasRiesgoOrdenadas()" [value]="nivel.nivel">{{ nivel.nivel }}</option>
+        </select>
+        <select aria-label="Filtrar por nivel residual" [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
+          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
+          <option value="">Todo riesgo residual</option>
+          <option *ngFor="let nivel of escalasRiesgoOrdenadas()" [value]="nivel.nivel">{{ nivel.nivel }}</option>
+        </select>
+        <input type="date" aria-label="Fecha inicial del filtro" [ngModel]="reporteFiltro().fechaInicio || ''" (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
+          [max]="fechaActualIso" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
       </div>
     </section>
 
-    <section class="grid grid-cols-1 xl:grid-cols-5 gap-5">
-      <div class="xl:col-span-3 bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-        <div class="flex items-center justify-between gap-3 mb-5">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Mapa de calor</h3>
-            <p class="text-xs text-gray-500">Ubicación visual del riesgo según probabilidad e impacto para priorizar la atención.</p>
-          </div>
-          <span class="text-xs font-semibold text-gray-500">Versión de criterios {{ metodologia()?.version || 'No disponible' }}</span>
+    <section class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Matrices</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalMatrices ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Evaluadas</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalCalculadas ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Sin evaluar</p><p class="mt-2 text-3xl font-bold text-slate-600">{{ dashboard()?.totalSinCalculo ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Alto / Crítico</p><p class="mt-2 text-3xl font-bold text-red-700">{{ dashboard()?.totalAltoCritico ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Plan requerido</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ dashboard()?.totalConPlanAccion ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Planes vencidos</p><p class="mt-2 text-3xl font-bold text-orange-700">{{ dashboard()?.totalPlanesVencidos ?? 0 }}</p></div>
+      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Cerradas</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ dashboard()?.totalCerradas ?? 0 }}</p></div>
+    </section>
+
+    <section class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.75fr)] gap-5">
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+          <div><h3 class="text-lg font-bold text-gray-900">Mapa de transición de riesgo</h3><p class="text-xs text-gray-500">Cruza riesgo inherente y residual de todas las matrices evaluadas. Cada matriz se cuenta una sola vez; las pendientes permanecen visibles en KPI y listado.</p></div>
+          <div class="text-right"><span class="block text-xs font-semibold text-gray-500">Metodología {{ metodologia()?.version || 'No disponible' }}</span><button *ngIf="seleccionMapa()" type="button" (click)="limpiarSeleccionMapa()" class="mt-1 text-xs font-semibold text-ihss-900 hover:underline">Limpiar selección del mapa</button></div>
         </div>
 
-        <div class="mx-auto flex max-w-[360px] gap-2">
-          <div class="w-10 pt-6 text-[10px] font-semibold text-gray-500 [writing-mode:vertical-rl] rotate-180 text-center">
-            Probabilidad
+        <div class="overflow-x-auto pb-2">
+          <div class="min-w-[760px] grid gap-2 items-stretch"
+            [style.grid-template-columns]="'120px repeat(' + nivelesMapaColumnas().length + ', minmax(86px, 1fr))'">
+            <div></div>
+            <div *ngFor="let nivel of nivelesMapaColumnas()" class="text-center text-[11px] font-bold text-gray-500 px-1">{{ nivel.etiqueta }}</div>
+            <ng-container *ngFor="let fila of heatmapFilas()">
+              <div class="flex items-center justify-end pr-2 text-xs font-bold text-gray-600">{{ fila.etiquetaInherente }}</div>
+              <button *ngFor="let celda of fila.celdas" type="button" (click)="seleccionarCeldaMapa(celda)"
+                class="min-h-20 rounded-xl border-2 p-2 text-left transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ihss-600"
+                [ngClass]="esCeldaMapaSeleccionada(celda) ? 'ring-4 ring-blue-300 shadow-lg -translate-y-0.5' : ''"
+                [attr.aria-pressed]="esCeldaMapaSeleccionada(celda)"
+                [ngStyle]="{'background-color': celda.color + (celda.total > 0 ? 'E6' : '66'), 'border-color': esCeldaMapaSeleccionada(celda) ? '#1d4ed8' : celda.colorBorde, 'color': celda.colorTexto}"
+                [attr.aria-label]="'Inherente ' + celda.etiquetaInherente + ' / Residual ' + celda.etiquetaResidual + ': ' + celda.total + ' matrices'"
+                [title]="'Inherente ' + celda.etiquetaInherente + ' / Residual ' + celda.etiquetaResidual + ': ' + celda.total + ' matrices'">
+                <span class="block text-2xl font-bold text-inherit">{{ celda.total }}</span>
+                <span class="block mt-1 text-[10px] font-semibold text-inherit opacity-80">{{ textoPromedioCelda(celda) }}</span>
+              </button>
+            </ng-container>
           </div>
-          <div class="flex-1">
-            <div class="grid grid-cols-5 gap-1">
-              <ng-container *ngFor="let fila of heatmapFilas()">
-                <ng-container *ngFor="let celda of fila.celdas">
-                  <div class="aspect-square rounded-md border border-white/80 shadow-sm flex items-center justify-center text-[8px] font-bold text-gray-900"
-                    [style.background]="celda.color"
-                    [title]="fila.frecuencia + ' / ' + celda.nivel">
-                    {{ celda.nivel }}
-                  </div>
-                </ng-container>
-              </ng-container>
-            </div>
-            <div class="mt-2 text-center text-xs font-semibold text-gray-500">Impacto</div>
-          </div>
+          <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-gray-500 min-w-[760px]"><span>Filas: riesgo inherente · Columnas: riesgo residual · “Sin evaluar” conserva matrices sin nivel completo</span><div class="flex items-center gap-2"><span class="w-5 h-3 rounded-sm bg-green-400"></span><span>Muy bajo</span><span class="w-5 h-3 rounded-sm bg-yellow-300"></span><span>Medio</span><span class="w-5 h-3 rounded-sm bg-orange-500"></span><span>Alto</span><span class="w-5 h-3 rounded-sm bg-red-600"></span><span>Crítico</span><span class="w-5 h-3 rounded-sm bg-slate-300"></span><span>Sin evaluar</span></div></div>
         </div>
       </div>
 
-      <div class="xl:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Distribución por nivel residual</h3>
-        <div class="space-y-3">
-          <ng-container *ngFor="let nivel of resumenNiveles()">
-            <div>
-              <div class="flex items-center justify-between text-xs font-semibold text-gray-600">
-                <span>{{ nivel.nivel }}</span>
-                <span>{{ nivel.total }}</span>
-              </div>
-              <div class="h-2 rounded-full bg-gray-100 overflow-hidden mt-1">
-                <div class="h-full rounded-full" [style.background]="nivel.color || colorNivel(nivel.nivel)"
-                  [style.width.%]="nivel.porcentaje"></div>
-              </div>
-            </div>
-          </ng-container>
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-6">
+        <div><h3 class="text-base font-bold text-gray-900 mb-3">Distribución inherente</h3><div class="space-y-2"><div *ngFor="let nivel of resumenNivelesInherente()"><div class="flex items-center justify-between text-xs font-semibold text-gray-600"><span>{{ nivel.nivel }}</span><span>{{ nivel.total }}</span></div><div class="h-2 rounded-full bg-gray-100 overflow-hidden mt-1"><div class="h-full rounded-full" [style.background]="nivel.color || colorNivel(nivel.nivel)" [style.width.%]="nivel.porcentaje"></div></div></div></div></div>
+        <div><h3 class="text-base font-bold text-gray-900 mb-3">Distribución residual</h3><div class="space-y-2"><div *ngFor="let nivel of resumenNivelesResidual()"><div class="flex items-center justify-between text-xs font-semibold text-gray-600"><span>{{ nivel.nivel }}</span><span>{{ nivel.total }}</span></div><div class="h-2 rounded-full bg-gray-100 overflow-hidden mt-1"><div class="h-full rounded-full" [style.background]="nivel.color || colorNivel(nivel.nivel)" [style.width.%]="nivel.porcentaje"></div></div></div></div></div>
+        <div><h3 class="text-base font-bold text-gray-900 mb-3">Matrices por tipo de sujeto</h3><div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-1 gap-2"><div *ngFor="let tipo of dashboard()?.porSujetoTipo" class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600"><span>{{ tipoSujetoEtiqueta(tipo.nombre) }}</span><span class="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-gray-900">{{ tipo.total }}</span></div></div></div>
+      </div>
+    </section>
+
+
+    <section *ngIf="seleccionMapa() as seleccion" class="bg-white border border-blue-200 rounded-2xl shadow-sm p-5" data-testid="detalle-cuadrante-mapa">
+      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wide text-blue-700">Filtro activo del mapa</p>
+          <h3 class="text-lg font-bold text-gray-900">Matrices del cuadrante seleccionado</h3>
+          <p class="text-sm text-gray-500">Inherente <strong>{{ seleccion.etiquetaInherente }}</strong> / Residual <strong>{{ seleccion.etiquetaResidual }}</strong></p>
         </div>
+        <div class="flex items-center gap-3">
+          <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800">{{ matricesCuadrante().length }} registro(s)</span>
+          <button type="button" (click)="limpiarSeleccionMapa()" class="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50">Limpiar selección del mapa</button>
+        </div>
+      </div>
+
+      <div *ngIf="cargandoCuadrante()" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm font-semibold text-blue-700">Consultando matrices del cuadrante...</div>
+
+      <div *ngIf="!cargandoCuadrante() && matricesCuadrante().length === 0" class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
+        No existen matrices en esta combinación de riesgo inherente y residual.
+      </div>
+
+      <div *ngIf="!cargandoCuadrante() && matricesCuadrante().length > 0" class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full min-w-[1050px] text-sm">
+          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+            <tr><th class="px-3 py-3 text-left">ID</th><th class="px-3 py-3 text-left">Sujeto / documento</th><th class="px-3 py-3 text-left">Tipo</th><th class="px-3 py-3 text-left">Estado</th><th class="px-3 py-3 text-left">Fecha</th><th class="px-3 py-3 text-left">Inherente</th><th class="px-3 py-3 text-left">Residual</th><th class="px-3 py-3 text-left">Plan</th><th class="px-3 py-3 text-right">Acción</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr *ngFor="let matriz of matricesCuadrante()" class="hover:bg-gray-50">
+              <td class="px-3 py-3 font-bold text-gray-700">{{ matriz.matrizId }}</td>
+              <td class="px-3 py-3"><p class="font-semibold text-gray-900">{{ matriz.nombreSujeto }}</p><p class="text-xs text-gray-500">{{ matriz.documento || matriz.sujetoIdExt || 'Sin documento' }}</p></td>
+              <td class="px-3 py-3 text-gray-600">{{ tipoSujetoEtiqueta(matriz.sujetoTipo) }}</td>
+              <td class="px-3 py-3"><span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{{ estadoEtiqueta(matriz.estado) }}</span></td>
+              <td class="px-3 py-3 text-gray-600 whitespace-nowrap">{{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+              <td class="px-3 py-3"><span class="font-semibold">{{ matriz.nivelInherente || 'Sin evaluar' }}</span><span class="block text-xs text-gray-500">{{ matriz.puntajeInherente ?? '-' }}</span></td>
+              <td class="px-3 py-3"><span class="font-semibold">{{ matriz.nivelResidual || 'Sin evaluar' }}</span><span class="block text-xs text-gray-500">{{ matriz.puntajeResidual ?? '-' }}</span></td>
+              <td class="px-3 py-3"><span [ngClass]="matriz.requierePlanAccion ? 'text-amber-700' : 'text-emerald-700'" class="font-bold">{{ matriz.requierePlanAccion ? 'Requerido' : 'No requerido' }}</span></td>
+              <td class="px-3 py-3 text-right"><button type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="px-3 py-2 rounded-lg bg-ihss-900 text-white text-xs font-semibold hover:bg-ihss-800">Ver detalle</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
+        <div class="flex items-center justify-between gap-3 mb-4"><h3 class="text-lg font-bold text-gray-900">Matrices críticas</h3><span class="text-xs font-semibold text-gray-500">Top {{ dashboard()?.matricesCriticas?.length ?? 0 }}</span></div>
+        <div class="space-y-2 max-h-80 overflow-auto pr-1">
+          <button *ngFor="let matriz of dashboard()?.matricesCriticas" type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-left hover:bg-white hover:border-red-200">
+            <div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-gray-900 truncate">{{ matriz.nombreSujeto }}</p><p class="text-xs text-gray-500">{{ matriz.sujetoTipo }} · {{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</p></div><span class="shrink-0 rounded-full px-2 py-1 text-[11px] font-bold" [ngStyle]="{'background-color': colorNivel(matriz.nivelResidual) + '22', 'color': colorNivel(matriz.nivelResidual)}">{{ matriz.nivelResidual }} {{ matriz.puntajeResidual | number:'1.2-2' }}</span></div>
+          </button>
+          <p *ngIf="(dashboard()?.matricesCriticas?.length ?? 0) === 0" class="py-6 text-center text-sm text-gray-500">No hay matrices Alto o Crítico para los filtros seleccionados.</p>
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Planes de acción</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div *ngFor="let plan of dashboard()?.planesAccion" class="rounded-xl border border-gray-100 bg-gray-50 p-4"><p class="text-xs font-bold uppercase text-gray-500">{{ plan.estado }}</p><p class="mt-1 text-2xl font-bold text-gray-900">{{ plan.total }}</p><p class="mt-1 text-xs font-semibold" [ngClass]="plan.vencidos > 0 ? 'text-red-700' : 'text-emerald-700'">{{ plan.vencidos }} vencido(s)</p></div>
+          <p *ngIf="(dashboard()?.planesAccion?.length ?? 0) === 0" class="sm:col-span-2 py-6 text-center text-sm text-gray-500">No existen planes para los filtros seleccionados.</p>
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="reporteFiltrosActivos()" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+      <div class="flex items-center justify-between gap-3 mb-4"><div><h3 class="text-lg font-bold text-gray-900">Matrices del filtro ejecutivo</h3><p class="text-xs text-gray-500">Máximo 25 registros ordenados por riesgo residual y fecha.</p></div><span class="text-xs font-semibold text-gray-500">{{ dashboard()?.matricesFiltradas?.length ?? 0 }} resultado(s)</span></div>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <button *ngFor="let matriz of dashboard()?.matricesFiltradas" type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="rounded-xl border border-gray-100 p-3 text-left hover:border-ihss-300 hover:bg-gray-50"><p class="font-semibold text-gray-900 truncate">{{ matriz.nombreSujeto }}</p><div class="mt-2 flex items-center justify-between text-xs text-gray-500"><span>{{ estadoEtiqueta(matriz.estado) }}</span><span>{{ matriz.nivelInherente || '-' }} → {{ matriz.nivelResidual || '-' }}</span></div></button>
       </div>
     </section>
   </ng-container>
@@ -227,13 +312,9 @@
                     <div class="flex flex-wrap justify-end gap-2">
                       <button type="button" (click)="editarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
+                        [disabled]="guardando() || !puedeEditarMatriz(matriz)"
+                        [title]="mensajeBloqueoEditarMatriz(matriz)">
                         Editar
-                      </button>
-                      <button *ngIf="!matriz.puntajeResidual" type="button" (click)="calcularMatriz(matriz)"
-                        class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || matriz.estado === 'CERRADA' || matriz.estado === 'INACTIVA'">
-                        Calcular
                       </button>
                       <button type="button" (click)="eliminarMatriz(matriz)"
                         class="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
@@ -260,11 +341,18 @@
       </div>
 
       <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden self-start">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
           <h3 class="text-lg font-bold text-gray-900">Detalle</h3>
-          <span *ngIf="matrizSeleccionada()" class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
-            {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
-          </span>
+          <div *ngIf="matrizSeleccionada()" class="flex flex-wrap items-center justify-end gap-2">
+            <button type="button" (click)="exportarFichaMatriz()" [disabled]="guardando()"
+              [attr.aria-busy]="exportando() === 'FICHA'"
+              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">
+              {{ exportando() === 'FICHA' ? 'Generando ficha...' : 'Ficha PDF' }}
+            </button>
+            <span class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
+              {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
+            </span>
+          </div>
         </div>
         <div *ngIf="matrizSeleccionada(); else noMatrizSeleccionada" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-3 text-sm">
             <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
@@ -640,7 +728,7 @@
           <h3 class="text-lg font-bold text-gray-900">Criterios registrados</h3>
           <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
             <input type="checkbox" [ngModel]="incluirCriteriosInactivos()" (ngModelChange)="incluirCriteriosInactivos.set($event); cargarCriterios()" />
-            Ver inactivos
+            Incluir inactivos
           </label>
         </div>
         <div class="overflow-x-auto border border-gray-200 rounded-xl max-w-full">
@@ -681,15 +769,21 @@
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap justify-end gap-1.5">
-                      <button type="button" (click)="editarCriterio(criterio)"
-                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50">
+                      <button type="button" (click)="editarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
+                        title="Los criterios inactivos deben activarse antes de editarlos"
+                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50">
                         Editar
                       </button>
-                      <button type="button" (click)="inactivarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
+                      <button *ngIf="criterio.activo" type="button" (click)="inactivarCriterio(criterio)" [disabled]="guardando()"
                         class="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold disabled:opacity-50">
                         Desactivar
                       </button>
-                      <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando()"
+                      <button *ngIf="!criterio.activo" type="button" (click)="reactivarCriterio(criterio)" [disabled]="guardando()"
+                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50">
+                        Activar
+                      </button>
+                      <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando() || criterio.activo"
+                        title="Primero desactive el criterio. La eliminación solo procede si no tiene uso histórico."
                         class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
                         Eliminar
                       </button>
@@ -945,53 +1039,55 @@
         </div>
         <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
           <button type="button" (click)="exportarReporte('EXCEL')" [disabled]="guardando() || cargandoReporte()"
+            [attr.aria-busy]="exportando() === 'EXCEL'"
             class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
-            Exportar Excel
+            {{ exportando() === 'EXCEL' ? 'Generando Excel...' : 'Exportar Excel (.xlsx)' }}
           </button>
           <button type="button" (click)="exportarReporte('PDF')" [disabled]="guardando() || cargandoReporte()"
+            [attr.aria-busy]="exportando() === 'PDF'"
             class="w-full sm:w-auto px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-bold disabled:opacity-50">
-            Generar PDF
+            {{ exportando() === 'PDF' ? 'Generando PDF...' : 'Generar PDF ejecutivo' }}
           </button>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        <input type="search" [ngModel]="reporteFiltro().buscar || ''"
+        <input type="search" aria-label="Buscar en el reporte" [ngModel]="reporteFiltro().buscar || ''"
           (ngModelChange)="actualizarFiltroReporte('buscar', $event)"
           placeholder="Buscar sujeto, documento, estado, nivel, factor o responsable"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <select [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
+        <select aria-label="Filtrar reporte por estado" [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los estados</option>
           <ng-container *ngFor="let estado of estadosDisponibles">
             <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
           </ng-container>
         </select>
-        <select [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
+        <select aria-label="Filtrar reporte por tipo de sujeto" [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los sujetos</option>
           <ng-container *ngFor="let tipo of tiposSujeto">
             <option [value]="tipo.valor">{{ tipo.texto }}</option>
           </ng-container>
         </select>
-        <select [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
+        <select aria-label="Filtrar reporte por nivel residual" [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
           <option value="">Todos los niveles</option>
           <ng-container *ngFor="let escala of escalasRiesgoOrdenadas()">
             <option [value]="escala.nivel">{{ escala.nivel }}</option>
           </ng-container>
         </select>
-        <input type="date" [ngModel]="reporteFiltro().fechaInicio || ''"
+        <input type="date" aria-label="Fecha inicial del reporte" [ngModel]="reporteFiltro().fechaInicio || ''"
           (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
           [min]="fechaMinimaReporteInicio"
           [max]="fechaActualIso"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <input type="date" [ngModel]="reporteFiltro().fechaFin || ''"
+        <input type="date" aria-label="Fecha final del reporte" [ngModel]="reporteFiltro().fechaFin || ''"
           (ngModelChange)="actualizarFiltroReporte('fechaFin', $event)"
           [min]="fechaMinimaReporteInicio"
           [max]="fechaActualIso"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <input type="text" [ngModel]="reporteFiltro().responsable || ''"
+        <input type="text" aria-label="Filtrar por responsable" [ngModel]="reporteFiltro().responsable || ''"
           (ngModelChange)="actualizarFiltroReporte('responsable', $event)"
           placeholder="Responsable"
           class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
@@ -1000,7 +1096,7 @@
           Limpiar filtros
         </button>
       </div>
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-gray-500">
+      <div role="status" aria-live="polite" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-gray-500">
         <span>{{ cargandoReporte() ? 'Actualizando reporte...' : 'Reporte actualizado con los filtros vigentes.' }}</span>
         <span *ngIf="reporte()?.fechaGeneracion">Generado: {{ reporte()?.fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
       </div>
@@ -1155,12 +1251,13 @@
 
   <ng-container *ngIf="evidenciaPreview() as preview">
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 px-4 py-6 backdrop-blur-sm">
-      <div class="w-full max-w-5xl max-h-[92vh] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
+      <div role="dialog" aria-modal="true" aria-labelledby="vista-previa-titulo"
+        class="w-full max-w-5xl max-h-[92vh] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
         (click)="$event.stopPropagation()">
         <div class="px-5 py-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0">
             <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Vista previa de evidencia</p>
-            <h3 class="mt-1 text-lg font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
+            <h3 id="vista-previa-titulo" class="mt-1 text-lg font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
               {{ preview.nombre }}
             </h3>
             <p class="mt-1 text-xs text-gray-500">
@@ -1233,12 +1330,13 @@
 
   <ng-container *ngIf="modalOperacion()">
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/55 px-4 py-6 backdrop-blur-sm">
-      <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
+      <div role="dialog" aria-modal="true" aria-labelledby="modal-operacion-titulo"
+        class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
         (click)="$event.stopPropagation()">
         <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between gap-4">
           <div class="min-w-0">
             <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Acción sensible</p>
-            <h3 class="mt-1 text-xl font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
+            <h3 id="modal-operacion-titulo" class="mt-1 text-xl font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
               {{ modalOperacion()?.titulo }}
             </h3>
           </div>
@@ -1267,7 +1365,7 @@
             </label>
           </ng-container>
 
-          <div *ngIf="modalError()" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          <div *ngIf="modalError()" role="alert" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
             {{ modalError() }}
           </div>
         </div>

@@ -1,0 +1,178 @@
+﻿{
+    "success":  true,
+    "datos":  {
+                  "fechaGeneracion":  "2026-07-21T11:13:24.6472001-06:00",
+                  "filtro":  {
+
+                             },
+                  "totalMatrices":  3,
+                  "totalCalculadas":  3,
+                  "totalCerradas":  0,
+                  "totalConPlanAccion":  2,
+                  "totalAltoCritico":  2,
+                  "totalPlanesVencidos":  0,
+                  "porEstado":  [
+                                    {
+                                        "nombre":  "EN_REVISION",
+                                        "total":  3
+                                    }
+                                ],
+                  "porNivelInherente":  [
+                                            {
+                                                "nombre":  "Alto",
+                                                "total":  1
+                                            },
+                                            {
+                                                "nombre":  "Crítico",
+                                                "total":  1
+                                            },
+                                            {
+                                                "nombre":  "Muy bajo",
+                                                "total":  1
+                                            }
+                                        ],
+                  "porNivelResidual":  [
+                                           {
+                                               "nombre":  "Alto",
+                                               "total":  1
+                                           },
+                                           {
+                                               "nombre":  "Crítico",
+                                               "total":  1
+                                           },
+                                           {
+                                               "nombre":  "Muy bajo",
+                                               "total":  1
+                                           }
+                                       ],
+                  "mapaTransicion":  [
+                                         {
+                                             "nivelInherente":  "Crítico",
+                                             "nivelResidual":  "Crítico",
+                                             "total":  1,
+                                             "promedioInherente":  4.85,
+                                             "promedioResidual":  4.85
+                                         },
+                                         {
+                                             "nivelInherente":  "Alto",
+                                             "nivelResidual":  "Alto",
+                                             "total":  1,
+                                             "promedioInherente":  3.6,
+                                             "promedioResidual":  3.6
+                                         },
+                                         {
+                                             "nivelInherente":  "Muy bajo",
+                                             "nivelResidual":  "Muy bajo",
+                                             "total":  1,
+                                             "promedioInherente":  1.0,
+                                             "promedioResidual":  1.0
+                                         }
+                                     ],
+                  "matricesCriticas":  [
+                                           {
+                                               "matrizId":  6,
+                                               "modeloId":  2,
+                                               "modeloVersion":  "1.0",
+                                               "sujetoTipo":  "PROVEEDOR",
+                                               "sujetoIdExt":  "056469849849",
+                                               "documento":  "419846494",
+                                               "nombreSujeto":  "Pruebas de Funcionalidad",
+                                               "estado":  "EN_REVISION",
+                                               "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                               "puntajeInherente":  4.85,
+                                               "nivelInherente":  "Crítico",
+                                               "puntajeResidual":  4.85,
+                                               "nivelResidual":  "Crítico",
+                                               "requierePlanAccion":  true
+                                           },
+                                           {
+                                               "matrizId":  7,
+                                               "modeloId":  2,
+                                               "modeloVersion":  "1.0",
+                                               "sujetoTipo":  "EMPLEADO",
+                                               "sujetoIdExt":  "01234561230123",
+                                               "documento":  "010203040506070809",
+                                               "nombreSujeto":  "Prueba",
+                                               "estado":  "EN_REVISION",
+                                               "fechaEvaluacion":  "2026-07-20T13:26:15",
+                                               "puntajeInherente":  3.6,
+                                               "nivelInherente":  "Alto",
+                                               "puntajeResidual":  3.6,
+                                               "nivelResidual":  "Alto",
+                                               "requierePlanAccion":  true
+                                           }
+                                       ],
+                  "matricesFiltradas":  [
+                                            {
+                                                "matrizId":  6,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "PROVEEDOR",
+                                                "sujetoIdExt":  "056469849849",
+                                                "documento":  "419846494",
+                                                "nombreSujeto":  "Pruebas de Funcionalidad",
+                                                "estado":  "EN_REVISION",
+                                                "fechaEvaluacion":  "2026-07-15T09:42:58",
+                                                "puntajeInherente":  4.85,
+                                                "nivelInherente":  "Crítico",
+                                                "puntajeResidual":  4.85,
+                                                "nivelResidual":  "Crítico",
+                                                "requierePlanAccion":  true
+                                            },
+                                            {
+                                                "matrizId":  7,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "EMPLEADO",
+                                                "sujetoIdExt":  "01234561230123",
+                                                "documento":  "010203040506070809",
+                                                "nombreSujeto":  "Prueba",
+                                                "estado":  "EN_REVISION",
+                                                "fechaEvaluacion":  "2026-07-20T13:26:15",
+                                                "puntajeInherente":  3.6,
+                                                "nivelInherente":  "Alto",
+                                                "puntajeResidual":  3.6,
+                                                "nivelResidual":  "Alto",
+                                                "requierePlanAccion":  true
+                                            },
+                                            {
+                                                "matrizId":  5,
+                                                "modeloId":  2,
+                                                "modeloVersion":  "1.0",
+                                                "sujetoTipo":  "PROVEEDOR",
+                                                "sujetoIdExt":  "PROV-0001",
+                                                "documento":  "0801200015463",
+                                                "nombreSujeto":  "Proveedor de servicios ABC",
+                                                "estado":  "EN_REVISION",
+                                                "fechaEvaluacion":  "2026-07-09T13:11:00",
+                                                "puntajeInherente":  1.0,
+                                                "nivelInherente":  "Muy bajo",
+                                                "puntajeResidual":  1.0,
+                                                "nivelResidual":  "Muy bajo",
+                                                "requierePlanAccion":  false
+                                            }
+                                        ],
+                  "planesAccion":  [
+                                       {
+                                           "estado":  "CERRADO",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       },
+                                       {
+                                           "estado":  "INACTIVO",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       },
+                                       {
+                                           "estado":  "PENDIENTE",
+                                           "total":  1,
+                                           "vencidos":  0
+                                       },
+                                       {
+                                           "estado":  "SIN_PLAN",
+                                           "total":  0,
+                                           "vencidos":  0
+                                       }
+                                   ]
+              }
+}

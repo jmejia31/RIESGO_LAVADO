@@ -1,0 +1,46 @@
+{
+  "fase": "Fase 12.1 - Orden funcional y reglas",
+  "modulo": "Módulo 3. Matrices de Riesgos",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "estado": "Iniciada con política operativa de estados versionada",
+  "objetivo": "Consolidar estados visibles, acciones permitidas, duplicados, variables por tipo de sujeto y recálculo automático antes del rediseño ejecutivo.",
+  "linea_base_confirmada": [
+    "Backend restringe estados destino a EN_REVISION, APROBADA, CERRADA e INACTIVA.",
+    "Frontend oculta CALCULADA como estado visible y la presenta como En Revisión.",
+    "El recálculo se ejecuta automáticamente después de crear o editar una matriz.",
+    "La captura utiliza variables correspondientes al tipo de sujeto seleccionado.",
+    "Existe validación preventiva de duplicados por documento o identificador externo.",
+    "El cálculo y la clasificación permanecen en backend."
+  ],
+  "cambios_iniciales": [
+    "Creación de política reutilizable para normalización y transición de estados.",
+    "Definición explícita de acciones de edición, eliminación y tratamiento por estado.",
+    "Pruebas unitarias para estados visibles, etiquetas y transiciones permitidas."
+  ],
+  "estados_visibles": [
+    "EN_REVISION",
+    "APROBADA",
+    "CERRADA",
+    "INACTIVA"
+  ],
+  "transiciones": {
+    "EN_REVISION": ["APROBADA", "INACTIVA"],
+    "APROBADA": ["CERRADA", "INACTIVA"],
+    "CERRADA": [],
+    "INACTIVA": ["EN_REVISION"]
+  },
+  "pendientes_fase_12_1": [
+    "Integrar la política centralizada en el componente principal de Matrices de Riesgos.",
+    "Retirar cualquier acción manual de cálculo que resulte redundante con el recálculo automático.",
+    "Reetiquetar indicadores que todavía expongan el término técnico Calculadas.",
+    "Ejecutar build, pruebas Frontend y quality gates de la rama.",
+    "Preparar documento Word de cierre de Fase 12.1."
+  ],
+  "restricciones": [
+    "No modificar DNP.",
+    "No usar CONTROL_ALMACEN.PROVEEDOR.",
+    "No conectar Matrices de Riesgos con Monitoreo de Listas.",
+    "No mover cálculos de riesgo al frontend.",
+    "No modificar main durante el desarrollo de Fase 12."
+  ]
+}

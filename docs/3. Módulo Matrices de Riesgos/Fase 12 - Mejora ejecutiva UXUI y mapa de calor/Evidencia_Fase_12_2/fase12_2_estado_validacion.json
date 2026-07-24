@@ -1,0 +1,17 @@
+{
+  "fase": "12.2 - Captura y criterios",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "estado": "Código integrado en rama; validación completa en ejecución",
+  "commit_implementacion": "b7044b695127bea20188fc4eab9f3d6ebb170fda",
+  "frontend_prevalidado": true,
+  "build_angular_prevalidado": true,
+  "restore_backend_prevalidado": true,
+  "backend_tests": "Pendiente de ejecución posterior al commit del propietario",
+  "cierre_fase_12_2": false,
+  "restricciones_confirmadas": [
+    "No se modificó DNP.",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR.",
+    "No se conectó Monitoreo de Listas con Matrices de Riesgos.",
+    "El cálculo de riesgo permanece en backend."
+  ]
+}

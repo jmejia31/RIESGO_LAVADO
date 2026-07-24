@@ -1,0 +1,54 @@
+{
+  "fase": "12.5.2",
+  "estado": "validacion_tecnica_final_aprobada",
+  "commit_funcional": "c17a7812ef1bdc7e895c10a3fc1ab1584398a7cc",
+  "ejecucion_controlada": {
+    "run_id": 29944750851,
+    "resultado": "success"
+  },
+  "quality_gate_independiente": {
+    "run_id": 29945198754,
+    "resultado": "success"
+  },
+  "pruebas": {
+    "backend": {
+      "aprobadas": 93,
+      "fallidas": 0,
+      "omitidas": 0
+    },
+    "frontend": {
+      "archivos_aprobados": 15,
+      "pruebas_aprobadas": 153,
+      "fallidas": 0
+    },
+    "e2e": {
+      "aprobadas": 7,
+      "fallidas": 0
+    }
+  },
+  "cobertura": {
+    "backend_lineas_pct": 15.65,
+    "backend_ramas_pct": 17.45,
+    "frontend_sentencias_pct": 35.35,
+    "frontend_ramas_pct": 29.15,
+    "frontend_funciones_pct": 32.32,
+    "frontend_lineas_pct": 35.70
+  },
+  "resultado_funcional": {
+    "pdf_vertical_horizontal_estandarizado": true,
+    "filas_no_partidas": true,
+    "encabezados_repetidos": true,
+    "pie_y_numeracion": true,
+    "excel_xlsx_openxml_real": true,
+    "excel_autofiltro": true,
+    "excel_panel_congelado": true,
+    "excel_configuracion_impresion": true
+  },
+  "nota_arquitectonica": "Monitoreo de Listas quedó normalizado mediante utilitarios compartidos del frontend. La consolidación de generación exclusiva en backend se verificará como criterio transversal durante 12.5.3 y antes del cierre 12.5.5.",
+  "restricciones": [
+    "No se modificó DNP",
+    "No se tocó CONTROL_ALMACEN.PROVEEDOR",
+    "No se integró Monitoreo de Listas con Matrices de Riesgos",
+    "No se fusionó a main"
+  ]
+}
