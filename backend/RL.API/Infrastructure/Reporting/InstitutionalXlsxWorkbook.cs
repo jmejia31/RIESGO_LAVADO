@@ -7,6 +7,7 @@ namespace RL.API.Infrastructure.Reporting;
 
 /// <summary>
 /// Generador OpenXML real para libros .xlsx institucionales.
+/// Permite hojas tabulares tradicionales y documentos ejecutivos de una sola hoja.
 /// </summary>
 public sealed class InstitutionalXlsxWorkbook
 {
@@ -25,7 +26,38 @@ public sealed class InstitutionalXlsxWorkbook
             title,
             headers.ToArray(),
             materialized,
-            orientation ?? InstitutionalReportStandard.ResolveOrientation(headers.Count)));
+            orientation ?? InstitutionalReportStandard.ResolveOrientation(headers.Count),
+            null));
+    }
+
+    /// <summary>
+    /// Agrega un reporte completo como documento continuo dentro de una única hoja.
+    /// Cada fila define celdas, estilos y combinaciones de columnas, lo que permite
+    /// replicar en Excel la jerarquía visual e informativa del PDF institucional.
+    /// </summary>
+    public void AddDocumentSheet(
+        string name,
+        IReadOnlyList<InstitutionalXlsxDocumentRow> rows,
+        int columnCount,
+        IReadOnlyList<decimal> columnWidths,
+        InstitutionalReportOrientation orientation = InstitutionalReportOrientation.Landscape,
+        int freezeRows = 2)
+    {
+        if (columnCount <= 0) throw new ArgumentOutOfRangeException(nameof(columnCount));
+        if (columnWidths.Count != columnCount)
+            throw new ArgumentException("La cantidad de anchos debe coincidir con el número de columnas.", nameof(columnWidths));
+
+        _sheets.Add(new InstitutionalXlsxSheet(
+            NormalizeSheetName(name),
+            string.Empty,
+            Array.Empty<string>(),
+            Array.Empty<IReadOnlyList<object?>>(),
+            orientation,
+            new InstitutionalXlsxDocument(
+                rows.ToArray(),
+                columnCount,
+                columnWidths.ToArray(),
+                Math.Clamp(freezeRows, 0, rows.Count))));
     }
 
     public byte[] ToBytes()
@@ -117,27 +149,45 @@ public sealed class InstitutionalXlsxWorkbook
     private static string StylesXml() =>
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
         "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
-        "<fonts count=\"3\">" +
+        "<fonts count=\"8\">" +
         "<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FF1F2937\"/></font>" +
         "<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "<font><b/><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
+        "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FF17466F\"/></font>" +
+        "<font><b/><sz val=\"8\"/><name val=\"Arial\"/><color rgb=\"FF64748B\"/></font>" +
+        "<font><b/><sz val=\"16\"/><name val=\"Arial\"/><color rgb=\"FF17466F\"/></font>" +
+        "<font><sz val=\"9\"/><name val=\"Arial\"/><color rgb=\"FFE2E8F0\"/></font>" +
+        "<font><b/><sz val=\"11\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
         "</fonts>" +
-        "<fills count=\"4\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
-        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FF123B63\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
-        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFF3F6F9\"/><bgColor indexed=\"64\"/></patternFill></fill></fills>" +
-        "<borders count=\"2\"><border/><border><left style=\"thin\"><color rgb=\"FFD8E0E8\"/></left>" +
-        "<right style=\"thin\"><color rgb=\"FFD8E0E8\"/></right><top style=\"thin\"><color rgb=\"FFD8E0E8\"/></top>" +
-        "<bottom style=\"thin\"><color rgb=\"FFD8E0E8\"/></bottom></border></borders>" +
+        "<fills count=\"5\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill>" +
+        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FF17466F\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFF3F6F9\"/><bgColor indexed=\"64\"/></patternFill></fill>" +
+        "<fill><patternFill patternType=\"solid\"><fgColor rgb=\"FFEEF3F7\"/><bgColor indexed=\"64\"/></patternFill></fill></fills>" +
+        "<borders count=\"3\"><border/><border><left style=\"thin\"><color rgb=\"FFD5DEE7\"/></left>" +
+        "<right style=\"thin\"><color rgb=\"FFD5DEE7\"/></right><top style=\"thin\"><color rgb=\"FFD5DEE7\"/></top>" +
+        "<bottom style=\"thin\"><color rgb=\"FFD5DEE7\"/></bottom></border>" +
+        "<border><bottom style=\"thin\"><color rgb=\"FFD5DEE7\"/></bottom></border></borders>" +
         "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>" +
-        "<cellXfs count=\"5\">" +
+        "<cellXfs count=\"13\">" +
         "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"top\" wrapText=\"1\"/></xf>" +
-        "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"2\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"2\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
         "<xf numFmtId=\"0\" fontId=\"2\" fillId=\"2\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
-        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"3\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"top\" wrapText=\"1\"/></xf>" +
-        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"top\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"3\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"3\" fillId=\"0\" borderId=\"2\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"4\" fillId=\"4\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"4\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"5\" fillId=\"4\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"6\" fillId=\"2\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"right\" vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"3\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"0\" fontId=\"7\" fillId=\"2\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
         "</cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>";
 
-    private string WorksheetXml(InstitutionalXlsxSheet sheet)
+    private string WorksheetXml(InstitutionalXlsxSheet sheet) =>
+        sheet.Document is null ? TabularWorksheetXml(sheet) : DocumentWorksheetXml(sheet);
+
+    private string TabularWorksheetXml(InstitutionalXlsxSheet sheet)
     {
         var maxColumns = Math.Max(1, sheet.Headers.Count);
         var columnWidths = CalculateWidths(sheet);
@@ -159,7 +209,7 @@ public sealed class InstitutionalXlsxWorkbook
                "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
                "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
                $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +
-               $"<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"4\" topLeftCell=\"A5\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>" +
+               "<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"4\" topLeftCell=\"A5\" activePane=\"bottomLeft\" state=\"frozen\"/></sheetView></sheetViews>" +
                "<sheetFormatPr defaultRowHeight=\"18\"/>" +
                $"<cols>{columns}</cols><sheetData>{rows}</sheetData>" +
                $"<autoFilter ref=\"A4:{lastColumn}{lastRow}\"/>" +
@@ -171,42 +221,106 @@ public sealed class InstitutionalXlsxWorkbook
                "</worksheet>";
     }
 
+    private string DocumentWorksheetXml(InstitutionalXlsxSheet sheet)
+    {
+        var document = sheet.Document!;
+        var columns = string.Join(string.Empty, document.ColumnWidths.Select((width, index) =>
+            $"<col min=\"{index + 1}\" max=\"{index + 1}\" width=\"{width:0.##}\" customWidth=\"1\"/>"));
+        var rows = new StringBuilder();
+        var merges = new List<string>();
+
+        for (var index = 0; index < document.Rows.Count; index++)
+            rows.Append(DocumentRowXml(index + 1, document.Rows[index], document.ColumnCount, merges));
+
+        var lastRow = Math.Max(1, document.Rows.Count);
+        var lastColumn = ColumnName(document.ColumnCount);
+        var orientation = sheet.Orientation == InstitutionalReportOrientation.Landscape ? "landscape" : "portrait";
+        var freezePane = document.FreezeRows > 0
+            ? $"<pane ySplit=\"{document.FreezeRows}\" topLeftCell=\"A{document.FreezeRows + 1}\" activePane=\"bottomLeft\" state=\"frozen\"/>"
+            : string.Empty;
+        var mergeXml = merges.Count > 0
+            ? $"<mergeCells count=\"{merges.Count}\">{string.Join(string.Empty, merges.Select(reference => $"<mergeCell ref=\"{reference}\"/>"))}</mergeCells>"
+            : string.Empty;
+
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+               "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+               "<sheetPr><pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/></sheetPr>" +
+               $"<dimension ref=\"A1:{lastColumn}{lastRow}\"/>" +
+               $"<sheetViews><sheetView workbookViewId=\"0\">{freezePane}</sheetView></sheetViews>" +
+               "<sheetFormatPr defaultRowHeight=\"18\"/>" +
+               $"<cols>{columns}</cols><sheetData>{rows}</sheetData>{mergeXml}" +
+               "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.25\" right=\"0.25\" top=\"0.45\" bottom=\"0.45\" header=\"0.2\" footer=\"0.2\"/>" +
+               $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
+               "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
+               "<oddFooter>&amp;LSGRLA-IHSS&amp;CGenerado: &amp;D &amp;T&amp;RPágina &amp;P de &amp;N</oddFooter></headerFooter>" +
+               "</worksheet>";
+    }
+
+    private static string DocumentRowXml(
+        int rowNumber,
+        InstitutionalXlsxDocumentRow row,
+        int maxColumns,
+        ICollection<string> merges)
+    {
+        var cells = new StringBuilder();
+        var column = 1;
+        foreach (var cell in row.Cells)
+        {
+            var span = Math.Max(1, cell.ColumnSpan);
+            if (column + span - 1 > maxColumns)
+                throw new InvalidOperationException($"La fila {rowNumber} supera las {maxColumns} columnas configuradas.");
+
+            cells.Append(CellXml(rowNumber, column, cell.Value, (int)cell.Style));
+            for (var offset = 1; offset < span; offset++)
+                cells.Append(CellXml(rowNumber, column + offset, null, (int)cell.Style));
+
+            if (span > 1)
+                merges.Add($"{ColumnName(column)}{rowNumber}:{ColumnName(column + span - 1)}{rowNumber}");
+            column += span;
+        }
+
+        while (column <= maxColumns)
+        {
+            cells.Append(CellXml(rowNumber, column, null, (int)InstitutionalXlsxCellStyle.Body));
+            column++;
+        }
+
+        var height = row.Height > 0 ? row.Height : 18m;
+        return $"<row r=\"{rowNumber}\" ht=\"{height:0.##}\" customHeight=\"1\">{cells}</row>";
+    }
+
     private static string RowXml(int rowNumber, IReadOnlyList<object?> values, int style, int maxColumns)
     {
         var cells = new StringBuilder();
         for (var column = 0; column < maxColumns; column++)
         {
             var value = column < values.Count ? values[column] : null;
-            var reference = $"{ColumnName(column + 1)}{rowNumber}";
-            if (value is null)
-            {
-                cells.Append($"<c r=\"{reference}\" s=\"{style}\" t=\"inlineStr\"><is><t></t></is></c>");
-                continue;
-            }
-
-            if (value is byte or short or int or long or float or double or decimal)
-            {
-                var number = Convert.ToString(value, CultureInfo.InvariantCulture);
-                cells.Append($"<c r=\"{reference}\" s=\"{style}\"><v>{number}</v></c>");
-            }
-            else if (value is bool boolean)
-            {
-                cells.Append($"<c r=\"{reference}\" s=\"{style}\" t=\"b\"><v>{(boolean ? 1 : 0)}</v></c>");
-            }
-            else
-            {
-                var text = Xml(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
-                cells.Append($"<c r=\"{reference}\" s=\"{style}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{text}</t></is></c>");
-            }
+            cells.Append(CellXml(rowNumber, column + 1, value, style));
         }
         return $"<row r=\"{rowNumber}\">{cells}</row>";
     }
 
+    private static string CellXml(int rowNumber, int columnNumber, object? value, int style)
+    {
+        var reference = $"{ColumnName(columnNumber)}{rowNumber}";
+        if (value is null)
+            return $"<c r=\"{reference}\" s=\"{style}\" t=\"inlineStr\"><is><t></t></is></c>";
+
+        if (value is byte or short or int or long or float or double or decimal)
+        {
+            var number = Convert.ToString(value, CultureInfo.InvariantCulture);
+            return $"<c r=\"{reference}\" s=\"{style}\"><v>{number}</v></c>";
+        }
+
+        if (value is bool boolean)
+            return $"<c r=\"{reference}\" s=\"{style}\" t=\"b\"><v>{(boolean ? 1 : 0)}</v></c>";
+
+        var text = Xml(Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
+        return $"<c r=\"{reference}\" s=\"{style}\" t=\"inlineStr\"><is><t xml:space=\"preserve\">{text}</t></is></c>";
+    }
+
     private static decimal[] CalculateWidths(InstitutionalXlsxSheet sheet)
     {
-        // Anchos institucionales para columnas recurrentes. El objetivo es evitar
-        // cortes de palabras en tipos, estados y niveles cuando la hoja se ajusta
-        // a una página de ancho, sin sobredimensionar las columnas descriptivas.
         var preferredWidths = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
         {
             ["ID"] = 8m,
@@ -249,8 +363,6 @@ public sealed class InstitutionalXlsxWorkbook
             widths[column] = Math.Clamp(maximum + 2, 10, 34);
         }
 
-        // Las hojas pequeñas deben conservar una anchura visual suficiente para
-        // que títulos y valores no se compriman en una columna excesivamente estrecha.
         if (widths.Length > 0 && widths.Length <= 4)
         {
             const decimal minimumTotalWidth = 60m;
@@ -301,5 +413,38 @@ public sealed class InstitutionalXlsxWorkbook
         string Title,
         IReadOnlyList<string> Headers,
         IReadOnlyList<IReadOnlyList<object?>> Rows,
-        InstitutionalReportOrientation Orientation);
+        InstitutionalReportOrientation Orientation,
+        InstitutionalXlsxDocument? Document);
+
+    private sealed record InstitutionalXlsxDocument(
+        IReadOnlyList<InstitutionalXlsxDocumentRow> Rows,
+        int ColumnCount,
+        IReadOnlyList<decimal> ColumnWidths,
+        int FreezeRows);
 }
+
+public enum InstitutionalXlsxCellStyle
+{
+    Body = 0,
+    Title = 1,
+    TableHeader = 2,
+    AlternateBody = 3,
+    BorderedBody = 4,
+    Section = 5,
+    CardLabel = 6,
+    CardValue = 7,
+    KpiValue = 8,
+    HeaderRight = 9,
+    CenteredBody = 10,
+    AlternateCenteredBody = 11,
+    Institution = 12
+}
+
+public sealed record InstitutionalXlsxDocumentCell(
+    object? Value,
+    int ColumnSpan = 1,
+    InstitutionalXlsxCellStyle Style = InstitutionalXlsxCellStyle.Body);
+
+public sealed record InstitutionalXlsxDocumentRow(
+    IReadOnlyList<InstitutionalXlsxDocumentCell> Cells,
+    decimal Height = 18m);
