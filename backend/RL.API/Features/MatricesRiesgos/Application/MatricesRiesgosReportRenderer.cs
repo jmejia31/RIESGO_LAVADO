@@ -96,58 +96,13 @@ internal static class MatricesRiesgosReportRenderer
     public static MatrizRiesgoExportacionDto ConstruirExcel(MatricesRiesgoReporteDto reporte)
     {
         var workbook = new InstitutionalXlsxWorkbook();
-        var resumen = new List<IReadOnlyList<object?>>();
-        resumen.AddRange(ConstruirFiltros(reporte.Filtro)
-            .Select(item => (IReadOnlyList<object?>)new object?[] { "Filtro", item.Label, item.Value }));
-        resumen.AddRange(new[]
-        {
-            (IReadOnlyList<object?>)new object?[] { "Indicador", "Total matrices", reporte.Totales.TotalMatrices },
-            new object?[] { "Indicador", "Calculadas", reporte.Totales.TotalCalculadas },
-            new object?[] { "Indicador", "Sin evaluar", reporte.Totales.TotalSinCalculo },
-            new object?[] { "Indicador", "Cerradas", reporte.Totales.TotalCerradas },
-            new object?[] { "Indicador", "Alto / Crítico", reporte.Totales.TotalAltoCritico },
-            new object?[] { "Indicador", "Plan requerido", reporte.Totales.TotalPlanAccionRequerido },
-            new object?[] { "Indicador", "Planes vencidos", reporte.Totales.TotalPlanesVencidos }
-        });
-        workbook.AddSheet("Resumen", "Resumen ejecutivo de Matrices de Riesgos",
-            new[] { "Sección", "Indicador", "Valor" }, resumen, InstitutionalReportOrientation.Portrait);
-
-        workbook.AddSheet("Matrices", "Matrices filtradas",
-            new[] { "ID", "Sujeto", "Documento", "Tipo", "Estado", "Puntaje inherente", "Nivel inherente", "Puntaje residual", "Nivel residual", "Plan requerido", "Fecha" },
-            reporte.MatricesFiltradas.Select(x => (IReadOnlyList<object?>)new object?[]
-            {
-                x.MatrizId, x.NombreSujeto, x.Documento, x.SujetoTipo, x.Estado, x.PuntajeInherente,
-                x.NivelInherente, x.PuntajeResidual, x.NivelResidual, x.RequierePlanAccion ? "Sí" : "No",
-                x.FechaEvaluacion.ToString(InstitutionalReportStandard.DateFormat)
-            }), InstitutionalReportOrientation.Landscape);
-
-        workbook.AddSheet("Factores", "Resultados por factor",
-            new[] { "Código", "Factor", "Matrices", "Promedio inherente", "Promedio residual", "Alto / Crítico", "Plan requerido" },
-            reporte.PorFactor.Select(x => (IReadOnlyList<object?>)new object?[]
-            {
-                x.FactorCodigo, x.FactorNombre, x.TotalMatrices, x.PromedioInherente, x.PromedioResidual,
-                x.TotalAltoCritico, x.TotalPlanAccionRequerido
-            }));
-
-        workbook.AddSheet("Mapa transición", "Mapa de transición inherente a residual",
-            new[] { "Nivel inherente", "Nivel residual", "Total", "Promedio inherente", "Promedio residual" },
-            reporte.MapaTransicion.Select(x => (IReadOnlyList<object?>)new object?[]
-            {
-                x.NivelInherente, x.NivelResidual, x.Total, x.PromedioInherente, x.PromedioResidual
-            }));
-
-        workbook.AddSheet("Matrices críticas", "Matrices Alto / Crítico",
-            new[] { "ID", "Sujeto", "Documento", "Tipo", "Estado", "Puntaje inherente", "Nivel inherente", "Puntaje residual", "Nivel residual", "Plan requerido", "Fecha" },
-            reporte.MatricesCriticas.Select(x => (IReadOnlyList<object?>)new object?[]
-            {
-                x.MatrizId, x.NombreSujeto, x.Documento, x.SujetoTipo, x.Estado, x.PuntajeInherente,
-                x.NivelInherente, x.PuntajeResidual, x.NivelResidual, x.RequierePlanAccion ? "Sí" : "No",
-                x.FechaEvaluacion.ToString(InstitutionalReportStandard.DateFormat)
-            }), InstitutionalReportOrientation.Landscape);
-
-        workbook.AddSheet("Planes", "Resumen de planes de acción",
-            new[] { "Estado", "Total", "Vencidos" },
-            reporte.PlanesAccion.Select(x => (IReadOnlyList<object?>)new object?[] { x.Estado, x.Total, x.Vencidos }));
+        workbook.AddDocumentSheet(
+            "Reporte Ejecutivo",
+            ConstruirDocumentoExcel(reporte),
+            11,
+            new decimal[] { 7m, 18m, 18m, 13m, 13m, 14m, 14m, 15m, 15m, 10m, 12m },
+            InstitutionalReportOrientation.Landscape,
+            2);
 
         return new MatrizRiesgoExportacionDto
         {
@@ -156,6 +111,267 @@ internal static class MatricesRiesgosReportRenderer
             Contenido = workbook.ToBytes()
         };
     }
+
+    private static IReadOnlyList<InstitutionalXlsxDocumentRow> ConstruirDocumentoExcel(MatricesRiesgoReporteDto reporte)
+    {
+        var rows = new List<InstitutionalXlsxDocumentRow>
+        {
+            Fila(24m,
+                Celda(InstitutionalReportStandard.InstitutionName, 7, InstitutionalXlsxCellStyle.Institution),
+                Celda($"{InstitutionalReportStandard.SystemName} · Matrices de Riesgos", 4, InstitutionalXlsxCellStyle.HeaderRight)),
+            Fila(32m,
+                Celda("REPORTE EJECUTIVO DE MATRICES DE RIESGOS", 7, InstitutionalXlsxCellStyle.Title),
+                Celda($"Generado: {reporte.FechaGeneracion.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}", 4, InstitutionalXlsxCellStyle.HeaderRight)),
+            Espacio(),
+            Seccion("1. FILTROS APLICADOS")
+        };
+
+        AgregarTarjetas(rows, ConstruirFiltros(reporte.Filtro)
+            .Select(item => (item.Label.ToUpperInvariant(), item.Value))
+            .ToArray(), new[] { 4, 4, 3 });
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("2. RESUMEN EJECUTIVO"));
+        AgregarKpis(rows, new[]
+        {
+            ("TOTAL MATRICES", reporte.Totales.TotalMatrices.ToString()),
+            ("CALCULADAS", reporte.Totales.TotalCalculadas.ToString()),
+            ("SIN EVALUAR", reporte.Totales.TotalSinCalculo.ToString()),
+            ("CERRADAS", reporte.Totales.TotalCerradas.ToString()),
+            ("ALTO / CRÍTICO", reporte.Totales.TotalAltoCritico.ToString()),
+            ("PLAN REQUERIDO", reporte.Totales.TotalPlanAccionRequerido.ToString()),
+            ("PLANES VENCIDOS", reporte.Totales.TotalPlanesVencidos.ToString())
+        });
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("3. MATRICES FILTRADAS"));
+        rows.Add(Fila(25m,
+            Celda("ID", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Sujeto", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Documento", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Tipo", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Estado", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Inherente", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Residual", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Plan", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Fecha", 1, InstitutionalXlsxCellStyle.TableHeader)));
+        AgregarFilasMatrices(rows, reporte.MatricesFiltradas.Select(x => new object?[]
+        {
+            x.MatrizId, Texto(x.NombreSujeto), Texto(x.Documento), Texto(x.SujetoTipo), Texto(x.Estado),
+            Resultado(x.PuntajeInherente, x.NivelInherente), Resultado(x.PuntajeResidual, x.NivelResidual),
+            x.RequierePlanAccion ? "Sí" : "No", x.FechaEvaluacion.ToString(InstitutionalReportStandard.DateFormat)
+        }));
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("4. RESULTADOS POR FACTOR"));
+        rows.Add(Fila(25m,
+            Celda("Factor", 3, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Matrices", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Promedio inherente", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Promedio residual", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Alto / Crítico", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Plan requerido", 1, InstitutionalXlsxCellStyle.TableHeader)));
+        AgregarFilas(rows, reporte.PorFactor.Select(x => new (object? Value, int Span, bool Centered)[]
+        {
+            ($"{Texto(x.FactorCodigo)} - {Texto(x.FactorNombre)}", 3, false),
+            (x.TotalMatrices, 1, true),
+            (x.PromedioInherente.ToString("0.0000", CultureInfo.InvariantCulture), 2, true),
+            (x.PromedioResidual.ToString("0.0000", CultureInfo.InvariantCulture), 2, true),
+            (x.TotalAltoCritico, 2, true),
+            (x.TotalPlanAccionRequerido, 1, true)
+        }));
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("5. MAPA DE TRANSICIÓN INHERENTE A RESIDUAL"));
+        rows.Add(Fila(25m,
+            Celda("Nivel inherente", 3, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Nivel residual", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Total", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Promedio inherente", 3, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Promedio residual", 2, InstitutionalXlsxCellStyle.TableHeader)));
+        AgregarFilas(rows, reporte.MapaTransicion.Select(x => new (object? Value, int Span, bool Centered)[]
+        {
+            (Texto(x.NivelInherente), 3, false),
+            (Texto(x.NivelResidual), 2, false),
+            (x.Total, 1, true),
+            (x.PromedioInherente.ToString("0.0000", CultureInfo.InvariantCulture), 3, true),
+            (x.PromedioResidual.ToString("0.0000", CultureInfo.InvariantCulture), 2, true)
+        }));
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("6. MATRICES ALTO / CRÍTICO"));
+        rows.Add(Fila(25m,
+            Celda("ID", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Sujeto", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Documento", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Estado", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Residual", 2, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Plan", 1, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Fecha", 1, InstitutionalXlsxCellStyle.TableHeader)));
+        AgregarFilas(rows, reporte.MatricesCriticas.Select(x => new (object? Value, int Span, bool Centered)[]
+        {
+            (x.MatrizId, 1, true),
+            (Texto(x.NombreSujeto), 2, false),
+            (Texto(x.Documento), 2, true),
+            (Texto(x.Estado), 2, true),
+            (Resultado(x.PuntajeResidual, x.NivelResidual), 2, true),
+            (x.RequierePlanAccion ? "Sí" : "No", 1, true),
+            (x.FechaEvaluacion.ToString(InstitutionalReportStandard.DateFormat), 1, true)
+        }));
+
+        rows.Add(Espacio());
+        rows.Add(Seccion("7. PLANES DE ACCIÓN"));
+        rows.Add(Fila(25m,
+            Celda("Estado", 5, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Total", 3, InstitutionalXlsxCellStyle.TableHeader),
+            Celda("Vencidos", 3, InstitutionalXlsxCellStyle.TableHeader)));
+        AgregarFilas(rows, reporte.PlanesAccion.Select(x => new (object? Value, int Span, bool Centered)[]
+        {
+            (Texto(x.Estado), 5, false),
+            (x.Total, 3, true),
+            (x.Vencidos, 3, true)
+        }));
+
+        rows.Add(Espacio());
+        rows.Add(Fila(20m,
+            Celda(InstitutionalReportStandard.SystemName, 3),
+            Celda(reporte.FechaGeneracion.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture), 5),
+            Celda("Reporte ejecutivo · Hoja única", 3)));
+        return rows;
+    }
+
+    private static void AgregarTarjetas(
+        ICollection<InstitutionalXlsxDocumentRow> rows,
+        IReadOnlyList<(string Label, string Value)> items,
+        IReadOnlyList<int> spans)
+    {
+        for (var index = 0; index < items.Count; index += spans.Count)
+        {
+            var labels = new List<InstitutionalXlsxDocumentCell>();
+            var values = new List<InstitutionalXlsxDocumentCell>();
+            for (var column = 0; column < spans.Count; column++)
+            {
+                var itemIndex = index + column;
+                var span = spans[column];
+                if (itemIndex < items.Count)
+                {
+                    labels.Add(Celda(items[itemIndex].Label, span, InstitutionalXlsxCellStyle.CardLabel));
+                    values.Add(Celda(items[itemIndex].Value, span, InstitutionalXlsxCellStyle.CardValue));
+                }
+                else
+                {
+                    labels.Add(Celda(null, span));
+                    values.Add(Celda(null, span));
+                }
+            }
+            rows.Add(new InstitutionalXlsxDocumentRow(labels, 18m));
+            rows.Add(new InstitutionalXlsxDocumentRow(values, 22m));
+        }
+    }
+
+    private static void AgregarKpis(
+        ICollection<InstitutionalXlsxDocumentRow> rows,
+        IReadOnlyList<(string Label, string Value)> items)
+    {
+        AgregarKpiFila(rows, items.Take(4).ToArray(), new[] { 3, 3, 3, 2 });
+        AgregarKpiFila(rows, items.Skip(4).Take(3).ToArray(), new[] { 3, 3, 3, 2 });
+    }
+
+    private static void AgregarKpiFila(
+        ICollection<InstitutionalXlsxDocumentRow> rows,
+        IReadOnlyList<(string Label, string Value)> items,
+        IReadOnlyList<int> spans)
+    {
+        var labels = new List<InstitutionalXlsxDocumentCell>();
+        var values = new List<InstitutionalXlsxDocumentCell>();
+        for (var index = 0; index < spans.Count; index++)
+        {
+            if (index < items.Count)
+            {
+                labels.Add(Celda(items[index].Label, spans[index], InstitutionalXlsxCellStyle.CardLabel));
+                values.Add(Celda(items[index].Value, spans[index], InstitutionalXlsxCellStyle.KpiValue));
+            }
+            else
+            {
+                labels.Add(Celda(null, spans[index]));
+                values.Add(Celda(null, spans[index]));
+            }
+        }
+        rows.Add(new InstitutionalXlsxDocumentRow(labels, 18m));
+        rows.Add(new InstitutionalXlsxDocumentRow(values, 30m));
+    }
+
+    private static void AgregarFilasMatrices(
+        ICollection<InstitutionalXlsxDocumentRow> rows,
+        IEnumerable<object?[]> values)
+    {
+        var materialized = values.ToArray();
+        if (materialized.Length == 0)
+        {
+            rows.Add(Fila(23m, Celda("Sin matrices para los filtros aplicados.", 11, InstitutionalXlsxCellStyle.BorderedBody)));
+            return;
+        }
+
+        for (var index = 0; index < materialized.Length; index++)
+        {
+            var row = materialized[index];
+            var alternate = index % 2 == 1;
+            rows.Add(Fila(23m,
+                Celda(row[0], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[1], 2, EstiloCuerpo(alternate, false)),
+                Celda(row[2], 2, EstiloCuerpo(alternate, true)),
+                Celda(row[3], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[4], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[5], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[6], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[7], 1, EstiloCuerpo(alternate, true)),
+                Celda(row[8], 1, EstiloCuerpo(alternate, true))));
+        }
+    }
+
+    private static void AgregarFilas(
+        ICollection<InstitutionalXlsxDocumentRow> rows,
+        IEnumerable<(object? Value, int Span, bool Centered)[]> values)
+    {
+        var materialized = values.ToArray();
+        if (materialized.Length == 0)
+        {
+            rows.Add(Fila(23m, Celda("Sin registros para mostrar.", 11, InstitutionalXlsxCellStyle.BorderedBody)));
+            return;
+        }
+
+        for (var index = 0; index < materialized.Length; index++)
+        {
+            var alternate = index % 2 == 1;
+            rows.Add(new InstitutionalXlsxDocumentRow(
+                materialized[index]
+                    .Select(cell => Celda(cell.Value, cell.Span, EstiloCuerpo(alternate, cell.Centered)))
+                    .ToArray(),
+                23m));
+        }
+    }
+
+    private static InstitutionalXlsxCellStyle EstiloCuerpo(bool alternate, bool centered) =>
+        alternate
+            ? centered ? InstitutionalXlsxCellStyle.AlternateCenteredBody : InstitutionalXlsxCellStyle.AlternateBody
+            : centered ? InstitutionalXlsxCellStyle.CenteredBody : InstitutionalXlsxCellStyle.BorderedBody;
+
+    private static InstitutionalXlsxDocumentRow Seccion(string title) =>
+        Fila(25m, Celda(title, 11, InstitutionalXlsxCellStyle.Section));
+
+    private static InstitutionalXlsxDocumentRow Espacio() =>
+        Fila(8m, Celda(null, 11));
+
+    private static InstitutionalXlsxDocumentRow Fila(
+        decimal height,
+        params InstitutionalXlsxDocumentCell[] cells) =>
+        new(cells, height);
+
+    private static InstitutionalXlsxDocumentCell Celda(
+        object? value,
+        int span,
+        InstitutionalXlsxCellStyle style = InstitutionalXlsxCellStyle.Body) =>
+        new(value, span, style);
 
     public static MatrizRiesgoExportacionDto ConstruirFicha(MatrizRiesgoDetalleDto matriz)
     {
