@@ -621,7 +621,7 @@ public sealed class MatricesRiesgosApplicationTests
             Assert.NotNull(archive.GetEntry("[Content_Types].xml"));
             Assert.NotNull(archive.GetEntry("xl/workbook.xml"));
             Assert.NotNull(archive.GetEntry("xl/styles.xml"));
-            Assert.True(archive.Entries.Count(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.Ordinal)) >= 5);
+            Assert.Single(archive.Entries.Where(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.Ordinal)));
         }
         Assert.Equal("APROBADA", filtro.Estado);
         Assert.Equal("PROVEEDOR", filtro.SujetoTipo);
