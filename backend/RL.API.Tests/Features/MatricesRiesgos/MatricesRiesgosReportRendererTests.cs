@@ -125,7 +125,7 @@ public sealed class MatricesRiesgosReportRendererTests
         {
             ["MatrizId"] = 101L,
             ["NombreSujeto"] = "Proveedor Estratégico Centroamericano, S. A.",
-            ["Documento"] = "0801-1999-123456",
+            ["Documento"] = "010203040506070809",
             ["SujetoTipo"] = "PROVEEDOR",
             ["Estado"] = "APROBADA",
             ["PuntajeInherente"] = 4.75m,
@@ -153,7 +153,7 @@ public sealed class MatricesRiesgosReportRendererTests
         {
             ["MatrizId"] = 101L,
             ["NombreSujeto"] = "Proveedor Estratégico Centroamericano, S. A.",
-            ["Documento"] = "0801-1999-123456",
+            ["Documento"] = "010203040506070809",
             ["SujetoTipo"] = "PROVEEDOR",
             ["Estado"] = "APROBADA",
             ["PuntajeInherente"] = 4.75m,
@@ -281,34 +281,68 @@ public sealed class MatricesRiesgosReportRendererTests
         Assert.NotNull(zip.GetEntry("[Content_Types].xml"));
         Assert.NotNull(zip.GetEntry("xl/workbook.xml"));
         Assert.NotNull(zip.GetEntry("xl/styles.xml"));
-        Assert.True(zip.Entries.Count(entry => entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)) >= 6);
 
-        using var reader = new StreamReader(zip.GetEntry("xl/workbook.xml")!.Open(), Encoding.UTF8);
-        var workbookXml = reader.ReadToEnd();
-        foreach (var hoja in new[] { "Resumen", "Matrices", "Factores", "Mapa transición", "Matrices críticas", "Planes" })
+        var worksheets = zip.Entries.Where(entry =>
+                entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
+                && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        Assert.Single(worksheets);
+
+        using var workbookReader = new StreamReader(zip.GetEntry("xl/workbook.xml")!.Open(), Encoding.UTF8);
+        var workbookXml = workbookReader.ReadToEnd();
+        var workbookDocument = XDocument.Parse(workbookXml);
+        Assert.Single(workbookDocument.Descendants().Where(element => element.Name.LocalName == "sheet"));
+        Assert.Contains("Reporte Ejecutivo", workbookXml);
+        Assert.DoesNotContain("name=\"Resumen\"", workbookXml);
+        Assert.DoesNotContain("name=\"Matrices\"", workbookXml);
+        Assert.DoesNotContain("name=\"Factores\"", workbookXml);
+        Assert.DoesNotContain("name=\"Planes\"", workbookXml);
+
+        using var sheetReader = new StreamReader(worksheets[0].Open(), Encoding.UTF8);
+        var sheetXml = sheetReader.ReadToEnd();
+        Assert.Contains("<pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/>", sheetXml);
+        Assert.Contains("fitToWidth=\"1\"", sheetXml);
+        Assert.Contains("fitToHeight=\"0\"", sheetXml);
+        Assert.Contains("orientation=\"landscape\"", sheetXml);
+        Assert.Contains("ySplit=\"2\"", sheetXml);
+        Assert.Contains("<mergeCells", sheetXml);
+        Assert.Contains("dimension ref=\"A1:K", sheetXml);
+
+        var document = XDocument.Parse(sheetXml);
+        var children = document.Root!.Elements().Select(element => element.Name.LocalName).ToList();
+        var sheetDataIndex = children.IndexOf("sheetData");
+        var mergeCellsIndex = children.IndexOf("mergeCells");
+        Assert.True(sheetDataIndex >= 0, "La hoja no contiene sheetData.");
+        Assert.True(mergeCellsIndex > sheetDataIndex, "mergeCells debe aparecer después de sheetData.");
+
+        var text = string.Join("|", document.Descendants()
+            .Where(element => element.Name.LocalName == "t")
+            .Select(element => element.Value));
+        var sections = new[]
         {
-            Assert.Contains(hoja, workbookXml);
+            "1. FILTROS APLICADOS",
+            "2. RESUMEN EJECUTIVO",
+            "3. MATRICES FILTRADAS",
+            "4. RESULTADOS POR FACTOR",
+            "5. MAPA DE TRANSICIÓN INHERENTE A RESIDUAL",
+            "6. MATRICES ALTO / CRÍTICO",
+            "7. PLANES DE ACCIÓN"
+        };
+
+        var previousIndex = -1;
+        foreach (var section in sections)
+        {
+            var currentIndex = text.IndexOf(section, StringComparison.Ordinal);
+            Assert.True(currentIndex > previousIndex, $"La sección '{section}' falta o está fuera de orden.");
+            previousIndex = currentIndex;
         }
 
-        foreach (var worksheet in zip.Entries.Where(entry =>
-                     entry.FullName.StartsWith("xl/worksheets/sheet", StringComparison.OrdinalIgnoreCase)
-                     && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)))
-        {
-            using var sheetReader = new StreamReader(worksheet.Open(), Encoding.UTF8);
-            var sheetXml = sheetReader.ReadToEnd();
-            Assert.Contains("<pageSetUpPr fitToPage=\"1\" autoPageBreaks=\"0\"/>", sheetXml);
-            Assert.Contains("fitToWidth=\"1\"", sheetXml);
-
-            var document = XDocument.Parse(sheetXml);
-            var children = document.Root!.Elements().Select(element => element.Name.LocalName).ToList();
-            var autoFilterIndex = children.IndexOf("autoFilter");
-            var mergeCellsIndex = children.IndexOf("mergeCells");
-            Assert.True(autoFilterIndex >= 0, $"{worksheet.FullName} no contiene autoFilter.");
-            Assert.True(mergeCellsIndex >= 0, $"{worksheet.FullName} no contiene mergeCells.");
-            Assert.True(autoFilterIndex < mergeCellsIndex,
-                $"{worksheet.FullName} no respeta el orden OpenXML: autoFilter debe preceder a mergeCells.");
-            Assert.NotEmpty(document.Root.Descendants().Where(element => element.Name.LocalName == "row"));
-        }
+        Assert.Contains("REPORTE EJECUTIVO DE MATRICES DE RIESGOS", text);
+        Assert.Contains("010203040506070809", text);
+        Assert.Contains("PROV - Proveedores", text);
+        Assert.Contains("4.7500", text);
+        Assert.Contains("PENDIENTE", text);
+        Assert.Contains("Reporte ejecutivo · Hoja única", text);
     }
 
     private static void AddListItem(object owner, string propertyName, IReadOnlyDictionary<string, object?> values)
