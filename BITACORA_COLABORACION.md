@@ -79,7 +79,7 @@ Esta bitácora registra de manera cronológica las intervenciones, cambios, veri
 
 ### 3. Resultados de Verificación Técnica
 - **Backend (.NET 10)**: 100% de pruebas superadas (0 errores).
-- **Frontend (Angular 19)**: Build exitoso en producción (bundle 379 kB) y 165/165 pruebas pasadas.
+- **Frontend (Angular 22)**: Build exitoso en producción (bundle 379 kB) y 165/165 pruebas pasadas.
 - **Git Status**: 2 únicas ramas sincronizadas (`main` y `desarrollo`).
 
 ### 4. Próximos Pasos y Punto de Continuación para el Siguiente Agente / Usuario
