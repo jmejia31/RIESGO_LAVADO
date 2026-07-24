@@ -20,6 +20,8 @@
 - **Alcance**: revisión de cambios atribuidos a Antigravity, protocolo multiagente, bitácora, documentación central, políticas de ramas, estándar de reportería y prueba de Excel de una hoja.
 - **Commit inicial de `desarrollo`**: `d737c3ba1147873a0863d24f9f6383330c611636`.
 - **Relación inicial con `main`**: `desarrollo` estaba dos commits detrás de `main`, sin diferencias de archivos. El contenido era equivalente, pero el historial no estaba sincronizado al mismo commit.
+- **Relación al cierre**: las ramas están divergidas. `desarrollo` contiene los commits documentales de esta auditoría y `main` conserva dos commits de merge que no están en la historia de `desarrollo`. No se debe forzar ninguna referencia; la reconciliación debe hacerse mediante revisión controlada antes de una futura integración.
+- **Commit de la bitácora de cierre**: `62ece2aa996e7066dafeee55ef3350ad6616ae30`.
 
 ## 3. Cambios revisados de Antigravity
 
@@ -50,15 +52,15 @@ La aserción de una sola hoja coincide con el comportamiento vigente del reporte
 
 | Hallazgo | Estado | Tratamiento |
 |---|---|---|
-| `BITACORA_COLABORACION.md` contenía enlaces `file:///c:/...` inutilizables desde GitHub | Confirmado | Sustituir por enlaces relativos |
-| La Intervención #1 identificaba el frontend como Angular 19 | Confirmado | El código declara Angular 22; se deja nota correctiva |
+| `BITACORA_COLABORACION.md` contenía enlaces `file:///c:/...` inutilizables desde GitHub | Confirmado | Sustituidos por enlaces relativos |
+| La Intervención #1 identificaba el frontend como Angular 19 | Confirmado | El código declara Angular 22; se dejó nota correctiva |
 | `AGENTS.md` fijaba conteos de 226+ y 27+ pruebas | Confirmado | El protocolo ya no fija cifras; los conteos pertenecen a cada ejecución |
 | `CONTRIBUTING.md` ordenaba trabajar directamente en `main` | Confirmado | Alineado con `desarrollo` activa y `main` estable |
 | `CLEANUP_REPORT.md` afirmaba que solo existía `main` | Confirmado como dato histórico | Marcado como evidencia histórica y enlazado al estado vigente |
 | `QUALITY.md` recomendaba mantener 77 pruebas Backend y 123 Frontend | Confirmado como línea base antigua | Separado de la evidencia vigente y clasificado como histórico |
 | `API.md` apuntaba a la carpeta global retirada `backend/RL.API/Controllers` | Confirmado | Corregido hacia `Features/<Modulo>` y `Contracts` |
 | El estándar PDF/Excel exigía el utilitario Angular incluso para Matrices, cuyo archivo oficial se genera en Backend | Confirmado | Corregido por capa propietaria |
-| La bitácora afirmaba sincronización total entre `main` y `desarrollo` | Parcialmente correcto | Los archivos coincidían, pero `desarrollo` estaba dos commits detrás al iniciar la auditoría |
+| La bitácora afirmaba sincronización total entre `main` y `desarrollo` | Parcialmente correcto | Los archivos coincidían al iniciar, pero `desarrollo` estaba dos commits detrás |
 | Resultados de pruebas de Antigravity | Reportados, no reproducidos | No existían ejecuciones CI asociadas a los commits revisados |
 
 ## 5. Documentación central revisada
@@ -83,7 +85,7 @@ Se revisaron directamente:
 - Proyecto Frontend y Backend para comprobar versiones reales.
 - Prueba Backend de exportación de Matrices para comprobar la exigencia de una única hoja.
 
-Los documentos históricos mantienen sus métricas de la fecha de cierre, pero ahora deben identificarse como históricos y no como estado vigente.
+Los documentos históricos mantienen sus métricas de la fecha de cierre, pero deben identificarse como históricos y no como estado vigente.
 
 ## 6. Correcciones publicadas en `desarrollo`
 
@@ -96,6 +98,7 @@ Los documentos históricos mantienen sus métricas de la fecha de cierre, pero a
 - Clasificación de `CLEANUP_REPORT.md` como evidencia histórica.
 - Corrección del estándar PDF/Excel según la capa que genera el archivo.
 - Creación de este documento vivo de continuidad.
+- Actualización de `BITACORA_COLABORACION.md` con la Intervención #3.
 
 ## 7. Evidencia técnica
 
@@ -105,7 +108,8 @@ Los documentos históricos mantienen sus métricas de la fecha de cierre, pero a
 - Versiones declaradas en `frontend/rl-app/package.json`.
 - Target Framework y proveedor Oracle en `backend/RL.API/RL.API.csproj`.
 - Cambio de prueba para exigir exactamente una hoja Excel.
-- Divergencia de dos commits entre `desarrollo` y `main` al inicio, sin diferencias de archivos.
+- Divergencia inicial de dos commits entre `desarrollo` y `main`, sin diferencias de archivos.
+- Divergencia final controlada por los commits documentales publicados en `desarrollo`.
 - Ausencia de estados y ejecuciones CI asociados a los commits de Antigravity consultados.
 
 ### No ejecutado en esta auditoría
@@ -136,4 +140,5 @@ Razón: la intervención se realizó mediante revisión y actualización directa
 3. Ejecutar validación de enlaces y estructura después de estos cambios documentales.
 4. Ejecutar Backend, Frontend, build y E2E antes de una integración.
 5. Registrar los resultados reales, incluidos conteos y commits, en ambos documentos colaborativos.
-6. Solicitar autorización de Javier Mejía antes de integrar `desarrollo` en `main`.
+6. Reconciliar la historia de `main` y `desarrollo` mediante una operación revisada; no usar `push --force`.
+7. Solicitar autorización de Javier Mejía antes de integrar `desarrollo` en `main`.
