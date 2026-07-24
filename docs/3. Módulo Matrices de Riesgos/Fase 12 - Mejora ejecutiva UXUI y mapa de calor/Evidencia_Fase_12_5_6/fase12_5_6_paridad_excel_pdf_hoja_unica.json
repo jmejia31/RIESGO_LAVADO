@@ -1,0 +1,72 @@
+{
+  "fase": "12.5.6",
+  "fecha": "2026-07-24",
+  "modulo": "Matrices de Riesgos",
+  "objetivo": "Corregir la exportación Excel del reporte ejecutivo para que sea una réplica informativa y visual del PDF dentro de una sola hoja.",
+  "rama": "fase-12-mejora-ejecutiva-matrices",
+  "main_modificado": false,
+  "pr": 2,
+  "fuentes_usuario": {
+    "pdf": {
+      "archivo": "Reporte_Matrices_Riesgos_20260724143927.pdf",
+      "paginas": 3,
+      "sha256": "9631c91c5438d08dada4ed7981677a75072e2e69664a604944712d414708361d"
+    },
+    "excel_anterior": {
+      "archivo": "Reporte_Matrices_Riesgos_20260724143924.xlsx",
+      "hojas": 6,
+      "nombres": [
+        "Resumen",
+        "Matrices",
+        "Factores",
+        "Mapa transición",
+        "Matrices críticas",
+        "Planes"
+      ],
+      "sha256": "7307cabfb8d50bbda9ae7e3fc00050826deadd1f011b9efdb5331fbab2ace2f3"
+    }
+  },
+  "resultado": {
+    "hojas": 1,
+    "nombre_hoja": "Reporte Ejecutivo",
+    "orientacion": "landscape",
+    "ajuste_impresion": {
+      "fit_to_width": 1,
+      "fit_to_height": 0,
+      "filas_congeladas": 2
+    },
+    "secciones": [
+      "1. FILTROS APLICADOS",
+      "2. RESUMEN EJECUTIVO",
+      "3. MATRICES FILTRADAS",
+      "4. RESULTADOS POR FACTOR",
+      "5. MAPA DE TRANSICIÓN INHERENTE A RESIDUAL",
+      "6. MATRICES ALTO / CRÍTICO",
+      "7. PLANES DE ACCIÓN"
+    ],
+    "documentos_como_texto": true,
+    "identificadores_largos_preservados": true,
+    "pdf_modificado": false,
+    "auditoria_modificada": false,
+    "motor_calculo_modificado": false
+  },
+  "archivos_codigo": [
+    "backend/RL.API/Infrastructure/Reporting/InstitutionalXlsxWorkbook.cs",
+    "backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportRenderer.cs",
+    "backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosReportRendererTests.cs"
+  ],
+  "commits": [
+    "fec75abb9dbec7e565191c261fda8f6e818f0fec",
+    "b6b0afe0d5f1954018f6bb311b05d4f416d04874",
+    "e96c79acc3ca3ade5044c487f4dedd1c81925b5b"
+  ],
+  "validacion": {
+    "archivo_corregido_generado_fuera_del_repositorio": "Reporte_Matrices_Riesgos_20260724143924_CORREGIDO.xlsx",
+    "sha256_archivo_corregido": "bc044784264a4bb156f12539a287af431de5aa68fbe0c6fc4d524e3a2014a3e7",
+    "hojas_inspeccionadas": 1,
+    "rango_inspeccionado": "A1:K58",
+    "errores_formula_detectados": 0,
+    "validacion_visual": "aprobada mediante render del rango completo",
+    "ci": "pendiente: GitHub no había publicado ejecuciones para el commit final al momento del cierre de esta evidencia"
+  }
+}
