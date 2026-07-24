@@ -1,55 +1,122 @@
-# Protocolo Transversal de Colaboración Multi-Agente y Desarrollo (Antigravity, Codex, ChatGPT, Usuario)
+# Protocolo Transversal de Colaboración Multiagente y Desarrollo
 
 > [!IMPORTANT]
 > **REGLA MANDATORIA DE PRIMERA LECTURA**
-> Antes de realizar cualquier inspección, análisis, modificación o ejecución de código en este repositorio, **TODO AGENTE DE IA (Antigravity, Codex, ChatGPT)** y el **Usuario** DEBEN consultar este documento `AGENTS.md` y la `BITACORA_COLABORACION.md`.
+> Antes de inspeccionar, analizar, modificar, probar o documentar este repositorio, todo participante —**Antigravity, Codex, ChatGPT y Javier Mejía (`jmejia31`)**— debe leer, en este orden:
+>
+> 1. `AGENTS.md`.
+> 2. [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
+> 3. [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
+> 4. `README.md` y la documentación específica del módulo que será intervenido.
 
 ---
 
-## 1. Integrantes del Equipo de Desarrollo
-- **Antigravity**: Agente de IA para pair programming, arquitectura y refactorización.
-- **Codex**: Agente de IA para desarrollo, autocompletado y asistencia técnica.
-- **ChatGPT**: Agente de IA para análisis, diseño, generación de código y asistencia estratégica.
-- **Usuario (Francisco Pérez / jmejia31)**: Propietario del proyecto, líder de requerimientos y aprobador final.
+## 1. Integrantes y responsabilidad
+
+- **Antigravity**: pair programming, arquitectura, refactorización y verificación técnica.
+- **Codex**: desarrollo, mantenimiento, pruebas y asistencia técnica.
+- **ChatGPT**: análisis, diseño, desarrollo, revisión integral y coordinación de continuidad.
+- **Javier Mejía (`jmejia31`)**: propietario, responsable de requerimientos y aprobador final.
+
+Ningún agente puede atribuirse aprobación funcional, cierre de fase, validación Oracle institucional o autorización para publicar en `main` si Javier Mejía no la ha otorgado expresamente.
 
 ---
 
-## 2. Flujo de Trabajo Obligatorio para Cada Sesión
+## 2. Política de ramas
 
-### Paso 1: Revisión Inicial Obligatoria
-1. Leer `AGENTS.md` (este archivo) para validar estándares y reglas.
-2. Leer la bitácora activa en `BITACORA_COLABORACION.md` para conocer:
-   - ¿Quién trabajó por última vez? (Antigravity, Codex, ChatGPT o Usuario).
-   - ¿Qué cambios exactos se hicieron?
-   - ¿En qué estado quedaron las pruebas y la compilación?
-   - ¿Cuáles son los siguientes pasos específicos para continuar?
-3. Verificar la sincronización con Git:
-   ```bash
-   git status
-   git fetch --all
-   git pull origin <rama-actual>
-   ```
+- **`desarrollo`**: rama obligatoria para trabajo activo, documentación, correcciones y mejoras.
+- **`main`**: rama estable. No se modifica, fusiona ni publica desde una intervención ordinaria sin autorización expresa de Javier Mejía.
+- Antes de trabajar se debe comprobar la relación real entre ramas y registrar si existe divergencia de commits o de archivos.
+- No crear, eliminar, renombrar ni limpiar ramas adicionales sin autorización expresa y evidencia previa de que no contienen trabajo pendiente.
 
-### Paso 2: Ejecución de Cambios y Estándares
-1. **Sin Parches Superficiales**: No silenciar excepciones, ni omitir pruebas fallidas, ni enmascarar errores.
-2. **Paridad y Calidad**: Respetar contratos institucionales de reportería Excel y PDF (hoja única, estilos ejecutivos).
-3. **Verificación de Pruebas**:
-   - Backend C#: `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj` (226+ pruebas).
-   - Frontend Angular: `npx ng test --watch=false` en `frontend/rl-app` (27+ pruebas).
-   - Compilación Frontend: `npm run build` en `frontend/rl-app`.
+Comandos de referencia:
 
-### Paso 3: Handoff / Cierre de Turno Obligatorio
-Antes de finalizar la intervención o responder al usuario, el agente o participante activo DEBE actualizar `BITACORA_COLABORACION.md` registrando:
-1. **Fecha y Hora**: `AAAA-MM-DD HH:MM`.
-2. **Autor**: [Antigravity | Codex | ChatGPT | Usuario].
-3. **Resumen de Trabajo Realizado**: Lista clara de funcionalidades agregadas, bugs corregidos o artefactos generados.
-4. **Archivos Modificados / Creados**: Lista con enlaces o rutas relativas.
-5. **Resultado de Verificación**: Estado de compilación y pruebas (`dotnet test`, `ng test`, `ng build`).
-6. **Sincronización Git**: Confirmación de `git push` a `https://github.com/jmejia31/RIESGO_LAVADO`.
-7. **Punto de Continuación y Próximos Pasos**: Instrucciones exactas para el siguiente agente o usuario sobre qué tarea tomar a continuación.
+```bash
+git status
+git fetch --all --prune
+git switch desarrollo
+git pull --ff-only origin desarrollo
+git log --oneline --decorate -n 15
+git diff --check
+```
 
 ---
 
-## 3. Repositorio Oficial y Sincronización
-- **URL Remote**: `https://github.com/jmejia31/RIESGO_LAVADO.git`
-- **Regla de Sincronía**: El entorno local y la rama remota en GitHub DEBEN mantenerse en la misma versión más actualizada. Nunca deben dejarse cambios locales sin empujar o sin confirmar si están validados.
+## 3. Flujo obligatorio de cada intervención
+
+### 3.1 Revisión inicial
+
+1. Leer los tres documentos obligatorios de colaboración.
+2. Identificar quién trabajó por última vez, qué commits produjo y cuál fue el punto de continuación.
+3. Revisar documentación central y documentación del módulo afectado.
+4. Comparar lo documentado con el código, dependencias, pruebas y estado Git actuales.
+5. Clasificar toda evidencia como:
+   - **Ejecutada y verificada en esta intervención**.
+   - **Reportada por una intervención anterior, no reproducida**.
+   - **Pendiente por dependencia externa**.
+
+No presentar como verificado un resultado heredado que no se ejecutó nuevamente.
+
+### 3.2 Ejecución de cambios
+
+1. Evitar parches superficiales, silenciamiento de excepciones y reducción artificial de pruebas o cobertura.
+2. Preservar contratos REST, IDs de módulos, reglas de negocio, motor de cálculo, estructura Oracle y separación funcional entre módulos, salvo autorización expresa.
+3. Mantener la paridad institucional entre PDF y Excel cuando aplique.
+4. Agregar o actualizar pruebas de regresión para cada cambio funcional.
+5. Usar enlaces relativos del repositorio; están prohibidos enlaces locales `file:///C:/...` en documentación versionada.
+6. No fijar cifras de pruebas en este protocolo. Los conteos reales pertenecen a la bitácora de cada ejecución.
+
+### 3.3 Verificación mínima
+
+Ejecutar, según el alcance:
+
+```powershell
+dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config
+dotnet build RIESGO_LAVADO.sln --no-restore
+dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore
+cd frontend/rl-app
+npm ci
+npm run build
+npm test -- --watch=false
+npm run e2e
+cd ../..
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_documentation_links.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_quality_gates.ps1
+```
+
+Cuando una validación no pueda ejecutarse, debe quedar declarada como **pendiente**, con la razón exacta. No se debe sustituir una prueba Oracle, AD, SMTP o de infraestructura por una afirmación documental.
+
+---
+
+## 4. Handoff obligatorio
+
+Antes de finalizar una intervención se deben actualizar **ambos** archivos:
+
+1. [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md): registro cronológico e inmutable de la intervención.
+2. [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md): estado vivo consolidado para continuar.
+
+Cada registro debe incluir:
+
+- fecha y hora local;
+- autor;
+- rama y commit inicial/final;
+- objetivo y alcance;
+- archivos creados o modificados;
+- cambios funcionales y documentales;
+- pruebas ejecutadas con conteos reales;
+- pruebas no ejecutadas y motivo;
+- estado de Git y publicación remota;
+- riesgos, restricciones y pendientes;
+- punto exacto de continuación.
+
+La copia `.agents/AGENTS.md` debe mantenerse idéntica a este archivo. Cualquier cambio del protocolo debe actualizar ambas copias en la misma intervención.
+
+---
+
+## 5. Repositorio oficial
+
+- **Repositorio**: `https://github.com/jmejia31/RIESGO_LAVADO.git`
+- No dejar cambios locales sin commit ni commits validados sin publicar en la rama autorizada.
+- No declarar una rama «sincronizada» únicamente porque sus archivos coinciden: también debe revisarse la divergencia de commits.
