@@ -111,11 +111,48 @@ Cada registro debe incluir:
 - riesgos, restricciones y pendientes;
 - punto exacto de continuación.
 
-La copia `.agents/AGENTS.md` debe mantenerse idéntica a este archivo. Cualquier cambio del protocolo debe actualizar ambas copias en la misma intervención.
+La copia `.agents/AGENTS.md` debe mantenerse idéntica a este archivo, salvo las rutas relativas necesarias por su ubicación. Cualquier cambio del protocolo debe actualizar ambas copias en la misma intervención.
 
 ---
 
-## 5. Repositorio oficial
+## 5. Publicación obligatoria al finalizar cada intervención
+
+> [!IMPORTANT]
+> **Todo colaborador debe publicar (`git push`) la totalidad de sus cambios en `origin/desarrollo` antes de dar por terminada su intervención.**
+> Ningún trabajo puede quedar solo en el repositorio local. El repositorio remoto es la única fuente de verdad compartida.
+
+Esta regla se aplica a:
+
+- código fuente, pruebas y configuración;
+- documentación, bitácora y estado colaborativo;
+- cualquier otro archivo creado o modificado durante la intervención.
+
+Secuencia mínima de cierre de intervención:
+
+```powershell
+git add -A
+git commit -m "<tipo>(<módulo>): <descripción concisa>"
+git push origin desarrollo
+```
+
+Verificar que el push fue aceptado:
+
+```powershell
+git status          # debe indicar "nothing to commit, working tree clean"
+git log --oneline --decorate -n 5   # el commit HEAD debe coincidir con origin/desarrollo
+```
+
+No se considera válido un handoff si:
+
+- existen archivos modificados sin confirmar (`git status` muestra cambios);
+- existen commits locales no publicados (`git log` muestra adelanto respecto a `origin/desarrollo`);
+- la bitácora o el estado colaborativo no fueron actualizados y publicados.
+
+Cuando un colaborador recibe el turno debe ejecutar `git pull --ff-only origin desarrollo` como primer paso para obtener el estado exacto del anterior.
+
+---
+
+## 6. Repositorio oficial
 
 - **Repositorio**: `https://github.com/jmejia31/RIESGO_LAVADO.git`
 - No dejar cambios locales sin commit ni commits validados sin publicar en la rama autorizada.

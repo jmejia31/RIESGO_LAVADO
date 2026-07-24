@@ -147,3 +147,98 @@ No se ejecutaron `dotnet test`, pruebas Frontend, build, E2E, validadores PowerS
 4. Ejecutar Backend, Frontend, build y E2E antes de solicitar integración.
 5. Registrar resultados y commits reales en la Intervención #4.
 6. No integrar a `main` sin autorización expresa de Javier Mejía.
+
+---
+
+## Registro de Intervención #4
+
+- **Fecha y Hora**: 2026-07-24 11:24, hora de Honduras.
+- **Agente / Autor**: Antigravity.
+- **Rama Git**: `desarrollo`.
+- **Commit inicial**: `d693dd740acc7622c4a401160506f5f881186a85`.
+- **Objetivo**: verificar el estado técnico y de fase del proyecto; agregar al protocolo la regla de publicación obligatoria de todos los cambios al finalizar cada intervención.
+
+### 1. Revisión realizada
+
+Se leyeron y analizaron:
+
+- `AGENTS.md`, `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- `README.md` y `CHANGELOG.md`.
+- `docs/0.0 Documentación/ARCHITECTURE.md` y `QUALITY.md`.
+- Estructura de `backend/RL.API/Features` y `backend/RL.API.Tests/Features`.
+- Estructura de `frontend/rl-app/src/app`.
+- Log de `desarrollo` (últimos 20 commits) y log de `origin/main` (últimos 5 commits).
+- Diferencia de archivos entre `origin/main` y `HEAD` (10 archivos, 652 inserciones, 253 eliminaciones —todos documentales—).
+- Estado de Git: un archivo modificado sin confirmar (`tools/validate_repository_structure.ps1`).
+
+### 2. Estado técnico verificado en esta intervención
+
+**Stack tecnológico** (confirmado en archivos de proyecto):
+
+| Componente | Versión |
+|---|---|
+| Angular | 22.0.3 |
+| Angular CLI | 22.0.4 |
+| TypeScript | 6.0.3 |
+| Node.js | 24.18.0 |
+| npm | 11.12.1 |
+| .NET | 10.0 |
+| Oracle.ManagedDataAccess.Core | 23.4.0 |
+
+**Módulos Backend** (`Features/`): `Auditoria`, `Catalogos`, `Configuracion`, `Identidad`, `Listas`, `MatricesRiesgos`.
+
+**Módulos de prueba Backend** (`RL.API.Tests/Features/`): `Auditoria`, `Catalogos`, `Configuracion`, `Identidad`, `Listas`, `MatricesRiesgos` + `ModuleBoundariesTests.cs`.
+
+**Frontend** (`features/`): `admin`, `auth`. La SPA carga componentes bajo demanda.
+
+**Divergencia de ramas**:
+- `desarrollo` tiene 11 commits documentales adelante de `main`.
+- `main` tiene 2 commits de merge que no están en `desarrollo`.
+- Los 10 archivos de diferencia son exclusivamente documentales (sin impacto en código productivo).
+- No debe usarse `push --force`; la reconciliación requiere revisión y autorización.
+
+### 3. Fases completadas (según CHANGELOG.md)
+
+El proyecto completó hasta la **Fase 12 de cierre arquitectónico** más las fases de calidad 13–21 y la Fase 10 de Matrices de Riesgos (cerrada con autorización de Javier Mejía). El reporte ejecutivo Excel de Matrices se unificó en una sola hoja (prueba de regresión activa).
+
+### 4. Archivos creados o modificados
+
+- [`AGENTS.md`](AGENTS.md): nueva sección 5 «Publicación obligatoria al finalizar cada intervención»; sección 5 anterior renombrada a 6.
+- [`.agents/AGENTS.md`](.agents/AGENTS.md): sincronización idéntica de la nueva sección.
+- [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md): esta entrada.
+- [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md): actualización del estado vivo.
+
+### 5. Cambios funcionales
+
+Ninguno. La intervención fue exclusivamente documental y de protocolo.
+
+### 6. Verificación ejecutada en esta intervención
+
+- Lectura directa de archivos de proyecto, bitácora y documentación.
+- Consulta de `git log`, `git status`, `git diff --stat origin/main HEAD`.
+- Confirmación de la estructura de módulos Backend, Tests y Frontend.
+- Confirmación de la divergencia de ramas.
+
+### 7. Verificación no ejecutada
+
+- `dotnet test`: no ejecutado; sin acceso a Oracle ni credenciales institucionales locales en esta sesión.
+- `npm test`, `npm run build`, E2E: no ejecutados.
+- Validadores PowerShell: no ejecutados.
+- Oracle institucional, AD, SMTP: no ejecutados.
+
+Razón: el alcance de la intervención fue documental y de protocolo. Las ejecuciones técnicas corresponden a la siguiente intervención funcional.
+
+### 8. Estado de Git al cierre
+
+- **Rama**: `desarrollo`.
+- **Commit de cierre**: pendiente de push (ver punto de continuación).
+- **Archivos pendientes antes del push**: `AGENTS.md`, `.agents/AGENTS.md`, `BITACORA_COLABORACION.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md`, `tools/validate_repository_structure.ps1` (modificado localmente —pendiente de revisión separada o confirmación si el cambio es intencional—).
+
+### 9. Punto exacto de continuación
+
+1. Ejecutar `git pull --ff-only origin desarrollo` al inicio de la próxima intervención.
+2. Revisar si el cambio en `tools/validate_repository_structure.ps1` es intencional; si lo es, confirmarlo con un commit descriptivo.
+3. Ejecutar `dotnet build`, `dotnet test`, `npm run build`, `npm test` y E2E para obtener conteos reales de esta sesión.
+4. Ejecutar los cuatro validadores PowerShell y registrar resultados.
+5. Planificar la reconciliación controlada de `main` y `desarrollo` con autorización de Javier Mejía.
+6. No integrar a `main` sin autorización expresa.
