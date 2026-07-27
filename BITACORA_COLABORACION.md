@@ -221,3 +221,106 @@ Razón: la sesión no dispone de un checkout ejecutable ni de acceso a servicios
 5. Validar Excel Desktop, PDF real y Oracle institucional.
 6. Actualizar Documento Maestro y checksum.
 7. No modificar `main` sin autorización expresa de Javier Mejía.
+
+---
+
+## Registro de Intervención #6
+
+- **Fecha y hora**: 2026-07-27 08:17, hora de Honduras.
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Actualizar el checkout local desde `origin/desarrollo`, verificar el avance reportado de la Intervención #5 y ejecutar la validación técnica reproducible prevista en el plan formal de cierre de Fase 12.
+
+### Revisión inicial ejecutada
+
+- Lectura de `AGENTS.md`.
+- Lectura de esta bitácora.
+- Lectura de `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- Lectura de `README.md`.
+- Lectura de `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- Confirmación de que el trabajo vigente corresponde a `desarrollo`, no a `main`.
+- Confirmación de que el reporte del avance recibido coincide con los commits publicados en `origin/desarrollo`.
+
+### Sincronización Git
+
+- Rama inicial local antes de corregir el flujo: `fase-12-mejora-ejecutiva-matrices`.
+- Rama obligatoria de trabajo según protocolo: `desarrollo`.
+- Se ejecutó `git fetch --all --prune`; el primer intento falló por bloqueo de red del entorno y se repitió con permiso de red.
+- Se ejecutó `git switch desarrollo`.
+- Se ejecutó `git pull --ff-only origin desarrollo`.
+- `desarrollo` quedó sincronizada en `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- `main` no fue modificada.
+
+### Confirmaciones del avance recibido
+
+- Existe el plan formal de cierre:
+  - `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- `ESTADO_COLABORACION.md` fue consolidado como documento vivo.
+- Esta bitácora contiene la Intervención #5.
+- Los commits reportados están en la historia de `desarrollo`:
+  - `22a5f29e78daeacd4822dd704b82d1a878b029c0`.
+  - `cdfde9f6381afe7d9677f4083df46fbd621778fe`.
+  - `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- Se comprobó que los acentos de los documentos no están dañados en los archivos; la visualización incorrecta observada provino de la salida de consola.
+
+### Verificación técnica ejecutada en esta intervención
+
+| Validación | Resultado |
+|---|---|
+| `git diff --check` | Correcto, sin errores |
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 96 pruebas aprobadas, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto en segundo intento con permisos de entorno |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | 18 archivos de prueba aprobados, 165 pruebas aprobadas |
+| `npm run e2e` | 7 pruebas aprobadas |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 439 archivos rastreados, 3 maestros SQL |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto |
+
+### Métricas de Quality Gates
+
+- Backend: 96 pruebas aprobadas.
+- Frontend: 18 archivos de prueba, 165 pruebas aprobadas.
+- E2E: 7 pruebas aprobadas.
+- Cobertura Backend reportada por Quality Gates:
+  - líneas: 22.15%;
+  - ramas: 21.21%.
+- Cobertura Frontend reportada por Quality Gates:
+  - sentencias: 38.99%;
+  - ramas: 33.51%;
+  - funciones: 36.00%;
+  - líneas: 39.20%.
+
+### Observaciones técnicas
+
+- `npm ci` falló inicialmente por permisos sobre la caché local de npm (`EPERM`) y fue repetido con permisos del entorno; el segundo intento fue correcto.
+- `npm ci` reportó 17 vulnerabilidades transitivas. No se ejecutó `npm audit fix` ni `npm audit fix --force` para evitar cambios de dependencias fuera del alcance de cierre.
+- El build Angular mantiene advertencia conocida por `exceljs` como dependencia CommonJS.
+- El build Backend mantiene dos advertencias `xUnit2009` en pruebas de reportería de Matrices; no bloquean la compilación ni las pruebas.
+- La copia `.agents/AGENTS.md` difiere de `AGENTS.md` solo en rutas relativas, diferencia permitida por el protocolo.
+
+### Verificación no ejecutada
+
+- Excel Desktop con archivo real: pendiente de usuario funcional.
+- PDF con datos institucionales reales: pendiente de usuario funcional autorizado.
+- Oracle institucional: pendiente de DBA autorizado.
+- Active Directory y SMTP: pendiente de infraestructura institucional.
+- Reconciliación `main`/`desarrollo`: pendiente de autorización expresa de Javier Mejía.
+- Documento Maestro final y checksum SHA-256: pendientes hasta completar validaciones funcionales e institucionales.
+
+### Punto exacto de continuación
+
+1. Revisar con Javier Mejía los resultados técnicos reproducidos de la Intervención #6.
+2. Ejecutar validación funcional con Excel Desktop y PDF real.
+3. Ejecutar validación Oracle institucional con DBA autorizado.
+4. Actualizar Documento Maestro de Fase 12 y regenerar checksum.
+5. Solicitar aprobación formal de Javier Mejía para cerrar Fase 12.
+6. No modificar ni integrar `main` sin autorización expresa.

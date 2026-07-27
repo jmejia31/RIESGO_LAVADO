@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #5.
-- **Fecha**: 2026-07-24 11:56, hora de Honduras.
-- **Autor**: ChatGPT.
+- **Intervención**: #6.
+- **Fecha**: 2026-07-27 08:17, hora de Honduras.
+- **Autor**: Codex.
 - **Rama**: `desarrollo`.
-- **Objetivo**: iniciar el cierre formal de la Fase 12, revisar el handoff recibido, limpiar el estado colaborativo duplicado y establecer un plan operativo único.
-- **Commit de inicio verificado**: `4887801d53a5310117d6642cd34b66f1afa50b73`.
-- **Primer commit de esta intervención**: `22a5f29e78daeacd4822dd704b82d1a878b029c0`.
+- **Objetivo**: actualizar el checkout local desde `origin/desarrollo`, confirmar el avance publicado de la Intervención #5 y ejecutar la validación técnica reproducible del plan de cierre de Fase 12.
+- **Commit de inicio verificado**: `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- **Estado**: validación técnica local reproducida; validaciones funcionales e institucionales siguen pendientes.
 
 ## 3. Estado de fases
 
@@ -96,7 +96,61 @@ La reconciliación debe realizarse mediante revisión controlada y validación c
 
 Razón: esta intervención se ejecuta mediante revisión y publicación remota del repositorio; no existe un checkout local ejecutable conectado a los servicios institucionales.
 
-## 7. Plan formal de cierre
+## 7. Validación técnica reproducida en la Intervención #6
+
+### 7.1 Ejecutado
+
+- `git fetch --all --prune`.
+- `git switch desarrollo`.
+- `git pull --ff-only origin desarrollo`.
+- Verificación de que `desarrollo` local y `origin/desarrollo` apuntan a `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- Verificación de que los commits `22a5f29`, `cdfde9f` y `8ccf973` están publicados en `desarrollo`.
+- `git diff --check`.
+- `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config`.
+- `dotnet build RIESGO_LAVADO.sln --no-restore`.
+- `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore`.
+- `npm ci`.
+- `npm run build`.
+- `npm test -- --watch=false`.
+- `npm run e2e`.
+- `tools/validate_repository_structure.ps1`.
+- `tools/validate_database_scripts.ps1`.
+- `tools/validate_documentation_links.ps1`.
+- `tools/run_quality_gates.ps1`.
+
+### 7.2 Resultados
+
+| Validación | Resultado |
+|---|---|
+| Backend build | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| Backend tests | 96 aprobadas, 0 fallidas, 0 omitidas |
+| Frontend build | Correcto, advertencia conocida por `exceljs` CommonJS |
+| Frontend tests | 18 archivos aprobados, 165 pruebas aprobadas |
+| E2E | 7 aprobadas |
+| Estructura | Correcta; 119 rutas obligatorias, 439 archivos rastreados, 3 maestros SQL |
+| Scripts Oracle | Correctos; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| Enlaces documentación | Correctos; 34 Markdown revisados, 41 enlaces locales |
+| Quality Gates | Correctos |
+
+### 7.3 Cobertura reportada por Quality Gates
+
+- Backend:
+  - líneas: 22.15%;
+  - ramas: 21.21%.
+- Frontend:
+  - sentencias: 38.99%;
+  - ramas: 33.51%;
+  - funciones: 36.00%;
+  - líneas: 39.20%.
+
+### 7.4 Observaciones
+
+- `npm ci` requirió un segundo intento con permisos del entorno por error `EPERM` sobre la caché local de npm.
+- `npm ci` reportó 17 vulnerabilidades transitivas. No se ejecutó `npm audit fix` porque no forma parte del cierre y puede modificar dependencias.
+- No se detectó daño real de codificación en los documentos colaborativos; la visualización incorrecta de acentos correspondió a salida de consola.
+- `.agents/AGENTS.md` difiere de `AGENTS.md` solo por rutas relativas, diferencia permitida por el protocolo.
+
+## 8. Plan formal de cierre
 
 El plan operativo completo está en:
 
@@ -115,7 +169,7 @@ Orden obligatorio:
 9. obtener aprobación formal de Javier;
 10. integrar a `main` únicamente si Javier lo autoriza.
 
-## 8. Responsabilidades
+## 9. Responsabilidades
 
 | Actividad | Responsable |
 |---|---|
@@ -128,7 +182,7 @@ Orden obligatorio:
 | AD/SMTP | Infraestructura institucional |
 | Aprobación y cierre | Javier Mejía |
 
-## 9. Restricciones vigentes
+## 10. Restricciones vigentes
 
 - No alterar DNP.
 - No alterar `CONTROL_ALMACEN.PROVEEDOR`.
@@ -139,13 +193,15 @@ Orden obligatorio:
 - No reducir pruebas o cobertura para aprobar un cambio.
 - No declarar cierre o aprobación sin Javier Mejía.
 
-## 10. Punto exacto de continuación
+## 11. Punto exacto de continuación
 
-La siguiente intervención con entorno ejecutable debe:
+La siguiente intervención debe:
 
 1. ejecutar `git pull --ff-only origin desarrollo`;
 2. revisar este documento, la bitácora y el plan de cierre;
-3. inspeccionar el ajuste de `tools/validate_repository_structure.ps1`;
-4. ejecutar Backend, Frontend, E2E y los cuatro validadores;
-5. registrar resultados reales y el commit exacto;
-6. no modificar `main` sin autorización.
+3. revisar los resultados técnicos reproducidos en la Intervención #6;
+4. ejecutar validación funcional con Excel Desktop y PDF real;
+5. coordinar validación Oracle institucional con DBA autorizado;
+6. actualizar Documento Maestro de Fase 12 y regenerar checksum;
+7. solicitar aprobación formal de Javier Mejía para cerrar Fase 12;
+8. no modificar `main` sin autorización expresa.
