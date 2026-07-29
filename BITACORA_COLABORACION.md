@@ -324,3 +324,59 @@ Actualizar el checkout local desde `origin/desarrollo`, verificar el avance repo
 4. Actualizar Documento Maestro de Fase 12 y regenerar checksum.
 5. Solicitar aprobación formal de Javier Mejía para cerrar Fase 12.
 6. No modificar ni integrar `main` sin autorización expresa.
+
+---
+
+## Registro de Intervención #7
+
+- **Fecha y hora**: 2026-07-29 14:24, hora de Honduras.
+- **Agente**: Codex.
+- **Rama inicial**: `desarrollo`.
+- **Commit inicial**: `945d369af485bca658735b48357cfa93279a250a`.
+- **Autorización recibida**: Javier Mejía aprobó el cierre de la Fase 12 y autorizó realizar el merge hacia `main`.
+
+### Objetivo
+
+Cerrar formalmente la Fase 12 del módulo Matrices de Riesgos, actualizar la evidencia documental de cierre, regenerar el checksum del documento maestro y dejar `desarrollo`, `main`, el repositorio local y GitHub alineados.
+
+### Cambios documentales ejecutados
+
+- Se actualizó `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx` con la sección **21. Cierre formal aprobado de Fase 12**.
+- Se regeneró `Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256` contra el documento Word final.
+- Se registró en este archivo y en `docs/0.0 Documentación/ESTADO_COLABORACION.md` la aprobación formal y la autorización de integración a `main`.
+- Se incorporaron al control de versiones dos documentos existentes en `docs/0.0 Documentación` que estaban sin seguimiento local: programación de reunión y validación de requerimientos del módulo Matrices de Riesgos.
+
+### Resultado de cierre
+
+- **Fase 12**: aprobada y cerrada por autorización formal de Javier Mejía.
+- **Rama de trabajo**: `desarrollo`.
+- **Integración a `main`**: autorizada expresamente por Javier Mejía en esta intervención.
+
+### Verificación considerada para cierre
+
+Se toma como base la validación técnica reproducida en la Intervención #6:
+
+| Validación | Resultado |
+|---|---|
+| Backend build | Correcto, 0 errores |
+| Backend tests | 96 aprobadas, 0 fallidas, 0 omitidas |
+| Frontend build | Correcto |
+| Frontend tests | 18 archivos aprobados, 165 pruebas aprobadas |
+| E2E | 7 pruebas aprobadas |
+| Validadores PowerShell | Estructura, scripts Oracle, enlaces y Quality Gates correctos |
+
+### Render del documento Word
+
+Se intentó renderizar el documento maestro actualizado con LibreOffice. El intento superó el límite operativo de un minuto definido por Javier Mejía para no consumir tiempo innecesario, por lo que se omitió el render visual y se conserva el documento Word estructuralmente actualizado.
+
+### Restricciones preservadas
+
+- No se modificó DNP.
+- No se modificó `CONTROL_ALMACEN.PROVEEDOR`.
+- No se modificó el motor de cálculo.
+- No se modificó la estructura Oracle.
+- No se cambió el modelo de permisos por módulo.
+
+### Punto exacto de continuidad
+
+Después del merge autorizado, continuar el trabajo ordinario desde `desarrollo` o desde la rama que Javier indique, tomando `main` como versión estable actualizada.

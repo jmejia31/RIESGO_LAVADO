@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #6.
-- **Fecha**: 2026-07-27 08:17, hora de Honduras.
+- **Intervención**: #7.
+- **Fecha**: 2026-07-29 14:24, hora de Honduras.
 - **Autor**: Codex.
 - **Rama**: `desarrollo`.
-- **Objetivo**: actualizar el checkout local desde `origin/desarrollo`, confirmar el avance publicado de la Intervención #5 y ejecutar la validación técnica reproducible del plan de cierre de Fase 12.
-- **Commit de inicio verificado**: `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
-- **Estado**: validación técnica local reproducida; validaciones funcionales e institucionales siguen pendientes.
+- **Objetivo**: cerrar formalmente la Fase 12 por aprobación de Javier Mejía, actualizar el documento maestro y autorizar la integración controlada hacia `main`.
+- **Commit de inicio verificado**: `945d369af485bca658735b48357cfa93279a250a`.
+- **Estado**: Fase 12 aprobada y cerrada; merge hacia `main` autorizado por Javier Mejía.
 
 ## 3. Estado de fases
 
@@ -40,11 +40,11 @@ Las fases de reorganización arquitectónica y calidad 1–21 están documentada
 
 ### 3.3 Dictamen vigente
 
-La fase que continúa es:
+La fase vigente queda:
 
-**Fase 12 — cierre formal y validación institucional posterior a 12.5.6.**
+**Fase 12 — aprobada y cerrada por autorización formal de Javier Mejía.**
 
-No debe declararse una Fase 13 hasta completar validaciones, Documento Maestro, checksum y aprobación de Javier Mejía.
+La continuidad posterior deberá tratarse como mantenimiento evolutivo, nueva fase aprobada o trabajo ordinario sobre `desarrollo`, según lo indique Javier Mejía.
 
 ## 4. Estado de componentes
 
@@ -150,24 +150,19 @@ Razón: esta intervención se ejecuta mediante revisión y publicación remota d
 - No se detectó daño real de codificación en los documentos colaborativos; la visualización incorrecta de acentos correspondió a salida de consola.
 - `.agents/AGENTS.md` difiere de `AGENTS.md` solo por rutas relativas, diferencia permitida por el protocolo.
 
-## 8. Plan formal de cierre
+## 8. Cierre formal de Fase 12
 
-El plan operativo completo está en:
+El plan operativo de cierre quedó ejecutado con aprobación formal de Javier Mejía. El documento de referencia permanece en:
 
 [`docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/Fase%2012%20-%20Mejora%20ejecutiva%20UXUI%20y%20mapa%20de%20calor/PLAN_CIERRE_FORMAL_FASE_12.md)
 
-Orden obligatorio:
+Evidencia de cierre:
 
-1. revisar y reconciliar ramas;
-2. ejecutar Backend;
-3. ejecutar Frontend y E2E;
-4. ejecutar validadores y Quality Gates;
-5. validar Excel Desktop y PDF real;
-6. validar Oracle institucional;
-7. actualizar Documento Maestro;
-8. regenerar checksum;
-9. obtener aprobación formal de Javier;
-10. integrar a `main` únicamente si Javier lo autoriza.
+1. validación técnica reproducida en la Intervención #6;
+2. aprobación formal recibida de Javier Mejía en la Intervención #7;
+3. documento maestro actualizado con cierre formal;
+4. checksum SHA-256 regenerado;
+5. integración a `main` autorizada expresamente.
 
 ## 9. Responsabilidades
 
@@ -197,11 +192,8 @@ Orden obligatorio:
 
 La siguiente intervención debe:
 
-1. ejecutar `git pull --ff-only origin desarrollo`;
-2. revisar este documento, la bitácora y el plan de cierre;
-3. revisar los resultados técnicos reproducidos en la Intervención #6;
-4. ejecutar validación funcional con Excel Desktop y PDF real;
-5. coordinar validación Oracle institucional con DBA autorizado;
-6. actualizar Documento Maestro de Fase 12 y regenerar checksum;
-7. solicitar aprobación formal de Javier Mejía para cerrar Fase 12;
-8. no modificar `main` sin autorización expresa.
+1. ejecutar `git fetch --all --prune`;
+2. trabajar desde la rama indicada por Javier Mejía, usando `main` como versión estable actualizada después del merge autorizado;
+3. mantener `desarrollo` como rama ordinaria de trabajo activo si no se indica otra rama;
+4. registrar cualquier nueva fase o mantenimiento en la bitácora y en este estado vivo;
+5. no reabrir la Fase 12 salvo instrucción expresa de Javier Mejía.
