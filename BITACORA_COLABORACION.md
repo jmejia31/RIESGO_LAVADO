@@ -380,3 +380,54 @@ Se intentó renderizar el documento maestro actualizado con LibreOffice. El inte
 ### Punto exacto de continuidad
 
 Después del merge autorizado, continuar el trabajo ordinario desde `desarrollo` o desde la rama que Javier indique, tomando `main` como versión estable actualizada.
+
+---
+
+## Registro de Intervención #8
+
+- **Fecha y hora**: 2026-07-29 16:00, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `f429102ca19277d4834898144c062828b6d36e2f`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Evaluar la alineación entre la validación técnica reproducible (Fase 12 / Intervención #6) y el diseño definitivo del Módulo Matrices de Riesgos, consolidando un único documento maestro de análisis en Git y registrando los resultados reales de calidad al 100%.
+
+### Archivos creados o modificados
+
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación del documento maestro [`ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) el cual detalla la arquitectura de base de datos Oracle (`MR_`), servicios en .NET 10 y formularios dinámicos mediante JSON en Angular 22 para el desarrollo del Módulo Matrices de Riesgos de 0 a 100%.
+- Consolidación del estado vivo y actualización de los puntos de continuación tras el éxito verificado de la Intervención #6.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | **96 pruebas aprobadas**, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | **18 archivos de prueba aprobados, 165 pruebas aprobadas** |
+| `npm run e2e` | **7 pruebas aprobadas** |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 441 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto. Puertas de calidad aprobadas |
+
+### Métricas de Cobertura de Quality Gates
+- **Backend:** líneas=22.15%, ramas=21.21%
+- **Frontend:** sentencias=38.99%, ramas=33.51%, funciones=36.00%, líneas=39.20%
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre el documento consolidado en Git [`docs/3. Módulo Matrices de Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md).
+2. Iniciar formalmente el desarrollo de la arquitectura dinámica de la Matriz de Riesgos sobre la rama `desarrollo`.
+3. Mantener y actualizar la bitácora de colaboración con cada cambio.
