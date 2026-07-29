@@ -323,7 +323,7 @@ foreach ($legacyDirectory in $legacyBackendDirectories) {
 }
 
 $rootMarkdown = Get-ChildItem -LiteralPath $RepositoryRoot -File -Filter '*.md' |
-    Where-Object { $_.Name -ne 'README.md' }
+    Where-Object { $_.Name -notin @('README.md', 'AGENTS.md', 'BITACORA_COLABORACION.md') }
 foreach ($file in $rootMarkdown) {
     $errors.Add("Documento general fuera del directorio tecnico de docs: $($file.Name)")
 }

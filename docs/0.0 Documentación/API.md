@@ -15,7 +15,7 @@ La API expone controladores bajo `/api`. Salvo endpoints marcados anónimos, se 
 | `/api/Listas` | listas, positivos, seguimientos, evidencias, coincidencias y cargas | autenticado y autorizado por módulo |
 | `/api/matrices-riesgos` | matrices, cálculo, estados, historial, reportes y criterios | autenticado y autorizado por módulo |
 
-Los contratos detallados se derivan de los DTO y atributos en `backend/RL.API/Controllers`; no deben duplicarse manualmente si Swagger está disponible. Cambiar rutas, payloads, códigos o nombres requiere actualizar frontend, documentación y pruebas en el mismo cambio.
+Los contratos detallados se derivan de los DTO y atributos ubicados en `backend/RL.API/Features/<Modulo>` y sus carpetas `Contracts`; las carpetas heredadas globales `Controllers` y `DTOs` ya no forman parte de la arquitectura vigente. No deben duplicarse manualmente los contratos cuando Swagger está disponible. Cambiar rutas, payloads, códigos o nombres requiere actualizar frontend, documentación y pruebas en el mismo cambio.
 
 ## Errores y seguridad
 

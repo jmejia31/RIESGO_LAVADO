@@ -2,9 +2,19 @@
 
 Aplicación institucional para administrar usuarios, configuración, listas de cautela, coincidencias, evidencias, auditoría y matrices de riesgos. El repositorio reúne una SPA Angular, una API ASP.NET Core y scripts Oracle controlados.
 
+## Colaboración y ramas
+
+Antes de trabajar es obligatorio revisar:
+
+- [Protocolo multiagente](AGENTS.md).
+- [Bitácora de colaboración](BITACORA_COLABORACION.md).
+- [Estado colaborativo vigente](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
+
+La rama `desarrollo` concentra el trabajo activo. `main` representa la versión estable y no debe modificarse o fusionarse sin autorización expresa de Javier Mejía. Cada intervención debe actualizar la bitácora y el estado colaborativo antes de finalizar.
+
 ## Arquitectura y tecnologías
 
-- `frontend/rl-app`: Angular 22, TypeScript 6, RxJS, Tailwind CSS, jsPDF y XLSX.
+- `frontend/rl-app`: Angular 22, TypeScript 6, RxJS, Tailwind CSS, jsPDF y ExcelJS.
 - `backend/RL.API`: ASP.NET Core 10, controladores REST, JWT, Oracle Managed Data Access, Serilog y Swagger.
 - `database`: scripts Oracle SQL/PLSQL de instalación, actualización, validación y respaldo.
 - `docs`: documentación funcional, técnica, evidencias y entregables históricos.
@@ -66,7 +76,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_repository_st
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_quality_gates.ps1
 ```
 
-La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.Tests`; Angular contiene pruebas Vitest. Toda modificación funcional debe mantener ambas suites aprobadas.
+La solución incluye pruebas unitarias del motor de matrices en `backend/RL.API.Tests`; Angular contiene pruebas Vitest. Toda modificación funcional debe mantener ambas suites aprobadas. Los conteos exactos de cada ejecución deben registrarse en `BITACORA_COLABORACION.md`; no deben inferirse de documentación histórica.
 
 ## Despliegue y seguridad
 
@@ -82,5 +92,6 @@ Consulte [despliegue](docs/0.0%20Documentación/DEPLOYMENT.md) antes de publicar
 - [Contribución](docs/0.0%20Documentación/CONTRIBUTING.md): flujo de contribución.
 - [Calidad](docs/0.0%20Documentación/QUALITY.md): cobertura, pisos anti-regresión y pruebas E2E.
 - [Cambios](docs/0.0%20Documentación/CHANGELOG.md): cambios relevantes.
-- [Informe de limpieza](docs/0.0%20Documentación/CLEANUP_REPORT.md): evidencia de la limpieza integral.
+- [Estado colaborativo](docs/0.0%20Documentación/ESTADO_COLABORACION.md): línea base viva y punto de continuación.
+- [Informe de limpieza](docs/0.0%20Documentación/CLEANUP_REPORT.md): evidencia histórica de la limpieza integral.
 - `docs/`: documentación modular, funcional e histórica.

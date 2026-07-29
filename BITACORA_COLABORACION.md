@@ -1,91 +1,382 @@
-# Bitácora de Colaboración Transversal (Antigravity - Codex - ChatGPT - Usuario)
+# Bitácora de Colaboración Transversal
 
-Esta bitácora registra de manera cronológica las intervenciones, cambios, verificaciones y transferencias de mando (handoffs) entre **Antigravity**, **Codex**, **ChatGPT** y el **Usuario**.
+Esta bitácora registra cronológicamente las intervenciones, verificaciones y transferencias de mando entre **Antigravity**, **Codex**, **ChatGPT** y **Javier Mejía**.
 
----
-
-##  Registro de Intervención #1
-
-- **Fecha y Hora**: 2026-07-24 09:32 (Hora Local)
-- **Agente / Autor**: Antigravity
-- **Rama Git**: `fase-12-mejora-ejecutiva-matrices`
-- **Estado de Sincronización Git**: Sincronizado localmente con `origin/fase-12-mejora-ejecutiva-matrices` (GitHub).
-
-### 1. Resumen de Trabajo Realizado
-1. **Revisión y Análisis Integral del Sistema**:
-   - Inspección del Backend .NET 10 (`backend/RL.API` y `backend/RL.API.Tests`).
-   - Inspección del Frontend Angular 19 (`frontend/rl-app`).
-   - Verificación de documentación de la Fase 12 (Matrices de Riesgo, Monitoreo de Listas, Reportería Ejecutiva y Paridad Excel/PDF en Hoja Única).
-2. **Sincronización Git (Remote vs Local)**:
-   - Se ejecutó `git fetch --all`.
-   - Se identificó que el repositorio remoto `https://github.com/jmejia31/RIESGO_LAVADO.git` en la rama `fase-12-mejora-ejecutiva-matrices` estaba 4 commits por delante del entorno local.
-   - Se realizó `git pull origin fase-12-mejora-ejecutiva-matrices` exitosamente con fast-forward (incorporando la unificación de reporte Excel en hoja única y validaciones de paridad PDF/Excel).
-3. **Establecimiento de la Regla de Colaboración**:
-   - Se crearon los archivos de regla `AGENTS.md` (en `.agents/AGENTS.md` y la raíz del proyecto `AGENTS.md`).
-   - Se estructuró el protocolo mandatorio de primera lectura y entrega de bitácora para **Antigravity**, **Codex**, **ChatGPT** y el **Usuario**.
-4. **Verificación de Compilación y Pruebas**:
-   - Pruebas Backend C#: **226/226 pasadas exitosamente** (`dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`).
-   - Compilación Frontend Angular: **Construcción exitosa** (`npm run build` en `frontend/rl-app`).
-   - Pruebas Frontend Angular (Karma/ChromeHeadless): **27/27 pasadas exitosamente** (`npx ng test --watch=false` en `frontend/rl-app`).
-
-### 2. Archivos Creados / Modificados en esta Intervención
-- [AGENTS.md](file:///c:/RIESGO_LAVADO/.agents/AGENTS.md) `[NUEVO]` - Regla transversal de colaboración multi-agente.
-- [AGENTS.md](file:///c:/RIESGO_LAVADO/AGENTS.md) `[NUEVO]` - Copia en la raíz para visibilidad directa.
-- [BITACORA_COLABORACION.md](file:///c:/RIESGO_LAVADO/BITACORA_COLABORACION.md) `[NUEVO]` - Bitácora de seguimiento e intercambio de tareas.
-
-### 3. Resultados de Verificación Técnica
-- **Backend (.NET 10)**: Pruebas unitarias al 100% (226 passed, 0 failed).
-- **Frontend (Angular 19)**: Build en producción sin errores, 27/27 pruebas de interfaz pasadas en ChromeHeadless.
-- **Git Status**: Actualizado y libre de divergencias con GitHub.
-
-### 4. Próximos Pasos y Punto de Continuación para el Siguiente Agente / Usuario
-- **Punto de Partida**: El proyecto está en la rama `fase-12-mejora-ejecutiva-matrices`, 100% funcional y alineado con GitHub.
-- **Siguiente Agente (Codex / ChatGPT / Antigravity / Usuario)**:
-  1. Revisar `AGENTS.md` y esta bitácora al iniciar.
-  2. Confirmar si se desea fusionar `fase-12-mejora-ejecutiva-matrices` hacia `main` o continuar con una nueva sub-fase/tarea.
-  3. Ejecutar los cambios deseados y registrar la Intervención #2 en `BITACORA_COLABORACION.md`.
+Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
 
 ---
 
-## 🚀 Registro de Intervención #2
+## Registro de Intervención #1
 
-- **Fecha y Hora**: 2026-07-24 10:40 (Hora Local)
-- **Agente / Autor**: Antigravity
-- **Rama Git**: `desarrollo` (y `main` sincronizada)
-- **Estado de Sincronización Git**: Sincronizado al 100% con GitHub (`origin/main` y `origin/desarrollo`).
+- **Fecha y hora**: 2026-07-24 09:32, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `fase-12-mejora-ejecutiva-matrices`.
 
-### 1. Resumen de Trabajo Realizado
-1. **Publicación de Archivos Colaborativos en GitHub**:
-   - Se verificó y aseguró la presencia de [AGENTS.md](file:///c:/RIESGO_LAVADO/AGENTS.md), [.agents/AGENTS.md](file:///c:/RIESGO_LAVADO/.agents/AGENTS.md) y [BITACORA_COLABORACION.md](file:///c:/RIESGO_LAVADO/BITACORA_COLABORACION.md) en el repositorio remoto de GitHub.
-2. **Merge de Fase 12 a la Rama Principal (`main`)**:
-   - Se realizó la fusión de la rama `fase-12-mejora-ejecutiva-matrices` hacia `main`.
-   - Se subieron todos los cambios de la Fase 12 (matrices de riesgo, monitoreo de listas, reportería en hoja única y paridad PDF/Excel) a `main`.
-3. **Creación y Estandarización de Rama Secundaria (`desarrollo`)**:
-   - Se creó y publicó la rama secundaria de trabajo `desarrollo` partiendo de `main` actualizado.
-4. **Limpieza Completa de Ramas Obsoletas (Local y GitHub)**:
-   - Se eliminaron 16 ramas temporales/antiguas en GitHub (`origin`).
-   - Se eliminaron las ramas locales equivalentes y se ejecutó `git fetch --prune`.
-   - **Resultado de Estructura de Ramas**: Existen **EXACTAMENTE 2 RAMAS** tanto localmente como en GitHub:
-     - `main`: Rama Principal de producción y versiones estables.
-     - `desarrollo`: Rama Secundaria de trabajo activo para los próximos desarrollos y mejoras.
-5. **Verificación Técnica**:
-   - Backend C#: **96/96 pruebas directas pasadas, 226/226 pruebas totales pasadas** (`dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`).
-   - Compilación Frontend Angular: **Exitoso** (`npm run build` en `frontend/rl-app`).
-   - Pruebas Frontend Angular: **165/165 pruebas pasadas (18 test files)** (`npx ng test --watch=false` en `frontend/rl-app`).
+### Resumen reportado
 
-### 2. Archivos Creados / Modificados en esta Intervención
-- [backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs](file:///c:/RIESGO_LAVADO/backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs) `[MODIFICADO]` - Actualización de aserción a reporte Excel en hoja única.
-- [BITACORA_COLABORACION.md](file:///c:/RIESGO_LAVADO/BITACORA_COLABORACION.md) `[MODIFICADO]` - Registro de Intervención #2 y actualización de estado.
+- Inspección del Backend .NET, Frontend y documentación de Fase 12.
+- Actualización fast-forward de la rama de Fase 12.
+- Creación de `AGENTS.md`, `.agents/AGENTS.md` y esta bitácora.
+- Resultados locales reportados:
+  - 226/226 pruebas Backend aprobadas;
+  - build Frontend aprobado;
+  - 27/27 pruebas Frontend aprobadas.
 
-### 3. Resultados de Verificación Técnica
-- **Backend (.NET 10)**: 100% de pruebas superadas (0 errores).
-- **Frontend (Angular 22)**: Build exitoso en producción (bundle 379 kB) y 165/165 pruebas pasadas.
-- **Git Status**: 2 únicas ramas sincronizadas (`main` y `desarrollo`).
+### Nota correctiva posterior
 
-### 4. Próximos Pasos y Punto de Continuación para el Siguiente Agente / Usuario
-- **Punto de Partida**: El proyecto está en la rama `desarrollo`, sincronizada con `main` y publicada en GitHub.
-- **Siguiente Agente (Codex / ChatGPT / Antigravity / Usuario)**:
-  1. Trabajar directamente sobre la rama `desarrollo`.
-  2. Ejecutar `git pull origin desarrollo` al inicio de cada turno.
-  3. Registrar la Intervención #3 en [BITACORA_COLABORACION.md](file:///c:/RIESGO_LAVADO/BITACORA_COLABORACION.md) antes de finalizar.
+La intervención identificó el frontend como Angular 19. La revisión posterior de `frontend/rl-app/package.json` confirmó Angular 22. Los resultados de pruebas se conservan como **reportados por Antigravity, no reproducidos mediante CI**.
 
+### Punto de continuación histórico
+
+Confirmar el destino de Fase 12 y formalizar el siguiente handoff.
+
+---
+
+## Registro de Intervención #2
+
+- **Fecha y hora**: 2026-07-24 10:40, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`, con cambios reportados también en `main`.
+
+### Resumen reportado
+
+- Publicación de los archivos colaborativos.
+- Integración de la rama de Fase 12 en `main`.
+- Creación de `desarrollo` como rama de trabajo activo.
+- Eliminación reportada de ramas temporales o antiguas.
+- Actualización de `MatricesRiesgosApplicationTests.cs` para exigir exactamente un worksheet en el Excel ejecutivo.
+- Resultados locales reportados:
+  - 226 pruebas Backend aprobadas;
+  - build Angular aprobado;
+  - 165/165 pruebas Frontend aprobadas en 18 archivos.
+
+### Observaciones posteriores
+
+- El frontend oficial es Angular 22.
+- La regresión de una sola hoja coincide con el reporte ejecutivo vigente.
+- Al iniciar la Intervención #3, `desarrollo` estaba dos commits detrás de `main` sin diferencias de contenido.
+- No se localizaron ejecuciones CI asociadas a los resultados reportados.
+
+### Punto de continuación histórico
+
+Trabajar sobre `desarrollo` y registrar la siguiente intervención.
+
+---
+
+## Registro de Intervención #3
+
+- **Fecha y hora**: 2026-07-24 10:55, hora de Honduras.
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d737c3ba1147873a0863d24f9f6383330c611636`.
+- **Commit final**: `d693dd740acc7622c4a401160506f5f881186a85`.
+
+### Objetivo
+
+Auditar los cambios de Antigravity, revisar la documentación colaborativa y central, corregir inconsistencias y crear un estado vivo de continuidad.
+
+### Hallazgos confirmados
+
+- Enlaces locales `file:///c:/...` inutilizables desde GitHub.
+- Referencias incompatibles a Angular 19 y Angular 22.
+- Conteos fijos de pruebas en el protocolo.
+- `CONTRIBUTING.md` todavía ordenaba trabajar directamente en `main`.
+- `CLEANUP_REPORT.md` presentaba como vigente una situación histórica de una sola rama.
+- `QUALITY.md` conservaba conteos históricos como recomendación vigente.
+- `API.md` apuntaba a la antigua carpeta global `Controllers`.
+- El estándar PDF/Excel exigía un utilitario Angular incluso para reportes generados en Backend.
+- Divergencia de commits entre `desarrollo` y `main`.
+- Ausencia de estados CI para los commits revisados.
+
+### Archivos creados o modificados
+
+- `AGENTS.md` y `.agents/AGENTS.md`.
+- `README.md`.
+- `docs/0.0 Documentación/CONTRIBUTING.md`.
+- `docs/0.0 Documentación/API.md`.
+- `docs/0.0 Documentación/QUALITY.md`.
+- `docs/0.0 Documentación/CLEANUP_REPORT.md`.
+- `frontend/rl-app/src/app/core/reporting/REPORT_PARITY_STANDARD.md`.
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- `BITACORA_COLABORACION.md`.
+
+### Verificación ejecutada
+
+- Revisión directa de archivos y commits remotos.
+- Comparación `desarrollo`/`main`.
+- Confirmación de versiones declaradas del stack.
+- Confirmación de la prueba que exige una única hoja.
+
+### No ejecutado
+
+Backend, Frontend, build, E2E, validadores PowerShell, Oracle institucional, AD y SMTP. La intervención se realizó mediante revisión remota sin checkout ejecutable.
+
+### Punto de continuación histórico
+
+Ejecutar validadores y suites completas antes de cualquier integración.
+
+---
+
+## Registro de Intervención #4
+
+- **Fecha y hora**: 2026-07-24 11:24, hora de Honduras.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d693dd740acc7622c4a401160506f5f881186a85`.
+- **Commit final publicado**: `4887801d53a5310117d6642cd34b66f1afa50b73`.
+
+### Objetivo
+
+Verificar el estado técnico y de fases y agregar la regla de publicación obligatoria al finalizar cada intervención.
+
+### Cambios
+
+- Nueva sección de publicación obligatoria en `AGENTS.md` y `.agents/AGENTS.md`.
+- Actualización del estado colaborativo y de esta bitácora.
+- Confirmación de Angular 22, TypeScript 6, Node 24, npm 11, .NET 10 y Oracle Managed Data Access 23.4.
+- Confirmación de módulos Backend, pruebas y estructura Frontend.
+- Confirmación de divergencia entre `main` y `desarrollo`.
+- Incorporación al repositorio del ajuste en `tools/validate_repository_structure.ps1`.
+
+### Verificación ejecutada
+
+Lectura de documentación y estructura, consulta de logs y comparación de ramas.
+
+### No ejecutado
+
+Backend, Frontend, build, E2E, validadores, Oracle institucional, AD y SMTP.
+
+### Nota de cierre posterior
+
+Aunque la entrada original indicaba «pendiente de push», la auditoría siguiente confirmó que el commit `4887801d...` sí estaba publicado en `origin/desarrollo`. Esta nota corrige el estado sin eliminar el antecedente histórico.
+
+### Punto de continuación histórico
+
+Ejecutar las validaciones técnicas y planificar la reconciliación de ramas sin modificar `main`.
+
+---
+
+## Registro de Intervención #5
+
+- **Fecha y hora**: 2026-07-24 11:56, hora de Honduras.
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `4887801d53a5310117d6642cd34b66f1afa50b73`.
+
+### Objetivo
+
+Iniciar el trabajo pendiente que puede ejecutarse de forma remota: auditar el handoff, consolidar el estado colaborativo y establecer el plan quirúrgico de cierre formal de la Fase 12.
+
+### Revisión realizada
+
+- Lectura de `AGENTS.md`, esta bitácora y `ESTADO_COLABORACION.md`.
+- Confirmación del commit remoto de la Intervención #4.
+- Comparación actualizada entre `main` y `desarrollo`.
+- Revisión del plan de fases y de la evidencia 12.5.6.
+- Confirmación de que la siguiente actividad no es una Fase 13, sino el cierre formal de Fase 12.
+
+### Hallazgos
+
+1. `ESTADO_COLABORACION.md` contenía bloques históricos duplicados después de la Intervención #4.
+2. No existía un documento operativo único con responsables, criterios y orden de cierre de Fase 12.
+3. Al inicio, `desarrollo` estaba 12 commits adelante y 2 detrás de `main`.
+4. Las pruebas y validaciones institucionales continuaban pendientes de reproducción.
+
+### Cambios publicados
+
+- Creación de:
+  - [`PLAN_CIERRE_FORMAL_FASE_12.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/Fase%2012%20-%20Mejora%20ejecutiva%20UXUI%20y%20mapa%20de%20calor/PLAN_CIERRE_FORMAL_FASE_12.md).
+- Reconstrucción de:
+  - [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md), eliminando duplicidad y dejando un único estado vigente.
+- Normalización editorial de esta bitácora, preservando los hechos y notas correctivas de las cuatro intervenciones anteriores.
+
+### Commits de esta intervención
+
+- `22a5f29e78daeacd4822dd704b82d1a878b029c0` — creación del plan de cierre.
+- `cdfde9f6381afe7d9677f4083df46fbd621778fe` — consolidación del estado vivo.
+- El commit de esta actualización de bitácora corresponde al cierre documental de la Intervención #5.
+
+### Verificación ejecutada
+
+- Revisión remota de archivos y commits.
+- Comparación de ramas.
+- Verificación del contenido publicado en `desarrollo`.
+- Validación lógica de enlaces relativos incorporados.
+
+### No ejecutado
+
+- Backend, Frontend, build, pruebas y E2E.
+- Validadores PowerShell y Quality Gates.
+- Excel Desktop y PDF con datos reales.
+- Oracle institucional, AD y SMTP.
+
+Razón: la sesión no dispone de un checkout ejecutable ni de acceso a servicios institucionales.
+
+### Punto exacto de continuación
+
+1. Actualizar un checkout local desde `origin/desarrollo`.
+2. Leer el plan formal de cierre.
+3. Ejecutar Backend, Frontend, E2E y los cuatro validadores.
+4. Registrar conteos y resultados reales como Intervención #6.
+5. Validar Excel Desktop, PDF real y Oracle institucional.
+6. Actualizar Documento Maestro y checksum.
+7. No modificar `main` sin autorización expresa de Javier Mejía.
+
+---
+
+## Registro de Intervención #6
+
+- **Fecha y hora**: 2026-07-27 08:17, hora de Honduras.
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Actualizar el checkout local desde `origin/desarrollo`, verificar el avance reportado de la Intervención #5 y ejecutar la validación técnica reproducible prevista en el plan formal de cierre de Fase 12.
+
+### Revisión inicial ejecutada
+
+- Lectura de `AGENTS.md`.
+- Lectura de esta bitácora.
+- Lectura de `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- Lectura de `README.md`.
+- Lectura de `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- Confirmación de que el trabajo vigente corresponde a `desarrollo`, no a `main`.
+- Confirmación de que el reporte del avance recibido coincide con los commits publicados en `origin/desarrollo`.
+
+### Sincronización Git
+
+- Rama inicial local antes de corregir el flujo: `fase-12-mejora-ejecutiva-matrices`.
+- Rama obligatoria de trabajo según protocolo: `desarrollo`.
+- Se ejecutó `git fetch --all --prune`; el primer intento falló por bloqueo de red del entorno y se repitió con permiso de red.
+- Se ejecutó `git switch desarrollo`.
+- Se ejecutó `git pull --ff-only origin desarrollo`.
+- `desarrollo` quedó sincronizada en `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- `main` no fue modificada.
+
+### Confirmaciones del avance recibido
+
+- Existe el plan formal de cierre:
+  - `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- `ESTADO_COLABORACION.md` fue consolidado como documento vivo.
+- Esta bitácora contiene la Intervención #5.
+- Los commits reportados están en la historia de `desarrollo`:
+  - `22a5f29e78daeacd4822dd704b82d1a878b029c0`.
+  - `cdfde9f6381afe7d9677f4083df46fbd621778fe`.
+  - `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- Se comprobó que los acentos de los documentos no están dañados en los archivos; la visualización incorrecta observada provino de la salida de consola.
+
+### Verificación técnica ejecutada en esta intervención
+
+| Validación | Resultado |
+|---|---|
+| `git diff --check` | Correcto, sin errores |
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 96 pruebas aprobadas, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto en segundo intento con permisos de entorno |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | 18 archivos de prueba aprobados, 165 pruebas aprobadas |
+| `npm run e2e` | 7 pruebas aprobadas |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 439 archivos rastreados, 3 maestros SQL |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto |
+
+### Métricas de Quality Gates
+
+- Backend: 96 pruebas aprobadas.
+- Frontend: 18 archivos de prueba, 165 pruebas aprobadas.
+- E2E: 7 pruebas aprobadas.
+- Cobertura Backend reportada por Quality Gates:
+  - líneas: 22.15%;
+  - ramas: 21.21%.
+- Cobertura Frontend reportada por Quality Gates:
+  - sentencias: 38.99%;
+  - ramas: 33.51%;
+  - funciones: 36.00%;
+  - líneas: 39.20%.
+
+### Observaciones técnicas
+
+- `npm ci` falló inicialmente por permisos sobre la caché local de npm (`EPERM`) y fue repetido con permisos del entorno; el segundo intento fue correcto.
+- `npm ci` reportó 17 vulnerabilidades transitivas. No se ejecutó `npm audit fix` ni `npm audit fix --force` para evitar cambios de dependencias fuera del alcance de cierre.
+- El build Angular mantiene advertencia conocida por `exceljs` como dependencia CommonJS.
+- El build Backend mantiene dos advertencias `xUnit2009` en pruebas de reportería de Matrices; no bloquean la compilación ni las pruebas.
+- La copia `.agents/AGENTS.md` difiere de `AGENTS.md` solo en rutas relativas, diferencia permitida por el protocolo.
+
+### Verificación no ejecutada
+
+- Excel Desktop con archivo real: pendiente de usuario funcional.
+- PDF con datos institucionales reales: pendiente de usuario funcional autorizado.
+- Oracle institucional: pendiente de DBA autorizado.
+- Active Directory y SMTP: pendiente de infraestructura institucional.
+- Reconciliación `main`/`desarrollo`: pendiente de autorización expresa de Javier Mejía.
+- Documento Maestro final y checksum SHA-256: pendientes hasta completar validaciones funcionales e institucionales.
+
+### Punto exacto de continuación
+
+1. Revisar con Javier Mejía los resultados técnicos reproducidos de la Intervención #6.
+2. Ejecutar validación funcional con Excel Desktop y PDF real.
+3. Ejecutar validación Oracle institucional con DBA autorizado.
+4. Actualizar Documento Maestro de Fase 12 y regenerar checksum.
+5. Solicitar aprobación formal de Javier Mejía para cerrar Fase 12.
+6. No modificar ni integrar `main` sin autorización expresa.
+
+---
+
+## Registro de Intervención #7
+
+- **Fecha y hora**: 2026-07-29 14:24, hora de Honduras.
+- **Agente**: Codex.
+- **Rama inicial**: `desarrollo`.
+- **Commit inicial**: `945d369af485bca658735b48357cfa93279a250a`.
+- **Autorización recibida**: Javier Mejía aprobó el cierre de la Fase 12 y autorizó realizar el merge hacia `main`.
+
+### Objetivo
+
+Cerrar formalmente la Fase 12 del módulo Matrices de Riesgos, actualizar la evidencia documental de cierre, regenerar el checksum del documento maestro y dejar `desarrollo`, `main`, el repositorio local y GitHub alineados.
+
+### Cambios documentales ejecutados
+
+- Se actualizó `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx` con la sección **21. Cierre formal aprobado de Fase 12**.
+- Se regeneró `Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256` contra el documento Word final.
+- Se registró en este archivo y en `docs/0.0 Documentación/ESTADO_COLABORACION.md` la aprobación formal y la autorización de integración a `main`.
+- Se incorporaron al control de versiones dos documentos existentes en `docs/0.0 Documentación` que estaban sin seguimiento local: programación de reunión y validación de requerimientos del módulo Matrices de Riesgos.
+
+### Resultado de cierre
+
+- **Fase 12**: aprobada y cerrada por autorización formal de Javier Mejía.
+- **Rama de trabajo**: `desarrollo`.
+- **Integración a `main`**: autorizada expresamente por Javier Mejía en esta intervención.
+
+### Verificación considerada para cierre
+
+Se toma como base la validación técnica reproducida en la Intervención #6:
+
+| Validación | Resultado |
+|---|---|
+| Backend build | Correcto, 0 errores |
+| Backend tests | 96 aprobadas, 0 fallidas, 0 omitidas |
+| Frontend build | Correcto |
+| Frontend tests | 18 archivos aprobados, 165 pruebas aprobadas |
+| E2E | 7 pruebas aprobadas |
+| Validadores PowerShell | Estructura, scripts Oracle, enlaces y Quality Gates correctos |
+
+### Render del documento Word
+
+Se intentó renderizar el documento maestro actualizado con LibreOffice. El intento superó el límite operativo de un minuto definido por Javier Mejía para no consumir tiempo innecesario, por lo que se omitió el render visual y se conserva el documento Word estructuralmente actualizado.
+
+### Restricciones preservadas
+
+- No se modificó DNP.
+- No se modificó `CONTROL_ALMACEN.PROVEEDOR`.
+- No se modificó el motor de cálculo.
+- No se modificó la estructura Oracle.
+- No se cambió el modelo de permisos por módulo.
+
+### Punto exacto de continuidad
+
+Después del merge autorizado, continuar el trabajo ordinario desde `desarrollo` o desde la rama que Javier indique, tomando `main` como versión estable actualizada.
