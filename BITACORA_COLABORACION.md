@@ -1011,9 +1011,75 @@ Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de 
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 79 enlaces locales |
 
+- **Commit final**: `05a956002bb5ddda88062ff8eef8cfef025be4d9`.
+
+### Objetivo
+
+Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de base de datos (eliminación de `PUBLISHED_ACTIVE` a favor de `PUBLISHED`, validación del esquema `RIESGO_LAVADO` en el retiro controlado, idempotencia en la carga del Formulario A, y normalización de sintaxis SQL*Plus).
+
+### Archivos creados o modificados
+
+- **Modificado**: `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Cambio de `PUBLISHED_ACTIVE` a `PUBLISHED` en la restricción check `CK_RL_MR_VER_EST` de `01_create_rl_mr_estructura_dinamica.sql`.
+- Inserción de la validación `UPPER(v_esquema_actual) <> 'RIESGO_LAVADO'` en el bloque de seguridad del script `00_retiro_controlado_modelo_prueba.sql` para abortar inmediatamente si se ejecuta en un esquema incorrecto.
+- Re-escritura idempotente de `04_config_json_inicial_formulario.sql` asegurando la creación/localización de la familia, la inserción condicional de la versión 1 si no existe, la actualización limpia en estado `DRAFT` y la correcta propagación de errores PL/SQL con `RAISE_APPLICATION_ERROR`.
+- Corrección de la consulta sobre `RL_USUARIOS` en `04_config_json_inicial_formulario.sql` para usar las columnas reales `USR_EMAIL` y `USUARIO_DOMINIO` en lugar de la inexistente `USR_LOGIN`.
+- Eliminación del punto y coma al final de `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK` en todos los archivos DDL.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 79 enlaces locales |
+
+---
+
+## Registro de Intervención #16
+
+- **Fecha y hora**: 2026-07-30 12:35, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `05a956002bb5ddda88062ff8eef8cfef025be4d9`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Diseñar y especificar detalladamente el Contrato JSON Propietario del IHSS y el Diccionario de datos físico definitivo de las 28 tablas relacionales del módulo dinámico de Matrices de Riesgos para la Fase 2 de diseño, sin ejecutar DDL ni modificar el esquema Oracle.
+
+### Archivos creados o modificados
+
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/DICCIONARIO_FISICO_CONTRATOS_JSON.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/DICCIONARIO_FISICO_CONTRATOS_JSON.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación del documento técnico `DICCIONARIO_FISICO_CONTRATOS_JSON.md` con las especificaciones físicas detalladas de las 28 tablas relacionales (`RL_MR_*`) del nuevo modelo dinámico, sus llaves, tipos y borrado lógico.
+- Especificación formal del contrato JSON propietario del IHSS para metadatos, secciones, campos y selectors de catálogos unificados (`CAT_FRECUENCIA`, `CAT_IMPACTO`, etc.).
+- Diseño de los DTOs de acoplamiento backend en C# y casos teóricos de validación de paridad.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 79 Enlaces locales |
+
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal del propietario de requerimientos (Javier Mejía) sobre los borradores SQL saneados de la Fase 1.
-2. Autorizar el paso formal a la Fase 2 (Diccionario Físico y Contratos JSON).
+1. Obtener la aprobación formal de Javier Mejía sobre el Contrato JSON y Diccionario Físico Definitivo (Fase 2).
+2. Proceder con el diseño detallado del retiro e instalación física (Fase 3).
 3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
 

@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #15.
-- **Fecha**: 2026-07-30 12:20, hora local.
+- **Intervención**: #16.
+- **Fecha**: 2026-07-30 12:35, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Corregir las inconsistencias bloqueantes de la Fase 1 (esquema `RIESGO_LAVADO`, estado `PUBLISHED`, idempotencia en carga de Formulario A, y columna de usuario de auditoría).
-- **Commit de inicio verificado**: `ca42f8c05bd9dfbc991a0cc4c6883a9926c00d4c`.
-- **Estado**: Fase 1 cerrada al 100% en el DDL; directiva SQL*Plus normalizada; validaciones de calidad locales en verde.
+- **Objetivo**: Diseñar y especificar el Contrato JSON Propietario del IHSS y el Diccionario de datos físico definitivo de las 28 tablas del módulo dinámico de Matrices de Riesgos (Fase 2).
+- **Commit de inicio verificado**: `05a956002bb5ddda88062ff8eef8cfef025be4d9`.
+- **Estado**: Fase 2 de diseño teórica completada al 100%; documento DICCIONARIO_FISICO_CONTRATOS_JSON.md integrado; validaciones de calidad en verde.
 
 ## 3. Estado de fases
 
