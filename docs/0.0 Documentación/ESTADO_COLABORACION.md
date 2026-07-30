@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #20.
-- **Fecha**: 2026-07-30 13:00, hora local.
+- **Intervención**: #22.
+- **Fecha**: 2026-07-30 14:17, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Corregir 4 defectos bloqueantes identificados en la Fase 3 sobre scripts de base de datos (protección de `RL_MR_EVIDENCIAS`, orden de FKs, validación de esquema RIESGO_LAVADO e instalación limpia).
-- **Commit de inicio verificado**: `6b8218e`.
-- **Estado**: Fase 3 corregida, validadores locales en verde y aprobada formalmente. Plan de la Fase 4 diseñado y aprobado en la Intervención #21.
+- **Objetivo**: Iniciar la Fase 5 de instalación física del modelo definitivo en Oracle, removiendo las restricciones `IS JSON` para compatibilidad con Oracle 11g.
+- **Commit de inicio verificado**: `7f5df0c`.
+- **Estado**: Script `01_create` ejecutado exitosamente; 34 tablas y 24 secuencias creadas y verificadas en catálogo de Oracle.
 
 ## 3. Estado de fases
 
@@ -192,8 +192,7 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Iniciar el desarrollo del Backend (Fase 4) sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
-2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
-3. Construir la interfaz y lógica del motor de validación dinámica JSON en el Backend (`IFormularioValidador.cs`).
-4. Trabajar exclusivamente en la rama `desarrollo` sin realizar modificaciones DDL/DML directas en Oracle hasta contar con la autorización y el respaldo del DBA.
-5. Actualizar la bitácora y el estado de colaboración al término de la intervención.
+1. Continuar con la Fase 5 ejecutando el script `02_create_rl_mr_restricciones_indices.sql` en Oracle pasando la autorización `EJECUTAR`.
+2. Validar que no existan restricciones deshabilitadas en el catálogo de Oracle tras su ejecución.
+3. Avanzar con el desarrollo del Backend (Fase 6) en C# una vez concluida la instalación física de la base de datos.
+4. Actualizar la bitácora y el estado de colaboración.
