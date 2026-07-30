@@ -9,12 +9,15 @@
 -- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
+-- PARÁMETRO DE ENTRADA OBLIGATORIO PARA SQL*PLUS: &1 (Palabra clave 'EJECUTAR')
+DEFINE autorizacion = '&1';
+
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
-  v_fase_aprobada VARCHAR2(10) := 'NO'; -- CAMBIAR A 'SI' CUANDO SE AUTORICE LA FASE 5 DE INSTALACIÓN
+  v_auth VARCHAR2(50) := q'[&autorizacion]';
 BEGIN
-  IF v_fase_aprobada <> 'SI' THEN
-    RAISE_APPLICATION_ERROR(-20100, 'EJECUCIÓN BLOQUEADA: Este script está en fase de diseño. El DBA debe cambiar v_fase_aprobada a ''SI'' en la Fase 5.');
+  IF UPPER(v_auth) <> 'EJECUTAR' THEN
+    RAISE_APPLICATION_ERROR(-20100, 'EJECUCIÓN BLOQUEADA: Script en fase de diseño. El DBA debe pasar "EJECUTAR" como primer argumento de SQL*Plus en la Fase 5.');
   END IF;
 END;
 /

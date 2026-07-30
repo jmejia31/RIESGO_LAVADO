@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #18.
-- **Fecha**: 2026-07-30 12:50, hora local.
+- **Intervención**: #19.
+- **Fecha**: 2026-07-30 13:00, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Cierre formal administrativo de la Fase 2 y handoff documental actualizando los commits definitivos del repositorio.
+- **Objetivo**: Diseñar e implementar los scripts DDL y DML preliminares de la base de datos de 34 tablas y 24 secuencias físicas (Fase 3).
 - **Commit de inicio verificado**: `edf30fbede6d42da34f718870195ee0a574ec8c1`.
-- **Estado**: Fase 2 aprobada técnicamente al 100% y cerrada de manera formal; commits sincronizados; validaciones en verde.
+- **Estado**: Fase 3 de diseño físico de base de datos completada; scripts SQL actualizados y preparados para revisión; validaciones de calidad locales en verde.
 
 ## 3. Estado de fases
 

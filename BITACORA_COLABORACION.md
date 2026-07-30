@@ -1145,5 +1145,50 @@ Cierre formal administrativo de la Fase 2 y handoff documental actualizando los 
 
 ### Punto exacto de continuación
 
-1. Solicitar la aprobación formal e inicio de la Fase 3: Diseño de scripts de instalación y desinstalación física.
-2. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
+1. Obtener la aprobación formal de Javier Mejía sobre los scripts físicos de base de datos (Fase 3).
+2. Proceder con el diseño y contratos Backend (Fase 4).
+3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
+
+---
+
+## Registro de Intervención #19
+
+- **Fecha y hora**: 2026-07-30 13:00, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `edf30fbede6d42da34f718870195ee0a574ec8c1`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Diseñar e implementar físicamente los scripts DDL y DML preliminares de la base de datos de 34 tablas y 24 secuencias físicas (Fase 3), incorporando la directiva de parada SQL*Plus por variable posicional externa y declarando el comportamiento implícito de commits DDL.
+
+### Archivos creados o modificados
+
+- **Modificado**: `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Actualización de los 5 borradores físicos de base de datos (`00` a `04`) implementando el parámetro posicional externo `&1` de SQL*Plus (`DEFINE autorizacion = '&1'`) para habilitar ejecuciones de forma administrativa limpia sin modificar código fuente.
+- Re-escritura completa del DDL `01_create_rl_mr_estructura_dinamica.sql` mapeando las 34 tablas relacionales dinámicas, las 24 secuencias físicas inventariadas, el modelo granular `PER_AMBITO` / `PER_OBJETIVO_CLAVE` de permisos y las 9 tablas asociativas físicas de trazabilidad de evidencias.
+- Detalle explícito en el plan y bitácora del comportamiento de commits implícitos DDL en Oracle ante abortos por error.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 90 Enlaces locales |
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre los scripts de base de datos de 34 tablas (Fase 3).
+2. Proceder con el diseño de contratos y adaptadores del Backend (Fase 4).
+3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
