@@ -1000,7 +1000,8 @@ Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de 
 - Cambio de `PUBLISHED_ACTIVE` a `PUBLISHED` en la restricción check `CK_RL_MR_VER_EST` de `01_create_rl_mr_estructura_dinamica.sql`.
 - Inserción de la validación `UPPER(v_esquema_actual) <> 'RIESGO_LAVADO'` en el bloque de seguridad del script `00_retiro_controlado_modelo_prueba.sql` para abortar inmediatamente si se ejecuta en un esquema incorrecto.
 - Re-escritura idempotente de `04_config_json_inicial_formulario.sql` asegurando la creación/localización de la familia, la inserción condicional de la versión 1 si no existe, la actualización limpia en estado `DRAFT` y la correcta propagación de errores PL/SQL con `RAISE_APPLICATION_ERROR`.
-- Eliminación del punto y coma al final de `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK` en todos los archivos.
+- Corrección de la consulta sobre `RL_USUARIOS` en `04_config_json_inicial_formulario.sql` para usar las columnas reales `USR_EMAIL` y `USUARIO_DOMINIO` en lugar de la inexistente `USR_LOGIN`.
+- Eliminación del punto y coma al final de `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK` en todos los archivos DDL.
 
 ### Verificación técnica ejecutada (en esta intervención)
 
@@ -1008,7 +1009,7 @@ Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de 
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
-| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 77 enlaces locales |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 79 enlaces locales |
 
 ### Punto exacto de continuación
 

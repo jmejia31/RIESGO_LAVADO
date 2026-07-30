@@ -30,10 +30,10 @@ BEGIN
   BEGIN
     SELECT USR_ID INTO v_usr_admin_id 
       FROM RL_USUARIOS 
-     WHERE USR_LOGIN = 'ADMIN' AND ROWNUM = 1;
+     WHERE (LOWER(USR_EMAIL) = 'admin@ihss.hn' OR UPPER(USUARIO_DOMINIO) = 'ADMIN') AND ROWNUM = 1;
   EXCEPTION
     WHEN NO_DATA_FOUND THEN
-      -- Fallback al primer usuario si no existe 'ADMIN'
+      -- Fallback al primer usuario activo si no existe 'ADMIN'
       SELECT USR_ID INTO v_usr_admin_id 
         FROM RL_USUARIOS 
        WHERE ROWNUM = 1;

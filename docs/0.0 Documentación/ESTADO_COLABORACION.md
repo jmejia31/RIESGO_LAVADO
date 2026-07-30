@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #14.
-- **Fecha**: 2026-07-30 12:05, hora local.
+- **Intervención**: #15.
+- **Fecha**: 2026-07-30 12:20, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Implementar el aborto por error en SQL*Plus en todos los scripts, añadir secuencias de autogeneración de PKs faltantes, corregir ortografía física de columnas y re-estructurar el plan de la Fase 2 para las 28 tablas.
-- **Commit de inicio verificado**: `9d1858140ce817f6cd899b360c6b8a1571561d92`.
-- **Estado**: Fase 1 de diseño cerrada de forma segura; directiva `WHENEVER SQLERROR` añadida a los 5 scripts DDL; 28 tablas y 24 secuencias del nuevo modelo mapeadas completamente en el Plan de la Fase 2.
+- **Objetivo**: Corregir las inconsistencias bloqueantes de la Fase 1 (esquema `RIESGO_LAVADO`, estado `PUBLISHED`, idempotencia en carga de Formulario A, y columna de usuario de auditoría).
+- **Commit de inicio verificado**: `ca42f8c05bd9dfbc991a0cc4c6883a9926c00d4c`.
+- **Estado**: Fase 1 cerrada al 100% en el DDL; directiva SQL*Plus normalizada; validaciones de calidad locales en verde.
 
 ## 3. Estado de fases
 
