@@ -1,0 +1,188 @@
+
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="utf-8">
+    <title>Análisis y Plan Definitivo de Implementación</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        @page {
+            size: 8.5in 11.0in; /* Carta */
+            margin: 1.0in 1.0in 1.0in 1.0in; /* Márgenes estándar */
+            mso-header-margin: .5in;
+            mso-footer-margin: .5in;
+            mso-paper-source: 0;
+        }
+        body {
+            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+            font-size: 11.0pt;
+            line-height: 1.5;
+            color: #2c3e50;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+            font-weight: bold;
+            color: #1a5f7a;
+            page-break-after: avoid;
+        }
+    </style>
+</head>
+<body lang="ES-HN" style="tab-interval:.5in">
+    <div class="WordSection1">
+        <h1 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #1a5f7a; font-size: 20pt; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 2px solid #1a5f7a; padding-bottom: 4px;">Análisis y Plan Definitivo de Implementación</h1>
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">Módulo Matrices de Riesgos (SGRLA - IHSS)</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">Este documento consolidado representa el análisis maestro, las decisiones de arquitectura definitiva y el plan de implementación para el módulo <strong style="font-weight: bold; color: #111111;">Matrices de Riesgos</strong> del Sistema de Gestión de Riesgo de Lavado de Activos y Financiamiento del Terrorismo (SGRLA) del Instituto Hondureño de Seguridad Social (IHSS).</p>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">Consolida en una única fuente de verdad la validación técnica reproducible que cierra la <strong style="font-weight: bold; color: #111111;">Fase 12</strong> y el diseño estratégico de evolución dinámica del módulo de <strong style="font-weight: bold; color: #111111;">0 a 100%</strong>.</p>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">1. Alineación de Objetivos</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">Existe una alíneación total y complementaria entre los dos componentes clave de esta intervención:</p>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">1. <strong style="font-weight: bold; color: #111111;">La Validación Técnica Reproducible (Fase 12):</strong> Asegura la calidad actual de la plataforma (limpieza de Git, compilación correcta, 96 pruebas Backend, 165 pruebas Frontend, 7 E2E y paso de Quality Gates sin degradaciones). Proporciona la base sólida de no-regresión necesaria antes de iniciar cambios estructurales.</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">2. <strong style="font-weight: bold; color: #111111;">El Plan Definitivo de Implementación (Arquitectura Dinámica):</strong> Define la visión a largo plazo para transformar el módulo en una solución paramétrica y dinámica basada en esquemas JSON. Esta arquitectura se apoya directamente en las políticas de calidad validadas en la Fase 12 para su despliegue seguro en Oracle (`MR_`) y Angular 22.</p>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">2. Validación Técnica de la Fase 12</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">La validación técnica se ha completado en el entorno local con un éxito del 100%. Los resultados reales registrados en esta sesión de trabajo son:</p>
+
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; border: 1px solid #bdc3c7; width: 100%; margin: 15px 0; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt;"><tr style="background-color: #1a5f7a; color: #ffffff; font-weight: bold; text-align: left;"><th style="border: 1px solid #bdc3c7; padding: 8px;">Comando de Ejecución</th></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">---</td><td style="border: 1px solid #bdc3c7; padding: 8px;">---</td><td style="border: 1px solid #bdc3c7; padding: 8px;">---</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Estructura**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`powershell -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; &amp; './tools/validate_repository_structure.ps1'"`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**Correcto**. 119 rutas obligatorias y 441 archivos validados.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Base de Datos**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`powershell -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; &amp; './tools/validate_database_scripts.ps1'"`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**Correcto**. 19 scripts activos raíz, 1 paquete modular, 22 alcanzables.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Documentación**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`powershell -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; &amp; './tools/validate_documentation_links.ps1'"`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**Correcto**. 34 Markdown y 41 enlaces validados (sin roturas).</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Quality Gates**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`powershell -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; &amp; './tools/run_quality_gates.ps1'"`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**Correcto**. Puertas de calidad aprobadas.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Backend Test**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**96 pruebas aprobadas**, 0 fallidas, 0 omitidas.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**Frontend Test**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`npm test -- --watch=false`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**165 pruebas aprobadas** (18 archivos de prueba).</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**E2E Playwright**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">`npm run e2e`</td><td style="border: 1px solid #bdc3c7; padding: 8px;">**7 pruebas aprobadas** en Playwright Chromium.</td></tr></table>
+
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">Métricas de Cobertura Reportadas por Quality Gates:</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Backend:</strong> Líneas: `22.15%` | Ramas: `21.21%`</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Frontend:</strong> Sentencias: `38.99%` | Ramas: `33.51%` | Funciones: `36.00%` | Líneas: `39.20%`</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">3. Decisiones y Diseño de la Arquitectura Definitiva</h2>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">3.1 Módulo y Familia de Formularios</h3>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">Se construirá un único módulo institucional denominado <strong style="font-weight: bold; color: #111111;">Matrices de Riesgos</strong>. Dentro de él se administrará inicialmente una familia denominada <strong style="font-weight: bold; color: #111111;">Matriz de Riesgos</strong>.</p>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">La solución permitirá versionar de forma inmutable la estructura a través de un esquema JSON:</p>
+<pre style="font-family: Consolas, 'Courier New', monospace; background-color: #f4f6f8; border: 1px solid #e1e4e6; padding: 10px; margin: 15px 0; font-size: 10pt; color: #2c3e50; white-space: pre-wrap; word-wrap: break-word;">Matriz de Riesgos
+├── Versión 1 (Borrador -&gt; Publicada -&gt; Vigente)
+├── Versión 2 (Clonada desde Versión 1)
+└── Versiones futuras</pre>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">El resultado consolidado principal será la <strong style="font-weight: bold; color: #111111;">Matriz Consolidada de Riesgos</strong>, la cual mostrará todas las evaluaciones realizadas incluso si pertenecen a versiones estructurales distintas, utilizando un mapeo por <strong style="font-weight: bold; color: #111111;">claves canónicas</strong>.</p>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">3.2 Fuente Funcional de Origen</h3>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">El libro consolidado de origen (archivo Excel de Matrices de Riesgos institucional) se congela como evidencia histórica de origen y cálculo de huella digital, y cuenta con:</p>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;">59 riesgos.</li>
+<li style="margin-bottom: 4px;">82 campos totales.</li>
+<li style="margin-bottom: 4px;">1,742 fórmulas de cálculo.</li>
+<li style="margin-bottom: 4px;">48 campos de captura o metadatos.</li>
+<li style="margin-bottom: 4px;">34 campos calculados.</li>
+<li style="margin-bottom: 4px;">~20 campos auxiliares internos.</li>
+<li style="margin-bottom: 4px;">~62 campos funcionales visibles.</li>
+</ul>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">3.3 Principios de la Solución</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Configuración Dinámica:</strong> Los formularios web en Angular 22 se renderizarán dinámicamente basados en el JSON del formulario, eliminando pantallas rígidas.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Versionamiento Inmutable:</strong> Una versión en estado `PUBLICADA` no puede modificarse. Los cambios requerirán clonar la estructura y crear una nueva versión.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Cálculos Protegidos:</strong> El servidor (ASP.NET Core 10) es la única autoridad de cálculo. El frontend puede previsualizar, pero los valores persistidos se calculan en backend.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Persistencia Híbrida:</strong> Almacenamiento JSON para respuestas dinámicas, tablas relacionales estructurales, tablas específicas para controles, planes de mitigación, y una tabla de proyecciones optimizada para búsquedas y consolidación.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Prefijo Oracle Dedicado:</strong> Todas las tablas, secuencias y objetos de este módulo utilizarán el prefijo `MR_`.</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">4. Estructura de Datos en Oracle (Prefijo `MR_`)</h2>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">4.1 Tablas de Formularios y Configuración</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;">`MR_FAMILIA_FORMULARIO`: Identidad de la matriz configurable (código, nombre, estado).</li>
+<li style="margin-bottom: 4px;">`MR_VERSION_FORMULARIO`: Estructura concreta versionada (versión, JSON de campos, estado, vigencias, huella digital).</li>
+<li style="margin-bottom: 4px;">`MR_REGISTRO_CAMPO`: Registro semántico global de los campos e identificadores.</li>
+<li style="margin-bottom: 4px;">`MR_DIFERENCIA_VERSION`: Detalle de diferencias entre versiones (campos agregados, modificados, retirados).</li>
+<li style="margin-bottom: 4px;">`MR_APROBACION_FORMULARIO`: Log de aprobaciones, revisiones y rechazos de la configuración.</li>
+<li style="margin-bottom: 4px;">`MR_PERMISO_FORMULARIO`: Definición de permisos a nivel de campo y rol.</li>
+</ul>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">4.2 Tablas de Operación y Transacciones</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;">`MR_RIESGO`: Entidad del riesgo con su código único e identidad permanente.</li>
+<li style="margin-bottom: 4px;">`MR_RELACION_RIESGO`: Relación muchos a muchos entre riesgos.</li>
+<li style="margin-bottom: 4px;">`MR_EVALUACION_RIESGO`: Evaluación transaccional (datos en JSON, resultados calculados en JSON, auditoría).</li>
+<li style="margin-bottom: 4px;">`MR_PROYECCION_EVALUACION`: Tabla aplanada de columnas principales (valores e impacto inherente/residual, área, estado, etc.) optimizada para filtros y búsquedas veloces.</li>
+<li style="margin-bottom: 4px;">`MR_FLUJO_EVALUACION`: Log de estados del ciclo de vida de la evaluación (Elaborado, Revisado, Aprobado).</li>
+</ul>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">4.3 Controles, Planes de Mitigación y Seguimiento</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;">`MR_CONTROL_RIESGO`: Catálogo de controles vinculados a una evaluación de riesgo.</li>
+<li style="margin-bottom: 4px;">`MR_EVALUACION_CONTROL`: Evaluación individual de controles (diseño, ejecución, efectividad).</li>
+<li style="margin-bottom: 4px;">`MR_PLAN_MITIGACION` y `MR_ACTIVIDAD_PLAN`: Planes de acción y actividades con responsables, fechas y porcentaje de avance.</li>
+<li style="margin-bottom: 4px;">`MR_SENAL_ALERTA` y `MR_AUTOMONITOREO`: Indicadores de umbrales y revisiones de automonitoreo de áreas.</li>
+<li style="margin-bottom: 4px;">`MR_ARCHIVO_ADJUNTO`: Metadatos de evidencias físicas. El archivo físico se almacena en el filesystem seguro del servidor; nunca en base64 en BD.</li>
+<li style="margin-bottom: 4px;">`MR_EVENTO_AUDITORIA`: Trazabilidad completa (acción, valor anterior, valor posterior, motivo, usuario, IP, correlación).</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">5. Diseño de Servicios y Contratos REST</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">Se estructurará modularmente en el Backend en `Features/MatricesRiesgos`:</p>
+
+<h3 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #34495e; font-size: 13pt; font-weight: bold; margin-top: 14px; margin-bottom: 6px;">Endpoints Principales:</h3>
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;">`GET/POST/PUT /api/matrices-riesgos/formularios`: Administración de familias y esquemas.</li>
+<li style="margin-bottom: 4px;">`POST /api/matrices-riesgos/formularios/{id}/versiones/{v}/publicar`: Transición y vigencia de versiones.</li>
+<li style="margin-bottom: 4px;">`GET/POST /api/matrices-riesgos/riesgos`: Gestión de la cabecera e identificación de riesgos.</li>
+<li style="margin-bottom: 4px;">`GET/POST /api/matrices-riesgos/evaluaciones`: Creación de evaluaciones y almacenamiento de datos dinámicos.</li>
+<li style="margin-bottom: 4px;">`GET/POST /api/matrices-riesgos/consolidado`: Matriz Consolidada de Riesgos e indicadores.</li>
+<li style="margin-bottom: 4px;">`POST /api/matrices-riesgos/migraciones/libro-origen`: Procesamiento y conciliación de los 59 riesgos iniciales.</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">6. Plan Definitivo de Implementación de 0 a 100%</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">El desarrollo se ejecutará bajo el siguiente esquema de avance y entregables verificables:</p>
+
+<table border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; border: 1px solid #bdc3c7; width: 100%; margin: 15px 0; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt;"><tr style="background-color: #1a5f7a; color: #ffffff; font-weight: bold; text-align: left;"><th style="border: 1px solid #bdc3c7; padding: 8px;">Fase</th></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">---:</td><td style="border: 1px solid #bdc3c7; padding: 8px;">---</td><td style="border: 1px solid #bdc3c7; padding: 8px;">---</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**0–5%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Análisis funcional</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Diccionario de 82 campos, mapeo de fórmulas y catálogos institucionales.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**5–10%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Diseño técnico</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Diagrama de base de datos final, esquema JSON y contratos API.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**10–25%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Base de datos</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Creación en Oracle de tablas `MR_`, llaves, secuencias e índices.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**25–45%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Servicios estructurales</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Implementación de APIs de configuración, familias, versiones y riesgos.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**45–55%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Servicios funcionales</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Motor de reglas, cálculos inherente/residual, flujos y auditoría en backend.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**55–72%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Interfaz web</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Renderizador dinámico de formularios, edición de planes y controles en Angular.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**72–80%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Matriz Consolidada</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Pantalla de proyecciones, filtros, exportación a Excel e indicadores visuales.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**80–88%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Migración</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Script y proceso de carga de los 59 riesgos origen con reporte de conciliación.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**88–95%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Pruebas integrales</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Pruebas unitarias de motor de cálculo, de versionamiento y pruebas E2E.</td></tr><tr style="background-color: #ffffff;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**95–98%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Despliegue y capacitación</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Preparación de entornos (Pruebas, UAT, Prod) y capacitación a analistas.</td></tr><tr style="background-color: #f8f9fa;"><td style="border: 1px solid #bdc3c7; padding: 8px;">**98–100%**</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Aceptación y cierre</td><td style="border: 1px solid #bdc3c7; padding: 8px;">Cierre de UAT con el usuario funcional, documentación final y firma de Javier Mejía.</td></tr></table>
+
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">7. Control de Riesgos del Proyecto</h2>
+
+<ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px; font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; color: #2c3e50; list-style-type: disc;">
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Cálculos en Cliente vs. Servidor:</strong> Para mitigar la manipulación, el backend siempre recalculará los valores oficiales.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Divergencias en Consolidación:</strong> Las claves canónicas resolverán la visualización homogénea de versiones heterogéneas. Si un campo no existe en una versión previa, se presentará vacío, sin inventar datos.</li>
+<li style="margin-bottom: 4px;"><strong style="font-weight: bold; color: #111111;">Cuadre de Carga de Origen:</strong> La migración exige un reporte automatizado que compare los cálculos del sistema contra las 1,742 fórmulas del libro origen para los 59 riesgos.</li>
+</ul>
+
+<hr style="border: 0; border-top: 1px solid #bdc3c7; margin: 20px 0;" />
+
+<h2 style="font-family: 'Calibri', 'Segoe UI', sans-serif; color: #2c3e50; font-size: 16pt; font-weight: bold; margin-top: 18px; margin-bottom: 8px; border-bottom: 1px solid #bdc3c7; padding-bottom: 2px;">8. Definición de Terminado (DoD)</h2>
+
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">El módulo se declarará al 100% únicamente si:</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">1. La versión 1 está publicada y vigente.</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">2. Los 59 riesgos origen están completamente migrados y conciliados.</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">3. Se puede crear una Versión 2 sin alterar los registros e históricos de la Versión 1.</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">4. Las pruebas de Quality Gates (cobertura mínima, tests unitarios, tests E2E) pasan correctamente.</p>
+<p style="font-family: 'Calibri', 'Segoe UI', sans-serif; font-size: 11pt; line-height: 1.5; color: #2c3e50; margin-top: 0; margin-bottom: 10px; text-align: justify;">5. El propietario del producto (Javier Mejía) otorga la aceptación formal por escrito.</p>
+
+    </div>
+</body>
+</html>

@@ -380,3 +380,290 @@ Se intentó renderizar el documento maestro actualizado con LibreOffice. El inte
 ### Punto exacto de continuidad
 
 Después del merge autorizado, continuar el trabajo ordinario desde `desarrollo` o desde la rama que Javier indique, tomando `main` como versión estable actualizada.
+
+---
+
+## Registro de Intervención #8
+
+- **Fecha y hora**: 2026-07-29 16:00, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `f429102ca19277d4834898144c062828b6d36e2f`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Evaluar la alineación entre la validación técnica reproducible (Fase 12 / Intervención #6) y el diseño definitivo del Módulo Matrices de Riesgos, consolidando un único documento maestro de análisis en Git y registrando los resultados reales de calidad al 100%.
+
+### Archivos creados o modificados
+
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación del documento maestro [`ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) el cual detalla la arquitectura de base de datos Oracle (`MR_`), servicios en .NET 10 y formularios dinámicos mediante JSON en Angular 22 para el desarrollo del Módulo Matrices de Riesgos de 0 a 100%.
+- Consolidación del estado vivo y actualización de los puntos de continuación tras el éxito verificado de la Intervención #6.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | **96 pruebas aprobadas**, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | **18 archivos de prueba aprobados, 165 pruebas aprobadas** |
+| `npm run e2e` | **7 pruebas aprobadas** |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 441 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto. Puertas de calidad aprobadas |
+- **Fecha y hora**: 2026-07-27 08:17, hora de Honduras.
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Actualizar el checkout local desde `origin/desarrollo`, verificar el avance reportado de la Intervención #5 y ejecutar la validación técnica reproducible prevista en el plan formal de cierre de Fase 12.
+
+### Revisión inicial ejecutada
+
+- Lectura de `AGENTS.md`.
+- Lectura de esta bitácora.
+- Lectura de `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- Lectura de `README.md`.
+- Lectura de `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- Confirmación de que el trabajo vigente corresponde a `desarrollo`, no a `main`.
+- Confirmación de que el reporte del avance recibido coincide con los commits publicados en `origin/desarrollo`.
+
+### Sincronización Git
+
+- Rama inicial local antes de corregir el flujo: `fase-12-mejora-ejecutiva-matrices`.
+- Rama obligatoria de trabajo según protocolo: `desarrollo`.
+- Se ejecutó `git fetch --all --prune`; el primer intento falló por bloqueo de red del entorno y se repitió con permiso de red.
+- Se ejecutó `git switch desarrollo`.
+- Se ejecutó `git pull --ff-only origin desarrollo`.
+- `desarrollo` quedó sincronizada en `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- `main` no fue modificada.
+
+### Confirmaciones del avance recibido
+
+- Existe el plan formal de cierre:
+  - `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/PLAN_CIERRE_FORMAL_FASE_12.md`.
+- `ESTADO_COLABORACION.md` fue consolidado como documento vivo.
+- Esta bitácora contiene la Intervención #5.
+- Los commits reportados están en la historia de `desarrollo`:
+  - `22a5f29e78daeacd4822dd704b82d1a878b029c0`.
+  - `cdfde9f6381afe7d9677f4083df46fbd621778fe`.
+  - `8ccf973822cfeea3adb8dbccdf43d4075ba741d9`.
+- Se comprobó que los acentos de los documentos no están dañados en los archivos; la visualización incorrecta observada provino de la salida de consola.
+
+### Verificación técnica ejecutada en esta intervención
+
+| Validación | Resultado |
+|---|---|
+| `git diff --check` | Correcto, sin errores |
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | 96 pruebas aprobadas, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto en segundo intento con permisos de entorno |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | 18 archivos de prueba aprobados, 165 pruebas aprobadas |
+| `npm run e2e` | 7 pruebas aprobadas |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 439 archivos rastreados, 3 maestros SQL |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto |
+
+### Métricas de Quality Gates
+
+- Backend: 96 pruebas aprobadas.
+- Frontend: 18 archivos de prueba, 165 pruebas aprobadas.
+- E2E: 7 pruebas aprobadas.
+- Cobertura Backend reportada por Quality Gates:
+  - líneas: 22.15%;
+  - ramas: 21.21%.
+- Cobertura Frontend reportada por Quality Gates:
+  - sentencias: 38.99%;
+  - ramas: 33.51%;
+  - funciones: 36.00%;
+  - líneas: 39.20%.
+
+### Observaciones técnicas
+
+- `npm ci` falló inicialmente por permisos sobre la caché local de npm (`EPERM`) y fue repetido con permisos del entorno; el segundo intento fue correcto.
+- `npm ci` reportó 17 vulnerabilidades transitivas. No se ejecutó `npm audit fix` ni `npm audit fix --force` para evitar cambios de dependencias fuera del alcance de cierre.
+- El build Angular mantiene advertencia conocida por `exceljs` como dependencia CommonJS.
+- El build Backend mantiene dos advertencias `xUnit2009` en pruebas de reportería de Matrices; no bloquean la compilación ni las pruebas.
+- La copia `.agents/AGENTS.md` difiere de `AGENTS.md` solo en rutas relativas, diferencia permitida por el protocolo.
+
+### Verificación no ejecutada
+
+- Excel Desktop con archivo real: pendiente de usuario funcional.
+- PDF con datos institucionales reales: pendiente de usuario funcional autorizado.
+- Oracle institucional: pendiente de DBA autorizado.
+- Active Directory y SMTP: pendiente de infraestructura institucional.
+- Reconciliación `main`/`desarrollo`: pendiente de autorización expresa de Javier Mejía.
+- Documento Maestro final y checksum SHA-256: pendientes hasta completar validaciones funcionales e institucionales.
+
+### Punto exacto de continuación
+
+1. Revisar con Javier Mejía los resultados técnicos reproducidos de la Intervención #6.
+2. Ejecutar validación funcional con Excel Desktop y PDF real.
+3. Ejecutar validación Oracle institucional con DBA autorizado.
+4. Actualizar Documento Maestro de Fase 12 y regenerar checksum.
+5. Solicitar aprobación formal de Javier Mejía para cerrar Fase 12.
+6. No modificar ni integrar `main` sin autorización expresa.
+
+---
+
+## Registro de Intervención #7
+
+- **Fecha y hora**: 2026-07-29 14:24, hora de Honduras.
+- **Agente**: Codex.
+- **Rama inicial**: `desarrollo`.
+- **Commit inicial**: `945d369af485bca658735b48357cfa93279a250a`.
+- **Autorización recibida**: Javier Mejía aprobó el cierre de la Fase 12 y autorizó realizar el merge hacia `main`.
+
+### Objetivo
+
+Cerrar formalmente la Fase 12 del módulo Matrices de Riesgos, actualizar la evidencia documental de cierre, regenerar el checksum del documento maestro y dejar `desarrollo`, `main`, el repositorio local y GitHub alineados.
+
+### Cambios documentales ejecutados
+
+- Se actualizó `docs/3. Módulo Matrices de Riesgos/Fase 12 - Mejora ejecutiva UXUI y mapa de calor/Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.docx` con la sección **21. Cierre formal aprobado de Fase 12**.
+- Se regeneró `Cierre_Tecnico_Fase_12_Matrices_Riesgos_SGRLA_IHSS.sha256` contra el documento Word final.
+- Se registró en este archivo y en `docs/0.0 Documentación/ESTADO_COLABORACION.md` la aprobación formal y la autorización de integración a `main`.
+- Se incorporaron al control de versiones dos documentos existentes en `docs/0.0 Documentación` que estaban sin seguimiento local: programación de reunión y validación de requerimientos del módulo Matrices de Riesgos.
+
+### Resultado de cierre
+
+- **Fase 12**: aprobada y cerrada por autorización formal de Javier Mejía.
+- **Rama de trabajo**: `desarrollo`.
+- **Integración a `main`**: autorizada expresamente por Javier Mejía en esta intervención.
+
+### Verificación considerada para cierre
+
+Se toma como base la validación técnica reproducida en la Intervención #6:
+
+| Validación | Resultado |
+|---|---|
+| Backend build | Correcto, 0 errores |
+| Backend tests | 96 aprobadas, 0 fallidas, 0 omitidas |
+| Frontend build | Correcto |
+| Frontend tests | 18 archivos aprobados, 165 pruebas aprobadas |
+| E2E | 7 pruebas aprobadas |
+| Validadores PowerShell | Estructura, scripts Oracle, enlaces y Quality Gates correctos |
+
+### Render del documento Word
+
+Se intentó renderizar el documento maestro actualizado con LibreOffice. El intento superó el límite operativo de un minuto definido por Javier Mejía para no consumir tiempo innecesario, por lo que se omitió el render visual y se conserva el documento Word estructuralmente actualizado.
+
+### Restricciones preservadas
+
+- No se modificó DNP.
+- No se modificó `CONTROL_ALMACEN.PROVEEDOR`.
+- No se modificó el motor de cálculo.
+- No se modificó la estructura Oracle.
+- No se cambió el modelo de permisos por módulo.
+
+### Punto exacto de continuidad
+
+Después del merge autorizado, continuar el trabajo ordinario desde `desarrollo` o desde la rama que Javier indique, tomando `main` como versión estable actualizada.
+
+---
+
+## Registro de Intervención #8
+
+- **Fecha y hora**: 2026-07-29 16:00, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `f429102ca19277d4834898144c062828b6d36e2f`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Evaluar la alineación entre la validación técnica reproducible (Fase 12 / Intervención #6) y el diseño definitivo del Módulo Matrices de Riesgos, consolidando un único documento maestro de análisis en Git y registrando los resultados reales de calidad al 100%.
+
+### Archivos creados o modificados
+
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación del documento maestro [`ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) el cual detalla la arquitectura de base de datos Oracle (`MR_`), servicios en .NET 10 y formularios dinámicos mediante JSON en Angular 22 para el desarrollo del Módulo Matrices de Riesgos de 0 a 100%.
+- Consolidación del estado vivo y actualización de los puntos de continuación tras el éxito verificado de la Intervención #6.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `dotnet restore RIESGO_LAVADO.sln --configfile NuGet.Config` | Correcto |
+| `dotnet build RIESGO_LAVADO.sln --no-restore` | Correcto, 0 errores, 2 advertencias xUnit2009 |
+| `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore` | **96 pruebas aprobadas**, 0 fallidas, 0 omitidas |
+| `npm ci` | Correcto |
+| `npm run build` | Correcto, con advertencia conocida por `exceljs` CommonJS |
+| `npm test -- --watch=false` | **18 archivos de prueba aprobados, 165 pruebas aprobadas** |
+| `npm run e2e` | **7 pruebas aprobadas** |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 441 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | Correcto; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | Correcto; 34 Markdown revisados, 41 enlaces locales |
+| `tools/run_quality_gates.ps1` | Correcto. Puertas de calidad aprobadas |
+
+### Métricas de Cobertura de Quality Gates
+- **Backend:** líneas=22.15%, ramas=21.21%
+- **Frontend:** sentencias=38.99%, ramas=33.51%, funciones=36.00%, líneas=39.20%
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre el documento consolidado en Git [`docs/3. Módulo Matrices de Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md).
+2. Iniciar formalmente el desarrollo de la arquitectura dinámica de la Matriz de Riesgos sobre la rama `desarrollo`.
+3. Mantener y actualizar la bitácora de colaboración con cada cambio.
+
+---
+
+## Registro de Intervención #9
+
+- **Fecha y hora**: 2026-07-30 08:35, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `7da70db04b77f98ee0ee8f0de202e88aee461ea5`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Integrar y consolidar en un único análisis maestro en formato Word (`.doc`) y Markdown (`.md`) los documentos de requerimientos de la carpeta `Analisis Matrices de riesgos v2` y el plan definitivo de implementación del Módulo Matrices de Riesgos en el repositorio Git.
+
+### Archivos creados o modificados
+
+- **Creado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)
+- **Creado**: `Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.doc`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Inspección de `C:\RIESGO_LAVADO\Analisis Matrices de riesgos v2\ANALISIS_FINAL_MODULO_MATRICES_DE_RIESGOS Chat.docx` mediante descompresión ZIP y parseo XML nativo de su contenido para extraer el análisis detallado.
+- Creación del documento maestro final consolidado de 0 a 100% en Markdown ([`ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)) y su versión Word (`.doc`) con estilos institucionales y fórmulas de cálculo del IHSS (VRI, ETP, VRR).
+- Modificación de los enlaces absolutos `file:///` a relativos en `ESTADO_COLABORACION.md` para cumplir las políticas del repositorio.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 443 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 35 Markdown revisados, 48 enlaces locales |
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre el documento maestro consolidado [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md) y su versión Word `.doc`.
+2. Iniciar el desarrollo de la arquitectura dinámica de la Matriz de Riesgos sobre la rama `desarrollo`.
+3. Mantener y actualizar la bitácora de colaboración con cada cambio.
