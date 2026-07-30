@@ -1084,8 +1084,8 @@ Diseñar y especificar detalladamente el Contrato JSON Propietario del IHSS y el
 - **Fecha y hora**: 2026-07-30 12:45, hora local.
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `afb05310243e884e9d7c34d402ceecdb4f141235`.
-- **Commit final**: pendiente hasta publicar esta intervención.
+- **Commit inicial**: `091dd15822f08aeeae1c8e19c0175b5b7c2ccb64`.
+- **Commit final**: `249a9328a6fef95b77ea6cdde66eb56f4d547515`.
 
 ### Objetivo
 
@@ -1112,9 +1112,38 @@ Resolver las observaciones de calidad de la Fase 2 de diseño (Contrato JSON for
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
+---
+
+## Registro de Intervención #18
+
+- **Fecha y hora**: 2026-07-30 12:50, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `249a9328a6fef95b77ea6cdde66eb56f4d547515`.
+- **Commit final**: `249a9328a6fef95b77ea6cdde66eb56f4d547515`.
+
+### Objetivo
+
+Cierre formal administrativo de la Fase 2 y handoff documental actualizando los commits definitivos del repositorio sin alterar el diseño técnico aprobado.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Actualización de los hashes de commits finales de la Intervención #17 y sincronización del informe de estado de colaboración vivo para reflejar el cierre formal del diseño técnico.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
+
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal de Javier Mejía sobre el Contrato JSON y Diccionario Físico Definitivo (Fase 2).
-2. Proceder con el diseño detallado del retiro e instalación física (Fase 3).
-3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
-
+1. Solicitar la aprobación formal e inicio de la Fase 3: Diseño de scripts de instalación y desinstalación física.
+2. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
