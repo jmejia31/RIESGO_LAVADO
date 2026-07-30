@@ -15,13 +15,13 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #19.
+- **Intervención**: #20.
 - **Fecha**: 2026-07-30 13:00, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Diseñar e implementar los scripts DDL y DML preliminares de la base de datos de 34 tablas y 24 secuencias físicas (Fase 3).
-- **Commit de inicio verificado**: `edf30fbede6d42da34f718870195ee0a574ec8c1`.
-- **Estado**: Fase 3 de diseño físico de base de datos completada; scripts SQL actualizados y preparados para revisión; validaciones de calidad locales en verde.
+- **Objetivo**: Corregir 4 defectos bloqueantes identificados en la Fase 3 sobre scripts de base de datos (protección de `RL_MR_EVIDENCIAS`, orden de FKs, validación de esquema RIESGO_LAVADO e instalación limpia).
+- **Commit de inicio verificado**: `6b8218e`.
+- **Estado**: Fase 3 corregida, validadores locales en verde y aprobada formalmente. Plan de la Fase 4 diseñado y aprobado en la Intervención #21.
 
 ## 3. Estado de fases
 
@@ -192,8 +192,8 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Tomar como línea base el [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.1.
-2. Iniciar el tramo 0–5%: diccionario de 82 campos, catálogos y mapeo de reglas.
-3. Convertir VRI, ETP, VRR y las reglas auxiliares verificadas en el libro en casos de paridad, y obtener aprobación funcional antes de implementarlas como reglas institucionales.
-4. Mantener separados los resultados históricos de Fase 12 de las pruebas del nuevo desarrollo.
-5. Trabajar exclusivamente sobre `desarrollo` y actualizar la bitácora y este estado vivo en cada intervención.
+1. Iniciar el desarrollo del Backend (Fase 4) sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
+2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
+3. Construir la interfaz y lógica del motor de validación dinámica JSON en el Backend (`IFormularioValidador.cs`).
+4. Trabajar exclusivamente en la rama `desarrollo` sin realizar modificaciones DDL/DML directas en Oracle hasta contar con la autorización y el respaldo del DBA.
+5. Actualizar la bitácora y el estado de colaboración al término de la intervención.

@@ -1203,7 +1203,7 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `6b8218e`.
-- **Commit final**: pendiente.
+- **Commit final**: `5995972`.
 
 ### Objetivo
 
@@ -1236,6 +1236,48 @@ Corregir 4 defectos bloqueantes identificados por Codex en los scripts de la Fas
 
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal de Javier Mejía sobre los scripts corregidos de base de datos (Fase 3).
-2. Proceder con el diseño de contratos y adaptadores del Backend (Fase 4).
+1. Diseñar y formular el plan de implementación de la Fase 4 para adaptadores y contratos de backend (Fase 4).
+
+---
+
+## Registro de Intervención #21
+
+- **Fecha y hora**: 2026-07-30 13:17, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `5995972`.
+- **Commit final**: pendiente.
+
+### Objetivo
+
+Diseñar, detallar y obtener la aprobación formal de Javier Mejía para el Plan de Implementación de la Fase 4 (Backend ASP.NET Core: Contratos, Adaptadores y Estructura Dinámica) asegurando la alineación absoluta con el modelo físico de 34 tablas, validación de permisos por rol, versionamiento histórico inmutable, evidencias asociadas y coherencia residual.
+
+### Archivos creados o modificados
+
+- **Creado (Artefacto)**: `implementation_plan.md` (Plan de la Fase 4)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación y refinamiento iterativo del Plan de la Fase 4, consolidado en la versión **Fase 4.5 Aprobada**.
+- Definición de la precedencia única de permisos (Oculto > Especificidad (Campo > Sección > Formulario) > Lectura > Edición).
+- Especificación del versionamiento histórico hermético mediante `EVA_VERSION_ID` para consultas de auditorías pasadas.
+- Inclusión del control de concurrencia optimista en el backend con la columna `EVA_VERSION_ROW` y la atomicidad de actualizaciones en una transacción única.
+- Regla de reutilización de evidencias existentes con rechazo obligatorio (HTTP 400) si no se puede determinar la evaluación asociada para el registro en `RL_MR_AUDITORIA`.
+- Declaración explícita de las fórmulas de paridad oficiales de cálculo (VRI, ETP, VRR) y verificación de coherencia residual ($VRR = VRR_2$) en pruebas unitarias del motor de cálculo.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
+
+### Punto exacto de continuación
+
+1. Iniciar la implementación del Backend en la rama `desarrollo` sin alterar el esquema Oracle hasta contar con validación del DBA.
+2. Construir los DTOs de configuración, controles, planes y evidencias del Hito 4.1.
+
 
