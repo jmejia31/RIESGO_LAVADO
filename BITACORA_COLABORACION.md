@@ -940,7 +940,7 @@ Diseñar e inventariar el retiro controlado del módulo anterior y estructurar l
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `9d1858140ce817f6cd899b360c6b8a1571561d92`.
-- **Commit final**: pendiente hasta publicar esta intervención.
+- **Commit final**: `949a0fa154c13886566085a6dbd418706d87e076`.
 
 ### Objetivo
 
@@ -971,9 +971,48 @@ Implementar el mecanismo de aborto automático ante errores SQL para consola SQL
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 75 enlaces locales |
 
+---
+
+## Registro de Intervención #15
+
+- **Fecha y hora**: 2026-07-30 12:20, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `949a0fa154c13886566085a6dbd418706d87e076`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de base de datos (eliminación de `PUBLISHED_ACTIVE` a favor de `PUBLISHED`, validación del esquema `RIESGO_LAVADO` en el retiro controlado, idempotencia en la carga del Formulario A, y normalización de sintaxis SQL*Plus).
+
+### Archivos creados o modificados
+
+- **Modificado**: `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Cambio de `PUBLISHED_ACTIVE` a `PUBLISHED` en la restricción check `CK_RL_MR_VER_EST` de `01_create_rl_mr_estructura_dinamica.sql`.
+- Inserción de la validación `UPPER(v_esquema_actual) <> 'RIESGO_LAVADO'` en el bloque de seguridad del script `00_retiro_controlado_modelo_prueba.sql` para abortar inmediatamente si se ejecuta en un esquema incorrecto.
+- Re-escritura idempotente de `04_config_json_inicial_formulario.sql` asegurando la creación/localización de la familia, la inserción condicional de la versión 1 si no existe, la actualización limpia en estado `DRAFT` y la correcta propagación de errores PL/SQL con `RAISE_APPLICATION_ERROR`.
+- Eliminación del punto y coma al final de `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK` en todos los archivos.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 77 enlaces locales |
+
 ### Punto exacto de continuación
 
-1. Obtener la aprobación de Javier Mejía sobre el Plan de la Fase 2 (Diccionario Físico y Contratos JSON).
-2. Proceder con el diseño e inventario de las especificaciones y contratos (Fase 2).
+1. Obtener la aprobación formal del propietario de requerimientos (Javier Mejía) sobre los borradores SQL saneados de la Fase 1.
+2. Autorizar el paso formal a la Fase 2 (Diccionario Físico y Contratos JSON).
 3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
 

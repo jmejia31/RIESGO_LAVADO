@@ -8,7 +8,7 @@
 -- ============================================================
 
 -- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
-WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
@@ -17,8 +17,12 @@ DECLARE
 BEGIN
   SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') INTO v_esquema_actual FROM DUAL;
   
+  IF UPPER(v_esquema_actual) <> 'RIESGO_LAVADO' THEN
+    RAISE_APPLICATION_ERROR(-20098, 'EJECUCIÓN BLOQUEADA: Este script solo puede ejecutarse en el esquema RIESGO_LAVADO. Esquema detectado: ' || v_esquema_actual);
+  END IF;
+  
   IF v_permiso_ejecucion <> 'SI' THEN
-    RAISE_APPLICATION_ERROR(-20099, 'EJECUCIÓN BLOQUEADA: Este script es destructivo. El DBA debe cambiar v_permiso_ejecucion a ''SI''. Esquema actual de ejecucion detectado: ' || v_esquema_actual);
+    RAISE_APPLICATION_ERROR(-20099, 'EJECUCIÓN BLOQUEADA: Este script es destructivo. El DBA debe cambiar v_permiso_ejecucion a ''SI''.');
   END IF;
 END;
 /
