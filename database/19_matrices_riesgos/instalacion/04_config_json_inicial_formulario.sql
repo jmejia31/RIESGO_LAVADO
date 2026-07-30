@@ -14,8 +14,14 @@ DEFINE autorizacion = '&1';
 
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
-  v_auth VARCHAR2(50) := q'[&autorizacion]';
+  v_auth           VARCHAR2(50) := q'[&autorizacion]';
+  v_esquema_actual VARCHAR2(100);
 BEGIN
+  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') INTO v_esquema_actual FROM DUAL;
+  IF UPPER(v_esquema_actual) <> 'RIESGO_LAVADO' THEN
+    RAISE_APPLICATION_ERROR(-20098, 'EJECUCIÓN BLOQUEADA: Este script solo puede ejecutarse en el esquema RIESGO_LAVADO. Esquema detectado: ' || v_esquema_actual);
+  END IF;
+
   IF UPPER(v_auth) <> 'EJECUTAR' THEN
     RAISE_APPLICATION_ERROR(-20100, 'EJECUCIÓN BLOQUEADA: Script en fase de diseño. El DBA debe pasar "EJECUTAR" como primer argumento de SQL*Plus en la Fase 5.');
   END IF;

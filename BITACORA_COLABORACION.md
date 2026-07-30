@@ -1191,6 +1191,51 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal de Javier Mejía sobre los scripts de base de datos de 34 tablas (Fase 3).
+1. Obtener la aprobación formal de Javier Mejía sobre los scripts corregidos de base de datos (Fase 3).
 2. Proceder con el diseño de contratos y adaptadores del Backend (Fase 4).
 3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
+
+---
+
+## Registro de Intervención #20
+
+- **Fecha y hora**: 2026-07-30 13:00, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `6b8218e`.
+- **Commit final**: pendiente.
+
+### Objetivo
+
+Corregir 4 defectos bloqueantes identificados por Codex en los scripts de la Fase 3: protección de `RL_MR_EVIDENCIAS` contra eliminación de la tabla definitiva, orden de creación de tablas respetando dependencias FK, validación de esquema `RIESGO_LAVADO` en todos los scripts de instalación, y preflight de ausencia de objetos definitivos previos.
+
+### Archivos modificados
+
+- `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+- [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+
+### Correcciones aplicadas
+
+1. **Protección de `RL_MR_EVIDENCIAS` en retiro**: Agregada verificación por firma de columnas (`EVI_HASH`) en `USER_TAB_COLUMNS` para distinguir inequívocamente la tabla antigua (sin `EVI_HASH`) de la definitiva (con `EVI_HASH`). Si la columna existe, el script aborta con `RAISE_APPLICATION_ERROR(-20096)`.
+2. **Orden de creación corregido**: `RL_MR_SENALES_ALERTA` y `RL_MR_AUTOMONITOREO` ahora se crean ANTES del bloque de 9 tablas asociativas `EVI_*`, garantizando que todas las FK apunten a tablas ya existentes.
+3. **Validación de esquema `RIESGO_LAVADO`**: Agregada a los 4 scripts de instalación (`01`–`04`) mediante `SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')` con aborto por `RAISE_APPLICATION_ERROR(-20098)`.
+4. **Preflight de instalación limpia en `01`**: Consulta `USER_TABLES` y `USER_SEQUENCES` buscando objetos con prefijo `RL_MR_*`. Si existen, aborta con `RAISE_APPLICATION_ERROR(-20101)` indicando que el retiro controlado debe ejecutarse primero.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre los scripts corregidos de base de datos (Fase 3).
+2. Proceder con el diseño de contratos y adaptadores del Backend (Fase 4).
+

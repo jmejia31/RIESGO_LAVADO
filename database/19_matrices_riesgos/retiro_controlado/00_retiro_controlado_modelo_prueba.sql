@@ -75,8 +75,9 @@ END;
 -- ============================================================
 DECLARE
   v_count_definitivas NUMBER := 0;
+  v_evi_es_definitiva NUMBER := 0;
 BEGIN
-  -- Verificar que NO existan tablas del modelo definitivo (Fase 3)
+  -- Verificar que NO existan tablas del modelo definitivo (Fase 3).
   -- Si alguna tabla definitiva existe, este retiro no debe ejecutarse.
   SELECT COUNT(*) INTO v_count_definitivas
     FROM USER_TABLES
@@ -100,6 +101,21 @@ BEGIN
       ' tabla(s) del modelo DEFINITIVO (Fase 3) en el esquema. ' ||
       'Este script solo debe ejecutarse cuando existen objetos de PRUEBA previos. ' ||
       'Verifique manualmente antes de proceder.');
+  END IF;
+
+  -- Verificación adicional: RL_MR_EVIDENCIAS existe en AMBOS modelos
+  -- (antiguo y definitivo). La versión definitiva tiene la columna EVI_HASH;
+  -- la antigua no. Si EVI_HASH existe, es la tabla definitiva y NO debe eliminarse.
+  SELECT COUNT(*) INTO v_evi_es_definitiva
+    FROM USER_TAB_COLUMNS
+   WHERE TABLE_NAME = 'RL_MR_EVIDENCIAS'
+     AND COLUMN_NAME = 'EVI_HASH';
+
+  IF v_evi_es_definitiva > 0 THEN
+    RAISE_APPLICATION_ERROR(-20096,
+      'EJECUCIÓN BLOQUEADA: La tabla RL_MR_EVIDENCIAS pertenece al modelo DEFINITIVO ' ||
+      '(se detectó la columna EVI_HASH). Este script solo retira objetos del modelo ' ||
+      'de prueba preliminar. NO se eliminará esta tabla.');
   END IF;
 
   DBMS_OUTPUT.PUT_LINE('VERIFICACIÓN OK: No se detectaron tablas del modelo definitivo. Procediendo con retiro de objetos de prueba.');
