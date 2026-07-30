@@ -901,7 +901,7 @@ Verificar que no exista acoplamiento físico o lógico en la base de datos (y ca
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `364dc60b43ff27b60e9d6df547902e88a03ca63e`.
-- **Commit final**: pendiente hasta publicar esta actualización documental.
+- **Commit final**: `9d1858140ce817f6cd899b360c6b8a1571561d92`.
 
 ### Objetivo
 
@@ -932,9 +932,48 @@ Diseñar e inventariar el retiro controlado del módulo anterior y estructurar l
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 74 enlaces locales |
 
+---
+
+## Registro de Intervención #14
+
+- **Fecha y hora**: 2026-07-30 12:05, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9d1858140ce817f6cd899b360c6b8a1571561d92`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Implementar el mecanismo de aborto automático ante errores SQL para consola SQL*Plus, crear las secuencias físicas de base de datos faltantes, renombrar columnas a caracteres ASCII seguros y ampliar el Plan de la Fase 2 cubriendo las 28 tablas y el JSON dinámico.
+
+### Archivos creados o modificados
+
+- **Modificado**: `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Inserción de la directiva `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;` en el encabezado de los 5 scripts DDL.
+- Incorporación de las secuencias `SEQ_RL_MR_CAMPOS`, `SEQ_RL_MR_APROBACIONES` y `SEQ_RL_MR_PERMISOS` para la generación automática de IDs.
+- Corrección de la columna `EVI_EXTENSIN` a `EVI_EXTENSION` y `PROY_DUEÑO_RIESGO` a `PROY_DUENO_RIESGO` para evitar caracteres no ASCII en nombres de columnas e índices.
+- Actualización y re-estructuración de la Fase 2 detallando las 28 tablas físicas de base de datos, el JSON dinámico y el DTO de envoltorio del Backend.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 75 enlaces locales |
+
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal de Javier Mejía sobre los borradores de scripts de base de datos (`database/19_matrices_riesgos/`) e inventarios de dependencias.
-2. Iniciar con el retiro autorizado del modelo de prueba en el esquema Oracle (Fase 4 del orden corregido).
+1. Obtener la aprobación de Javier Mejía sobre el Plan de la Fase 2 (Diccionario Físico y Contratos JSON).
+2. Proceder con el diseño e inventario de las especificaciones y contratos (Fase 2).
 3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
 

@@ -7,12 +7,18 @@
 -- ¡PRECAUCIÓN!: Este script elimina datos y estructuras. No debe correr de forma automática.
 -- ============================================================
 
+-- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
   v_permiso_ejecucion VARCHAR2(10) := 'NO'; -- CAMBIAR A 'SI' UNICAMENTE POR EL DBA AUTORIZADO
+  v_esquema_actual     VARCHAR2(100);
 BEGIN
+  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') INTO v_esquema_actual FROM DUAL;
+  
   IF v_permiso_ejecucion <> 'SI' THEN
-    RAISE_APPLICATION_ERROR(-20099, 'EJECUCIÓN BLOQUEADA: Este script es destructivo. El DBA debe editar el script y cambiar v_permiso_ejecucion a ''SI'' bajo su responsabilidad.');
+    RAISE_APPLICATION_ERROR(-20099, 'EJECUCIÓN BLOQUEADA: Este script es destructivo. El DBA debe cambiar v_permiso_ejecucion a ''SI''. Esquema actual de ejecucion detectado: ' || v_esquema_actual);
   END IF;
 END;
 /

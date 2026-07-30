@@ -6,6 +6,9 @@
 -- Clasificación: SCRIPT EN FASE DE DISEÑO (BLOQUEADO HASTA FASE 5 DE INSTALACIÓN).
 -- ============================================================
 
+-- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
   v_fase_aprobada VARCHAR2(10) := 'NO'; -- CAMBIAR A 'SI' CUANDO SE AUTORICE LA FASE 5 DE INSTALACIÓN
@@ -46,7 +49,7 @@ BEGIN
         "titulo": "2. Evaluación del Riesgo Inherente",
         "campos": [
           { "id": "descripcion_riesgo", "etiqueta": "Descripción del Evento", "tipo": "texto-largo", "obligatorio": true },
-          { "id": "frecuencia_inherente", "etiqueta": "Frecuencia / Probabilidad", "tipo": "selector-catalogo", "codigoCatalogo": "CAT_PROBABILIDAD", "obligatorio": true },
+          { "id": "frecuencia_inherente", "etiqueta": "Frecuencia", "tipo": "selector-catalogo", "codigoCatalogo": "CAT_FRECUENCIA", "obligatorio": true },
           { "id": "impacto_inherente", "etiqueta": "Impacto", "tipo": "selector-catalogo", "codigoCatalogo": "CAT_IMPACTO", "obligatorio": true }
         ]
       }

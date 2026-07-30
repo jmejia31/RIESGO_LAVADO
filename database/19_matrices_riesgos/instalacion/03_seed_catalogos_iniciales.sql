@@ -6,6 +6,9 @@
 -- Clasificación: SCRIPT EN FASE DE DISEÑO (BLOQUEADO HASTA FASE 5 DE INSTALACIÓN).
 -- ============================================================
 
+-- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK;
+
 -- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
   v_fase_aprobada VARCHAR2(10) := 'NO'; -- CAMBIAR A 'SI' CUANDO SE AUTORICE LA FASE 5 DE INSTALACIÓN
@@ -41,7 +44,7 @@ DECLARE
   END;
 BEGIN
   -- 1. CREACIÓN DE CATÁLOGOS BASE
-  upsert_catalogo('CAT_PROBABILIDAD', 'Escala de Probabilidad/Frecuencia');
+  upsert_catalogo('CAT_FRECUENCIA', 'Escala de Frecuencia');
   upsert_catalogo('CAT_IMPACTO', 'Escala de Impacto');
   upsert_catalogo('CAT_TIPO_CONTROL', 'Tipos de Control');
   upsert_catalogo('CAT_EFECTIVIDAD_CONTROL', 'Escala de Efectividad de Control');
@@ -50,11 +53,11 @@ BEGIN
 
   -- 2. ELEMENTOS DE CATÁLOGOS
   -- Frecuencia
-  upsert_elemento('CAT_PROBABILIDAD', '1', 'Muy Baja', 1);
-  upsert_elemento('CAT_PROBABILIDAD', '2', 'Baja', 2);
-  upsert_elemento('CAT_PROBABILIDAD', '3', 'Media', 3);
-  upsert_elemento('CAT_PROBABILIDAD', '4', 'Alta', 4);
-  upsert_elemento('CAT_PROBABILIDAD', '5', 'Muy Alta', 5);
+  upsert_elemento('CAT_FRECUENCIA', '1', 'Muy Baja', 1);
+  upsert_elemento('CAT_FRECUENCIA', '2', 'Baja', 2);
+  upsert_elemento('CAT_FRECUENCIA', '3', 'Media', 3);
+  upsert_elemento('CAT_FRECUENCIA', '4', 'Alta', 4);
+  upsert_elemento('CAT_FRECUENCIA', '5', 'Muy Alta', 5);
 
   -- Impacto
   upsert_elemento('CAT_IMPACTO', '1', 'Insignificante', 1);
