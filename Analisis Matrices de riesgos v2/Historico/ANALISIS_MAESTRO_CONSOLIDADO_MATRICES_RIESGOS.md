@@ -3,7 +3,7 @@
 ### Arquitectura dirigida por metadatos, formularios dinámicos JSON, persistencia híbrida y versionamiento histórico
 
 > [!IMPORTANT]
-> **Estado documental:** este archivo se conserva como antecedente consolidado de las Intervenciones #8 y #9. La línea base funcional y técnica final vigente es [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.2, con estado **Documento Maestro aprobado para implementación**. El archivo Word nativo separa el riesgo de sus evaluaciones, amplía el modelo relacional, distingue las pruebas históricas de Fase 12 de las pruebas del nuevo desarrollo y diferencia las fórmulas verificadas en Excel de su aprobación funcional para producción.
+> **Estado documental:** este archivo se conserva como antecedente consolidado de las Intervenciones #8 y #9. La línea base funcional y técnica final vigente es [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.2, con estado **Documento Maestro aprobado para implementación**. El archivo Word nativo separa el riesgo de sus evaluaciones, amplía el modelo relacional, distingue las pruebas históricas de Fase 12 de las pruebas del nuevo desarrollo y diferencia las fórmulas verificadas en Excel de su aprobación funcional para producción.
 
 ---
 
@@ -15,7 +15,7 @@
 | **Versión** | 1.0 Final Consolidada |
 | **Fecha** | 30 de julio de 2026 |
 | **Estado** | Antecedente consolidado; sustituido como línea base por la versión 1.2 aprobada en formato `.docx` nativo. |
-| **Documento vigente** | [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx) |
+| **Documento vigente** | [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx) |
 
 ### Historial de Versiones del Documento
 * **v1.0 (30/07/2026):** Versión final consolidada y unificada de los requerimientos analizados por los agentes y el propietario de requerimientos (Javier Mejía). Combina la validación de calidad de la Fase 12 y el diseño detallado del módulo dinámico de Matrices de Riesgos.

@@ -704,7 +704,7 @@ Aplicar los ajustes finales aprobados al análisis definitivo y declarar su vers
 ### Archivos creados o modificados
 
 - **Modificado**: [`Analisis Matrices de riesgos v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx).
-- **Modificado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
+- **Modificado**: [`Analisis Matrices de riesgos v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
 - **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
 
@@ -764,7 +764,7 @@ Comparar los tres análisis de la carpeta `Analisis Matrices de riesgos v2`, rec
 ### Archivos creados o modificados
 
 - **Creado y consolidado**: [`Analisis Matrices de riesgos v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx).
-- **Modificado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
+- **Modificado**: [`Analisis Matrices de riesgos v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
 - **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
 
@@ -798,6 +798,12 @@ Comparar los tres análisis de la carpeta `Analisis Matrices de riesgos v2`, rec
 
 - No se renderizó el documento Word por instrucción expresa de Javier Mejía.
 - No se utilizó ni instaló LibreOffice.
+| `tools/validate_documentation_links.ps1` | Correcto; 36 Markdown y 64 enlaces locales |
+
+### Verificación no ejecutada
+
+- No se renderizó el documento Word por instrucción expresa de Javier Mejía.
+- No se utilizó ni instaló LibreOffice.
 - No se repitieron compilaciones ni suites de servicios, interfaz o extremo a extremo porque el cambio es exclusivamente documental; sus resultados anteriores se presentan únicamente como antecedente histórico.
 
 ### Punto exacto de continuación
@@ -815,7 +821,7 @@ Comparar los tres análisis de la carpeta `Analisis Matrices de riesgos v2`, rec
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `7da70db04b77f98ee0ee8f0de202e88aee461ea5`.
-- **Commit final**: pendiente hasta publicar esta actualización documental.
+- **Commit final**: `364dc60b43ff27b60e9d6df547902e88a03ca63e`.
 
 ### Objetivo
 
@@ -823,37 +829,15 @@ Integrar y consolidar en un único análisis maestro en formato Word (`.doc`) y 
 
 ### Archivos creados o modificados
 
-- **Creado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)
-- **Creado**: `Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.doc`
-- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
-- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
-4. Iniciar la fase de análisis funcional y diccionario de 82 campos sobre `desarrollo`.
-
----
-
-## Registro de Intervención #9
-
-- **Fecha y hora**: 2026-07-30 08:35, hora local.
-- **Agente**: Antigravity.
-- **Rama**: `desarrollo`.
-- **Commit inicial**: `7da70db04b77f98ee0ee8f0de202e88aee461ea5`.
-- **Commit final**: pendiente hasta publicar esta actualización documental.
-
-### Objetivo
-
-Integrar y consolidar en un único análisis maestro en formato Word (`.doc`) y Markdown (`.md`) los documentos de requerimientos de la carpeta `Analisis Matrices de riesgos v2` y el plan definitivo de implementación del Módulo Matrices de Riesgos en el repositorio Git.
-
-### Archivos creados o modificados
-
-- **Creado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)
-- **Creado**: `Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.doc`
+- **Creado**: [`Analisis Matrices de riesgos v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)
+- **Creado**: `Analisis Matrices de riesgos v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.doc`
 - **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
 
 ### Cambios funcionales y documentales
 
 - Inspección de `C:\RIESGO_LAVADO\Analisis Matrices de riesgos v2\ANALISIS_FINAL_MODULO_MATRICES_DE_RIESGOS Chat.docx` mediante descompresión ZIP y parseo XML nativo de su contenido para extraer el análisis detallado.
-- Creación del documento maestro final consolidado de 0 a 100% en Markdown ([`ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)) y su versión Word (`.doc`) con estilos institucionales y fórmulas de cálculo del IHSS (VRI, ETP, VRR).
+- Creación del documento maestro final consolidado de 0 a 100% en Markdown ([`ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md)) y su versión Word (`.doc`) con estilos institucionales y fórmulas de cálculo del IHSS (VRI, ETP, VRR).
 - Modificación de los enlaces absolutos `file:///` a relativos en `ESTADO_COLABORACION.md` para cumplir las políticas del repositorio.
 
 ### Verificación técnica ejecutada (en esta intervención)
@@ -866,7 +850,7 @@ Integrar y consolidar en un único análisis maestro en formato Word (`.doc`) y 
 
 ### Punto exacto de continuación
 
-1. Obtener la aprobación formal de Javier Mejía sobre el documento maestro consolidado [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md) y su versión Word `.doc`.
+1. Obtener la aprobación formal de Javier Mejía sobre el documento maestro consolidado [`Analisis Matrices de riesgos v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/Historico/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md) y su versión Word `.doc`.
 2. Iniciar el desarrollo de la arquitectura dinámica de la Matriz de Riesgos sobre la rama `desarrollo`.
 3. Mantener y actualizar la bitácora de colaboración con cada cambio.
 
@@ -905,6 +889,52 @@ Verificar que no exista acoplamiento físico o lógico en la base de datos (y ca
 
 ### Punto exacto de continuación
 
-1. Iniciar con el diseño físico del nuevo módulo dinámico en base de datos Oracle utilizando el prefijo modular unificado **`MR_`** en sustitución del inglés `RISK_RECORD_*`.
+1. Iniciar con el diseño físico del nuevo módulo dinámico en base de datos Oracle utilizando el prefijo modular unificado **`RL_MR_*`** en sustitución del inglés `RISK_RECORD_*`.
 2. Mantener la separación estricta: ningún nuevo script o trigger para Matrices de Riesgos debe interactuar o unirse con las tablas de Monitoreo de Listas.
 3. Actualizar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
+
+---
+
+## Registro de Intervención #13
+
+- **Fecha y hora**: 2026-07-30 11:45, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `364dc60b43ff27b60e9d6df547902e88a03ca63e`.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
+
+### Objetivo
+
+Diseñar e inventariar el retiro controlado del módulo anterior y estructurar los borradores no ejecutables del nuevo modelo físico dinámico bajo la nomenclatura institucional `RL_MR_*` para la Fase 1 de diseño, sin ejecutar operaciones destructivas ni DDL en Oracle.
+
+### Archivos creados o modificados
+
+- **Creado (Borrador)**: `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql`
+- **Creado (Borrador)**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Creado (Borrador)**: `database/19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql`
+- **Creado (Borrador)**: `database/19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql`
+- **Creado (Borrador)**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Creación del script protegido de retiro controlado de prueba `00_retiro_controlado_modelo_prueba.sql` en un directorio separado del flujo automático.
+- Creación de los borradores de instalación del nuevo esquema relacional-JSON inmutable `01_create_rl_mr_estructura_dinamica.sql`, restricciones e índices `02_create_rl_mr_restricciones_indices.sql`, semillas `03_seed_catalogos_iniciales.sql` y cargador JSON `04_config_json_inicial_formulario.sql`.
+- Inserción de bloques PL/SQL de seguridad al inicio de todos los scripts para bloquear la ejecución accidental por consola.
+- Saneamiento y corrección de enlaces de antecedentes históricos rotos en la bitácora redirigiéndolos al directorio `Historico/`.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 74 enlaces locales |
+
+### Punto exacto de continuación
+
+1. Obtener la aprobación formal de Javier Mejía sobre los borradores de scripts de base de datos (`database/19_matrices_riesgos/`) e inventarios de dependencias.
+2. Iniciar con el retiro autorizado del modelo de prueba en el esquema Oracle (Fase 4 del orden corregido).
+3. Registrar la bitácora y estado de colaboración con cada cambio publicado en la rama `desarrollo`.
+
