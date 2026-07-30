@@ -15,14 +15,14 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #10.
-- **Fecha**: 2026-07-30 10:00, hora local.
+- **Intervención**: #11.
+- **Fecha**: 2026-07-30 10:13, hora local.
 - **Autor**: Codex.
 - **Rama**: `desarrollo`.
-- **Objetivo**: reconciliar los tres análisis disponibles y dejar una única línea base funcional y técnica final en formato Word nativo.
-- **Commit de inicio verificado**: `364dc60e2d9c22775815288114899054c4f7bb18`, equivalente a `origin/desarrollo` antes de los cambios.
-- **Documento final vigente**: [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.1.
-- **Estado**: documento estructuralmente validado; el Markdown y el `.doc` anteriores se conservan como antecedentes. No se realizó renderizado por instrucción expresa de Javier Mejía.
+- **Objetivo**: aplicar los ajustes finales aprobados y declarar formalmente el Documento Maestro para implementación.
+- **Commit de inicio verificado**: `ec5bf581f5bf7edca7bccb56d23519effe19148b`, equivalente a `origin/desarrollo` antes de los cambios.
+- **Documento final vigente**: [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.2.
+- **Estado**: **Documento Maestro aprobado para implementación** y validado estructuralmente. El Markdown y el `.doc` anteriores se conservan como antecedentes. No se realizó renderizado por instrucción expresa de Javier Mejía.
 
 ## 3. Estado de fases
 
@@ -57,7 +57,7 @@ La continuidad posterior se ha plasmado en el [Análisis y Plan Definitivo de Im
 | Monitoreo de Listas | Reporterías PDF/Excel estandarizadas en código |
 | Matrices de Riesgos | Excel ejecutivo de una sola hoja implementado |
 | Auditoría de exportaciones | Debe permanecer obligatoria |
-| Documento final de análisis 0–100% | Versión 1.1 consolidada en `.docx` nativo |
+| Documento final de análisis 0–100% | Versión 1.2 aprobada en `.docx` nativo |
 | Documentos consolidados anteriores | Antecedentes históricos, no línea base vigente |
 
 ## 5. Relación entre ramas
