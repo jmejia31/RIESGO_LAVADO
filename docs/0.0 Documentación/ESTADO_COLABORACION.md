@@ -15,13 +15,14 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #9.
-- **Fecha**: 2026-07-30 08:35, hora local.
-- **Autor**: Antigravity.
+- **Intervención**: #10.
+- **Fecha**: 2026-07-30 10:00, hora local.
+- **Autor**: Codex.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Integrar y consolidar en un único análisis maestro en formato Word (`.doc`) y Markdown (`.md`) los documentos de requerimientos de la carpeta `Analisis Matrices de riesgos v2` y el plan definitivo de implementación del Módulo Matrices de Riesgos en el repositorio Git.
-- **Commit de inicio verificado**: `7da70db04b77f98ee0ee8f0de202e88aee461ea5` (equivalente a `origin/desarrollo`).
-- **Estado**: Análisis maestro final consolidado de 0 a 100% y su versión Word cargados en Git; repositorio limpio y validado al 100%.
+- **Objetivo**: reconciliar los tres análisis disponibles y dejar una única línea base funcional y técnica final en formato Word nativo.
+- **Commit de inicio verificado**: `364dc60e2d9c22775815288114899054c4f7bb18`, equivalente a `origin/desarrollo` antes de los cambios.
+- **Documento final vigente**: [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.1.
+- **Estado**: documento estructuralmente validado; el Markdown y el `.doc` anteriores se conservan como antecedentes. No se realizó renderizado por instrucción expresa de Javier Mejía.
 
 ## 3. Estado de fases
 
@@ -56,8 +57,8 @@ La continuidad posterior se ha plasmado en el [Análisis y Plan Definitivo de Im
 | Monitoreo de Listas | Reporterías PDF/Excel estandarizadas en código |
 | Matrices de Riesgos | Excel ejecutivo de una sola hoja implementado |
 | Auditoría de exportaciones | Debe permanecer obligatoria |
-| Documento Maestro Fase 12 | Requiere actualización final |
-| Checksum final | Pendiente de regeneración después del documento definitivo |
+| Documento final de análisis 0–100% | Versión 1.1 consolidada en `.docx` nativo |
+| Documentos consolidados anteriores | Antecedentes históricos, no línea base vigente |
 
 ## 5. Relación entre ramas
 
@@ -192,7 +193,8 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Obtener la aprobación formal de Javier Mejía sobre el [Análisis y Plan Definitivo de Implementación del Módulo Matrices de Riesgos](../3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) cargado en Git.
-2. Iniciar la fase de desarrollo del Plan Definitivo (Fase de Reorganización y base de datos de 0 a 100% con prefijos `MR_`).
-3. Trabajar exclusivamente sobre la rama de trabajo activo `desarrollo`.
-4. Registrar cualquier nueva modificación en la bitácora de colaboración y mantener este estado vivo al día.
+1. Tomar como línea base el [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.1.
+2. Iniciar el tramo 0–5%: diccionario de 82 campos, catálogos y mapeo de reglas.
+3. Convertir VRI, ETP, VRR y las reglas auxiliares verificadas en el libro en casos de paridad, y obtener aprobación funcional antes de implementarlas como reglas institucionales.
+4. Mantener separados los resultados históricos de Fase 12 de las pruebas del nuevo desarrollo.
+5. Trabajar exclusivamente sobre `desarrollo` y actualizar la bitácora y este estado vivo en cada intervención.

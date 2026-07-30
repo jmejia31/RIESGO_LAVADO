@@ -629,6 +629,66 @@ Evaluar la alineación entre la validación técnica reproducible (Fase 12 / Int
 
 ---
 
+## Registro de Intervención #10
+
+- **Fecha y hora**: 2026-07-30 10:00, hora local de Honduras.
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `364dc60e2d9c22775815288114899054c4f7bb18`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Comparar los tres análisis de la carpeta `Analisis Matrices de riesgos v2`, reconciliar los dictámenes de ChatGPT y Antigravity y dejar una única línea base final en formato Word nativo.
+
+### Archivos creados o modificados
+
+- **Creado y consolidado**: [`Analisis Matrices de riesgos v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx).
+- **Modificado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
+
+### Cambios funcionales y documentales
+
+- Se declaró `Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`, versión 1.1, como línea base funcional y técnica final.
+- Se mantuvo la separación obligatoria entre `MR_RIESGO` y `MR_EVALUACION_RIESGO`.
+- Se incorporó la evidencia histórica reproducida de Fase 12, separándola explícitamente de las pruebas futuras del módulo dinámico.
+- Se adoptó **frecuencia** como término metodológico principal en lugar de referencias ambiguas a probabilidad.
+- Se documentaron códigos técnicos estables de estados y se separó el estado de publicación de la vigencia.
+- Se confirmó el prefijo `MR_` según el plan técnico vigente del repositorio.
+- Se verificaron directamente en `Matrices de Riesgos.xlsx` las 1,742 fórmulas, VRI, las ponderaciones ETP 70%/15%/15% y VRR; su implementación institucional permanece sujeta a conciliación de paridad y aprobación funcional.
+- Se amplió la tabla de entregables, riesgos, pruebas y definición de terminado.
+- El Markdown consolidado anterior quedó identificado como antecedente y enlaza a la versión final `.docx`.
+
+### Verificación ejecutada
+
+| Validación | Resultado |
+|---|---|
+| Estructura interna del `.docx` | Correcta; contenedor ZIP válido |
+| Contenido del `.docx` | 396 párrafos, 35 tablas y 3,445 palabras |
+| Nomenclatura descartada | 0 apariciones |
+| Terminología de frecuencia | Correcta; 0 referencias a probabilidad |
+| Separación riesgo/evaluación | Confirmada mediante `MR_RIESGO` y `MR_EVALUACION_RIESGO` |
+| Fórmulas metodológicas | VRI, ETP y VRR verificadas, con condición de aprobación funcional |
+| Inspección del libro de origen | 1,742 fórmulas exactas; VRI, ETP 70%/15%/15% y VRR verificadas |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 448 archivos rastreados y 3 maestros SQL |
+| `tools/validate_documentation_links.ps1` | Correcto; 36 Markdown y 64 enlaces locales |
+
+### Verificación no ejecutada
+
+- No se renderizó el documento Word por instrucción expresa de Javier Mejía.
+- No se utilizó ni instaló LibreOffice.
+- No se repitieron compilaciones ni suites de servicios, interfaz o extremo a extremo porque el cambio es exclusivamente documental; sus resultados anteriores se presentan únicamente como antecedente histórico.
+
+### Punto exacto de continuación
+
+1. Utilizar exclusivamente `Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx` como línea base del análisis.
+2. Conservar los otros documentos como antecedentes históricos.
+3. Antes de implementar cálculos, convertir VRI, ETP, VRR y las reglas auxiliares verificadas en casos de paridad y obtener aprobación funcional.
+4. Iniciar la fase de análisis funcional y diccionario de 82 campos sobre `desarrollo`.
+
+---
+
 ## Registro de Intervención #9
 
 - **Fecha y hora**: 2026-07-30 08:35, hora local.

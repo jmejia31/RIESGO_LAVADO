@@ -2,6 +2,9 @@
 ## MÓDULO MATRICES DE RIESGOS (SGRLA - IHSS)
 ### Arquitectura dirigida por metadatos, formularios dinámicos JSON, persistencia híbrida y versionamiento histórico
 
+> [!IMPORTANT]
+> **Estado documental:** este archivo se conserva como antecedente consolidado de las Intervenciones #8 y #9. La línea base funcional y técnica final vigente es [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.1. El archivo Word nativo separa el riesgo de sus evaluaciones, amplía el modelo relacional, distingue las pruebas históricas de Fase 12 de las pruebas del nuevo desarrollo y diferencia las fórmulas verificadas en Excel de su aprobación funcional para producción.
+
 ---
 
 ## Control del Documento
@@ -11,8 +14,8 @@
 | **Nombre Oficial** | Análisis Maestro y Plan Definitivo de Implementación del Módulo Matrices de Riesgos |
 | **Versión** | 1.0 Final Consolidada |
 | **Fecha** | 30 de julio de 2026 |
-| **Estado** | Alcance oficial para desarrollo de 0 a 100% |
-| **Sustituye** | Todos los borradores, análisis, memorias técnicas y denominaciones preliminares anteriores. |
+| **Estado** | Antecedente consolidado; sustituido como línea base por la versión 1.1 en formato `.docx` nativo. |
+| **Documento vigente** | [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx) |
 
 ### Historial de Versiones del Documento
 * **v1.0 (30/07/2026):** Versión final consolidada y unificada de los requerimientos analizados por los agentes y el propietario de requerimientos (Javier Mejía). Combina la validación de calidad de la Fase 12 y el diseño detallado del módulo dinámico de Matrices de Riesgos.
@@ -23,8 +26,8 @@
 
 Este documento representa la síntesis definitiva para la construcción del módulo **Matrices de Riesgos** del Sistema de Gestión de Riesgo de Lavado de Activos y Financiamiento del Terrorismo (SGRLA) del Instituto Hondureño de Seguridad Social (IHSS).
 
-Existe una alineación total y complementaria entre los dos componentes clave de este análisis:
-1. **La Validación Técnica Reproducible (Fase 12):** Establece la base de calidad necesaria para cualquier desarrollo. El éxito al 100% de las suites de prueba (96 backend, 165 frontend, 7 E2E y validadores locales de PowerShell) en la rama `desarrollo` asegura que el sistema está estable, limpio y libre de regresiones.
+Existe una relación complementaria entre los dos componentes clave de este análisis:
+1. **La Validación Técnica Reproducible (Fase 12):** Establece una línea base histórica de calidad. Las 96 pruebas de servicios, 165 pruebas de interfaz web, 7 pruebas de extremo a extremo y los validadores ejecutados corresponden a la plataforma existente en esa intervención; no prueban que el módulo dinámico futuro ya esté implementado.
 2. **El Plan Definitivo de Implementación (0 a 100%):** Define la visión a largo plazo para construir un módulo paramétrico dirigido por metadatos (JSON) en vez de pantallas estáticas, estructurando la persistencia en base de datos Oracle con prefijo modular y protegiendo el motor de reglas en el servidor.
 
 ---
@@ -140,9 +143,9 @@ La Matriz de Riesgos se organizará en siete secciones funcionales visibles:
 
 ### 7.2 Riesgo Inherente
 * **Campos:** Descripción del riesgo, Causas, Efectos, Frecuencia (escala 1 a 5), Impacto (escala 1 a 5), Valor del riesgo inherente (VRI) y Nivel del riesgo inherente.
-* **Fórmula Metodológica del IHSS:** 
+* **Fórmula metodológica verificada en el libro de origen:**
   $$\text{VRI} = \text{Frecuencia} + \text{Impacto} - 1$$
-  *La escala resultante será de 1 a 9. El nivel (Bajo, Medio, Alto, Crítico) se determinará mediante una tabla de rangos paramétrica en base de datos. No se utilizará una fórmula multiplicativa de probabilidad por impacto, ya que no corresponde al estándar metodológico del IHSS.*
+  *La expresión fue comprobada estructuralmente en el libro. Su escala, rangos e implementación en el servidor deberán recibir aprobación funcional antes de declararse regla institucional definitiva.*
 
 ### 7.3 Responsabilidad y Relaciones
 * **Campos:** Dueño del riesgo (usuario/área), Responsables adicionales, Regímenes afectados, Riesgos relacionados (transversalidad), Amenazas, Vulnerabilidades y Activos de información (estos tres últimos obligatorios y visibles únicamente para riesgos de tecnología).
@@ -151,11 +154,11 @@ La Matriz de Riesgos se organizará en siete secciones funcionales visibles:
 * **Campos:** Colección repetible de controles. Cada control tendrá: Identificador, Tipo (Preventivo, Detectivo, Correctivo), Descripción, Escala de efectividad, Nivel y porcentaje calculado, Nivel de automatización (Manual, Semiautomático, Automático), Estado, Comentarios y Evidencias físicas obligatorias.
 
 ### 7.5 Valoración Residual y Respuesta al Riesgo
-* **Fórmula de Efectividad Total Ponderada (ETP):**
+* **Fórmula de Efectividad Total Ponderada (ETP) verificada en el libro:**
   $$\text{ETP} = 0.70 \times \text{Efectividad Preventiva} + 0.15 \times \text{Efectividad Detectiva} + 0.15 \times \text{Efectividad Correctiva}$$
-* **Fórmula de Riesgo Residual (VRR):**
+* **Fórmula de Riesgo Residual (VRR) verificada en el libro:**
   $$\text{VRR} = \text{REDONDEAR}(\text{MÁXIMO}(1, \text{VRI} \times (1 - \text{ETP})), 0)$$
-  *El valor del riesgo residual (VRR) se traducirá nuevamente en Frecuencia Residual e Impacto Residual de acuerdo al algoritmo oficial parametrizado en el backend, determinando el semáforo final del riesgo residual.*
+  *Las ponderaciones, la distribución entre Frecuencia Residual e Impacto Residual y los semáforos deberán quedar respaldados por conciliación, casos de prueba y aprobación funcional.*
 * **Tratamiento:** Respuesta al riesgo (Aceptar, Evitar, Transferir, Mitigar) y justificación.
 
 ### 7.6 Planes de Mitigación y Actividades
