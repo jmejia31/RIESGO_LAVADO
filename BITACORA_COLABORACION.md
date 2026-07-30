@@ -1051,7 +1051,7 @@ Resolver las tres inconsistencias bloqueantes de la Fase 1 en los borradores de 
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `05a956002bb5ddda88062ff8eef8cfef025be4d9`.
-- **Commit final**: pendiente hasta publicar esta intervención.
+- **Commit final**: `091dd15822f08aeeae1c8e19c0175b5b7c2ccb64`.
 
 ### Objetivo
 
@@ -1076,6 +1076,43 @@ Diseñar y especificar detalladamente el Contrato JSON Propietario del IHSS y el
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 79 Enlaces locales |
+
+---
+
+## Registro de Intervención #17
+
+- **Fecha y hora**: 2026-07-30 12:45, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `091dd15822f08aeeae1c8e19c0175b5b7c2ccb64`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Aplicar correcciones y ampliaciones metodológicas de calidad en el plan y documento de especificación de la Fase 2 (alineamiento de fórmulas de VRI/VRR del Excel, ponderaciones de control ETP, coherencia residual, DTOs del Backend en `Contracts` y contrato JSON extendido).
+
+### Archivos creados o modificados
+
+- **Modificado**: [`docs/3. Módulo Matrices de Riesgos/DICCIONARIO_FISICO_CONTRATOS_JSON.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/DICCIONARIO_FISICO_CONTRATOS_JSON.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+
+### Cambios funcionales y documentales
+
+- Corrección de la fórmula de VRI a su forma aditiva oficial `VRI = Frecuencia + Impacto - 1` y de VRR a su forma con límites y redondeo `VRR = ROUND(MAX(1, VRI * (1 - ETP/100)), 0)`.
+- Corrección de la ponderación de efectividad de controles (ETP) a su definición funcional: Preventivo (70%), Detectivo (15%) y Correctivo (15%).
+- Adición explícita de la restricción de validación de mapa de calor `VRR 2 = Frecuencia residual + Impacto residual - 1` para coherencia residual.
+- Modificación de la cabecera del documento de diseño para cambiar su estado a "Preparado para revisión y aprobación".
+- Re-estructuración y cambio de ubicación de los DTOs del Backend para residir de forma nativa en `Features/MatricesRiesgos/Contracts/` y dar soporte a creación/actualización con auditoría y concurrencia.
+- Ampliación formal del contrato JSON de metadatos con tipos de control booleanos, enteros, decimales, monedas, fechas, archivos e indicaciones condicionales de activación y obligatoriedad.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 84 Enlaces locales |
 
 ### Punto exacto de continuación
 

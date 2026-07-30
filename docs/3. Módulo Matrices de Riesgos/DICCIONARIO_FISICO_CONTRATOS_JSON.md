@@ -1,8 +1,9 @@
 # Diccionario Físico y Especificación de Contratos JSON
 ## Módulo: Matrices de Riesgos (SGRLA - IHSS)
-### Versión: 1.0 (Diseño Técnico Aprobado)
+### Versión: 1.0
+### Estado: Preparado para revisión y aprobación
 
-Este documento detalla la especificación formal del modelo físico de base de datos de 28 tablas relacionales bajo el prefijo **`RL_MR_*`**, la definición del contrato JSON propietario del IHSS y los DTOs de acoplamiento del backend para el nuevo módulo modular.
+Este documento detalla la especificación formal del modelo físico de base de datos de 28 tablas relacionales bajo el prefijo **`RL_MR_*`**, la definición del contrato JSON propietario del IHSS y los DTOs de acoplamiento del backend para el nuevo módulo modular de Matrices de Riesgos.
 
 ---
 
@@ -350,20 +351,37 @@ Log transaccional granular a nivel de campo JSON.
 
 ---
 
-## 3. Contratos de Datos y DTOs en el Backend (C#)
+## 3. Contratos de Datos y DTOs en el Backend (C# - Contracts)
 
-Para recibir las respuestas dinámicas y mapearlas a la capa de servicios, se utilizará el siguiente diseño fuertemente tipado:
+Los contratos residirán bajo la ubicación existente de la arquitectura monolítica:
+`Features/MatricesRiesgos/Contracts`
 
+### 3.1 DTO de Creación (Riesgo Nuevo)
 ```csharp
-namespace RL.API.Features.MatricesRiesgos.Dtos
+namespace RL.API.Features.MatricesRiesgos.Contracts
 {
-    public sealed class RegistroEvaluacionRequestDto
+    public sealed class CrearEvaluacionRiesgoRequest
     {
         public long VersionFormularioId { get; set; }
+        public System.Text.Json.JsonElement RespuestasDinamicas { get; set; } // Payload dinámico JSON
+        public string IpOrigen { get; set; } = string.Empty;
+    }
+}
+```
+
+### 3.2 DTO de Actualización (Riesgo Existente)
+```csharp
+namespace RL.API.Features.MatricesRiesgos.Contracts
+{
+    public sealed class ActualizarEvaluacionRiesgoRequest
+    {
+        public long EvaluacionId { get; set; }
         public long RiesgoId { get; set; }
-        public long VersionRow { get; set; }
-        public string Estado { get; set; } = "BORRADOR";
+        public long VersionFormularioId { get; set; }
+        public long VersionRow { get; set; } // Concurrencia optimista
+        public string Estado { get; set; } = "BORRADOR"; // Borrador, En Revisión, Aprobada, etc.
         public System.Text.Json.JsonElement RespuestasDinamicas { get; set; }
+        public string IpOrigen { get; set; } = string.Empty;
     }
 }
 ```
@@ -374,14 +392,25 @@ namespace RL.API.Features.MatricesRiesgos.Dtos
 
 Las fórmulas de cálculo del VRI (Valor del Riesgo Inherente) y VRR (Valor del Riesgo Residual) de la metodología aprobada se validarán de acuerdo a los siguientes escenarios y ponderaciones del Excel de 59 Riesgos:
 
-* **Escenario 1 (Riesgo Inherente):**
-  * *Entradas:* Frecuencia = 4, Impacto = 5.
-  * *Fórmula VRI:* `VRI = Frecuencia x Impacto` → `4 x 5 = 20`.
-  * *Nivel Inherente:* `20` clasifica como **Extremo** (Umbral > 15).
-* **Escenario 2 (Cálculo ETP - Efectividad de Controles):**
-  * *Entradas:* Diseño (70%) = 100%, Ejecución (15%) = 80%, Soporte (15%) = 90%.
-  * *Fórmula ETP:* `(Diseño x 0.70) + (Ejecución x 0.15) + (Soporte x 0.15)` → `70 + 12 + 13.5 = 95.5%`.
-* **Escenario 3 (Riesgo Residual):**
-  * *Entradas:* VRI = 20, ETP = 95.5%.
-  * *Fórmula VRR:* `VRI x (1 - ETP/100)` → `20 x 0.045 = 0.9`.
-  * *Nivel Residual:* `0.9` clasifica como **Bajo** (Umbral < 3).
+### 4.1 Escenario 1 (Riesgo Inherente)
+* *Entradas:* Frecuencia = 4, Impacto = 5.
+* *Fórmula VRI:* `VRI = Frecuencia + Impacto - 1`
+* *Cálculo:* `VRI = 4 + 5 - 1 = 8`.
+* *Nivel Inherente:* `8` clasifica como **Alto / Crítico** según la escala aditiva (rango 1 a 9 del Excel).
+
+### 4.2 Escenario 2 (Ponderación ETP - Efectividad de Controles)
+* *Fórmula:* Basada exclusivamente en los tipos de control Preventivo (70%), Detectivo (15%) y Correctivo (15%):
+  `ETP = (Preventivo x 0.70) + (Detectivo x 0.15) + (Correctivo x 0.15)`
+* *Entradas:* Preventivo = 100% (1.00), Detectivo = 80% (0.80), Correctivo = 90% (0.90).
+* *Cálculo:* `(1.00 x 0.70) + (0.80 x 0.15) + (0.90 x 0.15) = 0.70 + 0.12 + 0.135 = 0.955 = 95.5%`.
+
+### 4.3 Escenario 3 (Riesgo Residual)
+* *Entradas:* VRI = 8, ETP = 95.5%.
+* *Fórmula VRR:* `VRR = ROUND(MAX(1, VRI x (1 - ETP/100)), 0)` (para ETP expresado como porcentaje).
+* *Cálculo:* `VRR = ROUND(MAX(1, 8 x (1 - 0.955)), 0) = ROUND(MAX(1, 0.36), 0) = ROUND(1, 0) = 1`.
+* *Resultado:* El valor entero resultante es `1`.
+
+### 4.4 Escenario 4 (Coherencia Residual - Mapa de Calor)
+* *Validación Compuesta:* El sistema validará que se cumpla la coherencia residual aritmética:
+  `VRR 2 = Frecuencia residual + Impacto residual - 1`
+  La evaluación del mapa de calor conciliará esta igualdad antes de permitir el cierre o aprobación de la evaluación.
