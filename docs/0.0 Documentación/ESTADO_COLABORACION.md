@@ -16,12 +16,12 @@
 ## 2. Última intervención
 
 - **Intervención**: #22.
-- **Fecha**: 2026-07-30 15:49, hora local.
+- **Fecha**: 2026-07-30 17:15, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Objetivo**: Ejecutar e instalar al 100% la Fase 5 de construcción física de la base de datos `RL_MR_*` en Oracle, resolviendo la incompatibilidad de las restricciones `IS JSON` y la falta de privilegios de `DBMS_CRYPTO`.
 - **Commit de inicio verificado**: `7f5df0c`.
-- **Estado**: Fase 5 completada con éxito. Ejecutados los scripts `01` a `04`. Verificadas 34 tablas, 24 secuencias, 0 llaves foráneas inválidas y carga exitosa de la semilla del Formulario A.
+- **Estado**: **Fase 5 completada: base de datos definitiva instalada y validada.** Se verificaron 34 tablas, 24 secuencias, 49 llaves foráneas habilitadas, 0 índices inválidos, y carga de 17 elementos en catálogos. (Observación: CAT_AREAS y CAT_EFECTIVIDAD_CONTROL creados pero sin elementos).
 
 ## 3. Estado de fases
 
@@ -196,4 +196,5 @@ La siguiente intervención debe:
 2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
 3. Construir la interfaz y lógica del motor de validación dinámica JSON en el Backend (`IFormularioValidador.cs` e `IFormularioValidador`).
 4. Ejecutar las pruebas unitarias de regresión para validar el motor de cálculo (frecuencia, impacto, ETP, VRI, VRR, coherencia residual $VRR = VRR_2$).
-5. Actualizar la bitácora y el estado de colaboración.
+5. **Observación técnica**: Se debe planificar la población de `CAT_AREAS` y `CAT_EFECTIVIDAD_CONTROL` antes de habilitar el formulario para el uso real de los usuarios, ya que actualmente están vacíos.
+6. Actualizar la bitácora y el estado de colaboración.

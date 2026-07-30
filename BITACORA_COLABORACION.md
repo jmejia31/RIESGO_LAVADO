@@ -1301,6 +1301,7 @@ Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcci
 - **Creado (Temporal)**: `scratch/validar_cantidades.sql`
 - **Creado (Temporal)**: `scratch/validar_constraints.sql`
 - **Creado (Temporal)**: `scratch/validar_formulario.sql`
+- **Creado (Temporal)**: `scratch/validar_fase5_completo.sql`
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
 - **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
 
@@ -1311,12 +1312,10 @@ Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcci
 3. **Instalación de Scripts**: Se ejecutaron síncronamente con autorización `EJECUTAR` en Oracle los 4 scripts:
    * `01_create_rl_mr_estructura_dinamica.sql` (Crea las 34 tablas y 24 secuencias).
    * `02_create_rl_mr_restricciones_indices.sql` (Crea índices y llaves foráneas).
-   * `03_seed_catalogos_iniciales.sql` (Carga catálogos base).
+   * `03_seed_catalogos_iniciales.sql` (Carga catálogos base con exactamente 17 elementos).
    * `04_config_json_inicial_formulario.sql` (Carga del Formulario A - Versión 1).
-4. **Verificación de Calidad Física**:
-   * **Objetos**: Confirmada la creación de exactamente **34 tablas** y **24 secuencias** en el catálogo de Oracle.
-   * **Claves Foráneas**: Verificación de constraints de tipo `R` que confirmó que **0** FKs están deshabilitadas (`status <> 'ENABLED'`), asegurando consistencia e integridad al 100%.
-   * **Carga de Datos**: Consulta directa a `RL_MR_VERSIONES_FORMULARIO` que devolvió la versión 1 del Formulario A (`FORM_A`) en estado `DRAFT`, con vigencia `0` (no vigente) y longitud JSON de `1224` bytes.
+4. **Declaración del Estado**: **Fase 5 completada: base de datos definitiva instalada y validada.**
+5. **Observación Funcional Registrada**: Los catálogos `CAT_AREAS` y `CAT_EFECTIVIDAD_CONTROL` fueron creados correctamente pero permanecen vacíos (sin registros). Antes de habilitar el formulario dinámico para la captura de los usuarios en producción, es obligatorio definir y poblar sus elementos (especialmente `CAT_AREAS`, que es requerido por el control desplegable del Formulario A).
 
 ### Verificación técnica ejecutada (en esta intervención)
 
@@ -1324,7 +1323,9 @@ Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcci
 |---|---|
 | Consulta Catálogo Oracle: Tablas | **34** creadas correctamente |
 | Consulta Catálogo Oracle: Secuencias | **24** creadas correctamente |
-| Consulta Catálogo Oracle: FKs Inválidas | **0** deshabilitadas (Todas habilitadas y correctas) |
+| Consulta Catálogo Oracle: FKs Habilitadas | **49** habilitadas de forma correcta (0 deshabilitadas) |
+| Consulta Catálogo Oracle: Índices | **Todos los índices válidos** (0 inválidos) |
+| Consulta Catálogo Oracle: Catálogos / Elementos | **6 catálogos** y **17 elementos** cargados correctamente |
 | Consulta Catálogo Oracle: Semilla Formulario | **DRAFT / No vigente (0) / 1224 bytes** confirmado |
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
@@ -1335,6 +1336,7 @@ Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcci
 1. Iniciar la codificación activa del Backend (Fase 6) en C# sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
 2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
 3. Implementar el motor de validación dinámica JSON (`IFormularioValidador` y `FormularioValidador`).
+
 
 
 
