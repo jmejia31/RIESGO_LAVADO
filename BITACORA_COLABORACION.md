@@ -1084,12 +1084,12 @@ Diseñar y especificar detalladamente el Contrato JSON Propietario del IHSS y el
 - **Fecha y hora**: 2026-07-30 12:45, hora local.
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `091dd15822f08aeeae1c8e19c0175b5b7c2ccb64`.
+- **Commit inicial**: `afb05310243e884e9d7c34d402ceecdb4f141235`.
 - **Commit final**: pendiente hasta publicar esta intervención.
 
 ### Objetivo
 
-Aplicar correcciones y ampliaciones metodológicas de calidad en el plan y documento de especificación de la Fase 2 (alineamiento de fórmulas de VRI/VRR del Excel, ponderaciones de control ETP, coherencia residual, DTOs del Backend en `Contracts` y contrato JSON extendido).
+Resolver las observaciones de calidad de la Fase 2 de diseño (Contrato JSON formal completo, modelo de permisos modular granular `PER_AMBITO` / `PER_OBJETIVO_CLAVE`, y trazabilidad de evidencias mediante 6 nuevas tablas asociativas físicas directas para totalizar 34 tablas en el módulo).
 
 ### Archivos creados o modificados
 
@@ -1099,20 +1099,18 @@ Aplicar correcciones y ampliaciones metodológicas de calidad en el plan y docum
 
 ### Cambios funcionales y documentales
 
-- Corrección de la fórmula de VRI a su forma aditiva oficial `VRI = Frecuencia + Impacto - 1` y de VRR a su forma con límites y redondeo `VRR = ROUND(MAX(1, VRI * (1 - ETP/100)), 0)`.
-- Corrección de la ponderación de efectividad de controles (ETP) a su definición funcional: Preventivo (70%), Detectivo (15%) y Correctivo (15%).
-- Adición explícita de la restricción de validación de mapa de calor `VRR 2 = Frecuencia residual + Impacto residual - 1` para coherencia residual.
-- Modificación de la cabecera del documento de diseño para cambiar su estado a "Preparado para revisión y aprobación".
-- Re-estructuración y cambio de ubicación de los DTOs del Backend para residir de forma nativa en `Features/MatricesRiesgos/Contracts/` y dar soporte a creación/actualización con auditoría y concurrencia.
-- Ampliación formal del contrato JSON de metadatos con tipos de control booleanos, enteros, decimales, monedas, fechas, archivos e indicaciones condicionales de activación y obligatoriedad.
+- Ampliación formal del Contrato JSON del IHSS detallando la estructura de metadatos, validaciones Regex condicionales, semáforos, visibilidad condicional por campos, grupos/tablas repetibles y el comportamiento del Backend ante propiedades desconocidas o nulas obligatorias.
+- Re-diseño del esquema de permisos físicos en `RL_MR_PERMISOS_FORMULARIO` reemplazando `PER_SECCION_ID` por las columnas explícitas `PER_AMBITO` (FORMULARIO, SECCION, CAMPO) y `PER_OBJETIVO_CLAVE` (clave canónica o identificador).
+- Creación de 6 nuevas tablas asociativas físicas de evidencias para mantener integridad referencial directa al 100% de cobertura (riesgo, plan, señal de alerta, automonitoreo, revisión y aprobación) para alcanzar un conteo oficial definitivo de **34 tablas físicas** en el módulo.
+- Corrección de enlaces absolutos `file:///` a rutas relativas en la documentación técnica para asegurar la conformidad con `AGENTS.md` y corregir la ejecución del script de validación.
 
 ### Verificación técnica ejecutada (en esta intervención)
 
 | Validación | Resultado Real |
 |---|---|
-| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 454 archivos rastreados |
+| `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
-| `tools/validate_documentation_links.ps1` | **Correcto**; 36 Markdown revisados, 84 Enlaces locales |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
 ### Punto exacto de continuación
 
