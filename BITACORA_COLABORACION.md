@@ -1157,7 +1157,7 @@ Cierre formal administrativo de la Fase 2 y handoff documental actualizando los 
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `edf30fbede6d42da34f718870195ee0a574ec8c1`.
-- **Commit final**: pendiente hasta publicar esta intervención.
+- **Commit final**: `a59ec00`.
 
 ### Objetivo
 
@@ -1177,6 +1177,8 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 
 - Actualización de los 5 borradores físicos de base de datos (`00` a `04`) implementando el parámetro posicional externo `&1` de SQL*Plus (`DEFINE autorizacion = '&1'`) para habilitar ejecuciones de forma administrativa limpia sin modificar código fuente.
 - Re-escritura completa del DDL `01_create_rl_mr_estructura_dinamica.sql` mapeando las 34 tablas relacionales dinámicas, las 24 secuencias físicas inventariadas, el modelo granular `PER_AMBITO` / `PER_OBJETIVO_CLAVE` de permisos y las 9 tablas asociativas físicas de trazabilidad de evidencias.
+- Re-escritura completa de `02_create_rl_mr_restricciones_indices.sql` ampliando los índices de rendimiento y restricciones de integridad referencial secundaria para cubrir las 34 tablas (proyecciones, evaluaciones, controles, planes, actividades, alertas, automonitoreo, revisiones, trazas, importaciones, auditoría, catálogos, permisos, aprobaciones y las 9 tablas asociativas de evidencias).
+- Re-escritura completa de `00_retiro_controlado_modelo_prueba.sql` incorporando cabecera de requisito previo de respaldo DBA, verificación PL/SQL que confirma que los objetos a retirar son exclusivamente de prueba (no del modelo definitivo), instrucciones de reversión mediante `impdp`, y nota explícita sobre commits implícitos DDL de Oracle.
 - Detalle explícito en el plan y bitácora del comportamiento de commits implícitos DDL en Oracle ante abortos por error.
 
 ### Verificación técnica ejecutada (en esta intervención)
@@ -1185,7 +1187,7 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
-| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 90 Enlaces locales |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
 
 ### Punto exacto de continuación
 
