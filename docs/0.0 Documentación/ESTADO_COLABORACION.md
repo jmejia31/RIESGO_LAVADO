@@ -44,7 +44,7 @@ La fase vigente queda:
 
 **Fase 12 — aprobada y cerrada por autorización formal de Javier Mejía.**
 
-La continuidad posterior se ha plasmado en el [Análisis y Plan Definitivo de Implementación del Módulo Matrices de Riesgos](file:///c:/RIESGO_LAVADO/docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md), que define la arquitectura y el desarrollo dinámico de 0 a 100% parametrizado por JSON en Oracle.
+La continuidad posterior se ha plasmado en el [Análisis y Plan Definitivo de Implementación del Módulo Matrices de Riesgos](../3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md), que define la arquitectura y el desarrollo dinámico de 0 a 100% parametrizado por JSON en Oracle.
 
 ## 4. Estado de componentes
 
@@ -192,7 +192,7 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Obtener la aprobación formal de Javier Mejía sobre el [Análisis y Plan Definitivo de Implementación del Módulo Matrices de Riesgos](file:///c:/RIESGO_LAVADO/docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) cargado en Git.
+1. Obtener la aprobación formal de Javier Mejía sobre el [Análisis y Plan Definitivo de Implementación del Módulo Matrices de Riesgos](../3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_PLAN_DEFINITIVO_MATRIZ_RIESGOS.md) cargado en Git.
 2. Iniciar la fase de desarrollo del Plan Definitivo (Fase de Reorganización y base de datos de 0 a 100% con prefijos `MR_`).
 3. Trabajar exclusivamente sobre la rama de trabajo activo `desarrollo`.
 4. Registrar cualquier nueva modificación en la bitácora de colaboración y mantener este estado vivo al día.
