@@ -15,13 +15,14 @@
 
 ## 2. Última intervención
 
-- **Intervención**: #12.
-- **Fecha**: 2026-07-30 10:30, hora local.
-- **Autor**: Antigravity.
+- **Intervención**: #13.
+- **Fecha**: 2026-07-30 10:25, hora local.
+- **Autor**: Codex.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Verificar la independencia funcional e inexistencia de acoplamiento en la base de datos entre el Módulo de Matrices de Riesgos y el de Monitoreo de Listas.
-- **Commit de inicio verificado**: `364dc60b43ff27b60e9d6df547902e88a03ca63e` (equivalente a `origin/desarrollo`).
-- **Estado**: Confirmación absoluta de aislamiento en DDL, backend y frontend aprobada por el usuario funcional. Repositorio limpio y verificado estructuralmente al 100%.
+- **Objetivo**: cerrar los tres ajustes finales de presentación y control documental del Documento Maestro de Matrices de Riesgos.
+- **Commit de inicio verificado**: `e059574ca7afa1ff606fdb4c064fd29804ea2e5e`, equivalente a `origin/desarrollo`.
+- **Documento final vigente**: [`Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](../../Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx), versión 1.2.
+- **Estado**: **Documento Maestro aprobado para implementación**; numeración reiniciada, responsables institucionales formalizados y control de aprobación completo. No se realizó renderizado por instrucción expresa de Javier Mejía.
 
 ## 3. Estado de fases
 

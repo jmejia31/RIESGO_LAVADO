@@ -629,6 +629,66 @@ Evaluar la alineación entre la validación técnica reproducible (Fase 12 / Int
 
 ---
 
+## Registro de Intervención #13
+
+- **Fecha y hora**: 2026-07-30 10:25, hora local de Honduras.
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `e059574ca7afa1ff606fdb4c064fd29804ea2e5e`.
+- **Commit final**: pendiente hasta publicar esta intervención.
+
+### Objetivo
+
+Corregir definitivamente los tres detalles finales de presentación y control documental señalados en la revisión externa, sin modificar la arquitectura ni el alcance aprobado.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`Analisis Matrices de riesgos v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx).
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
+
+### Cambios funcionales y documentales
+
+- Se corrigieron los cuatro procedimientos numerados para que captura, reevaluación, motor de reglas y migración comiencen visiblemente en 1.
+- Se sustituyó “Codex / equipo colaborador” por **Equipo técnico del proyecto**.
+- Se completó la fecha de revisión institucional.
+- Se reemplazaron las firmas vacías por una columna de **Constancia de control**, sin fabricar firmas manuscritas o digitales.
+- Se registraron las constancias “Documento preparado”, “Revisión incorporada” y “Aprobación expresa registrada”.
+- Se mantuvieron la versión 1.2 y el estado **Documento Maestro aprobado para implementación**.
+- No se modificaron arquitectura, modelo de datos, Backend, Frontend, JSON, migración ni alcance funcional.
+- Se corrigió un enlace local absoluto `file:///` heredado de la intervención anterior para restablecer el cumplimiento documental del repositorio.
+
+### Verificación ejecutada
+
+| Validación | Resultado |
+|---|---|
+| Contenedor `.docx` | Correcto; archivo ZIP/OOXML válido |
+| Contenido estructural | Correcto; 399 párrafos y 36 tablas |
+| Reinicio de numeración | Confirmado en OOXML; los cuatro procedimientos tienen `startOverride=1` |
+| Responsable de elaboración | “Equipo técnico del proyecto” confirmado |
+| Responsable anterior descartado | 0 apariciones de “Codex / equipo colaborador” |
+| Revisión | Responsable y fecha completos |
+| Aprobación | “Aprobación expresa registrada” confirmada |
+| Estado documental | Versión 1.2, Documento Maestro aprobado para implementación |
+| `git diff --check` | Correcto; sin errores de espacios |
+| `tools/validate_repository_structure.ps1` | Correcto; 119 rutas obligatorias, 448 archivos rastreados y 3 maestros SQL |
+| `tools/validate_documentation_links.ps1` | Correcto; 36 Markdown y 77 enlaces locales |
+
+### Verificación no ejecutada
+
+- No se renderizó el documento Word por instrucción expresa de Javier Mejía.
+- No se utilizó ni instaló LibreOffice.
+- No se ejecutaron compilaciones ni pruebas de Backend, Frontend o extremo a extremo porque el alcance es exclusivamente documental.
+- No se fabricaron ni insertaron firmas personales; la aprobación se documentó mediante trazabilidad electrónica.
+
+### Punto exacto de continuación
+
+1. Utilizar exclusivamente `Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`, versión 1.2, como Documento Maestro aprobado.
+2. Considerar cerrado el análisis; no requiere cambios adicionales de arquitectura ni alcance.
+3. Iniciar la implementación desde base de datos y diccionario funcional, manteniendo la conciliación obligatoria con el libro Excel.
+
+---
+
 ## Registro de Intervención #11
 
 - **Fecha y hora**: 2026-07-30 10:13, hora local de Honduras.
@@ -645,7 +705,7 @@ Aplicar los ajustes finales aprobados al análisis definitivo y declarar su vers
 
 - **Modificado**: [`Analisis Matrices de riesgos v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx`](Analisis%20Matrices%20de%20riesgos%20v2/Analisis_Definitivo_Modulo_Matrices_de_Riesgos.docx).
 - **Modificado**: [`Analisis Matrices de riesgos v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md`](Analisis%20Matrices%20de%20riesgos%20v2/ANALISIS_MAESTRO_CONSOLIDADO_MATRICES_RIESGOS.md).
-- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentaci%C3%B3n/ESTADO_COLABORACION.md).
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md).
 
 ### Cambios funcionales y documentales
@@ -831,7 +891,7 @@ Verificar que no exista acoplamiento físico o lógico en la base de datos (y ca
 
 ### Cambios funcionales y documentales
 
-- Auditoría e inspección técnica cruzada de Foreign Keys (`FK`), Joins y dependencias sobre todos los scripts SQL de base de datos en [database](file:///c:/RIESGO_LAVADO/database) (incluyendo `01_create_tables.sql` y `19_matrices_riesgos/01_create_rl_mr_estructura.sql`).
+- Auditoría e inspección técnica cruzada de Foreign Keys (`FK`), Joins y dependencias sobre todos los scripts SQL de base de datos en [`database`](database) (incluyendo `01_create_tables.sql` y `19_matrices_riesgos/01_create_rl_mr_estructura.sql`).
 - Confirmación absoluta de la separación: ninguna tabla de Matrices de Riesgos (`RL_MR_*` / `MR_*`) hace referencia o se conecta con tablas del Módulo de Monitoreo de Listas (`RL_LISTAS`, `RL_COINCIDENCIAS`, etc.), y viceversa.
 - Registro del plan de verificación en la base de conocimiento local, aprobado formalmente por el usuario.
 
