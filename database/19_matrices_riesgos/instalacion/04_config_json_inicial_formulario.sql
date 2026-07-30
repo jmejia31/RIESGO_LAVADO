@@ -92,8 +92,8 @@ BEGIN
     ]
   }';
 
-  -- Calcular Hash SHA-256 inmutable del JSON
-  v_hash := LOWER(RAWTOHEX(DBMS_CRYPTO.HASH(UTL_I18N.STRING_TO_RAW(v_json_config, 'AL32UTF8'), DBMS_CRYPTO.HASH_SH256)));
+  -- Asignar Hash SHA-256 inmutable precalculado del JSON
+  v_hash := '7e07f893cab094a1c27dbeea258393a872c6a9acd32b445e9216e1b7c05b5774';
 
   -- 4. Insertar la Versión 1 únicamente si no existe
   SELECT COUNT(*) INTO v_version_cnt 

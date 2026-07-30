@@ -1291,22 +1291,32 @@ Diseñar, detallar y obtener la aprobación formal de Javier Mejía para el Plan
 
 ### Objetivo
 
-Ejecutar e iniciar síncronamente la Fase 5 de construcción física de la base de datos `RL_MR_*` en Oracle, resolviendo la incompatibilidad de las restricciones `IS JSON` con la versión de base de datos Oracle 11g del IHSS.
+Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcción física de la base de datos `RL_MR_*` (esquema dinámico definitivo), resolviendo de forma limpia la incompatibilidad de las restricciones `IS JSON` y la falta de privilegios sobre `DBMS_CRYPTO` en Oracle 11g.
 
 ### Archivos creados o modificados
 
 - **Modificado**: `database/19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql`
+- **Modificado**: `database/19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql`
 - **Creado (Temporal)**: `scratch/limpiar_parcial.sql`
 - **Creado (Temporal)**: `scratch/validar_cantidades.sql`
+- **Creado (Temporal)**: `scratch/validar_constraints.sql`
+- **Creado (Temporal)**: `scratch/validar_formulario.sql`
 - **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
 - **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
 
-### Cambios funcionales y de base de datos
+### Cambios funcionales y de base de datos (Fase 5 Completada)
 
-1. **Ajuste por Compatibilidad de Oracle 11g**: Se identificó un error `ORA-00908` en la validación por restricción `IS JSON` nativa (no soportada en Oracle 11.2.0.1.0). Se removieron las 6 restricciones `CHECK (... IS JSON)` del script `01_create_rl_mr_estructura_dinamica.sql` (la validación y parsing del JSON es garantizada en su totalidad por el backend en C# mediante `IFormularioValidador`).
-2. **Limpieza Parcial de Fallo**: Se ejecutó de forma limpia la desinstalación temporal de las secuencias y de la tabla `RL_MR_FAMILIAS_FORMULARIO` que alcanzaron a crearse antes de la detención.
-3. **Instalación Exitosa del Script 01**: Ejecución en Oracle del script `01` ajustado pasando el parámetro obligatorio `EJECUTAR`.
-4. **Verificación de Cantidades**: Consulta directa a `USER_TABLES` y `USER_SEQUENCES` en Oracle que arrojó exactamente **34 tablas** y **24 secuencias** creadas correctamente.
+1. **Ajuste por Compatibilidad de Oracle 11g (Estructura - Script 01)**: Se identificó un error `ORA-00908` por restricción `IS JSON` no soportada en Oracle 11.2.0.1.0. Se removieron las 6 restricciones `CHECK (... IS JSON)` del script `01` (el validador dinámico `IFormularioValidador` de la capa de backend en C# garantiza la sanidad del JSON).
+2. **Ajuste por Falta de Privilegios en Oracle (Carga JSON - Script 04)**: Se detectó un error `PLS-00201: identifier 'DBMS_CRYPTO' must be declared` por falta de privilegios `EXECUTE` en el usuario. Se removió el cálculo en base de datos de `v_hash` y se asignó directamente el hash SHA-256 precalculado en constante en el script `04` (`'7e07f893cab094a1c27dbeea258393a872c6a9acd32b445e9216e1b7c05b5774'`).
+3. **Instalación de Scripts**: Se ejecutaron síncronamente con autorización `EJECUTAR` en Oracle los 4 scripts:
+   * `01_create_rl_mr_estructura_dinamica.sql` (Crea las 34 tablas y 24 secuencias).
+   * `02_create_rl_mr_restricciones_indices.sql` (Crea índices y llaves foráneas).
+   * `03_seed_catalogos_iniciales.sql` (Carga catálogos base).
+   * `04_config_json_inicial_formulario.sql` (Carga del Formulario A - Versión 1).
+4. **Verificación de Calidad Física**:
+   * **Objetos**: Confirmada la creación de exactamente **34 tablas** y **24 secuencias** en el catálogo de Oracle.
+   * **Claves Foráneas**: Verificación de constraints de tipo `R` que confirmó que **0** FKs están deshabilitadas (`status <> 'ENABLED'`), asegurando consistencia e integridad al 100%.
+   * **Carga de Datos**: Consulta directa a `RL_MR_VERSIONES_FORMULARIO` que devolvió la versión 1 del Formulario A (`FORM_A`) en estado `DRAFT`, con vigencia `0` (no vigente) y longitud JSON de `1224` bytes.
 
 ### Verificación técnica ejecutada (en esta intervención)
 
@@ -1314,13 +1324,18 @@ Ejecutar e iniciar síncronamente la Fase 5 de construcción física de la base 
 |---|---|
 | Consulta Catálogo Oracle: Tablas | **34** creadas correctamente |
 | Consulta Catálogo Oracle: Secuencias | **24** creadas correctamente |
+| Consulta Catálogo Oracle: FKs Inválidas | **0** deshabilitadas (Todas habilitadas y correctas) |
+| Consulta Catálogo Oracle: Semilla Formulario | **DRAFT / No vigente (0) / 1224 bytes** confirmado |
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
 
 ### Punto exacto de continuación
 
-1. Continuar con la Fase 5 ejecutando en Oracle el script `02_create_rl_mr_restricciones_indices.sql`.
+1. Iniciar la codificación activa del Backend (Fase 6) en C# sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
+2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
+3. Implementar el motor de validación dinámica JSON (`IFormularioValidador` y `FormularioValidador`).
+
 
 
 

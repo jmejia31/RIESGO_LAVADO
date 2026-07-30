@@ -16,12 +16,12 @@
 ## 2. Última intervención
 
 - **Intervención**: #22.
-- **Fecha**: 2026-07-30 14:17, hora local.
+- **Fecha**: 2026-07-30 15:49, hora local.
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Iniciar la Fase 5 de instalación física del modelo definitivo en Oracle, removiendo las restricciones `IS JSON` para compatibilidad con Oracle 11g.
+- **Objetivo**: Ejecutar e instalar al 100% la Fase 5 de construcción física de la base de datos `RL_MR_*` en Oracle, resolviendo la incompatibilidad de las restricciones `IS JSON` y la falta de privilegios de `DBMS_CRYPTO`.
 - **Commit de inicio verificado**: `7f5df0c`.
-- **Estado**: Script `01_create` ejecutado exitosamente; 34 tablas y 24 secuencias creadas y verificadas en catálogo de Oracle.
+- **Estado**: Fase 5 completada con éxito. Ejecutados los scripts `01` a `04`. Verificadas 34 tablas, 24 secuencias, 0 llaves foráneas inválidas y carga exitosa de la semilla del Formulario A.
 
 ## 3. Estado de fases
 
@@ -192,7 +192,8 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Continuar con la Fase 5 ejecutando el script `02_create_rl_mr_restricciones_indices.sql` en Oracle pasando la autorización `EJECUTAR`.
-2. Validar que no existan restricciones deshabilitadas en el catálogo de Oracle tras su ejecución.
-3. Avanzar con el desarrollo del Backend (Fase 6) en C# una vez concluida la instalación física de la base de datos.
-4. Actualizar la bitácora y el estado de colaboración.
+1. Iniciar el desarrollo del Backend (Fase 6) en C# sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
+2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
+3. Construir la interfaz y lógica del motor de validación dinámica JSON en el Backend (`IFormularioValidador.cs` e `IFormularioValidador`).
+4. Ejecutar las pruebas unitarias de regresión para validar el motor de cálculo (frecuencia, impacto, ETP, VRI, VRR, coherencia residual $VRR = VRR_2$).
+5. Actualizar la bitácora y el estado de colaboración.
