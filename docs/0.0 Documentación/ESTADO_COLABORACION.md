@@ -20,7 +20,7 @@
 - **Autor**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Objetivo**: Cierre formal administrativo de la Fase 2 y handoff documental actualizando los commits definitivos del repositorio.
-- **Commit de inicio verificado**: `249a9328a6fef95b77ea6cdde66eb56f4d547515`.
+- **Commit de inicio verificado**: `edf30fbede6d42da34f718870195ee0a574ec8c1`.
 - **Estado**: Fase 2 aprobada técnicamente al 100% y cerrada de manera formal; commits sincronizados; validaciones en verde.
 
 ## 3. Estado de fases
