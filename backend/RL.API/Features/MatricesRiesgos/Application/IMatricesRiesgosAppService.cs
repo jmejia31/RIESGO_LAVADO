@@ -45,7 +45,7 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip);
     Task<ServiceResult> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
     Task<ServiceResult> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
-    Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId);
+    Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip);
 
     // ============================================================
     // 4. REPORTES CONSOLIDADOS

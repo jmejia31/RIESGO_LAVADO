@@ -18,15 +18,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     private readonly IMatricesRiesgosRepository _repo;
     private readonly IFormularioValidador _validador;
     private readonly IMatricesRiesgoService _calculador;
+    private readonly RL.API.Features.Auditoria.Persistence.IAuditoriaRepository _auditoriaRepo;
 
     public MatricesRiesgosAppService(
         IMatricesRiesgosRepository repo, 
         IFormularioValidador validador, 
-        IMatricesRiesgoService calculador)
+        IMatricesRiesgoService calculador,
+        RL.API.Features.Auditoria.Persistence.IAuditoriaRepository auditoriaRepo)
     {
         _repo = repo;
         _validador = validador;
         _calculador = calculador;
+        _auditoriaRepo = auditoriaRepo;
     }
 
     // ============================================================
@@ -422,7 +425,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ResponderVinculo(exito);
     }
 
-    public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId)
+    public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip)
     {
         var evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);
         if (evidencia == null)
@@ -431,37 +434,76 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.Ok("La evidencia no existe o ya fue eliminada.");
         }
 
-        bool tieneVinculos = await _repo.EvidenciaTieneVinculosAsync(evidenciaId);
-        if (tieneVinculos)
+        // Definir la lambda para borrar el archivo físico del disco del servidor
+        Func<Task<bool>> eliminarArchivoFisico = () =>
         {
-            return ServiceResult.BadRequest("No se puede eliminar la evidencia porque ya se encuentra vinculada a un elemento del sistema.");
-        }
-
-        try
-        {
-            // Eliminar el archivo físico en el servidor
-            if (!string.IsNullOrWhiteSpace(evidencia.EviRuta))
+            try
             {
+                if (string.IsNullOrWhiteSpace(evidencia.EviRuta))
+                {
+                    return Task.FromResult(true); // Sin archivo físico que eliminar, consideramos limpio.
+                }
+
                 string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, evidencia.EviRuta);
                 if (File.Exists(fullPath))
                 {
                     File.Delete(fullPath);
                 }
+                return Task.FromResult(true);
             }
-        }
-        catch (Exception ex)
-        {
-            // Registrar error de disco pero continuar con la eliminación de base de datos para no bloquear
-            Serilog.Log.Error(ex, "Error al eliminar archivo físico de evidencia ID {Id}", evidenciaId);
-        }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Error físico al eliminar archivo de evidencia ID {Id} en disco", evidenciaId);
+                return Task.FromResult(false); // Retorna false si el disco falla.
+            }
+        };
 
-        bool eliminadoDb = await _repo.EliminarEvidenciaFisicaAsync(evidenciaId);
-        if (!eliminadoDb)
-        {
-            return ServiceResult.BadRequest("No se pudo eliminar el registro de evidencia en la base de datos.");
-        }
+        var resultado = await _repo.EliminarEvidenciaSeguraAsync(evidenciaId, eliminarArchivoFisico, usuarioId, ip);
 
-        return ServiceResult.Ok("Evidencia eliminada de forma exitosa.");
+        switch (resultado)
+        {
+            case ResultadoEliminacionEvidencia.Exito:
+                // Auditoría exitosa
+                await _auditoriaRepo.RegistrarAsync(
+                    "RL_MR_EVIDENCIAS", 
+                    evidenciaId.ToString(), 
+                    "DELETE", 
+                    $"Eliminación física exitosa del archivo {evidencia.EviNombreArchivo}.", 
+                    null, 
+                    usuarioId, 
+                    null, 
+                    ip, 
+                    "MatricesRiesgos"
+                );
+                return ServiceResult.Ok("Evidencia eliminada de forma exitosa.");
+
+            case ResultadoEliminacionEvidencia.NoExiste:
+                return ServiceResult.Ok("La evidencia no existe o ya fue eliminada.");
+
+            case ResultadoEliminacionEvidencia.TieneVinculos:
+                return ServiceResult.BadRequest("No se puede eliminar la evidencia porque ya se encuentra vinculada a un elemento del sistema.");
+
+            case ResultadoEliminacionEvidencia.FalloDisco:
+                return ServiceResult.BadRequest("Error al eliminar el archivo físico en el disco del servidor. El registro en la base de datos se mantiene intacto.");
+
+            case ResultadoEliminacionEvidencia.FalloCommit:
+                // Registro de inconsistencia auditable e inmutable
+                await _auditoriaRepo.RegistrarAsync(
+                    "RL_MR_EVIDENCIAS", 
+                    evidenciaId.ToString(), 
+                    "ERROR_COMPENSACION_EVIDENCIA", 
+                    $"Se eliminó el archivo físico {evidencia.EviNombreArchivo} pero falló la confirmación de la base de datos Oracle.", 
+                    null, 
+                    usuarioId, 
+                    null, 
+                    ip, 
+                    "MatricesRiesgos"
+                );
+                return new ServiceResult(false, "Error crítico de persistencia: El archivo físico fue eliminado, pero falló la confirmación en la base de datos.", 500);
+
+            default:
+                return ServiceResult.BadRequest("Resultado de eliminación desconocido.");
+        }
     }
 
     private static ServiceResult ResponderVinculo(bool exito)

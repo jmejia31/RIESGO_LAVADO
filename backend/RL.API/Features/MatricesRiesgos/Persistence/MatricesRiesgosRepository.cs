@@ -785,41 +785,99 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return await EjecutarVinculoEvidenciaAsync("RL_MR_EVI_APROBACION", "EVAP_APROBACION_ID", "EVAP_EVIDENCIA_ID", dto.EvapAprobacionId, dto.EvapEvidenciaId, null, "Aprobacion", usuarioId, ip);
     }
 
-    public async Task<bool> EvidenciaTieneVinculosAsync(long evidenciaId)
+    public async Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(
+        long evidenciaId, 
+        System.Func<System.Threading.Tasks.Task<bool>> eliminarArchivoFisico, 
+        long usuarioId, 
+        string? ip)
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
+        await using var trans = conn.BeginTransaction();
 
-        const string sql = @"
-            SELECT (SELECT COUNT(*) FROM RL_MR_EVI_RIESGO WHERE EVR_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_EVALUACION WHERE EVE_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_CONTROL WHERE EVC_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_PLAN WHERE EVP_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_ACTIVIDAD WHERE EVA_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_ALERTA WHERE EVA_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_AUTOMONITOREO WHERE EVM_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_REVISION WHERE EVV_EVIDENCIA_ID = :id)
-                 + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :id) AS total
-              FROM DUAL";
+        try
+        {
+            // 1. Bloquear y verificar existencia de la evidencia mediante SELECT ... FOR UPDATE
+            const string sqlLock = "SELECT EVI_ID FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id FOR UPDATE";
+            await using var cmdLock = new OracleCommand(sqlLock, conn);
+            cmdLock.Parameters.Add(new OracleParameter("id", evidenciaId));
+            
+            await using var readerLock = await cmdLock.ExecuteReaderAsync();
+            if (!await readerLock.ReadAsync())
+            {
+                // Idempotencia: Si no existe, no hacemos nada y retornamos NoExiste
+                await trans.RollbackAsync();
+                return ResultadoEliminacionEvidencia.NoExiste;
+            }
+            await readerLock.CloseAsync();
 
-        await using var cmd = new OracleCommand(sql, conn);
-        cmd.Parameters.Add(new OracleParameter("id", evidenciaId));
+            // 2. Verificar si tiene vínculos activos en las 9 tablas puente
+            const string sqlCheck = @"
+                SELECT (SELECT COUNT(*) FROM RL_MR_EVI_RIESGO WHERE EVR_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_EVALUACION WHERE EVE_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_CONTROL WHERE EVC_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_PLAN WHERE EVP_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_ACTIVIDAD WHERE EVA_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_ALERTA WHERE EVA_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_AUTOMONITOREO WHERE EVM_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_REVISION WHERE EVV_EVIDENCIA_ID = :id)
+                     + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :id) AS total
+                  FROM DUAL";
 
-        int total = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return total > 0;
-    }
+            await using var cmdCheck = new OracleCommand(sqlCheck, conn);
+            cmdCheck.Parameters.Add(new OracleParameter("id", evidenciaId));
+            int totalVinculos = Convert.ToInt32(await cmdCheck.ExecuteScalarAsync());
 
-    public async Task<bool> EliminarEvidenciaFisicaAsync(long evidenciaId)
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
+            if (totalVinculos > 0)
+            {
+                await trans.RollbackAsync();
+                return ResultadoEliminacionEvidencia.TieneVinculos;
+            }
 
-        const string sql = "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id";
-        await using var cmd = new OracleCommand(sql, conn);
-        cmd.Parameters.Add(new OracleParameter("id", evidenciaId));
+            // 3. Ejecutar DELETE en base de datos Oracle (todavía sin Commit)
+            const string sqlDelete = "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id";
+            await using var cmdDelete = new OracleCommand(sqlDelete, conn);
+            cmdDelete.Parameters.Add(new OracleParameter("id", evidenciaId));
+            await cmdDelete.ExecuteNonQueryAsync();
 
-        int rows = await cmd.ExecuteNonQueryAsync();
-        return rows > 0;
+            // 4. Invocar la lambda de eliminación del archivo físico
+            bool archivoBorrado = false;
+            try
+            {
+                archivoBorrado = await eliminarArchivoFisico();
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Error(ex, "Excepción al eliminar archivo físico de evidencia ID {Id} en disco", evidenciaId);
+                archivoBorrado = false;
+            }
+
+            if (!archivoBorrado)
+            {
+                // REGLA CLAVE: Si falla el borrado de disco, HACER ROLLBACK y conservar el registro de Oracle
+                await trans.RollbackAsync();
+                return ResultadoEliminacionEvidencia.FalloDisco;
+            }
+
+            // 5. Intentar confirmar la transacción en Oracle
+            try
+            {
+                await trans.CommitAsync();
+                return ResultadoEliminacionEvidencia.Exito;
+            }
+            catch (Exception commitEx)
+            {
+                Serilog.Log.Error(commitEx, "Error al confirmar (Commit) eliminación de evidencia ID {Id} en Oracle", evidenciaId);
+                // Si el commit falla, el archivo físico ya fue borrado, pero Oracle mantiene el registro.
+                return ResultadoEliminacionEvidencia.FalloCommit;
+            }
+        }
+        catch (Exception ex)
+        {
+            await trans.RollbackAsync();
+            Serilog.Log.Error(ex, "Error general en la transacción de eliminación de evidencia ID {Id}", evidenciaId);
+            throw;
+        }
     }
 
     private async Task<bool> EjecutarVinculoEvidenciaAsync(string tablaPuente, string colId, string colEvi, long entidadId, long evidenciaId, long? evaluacionId, string tipoEntidad, long usuarioId, string? ip)

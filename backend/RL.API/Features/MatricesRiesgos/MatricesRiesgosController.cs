@@ -412,7 +412,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.EliminarEvidenciaAsync(id, ObtenerUsuarioId());
+            var result = await _service.EliminarEvidenciaAsync(id, ObtenerUsuarioId(), ObtenerIp());
             return Responder(result);
         }
         catch (Exception ex)

@@ -337,7 +337,7 @@ public sealed class MatricesRiesgosApplicationTests
         var service = CrearServicio(out var repoStub, out _, out _);
         repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
 
-        var result = await service.EliminarEvidenciaAsync(123L, 99);
+        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
 
         Assert.True(result.Success);
         Assert.Contains("La evidencia no existe o ya fue eliminada", result.Message, StringComparison.OrdinalIgnoreCase);
@@ -349,28 +349,94 @@ public sealed class MatricesRiesgosApplicationTests
         var service = CrearServicio(out var repoStub, out _, out _);
         var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf" };
         repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EvidenciaTieneVinculosAsync), _ => Task.FromResult(true));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.TieneVinculos));
 
-        var result = await service.EliminarEvidenciaAsync(123L, 99);
+        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
 
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
-        Assert.Contains("se encuentra vinculada", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ya se encuentra vinculada", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task EliminarEvidencia_SinVinculos_EliminaFisicoYDb_RetornaOk()
+    public async Task EliminarEvidencia_FalloDisco_RetornaBadRequestYConservaRegistro()
     {
         var service = CrearServicio(out var repoStub, out _, out _);
         var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
         repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EvidenciaTieneVinculosAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaFisicaAsync), _ => Task.FromResult(true));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.FalloDisco));
 
-        var result = await service.EliminarEvidenciaAsync(123L, 99);
+        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Contains("mantiene intacto", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task EliminarEvidencia_FalloCommit_RetornaError500YRegistraAuditoriaFallo()
+    {
+        var service = CrearServicio(out var repoStub, out _, out _, out var auditoriaStub);
+        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.FalloCommit));
+
+        bool auditoriaRegistrada = false;
+        auditoriaStub.On("RegistrarAsync", args =>
+        {
+            if (args != null && args.Length > 2 && args[2]?.ToString() == "ERROR_COMPENSACION_EVIDENCIA")
+            {
+                auditoriaRegistrada = true;
+            }
+            return Task.CompletedTask;
+        });
+
+        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
+
+        Assert.False(result.Success);
+        Assert.Equal(500, result.StatusCode);
+        Assert.True(auditoriaRegistrada);
+    }
+
+    [Fact]
+    public async Task EliminarEvidencia_Exito_EliminaFisicoYDb_RetornaOk()
+    {
+        var service = CrearServicio(out var repoStub, out _, out _, out var auditoriaStub);
+        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.Exito));
+
+        bool auditoriaRegistrada = false;
+        auditoriaStub.On("RegistrarAsync", args =>
+        {
+            if (args != null && args.Length > 2 && args[2]?.ToString() == "DELETE")
+            {
+                auditoriaRegistrada = true;
+            }
+            return Task.CompletedTask;
+        });
+
+        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
 
         Assert.True(result.Success);
         Assert.Contains("eliminada de forma exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.True(auditoriaRegistrada);
+    }
+
+    private static MatricesRiesgosAppService CrearServicio(
+        out InterfaceStub repoStub, 
+        out InterfaceStub valStub, 
+        out InterfaceStub calcStub,
+        out InterfaceStub auditoriaStub)
+    {
+        var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);
+        var val = InterfaceStub.Create<IFormularioValidador>(out valStub);
+        var calc = InterfaceStub.Create<IMatricesRiesgoService>(out calcStub);
+        var auditoria = InterfaceStub.Create<RL.API.Features.Auditoria.Persistence.IAuditoriaRepository>(out auditoriaStub);
+        
+        auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
+
+        return new MatricesRiesgosAppService(repo, val, calc, auditoria);
     }
 
     private static MatricesRiesgosAppService CrearServicio(
@@ -378,10 +444,6 @@ public sealed class MatricesRiesgosApplicationTests
         out InterfaceStub valStub, 
         out InterfaceStub calcStub)
     {
-        var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);
-        var val = InterfaceStub.Create<IFormularioValidador>(out valStub);
-        var calc = InterfaceStub.Create<IMatricesRiesgoService>(out calcStub);
-        
-        return new MatricesRiesgosAppService(repo, val, calc);
+        return CrearServicio(out repoStub, out valStub, out calcStub, out _);
     }
 }

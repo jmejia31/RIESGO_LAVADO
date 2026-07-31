@@ -4,6 +4,15 @@ using RL.API.Features.MatricesRiesgos.Contracts;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
 
+public enum ResultadoEliminacionEvidencia
+{
+    Exito,
+    NoExiste,
+    TieneVinculos,
+    FalloDisco,
+    FalloCommit
+}
+
 public interface IMatricesRiesgosRepository
 {
     // ============================================================
@@ -44,8 +53,8 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
     
-    Task<bool> EvidenciaTieneVinculosAsync(long evidenciaId);
-    Task<bool> EliminarEvidenciaFisicaAsync(long evidenciaId);
+    Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, System.Func<System.Threading.Tasks.Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
+
 
     // ============================================================
     // 4. REPORTES CONSOLIDADOS Y CATÁLOGOS PARAMÉTRICOS
