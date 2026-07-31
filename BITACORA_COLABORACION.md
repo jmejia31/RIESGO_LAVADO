@@ -1654,7 +1654,7 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 - **Fecha y hora**: 2026-07-31 10:35, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `1f319d5` | **Commit final**: `3773852`.
+- **Commit inicial**: `1f319d5` | **Commit final**: `ea617b3`.
 
 ### Objetivo y alcance
 
