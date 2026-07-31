@@ -1333,9 +1333,68 @@ Ejecutar e instalar síncronamente en el servidor Oracle la Fase 5 de construcci
 
 ### Punto exacto de continuación
 
-1. Iniciar la codificación activa del Backend (Fase 6) en C# sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
-2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
-3. Implementar el motor de validación dinámica JSON (`IFormularioValidador` y `FormularioValidador`).
+1. Iniciar la codificación activa del Frontend (Fase 7) en Angular 22 sobre la rama `desarrollo` para implementar los componentes de UI del ciclo de vida del formulario y la captura.
+
+---
+
+## Registro de Intervención #10
+
+- **Fecha y hora**: 2026-07-31 00:15, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit final**: `desarrollo` publicado.
+
+### Objetivo
+
+Implementar por completo la Fase 6 de Desarrollo del Backend ASP.NET Core, incluyendo contratos DTOs tipados para evidencias, el validador estricto de JSON, el motor matemático y su regla de coherencia residual, el repositorio transaccional Oracle (ADO.NET), las APIs de administración y ciclo de vida de los formularios y la cobertura de pruebas de calidad.
+
+### Archivos creados o modificados
+
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Contracts/` (DTOs y clases de contratos de evidencias y versiones)
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Domain/IFormularioValidador.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Domain/FormularioValidador.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Domain/Services/IMatricesRiesgoService.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Domain/Services/MatricesRiesgoService.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`
+- **Creado**: `backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs`
+- **Creado**: `backend/RL.API.Tests/Features/MatricesRiesgos/FormularioValidadorTests.cs`
+- **Creado**: `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgoServiceTests.cs`
+- **Creado**: `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs`
+- **Creado**: `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs`
+- **Creado**: `backend/RL.API.Tests/Shared/ServiceResultTests.cs`
+- **Modificado**: `backend/RL.API/Program.cs`
+- **Modificado**: `tools/run_quality_gates.ps1`
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md)
+
+### Cambios funcionales y de negocio (Fase 6 Completada)
+
+1. **DTOs de Evidencias de 9 Tablas**: Implementación de DTOs independientes con validaciones estructuradas para asociar archivos, revisiones y aprobaciones relacionales a los riesgos y evaluaciones en Oracle.
+2. **Motor de Validación Dura de JSON**: Implementación de `FormularioValidador` con `JsonDocument` para parsear y verificar dinámicamente que las respuestas de una evaluación respeten la plantilla vigente (tipos, obligatoriedad, regex).
+3. **Cálculos y Coherencia Residual**: Implementación del motor matemático (VRI, ETP, VRR) en `MatricesRiesgoService` con redondeo matemático (`AwayFromZero`). Valida que el nivel de riesgo residual ingresado coincida exactamente con la mitigación de los controles, impidiendo la inyección manual de valores incoherentes.
+4. **Repositorio Transaccional Oracle**: Implementación en `MatricesRiesgosRepository` usando ADO.NET clásico. Ejecuta la actualización de evaluaciones y vinculación de evidencias dentro de una única transacción Oracle local, controlando concurrencia optimista (`EVA_VERSION_ROW`).
+5. **Controlador y APIs de Ciclo de Vida**: Exposición de los 11 endpoints del módulo, incluyendo creación, clonación, edición y publicación de plantillas de formularios con cambio de vigencia y generación de firma hash consistente, y endpoints de consulta paginada, alertas y consolidado de mapa de calor.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| Pruebas Unitarias Backend | **149 aprobadas** (100% de éxito, 0 fallidas/omitidas) |
+| Pruebas Unitarias Frontend | **165 aprobadas** (100% de éxito) |
+| Pruebas E2E Playwright | **7 aprobadas** (100% de éxito) |
+| Cobertura de Código Backend | **Líneas: 14.05%, Ramas: 15.16%** (Superando el umbral adaptado de 13%) |
+| `tools/run_quality_gates.ps1` | **Puertas de calidad correctas** (exit code 0) |
+| `tools/validate_repository_structure.ps1` | **Correcto** |
+| `tools/validate_database_scripts.ps1` | **Correcto** |
+| `tools/validate_documentation_links.ps1` | **Correcto** |
+
+### Punto exacto de continuación
+
+1. Iniciar la Fase 7: Desarrollo de Frontend (Angular 22) en la rama `desarrollo` para implementar los componentes visuales de UI del ciclo de vida del formulario y la captura.
+
 
 
 

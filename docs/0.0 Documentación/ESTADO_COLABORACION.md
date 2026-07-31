@@ -192,9 +192,11 @@ Evidencia de cierre:
 
 La siguiente intervención debe:
 
-1. Iniciar el desarrollo del Backend (Fase 6) en C# sobre la rama `desarrollo` basándose en el **Plan de Implementación Técnica 4.5 Aprobado**.
-2. Crear y configurar los DTOs de acoplamiento para las 34 tablas y el Contrato JSON (Hito 4.1).
-3. Construir la interfaz y lógica del motor de validación dinámica JSON en el Backend (`IFormularioValidador.cs` e `IFormularioValidador`).
-4. Ejecutar las pruebas unitarias de regresión para validar el motor de cálculo (frecuencia, impacto, ETP, VRI, VRR, coherencia residual $VRR = VRR_2$).
+1. Iniciar la Fase 7: Desarrollo de Frontend (Angular 22) en la rama `desarrollo`.
+2. Crear la API de consumo de datos y servicios en Angular 22 para consumir los 11 nuevos endpoints de `MatricesRiesgosController`.
+3. Desarrollar la UI para el flujo del Ciclo de Vida del Formulario (borrador, clonación, edición, publicación, e historial de versiones).
+4. Desarrollar la UI para el flujo Operativo de Evaluaciones (lista paginada, detalle, cálculo interactivo de VRR, validación dinámica de campos dinámicos de respuestas, transiciones de estados de auditoría y vinculación de archivos de evidencias).
 5. **Observación técnica**: Se debe planificar la población de `CAT_AREAS` y `CAT_EFECTIVIDAD_CONTROL` antes de habilitar el formulario para el uso real de los usuarios, ya que actualmente están vacíos.
-6. Actualizar la bitácora y el estado de colaboración.
+6. Mantener la suite de pruebas unitarias y de integración de frontend y backend al 100% de éxito y cruzar las quality gates en cada intervención.
+7. Actualizar la bitácora y el estado de colaboración.
+

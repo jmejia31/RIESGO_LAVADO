@@ -1,51 +1,136 @@
-using Newtonsoft.Json;
+using System;
 using Microsoft.AspNetCore.Http;
 
 namespace RL.API.Features.MatricesRiesgos.Contracts;
 
-public sealed class MatrizRiesgoEvidenciaDto
+// ============================================================
+// 1. DTO CENTRAL DE METADATOS DE EVIDENCIAS (RL_MR_EVIDENCIAS)
+// ============================================================
+public sealed class EvidenciaDto
 {
-    public long EvidenciaId { get; set; }
-    public long MatrizId { get; set; }
-    public long? ControlId { get; set; }
-    public long? PlanId { get; set; }
-    public string NombreOriginal { get; set; } = string.Empty;
-    public string NombreFisico { get; set; } = string.Empty;
-    public string? TipoMime { get; set; }
-    public string? Extension { get; set; }
-    public long TamanoBytes { get; set; }
-    [JsonIgnore]
-    public string RutaFisica { get; set; } = string.Empty;
-    public string? HashSha256 { get; set; }
-    public bool Activa { get; set; }
-    public string? MotivoInactivo { get; set; }
-    public DateTime FechaCreacion { get; set; }
+    public long EviId { get; set; }
+    public string EviNombreArchivo { get; set; } = string.Empty;
+    public string EviExtension { get; set; } = string.Empty;
+    public long EviTamano { get; set; }
+    public string EviHash { get; set; } = string.Empty;
+    public string EviRuta { get; set; } = string.Empty;
+    public long EviUsrCreacion { get; set; }
+    public DateTime EviFechaCreacion { get; set; }
 }
 
-public sealed class MatrizRiesgoEvidenciaRegistroDto
+public sealed class EvidenciaRegistroDto
 {
-    public long MatrizId { get; set; }
-    public long? ControlId { get; set; }
-    public long? PlanId { get; set; }
-    public string NombreOriginal { get; set; } = string.Empty;
-    public string NombreFisico { get; set; } = string.Empty;
-    public string? TipoMime { get; set; }
-    public string? Extension { get; set; }
-    public long TamanoBytes { get; set; }
-    public string RutaFisica { get; set; } = string.Empty;
-    public string? HashSha256 { get; set; }
+    public string EviNombreArchivo { get; set; } = string.Empty;
+    public string EviExtension { get; set; } = string.Empty;
+    public long EviTamano { get; set; }
+    public string EviHash { get; set; } = string.Empty;
+    public string EviRuta { get; set; } = string.Empty;
+    public long EviUsrCreacion { get; set; }
 }
 
-public sealed class MatrizRiesgoEvidenciaDescargaDto
+public sealed class EvidenciaDescargaDto
 {
     public string NombreArchivo { get; set; } = string.Empty;
     public string ContentType { get; set; } = "application/octet-stream";
     public byte[] Contenido { get; set; } = Array.Empty<byte>();
 }
 
-public sealed class MatrizRiesgoEvidenciaUploadFormDto
+public sealed class EvidenciaUploadFormDto
 {
-    public long? ControlId { get; set; }
-    public long? PlanId { get; set; }
     public IFormFile? Archivo { get; set; }
+    public long UsrId { get; set; }
+}
+
+// ============================================================
+// 2. DTOS ESPECÍFICOS PARA LAS 9 TABLAS PUENTE DE EVIDENCIAS
+// ============================================================
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_RIESGO
+/// </summary>
+public sealed class AsociarEvidenciaRiesgoDto
+{
+    public long EvrRiesgoId { get; set; }
+    public long EvrEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_EVALUACION
+/// </summary>
+public sealed class AsociarEvidenciaEvaluacionDto
+{
+    public long EveEvaluacionId { get; set; }
+    public long EveEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_CONTROL
+/// </summary>
+public sealed class AsociarEvidenciaControlDto
+{
+    public long EvcControlId { get; set; }
+    public long EvcEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_PLAN
+/// </summary>
+public sealed class AsociarEvidenciaPlanDto
+{
+    public long EvpPlanId { get; set; }
+    public long EvpEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_ACTIVIDAD
+/// </summary>
+public sealed class AsociarEvidenciaActividadDto
+{
+    public long EvaActividadId { get; set; }
+    public long EvaEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_ALERTA
+/// </summary>
+public sealed class AsociarEvidenciaAlertaDto
+{
+    public long EvaAlertaId { get; set; }
+    public long EvaEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_AUTOMONITOREO
+/// </summary>
+public sealed class AsociarEvidenciaAutomonitoreoDto
+{
+    public long EvmMonitoreoId { get; set; }
+    public long EvmEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_REVISION
+/// </summary>
+public sealed class AsociarEvidenciaRevisionDto
+{
+    public long EvvRevisionId { get; set; }
+    public long EvvEvidenciaId { get; set; }
+    public long UsrId { get; set; }
+}
+
+/// <summary>
+/// Mapea la asociación en RL_MR_EVI_APROBACION
+/// </summary>
+public sealed class AsociarEvidenciaAprobacionDto
+{
+    public long EvapAprobacionId { get; set; }
+    public long EvapEvidenciaId { get; set; }
+    public long UsrId { get; set; }
 }

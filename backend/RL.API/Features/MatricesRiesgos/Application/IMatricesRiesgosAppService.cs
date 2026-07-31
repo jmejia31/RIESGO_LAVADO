@@ -1,38 +1,53 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using RL.API.Features.MatricesRiesgos.Contracts;
-using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
 
 public interface IMatricesRiesgosAppService
 {
-    Task<ServiceResult<MetodologiaCalculoDto>> ObtenerMetodologiaVigenteAsync();
-    Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro);
-    Task<ServiceResult<MatricesRiesgoReporteDto>> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro);
-    Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarFichaAsync(long matrizId, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<List<MatrizRiesgoResumenDto>>> ListarAsync(MatrizRiesgoFiltroDto filtro);
-    Task<ServiceResult<MatrizRiesgoDetalleDto>> ObtenerAsync(long matrizId);
-    Task<ServiceResult<MatrizRiesgoDetalleDto>> CrearAsync(MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizRiesgoDetalleDto>> ActualizarAsync(long matrizId, MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizCalculoResultadoDto>> CalcularAsync(long matrizId, MatrizRiesgoCalcularRequestDto dto, bool esRecalculo, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> CambiarEstadoAsync(long matrizId, MatrizRiesgoCambiarEstadoRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> EliminarMatrizAsync(long matrizId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<List<MatrizRiesgoHistorialDto>>> ObtenerHistorialAsync(long matrizId);
-    Task<ServiceResult<List<MatrizRiesgoPlanAccionDto>>> ListarPlanesAsync(long matrizId);
-    Task<ServiceResult<MatrizRiesgoPlanAccionDto>> CrearPlanAsync(long matrizId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizRiesgoPlanAccionDto>> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> CambiarEstadoPlanAsync(long matrizId, long planId, MatrizRiesgoPlanEstadoRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> InactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> ReactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<List<MatrizRiesgoEvidenciaDto>>> ListarEvidenciasAsync(long matrizId);
-    Task<ServiceResult<MatrizRiesgoEvidenciaDto>> CargarEvidenciaAsync(long matrizId, long? controlId, long? planId, IFormFile? archivo, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizRiesgoEvidenciaDescargaDto>> DescargarEvidenciaAsync(long matrizId, long evidenciaId, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> InactivarEvidenciaAsync(long matrizId, long evidenciaId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<List<MatrizRiesgoCriterioDto>>> ListarCriteriosAsync(bool incluirInactivos);
-    Task<ServiceResult<MatrizRiesgoCriterioDto>> CrearCriterioAsync(MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult<MatrizRiesgoCriterioDto>> ActualizarCriterioAsync(long criterioId, MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> InactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> ReactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
-    Task<ServiceResult> EliminarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip);
+    // ============================================================
+    // 1. GESTIÓN DEL CICLO DE VIDA DEL FORMULARIO Y VERSIONES
+    // ============================================================
+    Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string familiaCodigo);
+    Task<ServiceResult<VersionFormularioDto>> ObtenerVersionFormularioAsync(long versionId);
+    Task<ServiceResult<long>> CrearBorradorFormularioAsync(long familiaId, string codigoFormulario, string jsonConfig, long usuarioId);
+    Task<ServiceResult<long>> ClonarVersionFormularioAsync(long versionOrigenId, long usuarioId);
+    Task<ServiceResult> ActualizarBorradorFormularioAsync(long versionId, string jsonConfig, long usuarioId);
+    Task<ServiceResult> PublicarVersionFormularioAsync(long versionId, long usuarioId);
+    Task<ServiceResult> CambiarEstadoVigenciaFormularioAsync(long versionId, bool vigente, long usuarioId);
+    Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
+
+    // ============================================================
+    // 2. GESTIÓN DE EVALUACIONES E HISTORIAL DE CAMBIOS
+    // ============================================================
+    Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId);
+    Task<ServiceResult<List<EvaluacionRiesgoDto>>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);
+    Task<ServiceResult<long>> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip);
+    Task<ServiceResult<List<RevisionEvaluacionDto>>> ObtenerRevisionesEvaluacionAsync(long evaId);
+
+    // ============================================================
+    // 3. ARCHIVO FÍSICO CENTRAL DE EVIDENCIAS Y SUS VINCULACIONES
+    // ============================================================
+    Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId);
+    Task<ServiceResult<EvidenciaDto>> ObtenerEvidenciaFisicaAsync(long evidenciaId);
+    
+    Task<ServiceResult> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaPlanAsync(AsociarEvidenciaPlanDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaActividadAsync(AsociarEvidenciaActividadDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaAlertaAsync(AsociarEvidenciaAlertaDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
+
+    // ============================================================
+    // 4. REPORTES CONSOLIDADOS
+    // ============================================================
+    Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerConsolidadoMatricesAsync();
 }

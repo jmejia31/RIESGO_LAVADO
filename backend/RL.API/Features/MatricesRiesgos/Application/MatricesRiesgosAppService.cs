@@ -1,931 +1,487 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Shared.Results;
-using RL.API.Infrastructure.Reporting;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
 
 public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 {
-    private static readonly HashSet<string> SujetosPermitidos = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "PROVEEDOR",
-        "CLIENTE_PATRONO",
-        "EMPLEADO",
-        "AREA",
-        "PROCESO",
-        "CASO_POSITIVO",
-        "INSTITUCIONAL"
-    };
-
-    private static readonly HashSet<string> EstadosPermitidos = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "EN_REVISION",
-        "APROBADA",
-        "CERRADA",
-        "INACTIVA"
-    };
-
-    private static readonly HashSet<string> EstadosPlanPermitidos = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "PENDIENTE",
-        "EN_PROCESO",
-        "CERRADO",
-        "VENCIDO",
-        "INACTIVO"
-    };
-
-    private static readonly HashSet<string> ExtensionesEvidenciaPermitidas = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".pdf",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".doc",
-        ".docx",
-        ".xls",
-        ".xlsx"
-    };
-
-    private static readonly Dictionary<string, byte[][]> FirmasEvidenciaPermitidas = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [".pdf"] = new[] { new byte[] { 0x25, 0x50, 0x44, 0x46 } },
-        [".png"] = new[] { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } },
-        [".jpg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
-        [".jpeg"] = new[] { new byte[] { 0xFF, 0xD8, 0xFF } },
-        [".doc"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
-        [".xls"] = new[] { new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1 } },
-        [".docx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } },
-        [".xlsx"] = new[] { new byte[] { 0x50, 0x4B, 0x03, 0x04 }, new byte[] { 0x50, 0x4B, 0x05, 0x06 }, new byte[] { 0x50, 0x4B, 0x07, 0x08 } }
-    };
-
-    private static readonly Dictionary<string, string[]> MimeTypesEvidenciaPermitidos = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [".pdf"] = new[] { "application/pdf" },
-        [".png"] = new[] { "image/png" },
-        [".jpg"] = new[] { "image/jpeg", "image/pjpeg" },
-        [".jpeg"] = new[] { "image/jpeg", "image/pjpeg" },
-        [".doc"] = new[] { "application/msword", "application/octet-stream" },
-        [".docx"] = new[] { "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/zip", "application/octet-stream" },
-        [".xls"] = new[] { "application/vnd.ms-excel", "application/octet-stream" },
-        [".xlsx"] = new[] { "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/zip", "application/octet-stream" }
-    };
-
     private readonly IMatricesRiesgosRepository _repo;
-    private readonly IMatricesRiesgoService _motorCalculo;
-    private readonly IConfiguration? _configuration;
-    private readonly IWebHostEnvironment? _environment;
+    private readonly IFormularioValidador _validador;
+    private readonly IMatricesRiesgoService _calculador;
 
-    public MatricesRiesgosAppService(IMatricesRiesgosRepository repo, IMatricesRiesgoService motorCalculo, IConfiguration? configuration = null, IWebHostEnvironment? environment = null)
+    public MatricesRiesgosAppService(
+        IMatricesRiesgosRepository repo, 
+        IFormularioValidador validador, 
+        IMatricesRiesgoService calculador)
     {
         _repo = repo;
-        _motorCalculo = motorCalculo;
-        _configuration = configuration;
-        _environment = environment;
+        _validador = validador;
+        _calculador = calculador;
     }
 
-    public async Task<ServiceResult<MetodologiaCalculoDto>> ObtenerMetodologiaVigenteAsync()
+    // ============================================================
+    // 1. GESTIÓN DEL CICLO DE VIDA DEL FORMULARIO Y VERSIONES
+    // ============================================================
+
+    public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string familiaCodigo)
     {
-        var metodologia = await _repo.ObtenerMetodologiaVigenteAsync();
-        return metodologia == null
-            ? ServiceResult<MetodologiaCalculoDto>.NotFound("No existe una metodología aprobada vigente para Matrices de Riesgos.")
-            : ServiceResult<MetodologiaCalculoDto>.Ok(metodologia);
-    }
-
-    public async Task<ServiceResult<MatricesRiesgoDashboardDto>> ObtenerDashboardAsync(MatrizRiesgoReporteFiltroDto filtro)
-    {
-        filtro ??= new MatrizRiesgoReporteFiltroDto();
-        var errorFiltro = NormalizarFiltroReporte(filtro);
-        if (errorFiltro != null)
-            return ServiceResult<MatricesRiesgoDashboardDto>.BadRequest(errorFiltro);
-
-        var dashboard = await _repo.ObtenerDashboardAsync(filtro);
-        return ServiceResult<MatricesRiesgoDashboardDto>.Ok(dashboard);
-    }
-
-    public async Task<ServiceResult<MatricesRiesgoReporteDto>> ObtenerReporteAsync(MatrizRiesgoReporteFiltroDto filtro)
-    {
-        var errorFiltro = NormalizarFiltroReporte(filtro);
-        if (errorFiltro != null)
-            return ServiceResult<MatricesRiesgoReporteDto>.BadRequest(errorFiltro);
-
-        var reporte = await _repo.ObtenerReporteAsync(filtro);
-        return ServiceResult<MatricesRiesgoReporteDto>.Ok(reporte);
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarReporteAsync(MatrizRiesgoReporteFiltroDto filtro, string formato, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        var errorFiltro = NormalizarFiltroReporte(filtro);
-        if (errorFiltro != null)
-            return ServiceResult<MatrizRiesgoExportacionDto>.BadRequest(errorFiltro);
-
-        var formatoNormalizado = string.IsNullOrWhiteSpace(formato) ? "EXCEL" : formato.Trim().ToUpperInvariant();
-        if (formatoNormalizado != "EXCEL" && formatoNormalizado != "PDF")
-            return ServiceResult<MatrizRiesgoExportacionDto>.BadRequest("El formato de exportación debe ser EXCEL o PDF.");
-
-        var reporte = await _repo.ObtenerReporteAsync(filtro);
-        var archivo = formatoNormalizado == "PDF"
-            ? ConstruirPdfReporte(reporte)
-            : ConstruirExcelReporte(reporte);
-
-        await _repo.RegistrarExportacionReporteAsync(filtro, formatoNormalizado, usuarioId, usuarioEmail, ip);
-        return ServiceResult<MatrizRiesgoExportacionDto>.Ok(archivo, "Reporte generado correctamente.");
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoExportacionDto>> ExportarFichaAsync(long matrizId, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (matrizId <= 0)
-            return ServiceResult<MatrizRiesgoExportacionDto>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-        if (matriz == null)
-            return ServiceResult<MatrizRiesgoExportacionDto>.NotFound("No se encontró la matriz de riesgos.");
-
-        var archivo = MatricesRiesgosReportRenderer.ConstruirFicha(matriz);
-        await _repo.RegistrarExportacionReporteAsync(new MatrizRiesgoReporteFiltroDto
+        var version = await _repo.ObtenerVersionVigenteFormularioAsync(familiaCodigo);
+        if (version == null)
         {
-            Buscar = $"MATRIZ_ID:{matrizId}",
-            SujetoTipo = matriz.SujetoTipo
-        }, "PDF", usuarioId, usuarioEmail, ip);
-
-        return ServiceResult<MatrizRiesgoExportacionDto>.Ok(archivo, "Ficha individual generada correctamente.");
+            return ServiceResult<VersionFormularioDto>.NotFound($"No existe una versión de formulario publicada y vigente para la familia '{familiaCodigo}'.");
+        }
+        return ServiceResult<VersionFormularioDto>.Ok(version);
     }
 
-    public async Task<ServiceResult<List<MatrizRiesgoResumenDto>>> ListarAsync(MatrizRiesgoFiltroDto filtro)
+    public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionFormularioAsync(long versionId)
     {
-        var datos = await _repo.ListarMatricesAsync(filtro);
-        return ServiceResult<List<MatrizRiesgoResumenDto>>.Ok(datos);
+        var version = await _repo.ObtenerVersionFormularioAsync(versionId);
+        if (version == null)
+        {
+            return ServiceResult<VersionFormularioDto>.NotFound($"No se encontró la versión de formulario con ID {versionId}.");
+        }
+        return ServiceResult<VersionFormularioDto>.Ok(version);
     }
 
-    public async Task<ServiceResult<MatrizRiesgoDetalleDto>> ObtenerAsync(long matrizId)
+    public async Task<ServiceResult<long>> CrearBorradorFormularioAsync(long familiaId, string codigoFormulario, string jsonConfig, long usuarioId)
     {
-        if (matrizId <= 0)
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-        return matriz == null
-            ? ServiceResult<MatrizRiesgoDetalleDto>.NotFound("No se encontró la matriz de riesgos.")
-            : ServiceResult<MatrizRiesgoDetalleDto>.Ok(matriz);
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoDetalleDto>> CrearAsync(MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        var error = ValidarCreacion(dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest(error);
+        if (string.IsNullOrWhiteSpace(jsonConfig))
+        {
+            return ServiceResult<long>.BadRequest("El contenido JSON de configuración es obligatorio.");
+        }
 
         try
         {
-            var matrizId = await _repo.CrearMatrizAsync(dto, usuarioId, usuarioEmail, ip);
-            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-            return matriz == null
-                ? ServiceResult<MatrizRiesgoDetalleDto>.NotFound("La matriz fue creada, pero no pudo consultarse el detalle.")
-                : ServiceResult<MatrizRiesgoDetalleDto>.Ok(matriz, "Matriz de riesgos creada correctamente.");
+            // Validar que sea un JSON sintácticamente válido
+            JsonDocument.Parse(jsonConfig);
         }
-        catch (InvalidOperationException ex)
+        catch (JsonException ex)
         {
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest(ex.Message);
+            return ServiceResult<long>.BadRequest($"El formato del JSON de configuración es inválido: {ex.Message}");
+        }
+
+        long nuevoId = await _repo.CrearBorradorFormularioAsync(familiaId, codigoFormulario, jsonConfig, usuarioId);
+        return ServiceResult<long>.Ok(nuevoId, "Borrador de formulario creado exitosamente.");
+    }
+
+    public async Task<ServiceResult<long>> ClonarVersionFormularioAsync(long versionOrigenId, long usuarioId)
+    {
+        try
+        {
+            long nuevoId = await _repo.ClonarVersionFormularioAsync(versionOrigenId, usuarioId);
+            return ServiceResult<long>.Ok(nuevoId, "Versión de formulario clonada como borrador exitosamente.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return ServiceResult<long>.NotFound(ex.Message);
         }
     }
 
-    public async Task<ServiceResult<MatrizRiesgoDetalleDto>> ActualizarAsync(long matrizId, MatrizRiesgoCrearRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult> ActualizarBorradorFormularioAsync(long versionId, string jsonConfig, long usuarioId)
     {
-        if (matrizId <= 0)
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var error = ValidarCreacion(dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest(error);
+        if (string.IsNullOrWhiteSpace(jsonConfig))
+        {
+            return ServiceResult.BadRequest("El contenido JSON de configuración es obligatorio.");
+        }
 
         try
         {
-            var ok = await _repo.ActualizarMatrizAsync(matrizId, dto, usuarioId, usuarioEmail, ip);
-            if (!ok)
-                return ServiceResult<MatrizRiesgoDetalleDto>.NotFound("No se encontró la matriz de riesgos.");
-
-            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-            return matriz == null
-                ? ServiceResult<MatrizRiesgoDetalleDto>.NotFound("La matriz fue actualizada, pero no pudo consultarse el detalle.")
-                : ServiceResult<MatrizRiesgoDetalleDto>.Ok(matriz, "Matriz de riesgos actualizada correctamente.");
+            JsonDocument.Parse(jsonConfig);
         }
-        catch (InvalidOperationException ex)
+        catch (JsonException ex)
         {
-            return ServiceResult<MatrizRiesgoDetalleDto>.BadRequest(ex.Message);
+            return ServiceResult.BadRequest($"El formato del JSON de configuración es inválido: {ex.Message}");
         }
+
+        string hash = CalcularHashSha256(jsonConfig);
+        bool exito = await _repo.ActualizarBorradorFormularioAsync(versionId, jsonConfig, hash, usuarioId);
+        
+        if (!exito)
+        {
+            return ServiceResult.BadRequest("No se pudo actualizar el formulario. Verifique que exista y esté en estado DRAFT.");
+        }
+        return ServiceResult.Ok("Borrador de formulario actualizado exitosamente.");
     }
 
-    public async Task<ServiceResult<MatrizCalculoResultadoDto>> CalcularAsync(long matrizId, MatrizRiesgoCalcularRequestDto dto, bool esRecalculo, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult> PublicarVersionFormularioAsync(long versionId, long usuarioId)
     {
-        if (matrizId <= 0)
-            return ServiceResult<MatrizCalculoResultadoDto>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        if (esRecalculo && string.IsNullOrWhiteSpace(dto.MotivoCalculo))
-            return ServiceResult<MatrizCalculoResultadoDto>.BadRequest("El motivo de recálculo es obligatorio.");
-
-        try
+        var version = await _repo.ObtenerVersionFormularioAsync(versionId);
+        if (version == null)
         {
-            // Orquestación del cálculo: arma la solicitud desde datos persistidos,
-            // ejecuta el motor aprobado y luego guarda resultado, historial y auditoría.
-            var solicitud = await _repo.PrepararSolicitudCalculoAsync(matrizId, dto.TipoCalculo, dto.MotivoCalculo, esRecalculo);
-            if (solicitud == null)
-                return ServiceResult<MatrizCalculoResultadoDto>.NotFound("No se encontró la matriz de riesgos.");
-
-            var resultado = _motorCalculo.Calcular(solicitud);
-            if (!resultado.Success || resultado.Data == null)
-                return ServiceResult<MatrizCalculoResultadoDto>.BadRequest(resultado.Message ?? "No se pudo calcular la matriz de riesgos.");
-
-            await _repo.PersistirResultadoCalculoAsync(matrizId, resultado.Data, dto.MotivoCalculo, esRecalculo, usuarioId, usuarioEmail, ip);
-            return ServiceResult<MatrizCalculoResultadoDto>.Ok(resultado.Data, esRecalculo ? "Matriz recalculada correctamente." : "Matriz calculada correctamente.");
+            return ServiceResult.NotFound($"No se encontró la versión de formulario con ID {versionId}.");
         }
-        catch (InvalidOperationException ex)
+
+        if (!version.VerEstado.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
         {
-            return ServiceResult<MatrizCalculoResultadoDto>.BadRequest(ex.Message);
+            return ServiceResult.BadRequest("Solo se pueden publicar versiones de formularios que estén en estado DRAFT.");
         }
+
+        string hash = CalcularHashSha256(version.VerJson);
+        bool exito = await _repo.PublicarVersionFormularioAsync(versionId, hash, usuarioId);
+
+        if (!exito)
+        {
+            return ServiceResult.BadRequest("Ocurrió un error al intentar publicar la versión del formulario.");
+        }
+        return ServiceResult.Ok("Versión de formulario publicada y activada como vigente exitosamente.");
     }
 
-    public async Task<ServiceResult> CambiarEstadoAsync(long matrizId, MatrizRiesgoCambiarEstadoRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult> CambiarEstadoVigenciaFormularioAsync(long versionId, bool vigente, long usuarioId)
     {
-        if (matrizId <= 0)
-            return ServiceResult.BadRequest("El identificador de la matriz es obligatorio.");
-
-        if (dto == null)
-            return ServiceResult.BadRequest("La solicitud de cambio de estado es obligatoria.");
-
-        var estado = dto.Estado?.Trim().ToUpperInvariant();
-        if (string.IsNullOrWhiteSpace(estado) || !EstadosPermitidos.Contains(estado))
-            return ServiceResult.BadRequest("El estado solicitado no es válido para la gestión operativa de Matrices de Riesgos.");
-
-        if (string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo del cambio de estado es obligatorio.");
-
-        try
+        bool exito = await _repo.CambiarEstadoVigenciaFormularioAsync(versionId, vigente, usuarioId);
+        if (!exito)
         {
-            // Regla operativa Fase 11: el cálculo/recálculo se ejecuta al guardar,
-            // por eso la API solo permite estados de revisión, aprobación, cierre e inactivación.
-            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-            if (matriz == null)
-                return ServiceResult.NotFound("No se encontró la matriz de riesgos.");
+            return ServiceResult.NotFound($"No se encontró la versión de formulario con ID {versionId} para cambiar su vigencia.");
+        }
+        return ServiceResult.Ok("Estado de vigencia de la versión de formulario actualizado con éxito.");
+    }
 
-            if (matriz.Estado.Equals("INACTIVA", StringComparison.OrdinalIgnoreCase) && estado != "EN_REVISION")
-                return ServiceResult.BadRequest("Una matriz inactiva solo puede activarse nuevamente al estado En Revisión.");
+    public async Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo)
+    {
+        var historial = await _repo.ListarHistorialVersionesFormularioAsync(familiaCodigo);
+        return ServiceResult<List<VersionFormularioDto>>.Ok(historial);
+    }
 
-            if (estado == "CERRADA")
+    // ============================================================
+    // 2. GESTIÓN DE EVALUACIONES E HISTORIAL DE CAMBIOS
+    // ============================================================
+
+    public async Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId)
+    {
+        var eva = await _repo.ObtenerEvaluacionAsync(evaId);
+        if (eva == null)
+        {
+            return ServiceResult<EvaluacionRiesgoDto>.NotFound($"No se encontró la evaluación de riesgo con ID {evaId}.");
+        }
+        return ServiceResult<EvaluacionRiesgoDto>.Ok(eva);
+    }
+
+    public async Task<ServiceResult<List<EvaluacionRiesgoDto>>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro)
+    {
+        var lista = await _repo.ListarEvaluacionesPaginadasAsync(filtro);
+        return ServiceResult<List<EvaluacionRiesgoDto>>.Ok(lista);
+    }
+
+    public async Task<ServiceResult<long>> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip)
+    {
+        // 1. Obtener la versión de formulario vinculada
+        var version = await _repo.ObtenerVersionFormularioAsync(dto.EvaVersionId);
+        if (version == null)
+        {
+            return ServiceResult<long>.BadRequest($"La versión de formulario ID {dto.EvaVersionId} no existe en el sistema.");
+        }
+
+        // 2. Validación Dura del JSON de respuestas
+        var valResult = await _validador.ValidarRespuestasAsync(dto.EvaDataJson, version.VerJson);
+        if (!valResult.Valido)
+        {
+            var errorsList = new List<string>();
+            foreach (var err in valResult.Errores)
             {
-                // El cierre exige gestión documentada cuando el residual requiere plan.
-                // Así se evita cerrar riesgos altos/críticos sin tratamiento.
-                if (matriz.RequierePlanAccion && !await _repo.TienePlanTratadoParaCierreAsync(matrizId))
-                    return ServiceResult.BadRequest("No se puede cerrar la matriz porque requiere plan de acción y no tiene un plan cerrado o una justificación aprobada.");
+                errorsList.Add($"Campo '{err.Campo}': {err.Mensaje}");
+            }
+            return ServiceResult<long>.BadRequest("Error de validación de estructura JSON:\n" + string.Join("\n", errorsList));
+        }
+
+        // 3. Ejecutar motor de cálculo y coherencia residual (VRI, ETP, VRR)
+        var vars = ExtraerVariablesCalculo(dto.EvaDataJson);
+        var calcResult = _calculador.CalcularYValidarRiesgo(vars.frec, vars.imp, vars.prev, vars.det, vars.corr, vars.frecRes, vars.impRes);
+        if (!calcResult.Success)
+        {
+            return ServiceResult<long>.BadRequest(calcResult.Message);
+        }
+
+        // 4. Inyectar los valores calculados al DTO de persistencia
+        dto.EvaVri = calcResult.Data!.Vri;
+        dto.EvaEtp = calcResult.Data!.Etp;
+        dto.EvaVrr = calcResult.Data!.Vrr;
+
+        // Formar el JSON calculado
+        dto.EvaDataCalcJson = JsonSerializer.Serialize(calcResult.Data);
+
+        long nuevoId = await _repo.CrearEvaluacionAsync(dto, usuarioId, ip);
+        return ServiceResult<long>.Ok(nuevoId, "Evaluación de riesgo creada y calculada exitosamente.");
+    }
+
+    public async Task<ServiceResult> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip)
+    {
+        var version = await _repo.ObtenerVersionFormularioAsync(dto.EvaVersionId);
+        if (version == null)
+        {
+            return ServiceResult.BadRequest($"La versión de formulario ID {dto.EvaVersionId} no existe.");
+        }
+
+        // 1. Validación Dura del JSON
+        var valResult = await _validador.ValidarRespuestasAsync(dto.EvaDataJson, version.VerJson);
+        if (!valResult.Valido)
+        {
+            var errorsList = new List<string>();
+            foreach (var err in valResult.Errores)
+            {
+                errorsList.Add($"Campo '{err.Campo}': {err.Mensaje}");
+            }
+            return ServiceResult.BadRequest("Error de validación de estructura JSON:\n" + string.Join("\n", errorsList));
+        }
+
+        // 2. Ejecutar motor de cálculo
+        var vars = ExtraerVariablesCalculo(dto.EvaDataJson);
+        var calcResult = _calculador.CalcularYValidarRiesgo(vars.frec, vars.imp, vars.prev, vars.det, vars.corr, vars.frecRes, vars.impRes);
+        if (!calcResult.Success)
+        {
+            return ServiceResult.BadRequest(calcResult.Message);
+        }
+
+        dto.EvaVri = calcResult.Data!.Vri;
+        dto.EvaEtp = calcResult.Data!.Etp;
+        dto.EvaVrr = calcResult.Data!.Vrr;
+        dto.EvaDataCalcJson = JsonSerializer.Serialize(calcResult.Data);
+
+        try
+        {
+            bool exito = await _repo.ActualizarEvaluacionAsync(dto, usuarioId, ip);
+            if (!exito)
+            {
+                return ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId} para actualizar.");
+            }
+            return ServiceResult.Ok("Evaluación actualizada y calculada con éxito.");
+        }
+        catch (System.Data.DBConcurrencyException ex)
+        {
+            return new ServiceResult(false, ex.Message, 409);
+        }
+    }
+
+    public async Task<ServiceResult> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip)
+    {
+        var evaluacion = await _repo.ObtenerEvaluacionAsync(evaId);
+        if (evaluacion == null)
+        {
+            return ServiceResult.NotFound($"No se encontró la evaluación ID {evaId}.");
+        }
+
+        // Validar transiciones autorizadas de la Máquina de Estados
+        string actual = evaluacion.EvaEstado.ToUpperInvariant();
+        string nuevo = nuevoEstado.ToUpperInvariant();
+        bool transicionValida = false;
+
+        if (actual == "BORRADOR" && nuevo == "EN_REVISION") transicionValida = true;
+        else if (actual == "EN_REVISION" && (nuevo == "OBSERVADA" || nuevo == "APROBADA" || nuevo == "RECHAZADA")) transicionValida = true;
+        else if (actual == "OBSERVADA" && nuevo == "BORRADOR") transicionValida = true;
+        else if (actual == "APROBADA" && nuevo == "CERRADA") transicionValida = true;
+
+        if (!transicionValida)
+        {
+            return ServiceResult.BadRequest($"Transición de estado inválida: No se permite pasar del estado '{actual}' al estado '{nuevo}' según el flujo de la máquina de estados.");
+        }
+
+        bool exito = await _repo.TransicionarEstadoEvaluacionAsync(evaId, nuevo, motivo, usuarioId, ip);
+        if (!exito)
+        {
+            return ServiceResult.BadRequest("No se pudo realizar la transición de estado.");
+        }
+        return ServiceResult.Ok($"Transición de estado a '{nuevo}' realizada exitosamente.");
+    }
+
+    public async Task<ServiceResult<List<RevisionEvaluacionDto>>> ObtenerRevisionesEvaluacionAsync(long evaId)
+    {
+        var lista = await _repo.ObtenerRevisionesEvaluacionAsync(evaId);
+        return ServiceResult<List<RevisionEvaluacionDto>>.Ok(lista);
+    }
+
+    // ============================================================
+    // 3. ARCHIVO FÍSICO CENTRAL DE EVIDENCIAS Y SUS VINCULACIONES
+    // ============================================================
+
+    public async Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId)
+    {
+        if (archivo == null || archivo.Length == 0)
+        {
+            return ServiceResult<EvidenciaDto>.BadRequest("El archivo cargado está vacío o es nulo.");
+        }
+
+        try
+        {
+            // Generar ruta de almacenamiento físico
+            string uploadsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias");
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
             }
 
-            var ok = await _repo.CambiarEstadoAsync(matrizId, estado, dto.Motivo, usuarioId, usuarioEmail, ip);
-            return ok
-                ? ServiceResult.Ok("Estado de la matriz actualizado correctamente.")
-                : ServiceResult.NotFound("No se encontró la matriz de riesgos.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-    }
+            string ext = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+            string nombreFisico = $"{Guid.NewGuid()}{ext}";
+            string rutaCompleta = Path.Combine(uploadsPath, nombreFisico);
 
-    public async Task<ServiceResult> EliminarMatrizAsync(long matrizId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (matrizId <= 0)
-            return ServiceResult.BadRequest("El identificador de la matriz es obligatorio.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de eliminación de la matriz es obligatorio.");
-
-        try
-        {
-            // La eliminación lógica solo aplica a registros todavía operativos.
-            // Una matriz aprobada, cerrada o inactiva ya forma parte del expediente auditable.
-            var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-            if (matriz == null)
-                return ServiceResult.NotFound("No se encontró la matriz de riesgos.");
-
-            if (matriz.Estado is "APROBADA" or "CERRADA" or "INACTIVA")
-                return ServiceResult.BadRequest("La matriz no puede eliminarse porque ya fue aprobada, cerrada o se encuentra inactiva.");
-
-            var ok = await _repo.EliminarMatrizAsync(matrizId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-            return ok
-                ? ServiceResult.Ok("Matriz eliminada correctamente.")
-                : ServiceResult.NotFound("No se encontró la matriz de riesgos.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult<List<MatrizRiesgoHistorialDto>>> ObtenerHistorialAsync(long matrizId)
-    {
-        if (matrizId <= 0)
-            return ServiceResult<List<MatrizRiesgoHistorialDto>>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var historial = await _repo.ObtenerHistorialAsync(matrizId);
-        return ServiceResult<List<MatrizRiesgoHistorialDto>>.Ok(historial);
-    }
-
-    public async Task<ServiceResult<List<MatrizRiesgoPlanAccionDto>>> ListarPlanesAsync(long matrizId)
-    {
-        if (matrizId <= 0)
-            return ServiceResult<List<MatrizRiesgoPlanAccionDto>>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-        if (matriz == null)
-            return ServiceResult<List<MatrizRiesgoPlanAccionDto>>.NotFound("No se encontró la matriz de riesgos.");
-
-        return ServiceResult<List<MatrizRiesgoPlanAccionDto>>.Ok(await _repo.ListarPlanesAsync(matrizId));
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoPlanAccionDto>> CrearPlanAsync(long matrizId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        var error = ValidarPlan(matrizId, dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoPlanAccionDto>.BadRequest(error);
-
-        try
-        {
-            var planId = await _repo.CrearPlanAsync(matrizId, dto, usuarioId, usuarioEmail, ip);
-            var plan = (await _repo.ListarPlanesAsync(matrizId)).FirstOrDefault(x => x.PlanId == planId);
-            return plan == null
-                ? ServiceResult<MatrizRiesgoPlanAccionDto>.NotFound("El plan fue creado, pero no pudo consultarse.")
-                : ServiceResult<MatrizRiesgoPlanAccionDto>.Ok(plan, "Plan de acción registrado correctamente.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult<MatrizRiesgoPlanAccionDto>.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoPlanAccionDto>> ActualizarPlanAsync(long matrizId, long planId, MatrizRiesgoPlanAccionRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (planId <= 0)
-            return ServiceResult<MatrizRiesgoPlanAccionDto>.BadRequest("El identificador del plan es obligatorio.");
-
-        var error = ValidarPlan(matrizId, dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoPlanAccionDto>.BadRequest(error);
-
-        try
-        {
-            var ok = await _repo.ActualizarPlanAsync(matrizId, planId, dto, usuarioId, usuarioEmail, ip);
-            if (!ok)
-                return ServiceResult<MatrizRiesgoPlanAccionDto>.NotFound("No se encontró el plan de acción activo.");
-
-            var plan = (await _repo.ListarPlanesAsync(matrizId)).FirstOrDefault(x => x.PlanId == planId);
-            return plan == null
-                ? ServiceResult<MatrizRiesgoPlanAccionDto>.NotFound("El plan fue actualizado, pero no pudo consultarse.")
-                : ServiceResult<MatrizRiesgoPlanAccionDto>.Ok(plan, "Plan de acción actualizado correctamente.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult<MatrizRiesgoPlanAccionDto>.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult> CambiarEstadoPlanAsync(long matrizId, long planId, MatrizRiesgoPlanEstadoRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (matrizId <= 0 || planId <= 0)
-            return ServiceResult.BadRequest("La matriz y el plan son obligatorios.");
-
-        var estado = dto?.Estado?.Trim().ToUpperInvariant() ?? string.Empty;
-        if (!EstadosPlanPermitidos.Contains(estado) || estado == "INACTIVO")
-            return ServiceResult.BadRequest("El estado del plan no es válido.");
-
-        if (string.IsNullOrWhiteSpace(dto?.Motivo))
-            return ServiceResult.BadRequest("El motivo del cambio de estado del plan es obligatorio.");
-
-        try
-        {
-            var ok = await _repo.CambiarEstadoPlanAsync(matrizId, planId, estado, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-            return ok ? ServiceResult.Ok("Estado del plan actualizado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult> InactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (matrizId <= 0 || planId <= 0)
-            return ServiceResult.BadRequest("La matriz y el plan son obligatorios.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de desactivación del plan es obligatorio.");
-
-        var ok = await _repo.InactivarPlanAsync(matrizId, planId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-        return ok ? ServiceResult.Ok("Plan de acción desactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción activo.");
-    }
-
-    public async Task<ServiceResult> ReactivarPlanAsync(long matrizId, long planId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (matrizId <= 0 || planId <= 0)
-            return ServiceResult.BadRequest("La matriz y el plan son obligatorios.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de reactivación del plan es obligatorio.");
-
-        try
-        {
-            var ok = await _repo.ReactivarPlanAsync(matrizId, planId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-            return ok ? ServiceResult.Ok("Plan de acción reactivado correctamente.") : ServiceResult.NotFound("No se encontró el plan de acción inactivo.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult<List<MatrizRiesgoEvidenciaDto>>> ListarEvidenciasAsync(long matrizId)
-    {
-        if (matrizId <= 0)
-            return ServiceResult<List<MatrizRiesgoEvidenciaDto>>.BadRequest("El identificador de la matriz es obligatorio.");
-
-        var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-        if (matriz == null)
-            return ServiceResult<List<MatrizRiesgoEvidenciaDto>>.NotFound("No se encontró la matriz de riesgos.");
-
-        return ServiceResult<List<MatrizRiesgoEvidenciaDto>>.Ok(await _repo.ListarEvidenciasAsync(matrizId));
-    }
-
-    public async Task<ServiceResult<MatrizRiesgoEvidenciaDto>> CargarEvidenciaAsync(long matrizId, long? controlId, long? planId, IFormFile? archivo, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        var error = ValidarArchivoEvidencia(matrizId, archivo);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoEvidenciaDto>.BadRequest(error);
-
-        var matriz = await _repo.ObtenerMatrizAsync(matrizId);
-        if (matriz == null)
-            return ServiceResult<MatrizRiesgoEvidenciaDto>.NotFound("No se encontró la matriz de riesgos.");
-
-        var extension = Path.GetExtension(archivo!.FileName).ToLowerInvariant();
-        var nombreFisico = $"{Guid.NewGuid():N}{extension}";
-        var directorio = ObtenerDirectorioEvidenciasMatrices();
-        var rutaFisica = Path.Combine(directorio, nombreFisico);
-        var evidenciaRegistrada = false;
-
-        try
-        {
-            Directory.CreateDirectory(directorio);
-            await using (var stream = new FileStream(rutaFisica, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            // Guardar archivo físico
+            using (var stream = new FileStream(rutaCompleta, FileMode.Create))
             {
                 await archivo.CopyToAsync(stream);
             }
 
-            var registro = new MatrizRiesgoEvidenciaRegistroDto
+            // Calcular Hash SHA-256 del archivo
+            string hash = string.Empty;
+            using (var sha = SHA256.Create())
             {
-                MatrizId = matrizId,
-                ControlId = controlId,
-                PlanId = planId,
-                NombreOriginal = Path.GetFileName(archivo.FileName),
-                NombreFisico = nombreFisico,
-                TipoMime = archivo.ContentType,
-                Extension = extension,
-                TamanoBytes = archivo.Length,
-                RutaFisica = rutaFisica,
-                HashSha256 = await CalcularHashSha256Async(rutaFisica)
+                using var stream = File.OpenRead(rutaCompleta);
+                byte[] hashBytes = await sha.ComputeHashAsync(stream);
+                hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            }
+
+            var dto = new EvidenciaRegistroDto
+            {
+                EviNombreArchivo = archivo.FileName,
+                EviExtension = ext.Replace(".", ""),
+                EviTamano = archivo.Length,
+                EviHash = hash,
+                EviRuta = Path.Combine("App_Data", "Evidencias", nombreFisico),
+                EviUsrCreacion = usuarioId
             };
 
-            var evidenciaId = await _repo.RegistrarEvidenciaAsync(registro, usuarioId, usuarioEmail, ip);
-            evidenciaRegistrada = true;
-            var evidencia = await _repo.ObtenerEvidenciaAsync(matrizId, evidenciaId);
-            return evidencia == null
-                ? ServiceResult<MatrizRiesgoEvidenciaDto>.NotFound("La evidencia fue registrada, pero no pudo consultarse.")
-                : ServiceResult<MatrizRiesgoEvidenciaDto>.Ok(evidencia, "Evidencia registrada correctamente.");
+            long nuevoId = await _repo.RegistrarEvidenciaFisicaAsync(dto, usuarioId);
+            var result = await _repo.ObtenerEvidenciaFisicaAsync(nuevoId);
+            
+            return ServiceResult<EvidenciaDto>.Ok(result!, "Archivo físico cargado y registrado de forma exitosa.");
         }
-        catch
+        catch (Exception ex)
         {
-            if (!evidenciaRegistrada)
-                EliminarArchivoSilenciosamente(rutaFisica);
-            throw;
+            return new ServiceResult<EvidenciaDto>(false, null, $"Error físico de carga de archivo: {ex.Message}", 500);
         }
     }
 
-    public async Task<ServiceResult<MatrizRiesgoEvidenciaDescargaDto>> DescargarEvidenciaAsync(long matrizId, long evidenciaId, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult<EvidenciaDto>> ObtenerEvidenciaFisicaAsync(long evidenciaId)
     {
-        var evidencia = await _repo.ObtenerEvidenciaAsync(matrizId, evidenciaId);
-        if (evidencia == null || !evidencia.Activa)
-            return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.NotFound("No se encontró la evidencia activa.");
-
-        var rutaSegura = ObtenerRutaEvidenciaSegura(evidencia.RutaFisica);
-        if (rutaSegura == null || !File.Exists(rutaSegura))
-            return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.NotFound("El archivo físico no existe en el almacenamiento protegido.");
-
-        var contenido = await File.ReadAllBytesAsync(rutaSegura);
-        await _repo.RegistrarDescargaEvidenciaAsync(matrizId, evidenciaId, usuarioId, usuarioEmail, ip);
-
-        return ServiceResult<MatrizRiesgoEvidenciaDescargaDto>.Ok(new MatrizRiesgoEvidenciaDescargaDto
+        var evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);
+        if (evidencia == null)
         {
-            NombreArchivo = evidencia.NombreOriginal,
-            ContentType = string.IsNullOrWhiteSpace(evidencia.TipoMime) ? "application/octet-stream" : evidencia.TipoMime,
-            Contenido = contenido
-        });
+            return ServiceResult<EvidenciaDto>.NotFound($"No se encontró el registro de evidencia con ID {evidenciaId}.");
+        }
+        return ServiceResult<EvidenciaDto>.Ok(evidencia);
     }
 
-    public async Task<ServiceResult> InactivarEvidenciaAsync(long matrizId, long evidenciaId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip)
     {
-        if (matrizId <= 0 || evidenciaId <= 0)
-            return ServiceResult.BadRequest("La matriz y la evidencia son obligatorias.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de eliminación lógica de la evidencia es obligatorio.");
-
-        var ok = await _repo.InactivarEvidenciaAsync(matrizId, evidenciaId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-        return ok ? ServiceResult.Ok("Evidencia eliminada correctamente.") : ServiceResult.NotFound("No se encontró la evidencia activa.");
+        bool exito = await _repo.VincularEvidenciaRiesgoAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
     }
 
-    public async Task<ServiceResult<List<MatrizRiesgoCriterioDto>>> ListarCriteriosAsync(bool incluirInactivos)
+    public async Task<ServiceResult> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip)
     {
-        var criterios = await _repo.ListarCriteriosAsync(incluirInactivos);
-        return ServiceResult<List<MatrizRiesgoCriterioDto>>.Ok(criterios);
+        bool exito = await _repo.VincularEvidenciaEvaluacionAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
     }
 
-    public async Task<ServiceResult<MatrizRiesgoCriterioDto>> CrearCriterioAsync(MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
+    public async Task<ServiceResult> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip)
     {
-        var error = ValidarCriterio(dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoCriterioDto>.BadRequest(error);
+        bool exito = await _repo.VincularEvidenciaControlAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaPlanAsync(AsociarEvidenciaPlanDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaPlanAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaActividadAsync(AsociarEvidenciaActividadDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaActividadAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaAlertaAsync(AsociarEvidenciaAlertaDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaAlertaAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaAutomonitoreoAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaRevisionAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    public async Task<ServiceResult> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip)
+    {
+        bool exito = await _repo.VincularEvidenciaAprobacionAsync(dto, usuarioId, ip);
+        return ResponderVinculo(exito);
+    }
+
+    private static ServiceResult ResponderVinculo(bool exito)
+    {
+        if (exito) return ServiceResult.Ok("Evidencia vinculada exitosamente de forma relacional.");
+        return ServiceResult.BadRequest("No se pudo realizar la vinculación relacional de la evidencia.");
+    }
+
+    // ============================================================
+    // 4. REPORTES CONSOLIDADOS
+    // ============================================================
+
+    public async Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerConsolidadoMatricesAsync()
+    {
+        var consolidado = await _repo.ObtenerConsolidadoMatricesAsync();
+        return ServiceResult<List<Dictionary<string, object>>>.Ok(consolidado);
+    }
+
+    // ============================================================
+    // AUXILIARES
+    // ============================================================
+
+    private static string CalcularHashSha256(string texto)
+    {
+        using var sha = SHA256.Create();
+        byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(texto));
+        return BitConverter.ToString(bytes).Replace("-", "").ToLower();
+    }
+
+    private static (int frec, int imp, decimal prev, decimal det, decimal corr, int frecRes, int impRes) ExtraerVariablesCalculo(string jsonRespuestas)
+    {
+        int frec = 0, imp = 0, frecRes = 0, impRes = 0;
+        decimal prev = 0, det = 0, corr = 0;
 
         try
         {
-            var criterioId = await _repo.CrearCriterioAsync(dto, usuarioId, usuarioEmail, ip);
-            var criterio = (await _repo.ListarCriteriosAsync(true)).FirstOrDefault(x => x.CriterioId == criterioId);
-            return criterio == null
-                ? ServiceResult<MatrizRiesgoCriterioDto>.NotFound("El criterio fue creado, pero no pudo consultarse.")
-                : ServiceResult<MatrizRiesgoCriterioDto>.Ok(criterio, "Criterio registrado correctamente.");
+            using var doc = JsonDocument.Parse(jsonRespuestas);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("frecuencia_inherente", out var fProp) && fProp.ValueKind == JsonValueKind.Number) frec = fProp.GetInt32();
+            else if (root.TryGetProperty("frecuencia_inherente", out var fPropStr) && fPropStr.ValueKind == JsonValueKind.String && int.TryParse(fPropStr.GetString(), out var fVal)) frec = fVal;
+
+            if (root.TryGetProperty("impacto_inherente", out var iProp) && iProp.ValueKind == JsonValueKind.Number) imp = iProp.GetInt32();
+            else if (root.TryGetProperty("impacto_inherente", out var iPropStr) && iPropStr.ValueKind == JsonValueKind.String && int.TryParse(iPropStr.GetString(), out var iVal)) imp = iVal;
+
+            if (root.TryGetProperty("controles_preventivo", out var cpProp) && cpProp.ValueKind == JsonValueKind.Number) prev = cpProp.GetDecimal();
+            else if (root.TryGetProperty("controles_preventivo", out var cpPropStr) && cpPropStr.ValueKind == JsonValueKind.String && decimal.TryParse(cpPropStr.GetString(), out var cpVal)) prev = cpVal;
+
+            if (root.TryGetProperty("controles_detectivo", out var cdProp) && cdProp.ValueKind == JsonValueKind.Number) det = cdProp.GetDecimal();
+            else if (root.TryGetProperty("controles_detectivo", out var cdPropStr) && cdPropStr.ValueKind == JsonValueKind.String && decimal.TryParse(cdPropStr.GetString(), out var cdVal)) det = cdVal;
+
+            if (root.TryGetProperty("controles_correctivo", out var ccProp) && ccProp.ValueKind == JsonValueKind.Number) corr = ccProp.GetDecimal();
+            else if (root.TryGetProperty("controles_correctivo", out var ccPropStr) && ccPropStr.ValueKind == JsonValueKind.String && decimal.TryParse(ccPropStr.GetString(), out var ccVal)) corr = ccVal;
+
+            if (root.TryGetProperty("frecuencia_residual", out var frProp) && frProp.ValueKind == JsonValueKind.Number) frecRes = frProp.GetInt32();
+            else if (root.TryGetProperty("frecuencia_residual", out var frPropStr) && frPropStr.ValueKind == JsonValueKind.String && int.TryParse(frPropStr.GetString(), out var frVal)) frecRes = frVal;
+
+            if (root.TryGetProperty("impacto_residual", out var irProp) && irProp.ValueKind == JsonValueKind.Number) impRes = irProp.GetInt32();
+            else if (root.TryGetProperty("impacto_residual", out var irPropStr) && irPropStr.ValueKind == JsonValueKind.String && int.TryParse(irPropStr.GetString(), out var irVal)) impRes = irVal;
         }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult<MatrizRiesgoCriterioDto>.BadRequest(ex.Message);
-        }
-    }
+        catch { }
 
-    public async Task<ServiceResult<MatrizRiesgoCriterioDto>> ActualizarCriterioAsync(long criterioId, MatrizRiesgoCriterioRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (criterioId <= 0)
-            return ServiceResult<MatrizRiesgoCriterioDto>.BadRequest("El identificador del criterio es obligatorio.");
-
-        var error = ValidarCriterio(dto);
-        if (error != null)
-            return ServiceResult<MatrizRiesgoCriterioDto>.BadRequest(error);
-
-        try
-        {
-            var ok = await _repo.ActualizarCriterioAsync(criterioId, dto, usuarioId, usuarioEmail, ip);
-            if (!ok)
-                return ServiceResult<MatrizRiesgoCriterioDto>.NotFound("No se encontró el criterio activo.");
-
-            var criterio = (await _repo.ListarCriteriosAsync(true)).FirstOrDefault(x => x.CriterioId == criterioId);
-            return criterio == null
-                ? ServiceResult<MatrizRiesgoCriterioDto>.NotFound("El criterio fue actualizado, pero no pudo consultarse.")
-                : ServiceResult<MatrizRiesgoCriterioDto>.Ok(criterio, "Criterio actualizado correctamente.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult<MatrizRiesgoCriterioDto>.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult> InactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (criterioId <= 0)
-            return ServiceResult.BadRequest("El identificador del criterio es obligatorio.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de desactivación del criterio es obligatorio.");
-
-        var ok = await _repo.InactivarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-        return ok
-            ? ServiceResult.Ok("Criterio desactivado correctamente.")
-            : ServiceResult.NotFound("No se encontró el criterio activo.");
-    }
-
-
-    public async Task<ServiceResult> ReactivarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (criterioId <= 0)
-            return ServiceResult.BadRequest("El identificador del criterio es obligatorio.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de reactivación del criterio es obligatorio.");
-
-        try
-        {
-            var ok = await _repo.ReactivarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-            return ok
-                ? ServiceResult.Ok("Criterio activado correctamente.")
-                : ServiceResult.NotFound("No se encontró el criterio inactivo.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-    }
-
-    public async Task<ServiceResult> EliminarCriterioAsync(long criterioId, MatrizRiesgoInactivarRequestDto dto, long usuarioId, string? usuarioEmail, string? ip)
-    {
-        if (criterioId <= 0)
-            return ServiceResult.BadRequest("El identificador del criterio es obligatorio.");
-
-        if (dto == null || string.IsNullOrWhiteSpace(dto.Motivo))
-            return ServiceResult.BadRequest("El motivo de eliminación del criterio es obligatorio.");
-
-        try
-        {
-            if (await _repo.CriterioTieneUsoHistoricoAsync(criterioId))
-                return ServiceResult.BadRequest("El criterio está relacionado con evaluaciones históricas y no puede eliminarse físicamente. Desactívelo para conservar la trazabilidad.");
-
-            var ok = await _repo.EliminarCriterioAsync(criterioId, dto.Motivo.Trim(), usuarioId, usuarioEmail, ip);
-            return ok
-                ? ServiceResult.Ok("Criterio eliminado correctamente.")
-                : ServiceResult.NotFound("No se encontró el criterio.");
-        }
-        catch (InvalidOperationException ex)
-        {
-            return ServiceResult.BadRequest(ex.Message);
-        }
-        catch (Oracle.ManagedDataAccess.Client.OracleException ex) when (ex.Number == 2292)
-        {
-            return ServiceResult.BadRequest("El criterio ya está relacionado con información histórica y no puede eliminarse físicamente. Puede desactivarlo para conservar la trazabilidad.");
-        }
-    }
-
-    private static string? ValidarPlan(long matrizId, MatrizRiesgoPlanAccionRequestDto dto)
-    {
-        if (matrizId <= 0)
-            return "El identificador de la matriz es obligatorio.";
-
-        if (dto == null)
-            return "La solicitud del plan de acción es obligatoria.";
-
-        dto.Actividad = dto.Actividad?.Trim() ?? string.Empty;
-        dto.Responsable = dto.Responsable?.Trim() ?? string.Empty;
-        dto.Periodicidad = dto.Periodicidad?.Trim();
-        dto.MedioPrueba = dto.MedioPrueba?.Trim();
-        dto.Observaciones = dto.Observaciones?.Trim();
-
-        if (string.IsNullOrWhiteSpace(dto.Actividad))
-            return "La actividad del plan de acción es obligatoria.";
-
-        if (string.IsNullOrWhiteSpace(dto.Responsable))
-            return "El responsable del plan de acción es obligatorio.";
-
-        if (dto.Actividad.Length > 1500)
-            return "La actividad del plan no debe superar los 1500 caracteres.";
-
-        if (dto.Responsable.Length > 300)
-            return "El responsable del plan no debe superar los 300 caracteres.";
-
-        if (dto.Periodicidad?.Length > 80 || dto.MedioPrueba?.Length > 300 || dto.Observaciones?.Length > 1500)
-            return "La periodicidad, el medio de prueba o las observaciones superan la longitud permitida.";
-
-        if (dto.FechaInicio.HasValue && dto.FechaInicio.Value.Date < DateTime.Today)
-            return "La fecha de inicio no puede ser menor a la fecha actual.";
-
-        if (dto.FechaFin.HasValue && dto.FechaFin.Value.Date < DateTime.Today)
-            return "La fecha final no puede ser menor a la fecha actual.";
-
-        if (dto.FechaInicio.HasValue && dto.FechaFin.HasValue && dto.FechaFin.Value.Date < dto.FechaInicio.Value.Date)
-            return "La fecha de finalización no puede ser menor que la fecha de inicio.";
-
-        return null;
-    }
-
-    private string? ValidarArchivoEvidencia(long matrizId, IFormFile? archivo)
-    {
-        if (matrizId <= 0)
-            return "El identificador de la matriz es obligatorio.";
-
-        if (archivo == null || archivo.Length == 0)
-            return "El archivo de evidencia es obligatorio.";
-
-        var maxMb = _configuration?.GetValue<int?>("Evidencias:MaxFileSizeMb") ?? 10;
-        if (maxMb <= 0)
-            maxMb = 10;
-        var maxBytes = maxMb * 1024L * 1024L;
-        if (archivo.Length > maxBytes)
-            return $"El archivo supera el tamaño máximo permitido de {maxMb} MB.";
-
-        var nombreOriginal = Path.GetFileName(archivo.FileName);
-        if (string.IsNullOrWhiteSpace(nombreOriginal) || nombreOriginal.Length > 255 || nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-            return "El nombre del archivo de evidencia no es válido.";
-
-        var extension = Path.GetExtension(nombreOriginal).ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(extension) || !ExtensionesEvidenciaPermitidas.Contains(extension))
-            return "La extensión del archivo no está permitida para evidencias.";
-
-        var tiposPermitidos = _configuration?
-            .GetSection($"Evidencias:AllowedMimeTypes:{extension.ToLowerInvariant()}")
-            .Get<string[]>();
-
-        if (tiposPermitidos is not { Length: > 0 })
-            tiposPermitidos = MimeTypesEvidenciaPermitidos[extension];
-
-        if (string.IsNullOrWhiteSpace(archivo.ContentType) || !tiposPermitidos.Contains(archivo.ContentType.Trim(), StringComparer.OrdinalIgnoreCase))
-            return "El tipo MIME del archivo no coincide con la extensión permitida.";
-
-        if ((_configuration?.GetValue<bool?>("Evidencias:ValidateFileSignature") ?? true) && !TieneFirmaEvidenciaPermitida(archivo, extension))
-            return "El contenido del archivo no coincide con la firma real de su extensión.";
-
-        return null;
-    }
-
-    private string ObtenerDirectorioEvidenciasMatrices()
-    {
-        var rutaEspecifica = _configuration?["MatricesRiesgos:Evidencias:StoragePath"];
-        if (!string.IsNullOrWhiteSpace(rutaEspecifica))
-            return ResolverRutaAlmacenamiento(rutaEspecifica);
-
-        var rutaBase = _configuration?["Evidencias:StoragePath"] ?? "App_Data/Evidencias";
-        return ResolverRutaAlmacenamiento(Path.Combine(rutaBase, "MatricesRiesgos"));
-    }
-
-    private string ResolverRutaAlmacenamiento(string ruta)
-    {
-        if (Path.IsPathRooted(ruta))
-            return Path.GetFullPath(ruta);
-        var raiz = _environment?.ContentRootPath ?? AppContext.BaseDirectory;
-        return Path.GetFullPath(Path.Combine(raiz, ruta));
-    }
-
-    private string? ObtenerRutaEvidenciaSegura(string rutaRegistrada)
-    {
-        if (string.IsNullOrWhiteSpace(rutaRegistrada))
-            return null;
-
-        try
-        {
-            var directorio = Path.GetFullPath(ObtenerDirectorioEvidenciasMatrices());
-            var candidata = Path.GetFullPath(rutaRegistrada);
-            var prefijo = directorio.EndsWith(Path.DirectorySeparatorChar) ? directorio : directorio + Path.DirectorySeparatorChar;
-            return candidata.StartsWith(prefijo, StringComparison.OrdinalIgnoreCase) ? candidata : null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static bool TieneFirmaEvidenciaPermitida(IFormFile archivo, string extension)
-    {
-        if (!FirmasEvidenciaPermitidas.TryGetValue(extension, out var firmas))
-            return false;
-
-        Span<byte> buffer = stackalloc byte[8];
-        using var stream = archivo.OpenReadStream();
-        var leidos = stream.Read(buffer);
-        foreach (var firma in firmas)
-        {
-            if (leidos >= firma.Length && buffer[..firma.Length].SequenceEqual(firma))
-                return true;
-        }
-
-        return false;
-    }
-
-    private static void EliminarArchivoSilenciosamente(string rutaFisica)
-    {
-        try
-        {
-            if (File.Exists(rutaFisica))
-                File.Delete(rutaFisica);
-        }
-        catch
-        {
-            // La excepción original conserva prioridad; el archivo queda sujeto a limpieza operativa.
-        }
-    }
-
-    private static async Task<string> CalcularHashSha256Async(string rutaFisica)
-    {
-        await using var stream = File.OpenRead(rutaFisica);
-        var hash = await SHA256.HashDataAsync(stream);
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    private static string? ValidarCreacion(MatrizRiesgoCrearRequestDto dto)
-    {
-        if (dto == null)
-            return "La solicitud de creación de matriz es obligatoria.";
-
-        dto.SujetoTipo = dto.SujetoTipo?.Trim().ToUpperInvariant() ?? string.Empty;
-        dto.NombreSujeto = dto.NombreSujeto?.Trim() ?? string.Empty;
-        dto.OrigenDatos = string.IsNullOrWhiteSpace(dto.OrigenDatos) ? "CAPTURA" : dto.OrigenDatos.Trim().ToUpperInvariant();
-
-        if (!SujetosPermitidos.Contains(dto.SujetoTipo))
-            return "El tipo de sujeto evaluado no es válido.";
-
-        if (string.IsNullOrWhiteSpace(dto.NombreSujeto))
-            return "El nombre del sujeto evaluado es obligatorio.";
-
-        if (dto.Detalles == null || dto.Detalles.Count == 0)
-            return "Debe registrar al menos un detalle de variable para evaluar la matriz.";
-
-        dto.Controles ??= new List<MatrizRiesgoControlRequestDto>();
-
-        foreach (var detalle in dto.Detalles)
-        {
-            if (detalle.VariableId <= 0)
-                return "Cada detalle debe indicar una variable válida.";
-
-            if (detalle.Puntaje < 0)
-                return "El puntaje de una variable no puede ser negativo.";
-        }
-
-        if (dto.Controles != null)
-        {
-            foreach (var control in dto.Controles)
-            {
-                if (string.IsNullOrWhiteSpace(control.Nombre))
-                    return "Cada control debe tener nombre.";
-
-                control.Nombre = control.Nombre.Trim();
-                control.Descripcion = control.Descripcion?.Trim();
-                control.Responsable = control.Responsable?.Trim();
-
-                if (control.Descripcion?.Length > 1500)
-                    return "La descripción del control no debe superar los 1500 caracteres.";
-
-                if (control.Responsable?.Length > 300)
-                    return "El responsable del control no debe superar los 300 caracteres.";
-
-                if (control.EfectividadPct < 0 || control.EfectividadPct > 100)
-                    return "La efectividad del control debe estar entre 0% y 100%.";
-            }
-        }
-
-        return null;
-    }
-
-    private static string? NormalizarFiltroReporte(MatrizRiesgoReporteFiltroDto filtro)
-    {
-        if (filtro == null)
-            return null;
-
-        filtro.Buscar = filtro.Buscar?.Trim();
-        filtro.Estado = filtro.Estado?.Trim().ToUpperInvariant();
-        filtro.SujetoTipo = filtro.SujetoTipo?.Trim().ToUpperInvariant();
-        filtro.NivelInherente = filtro.NivelInherente?.Trim();
-        filtro.NivelResidual = filtro.NivelResidual?.Trim();
-        filtro.ModeloVersion = filtro.ModeloVersion?.Trim();
-        filtro.Responsable = filtro.Responsable?.Trim();
-
-        var fechaMinima = new DateTime(2000, 1, 1);
-        if (filtro.FechaInicio.HasValue && filtro.FechaInicio.Value.Date < fechaMinima)
-            return "La fecha de inicio del reporte no puede ser menor al 01/01/2000.";
-
-        if (filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date < fechaMinima)
-            return "La fecha final del reporte no puede ser menor al 01/01/2000.";
-
-        if (filtro.FechaInicio.HasValue && filtro.FechaInicio.Value.Date > DateTime.Today)
-            return "La fecha de inicio del reporte no puede ser mayor a la fecha actual.";
-
-        if (filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date > DateTime.Today)
-            return "La fecha final del reporte no puede ser mayor a la fecha actual.";
-
-        if (filtro.FechaInicio.HasValue && filtro.FechaFin.HasValue && filtro.FechaFin.Value.Date < filtro.FechaInicio.Value.Date)
-            return "La fecha final del reporte no puede ser menor que la fecha de inicio.";
-
-        return null;
-    }
-
-    private static MatrizRiesgoExportacionDto ConstruirExcelReporte(MatricesRiesgoReporteDto reporte) =>
-        MatricesRiesgosReportRenderer.ConstruirExcel(reporte);
-
-    private static MatrizRiesgoExportacionDto ConstruirPdfReporte(MatricesRiesgoReporteDto reporte) =>
-        MatricesRiesgosReportRenderer.ConstruirPdfEjecutivo(reporte);
-
-    private static string? ValidarCriterio(MatrizRiesgoCriterioRequestDto dto)
-    {
-        if (dto == null)
-            return "La solicitud del criterio es obligatoria.";
-
-        if (dto.VariableId <= 0)
-            return "La variable asociada al criterio es obligatoria.";
-
-        if (dto.EscalaId.HasValue && dto.EscalaId.Value <= 0)
-            return "La escala asociada al criterio no es válida.";
-
-        if (string.IsNullOrWhiteSpace(dto.Descripcion))
-            return "La descripción del criterio es obligatoria.";
-
-        if (dto.Descripcion.Trim().Length > 1500)
-            return "La descripción del criterio no puede superar 1500 caracteres.";
-
-        if (dto.Puntaje < 0)
-            return "El puntaje del criterio no puede ser negativo.";
-
-        if (dto.ValorDesde.HasValue && dto.ValorHasta.HasValue && dto.ValorDesde.Value > dto.ValorHasta.Value)
-            return "El valor inicial del rango no puede ser mayor que el valor final.";
-
-        dto.Descripcion = dto.Descripcion.Trim();
-        return null;
+        return (frec, imp, prev, det, corr, frecRes, impRes);
     }
 }

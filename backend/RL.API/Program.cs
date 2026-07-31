@@ -135,6 +135,7 @@ builder.Services.AddScoped<IListasService, ListasService>();
 builder.Services.AddScoped<IEvidenciasService, EvidenciasService>();
 builder.Services.AddScoped<ICoincidenciasService, CoincidenciasService>();
 builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
+builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
 builder.Services.AddScoped<IMatricesRiesgosAppService, MatricesRiesgosAppService>();
 
 // Proceso de contexto: permite obtener IP, usuario y datos de solicitud para auditoría.

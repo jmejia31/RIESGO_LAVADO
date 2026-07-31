@@ -109,3 +109,13 @@ public sealed class MatrizRiesgoHistorialDto
     public string? Ip { get; set; }
     public DateTime Fecha { get; set; }
 }
+
+public sealed class MatrizRiesgoEvidenciaDto
+{
+    public long EvidenciaId { get; set; }
+    public string NombreArchivo { get; set; } = string.Empty;
+    public string Extension { get; set; } = string.Empty;
+    public long Tamano { get; set; }
+    public string Hash { get; set; } = string.Empty;
+    public string Ruta { get; set; } = string.Empty;
+}
