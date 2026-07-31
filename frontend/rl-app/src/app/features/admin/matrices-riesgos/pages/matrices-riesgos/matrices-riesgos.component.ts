@@ -33,7 +33,7 @@ import {
   transicionesPermitidasMatriz
 } from '../../domain/matrices-riesgos-estados.policy';
 
-type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes';
+type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes' | 'plantillas';
 type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'reactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
 
 interface CapturaVariable {
@@ -165,6 +165,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly matrizEditandoId = signal<number | null>(null);
   readonly matricesDuplicadas = signal<MatrizRiesgoResumen[]>([]);
   readonly buscandoDuplicados = signal(false);
+  
+  // --- SIGNALS DE ADMINISTRACIÓN DE PLANTILLAS (HITO 7.4) ---
+  readonly versionesFormulario = signal<VersionFormularioDto[]>([]);
+  readonly cargandoVersiones = signal(false);
+  readonly versionEditarJson = signal<VersionFormularioDto | null>(null);
+  readonly editorJsonContenido = signal('');
 
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal('');
@@ -497,6 +503,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.cerrarVistaPreviaEvidencia();
+  }
+
+  seleccionarTab(tabName: TabMatrices): void {
+    this.tab.set(tabName);
+    this.error.set(null);
+    this.mensaje.set(null);
+    if (tabName === 'plantillas') {
+      this.cargarHistorialVersiones();
+    }
   }
 
   actualizarModulo(): void {
@@ -1802,6 +1817,113 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
+  // --- GESTIÓN DE PLANTILLAS Y CICLO DE VIDA (HITO 7.4) ---
+  cargarHistorialVersiones(familiaCodigo: string = 'MATRIZ_RIESGOS_LAFT'): void {
+    this.cargandoVersiones.set(true);
+    this.error.set(null);
+    this.service.listarHistorialVersionesFormulario(familiaCodigo).subscribe({
+      next: (datos) => {
+        this.versionesFormulario.set(datos);
+        this.cargandoVersiones.set(false);
+      },
+      error: (err: unknown) => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el historial de versiones del formulario.'));
+        this.cargandoVersiones.set(false);
+      }
+    });
+  }
+
+  clonarVersion(id: number): void {
+    this.guardando.set(true);
+    this.error.set(null);
+    this.service.clonarVersionFormulario(id).subscribe({
+      next: (nuevaVersion) => {
+        this.mensaje.set(`Se clonó con éxito la versión. Nuevo Borrador creado ID: ${nuevaVersion.datos}`);
+        this.cargarHistorialVersiones();
+        this.guardando.set(false);
+      },
+      error: (err: unknown) => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo clonar la versión seleccionada.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  publicarVersion(id: number): void {
+    this.guardando.set(true);
+    this.error.set(null);
+    this.service.publicarVersionFormulario(id).subscribe({
+      next: (versionPublicada) => {
+        this.cargarHistorialVersiones();
+        this.cargarTodo(); // Recarga formulario vigente transversal
+        this.mensaje.set(`Versión publicada exitosamente. Hash generado: ${versionPublicada.datos?.substring(0, 10)}...`);
+        this.guardando.set(false);
+      },
+      error: (err: unknown) => {
+        this.error.set(this.obtenerMensajeError(err, 'Fallo al publicar la versión de formulario.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  cambiarVigenciaVersion(id: number, vigente: boolean): void {
+    this.guardando.set(true);
+    this.error.set(null);
+    this.service.cambiarEstadoVigenciaFormulario(id, vigente).subscribe({
+      next: () => {
+        this.cargarHistorialVersiones();
+        this.cargarTodo();
+        this.mensaje.set(`Vigencia actualizada correctamente.`);
+        this.guardando.set(false);
+      },
+      error: (err: unknown) => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo cambiar la vigencia de la versión.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
+  abrirEditorJson(version: VersionFormularioDto): void {
+    this.versionEditarJson.set(version);
+    this.editorJsonContenido.set(version.verJson ? JSON.stringify(JSON.parse(version.verJson), null, 2) : '{}');
+    this.error.set(null);
+  }
+
+  cancelarEditorJson(): void {
+    this.versionEditarJson.set(null);
+    this.editorJsonContenido.set('');
+  }
+
+  guardarJsonVersion(): void {
+    const version = this.versionEditarJson();
+    if (!version) return;
+
+    this.error.set(null);
+    let jsonString = '';
+    try {
+      // Validar sintaxis JSON en el cliente antes de guardar
+      const parsed = JSON.parse(this.editorJsonContenido());
+      jsonString = JSON.stringify(parsed);
+    } catch (e) {
+      this.error.set('Sintaxis JSON inválida. Revise las llaves y comillas antes de guardar.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.actualizarBorradorFormulario(version.verId, jsonString).subscribe({
+      next: () => {
+        this.mensaje.set('Esquema JSON del borrador guardado correctamente.');
+        this.cargarHistorialVersiones();
+        this.cancelarEditorJson();
+        this.guardando.set(false);
+      },
+      error: (err: unknown) => {
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el esquema del borrador.'));
+        this.guardando.set(false);
+      }
+    });
+  }
+
   private ejecutarInactivacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
     this.guardando.set(true);
     this.service.inactivarCriterio(criterio.criterioId, motivo).subscribe({
@@ -2123,13 +2245,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return `${anio}-${mes}-${dia}`;
   }
 
-  private formatearFecha(valor: string | Date | null | undefined): string {
+  formatearFecha(valor: string | Date | null | undefined): string {
     if (!valor) return '';
     const fecha = new Date(valor);
     return Number.isNaN(fecha.getTime()) ? `${valor}` : fecha.toLocaleDateString('es-HN');
   }
 
-  private formatearFechaHora(valor: string | Date | null | undefined): string {
+  formatearFechaHora(valor: string | Date | null | undefined): string {
     if (!valor) return '';
     const fecha = new Date(valor);
     return Number.isNaN(fecha.getTime()) ? `${valor}` : fecha.toLocaleString('es-HN');

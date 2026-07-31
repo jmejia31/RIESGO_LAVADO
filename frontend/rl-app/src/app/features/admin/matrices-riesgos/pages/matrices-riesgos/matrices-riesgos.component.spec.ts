@@ -13,6 +13,11 @@ describe('MatricesRiesgosComponent', () => {
     service = {
       metodologiaVigente: vi.fn(() => of({ variables: [], escalasCatalogo: [], escalasRiesgo: [] })),
       obtenerVersionVigenteFormulario: vi.fn(() => of({ verId: 1, verCodigo: 'FORM_A' })),
+      listarHistorialVersionesFormulario: vi.fn(() => of([])),
+      clonarVersionFormulario: vi.fn(() => of({ verId: 2, verCodigo: 'FORM_A_CLON' })),
+      publicarVersionFormulario: vi.fn(() => of({ verId: 1, verHash: 'ABC123XYZ' })),
+      cambiarEstadoVigenciaFormulario: vi.fn(() => of({ success: true })),
+      actualizarBorradorFormulario: vi.fn(() => of({ success: true })),
       cargarArchivoEvidenciaFase7: vi.fn(() => of({ eviId: 50 })),
       vincularEvidenciaEvaluacion: vi.fn(() => of({ success: true })),
       eliminarEvidenciaHuerfana: vi.fn(() => of({ success: true })),
@@ -975,6 +980,79 @@ describe('MatricesRiesgosComponent', () => {
     expect(service['vincularEvidenciaEvaluacion']).toHaveBeenCalled();
     expect(service['eliminarEvidenciaHuerfana']).toHaveBeenCalledWith(50);
     expect(component.error()).toContain('Fallo al vincular la evidencia. Se compensó eliminando el archivo huérfano');
+  });
+
+  // --- PRUEBAS HITO 7.4: CICLO DE VIDA DE VERSIONES ---
+
+  it('carga el historial de versiones al seleccionar la pestaña plantillas', () => {
+    const mockVersiones = [
+      { verId: 1, verCodigo: 'FORM_A', verVersion: 1, verEstado: 'PUBLISHED', verVigente: true, verUsrCreacion: 1 }
+    ];
+    service['listarHistorialVersionesFormulario'].mockReturnValue(of(mockVersiones));
+
+    component.seleccionarTab('plantillas');
+
+    expect(component.tab()).toBe('plantillas');
+    expect(service['listarHistorialVersionesFormulario']).toHaveBeenCalledWith('MATRIZ_RIESGOS_LAFT');
+    expect(component.versionesFormulario()).toEqual(mockVersiones);
+  });
+
+  it('clona una version publicada con exito y recarga el historial', () => {
+    service['clonarVersionFormulario'].mockReturnValue(of({ datos: 2 }));
+    
+    component.clonarVersion(1);
+
+    expect(service['clonarVersionFormulario']).toHaveBeenCalledWith(1);
+    expect(component.mensaje()).toContain('Se clonó con éxito la versión. Nuevo Borrador creado ID: 2');
+    expect(service['listarHistorialVersionesFormulario']).toHaveBeenCalled();
+  });
+
+  it('publica una version borrador con exito y recarga la metodologia', () => {
+    service['publicarVersionFormulario'].mockReturnValue(of({ datos: 'ABC123XYZ' }));
+    
+    component.publicarVersion(1);
+
+    expect(service['publicarVersionFormulario']).toHaveBeenCalledWith(1);
+    expect(component.mensaje()).toContain('Versión publicada exitosamente. Hash generado: ABC123XYZ...');
+    expect(service['metodologiaVigente']).toHaveBeenCalled();
+  });
+
+  it('cambia la vigencia de una version publicada', () => {
+    service['cambiarEstadoVigenciaFormulario'].mockReturnValue(of({ success: true }));
+
+    component.cambiarVigenciaVersion(1, false);
+
+    expect(service['cambiarEstadoVigenciaFormulario']).toHaveBeenCalledWith(1, false);
+    expect(component.mensaje()).toBe('Vigencia actualizada correctamente.');
+  });
+
+  it('valida la sintaxis del esquema JSON en el cliente antes de guardar', () => {
+    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1 } as any;
+    component.abrirEditorJson(mockVersion);
+    
+    // Asignar JSON mal formado (falta cerrar llave)
+    component.editorJsonContenido.set('{ "secciones": [ }');
+
+    component.guardarJsonVersion();
+
+    expect(component.error()).toBe('Sintaxis JSON inválida. Revise las llaves y comillas antes de guardar.');
+    expect(service['actualizarBorradorFormulario']).not.toHaveBeenCalled();
+  });
+
+  it('guarda exitosamente el JSON del borrador cuando es valido', () => {
+    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1 } as any;
+    component.abrirEditorJson(mockVersion);
+    
+    // JSON válido
+    component.editorJsonContenido.set('{ "secciones": [] }');
+
+    service['actualizarBorradorFormulario'].mockReturnValue(of({ success: true }));
+
+    component.guardarJsonVersion();
+
+    expect(service['actualizarBorradorFormulario']).toHaveBeenCalledWith(1, '{"secciones":[]}');
+    expect(component.mensaje()).toBe('Esquema JSON del borrador guardado correctamente.');
+    expect(component.versionEditarJson()).toBeNull();
   });
 });
 
