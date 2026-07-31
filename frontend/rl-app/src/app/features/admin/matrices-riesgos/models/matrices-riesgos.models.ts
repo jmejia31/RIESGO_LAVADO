@@ -326,3 +326,128 @@ export interface MatrizRiesgoEvidencia {
   motivoInactivo?: string | null;
   fechaCreacion: string;
 }
+
+// ============================================================
+// 3. NUEVOS MODELOS FASE 7 (ALINEADOS CON EL BACKEND DE C#)
+// ============================================================
+
+export interface VersionFormularioDto {
+  verId: number;
+  verFamiliaId: number;
+  verCodigo: string;
+  verVersion: number;
+  verJson: string; // JSON String
+  verHash: string;
+  verEstado: 'DRAFT' | 'PUBLISHED';
+  verVigente: boolean;
+  verFechaInicio?: string | null;
+  verFechaFin?: string | null;
+  verFechaCreacion: string;
+  verUsrCreacion: number;
+}
+
+export interface EvaluacionRiesgoDto {
+  evaId: number;
+  evaRiesgoId: number;
+  evaVersionId: number;
+  evaEstado: string; // DRAFT, REGISTRADA, APROBADA, RECHAZADA, etc.
+  evaDataJson: string; // JSON String capturado
+  evaDataCalcJson?: string | null; // JSON String con cálculos
+  evaVri?: number | null;
+  evaEtp?: number | null;
+  evaVrr?: number | null;
+  evaFechaEval: string;
+  evaUsrEval: number;
+  evaVersionRow: number;
+  evaActivo: boolean;
+}
+
+export interface RevisionEvaluacionDto {
+  revId: number;
+  revEvaluacionId: number;
+  revEstadoAnterior: string;
+  revEstadoNuevo: string;
+  revMotivo?: string | null;
+  revFecha: string;
+  revUsrId: number;
+}
+
+export interface EvidenciaDto {
+  eviId: number;
+  eviNombreArchivo: string;
+  eviExtension: string;
+  eviTamano: number;
+  eviHash: string;
+  eviRuta: string;
+  eviUsrCreacion: number;
+  eviFechaCreacion: string;
+}
+
+export interface AsociarEvidenciaRiesgoDto {
+  evrRiesgoId: number;
+  evrEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaEvaluacionDto {
+  eveEvaluacionId: number;
+  eveEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaControlDto {
+  evcControlId: number;
+  evcEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaPlanDto {
+  evpPlanId: number;
+  evpEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaActividadDto {
+  evaActividadId: number;
+  evaEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaAlertaDto {
+  evaAlertaId: number;
+  evaEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaAutomonitoreoDto {
+  evmMonitoreoId: number;
+  evmEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaRevisionDto {
+  evvRevisionId: number;
+  evvEvidenciaId: number;
+  usrId: number;
+}
+
+export interface AsociarEvidenciaAprobacionDto {
+  evapAprobacionId: number;
+  evapEvidenciaId: number;
+  usrId: number;
+}
+
+export interface ConsultaEvaluacionPaginadaDto {
+  buscar?: string;
+  estado?: string;
+  pagina: number;
+  limite: number;
+}
+
+export interface EvidenciaPoliticaDto {
+  maximoMb: number;
+  maximoBytes: number;
+  extensionesPermitidas: string; // ej. "pdf,jpg,png,xlsx,docx"
+  tiposPermitidosTexto: string; // ej. "PDF, imágenes JPG/PNG, Excel, Word"
+}
+

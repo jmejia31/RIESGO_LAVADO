@@ -232,4 +232,117 @@ describe('MatricesRiesgosService', () => {
 
     expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));
   });
+
+  // --- PRUEBAS ADICIONALES FASE 7 ---
+
+  it('crea borrador de formulario con familia y codigo en query string', () => {
+    const result = vi.fn();
+    service.crearBorradorFormulario(1, 'FORM_A', '{}').subscribe(result);
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/formularios/borrador`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.params.get('familiaId')).toBe('1');
+    expect(request.request.params.get('codigoFormulario')).toBe('FORM_A');
+    expect(request.request.body).toBe('{}');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 10 });
+    expect(result).toHaveBeenCalledWith({ success: true, datos: 10 });
+  });
+
+  it('clona version de formulario mediante POST', () => {
+    const result = vi.fn();
+    service.clonarVersionFormulario(5).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/formularios/5/clonar`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 11 });
+    expect(result).toHaveBeenCalledWith({ success: true, datos: 11 });
+  });
+
+  it('actualiza borrador de formulario mediante PUT', () => {
+    const result = vi.fn();
+    service.actualizarBorradorFormulario(5, '{}').subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/formularios/5`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toBe('{}');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 'Actualizado' });
+    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Actualizado' });
+  });
+
+  it('publica version de formulario mediante POST', () => {
+    const result = vi.fn();
+    service.publicarVersionFormulario(5).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/formularios/5/publicar`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 'Publicado' });
+    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Publicado' });
+  });
+
+  it('cambia estado de vigencia de formulario con query string', () => {
+    const result = vi.fn();
+    service.cambiarEstadoVigenciaFormulario(5, true).subscribe(result);
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/formularios/5/estado`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.params.get('vigente')).toBe('true');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 'Vigencia cambiada' });
+    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Vigencia cambiada' });
+  });
+
+  it('obtiene la version vigente de formulario', () => {
+    const result = vi.fn();
+    service.obtenerVersionVigenteFormulario('MATRIZ_RIESGOS_LAFT').subscribe(result);
+
+    const request = http.expectOne(req => req.url === `${apiUrl}/formulario/version-vigente`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('familiaCodigo')).toBe('MATRIZ_RIESGOS_LAFT');
+    request.flush({ success: true, datos: { verId: 10 } });
+    expect(result).toHaveBeenCalledWith({ verId: 10 });
+  });
+
+  it('vincula evidencias en todos los tipos relacionales', () => {
+    service.vincularEvidenciaRiesgo({ evrRiesgoId: 1, evrEvidenciaId: 2, usrId: 99 }).subscribe();
+    service.vincularEvidenciaEvaluacion({ eveEvaluacionId: 1, eveEvidenciaId: 2, usrId: 99 }).subscribe();
+    service.vincularEvidenciaControl({ evcControlId: 1, evcEvidenciaId: 2, usrId: 99 }).subscribe();
+
+    const reqRiesgo = http.expectOne(`${apiUrl}/evidencias/vincular/riesgo`);
+    expect(reqRiesgo.request.method).toBe('POST');
+    reqRiesgo.flush({ success: true });
+
+    const reqEval = http.expectOne(`${apiUrl}/evidencias/vincular/evaluacion`);
+    expect(reqEval.request.method).toBe('POST');
+    reqEval.flush({ success: true });
+
+    const reqCtrl = http.expectOne(`${apiUrl}/evidencias/vincular/control`);
+    expect(reqCtrl.request.method).toBe('POST');
+    reqCtrl.flush({ success: true });
+  });
+
+  it('elimina evidencia huerfana de forma idempotente', () => {
+    const result = vi.fn();
+    service.eliminarEvidenciaHuerfana(123).subscribe(result);
+
+    const request = http.expectOne(`${apiUrl}/evidencias/123`);
+    expect(request.request.method).toBe('DELETE');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, mensaje: 'Eliminado' });
+    expect(result).toHaveBeenCalledWith({ success: true, mensaje: 'Eliminado' });
+  });
+
+  it('obtiene politica de evidencias transversal de listas', () => {
+    const result = vi.fn();
+    service.obtenerPoliticaEvidencias().subscribe(result);
+
+    const request = http.expectOne('http://localhost:5043/api/listas/evidencias/politica');
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: { maximoMb: 10 } });
+    expect(result).toHaveBeenCalledWith({ maximoMb: 10 });
+  });
 });
+

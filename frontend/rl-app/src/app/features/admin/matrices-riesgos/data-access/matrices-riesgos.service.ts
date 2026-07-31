@@ -17,7 +17,22 @@ import {
   MatrizRiesgoPlanAccionRequest,
   MatrizRiesgoReporteFiltro,
   MatrizRiesgoResumen,
-  MetodologiaMatrices
+  MetodologiaMatrices,
+  VersionFormularioDto,
+  EvaluacionRiesgoDto,
+  RevisionEvaluacionDto,
+  EvidenciaDto,
+  AsociarEvidenciaRiesgoDto,
+  AsociarEvidenciaEvaluacionDto,
+  AsociarEvidenciaControlDto,
+  AsociarEvidenciaPlanDto,
+  AsociarEvidenciaActividadDto,
+  AsociarEvidenciaAlertaDto,
+  AsociarEvidenciaAutomonitoreoDto,
+  AsociarEvidenciaRevisionDto,
+  AsociarEvidenciaAprobacionDto,
+  ConsultaEvaluacionPaginadaDto,
+  EvidenciaPoliticaDto
 } from '../models/matrices-riesgos.models';
 
 type ApiResponse<T> = { success: boolean; datos: T; mensaje?: string };
@@ -188,6 +203,142 @@ export class MatricesRiesgosService {
 
   eliminarCriterio(id: number, motivo: string): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/criterios/${id}/eliminar`, { motivo }, this.confirmado);
+  }
+
+  // ============================================================
+  // 4. NUEVOS MÉTODOS DEL MÓDULO MATRICES DE RIESGOS (FASE 7)
+  // ============================================================
+
+  // --- ADMINISTRACIÓN DE FORMULARIOS ---
+  crearBorradorFormulario(familiaId: number, codigoFormulario: string, jsonConfig: string): Observable<ApiResponse<number>> {
+    const params = new HttpParams()
+      .set('familiaId', String(familiaId))
+      .set('codigoFormulario', codigoFormulario);
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formularios/borrador`, jsonConfig, { params, ...this.confirmado });
+  }
+
+  clonarVersionFormulario(id: number): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/formularios/${id}/clonar`, {}, this.confirmado);
+  }
+
+  actualizarBorradorFormulario(id: number, jsonConfig: string): Observable<ApiResponse<string>> {
+    return this.http.put<ApiResponse<string>>(`${this.apiUrl}/formularios/${id}`, jsonConfig, this.confirmado);
+  }
+
+  publicarVersionFormulario(id: number): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/formularios/${id}/publicar`, {}, this.confirmado);
+  }
+
+  cambiarEstadoVigenciaFormulario(id: number, vigente: boolean): Observable<ApiResponse<string>> {
+    const params = new HttpParams().set('vigente', String(vigente));
+    return this.http.put<ApiResponse<string>>(`${this.apiUrl}/formularios/${id}/estado`, {}, { params, ...this.confirmado });
+  }
+
+  listarHistorialVersionesFormulario(familiaCodigo: string): Observable<VersionFormularioDto[]> {
+    const params = new HttpParams().set('familiaCodigo', familiaCodigo);
+    return this.http.get<ApiResponse<VersionFormularioDto[]>>(`${this.apiUrl}/formularios/historial`, { params })
+      .pipe(map(res => res.datos));
+  }
+
+  // --- OPERATIVA DE EVALUACIONES ---
+  obtenerVersionVigenteFormulario(familiaCodigo = 'MATRIZ_RIESGOS_LAFT'): Observable<VersionFormularioDto> {
+    const params = new HttpParams().set('familiaCodigo', familiaCodigo);
+    return this.http.get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formulario/version-vigente`, { params })
+      .pipe(map(res => res.datos));
+  }
+
+  obtenerEvaluacionFase7(id: number): Observable<EvaluacionRiesgoDto> {
+    return this.http.get<ApiResponse<EvaluacionRiesgoDto>>(`${this.apiUrl}/evaluaciones/${id}`)
+      .pipe(map(res => res.datos));
+  }
+
+  listarEvaluacionesPaginadasFase7(filtro: ConsultaEvaluacionPaginadaDto): Observable<{ datos: EvaluacionRiesgoDto[], total: number }> {
+    const params = this.construirParams(filtro);
+    return this.http.get<ApiResponse<EvaluacionRiesgoDto[]>>(`${this.apiUrl}/evaluaciones`, { params })
+      .pipe(map(res => ({ datos: res.datos, total: res.datos?.length || 0 })));
+  }
+
+  crearEvaluacionFase7(dto: EvaluacionRiesgoDto): Observable<number> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/evaluaciones`, dto, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  actualizarEvaluacionFase7(id: number, dto: EvaluacionRiesgoDto): Observable<string> {
+    return this.http.put<ApiResponse<string>>(`${this.apiUrl}/evaluaciones/${id}`, dto, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  transicionarEstadoEvaluacion(id: number, nuevoEstado: string, motivo?: string): Observable<ApiResponse<string>> {
+    let params = new HttpParams().set('nuevoEstado', nuevoEstado);
+    if (motivo) {
+      params = params.set('motivo', motivo);
+    }
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evaluaciones/${id}/transiciones`, {}, { params, ...this.confirmado });
+  }
+
+  obtenerRevisionesEvaluacion(id: number): Observable<RevisionEvaluacionDto[]> {
+    return this.http.get<ApiResponse<RevisionEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/revisiones`)
+      .pipe(map(res => res.datos));
+  }
+
+  // --- CARGA Y VINCULACIÓN DE EVIDENCIAS ---
+  cargarArchivoEvidenciaFase7(archivo: File): Observable<EvidenciaDto> {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    return this.http.post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, this.confirmado)
+      .pipe(map(res => res.datos));
+  }
+
+  vincularEvidenciaRiesgo(dto: AsociarEvidenciaRiesgoDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/riesgo`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaEvaluacion(dto: AsociarEvidenciaEvaluacionDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/evaluacion`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaControl(dto: AsociarEvidenciaControlDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/control`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaPlan(dto: AsociarEvidenciaPlanDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/plan`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaActividad(dto: AsociarEvidenciaActividadDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/actividad`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaAlerta(dto: AsociarEvidenciaAlertaDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/alerta`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaAutomonitoreo(dto: AsociarEvidenciaAutomonitoreoDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/automonitoreo`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaRevision(dto: AsociarEvidenciaRevisionDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/revision`, dto, this.confirmado);
+  }
+
+  vincularEvidenciaAprobacion(dto: AsociarEvidenciaAprobacionDto): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/evidencias/vincular/aprobacion`, dto, this.confirmado);
+  }
+
+  eliminarEvidenciaHuerfana(id: number): Observable<ApiResponse<string>> {
+    return this.http.delete<ApiResponse<string>>(`${this.apiUrl}/evidencias/${id}`, this.confirmado);
+  }
+
+  // --- REPORTES Y CONSOLIDADO ---
+  obtenerConsolidadoMatricesFase7(): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/consolidado`)
+      .pipe(map(res => res.datos));
+  }
+
+  // --- CONSULTA PREVENTIVA DE POLÍTICAS DE EVIDENCIA ---
+  obtenerPoliticaEvidencias(): Observable<EvidenciaPoliticaDto> {
+    return this.http.get<ApiResponse<EvidenciaPoliticaDto>>(`${environment.apiUrl}/listas/evidencias/politica`)
+      .pipe(map(res => res.datos));
   }
 
   private construirParams(filtro: object): HttpParams {

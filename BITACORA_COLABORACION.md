@@ -1546,6 +1546,53 @@ Resolver el defecto bloqueante de seguridad transaccional en el Hito 7.0 (Elimin
 
 1. Iniciar el Frontend (Fase 7) en Angular 22 sobre la rama `desarrollo` (Hito 7.1 en adelante) con la certeza de que el backend es completamente seguro, transaccional e idempotente para la compensación de evidencias.
 
+---
+
+## Registro de Intervención #14
+
+- **Fecha y hora**: 2026-07-31 14:45, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit final**: `desarrollo` publicado.
+
+### Objetivo
+
+Ejecutar e implementar el Hito 7.1 (Capa de Servicios y Modelos de API en Frontend) de la Fase 7: definir los DTOs e interfaces TypeScript alineados al 100% con los modelos del backend y base de datos, implementar los nuevos métodos de llamada HttpClient en `MatricesRiesgosService` mapeando las 25 rutas REST del backend más la consulta preventora de política de evidencias de listas, e implementar y certificar la suite de pruebas unitarias en Vitest.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.spec.ts`](frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.spec.ts) (Pruebas unitarias de Vitest para los 26 nuevos métodos expuestos)
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts`](frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts) (Implementación HttpClient de los 25 endpoints de matrices/evidencias y consulta de política de listas)
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts`](frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts) (Modelos e interfaces TypeScript de la Fase 7)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) (Este archivo de registro histórico)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) (Estado vivo de colaboración)
+
+### Cambios funcionales y técnicos (Hito 7.1 Frontend Completado)
+
+1. **Alineación de Modelos de API**: Se crearon las interfaces TypeScript correspondientes a `VersionFormularioDto`, `EvaluacionRiesgoDto`, `RevisionEvaluacionDto`, `EvidenciaDto`, y las estructuras relacionales puente de evidencias (`AsociarEvidencia*Dto`), así como `EvidenciaPoliticaDto` e inputs paginados de búsqueda.
+2. **Exposición del Contrato de Enlace**: Se programaron y documentaron los 25 endpoints modularizados bajo `api/matrices-riesgos` y la llamada preventora de políticas a `api/listas/evidencias/politica`.
+3. **Validación de Cabeceras de Modificación**: Todas las llamadas que representan alteraciones lógicas o generación de reportes sensibles incorporan de forma estricta la cabecera `CONFIRMACION_CAMBIOS_HEADER = '1'` para la auditoría de seguridad del interceptor de Angular.
+4. **Vitest Suite de Pruebas**: Se agregaron 9 pruebas unitarias verificando la construcción de parámetros, los verbos correctos (POST, PUT, GET, DELETE), el paso de headers de confirmación y el mapeo exitoso de payloads. Total de pruebas frontend superadas: **174 aprobadas (100% éxito)**.
+5. **Quality Gates Aprobadas**: Cobertura frontend estable en **Statements: 38.95% / Lines: 39.14%** y backend estable en **Líneas: 16.30% / Ramas: 16.75%**.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| Pruebas Unitarias Backend | **179 aprobadas** (100% de éxito, 0 fallidas, 0 omitidas) |
+| Pruebas Unitarias Frontend | **174 aprobadas** (100% de éxito) |
+| Pruebas E2E Playwright | **7 aprobadas** (100% de éxito) |
+| Cobertura de Código Backend | **Líneas: 16.30%, Ramas: 16.75%** (Mínimo: Líneas: 15.3%, Ramas: 16.3%) |
+| `tools/run_quality_gates.ps1` | **Puertas de calidad correctas** (exit code 0 - APROBADO) |
+| `tools/validate_repository_structure.ps1` | **Correcto** |
+| `tools/validate_database_scripts.ps1` | **Correcto** |
+| `tools/validate_documentation_links.ps1` | **Correcto** |
+
+### Punto de continuación
+
+1. Iniciar el Hito 7.2 (Dashboard Ejecutivo e Integración de Mapa de Calor 5x5): desarrollar la grilla visual interactiva en la UI mapeando frecuencia e impacto del 1 al 5 y los filtros de celdas.
+
+
 
 
 
