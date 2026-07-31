@@ -1,3 +1,4 @@
+#pragma warning disable CA1416
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -373,6 +374,96 @@ public sealed class MatricesRiesgosControllerTests
         var statusResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, statusResult.StatusCode);
     }
+
+    [Fact]
+    public async Task CrearBorradorFormulario_Ok_RetornaLong()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.CrearBorradorFormularioAsync), _ => Task.FromResult(ServiceResult<long>.Ok(123)));
+
+        var result = await controller.CrearBorradorFormulario(1, "FORM_A", "{}");
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+        var datosProp = okResult.Value.GetType().GetProperty("datos");
+        Assert.Equal(123L, (long)datosProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task ClonarVersionFormulario_Ok_RetornaLong()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.ClonarVersionFormularioAsync), _ => Task.FromResult(ServiceResult<long>.Ok(456)));
+
+        var result = await controller.ClonarVersionFormulario(1);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+        var datosProp = okResult.Value.GetType().GetProperty("datos");
+        Assert.Equal(456L, (long)datosProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task ActualizarBorradorFormulario_Ok_RetornaOk()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ => Task.FromResult(ServiceResult.Ok("Actualizado")));
+
+        var result = await controller.ActualizarBorradorFormulario(1, "{}");
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task PublicarVersionFormulario_Ok_RetornaOk()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.PublicarVersionFormularioAsync), _ => Task.FromResult(ServiceResult.Ok("Publicado")));
+
+        var result = await controller.PublicarVersionFormulario(1);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task CambiarEstadoVigenciaFormulario_Ok_RetornaOk()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(ServiceResult.Ok("Vigencia cambiada")));
+
+        var result = await controller.CambiarEstadoVigenciaFormulario(1, true);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task ListarHistorialVersionesFormulario_Ok_RetornaLista()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.ListarHistorialVersionesFormularioAsync), _ => Task.FromResult(ServiceResult<List<VersionFormularioDto>>.Ok(new List<VersionFormularioDto>())));
+
+        var result = await controller.ListarHistorialVersionesFormulario("FORM_A");
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
+
+
 
     private static MatricesRiesgosController CrearController(out InterfaceStub serviceStub, out InterfaceStub loggerStub)
     {

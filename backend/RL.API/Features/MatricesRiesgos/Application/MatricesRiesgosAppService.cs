@@ -198,7 +198,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         var calcResult = _calculador.CalcularYValidarRiesgo(vars.frec, vars.imp, vars.prev, vars.det, vars.corr, vars.frecRes, vars.impRes);
         if (!calcResult.Success)
         {
-            return ServiceResult<long>.BadRequest(calcResult.Message);
+            return ServiceResult<long>.BadRequest(calcResult.Message ?? "Error de cálculo");
         }
 
         // 4. Inyectar los valores calculados al DTO de persistencia
@@ -238,7 +238,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         var calcResult = _calculador.CalcularYValidarRiesgo(vars.frec, vars.imp, vars.prev, vars.det, vars.corr, vars.frecRes, vars.impRes);
         if (!calcResult.Success)
         {
-            return ServiceResult.BadRequest(calcResult.Message);
+            return ServiceResult.BadRequest(calcResult.Message ?? "Error de cálculo");
         }
 
         dto.EvaVri = calcResult.Data!.Vri;

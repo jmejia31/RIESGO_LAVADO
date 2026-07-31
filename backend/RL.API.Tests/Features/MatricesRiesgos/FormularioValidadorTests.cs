@@ -278,5 +278,93 @@ public sealed class FormularioValidadorTests
         Assert.False(result.Valido);
         Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("debe ser de tipo texto"));
     }
+
+    [Fact]
+    public async Task ValidarRespuestas_TipoCatalogoValido_RetornaValido()
+    {
+        const string config = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        { ""id"": ""c1"", ""tipo"": ""catalogo"", ""obligatorio"": true }
+                    ]
+                }
+            ]
+        }";
+        // Catalogo espera un número entero (ID)
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": 45 }", config);
+        Assert.True(result.Valido);
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_TipoCatalogoInvalido_RetornaError()
+    {
+        const string config = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        { ""id"": ""c1"", ""tipo"": ""catalogo"", ""obligatorio"": true }
+                    ]
+                }
+            ]
+        }";
+        // Catalogo con valor no entero (un string que no es número)
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": ""no-un-numero"" }", config);
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("entero"));
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_TipoCatalogoMultipleValido_RetornaValido()
+    {
+        const string config = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        { ""id"": ""c1"", ""tipo"": ""catalogo-multiple"", ""obligatorio"": true }
+                    ]
+                }
+            ]
+        }";
+        // Espera un array de números enteros
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": [1, 2, 3] }", config);
+        Assert.True(result.Valido);
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_TipoCatalogoMultipleNoArray_RetornaError()
+    {
+        const string config = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        { ""id"": ""c1"", ""tipo"": ""catalogo-multiple"", ""obligatorio"": true }
+                    ]
+                }
+            ]
+        }";
+        // Se envía un entero plano en vez de array
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": 1 }", config);
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("lista de enteros"));
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_TipoCatalogoMultipleElementosNoEnteros_RetornaError()
+    {
+        const string config = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        { ""id"": ""c1"", ""tipo"": ""catalogo-multiple"", ""obligatorio"": true }
+                    ]
+                }
+            ]
+        }";
+        // Array contiene elementos que no son números (un boolean)
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": [1, ""dos"", 3] }", config);
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("deben ser números enteros"));
+    }
 }
 

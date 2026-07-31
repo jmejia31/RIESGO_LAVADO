@@ -84,6 +84,33 @@ public sealed class FormularioValidador : IFormularioValidador
                             result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser de tipo texto."));
                         }
                         break;
+
+                    case "catalogo":
+                        if (valorElemento.ValueKind != JsonValueKind.Number &&
+                            !(valorElemento.ValueKind == JsonValueKind.String && long.TryParse(valorElemento.GetString(), out _)))
+                        {
+                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser un valor de catálogo (entero)."));
+                        }
+                        break;
+
+                    case "catalogo-multiple":
+                        if (valorElemento.ValueKind != JsonValueKind.Array)
+                        {
+                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser una lista de enteros (catálogo múltiple)."));
+                        }
+                        else
+                        {
+                            foreach (var element in valorElemento.EnumerateArray())
+                            {
+                                if (element.ValueKind != JsonValueKind.Number &&
+                                    !(element.ValueKind == JsonValueKind.String && long.TryParse(element.GetString(), out _)))
+                                {
+                                    result.Errores.Add(new FormularioValidationError(campoId, $"Todos los elementos del campo '{metadatos.Etiqueta}' deben ser números enteros."));
+                                    break;
+                                }
+                            }
+                        }
+                        break;
                 }
 
                 // C. Validar Expresión Regular (si aplica)

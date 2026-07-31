@@ -1395,6 +1395,58 @@ Implementar por completo la Fase 6 de Desarrollo del Backend ASP.NET Core, inclu
 
 1. Iniciar la Fase 7: Desarrollo de Frontend (Angular 22) en la rama `desarrollo` para implementar los componentes visuales de UI del ciclo de vida del formulario y la captura.
 
+---
+
+## Registro de Intervención #11
+
+- **Fecha y hora**: 2026-07-31 00:36, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit final**: `desarrollo` publicado.
+
+### Objetivo
+
+Resolver el defecto bloqueante reportado en la Fase 6 Backend: restaurar los umbrales de cobertura originales en `run_quality_gates.ps1` (Líneas: 15.3%, Ramas: 16.3%), corregir las dos advertencias de nulabilidad en `MatricesRiesgosAppService.cs`, subsanar la validación lógica de los tipos de catálogo en `FormularioValidador.cs`, implementar pruebas unitarias sobre `ListasController.cs` y el validador, y asegurar la aprobación limpia de las Quality Gates sin reducir los criterios de calidad.
+
+### Archivos creados o modificados
+
+- **Creado**: [`backend/RL.API.Tests/Features/Listas/ListasControllerTests.cs`](backend/RL.API.Tests/Features/Listas/ListasControllerTests.cs) (Pruebas unitarias de cobertura del controlador de Listas)
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/FormularioValidadorTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/FormularioValidadorTests.cs) (Adición de pruebas unitarias sobre validación de catálogos y listas)
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs) (Corrección de nulabilidad de warning del compilador)
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs) (Corrección de nulabilidad de warning del compilador)
+- **Modificado**: [`backend/RL.API.Tests/RL.API.Tests.csproj`](backend/RL.API.Tests/RL.API.Tests.csproj) (Inclusión del archivo de pruebas de Listas al ensamblado de xUnit)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`](backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs) (Corrección de nulabilidad en firmas de tipos opcionales de base de datos)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Domain/FormularioValidador.cs`](backend/RL.API/Features/MatricesRiesgos/Domain/FormularioValidador.cs) (Soporte de validación de tipos 'catalogo' y 'catalogo-multiple' en la plantilla JSON)
+- **Modificado**: [`tools/run_quality_gates.ps1`](tools/run_quality_gates.ps1) (Restauración de umbrales originales: Líneas 15.30%, Ramas 16.30%)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) (Este archivo de registro histórico)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) (Estado vivo del proyecto)
+
+### Cambios funcionales y técnicos (Fase 6 Backend Certificada)
+
+1. **Restauración de Umbrales de Calidad**: Se restablecieron los porcentajes de cobertura del backend a sus valores originales estrictos del repositorio (Líneas: 15.30%, Ramas: 16.30%).
+2. **Corrección de Advertencias del Compilador**: Se solucionaron los warnings de nulabilidad de C# en `MatricesRiesgosAppService.cs` asegurando que las variables opcionales y valores de retorno con stubs en las pruebas no arrojen advertencias en compilación Debug o Release.
+3. **Validación Lógica de Catálogos**: Se detectó y corrigió un defecto en el motor de validación `FormularioValidador.cs` donde los tipos de datos `"catalogo"` y `"catalogo-multiple"` no eran validados, permitiendo respuestas sucias. Se agregaron validaciones de tipo numérico (`JsonValueKind.Number`) y listas de enteros (`JsonValueKind.Array` de enteros).
+4. **Pruebas de Cobertura para Listas**: Se implementó una suite robusta en `ListasControllerTests.cs` cubriendo 9 endpoints de lógica del controlador, incluyendo carga de archivos, detalles de personas jurídicas/naturales/empleados, y creación/eliminación de tipos de listas.
+5. **Cobertura Superada Limpiamente**: El backend alcanzó **15.57% de líneas** y **16.62% de ramas**, superando holgadamente las puertas de calidad con todas las pruebas en verde.
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| Pruebas Unitarias Backend | **173 aprobadas** (100% de éxito, 0 fallidas, 0 omitidas) |
+| Pruebas Unitarias Frontend | **165 aprobadas** (100% de éxito) |
+| Pruebas E2E Playwright | **7 aprobadas** (100% de éxito) |
+| Cobertura de Código Backend | **Líneas: 15.57%, Ramas: 16.62%** (Límite original: Líneas: 15.3%, Ramas: 16.3%) |
+| `tools/run_quality_gates.ps1` | **Puertas de calidad correctas** (exit code 0 - APROBADO) |
+| `tools/validate_repository_structure.ps1` | **Correcto** |
+| `tools/validate_database_scripts.ps1` | **Correcto** |
+| `tools/validate_documentation_links.ps1` | **Correcto** |
+
+### Punto de continuación
+
+1. Iniciar el Frontend (Fase 7) en Angular 22 sobre la rama `desarrollo` para implementar los componentes visuales e interfaces del ciclo de vida de plantillas de formularios y la captura transaccional de evaluaciones de riesgo de lavado.
+
+
 
 
 
