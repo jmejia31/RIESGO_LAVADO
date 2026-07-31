@@ -14,12 +14,12 @@ Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COL
 
 ## 2. Ultima intervencion
 
-- Intervencion: Maquetador Visual de Plantillas y Semilla de Base de Datos (Hito 7.4+)
-- Fecha: 2026-07-31 11:05 hora local (UTC-6)
+- Intervencion: Publicación de Plan Técnico Consolidado Aprobado
+- Fecha: 2026-07-31 12:40 hora local (UTC-6)
 - Autor: Antigravity
 - Rama: desarrollo
-- Commit HEAD: `0e57a7f` publicado en origin/desarrollo
-- Estado: Maquetador visual de plantillas (CRUD de secciones/campos) implementado. Base de datos de desarrollo sembrada con la metodologia. Quality Gates aprobadas.
+- Commit HEAD: `8a0407a` publicado en origin/desarrollo
+- Estado: Plan técnico de ajustes de diseño, roles y reportes en Oracle aprobado y documentado en el repositorio.
 
 ## 3. Estado de fases
 
@@ -36,9 +36,10 @@ Las fases 1-21 estan completadas. No corresponde abrir nueva fase de reorganizac
 - Hito 7.3: Renderizado dinamico, coherencia VRR, evidencias 2 pasos - implementado
 - Hito 7.4: Plantillas, ciclo de vida y maquetador visual interactivo completo (CRUD sin codigo) - implementado
 - Hito 7.5: Quality Gates locales - aprobadas
+- Ajustes de Diseño, Seguridad y Reportes en Oracle: Plan técnico consolidado aprobado por los socios.
 
 ### 3.3 Dictamen vigente
-Fase 7 completada localmente. Pendiente validacion institucional Javier Mejia.
+Fase 7 visual y maquetador completados. Corrección de arquitectura dinámica, seguridad y reportería en ejecución en la rama `desarrollo`.
 
 ## 4. Estado de componentes
 
@@ -52,7 +53,7 @@ Fase 7 completada localmente. Pendiente validacion institucional Javier Mejia.
 
 ## 5. Relacion entre ramas
 
-- desarrollo es la rama activa. HEAD = `0e57a7f` sincronizado con origin/desarrollo.
+- desarrollo es la rama activa. HEAD = `8a0407a` sincronizado con origin/desarrollo.
 - Integrar a main requiere autorizacion expresa de Javier Mejia.
 
 ## 6. Quality Gates
@@ -83,6 +84,5 @@ Fase 7 completada localmente. Pendiente validacion institucional Javier Mejia.
 
 ## 9. Punto exacto de continuacion
 
-1. Prueba integracion Oracle real DELETE /evidencias/{id}: bloqueo FOR UPDATE, ciclo archivo+Oracle, ERROR_COMPENSACION_EVIDENCIA.
-2. Validacion institucional Javier Mejia sobre modulo completo.
-3. Definir Fase 8 (roles, despliegue, AD/SMTP) o pase a produccion.
+1. Ejecución del plan técnico aprobado para implementar los ajustes de diseño visual (mapa de calor 5x5 accesible, remoción de JSON técnico en frontend, ocultar archivo), roles centralizados, consultas directas Oracle 11g de dashboard y reportes con paginación, auditoría de exportación y pruebas de integración HTTP de autorización.
+2. Validación por parte de los socios y pruebas de integración finales.

@@ -1724,3 +1724,30 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 
 1. Prueba de integración Oracle real para `DELETE /evidencias/{id}`.
 2. Validación final por Javier Mejía.
+
+---
+
+## Registro de Intervención — Antigravity — Publicación de Plan Técnico Consolidado Aprobado
+
+- **Fecha y hora**: 2026-07-31 12:40, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `1958f74` | **Commit final**: `8a0407a`.
+
+### Objetivo y alcance
+
+1. Crear y publicar el plan técnico detallado de corrección visual, permisos y reportes transaccionales de Oracle en el repositorio en [`docs/3. Módulo Matrices de Riesgos/PLAN_IMPLEMENTACION_AJUSTES_DISENO_SEGURIDAD_REPORTES_ORACLE.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/PLAN_IMPLEMENTACION_AJUSTES_DISENO_SEGURIDAD_REPORTES_ORACLE.md) de acuerdo a las once precisiones obligatorias del dictamen consolidado final (remoción completa de `EVA_ESTADO`, límites de descarga de reportes, compatibilidad histórica de archivo, migración física Oracle segura e idempotente, rediseño de metodología dinámica y contratos heredados, etc.).
+2. Sincronizar el estado de la colaboración antes del inicio de la fase de codificación.
+
+### Archivos creados o modificados
+
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/PLAN_IMPLEMENTACION_AJUSTES_DISENO_SEGURIDAD_REPORTES_ORACLE.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/PLAN_IMPLEMENTACION_AJUSTES_DISENO_SEGURIDAD_REPORTES_ORACLE.md) — Plan técnico consolidado aprobado.
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) — Este archivo.
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización de estado de la última intervención.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+- N/A (Fase de documentación y planificación).
+
+### Punto exacto de continuación
+1. Ejecución del plan técnico aprobado para implementar los ajustes de diseño visual (mapa de calor 5x5 accesible, remoción de JSON técnico en frontend, ocultar archivo), remoción absoluta de `EVA_ESTADO` en todo el proyecto, roles centralizados, consultas directas Oracle 11g de dashboard y reportes con paginación, auditoría de exportación, límites de descarga de reportes, migración Oracle segura e idempotente para unicidad de proyecciones y pruebas de integración HTTP de autorización.
+
