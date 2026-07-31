@@ -476,6 +476,34 @@ public sealed class MatricesRiesgosControllerTests
         var successProp = okResult.Value.GetType().GetProperty("success");
         Assert.True((bool)successProp!.GetValue(okResult.Value)!);
     }
+
+    [Fact]
+    public async Task ObtenerMetodologiaVigente_RetornaOk()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        var dto = new MetodologiaMatricesDto { Version = "1.0" };
+        serviceStub.On(nameof(IMatricesRiesgosAppService.ObtenerMetodologiaVigenteAsync), _ => Task.FromResult(ServiceResult<MetodologiaMatricesDto>.Ok(dto)));
+
+        var result = await controller.ObtenerMetodologiaVigente();
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
+
+    [Fact]
+    public async Task ObtenerMetodologiaVigente_NotFound_RetornaError()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.ObtenerMetodologiaVigenteAsync), _ => Task.FromResult(ServiceResult<MetodologiaMatricesDto>.NotFound("No existe")));
+
+        var result = await controller.ObtenerMetodologiaVigente();
+
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(404, objectResult.StatusCode);
+    }
+
     private static MatricesRiesgosController CrearController(out InterfaceStub serviceStub, out InterfaceStub loggerStub)
     {
         var service = InterfaceStub.Create<IMatricesRiesgosAppService>(out serviceStub);

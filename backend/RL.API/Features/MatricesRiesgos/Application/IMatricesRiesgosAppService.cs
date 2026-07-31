@@ -51,4 +51,9 @@ public interface IMatricesRiesgosAppService
     // 4. REPORTES CONSOLIDADOS
     // ============================================================
     Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerConsolidadoMatricesAsync();
+
+    // ============================================================
+    // 5. METODOLOGÍA VIGENTE
+    // ============================================================
+    Task<ServiceResult<MetodologiaMatricesDto>> ObtenerMetodologiaVigenteAsync();
 }

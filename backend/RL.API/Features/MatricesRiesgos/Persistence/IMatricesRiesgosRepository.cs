@@ -60,4 +60,9 @@ public interface IMatricesRiesgosRepository
     // 4. REPORTES CONSOLIDADOS Y CATÁLOGOS PARAMÉTRICOS
     // ============================================================
     Task<List<Dictionary<string, object>>> ObtenerConsolidadoMatricesAsync();
+
+    // ============================================================
+    // 5. METODOLOGÍA VIGENTE
+    // ============================================================
+    Task<MetodologiaMatricesDto?> ObtenerMetodologiaVigenteAsync();
 }

@@ -441,6 +441,21 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("metodologia/vigente")]
+    public async Task<IActionResult> ObtenerMetodologiaVigente()
+    {
+        try
+        {
+            var result = await _service.ObtenerMetodologiaVigenteAsync();
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener metodología vigente.");
+            return Error500(ex);
+        }
+    }
+
     // ============================================================
     // METODOS AUXILIARES DE SEGURIDAD E IP
     // ============================================================

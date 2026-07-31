@@ -119,3 +119,71 @@ public sealed class MatrizRiesgoEvidenciaDto
     public string Hash { get; set; } = string.Empty;
     public string Ruta { get; set; } = string.Empty;
 }
+
+// ============================================================
+// DTOs: Metodología vigente (GET /metodologia/vigente)
+// ============================================================
+
+public sealed class MetodologiaMatricesDto
+{
+    public string Version { get; set; } = string.Empty;
+    public decimal PesoTotalEsperado { get; set; }
+    public decimal PuntajeMinimo { get; set; }
+    public decimal PuntajeMaximo { get; set; }
+    public decimal MitigacionMaximaPct { get; set; }
+    public int DecimalesCalculo { get; set; } = 4;
+    public int DecimalesVisualizacion { get; set; } = 2;
+    public List<FactorInstitucionalDto> FactoresInstitucionales { get; set; } = new();
+    public List<VariableMetodologiaRespuestaDto> Variables { get; set; } = new();
+    public List<EscalaRiesgoDto> EscalasRiesgo { get; set; } = new();
+    public List<EscalaRiesgoDto> EscalasCatalogo { get; set; } = new();
+    public List<CriterioCalculoRespuestaDto> Criterios { get; set; } = new();
+    public List<decimal> MitigacionesPermitidas { get; set; } = new();
+}
+
+public sealed class FactorInstitucionalDto
+{
+    public string Codigo { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public decimal PesoInstitucional { get; set; }
+    public bool ObligatorioGlobal { get; set; } = true;
+}
+
+public sealed class VariableMetodologiaRespuestaDto
+{
+    public long VariableId { get; set; }
+    public long FactorId { get; set; }
+    public string FactorCodigo { get; set; } = string.Empty;
+    public string FactorNombre { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public string Nombre { get; set; } = string.Empty;
+    public decimal PesoInterno { get; set; }
+    public bool Obligatoria { get; set; }
+}
+
+public sealed class EscalaRiesgoDto
+{
+    public long EscalaId { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public string Nivel { get; set; } = string.Empty;
+    public string Color { get; set; } = string.Empty;
+    public decimal ValorMinimo { get; set; }
+    public decimal ValorMaximo { get; set; }
+    public bool RequierePlanAccion { get; set; }
+}
+
+public sealed class CriterioCalculoRespuestaDto
+{
+    public long CriterioId { get; set; }
+    public long FactorId { get; set; }
+    public string FactorCodigo { get; set; } = string.Empty;
+    public string FactorNombre { get; set; } = string.Empty;
+    public long VariableId { get; set; }
+    public string VariableCodigo { get; set; } = string.Empty;
+    public string VariableNombre { get; set; } = string.Empty;
+    public long? EscalaId { get; set; }
+    public decimal? ValorDesde { get; set; }
+    public decimal? ValorHasta { get; set; }
+    public decimal Puntaje { get; set; }
+    public string Descripcion { get; set; } = string.Empty;
+}

@@ -1647,9 +1647,43 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 1. Ejecutar pruebas de integración Oracle para `DELETE /evidencias/{id}` (bloqueo `FOR UPDATE`, ciclo archivo + Oracle).
 2. Revisar si se requiere una Fase 8 o si el módulo puede pasar a validación institucional con Javier Mejía.
 
+---
 
+## Registro de Intervención — Antigravity — Resolución Brecha de Metodología y puerto 5043
 
+- **Fecha y hora**: 2026-07-31 10:35, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `1f319d5` | **Commit final**: `3773852`.
 
+### Objetivo y alcance
 
+1. Resolver el conflicto de inicio del servidor backend local (puerto 5043 ocupado) deteniendo el proceso huérfano.
+2. Resolver la brecha del Hito 7.1 implementando el endpoint faltante del backend `GET /api/matrices-riesgos/metodologia/vigente` requerido para alimentar correctamente el dashboard y mapa de calor 5x5 en el frontend.
+3. Actualizar contratos (DTOs), repositorio, lógica de servicios y el controlador para mapear los factores, variables y escalas activas de la metodología aprobada de Matrices de Riesgos en Oracle.
 
+### Archivos creados o modificados
 
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Contracts/Matrices/MatrizRiesgoDtos.cs`](backend/RL.API/Features/MatricesRiesgos/Contracts/Matrices/MatrizRiesgoDtos.cs) — Se agregaron `MetodologiaMatricesDto` y DTOs auxiliares de factores, variables y escalas.
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs`](backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs) — Declaración del método `ObtenerMetodologiaVigenteAsync`.
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`](backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs) — Implementación de la consulta a `RL_MR_MODELOS`, `RL_MR_FACTORES`, `RL_MR_VARIABLES` y `RL_MR_ESCALAS`.
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs`](backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs) — Interfaz de servicio de aplicación.
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`](backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs) — Implementación del caso de uso.
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs`](backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs) — Exposición de la ruta `GET api/matrices-riesgos/metodologia/vigente`.
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs) — Pruebas unitarias para el controlador del caso metodológico (OK y NotFound).
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- Backend: **181 correctas, 0 fallidas** (+2 pruebas unitarias de regresión).
+- Frontend: **183 correctas, 0 fallidas** (18 archivos de spec).
+- E2E Playwright: **7 correctas, 0 fallidas** (Se verificó que el flujo completo del login, matrices-riesgos dashboard y el filtro del mapa 5x5 conectan correctamente sin errores HTTP 404/500).
+- Quality Gates: **aprobadas** — Backend líneas 16.02% / ramas 16.43%; Frontend sentencias 40.20% / líneas 40.40%.
+
+### Riesgos y restricciones
+
+- Si se agregan nuevos criterios dinámicos a la base de datos, la tabla `RL_MR_CRITERIOS` debe existir o ser validada. Se agregó un bloque de contingencia seguro en el repositorio en caso de no estar instalada a nivel local.
+
+### Punto exacto de continuación
+
+1. Prueba de integración Oracle real para `DELETE /evidencias/{id}`.
+2. Validación final por Javier Mejía.

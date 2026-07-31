@@ -523,6 +523,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     }
 
     // ============================================================
+    // 5. METODOLOGÍA VIGENTE
+    // ============================================================
+
+    public async Task<ServiceResult<MetodologiaMatricesDto>> ObtenerMetodologiaVigenteAsync()
+    {
+        var metodologia = await _repo.ObtenerMetodologiaVigenteAsync();
+        if (metodologia == null)
+        {
+            return ServiceResult<MetodologiaMatricesDto>.NotFound("No existe una metodología de matrices vigente y aprobada en el sistema.");
+        }
+        return ServiceResult<MetodologiaMatricesDto>.Ok(metodologia);
+    }
+
+    // ============================================================
     // AUXILIARES
     // ============================================================
 

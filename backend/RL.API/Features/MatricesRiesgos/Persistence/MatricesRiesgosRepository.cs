@@ -1034,4 +1034,201 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             _ => "CRÍTICO"
         };
     }
+
+    // ============================================================
+    // 5. METODOLOGÍA VIGENTE
+    // ============================================================
+
+    public async Task<MetodologiaMatricesDto?> ObtenerMetodologiaVigenteAsync()
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        // 5.1 Modelo aprobado
+        const string sqlModelo = @"
+            SELECT MRM_ID, MRM_VERSION, MRM_ESTADO
+              FROM RL_MR_MODELOS
+             WHERE MRM_ESTADO = 'APROBADO'
+               AND MRM_ESTADO_REGISTRO = 1
+               AND ROWNUM = 1
+             ORDER BY MRM_FECHA_APROBACION DESC";
+
+        long modeloId;
+        string version;
+
+        await using (var cmd = new OracleCommand(sqlModelo, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            if (!await reader.ReadAsync()) return null;
+            modeloId = reader.GetInt64(reader.GetOrdinal("MRM_ID"));
+            version  = reader.GetString(reader.GetOrdinal("MRM_VERSION"));
+        }
+
+        var dto = new MetodologiaMatricesDto
+        {
+            Version              = version,
+            PesoTotalEsperado    = 100m,
+            PuntajeMinimo        = 0m,
+            PuntajeMaximo        = 100m,
+            MitigacionMaximaPct  = 30m,
+            DecimalesCalculo     = 4,
+            DecimalesVisualizacion = 2,
+            MitigacionesPermitidas = new List<decimal> { 0m, 10m, 20m, 30m }
+        };
+
+        // 5.2 Factores
+        const string sqlFactores = @"
+            SELECT MRF_ID, MRF_CODIGO, MRF_NOMBRE, MRF_PESO_INSTITUCIONAL
+              FROM RL_MR_FACTORES
+             WHERE MRF_MODELO_ID = :modeloId
+               AND MRF_ESTADO_REGISTRO = 1
+             ORDER BY MRF_ORDEN";
+
+        var factores = new Dictionary<long, FactorInstitucionalDto>();
+
+        await using (var cmd = new OracleCommand(sqlFactores, conn))
+        {
+            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var fId     = reader.GetInt64(reader.GetOrdinal("MRF_ID"));
+                var fCodigo = reader.GetString(reader.GetOrdinal("MRF_CODIGO"));
+                var fNombre = reader.GetString(reader.GetOrdinal("MRF_NOMBRE"));
+                var fPeso   = reader.GetDecimal(reader.GetOrdinal("MRF_PESO_INSTITUCIONAL"));
+                factores[fId] = new FactorInstitucionalDto
+                {
+                    Codigo = fCodigo,
+                    Nombre = fNombre,
+                    PesoInstitucional = fPeso,
+                    ObligatorioGlobal = true
+                };
+            }
+        }
+
+        dto.FactoresInstitucionales.AddRange(factores.Values);
+
+        // 5.3 Variables
+        const string sqlVariables = @"
+            SELECT v.MRV_ID, v.MRV_FACTOR_ID, v.MRV_CODIGO, v.MRV_NOMBRE,
+                   v.MRV_PESO_INTERNO, v.MRV_OBLIGATORIA
+              FROM RL_MR_VARIABLES v
+              JOIN RL_MR_FACTORES  f ON f.MRF_ID = v.MRV_FACTOR_ID
+             WHERE f.MRF_MODELO_ID   = :modeloId
+               AND v.MRV_ESTADO_REGISTRO = 1
+             ORDER BY f.MRF_ORDEN, v.MRV_ORDEN";
+
+        await using (var cmd = new OracleCommand(sqlVariables, conn))
+        {
+            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var vId      = reader.GetInt64(reader.GetOrdinal("MRV_ID"));
+                var factorId = reader.GetInt64(reader.GetOrdinal("MRV_FACTOR_ID"));
+                var vCodigo  = reader.GetString(reader.GetOrdinal("MRV_CODIGO"));
+                var vNombre  = reader.GetString(reader.GetOrdinal("MRV_NOMBRE"));
+                var vPeso    = reader.GetDecimal(reader.GetOrdinal("MRV_PESO_INTERNO"));
+                var vOblig   = reader.GetDecimal(reader.GetOrdinal("MRV_OBLIGATORIA"));
+
+                factores.TryGetValue(factorId, out var factor);
+                dto.Variables.Add(new VariableMetodologiaRespuestaDto
+                {
+                    VariableId  = vId,
+                    FactorId    = factorId,
+                    FactorCodigo = factor?.Codigo ?? string.Empty,
+                    FactorNombre = factor?.Nombre ?? string.Empty,
+                    Codigo      = vCodigo,
+                    Nombre      = vNombre,
+                    PesoInterno = vPeso,
+                    Obligatoria = vOblig != 0
+                });
+            }
+        }
+
+        // 5.4 Escalas
+        const string sqlEscalas = @"
+            SELECT MRE_ID, MRE_TIPO, MRE_NIVEL, MRE_COLOR_HEX,
+                   MRE_VALOR_MIN, MRE_VALOR_MAX
+              FROM RL_MR_ESCALAS
+             WHERE MRE_MODELO_ID   = :modeloId
+               AND MRE_ESTADO_REGISTRO = 1
+             ORDER BY MRE_TIPO, MRE_ORDEN";
+
+        await using (var cmd = new OracleCommand(sqlEscalas, conn))
+        {
+            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var escalaId = reader.GetInt64(reader.GetOrdinal("MRE_ID"));
+                var tipo     = reader.GetString(reader.GetOrdinal("MRE_TIPO"));
+                var nivel    = reader.GetString(reader.GetOrdinal("MRE_NIVEL"));
+                var color    = reader.IsDBNull(reader.GetOrdinal("MRE_COLOR_HEX"))
+                               ? "#888888"
+                               : reader.GetString(reader.GetOrdinal("MRE_COLOR_HEX"));
+                var vMin     = reader.GetDecimal(reader.GetOrdinal("MRE_VALOR_MIN"));
+                var vMax     = reader.GetDecimal(reader.GetOrdinal("MRE_VALOR_MAX"));
+
+                var escala = new EscalaRiesgoDto
+                {
+                    EscalaId           = escalaId,
+                    Tipo               = tipo,
+                    Nivel              = nivel,
+                    Color              = color,
+                    ValorMinimo        = vMin,
+                    ValorMaximo        = vMax,
+                    RequierePlanAccion = nivel is "ALTO" or "CRÍTICO" or "CRITICO"
+                };
+
+                if (tipo is "RIESGO" or "INHERENTE" or "RESIDUAL")
+                    dto.EscalasRiesgo.Add(escala);
+                else
+                    dto.EscalasCatalogo.Add(escala);
+            }
+        }
+
+        // 5.5 Criterios (tabla RL_MR_CRITERIOS — puede no existir en este ambiente)
+        try
+        {
+            const string sqlCriterios = @"
+                SELECT c.MRC_ID, c.MRC_FACTOR_ID, f.MRF_CODIGO, f.MRF_NOMBRE,
+                       c.MRC_VARIABLE_ID, v.MRV_CODIGO, v.MRV_NOMBRE,
+                       c.MRC_ESCALA_ID, c.MRC_VALOR_DESDE, c.MRC_VALOR_HASTA,
+                       c.MRC_PUNTAJE, c.MRC_DESCRIPCION
+                  FROM RL_MR_CRITERIOS c
+                  JOIN RL_MR_FACTORES  f ON f.MRF_ID = c.MRC_FACTOR_ID
+                  JOIN RL_MR_VARIABLES v ON v.MRV_ID = c.MRC_VARIABLE_ID
+                 WHERE f.MRF_MODELO_ID = :modeloId
+                   AND c.MRC_ESTADO_REGISTRO = 1";
+
+            await using var cmd = new OracleCommand(sqlCriterios, conn);
+            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                dto.Criterios.Add(new CriterioCalculoRespuestaDto
+                {
+                    CriterioId    = reader.GetInt64(0),
+                    FactorId      = reader.GetInt64(1),
+                    FactorCodigo  = reader.GetString(2),
+                    FactorNombre  = reader.GetString(3),
+                    VariableId    = reader.GetInt64(4),
+                    VariableCodigo = reader.GetString(5),
+                    VariableNombre = reader.GetString(6),
+                    EscalaId      = reader.IsDBNull(7) ? null : reader.GetInt64(7),
+                    ValorDesde    = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+                    ValorHasta    = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
+                    Puntaje       = reader.GetDecimal(10),
+                    Descripcion   = reader.IsDBNull(11) ? string.Empty : reader.GetString(11)
+                });
+            }
+        }
+        catch (OracleException)
+        {
+            // RL_MR_CRITERIOS puede no existir en el ambiente local; continuar sin criterios.
+        }
+
+        return dto;
+    }
 }
