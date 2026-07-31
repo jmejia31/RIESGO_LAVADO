@@ -1592,8 +1592,60 @@ Ejecutar e implementar el Hito 7.1 (Capa de Servicios y Modelos de API en Fronte
 
 1. Iniciar el Hito 7.2 (Dashboard Ejecutivo e Integración de Mapa de Calor 5x5): desarrollar la grilla visual interactiva en la UI mapeando frecuencia e impacto del 1 al 5 y los filtros de celdas.
 
+---
 
+## Registro de Intervención — Antigravity — Cierre Fase 7 (Hitos 7.2 al 7.5)
 
+- **Fecha y hora**: 2026-07-31 09:14, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `3aaa669` | **Commit final**: `1f319d5`.
+
+### Objetivo y alcance
+
+Completar la totalidad de la Fase 7 del frontend Angular 22 para el módulo de Matrices de Riesgos LAFT, incluyendo la UI operativa, la administración de plantillas y las pruebas de regresión.
+
+### Archivos creados o modificados
+
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts` — Dashboard 5×5, renderizado dinámico, coherencia residual, ciclo de vida de versiones; corrección de visibilidad `formatearFecha`/`formatearFechaHora`.
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html` — Mapa 5×5, formulario dinámico, pestaña Plantillas, modal Editor JSON.
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts` — 67 pruebas unitarias; corrección de nombre de spy `cambiarEstadoVigenciaFormulario`.
+
+### Cambios funcionales
+
+- **Hito 7.2**: Grilla 5×5 interactiva con coloreado semáforo y filtrado por celda.
+- **Hito 7.3**: Motor de renderizado dinámico (9 tipos de campos), coherencia residual VRR, alertas de catálogos vacíos, carga de evidencias en 2 pasos con compensación `DELETE`.
+- **Hito 7.4**: Pestaña Plantillas con línea de tiempo, clonar, publicar, cambiar vigencia, modal Editor JSON con validación de sintaxis client-side.
+- **Correcciones**: Mensaje de éxito movido post-`cargarTodo()` para evitar reset; métodos de formato fecha hechos públicos para uso en templates.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- Backend: **179 correctas, 0 fallidas**.
+- Frontend: **183 correctas, 0 fallidas** (18 archivos de spec).
+- E2E Playwright: **7 correctas, 0 fallidas**.
+- Quality Gates: **aprobadas** — Backend líneas 16.30% / ramas 16.75%; Frontend sentencias 40.20% / líneas 40.40%.
+
+### Pruebas no ejecutadas
+
+- Integración con Oracle real para `SELECT ... FOR UPDATE` en `DELETE /evidencias/{id}`. Motivo: no disponible en entorno local. **Pendiente antes de producción**.
+
+### Estado Git
+
+```
+git status   → nothing to commit, working tree clean
+HEAD         → 1f319d5 (coincide con origin/desarrollo)
+```
+
+### Riesgos y restricciones
+
+- La validación de sintaxis JSON es client-side; el backend debe rechazar esquemas semánticamente inválidos en la publicación.
+- Las pruebas de integración Oracle siguen pendientes y deben ejecutarse antes de declarar el módulo listo para producción.
+
+### Punto exacto de continuación
+
+**Fase 7 completada al 100% localmente.** El siguiente paso es:
+1. Ejecutar pruebas de integración Oracle para `DELETE /evidencias/{id}` (bloqueo `FOR UPDATE`, ciclo archivo + Oracle).
+2. Revisar si se requiere una Fase 8 o si el módulo puede pasar a validación institucional con Javier Mejía.
 
 
 
