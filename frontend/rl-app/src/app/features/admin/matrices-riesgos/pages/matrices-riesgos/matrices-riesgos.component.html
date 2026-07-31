@@ -1573,9 +1573,9 @@
         </div>
 
         <!-- Área del editor -->
-        <div class="flex-1 overflow-auto p-6 space-y-4">
+        <div class="flex-1 overflow-auto p-6 space-y-6">
 
-          <!-- Banner de error de sintaxis -->
+          <!-- Banner de error de sintaxis o validación -->
           <div *ngIf="error()" role="alert"
             class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
             <svg class="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1584,42 +1584,151 @@
             <span class="text-sm font-medium text-red-700">{{ error() }}</span>
           </div>
 
-          <!-- Textarea del JSON -->
-          <div class="space-y-1.5">
-            <label for="editor-json-textarea" class="block text-xs font-bold uppercase text-gray-500 tracking-wide">
-              Contenido JSON del Formulario (VER_JSON)
-            </label>
-            <textarea
-              id="editor-json-textarea"
-              data-testid="editor-json-textarea"
-              [ngModel]="editorJsonContenido()"
-              (ngModelChange)="editorJsonContenido.set($event)"
-              [disabled]="guardando()"
-              rows="22"
-              spellcheck="false"
-              autocomplete="off"
-              class="w-full font-mono text-xs text-gray-800 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 resize-y outline-none transition focus:border-ihss-600 focus:ring-2 focus:ring-ihss-600/20 disabled:opacity-60"
-              placeholder='{
-  "version": "1.0",
-  "campos": []
-}'></textarea>
-            <p class="text-[11px] text-gray-400">
-              Ingrese JSON válido. El sistema validará la sintaxis antes de guardar. Espacios y saltos de línea son normalizados al publicar.
-            </p>
+          <!-- Metadatos del Formulario -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100" *ngIf="esquemaDiseno()">
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold uppercase text-gray-500">Nombre del Formulario</label>
+              <input type="text" [(ngModel)]="esquemaDiseno().nombreFormulario" [disabled]="guardando()"
+                class="w-full text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus:border-ihss-600 focus:outline-none" />
+            </div>
+            <div class="space-y-1">
+              <label class="block text-[11px] font-bold uppercase text-gray-500">Código del Formulario</label>
+              <input type="text" [(ngModel)]="esquemaDiseno().codigoFormulario" [disabled]="guardando()"
+                class="w-full text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus:border-ihss-600 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- Constructor de Secciones y Campos -->
+          <div class="space-y-6" *ngIf="esquemaDiseno()">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase text-gray-600 tracking-wide">Estructura del Formulario</h4>
+              <button type="button" (click)="agregarSeccion()" [disabled]="guardando()"
+                class="px-3 py-1.5 rounded-lg bg-ihss-50 text-ihss-700 hover:bg-ihss-100 text-xs font-bold flex items-center gap-1 transition">
+                <span>➕</span> Agregar Sección
+              </button>
+            </div>
+
+            <!-- Listado de Secciones -->
+            <div class="space-y-4">
+              <div *ngFor="let seccion of esquemaDiseno().secciones; let sIdx = index" 
+                class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm space-y-4">
+                
+                <!-- Cabecera de la Sección -->
+                <div class="flex items-start justify-between gap-3 pb-3 border-b border-gray-100">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
+                    <input type="text" [(ngModel)]="seccion.titulo" placeholder="Título de la Sección" [disabled]="guardando()"
+                      class="text-xs font-bold text-gray-800 border border-gray-200 rounded-lg px-2 py-1 focus:border-ihss-600 focus:outline-none" />
+                    <input type="text" [(ngModel)]="seccion.id" placeholder="ID único de Sección" [disabled]="guardando()"
+                      class="text-xs font-mono text-gray-500 border border-gray-200 rounded-lg px-2 py-1 focus:border-ihss-600 focus:outline-none" />
+                  </div>
+                  <button type="button" (click)="eliminarSeccion(sIdx)" [disabled]="guardando()"
+                    title="Eliminar Sección"
+                    class="p-1 rounded text-red-500 hover:bg-red-50 transition text-xs font-bold">
+                    🗑️ Borrar
+                  </button>
+                </div>
+
+                <!-- Campos de la Sección -->
+                <div class="space-y-3 pl-4 border-l-2 border-gray-100">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Campos en esta sección</span>
+                    <button type="button" (click)="agregarCampo(sIdx)" [disabled]="guardando()"
+                      class="px-2.5 py-1 rounded bg-gray-50 text-gray-700 hover:bg-gray-100 text-[10px] font-bold transition">
+                      ➕ Agregar Campo
+                    </button>
+                  </div>
+
+                  <!-- Sin campos -->
+                  <div *ngIf="seccion.campos.length === 0" class="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <p class="text-xs text-gray-400">No hay campos agregados en esta sección.</p>
+                  </div>
+
+                  <!-- Listado de Campos -->
+                  <div class="space-y-3" *ngIf="seccion.campos.length > 0">
+                    <div *ngFor="let campo of seccion.campos; let cIdx = index"
+                      class="grid grid-cols-1 lg:grid-cols-12 gap-2 p-3 bg-gray-50/60 border border-gray-200/80 rounded-xl items-center">
+                      
+                      <!-- Etiqueta del Campo -->
+                      <div class="lg:col-span-3">
+                        <input type="text" [(ngModel)]="campo.etiqueta" placeholder="Etiqueta visible" [disabled]="guardando()"
+                          class="w-full text-xs text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none bg-white" />
+                      </div>
+
+                      <!-- ID del Campo -->
+                      <div class="lg:col-span-2">
+                        <input type="text" [(ngModel)]="campo.id" placeholder="ID Campo" [disabled]="guardando()"
+                          class="w-full text-xs font-mono text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none bg-white" />
+                      </div>
+
+                      <!-- Tipo de Campo -->
+                      <div class="lg:col-span-2">
+                        <select [(ngModel)]="campo.tipo" [disabled]="guardando()"
+                          class="w-full text-xs text-gray-700 border border-gray-200 rounded-lg px-2 py-1.5 focus:border-ihss-600 focus:outline-none bg-white">
+                          <option value="texto">Texto plano</option>
+                          <option value="texto-largo">Área de texto largo</option>
+                          <option value="numero">Numérico</option>
+                          <option value="fecha">Fecha</option>
+                          <option value="selector-catalogo">Selección de catálogo</option>
+                          <option value="checkbox">Verificación (Sí/No)</option>
+                          <option value="archivo">Archivo adjunto</option>
+                        </select>
+                      </div>
+
+                      <!-- Código Catálogo (si aplica) -->
+                      <div class="lg:col-span-2">
+                        <input type="text" [(ngModel)]="campo.codigoCatalogo" placeholder="Cód. Catálogo"
+                          [disabled]="guardando() || campo.tipo !== 'selector-catalogo'"
+                          [ngClass]="campo.tipo !== 'selector-catalogo' ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'bg-white'"
+                          class="w-full text-xs font-mono text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none" />
+                      </div>
+
+                      <!-- Es Obligatorio -->
+                      <div class="lg:col-span-2 flex items-center justify-center">
+                        <label class="flex items-center gap-1 cursor-pointer text-xs text-gray-600 select-none">
+                          <input type="checkbox" [(ngModel)]="campo.obligatorio" [disabled]="guardando()"
+                            class="rounded border-gray-300 text-ihss-600 focus:ring-ihss-500" />
+                          <span>Requerido</span>
+                        </label>
+                      </div>
+
+                      <!-- Acciones Campo -->
+                      <div class="lg:col-span-1 flex items-center justify-end">
+                        <button type="button" (click)="eliminarCampo(sIdx, cIdx)" [disabled]="guardando()"
+                          title="Eliminar Campo"
+                          class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition text-xs">
+                          🗑️
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Botón de pie sección -->
+            <div *ngIf="esquemaDiseno().secciones.length === 0" class="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+              <p class="text-xs text-gray-400">El formulario no tiene secciones definidas aún.</p>
+              <button type="button" (click)="agregarSeccion()" class="mt-2 px-3 py-1.5 rounded-lg bg-ihss-600 text-white text-xs font-bold hover:bg-ihss-700 transition">
+                ➕ Inicializar Primera Sección
+              </button>
+            </div>
           </div>
 
         </div>
 
         <!-- Pie del modal -->
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2" *ngIf="esquemaDiseno()">
           <button type="button" (click)="cancelarEditorJson()" [disabled]="guardando()"
             class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
             Cancelar
           </button>
-          <button type="button" (click)="guardarJsonVersion()" [disabled]="guardando() || !editorJsonContenido().trim()"
+          <button type="button" (click)="guardarJsonVersion()" [disabled]="guardando()"
             data-testid="btn-guardar-json"
             class="px-5 py-2 rounded-xl bg-ihss-600 text-white text-sm font-bold hover:bg-ihss-700 shadow-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ihss-600 focus:ring-offset-2">
-            {{ guardando() ? 'Guardando...' : 'Guardar Esquema' }}
+            {{ guardando() ? 'Guardando...' : 'Guardar Diseño' }}
           </button>
         </div>
 

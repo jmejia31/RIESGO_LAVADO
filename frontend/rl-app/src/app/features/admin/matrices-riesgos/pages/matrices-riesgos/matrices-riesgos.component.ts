@@ -171,6 +171,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly cargandoVersiones = signal(false);
   readonly versionEditarJson = signal<VersionFormularioDto | null>(null);
   readonly editorJsonContenido = signal('');
+  readonly esquemaDiseno = signal<any>(null);
 
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal('');
@@ -1885,40 +1886,133 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   abrirEditorJson(version: VersionFormularioDto): void {
     this.versionEditarJson.set(version);
-    this.editorJsonContenido.set(version.verJson ? JSON.stringify(JSON.parse(version.verJson), null, 2) : '{}');
     this.error.set(null);
+
+    let parsed: any = null;
+    try {
+      parsed = version.verJson ? JSON.parse(version.verJson) : null;
+    } catch (e) {}
+
+    if (!parsed || typeof parsed !== 'object') {
+      parsed = {
+        codigoFormulario: version.verCodigo || 'FORM_A',
+        nombreFormulario: 'Formulario A',
+        secciones: []
+      };
+    }
+
+    if (!parsed.secciones || !Array.isArray(parsed.secciones)) {
+      parsed.secciones = [];
+    }
+
+    parsed.secciones.forEach((sec: any) => {
+      if (!sec.campos || !Array.isArray(sec.campos)) {
+        sec.campos = [];
+      }
+    });
+
+    this.esquemaDiseno.set(parsed);
   }
 
   cancelarEditorJson(): void {
     this.versionEditarJson.set(null);
-    this.editorJsonContenido.set('');
+    this.esquemaDiseno.set(null);
+  }
+
+  agregarSeccion(): void {
+    const actual = this.esquemaDiseno();
+    if (!actual) return;
+
+    const nuevasSecciones = [
+      ...actual.secciones,
+      {
+        id: `seccion_${actual.secciones.length + 1}`,
+        titulo: `Nueva Sección ${actual.secciones.length + 1}`,
+        campos: []
+      }
+    ];
+
+    this.esquemaDiseno.set({
+      ...actual,
+      secciones: nuevasSecciones
+    });
+  }
+
+  eliminarSeccion(index: number): void {
+    const actual = this.esquemaDiseno();
+    if (!actual) return;
+
+    const nuevasSecciones = [...actual.secciones];
+    nuevasSecciones.splice(index, 1);
+
+    this.esquemaDiseno.set({
+      ...actual,
+      secciones: nuevasSecciones
+    });
+  }
+
+  agregarCampo(seccionIndex: number): void {
+    const actual = this.esquemaDiseno();
+    if (!actual) return;
+
+    const nuevasSecciones = [...actual.secciones];
+    const seccion = nuevasSecciones[seccionIndex];
+    
+    seccion.campos = [
+      ...seccion.campos,
+      {
+        id: `campo_${seccion.campos.length + 1}`,
+        etiqueta: `Nuevo Campo ${seccion.campos.length + 1}`,
+        tipo: 'texto',
+        obligatorio: false
+      }
+    ];
+
+    this.esquemaDiseno.set({
+      ...actual,
+      secciones: nuevasSecciones
+    });
+  }
+
+  eliminarCampo(seccionIndex: number, campoIndex: number): void {
+    const actual = this.esquemaDiseno();
+    if (!actual) return;
+
+    const nuevasSecciones = [...actual.secciones];
+    const seccion = nuevasSecciones[seccionIndex];
+    seccion.campos = [...seccion.campos];
+    seccion.campos.splice(campoIndex, 1);
+
+    this.esquemaDiseno.set({
+      ...actual,
+      secciones: nuevasSecciones
+    });
   }
 
   guardarJsonVersion(): void {
     const version = this.versionEditarJson();
-    if (!version) return;
+    const actual = this.esquemaDiseno();
+    if (!version || !actual) return;
 
     this.error.set(null);
     let jsonString = '';
     try {
-      // Validar sintaxis JSON en el cliente antes de guardar
-      const parsed = JSON.parse(this.editorJsonContenido());
-      jsonString = JSON.stringify(parsed);
+      jsonString = JSON.stringify(actual);
     } catch (e) {
-      this.error.set('Sintaxis JSON inválida. Revise las llaves y comillas antes de guardar.');
+      this.error.set('Error interno al generar el esquema del formulario. Intente de nuevo.');
       return;
     }
 
     this.guardando.set(true);
     this.service.actualizarBorradorFormulario(version.verId, jsonString).subscribe({
       next: () => {
-        this.mensaje.set('Esquema JSON del borrador guardado correctamente.');
+        this.mensaje.set('Diseño de plantilla guardado correctamente.');
         this.cargarHistorialVersiones();
         this.cancelarEditorJson();
         this.guardando.set(false);
       },
       error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el esquema del borrador.'));
+        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el diseño de la plantilla.'));
         this.guardando.set(false);
       }
     });

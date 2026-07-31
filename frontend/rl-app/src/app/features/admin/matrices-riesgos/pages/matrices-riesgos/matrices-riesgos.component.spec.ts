@@ -1026,32 +1026,52 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.mensaje()).toBe('Vigencia actualizada correctamente.');
   });
 
-  it('valida la sintaxis del esquema JSON en el cliente antes de guardar', () => {
-    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1 } as any;
+  it('permite agregar y eliminar secciones y campos visualmente en el maquetador', () => {
+    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1, verJson: '' } as any;
     component.abrirEditorJson(mockVersion);
     
-    // Asignar JSON mal formado (falta cerrar llave)
-    component.editorJsonContenido.set('{ "secciones": [ }');
+    // Verificar estado inicial
+    expect(component.esquemaDiseno().secciones.length).toBe(0);
 
-    component.guardarJsonVersion();
+    // Agregar sección
+    component.agregarSeccion();
+    expect(component.esquemaDiseno().secciones.length).toBe(1);
+    expect(component.esquemaDiseno().secciones[0].titulo).toBe('Nueva Sección 1');
 
-    expect(component.error()).toBe('Sintaxis JSON inválida. Revise las llaves y comillas antes de guardar.');
-    expect(service['actualizarBorradorFormulario']).not.toHaveBeenCalled();
+    // Agregar campo a la sección 0
+    component.agregarCampo(0);
+    expect(component.esquemaDiseno().secciones[0].campos.length).toBe(1);
+    expect(component.esquemaDiseno().secciones[0].campos[0].etiqueta).toBe('Nuevo Campo 1');
+
+    // Eliminar campo
+    component.eliminarCampo(0, 0);
+    expect(component.esquemaDiseno().secciones[0].campos.length).toBe(0);
+
+    // Eliminar sección
+    component.eliminarSeccion(0);
+    expect(component.esquemaDiseno().secciones.length).toBe(0);
   });
 
-  it('guarda exitosamente el JSON del borrador cuando es valido', () => {
-    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1 } as any;
+  it('guarda exitosamente el diseño del formulario estructurado como JSON', () => {
+    const mockVersion = { verId: 1, verCodigo: 'FORM_A', verVersion: 1, verJson: '' } as any;
     component.abrirEditorJson(mockVersion);
     
-    // JSON válido
-    component.editorJsonContenido.set('{ "secciones": [] }');
-
+    component.agregarSeccion(); // Crea seccion_1
+    
     service['actualizarBorradorFormulario'].mockReturnValue(of({ success: true }));
 
     component.guardarJsonVersion();
 
-    expect(service['actualizarBorradorFormulario']).toHaveBeenCalledWith(1, '{"secciones":[]}');
-    expect(component.mensaje()).toBe('Esquema JSON del borrador guardado correctamente.');
+    const expectedJson = JSON.stringify({
+      codigoFormulario: 'FORM_A',
+      nombreFormulario: 'Formulario A',
+      secciones: [
+        { id: 'seccion_1', titulo: 'Nueva Sección 1', campos: [] }
+      ]
+    });
+
+    expect(service['actualizarBorradorFormulario']).toHaveBeenCalledWith(1, expectedJson);
+    expect(component.mensaje()).toBe('Diseño de plantilla guardado correctamente.');
     expect(component.versionEditarJson()).toBeNull();
   });
 });

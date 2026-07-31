@@ -14,12 +14,12 @@ Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COL
 
 ## 2. Ultima intervencion
 
-- Intervencion: Resolucion Brecha de Metodologia y puerto 5043 (Hito 7.1+)
-- Fecha: 2026-07-31 10:35 hora local (UTC-6)
+- Intervencion: Maquetador Visual de Plantillas y Semilla de Base de Datos (Hito 7.4+)
+- Fecha: 2026-07-31 11:05 hora local (UTC-6)
 - Autor: Antigravity
 - Rama: desarrollo
-- Commit HEAD: `ea617b3` publicado en origin/desarrollo
-- Estado: Metodologia vigente implementada en backend. Frontend funcional al 100%. Quality Gates aprobadas.
+- Commit HEAD: `0e57a7f` publicado en origin/desarrollo
+- Estado: Maquetador visual de plantillas (CRUD de secciones/campos) implementado. Base de datos de desarrollo sembrada con la metodologia. Quality Gates aprobadas.
 
 ## 3. Estado de fases
 
@@ -28,13 +28,13 @@ Las fases 1-21 estan completadas. No corresponde abrir nueva fase de reorganizac
 
 ### 3.2 Matrices de Riesgos
 
-- Fase 5: Oracle RL_MR_* instalada y validada
+- Fase 5: Oracle RL_MR_* instalada y validada con semilla de metodologia vigente
 - Fase 6: Backend ASP.NET Core completado y certificado
 - Hito 7.0: DELETE /evidencias/{id} con compensacion transaccional - certificado
 - Hito 7.1: 25 endpoints TypeScript - implementado y testeado
 - Hito 7.2: Dashboard 5x5 interactivo - implementado
 - Hito 7.3: Renderizado dinamico, coherencia VRR, evidencias 2 pasos - implementado
-- Hito 7.4: Plantillas, ciclo de vida, modal Editor JSON - implementado
+- Hito 7.4: Plantillas, ciclo de vida y maquetador visual interactivo completo (CRUD sin codigo) - implementado
 - Hito 7.5: Quality Gates locales - aprobadas
 
 ### 3.3 Dictamen vigente
@@ -47,12 +47,12 @@ Fase 7 completada localmente. Pendiente validacion institucional Javier Mejia.
 | Backend modular | 181 pruebas unitarias correctas |
 | Frontend Angular | 183 pruebas unitarias correctas |
 | E2E Playwright | 7 pruebas correctas |
-| Oracle | Estructura instalada al 100% |
-| Matrices de Riesgos Frontend | Completo: Dashboard 5x5, captura, plantillas |
+| Oracle | Estructura instalada y sembrada al 100% |
+| Matrices de Riesgos Frontend | Completo: Dashboard 5x5, captura, plantillas y maquetador visual de esquemas |
 
 ## 5. Relacion entre ramas
 
-- desarrollo es la rama activa. HEAD = `ea617b3` sincronizado con origin/desarrollo.
+- desarrollo es la rama activa. HEAD = `0e57a7f` sincronizado con origin/desarrollo.
 - Integrar a main requiere autorizacion expresa de Javier Mejia.
 
 ## 6. Quality Gates

@@ -1687,3 +1687,40 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 
 1. Prueba de integración Oracle real para `DELETE /evidencias/{id}`.
 2. Validación final por Javier Mejía.
+
+---
+
+## Registro de Intervención — Antigravity — Maquetador Visual de Plantillas y Semilla de Base de Datos
+
+- **Fecha y hora**: 2026-07-31 11:05, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `45196e0` | **Commit final**: `0e57a7f`.
+
+### Objetivo y alcance
+
+1. Implementar un **Maquetador Visual Interactivo (CRUD completo)** para la edición y administración de plantillas de formularios de captura de matrices en la pestaña "Plantillas", reemplazando la edición textual de código JSON plano requerida por el Hito 7.4.
+2. Solucionar el problema de base de datos `ORA-00942` ejecutando de manera exitosa la siembra de la metodología base (`03_seed_metodologia_matrices_riesgos.sql`) y la configuración inicial de la versión 1 del formulario (`04_config_json_inicial_formulario.sql` con el argumento `EJECUTAR`) a la base de datos de desarrollo mediante SQLPlus.
+3. Detener de forma limpia todos los procesos locales de `dotnet.exe` y `node.exe` antes de finalizar para evitar el bloqueo de puertos en la máquina del usuario.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`](frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html) — Rediseño del modal "Editar JSON" por un maquetador visual e interactivo completo para agregar/modificar/eliminar secciones y campos.
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`](frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts) — Lógica TypeScript para inicializar y gestionar el signal `esquemaDiseno` en base a operaciones CRUD visuales e interactivas.
+- **Modificado**: [`frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts`](frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts) — Modificación de las pruebas unitarias spec de la pestaña "Plantillas" para validar la estructura generada por el maquetador visual y su guardado.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- Backend: **181 correctas, 0 fallidas**.
+- Frontend: **183 correctas, 0 fallidas** (18 archivos de spec, Vitest pasa exitosamente tras re-adaptar las pruebas unitarias al maquetador visual).
+- E2E Playwright: **7 correctas, 0 fallidas** (Se validó que el flujo completo del sistema funciona correctamente con el backend corriendo localmente).
+- Quality Gates: **aprobadas** — Backend líneas 16.02% / ramas 16.43%; Frontend sentencias 40.20% / líneas 40.40%.
+
+### Riesgos y restricciones
+
+- La administración visual genera el JSON bajo el estándar esperado por el motor dinámico del frontend y validado por el backend en su esquema de persistencia.
+
+### Punto exacto de continuación
+
+1. Prueba de integración Oracle real para `DELETE /evidencias/{id}`.
+2. Validación final por Javier Mejía.
