@@ -12,6 +12,10 @@ describe('MatricesRiesgosComponent', () => {
   beforeEach(async () => {
     service = {
       metodologiaVigente: vi.fn(() => of({ variables: [], escalasCatalogo: [], escalasRiesgo: [] })),
+      obtenerVersionVigenteFormulario: vi.fn(() => of({ verId: 1, verCodigo: 'FORM_A' })),
+      cargarArchivoEvidenciaFase7: vi.fn(() => of({ eviId: 50 })),
+      vincularEvidenciaEvaluacion: vi.fn(() => of({ success: true })),
+      eliminarEvidenciaHuerfana: vi.fn(() => of({ success: true })),
       dashboard: vi.fn(() => of({})),
       reporte: vi.fn(() => of({})),
       listar: vi.fn(() => of([])),
@@ -912,4 +916,65 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.criteriosForm.descripcion).toBe('Rango existente');
     expect(component.guardando()).toBe(false);
   });
+
+  // --- PRUEBAS ADICIONALES HITO 7.3 ---
+
+  it('bloquea y desactiva el guardado cuando existe incoherencia residual', () => {
+    // Simular que el cálculo mitigador da VRR = 3, pero el formulario da VRR2 = 5
+    vi.spyOn(component, 'vrrCalculadoLocal').mockReturnValue(3);
+    vi.spyOn(component, 'vrrFormularioLocal').mockReturnValue(5);
+    vi.spyOn(component, 'coherenteLocal').mockReturnValue(false);
+
+    component.crearMatriz();
+
+    expect(component.error()).toContain('Bloqueado: La Frecuencia/Impacto Residual del formulario no coincide');
+    expect(service['crear']).not.toHaveBeenCalled();
+  });
+
+  it('alerta visualmente cuando existen catalogos de variables vacios', () => {
+    component.metodologia.set({
+      variables: [{ variableId: 10, obligatoria: true, nombre: 'Frecuencia' }]
+    } as never);
+    component.criterios.set([]); // Sin criterios activos, provocará catálogo vacío
+
+    expect(component.alertarCatalogosVacios()).toBe(true);
+  });
+
+  it('realiza carga en dos pasos y compensa con DELETE si falla la vinculacion', () => {
+    // 1. Configurar metodología y variables del sujeto para que progresoCaptura no sea cero ni pendiente
+    component.metodologia.set({
+      variables: [
+        { variableId: 1, factorId: 1, factorCodigo: 'PROVEEDORES', nombre: 'Frecuencia' }
+      ]
+    } as never);
+    component.nuevaMatriz.sujetoTipo = 'PROVEEDOR';
+    component.nuevaMatriz.nombreSujeto = 'Proveedor Uno';
+    component.capturasVariables.set([{
+      variableId: 1, criterioId: null, puntaje: 3, valorCapturado: '3',
+      justificacion: 'Evaluación inicial', fuenteDato: 'CAPTURA'
+    }] as never);
+
+    const archivo = new File(['%PDF-1.4'], 'factura.pdf', { type: 'application/pdf' });
+    component.evidenciaArchivo = archivo;
+
+    const mockEvidencia = { eviId: 50, eviNombreArchivo: 'factura.pdf' };
+    const mockMatriz = { matrizId: 100, sujetoTipo: 'PROVEEDOR' };
+
+    service['cargarArchivoEvidenciaFase7'].mockReturnValue(of(mockEvidencia));
+    service['crear'].mockReturnValue(of(mockMatriz));
+    service['vincularEvidenciaEvaluacion'].mockReturnValue(throwError(() => new Error('Error al vincular')));
+    service['eliminarEvidenciaHuerfana'].mockReturnValue(of({ success: true }));
+
+    // Forzar coherencia
+    vi.spyOn(component, 'coherenteLocal').mockReturnValue(true);
+
+    component.crearMatriz();
+
+    expect(service['cargarArchivoEvidenciaFase7']).toHaveBeenCalledWith(archivo);
+    expect(service['crear']).toHaveBeenCalled();
+    expect(service['vincularEvidenciaEvaluacion']).toHaveBeenCalled();
+    expect(service['eliminarEvidenciaHuerfana']).toHaveBeenCalledWith(50);
+    expect(component.error()).toContain('Fallo al vincular la evidencia. Se compensó eliminando el archivo huérfano');
+  });
 });
+

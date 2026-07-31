@@ -20,7 +20,9 @@ import {
   MatrizRiesgoResumen,
   MatricesRiesgoReporte,
   MetodologiaMatrices,
-  VariableMetodologia
+  VariableMetodologia,
+  VersionFormularioDto,
+  EvidenciaDto
 } from '../../models/matrices-riesgos.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import {
@@ -153,6 +155,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly cargandoCuadrante = signal(false);
   readonly reporte = signal<MatricesRiesgoReporte | null>(null);
   readonly metodologia = signal<MetodologiaMatrices | null>(null);
+  readonly formularioVigente = signal<VersionFormularioDto | null>(null);
   readonly matrices = signal<MatrizRiesgoResumen[]>([]);
   readonly matrizSeleccionada = signal<MatrizRiesgoDetalle | null>(null);
   readonly historial = signal<MatrizRiesgoHistorial[]>([]);
@@ -274,6 +277,85 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const total = capturas.length;
     const completas = capturas.filter(c => c.puntaje !== null && c.puntaje !== undefined).length;
     return { total, completas, pendiente: Math.max(0, total - completas) };
+  });
+
+  // --- CÁLCULOS INTERACTIVOS EN UI Y COHERENCIA RESIDUAL (HITO 7.3) ---
+  readonly vriLocal = computed(() => {
+    const capturas = this.capturasVariables();
+    const metodologia = this.metodologia();
+    if (!metodologia) return 0;
+    
+    // Obtener la frecuencia e impacto de la captura basándose en nombres/criterios
+    const frec = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('frecuencia'));
+    const imp = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('impacto'));
+    
+    const valFrec = frec?.puntaje ?? 0;
+    const valImp = imp?.puntaje ?? 0;
+    
+    if (valFrec === 0 || valImp === 0) return 0;
+    // VRI = Frecuencia + Impacto - 1
+    return Math.round(valFrec + valImp - 1);
+  });
+
+  readonly etpLocal = computed(() => {
+    // Si hay control opcional ingresado, sumamos su efectividad mitigadora.
+    // En el SGRLA, la Efectividad Total Ponderada (ETP) se calcula según preventivos, detectivos y correctivos,
+    // o de forma directa mediante la efectividad del control mitigador seleccionado.
+    const control = this.nuevoControl;
+    if (!control.nombre.trim()) return 0;
+    return control.efectividadPct;
+  });
+
+  readonly vrrCalculadoLocal = computed(() => {
+    const vri = this.vriLocal();
+    const etp = this.etpLocal();
+    if (vri === 0) return 0;
+    
+    // Regla metodológica: MAX(1, VRI * (1 - ETP/100)) redondeado sin decimales (AwayFromZero)
+    const factor = 1 - (etp / 100);
+    const raw = vri * factor;
+    return Math.max(1, Math.round(raw));
+  });
+
+  readonly vrrFormularioLocal = computed(() => {
+    const capturas = this.capturasVariables();
+    // En el Formulario A el usuario también captura frecuencia e impacto residual directamente
+    const frecRes = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('residual') && this.variableNombre(c.variableId).toLowerCase().includes('frecuencia'));
+    const impRes = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('residual') && this.variableNombre(c.variableId).toLowerCase().includes('impacto'));
+    
+    const valFrec = frecRes?.puntaje ?? 0;
+    const valImp = impRes?.puntaje ?? 0;
+    
+    if (valFrec === 0 || valImp === 0) return 0;
+    return Math.round(valFrec + valImp - 1);
+  });
+
+  readonly coherenteLocal = computed(() => {
+    const vrrCalc = this.vrrCalculadoLocal();
+    const vrrForm = this.vrrFormularioLocal();
+    if (vrrCalc === 0 || vrrForm === 0) return true; // Aún en captura parcial
+    return vrrCalc === vrrForm;
+  });
+
+  readonly nivelResidualLocal = computed(() => {
+    const vrr = this.vrrCalculadoLocal();
+    if (vrr === 0) return 'PENDIENTE';
+    if (vrr <= 2) return 'BAJO';
+    if (vrr <= 4) return 'MODERADO';
+    if (vrr <= 6) return 'ALTO';
+    return 'CRÍTICO';
+  });
+
+  readonly alertarCatalogosVacios = computed(() => {
+    // Si la metodología está cargada y no tiene áreas o no hay criterios disponibles para las variables,
+    // alerta de catálogo vacío.
+    const variables = this.metodologia()?.variables ?? [];
+    for (const v of variables) {
+      if (v.obligatoria && this.criteriosVariable(v.variableId).length === 0) {
+        return true;
+      }
+    }
+    return false;
   });
 
   readonly escalasCriterio = computed(() =>
@@ -450,6 +532,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.cargarReporte();
         this.cargarMatrices();
         this.cargarCriterios();
+
+        // Cargar versión vigente de formulario para el renderizador dinámico
+        this.service.obtenerVersionVigenteFormulario().subscribe({
+          next: formulario => this.formularioVigente.set(formulario),
+          error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el diseño de formulario dinámico.'))
+        });
       },
       error: err => {
         this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la metodología vigente.'));
@@ -733,11 +821,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   crearMatriz(): void {
+    // 1. Bloqueo estricto por coherencia residual (Hito 7.3)
+    if (!this.coherenteLocal()) {
+      this.error.set('Bloqueado: La Frecuencia/Impacto Residual del formulario no coincide con el cálculo mitigador.');
+      return;
+    }
+
     const dto = this.construirDtoMatriz();
     if (!dto) return;
 
-    // Control preventivo de duplicidad: identificador externo o documento no deben
-    // crear una segunda matriz activa para el mismo sujeto evaluado.
+    // Control preventivo de duplicidad
     if (!this.matrizEditandoId() && this.matricesDuplicadas().length > 0) {
       this.error.set('Ya existe una matriz activa con el mismo identificador externo o documento. Revise el registro existente antes de crear otro.');
       return;
@@ -745,17 +838,79 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.guardando.set(true);
     const matrizId = this.matrizEditandoId();
-    const request = matrizId
-      ? this.service.actualizar(matrizId, dto)
-      : this.service.crear(dto);
 
-    request.subscribe({
-      next: matriz => this.calcularAutomaticamenteDespuesDeGuardar(matriz, !!matrizId),
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, matrizId ? 'No se pudo actualizar la matriz.' : 'No se pudo crear la matriz.'));
-        this.guardando.set(false);
-      }
-    });
+    // Flujo en dos pasos con compensación de evidencias si se seleccionó archivo físico
+    if (this.evidenciaArchivo) {
+      const archivo = this.evidenciaArchivo;
+      this.service.cargarArchivoEvidenciaFase7(archivo).subscribe({
+        next: (evidencia) => {
+          const eviId = evidencia.eviId;
+          // Paso 2: Crear la matriz/evaluación y luego vincular
+          const request = matrizId
+            ? this.service.actualizar(matrizId, dto)
+            : this.service.crear(dto);
+
+          request.subscribe({
+            next: (matriz) => {
+              // Vincular la evidencia física cargada a la evaluación creada
+              this.service.vincularEvidenciaEvaluacion({
+                eveEvaluacionId: matriz.matrizId,
+                eveEvidenciaId: eviId,
+                usrId: 1 // Usr ID simulado por sesión
+              }).subscribe({
+                next: () => {
+                  this.evidenciaArchivo = null;
+                  this.calcularAutomaticamenteDespuesDeGuardar(matriz, !!matrizId);
+                },
+                error: (vincError) => {
+                  // COMPENSACIÓN: Si falla el paso 2 de vinculación, eliminar la evidencia física huérfana
+                  this.service.eliminarEvidenciaHuerfana(eviId).subscribe({
+                    next: () => {
+                      this.error.set('Fallo al vincular la evidencia. Se compensó eliminando el archivo huérfano: ' + this.obtenerMensajeError(vincError, ''));
+                      this.guardando.set(false);
+                    },
+                    error: (compError) => {
+                      this.error.set('Error crítico: falló vinculación y falló compensación de evidencia ID: ' + eviId);
+                      this.guardando.set(false);
+                    }
+                  });
+                }
+              });
+            },
+            error: (saveError) => {
+              // COMPENSACIÓN: Si falla el guardado de la matriz, eliminar la evidencia física huérfana
+              this.service.eliminarEvidenciaHuerfana(eviId).subscribe({
+                next: () => {
+                  this.error.set('Fallo al guardar la matriz. Se compensó eliminando la evidencia: ' + this.obtenerMensajeError(saveError, ''));
+                  this.guardando.set(false);
+                },
+                error: () => {
+                  this.error.set('Error crítico: falló guardado y falló compensación de evidencia ID: ' + eviId);
+                  this.guardando.set(false);
+                }
+              });
+            }
+          });
+        },
+        error: (uploadError) => {
+          this.error.set('No se pudo cargar físicamente el archivo de evidencia: ' + this.obtenerMensajeError(uploadError, ''));
+          this.guardando.set(false);
+        }
+      });
+    } else {
+      // Guardado ordinario sin evidencias
+      const request = matrizId
+        ? this.service.actualizar(matrizId, dto)
+        : this.service.crear(dto);
+
+      request.subscribe({
+        next: matriz => this.calcularAutomaticamenteDespuesDeGuardar(matriz, !!matrizId),
+        error: err => {
+          this.error.set(this.obtenerMensajeError(err, matrizId ? 'No se pudo actualizar la matriz.' : 'No se pudo crear la matriz.'));
+          this.guardando.set(false);
+        }
+      });
+    }
   }
 
   actualizarCampoMatriz(campo: 'sujetoTipo' | 'sujetoIdExt' | 'documento' | 'nombreSujeto', valor: string): void {
