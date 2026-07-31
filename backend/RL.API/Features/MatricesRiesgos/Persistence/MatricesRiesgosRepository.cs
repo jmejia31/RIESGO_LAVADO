@@ -785,6 +785,43 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return await EjecutarVinculoEvidenciaAsync("RL_MR_EVI_APROBACION", "EVAP_APROBACION_ID", "EVAP_EVIDENCIA_ID", dto.EvapAprobacionId, dto.EvapEvidenciaId, null, "Aprobacion", usuarioId, ip);
     }
 
+    public async Task<bool> EvidenciaTieneVinculosAsync(long evidenciaId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT (SELECT COUNT(*) FROM RL_MR_EVI_RIESGO WHERE EVR_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_EVALUACION WHERE EVE_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_CONTROL WHERE EVC_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_PLAN WHERE EVP_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_ACTIVIDAD WHERE EVA_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_ALERTA WHERE EVA_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_AUTOMONITOREO WHERE EVM_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_REVISION WHERE EVV_EVIDENCIA_ID = :id)
+                 + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :id) AS total
+              FROM DUAL";
+
+        await using var cmd = new OracleCommand(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("id", evidenciaId));
+
+        int total = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return total > 0;
+    }
+
+    public async Task<bool> EliminarEvidenciaFisicaAsync(long evidenciaId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id";
+        await using var cmd = new OracleCommand(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("id", evidenciaId));
+
+        int rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0;
+    }
+
     private async Task<bool> EjecutarVinculoEvidenciaAsync(string tablaPuente, string colId, string colEvi, long entidadId, long evidenciaId, long? evaluacionId, string tipoEntidad, long usuarioId, string? ip)
     {
         // Regla obligatoria: No se permite vincular sin aud_evaluacion_id si se puede determinar

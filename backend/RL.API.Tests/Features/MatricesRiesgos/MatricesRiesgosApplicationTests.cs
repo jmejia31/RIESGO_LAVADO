@@ -331,6 +331,48 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.False((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, "127.0.0.1")).Success);
     }
 
+    [Fact]
+    public async Task EliminarEvidencia_Inexistente_RetornaOkIdempotente()
+    {
+        var service = CrearServicio(out var repoStub, out _, out _);
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
+
+        var result = await service.EliminarEvidenciaAsync(123L, 99);
+
+        Assert.True(result.Success);
+        Assert.Contains("La evidencia no existe o ya fue eliminada", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task EliminarEvidencia_ConVinculos_RetornaBadRequest()
+    {
+        var service = CrearServicio(out var repoStub, out _, out _);
+        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf" };
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EvidenciaTieneVinculosAsync), _ => Task.FromResult(true));
+
+        var result = await service.EliminarEvidenciaAsync(123L, 99);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Contains("se encuentra vinculada", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task EliminarEvidencia_SinVinculos_EliminaFisicoYDb_RetornaOk()
+    {
+        var service = CrearServicio(out var repoStub, out _, out _);
+        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EvidenciaTieneVinculosAsync), _ => Task.FromResult(false));
+        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaFisicaAsync), _ => Task.FromResult(true));
+
+        var result = await service.EliminarEvidenciaAsync(123L, 99);
+
+        Assert.True(result.Success);
+        Assert.Contains("eliminada de forma exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static MatricesRiesgosAppService CrearServicio(
         out InterfaceStub repoStub, 
         out InterfaceStub valStub, 

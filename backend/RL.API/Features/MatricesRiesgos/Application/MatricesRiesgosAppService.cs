@@ -422,6 +422,48 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ResponderVinculo(exito);
     }
 
+    public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId)
+    {
+        var evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);
+        if (evidencia == null)
+        {
+            // Idempotencia: Si ya fue eliminada, responder exitosamente sin error funcional.
+            return ServiceResult.Ok("La evidencia no existe o ya fue eliminada.");
+        }
+
+        bool tieneVinculos = await _repo.EvidenciaTieneVinculosAsync(evidenciaId);
+        if (tieneVinculos)
+        {
+            return ServiceResult.BadRequest("No se puede eliminar la evidencia porque ya se encuentra vinculada a un elemento del sistema.");
+        }
+
+        try
+        {
+            // Eliminar el archivo físico en el servidor
+            if (!string.IsNullOrWhiteSpace(evidencia.EviRuta))
+            {
+                string fullPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, evidencia.EviRuta);
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Registrar error de disco pero continuar con la eliminación de base de datos para no bloquear
+            Serilog.Log.Error(ex, "Error al eliminar archivo físico de evidencia ID {Id}", evidenciaId);
+        }
+
+        bool eliminadoDb = await _repo.EliminarEvidenciaFisicaAsync(evidenciaId);
+        if (!eliminadoDb)
+        {
+            return ServiceResult.BadRequest("No se pudo eliminar el registro de evidencia en la base de datos.");
+        }
+
+        return ServiceResult.Ok("Evidencia eliminada de forma exitosa.");
+    }
+
     private static ServiceResult ResponderVinculo(bool exito)
     {
         if (exito) return ServiceResult.Ok("Evidencia vinculada exitosamente de forma relacional.");

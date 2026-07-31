@@ -119,7 +119,7 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    [HttpGet("formularios/{id:long}/historial")]
+    [HttpGet("formularios/historial")]
     public async Task<IActionResult> ListarHistorialVersionesFormulario([FromQuery] string familiaCodigo)
     {
         try
@@ -402,6 +402,22 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
         catch (Exception ex)
         {
+            return Error500(ex);
+        }
+    }
+
+    [HttpDelete("evidencias/{id:long}")]
+    [AuditRequired("Eliminación de archivo de evidencia física huérfana")]
+    public async Task<IActionResult> EliminarEvidencia(long id)
+    {
+        try
+        {
+            var result = await _service.EliminarEvidenciaAsync(id, ObtenerUsuarioId());
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar la evidencia ID {Id}", id);
             return Error500(ex);
         }
     }

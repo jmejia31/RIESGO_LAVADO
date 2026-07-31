@@ -43,6 +43,9 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
+    
+    Task<bool> EvidenciaTieneVinculosAsync(long evidenciaId);
+    Task<bool> EliminarEvidenciaFisicaAsync(long evidenciaId);
 
     // ============================================================
     // 4. REPORTES CONSOLIDADOS Y CATÁLOGOS PARAMÉTRICOS

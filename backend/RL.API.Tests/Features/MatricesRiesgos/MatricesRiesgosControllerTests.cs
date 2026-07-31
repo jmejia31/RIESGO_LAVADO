@@ -463,8 +463,19 @@ public sealed class MatricesRiesgosControllerTests
         Assert.True((bool)successProp!.GetValue(okResult.Value)!);
     }
 
+    [Fact]
+    public async Task EliminarEvidencia_RetornaOk()
+    {
+        var controller = CrearController(out var serviceStub, out _);
+        serviceStub.On(nameof(IMatricesRiesgosAppService.EliminarEvidenciaAsync), _ => Task.FromResult(ServiceResult.Ok("Eliminado")));
 
+        var result = await controller.EliminarEvidencia(123L);
 
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+        var successProp = okResult.Value.GetType().GetProperty("success");
+        Assert.True((bool)successProp!.GetValue(okResult.Value)!);
+    }
     private static MatricesRiesgosController CrearController(out InterfaceStub serviceStub, out InterfaceStub loggerStub)
     {
         var service = InterfaceStub.Create<IMatricesRiesgosAppService>(out serviceStub);

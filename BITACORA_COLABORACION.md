@@ -1446,6 +1446,58 @@ Resolver el defecto bloqueante reportado en la Fase 6 Backend: restaurar los umb
 
 1. Iniciar el Frontend (Fase 7) en Angular 22 sobre la rama `desarrollo` para implementar los componentes visuales e interfaces del ciclo de vida de plantillas de formularios y la captura transaccional de evaluaciones de riesgo de lavado.
 
+---
+
+## Registro de Intervención #12
+
+- **Fecha y hora**: 2026-07-31 01:02, hora local.
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit final**: `desarrollo` publicado.
+
+### Objetivo
+
+Ejecutar e implementar el Hito 7.0 (Ajustes Técnicos Previos en Backend) de la Fase 7: corregir el contrato de ruta del historial de formularios, e implementar el endpoint de eliminación y compensación de evidencias huérfanas en el backend de forma transaccional, idempotente y segura, garantizando calidad del 100%.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationTests.cs) (Pruebas de EliminarEvidenciaAsync)
+- **Modificado**: [`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs`](backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs) (Pruebas del endpoint DELETE de evidencias)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs`](backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs) (Definición de EliminarEvidenciaAsync)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`](backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs) (Implementación de EliminarEvidenciaAsync)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs`](backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs) (Ruta de historial formularios corregida y endpoint `DELETE api/matrices-riesgos/evidencias/{id}`)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs`](backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs) (Firmas de verificación de vínculos y eliminación)
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`](backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs) (Implementación de consultas Oracle de vínculos relacionales y eliminación)
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) (Este archivo de registro histórico)
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) (Estado vivo de colaboración)
+
+### Cambios funcionales y técnicos (Hito 7.0 Backend Completado)
+
+1. **Corrección de Ruta del Historial**: Se cambió la ruta HTTP del historial de formularios a `GET api/matrices-riesgos/formularios/historial`, consumiendo el query string `familiaCodigo` y eliminando el parámetro de ruta `{id}` en desuso.
+2. **Endpoint DELETE de Evidencias**: Se expuso la API `DELETE api/matrices-riesgos/evidencias/{id}`.
+3. **Validación de Vínculos relacionales**: La base de datos verifica mediante consultas de agregación estructurada en las 9 tablas puente (`RL_MR_EVI_*`) que la evidencia no tenga relaciones previas.
+4. **Idempotencia**: Si el identificador de evidencia provisto no existe o ya fue eliminado, el servicio responde de forma idempotente con éxito (HTTP 200) sin arrojar errores de negocio.
+5. **Borrado Físico y Auditoría**: Elimina el archivo del almacenamiento del servidor local y el registro de la tabla `RL_MR_EVIDENCIAS`, escribiendo una traza de auditoría de seguridad.
+6. **Pruebas y Cobertura Expandidas**: Se incorporaron 4 nuevas pruebas unitarias en backend. Cobertura backend alcanzada: **Líneas: 15.76%, Ramas: 16.89%** (superando los umbrales originales).
+
+### Verificación técnica ejecutada (en esta intervención)
+
+| Validación | Resultado Real |
+|---|---|
+| Pruebas Unitarias Backend | **177 aprobadas** (100% de éxito, 0 fallidas, 0 omitidas) |
+| Pruebas Unitarias Frontend | **165 aprobadas** (100% de éxito) |
+| Pruebas E2E Playwright | **7 aprobadas** (100% de éxito) |
+| Cobertura de Código Backend | **Líneas: 15.76%, Ramas: 16.89%** (Mínimo: Líneas: 15.3%, Ramas: 16.3%) |
+| `tools/run_quality_gates.ps1` | **Puertas de calidad correctas** (exit code 0 - APROBADO) |
+| `tools/validate_repository_structure.ps1` | **Correcto** |
+| `tools/validate_database_scripts.ps1` | **Correcto** |
+| `tools/validate_documentation_links.ps1` | **Correcto** |
+
+### Punto de continuación
+
+1. Iniciar el Frontend (Fase 7) en Angular 22 sobre la rama `desarrollo` para implementar los componentes visuales de UI e integrar el consumo de los 25 endpoints del controlador del backend de Matrices de Riesgo.
+
+
 
 
 
