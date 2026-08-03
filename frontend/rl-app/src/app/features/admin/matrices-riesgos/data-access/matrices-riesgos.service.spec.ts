@@ -10,7 +10,9 @@ describe('MatricesRiesgosService', () => {
   const apiUrl = 'http://localhost:5043/api/matrices-riesgos';
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()]
+    });
     service = TestBed.inject(MatricesRiesgosService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -20,329 +22,135 @@ describe('MatricesRiesgosService', () => {
     TestBed.resetTestingModule();
   });
 
+  it('consulta la metodología dinámica vigente', () => {
+    const resultado = vi.fn();
+    const metodologia = {
+      versionFormularioId: 10,
+      codigo: 'FORM_A',
+      version: 2,
+      secciones: [],
+      catalogos: [],
+      reglas: []
+    };
 
-  it('consulta el dashboard ejecutivo con filtros reales', () => {
-    const result = vi.fn();
-    service.dashboard({ sujetoTipo: 'PROVEEDOR', nivelInherente: 'ALTO', nivelResidual: 'MEDIO' }).subscribe(result);
+    service.metodologiaVigente().subscribe(resultado);
 
-    const request = http.expectOne(req => req.url === `${apiUrl}/dashboard`);
+    const request = http.expectOne(`${apiUrl}/metodologia/vigente`);
     expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('sujetoTipo')).toBe('PROVEEDOR');
-    expect(request.request.params.get('nivelInherente')).toBe('ALTO');
-    expect(request.request.params.get('nivelResidual')).toBe('MEDIO');
-    request.flush({ success: true, datos: { totalMatrices: 2 } });
-    expect(result).toHaveBeenCalledWith({ totalMatrices: 2 });
+    request.flush({ success: true, datos: metodologia });
+    expect(resultado).toHaveBeenCalledWith(metodologia);
   });
 
-  it('construye el reporte omitiendo filtros vacios', () => {
-    const result = vi.fn();
-    service.reporte({ estado: 'ACTIVA', busqueda: '', fechaDesde: undefined } as never).subscribe(result);
+  it('consulta el consolidado mediante filas tipadas', () => {
+    const resultado = vi.fn();
+    const filas = [{
+      riesgoId: 1,
+      evaluacionId: 2,
+      versionFormularioId: 10,
+      codigoRiesgo: 'R-001',
+      areaPrincipal: 'Cumplimiento',
+      duenoRiesgo: 'Responsable',
+      vri: 7,
+      nivelInherente: 'ALTO',
+      vrr: 4,
+      nivelResidual: 'MODERADO',
+      respuestaRiesgo: 'MITIGAR',
+      estadoEvaluacion: 'APROBADA',
+      fechaEvaluacion: '2026-08-03T10:00:00'
+    }];
 
-    const request = http.expectOne(req => req.url === `${apiUrl}/reportes`);
-    expect(request.request.params.keys()).toEqual(['estado']);
-    expect(request.request.params.get('estado')).toBe('ACTIVA');
-    request.flush({ success: true, datos: { total: 3 } });
-    expect(result).toHaveBeenCalledWith({ total: 3 });
-  });
+    service.obtenerConsolidado().subscribe(resultado);
 
-  it('exporta el reporte como blob con formato y confirmacion previa', () => {
-    const result = vi.fn();
-    service.exportarReporte({ estado: 'ACTIVA' } as never, 'PDF').subscribe(result);
-
-    const request = http.expectOne(req => req.url === `${apiUrl}/reportes/exportar`);
+    const request = http.expectOne(`${apiUrl}/consolidado`);
     expect(request.request.method).toBe('GET');
-    expect(request.request.responseType).toBe('blob');
-    expect(request.request.params.get('estado')).toBe('ACTIVA');
-    expect(request.request.params.get('formato')).toBe('PDF');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    const archivo = new Blob(['reporte'], { type: 'application/pdf' });
-    request.flush(archivo);
-    expect(result).toHaveBeenCalledWith(archivo);
+    request.flush({ success: true, datos: filas });
+    expect(resultado).toHaveBeenCalledWith(filas);
   });
 
-  it('exporta la ficha individual como blob auditado', () => {
-    const result = vi.fn();
-    service.exportarFicha(14).subscribe(result);
+  it('lista evaluaciones con paginación compatible con el backend', () => {
+    service.listarEvaluaciones({
+      estado: 'BORRADOR',
+      pagina: 2,
+      registrosPorPagina: 25
+    }).subscribe();
 
-    const request = http.expectOne(`${apiUrl}/14/reportes/ficha`);
-    expect(request.request.method).toBe('GET');
-    expect(request.request.responseType).toBe('blob');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    const archivo = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
-    request.flush(archivo);
-    expect(result).toHaveBeenCalledWith(archivo);
+    const request = http.expectOne(req => req.url === `${apiUrl}/evaluaciones`);
+    expect(request.request.params.get('estado')).toBe('BORRADOR');
+    expect(request.request.params.get('pagina')).toBe('2');
+    expect(request.request.params.get('registrosPorPagina')).toBe('25');
+    request.flush({ success: true, datos: [] });
   });
 
-  it('actualiza una matriz y extrae el detalle de la respuesta', () => {
-    const dto = { nombre: 'Matriz institucional' } as never;
-    const detalle = { id: 14, nombre: 'Matriz institucional' };
-    const result = vi.fn();
-    service.actualizar(14, dto).subscribe(result);
+  it('crea una evaluación con confirmación de operación sensible', () => {
+    const dto = {
+      evaId: 0,
+      evaRiesgoId: 4,
+      evaVersionId: 10,
+      evaEstado: 'BORRADOR',
+      evaDataJson: '{}',
+      evaDataCalcJson: '{}',
+      evaFechaEval: '2026-08-03T10:00:00',
+      evaUsrEval: 1,
+      evaVersionRow: 1,
+      evaActivo: true
+    };
 
-    const request = http.expectOne(`${apiUrl}/14`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual(dto);
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: detalle });
-    expect(result).toHaveBeenCalledWith(detalle);
-  });
+    service.crearEvaluacion(dto).subscribe();
 
-  it('no expone un endpoint publico de recalculo separado', () => {
-    expect('recalcular' in (service as unknown as Record<string, unknown>)).toBe(false);
-  });
-
-  it('consulta criterios activos e inactivos mediante un parametro explicito', () => {
-    const criterios = [{ id: 1, nombre: 'Pais' }];
-    const result = vi.fn();
-    service.listarCriterios(true).subscribe(result);
-
-    const request = http.expectOne(req => req.url === `${apiUrl}/criterios`);
-    expect(request.request.params.get('incluirInactivos')).toBe('true');
-    request.flush({ success: true, datos: criterios });
-    expect(result).toHaveBeenCalledWith(criterios);
-  });
-
-  it('lista los planes de una matriz', () => {
-    const planes = [{ planId: 4, actividad: 'Revisar expediente' }];
-    const result = vi.fn();
-    service.listarPlanes(12).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/12/planes`);
-    expect(request.request.method).toBe('GET');
-    request.flush({ success: true, datos: planes });
-    expect(result).toHaveBeenCalledWith(planes);
-  });
-
-  it('crea un plan con confirmacion previa y extrae la respuesta', () => {
-    const dto = { actividad: 'Revisar expediente', responsable: 'Cumplimiento' };
-    const result = vi.fn();
-    service.crearPlan(12, dto).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/12/planes`);
+    const request = http.expectOne(`${apiUrl}/evaluaciones`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(dto);
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: { planId: 4, ...dto } });
-    expect(result).toHaveBeenCalledWith(expect.objectContaining({ planId: 4 }));
+    request.flush({ success: true, datos: 15 });
   });
 
-  it('actualiza y cambia el estado de un plan con motivo', () => {
-    const dto = { actividad: 'Seguimiento mensual', responsable: 'Cumplimiento' } as never;
-    service.actualizarPlan(12, 4, dto).subscribe();
-    service.cambiarEstadoPlan(12, 4, 'CERRADO', 'Evidencia aprobada').subscribe();
+  it('transiciona una evaluación mediante el endpoint canónico', () => {
+    service.transicionarEvaluacion(15, 'EN_REVISION', 'Captura completada').subscribe();
 
-    const update = http.expectOne(`${apiUrl}/12/planes/4`);
-    expect(update.request.method).toBe('PUT');
-    expect(update.request.body).toEqual(dto);
-    expect(update.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    update.flush({ success: true, datos: { planId: 4 } });
-
-    const estado = http.expectOne(`${apiUrl}/12/planes/4/estado`);
-    expect(estado.request.method).toBe('PUT');
-    expect(estado.request.body).toEqual({ estado: 'CERRADO', motivo: 'Evidencia aprobada' });
-    expect(estado.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    estado.flush({ success: true });
-  });
-
-  it('inactiva un plan con confirmacion y motivo', () => {
-    service.inactivarPlan(12, 4, 'Plan sustituido').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/12/planes/4/inactivar`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ motivo: 'Plan sustituido' });
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true });
-  });
-
-  it('reactiva un plan con confirmacion y motivo', () => {
-    service.reactivarPlan(12, 4, 'Reapertura autorizada').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/12/planes/4/reactivar`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ motivo: 'Reapertura autorizada' });
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true });
-  });
-
-  it('lista las evidencias de una matriz', () => {
-    const evidencias = [{ evidenciaId: 8, nombreOriginal: 'reporte.pdf' }];
-    const result = vi.fn();
-    service.listarEvidencias(12).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/12/evidencias`);
-    expect(request.request.method).toBe('GET');
-    request.flush({ success: true, datos: evidencias });
-    expect(result).toHaveBeenCalledWith(evidencias);
-  });
-
-  it('carga evidencia como FormData vinculada a plan y control', () => {
-    const archivo = new File(['%PDF-1.7'], 'reporte.pdf', { type: 'application/pdf' });
-    service.cargarEvidencia(12, archivo, 3, 4).subscribe();
-
-    const request = http.expectOne(`${apiUrl}/12/evidencias`);
+    const request = http.expectOne(req => req.url === `${apiUrl}/evaluaciones/15/transiciones`);
     expect(request.request.method).toBe('POST');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    const form = request.request.body as FormData;
-    expect(form.get('archivo')).toBe(archivo);
-    expect(form.get('controlId')).toBe('3');
-    expect(form.get('planId')).toBe('4');
-    request.flush({ success: true, datos: { evidenciaId: 8 } });
-  });
-
-  it('descarga una evidencia como blob auditado', () => {
-    const result = vi.fn();
-    service.descargarEvidencia(12, 8).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/12/evidencias/8/descargar`);
-    expect(request.request.method).toBe('GET');
-    expect(request.request.responseType).toBe('blob');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    const archivo = new Blob(['reporte'], { type: 'application/pdf' });
-    request.flush(archivo);
-    expect(result).toHaveBeenCalledWith(archivo);
-  });
-
-  it('inactiva una evidencia con confirmacion y motivo', () => {
-    service.inactivarEvidencia(12, 8, 'Documento sustituido').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/12/evidencias/8/inactivar`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ motivo: 'Documento sustituido' });
+    expect(request.request.params.get('nuevoEstado')).toBe('EN_REVISION');
+    expect(request.request.params.get('motivo')).toBe('Captura completada');
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     request.flush({ success: true });
   });
 
-
-  it('reactiva un criterio con confirmacion y motivo', () => {
-    service.reactivarCriterio(9, 'Rango nuevamente vigente').subscribe();
-
-    const request = http.expectOne(`${apiUrl}/criterios/9/reactivar`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toEqual({ motivo: 'Rango nuevamente vigente' });
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true });
-  });
-
-  it('propaga errores HTTP del listado al coordinador de la pantalla', () => {
-    const error = vi.fn();
-    service.listar({ estado: 'ACTIVA' } as never).subscribe({ error });
-
-    const request = http.expectOne(req => req.url === apiUrl);
-    request.flush({ mensaje: 'Consulta rechazada' }, { status: 500, statusText: 'Server Error' });
-
-    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 500 }));
-  });
-
-  // --- PRUEBAS ADICIONALES FASE 7 ---
-
-  it('crea borrador de formulario con familia y codigo en query string', () => {
-    const result = vi.fn();
-    service.crearBorradorFormulario(1, 'FORM_A', '{}').subscribe(result);
+  it('crea un borrador de formulario con familia y código', () => {
+    const resultado = vi.fn();
+    service.crearBorradorFormulario(1, 'FORM_A', '{"secciones":[]}').subscribe(resultado);
 
     const request = http.expectOne(req => req.url === `${apiUrl}/formularios/borrador`);
     expect(request.request.method).toBe('POST');
     expect(request.request.params.get('familiaId')).toBe('1');
     expect(request.request.params.get('codigoFormulario')).toBe('FORM_A');
-    expect(request.request.body).toBe('{}');
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: 10 });
-    expect(result).toHaveBeenCalledWith({ success: true, datos: 10 });
+    request.flush({ success: true, datos: 22 });
+    expect(resultado).toHaveBeenCalledWith(22);
   });
 
-  it('clona version de formulario mediante POST', () => {
-    const result = vi.fn();
-    service.clonarVersionFormulario(5).subscribe(result);
+  it('carga y vincula una evidencia a una evaluación', () => {
+    const archivo = new File(['evidencia'], 'evidencia.pdf', { type: 'application/pdf' });
+    service.cargarEvidencia(archivo).subscribe();
 
-    const request = http.expectOne(`${apiUrl}/formularios/5/clonar`);
-    expect(request.request.method).toBe('POST');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: 11 });
-    expect(result).toHaveBeenCalledWith({ success: true, datos: 11 });
+    const carga = http.expectOne(`${apiUrl}/evidencias/cargar`);
+    expect(carga.request.method).toBe('POST');
+    expect(carga.request.body instanceof FormData).toBe(true);
+    expect(carga.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    carga.flush({ success: true, datos: { eviId: 8 } });
+
+    service.vincularEvidenciaEvaluacion({ eveEvaluacionId: 15, eveEvidenciaId: 8 }).subscribe();
+    const vinculo = http.expectOne(`${apiUrl}/evidencias/vincular/evaluacion`);
+    expect(vinculo.request.method).toBe('POST');
+    expect(vinculo.request.body).toEqual({ eveEvaluacionId: 15, eveEvidenciaId: 8 });
+    expect(vinculo.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    vinculo.flush({ success: true });
   });
 
-  it('actualiza borrador de formulario mediante PUT', () => {
-    const result = vi.fn();
-    service.actualizarBorradorFormulario(5, '{}').subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/formularios/5`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toBe('{}');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: 'Actualizado' });
-    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Actualizado' });
-  });
-
-  it('publica version de formulario mediante POST', () => {
-    const result = vi.fn();
-    service.publicarVersionFormulario(5).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/formularios/5/publicar`);
-    expect(request.request.method).toBe('POST');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: 'Publicado' });
-    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Publicado' });
-  });
-
-  it('cambia estado de vigencia de formulario con query string', () => {
-    const result = vi.fn();
-    service.cambiarEstadoVigenciaFormulario(5, true).subscribe(result);
-
-    const request = http.expectOne(req => req.url === `${apiUrl}/formularios/5/estado`);
-    expect(request.request.method).toBe('PUT');
-    expect(request.request.params.get('vigente')).toBe('true');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, datos: 'Vigencia cambiada' });
-    expect(result).toHaveBeenCalledWith({ success: true, datos: 'Vigencia cambiada' });
-  });
-
-  it('obtiene la version vigente de formulario', () => {
-    const result = vi.fn();
-    service.obtenerVersionVigenteFormulario('MATRIZ_RIESGOS_LAFT').subscribe(result);
-
-    const request = http.expectOne(req => req.url === `${apiUrl}/formulario/version-vigente`);
-    expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('familiaCodigo')).toBe('MATRIZ_RIESGOS_LAFT');
-    request.flush({ success: true, datos: { verId: 10 } });
-    expect(result).toHaveBeenCalledWith({ verId: 10 });
-  });
-
-  it('vincula evidencias en todos los tipos relacionales', () => {
-    service.vincularEvidenciaRiesgo({ evrRiesgoId: 1, evrEvidenciaId: 2, usrId: 99 }).subscribe();
-    service.vincularEvidenciaEvaluacion({ eveEvaluacionId: 1, eveEvidenciaId: 2, usrId: 99 }).subscribe();
-    service.vincularEvidenciaControl({ evcControlId: 1, evcEvidenciaId: 2, usrId: 99 }).subscribe();
-
-    const reqRiesgo = http.expectOne(`${apiUrl}/evidencias/vincular/riesgo`);
-    expect(reqRiesgo.request.method).toBe('POST');
-    reqRiesgo.flush({ success: true });
-
-    const reqEval = http.expectOne(`${apiUrl}/evidencias/vincular/evaluacion`);
-    expect(reqEval.request.method).toBe('POST');
-    reqEval.flush({ success: true });
-
-    const reqCtrl = http.expectOne(`${apiUrl}/evidencias/vincular/control`);
-    expect(reqCtrl.request.method).toBe('POST');
-    reqCtrl.flush({ success: true });
-  });
-
-  it('elimina evidencia huerfana de forma idempotente', () => {
-    const result = vi.fn();
-    service.eliminarEvidenciaHuerfana(123).subscribe(result);
-
-    const request = http.expectOne(`${apiUrl}/evidencias/123`);
-    expect(request.request.method).toBe('DELETE');
-    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
-    request.flush({ success: true, mensaje: 'Eliminado' });
-    expect(result).toHaveBeenCalledWith({ success: true, mensaje: 'Eliminado' });
-  });
-
-  it('obtiene politica de evidencias transversal de listas', () => {
-    const result = vi.fn();
-    service.obtenerPoliticaEvidencias().subscribe(result);
-
-    const request = http.expectOne('http://localhost:5043/api/listas/evidencias/politica');
-    expect(request.request.method).toBe('GET');
-    request.flush({ success: true, datos: { maximoMb: 10 } });
-    expect(result).toHaveBeenCalledWith({ maximoMb: 10 });
+  it('no expone métodos del modelo heredado', () => {
+    const metodos = service as unknown as Record<string, unknown>;
+    expect('dashboard' in metodos).toBe(false);
+    expect('listarCriterios' in metodos).toBe(false);
+    expect('crearPlan' in metodos).toBe(false);
+    expect('recalcular' in metodos).toBe(false);
   });
 });
-
