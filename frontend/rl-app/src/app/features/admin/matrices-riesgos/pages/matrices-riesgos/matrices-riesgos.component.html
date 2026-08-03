@@ -1,31 +1,31 @@
 <section class="w-full space-y-5" aria-labelledby="titulo-matrices">
   <header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">SGRLA · IHSS</p>
+    <div class="mt-1 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">SGRLA · IHSS</p>
-        <h1 id="titulo-matrices" class="mt-1 text-2xl font-bold text-slate-900">Matrices de Riesgos</h1>
-        <p class="mt-2 max-w-3xl text-sm text-slate-600">Evaluaciones basadas en formularios versionados, campos dinámicos, catálogos y reglas trazables.</p>
+        <h1 id="titulo-matrices" class="text-2xl font-bold text-slate-900">Matrices de Riesgos</h1>
+        <p class="mt-2 text-sm text-slate-600">Formulario versionado, campos dinámicos, catálogos y reglas trazables.</p>
       </div>
-      <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-        <div><span class="font-semibold">Formulario:</span> {{ versionVigente()?.verCodigo || 'Sin versión vigente' }}</div>
-        <div><span class="font-semibold">Versión:</span> {{ versionVigente()?.verVersion || '-' }}</div>
-        <div><span class="font-semibold">Campos:</span> {{ totalCampos() }}</div>
-      </div>
+      <dl class="grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm">
+        <div><dt class="font-semibold text-slate-500">Formulario</dt><dd>{{ versionVigente()?.verCodigo || '-' }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Versión</dt><dd>{{ versionVigente()?.verVersion || '-' }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Campos</dt><dd>{{ totalCampos() }}</dd></div>
+      </dl>
     </div>
   </header>
 
-  @if (error()) {
-    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div>
-  }
-  @if (mensaje()) {
-    <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div>
-  }
+  @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
+  @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
 
   <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos">
-    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'evaluaciones'" [class.text-white]="tab() === 'evaluaciones'" (click)="seleccionarTab('evaluaciones')">Evaluaciones</button>
-    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'captura'" [class.text-white]="tab() === 'captura'" (click)="seleccionarTab('captura')">Captura dinámica</button>
-    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'consolidado'" [class.text-white]="tab() === 'consolidado'" (click)="seleccionarTab('consolidado')">Consolidado</button>
-    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'plantillas'" [class.text-white]="tab() === 'plantillas'" (click)="seleccionarTab('plantillas')">Plantillas</button>
+    @for (opcion of [
+      { id: 'evaluaciones', texto: 'Evaluaciones' },
+      { id: 'captura', texto: 'Captura dinámica' },
+      { id: 'consolidado', texto: 'Consolidado' },
+      { id: 'plantillas', texto: 'Plantillas' }
+    ]; track opcion.id) {
+      <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === opcion.id" [class.text-white]="tab() === opcion.id" (click)="seleccionarTab($any(opcion.id))">{{ opcion.texto }}</button>
+    }
   </nav>
 
   @if (cargando()) {
@@ -33,55 +33,23 @@
   }
 
   @if (!cargando() && tab() === 'evaluaciones') {
-    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-evaluaciones">
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h2 id="titulo-evaluaciones" class="text-lg font-bold text-slate-900">Evaluaciones registradas</h2>
-          <p class="text-sm text-slate-600">El estado se obtiene del último flujo registrado.</p>
-        </div>
+        <div><h2 class="text-lg font-bold text-slate-900">Evaluaciones</h2><p class="text-sm text-slate-600">El estado proviene del último flujo registrado.</p></div>
         <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" (click)="nuevaEvaluacion()">Nueva evaluación</button>
       </div>
-
       <div class="grid gap-3 md:grid-cols-4">
-        <label class="text-sm font-medium text-slate-700 md:col-span-2">
-          Buscar
-          <input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)" placeholder="Código, área o responsable">
-        </label>
-        <label class="text-sm font-medium text-slate-700">
-          Estado
-          <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)">
-            <option value="">Todos</option>
-            <option value="BORRADOR">Borrador</option>
-            <option value="EN_REVISION">En revisión</option>
-            <option value="OBSERVADA">Observada</option>
-            <option value="APROBADA">Aprobada</option>
-            <option value="RECHAZADA">Rechazada</option>
-            <option value="CERRADA">Cerrada</option>
-          </select>
-        </label>
-        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" (click)="cargarEvaluaciones()">Aplicar filtros</button>
+        <label class="text-sm font-medium md:col-span-2">Buscar<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></label>
+        <label class="text-sm font-medium">Estado<select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></label>
+        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarEvaluaciones()">Aplicar filtros</button>
       </div>
-
       <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-full divide-y divide-slate-200 text-sm">
-          <thead class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
-            <tr><th class="px-4 py-3">Evaluación</th><th class="px-4 py-3">Riesgo</th><th class="px-4 py-3">Versión</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Acciones</th></tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 bg-white">
+        <table class="min-w-[900px] w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Evaluación</th><th class="px-4 py-3">Riesgo</th><th class="px-4 py-3">Versión</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Acción</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">
             @for (evaluacion of evaluaciones(); track evaluacion.evaId) {
-              <tr>
-                <td class="px-4 py-3 font-semibold text-slate-900">{{ evaluacion.evaId }}</td>
-                <td class="px-4 py-3">{{ evaluacion.evaRiesgoId }}</td>
-                <td class="px-4 py-3">{{ evaluacion.evaVersionId }}</td>
-                <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{{ evaluacion.evaEstado }}</span></td>
-                <td class="px-4 py-3">{{ evaluacion.evaVri ?? '-' }}</td>
-                <td class="px-4 py-3">{{ evaluacion.evaVrr ?? '-' }}</td>
-                <td class="px-4 py-3">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td class="px-4 py-3"><button type="button" class="font-semibold text-blue-700 hover:underline" (click)="editarEvaluacion(evaluacion)">Abrir</button></td>
-              </tr>
-            } @empty {
-              <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No hay evaluaciones para los filtros seleccionados.</td></tr>
-            }
+              <tr><td class="px-4 py-3 font-semibold">{{ evaluacion.evaId }}</td><td class="px-4 py-3">{{ evaluacion.evaRiesgoId }}</td><td class="px-4 py-3">{{ evaluacion.evaVersionId }}</td><td class="px-4 py-3">{{ evaluacion.evaEstado }}</td><td class="px-4 py-3">{{ evaluacion.evaVri ?? '-' }}</td><td class="px-4 py-3">{{ evaluacion.evaVrr ?? '-' }}</td><td class="px-4 py-3">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td><td class="px-4 py-3"><button type="button" class="font-semibold text-blue-700" (click)="editarEvaluacion(evaluacion)">Abrir</button></td></tr>
+            } @empty { <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Sin evaluaciones.</td></tr> }
           </tbody>
         </table>
       </div>
@@ -89,30 +57,20 @@
   }
 
   @if (!cargando() && tab() === 'captura') {
-    <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-captura">
+    <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 id="titulo-captura" class="text-lg font-bold text-slate-900">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2>
-          <p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p>
-        </div>
-        <label class="text-sm font-semibold text-slate-700">
-          Riesgo ID
-          <input class="ml-2 w-36 rounded-lg border border-slate-300 px-3 py-2" type="number" min="1" [ngModel]="riesgoId()" (ngModelChange)="riesgoId.set($event)">
-        </label>
+        <div><h2 class="text-lg font-bold">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p></div>
+        <label class="text-sm font-semibold">Riesgo ID<input class="ml-2 w-36 rounded-lg border border-slate-300 px-3 py-2" type="number" min="1" [ngModel]="riesgoId()" (ngModelChange)="riesgoId.set($event)"></label>
       </div>
-
       @for (seccion of secciones(); track seccion.clave) {
         <fieldset class="rounded-xl border border-slate-200 p-4">
-          <legend class="px-2 text-base font-bold text-slate-900">{{ seccion.titulo }}</legend>
+          <legend class="px-2 font-bold">{{ seccion.titulo }}</legend>
           <div class="grid gap-4 md:grid-cols-2">
             @for (campo of seccion.campos; track campo.clave) {
-              <label class="text-sm font-medium text-slate-700 md:col-span-2">
+              <label class="text-sm font-medium">
                 {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600">*</span> }
                 @if (opcionesCatalogo(campo).length) {
-                  <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
-                    <option [ngValue]="null">Seleccione</option>
-                    @for (opcion of opcionesCatalogo(campo); track opcion.codigo) { <option [value]="opcion.codigo">{{ opcion.valor }}</option> }
-                  </select>
+                  <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"><option [ngValue]="null">Seleccione</option>@for (opcion of opcionesCatalogo(campo); track opcion.codigo) { <option [value]="opcion.codigo">{{ opcion.valor }}</option> }</select>
                 } @else if (campo.tipo === 'booleano' || campo.tipo === 'checkbox') {
                   <input class="ml-3 h-4 w-4" type="checkbox" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
                 } @else if (campo.tipo === 'textarea') {
@@ -124,73 +82,23 @@
             }
           </div>
         </fieldset>
-      } @empty {
-        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">La versión vigente no contiene secciones dinámicas disponibles.</div>
-      }
-
-      <div class="flex flex-wrap gap-3">
-        <button type="button" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="guardando() || !puedeGuardar()" (click)="guardarEvaluacion()">Guardar evaluación</button>
-        <button type="button" class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold" (click)="seleccionarTab('evaluaciones')">Cancelar</button>
-      </div>
-
+      } @empty { <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">La versión vigente no contiene secciones.</div> }
+      <div class="flex gap-3"><button type="button" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando() || !puedeGuardar()" (click)="guardarEvaluacion()">Guardar</button><button type="button" class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold" (click)="seleccionarTab('evaluaciones')">Cancelar</button></div>
       @if (evaluacionSeleccionada(); as evaluacion) {
-        <section class="grid gap-4 border-t border-slate-200 pt-5 lg:grid-cols-2">
-          <div class="rounded-xl bg-slate-50 p-4">
-            <h3 class="font-bold text-slate-900">Transición de estado</h3>
-            <div class="mt-3 grid gap-3">
-              <select class="rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoEstado">
-                <option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option>
-              </select>
-              <textarea class="rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="motivoTransicion" placeholder="Motivo de la transición"></textarea>
-              <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="transicionarEvaluacion(evaluacion)">Aplicar transición</button>
-            </div>
-          </div>
-          <div class="rounded-xl bg-slate-50 p-4">
-            <h3 class="font-bold text-slate-900">Evidencia</h3>
-            <input class="mt-3 block w-full text-sm" type="file" (change)="seleccionarArchivo($event)">
-            <button type="button" class="mt-3 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando() || !archivoEvidencia" (click)="cargarYVincularEvidencia(evaluacion)">Cargar y vincular</button>
-          </div>
-        </section>
-        <section class="border-t border-slate-200 pt-5">
-          <h3 class="font-bold text-slate-900">Historial de revisión</h3>
-          <div class="mt-3 space-y-2">
-            @for (revision of revisiones(); track revision.revId) {
-              <div class="rounded-lg border border-slate-200 px-3 py-2 text-sm"><span class="font-semibold">{{ revision.revEstadoAnterior }} → {{ revision.revEstadoNuevo }}</span><span class="ml-2 text-slate-500">{{ revision.revFecha | date:'dd/MM/yyyy HH:mm' }}</span>@if (revision.revMotivo) { <p class="mt-1 text-slate-600">{{ revision.revMotivo }}</p> }</div>
-            } @empty { <p class="text-sm text-slate-500">Sin revisiones registradas.</p> }
-          </div>
-        </section>
+        <div class="grid gap-4 border-t border-slate-200 pt-5 lg:grid-cols-2">
+          <div class="rounded-xl bg-slate-50 p-4"><h3 class="font-bold">Transición</h3><select class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoEstado"><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select><textarea class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="motivoTransicion" placeholder="Motivo"></textarea><button type="button" class="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="transicionarEvaluacion(evaluacion)">Aplicar</button></div>
+          <div class="rounded-xl bg-slate-50 p-4"><h3 class="font-bold">Evidencia</h3><input class="mt-3 block w-full text-sm" type="file" (change)="seleccionarArchivo($event)"><button type="button" class="mt-3 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando() || !archivoEvidencia" (click)="cargarYVincularEvidencia(evaluacion)">Cargar y vincular</button></div>
+        </div>
+        <div class="border-t border-slate-200 pt-5"><h3 class="font-bold">Historial de revisiones</h3><div class="mt-3 space-y-2">@for (revision of revisiones(); track revision.revId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex justify-between"><span class="font-semibold">Revisión {{ revision.revId }}</span><span class="text-slate-500">{{ revision.revFecha | date:'dd/MM/yyyy HH:mm' }}</span></div><pre class="mt-2 max-h-32 overflow-auto whitespace-pre-wrap text-xs text-slate-600">{{ revision.revDatosJson }}</pre></article> } @empty { <p class="text-sm text-slate-500">Sin revisiones.</p> }</div></div>
       }
     </section>
   }
 
   @if (!cargando() && tab() === 'consolidado') {
-    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-consolidado">
-      <div class="flex items-center justify-between"><div><h2 id="titulo-consolidado" class="text-lg font-bold text-slate-900">Matriz consolidada</h2><p class="text-sm text-slate-600">Contrato tipado basado en proyecciones relacionales.</p></div><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarConsolidado()">Actualizar</button></div>
-      <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-[1100px] divide-y divide-slate-200 text-sm">
-          <thead class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Área</th><th class="px-4 py-3">Dueño</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">Nivel inherente</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Nivel residual</th><th class="px-4 py-3">Respuesta</th><th class="px-4 py-3">Estado</th></tr></thead>
-          <tbody class="divide-y divide-slate-100">
-            @for (fila of consolidado(); track fila.evaluacionId) { <tr><td class="px-4 py-3 font-semibold">{{ fila.codigoRiesgo }}</td><td class="px-4 py-3">{{ fila.areaPrincipal }}</td><td class="px-4 py-3">{{ fila.duenoRiesgo }}</td><td class="px-4 py-3">{{ fila.vri }}</td><td class="px-4 py-3">{{ fila.nivelInherente }}</td><td class="px-4 py-3">{{ fila.vrr }}</td><td class="px-4 py-3">{{ fila.nivelResidual }}</td><td class="px-4 py-3">{{ fila.respuestaRiesgo }}</td><td class="px-4 py-3">{{ fila.estadoEvaluacion }}</td></tr> } @empty { <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">No hay proyecciones disponibles.</td></tr> }
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex justify-between"><div><h2 class="text-lg font-bold">Matriz consolidada</h2><p class="text-sm text-slate-600">Proyección relacional tipada.</p></div><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarConsolidado()">Actualizar</button></div><div class="overflow-x-auto rounded-xl border border-slate-200"><table class="min-w-[1100px] w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-100 text-left text-xs uppercase"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Área</th><th class="px-4 py-3">Dueño</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">Inherente</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Residual</th><th class="px-4 py-3">Respuesta</th><th class="px-4 py-3">Estado</th></tr></thead><tbody class="divide-y divide-slate-100">@for (fila of consolidado(); track fila.evaluacionId) { <tr><td class="px-4 py-3 font-semibold">{{ fila.codigoRiesgo }}</td><td class="px-4 py-3">{{ fila.areaPrincipal }}</td><td class="px-4 py-3">{{ fila.duenoRiesgo }}</td><td class="px-4 py-3">{{ fila.vri }}</td><td class="px-4 py-3">{{ fila.nivelInherente }}</td><td class="px-4 py-3">{{ fila.vrr }}</td><td class="px-4 py-3">{{ fila.nivelResidual }}</td><td class="px-4 py-3">{{ fila.respuestaRiesgo }}</td><td class="px-4 py-3">{{ fila.estadoEvaluacion }}</td></tr> } @empty { <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">Sin proyecciones.</td></tr> }</tbody></table></div></section>
   }
 
   @if (!cargando() && tab() === 'plantillas') {
-    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-plantillas">
-      <div><h2 id="titulo-plantillas" class="text-lg font-bold text-slate-900">Versiones del formulario</h2><p class="text-sm text-slate-600">Mantenimiento controlado de versiones, vigencia y definición dinámica.</p></div>
-      <div class="grid gap-3">
-        @for (version of versiones(); track version.verId) {
-          <article class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between">
-            <div><h3 class="font-bold text-slate-900">{{ version.verCodigo }} · v{{ version.verVersion }}</h3><p class="text-sm text-slate-600">{{ version.verEstado }} · {{ version.verVigente ? 'Vigente' : 'No vigente' }}</p></div>
-            <div class="flex flex-wrap gap-2"><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="abrirDefinicion(version)">Abrir definición</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="clonarVersion(version)">Clonar</button>@if (version.verEstado === 'DRAFT') { <button type="button" class="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white" (click)="publicarVersion(version)">Publicar</button> }</div>
-          </article>
-        } @empty { <p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No existen versiones registradas.</p> }
-      </div>
-      @if (versionEditando()) {
-        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4"><h3 class="font-bold text-slate-900">Definición técnica de {{ versionEditando()?.verCodigo }}</h3><textarea class="mt-3 min-h-80 w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs" [(ngModel)]="definicionTecnica"></textarea><div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarDefinicion()">Guardar definición</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="versionEditando.set(null)">Cerrar</button></div></div>
-      }
-    </section>
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div><h2 class="text-lg font-bold">Versiones del formulario</h2><p class="text-sm text-slate-600">Mantenimiento de versión, vigencia y definición dinámica.</p></div><div class="grid gap-3">@for (version of versiones(); track version.verId) { <article class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"><div><h3 class="font-bold">{{ version.verCodigo }} · v{{ version.verVersion }}</h3><p class="text-sm text-slate-600">{{ version.verEstado }} · {{ version.verVigente ? 'Vigente' : 'No vigente' }}</p></div><div class="flex gap-2"><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="abrirDefinicion(version)">Abrir definición</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="clonarVersion(version)">Clonar</button>@if (version.verEstado === 'DRAFT') { <button type="button" class="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white" (click)="publicarVersion(version)">Publicar</button> }</div></article> } @empty { <p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Sin versiones.</p> }</div>@if (versionEditando()) { <div class="rounded-xl border border-blue-200 bg-blue-50 p-4"><h3 class="font-bold">Definición técnica de {{ versionEditando()?.verCodigo }}</h3><textarea class="mt-3 min-h-80 w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs" [(ngModel)]="definicionTecnica"></textarea><div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarDefinicion()">Guardar</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="versionEditando.set(null)">Cerrar</button></div></div> }</section>
   }
 </section>
