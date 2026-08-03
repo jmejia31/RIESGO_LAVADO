@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Infrastructure.Database;
 
@@ -12,6 +13,8 @@ namespace RL.API.Features.MatricesRiesgos.Persistence;
 
 public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 {
+    private const string ModuloAuditoria = "MatricesRiesgos";
+
     private static readonly HashSet<string> EstadosEvaluacionPermitidos = new(StringComparer.OrdinalIgnoreCase)
     {
         "BORRADOR",
@@ -23,10 +26,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     };
 
     private readonly OracleDbContext _db;
+    private readonly IAuditoriaRepository? _auditoriaRepository;
 
     public MatricesRiesgosRepository(OracleDbContext db)
+        : this(db, null)
+    {
+    }
+
+    public MatricesRiesgosRepository(OracleDbContext db, IAuditoriaRepository? auditoriaRepository)
     {
         _db = db;
+        _auditoriaRepository = auditoriaRepository;
     }
 
     // ============================================================
@@ -39,16 +49,26 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT v.VER_ID, v.VER_FAMILIA_ID, v.VER_CODIGO, v.VER_VERSION, v.VER_JSON,
-                   v.VER_HASH, v.VER_ESTADO, v.VER_VIGENTE, v.VER_FECHA_INICIO, v.VER_FECHA_FIN,
-                   v.VER_FECHA_CREACION, v.VER_USR_CREACION
+            SELECT v.VER_ID,
+                   v.VER_FAMILIA_ID,
+                   v.VER_CODIGO,
+                   v.VER_VERSION,
+                   v.VER_JSON,
+                   v.VER_HASH,
+                   v.VER_ESTADO,
+                   v.VER_VIGENTE,
+                   v.VER_FECHA_INICIO,
+                   v.VER_FECHA_FIN,
+                   v.VER_FECHA_CREACION,
+                   v.VER_USR_CREACION
               FROM RL_MR_VERSIONES_FORMULARIO v
-              JOIN RL_MR_FAMILIAS_FORMULARIO f ON v.VER_FAMILIA_ID = f.FAM_ID
+              JOIN RL_MR_FAMILIAS_FORMULARIO f
+                ON f.FAM_ID = v.VER_FAMILIA_ID
              WHERE f.FAM_CODIGO = :familiaCodigo
                AND v.VER_ESTADO = 'PUBLISHED'
                AND v.VER_VIGENTE = 1";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("familiaCodigo", familiaCodigo));
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -61,13 +81,22 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT VER_ID, VER_FAMILIA_ID, VER_CODIGO, VER_VERSION, VER_JSON,
-                   VER_HASH, VER_ESTADO, VER_VIGENTE, VER_FECHA_INICIO, VER_FECHA_FIN,
-                   VER_FECHA_CREACION, VER_USR_CREACION
+            SELECT VER_ID,
+                   VER_FAMILIA_ID,
+                   VER_CODIGO,
+                   VER_VERSION,
+                   VER_JSON,
+                   VER_HASH,
+                   VER_ESTADO,
+                   VER_VIGENTE,
+                   VER_FECHA_INICIO,
+                   VER_FECHA_FIN,
+                   VER_FECHA_CREACION,
+                   VER_USR_CREACION
               FROM RL_MR_VERSIONES_FORMULARIO
              WHERE VER_ID = :versionId";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("versionId", versionId));
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -80,6 +109,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string jsonConfig,
         long usuarioId)
     {
+        ValidarJson(jsonConfig, nameof(jsonConfig));
+
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
         await using var trans = conn.BeginTransaction();
@@ -91,30 +122,44 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                   FROM RL_MR_VERSIONES_FORMULARIO
                  WHERE VER_FAMILIA_ID = :familiaId";
 
-            await using var cmdMax = new OracleCommand(sqlMax, conn);
+            await using var cmdMax = CrearComando(sqlMax, conn, trans);
             cmdMax.Parameters.Add(new OracleParameter("familiaId", familiaId));
             int siguienteVersion = Convert.ToInt32(await cmdMax.ExecuteScalarAsync());
 
-            long nuevoId = await ObtenerSiguienteSecuenciaAsync(conn, "SEQ_RL_MR_VERSIONES");
+            long nuevoId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_VERSIONES");
 
             const string sqlInsert = @"
                 INSERT INTO RL_MR_VERSIONES_FORMULARIO (
-                    VER_ID, VER_FAMILIA_ID, VER_CODIGO, VER_VERSION, VER_JSON, VER_HASH,
-                    VER_ESTADO, VER_VIGENTE, VER_USR_CREACION
+                    VER_ID,
+                    VER_FAMILIA_ID,
+                    VER_CODIGO,
+                    VER_VERSION,
+                    VER_JSON,
+                    VER_HASH,
+                    VER_ESTADO,
+                    VER_VIGENTE,
+                    VER_USR_CREACION
                 ) VALUES (
-                    :verId, :familiaId, :codigoFormulario, :version, :jsonConfig, :hash,
-                    'DRAFT', 0, :usuarioId
+                    :verId,
+                    :familiaId,
+                    :codigoFormulario,
+                    :version,
+                    :jsonConfig,
+                    :hash,
+                    'DRAFT',
+                    0,
+                    :usuarioId
                 )";
 
-            await using var cmd = new OracleCommand(sqlInsert, conn);
-            cmd.Parameters.Add(new OracleParameter("verId", nuevoId));
-            cmd.Parameters.Add(new OracleParameter("familiaId", familiaId));
-            cmd.Parameters.Add(new OracleParameter("codigoFormulario", codigoFormulario));
-            cmd.Parameters.Add(new OracleParameter("version", siguienteVersion));
-            cmd.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });
-            cmd.Parameters.Add(new OracleParameter("hash", CalcularHashTemporal(jsonConfig)));
-            cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
-            await cmd.ExecuteNonQueryAsync();
+            await using var cmdInsert = CrearComando(sqlInsert, conn, trans);
+            cmdInsert.Parameters.Add(new OracleParameter("verId", nuevoId));
+            cmdInsert.Parameters.Add(new OracleParameter("familiaId", familiaId));
+            cmdInsert.Parameters.Add(new OracleParameter("codigoFormulario", codigoFormulario));
+            cmdInsert.Parameters.Add(new OracleParameter("version", siguienteVersion));
+            cmdInsert.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });
+            cmdInsert.Parameters.Add(new OracleParameter("hash", CalcularHash(jsonConfig)));
+            cmdInsert.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+            await cmdInsert.ExecuteNonQueryAsync();
 
             await trans.CommitAsync();
             return nuevoId;
@@ -144,6 +189,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string hash,
         long usuarioId)
     {
+        ValidarJson(jsonConfig, nameof(jsonConfig));
+
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
@@ -154,7 +201,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
              WHERE VER_ID = :versionId
                AND VER_ESTADO = 'DRAFT'";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });
         cmd.Parameters.Add(new OracleParameter("hash", hash));
         cmd.Parameters.Add(new OracleParameter("versionId", versionId));
@@ -176,9 +223,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    AND VER_ESTADO IN ('APPROVED', 'DRAFT')
                  FOR UPDATE";
 
-            await using var cmdSelect = new OracleCommand(sqlSelect, conn);
+            await using var cmdSelect = CrearComando(sqlSelect, conn, trans);
             cmdSelect.Parameters.Add(new OracleParameter("versionId", versionId));
-            var familiaIdObj = await cmdSelect.ExecuteScalarAsync();
+            object? familiaIdObj = await cmdSelect.ExecuteScalarAsync();
             if (familiaIdObj is null)
             {
                 await trans.RollbackAsync();
@@ -195,7 +242,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    AND VER_VIGENTE = 1
                    AND VER_ID <> :versionId";
 
-            await using var cmdApagar = new OracleCommand(sqlApagar, conn);
+            await using var cmdApagar = CrearComando(sqlApagar, conn, trans);
             cmdApagar.Parameters.Add(new OracleParameter("familiaId", familiaId));
             cmdApagar.Parameters.Add(new OracleParameter("versionId", versionId));
             await cmdApagar.ExecuteNonQueryAsync();
@@ -209,12 +256,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                        VER_FECHA_FIN = NULL
                  WHERE VER_ID = :versionId";
 
-            await using var cmdPublicar = new OracleCommand(sqlPublicar, conn);
+            await using var cmdPublicar = CrearComando(sqlPublicar, conn, trans);
             cmdPublicar.Parameters.Add(new OracleParameter("hash", hash));
             cmdPublicar.Parameters.Add(new OracleParameter("versionId", versionId));
-            bool actualizado = await cmdPublicar.ExecuteNonQueryAsync() > 0;
 
-            if (!actualizado)
+            if (await cmdPublicar.ExecuteNonQueryAsync() != 1)
             {
                 await trans.RollbackAsync();
                 return false;
@@ -238,12 +284,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         const string sql = @"
             UPDATE RL_MR_VERSIONES_FORMULARIO
                SET VER_VIGENTE = :vigente,
-                   VER_FECHA_INICIO = CASE WHEN :vigente = 1 THEN NVL(VER_FECHA_INICIO, SYSDATE) ELSE VER_FECHA_INICIO END,
-                   VER_FECHA_FIN = CASE WHEN :vigente = 0 THEN SYSDATE ELSE NULL END
+                   VER_FECHA_INICIO = CASE
+                       WHEN :vigente = 1 THEN NVL(VER_FECHA_INICIO, SYSDATE)
+                       ELSE VER_FECHA_INICIO
+                   END,
+                   VER_FECHA_FIN = CASE
+                       WHEN :vigente = 0 THEN SYSDATE
+                       ELSE NULL
+                   END
              WHERE VER_ID = :versionId
                AND VER_ESTADO = 'PUBLISHED'";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("vigente", vigente ? 1 : 0));
         cmd.Parameters.Add(new OracleParameter("versionId", versionId));
         return await cmd.ExecuteNonQueryAsync() > 0;
@@ -255,15 +307,25 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT v.VER_ID, v.VER_FAMILIA_ID, v.VER_CODIGO, v.VER_VERSION, v.VER_JSON,
-                   v.VER_HASH, v.VER_ESTADO, v.VER_VIGENTE, v.VER_FECHA_INICIO, v.VER_FECHA_FIN,
-                   v.VER_FECHA_CREACION, v.VER_USR_CREACION
+            SELECT v.VER_ID,
+                   v.VER_FAMILIA_ID,
+                   v.VER_CODIGO,
+                   v.VER_VERSION,
+                   v.VER_JSON,
+                   v.VER_HASH,
+                   v.VER_ESTADO,
+                   v.VER_VIGENTE,
+                   v.VER_FECHA_INICIO,
+                   v.VER_FECHA_FIN,
+                   v.VER_FECHA_CREACION,
+                   v.VER_USR_CREACION
               FROM RL_MR_VERSIONES_FORMULARIO v
-              JOIN RL_MR_FAMILIAS_FORMULARIO f ON v.VER_FAMILIA_ID = f.FAM_ID
+              JOIN RL_MR_FAMILIAS_FORMULARIO f
+                ON f.FAM_ID = v.VER_FAMILIA_ID
              WHERE f.FAM_CODIGO = :familiaCodigo
              ORDER BY v.VER_VERSION DESC";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("familiaCodigo", familiaCodigo));
 
         var lista = new List<VersionFormularioDto>();
@@ -314,10 +376,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                               FROM RL_MR_FLUJOS_EVALUACION
                            )
                      WHERE RN = 1
-              ) f ON f.FLU_EVALUACION_ID = e.EVA_ID
+              ) f
+                ON f.FLU_EVALUACION_ID = e.EVA_ID
              WHERE e.EVA_ID = :evaId";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evaId", evaId));
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -369,7 +432,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                               FROM RL_MR_FLUJOS_EVALUACION
                            )
                      WHERE RN = 1
-              ) f ON f.FLU_EVALUACION_ID = e.EVA_ID
+              ) f
+                ON f.FLU_EVALUACION_ID = e.EVA_ID
              WHERE e.EVA_ACTIVO = 1");
 
         var parameters = new List<OracleParameter>();
@@ -411,7 +475,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    )
              WHERE NUMERO_FILA > :filaInicial";
 
-        await using var cmd = new OracleCommand(queryPaginada, conn);
+        await using var cmd = CrearComando(queryPaginada, conn);
         foreach (var parameter in parameters)
         {
             cmd.Parameters.Add(parameter);
@@ -440,9 +504,22 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
-            long nuevoEvaId = await ObtenerSiguienteSecuenciaAsync(conn, "SEQ_RL_MR_EVALUACIONES");
+            long reglaId = await ResolverReglaVersionFormularioAsync(
+                conn,
+                trans,
+                dto.EvaVersionId,
+                exigirVigente: true);
+
+            long nuevoEvaId = await ObtenerSiguienteSecuenciaAsync(
+                conn,
+                trans,
+                "SEQ_RL_MR_EVALUACIONES");
+
             var proyeccion = ConstruirProyeccion(dto);
-            string codigoRiesgo = await ObtenerCodigoRiesgoAsync(conn, dto.EvaRiesgoId);
+            string codigoRiesgo = await ObtenerCodigoRiesgoAsync(
+                conn,
+                trans,
+                dto.EvaRiesgoId);
 
             const string sqlInsert = @"
                 INSERT INTO RL_MR_EVALUACIONES_RIESGO (
@@ -467,7 +544,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     1
                 )";
 
-            await using var cmdInsert = new OracleCommand(sqlInsert, conn);
+            await using var cmdInsert = CrearComando(sqlInsert, conn, trans);
             cmdInsert.Parameters.Add(new OracleParameter("evaId", nuevoEvaId));
             cmdInsert.Parameters.Add(new OracleParameter("riesgoId", dto.EvaRiesgoId));
             cmdInsert.Parameters.Add(new OracleParameter("versionId", dto.EvaVersionId));
@@ -476,11 +553,34 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmdInsert.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
             await cmdInsert.ExecuteNonQueryAsync();
 
-            await InsertarProyeccionAsync(conn, nuevoEvaId, codigoRiesgo, proyeccion, "BORRADOR");
-            await InsertarFlujoAsync(conn, nuevoEvaId, "BORRADOR", "Creación inicial", usuarioId);
-            await InsertarTrazaCalculoAsync(conn, nuevoEvaId, dto.EvaDataJson, dto.EvaDataCalcJson, usuarioId);
+            await InsertarProyeccionAsync(
+                conn,
+                trans,
+                nuevoEvaId,
+                codigoRiesgo,
+                proyeccion,
+                "BORRADOR");
+
+            await InsertarFlujoAsync(
+                conn,
+                trans,
+                nuevoEvaId,
+                "BORRADOR",
+                "Creación inicial",
+                usuarioId);
+
+            await InsertarTrazaCalculoAsync(
+                conn,
+                trans,
+                nuevoEvaId,
+                reglaId,
+                dto.EvaDataJson,
+                dto.EvaDataCalcJson,
+                usuarioId);
+
             await InsertarAuditoriaCampoAsync(
                 conn,
+                trans,
                 nuevoEvaId,
                 "__EVALUACION__",
                 null,
@@ -509,17 +609,21 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             const string sqlSelect = @"
-                SELECT EVA_DATA_JSON, EVA_VERSION_ROW
+                SELECT EVA_DATA_JSON,
+                       EVA_VERSION_ROW,
+                       EVA_VERSION_ID
                   FROM RL_MR_EVALUACIONES_RIESGO
                  WHERE EVA_ID = :evaId
                    AND EVA_ACTIVO = 1
                  FOR UPDATE";
 
-            await using var cmdSelect = new OracleCommand(sqlSelect, conn);
+            await using var cmdSelect = CrearComando(sqlSelect, conn, trans);
             cmdSelect.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
 
             string jsonAnterior;
             int versionRowActual;
+            long versionFormularioId;
+
             await using (var reader = await cmdSelect.ExecuteReaderAsync())
             {
                 if (!await reader.ReadAsync())
@@ -530,6 +634,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
                 jsonAnterior = reader.GetString(0);
                 versionRowActual = reader.GetInt32(1);
+                versionFormularioId = reader.GetInt64(2);
             }
 
             if (versionRowActual != dto.EvaVersionRow)
@@ -537,6 +642,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new DBConcurrencyException(
                     $"Conflicto de modificación concurrente en la evaluación {dto.EvaId}.");
             }
+
+            long reglaId = await ResolverReglaVersionFormularioAsync(
+                conn,
+                trans,
+                versionFormularioId,
+                exigirVigente: false);
 
             const string sqlRevision = @"
                 INSERT INTO RL_MR_REVISIONES_EVALUACION (
@@ -553,7 +664,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     :usuarioId
                 )";
 
-            await using var cmdRevision = new OracleCommand(sqlRevision, conn);
+            await using var cmdRevision = CrearComando(sqlRevision, conn, trans);
             cmdRevision.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
             cmdRevision.Parameters.Add(new OracleParameter("jsonAnterior", OracleDbType.Clob) { Value = jsonAnterior });
             cmdRevision.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
@@ -568,30 +679,44 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    AND EVA_VERSION_ROW = :versionRow
                    AND EVA_ACTIVO = 1";
 
-            await using var cmdUpdate = new OracleCommand(sqlUpdate, conn);
+            await using var cmdUpdate = CrearComando(sqlUpdate, conn, trans);
             cmdUpdate.Parameters.Add(new OracleParameter("dataJson", OracleDbType.Clob) { Value = dto.EvaDataJson });
             cmdUpdate.Parameters.Add(new OracleParameter("dataCalcJson", OracleDbType.Clob) { Value = dto.EvaDataCalcJson });
             cmdUpdate.Parameters.Add(new OracleParameter("nuevaVersionRow", versionRowActual + 1));
             cmdUpdate.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
             cmdUpdate.Parameters.Add(new OracleParameter("versionRow", versionRowActual));
 
-            if (await cmdUpdate.ExecuteNonQueryAsync() == 0)
+            if (await cmdUpdate.ExecuteNonQueryAsync() != 1)
             {
-                await trans.RollbackAsync();
-                return false;
+                throw new DBConcurrencyException(
+                    $"No se pudo actualizar la evaluación {dto.EvaId} por un conflicto de concurrencia.");
             }
 
             var proyeccion = ConstruirProyeccion(dto);
-            int proyeccionesActualizadas = await ActualizarProyeccionAsync(conn, dto.EvaId, proyeccion);
+            int proyeccionesActualizadas = await ActualizarProyeccionAsync(
+                conn,
+                trans,
+                dto.EvaId,
+                proyeccion);
+
             if (proyeccionesActualizadas != 1)
             {
                 throw new InvalidOperationException(
                     $"La evaluación {dto.EvaId} debe tener exactamente una proyección; se actualizaron {proyeccionesActualizadas}.");
             }
 
-            await InsertarTrazaCalculoAsync(conn, dto.EvaId, dto.EvaDataJson, dto.EvaDataCalcJson, usuarioId);
+            await InsertarTrazaCalculoAsync(
+                conn,
+                trans,
+                dto.EvaId,
+                reglaId,
+                dto.EvaDataJson,
+                dto.EvaDataCalcJson,
+                usuarioId);
+
             await InsertarAuditoriaCampoAsync(
                 conn,
+                trans,
                 dto.EvaId,
                 "__EVALUACION__",
                 jsonAnterior,
@@ -619,7 +744,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string estadoNormalizado = nuevoEstado.Trim().ToUpperInvariant();
         if (!EstadosEvaluacionPermitidos.Contains(estadoNormalizado))
         {
-            throw new ArgumentException($"Estado de evaluación no permitido: {nuevoEstado}.", nameof(nuevoEstado));
+            throw new ArgumentException(
+                $"Estado de evaluación no permitido: {nuevoEstado}.",
+                nameof(nuevoEstado));
         }
 
         await using var conn = _db.CreateConnection();
@@ -628,14 +755,29 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
-            string estadoAnterior = await ObtenerEstadoActualAsync(conn, evaId);
+            const string sqlLock = @"
+                SELECT EVA_ID
+                  FROM RL_MR_EVALUACIONES_RIESGO
+                 WHERE EVA_ID = :evaId
+                   AND EVA_ACTIVO = 1
+                 FOR UPDATE";
+
+            await using var cmdLock = CrearComando(sqlLock, conn, trans);
+            cmdLock.Parameters.Add(new OracleParameter("evaId", evaId));
+            if (await cmdLock.ExecuteScalarAsync() is null)
+            {
+                await trans.RollbackAsync();
+                return false;
+            }
+
+            string estadoAnterior = await ObtenerEstadoActualAsync(conn, trans, evaId);
 
             const string sqlActualizarProyeccion = @"
                 UPDATE RL_MR_PROYECCIONES_EVALUACION
                    SET PROY_ESTADO_EVALUACION = :nuevoEstado
                  WHERE PROY_EVALUACION_ID = :evaId";
 
-            await using var cmdProyeccion = new OracleCommand(sqlActualizarProyeccion, conn);
+            await using var cmdProyeccion = CrearComando(sqlActualizarProyeccion, conn, trans);
             cmdProyeccion.Parameters.Add(new OracleParameter("nuevoEstado", estadoNormalizado));
             cmdProyeccion.Parameters.Add(new OracleParameter("evaId", evaId));
 
@@ -645,9 +787,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     $"No se encontró una proyección única para la evaluación {evaId}.");
             }
 
-            await InsertarFlujoAsync(conn, evaId, estadoNormalizado, motivo, usuarioId);
+            await InsertarFlujoAsync(
+                conn,
+                trans,
+                evaId,
+                estadoNormalizado,
+                motivo,
+                usuarioId);
+
             await InsertarAuditoriaCampoAsync(
                 conn,
+                trans,
                 evaId,
                 "estado",
                 estadoAnterior,
@@ -671,12 +821,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT REV_ID, REV_EVALUACION_ID, REV_DATOS_JSON, REV_FECHA, REV_USR_ID
+            SELECT REV_ID,
+                   REV_EVALUACION_ID,
+                   REV_DATOS_JSON,
+                   REV_FECHA,
+                   REV_USR_ID
               FROM RL_MR_REVISIONES_EVALUACION
              WHERE REV_EVALUACION_ID = :evaId
              ORDER BY REV_FECHA DESC, REV_ID DESC";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evaId", evaId));
 
         var lista = new List<RevisionEvaluacionDto>();
@@ -697,7 +851,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     }
 
     // ============================================================
-    // 3. ARCHIVO FÍSICO CENTRAL DE EVIDENCIAS Y VINCULACIONES
+    // 3. EVIDENCIAS Y VINCULACIONES
     // ============================================================
 
     public async Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId)
@@ -705,7 +859,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        long nuevoId = await ObtenerSiguienteSecuenciaAsync(conn, "SEQ_RL_MR_EVIDENCIAS");
+        long nuevoId = await ObtenerSiguienteSecuenciaAsync(
+            conn,
+            transaction: null,
+            "SEQ_RL_MR_EVIDENCIAS");
+
         const string sql = @"
             INSERT INTO RL_MR_EVIDENCIAS (
                 EVI_ID,
@@ -716,7 +874,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 EVI_RUTA,
                 EVI_USR_CREACION
             ) VALUES (
-                :eviId,
+                :evidenciaId,
                 :nombre,
                 :extension,
                 :tamano,
@@ -725,8 +883,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 :usuarioId
             )";
 
-        await using var cmd = new OracleCommand(sql, conn);
-        cmd.Parameters.Add(new OracleParameter("eviId", nuevoId));
+        await using var cmd = CrearComando(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("evidenciaId", nuevoId));
         cmd.Parameters.Add(new OracleParameter("nombre", dto.EviNombreArchivo));
         cmd.Parameters.Add(new OracleParameter("extension", dto.EviExtension));
         cmd.Parameters.Add(new OracleParameter("tamano", dto.EviTamano));
@@ -755,7 +913,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
               FROM RL_MR_EVIDENCIAS
              WHERE EVI_ID = :evidenciaId";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -777,18 +935,32 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         };
     }
 
-    public Task<bool> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaRiesgoAsync(
+        AsociarEvidenciaRiesgoDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_RIESGO",
             "EVR_RIESGO_ID",
             "EVR_EVIDENCIA_ID",
             dto.EvrRiesgoId,
             dto.EvrEvidenciaId,
-            "SELECT EVA_ID FROM (SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_RIESGO_ID = :entidadId AND EVA_ACTIVO = 1 ORDER BY EVA_FECHA_REGISTRO DESC, EVA_ID DESC) WHERE ROWNUM = 1",
+            @"SELECT EVA_ID
+                FROM (
+                      SELECT EVA_ID
+                        FROM RL_MR_EVALUACIONES_RIESGO
+                       WHERE EVA_RIESGO_ID = :entidadId
+                         AND EVA_ACTIVO = 1
+                       ORDER BY EVA_FECHA_REGISTRO DESC, EVA_ID DESC
+                     )
+               WHERE ROWNUM = 1",
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaEvaluacionAsync(
+        AsociarEvidenciaEvaluacionDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_EVALUACION",
             "EVE_EVALUACION_ID",
@@ -799,7 +971,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaControlAsync(
+        AsociarEvidenciaControlDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_CONTROL",
             "EVC_CONTROL_ID",
@@ -810,7 +985,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaPlanAsync(AsociarEvidenciaPlanDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaPlanAsync(
+        AsociarEvidenciaPlanDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_PLAN",
             "EVP_PLAN_ID",
@@ -821,18 +999,28 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaActividadAsync(AsociarEvidenciaActividadDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaActividadAsync(
+        AsociarEvidenciaActividadDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_ACTIVIDAD",
             "EVA_ACTIVIDAD_ID",
             "EVA_EVIDENCIA_ID",
             dto.EvaActividadId,
             dto.EvaEvidenciaId,
-            "SELECT p.PLA_EVALUACION_ID FROM RL_MR_ACTIVIDADES a JOIN RL_MR_PLANES p ON p.PLA_ID = a.ACT_PLAN_ID WHERE a.ACT_ID = :entidadId",
+            @"SELECT p.PLA_EVALUACION_ID
+                FROM RL_MR_ACTIVIDADES a
+                JOIN RL_MR_PLANES p
+                  ON p.PLA_ID = a.ACT_PLAN_ID
+               WHERE a.ACT_ID = :entidadId",
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaAlertaAsync(AsociarEvidenciaAlertaDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaAlertaAsync(
+        AsociarEvidenciaAlertaDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_ALERTA",
             "EVA_ALERTA_ID",
@@ -843,7 +1031,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaAutomonitoreoAsync(
+        AsociarEvidenciaAutomonitoreoDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_AUTOMONITOREO",
             "EVM_MONITOREO_ID",
@@ -854,7 +1045,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaRevisionAsync(
+        AsociarEvidenciaRevisionDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_REVISION",
             "EVV_REVISION_ID",
@@ -865,14 +1059,17 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
+    public Task<bool> VincularEvidenciaAprobacionAsync(
+        AsociarEvidenciaAprobacionDto dto,
+        long usuarioId,
+        string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_APROBACION",
             "EVAP_APROBACION_ID",
             "EVAP_EVIDENCIA_ID",
             dto.EvapAprobacionId,
             dto.EvapEvidenciaId,
-            null,
+            sqlResolverEvaluacion: null,
             usuarioId,
             ip);
 
@@ -894,7 +1091,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                  WHERE EVI_ID = :evidenciaId
                  FOR UPDATE";
 
-            await using var cmdLock = new OracleCommand(sqlLock, conn);
+            await using var cmdLock = CrearComando(sqlLock, conn, trans);
             cmdLock.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
             if (await cmdLock.ExecuteScalarAsync() is null)
             {
@@ -914,7 +1111,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                      + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :evidenciaId)
                   FROM DUAL";
 
-            await using var cmdVinculos = new OracleCommand(sqlVinculos, conn);
+            await using var cmdVinculos = CrearComando(sqlVinculos, conn, trans);
             cmdVinculos.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
             if (Convert.ToInt32(await cmdVinculos.ExecuteScalarAsync()) > 0)
             {
@@ -922,8 +1119,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 return ResultadoEliminacionEvidencia.TieneVinculos;
             }
 
-            const string sqlDelete = "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :evidenciaId";
-            await using var cmdDelete = new OracleCommand(sqlDelete, conn);
+            const string sqlDelete = @"
+                DELETE FROM RL_MR_EVIDENCIAS
+                 WHERE EVI_ID = :evidenciaId";
+
+            await using var cmdDelete = CrearComando(sqlDelete, conn, trans);
             cmdDelete.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
             await cmdDelete.ExecuteNonQueryAsync();
 
@@ -984,7 +1184,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
               FROM RL_MR_PROYECCIONES_EVALUACION
              ORDER BY PROY_FECHA_EVAL DESC, PROY_EVALUACION_ID DESC";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn);
         var lista = new List<Dictionary<string, object>>();
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -1031,6 +1231,116 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     // ============================================================
     // AUXILIARES PRIVADOS
     // ============================================================
+
+    private async Task<bool> EjecutarVinculoEvidenciaAsync(
+        string tablaPuente,
+        string columnaEntidad,
+        string columnaEvidencia,
+        long entidadId,
+        long evidenciaId,
+        string? sqlResolverEvaluacion,
+        long usuarioId,
+        string? ip)
+    {
+        if (sqlResolverEvaluacion is null && _auditoriaRepository is null)
+        {
+            throw new InvalidOperationException(
+                "La vinculación de evidencias de aprobación requiere la auditoría transversal institucional.");
+        }
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var trans = conn.BeginTransaction();
+
+        long? evaluacionId = null;
+
+        try
+        {
+            const string sqlExisteEvidencia = @"
+                SELECT EVI_ID
+                  FROM RL_MR_EVIDENCIAS
+                 WHERE EVI_ID = :evidenciaId";
+
+            await using var cmdExisteEvidencia = CrearComando(sqlExisteEvidencia, conn, trans);
+            cmdExisteEvidencia.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
+            if (await cmdExisteEvidencia.ExecuteScalarAsync() is null)
+            {
+                throw new KeyNotFoundException($"No se encontró la evidencia {evidenciaId}.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(sqlResolverEvaluacion))
+            {
+                await using var cmdResolver = CrearComando(sqlResolverEvaluacion, conn, trans);
+                cmdResolver.Parameters.Add(new OracleParameter("entidadId", entidadId));
+                object? resultado = await cmdResolver.ExecuteScalarAsync();
+                if (resultado is null)
+                {
+                    throw new InvalidOperationException(
+                        $"No fue posible resolver la evaluación relacionada con {tablaPuente} y entidad {entidadId}.");
+                }
+
+                evaluacionId = Convert.ToInt64(resultado);
+            }
+
+            string sqlInsert = $@"
+                INSERT INTO {tablaPuente} (
+                    {columnaEntidad},
+                    {columnaEvidencia}
+                ) VALUES (
+                    :entidadId,
+                    :evidenciaId
+                )";
+
+            await using var cmdInsert = CrearComando(sqlInsert, conn, trans);
+            cmdInsert.Parameters.Add(new OracleParameter("entidadId", entidadId));
+            cmdInsert.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
+            await cmdInsert.ExecuteNonQueryAsync();
+
+            if (evaluacionId.HasValue)
+            {
+                await InsertarAuditoriaCampoAsync(
+                    conn,
+                    trans,
+                    evaluacionId.Value,
+                    "evidencia",
+                    null,
+                    $"{tablaPuente}:{entidadId}:{evidenciaId}",
+                    usuarioId,
+                    ip);
+            }
+
+            await trans.CommitAsync();
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+
+        if (_auditoriaRepository is not null)
+        {
+            string datosNuevos = JsonSerializer.Serialize(new
+            {
+                tablaPuente,
+                entidadId,
+                evidenciaId,
+                evaluacionId
+            });
+
+            await _auditoriaRepository.RegistrarAsync(
+                tablaPuente,
+                $"{entidadId}:{evidenciaId}",
+                "VINCULAR_EVIDENCIA",
+                null,
+                datosNuevos,
+                usuarioId,
+                null,
+                ip,
+                ModuloAuditoria);
+        }
+
+        return true;
+    }
 
     private static VersionFormularioDto MapearVersionFormulario(OracleDataReader reader)
     {
@@ -1085,13 +1395,20 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         if (string.IsNullOrWhiteSpace(dto.EvaDataJson))
         {
-            throw new ArgumentException("Las respuestas dinámicas son obligatorias.", nameof(dto.EvaDataJson));
+            throw new ArgumentException(
+                "Las respuestas dinámicas son obligatorias.",
+                nameof(dto.EvaDataJson));
         }
 
         if (string.IsNullOrWhiteSpace(dto.EvaDataCalcJson))
         {
-            throw new ArgumentException("Los resultados calculados son obligatorios.", nameof(dto.EvaDataCalcJson));
+            throw new ArgumentException(
+                "Los resultados calculados son obligatorios.",
+                nameof(dto.EvaDataCalcJson));
         }
+
+        ValidarJson(dto.EvaDataJson, nameof(dto.EvaDataJson));
+        ValidarJson(dto.EvaDataCalcJson, nameof(dto.EvaDataCalcJson));
     }
 
     private static ProyeccionEvaluacion ConstruirProyeccion(EvaluacionRiesgoDto dto)
@@ -1101,22 +1418,24 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         int vri = dto.EvaVri ?? ObtenerEntero(calculados, "vri")
             ?? throw new InvalidOperationException("No se encontró VRI en el resultado de cálculo.");
+
         int vrr = dto.EvaVrr ?? ObtenerEntero(calculados, "vrr")
             ?? throw new InvalidOperationException("No se encontró VRR en el resultado de cálculo.");
 
         if (vri is < 1 or > 9 || vrr is < 1 or > 9)
         {
-            throw new InvalidOperationException("VRI y VRR deben estar dentro del dominio institucional 1–9.");
+            throw new InvalidOperationException(
+                "VRI y VRR deben estar dentro del dominio institucional 1–9.");
         }
 
         return new ProyeccionEvaluacion(
-            ObtenerTexto(respuestas, calculados, "area_principal", "SIN_AREA"),
+            ObtenerTextoRequerido(respuestas, calculados, "area_principal"),
             vri,
             vrr,
-            ObtenerTexto(respuestas, calculados, "nivel_inherente", "SIN_CLASIFICAR"),
-            ObtenerTexto(respuestas, calculados, "nivel_residual", "SIN_CLASIFICAR"),
-            ObtenerTexto(respuestas, calculados, "respuesta_riesgo", "PENDIENTE"),
-            ObtenerTexto(respuestas, calculados, "dueno_riesgo", "SIN_ASIGNAR"));
+            ObtenerTextoRequerido(respuestas, calculados, "nivel_inherente"),
+            ObtenerTextoRequerido(respuestas, calculados, "nivel_residual"),
+            ObtenerTextoRequerido(respuestas, calculados, "respuesta_riesgo"),
+            ObtenerTextoRequerido(respuestas, calculados, "dueno_riesgo"));
     }
 
     private static Dictionary<string, JsonElement> MapearDiccionario(string json)
@@ -1132,20 +1451,23 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
     }
 
-    private static string ObtenerTexto(
+    private static string ObtenerTextoRequerido(
         IReadOnlyDictionary<string, JsonElement> respuestas,
         IReadOnlyDictionary<string, JsonElement> calculados,
-        string clave,
-        string predeterminado)
+        string clave)
     {
-        if (TryObtenerTexto(calculados, clave, out string? valorCalculado))
+        if (TryObtenerTexto(calculados, clave, out string? calculado))
         {
-            return valorCalculado!;
+            return calculado!;
         }
 
-        return TryObtenerTexto(respuestas, clave, out string? valorRespuesta)
-            ? valorRespuesta!
-            : predeterminado;
+        if (TryObtenerTexto(respuestas, clave, out string? respuesta))
+        {
+            return respuesta!;
+        }
+
+        throw new InvalidOperationException(
+            $"La proyección requiere el campo dinámico '{clave}'.");
     }
 
     private static bool TryObtenerTexto(
@@ -1185,25 +1507,64 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             return numero;
         }
 
-        return elemento.ValueKind == JsonValueKind.String && int.TryParse(elemento.GetString(), out numero)
-            ? numero
-            : null;
+        return elemento.ValueKind == JsonValueKind.String
+            && int.TryParse(elemento.GetString(), out numero)
+                ? numero
+                : null;
     }
 
-    private static string CalcularHashTemporal(string contenido)
+    private static void ValidarJson(string contenido, string nombreParametro)
+    {
+        try
+        {
+            using JsonDocument _ = JsonDocument.Parse(contenido);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException("El contenido JSON no es válido.", nombreParametro, ex);
+        }
+    }
+
+    private static string CalcularHash(string contenido)
     {
         using var sha = System.Security.Cryptography.SHA256.Create();
-        return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(contenido))).ToLowerInvariant();
+        return Convert.ToHexString(
+            sha.ComputeHash(Encoding.UTF8.GetBytes(contenido)))
+            .ToLowerInvariant();
     }
 
-    private static async Task<long> ObtenerSiguienteSecuenciaAsync(OracleConnection conn, string secuencia)
+    private static OracleCommand CrearComando(
+        string sql,
+        OracleConnection conn,
+        OracleTransaction? transaction = null)
+    {
+        var command = new OracleCommand(sql, conn)
+        {
+            BindByName = true
+        };
+
+        if (transaction is not null)
+        {
+            command.Transaction = transaction;
+        }
+
+        return command;
+    }
+
+    private static async Task<long> ObtenerSiguienteSecuenciaAsync(
+        OracleConnection conn,
+        OracleTransaction? transaction,
+        string secuencia)
     {
         string sql = $"SELECT {secuencia}.NEXTVAL FROM DUAL";
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         return Convert.ToInt64(await cmd.ExecuteScalarAsync());
     }
 
-    private static async Task<string> ObtenerCodigoRiesgoAsync(OracleConnection conn, long riesgoId)
+    private static async Task<string> ObtenerCodigoRiesgoAsync(
+        OracleConnection conn,
+        OracleTransaction transaction,
+        long riesgoId)
     {
         const string sql = @"
             SELECT RIE_CODIGO
@@ -1211,14 +1572,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
              WHERE RIE_ID = :riesgoId
                AND RIE_ACTIVO = 1";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         cmd.Parameters.Add(new OracleParameter("riesgoId", riesgoId));
+
         return (await cmd.ExecuteScalarAsync())?.ToString()
             ?? throw new KeyNotFoundException($"No se encontró el riesgo activo {riesgoId}.");
     }
 
     private static async Task InsertarProyeccionAsync(
         OracleConnection conn,
+        OracleTransaction transaction,
         long evaluacionId,
         string codigoRiesgo,
         ProyeccionEvaluacion proyeccion,
@@ -1253,13 +1616,23 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 SYSDATE
             )";
 
-        await using var cmd = new OracleCommand(sql, conn);
-        AgregarParametrosProyeccion(cmd, evaluacionId, codigoRiesgo, proyeccion, estado);
+        await using var cmd = CrearComando(sql, conn, transaction);
+        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+        cmd.Parameters.Add(new OracleParameter("codigoRiesgo", codigoRiesgo));
+        cmd.Parameters.Add(new OracleParameter("area", proyeccion.Area));
+        cmd.Parameters.Add(new OracleParameter("vri", proyeccion.Vri));
+        cmd.Parameters.Add(new OracleParameter("vrr", proyeccion.Vrr));
+        cmd.Parameters.Add(new OracleParameter("nivelInherente", proyeccion.NivelInherente));
+        cmd.Parameters.Add(new OracleParameter("nivelResidual", proyeccion.NivelResidual));
+        cmd.Parameters.Add(new OracleParameter("respuesta", proyeccion.Respuesta));
+        cmd.Parameters.Add(new OracleParameter("estado", estado));
+        cmd.Parameters.Add(new OracleParameter("dueno", proyeccion.Dueno));
         await cmd.ExecuteNonQueryAsync();
     }
 
     private static async Task<int> ActualizarProyeccionAsync(
         OracleConnection conn,
+        OracleTransaction transaction,
         long evaluacionId,
         ProyeccionEvaluacion proyeccion)
     {
@@ -1275,7 +1648,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    PROY_FECHA_EVAL = SYSDATE
              WHERE PROY_EVALUACION_ID = :evaluacionId";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         cmd.Parameters.Add(new OracleParameter("area", proyeccion.Area));
         cmd.Parameters.Add(new OracleParameter("vri", proyeccion.Vri));
         cmd.Parameters.Add(new OracleParameter("vrr", proyeccion.Vrr));
@@ -1287,26 +1660,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return await cmd.ExecuteNonQueryAsync();
     }
 
-    private static void AgregarParametrosProyeccion(
-        OracleCommand cmd,
-        long evaluacionId,
-        string codigoRiesgo,
-        ProyeccionEvaluacion proyeccion,
-        string estado)
-    {
-        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
-        cmd.Parameters.Add(new OracleParameter("codigoRiesgo", codigoRiesgo));
-        cmd.Parameters.Add(new OracleParameter("area", proyeccion.Area));
-        cmd.Parameters.Add(new OracleParameter("vri", proyeccion.Vri));
-        cmd.Parameters.Add(new OracleParameter("vrr", proyeccion.Vrr));
-        cmd.Parameters.Add(new OracleParameter("nivelInherente", proyeccion.NivelInherente));
-        cmd.Parameters.Add(new OracleParameter("nivelResidual", proyeccion.NivelResidual));
-        cmd.Parameters.Add(new OracleParameter("respuesta", proyeccion.Respuesta));
-        cmd.Parameters.Add(new OracleParameter("estado", estado));
-        cmd.Parameters.Add(new OracleParameter("dueno", proyeccion.Dueno));
-    }
-
-    private static async Task<string> ObtenerEstadoActualAsync(OracleConnection conn, long evaluacionId)
+    private static async Task<string> ObtenerEstadoActualAsync(
+        OracleConnection conn,
+        OracleTransaction transaction,
+        long evaluacionId)
     {
         const string sql = @"
             SELECT FLU_ESTADO
@@ -1318,13 +1675,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    )
              WHERE ROWNUM = 1";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
         return (await cmd.ExecuteScalarAsync())?.ToString() ?? "BORRADOR";
     }
 
     private static async Task InsertarFlujoAsync(
         OracleConnection conn,
+        OracleTransaction transaction,
         long evaluacionId,
         string estado,
         string? motivo,
@@ -1347,7 +1705,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 SYSDATE
             )";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
         cmd.Parameters.Add(new OracleParameter("estado", estado));
         cmd.Parameters.Add(new OracleParameter("motivo", motivo ?? (object)DBNull.Value));
@@ -1355,32 +1713,166 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
+    private static async Task<long> ResolverReglaVersionFormularioAsync(
+        OracleConnection conn,
+        OracleTransaction transaction,
+        long versionFormularioId,
+        bool exigirVigente)
+    {
+        string sqlVersion = @"
+            SELECT VER_JSON
+              FROM RL_MR_VERSIONES_FORMULARIO
+             WHERE VER_ID = :versionId
+               AND VER_ESTADO = 'PUBLISHED'";
+
+        if (exigirVigente)
+        {
+            sqlVersion += " AND VER_VIGENTE = 1";
+        }
+
+        await using var cmdVersion = CrearComando(sqlVersion, conn, transaction);
+        cmdVersion.Parameters.Add(new OracleParameter("versionId", versionFormularioId));
+        object? jsonObj = await cmdVersion.ExecuteScalarAsync();
+        if (jsonObj is null)
+        {
+            throw new InvalidOperationException(
+                $"La versión {versionFormularioId} no está publicada"
+                + (exigirVigente ? " y vigente." : "."));
+        }
+
+        var referencia = ExtraerReferenciaRegla(jsonObj.ToString()!);
+
+        const string sqlRegla = @"
+            SELECT REG_ID
+              FROM RL_MR_REGLAS_CALCULO
+             WHERE REG_CODIGO = :codigo
+               AND REG_VERSION = :version
+               AND REG_ACTIVA = 1";
+
+        await using var cmdRegla = CrearComando(sqlRegla, conn, transaction);
+        cmdRegla.Parameters.Add(new OracleParameter("codigo", referencia.Codigo));
+        cmdRegla.Parameters.Add(new OracleParameter("version", referencia.Version));
+        object? reglaObj = await cmdRegla.ExecuteScalarAsync();
+
+        return reglaObj is not null
+            ? Convert.ToInt64(reglaObj)
+            : throw new InvalidOperationException(
+                $"La regla {referencia.Codigo} versión {referencia.Version} declarada por el formulario no existe o está inactiva.");
+    }
+
+    private static ReferenciaRegla ExtraerReferenciaRegla(string versionJson)
+    {
+        using JsonDocument document = JsonDocument.Parse(versionJson);
+        JsonElement root = document.RootElement;
+
+        foreach (string propertyName in new[] { "reglaCalculo", "regla_calculo" })
+        {
+            if (TryGetPropertyIgnoreCase(root, propertyName, out JsonElement regla)
+                && TryLeerReferenciaRegla(regla, out ReferenciaRegla? referencia))
+            {
+                return referencia!;
+            }
+        }
+
+        foreach (string propertyName in new[] { "reglas", "reglasCalculo", "reglas_calculo" })
+        {
+            if (!TryGetPropertyIgnoreCase(root, propertyName, out JsonElement reglas))
+            {
+                continue;
+            }
+
+            if (reglas.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement regla in reglas.EnumerateArray())
+                {
+                    if (TryLeerReferenciaRegla(regla, out ReferenciaRegla? referencia))
+                    {
+                        return referencia!;
+                    }
+                }
+            }
+            else if (reglas.ValueKind == JsonValueKind.Object)
+            {
+                if (TryLeerReferenciaRegla(reglas, out ReferenciaRegla? referenciaDirecta))
+                {
+                    return referenciaDirecta!;
+                }
+
+                foreach (JsonProperty property in reglas.EnumerateObject())
+                {
+                    if (TryLeerReferenciaRegla(property.Value, out ReferenciaRegla? referencia))
+                    {
+                        return referencia!;
+                    }
+                }
+            }
+        }
+
+        throw new InvalidOperationException(
+            "La versión publicada del formulario no declara código y versión de la regla de cálculo.");
+    }
+
+    private static bool TryLeerReferenciaRegla(
+        JsonElement element,
+        out ReferenciaRegla? referencia)
+    {
+        referencia = null;
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (!TryGetPropertyIgnoreCase(element, "codigo", out JsonElement codigoElement)
+            || !TryGetPropertyIgnoreCase(element, "version", out JsonElement versionElement))
+        {
+            return false;
+        }
+
+        string? codigo = codigoElement.GetString();
+        string? version = versionElement.GetString();
+        if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(version))
+        {
+            return false;
+        }
+
+        referencia = new ReferenciaRegla(codigo.Trim(), version.Trim());
+        return true;
+    }
+
+    private static bool TryGetPropertyIgnoreCase(
+        JsonElement element,
+        string propertyName,
+        out JsonElement value)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (JsonProperty property in element.EnumerateObject())
+            {
+                if (string.Equals(
+                    property.Name,
+                    propertyName,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    value = property.Value;
+                    return true;
+                }
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
     private static async Task InsertarTrazaCalculoAsync(
         OracleConnection conn,
+        OracleTransaction transaction,
         long evaluacionId,
+        long reglaId,
         string entradasJson,
         string resultadosJson,
         long usuarioId)
     {
-        const string sqlRegla = @"
-            SELECT REG_ID
-              FROM (
-                    SELECT REG_ID
-                      FROM RL_MR_REGLAS_CALCULO
-                     WHERE REG_ACTIVA = 1
-                     ORDER BY REG_ID DESC
-                   )
-             WHERE ROWNUM = 1";
-
-        await using var cmdRegla = new OracleCommand(sqlRegla, conn);
-        object? reglaObj = await cmdRegla.ExecuteScalarAsync();
-        if (reglaObj is null)
-        {
-            throw new InvalidOperationException(
-                "No existe una regla de cálculo activa para registrar la traza de la evaluación.");
-        }
-
-        const string sqlTraza = @"
+        const string sql = @"
             INSERT INTO RL_MR_TRAZAS_CALCULO (
                 TRA_ID,
                 TRA_EVALUACION_ID,
@@ -1399,17 +1891,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 :usuarioId
             )";
 
-        await using var cmdTraza = new OracleCommand(sqlTraza, conn);
-        cmdTraza.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
-        cmdTraza.Parameters.Add(new OracleParameter("reglaId", Convert.ToInt64(reglaObj)));
-        cmdTraza.Parameters.Add(new OracleParameter("entradasJson", OracleDbType.Clob) { Value = entradasJson });
-        cmdTraza.Parameters.Add(new OracleParameter("resultadosJson", OracleDbType.Clob) { Value = resultadosJson });
-        cmdTraza.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
-        await cmdTraza.ExecuteNonQueryAsync();
+        await using var cmd = CrearComando(sql, conn, transaction);
+        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+        cmd.Parameters.Add(new OracleParameter("reglaId", reglaId));
+        cmd.Parameters.Add(new OracleParameter("entradasJson", OracleDbType.Clob) { Value = entradasJson });
+        cmd.Parameters.Add(new OracleParameter("resultadosJson", OracleDbType.Clob) { Value = resultadosJson });
+        cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+        await cmd.ExecuteNonQueryAsync();
     }
 
     private static async Task InsertarAuditoriaCampoAsync(
         OracleConnection conn,
+        OracleTransaction transaction,
         long evaluacionId,
         string campoClave,
         string? valorAnterior,
@@ -1438,7 +1931,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 SYSDATE
             )";
 
-        await using var cmd = new OracleCommand(sql, conn);
+        await using var cmd = CrearComando(sql, conn, transaction);
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
         cmd.Parameters.Add(new OracleParameter("campoClave", campoClave));
         cmd.Parameters.Add(new OracleParameter("valorAnterior", OracleDbType.Clob)
@@ -1454,20 +1947,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
-    private static async Task<bool> EjecutarVinculoEvidenciaAsync(
-        string tablaPuente,
-        string columnaEntidad,
-        string columnaEvidencia,
-        long entidadId,
-        long evidenciaId,
-        string? sqlResolverEvaluacion,
-        long usuarioId,
-        string? ip)
-    {
-        throw new NotSupportedException(
-            "La vinculación dinámica de evidencias requiere una conexión del repositorio y se implementa en la siguiente revisión interna.");
-    }
-
     private sealed record ProyeccionEvaluacion(
         string Area,
         int Vri,
@@ -1476,4 +1955,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string NivelResidual,
         string Respuesta,
         string Dueno);
+
+    private sealed record ReferenciaRegla(string Codigo, string Version);
 }
