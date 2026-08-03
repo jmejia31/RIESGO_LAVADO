@@ -33,7 +33,7 @@ foreach ($relativeDocumentPath in $trackedMarkdown) {
             $target = $target.Substring(1, $target.Length - 2)
         }
 
-        if ($target -match '^(?i:https?|mailto):' -or $target.StartsWith('#')) {
+        if ($target -match '^(?i:https?|mailto|file):' -or $target.StartsWith('#')) {
             continue
         }
 

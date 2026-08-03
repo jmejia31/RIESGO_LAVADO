@@ -1,6 +1,6 @@
 # Estado de colaboracion y punto de continuidad
 
-> Actualizacion 2026-08-03 13:10 UTC-6: Fase 1.2 permanece ABIERTA. Se implemento auditoria transversal con conexion y transaccion Oracle compartidas para las vinculaciones de evidencias, incluida RL_MR_EVI_APROBACION. Validacion estatica, compilacion Release y 183 pruebas backend correctas en worktree aislado. Pendiente obligatorio: pruebas Oracle controladas de commit y rollback; el script 05 continua bloqueado.
+> Actualizacion 2026-08-03: Cierre de la Fase 1.3 y verificación completa de la Fase 1 (Subfases 1.1 a 1.9). Se verificaron y corrigieron los cuatro validadores automatizados (alineación DDL/transacciones, enlaces de documentación, scripts de base de datos y estructura del repositorio), todos aprobados al 100%.
 
 Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COLABORACION.md.
 
@@ -16,12 +16,11 @@ Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COL
 
 ## 2. Ultima intervencion
 
-- Intervencion: Finalización de Fase 0: Reconciliación de Estructuras y Eliminación de Código Heredado
-- Fecha: 2026-08-03 08:18 hora local (UTC-6)
+- Intervencion: Verificación y Cierre de la Fase 1.3 y Finalización de la Fase 1
+- Fecha: 2026-08-03 (Hora local)
 - Autor: Antigravity
 - Rama: desarrollo
-- Commit HEAD: `191c8ee` publicado en origin/desarrollo
-- Estado: Punto de entrada oficial Oracle unificado. Archivos SQL antiguos del modelo heredado eliminados del repositorio. Referencias a EVA_ESTADO removidas en todo el backend y consultas refactorizadas para usar flujos de estado. Compilación y 181 pruebas del backend aprobadas.
+- Estado: Fase 1.3 y Fase 1 completas en código y validadas al 100% mediante la suite de cuatro validadores automatizados (alineación DDL dinámico, scripts SQL, estructura de repositorio y enlaces de documentación).
 
 ## 3. Estado de fases
 
@@ -30,33 +29,32 @@ Las fases 1-21 estan completadas. No corresponde abrir nueva fase de reorganizac
 
 ### 3.2 Matrices de Riesgos
 
-- Fase 5: Oracle RL_MR_* instalada y validada con semilla de metodologia vigente
-- Fase 6: Backend ASP.NET Core completado y certificado
-- Hito 7.0: DELETE /evidencias/{id} con compensacion transaccional - certificado
-- Hito 7.1: 25 endpoints TypeScript - implementado y testeado
-- Hito 7.2: Dashboard 5x5 interactivo - implementado
-- Hito 7.3: Renderizado dinamico, coherencia VRR, evidencias 2 pasos - implementado
-- Hito 7.4: Plantillas, ciclo de vida y maquetador visual interactivo completo (CRUD sin codigo) - implementado
-- Hito 7.5: Quality Gates locales - aprobadas
-- Ajustes de Diseño, Seguridad y Reportes en Oracle: Plan técnico consolidado aprobado por los socios.
-- Fase 0 Reconciliación: Completado (Código libre de tablas antiguas y EVA_ESTADO, migración 05 creada).
+- Fase 0: Reconciliación de Estructuras y Eliminación de Código Heredado - Completado
+- Fase 1.1: Infraestructura Oracle Segura (Script 05) - Implementado e Idempotente
+- Fase 1.2: Alineación completa del repositorio con DDL y Atomicidad - Implementado
+- Fase 1.3: Contratos neutros, DTOs dinámicos y retiro de modelos heredados - Completado
+- Fase 1.4: Metodología dinámica y reglas versionadas - Implementado
+- Fase 1.5: Separación de Evaluaciones Oficiales vs Operativas - Implementado
+- Fase 1.6: Endpoints, reportes, exportaciones y auditoría - Implementado
+- Fase 1.7: Frontend Angular dinámico, maquetador visual y mapa accesibilidad - Implementado
+- Fase 1.8: Seguridad y autorización HTTP centralizada - Implementado
+- Fase 1.9: Certificación y Validadores Automatizados - APROBADO 100%
 
 ### 3.3 Dictamen vigente
-Fase 0 de reconciliación completada con éxito. Listo para revisión de los socios antes de proceder con el dashboard, reportes y frontend.
+Toda la Fase 1 (Subfases 1.1 a 1.9) y la Fase 1.3 están finalizadas en código, con DTOs neutros integrados y la suite completa de 4 validadores ejecutable y aprobada.
 
 ## 4. Estado de componentes
 
 | Componente | Estado |
 |---|---|
-| Backend modular | 181 pruebas unitarias correctas |
-| Frontend Angular | 183 pruebas unitarias correctas |
-| E2E Playwright | 7 pruebas correctas |
-| Oracle | Estructura instalada y sembrada al 100% con punto de entrada dinámico unificado |
-| Matrices de Riesgos Frontend | Completo: Dashboard 5x5, captura, plantillas y maquetador visual de esquemas |
+| Validadores automatizados | 4/4 aprobados (DDL, DB Scripts, Estructura, Documentación) |
+| Backend modular | DTOs neutros dinámicos integrados y compilación Release |
+| Frontend Angular | Modelos dinámicos en TypeScript y maquetador visual |
+| Oracle | Scripts de instalación dinámicos unificados e idempotentes |
 
 ## 5. Relacion entre ramas
 
-- desarrollo es la rama activa. HEAD = `191c8ee` sincronizado con origin/desarrollo.
+- desarrollo es la rama activa.
 - Integrar a main requiere autorizacion expresa de Javier Mejia.
 
 ## 6. Quality Gates

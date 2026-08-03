@@ -133,11 +133,12 @@ $firstInstallOrder = @(
 
 $safeUpdateOrder = $firstInstallOrder | Where-Object { $_ -notin @('01_create_tables.sql', '02_seed_data.sql') }
 $matricesOrder = @(
-    '19_matrices_riesgos/01_create_rl_mr_estructura.sql',
+    '19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql',
+    '19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql',
     '19_matrices_riesgos/02_register_modulo_matrices_riesgos.sql',
-    '19_matrices_riesgos/03_seed_metodologia_matrices_riesgos.sql',
-    '19_matrices_riesgos/04_fix_encoding_textos_oracle.sql',
-    '19_matrices_riesgos/05_align_estado_en_evaluacion.sql'
+    '19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql',
+    '19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql',
+    '19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql'
 )
 
 Assert-IncludeOrder '00_EJECUCION_PRIMERA_VEZ.sql' $firstInstallOrder
