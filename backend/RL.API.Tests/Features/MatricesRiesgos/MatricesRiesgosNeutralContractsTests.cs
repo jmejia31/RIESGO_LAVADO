@@ -30,34 +30,46 @@ public sealed class MatricesRiesgosNeutralContractsTests
     [Fact]
     public void ReporteConsolidado_ExponeFilaTipadaEnRepositorioYAplicacion()
     {
-        MethodInfo? repositorio = typeof(IMatricesRiesgosRepository)
-            .GetMethod(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync));
-        MethodInfo? aplicacion = typeof(IMatricesRiesgosAppService)
-            .GetMethod(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync));
+        MethodInfo repositorio = Assert.Single(
+            typeof(IMatricesRiesgosRepository).GetMethods(),
+            metodo => metodo.Name == nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync));
+        MethodInfo aplicacion = Assert.Single(
+            typeof(IMatricesRiesgosAppService).GetMethods(),
+            metodo => metodo.Name == nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync));
 
-        Assert.NotNull(repositorio);
-        Assert.NotNull(aplicacion);
-        Assert.Equal(typeof(Task<IReadOnlyList<RiesgoReporteFilaDto>>), repositorio!.ReturnType);
-        Assert.Equal(typeof(Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>>), aplicacion!.ReturnType);
+        Assert.Equal(typeof(Task<IReadOnlyList<RiesgoReporteFilaDto>>), repositorio.ReturnType);
+        Assert.Equal(typeof(Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>>), aplicacion.ReturnType);
     }
 
     [Fact]
     public void MetodologiaVigente_ExponeContratoNeutroEnRepositorioYAplicacion()
     {
-        MethodInfo? repositorio = typeof(IMatricesRiesgosRepository)
-            .GetMethod(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync));
-        MethodInfo? aplicacion = typeof(IMatricesRiesgosAppService)
-            .GetMethod(nameof(IMatricesRiesgosAppService.ObtenerMetodologiaDinamicaVigenteAsync));
+        MethodInfo repositorio = Assert.Single(
+            typeof(IMatricesRiesgosRepository).GetMethods(),
+            metodo => metodo.Name == nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync));
+        MethodInfo aplicacion = Assert.Single(
+            typeof(IMatricesRiesgosAppService).GetMethods(),
+            metodo => metodo.Name == nameof(IMatricesRiesgosAppService.ObtenerMetodologiaDinamicaVigenteAsync));
 
-        Assert.NotNull(repositorio);
-        Assert.NotNull(aplicacion);
-        Assert.Equal(typeof(Task<MetodologiaFormularioDto>), Desanular(repositorio!.ReturnType));
-        Assert.Equal(typeof(Task<ServiceResult<MetodologiaFormularioDto>>), aplicacion!.ReturnType);
+        Assert.Equal(typeof(Task<MetodologiaFormularioDto>), repositorio.ReturnType);
+        Assert.Equal(typeof(Task<ServiceResult<MetodologiaFormularioDto>>), aplicacion.ReturnType);
     }
 
-    private static Type Desanular(Type type)
+    [Fact]
+    public void InterfacesPublicas_NoExponenMetodosDelContratoAnterior()
     {
-        // La nulabilidad de referencia no cambia el Type de reflexión en tiempo de ejecución.
-        return type;
+        string[] nombresRetirados =
+        {
+            "ObtenerConsolidadoMatricesAsync",
+            "ObtenerMetodologiaVigenteAsync",
+            "ObtenerDashboardAsync",
+            "ObtenerReporteAsync"
+        };
+
+        string[] repositorio = typeof(IMatricesRiesgosRepository).GetMethods().Select(m => m.Name).ToArray();
+        string[] aplicacion = typeof(IMatricesRiesgosAppService).GetMethods().Select(m => m.Name).ToArray();
+
+        Assert.DoesNotContain(repositorio, nombre => nombresRetirados.Contains(nombre, StringComparer.Ordinal));
+        Assert.DoesNotContain(aplicacion, nombre => nombresRetirados.Contains(nombre, StringComparer.Ordinal));
     }
 }
