@@ -1,1739 +1,260 @@
-<div class="w-full min-h-full space-y-5">
-  <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+<section class="w-full space-y-5" aria-labelledby="titulo-matrices">
+  <header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Módulo 2 · Gestión y evaluación</p>
-        <h2 class="text-2xl font-bold text-gray-900">Matrices de Riesgos</h2>
-        <p class="text-sm text-gray-500">
-          Evalúe proveedores, clientes/patronos, empleados o la institución completa con los criterios aprobados por Cumplimiento.
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">SGRLA · IHSS</p>
+        <h1 id="titulo-matrices" class="mt-1 text-2xl font-bold text-slate-900">Matrices de Riesgos</h1>
+        <p class="mt-2 max-w-3xl text-sm text-slate-600">
+          Evaluaciones basadas en formularios versionados, campos dinámicos, catálogos y reglas trazables.
         </p>
       </div>
 
-      <div class="flex flex-wrap gap-2">
-        <button type="button" (click)="actualizarModulo()"
-          class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-          [disabled]="cargando() || guardando()">
-          Actualizar
-        </button>
-        <button type="button" (click)="iniciarNuevaMatriz()"
-          class="px-4 py-2 rounded-xl bg-ihss-900 text-white text-sm font-semibold hover:bg-ihss-800 disabled:opacity-50"
-          [disabled]="guardando()">
-          Nueva matriz
-        </button>
+      <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <div><span class="font-semibold">Formulario:</span> {{ versionVigente()?.verCodigo || 'Sin versión vigente' }}</div>
+        <div><span class="font-semibold">Versión:</span> {{ versionVigente()?.verVersion || '-' }}</div>
+        <div><span class="font-semibold">Campos:</span> {{ totalCampos() }}</div>
       </div>
     </div>
-  </section>
+  </header>
 
-  <div *ngIf="error()" role="alert" aria-live="assertive" class="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
-    {{ error() }}
-  </div>
+  @if (error()) {
+    <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+      {{ error() }}
+    </div>
+  }
 
-  <div *ngIf="mensaje()" role="status" aria-live="polite" class="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl px-4 py-3 text-sm font-medium">
-    {{ mensaje() }}
-  </div>
+  @if (mensaje()) {
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">
+      {{ mensaje() }}
+    </div>
+  }
 
-  <nav aria-label="Secciones de Matrices de Riesgos" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-2 flex flex-wrap gap-2">
-    <button type="button" (click)="tab.set('dashboard')" [attr.aria-current]="tab() === 'dashboard' ? 'page' : null"
-      [ngClass]="tab() === 'dashboard' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Panel
-    </button>
-    <button type="button" (click)="tab.set('matrices')" [attr.aria-current]="tab() === 'matrices' ? 'page' : null"
-      [ngClass]="tab() === 'matrices' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Matrices
-    </button>
-    <button type="button" (click)="iniciarNuevaMatriz()" [attr.aria-current]="tab() === 'nueva' ? 'page' : null"
-      [ngClass]="tab() === 'nueva' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Captura
-    </button>
-    <button type="button" (click)="seleccionarTab('criterios')" [attr.aria-current]="tab() === 'criterios' ? 'page' : null"
-      [ngClass]="tab() === 'criterios' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Criterios
-    </button>
-    <button type="button" (click)="seleccionarTab('planes')" [attr.aria-current]="tab() === 'planes' ? 'page' : null"
-      [ngClass]="tab() === 'planes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Planes y evidencias
-    </button>
-    <button type="button" (click)="seleccionarTab('reportes'); cargarReporte()" [attr.aria-current]="tab() === 'reportes' ? 'page' : null"
-      [ngClass]="tab() === 'reportes' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-      Reportes
-    </button>
-    <button type="button" (click)="seleccionarTab('plantillas')" [attr.aria-current]="tab() === 'plantillas' ? 'page' : null"
-      [ngClass]="tab() === 'plantillas' ? 'bg-ihss-900 text-white' : 'text-gray-600 hover:bg-gray-50'"
-      class="px-4 py-2 rounded-xl text-sm font-semibold transition-colors" data-testid="btn-tab-plantillas">
-      Plantillas
-    </button>
+  <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos">
+    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'evaluaciones'" [class.text-white]="tab() === 'evaluaciones'" (click)="seleccionarTab('evaluaciones')">Evaluaciones</button>
+    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'captura'" [class.text-white]="tab() === 'captura'" (click)="seleccionarTab('captura')">Captura dinámica</button>
+    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'consolidado'" [class.text-white]="tab() === 'consolidado'" (click)="seleccionarTab('consolidado')">Consolidado</button>
+    <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === 'plantillas'" [class.text-white]="tab() === 'plantillas'" (click)="seleccionarTab('plantillas')">Plantillas</button>
   </nav>
 
-  <div *ngIf="cargando()" role="status" aria-live="polite" aria-busy="true" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
-    Cargando información del módulo de Matrices de Riesgos...
-  </div>
+  @if (cargando()) {
+    <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Cargando información...</div>
+  }
 
-  <ng-container *ngIf="tab() === 'dashboard'">
-    <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 space-y-4">
-      <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-4">
+  @if (!cargando() && tab() === 'evaluaciones') {
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-evaluaciones">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h3 class="text-lg font-bold text-gray-900">Panel ejecutivo de Matrices</h3>
-          <p class="text-xs text-gray-500">Incluye todas las matrices activas y todos los tipos de sujeto. El backend consolida un único resultado vigente por matriz para evitar duplicaciones por factor.</p>
+          <h2 id="titulo-evaluaciones" class="text-lg font-bold text-slate-900">Evaluaciones registradas</h2>
+          <p class="text-sm text-slate-600">El estado se obtiene del último flujo registrado.</p>
         </div>
-        <button *ngIf="reporteFiltrosActivos()" type="button" (click)="limpiarFiltrosReporte()"
-          class="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50">
-          Limpiar filtros
-        </button>
+        <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" (click)="nuevaEvaluacion()">Nueva evaluación</button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-        <select aria-label="Filtrar panel por tipo de sujeto" [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
-          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todos los sujetos</option>
-          <option *ngFor="let tipo of tiposSujeto" [value]="tipo.valor">{{ tipo.texto }}</option>
-        </select>
-        <select aria-label="Filtrar por estado" [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
-          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todos los estados</option>
-          <option *ngFor="let estado of estadosDisponibles" [value]="estado">{{ estadoEtiqueta(estado) }}</option>
-        </select>
-        <select aria-label="Filtrar por nivel inherente" [ngModel]="reporteFiltro().nivelInherente || ''" (ngModelChange)="actualizarFiltroReporte('nivelInherente', $event)"
-          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todo riesgo inherente</option>
-          <option *ngFor="let nivel of escalasRiesgoOrdenadas()" [value]="nivel.nivel">{{ nivel.nivel }}</option>
-        </select>
-        <select aria-label="Filtrar por nivel residual" [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
-          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todo riesgo residual</option>
-          <option *ngFor="let nivel of escalasRiesgoOrdenadas()" [value]="nivel.nivel">{{ nivel.nivel }}</option>
-        </select>
-        <input type="date" aria-label="Fecha inicial del filtro" [ngModel]="reporteFiltro().fechaInicio || ''" (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
-          [max]="fechaActualIso" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-      </div>
-    </section>
-
-    <section class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-4">
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Matrices</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalMatrices ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Evaluadas</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ dashboard()?.totalCalculadas ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Sin evaluar</p><p class="mt-2 text-3xl font-bold text-slate-600">{{ dashboard()?.totalSinCalculo ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Alto / Crítico</p><p class="mt-2 text-3xl font-bold text-red-700">{{ dashboard()?.totalAltoCritico ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Plan requerido</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ dashboard()?.totalConPlanAccion ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Planes vencidos</p><p class="mt-2 text-3xl font-bold text-orange-700">{{ dashboard()?.totalPlanesVencidos ?? 0 }}</p></div>
-      <div class="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm"><p class="text-[11px] font-bold uppercase text-gray-400">Cerradas</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ dashboard()?.totalCerradas ?? 0 }}</p></div>
-    </section>
-
-    <section class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.75fr)] gap-5">
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
-        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
-          <div><h3 class="text-lg font-bold text-gray-900">Mapa de transición de riesgo</h3><p class="text-xs text-gray-500">Cruza riesgo inherente y residual de todas las matrices evaluadas. Cada matriz se cuenta una sola vez; las pendientes permanecen visibles en KPI y listado.</p></div>
-          <div class="text-right"><span class="block text-xs font-semibold text-gray-500">Metodología {{ metodologia()?.version || 'No disponible' }}</span><button *ngIf="seleccionMapa()" type="button" (click)="limpiarSeleccionMapa()" class="mt-1 text-xs font-semibold text-ihss-900 hover:underline">Limpiar selección del mapa</button></div>
-        </div>
-
-        <div class="overflow-x-auto pb-2">
-          <div class="min-w-[760px] grid gap-2 items-stretch"
-            [style.grid-template-columns]="'120px repeat(' + nivelesMapaColumnas().length + ', minmax(86px, 1fr))'">
-            <div></div>
-            <div *ngFor="let nivel of nivelesMapaColumnas()" class="text-center text-[11px] font-bold text-gray-500 px-1">{{ nivel.etiqueta }}</div>
-            <ng-container *ngFor="let fila of heatmapFilas()">
-              <div class="flex items-center justify-end pr-2 text-xs font-bold text-gray-600">{{ fila.etiquetaInherente }}</div>
-              <button *ngFor="let celda of fila.celdas" type="button" (click)="seleccionarCeldaMapa(celda)"
-                class="min-h-20 rounded-xl border-2 p-2 text-left transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ihss-600"
-                [ngClass]="esCeldaMapaSeleccionada(celda) ? 'ring-4 ring-blue-300 shadow-lg -translate-y-0.5' : ''"
-                [attr.aria-pressed]="esCeldaMapaSeleccionada(celda)"
-                [ngStyle]="{'background-color': celda.color + (celda.total > 0 ? 'E6' : '66'), 'border-color': esCeldaMapaSeleccionada(celda) ? '#1d4ed8' : celda.colorBorde, 'color': celda.colorTexto}"
-                [attr.aria-label]="'Inherente ' + celda.etiquetaInherente + ' / Residual ' + celda.etiquetaResidual + ': ' + celda.total + ' matrices'"
-                [title]="'Inherente ' + celda.etiquetaInherente + ' / Residual ' + celda.etiquetaResidual + ': ' + celda.total + ' matrices'">
-                <span class="block text-2xl font-bold text-inherit">{{ celda.total }}</span>
-                <span class="block mt-1 text-[10px] font-semibold text-inherit opacity-80">{{ textoPromedioCelda(celda) }}</span>
-              </button>
-            </ng-container>
-          </div>
-          <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs font-semibold text-gray-500 min-w-[760px]"><span>Filas: riesgo inherente · Columnas: riesgo residual · “Sin evaluar” conserva matrices sin nivel completo</span><div class="flex items-center gap-2"><span class="w-5 h-3 rounded-sm bg-green-400"></span><span>Muy bajo</span><span class="w-5 h-3 rounded-sm bg-yellow-300"></span><span>Medio</span><span class="w-5 h-3 rounded-sm bg-orange-500"></span><span>Alto</span><span class="w-5 h-3 rounded-sm bg-red-600"></span><span>Crítico</span><span class="w-5 h-3 rounded-sm bg-slate-300"></span><span>Sin evaluar</span></div></div>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-6">
-        <div><h3 class="text-base font-bold text-gray-900 mb-3">Distribución inherente</h3><div class="space-y-2"><div *ngFor="let nivel of resumenNivelesInherente()"><div class="flex items-center justify-between text-xs font-semibold text-gray-600"><span>{{ nivel.nivel }}</span><span>{{ nivel.total }}</span></div><div class="h-2 rounded-full bg-gray-100 overflow-hidden mt-1"><div class="h-full rounded-full" [style.background]="nivel.color || colorNivel(nivel.nivel)" [style.width.%]="nivel.porcentaje"></div></div></div></div></div>
-        <div><h3 class="text-base font-bold text-gray-900 mb-3">Distribución residual</h3><div class="space-y-2"><div *ngFor="let nivel of resumenNivelesResidual()"><div class="flex items-center justify-between text-xs font-semibold text-gray-600"><span>{{ nivel.nivel }}</span><span>{{ nivel.total }}</span></div><div class="h-2 rounded-full bg-gray-100 overflow-hidden mt-1"><div class="h-full rounded-full" [style.background]="nivel.color || colorNivel(nivel.nivel)" [style.width.%]="nivel.porcentaje"></div></div></div></div></div>
-        <div><h3 class="text-base font-bold text-gray-900 mb-3">Matrices por tipo de sujeto</h3><div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-1 gap-2"><div *ngFor="let tipo of dashboard()?.porSujetoTipo" class="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600"><span>{{ tipoSujetoEtiqueta(tipo.nombre) }}</span><span class="rounded-full bg-white border border-gray-200 px-2 py-0.5 text-gray-900">{{ tipo.total }}</span></div></div></div>
-      </div>
-    </section>
-
-
-    <section *ngIf="seleccionMapa() as seleccion" class="bg-white border border-blue-200 rounded-2xl shadow-sm p-5" data-testid="detalle-cuadrante-mapa">
-      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-wide text-blue-700">Filtro activo del mapa</p>
-          <h3 class="text-lg font-bold text-gray-900">Matrices del cuadrante seleccionado</h3>
-          <p class="text-sm text-gray-500">Inherente <strong>{{ seleccion.etiquetaInherente }}</strong> / Residual <strong>{{ seleccion.etiquetaResidual }}</strong></p>
-        </div>
-        <div class="flex items-center gap-3">
-          <span class="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-800">{{ matricesCuadrante().length }} registro(s)</span>
-          <button type="button" (click)="limpiarSeleccionMapa()" class="px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50">Limpiar selección del mapa</button>
-        </div>
-      </div>
-
-      <div *ngIf="cargandoCuadrante()" class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-4 text-sm font-semibold text-blue-700">Consultando matrices del cuadrante...</div>
-
-      <div *ngIf="!cargandoCuadrante() && matricesCuadrante().length === 0" class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-600">
-        No existen matrices en esta combinación de riesgo inherente y residual.
-      </div>
-
-      <div *ngIf="!cargandoCuadrante() && matricesCuadrante().length > 0" class="overflow-x-auto rounded-xl border border-gray-200">
-        <table class="w-full min-w-[1050px] text-sm">
-          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-            <tr><th class="px-3 py-3 text-left">ID</th><th class="px-3 py-3 text-left">Sujeto / documento</th><th class="px-3 py-3 text-left">Tipo</th><th class="px-3 py-3 text-left">Estado</th><th class="px-3 py-3 text-left">Fecha</th><th class="px-3 py-3 text-left">Inherente</th><th class="px-3 py-3 text-left">Residual</th><th class="px-3 py-3 text-left">Plan</th><th class="px-3 py-3 text-right">Acción</th></tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr *ngFor="let matriz of matricesCuadrante()" class="hover:bg-gray-50">
-              <td class="px-3 py-3 font-bold text-gray-700">{{ matriz.matrizId }}</td>
-              <td class="px-3 py-3"><p class="font-semibold text-gray-900">{{ matriz.nombreSujeto }}</p><p class="text-xs text-gray-500">{{ matriz.documento || matriz.sujetoIdExt || 'Sin documento' }}</p></td>
-              <td class="px-3 py-3 text-gray-600">{{ tipoSujetoEtiqueta(matriz.sujetoTipo) }}</td>
-              <td class="px-3 py-3"><span class="rounded-full bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{{ estadoEtiqueta(matriz.estado) }}</span></td>
-              <td class="px-3 py-3 text-gray-600 whitespace-nowrap">{{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
-              <td class="px-3 py-3"><span class="font-semibold">{{ matriz.nivelInherente || 'Sin evaluar' }}</span><span class="block text-xs text-gray-500">{{ matriz.puntajeInherente ?? '-' }}</span></td>
-              <td class="px-3 py-3"><span class="font-semibold">{{ matriz.nivelResidual || 'Sin evaluar' }}</span><span class="block text-xs text-gray-500">{{ matriz.puntajeResidual ?? '-' }}</span></td>
-              <td class="px-3 py-3"><span [ngClass]="matriz.requierePlanAccion ? 'text-amber-700' : 'text-emerald-700'" class="font-bold">{{ matriz.requierePlanAccion ? 'Requerido' : 'No requerido' }}</span></td>
-              <td class="px-3 py-3 text-right"><button type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="px-3 py-2 rounded-lg bg-ihss-900 text-white text-xs font-semibold hover:bg-ihss-800">Ver detalle</button></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
-        <div class="flex items-center justify-between gap-3 mb-4"><h3 class="text-lg font-bold text-gray-900">Matrices críticas</h3><span class="text-xs font-semibold text-gray-500">Top {{ dashboard()?.matricesCriticas?.length ?? 0 }}</span></div>
-        <div class="space-y-2 max-h-80 overflow-auto pr-1">
-          <button *ngFor="let matriz of dashboard()?.matricesCriticas" type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="w-full rounded-xl border border-gray-100 bg-gray-50 p-3 text-left hover:bg-white hover:border-red-200">
-            <div class="flex items-start justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-gray-900 truncate">{{ matriz.nombreSujeto }}</p><p class="text-xs text-gray-500">{{ matriz.sujetoTipo }} · {{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</p></div><span class="shrink-0 rounded-full px-2 py-1 text-[11px] font-bold" [ngStyle]="{'background-color': colorNivel(matriz.nivelResidual) + '22', 'color': colorNivel(matriz.nivelResidual)}">{{ matriz.nivelResidual }} {{ matriz.puntajeResidual | number:'1.2-2' }}</span></div>
-          </button>
-          <p *ngIf="(dashboard()?.matricesCriticas?.length ?? 0) === 0" class="py-6 text-center text-sm text-gray-500">No hay matrices Alto o Crítico para los filtros seleccionados.</p>
-        </div>
-      </div>
-
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 min-w-0">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Planes de acción</h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div *ngFor="let plan of dashboard()?.planesAccion" class="rounded-xl border border-gray-100 bg-gray-50 p-4"><p class="text-xs font-bold uppercase text-gray-500">{{ plan.estado }}</p><p class="mt-1 text-2xl font-bold text-gray-900">{{ plan.total }}</p><p class="mt-1 text-xs font-semibold" [ngClass]="plan.vencidos > 0 ? 'text-red-700' : 'text-emerald-700'">{{ plan.vencidos }} vencido(s)</p></div>
-          <p *ngIf="(dashboard()?.planesAccion?.length ?? 0) === 0" class="sm:col-span-2 py-6 text-center text-sm text-gray-500">No existen planes para los filtros seleccionados.</p>
-        </div>
-      </div>
-    </section>
-
-    <section *ngIf="reporteFiltrosActivos()" class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-      <div class="flex items-center justify-between gap-3 mb-4"><div><h3 class="text-lg font-bold text-gray-900">Matrices del filtro ejecutivo</h3><p class="text-xs text-gray-500">Máximo 25 registros ordenados por riesgo residual y fecha.</p></div><span class="text-xs font-semibold text-gray-500">{{ dashboard()?.matricesFiltradas?.length ?? 0 }} resultado(s)</span></div>
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-        <button *ngFor="let matriz of dashboard()?.matricesFiltradas" type="button" (click)="abrirMatrizDesdeDashboard(matriz.matrizId)" class="rounded-xl border border-gray-100 p-3 text-left hover:border-ihss-300 hover:bg-gray-50"><p class="font-semibold text-gray-900 truncate">{{ matriz.nombreSujeto }}</p><div class="mt-2 flex items-center justify-between text-xs text-gray-500"><span>{{ estadoEtiqueta(matriz.estado) }}</span><span>{{ matriz.nivelInherente || '-' }} → {{ matriz.nivelResidual || '-' }}</span></div></button>
-      </div>
-    </section>
-  </ng-container>
-
-  <ng-container *ngIf="tab() === 'matrices'">
-    <ng-template #historialMatriz>
-      <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-        <p class="text-xs font-bold uppercase text-gray-400 mb-3">Historial</p>
-        <div class="space-y-2 max-h-72 overflow-auto pr-1">
-          <ng-container *ngFor="let item of historial()">
-            <div class="rounded-xl border border-gray-100 bg-gray-50 p-3">
-              <p class="rl-clamp-2 font-semibold text-gray-800" [title]="item.accion + ' ' + item.tabla">
-                {{ item.accion }} <span class="text-gray-400">{{ item.tabla }}</span>
-              </p>
-              <p class="text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
-                {{ item.fecha | date:'dd/MM/yyyy HH:mm' }} · {{ item.usuarioEmail || 'Usuario' }}
-              </p>
-              <p *ngIf="item.motivo" class="text-xs text-gray-600 mt-1 break-words [overflow-wrap:anywhere]">{{ item.motivo }}</p>
-            </div>
-          </ng-container>
-          <p *ngIf="historial().length === 0" class="text-sm text-gray-500">Seleccione una matriz para consultar historial.</p>
-        </div>
-      </section>
-    </ng-template>
-
-    <section class="grid grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(340px,0.95fr)] gap-5 min-w-0">
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(260px,1fr)_180px_180px] gap-3 min-w-0">
-          <input type="text" [ngModel]="filtroBuscar()" [ngModelOptions]="{standalone:true}"
-            (ngModelChange)="actualizarFiltroMatrices('buscar', $event)"
-            placeholder="Buscar por sujeto, documento o estado"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ihss-600" />
-          <select [ngModel]="filtroEstado()" (ngModelChange)="actualizarFiltroMatrices('estado', $event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-            <option value="">Todos los estados</option>
-            <ng-container *ngFor="let estado of estadosDisponibles">
-              <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
-            </ng-container>
-          </select>
-          <select [ngModel]="filtroSujetoTipo()" (ngModelChange)="actualizarFiltroMatrices('sujetoTipo', $event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-            <option value="">Todos los sujetos</option>
-            <ng-container *ngFor="let tipo of tiposSujeto">
-              <option [value]="tipo.valor">{{ tipo.texto }}</option>
-            </ng-container>
-          </select>
-        </div>
-
-        <div class="overflow-x-auto border border-gray-200 rounded-xl max-w-full">
-          <table class="w-full min-w-[1080px] table-fixed divide-y divide-gray-200 text-sm">
-            <colgroup>
-              <col class="w-[28%]" />
-              <col class="w-[12%]" />
-              <col class="w-[17%]" />
-              <col class="w-[16%]" />
-              <col class="w-[27%]" />
-            </colgroup>
-            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th class="px-4 py-3 text-left">Sujeto</th>
-                <th class="px-4 py-3 text-left">Estado</th>
-                <th class="px-4 py-3 text-left">Residual</th>
-                <th class="px-4 py-3 text-left">Fecha</th>
-                <th class="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <ng-container *ngIf="matrices().length > 0; else noMatrices">
-                <tr *ngFor="let matriz of matrices()" class="hover:bg-gray-50 align-top">
-                  <td class="px-4 py-3 min-w-0">
-                    <button type="button" (click)="seleccionarMatriz(matriz.matrizId)"
-                      class="rl-clamp-2 text-left font-semibold text-gray-900 hover:text-ihss-900 max-w-full"
-                      [title]="matriz.nombreSujeto">
-                      {{ matriz.nombreSujeto }}
-                    </button>
-                    <p class="rl-clamp-2 mt-1 text-xs text-gray-500 max-w-full" [title]="matriz.sujetoTipo + ' ' + (matriz.documento || '')">{{ matriz.sujetoTipo }} {{ matriz.documento || '' }}</p>
-                  </td>
-                  <td class="px-4 py-3 align-middle">
-                    <span class="inline-flex max-w-full px-2 py-1 rounded-full bg-gray-100 text-xs font-bold text-gray-700 truncate">{{ estadoEtiqueta(matriz.estado) }}</span>
-                  </td>
-                  <td class="px-4 py-3 align-middle">
-                    <span class="inline-flex items-center gap-2">
-                      <span class="w-3 h-3 rounded-full" [style.background]="colorNivel(matriz.nivelResidual)"></span>
-                      <span>{{ matriz.puntajeResidual ?? '-' }} {{ matriz.nivelResidual || '' }}</span>
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 align-middle text-gray-500 whitespace-nowrap">{{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
-                  <td class="px-4 py-3 align-middle">
-                    <div class="flex flex-wrap justify-end gap-2">
-                      <button type="button" (click)="editarMatriz(matriz)"
-                        class="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || !puedeEditarMatriz(matriz)"
-                        [title]="mensajeBloqueoEditarMatriz(matriz)">
-                        Editar
-                      </button>
-                      <button type="button" (click)="eliminarMatriz(matriz)"
-                        class="px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50 whitespace-nowrap"
-                        [disabled]="guardando() || !puedeEliminarMatriz(matriz)"
-                        [title]="mensajeBloqueoEliminarMatriz(matriz)">
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </ng-container>
-              <ng-template #noMatrices>
-                <tr>
-                  <td colspan="5" class="px-4 py-10 text-center text-sm text-gray-500">No hay matrices registradas.</td>
-                </tr>
-              </ng-template>
-            </tbody>
-          </table>
-        </div>
-
-        <ng-container *ngIf="mostrarHistorialDebajoListado()">
-          <ng-container *ngTemplateOutlet="historialMatriz"></ng-container>
-        </ng-container>
-      </div>
-
-      <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0 overflow-hidden self-start">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h3 class="text-lg font-bold text-gray-900">Detalle</h3>
-          <div *ngIf="matrizSeleccionada()" class="flex flex-wrap items-center justify-end gap-2">
-            <button type="button" (click)="exportarFichaMatriz()" [disabled]="guardando()"
-              [attr.aria-busy]="exportando() === 'FICHA'"
-              class="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-50 disabled:opacity-50">
-              {{ exportando() === 'FICHA' ? 'Generando ficha...' : 'Ficha PDF' }}
-            </button>
-            <span class="rounded-full bg-gray-100 px-2 py-1 text-[11px] font-bold text-gray-600">
-              {{ estadoEtiqueta(matrizSeleccionada()?.estado) }}
-            </span>
-          </div>
-        </div>
-        <div *ngIf="matrizSeleccionada(); else noMatrizSeleccionada" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-3 text-sm">
-            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              <p class="text-xs font-bold uppercase text-gray-400">Sujeto evaluado</p>
-              <p class="rl-clamp-3 mt-1 font-semibold text-gray-900" [title]="matrizSeleccionada()?.nombreSujeto || ''">{{ matrizSeleccionada()?.nombreSujeto }}</p>
-              <p class="mt-2 text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
-                {{ matrizSeleccionada()?.sujetoTipo }} · {{ matrizSeleccionada()?.documento || matrizSeleccionada()?.sujetoIdExt || 'Sin documento' }}
-              </p>
-            </section>
-
-            <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm min-w-0">
-              <p class="text-xs font-bold uppercase text-gray-400">Riesgo inherente</p>
-              <div class="mt-2 flex items-center gap-2">
-                <span class="h-3 w-3 rounded-full shrink-0" [style.background]="colorNivel(matrizSeleccionada()?.nivelInherente)"></span>
-                <p class="font-bold break-words [overflow-wrap:anywhere]">{{ matrizSeleccionada()?.puntajeInherente ?? '-' }} {{ matrizSeleccionada()?.nivelInherente || '' }}</p>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-gray-200 bg-gray-50 p-4 shadow-sm min-w-0">
-              <p class="text-xs font-bold uppercase text-gray-400">Riesgo residual</p>
-              <div class="mt-2 flex items-center gap-2">
-                <span class="h-3 w-3 rounded-full shrink-0" [style.background]="colorNivel(matrizSeleccionada()?.nivelResidual)"></span>
-                <p class="font-bold break-words [overflow-wrap:anywhere]">{{ matrizSeleccionada()?.puntajeResidual ?? '-' }} {{ matrizSeleccionada()?.nivelResidual || '' }}</p>
-              </div>
-            </section>
-
-            <section *ngIf="matrizSeleccionada()?.requierePlanAccion"
-              class="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm text-xs font-semibold text-amber-800 min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              Esta matriz requiere plan de acción por nivel residual Alto o Crítico.
-            </section>
-
-            <section *ngIf="(matrizSeleccionada()?.resultados?.length || 0) > 0"
-              class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Resultados vigentes</p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-2 max-h-64 overflow-auto pr-1">
-                <ng-container *ngFor="let resultado of matrizSeleccionada()?.resultados">
-                  <div *ngIf="resultado.esVigente" class="rounded-xl border border-gray-100 bg-gray-50 p-3 min-w-0">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                      <p class="font-semibold text-gray-800">{{ resultado.tipoResultado }}</p>
-                      <span class="rounded-full px-2 py-1 text-[11px] font-bold"
-                        [ngStyle]="{'background-color': colorNivel(resultado.nivelResidual) + '22', 'color': colorNivel(resultado.nivelResidual)}">
-                        {{ resultado.nivelResidual }}
-                      </span>
-                    </div>
-                    <p class="mt-1 text-xs text-gray-600 break-words [overflow-wrap:anywhere]">
-                      Inherente {{ resultado.puntajeInherente }} / Residual {{ resultado.puntajeResidual }} / Mitigación {{ resultado.mitigacionPct }}%
-                    </p>
-                  </div>
-                </ng-container>
-              </div>
-            </section>
-
-            <section *ngIf="(matrizSeleccionada()?.controles?.length || 0) > 0"
-              class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-3">Controles mitigantes</p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-2 max-h-52 overflow-auto pr-1">
-                <ng-container *ngFor="let control of matrizSeleccionada()?.controles">
-                  <div class="rounded-xl border border-gray-100 bg-gray-50 p-3 min-w-0">
-                    <div class="flex flex-wrap items-center justify-between gap-2">
-                      <p class="rl-clamp-2 font-semibold text-gray-800" [title]="control.nombre">{{ control.nombre }}</p>
-                      <span class="text-xs font-bold text-emerald-700">{{ control.efectividadPct }}%</span>
-                    </div>
-                    <p class="mt-1 text-xs text-gray-500 break-words [overflow-wrap:anywhere]">
-                      {{ control.factorCodigo || 'General' }} · {{ control.estado }} · Evidencia {{ control.tieneEvidencia ? 'registrada' : 'pendiente' }}
-                    </p>
-                  </div>
-                </ng-container>
-              </div>
-            </section>
-
-            <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm min-w-0 lg:col-span-2 xl:col-span-1 2xl:col-span-2">
-              <p class="text-xs font-bold uppercase text-gray-400 mb-2">Cambiar estado</p>
-              <p class="mb-3 text-xs text-gray-500">
-                El cálculo se ejecuta automáticamente al guardar. Use estos estados solo para revisión, aprobación, cierre, desactivación o activación.
-              </p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <ng-container *ngFor="let estado of estadosGestionablesParaMatriz(matrizSeleccionada()?.estado)">
-                  <button type="button" (click)="cambiarEstado(matrizSeleccionada()!, estado)"
-                    class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50 truncate"
-                    [disabled]="guardando() || estado === matrizSeleccionada()?.estado">
-                    {{ textoBotonEstado(matrizSeleccionada()!, estado) }}
-                  </button>
-                </ng-container>
-              </div>
-            </section>
-
-            <ng-container *ngIf="!mostrarHistorialDebajoListado()">
-              <ng-container *ngTemplateOutlet="historialMatriz"></ng-container>
-            </ng-container>
-          </div>
-        <ng-template #noMatrizSeleccionada>
-          <p class="text-sm text-gray-500">Seleccione una matriz del listado para ver su detalle.</p>
-        </ng-template>
-      </aside>
-    </section>
-  </ng-container>
-
-  <ng-container *ngIf="tab() === 'nueva'">
-    <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-5">
-      <div>
-        <h3 class="text-lg font-bold text-gray-900">{{ matrizEditandoId() ? 'Editar matriz' : 'Captura de matriz' }}</h3>
-        <p *ngIf="matrizEditandoId()" class="mt-2 text-xs font-semibold text-amber-700">
-          Editando matriz {{ matrizEditandoId() }}. Al guardar, los resultados anteriores quedan no vigentes y el sistema recalcula automáticamente.
-        </p>
-        <p class="text-xs text-gray-500">Seleccione el tipo de sujeto, complete sus variables requeridas y guarde para obtener la evaluación de riesgo.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <label class="space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Tipo de sujeto</span>
-          <select [ngModel]="nuevaMatriz.sujetoTipo" (ngModelChange)="actualizarCampoMatriz('sujetoTipo', $event)"
-            [disabled]="!!matrizEditandoId()"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white disabled:bg-gray-100 disabled:text-gray-500">
-            <ng-container *ngFor="let tipo of tiposSujeto">
-              <option [value]="tipo.valor">{{ tipo.texto }}</option>
-            </ng-container>
+      <div class="grid gap-3 md:grid-cols-4">
+        <label class="text-sm font-medium text-slate-700 md:col-span-2">
+          Buscar
+          <input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)" placeholder="Código, área o responsable">
+        </label>
+        <label class="text-sm font-medium text-slate-700">
+          Estado
+          <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)">
+            <option value="">Todos</option>
+            <option value="BORRADOR">Borrador</option>
+            <option value="EN_REVISION">En revisión</option>
+            <option value="OBSERVADA">Observada</option>
+            <option value="APROBADA">Aprobada</option>
+            <option value="RECHAZADA">Rechazada</option>
+            <option value="CERRADA">Cerrada</option>
           </select>
         </label>
-        <label class="space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Identificador externo</span>
-          <input type="text" [ngModel]="nuevaMatriz.sujetoIdExt" (ngModelChange)="actualizarCampoMatriz('sujetoIdExt', $event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Documento</span>
-          <input type="text" [ngModel]="nuevaMatriz.documento" (ngModelChange)="actualizarCampoMatriz('documento', $event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        </label>
-        <label class="space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Nombre</span>
-          <input type="text" [ngModel]="nuevaMatriz.nombreSujeto" (ngModelChange)="actualizarCampoMatriz('nombreSujeto', $event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        </label>
+        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700" (click)="cargarEvaluaciones()">Aplicar filtros</button>
       </div>
 
-      <div *ngIf="buscandoDuplicados() || matricesDuplicadas().length > 0"
-        class="rounded-xl border px-4 py-3 text-sm"
-        [ngClass]="matricesDuplicadas().length > 0 ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-blue-100 bg-blue-50 text-blue-700'">
-        <p class="font-bold">
-          {{ buscandoDuplicados() ? 'Verificando duplicados...' : 'Posible matriz duplicada detectada' }}
-        </p>
-        <p *ngIf="matricesDuplicadas().length > 0" class="mt-1 text-xs">
-          El registro existente se muestra solo para consulta. Para modificarlo, abra la matriz desde el listado y use Editar.
-        </p>
-        <div *ngIf="matricesDuplicadas().length > 0" class="mt-2 space-y-1">
-          <button *ngFor="let matriz of matricesDuplicadas()" type="button" (click)="seleccionarMatriz(matriz.matrizId); tab.set('matrices')"
-            class="block w-full text-left rounded-lg border border-amber-200 bg-white/70 px-3 py-2 hover:bg-white">
-            <span class="font-semibold">{{ matriz.nombreSujeto }}</span>
-            <span class="text-xs"> · {{ matriz.documento || matriz.sujetoIdExt || 'sin documento' }} · {{ estadoEtiqueta(matriz.estado) }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
-        <div>
-          <p class="text-xs font-bold uppercase text-gray-400">Evaluación</p>
-          <p class="font-semibold text-gray-800">{{ etiquetaTipoSujeto(nuevaMatriz.sujetoTipo) }}</p>
-        </div>
-        <div>
-          <p class="text-xs font-bold uppercase text-gray-400">Variables requeridas</p>
-          <p class="font-semibold text-gray-800">{{ progresoCaptura().completas }}/{{ progresoCaptura().total }} completas</p>
-        </div>
-        <div>
-          <p class="text-xs font-bold uppercase text-gray-400">Tipo de cálculo</p>
-          <p class="font-semibold text-gray-800">{{ tipoCalculoParaSujeto(nuevaMatriz.sujetoTipo) === 'GLOBAL' ? 'Global institucional' : 'Por factor' }}</p>
-        </div>
-      </div>
-
-      <div class="overflow-x-auto border border-gray-200 rounded-xl max-w-full">
-        <table class="min-w-[1240px] w-full divide-y divide-gray-200 text-sm table-fixed">
-          <colgroup>
-            <col class="w-[22%]" />
-            <col class="w-[24%]" />
-            <col class="w-[13%]" />
-            <col class="w-[9%]" />
-            <col class="w-[22%]" />
-            <col class="w-[10%]" />
-          </colgroup>
-          <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
             <tr>
-              <th class="px-4 py-3 text-left">Variable</th>
-              <th class="px-4 py-3 text-left">Criterio de decisión</th>
-              <th class="px-4 py-3 text-left">Valor capturado</th>
-              <th class="px-4 py-3 text-left">Puntaje</th>
-              <th class="px-4 py-3 text-left">Justificación</th>
-              <th class="px-4 py-3 text-left">Fuente</th>
+              <th class="px-4 py-3">Evaluación</th>
+              <th class="px-4 py-3">Riesgo</th>
+              <th class="px-4 py-3">Versión</th>
+              <th class="px-4 py-3">Estado</th>
+              <th class="px-4 py-3">VRI</th>
+              <th class="px-4 py-3">VRR</th>
+              <th class="px-4 py-3">Fecha</th>
+              <th class="px-4 py-3">Acciones</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-100">
-            <tr *ngFor="let captura of capturasVariables()">
-                <td class="px-4 py-3 font-semibold text-gray-800">
-                  <span class="rl-clamp-2" [title]="variableNombre(captura.variableId)">{{ variableNombre(captura.variableId) }}</span>
-                  <ng-container *ngIf="criteriosVariable(captura.variableId).length > 0; else sinCriterios">
-                    <p class="mt-1 text-[11px] font-medium text-emerald-700">
-                      {{ criteriosVariable(captura.variableId).length }} criterio(s) activo(s)
-                    </p>
-                  </ng-container>
-                  <ng-template #sinCriterios>
-                    <p class="mt-1 text-[11px] font-medium text-gray-400">Sin criterios activos</p>
-                  </ng-template>
-                </td>
+          <tbody class="divide-y divide-slate-100 bg-white">
+            @for (evaluacion of evaluaciones(); track evaluacion.evaId) {
+              <tr>
+                <td class="px-4 py-3 font-semibold text-slate-900">{{ evaluacion.evaId }}</td>
+                <td class="px-4 py-3">{{ evaluacion.evaRiesgoId }}</td>
+                <td class="px-4 py-3">{{ evaluacion.evaVersionId }}</td>
+                <td class="px-4 py-3"><span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold">{{ evaluacion.evaEstado }}</span></td>
+                <td class="px-4 py-3">{{ evaluacion.evaVri ?? '-' }}</td>
+                <td class="px-4 py-3">{{ evaluacion.evaVrr ?? '-' }}</td>
+                <td class="px-4 py-3">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="px-4 py-3">
-                  <select [ngModel]="captura.criterioId" (ngModelChange)="seleccionarCriterio(captura.variableId, $event)"
-                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-                    <option [ngValue]="null">Sin criterio</option>
-                    <ng-container *ngFor="let criterio of criteriosVariable(captura.variableId)">
-                      <option [ngValue]="criterio.criterioId">
-                        {{ criterio.valorDesde ?? '-' }} a {{ criterio.valorHasta ?? '-' }} · Puntaje {{ criterio.puntaje }}
-                      </option>
-                    </ng-container>
-                  </select>
-                  <p *ngIf="criterioSugerido(captura)" class="rl-clamp-2 mt-1 text-[11px] font-medium text-ihss-900"
-                    [title]="criterioSugerido(captura)?.descripcion || ''">
-                    Sugerido: {{ criterioSugerido(captura)?.puntaje }} · {{ criterioSugerido(captura)?.descripcion }}
-                  </p>
-                </td>
-                <td class="px-4 py-3">
-                  <input type="text" [ngModel]="captura.valorCapturado"
-                    (ngModelChange)="actualizarValorCapturado(captura.variableId, $event)"
-                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-                </td>
-                <td class="px-4 py-3">
-                  <input type="number" min="0" step="0.01" [ngModel]="captura.puntaje"
-                    (ngModelChange)="actualizarPuntaje(captura.variableId, $event)"
-                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-                  <p *ngIf="advertenciaCriterio(captura)" class="mt-1 text-[11px] font-semibold text-red-600">
-                    {{ advertenciaCriterio(captura) }}
-                  </p>
-                </td>
-                <td class="px-4 py-3">
-                  <input type="text" [ngModel]="captura.justificacion"
-                    (ngModelChange)="actualizarJustificacion(captura.variableId, $event)"
-                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-                </td>
-                <td class="px-4 py-3">
-                  <input type="text" [ngModel]="captura.fuenteDato"
-                    (ngModelChange)="actualizarFuente(captura.variableId, $event)"
-                    class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
+                  <button type="button" class="font-semibold text-blue-700 hover:underline" (click)="editarEvaluacion(evaluacion)">Abrir</button>
                 </td>
               </tr>
+            } @empty {
+              <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No hay evaluaciones para los filtros seleccionados.</td></tr>
+            }
           </tbody>
         </table>
       </div>
-
-      <div class="rounded-2xl bg-gray-50 border border-gray-100 p-4 space-y-3">
-        <h4 class="font-bold text-gray-900">Control mitigante opcional</h4>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Factor asociado</span>
-            <select [(ngModel)]="nuevoControl.factorId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-              <option [ngValue]="null">Sin factor específico</option>
-              <ng-container *ngFor="let factor of factoresControlDisponibles()">
-                <option [ngValue]="factor.factorId">{{ factor.factorNombre }}</option>
-              </ng-container>
-            </select>
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Nombre</span>
-            <input type="text" [(ngModel)]="nuevoControl.nombre" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Mitigación %</span>
-            <select [(ngModel)]="nuevoControl.efectividadPct"
-              class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-              <ng-container *ngFor="let mitigacion of mitigacionesPermitidasOrdenadas()">
-                <option [ngValue]="mitigacion">{{ mitigacion }}%</option>
-              </ng-container>
-            </select>
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Responsable</span>
-            <input type="text" [(ngModel)]="nuevoControl.responsable" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Periodicidad</span>
-            <input type="text" [(ngModel)]="nuevoControl.periodicidad" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Oportunidad</span>
-            <input type="text" [(ngModel)]="nuevoControl.oportunidad" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Automatización</span>
-            <input type="text" [(ngModel)]="nuevoControl.automatizacion" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Calidad</span>
-            <input type="text" [(ngModel)]="nuevoControl.calidad" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1 md:col-span-2">
-            <span class="text-xs font-bold uppercase text-gray-500">Procedimientos</span>
-            <input type="text" [(ngModel)]="nuevoControl.procedimientos" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 md:col-span-2 xl:col-span-1">
-            <input type="checkbox" [(ngModel)]="nuevoControl.evidenciaObligatoria" class="rounded border-gray-300" />
-            Evidencia obligatoria
-          </label>
-        </div>
-        <textarea [(ngModel)]="nuevoControl.descripcion" maxlength="1500" rows="2" placeholder="Descripción del control"
-          class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
-      </div>
-
-      <!-- ALERTA ADMINISTRATIVA DE CATÁLOGOS VACÍOS (HITO 7.3) -->
-      <div *ngIf="alertarCatalogosVacios()" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-        <p class="font-bold">⚠️ Catálogo administrativo vacío detectado</p>
-        <p class="mt-1 text-xs">Existen variables requeridas que no poseen criterios de decisión activos. Por favor configure los elementos correspondientes en la administración del sistema antes de evaluar.</p>
-      </div>
-
-      <!-- CARGA DE EVIDENCIA EN DOS PASOS (HITO 7.3) -->
-      <div class="rounded-2xl border border-gray-200 p-5 space-y-3">
-        <h4 class="font-bold text-gray-900">Adjuntar Evidencia Física (Opcional)</h4>
-        <p class="text-xs text-gray-500">Cargue el archivo soporte de la evaluación. Peso máximo permitido: 10 MB. Extensiones: PDF, imágenes JPG/PNG, Excel, Word.</p>
-        <div class="flex items-center gap-4">
-          <input type="file" (change)="evidenciaArchivo = $any($event.target).files[0]" id="evidenciaCapturaFile"
-            class="hidden" />
-          <label for="evidenciaCapturaFile"
-            class="cursor-pointer px-4 py-2 rounded-xl border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50">
-            {{ evidenciaArchivo ? 'Cambiar archivo' : 'Seleccionar archivo' }}
-          </label>
-          <span *ngIf="evidenciaArchivo" class="text-xs font-semibold text-emerald-700">
-            📎 {{ evidenciaArchivo.name }} ({{ (evidenciaArchivo.size / 1024 / 1024).toFixed(2) }} MB)
-          </span>
-          <span *ngIf="!evidenciaArchivo" class="text-xs text-gray-400">Sin archivo seleccionado</span>
-        </div>
-      </div>
-
-      <!-- ADVERTENCIA DE INCOHERENCIA RESIDUAL (HITO 7.3) -->
-      <div *ngIf="!coherenteLocal()" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" data-testid="alert-incoherencia">
-        <p class="font-bold">🚫 Incoherencia de Riesgo Residual Detectada</p>
-        <p class="mt-1 text-xs">
-          El Riesgo Residual calculado por la mitigación de controles es <strong>{{ vrrCalculadoLocal() }} ({{ nivelResidualLocal() }})</strong>,
-          pero la combinación de Frecuencia e Impacto Residuales seleccionada da <strong>{{ vrrFormularioLocal() }}</strong>.
-          Ambos valores deben coincidir para poder guardar la evaluación.
-        </p>
-      </div>
-
-      <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-        <button *ngIf="matrizEditandoId()" type="button" (click)="cancelarEdicionMatriz()" [disabled]="guardando()"
-          class="px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:bg-gray-50 disabled:opacity-50">
-          Cancelar
-        </button>
-        <button type="button" (click)="crearMatriz()" [disabled]="guardando() || (!matrizEditandoId() && matricesDuplicadas().length > 0) || !coherenteLocal() || alertarCatalogosVacios()"
-          class="px-5 py-2.5 rounded-xl bg-ihss-900 text-white text-sm font-bold disabled:opacity-50" data-testid="btn-guardar-matriz">
-          {{ matrizEditandoId() ? 'Guardar cambios' : 'Guardar matriz' }}
-        </button>
-      </div>
     </section>
-  </ng-container>
+  }
 
-  <ng-container *ngIf="tab() === 'criterios'">
-    <section class="grid grid-cols-1 xl:grid-cols-3 gap-5 min-w-0">
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
+  @if (!cargando() && tab() === 'captura') {
+    <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-captura">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h3 class="text-lg font-bold text-gray-900">{{ criterioEditandoId() ? 'Editar criterio' : 'Nuevo criterio' }}</h3>
-          <p class="text-xs text-gray-500">Defina los rangos que guían la selección de puntajes durante la captura de matrices.</p>
+          <h2 id="titulo-captura" class="text-lg font-bold text-slate-900">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2>
+          <p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p>
         </div>
-        <label class="block space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Variable</span>
-          <select [(ngModel)]="criteriosForm.variableId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-            <option [ngValue]="0">Seleccione</option>
-            <ng-container *ngFor="let variable of metodologia()?.variables || []">
-              <option [ngValue]="variable.variableId">{{ variable.factorCodigo }} - {{ variable.nombre }}</option>
-            </ng-container>
-          </select>
+        <label class="text-sm font-semibold text-slate-700">
+          Riesgo ID
+          <input class="ml-2 w-36 rounded-lg border border-slate-300 px-3 py-2" type="number" min="1" [(ngModel)]="riesgoId">
         </label>
-        <label class="block space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Escala asociada</span>
-          <select [(ngModel)]="criteriosForm.escalaId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-            <option [ngValue]="null">Sin escala</option>
-            <ng-container *ngFor="let escala of escalasCriterio()">
-              <option [ngValue]="escala.escalaId">{{ escala.tipo }} - {{ escala.nivel }} ({{ escala.valorMinimo }} a {{ escala.valorMaximo }})</option>
-            </ng-container>
-          </select>
-        </label>
-        <div class="grid grid-cols-3 gap-3">
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Desde</span>
-            <input type="number" step="0.01" [(ngModel)]="criteriosForm.valorDesde" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Hasta</span>
-            <input type="number" step="0.01" [(ngModel)]="criteriosForm.valorHasta" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Puntaje</span>
-            <input type="number" step="0.01" [(ngModel)]="criteriosForm.puntaje" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-        </div>
-        <label class="block space-y-1">
-          <span class="text-xs font-bold uppercase text-gray-500">Descripción</span>
-          <textarea rows="4" [(ngModel)]="criteriosForm.descripcion" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
-        </label>
-        <div class="flex gap-2">
-          <button type="button" (click)="guardarCriterio()" [disabled]="guardando()"
-            class="px-4 py-2 rounded-xl bg-ihss-900 text-white text-sm font-bold disabled:opacity-50">
-            Guardar
-          </button>
-          <button type="button" (click)="limpiarFormularioCriterio()"
-            class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700">
-            Limpiar
-          </button>
-        </div>
       </div>
 
-      <div class="xl:col-span-2 bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4 min-w-0">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="text-lg font-bold text-gray-900">Criterios registrados</h3>
-          <label class="inline-flex items-center gap-2 text-sm font-semibold text-gray-700">
-            <input type="checkbox" [ngModel]="incluirCriteriosInactivos()" (ngModelChange)="incluirCriteriosInactivos.set($event); cargarCriterios()" />
-            Incluir inactivos
-          </label>
-        </div>
-        <div class="overflow-x-auto border border-gray-200 rounded-xl max-w-full">
-          <table class="min-w-[760px] w-full divide-y divide-gray-200 text-sm table-fixed">
-            <colgroup>
-              <col class="w-[38%]" />
-              <col class="w-[23%]" />
-              <col class="w-[9%]" />
-              <col class="w-[11%]" />
-              <col class="w-[19%]" />
-            </colgroup>
-            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th class="px-4 py-3 text-left">Variable</th>
-                <th class="px-4 py-3 text-left">Rango</th>
-                <th class="px-4 py-3 text-left">Puntaje</th>
-                <th class="px-4 py-3 text-left">Estado</th>
-                <th class="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <ng-container *ngIf="criterios().length > 0; else noCriterios">
-                <tr *ngFor="let criterio of criterios()">
-                  <td class="px-4 py-3">
-                    <p class="rl-clamp-2 font-semibold text-gray-900" [title]="criterio.factorCodigo + ' - ' + criterio.variableNombre">{{ criterio.factorCodigo }} - {{ criterio.variableNombre }}</p>
-                    <p class="rl-clamp-2 text-xs text-gray-500" [title]="criterio.descripcion">{{ criterio.descripcion }}</p>
-                  </td>
-                  <td class="px-4 py-3 text-gray-600">
-                    {{ criterio.valorDesde ?? '-' }} a {{ criterio.valorHasta ?? '-' }}
-                    <p class="text-xs text-gray-400">{{ criterio.escalaTipo || '' }} {{ criterio.escalaNivel || '' }}</p>
-                  </td>
-                  <td class="px-3 py-3 text-center font-bold">{{ criterio.puntaje }}</td>
-                  <td class="px-4 py-3">
-                    <span class="px-2 py-1 rounded-full text-xs font-bold"
-                      [ngClass]="criterio.activo ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'">
-                      {{ criterio.activo ? 'Activo' : 'Inactivo' }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex flex-wrap justify-end gap-1.5">
-                      <button type="button" (click)="editarCriterio(criterio)" [disabled]="!criterio.activo || guardando()"
-                        title="Los criterios inactivos deben activarse antes de editarlos"
-                        class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold hover:bg-gray-50 disabled:opacity-50">
-                        Editar
-                      </button>
-                      <button *ngIf="criterio.activo" type="button" (click)="inactivarCriterio(criterio)" [disabled]="guardando()"
-                        class="px-2.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold disabled:opacity-50">
-                        Desactivar
-                      </button>
-                      <button *ngIf="!criterio.activo" type="button" (click)="reactivarCriterio(criterio)" [disabled]="guardando()"
-                        class="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold disabled:opacity-50">
-                        Activar
-                      </button>
-                      <button type="button" (click)="eliminarCriterio(criterio)" [disabled]="guardando() || criterio.activo"
-                        title="Primero desactive el criterio. La eliminación solo procede si no tiene uso histórico."
-                        class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold hover:bg-red-50 disabled:opacity-50">
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </ng-container>
-              <ng-template #noCriterios>
-                <tr>
-                  <td colspan="5" class="px-4 py-10 text-center text-sm text-gray-500">No hay criterios registrados.</td>
-                </tr>
-              </ng-template>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-  </ng-container>
+      @for (seccion of secciones(); track seccion.clave) {
+        <fieldset class="rounded-xl border border-slate-200 p-4">
+          <legend class="px-2 text-base font-bold text-slate-900">{{ seccion.titulo }}</legend>
+          <div class="grid gap-4 md:grid-cols-2">
+            @for (campo of seccion.campos; track campo.clave) {
+              <label class="text-sm font-medium text-slate-700" [class.md:col-span-2]="campo.tipo === 'textarea'">
+                {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600">*</span> }
 
-  <ng-container *ngIf="tab() === 'planes'">
-    <section class="grid grid-cols-1 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.6fr)] gap-5 min-w-0">
-      <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
-        <div>
-          <h3 class="text-lg font-bold text-gray-900">Planes de acción</h3>
-          <p class="text-xs text-gray-500">Tratamiento obligatorio para matrices con residual Alto o Crítico.</p>
-        </div>
-
-        <label class="space-y-1 block">
-          <span class="text-xs font-bold uppercase text-gray-500">Matriz</span>
-          <select [ngModel]="matrizSeleccionada()?.matrizId || null" (ngModelChange)="seleccionarMatrizParaPlanes($event)"
-            class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-            <option [ngValue]="null">Seleccione una matriz</option>
-            <ng-container *ngFor="let matriz of matrices()">
-              <option [ngValue]="matriz.matrizId">{{ matriz.nombreSujeto }} · {{ estadoEtiqueta(matriz.estado) }}</option>
-            </ng-container>
-          </select>
-        </label>
-
-        <div *ngIf="matrizSeleccionada()" class="rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm">
-          <p class="font-bold text-gray-900">{{ matrizSeleccionada()?.nombreSujeto }}</p>
-          <p class="text-xs text-gray-500">{{ matrizSeleccionada()?.sujetoTipo }} · {{ matrizSeleccionada()?.documento || matrizSeleccionada()?.sujetoIdExt || 'Sin documento' }}</p>
-          <p class="mt-2 text-xs font-semibold"
-            [ngClass]="matrizSeleccionada()?.requierePlanAccion ? 'text-amber-700' : 'text-emerald-700'">
-            {{ matrizSeleccionada()?.requierePlanAccion ? 'Requiere plan de acción.' : 'No requiere plan obligatorio por nivel residual.' }}
-          </p>
-        </div>
-
-        <div class="space-y-3">
-          <h4 class="font-bold text-gray-900">{{ planEditandoId() ? 'Editar plan' : 'Nuevo plan' }}</h4>
-          <label class="block space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Actividad</span>
-            <textarea rows="3" [(ngModel)]="planForm.actividad" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
-          </label>
-          <label class="block space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Responsable</span>
-            <input type="text" [(ngModel)]="planForm.responsable" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label class="space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Fecha inicio</span>
-              <input type="date" [(ngModel)]="planForm.fechaInicio" [min]="fechaActualIso" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-            </label>
-            <label class="space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Fecha fin</span>
-              <input type="date" [(ngModel)]="planForm.fechaFin" [min]="fechaMinimaFinPlan()" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-            </label>
-          </div>
-          <label class="block space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Medio de prueba</span>
-            <input type="text" [(ngModel)]="planForm.medioPrueba" maxlength="300" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-          </label>
-          <label class="block space-y-1">
-            <span class="text-xs font-bold uppercase text-gray-500">Observaciones</span>
-            <textarea rows="2" [(ngModel)]="planForm.observaciones" maxlength="1500" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"></textarea>
-          </label>
-          <div class="flex flex-col sm:flex-row gap-2">
-            <button type="button" (click)="guardarPlanAccion()" [disabled]="guardando() || !matrizSeleccionada()"
-              class="px-4 py-2 rounded-xl bg-ihss-900 text-white text-sm font-bold disabled:opacity-50">
-              {{ planEditandoId() ? 'Guardar cambios' : 'Guardar plan' }}
-            </button>
-            <button type="button" (click)="limpiarFormularioPlan()" class="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-700">
-              Limpiar
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-5 min-w-0">
-        <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h3 class="text-lg font-bold text-gray-900">Seguimiento de planes</h3>
-              <p class="text-xs text-gray-500">Controle compromisos, responsables y fechas para reducir riesgos altos o críticos.</p>
-            </div>
-            <span class="text-xs font-bold text-gray-500">{{ planesAccion().length }} plan(es)</span>
-          </div>
-          <div class="overflow-x-auto border border-gray-200 rounded-xl">
-            <table class="min-w-[920px] w-full table-fixed divide-y divide-gray-200 text-sm">
-              <colgroup>
-                <col class="w-[32%]" />
-                <col class="w-[18%]" />
-                <col class="w-[14%]" />
-                <col class="w-[12%]" />
-                <col class="w-[24%]" />
-              </colgroup>
-              <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
-                  <th class="px-4 py-3 text-left">Actividad</th>
-                  <th class="px-4 py-3 text-left">Responsable</th>
-                  <th class="px-4 py-3 text-left">Estado</th>
-                  <th class="px-4 py-3 text-left">Fecha fin</th>
-                  <th class="px-4 py-3 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr *ngFor="let plan of planesAccion()">
-                  <td class="px-4 py-3">
-                    <p class="rl-clamp-2 font-semibold text-gray-900" [title]="plan.actividad">{{ plan.actividad }}</p>
-                    <p class="rl-clamp-2 text-xs text-gray-500" [title]="plan.medioPrueba || ''">{{ plan.medioPrueba || 'Sin medio de prueba' }}</p>
-                  </td>
-                  <td class="px-4 py-3">{{ plan.responsable }}</td>
-                  <td class="px-4 py-3">
-                    <span class="rounded-full px-2 py-1 text-xs font-bold"
-                      [ngClass]="plan.estado === 'CERRADO' ? 'bg-emerald-50 text-emerald-700' : plan.vencido || plan.estado === 'VENCIDO' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'">
-                      {{ plan.vencido && plan.estado !== 'CERRADO' ? 'VENCIDO' : plan.estado }}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 whitespace-nowrap">{{ plan.fechaFin ? (plan.fechaFin | date:'dd/MM/yyyy') : '-' }}</td>
-                  <td class="px-4 py-3">
-                    <div class="flex flex-wrap justify-end gap-1.5">
-                      <ng-container *ngIf="plan.estado !== 'INACTIVO'; else planInactivoAcciones">
-                        <button type="button" (click)="editarPlan(plan)" class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold">Editar</button>
-                        <button *ngFor="let estado of estadosPlan" type="button" (click)="cambiarEstadoPlan(plan, estado)"
-                          [disabled]="plan.estado === estado || guardando()"
-                          class="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold disabled:opacity-40">
-                          {{ estado }}
-                        </button>
-                        <button type="button" (click)="inactivarPlan(plan)" [disabled]="guardando()"
-                          class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
-                          Desactivar
-                        </button>
-                      </ng-container>
-                      <ng-template #planInactivoAcciones>
-                        <button type="button" (click)="reactivarPlan(plan)" [disabled]="guardando()"
-                          class="px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 text-xs font-semibold disabled:opacity-50">
-                          Reactivar
-                        </button>
-                      </ng-template>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="planesAccion().length === 0">
-                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay planes registrados para la matriz seleccionada.</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-4">
-          <div>
-            <h3 class="text-lg font-bold text-gray-900">Evidencias documentales</h3>
-            <p class="text-xs text-gray-500">Adjunte documentos de soporte para planes, controles mitigantes o decisiones de la matriz seleccionada.</p>
-          </div>
-          <div class="space-y-3">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <label class="min-w-0 space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Archivo</span>
-              <label class="flex min-h-[42px] w-full cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                Seleccionar archivo
-                <input type="file" (change)="seleccionarArchivoEvidencia($event)" class="sr-only" />
+                @if (opcionesCatalogo(campo).length) {
+                  <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
+                    <option [ngValue]="null">Seleccione</option>
+                    @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
+                      <option [value]="opcion.codigo">{{ opcion.valor }}</option>
+                    }
+                  </select>
+                } @else if (campo.tipo === 'booleano' || campo.tipo === 'checkbox') {
+                  <input class="ml-3 h-4 w-4" type="checkbox" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
+                } @else if (campo.tipo === 'textarea') {
+                  <textarea class="mt-1 min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
+                } @else {
+                  <input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [type]="campo.tipo === 'numero' ? 'number' : campo.tipo === 'fecha' ? 'date' : 'text'" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
+                }
               </label>
-              <span *ngIf="evidenciaArchivo" class="block max-w-full truncate text-xs text-gray-500" [title]="evidenciaArchivo.name">
-                {{ evidenciaArchivo.name }} · {{ (evidenciaArchivo.size / 1024) | number:'1.0-0' }} KB
-              </span>
-            </label>
-            <label class="min-w-0 space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Plan</span>
-              <select [(ngModel)]="evidenciaPlanId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-                <option [ngValue]="null">Sin plan</option>
-                <option *ngFor="let plan of planesAccion()" [ngValue]="plan.planId">Plan {{ plan.planId }}</option>
+            }
+          </div>
+        </fieldset>
+      } @empty {
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">La versión vigente no contiene secciones dinámicas disponibles.</div>
+      }
+
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50" [disabled]="guardando() || !puedeGuardar()" (click)="guardarEvaluacion()">Guardar evaluación</button>
+        <button type="button" class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold" (click)="seleccionarTab('evaluaciones')">Cancelar</button>
+      </div>
+
+      @if (evaluacionSeleccionada(); as evaluacion) {
+        <section class="grid gap-4 border-t border-slate-200 pt-5 lg:grid-cols-2">
+          <div class="rounded-xl bg-slate-50 p-4">
+            <h3 class="font-bold text-slate-900">Transición de estado</h3>
+            <div class="mt-3 grid gap-3">
+              <select class="rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoEstado">
+                <option value="EN_REVISION">En revisión</option>
+                <option value="OBSERVADA">Observada</option>
+                <option value="APROBADA">Aprobada</option>
+                <option value="RECHAZADA">Rechazada</option>
+                <option value="CERRADA">Cerrada</option>
               </select>
-            </label>
-            <label class="min-w-0 space-y-1">
-              <span class="text-xs font-bold uppercase text-gray-500">Control mitigante</span>
-              <select [(ngModel)]="evidenciaControlId" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-                <option [ngValue]="null">Sin control mitigante</option>
-                <option *ngFor="let control of matrizSeleccionada()?.controles || []" [ngValue]="control.controlId">{{ control.nombre }}</option>
-              </select>
-            </label>
-            </div>
-            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <button type="button" (click)="vistaPreviaArchivoSeleccionado()" [disabled]="!evidenciaArchivo || guardando()"
-              class="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold text-gray-700 disabled:opacity-50">
-              Vista previa
-            </button>
-            <button type="button" (click)="cargarEvidencia()" [disabled]="guardando() || !matrizSeleccionada() || !evidenciaArchivo"
-              class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
-              Cargar
-            </button>
+              <textarea class="rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="motivoTransicion" placeholder="Motivo de la transición"></textarea>
+              <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="transicionarEvaluacion(evaluacion)">Aplicar transición</button>
             </div>
           </div>
-          <div class="overflow-x-auto border border-gray-200 rounded-xl">
-            <table class="min-w-[680px] w-full table-fixed divide-y divide-gray-200 text-sm">
-              <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                <tr>
-                  <th class="w-[28%] px-4 py-3 text-left">Archivo</th>
-                  <th class="w-[20%] px-4 py-3 text-left">Vínculo</th>
-                  <th class="w-[18%] px-4 py-3 text-left">Fecha</th>
-                  <th class="w-[12%] px-4 py-3 text-left">Estado</th>
-                  <th class="w-[22%] px-4 py-3 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-100">
-                <tr *ngFor="let evidencia of evidencias()">
-                  <td class="px-4 py-3">
-                    <p class="rl-clamp-2 font-semibold text-gray-900" [title]="evidencia.nombreOriginal">{{ evidencia.nombreOriginal }}</p>
-                    <p class="text-xs text-gray-500">{{ (evidencia.tamanoBytes / 1024) | number:'1.0-0' }} KB</p>
-                  </td>
-                  <td class="px-4 py-3 text-xs text-gray-600 break-words [overflow-wrap:anywhere]">Plan {{ evidencia.planId || '-' }} · Control {{ evidencia.controlId || '-' }}</td>
-                  <td class="px-4 py-3 whitespace-nowrap">{{ evidencia.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
-                  <td class="px-4 py-3">{{ evidencia.activa ? 'Activa' : 'Inactiva' }}</td>
-                  <td class="px-4 py-3">
-                    <div class="flex flex-wrap justify-end gap-2">
-                      <button type="button" (click)="vistaPreviaEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
-                        class="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-xs font-semibold disabled:opacity-50">
-                        Vista previa
-                      </button>
-                      <button type="button" (click)="inactivarEvidencia(evidencia)" [disabled]="!evidencia.activa || guardando()"
-                        class="px-2.5 py-1.5 rounded-lg border border-red-200 text-red-700 text-xs font-semibold disabled:opacity-50">
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="evidencias().length === 0">
-                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">No hay evidencias registradas para la matriz seleccionada.</td>
-                </tr>
-              </tbody>
-            </table>
+
+          <div class="rounded-xl bg-slate-50 p-4">
+            <h3 class="font-bold text-slate-900">Evidencia</h3>
+            <input class="mt-3 block w-full text-sm" type="file" (change)="seleccionarArchivo($event)">
+            <button type="button" class="mt-3 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando() || !archivoEvidencia" (click)="cargarYVincularEvidencia(evaluacion)">Cargar y vincular</button>
           </div>
         </section>
-      </div>
-    </section>
-  </ng-container>
 
-  <ng-container *ngIf="tab() === 'reportes'">
-    <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 space-y-5">
-      <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <section class="border-t border-slate-200 pt-5">
+          <h3 class="font-bold text-slate-900">Historial de revisión</h3>
+          <div class="mt-3 space-y-2">
+            @for (revision of revisiones(); track revision.revId) {
+              <div class="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                <span class="font-semibold">{{ revision.revEstadoAnterior }} → {{ revision.revEstadoNuevo }}</span>
+                <span class="ml-2 text-slate-500">{{ revision.revFecha | date:'dd/MM/yyyy HH:mm' }}</span>
+                @if (revision.revMotivo) { <p class="mt-1 text-slate-600">{{ revision.revMotivo }}</p> }
+              </div>
+            } @empty {
+              <p class="text-sm text-slate-500">Sin revisiones registradas.</p>
+            }
+          </div>
+        </section>
+      }
+    </section>
+  }
+
+  @if (!cargando() && tab() === 'consolidado') {
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-consolidado">
+      <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-lg font-bold text-gray-900">Reportería y exportaciones</h3>
-          <p class="text-xs text-gray-500">Consulte resultados filtrados y genere salidas oficiales en Excel o PDF.</p>
+          <h2 id="titulo-consolidado" class="text-lg font-bold text-slate-900">Matriz consolidada</h2>
+          <p class="text-sm text-slate-600">Contrato tipado basado en proyecciones relacionales.</p>
         </div>
-        <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
-          <button type="button" (click)="exportarReporte('EXCEL')" [disabled]="guardando() || cargandoReporte()"
-            [attr.aria-busy]="exportando() === 'EXCEL'"
-            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-bold disabled:opacity-50">
-            {{ exportando() === 'EXCEL' ? 'Generando Excel...' : 'Exportar Excel (.xlsx)' }}
-          </button>
-          <button type="button" (click)="exportarReporte('PDF')" [disabled]="guardando() || cargandoReporte()"
-            [attr.aria-busy]="exportando() === 'PDF'"
-            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-bold disabled:opacity-50">
-            {{ exportando() === 'PDF' ? 'Generando PDF...' : 'Generar PDF ejecutivo' }}
-          </button>
-        </div>
+        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarConsolidado()">Actualizar</button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-        <input type="search" aria-label="Buscar en el reporte" [ngModel]="reporteFiltro().buscar || ''"
-          (ngModelChange)="actualizarFiltroReporte('buscar', $event)"
-          placeholder="Buscar sujeto, documento, estado, nivel, factor o responsable"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <select aria-label="Filtrar reporte por estado" [ngModel]="reporteFiltro().estado || ''" (ngModelChange)="actualizarFiltroReporte('estado', $event)"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todos los estados</option>
-          <ng-container *ngFor="let estado of estadosDisponibles">
-            <option [value]="estado">{{ estadoEtiqueta(estado) }}</option>
-          </ng-container>
-        </select>
-        <select aria-label="Filtrar reporte por tipo de sujeto" [ngModel]="reporteFiltro().sujetoTipo || ''" (ngModelChange)="actualizarFiltroReporte('sujetoTipo', $event)"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todos los sujetos</option>
-          <ng-container *ngFor="let tipo of tiposSujeto">
-            <option [value]="tipo.valor">{{ tipo.texto }}</option>
-          </ng-container>
-        </select>
-        <select aria-label="Filtrar reporte por nivel residual" [ngModel]="reporteFiltro().nivelResidual || ''" (ngModelChange)="actualizarFiltroReporte('nivelResidual', $event)"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white">
-          <option value="">Todos los niveles</option>
-          <ng-container *ngFor="let escala of escalasRiesgoOrdenadas()">
-            <option [value]="escala.nivel">{{ escala.nivel }}</option>
-          </ng-container>
-        </select>
-        <input type="date" aria-label="Fecha inicial del reporte" [ngModel]="reporteFiltro().fechaInicio || ''"
-          (ngModelChange)="actualizarFiltroReporte('fechaInicio', $event)"
-          [min]="fechaMinimaReporteInicio"
-          [max]="fechaActualIso"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <input type="date" aria-label="Fecha final del reporte" [ngModel]="reporteFiltro().fechaFin || ''"
-          (ngModelChange)="actualizarFiltroReporte('fechaFin', $event)"
-          [min]="fechaMinimaReporteInicio"
-          [max]="fechaActualIso"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <input type="text" aria-label="Filtrar por responsable" [ngModel]="reporteFiltro().responsable || ''"
-          (ngModelChange)="actualizarFiltroReporte('responsable', $event)"
-          placeholder="Responsable"
-          class="rounded-xl border border-gray-200 px-3 py-2 text-sm" />
-        <button type="button" (click)="limpiarFiltrosReporte()" [disabled]="!reporteFiltrosActivos() || cargandoReporte()"
-          class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-          Limpiar filtros
-        </button>
-      </div>
-      <div role="status" aria-live="polite" class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-gray-500">
-        <span>{{ cargandoReporte() ? 'Actualizando reporte...' : 'Reporte actualizado con los filtros vigentes.' }}</span>
-        <span *ngIf="reporte()?.fechaGeneracion">Generado: {{ reporte()?.fechaGeneracion | date:'dd/MM/yyyy HH:mm' }}</span>
-      </div>
-
-      <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p class="text-xs font-bold uppercase text-slate-500">Volumen de matrices</p>
-          <div class="mt-3 grid grid-cols-3 gap-3">
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-slate-400">Total</p>
-              <p class="text-2xl font-bold text-slate-900">{{ reporte()?.totales?.totalMatrices ?? 0 }}</p>
-            </div>
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-slate-400">Calculadas</p>
-              <p class="text-2xl font-bold text-slate-900">{{ reporte()?.totales?.totalCalculadas ?? 0 }}</p>
-            </div>
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-slate-400">Cerradas</p>
-              <p class="text-2xl font-bold text-slate-900">{{ reporte()?.totales?.totalCerradas ?? 0 }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-          <p class="text-xs font-bold uppercase text-amber-700">Riesgo residual</p>
-          <div class="mt-3 flex items-end justify-between gap-3">
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-amber-600">Alto / Crítico</p>
-              <p class="text-2xl font-bold text-amber-700">{{ reporte()?.totales?.totalAltoCritico ?? 0 }}</p>
-            </div>
-            <p class="text-xs text-amber-700">Matrices que requieren seguimiento prioritario.</p>
-          </div>
-        </div>
-        <div class="rounded-2xl border border-red-200 bg-red-50 p-4">
-          <p class="text-xs font-bold uppercase text-red-700">Planes de acción</p>
-          <div class="mt-3 grid grid-cols-2 gap-3">
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-red-600">Requeridos</p>
-              <p class="text-2xl font-bold text-red-700">{{ reporte()?.totales?.totalPlanAccionRequerido ?? 0 }}</p>
-            </div>
-            <div>
-              <p class="text-[11px] font-semibold uppercase text-red-600">Vencidos</p>
-              <p class="text-2xl font-bold text-red-700">{{ reporte()?.totales?.totalPlanesVencidos ?? 0 }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <div class="rounded-2xl border border-gray-100 p-5">
-          <h4 class="font-bold text-gray-900 mb-3">Riesgo inherente por nivel</h4>
-          <div class="space-y-3">
-            <ng-container *ngFor="let nivel of reporte()?.mapaInherente || []">
-              <div>
-                <div class="flex items-center justify-between text-xs font-semibold text-gray-600">
-                  <span>{{ nivel.nivel }} · promedio {{ nivel.promedio }}</span>
-                  <span>{{ nivel.total }}</span>
-                </div>
-                <div class="mt-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div class="h-full rounded-full" [style.background]="colorNivel(nivel.nivel)"
-                    [style.width.%]="(nivel.total / ((reporte()?.totales?.totalMatrices || 1))) * 100"></div>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </div>
-
-        <div class="rounded-2xl border border-gray-100 p-5">
-          <h4 class="font-bold text-gray-900 mb-3">Riesgo residual por nivel</h4>
-          <div class="space-y-3">
-            <ng-container *ngFor="let nivel of reporte()?.mapaResidual || []">
-              <div>
-                <div class="flex items-center justify-between text-xs font-semibold text-gray-600">
-                  <span>{{ nivel.nivel }} · promedio {{ nivel.promedio }}</span>
-                  <span>{{ nivel.total }}</span>
-                </div>
-                <div class="mt-1 h-2 rounded-full bg-gray-100 overflow-hidden">
-                  <div class="h-full rounded-full" [style.background]="colorNivel(nivel.nivel)"
-                    [style.width.%]="(nivel.total / ((reporte()?.totales?.totalMatrices || 1))) * 100"></div>
-                </div>
-              </div>
-            </ng-container>
-          </div>
-        </div>
-      </section>
-
-      <app-matrices-reporte-tabla
-        [matrices]="obtenerMatricesReporte()"
-        [escalas]="escalasRiesgoOrdenadas()" />
-
-      <section class="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <div class="overflow-x-auto rounded-xl border border-gray-200">
-          <table class="min-w-[860px] w-full divide-y divide-gray-200 text-sm table-fixed">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th class="px-4 py-3 text-left">Factor</th>
-                <th class="px-4 py-3 text-left">Matrices</th>
-                <th class="px-4 py-3 text-left">Inherente</th>
-                <th class="px-4 py-3 text-left">Residual</th>
-                <th class="px-4 py-3 text-left">Alto/Crítico</th>
-                <th class="px-4 py-3 text-left">Plan</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr *ngFor="let factor of reporte()?.porFactor || []">
-                <td class="px-4 py-3">
-                  <p class="rl-clamp-2 font-semibold text-gray-900" [title]="factor.factorCodigo + ' - ' + factor.factorNombre">{{ factor.factorCodigo }} - {{ factor.factorNombre }}</p>
-                </td>
-                <td class="px-4 py-3">{{ factor.totalMatrices }}</td>
-                <td class="px-4 py-3">{{ factor.promedioInherente }}</td>
-                <td class="px-4 py-3">{{ factor.promedioResidual }}</td>
-                <td class="px-4 py-3">{{ factor.totalAltoCritico }}</td>
-                <td class="px-4 py-3">{{ factor.totalPlanAccionRequerido }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="overflow-x-auto rounded-xl border border-gray-200">
-          <table class="min-w-[720px] w-full divide-y divide-gray-200 text-sm table-fixed">
-            <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th class="px-4 py-3 text-left">Matriz crítica</th>
-                <th class="px-4 py-3 text-left">Estado</th>
-                <th class="px-4 py-3 text-left">Residual</th>
-                <th class="px-4 py-3 text-left">Fecha</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr *ngFor="let matriz of reporte()?.matricesCriticas || []">
-                <td class="px-4 py-3">
-                  <p class="rl-clamp-2 font-semibold text-gray-900" [title]="matriz.nombreSujeto">{{ matriz.nombreSujeto }}</p>
-                  <p class="text-xs text-gray-500">{{ matriz.sujetoTipo }}</p>
-                </td>
-                <td class="px-4 py-3">{{ estadoEtiqueta(matriz.estado) }}</td>
-                <td class="px-4 py-3">
-                  <span class="inline-flex items-center gap-2">
-                    <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelResidual)"></span>
-                    {{ matriz.puntajeResidual }} {{ matriz.nivelResidual }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 whitespace-nowrap">{{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
-              </tr>
-              <tr *ngIf="(reporte()?.matricesCriticas?.length || 0) === 0">
-                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500">No hay matrices críticas con los filtros aplicados.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </section>
-  </ng-container>
-
-  <ng-container *ngIf="evidenciaPreview() as preview">
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/60 px-4 py-6 backdrop-blur-sm">
-      <div role="dialog" aria-modal="true" aria-labelledby="vista-previa-titulo"
-        class="w-full max-w-5xl max-h-[92vh] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
-        (click)="$event.stopPropagation()">
-        <div class="px-5 py-4 border-b border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div class="min-w-0">
-            <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Vista previa de evidencia</p>
-            <h3 id="vista-previa-titulo" class="mt-1 text-lg font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
-              {{ preview.nombre }}
-            </h3>
-            <p class="mt-1 text-xs text-gray-500">
-              {{ preview.tipoMime || 'Tipo no definido' }} · {{ (preview.tamanoBytes / 1024) | number:'1.0-0' }} KB
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-2 sm:justify-end">
-            <button type="button" (click)="descargarVistaPreviaActual()" [disabled]="!preview.url"
-              class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 disabled:opacity-50">
-              Descargar
-            </button>
-            <button type="button" (click)="cerrarVistaPreviaEvidencia()"
-              class="px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-bold">
-              Cerrar
-            </button>
-          </div>
-        </div>
-
-        <div class="p-5 bg-gray-50 overflow-auto max-h-[calc(92vh-120px)]">
-          <div *ngIf="preview.cargando" class="min-h-[360px] flex items-center justify-center rounded-2xl border border-dashed border-gray-300 bg-white text-sm font-semibold text-gray-500">
-            Preparando vista previa...
-          </div>
-
-          <div *ngIf="!preview.cargando && preview.error" class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-            {{ preview.error }}
-          </div>
-
-          <ng-container *ngIf="!preview.cargando && !preview.error">
-            <img *ngIf="preview.tipoVista === 'imagen' && preview.url" [src]="preview.url" [alt]="preview.nombre"
-              class="mx-auto max-h-[68vh] max-w-full rounded-xl border border-gray-200 bg-white object-contain shadow-sm" />
-
-            <iframe *ngIf="preview.tipoVista === 'pdf' && preview.urlSegura" [src]="preview.urlSegura"
-              class="h-[68vh] w-full rounded-xl border border-gray-200 bg-white"
-              title="Vista previa PDF"></iframe>
-
-            <pre *ngIf="preview.tipoVista === 'texto'"
-              class="max-h-[68vh] overflow-auto whitespace-pre-wrap break-words rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-800">{{ preview.texto }}</pre>
-
-            <div *ngIf="preview.tipoVista === 'office' || preview.tipoVista === 'generico'"
-              class="min-h-[360px] rounded-2xl border border-gray-200 bg-white p-6 flex flex-col items-center justify-center text-center">
-              <div class="h-16 w-16 rounded-2xl bg-ihss-50 text-ihss-700 flex items-center justify-center text-2xl font-black">
-                DOC
-              </div>
-              <h4 class="mt-4 max-w-2xl text-lg font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
-                {{ preview.nombre }}
-              </h4>
-              <p class="mt-2 max-w-2xl text-sm text-gray-600">
-                El archivo fue recuperado correctamente. Este tipo de documento no siempre puede mostrarse embebido en el navegador; utilice Descargar para abrirlo con la aplicación correspondiente.
-              </p>
-              <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left text-xs text-gray-600">
-                <div class="rounded-xl bg-gray-50 px-4 py-3">
-                  <span class="block font-bold uppercase text-gray-400">Tipo</span>
-                  <span class="break-words [overflow-wrap:anywhere]">{{ preview.tipoMime || 'No definido' }}</span>
-                </div>
-                <div class="rounded-xl bg-gray-50 px-4 py-3">
-                  <span class="block font-bold uppercase text-gray-400">Tamaño</span>
-                  <span>{{ (preview.tamanoBytes / 1024) | number:'1.0-0' }} KB</span>
-                </div>
-                <div class="rounded-xl bg-gray-50 px-4 py-3">
-                  <span class="block font-bold uppercase text-gray-400">Estado</span>
-                  <span>Disponible para descarga</span>
-                </div>
-              </div>
-            </div>
-          </ng-container>
-        </div>
-      </div>
-    </div>
-  </ng-container>
-
-  <ng-container *ngIf="modalOperacion()">
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/55 px-4 py-6 backdrop-blur-sm">
-      <div role="dialog" aria-modal="true" aria-labelledby="modal-operacion-titulo"
-        class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden"
-        (click)="$event.stopPropagation()">
-        <div class="px-6 py-5 border-b border-gray-100 flex items-start justify-between gap-4">
-          <div class="min-w-0">
-            <p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Acción sensible</p>
-            <h3 id="modal-operacion-titulo" class="mt-1 text-xl font-bold text-gray-900 break-words [overflow-wrap:anywhere]">
-              {{ modalOperacion()?.titulo }}
-            </h3>
-          </div>
-        </div>
-
-        <div class="px-6 py-5 space-y-4">
-          <p class="text-sm text-gray-600 leading-6 break-words [overflow-wrap:anywhere]">
-            {{ modalOperacion()?.descripcion }}
-          </p>
-
-          <ng-container *ngIf="modalOperacion()?.requiereMotivo">
-            <label class="block space-y-2">
-              <span class="text-xs font-bold uppercase text-gray-500">Motivo obligatorio</span>
-              <textarea [(ngModel)]="modalMotivoTexto"
-                (ngModelChange)="actualizarModalMotivo($event)"
-                rows="4" maxlength="1000"
-                class="w-full resize-y rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-ihss-600 focus:ring-2 focus:ring-ihss-600/20"
-                placeholder="Describa el motivo de la acción..."></textarea>
-              <span *ngIf="modalOperacion()?.tipo === 'estado' && existeMotivoCambioEstado(modalMotivoTexto)" class="block text-xs font-semibold text-red-600">
-                Este motivo ya fue utilizado en un cambio de estado de esta matriz.
-              </span>
-              <span class="block text-right text-[11px] font-medium"
-                [ngClass]="modalMotivoTexto.length >= 950 ? 'text-amber-600' : 'text-gray-400'">
-                {{ contadorModalMotivo() }}/1000
-              </span>
-            </label>
-          </ng-container>
-
-          <div *ngIf="modalError()" role="alert" class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
-            {{ modalError() }}
-          </div>
-        </div>
-
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-          <button type="button" (click)="cerrarModal()" [disabled]="guardando()"
-            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-            Cancelar
-          </button>
-          <button type="button" (click)="confirmarModal()" [disabled]="!puedeConfirmarModal()"
-            class="px-4 py-2 rounded-xl text-sm font-bold text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50"
-            [ngClass]="claseBotonModal(modalOperacion())">
-            {{ guardando() ? 'Procesando...' : modalOperacion()?.textoConfirmar }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </ng-container>
-
-  <!-- PESTAÑA: GESTIÓN DE PLANTILLAS Y CICLO DE VIDA (HITO 7.4) -->
-  <ng-container *ngIf="tab() === 'plantillas'">
-    <section class="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-100 pb-4">
-        <div>
-          <h3 class="text-lg font-bold text-gray-900">Plantillas y Ciclo de Vida del Formulario A</h3>
-          <p class="text-xs text-gray-500">Administre el ciclo de vida de las versiones de captura transaccionales del SGRLA.</p>
-        </div>
-        <button type="button" (click)="cargarHistorialVersiones()" [disabled]="cargandoVersiones() || guardando()"
-          class="px-3 py-1.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-          Refrescar historial
-        </button>
-      </div>
-
-      <!-- Spinner de carga -->
-      <div *ngIf="cargandoVersiones()" class="py-10 text-center text-sm font-semibold text-ihss-900">
-        Cargando historial de versiones y plantillas del sistema...
-      </div>
-
-      <!-- Editor de JSON para Borradores -->
-      <div *ngIf="versionEditarJson()" class="rounded-2xl border border-ihss-200 bg-ihss-50/20 p-5 space-y-4">
-        <div class="flex items-center justify-between border-b border-ihss-100 pb-2">
-          <span class="text-sm font-bold text-ihss-900">
-            Editar Esquema JSON: Formulario A - Versión {{ versionEditarJson()?.verVersion }} (ID: {{ versionEditarJson()?.verId }})
-          </span>
-          <span class="text-xs font-bold uppercase text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">Borrador</span>
-        </div>
-        <p class="text-xs text-gray-500">
-          Asegúrese de respetar el esquema de secciones y controles. Si guarda un JSON no válido o vacío, el formulario de captura no podrá renderizarse.
-        </p>
-        <textarea [(ngModel)]="editorJsonContenido" rows="12"
-          class="w-full font-mono text-xs rounded-xl border border-gray-200 p-4 bg-gray-50 text-gray-800 focus:outline-none focus:border-ihss-600 focus:ring-1 focus:ring-ihss-600"></textarea>
-        <div class="flex justify-end gap-2">
-          <button type="button" (click)="cancelarEditorJson()" [disabled]="guardando()"
-            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50">
-            Cancelar
-          </button>
-          <button type="button" (click)="guardarJsonVersion()" [disabled]="guardando()"
-            class="px-4 py-2 rounded-xl bg-ihss-900 text-white text-xs font-bold disabled:opacity-50" data-testid="btn-guardar-json">
-            {{ guardando() ? 'Guardando...' : 'Guardar borrador' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Listado de Versiones Timeline -->
-      <div *ngIf="!cargandoVersiones() && versionesFormulario().length === 0" class="py-8 text-center text-sm text-gray-400">
-        No se encontraron versiones de formularios registradas en el sistema.
-      </div>
-
-      <div *ngIf="!cargandoVersiones() && versionesFormulario().length > 0" class="relative pl-6 border-l-2 border-gray-100 space-y-6">
-        <div *ngFor="let ver of versionesFormulario()" class="relative group">
-          <!-- Punto indicador del timeline -->
-          <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full border-4 border-white transition-colors"
-            [ngClass]="ver.verVigente ? 'bg-emerald-600 ring-2 ring-emerald-100' : 'bg-gray-300 group-hover:bg-gray-400'"></div>
-          
-          <div class="bg-gray-50 hover:bg-gray-50/70 border border-gray-100 rounded-2xl p-4 transition-all">
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-              <div class="space-y-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <h4 class="font-bold text-gray-900 text-sm">
-                    Formulario A - Versión {{ ver.verVersion }} (Código: {{ ver.verCodigo }})
-                  </h4>
-                  <!-- Badge Estado -->
-                  <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-                    [ngClass]="ver.verEstado === 'PUBLISHED' ? 'text-emerald-700 bg-emerald-50' : 'text-amber-700 bg-amber-50'">
-                    {{ ver.verEstado }}
-                  </span>
-                  <!-- Badge Vigencia -->
-                  <span *ngIf="ver.verVigente" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-emerald-100 bg-emerald-800">
-                    Vigente / Activo
-                  </span>
-                  <span *ngIf="!ver.verVigente" class="text-[10px] font-bold px-2 py-0.5 rounded-full text-gray-400 bg-gray-100">
-                    Inactivo
-                  </span>
-                </div>
-                <!-- Hash abreviado -->
-                <p class="font-mono text-[11px] text-gray-400" *ngIf="ver.verHash">
-                  SHA-256: <span class="bg-gray-200/50 px-1 py-0.5 rounded" [title]="ver.verHash">{{ ver.verHash.substring(0, 15) }}...</span>
-                </p>
-                <!-- Metadatos -->
-                <p class="text-xs text-gray-500">
-                  Creado: {{ formatearFechaHora(ver.verFechaCreacion) }} por Usuario ID: {{ ver.verUsrCreacion }}
-                </p>
-              </div>
-
-              <!-- Botones Operativos de la Versión -->
-              <div class="flex flex-wrap gap-2 self-start">
-                <!-- Acciones para borradores (DRAFT) -->
-                <ng-container *ngIf="ver.verEstado === 'DRAFT'">
-                  <button type="button" (click)="abrirEditorJson(ver)" [disabled]="guardando()"
-                    class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-                    Editar JSON
-                  </button>
-                  <button type="button" (click)="publicarVersion(ver.verId)" [disabled]="guardando()"
-                    class="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-50"
-                    data-testid="btn-publicar-version">
-                    Publicar
-                  </button>
-                </ng-container>
-
-                <!-- Acciones para publicados (PUBLISHED) -->
-                <ng-container *ngIf="ver.verEstado === 'PUBLISHED'">
-                  <button type="button" (click)="clonarVersion(ver.verId)" [disabled]="guardando()"
-                    class="px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    data-testid="btn-clonar-version">
-                    Clonar a Borrador
-                  </button>
-                  <button type="button" (click)="cambiarVigenciaVersion(ver.verId, !ver.verVigente)" [disabled]="guardando()"
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold disabled:opacity-50"
-                    [ngClass]="ver.verVigente ? 'border border-red-200 text-red-700 hover:bg-red-50' : 'border border-emerald-200 text-emerald-700 hover:bg-emerald-50'">
-                    {{ ver.verVigente ? 'Desactivar vigencia' : 'Hacer vigente' }}
-                  </button>
-                </ng-container>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
+        <table class="min-w-[1100px] divide-y divide-slate-200 text-sm">
+          <thead class="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-600">
+            <tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Área</th><th class="px-4 py-3">Dueño</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">Nivel inherente</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Nivel residual</th><th class="px-4 py-3">Respuesta</th><th class="px-4 py-3">Estado</th></tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            @for (fila of consolidado(); track fila.evaluacionId) {
+              <tr><td class="px-4 py-3 font-semibold">{{ fila.codigoRiesgo }}</td><td class="px-4 py-3">{{ fila.areaPrincipal }}</td><td class="px-4 py-3">{{ fila.duenoRiesgo }}</td><td class="px-4 py-3">{{ fila.vri }}</td><td class="px-4 py-3">{{ fila.nivelInherente }}</td><td class="px-4 py-3">{{ fila.vrr }}</td><td class="px-4 py-3">{{ fila.nivelResidual }}</td><td class="px-4 py-3">{{ fila.respuestaRiesgo }}</td><td class="px-4 py-3">{{ fila.estadoEvaluacion }}</td></tr>
+            } @empty {
+              <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">No hay proyecciones disponibles.</td></tr>
+            }
+          </tbody>
+        </table>
       </div>
     </section>
-  </ng-container>
+  }
 
-  <!-- MODAL: EDITOR JSON DE VERSIÓN BORRADOR (HITO 7.4) -->
-  <ng-container *ngIf="versionEditarJson()">
-    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm"
-      role="dialog" aria-modal="true" aria-labelledby="modal-editor-json-titulo">
-
-      <div class="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-
-        <!-- Cabecera del modal -->
-        <div class="px-6 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
-          <div>
-            <h3 id="modal-editor-json-titulo" class="text-base font-bold text-gray-900">
-              Editor de Esquema JSON — Versión {{ versionEditarJson()?.verVersion }}
-            </h3>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Código: <span class="font-mono">{{ versionEditarJson()?.verCodigo }}</span> &middot;
-              Solo versiones en estado <span class="font-semibold text-amber-600">DRAFT</span> pueden editarse.
-            </p>
-          </div>
-          <button type="button" (click)="cancelarEditorJson()" [disabled]="guardando()"
-            class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition disabled:opacity-50"
-            aria-label="Cerrar editor">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Área del editor -->
-        <div class="flex-1 overflow-auto p-6 space-y-6">
-
-          <!-- Banner de error de sintaxis o validación -->
-          <div *ngIf="error()" role="alert"
-            class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <svg class="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-            </svg>
-            <span class="text-sm font-medium text-red-700">{{ error() }}</span>
-          </div>
-
-          <!-- Metadatos del Formulario -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100" *ngIf="esquemaDiseno()">
-            <div class="space-y-1">
-              <label class="block text-[11px] font-bold uppercase text-gray-500">Nombre del Formulario</label>
-              <input type="text" [(ngModel)]="esquemaDiseno().nombreFormulario" [disabled]="guardando()"
-                class="w-full text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus:border-ihss-600 focus:outline-none" />
-            </div>
-            <div class="space-y-1">
-              <label class="block text-[11px] font-bold uppercase text-gray-500">Código del Formulario</label>
-              <input type="text" [(ngModel)]="esquemaDiseno().codigoFormulario" [disabled]="guardando()"
-                class="w-full text-xs font-semibold text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-1.5 focus:border-ihss-600 focus:outline-none" />
-            </div>
-          </div>
-
-          <!-- Constructor de Secciones y Campos -->
-          <div class="space-y-6" *ngIf="esquemaDiseno()">
-            <div class="flex items-center justify-between">
-              <h4 class="text-xs font-bold uppercase text-gray-600 tracking-wide">Estructura del Formulario</h4>
-              <button type="button" (click)="agregarSeccion()" [disabled]="guardando()"
-                class="px-3 py-1.5 rounded-lg bg-ihss-50 text-ihss-700 hover:bg-ihss-100 text-xs font-bold flex items-center gap-1 transition">
-                <span>➕</span> Agregar Sección
-              </button>
-            </div>
-
-            <!-- Listado de Secciones -->
-            <div class="space-y-4">
-              <div *ngFor="let seccion of esquemaDiseno().secciones; let sIdx = index" 
-                class="p-4 rounded-xl border border-gray-200 bg-white shadow-sm space-y-4">
-                
-                <!-- Cabecera de la Sección -->
-                <div class="flex items-start justify-between gap-3 pb-3 border-b border-gray-100">
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 flex-1">
-                    <input type="text" [(ngModel)]="seccion.titulo" placeholder="Título de la Sección" [disabled]="guardando()"
-                      class="text-xs font-bold text-gray-800 border border-gray-200 rounded-lg px-2 py-1 focus:border-ihss-600 focus:outline-none" />
-                    <input type="text" [(ngModel)]="seccion.id" placeholder="ID único de Sección" [disabled]="guardando()"
-                      class="text-xs font-mono text-gray-500 border border-gray-200 rounded-lg px-2 py-1 focus:border-ihss-600 focus:outline-none" />
-                  </div>
-                  <button type="button" (click)="eliminarSeccion(sIdx)" [disabled]="guardando()"
-                    title="Eliminar Sección"
-                    class="p-1 rounded text-red-500 hover:bg-red-50 transition text-xs font-bold">
-                    🗑️ Borrar
-                  </button>
-                </div>
-
-                <!-- Campos de la Sección -->
-                <div class="space-y-3 pl-4 border-l-2 border-gray-100">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase">Campos en esta sección</span>
-                    <button type="button" (click)="agregarCampo(sIdx)" [disabled]="guardando()"
-                      class="px-2.5 py-1 rounded bg-gray-50 text-gray-700 hover:bg-gray-100 text-[10px] font-bold transition">
-                      ➕ Agregar Campo
-                    </button>
-                  </div>
-
-                  <!-- Sin campos -->
-                  <div *ngIf="seccion.campos.length === 0" class="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                    <p class="text-xs text-gray-400">No hay campos agregados en esta sección.</p>
-                  </div>
-
-                  <!-- Listado de Campos -->
-                  <div class="space-y-3" *ngIf="seccion.campos.length > 0">
-                    <div *ngFor="let campo of seccion.campos; let cIdx = index"
-                      class="grid grid-cols-1 lg:grid-cols-12 gap-2 p-3 bg-gray-50/60 border border-gray-200/80 rounded-xl items-center">
-                      
-                      <!-- Etiqueta del Campo -->
-                      <div class="lg:col-span-3">
-                        <input type="text" [(ngModel)]="campo.etiqueta" placeholder="Etiqueta visible" [disabled]="guardando()"
-                          class="w-full text-xs text-gray-800 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none bg-white" />
-                      </div>
-
-                      <!-- ID del Campo -->
-                      <div class="lg:col-span-2">
-                        <input type="text" [(ngModel)]="campo.id" placeholder="ID Campo" [disabled]="guardando()"
-                          class="w-full text-xs font-mono text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none bg-white" />
-                      </div>
-
-                      <!-- Tipo de Campo -->
-                      <div class="lg:col-span-2">
-                        <select [(ngModel)]="campo.tipo" [disabled]="guardando()"
-                          class="w-full text-xs text-gray-700 border border-gray-200 rounded-lg px-2 py-1.5 focus:border-ihss-600 focus:outline-none bg-white">
-                          <option value="texto">Texto plano</option>
-                          <option value="texto-largo">Área de texto largo</option>
-                          <option value="numero">Numérico</option>
-                          <option value="fecha">Fecha</option>
-                          <option value="selector-catalogo">Selección de catálogo</option>
-                          <option value="checkbox">Verificación (Sí/No)</option>
-                          <option value="archivo">Archivo adjunto</option>
-                        </select>
-                      </div>
-
-                      <!-- Código Catálogo (si aplica) -->
-                      <div class="lg:col-span-2">
-                        <input type="text" [(ngModel)]="campo.codigoCatalogo" placeholder="Cód. Catálogo"
-                          [disabled]="guardando() || campo.tipo !== 'selector-catalogo'"
-                          [ngClass]="campo.tipo !== 'selector-catalogo' ? 'opacity-40 bg-gray-100 cursor-not-allowed' : 'bg-white'"
-                          class="w-full text-xs font-mono text-gray-600 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:border-ihss-600 focus:outline-none" />
-                      </div>
-
-                      <!-- Es Obligatorio -->
-                      <div class="lg:col-span-2 flex items-center justify-center">
-                        <label class="flex items-center gap-1 cursor-pointer text-xs text-gray-600 select-none">
-                          <input type="checkbox" [(ngModel)]="campo.obligatorio" [disabled]="guardando()"
-                            class="rounded border-gray-300 text-ihss-600 focus:ring-ihss-500" />
-                          <span>Requerido</span>
-                        </label>
-                      </div>
-
-                      <!-- Acciones Campo -->
-                      <div class="lg:col-span-1 flex items-center justify-end">
-                        <button type="button" (click)="eliminarCampo(sIdx, cIdx)" [disabled]="guardando()"
-                          title="Eliminar Campo"
-                          class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition text-xs">
-                          🗑️
-                        </button>
-                      </div>
-
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-            </div>
-
-            <!-- Botón de pie sección -->
-            <div *ngIf="esquemaDiseno().secciones.length === 0" class="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-              <p class="text-xs text-gray-400">El formulario no tiene secciones definidas aún.</p>
-              <button type="button" (click)="agregarSeccion()" class="mt-2 px-3 py-1.5 rounded-lg bg-ihss-600 text-white text-xs font-bold hover:bg-ihss-700 transition">
-                ➕ Inicializar Primera Sección
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Pie del modal -->
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2" *ngIf="esquemaDiseno()">
-          <button type="button" (click)="cancelarEditorJson()" [disabled]="guardando()"
-            class="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50">
-            Cancelar
-          </button>
-          <button type="button" (click)="guardarJsonVersion()" [disabled]="guardando()"
-            data-testid="btn-guardar-json"
-            class="px-5 py-2 rounded-xl bg-ihss-600 text-white text-sm font-bold hover:bg-ihss-700 shadow-sm disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ihss-600 focus:ring-offset-2">
-            {{ guardando() ? 'Guardando...' : 'Guardar Diseño' }}
-          </button>
-        </div>
-
+  @if (!cargando() && tab() === 'plantillas') {
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-plantillas">
+      <div>
+        <h2 id="titulo-plantillas" class="text-lg font-bold text-slate-900">Versiones del formulario</h2>
+        <p class="text-sm text-slate-600">Mantenimiento controlado de versiones, vigencia y definición dinámica.</p>
       </div>
-    </div>
-  </ng-container>
 
-</div>
+      <div class="grid gap-3">
+        @for (version of versiones(); track version.verId) {
+          <article class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between">
+            <div><h3 class="font-bold text-slate-900">{{ version.verCodigo }} · v{{ version.verVersion }}</h3><p class="text-sm text-slate-600">{{ version.verEstado }} · {{ version.verVigente ? 'Vigente' : 'No vigente' }}</p></div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="abrirDefinicion(version)">Abrir definición</button>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="clonarVersion(version)">Clonar</button>
+              @if (version.verEstado === 'DRAFT') {
+                <button type="button" class="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white" (click)="publicarVersion(version)">Publicar</button>
+              }
+            </div>
+          </article>
+        } @empty {
+          <p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">No existen versiones registradas.</p>
+        }
+      </div>
+
+      @if (versionEditando()) {
+        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <h3 class="font-bold text-slate-900">Definición técnica de {{ versionEditando()?.verCodigo }}</h3>
+          <textarea class="mt-3 min-h-80 w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs" [(ngModel)]="definicionTecnica"></textarea>
+          <div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarDefinicion()">Guardar definición</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="versionEditando.set(null)">Cerrar</button></div>
+        </div>
+      }
+    </section>
+  }
+</section>
