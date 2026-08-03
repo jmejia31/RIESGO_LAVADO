@@ -121,8 +121,7 @@ builder.Services.AddScoped<ICatalogoRepository, CatalogoRepository>();
 builder.Services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IListasRepository, ListasRepository>();
-builder.Services.AddScoped<MatricesRiesgosRepository>();
-builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepositoryFacade>();
+builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
 
 // Proceso de negocio: registra servicios que concentran validaciones, auditoría y reglas funcionales.
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
