@@ -45,6 +45,56 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
     Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, Func<Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
-    Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync();
-    Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync();
+    async Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()
+    {
+        if (this is not MatricesRiesgosRepository repositorio)
+        {
+            throw new InvalidOperationException("La implementación debe proporcionar el consolidado tipado.");
+        }
+
+#pragma warning disable CS0618
+        List<Dictionary<string, object>> filas = await repositorio.ObtenerConsolidadoMatricesAsync();
+#pragma warning restore CS0618
+        var resultado = new List<RiesgoReporteFilaDto>(filas.Count);
+        foreach (Dictionary<string, object> fila in filas)
+        {
+            resultado.Add(new RiesgoReporteFilaDto
+            {
+                EvaluacionId = Convert.ToInt64(fila["EvaluacionId"]),
+                CodigoRiesgo = Convert.ToString(fila["CodigoRiesgo"]) ?? string.Empty,
+                EstadoEvaluacion = Convert.ToString(fila["Estado"]) ?? string.Empty,
+                Vri = Convert.ToInt32(fila["Vri"]),
+                Vrr = Convert.ToInt32(fila["Vrr"]),
+                NivelInherente = Convert.ToString(fila["NivelInherente"]) ?? string.Empty,
+                NivelResidual = Convert.ToString(fila["NivelResidual"]) ?? string.Empty,
+                RespuestaRiesgo = Convert.ToString(fila["RespuestaRiesgo"]) ?? string.Empty,
+                AreaPrincipal = Convert.ToString(fila["Area"]) ?? string.Empty,
+                DuenoRiesgo = Convert.ToString(fila["Dueno"]) ?? string.Empty,
+                FechaEvaluacion = Convert.ToDateTime(fila["Fecha"])
+            });
+        }
+        return resultado;
+    }
+
+    async Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()
+    {
+        if (this is not MatricesRiesgosRepository repositorio)
+        {
+            throw new InvalidOperationException("La implementación debe proporcionar la metodología dinámica.");
+        }
+
+#pragma warning disable CS0618
+        MetodologiaMatricesDto? anterior = await repositorio.ObtenerMetodologiaVigenteAsync();
+#pragma warning restore CS0618
+        return anterior is null
+            ? null
+            : new MetodologiaFormularioDto
+            {
+                Codigo = anterior.Version,
+                Version = 0,
+                Secciones = Array.Empty<SeccionFormularioDto>(),
+                Catalogos = Array.Empty<CatalogoMatricesDto>(),
+                Reglas = Array.Empty<ReglaCalculoMatricesDto>()
+            };
+    }
 }
