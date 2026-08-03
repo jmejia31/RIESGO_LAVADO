@@ -64,13 +64,20 @@ docs/**/*.log
 ~$*.pptx
 ~WRL*.tmp
 
-# Local configuration with secrets
+# Local configuration and test credentials — never version
 backend/RL.API/appsettings.json
 backend/RL.API/appsettings.Development.json
+**/appsettings.Local.json
+**/appsettings.*.local.json
+**/appsettings.Local.*.json
+**/oracle-testsettings*.json
+**/*.runsettings.local
 .env
 .env.*
 !.env.example
+.env.oracle
 secrets.json
+*.secrets.json
 appsettings.Development.local.json
 
 # OS files
