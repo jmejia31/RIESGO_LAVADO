@@ -1,166 +1,238 @@
 # Estado de Ejecución — Fase 1.2
 ## Alineación del repositorio con el DDL dinámico definitivo
 
-Fecha: 3 de agosto de 2026  
-Rama: `desarrollo`  
-Rama estable: `main` — intacta  
-Estado: implementación técnica en revisión; no certificada en Oracle
+**Fecha:** 3 de agosto de 2026  
+**Rama de trabajo:** `desarrollo`  
+**Rama estable:** `main` — intacta  
+**Estado:** implementación técnica corregida y pendiente de revisión, compilación y certificación Oracle.
 
-## 1. Autorización de inicio
+---
 
-Codex autorizó iniciar la Fase 1.2 bajo estas condiciones:
+## 1. Condiciones establecidas por Codex
 
-1. Retirar el workflow temporal antes de cualquier otro cambio.
-2. Ampliar el validador a todo el módulo.
-3. Alinear creación, actualización, transiciones, proyección y trazas con el DDL definitivo.
-4. Solicitar revisión antes de ejecutar el script `05` en Oracle.
+La Fase 1.2 continúa abierta. Antes de ejecutar Oracle debían resolverse los siguientes bloqueantes:
 
-## 2. Cambios ejecutados
+1. retirar la fachada transitoria y hacer operativas las nueve vinculaciones de evidencias;
+2. asignar explícitamente `OracleTransaction` a todos los comandos de los casos de uso transaccionales;
+3. vincular cada traza con la regla declarada por la versión publicada del formulario;
+4. no publicar la copia local divergente sobre `origin/desarrollo`;
+5. impedir la publicación de credenciales Oracle codificadas y rotar la contraseña expuesta localmente;
+6. ejecutar posteriormente validador, compilación, pruebas unitarias y pruebas Oracle controladas.
+
+---
+
+## 2. Commits publicados después de la revisión
 
 | Cambio | Commit | Estado |
 |---|---|---|
-| Retiro del workflow temporal `.github/workflows/agent-fix-matrices-phase1.yml` | `6070c4ca793002acf6dc229c52f10df8efb62107` | Completado |
-| Ampliación del validador a backend, pruebas, frontend y base de datos del módulo | `264a0cf9d163c18e850a701b006624fd072ab92b` | Completado |
-| Exclusión controlada de scripts históricos de retiro para evitar falsos positivos | `291c182f2383daa5e9ae77a59789a2a76dcff0c0` | Completado |
-| Alineación inicial de CRUD, flujo, proyección, auditoría y trazas con el DDL | `ca1862a942c2ed1be387d4c1955905591555cabc` | Implementado; pendiente de compilación y revisión |
-| Fachada transitoria para mantener operativo el flujo de evidencias | `1ea79c8d1780a4f98eacd1a58d672017b732c6b6` | Implementada; pendiente de pruebas |
-| Registro de la fachada en inyección de dependencias | `f52d4eb97ce40908a5d8815f9ccc9982d06e691f` | Implementado |
+| Repositorio operativo: evidencias, transacciones y regla versionada | `b70635673867b150b3aa6e85ec210a0514241d88` | Implementado; pendiente de pruebas |
+| Registro directo del repositorio, sin fachada, en `Program.cs` | `b4a0f9228165c5aef284012d38c35d25e222791e` | Implementado |
+| Eliminación física de `MatricesRiesgosRepositoryFacade.cs` | `f0754c77fe4a54c68336cba5c1494dcc240f1f36` | Completado |
+| Validador reforzado para DDL, transacciones, evidencias y secretos | `689ad980e4b62521277fb6712955400066448436` | Publicado; pendiente de ejecución local |
+| Exclusiones adicionales de configuraciones y secretos locales | `b1b3082b456b8efb03acb19864d099521661dc5f` | Completado |
+| Semilla idempotente de regla de cálculo versionada | `14b438f0de42cd2cda70954f9f3c5711e6cd5ed6` | Publicada; no ejecutada |
+| Formulario inicial vinculado a la regla `CALCULO_VRI_VRR` versión `1.0` | `7e5b07d36e13dcbc2e897989f935110819213b4c` | Publicado; no ejecutado |
 
-## 3. Alineación realizada
+Los commits anteriores de inicio de Fase 1.2 permanecen en el historial remoto. Ningún cambio fue aplicado a `main`.
 
-### 3.1 Evaluaciones
+---
 
-La creación y actualización dejan de escribir columnas inexistentes en `RL_MR_EVALUACIONES_RIESGO`.
+## 3. Evidencias operativas
 
-Se utilizan exclusivamente:
+Las nueve vinculaciones se concentran ahora en `MatricesRiesgosRepository`:
 
-- `EVA_ID`
-- `EVA_RIESGO_ID`
-- `EVA_VERSION_ID`
-- `EVA_DATA_JSON`
-- `EVA_DATA_CALC_JSON`
-- `EVA_FECHA_REGISTRO`
-- `EVA_USR_REGISTRO`
-- `EVA_VERSION_ROW`
-- `EVA_ACTIVO`
+- riesgo;
+- evaluación;
+- control;
+- plan;
+- actividad;
+- alerta;
+- automonitoreo;
+- revisión;
+- aprobación.
 
-### 3.2 Estados
+Cada operación:
 
-El estado actual se obtiene del último registro de `RL_MR_FLUJOS_EVALUACION`, utilizando:
+1. verifica la existencia física de la evidencia;
+2. resuelve la evaluación relacionada cuando el modelo lo permite;
+3. inserta en la tabla puente `RL_MR_EVI_*` correspondiente;
+4. registra `RL_MR_AUDITORIA` dentro de la misma transacción cuando existe una evaluación relacionada;
+5. registra la auditoría transversal institucional mediante `IAuditoriaRepository.RegistrarAsync` cuando el servicio está disponible.
 
-- `FLU_ESTADO`
-- `FLU_FECHA`
-- `FLU_ID`
+No permanece ningún `NotSupportedException` ni fachada registrada en el flujo activo.
 
-Cada transición inserta una nueva fila de flujo y actualiza la proyección relacional dentro de la misma transacción.
+### Observación para revisión
 
-### 3.3 Proyecciones
+La aprobación de formulario no tiene una relación física directa con una evaluación. Su vínculo utiliza auditoría transversal institucional; no se inventa un `AUD_EVALUACION_ID` para satisfacer `RL_MR_AUDITORIA`.
 
-Se eliminaron las dependencias de `PROY_ETP` y se utilizan las columnas físicas obligatorias:
+---
 
-- `PROY_CODIGO_RIESGO`
-- `PROY_AREA_PRINCIPAL`
-- `PROY_VRI`
-- `PROY_VRR`
-- `PROY_NIVEL_INHERENTE`
-- `PROY_NIVEL_RESIDUAL`
-- `PROY_RESPUESTA_RIESGO`
-- `PROY_ESTADO_EVALUACION`
-- `PROY_DUENO_RIESGO`
-- `PROY_FECHA_EVAL`
+## 4. Atomicidad Oracle
 
-La actualización exige exactamente una proyección por evaluación.
+Se incorporó un único constructor de comandos que:
 
-### 3.4 Trazas
+- activa `BindByName`;
+- recibe opcionalmente `OracleTransaction`;
+- asigna explícitamente `command.Transaction = transaction`.
 
-La creación y actualización registran trazas en `RL_MR_TRAZAS_CALCULO` con:
+En creación y actualización de evaluación, los siguientes pasos comparten la misma conexión y transacción:
 
 - evaluación;
-- regla activa;
-- entradas dinámicas;
-- resultados calculados;
-- usuario;
-- fecha.
+- proyección;
+- flujo inicial o transición;
+- revisión histórica;
+- traza de cálculo;
+- auditoría específica del módulo.
 
-La selección exacta de regla y versión sigue pendiente de la Fase 1.4, donde se conectará con la versión publicada del formulario.
+Ante una excepción se ejecuta `RollbackAsync`; solo se confirma cuando todos los pasos obligatorios han finalizado.
 
-### 3.5 Auditoría
+---
 
-Se alineó la auditoría específica del módulo con las columnas reales:
+## 5. Regla vinculada a la versión del formulario
 
-- `AUD_CAMPO_CLAVE`
-- `AUD_VALOR_ANT`
-- `AUD_VALOR_NVO`
-- `AUD_IP`
-- `AUD_USR_ID`
-- `AUD_FECHA`
+La traza ya no selecciona la última regla activa global.
 
-No se utilizan `AUD_ACCION` ni `AUD_DETALLE`, porque no existen en el DDL definitivo.
+El proceso actual:
 
-## 4. Validador ampliado
+1. toma `EVA_VERSION_ID`;
+2. obtiene el `VER_JSON` de esa versión;
+3. exige que la versión esté `PUBLISHED`; para nuevas evaluaciones también exige `VER_VIGENTE = 1`;
+4. extrae el código y la versión de la regla declarada;
+5. resuelve exactamente `REG_CODIGO`, `REG_VERSION` y `REG_ACTIVA = 1`;
+6. persiste ese `REG_ID` en `TRA_REGLA_ID`.
 
-El validador revisa de manera recursiva:
+Las semillas ahora registran:
 
-- backend del módulo;
-- pruebas backend del módulo;
-- frontend Angular del módulo;
-- scripts Oracle activos del módulo.
+```text
+Código: CALCULO_VRI_VRR
+Versión: 1.0
+Algoritmo: MATRICES_VRI_ADITIVO_1_9
+Fórmula institucional: VRI = Frecuencia + Impacto - 1
+Dominio: 1–9
+```
 
-Bloquea referencias a:
+No se fijaron intervalos Bajo/Moderado/Alto/Crítico en C# ni en la semilla. Esos parámetros continúan sujetos a definición funcional y versionamiento en la Fase 1.4.
 
-- `FLU_ESTADO_NUEVO`
-- `FLU_ESTADO_ANTERIOR`
-- `EVA_ESTADO`
-- `EVA_VRI`
-- `EVA_ETP`
-- `EVA_VRR`
-- `EVA_FECHA_EVAL`
-- `EVA_USR_EVAL`
-- `PROY_ETP`
-- tablas retiradas del modelo anterior;
-- clasificación residual rígida en C#;
-- método de auditoría inexistente `RegistrarAuditoriaAsync`.
+---
 
-También verifica que el workflow temporal no exista y que el script `05` conserve sus protecciones.
+## 6. Seguridad de credenciales
 
-## 5. Pendientes antes de solicitar cierre de Fase 1.2
+La revisión de Codex detectó una contraseña Oracle dentro de una prueba preparada únicamente en la copia local divergente.
 
-1. Ejecutar compilación del backend.
-2. Ejecutar las pruebas unitarias existentes.
-3. Corregir cualquier consumidor o prueba que todavía dependa de contratos heredados.
-4. Ejecutar el validador integral en un clon actualizado.
-5. Revisar la fachada transitoria y decidir su consolidación en un único repositorio antes del cierre definitivo.
-6. Crear pruebas de integración Oracle para creación, actualización, transición, proyección, traza y rollback.
-7. Confirmar que existe una regla activa válida para registrar trazas.
-8. Solicitar revisión de Codex sobre los commits publicados.
-9. No ejecutar todavía el script `05` en Oracle.
+### Acciones obligatorias fuera del repositorio
 
-## 6. Estado real
+1. eliminar o deshacer ese archivo local antes de cualquier commit;
+2. no copiar su contenido a `origin/desarrollo`;
+3. mover la conexión de pruebas a variables de entorno, .NET User Secrets o configuración local ignorada;
+4. **rotar inmediatamente la contraseña expuesta mediante el operador o DBA autorizado**;
+5. limpiar la credencial de historiales, respaldos y archivos temporales locales donde haya quedado registrada.
+
+La rotación no puede ejecutarse desde GitHub ni desde este repositorio.
+
+### Protecciones publicadas
+
+`.gitignore` excluye configuraciones locales, archivos de secretos, entornos y configuraciones Oracle de prueba. El validador examina backend, frontend, scripts y workflows buscando patrones de cadenas Oracle y contraseñas codificadas sin imprimir el valor detectado.
+
+Una búsqueda estática en el remoto no encontró coincidencias para los patrones comunes `Password=`, `Pwd=` o `User Id=`. Esto no certifica la copia local de Codex ni sustituye la rotación.
+
+---
+
+## 7. Validador integral
+
+`validate_matrices_dynamic_ddl_alignment.ps1` ahora comprueba:
+
+- ausencia del workflow temporal;
+- ausencia de la fachada;
+- ausencia de `NotSupportedException` en el repositorio;
+- eliminación de columnas incompatibles y tablas retiradas;
+- uso de `FLU_ESTADO`;
+- propagación explícita de `OracleTransaction`;
+- resolución de reglas por versión publicada, código y versión;
+- presencia de las nueve vinculaciones de evidencias;
+- registro directo de `MatricesRiesgosRepository` en DI;
+- protecciones del script `05`;
+- posibles secretos Oracle codificados.
+
+Los scripts de retiro histórico permanecen fuera del análisis de incompatibilidades porque contienen referencias antiguas deliberadas para eliminación controlada.
+
+---
+
+## 8. Copia local divergente
+
+La copia local preparada por otro trabajo no debe confirmarse ni publicarse sobre el remoto.
+
+Procedimiento seguro para revisión:
+
+```powershell
+git fetch origin desarrollo
+git worktree add ..\RIESGO_LAVADO_REVISION_CODEX --detach origin/desarrollo
+cd ..\RIESGO_LAVADO_REVISION_CODEX
+```
+
+La copia original con cambios preparados debe permanecer intacta hasta que su responsable:
+
+- retire la credencial;
+- compare sus cambios con `origin/desarrollo`;
+- conserve únicamente trabajo legítimo no duplicado;
+- descarte las versiones incompatibles del repositorio y las pruebas inseguras.
+
+No se autoriza `git push --force`, `reset --hard`, merge ni rebase sobre el trabajo local sin revisión manual.
+
+---
+
+## 9. Validaciones pendientes
+
+Todavía no se declara aprobada ni cerrada la Fase 1.2.
+
+Pendientes:
+
+1. ejecutar el validador en un worktree actualizado;
+2. compilar el backend en Release;
+3. ejecutar toda la suite backend;
+4. corregir contratos o pruebas heredadas que fallen;
+5. crear y ejecutar pruebas Oracle reales de creación, actualización, transición, evidencia, proyección, traza, auditoría y rollback;
+6. probar la vinculación de las nueve tablas puente;
+7. probar que una versión sin referencia de regla sea rechazada;
+8. probar que una regla inexistente o inactiva sea rechazada;
+9. revisar el tratamiento histórico de versiones retiradas o archivadas;
+10. solicitar autorización antes de ejecutar el script `05`.
+
+No se ha ejecutado ningún DDL o DML de estos scripts en Oracle durante esta intervención.
+
+---
+
+## 10. Estado real
 
 ```text
 Workflow temporal: eliminado.
-Validador integral: ampliado.
-CRUD y flujo: alineación inicial implementada.
-Proyección: alineación inicial implementada.
-Trazas: inserción implementada, selección versionada pendiente.
-Auditoría específica: alineada al DDL.
+Fachada transitoria: eliminada.
+Nueve vinculaciones de evidencias: implementadas en el repositorio activo.
+OracleTransaction: propagada explícitamente en operaciones transaccionales.
+Regla de traza: vinculada por código y versión a VER_JSON.
+Semilla de regla y referencia del formulario: publicadas, no ejecutadas.
+Protección contra secretos: ampliada.
+Credencial local expuesta: requiere rotación externa inmediata.
+Validador: actualizado, no ejecutado desde este entorno.
 Compilación: no ejecutada.
-Pruebas backend: no ejecutadas después de estos cambios.
+Pruebas backend: no ejecutadas después de estos commits.
 Pruebas Oracle reales: no ejecutadas.
-Script 05 en Oracle: no ejecutado.
-Fase 1.2: en revisión, no cerrada.
+Script 05: no ejecutado.
+Fase 1.2: abierta y pendiente de revisión de Codex.
 main: intacta.
 ```
 
-## 7. Próxima revisión solicitada a Codex
+---
 
-Codex deberá verificar:
+## 11. Solicitud de revisión a Codex
 
-- eliminación real de identificadores incompatibles;
-- correspondencia de todos los `INSERT`, `UPDATE` y `SELECT` con el DDL;
-- atomicidad de evaluación, flujo, proyección, traza y auditoría;
-- tratamiento de la regla activa de cálculo;
-- ausencia de regresiones en evidencias;
-- cobertura del validador;
-- necesidad o retiro de la fachada transitoria;
-- pruebas requeridas antes de ejecutar Oracle.
+Revisar los commits señalados y confirmar:
+
+1. operación real de las nueve vinculaciones;
+2. propagación de `OracleTransaction` en cada comando transaccional;
+3. resolución de `TRA_REGLA_ID` desde la versión exacta del formulario;
+4. coherencia de las semillas `03` y `04`;
+5. cobertura y posibles falsos positivos del validador;
+6. estrategia de auditoría para aprobación de formulario;
+7. pruebas necesarias antes de ejecutar Oracle.
+
+La Fase 1.2 no debe cerrarse hasta contar con compilación, pruebas automatizadas, pruebas Oracle reales y nueva aprobación expresa.
