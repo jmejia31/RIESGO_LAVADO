@@ -1,2429 +1,444 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { OnDestroy } from '@angular/core';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { MatricesReporteTablaComponent } from '../../components/matrices-reporte-tabla/matrices-reporte-tabla.component';
 import {
-  EscalaRiesgo,
-  MatrizRiesgoCriterio,
-  MatrizRiesgoCriterioRequest,
-  MatrizRiesgoCrearRequest,
-  MatrizRiesgoDetalle,
-  MatrizRiesgoDashboard,
-  MatrizRiesgoEvidencia,
-  MatrizRiesgoHistorial,
-  MatrizRiesgoPlanAccion,
-  MatrizRiesgoPlanAccionRequest,
-  MatrizRiesgoReporteFiltro,
-  MatrizRiesgoResumen,
-  MatricesRiesgoReporte,
-  MetodologiaMatrices,
-  VariableMetodologia,
-  VersionFormularioDto,
-  EvidenciaDto
+  CampoFormulario,
+  DefinicionFormularioEditable,
+  EvaluacionRiesgoDto,
+  MetodologiaFormulario,
+  RespuestasFormulario,
+  RevisionEvaluacionDto,
+  RiesgoReporteFila,
+  VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
-import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
-import {
-  ESTADOS_MATRIZ_VISIBLES,
-  etiquetaEstadoMatriz,
-  puedeEditarMatriz as puedeEditarMatrizPorEstado,
-  puedeEliminarMatriz as puedeEliminarMatrizPorEstado,
-  transicionesPermitidasMatriz
-} from '../../domain/matrices-riesgos-estados.policy';
 
-type TabMatrices = 'dashboard' | 'matrices' | 'nueva' | 'criterios' | 'planes' | 'reportes' | 'plantillas';
-type ModalTipo = 'estado' | 'eliminarMatriz' | 'inactivarCriterio' | 'reactivarCriterio' | 'eliminarCriterio' | 'estadoPlan' | 'inactivarPlan' | 'reactivarPlan' | 'inactivarEvidencia';
-
-interface CapturaVariable {
-  variableId: number;
-  criterioId: number | null;
-  puntaje: number | null;
-  valorCapturado: string;
-  justificacion: string;
-  fuenteDato: string;
-}
-
-interface CeldaMapaVista {
-  nivelInherente: string;
-  etiquetaInherente: string;
-  nivelResidual: string;
-  etiquetaResidual: string;
-  total: number;
-  promedioInherente: number;
-  promedioResidual: number;
-  color: string;
-  colorBorde: string;
-  colorTexto: string;
-}
-
-interface ModalOperacion {
-  tipo: ModalTipo;
-  titulo: string;
-  descripcion: string;
-  textoConfirmar: string;
-  requiereMotivo: boolean;
-  estado?: string;
-  matriz?: MatrizRiesgoResumen;
-  criterio?: MatrizRiesgoCriterio;
-  plan?: MatrizRiesgoPlanAccion;
-  evidencia?: MatrizRiesgoEvidencia;
-  tono: 'normal' | 'advertencia' | 'peligro';
-}
-
-interface EvidenciaPreview {
-  nombre: string;
-  tipoMime: string;
-  tamanoBytes: number;
-  url: string | null;
-  urlSegura: SafeResourceUrl | null;
-  tipoVista: 'imagen' | 'pdf' | 'texto' | 'office' | 'generico';
-  texto?: string;
-  cargando: boolean;
-  error?: string;
-}
+type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatricesReporteTablaComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './matrices-riesgos.component.html',
-  styles: [`
-    :host {
-      display: block;
-      min-width: 0;
-    }
-
-    .rl-table {
-      width: 100%;
-      min-width: 920px;
-      table-layout: fixed;
-    }
-
-    .rl-clamp-2,
-    .rl-clamp-3 {
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      overflow-wrap: anywhere;
-      word-break: normal;
-    }
-
-    .rl-clamp-2 {
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-    }
-
-    .rl-clamp-3 {
-      -webkit-line-clamp: 3;
-      line-clamp: 3;
-    }
-
-    @media (max-width: 768px) {
-      .rl-table {
-        min-width: 760px;
-      }
-    }
-  `],
-  changeDetection: ChangeDetectionStrategy.Default
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MatricesRiesgosComponent implements OnInit, OnDestroy {
+export class MatricesRiesgosComponent implements OnInit {
   private readonly service = inject(MatricesRiesgosService);
-  private readonly configService = inject(ConfiguracionService);
-  private readonly sanitizer = inject(DomSanitizer);
-  private reporteFiltroTimer: ReturnType<typeof setTimeout> | null = null;
-  private matricesFiltroTimer: ReturnType<typeof setTimeout> | null = null;
-  private duplicadosTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly tab = signal<TabMatrices>('dashboard');
+  readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
-  readonly cargandoReporte = signal(false);
   readonly guardando = signal(false);
-  readonly exportando = signal<'EXCEL' | 'PDF' | 'FICHA' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
-  readonly modalOperacion = signal<ModalOperacion | null>(null);
-  readonly evidenciaPreview = signal<EvidenciaPreview | null>(null);
-  readonly modalMotivo = signal('');
-  readonly modalError = signal<string | null>(null);
-  modalMotivoTexto = '';
 
-  readonly dashboard = signal<MatrizRiesgoDashboard | null>(null);
-  readonly seleccionMapa = signal<CeldaMapaVista | null>(null);
-  readonly matricesCuadrante = signal<MatrizRiesgoResumen[]>([]);
-  readonly cargandoCuadrante = signal(false);
-  readonly reporte = signal<MatricesRiesgoReporte | null>(null);
-  readonly metodologia = signal<MetodologiaMatrices | null>(null);
-  readonly formularioVigente = signal<VersionFormularioDto | null>(null);
-  readonly matrices = signal<MatrizRiesgoResumen[]>([]);
-  readonly matrizSeleccionada = signal<MatrizRiesgoDetalle | null>(null);
-  readonly historial = signal<MatrizRiesgoHistorial[]>([]);
-  readonly criterios = signal<MatrizRiesgoCriterio[]>([]);
-  readonly planesAccion = signal<MatrizRiesgoPlanAccion[]>([]);
-  readonly evidencias = signal<MatrizRiesgoEvidencia[]>([]);
-  readonly matrizEditandoId = signal<number | null>(null);
-  readonly matricesDuplicadas = signal<MatrizRiesgoResumen[]>([]);
-  readonly buscandoDuplicados = signal(false);
-  
-  // --- SIGNALS DE ADMINISTRACIÓN DE PLANTILLAS (HITO 7.4) ---
-  readonly versionesFormulario = signal<VersionFormularioDto[]>([]);
-  readonly cargandoVersiones = signal(false);
-  readonly versionEditarJson = signal<VersionFormularioDto | null>(null);
-  readonly editorJsonContenido = signal('');
-  readonly esquemaDiseno = signal<any>(null);
+  readonly metodologia = signal<MetodologiaFormulario | null>(null);
+  readonly versionVigente = signal<VersionFormularioDto | null>(null);
+  readonly versiones = signal<VersionFormularioDto[]>([]);
+  readonly evaluaciones = signal<EvaluacionRiesgoDto[]>([]);
+  readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
+  readonly revisiones = signal<RevisionEvaluacionDto[]>([]);
+  readonly consolidado = signal<RiesgoReporteFila[]>([]);
 
+  readonly pagina = signal(1);
+  readonly registrosPorPagina = signal(20);
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal('');
-  readonly filtroSujetoTipo = signal('');
-  readonly incluirCriteriosInactivos = signal(false);
-  readonly reporteFiltro = signal<MatrizRiesgoReporteFiltro>({});
-  readonly reporteFiltrosActivos = computed(() =>
-    Object.values(this.reporteFiltro()).some(valor => `${valor ?? ''}`.trim() !== '')
-  );
 
-  nuevaMatriz = {
-    sujetoTipo: 'PROVEEDOR',
-    sujetoIdExt: '',
-    documento: '',
-    nombreSujeto: '',
-    origenDatos: 'CAPTURA'
-  };
+  riesgoId = 0;
+  respuestas: RespuestasFormulario = {};
+  motivoTransicion = '';
+  nuevoEstado = 'EN_REVISION';
+  archivoEvidencia: File | null = null;
 
-  nuevoControl = {
-    factorId: null as number | null,
-    nombre: '',
-    descripcion: '',
-    periodicidad: '',
-    oportunidad: '',
-    automatizacion: '',
-    procedimientos: '',
-    calidad: '',
-    efectividadPct: 0,
-    responsable: '',
-    evidenciaObligatoria: false
-  };
+  readonly versionEditando = signal<VersionFormularioDto | null>(null);
+  definicionTecnica = '';
 
-  criteriosForm: MatrizRiesgoCriterioRequest = {
-    variableId: 0,
-    escalaId: null,
-    valorDesde: null,
-    valorHasta: null,
-    puntaje: 0,
-    descripcion: ''
-  };
-
-  planForm: MatrizRiesgoPlanAccionRequest = {
-    resultadoId: null,
-    actividad: '',
-    responsable: '',
-    periodicidad: '',
-    fechaInicio: '',
-    fechaFin: '',
-    medioPrueba: '',
-    observaciones: ''
-  };
-
-  readonly planEditandoId = signal<number | null>(null);
-  evidenciaArchivo: File | null = null;
-  evidenciaPlanId: number | null = null;
-  evidenciaControlId: number | null = null;
-
-  readonly criterioEditandoId = signal<number | null>(null);
-  readonly capturasVariables = signal<CapturaVariable[]>([]);
-
-  // Estados funcionales aprobados para la operación diaria.
-  // Los estados técnicos se normalizan mediante una única política de dominio.
-  readonly estadosDisponibles = [...ESTADOS_MATRIZ_VISIBLES];
-  readonly estadosPlan = ['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO'];
-  readonly fechaActualIso = this.fechaLocalIso(new Date());
-  readonly fechaMinimaReporteInicio = '2000-01-01';
-  readonly tiposSujeto = [
-    { valor: 'PROVEEDOR', texto: 'Proveedor' },
-    { valor: 'CLIENTE_PATRONO', texto: 'Cliente / Patrono' },
-    { valor: 'EMPLEADO', texto: 'Empleado' },
-    { valor: 'AREA', texto: 'Área' },
-    { valor: 'PROCESO', texto: 'Proceso' },
-    { valor: 'CASO_POSITIVO', texto: 'Caso positivo' },
-    { valor: 'INSTITUCIONAL', texto: 'Institucional' }
-  ];
-
-  constructor() {
-    effect(onCleanup => {
-      if (!this.error()) return;
-      const timer = setTimeout(() => this.error.set(null), 6500);
-      onCleanup(() => clearTimeout(timer));
-    });
-
-    effect(onCleanup => {
-      if (!this.mensaje()) return;
-      const timer = setTimeout(() => this.mensaje.set(null), 4200);
-      onCleanup(() => clearTimeout(timer));
-    });
-  }
-
-  readonly variablesPorFactor = computed(() => {
-    const grupos = new Map<string, { factorId: number; factorCodigo: string; factorNombre: string; variables: VariableMetodologia[] }>();
-    for (const variable of this.metodologia()?.variables ?? []) {
-      const key = variable.factorCodigo;
-      if (!grupos.has(key)) {
-        grupos.set(key, {
-          factorId: variable.factorId,
-          factorCodigo: variable.factorCodigo,
-          factorNombre: variable.factorNombre,
-          variables: []
-        });
-      }
-      grupos.get(key)!.variables.push(variable);
-    }
-    return Array.from(grupos.values());
-  });
-
-  readonly progresoCaptura = computed(() => {
-    const capturas = this.capturasVariables();
-    const total = capturas.length;
-    const completas = capturas.filter(c => c.puntaje !== null && c.puntaje !== undefined).length;
-    return { total, completas, pendiente: Math.max(0, total - completas) };
-  });
-
-  // --- CÁLCULOS INTERACTIVOS EN UI Y COHERENCIA RESIDUAL (HITO 7.3) ---
-  readonly vriLocal = computed(() => {
-    const capturas = this.capturasVariables();
+  readonly secciones = computed(() => {
     const metodologia = this.metodologia();
-    if (!metodologia) return 0;
-    
-    // Obtener la frecuencia e impacto de la captura basándose en nombres/criterios
-    const frec = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('frecuencia'));
-    const imp = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('impacto'));
-    
-    const valFrec = frec?.puntaje ?? 0;
-    const valImp = imp?.puntaje ?? 0;
-    
-    if (valFrec === 0 || valImp === 0) return 0;
-    // VRI = Frecuencia + Impacto - 1
-    return Math.round(valFrec + valImp - 1);
-  });
-
-  readonly etpLocal = computed(() => {
-    // Si hay control opcional ingresado, sumamos su efectividad mitigadora.
-    // En el SGRLA, la Efectividad Total Ponderada (ETP) se calcula según preventivos, detectivos y correctivos,
-    // o de forma directa mediante la efectividad del control mitigador seleccionado.
-    const control = this.nuevoControl;
-    if (!control.nombre.trim()) return 0;
-    return control.efectividadPct;
-  });
-
-  readonly vrrCalculadoLocal = computed(() => {
-    const vri = this.vriLocal();
-    const etp = this.etpLocal();
-    if (vri === 0) return 0;
-    
-    // Regla metodológica: MAX(1, VRI * (1 - ETP/100)) redondeado sin decimales (AwayFromZero)
-    const factor = 1 - (etp / 100);
-    const raw = vri * factor;
-    return Math.max(1, Math.round(raw));
-  });
-
-  readonly vrrFormularioLocal = computed(() => {
-    const capturas = this.capturasVariables();
-    // En el Formulario A el usuario también captura frecuencia e impacto residual directamente
-    const frecRes = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('residual') && this.variableNombre(c.variableId).toLowerCase().includes('frecuencia'));
-    const impRes = capturas.find(c => this.variableNombre(c.variableId).toLowerCase().includes('residual') && this.variableNombre(c.variableId).toLowerCase().includes('impacto'));
-    
-    const valFrec = frecRes?.puntaje ?? 0;
-    const valImp = impRes?.puntaje ?? 0;
-    
-    if (valFrec === 0 || valImp === 0) return 0;
-    return Math.round(valFrec + valImp - 1);
-  });
-
-  readonly coherenteLocal = computed(() => {
-    const vrrCalc = this.vrrCalculadoLocal();
-    const vrrForm = this.vrrFormularioLocal();
-    if (vrrCalc === 0 || vrrForm === 0) return true; // Aún en captura parcial
-    return vrrCalc === vrrForm;
-  });
-
-  readonly nivelResidualLocal = computed(() => {
-    const vrr = this.vrrCalculadoLocal();
-    if (vrr === 0) return 'PENDIENTE';
-    if (vrr <= 2) return 'BAJO';
-    if (vrr <= 4) return 'MODERADO';
-    if (vrr <= 6) return 'ALTO';
-    return 'CRÍTICO';
-  });
-
-  readonly alertarCatalogosVacios = computed(() => {
-    // Si la metodología está cargada y no tiene áreas o no hay criterios disponibles para las variables,
-    // alerta de catálogo vacío.
-    const variables = this.metodologia()?.variables ?? [];
-    for (const v of variables) {
-      if (v.obligatoria && this.criteriosVariable(v.variableId).length === 0) {
-        return true;
-      }
+    if (metodologia?.secciones?.length) {
+      return [...metodologia.secciones].sort((a, b) => a.orden - b.orden);
     }
-    return false;
+
+    return this.extraerDefinicionVersion(this.versionVigente()).secciones;
   });
 
-  readonly escalasCriterio = computed(() =>
-    (this.metodologia()?.escalasCatalogo ?? []).filter(e => e.tipo === 'VARIABLE' || e.tipo === 'INHERENTE' || e.tipo === 'RESIDUAL')
+  readonly totalCampos = computed(() =>
+    this.secciones().reduce((total, seccion) => total + seccion.campos.length, 0)
   );
 
-  readonly escalasRiesgoOrdenadas = computed(() =>
-    [...(this.metodologia()?.escalasRiesgo ?? [])].sort((a, b) => a.valorMinimo - b.valorMinimo)
+  readonly totalCompletados = computed(() =>
+    this.secciones()
+      .flatMap(seccion => seccion.campos)
+      .filter(campo => this.tieneValor(this.respuestas[campo.clave]))
+      .length
   );
 
-  readonly mitigacionesPermitidasOrdenadas = computed(() => {
-    const valores = this.metodologia()?.mitigacionesPermitidas?.length
-      ? this.metodologia()?.mitigacionesPermitidas ?? []
-      : [0, 10, 25, 40, 55];
-    return [...new Set(valores.map(valor => Number(valor)))].sort((a, b) => a - b);
-  });
-
-  readonly resumenNivelesInherente = computed(() =>
-    this.construirResumenNiveles(this.dashboard()?.porNivelInherente ?? [])
-  );
-
-  readonly resumenNivelesResidual = computed(() =>
-    this.construirResumenNiveles(this.dashboard()?.porNivelResidual ?? [])
-  );
-
-  readonly nivelesMapa = computed(() => [
-    ...this.escalasRiesgoOrdenadas().map(escala => ({ valor: escala.nivel, etiqueta: escala.nivel })),
-    { valor: 'SIN_CALCULO', etiqueta: 'Sin evaluar' }
-  ]);
-
-  readonly heatmapFilas = computed(() => {
-    const niveles = this.nivelesMapa();
-    const nivelesRiesgo = niveles.filter(nivel => nivel.valor !== 'SIN_CALCULO');
-    const sinEvaluar = niveles.find(nivel => nivel.valor === 'SIN_CALCULO')!;
-    const filas = [...nivelesRiesgo].reverse().concat(sinEvaluar);
-    const datos = new Map((this.dashboard()?.mapaTransicion ?? []).map(celda => [
-      `${this.normalizarNivelMapa(celda.nivelInherente)}|${this.normalizarNivelMapa(celda.nivelResidual)}`,
-      celda
-    ]));
-
-    return filas.map(inherente => ({
-      nivelInherente: inherente.valor,
-      etiquetaInherente: inherente.etiqueta,
-      celdas: niveles.map(residual => {
-        const dato = datos.get(`${this.normalizarNivelMapa(inherente.valor)}|${this.normalizarNivelMapa(residual.valor)}`);
-        return {
-          nivelInherente: inherente.valor,
-          etiquetaInherente: inherente.etiqueta,
-          nivelResidual: residual.valor,
-          etiquetaResidual: residual.etiqueta,
-          total: dato?.total ?? 0,
-          promedioInherente: dato?.promedioInherente ?? 0,
-          promedioResidual: dato?.promedioResidual ?? 0,
-          color: this.colorMapaTransicion(inherente.valor, residual.valor),
-          colorBorde: this.colorNivel(inherente.valor),
-          colorTexto: this.colorTextoMapa(inherente.valor, residual.valor)
-        } satisfies CeldaMapaVista;
-      })
-    }));
-  });
-
-  readonly nivelesMapaColumnas = computed(() => this.nivelesMapa());
-
-  seleccionarCeldaMapa(celda: CeldaMapaVista): void {
-    this.seleccionMapa.set(celda);
-    this.matricesCuadrante.set([]);
-    this.cargandoCuadrante.set(true);
-
-    const filtroCuadrante: MatrizRiesgoReporteFiltro = {
-      ...this.reporteFiltro(),
-      nivelInherente: celda.nivelInherente,
-      nivelResidual: celda.nivelResidual
-    };
-
-    this.service.dashboard(filtroCuadrante).subscribe({
-      next: datos => {
-        this.matricesCuadrante.set(datos.matricesFiltradas ?? []);
-        this.cargandoCuadrante.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudieron consultar las matrices del cuadrante.'));
-        this.matricesCuadrante.set([]);
-        this.cargandoCuadrante.set(false);
-      }
-    });
-  }
-
-  limpiarSeleccionMapa(): void {
-    this.seleccionMapa.set(null);
-    this.matricesCuadrante.set([]);
-    this.cargandoCuadrante.set(false);
-  }
-
-  esCeldaMapaSeleccionada(celda: CeldaMapaVista): boolean {
-    const seleccion = this.seleccionMapa();
-    return !!seleccion
-      && this.normalizarNivelMapa(seleccion.nivelInherente) === this.normalizarNivelMapa(celda.nivelInherente)
-      && this.normalizarNivelMapa(seleccion.nivelResidual) === this.normalizarNivelMapa(celda.nivelResidual);
-  }
-
-  textoPromedioCelda(celda: CeldaMapaVista): string {
-    if (celda.nivelInherente === 'SIN_CALCULO' || celda.nivelResidual === 'SIN_CALCULO') {
-      return 'Nivel pendiente';
+  readonly puedeGuardar = computed(() => {
+    if (this.riesgoId <= 0 || !this.versionVigente()) {
+      return false;
     }
-    return `${celda.promedioInherente.toFixed(2)} → ${celda.promedioResidual.toFixed(2)}`;
-  }
 
-  abrirMatrizDesdeDashboard(matrizId: number): void {
-    this.tab.set('matrices');
-    this.seleccionarMatriz(matrizId);
-  }
-
-  private construirResumenNiveles(conteosOrigen: { nombre: string; total: number }[]) {
-    const totalMatrices = this.dashboard()?.totalMatrices ?? 0;
-    const conteos = new Map(conteosOrigen.map(x => [this.normalizarNivelMapa(x.nombre), x.total]));
-    return this.escalasRiesgoOrdenadas().map(escala => {
-      const total = conteos.get(this.normalizarNivelMapa(escala.nivel)) ?? 0;
-      return {
-        ...escala,
-        total,
-        porcentaje: totalMatrices > 0 ? (total / totalMatrices) * 100 : 0
-      };
-    });
-  }
-
-  private normalizarNivelMapa(nivel?: string | null): string {
-    return `${nivel ?? ''}`.trim().normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
-  }
-
-  readonly mostrarHistorialDebajoListado = computed(() => {
-    // Con pocos registros, el historial se coloca bajo el listado para aprovechar el espacio central.
-    // Cuando la lista crece, permanece en el panel de detalle para evitar desplazamientos largos.
-    return !!this.matrizSeleccionada() && this.matrices().length > 0 && this.matrices().length <= 4;
+    return this.secciones()
+      .flatMap(seccion => seccion.campos)
+      .filter(campo => campo.obligatorio)
+      .every(campo => this.tieneValor(this.respuestas[campo.clave]));
   });
 
   ngOnInit(): void {
-    this.cargarTodo();
+    this.cargarModulo();
   }
 
-  ngOnDestroy(): void {
-    this.cerrarVistaPreviaEvidencia();
-  }
-
-  seleccionarTab(tabName: TabMatrices): void {
-    this.tab.set(tabName);
+  seleccionarTab(tab: TabMatrices): void {
+    this.tab.set(tab);
     this.error.set(null);
     this.mensaje.set(null);
-    if (tabName === 'plantillas') {
-      this.cargarHistorialVersiones();
+
+    if (tab === 'consolidado') {
+      this.cargarConsolidado();
+    }
+    if (tab === 'plantillas') {
+      this.cargarVersiones();
     }
   }
 
-  actualizarModulo(): void {
-    this.error.set(null);
-    this.mensaje.set(null);
-    this.matricesDuplicadas.set([]);
-    this.limpiarSeleccionMapa();
-    this.matrizSeleccionada.set(null);
-    this.historial.set([]);
-    this.planesAccion.set([]);
-    this.evidencias.set([]);
-    this.evidenciaArchivo = null;
-    this.evidenciaPlanId = null;
-    this.evidenciaControlId = null;
-    this.cerrarVistaPreviaEvidencia();
-    this.limpiarFormularioMatriz();
-    this.limpiarFormularioPlan();
-    this.cargarTodo();
-  }
-
-  cargarTodo(): void {
+  cargarModulo(): void {
     this.cargando.set(true);
     this.error.set(null);
-    this.mensaje.set(null);
 
-    // Carga base del módulo: la metodología define variables, criterios,
-    // escalas y mitigaciones antes de consultar matrices, reportes y catálogos.
+    this.service.obtenerVersionVigenteFormulario().subscribe({
+      next: version => {
+        this.versionVigente.set(version);
+        this.inicializarRespuestas();
+        this.cargarMetodologia();
+        this.cargarEvaluaciones();
+      },
+      error: error => this.finalizarConError(error, 'No se pudo cargar la versión vigente del formulario.')
+    });
+  }
+
+  cargarMetodologia(): void {
     this.service.metodologiaVigente().subscribe({
       next: metodologia => {
         this.metodologia.set(metodologia);
-        this.prepararCapturaVariables();
-        this.cargarDashboard();
-        this.cargarReporte();
-        this.cargarMatrices();
-        this.cargarCriterios();
+        this.inicializarRespuestas();
+        this.cargando.set(false);
+      },
+      error: error => this.finalizarConError(error, 'No se pudo cargar la metodología dinámica vigente.')
+    });
+  }
 
-        // Cargar versión vigente de formulario para el renderizador dinámico
-        this.service.obtenerVersionVigenteFormulario().subscribe({
-          next: formulario => this.formularioVigente.set(formulario),
-          error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el diseño de formulario dinámico.'))
+  cargarEvaluaciones(): void {
+    this.cargando.set(true);
+    this.service.listarEvaluaciones({
+      buscar: this.filtroBuscar().trim() || undefined,
+      estado: this.filtroEstado().trim() || undefined,
+      pagina: this.pagina(),
+      registrosPorPagina: this.registrosPorPagina()
+    }).subscribe({
+      next: evaluaciones => {
+        this.evaluaciones.set(evaluaciones);
+        this.cargando.set(false);
+      },
+      error: error => this.finalizarConError(error, 'No se pudieron consultar las evaluaciones.')
+    });
+  }
+
+  cargarConsolidado(): void {
+    this.cargando.set(true);
+    this.service.obtenerConsolidado().subscribe({
+      next: filas => {
+        this.consolidado.set(filas);
+        this.cargando.set(false);
+      },
+      error: error => this.finalizarConError(error, 'No se pudo cargar la matriz consolidada.')
+    });
+  }
+
+  cargarVersiones(): void {
+    this.cargando.set(true);
+    this.service.listarHistorialVersionesFormulario().subscribe({
+      next: versiones => {
+        this.versiones.set(versiones);
+        this.cargando.set(false);
+      },
+      error: error => this.finalizarConError(error, 'No se pudo cargar el historial de formularios.')
+    });
+  }
+
+  actualizarRespuesta(campo: CampoFormulario, valor: string | number | boolean | null): void {
+    this.respuestas = { ...this.respuestas, [campo.clave]: valor };
+  }
+
+  valorRespuesta(campo: CampoFormulario): string | number | boolean | null {
+    return this.respuestas[campo.clave] ?? null;
+  }
+
+  opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
+    if (!campo.codigoCatalogo) {
+      return [];
+    }
+
+    return this.metodologia()?.catalogos
+      .find(catalogo => catalogo.codigo === campo.codigoCatalogo)
+      ?.elementos
+      .slice()
+      .sort((a, b) => a.orden - b.orden) ?? [];
+  }
+
+  nuevaEvaluacion(): void {
+    this.evaluacionSeleccionada.set(null);
+    this.riesgoId = 0;
+    this.inicializarRespuestas();
+    this.tab.set('captura');
+  }
+
+  editarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
+    this.evaluacionSeleccionada.set(evaluacion);
+    this.riesgoId = evaluacion.evaRiesgoId;
+    this.respuestas = this.parsearRespuestas(evaluacion.evaDataJson);
+    this.tab.set('captura');
+    this.cargarRevisiones(evaluacion.evaId);
+  }
+
+  guardarEvaluacion(): void {
+    const version = this.versionVigente();
+    if (!version || !this.puedeGuardar()) {
+      this.error.set('Complete el riesgo y todos los campos obligatorios antes de guardar.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.error.set(null);
+    const actual = this.evaluacionSeleccionada();
+    const dto: EvaluacionRiesgoDto = {
+      evaId: actual?.evaId ?? 0,
+      evaRiesgoId: this.riesgoId,
+      evaVersionId: version.verId,
+      evaEstado: actual?.evaEstado ?? 'BORRADOR',
+      evaDataJson: JSON.stringify(this.respuestas),
+      evaDataCalcJson: actual?.evaDataCalcJson ?? '{}',
+      evaVri: actual?.evaVri ?? null,
+      evaVrr: actual?.evaVrr ?? null,
+      evaFechaEval: actual?.evaFechaEval ?? new Date().toISOString(),
+      evaUsrEval: actual?.evaUsrEval ?? 0,
+      evaVersionRow: actual?.evaVersionRow ?? 1,
+      evaActivo: true
+    };
+
+    const solicitud = actual
+      ? this.service.actualizarEvaluacion(actual.evaId, dto)
+      : this.service.crearEvaluacion(dto);
+
+    solicitud.subscribe({
+      next: () => {
+        this.mensaje.set(actual ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
+        this.guardando.set(false);
+        this.tab.set('evaluaciones');
+        this.cargarEvaluaciones();
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo guardar la evaluación.'));
+      }
+    });
+  }
+
+  transicionarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
+    if (!this.nuevoEstado.trim()) {
+      this.error.set('Seleccione un estado de destino.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.transicionarEvaluacion(
+      evaluacion.evaId,
+      this.nuevoEstado,
+      this.motivoTransicion
+    ).subscribe({
+      next: () => {
+        this.mensaje.set('Estado actualizado correctamente.');
+        this.guardando.set(false);
+        this.motivoTransicion = '';
+        this.cargarEvaluaciones();
+        this.cargarRevisiones(evaluacion.evaId);
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo realizar la transición.'));
+      }
+    });
+  }
+
+  cargarRevisiones(evaluacionId: number): void {
+    this.service.obtenerRevisiones(evaluacionId).subscribe({
+      next: revisiones => this.revisiones.set(revisiones),
+      error: () => this.revisiones.set([])
+    });
+  }
+
+  seleccionarArchivo(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.archivoEvidencia = input.files?.item(0) ?? null;
+  }
+
+  cargarYVincularEvidencia(evaluacion: EvaluacionRiesgoDto): void {
+    if (!this.archivoEvidencia) {
+      this.error.set('Seleccione un archivo de evidencia.');
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.cargarEvidencia(this.archivoEvidencia).subscribe({
+      next: evidencia => {
+        this.service.vincularEvidenciaEvaluacion({
+          eveEvaluacionId: evaluacion.evaId,
+          eveEvidenciaId: evidencia.eviId
+        }).subscribe({
+          next: () => {
+            this.archivoEvidencia = null;
+            this.guardando.set(false);
+            this.mensaje.set('Evidencia cargada y vinculada correctamente.');
+          },
+          error: error => {
+            this.service.eliminarEvidenciaHuerfana(evidencia.eviId).subscribe();
+            this.guardando.set(false);
+            this.error.set(this.obtenerMensajeError(error, 'No se pudo vincular la evidencia.'));
+          }
         });
       },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la metodología vigente.'));
-        this.cargando.set(false);
-      }
-    });
-  }
-
-  iniciarNuevaMatriz(): void {
-    this.limpiarFormularioMatriz();
-    this.tab.set('nueva');
-  }
-
-  cargarDashboard(): void {
-    this.service.dashboard(this.reporteFiltro()).subscribe({
-      next: datos => this.dashboard.set(datos),
-      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el dashboard.'))
-    });
-  }
-
-  cargarReporte(): void {
-    this.cargandoReporte.set(true);
-    this.service.reporte(this.reporteFiltro()).subscribe({
-      next: datos => {
-        this.reporte.set(datos);
-        this.cargandoReporte.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la reportería.'));
-        this.cargandoReporte.set(false);
-      }
-    });
-  }
-
-  actualizarFiltroReporte(campo: keyof MatrizRiesgoReporteFiltro, valor: string): void {
-    const valorLimpio = valor?.trim?.() ?? valor;
-    const filtroNuevo = { ...this.reporteFiltro(), [campo]: valorLimpio || undefined };
-    const errorFecha = this.validarFechasReporte(filtroNuevo);
-    if (errorFecha) {
-      this.error.set(errorFecha);
-      return;
-    }
-
-    this.limpiarSeleccionMapa();
-    this.reporteFiltro.set(filtroNuevo);
-    this.programarCargaReporte();
-  }
-
-  actualizarFiltroMatrices(campo: 'buscar' | 'estado' | 'sujetoTipo', valor: string): void {
-    if (campo === 'buscar') this.filtroBuscar.set(valor);
-    if (campo === 'estado') this.filtroEstado.set(valor);
-    if (campo === 'sujetoTipo') this.filtroSujetoTipo.set(valor);
-    this.programarCargaMatrices();
-  }
-
-  limpiarFiltrosReporte(): void {
-    this.limpiarSeleccionMapa();
-    this.reporteFiltro.set({});
-    this.cargarDashboard();
-    this.cargarReporte();
-  }
-
-  private programarCargaReporte(): void {
-    // Evita llamadas repetidas mientras el usuario escribe o cambia filtros.
-    if (this.reporteFiltroTimer) clearTimeout(this.reporteFiltroTimer);
-    this.reporteFiltroTimer = setTimeout(() => {
-      this.cargarDashboard();
-      this.cargarReporte();
-    }, 350);
-  }
-
-  private programarCargaMatrices(): void {
-    // Mantiene la búsqueda automática sin saturar el API por cada pulsación.
-    if (this.matricesFiltroTimer) clearTimeout(this.matricesFiltroTimer);
-    this.matricesFiltroTimer = setTimeout(() => this.cargarMatrices(), 300);
-  }
-
-  private programarBusquedaDuplicadosMatriz(): void {
-    // En edición no se valida contra sí misma; la duplicidad solo bloquea altas nuevas.
-    if (this.matrizEditandoId()) {
-      this.matricesDuplicadas.set([]);
-      return;
-    }
-
-    if (this.duplicadosTimer) clearTimeout(this.duplicadosTimer);
-    this.duplicadosTimer = setTimeout(() => this.buscarDuplicadosMatriz(), 320);
-  }
-
-  private buscarDuplicadosMatriz(): void {
-    const termino = this.terminoBusquedaDuplicadoMatriz();
-    if (!termino || termino.length < 3) {
-      this.matricesDuplicadas.set([]);
-      this.buscandoDuplicados.set(false);
-      return;
-    }
-
-    this.buscandoDuplicados.set(true);
-    this.service.listar({ buscar: termino }).subscribe({
-      next: datos => {
-        this.matricesDuplicadas.set(datos.filter(matriz => this.esDuplicadoMatriz(matriz)));
-        this.buscandoDuplicados.set(false);
-      },
-      error: () => {
-        this.matricesDuplicadas.set([]);
-        this.buscandoDuplicados.set(false);
-      }
-    });
-  }
-
-  private terminoBusquedaDuplicadoMatriz(): string {
-    return [
-      this.nuevaMatriz.documento,
-      this.nuevaMatriz.sujetoIdExt
-    ].map(x => x.trim()).find(x => x.length >= 3) ?? '';
-  }
-
-  private esDuplicadoMatriz(matriz: MatrizRiesgoResumen): boolean {
-    if (matriz.matrizId === this.matrizEditandoId()) return false;
-
-    const documento = this.normalizarComparacion(this.nuevaMatriz.documento);
-    const identificador = this.normalizarComparacion(this.nuevaMatriz.sujetoIdExt);
-
-    return (!!documento && documento === this.normalizarComparacion(matriz.documento || ''))
-      || (!!identificador && identificador === this.normalizarComparacion(matriz.sujetoIdExt || ''));
-  }
-
-  private normalizarComparacion(valor: string): string {
-    return `${valor ?? ''}`.trim().replace(/\s+/g, ' ').toUpperCase();
-  }
-
-  exportarReporte(formato: 'EXCEL' | 'PDF'): void {
-    if (this.exportando()) return;
-
-    // La API es la fuente única del archivo. Angular únicamente coordina la
-    // descarga y mantiene un estado visible para impedir solicitudes duplicadas.
-    this.exportando.set(formato);
-    this.guardando.set(true);
-    this.service.exportarReporte(this.reporteFiltro(), formato).subscribe({
-      next: blob => {
-        this.descargarArchivoReporte(blob, formato);
-        this.mensaje.set(`Reporte ${formato} generado correctamente.`);
-        this.exportando.set(null);
+      error: error => {
         this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo exportar el reporte.'));
-        this.exportando.set(null);
-        this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo cargar la evidencia.'));
       }
     });
   }
 
-  private descargarArchivoReporte(blob: Blob, formato: 'EXCEL' | 'PDF'): void {
-    const extension = formato === 'PDF' ? 'pdf' : 'xlsx';
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Reporte_Matrices_Riesgos_${this.fechaArchivo()}.${extension}`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  exportarFichaMatriz(): void {
-    const matriz = this.matrizSeleccionada();
-    if (!matriz) {
-      this.error.set('Seleccione una matriz para generar su ficha individual.');
-      return;
-    }
-    if (this.exportando()) return;
-
-    this.exportando.set('FICHA');
+  clonarVersion(version: VersionFormularioDto): void {
     this.guardando.set(true);
-    this.service.exportarFicha(matriz.matrizId).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Ficha_Matriz_Riesgo_${matriz.matrizId}_${this.fechaArchivo()}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        this.mensaje.set('Ficha individual PDF generada correctamente.');
-        this.exportando.set(null);
-        this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo generar la ficha individual.'));
-        this.exportando.set(null);
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  cargarMatrices(): void {
-    this.cargando.set(true);
-    this.service.listar({
-      buscar: this.filtroBuscar(),
-      estado: this.filtroEstado(),
-      sujetoTipo: this.filtroSujetoTipo()
-    }).subscribe({
-      next: datos => {
-        this.matrices.set(datos);
-        this.cargando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo listar matrices.'));
-        this.cargando.set(false);
-      }
-    });
-  }
-
-  cargarCriterios(): void {
-    this.service.listarCriterios(this.incluirCriteriosInactivos()).subscribe({
-      next: datos => {
-        const verInactivos = this.incluirCriteriosInactivos();
-        this.criterios.set(verInactivos ? datos : datos.filter(c => c.activo));
-        this.aplicarCriteriosAutomaticos();
-      },
-      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los criterios.'))
-    });
-  }
-
-  seleccionarMatriz(id: number): void {
-    this.cargando.set(true);
-    this.service.obtener(id).subscribe({
-      next: matriz => {
-        this.matrizSeleccionada.set(matriz);
-        this.planesAccion.set(matriz.planesAccion ?? []);
-        this.evidencias.set(matriz.evidencias ?? []);
-        this.cargarHistorial(id);
-        this.cargando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo consultar la matriz.'));
-        this.cargando.set(false);
-      }
-    });
-  }
-
-  cargarHistorial(id: number): void {
-    this.service.historial(id).subscribe({
-      next: datos => this.historial.set(this.deduplicarHistorial(datos)),
-      error: () => this.historial.set([])
-    });
-  }
-
-  seleccionarMatrizParaPlanes(id: number | string | null): void {
-    const matrizId = id === null || id === '' ? null : Number(id);
-    if (!matrizId) {
-      this.matrizSeleccionada.set(null);
-      this.planesAccion.set([]);
-      this.evidencias.set([]);
-      this.limpiarFormularioPlan();
-      return;
-    }
-
-    this.seleccionarMatriz(matrizId);
-    this.cargarPlanesYEvidencias(matrizId);
-  }
-
-  cargarPlanesYEvidencias(matrizId?: number): void {
-    const id = matrizId ?? this.matrizSeleccionada()?.matrizId;
-    if (!id) {
-      this.planesAccion.set([]);
-      this.evidencias.set([]);
-      return;
-    }
-
-    this.service.listarPlanes(id).subscribe({
-      next: datos => this.planesAccion.set(datos),
-      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar los planes de acción.'))
-    });
-
-    this.service.listarEvidencias(id).subscribe({
-      next: datos => this.evidencias.set(datos),
-      error: err => this.error.set(this.obtenerMensajeError(err, 'No se pudieron cargar las evidencias.'))
-    });
-  }
-
-  crearMatriz(): void {
-    // 1. Bloqueo estricto por coherencia residual (Hito 7.3)
-    if (!this.coherenteLocal()) {
-      this.error.set('Bloqueado: La Frecuencia/Impacto Residual del formulario no coincide con el cálculo mitigador.');
-      return;
-    }
-
-    const dto = this.construirDtoMatriz();
-    if (!dto) return;
-
-    // Control preventivo de duplicidad
-    if (!this.matrizEditandoId() && this.matricesDuplicadas().length > 0) {
-      this.error.set('Ya existe una matriz activa con el mismo identificador externo o documento. Revise el registro existente antes de crear otro.');
-      return;
-    }
-
-    this.guardando.set(true);
-    const matrizId = this.matrizEditandoId();
-
-    // Flujo en dos pasos con compensación de evidencias si se seleccionó archivo físico
-    if (this.evidenciaArchivo) {
-      const archivo = this.evidenciaArchivo;
-      this.service.cargarArchivoEvidenciaFase7(archivo).subscribe({
-        next: (evidencia) => {
-          const eviId = evidencia.eviId;
-          // Paso 2: Crear la matriz/evaluación y luego vincular
-          const request = matrizId
-            ? this.service.actualizar(matrizId, dto)
-            : this.service.crear(dto);
-
-          request.subscribe({
-            next: (matriz) => {
-              // Vincular la evidencia física cargada a la evaluación creada
-              this.service.vincularEvidenciaEvaluacion({
-                eveEvaluacionId: matriz.matrizId,
-                eveEvidenciaId: eviId,
-                usrId: 1 // Usr ID simulado por sesión
-              }).subscribe({
-                next: () => {
-                  this.evidenciaArchivo = null;
-                  this.calcularAutomaticamenteDespuesDeGuardar(matriz, !!matrizId);
-                },
-                error: (vincError) => {
-                  // COMPENSACIÓN: Si falla el paso 2 de vinculación, eliminar la evidencia física huérfana
-                  this.service.eliminarEvidenciaHuerfana(eviId).subscribe({
-                    next: () => {
-                      this.error.set('Fallo al vincular la evidencia. Se compensó eliminando el archivo huérfano: ' + this.obtenerMensajeError(vincError, ''));
-                      this.guardando.set(false);
-                    },
-                    error: (compError) => {
-                      this.error.set('Error crítico: falló vinculación y falló compensación de evidencia ID: ' + eviId);
-                      this.guardando.set(false);
-                    }
-                  });
-                }
-              });
-            },
-            error: (saveError) => {
-              // COMPENSACIÓN: Si falla el guardado de la matriz, eliminar la evidencia física huérfana
-              this.service.eliminarEvidenciaHuerfana(eviId).subscribe({
-                next: () => {
-                  this.error.set('Fallo al guardar la matriz. Se compensó eliminando la evidencia: ' + this.obtenerMensajeError(saveError, ''));
-                  this.guardando.set(false);
-                },
-                error: () => {
-                  this.error.set('Error crítico: falló guardado y falló compensación de evidencia ID: ' + eviId);
-                  this.guardando.set(false);
-                }
-              });
-            }
-          });
-        },
-        error: (uploadError) => {
-          this.error.set('No se pudo cargar físicamente el archivo de evidencia: ' + this.obtenerMensajeError(uploadError, ''));
-          this.guardando.set(false);
-        }
-      });
-    } else {
-      // Guardado ordinario sin evidencias
-      const request = matrizId
-        ? this.service.actualizar(matrizId, dto)
-        : this.service.crear(dto);
-
-      request.subscribe({
-        next: matriz => this.calcularAutomaticamenteDespuesDeGuardar(matriz, !!matrizId),
-        error: err => {
-          this.error.set(this.obtenerMensajeError(err, matrizId ? 'No se pudo actualizar la matriz.' : 'No se pudo crear la matriz.'));
-          this.guardando.set(false);
-        }
-      });
-    }
-  }
-
-  actualizarCampoMatriz(campo: 'sujetoTipo' | 'sujetoIdExt' | 'documento' | 'nombreSujeto', valor: string): void {
-    this.nuevaMatriz = { ...this.nuevaMatriz, [campo]: valor };
-    if (campo === 'sujetoTipo') {
-      this.prepararCapturaVariables();
-      this.ajustarFactorControlAlTipoSujeto();
-    }
-    this.programarBusquedaDuplicadosMatriz();
-  }
-
-  cancelarEdicionMatriz(): void {
-    this.limpiarFormularioMatriz();
-    this.matricesDuplicadas.set([]);
-    this.tab.set('matrices');
-  }
-
-  private construirDtoMatriz(): MatrizRiesgoCrearRequest | null {
-    const progreso = this.progresoCaptura();
-    if (progreso.total === 0) {
-      this.error.set('No existen variables configuradas para el tipo de sujeto seleccionado.');
-      return null;
-    }
-
-    if (progreso.pendiente > 0) {
-      this.error.set(`Debe completar las ${progreso.total} variables de ${this.etiquetaTipoSujeto(this.nuevaMatriz.sujetoTipo)} antes de guardar y calcular. Faltan ${progreso.pendiente}.`);
-      return null;
-    }
-
-    // Solo se envían las variables que corresponden al tipo de sujeto seleccionado.
-    // La ponderación y clasificación final se conservan en el proceso de cálculo del API.
-    const detalles = this.capturasVariables()
-      .map(x => ({
-        variableId: x.variableId,
-        puntaje: Number(x.puntaje),
-        valorCapturado: x.valorCapturado || null,
-        justificacion: x.justificacion || null,
-        fuenteDato: x.fuenteDato || null
-      }));
-
-    if (!this.nuevaMatriz.nombreSujeto.trim()) {
-      this.error.set('El nombre del sujeto evaluado es obligatorio.');
-      return null;
-    }
-
-    const errorCriterios = this.validarCapturasContraCriterios();
-    if (errorCriterios) {
-      this.error.set(errorCriterios);
-      return null;
-    }
-
-    return {
-      ...this.nuevaMatriz,
-      sujetoIdExt: this.nuevaMatriz.sujetoIdExt || null,
-      documento: this.nuevaMatriz.documento || null,
-      detalles,
-      controles: this.nuevoControl.nombre.trim()
-        ? [{
-            factorId: this.nuevoControl.factorId ?? this.factorCapturaActual()?.factorId ?? null,
-            nombre: this.nuevoControl.nombre,
-            descripcion: this.nuevoControl.descripcion || null,
-            periodicidad: this.nuevoControl.periodicidad || null,
-            oportunidad: this.nuevoControl.oportunidad || null,
-            automatizacion: this.nuevoControl.automatizacion || null,
-            procedimientos: this.nuevoControl.procedimientos || null,
-            calidad: this.nuevoControl.calidad || null,
-            efectividadPct: Number(this.nuevoControl.efectividadPct),
-            responsable: this.nuevoControl.responsable || null,
-            evidenciaObligatoria: this.nuevoControl.evidenciaObligatoria
-          }]
-        : []
-    };
-  }
-
-  editarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): void {
-    this.cargando.set(true);
-    this.service.obtener(matriz.matrizId).subscribe({
-      next: detalle => {
-        // La edición reconstruye la captura con las variables vigentes del tipo
-        // de sujeto, conserva valores registrados y recalcula al guardar.
-        this.matrizEditandoId.set(detalle.matrizId);
-        this.nuevaMatriz = {
-          sujetoTipo: detalle.sujetoTipo,
-          sujetoIdExt: detalle.sujetoIdExt || '',
-          documento: detalle.documento || '',
-          nombreSujeto: detalle.nombreSujeto,
-          origenDatos: detalle.origenDatos || 'CAPTURA'
-        };
-        const variablesEdicion = this.variablesParaTipoSujeto(detalle.sujetoTipo);
-        this.capturasVariables.set(variablesEdicion.map(variable => {
-          const valor = detalle.detalles.find(d => d.variableId === variable.variableId);
-          return {
-            variableId: variable.variableId,
-            criterioId: null,
-            puntaje: valor?.puntaje ?? null,
-            valorCapturado: valor?.valorCapturado ?? '',
-            justificacion: valor?.justificacion ?? '',
-            fuenteDato: valor?.fuenteDato ?? 'CAPTURA'
-          };
-        }));
-        this.aplicarCriteriosAutomaticos();
-        this.matricesDuplicadas.set([]);
-        this.tab.set('nueva');
-        this.matrizSeleccionada.set(detalle);
-        this.cargando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la matriz para edición.'));
-        this.cargando.set(false);
-      }
-    });
-  }
-
-  cambiarEstado(matriz: MatrizRiesgoResumen, estado: string): void {
-    const activandoMatriz = matriz.estado === 'INACTIVA' && estado === 'EN_REVISION';
-    const inactivandoMatriz = estado === 'INACTIVA';
-    this.abrirModal({
-      tipo: 'estado',
-      titulo: activandoMatriz ? 'Activar matriz' : inactivandoMatriz ? 'Desactivar matriz' : 'Cambiar estado',
-      descripcion: activandoMatriz
-        ? `Ingrese el motivo obligatorio para activar la matriz ${matriz.matrizId}. El estado volverá a En Revisión.`
-        : `Ingrese el motivo obligatorio para cambiar la matriz ${matriz.matrizId} al estado ${this.estadoEtiqueta(estado)}.`,
-      textoConfirmar: activandoMatriz ? 'Activar' : inactivandoMatriz ? 'Desactivar' : 'Cambiar estado',
-      requiereMotivo: true,
-      matriz,
-      estado,
-      tono: inactivandoMatriz ? 'peligro' : activandoMatriz ? 'normal' : 'advertencia'
-    });
-  }
-
-  eliminarMatriz(matriz: MatrizRiesgoResumen): void {
-    this.abrirModal({
-      tipo: 'eliminarMatriz',
-      titulo: 'Eliminar matriz',
-      descripcion: `Ingrese el motivo obligatorio para retirar la matriz ${matriz.matrizId} de la operación diaria. La información se conservará para consulta histórica.`,
-      textoConfirmar: 'Eliminar matriz',
-      requiereMotivo: true,
-      matriz,
-      tono: 'peligro'
-    });
-  }
-
-  abrirModal(operacion: ModalOperacion): void {
-    this.modalOperacion.set(operacion);
-    this.modalMotivo.set('');
-    this.modalMotivoTexto = '';
-    this.modalError.set(null);
-  }
-
-  cerrarModal(): void {
-    if (this.guardando()) return;
-    this.modalOperacion.set(null);
-    this.modalMotivo.set('');
-    this.modalMotivoTexto = '';
-    this.modalError.set(null);
-  }
-
-  actualizarModalMotivo(valorIngresado: string): void {
-    const valor = (valorIngresado ?? '').slice(0, 1000);
-    this.modalMotivoTexto = valor;
-    this.modalMotivo.set(valor);
-    this.modalError.set(null);
-  }
-
-  contadorModalMotivo(): number {
-    return this.modalMotivoTexto.length;
-  }
-
-  confirmarModal(): void {
-    const operacion = this.modalOperacion();
-    if (!operacion) return;
-
-    const motivo = this.modalMotivoTexto.trim();
-    if (operacion.requiereMotivo && !motivo) {
-      this.modalError.set('El motivo es obligatorio para completar esta acción.');
-      return;
-    }
-
-    if (operacion.tipo === 'estado' && this.existeMotivoCambioEstado(motivo)) {
-      this.modalError.set('Este motivo ya fue utilizado en un cambio de estado de esta matriz. Ingrese un motivo diferente.');
-      return;
-    }
-
-    this.modalError.set(null);
-    switch (operacion.tipo) {
-      case 'estado':
-        this.ejecutarCambioEstado(operacion.matriz!, operacion.estado!, motivo);
-        break;
-      case 'eliminarMatriz':
-        this.ejecutarEliminacionMatriz(operacion.matriz!, motivo);
-        break;
-      case 'inactivarCriterio':
-        this.ejecutarInactivacionCriterio(operacion.criterio!, motivo);
-        break;
-      case 'reactivarCriterio':
-        this.ejecutarReactivacionCriterio(operacion.criterio!, motivo);
-        break;
-      case 'eliminarCriterio':
-        this.ejecutarEliminacionCriterio(operacion.criterio!, motivo);
-        break;
-      case 'estadoPlan':
-        this.ejecutarCambioEstadoPlan(operacion.plan!, operacion.estado!, motivo);
-        break;
-      case 'inactivarPlan':
-        this.ejecutarInactivacionPlan(operacion.plan!, motivo);
-        break;
-      case 'reactivarPlan':
-        this.ejecutarReactivacionPlan(operacion.plan!, motivo);
-        break;
-      case 'inactivarEvidencia':
-        this.ejecutarInactivacionEvidencia(operacion.evidencia!, motivo);
-        break;
-    }
-  }
-
-  guardarPlanAccion(): void {
-    const matriz = this.matrizSeleccionada();
-    if (!matriz) {
-      this.error.set('Seleccione una matriz antes de registrar el plan de acción.');
-      return;
-    }
-
-    if (!this.planForm.actividad.trim() || !this.planForm.responsable.trim()) {
-      this.error.set('La actividad y el responsable del plan son obligatorios.');
-      return;
-    }
-
-    const errorFormulario = this.validarFormularioPlan();
-    if (errorFormulario) {
-      this.error.set(errorFormulario);
-      return;
-    }
-
-    this.guardando.set(true);
-    const dto: MatrizRiesgoPlanAccionRequest = {
-      resultadoId: this.planForm.resultadoId || null,
-      actividad: this.planForm.actividad.trim(),
-      responsable: this.planForm.responsable.trim(),
-      periodicidad: this.planForm.periodicidad || null,
-      fechaInicio: this.planForm.fechaInicio || null,
-      fechaFin: this.planForm.fechaFin || null,
-      medioPrueba: this.planForm.medioPrueba || null,
-      observaciones: this.planForm.observaciones || null
-    };
-
-    const planId = this.planEditandoId();
-    const request = planId
-      ? this.service.actualizarPlan(matriz.matrizId, planId, dto)
-      : this.service.crearPlan(matriz.matrizId, dto);
-
-    request.subscribe({
+    this.service.clonarVersionFormulario(version.verId).subscribe({
       next: () => {
-        this.mensaje.set(planId ? 'Plan de acción actualizado correctamente.' : 'Plan de acción registrado correctamente.');
-        this.limpiarFormularioPlan();
-        this.cargarPlanesYEvidencias(matriz.matrizId);
-        this.cargarReporte();
         this.guardando.set(false);
+        this.mensaje.set('Versión clonada como borrador.');
+        this.cargarVersiones();
       },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el plan de acción.'));
+      error: error => {
         this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo clonar la versión.'));
       }
     });
   }
 
-  editarPlan(plan: MatrizRiesgoPlanAccion): void {
-    this.planEditandoId.set(plan.planId);
-    this.planForm = {
-      resultadoId: plan.resultadoId ?? null,
-      actividad: plan.actividad,
-      responsable: plan.responsable,
-      periodicidad: plan.periodicidad || '',
-      fechaInicio: plan.fechaInicio ? plan.fechaInicio.substring(0, 10) : '',
-      fechaFin: plan.fechaFin ? plan.fechaFin.substring(0, 10) : '',
-      medioPrueba: plan.medioPrueba || '',
-      observaciones: plan.observaciones || ''
-    };
+  abrirDefinicion(version: VersionFormularioDto): void {
+    this.versionEditando.set(version);
+    this.definicionTecnica = this.formatearDefinicion(version.verJson);
   }
 
-  limpiarFormularioPlan(): void {
-    this.planEditandoId.set(null);
-    this.planForm = {
-      resultadoId: null,
-      actividad: '',
-      responsable: '',
-      periodicidad: '',
-      fechaInicio: '',
-      fechaFin: '',
-      medioPrueba: '',
-      observaciones: ''
-    };
-  }
-
-  fechaMinimaFinPlan(): string {
-    // La fecha final del plan no puede ser anterior a hoy ni anterior a la fecha de inicio elegida.
-    return this.planForm.fechaInicio && this.planForm.fechaInicio > this.fechaActualIso
-      ? this.planForm.fechaInicio
-      : this.fechaActualIso;
-  }
-
-  private validarFormularioPlan(): string | null {
-    const actividad = this.planForm.actividad.trim();
-    const responsable = this.planForm.responsable.trim();
-    const medioPrueba = (this.planForm.medioPrueba || '').trim();
-    const observaciones = (this.planForm.observaciones || '').trim();
-
-    if (actividad.length > 1500) return 'La actividad no debe superar los 1500 caracteres.';
-    if (observaciones.length > 1500) return 'Las observaciones no deben superar los 1500 caracteres.';
-    if (medioPrueba.length > 300) return 'El medio de prueba no debe superar los 300 caracteres.';
-    if (responsable.length > 300) return 'El responsable no debe superar los 300 caracteres.';
-
-    if (this.planForm.fechaInicio && this.planForm.fechaInicio < this.fechaActualIso) {
-      return 'La fecha de inicio no puede ser menor a la fecha actual.';
-    }
-    if (this.planForm.fechaFin && this.planForm.fechaFin < this.fechaActualIso) {
-      return 'La fecha final no puede ser menor a la fecha actual.';
-    }
-    if (this.planForm.fechaInicio && this.planForm.fechaFin && this.planForm.fechaFin < this.planForm.fechaInicio) {
-      return 'La fecha final no puede ser menor que la fecha de inicio.';
-    }
-
-    return null;
-  }
-
-  private validarFechasReporte(filtro: MatrizRiesgoReporteFiltro): string | null {
-    const fechaInicio = filtro.fechaInicio || '';
-    const fechaFin = filtro.fechaFin || '';
-
-    if (fechaInicio && fechaInicio < this.fechaMinimaReporteInicio) {
-      return 'La fecha de inicio del reporte no puede ser menor al 01/01/2000.';
-    }
-    if (fechaInicio && fechaInicio > this.fechaActualIso) {
-      return 'La fecha de inicio del reporte no puede ser mayor a la fecha actual.';
-    }
-    if (fechaFin && fechaFin > this.fechaActualIso) {
-      return 'La fecha final del reporte no puede ser mayor a la fecha actual.';
-    }
-    if (fechaFin && fechaFin < this.fechaMinimaReporteInicio) {
-      return 'La fecha final del reporte no puede ser menor al 01/01/2000.';
-    }
-    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
-      return 'La fecha final del reporte no puede ser menor que la fecha de inicio.';
-    }
-
-    return null;
-  }
-
-  cambiarEstadoPlan(plan: MatrizRiesgoPlanAccion, estado: string): void {
-    this.abrirModal({
-      tipo: 'estadoPlan',
-      titulo: 'Cambiar estado del plan',
-      descripcion: `Ingrese el motivo obligatorio para cambiar el plan ${plan.planId} al estado ${estado}.`,
-      textoConfirmar: 'Cambiar estado',
-      requiereMotivo: true,
-      estado,
-      plan,
-      tono: estado === 'CERRADO' ? 'normal' : 'advertencia'
-    });
-  }
-
-  inactivarPlan(plan: MatrizRiesgoPlanAccion): void {
-    this.abrirModal({
-      tipo: 'inactivarPlan',
-      titulo: 'Desactivar plan',
-      descripcion: `Ingrese el motivo obligatorio para desactivar el plan ${plan.planId}.`,
-      textoConfirmar: 'Desactivar',
-      requiereMotivo: true,
-      plan,
-      tono: 'peligro'
-    });
-  }
-
-  reactivarPlan(plan: MatrizRiesgoPlanAccion): void {
-    this.abrirModal({
-      tipo: 'reactivarPlan',
-      titulo: 'Reactivar plan',
-      descripcion: `Ingrese el motivo obligatorio para reactivar el plan ${plan.planId}. El estado volverá a PENDIENTE.`,
-      textoConfirmar: 'Reactivar',
-      requiereMotivo: true,
-      plan,
-      tono: 'normal'
-    });
-  }
-
-  seleccionarArchivoEvidencia(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.evidenciaArchivo = input.files?.item(0) ?? null;
-  }
-
-  vistaPreviaArchivoSeleccionado(): void {
-    if (!this.evidenciaArchivo) {
-      this.error.set('Seleccione un archivo para visualizar.');
-      return;
-    }
-    if (!this.validarTamanoVistaPrevia(this.evidenciaArchivo.size)) return;
-    void this.crearVistaPreviaDesdeBlob(this.evidenciaArchivo, this.evidenciaArchivo.name, this.evidenciaArchivo.type);
-  }
-
-  cargarEvidencia(): void {
-    const matriz = this.matrizSeleccionada();
-    if (!matriz || !this.evidenciaArchivo) {
-      this.error.set('Seleccione una matriz y un archivo de evidencia.');
+  guardarDefinicion(): void {
+    const version = this.versionEditando();
+    if (!version) {
       return;
     }
 
-    this.guardando.set(true);
-    this.service.cargarEvidencia(matriz.matrizId, this.evidenciaArchivo, this.evidenciaControlId, this.evidenciaPlanId).subscribe({
-      next: () => {
-        this.mensaje.set('Evidencia registrada correctamente.');
-        this.evidenciaArchivo = null;
-        this.evidenciaPlanId = null;
-        this.evidenciaControlId = null;
-        this.cargarPlanesYEvidencias(matriz.matrizId);
-        this.seleccionarMatriz(matriz.matrizId);
-        this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar la evidencia.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  descargarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
-    const matriz = this.matrizSeleccionada();
-    if (!matriz) return;
-
-    this.guardando.set(true);
-    this.service.descargarEvidencia(matriz.matrizId, evidencia.evidenciaId).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = evidencia.nombreOriginal;
-        link.click();
-        URL.revokeObjectURL(url);
-        this.mensaje.set('Evidencia descargada correctamente.');
-        this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo descargar la evidencia.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  vistaPreviaEvidencia(evidencia: MatrizRiesgoEvidencia): void {
-    const matriz = this.matrizSeleccionada();
-    if (!matriz || !evidencia.activa) return;
-    if (!this.validarTamanoVistaPrevia(evidencia.tamanoBytes)) return;
-
-    this.cerrarVistaPreviaEvidencia();
-    this.evidenciaPreview.set({
-      nombre: evidencia.nombreOriginal,
-      tipoMime: evidencia.tipoMime || 'application/octet-stream',
-      tamanoBytes: evidencia.tamanoBytes,
-      url: null,
-      urlSegura: null,
-      tipoVista: this.tipoVistaPorMime(evidencia.tipoMime || '', evidencia.nombreOriginal),
-      cargando: true
-    });
-
-    this.service.descargarEvidencia(matriz.matrizId, evidencia.evidenciaId).subscribe({
-      next: blob => {
-        void this.crearVistaPreviaDesdeBlob(blob, evidencia.nombreOriginal, blob.type || evidencia.tipoMime || 'application/octet-stream');
-      },
-      error: err => {
-        this.evidenciaPreview.update(actual => actual ? {
-          ...actual,
-          cargando: false,
-          error: this.obtenerMensajeError(err, 'No se pudo generar la vista previa de la evidencia.')
-        } : actual);
-      }
-    });
-  }
-
-  cerrarVistaPreviaEvidencia(): void {
-    const actual = this.evidenciaPreview();
-    if (actual?.url) {
-      URL.revokeObjectURL(actual.url);
-    }
-    this.evidenciaPreview.set(null);
-  }
-
-  descargarVistaPreviaActual(): void {
-    const actual = this.evidenciaPreview();
-    if (!actual?.url) return;
-    const link = document.createElement('a');
-    link.href = actual.url;
-    link.download = actual.nombre;
-    link.click();
-  }
-
-  inactivarEvidencia(evidencia: MatrizRiesgoEvidencia): void {
-    this.abrirModal({
-      tipo: 'inactivarEvidencia',
-      titulo: 'Eliminar evidencia',
-      descripcion: `Ingrese el motivo obligatorio para eliminar lógicamente la evidencia ${evidencia.evidenciaId}. El archivo físico se conserva.`,
-      textoConfirmar: 'Eliminar',
-      requiereMotivo: true,
-      evidencia,
-      tono: 'peligro'
-    });
-  }
-
-  private ejecutarCambioEstadoPlan(plan: MatrizRiesgoPlanAccion, estado: string, motivo: string): void {
-    const matrizId = this.matrizSeleccionada()?.matrizId;
-    if (!matrizId) return;
-
-    this.guardando.set(true);
-    this.service.cambiarEstadoPlan(matrizId, plan.planId, estado, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Estado del plan actualizado correctamente.');
-        this.cargarPlanesYEvidencias(matrizId);
-        this.cargarReporte();
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo cambiar el estado del plan.')
-    });
-  }
-
-  private ejecutarInactivacionPlan(plan: MatrizRiesgoPlanAccion, motivo: string): void {
-    const matrizId = this.matrizSeleccionada()?.matrizId;
-    if (!matrizId) return;
-
-    this.guardando.set(true);
-    this.service.inactivarPlan(matrizId, plan.planId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Plan de acción desactivado correctamente.');
-        this.cargarPlanesYEvidencias(matrizId);
-        this.cargarReporte();
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo desactivar el plan.')
-    });
-  }
-
-  private ejecutarReactivacionPlan(plan: MatrizRiesgoPlanAccion, motivo: string): void {
-    const matrizId = this.matrizSeleccionada()?.matrizId;
-    if (!matrizId) return;
-
-    this.guardando.set(true);
-    this.service.reactivarPlan(matrizId, plan.planId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Plan de acción reactivado correctamente.');
-        this.cargarPlanesYEvidencias(matrizId);
-        this.cargarReporte();
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo reactivar el plan.')
-    });
-  }
-
-  private ejecutarInactivacionEvidencia(evidencia: MatrizRiesgoEvidencia, motivo: string): void {
-    const matrizId = this.matrizSeleccionada()?.matrizId;
-    if (!matrizId) return;
-
-    this.guardando.set(true);
-    this.service.inactivarEvidencia(matrizId, evidencia.evidenciaId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Evidencia eliminada correctamente.');
-        this.cargarPlanesYEvidencias(matrizId);
-        this.seleccionarMatriz(matrizId);
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo eliminar la evidencia.')
-    });
-  }
-
-  guardarCriterio(): void {
-    if (!this.criteriosForm.variableId || !this.criteriosForm.descripcion.trim()) {
-      this.error.set('La variable y la descripción del criterio son obligatorias.');
-      return;
-    }
-
-    if (this.criteriosForm.valorDesde !== null && this.criteriosForm.valorHasta !== null
-      && Number(this.criteriosForm.valorDesde) > Number(this.criteriosForm.valorHasta)) {
-      this.error.set('El valor desde no puede ser mayor que el valor hasta.');
-      return;
-    }
-
-    const solapamiento = this.validarSolapamientoCriterio();
-    if (solapamiento) {
-      this.error.set(solapamiento);
-      return;
-    }
-
-    this.guardando.set(true);
-    const dto: MatrizRiesgoCriterioRequest = {
-      variableId: Number(this.criteriosForm.variableId),
-      escalaId: this.criteriosForm.escalaId ? Number(this.criteriosForm.escalaId) : null,
-      valorDesde: this.criteriosForm.valorDesde === null || this.criteriosForm.valorDesde === undefined ? null : Number(this.criteriosForm.valorDesde),
-      valorHasta: this.criteriosForm.valorHasta === null || this.criteriosForm.valorHasta === undefined ? null : Number(this.criteriosForm.valorHasta),
-      puntaje: Number(this.criteriosForm.puntaje),
-      descripcion: this.criteriosForm.descripcion.trim()
-    };
-
-    const id = this.criterioEditandoId();
-    const request = id
-      ? this.service.actualizarCriterio(id, dto)
-      : this.service.crearCriterio(dto);
-
-    request.subscribe({
-      next: () => {
-        this.mensaje.set(id ? 'Criterio actualizado correctamente.' : 'Criterio registrado correctamente.');
-        this.limpiarFormularioCriterio();
-        this.cargarCriterios();
-        this.aplicarCriteriosAutomaticos();
-        this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el criterio.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  editarCriterio(criterio: MatrizRiesgoCriterio): void {
-    this.criterioEditandoId.set(criterio.criterioId);
-    this.criteriosForm = {
-      variableId: criterio.variableId,
-      escalaId: criterio.escalaId ?? null,
-      valorDesde: criterio.valorDesde ?? null,
-      valorHasta: criterio.valorHasta ?? null,
-      puntaje: criterio.puntaje,
-      descripcion: criterio.descripcion
-    };
-  }
-
-  inactivarCriterio(criterio: MatrizRiesgoCriterio): void {
-    this.abrirModal({
-      tipo: 'inactivarCriterio',
-      titulo: 'Desactivar criterio',
-      descripcion: `Ingrese el motivo obligatorio para desactivar el criterio ${criterio.criterioId}.`,
-      textoConfirmar: 'Desactivar',
-      requiereMotivo: true,
-      criterio,
-      tono: 'peligro'
-    });
-  }
-
-
-  reactivarCriterio(criterio: MatrizRiesgoCriterio): void {
-    this.abrirModal({
-      tipo: 'reactivarCriterio',
-      titulo: 'Activar criterio',
-      descripcion: `Ingrese el motivo obligatorio para activar el criterio ${criterio.criterioId}. Se validará que su rango no se superponga con criterios activos.`,
-      textoConfirmar: 'Activar',
-      requiereMotivo: true,
-      criterio,
-      tono: 'normal'
-    });
-  }
-
-  eliminarCriterio(criterio: MatrizRiesgoCriterio): void {
-    this.abrirModal({
-      tipo: 'eliminarCriterio',
-      titulo: 'Eliminar criterio',
-      descripcion: `Ingrese el motivo obligatorio para eliminar definitivamente el criterio ${criterio.criterioId}. Esta acción retira el criterio del catálogo.`,
-      textoConfirmar: 'Eliminar',
-      requiereMotivo: true,
-      criterio,
-      tono: 'peligro'
-    });
-  }
-  limpiarFormularioCriterio(): void {
-    this.criterioEditandoId.set(null);
-    this.criteriosForm = {
-      variableId: 0,
-      escalaId: null,
-      valorDesde: null,
-      valorHasta: null,
-      puntaje: 0,
-      descripcion: ''
-    };
-  }
-
-  variableNombre(variableId: number): string {
-    const variable = this.metodologia()?.variables.find(v => v.variableId === Number(variableId));
-    return variable ? `${variable.factorCodigo} - ${variable.nombre}` : 'Variable';
-  }
-
-  criteriosVariable(variableId: number): MatrizRiesgoCriterio[] {
-    return this.criterios()
-      .filter(c => c.activo && c.variableId === Number(variableId))
-      .sort((a, b) => (a.valorDesde ?? -999999) - (b.valorDesde ?? -999999));
-  }
-
-  criterioSeleccionado(captura: CapturaVariable): MatrizRiesgoCriterio | null {
-    if (!captura.criterioId) return null;
-    return this.criterios().find(c => c.criterioId === Number(captura.criterioId)) ?? null;
-  }
-
-  criterioSugerido(captura: CapturaVariable): MatrizRiesgoCriterio | null {
-    const criterios = this.criteriosVariable(captura.variableId);
-    if (criterios.length === 0) return null;
-
-    const valor = this.numeroSeguro(captura.valorCapturado);
-    if (valor === null) return null;
-
-    return criterios.find(c => {
-      const desde = c.valorDesde ?? Number.NEGATIVE_INFINITY;
-      const hasta = c.valorHasta ?? Number.POSITIVE_INFINITY;
-      return valor >= desde && valor <= hasta;
-    }) ?? null;
-  }
-
-  actualizarValorCapturado(variableId: number, valor: string): void {
-    const captura = this.capturasVariables().find(x => x.variableId === variableId);
-    if (!captura) return;
-
-    const sugerido = this.criterioSugerido({ ...captura, valorCapturado: valor });
-    this.actualizarCaptura(variableId, {
-      valorCapturado: valor,
-      criterioId: sugerido?.criterioId ?? captura.criterioId,
-      puntaje: sugerido ? Number(sugerido.puntaje) : captura.puntaje,
-      justificacion: sugerido && !captura.justificacion.trim() ? sugerido.descripcion : captura.justificacion
-    });
-  }
-
-  actualizarPuntaje(variableId: number, valor: number | string | null): void {
-    const puntaje = valor === null || valor === '' ? null : Number(valor);
-    this.actualizarCaptura(variableId, { puntaje });
-  }
-
-  actualizarJustificacion(variableId: number, valor: string): void {
-    this.actualizarCaptura(variableId, { justificacion: valor });
-  }
-
-  actualizarFuente(variableId: number, valor: string): void {
-    this.actualizarCaptura(variableId, { fuenteDato: valor });
-  }
-
-  seleccionarCriterio(variableId: number, criterioId: number | string | null): void {
-    const id = criterioId === null || criterioId === '' ? null : Number(criterioId);
-    const criterio = id ? this.criterios().find(c => c.criterioId === id) : null;
-    if (!criterio) {
-      this.actualizarCaptura(variableId, { criterioId: null });
-      return;
-    }
-
-    const captura = this.capturasVariables().find(x => x.variableId === variableId);
-    this.actualizarCaptura(variableId, {
-      criterioId: criterio.criterioId,
-      puntaje: Number(criterio.puntaje),
-      justificacion: captura?.justificacion.trim() ? captura.justificacion : criterio.descripcion
-    });
-  }
-
-  advertenciaCriterio(captura: CapturaVariable): string | null {
-    const criterios = this.criteriosVariable(captura.variableId);
-    if (criterios.length === 0 || captura.puntaje === null || captura.puntaje === undefined) return null;
-
-    const seleccionado = this.criterioSeleccionado(captura);
-    if (seleccionado && Number(captura.puntaje) !== Number(seleccionado.puntaje)) {
-      return `El puntaje debe coincidir con el criterio seleccionado: ${seleccionado.puntaje}.`;
-    }
-
-    const sugerido = this.criterioSugerido(captura);
-    if (sugerido && Number(captura.puntaje) !== Number(sugerido.puntaje)) {
-      return `Según el valor capturado, el criterio aplicable sugiere ${sugerido.puntaje}.`;
-    }
-
-    if (!seleccionado && !sugerido) {
-      return 'La variable tiene criterios activos; seleccione uno o capture un valor dentro de un rango definido.';
-    }
-
-    return null;
-  }
-
-  colorNivel(nivel?: string | null): string {
-    const escala = this.escalasRiesgoOrdenadas().find(e => e.nivel.toUpperCase() === (nivel ?? '').toUpperCase());
-    if (escala?.color) return escala.color;
-    const normalizado = (nivel ?? '').toUpperCase();
-    if (normalizado.includes('CRIT')) return '#dc2626';
-    if (normalizado.includes('ALTO')) return '#f97316';
-    if (normalizado.includes('MEDIO')) return '#facc15';
-    if (normalizado.includes('BAJO')) return '#22c55e';
-    return '#94a3b8';
-  }
-
-  colorMapaTransicion(nivelInherente?: string | null, nivelResidual?: string | null): string {
-    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
-      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
-      return '#cbd5e1';
-    }
-
-    // Paleta visual diagonal inspirada en el mapa institucional de referencia.
-    // Los niveles ya vienen calculados desde backend; aquí solo se representa su intensidad.
-    const paleta = ['#4ade80', '#86efac', '#bef264', '#fde047', '#facc15', '#fb923c', '#f97316', '#ef4444', '#dc2626'];
-    const niveles = this.escalasRiesgoOrdenadas();
-    const maximo = Math.max(1, niveles.length - 1);
-    const indiceInherente = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelInherente)));
-    const indiceResidual = Math.max(0, niveles.findIndex(n => this.normalizarNivelMapa(n.nivel) === this.normalizarNivelMapa(nivelResidual)));
-    const posicion = Math.round(((indiceInherente + indiceResidual) / (maximo * 2)) * (paleta.length - 1));
-    return paleta[Math.max(0, Math.min(paleta.length - 1, posicion))];
-  }
-
-  colorTextoMapa(nivelInherente?: string | null, nivelResidual?: string | null): string {
-    if (this.normalizarNivelMapa(nivelInherente) === 'SIN_CALCULO'
-      || this.normalizarNivelMapa(nivelResidual) === 'SIN_CALCULO') {
-      return '#334155';
-    }
-    const color = this.colorMapaTransicion(nivelInherente, nivelResidual);
-    return ['#f97316', '#ef4444', '#dc2626'].includes(color) ? '#ffffff' : '#0f172a';
-  }
-
-  tipoSujetoEtiqueta(tipo?: string | null): string {
-    const normalizado = `${tipo ?? ''}`.trim().toUpperCase();
-    return this.tiposSujeto.find(item => item.valor === normalizado)?.texto ?? normalizado.replaceAll('_', ' ');
-  }
-
-  estadoEtiqueta(estado?: string | null): string {
-    return etiquetaEstadoMatriz(estado);
-  }
-
-  estadosGestionablesParaMatriz(estadoActual?: string | null): readonly string[] {
-    return transicionesPermitidasMatriz(estadoActual);
-  }
-
-  puedeEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
-    return puedeEditarMatrizPorEstado(matriz.estado);
-  }
-
-  mensajeBloqueoEditarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
-    return this.puedeEditarMatriz(matriz)
-      ? 'Editar matriz'
-      : 'La matriz solo puede editarse mientras se encuentra En Revisión.';
-  }
-
-  puedeEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): boolean {
-    return puedeEliminarMatrizPorEstado(matriz.estado);
-  }
-
-  mensajeBloqueoEliminarMatriz(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle): string {
-    return this.puedeEliminarMatriz(matriz)
-      ? 'Eliminar matriz'
-      : 'La matriz solo puede eliminarse mientras se encuentra En Revisión.';
-  }
-
-  textoBotonEstado(matriz: MatrizRiesgoResumen | MatrizRiesgoDetalle, estado: string): string {
-    return matriz.estado === 'INACTIVA' && estado === 'EN_REVISION'
-      ? 'Activar'
-      : this.estadoEtiqueta(estado);
-  }
-
-  claseBotonModal(operacion: ModalOperacion | null): string {
-    if (operacion?.tono === 'peligro') return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
-    if (operacion?.tono === 'advertencia') return 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-500';
-    return 'bg-ihss-900 hover:bg-ihss-800 focus:ring-ihss-600';
-  }
-
-  puedeConfirmarModal(): boolean {
-    const operacion = this.modalOperacion();
-    if (!operacion || this.guardando()) return false;
-    const motivo = this.modalMotivoTexto.trim();
-    if (operacion.requiereMotivo && !motivo) return false;
-    if (operacion.tipo === 'estado' && this.existeMotivoCambioEstado(motivo)) return false;
-    return true;
-  }
-
-  private ejecutarCambioEstado(matriz: MatrizRiesgoResumen, estado: string, motivo: string): void {
-    this.guardando.set(true);
-    this.service.cambiarEstado(matriz.matrizId, estado, motivo).subscribe({
-      next: () => this.refrescarDespuesAccion(matriz.matrizId, 'Estado actualizado correctamente.'),
-      error: err => this.finalizarAccionConError(err, 'No se pudo cambiar el estado.')
-    });
-  }
-
-  private ejecutarEliminacionMatriz(matriz: MatrizRiesgoResumen, motivo: string): void {
-    this.guardando.set(true);
-    this.service.eliminarMatriz(matriz.matrizId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Matriz eliminada correctamente.');
-        this.matrizSeleccionada.set(null);
-        this.historial.set([]);
-        this.limpiarFormularioMatriz();
-        this.cargarDashboard();
-        this.cargarReporte();
-        this.cargarMatrices();
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo eliminar la matriz.')
-    });
-  }
-
-  // --- GESTIÓN DE PLANTILLAS Y CICLO DE VIDA (HITO 7.4) ---
-  cargarHistorialVersiones(familiaCodigo: string = 'MATRIZ_RIESGOS_LAFT'): void {
-    this.cargandoVersiones.set(true);
-    this.error.set(null);
-    this.service.listarHistorialVersionesFormulario(familiaCodigo).subscribe({
-      next: (datos) => {
-        this.versionesFormulario.set(datos);
-        this.cargandoVersiones.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cargar el historial de versiones del formulario.'));
-        this.cargandoVersiones.set(false);
-      }
-    });
-  }
-
-  clonarVersion(id: number): void {
-    this.guardando.set(true);
-    this.error.set(null);
-    this.service.clonarVersionFormulario(id).subscribe({
-      next: (nuevaVersion) => {
-        this.mensaje.set(`Se clonó con éxito la versión. Nuevo Borrador creado ID: ${nuevaVersion.datos}`);
-        this.cargarHistorialVersiones();
-        this.guardando.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo clonar la versión seleccionada.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  publicarVersion(id: number): void {
-    this.guardando.set(true);
-    this.error.set(null);
-    this.service.publicarVersionFormulario(id).subscribe({
-      next: (versionPublicada) => {
-        this.cargarHistorialVersiones();
-        this.cargarTodo(); // Recarga formulario vigente transversal
-        this.mensaje.set(`Versión publicada exitosamente. Hash generado: ${versionPublicada.datos?.substring(0, 10)}...`);
-        this.guardando.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'Fallo al publicar la versión de formulario.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  cambiarVigenciaVersion(id: number, vigente: boolean): void {
-    this.guardando.set(true);
-    this.error.set(null);
-    this.service.cambiarEstadoVigenciaFormulario(id, vigente).subscribe({
-      next: () => {
-        this.cargarHistorialVersiones();
-        this.cargarTodo();
-        this.mensaje.set(`Vigencia actualizada correctamente.`);
-        this.guardando.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo cambiar la vigencia de la versión.'));
-        this.guardando.set(false);
-      }
-    });
-  }
-
-  abrirEditorJson(version: VersionFormularioDto): void {
-    this.versionEditarJson.set(version);
-    this.error.set(null);
-
-    let parsed: any = null;
     try {
-      parsed = version.verJson ? JSON.parse(version.verJson) : null;
-    } catch (e) {}
-
-    if (!parsed || typeof parsed !== 'object') {
-      parsed = {
-        codigoFormulario: version.verCodigo || 'FORM_A',
-        nombreFormulario: 'Formulario A',
-        secciones: []
-      };
-    }
-
-    if (!parsed.secciones || !Array.isArray(parsed.secciones)) {
-      parsed.secciones = [];
-    }
-
-    parsed.secciones.forEach((sec: any) => {
-      if (!sec.campos || !Array.isArray(sec.campos)) {
-        sec.campos = [];
-      }
-    });
-
-    this.esquemaDiseno.set(parsed);
-  }
-
-  cancelarEditorJson(): void {
-    this.versionEditarJson.set(null);
-    this.esquemaDiseno.set(null);
-  }
-
-  agregarSeccion(): void {
-    const actual = this.esquemaDiseno();
-    if (!actual) return;
-
-    const nuevasSecciones = [
-      ...actual.secciones,
-      {
-        id: `seccion_${actual.secciones.length + 1}`,
-        titulo: `Nueva Sección ${actual.secciones.length + 1}`,
-        campos: []
-      }
-    ];
-
-    this.esquemaDiseno.set({
-      ...actual,
-      secciones: nuevasSecciones
-    });
-  }
-
-  eliminarSeccion(index: number): void {
-    const actual = this.esquemaDiseno();
-    if (!actual) return;
-
-    const nuevasSecciones = [...actual.secciones];
-    nuevasSecciones.splice(index, 1);
-
-    this.esquemaDiseno.set({
-      ...actual,
-      secciones: nuevasSecciones
-    });
-  }
-
-  agregarCampo(seccionIndex: number): void {
-    const actual = this.esquemaDiseno();
-    if (!actual) return;
-
-    const nuevasSecciones = [...actual.secciones];
-    const seccion = nuevasSecciones[seccionIndex];
-    
-    seccion.campos = [
-      ...seccion.campos,
-      {
-        id: `campo_${seccion.campos.length + 1}`,
-        etiqueta: `Nuevo Campo ${seccion.campos.length + 1}`,
-        tipo: 'texto',
-        obligatorio: false
-      }
-    ];
-
-    this.esquemaDiseno.set({
-      ...actual,
-      secciones: nuevasSecciones
-    });
-  }
-
-  eliminarCampo(seccionIndex: number, campoIndex: number): void {
-    const actual = this.esquemaDiseno();
-    if (!actual) return;
-
-    const nuevasSecciones = [...actual.secciones];
-    const seccion = nuevasSecciones[seccionIndex];
-    seccion.campos = [...seccion.campos];
-    seccion.campos.splice(campoIndex, 1);
-
-    this.esquemaDiseno.set({
-      ...actual,
-      secciones: nuevasSecciones
-    });
-  }
-
-  guardarJsonVersion(): void {
-    const version = this.versionEditarJson();
-    const actual = this.esquemaDiseno();
-    if (!version || !actual) return;
-
-    this.error.set(null);
-    let jsonString = '';
-    try {
-      jsonString = JSON.stringify(actual);
-    } catch (e) {
-      this.error.set('Error interno al generar el esquema del formulario. Intente de nuevo.');
+      JSON.parse(this.definicionTecnica);
+    } catch {
+      this.error.set('La definición técnica no tiene una estructura válida.');
       return;
     }
 
     this.guardando.set(true);
-    this.service.actualizarBorradorFormulario(version.verId, jsonString).subscribe({
+    this.service.actualizarBorradorFormulario(version.verId, this.definicionTecnica).subscribe({
       next: () => {
-        this.mensaje.set('Diseño de plantilla guardado correctamente.');
-        this.cargarHistorialVersiones();
-        this.cancelarEditorJson();
         this.guardando.set(false);
+        this.versionEditando.set(null);
+        this.mensaje.set('Definición del formulario actualizada.');
+        this.cargarVersiones();
       },
-      error: (err: unknown) => {
-        this.error.set(this.obtenerMensajeError(err, 'No se pudo guardar el diseño de la plantilla.'));
+      error: error => {
         this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo actualizar la definición.'));
       }
     });
   }
 
-  private ejecutarInactivacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
+  publicarVersion(version: VersionFormularioDto): void {
     this.guardando.set(true);
-    this.service.inactivarCriterio(criterio.criterioId, motivo).subscribe({
+    this.service.publicarVersionFormulario(version.verId).subscribe({
       next: () => {
-        this.mensaje.set('Criterio desactivado correctamente.');
-        this.cargarCriterios();
         this.guardando.set(false);
-        this.cerrarModal();
+        this.mensaje.set('Versión publicada correctamente.');
+        this.cargarVersiones();
+        this.cargarModulo();
       },
-      error: err => this.finalizarAccionConError(err, 'No se pudo desactivar el criterio.')
-    });
-  }
-
-
-  private ejecutarReactivacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
-    this.guardando.set(true);
-    this.service.reactivarCriterio(criterio.criterioId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Criterio activado correctamente.');
-        this.cargarCriterios();
+      error: error => {
         this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo activar el criterio.')
-    });
-  }
-
-  private ejecutarEliminacionCriterio(criterio: MatrizRiesgoCriterio, motivo: string): void {
-    this.guardando.set(true);
-    this.service.eliminarCriterio(criterio.criterioId, motivo).subscribe({
-      next: () => {
-        this.mensaje.set('Criterio eliminado correctamente.');
-        this.limpiarFormularioCriterio();
-        this.cargarCriterios();
-        this.aplicarCriteriosAutomaticos();
-        this.guardando.set(false);
-        this.cerrarModal();
-      },
-      error: err => this.finalizarAccionConError(err, 'No se pudo eliminar el criterio.')
-    });
-  }
-
-
-  private validarSolapamientoCriterio(): string | null {
-    const variableId = Number(this.criteriosForm.variableId);
-    if (!variableId) return null;
-
-    const desdeNuevo = this.criteriosForm.valorDesde ?? Number.NEGATIVE_INFINITY;
-    const hastaNuevo = this.criteriosForm.valorHasta ?? Number.POSITIVE_INFINITY;
-    const editandoId = this.criterioEditandoId();
-    const conflicto = this.criterios().find(criterio => {
-      if (!criterio.activo || criterio.variableId !== variableId || criterio.criterioId === editandoId) return false;
-      const desdeExistente = criterio.valorDesde ?? Number.NEGATIVE_INFINITY;
-      const hastaExistente = criterio.valorHasta ?? Number.POSITIVE_INFINITY;
-      return desdeExistente <= hastaNuevo && hastaExistente >= desdeNuevo;
-    });
-
-    return conflicto
-      ? `El rango se superpone con el criterio activo ${conflicto.criterioId} (${conflicto.valorDesde ?? '-∞'} a ${conflicto.valorHasta ?? '∞'}).`
-      : null;
-  }
-
-  private prepararCapturaVariables(): void {
-    const existentes = new Map(this.capturasVariables().map(captura => [captura.variableId, captura]));
-    this.capturasVariables.set(this.variablesParaTipoSujeto(this.nuevaMatriz.sujetoTipo).map(variable => ({
-      variableId: variable.variableId,
-      criterioId: existentes.get(variable.variableId)?.criterioId ?? null,
-      puntaje: existentes.get(variable.variableId)?.puntaje ?? null,
-      valorCapturado: existentes.get(variable.variableId)?.valorCapturado ?? '',
-      justificacion: existentes.get(variable.variableId)?.justificacion ?? '',
-      fuenteDato: existentes.get(variable.variableId)?.fuenteDato ?? 'CAPTURA'
-    })));
-  }
-
-  private calcularAutomaticamenteDespuesDeGuardar(matriz: MatrizRiesgoDetalle, fueEdicion: boolean): void {
-    const tipoCalculo = this.tipoCalculoParaSujeto(matriz.sujetoTipo);
-    this.service.calcular(matriz.matrizId, tipoCalculo).subscribe({
-      next: () => {
-        this.mensaje.set(fueEdicion
-          ? 'Matriz actualizada y recalculada automáticamente.'
-          : 'Matriz creada y calculada automáticamente.');
-        this.matrizSeleccionada.set(matriz);
-        this.limpiarFormularioMatriz();
-        this.cargarDashboard();
-        this.cargarReporte();
-        this.cargarMatrices();
-        this.seleccionarMatriz(matriz.matrizId);
-        this.tab.set('matrices');
-        this.guardando.set(false);
-      },
-      error: err => {
-        this.error.set(this.obtenerMensajeError(err, 'La matriz fue guardada, pero no se pudo calcular automáticamente.'));
-        this.matrizSeleccionada.set(matriz);
-        this.cargarMatrices();
-        this.tab.set('matrices');
-        this.guardando.set(false);
+        this.error.set(this.obtenerMensajeError(error, 'No se pudo publicar la versión.'));
       }
     });
   }
 
-  private aplicarCriteriosAutomaticos(): void {
-    this.capturasVariables.set(this.capturasVariables().map(captura => {
-      const sugerido = this.criterioSugerido(captura);
-      if (!sugerido) return captura;
+  private inicializarRespuestas(): void {
+    const actuales = this.respuestas;
+    const iniciales: RespuestasFormulario = {};
+    for (const campo of this.secciones().flatMap(seccion => seccion.campos)) {
+      iniciales[campo.clave] = actuales[campo.clave] ?? null;
+    }
+    this.respuestas = iniciales;
+  }
 
+  private extraerDefinicionVersion(version: VersionFormularioDto | null): DefinicionFormularioEditable {
+    if (!version?.verJson) {
+      return { codigoFormulario: '', nombreFormulario: '', secciones: [] };
+    }
+
+    try {
+      const definicion = JSON.parse(version.verJson) as Partial<DefinicionFormularioEditable>;
       return {
-        ...captura,
-        criterioId: sugerido.criterioId,
-        puntaje: captura.puntaje ?? Number(sugerido.puntaje),
-        justificacion: captura.justificacion.trim() ? captura.justificacion : sugerido.descripcion
+        codigoFormulario: definicion.codigoFormulario ?? version.verCodigo,
+        nombreFormulario: definicion.nombreFormulario ?? version.verCodigo,
+        secciones: Array.isArray(definicion.secciones)
+          ? definicion.secciones.map((seccion, indice) => ({
+              clave: seccion.clave || `seccion_${indice + 1}`,
+              titulo: seccion.titulo || `Sección ${indice + 1}`,
+              orden: Number(seccion.orden ?? indice + 1),
+              campos: Array.isArray(seccion.campos) ? seccion.campos : []
+            }))
+          : [],
+        reglas: Array.isArray(definicion.reglas) ? definicion.reglas : []
       };
-    }));
-  }
-
-  private refrescarDespuesAccion(matrizId: number, mensaje: string): void {
-    this.mensaje.set(mensaje);
-    this.cargarDashboard();
-    this.cargarReporte();
-    this.cargarMatrices();
-    this.seleccionarMatriz(matrizId);
-    this.guardando.set(false);
-    this.cerrarModal();
-  }
-
-  private finalizarAccionConError(err: unknown, mensajeDefault: string): void {
-    const mensaje = this.obtenerMensajeError(err, mensajeDefault);
-    if (this.modalOperacion()) {
-      this.modalError.set(mensaje);
-    } else {
-      this.error.set(mensaje);
+    } catch {
+      return { codigoFormulario: version.verCodigo, nombreFormulario: version.verCodigo, secciones: [] };
     }
-    this.guardando.set(false);
   }
 
-  private validarCapturasContraCriterios(): string | null {
-    // Si el usuario selecciona un criterio, el puntaje debe coincidir con ese
-    // rango para evitar evaluaciones manuales inconsistentes.
-    for (const captura of this.capturasVariables()) {
-      if (captura.puntaje === null || captura.puntaje === undefined) continue;
-
-      const advertencia = this.advertenciaCriterio(captura);
-      if (advertencia) {
-        return `${this.variableNombre(captura.variableId)}: ${advertencia}`;
-      }
+  private parsearRespuestas(contenido: string): RespuestasFormulario {
+    try {
+      const valor = JSON.parse(contenido);
+      return valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {};
+    } catch {
+      return {};
     }
-
-    return null;
   }
 
-  private actualizarCaptura(variableId: number, cambios: Partial<CapturaVariable>): void {
-    this.capturasVariables.set(this.capturasVariables().map(captura =>
-      captura.variableId === variableId ? { ...captura, ...cambios } : captura
-    ));
-  }
-
-  private numeroSeguro(valor: string): number | null {
-    const normalizado = `${valor ?? ''}`.trim().replace(',', '.');
-    if (!normalizado) return null;
-    const numero = Number(normalizado);
-    return Number.isFinite(numero) ? numero : null;
-  }
-
-  existeMotivoCambioEstado(motivo: string): boolean {
-    const motivoNormalizado = motivo.trim().toUpperCase();
-    if (!motivoNormalizado) return false;
-
-    return this.historial().some(item =>
-      item.accion?.toUpperCase() === 'CAMBIO_ESTADO'
-      && (item.motivo ?? '').trim().toUpperCase() === motivoNormalizado
-    );
-  }
-
-  private deduplicarHistorial(datos: MatrizRiesgoHistorial[]): MatrizRiesgoHistorial[] {
-    // Limpia repeticiones visuales causadas por reintentos rápidos sin eliminar
-    // trazabilidad real en base de datos.
-    const vistos = new Set<string>();
-    return datos.filter(item => {
-      const fecha = item.fecha ? new Date(item.fecha) : null;
-      const fechaMinuto = fecha && !Number.isNaN(fecha.getTime())
-        ? `${fecha.getFullYear()}-${fecha.getMonth()}-${fecha.getDate()} ${fecha.getHours()}:${fecha.getMinutes()}`
-        : item.fecha;
-      const key = [
-        item.accion,
-        item.tabla,
-        item.registroId,
-        item.estadoAnterior ?? '',
-        item.estadoNuevo ?? '',
-        (item.motivo ?? '').trim().toUpperCase(),
-        fechaMinuto
-      ].join('|');
-      if (vistos.has(key)) return false;
-      vistos.add(key);
-      return true;
-    });
-  }
-
-
-  obtenerMatricesReporte(reporte: MatricesRiesgoReporte | null = this.reporte()): MatrizRiesgoResumen[] {
-    return reporte?.matricesFiltradas ?? [];
-  }
-
-  private descargarBlob(blob: Blob, nombre: string): void {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  private async crearVistaPreviaDesdeBlob(blob: Blob, nombre: string, tipoMime: string): Promise<void> {
-    this.cerrarVistaPreviaEvidencia();
-    if (!blob.size) {
-      this.evidenciaPreview.set({
-        nombre,
-        tipoMime: tipoMime || 'application/octet-stream',
-        tamanoBytes: 0,
-        url: null,
-        urlSegura: null,
-        tipoVista: 'generico',
-        cargando: false,
-        error: 'El archivo no contiene datos para mostrar en vista previa.'
-      });
-      return;
+  private formatearDefinicion(contenido: string): string {
+    try {
+      return JSON.stringify(JSON.parse(contenido), null, 2);
+    } catch {
+      return contenido;
     }
-
-    const mimeDetectado = await this.detectarMimeVistaPrevia(blob, nombre, tipoMime || blob.type);
-    const mime = mimeDetectado || tipoMime || blob.type || 'application/octet-stream';
-    const url = URL.createObjectURL(blob);
-    const tipoVista = this.tipoVistaPorMime(mime, nombre);
-    const preview: EvidenciaPreview = {
-      nombre,
-      tipoMime: mime,
-      tamanoBytes: blob.size,
-      url,
-      urlSegura: this.sanitizer.bypassSecurityTrustResourceUrl(url),
-      tipoVista,
-      cargando: false
-    };
-
-    if (tipoVista === 'texto') {
-      try {
-        preview.texto = await blob.text();
-      } catch {
-        preview.error = 'No se pudo leer el contenido de texto del archivo.';
-      }
-    }
-
-    this.evidenciaPreview.set(preview);
   }
 
-  private tipoVistaPorMime(tipoMime: string, nombre: string): EvidenciaPreview['tipoVista'] {
-    const mime = `${tipoMime || ''}`.toLowerCase();
-    const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
-    if (mime.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'].includes(extension)) return 'imagen';
-    if (mime === 'application/pdf' || extension === 'pdf') return 'pdf';
-    if (mime.startsWith('text/') || ['txt', 'csv', 'json', 'xml', 'log'].includes(extension)) return 'texto';
-    if ([
-      'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp'
-    ].includes(extension) || mime.includes('word') || mime.includes('excel') || mime.includes('spreadsheet') || mime.includes('presentation') || mime.includes('officedocument')) {
-      return 'office';
-    }
-    return 'generico';
+  private tieneValor(valor: unknown): boolean {
+    return valor !== null && valor !== undefined && `${valor}`.trim() !== '';
   }
 
-  private async detectarMimeVistaPrevia(blob: Blob, nombre: string, tipoMime?: string): Promise<string> {
-    const mime = `${tipoMime || blob.type || ''}`.toLowerCase();
-    if (mime && mime !== 'application/octet-stream') return mime;
-
-    const extension = nombre.split('.').pop()?.toLowerCase() ?? '';
-    const porExtension: Record<string, string> = {
-      png: 'image/png',
-      jpg: 'image/jpeg',
-      jpeg: 'image/jpeg',
-      gif: 'image/gif',
-      webp: 'image/webp',
-      bmp: 'image/bmp',
-      pdf: 'application/pdf',
-      txt: 'text/plain',
-      csv: 'text/csv',
-      json: 'application/json',
-      xml: 'text/xml',
-      log: 'text/plain',
-      doc: 'application/msword',
-      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      xls: 'application/vnd.ms-excel',
-      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      ppt: 'application/vnd.ms-powerpoint',
-      pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-    };
-    if (porExtension[extension]) return porExtension[extension];
-
-    const bytes = new Uint8Array(await blob.slice(0, 16).arrayBuffer());
-    const firma = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
-    if (firma.startsWith('89 50 4e 47')) return 'image/png';
-    if (firma.startsWith('ff d8 ff')) return 'image/jpeg';
-    if (firma.startsWith('47 49 46 38')) return 'image/gif';
-    if (firma.startsWith('25 50 44 46')) return 'application/pdf';
-    if (firma.startsWith('50 4b 03 04')) return 'application/zip';
-
-    return mime || 'application/octet-stream';
+  private finalizarConError(error: unknown, mensaje: string): void {
+    this.cargando.set(false);
+    this.error.set(this.obtenerMensajeError(error, mensaje));
   }
 
-  private validarTamanoVistaPrevia(tamanoBytes: number): boolean {
-    const maxBytes = 10 * 1024 * 1024;
-    if (tamanoBytes <= maxBytes) return true;
-    this.error.set('La vista previa solo está disponible para archivos de hasta 10 MB.');
-    return false;
-  }
-
-  private fechaArchivo(): string {
-    return new Date().toISOString().slice(0, 19).replace(/-/g, '').replace(/:/g, '').replace('T', '');
-  }
-
-  private fechaLocalIso(fecha: Date): string {
-    const anio = fecha.getFullYear();
-    const mes = `${fecha.getMonth() + 1}`.padStart(2, '0');
-    const dia = `${fecha.getDate()}`.padStart(2, '0');
-    return `${anio}-${mes}-${dia}`;
-  }
-
-  formatearFecha(valor: string | Date | null | undefined): string {
-    if (!valor) return '';
-    const fecha = new Date(valor);
-    return Number.isNaN(fecha.getTime()) ? `${valor}` : fecha.toLocaleDateString('es-HN');
-  }
-
-  formatearFechaHora(valor: string | Date | null | undefined): string {
-    if (!valor) return '';
-    const fecha = new Date(valor);
-    return Number.isNaN(fecha.getTime()) ? `${valor}` : fecha.toLocaleString('es-HN');
-  }
-
-  private formatearResultado(puntaje: number | null | undefined, nivel: string | null | undefined): string {
-    if (puntaje === null || puntaje === undefined) return '-';
-    return `${puntaje} ${nivel || ''}`.trim();
-  }
-
-  private limpiarFormularioMatriz(): void {
-    this.matrizEditandoId.set(null);
-    this.capturasVariables.set([]);
-    this.matricesDuplicadas.set([]);
-    this.nuevaMatriz = {
-      sujetoTipo: 'PROVEEDOR',
-      sujetoIdExt: '',
-      documento: '',
-      nombreSujeto: '',
-      origenDatos: 'CAPTURA'
-    };
-    this.nuevoControl = {
-      factorId: null,
-      nombre: '',
-      descripcion: '',
-      periodicidad: '',
-      oportunidad: '',
-      automatizacion: '',
-      procedimientos: '',
-      calidad: '',
-      efectividadPct: this.mitigacionesPermitidasOrdenadas()[0] ?? 0,
-      responsable: '',
-      evidenciaObligatoria: false
-    };
-    this.prepararCapturaVariables();
-  }
-
-  private factorCodigoPorTipoSujeto(tipo: string): string | null {
-    const normalizado = `${tipo ?? ''}`.trim().toUpperCase();
-    if (normalizado === 'PROVEEDOR') return 'PROVEEDORES';
-    if (normalizado === 'CLIENTE_PATRONO') return 'CLIENTES_PATRONOS';
-    if (normalizado === 'EMPLEADO') return 'EMPLEADOS';
-    return null;
-  }
-
-  factorCapturaActual(): { factorId: number; factorCodigo: string; factorNombre: string; variables: VariableMetodologia[] } | null {
-    const factorCodigo = this.factorCodigoPorTipoSujeto(this.nuevaMatriz.sujetoTipo);
-    if (!factorCodigo) return null;
-    return this.variablesPorFactor().find(g => g.factorCodigo === factorCodigo) ?? null;
-  }
-
-  factoresControlDisponibles(): { factorId: number; factorCodigo: string; factorNombre: string; variables: VariableMetodologia[] }[] {
-    const factor = this.factorCapturaActual();
-    return factor ? [factor] : this.variablesPorFactor();
-  }
-
-  private variablesParaTipoSujeto(tipo: string): VariableMetodologia[] {
-    const variables = this.metodologia()?.variables ?? [];
-    const factorCodigo = this.factorCodigoPorTipoSujeto(tipo);
-    if (!factorCodigo) return variables;
-    return variables.filter(variable => variable.factorCodigo === factorCodigo);
-  }
-
-  tipoCalculoParaSujeto(tipo: string): 'GLOBAL' | 'FACTOR' {
-    return this.factorCodigoPorTipoSujeto(tipo) ? 'FACTOR' : 'GLOBAL';
-  }
-
-  etiquetaTipoSujeto(tipo: string): string {
-    return this.tiposSujeto.find(x => x.valor === tipo)?.texto ?? tipo;
-  }
-
-  private ajustarFactorControlAlTipoSujeto(): void {
-    const factorId = this.factorCapturaActual()?.factorId ?? null;
-    this.nuevoControl = { ...this.nuevoControl, factorId };
-  }
-
-  private obtenerMensajeError(err: unknown, mensajeDefault: string): string {
-    const error = err as { error?: { mensaje?: string; detalle?: string }; message?: string };
-    return error?.error?.mensaje || error?.error?.detalle || error?.message || mensajeDefault;
+  private obtenerMensajeError(error: unknown, mensaje: string): string {
+    const respuesta = error as { error?: { mensaje?: string }; message?: string };
+    return respuesta?.error?.mensaje || respuesta?.message || mensaje;
   }
 }
