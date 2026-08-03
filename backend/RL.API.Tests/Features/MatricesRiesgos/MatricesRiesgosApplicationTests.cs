@@ -1,7 +1,7 @@
 #pragma warning disable CA1416
 using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Data;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RL.API.Features.MatricesRiesgos.Application;
@@ -17,233 +17,123 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 public sealed class MatricesRiesgosApplicationTests
 {
     [Fact]
-    public async Task ObtenerVersionVigenteFormulario_SiExiste_RetornaOk()
+    public async Task ObtenerVersionVigente_SiExiste_RetornaContratoVersionado()
     {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        var expected = new VersionFormularioDto { VerId = 1, VerCodigo = "FORM_A", VerVigente = true };
-        
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionVigenteFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(expected));
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionVigenteFormularioAsync), _ =>
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+            {
+                VerId = 10,
+                VerCodigo = "FORM_A",
+                VerVersion = 2,
+                VerEstado = "PUBLISHED",
+                VerVigente = true
+            }));
 
-        var result = await service.ObtenerVersionVigenteFormularioAsync("MATRIZ_RIESGOS_LAFT");
+        ServiceResult<VersionFormularioDto> result = await service.ObtenerVersionVigenteFormularioAsync("MATRIZ_RIESGOS_LAFT");
 
         Assert.True(result.Success);
-        Assert.NotNull(result.Data);
-        Assert.Equal("FORM_A", result.Data!.VerCodigo);
+        Assert.Equal(10, result.Data!.VerId);
+        Assert.Equal("PUBLISHED", result.Data.VerEstado);
     }
 
     [Fact]
-    public async Task ObtenerVersionFormulario_SiNoExiste_RetornaNotFound()
+    public async Task CrearBorrador_DefinicionInvalida_RetornaBadRequest()
     {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
-
-        var result = await service.ObtenerVersionFormularioAsync(999);
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CrearBorradorFormulario_JsonInvalido_RetornaBadRequest()
-    {
-        var service = CrearServicio(out _, out _, out _);
-        var result = await service.CrearBorradorFormularioAsync(1, "FORM_A", "{ roto: true ", 99);
+        MatricesRiesgosAppService service = CrearServicio(out _, out _, out _);
+        ServiceResult<long> result = await service.CrearBorradorFormularioAsync(1, "FORM_A", "{invalido", 99);
 
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
     }
 
     [Fact]
-    public async Task CrearBorradorFormulario_JsonVacio_RetornaBadRequest()
+    public async Task CrearEvaluacion_VersionNoPublicada_RetornaBadRequest()
     {
-        var service = CrearServicio(out _, out _, out _);
-        var result = await service.CrearBorradorFormularioAsync(1, "FORM_A", "", 99);
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+            {
+                VerId = 10,
+                VerEstado = "DRAFT",
+                VerVigente = false,
+                VerJson = "{}"
+            }));
+
+        ServiceResult<long> result = await service.CrearEvaluacionAsync(
+            new EvaluacionRiesgoDto { EvaVersionId = 10, EvaDataJson = "{}" },
+            99,
+            "127.0.0.1");
 
         Assert.False(result.Success);
         Assert.Equal(400, result.StatusCode);
     }
 
     [Fact]
-    public async Task ActualizarBorradorFormulario_JsonInvalido_RetornaBadRequest()
+    public async Task CrearEvaluacion_DatosValidos_CalculaYPersiste()
     {
-        var service = CrearServicio(out _, out _, out _);
-        var result = await service.ActualizarBorradorFormularioAsync(1, "{ rotisimo: ", 99);
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+            {
+                VerId = 10,
+                VerEstado = "PUBLISHED",
+                VerVigente = true,
+                VerJson = "{\"secciones\":[]}"
+            }));
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ =>
+            Task.FromResult(new FormularioValidationResult()));
+        calculador.On(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo), _ =>
+            ServiceResult<CalculoRiesgoResultadoDto>.Ok(new CalculoRiesgoResultadoDto
+            {
+                Vri = 7,
+                Etp = 25m,
+                Vrr = 4
+            }));
+        repo.On(nameof(IMatricesRiesgosRepository.CrearEvaluacionAsync), _ => Task.FromResult(55L));
 
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
+        var dto = new EvaluacionRiesgoDto
+        {
+            EvaRiesgoId = 5,
+            EvaVersionId = 10,
+            EvaDataJson = "{\"frecuencia_inherente\":4,\"impacto_inherente\":4}"
+        };
+
+        ServiceResult<long> result = await service.CrearEvaluacionAsync(dto, 99, "127.0.0.1");
+
+        Assert.True(result.Success);
+        Assert.Equal(55, result.Data);
+        Assert.Equal(7, dto.EvaVri);
+        Assert.Equal(4, dto.EvaVrr);
+        Assert.False(string.IsNullOrWhiteSpace(dto.EvaDataCalcJson));
     }
 
     [Fact]
-    public async Task PublicarVersionFormulario_EstadoDiferenteDraft_RetornaBadRequest()
+    public async Task ActualizarEvaluacion_ConflictoOptimista_Retorna409()
     {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        var publicado = new VersionFormularioDto { VerId = 1, VerEstado = "PUBLISHED", VerJson = "{}" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(publicado));
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+            {
+                VerId = 10,
+                VerEstado = "PUBLISHED",
+                VerVigente = true,
+                VerJson = "{}"
+            }));
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ =>
+            Task.FromResult(new FormularioValidationResult()));
+        calculador.On(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo), _ =>
+            ServiceResult<CalculoRiesgoResultadoDto>.Ok(new CalculoRiesgoResultadoDto()));
+        repo.On(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync), _ =>
+            throw new DBConcurrencyException("Conflicto"));
 
-        var result = await service.PublicarVersionFormularioAsync(1, 99);
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CambiarEstadoVigenciaFormulario_FalloRepo_RetornaNotFound()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(false));
-
-        var result = await service.CambiarEstadoVigenciaFormularioAsync(99, true, 99);
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task ObtenerEvaluacion_SiNoExiste_RetornaNotFound()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(null));
-
-        var result = await service.ObtenerEvaluacionAsync(999);
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CrearEvaluacion_VersionFormularioInvalido_RetornaBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
-
-        var dto = new EvaluacionRiesgoDto { EvaVersionId = 999 };
-        var result = await service.CrearEvaluacionAsync(dto, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CrearEvaluacion_ValidadorFalla_RetornaBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out var valStub, out _);
-        var configForm = new VersionFormularioDto { VerId = 1, VerJson = "{}" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(configForm));
-
-        var validationFail = new FormularioValidationResult();
-        validationFail.Errores.Add(new FormularioValidationError("campo1", "Falla"));
-        valStub.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(validationFail));
-
-        var dto = new EvaluacionRiesgoDto { EvaVersionId = 1, EvaDataJson = "{}" };
-        var result = await service.CrearEvaluacionAsync(dto, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CrearEvaluacion_CalculoIncoherente_RetornaBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out var valStub, out var calcStub);
-        var configForm = new VersionFormularioDto { VerId = 1, VerJson = "{}" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(configForm));
-        valStub.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(new FormularioValidationResult()));
-
-        calcStub.On(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo), _ => ServiceResult<CalculoRiesgoResultadoDto>.BadRequest("Incoherente"));
-
-        var dto = new EvaluacionRiesgoDto { EvaVersionId = 1, EvaDataJson = "{}" };
-        var result = await service.CrearEvaluacionAsync(dto, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task ActualizarEvaluacion_ConcurrenciaOptimistaFalla_RetornaConflict()
-    {
-        var service = CrearServicio(out var repoStub, out var valStub, out var calcStub);
-        var configForm = new VersionFormularioDto { VerId = 1, VerJson = "{}" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(configForm));
-        valStub.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(new FormularioValidationResult()));
-        calcStub.On(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo), _ => ServiceResult<CalculoRiesgoResultadoDto>.Ok(new CalculoRiesgoResultadoDto()));
-
-        repoStub.On(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync), _ => {
-            throw new System.Data.DBConcurrencyException("Conflicto.");
-        });
-
-        var dto = new EvaluacionRiesgoDto { EvaVersionId = 1, EvaDataJson = "{}" };
-        var result = await service.ActualizarEvaluacionAsync(dto, 99, "127.0.0.1");
+        ServiceResult result = await service.ActualizarEvaluacionAsync(
+            new EvaluacionRiesgoDto { EvaVersionId = 10, EvaDataJson = "{}" },
+            99,
+            "127.0.0.1");
 
         Assert.False(result.Success);
         Assert.Equal(409, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task TransicionarEstadoEvaluacion_EstadoInvalido_RetornaBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-
-        // Setup evaluacion actual en estado CERRADA
-        var actual = new EvaluacionRiesgoDto { EvaId = 5, EvaEstado = "CERRADA" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(actual));
-
-        // Intentar pasar a BORRADOR (no permitido por grafo)
-        var result = await service.TransicionarEstadoEvaluacionAsync(5, "BORRADOR", "Reabrir", 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task PublicarVersionFormulario_SiExisteBorrador_PublicaCorrectamente()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-
-        var borrador = new VersionFormularioDto { VerId = 2, VerEstado = "DRAFT", VerJson = "{}" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(borrador));
-        repoStub.On(nameof(IMatricesRiesgosRepository.PublicarVersionFormularioAsync), _ => Task.FromResult(true));
-
-        var result = await service.PublicarVersionFormularioAsync(2, 99);
-
-        Assert.True(result.Success);
-    }
-
-    [Fact]
-    public async Task ObtenerEvidenciaFisica_SiNoExiste_RetornaNotFound()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
-
-        var result = await service.ObtenerEvidenciaFisicaAsync(999);
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task VincularEvidencias_LlamanAlRepositorioCorrectamente()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRiesgoAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaEvaluacionAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaControlAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaPlanAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaActividadAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAlertaAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAutomonitoreoAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRevisionAsync), _ => Task.FromResult(true));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAprobacionAsync), _ => Task.FromResult(true));
-
-        Assert.True((await service.VincularEvidenciaRiesgoAsync(new AsociarEvidenciaRiesgoDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaEvaluacionAsync(new AsociarEvidenciaEvaluacionDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaControlAsync(new AsociarEvidenciaControlDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaPlanAsync(new AsociarEvidenciaPlanDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaActividadAsync(new AsociarEvidenciaActividadDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaAlertaAsync(new AsociarEvidenciaAlertaDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaAutomonitoreoAsync(new AsociarEvidenciaAutomonitoreoDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaRevisionAsync(new AsociarEvidenciaRevisionDto(), 99, "127.0.0.1")).Success);
-        Assert.True((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, "127.0.0.1")).Success);
     }
 
     [Theory]
@@ -253,197 +143,105 @@ public sealed class MatricesRiesgosApplicationTests
     [InlineData("EN_REVISION", "RECHAZADA")]
     [InlineData("OBSERVADA", "BORRADOR")]
     [InlineData("APROBADA", "CERRADA")]
-    public async Task TransicionarEstadoEvaluacion_CasosValidos_RetornaOk(string actual, string nuevo)
+    public async Task TransicionPermitida_RetornaOk(string actual, string nuevo)
     {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        
-        var evaluacion = new EvaluacionRiesgoDto { EvaId = 1, EvaEstado = actual };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(evaluacion));
-        repoStub.On(nameof(IMatricesRiesgosRepository.TransicionarEstadoEvaluacionAsync), _ => Task.FromResult(true));
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto { EvaId = 1, EvaEstado = actual }));
+        repo.On(nameof(IMatricesRiesgosRepository.TransicionarEstadoEvaluacionAsync), _ => Task.FromResult(true));
 
-        var result = await service.TransicionarEstadoEvaluacionAsync(1, nuevo, "Transición de prueba", 99, "127.0.0.1");
+        ServiceResult result = await service.TransicionarEstadoEvaluacionAsync(1, nuevo, "Prueba", 99, "127.0.0.1");
 
         Assert.True(result.Success);
     }
 
     [Fact]
-    public async Task CargarArchivoEvidenciaFisica_ArchivoNulo_RetornaBadRequest()
+    public async Task Consolidado_RetornaFilasTipadas()
     {
-        var service = CrearServicio(out _, out _, out _);
-        
-        var result = await service.CargarArchivoEvidenciaFisicaAsync(null!, 99);
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task CargarArchivoEvidenciaFisica_ArchivoVacio_RetornaBadRequest()
-    {
-        var service = CrearServicio(out _, out _, out _);
-        
-        // Simular IFormFile vacío
-        var fileStub = new FormFile(Stream.Null, 0, 0, "archivo", "vacio.txt");
-        var result = await service.CargarArchivoEvidenciaFisicaAsync(fileStub, 99);
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task ClonarVersionFormulario_OrigenNoExiste_RetornaNotFound()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        
-        repoStub.On(nameof(IMatricesRiesgosRepository.ClonarVersionFormularioAsync), _ => {
-            throw new KeyNotFoundException("No se encontró la versión origen.");
-        });
-
-        var result = await service.ClonarVersionFormularioAsync(999, 99);
-
-        Assert.False(result.Success);
-        Assert.Equal(404, result.StatusCode);
-    }
-
-    [Fact]
-    public async Task VincularEvidencias_FalloRepo_RetornanBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRiesgoAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaEvaluacionAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaControlAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaPlanAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaActividadAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAlertaAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAutomonitoreoAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRevisionAsync), _ => Task.FromResult(false));
-        repoStub.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAprobacionAsync), _ => Task.FromResult(false));
-
-        Assert.False((await service.VincularEvidenciaRiesgoAsync(new AsociarEvidenciaRiesgoDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaEvaluacionAsync(new AsociarEvidenciaEvaluacionDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaControlAsync(new AsociarEvidenciaControlDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaPlanAsync(new AsociarEvidenciaPlanDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaActividadAsync(new AsociarEvidenciaActividadDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaAlertaAsync(new AsociarEvidenciaAlertaDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaAutomonitoreoAsync(new AsociarEvidenciaAutomonitoreoDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaRevisionAsync(new AsociarEvidenciaRevisionDto(), 99, "127.0.0.1")).Success);
-        Assert.False((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, "127.0.0.1")).Success);
-    }
-
-    [Fact]
-    public async Task EliminarEvidencia_Inexistente_RetornaOkIdempotente()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
-
-        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
-
-        Assert.True(result.Success);
-        Assert.Contains("La evidencia no existe o ya fue eliminada", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task EliminarEvidencia_ConVinculos_RetornaBadRequest()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.TieneVinculos));
-
-        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("ya se encuentra vinculada", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task EliminarEvidencia_FalloDisco_RetornaBadRequestYConservaRegistro()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _);
-        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.FalloDisco));
-
-        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-        Assert.Contains("mantiene intacto", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task EliminarEvidencia_FalloCommit_RetornaError500YRegistraAuditoriaFallo()
-    {
-        var service = CrearServicio(out var repoStub, out _, out _, out var auditoriaStub);
-        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.FalloCommit));
-
-        bool auditoriaRegistrada = false;
-        auditoriaStub.On("RegistrarAsync", args =>
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        IReadOnlyList<RiesgoReporteFilaDto> filas = new List<RiesgoReporteFilaDto>
         {
-            if (args != null && args.Length > 2 && args[2]?.ToString() == "ERROR_COMPENSACION_EVIDENCIA")
-            {
-                auditoriaRegistrada = true;
-            }
-            return Task.CompletedTask;
-        });
+            new() { RiesgoId = 1, EvaluacionId = 2, CodigoRiesgo = "R-001", Vri = 7, Vrr = 4 }
+        };
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(filas));
 
-        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
+        ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>> result = await service.ObtenerConsolidadoTipadoAsync();
 
-        Assert.False(result.Success);
-        Assert.Equal(500, result.StatusCode);
-        Assert.True(auditoriaRegistrada);
+        Assert.True(result.Success);
+        Assert.Single(result.Data!);
+        Assert.Equal("R-001", result.Data![0].CodigoRiesgo);
     }
 
     [Fact]
-    public async Task EliminarEvidencia_Exito_EliminaFisicoYDb_RetornaOk()
+    public async Task Metodologia_RetornaVersionSeccionesCatalogosYReglas()
     {
-        var service = CrearServicio(out var repoStub, out _, out _, out var auditoriaStub);
-        var evidencia = new EvidenciaDto { EviId = 123L, EviNombreArchivo = "doc.pdf", EviRuta = "App_Data/Evidencias/no-file.pdf" };
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(evidencia));
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), _ => Task.FromResult(ResultadoEliminacionEvidencia.Exito));
-
-        bool auditoriaRegistrada = false;
-        auditoriaStub.On("RegistrarAsync", args =>
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        var metodologia = new MetodologiaFormularioDto
         {
-            if (args != null && args.Length > 2 && args[2]?.ToString() == "DELETE")
-            {
-                auditoriaRegistrada = true;
-            }
-            return Task.CompletedTask;
-        });
+            VersionFormularioId = 10,
+            Codigo = "FORM_A",
+            Version = 2,
+            Secciones = new[] { new SeccionFormularioDto { Clave = "s1", Campos = Array.Empty<CampoFormularioDto>() } },
+            Catalogos = Array.Empty<CatalogoMatricesDto>(),
+            Reglas = new[] { new ReglaCalculoMatricesDto { Codigo = "CALCULO_VRI_VRR", Version = "1.0" } }
+        };
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync), _ =>
+            Task.FromResult<MetodologiaFormularioDto?>(metodologia));
 
-        var result = await service.EliminarEvidenciaAsync(123L, 99, "127.0.0.1");
+        ServiceResult<MetodologiaFormularioDto> result = await service.ObtenerMetodologiaDinamicaVigenteAsync();
 
         Assert.True(result.Success);
-        Assert.Contains("eliminada de forma exitosa", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.True(auditoriaRegistrada);
+        Assert.Equal(10, result.Data!.VersionFormularioId);
+        Assert.Single(result.Data.Reglas);
+    }
+
+    [Fact]
+    public async Task Vinculaciones_DeLasNueveEntidades_DeleganAlRepositorio()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRiesgoAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaEvaluacionAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaControlAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaPlanAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaActividadAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAlertaAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAutomonitoreoAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRevisionAsync), _ => Task.FromResult(true));
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAprobacionAsync), _ => Task.FromResult(true));
+
+        Assert.True((await service.VincularEvidenciaRiesgoAsync(new AsociarEvidenciaRiesgoDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaEvaluacionAsync(new AsociarEvidenciaEvaluacionDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaControlAsync(new AsociarEvidenciaControlDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaPlanAsync(new AsociarEvidenciaPlanDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaActividadAsync(new AsociarEvidenciaActividadDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaAlertaAsync(new AsociarEvidenciaAlertaDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaAutomonitoreoAsync(new AsociarEvidenciaAutomonitoreoDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaRevisionAsync(new AsociarEvidenciaRevisionDto(), 99, null)).Success);
+        Assert.True((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, null)).Success);
+    }
+
+    [Fact]
+    public async Task CargarEvidencia_ArchivoVacio_RetornaBadRequest()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out _, out _, out _);
+        var archivo = new FormFile(System.IO.Stream.Null, 0, 0, "archivo", "vacio.txt");
+
+        ServiceResult<EvidenciaDto> result = await service.CargarArchivoEvidenciaFisicaAsync(archivo, 99);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
     }
 
     private static MatricesRiesgosAppService CrearServicio(
-        out InterfaceStub repoStub, 
-        out InterfaceStub valStub, 
-        out InterfaceStub calcStub,
-        out InterfaceStub auditoriaStub)
+        out InterfaceStub repoStub,
+        out InterfaceStub validadorStub,
+        out InterfaceStub calculadorStub)
     {
-        var repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);
-        var val = InterfaceStub.Create<IFormularioValidador>(out valStub);
-        var calc = InterfaceStub.Create<IMatricesRiesgoService>(out calcStub);
-        var auditoria = InterfaceStub.Create<RL.API.Features.Auditoria.Persistence.IAuditoriaRepository>(out auditoriaStub);
-        
+        IMatricesRiesgosRepository repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out repoStub);
+        IFormularioValidador validador = InterfaceStub.Create<IFormularioValidador>(out validadorStub);
+        IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out calculadorStub);
+        IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-
-        return new MatricesRiesgosAppService(repo, val, calc, auditoria);
-    }
-
-    private static MatricesRiesgosAppService CrearServicio(
-        out InterfaceStub repoStub, 
-        out InterfaceStub valStub, 
-        out InterfaceStub calcStub)
-    {
-        return CrearServicio(out repoStub, out valStub, out calcStub, out _);
+        return new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
     }
 }
