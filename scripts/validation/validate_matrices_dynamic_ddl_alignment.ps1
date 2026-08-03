@@ -12,7 +12,15 @@ $scanRoots = @(
 )
 
 $extensions = @('.cs', '.ts', '.html', '.sql', '.json')
-$excludedDirectoryNames = @('bin', 'obj', 'node_modules', 'dist', 'coverage', 'Historico')
+$excludedDirectoryNames = @(
+    'bin',
+    'obj',
+    'node_modules',
+    'dist',
+    'coverage',
+    'Historico',
+    'retiro_controlado'
+)
 $errors = New-Object System.Collections.Generic.List[string]
 
 if (-not (Test-Path -LiteralPath $script05)) {
@@ -50,8 +58,9 @@ foreach ($root in $scanRoots) {
     }
 
     Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
-        $extensions -contains $_.Extension.ToLowerInvariant() -and
-        -not ($_.FullName -split [IO.Path]::DirectorySeparatorChar | Where-Object { $excludedDirectoryNames -contains $_ })
+        $pathParts = $_.FullName -split [IO.Path]::DirectorySeparatorChar
+        $isExcluded = @($pathParts | Where-Object { $excludedDirectoryNames -contains $_ }).Count -gt 0
+        ($extensions -contains $_.Extension.ToLowerInvariant()) -and -not $isExcluded
     } | ForEach-Object { $sourceFiles.Add($_) }
 }
 
