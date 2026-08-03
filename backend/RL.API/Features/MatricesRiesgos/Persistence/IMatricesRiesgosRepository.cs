@@ -42,7 +42,7 @@ public interface IMatricesRiesgosRepository
     // ============================================================
     Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId);
     Task<EvidenciaDto?> ObtenerEvidenciaFisicaAsync(long evidenciaId);
-    
+
     Task<bool> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip);
@@ -52,17 +52,16 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
-    
+
     Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, System.Func<System.Threading.Tasks.Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
+    // ============================================================
+    // 4. REPORTES CONSOLIDADOS TIPADOS
+    // ============================================================
+    Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoMatricesAsync();
 
     // ============================================================
-    // 4. REPORTES CONSOLIDADOS Y CATÁLOGOS PARAMÉTRICOS
+    // 5. METODOLOGÍA DINÁMICA VIGENTE
     // ============================================================
-    Task<List<Dictionary<string, object>>> ObtenerConsolidadoMatricesAsync();
-
-    // ============================================================
-    // 5. METODOLOGÍA VIGENTE
-    // ============================================================
-    Task<MetodologiaMatricesDto?> ObtenerMetodologiaVigenteAsync();
+    Task<MetodologiaFormularioDto?> ObtenerMetodologiaVigenteAsync();
 }
