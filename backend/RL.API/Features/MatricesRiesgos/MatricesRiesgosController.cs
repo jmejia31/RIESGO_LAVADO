@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -16,7 +15,7 @@ namespace RL.API.Features.MatricesRiesgos;
 
 [ApiController]
 [Authorize]
-[ModuloAuthorize(10)] // Modulo 10 de Matrices de Riesgos en el SGRLA
+[ModuloAuthorize(10)]
 [Route("api/matrices-riesgos")]
 [Produces("application/json")]
 public sealed class MatricesRiesgosController : ControllerBase
@@ -31,7 +30,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     // ============================================================
-    // 1. ENDPOINTS DE ADMINISTRACIÓN DEL CICLO DE VIDA DEL FORMULARIO
+    // 1. ADMINISTRACIÓN DEL CICLO DE VIDA DEL FORMULARIO
     // ============================================================
 
     [HttpPost("formularios/borrador")]
@@ -135,7 +134,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     // ============================================================
-    // 2. ENDPOINTS OPERATIVOS DE EVALUACIONES E HISTORIAL
+    // 2. EVALUACIONES E HISTORIAL
     // ============================================================
 
     [HttpGet("formulario/version-vigente")]
@@ -252,7 +251,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     // ============================================================
-    // 3. ENDPOINTS DE VINCULACIÓN DE EVIDENCIAS TIPO DURO
+    // 3. VINCULACIÓN DE EVIDENCIAS
     // ============================================================
 
     [HttpPost("evidencias/cargar")]
@@ -277,8 +276,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaRiesgoAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaRiesgoAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -292,8 +290,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaEvaluacionAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaEvaluacionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -307,8 +304,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaControlAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaControlAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -322,8 +318,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaPlanAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaPlanAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -337,8 +332,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaActividadAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaActividadAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -352,8 +346,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaAlertaAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaAlertaAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -367,8 +360,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.VincularEvidenciaAutomonitoreoAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaAutomonitoreoAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -377,13 +369,12 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPost("evidencias/vincular/revision")]
-    [AuditRequired("Vinculación de evidencia a Revision de Evaluación")]
+    [AuditRequired("Vinculación de evidencia a Revisión de Evaluación")]
     public async Task<IActionResult> VincularEvidenciaRevision([FromBody] AsociarEvidenciaRevisionDto dto)
     {
         try
         {
-            var result = await _service.VincularEvidenciaRevisionAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaRevisionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -392,13 +383,12 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPost("evidencias/vincular/aprobacion")]
-    [AuditRequired("Vinculación de evidencia a Aprobacion de Formulario")]
+    [AuditRequired("Vinculación de evidencia a Aprobación de Formulario")]
     public async Task<IActionResult> VincularEvidenciaAprobacion([FromBody] AsociarEvidenciaAprobacionDto dto)
     {
         try
         {
-            var result = await _service.VincularEvidenciaAprobacionAsync(dto, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.VincularEvidenciaAprobacionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -412,8 +402,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.EliminarEvidenciaAsync(id, ObtenerUsuarioId(), ObtenerIp());
-            return Responder(result);
+            return Responder(await _service.EliminarEvidenciaAsync(id, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
@@ -423,7 +412,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     // ============================================================
-    // 4. REPORTES CONSOLIDADOS Y AUXILIARES
+    // 4. REPORTES Y METODOLOGÍA CON CONTRATOS NEUTROS
     // ============================================================
 
     [HttpGet("consolidado")]
@@ -431,12 +420,12 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.ObtenerConsolidadoMatricesAsync();
+            var result = await _service.ObtenerConsolidadoTipadoAsync();
             return Responder(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener matriz consolidada.");
+            _logger.LogError(ex, "Error al obtener matriz consolidada tipada.");
             return Error500(ex);
         }
     }
@@ -446,19 +435,15 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         try
         {
-            var result = await _service.ObtenerMetodologiaVigenteAsync();
+            var result = await _service.ObtenerMetodologiaDinamicaVigenteAsync();
             return Responder(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al obtener metodología vigente.");
+            _logger.LogError(ex, "Error al obtener metodología dinámica vigente.");
             return Error500(ex);
         }
     }
-
-    // ============================================================
-    // METODOS AUXILIARES DE SEGURIDAD E IP
-    // ============================================================
 
     private long ObtenerUsuarioId()
     {
@@ -469,11 +454,15 @@ public sealed class MatricesRiesgosController : ControllerBase
     {
         var forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(forwardedFor))
+        {
             return forwardedFor.Split(',')[0].Trim();
+        }
 
         var realIp = Request.Headers["X-Real-IP"].FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(realIp))
+        {
             return realIp.Trim();
+        }
 
         return HttpContext.Connection.RemoteIpAddress?.ToString();
     }
