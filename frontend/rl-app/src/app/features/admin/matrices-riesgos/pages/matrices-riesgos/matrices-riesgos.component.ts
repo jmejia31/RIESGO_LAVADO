@@ -43,9 +43,9 @@ export class MatricesRiesgosComponent implements OnInit {
   readonly registrosPorPagina = signal(20);
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal('');
+  readonly riesgoId = signal(0);
+  readonly respuestas = signal<RespuestasFormulario>({});
 
-  riesgoId = 0;
-  respuestas: RespuestasFormulario = {};
   motivoTransicion = '';
   nuevoEstado = 'EN_REVISION';
   archivoEvidencia: File | null = null;
@@ -66,22 +66,24 @@ export class MatricesRiesgosComponent implements OnInit {
     this.secciones().reduce((total, seccion) => total + seccion.campos.length, 0)
   );
 
-  readonly totalCompletados = computed(() =>
-    this.secciones()
+  readonly totalCompletados = computed(() => {
+    const respuestas = this.respuestas();
+    return this.secciones()
       .flatMap(seccion => seccion.campos)
-      .filter(campo => this.tieneValor(this.respuestas[campo.clave]))
-      .length
-  );
+      .filter(campo => this.tieneValor(respuestas[campo.clave]))
+      .length;
+  });
 
   readonly puedeGuardar = computed(() => {
-    if (this.riesgoId <= 0 || !this.versionVigente()) {
+    const respuestas = this.respuestas();
+    if (this.riesgoId() <= 0 || !this.versionVigente()) {
       return false;
     }
 
     return this.secciones()
       .flatMap(seccion => seccion.campos)
       .filter(campo => campo.obligatorio)
-      .every(campo => this.tieneValor(this.respuestas[campo.clave]));
+      .every(campo => this.tieneValor(respuestas[campo.clave]));
   });
 
   ngOnInit(): void {
@@ -93,12 +95,8 @@ export class MatricesRiesgosComponent implements OnInit {
     this.error.set(null);
     this.mensaje.set(null);
 
-    if (tab === 'consolidado') {
-      this.cargarConsolidado();
-    }
-    if (tab === 'plantillas') {
-      this.cargarVersiones();
-    }
+    if (tab === 'consolidado') this.cargarConsolidado();
+    if (tab === 'plantillas') this.cargarVersiones();
   }
 
   cargarModulo(): void {
@@ -166,17 +164,15 @@ export class MatricesRiesgosComponent implements OnInit {
   }
 
   actualizarRespuesta(campo: CampoFormulario, valor: string | number | boolean | null): void {
-    this.respuestas = { ...this.respuestas, [campo.clave]: valor };
+    this.respuestas.update(actuales => ({ ...actuales, [campo.clave]: valor }));
   }
 
   valorRespuesta(campo: CampoFormulario): string | number | boolean | null {
-    return this.respuestas[campo.clave] ?? null;
+    return this.respuestas()[campo.clave] ?? null;
   }
 
   opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
-    if (!campo.codigoCatalogo) {
-      return [];
-    }
+    if (!campo.codigoCatalogo) return [];
 
     return this.metodologia()?.catalogos
       .find(catalogo => catalogo.codigo === campo.codigoCatalogo)
@@ -187,15 +183,15 @@ export class MatricesRiesgosComponent implements OnInit {
 
   nuevaEvaluacion(): void {
     this.evaluacionSeleccionada.set(null);
-    this.riesgoId = 0;
+    this.riesgoId.set(0);
     this.inicializarRespuestas();
     this.tab.set('captura');
   }
 
   editarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
     this.evaluacionSeleccionada.set(evaluacion);
-    this.riesgoId = evaluacion.evaRiesgoId;
-    this.respuestas = this.parsearRespuestas(evaluacion.evaDataJson);
+    this.riesgoId.set(evaluacion.evaRiesgoId);
+    this.respuestas.set(this.parsearRespuestas(evaluacion.evaDataJson));
     this.tab.set('captura');
     this.cargarRevisiones(evaluacion.evaId);
   }
@@ -212,10 +208,10 @@ export class MatricesRiesgosComponent implements OnInit {
     const actual = this.evaluacionSeleccionada();
     const dto: EvaluacionRiesgoDto = {
       evaId: actual?.evaId ?? 0,
-      evaRiesgoId: this.riesgoId,
+      evaRiesgoId: this.riesgoId(),
       evaVersionId: version.verId,
       evaEstado: actual?.evaEstado ?? 'BORRADOR',
-      evaDataJson: JSON.stringify(this.respuestas),
+      evaDataJson: JSON.stringify(this.respuestas()),
       evaDataCalcJson: actual?.evaDataCalcJson ?? '{}',
       evaVri: actual?.evaVri ?? null,
       evaVrr: actual?.evaVrr ?? null,
@@ -250,11 +246,7 @@ export class MatricesRiesgosComponent implements OnInit {
     }
 
     this.guardando.set(true);
-    this.service.transicionarEvaluacion(
-      evaluacion.evaId,
-      this.nuevoEstado,
-      this.motivoTransicion
-    ).subscribe({
+    this.service.transicionarEvaluacion(evaluacion.evaId, this.nuevoEstado, this.motivoTransicion).subscribe({
       next: () => {
         this.mensaje.set('Estado actualizado correctamente.');
         this.guardando.set(false);
@@ -335,9 +327,7 @@ export class MatricesRiesgosComponent implements OnInit {
 
   guardarDefinicion(): void {
     const version = this.versionEditando();
-    if (!version) {
-      return;
-    }
+    if (!version) return;
 
     try {
       JSON.parse(this.definicionTecnica);
@@ -378,12 +368,12 @@ export class MatricesRiesgosComponent implements OnInit {
   }
 
   private inicializarRespuestas(): void {
-    const actuales = this.respuestas;
+    const actuales = this.respuestas();
     const iniciales: RespuestasFormulario = {};
     for (const campo of this.secciones().flatMap(seccion => seccion.campos)) {
       iniciales[campo.clave] = actuales[campo.clave] ?? null;
     }
-    this.respuestas = iniciales;
+    this.respuestas.set(iniciales);
   }
 
   private extraerDefinicionVersion(version: VersionFormularioDto | null): DefinicionFormularioEditable {
