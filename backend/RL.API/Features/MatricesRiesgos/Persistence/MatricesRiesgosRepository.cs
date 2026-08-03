@@ -1309,34 +1309,41 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     ip);
             }
 
+            if (_auditoriaRepository is not null)
+            {
+                string datosNuevos = JsonSerializer.Serialize(new
+                {
+                    tablaPuente,
+                    entidadId,
+                    evidenciaId,
+                    evaluacionId
+                });
+
+                await _auditoriaRepository.RegistrarAsync(
+                    conn,
+                    trans,
+                    tablaPuente,
+                    $"{entidadId}:{evidenciaId}",
+                    "VINCULAR_EVIDENCIA",
+                    null,
+                    datosNuevos,
+                    usuarioId,
+                    null,
+                    ip,
+                    ModuloAuditoria);
+            }
+            else if (string.Equals(tablaPuente, "RL_MR_EVI_APROBACION", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException(
+                    "La vinculación de evidencia a aprobación exige auditoría transversal transaccional.");
+            }
+
             await trans.CommitAsync();
         }
         catch
         {
             await trans.RollbackAsync();
             throw;
-        }
-
-        if (_auditoriaRepository is not null)
-        {
-            string datosNuevos = JsonSerializer.Serialize(new
-            {
-                tablaPuente,
-                entidadId,
-                evidenciaId,
-                evaluacionId
-            });
-
-            await _auditoriaRepository.RegistrarAsync(
-                tablaPuente,
-                $"{entidadId}:{evidenciaId}",
-                "VINCULAR_EVIDENCIA",
-                null,
-                datosNuevos,
-                usuarioId,
-                null,
-                ip,
-                ModuloAuditoria);
         }
 
         return true;

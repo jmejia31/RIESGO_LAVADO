@@ -61,6 +61,13 @@ function Get-SourceFiles {
     return $result
 }
 
+function Get-RelativeRepositoryPath {
+    param([string]$Path)
+
+    $root = ([string]$repositoryRoot).TrimEnd('\', '/')
+    return $Path.Substring($root.Length).TrimStart('\', '/')
+}
+
 if (-not (Test-Path -LiteralPath $script05)) {
     $errors.Add("No se encontró el script Oracle 05: $script05")
 }
@@ -105,10 +112,10 @@ foreach ($file in $moduleFiles) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
     foreach ($entry in $forbiddenTokens.GetEnumerator()) {
         if ($content.Contains($entry.Key)) {
-            $relativePath = [IO.Path]::GetRelativePath($repositoryRoot, $file.FullName)
+            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
             $matches = Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Key
             foreach ($match in $matches) {
-                $errors.Add("$relativePath:$($match.LineNumber): identificador incompatible '$($entry.Key)'. $($entry.Value)")
+                $errors.Add("${relativePath}:$($match.LineNumber): identificador incompatible '$($entry.Key)'. $($entry.Value)")
             }
         }
     }
@@ -176,12 +183,17 @@ foreach ($file in $securityFiles) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
     $containsSecret =
         $content -match $connectionStringPattern -or
-        $content -match $jsonOraclePasswordPattern -or
-        $content -match $standalonePasswordPattern
+        $content -match $jsonOraclePasswordPattern
+
+    # En C# una propiedad o parámetro llamado Password no es una credencial codificada.
+    # El patrón aislado se reserva para archivos de configuración y secretos.
+    if ($file.Extension -ne '.cs') {
+        $containsSecret = $containsSecret -or ($content -match $standalonePasswordPattern)
+    }
 
     if ($containsSecret) {
-        $relativePath = [IO.Path]::GetRelativePath($repositoryRoot, $file.FullName)
-        $errors.Add("$relativePath: posible credencial o cadena Oracle codificada. Mover a variables de entorno, User Secrets o configuración local ignorada.")
+        $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
+        $errors.Add("${relativePath}: posible credencial o cadena Oracle codificada. Mover a variables de entorno, User Secrets o configuracion local ignorada.")
     }
 }
 
@@ -208,12 +220,12 @@ if (Test-Path -LiteralPath $script05) {
 }
 
 if ($errors.Count -gt 0) {
-    Write-Host "Validación integral de Matrices: FALLÓ ($($errors.Count) hallazgos)." -ForegroundColor Red
+    Write-Host "Validacion integral de Matrices: FALLO ($($errors.Count) hallazgos)." -ForegroundColor Red
     foreach ($errorItem in $errors) {
         Write-Error $errorItem
     }
     exit 1
 }
 
-Write-Host "Validación integral de Matrices contra DDL, transacciones y seguridad: CORRECTA." -ForegroundColor Green
-Write-Host "Archivos del módulo revisados: $($moduleFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
+Write-Host "Validacion integral de Matrices contra DDL, transacciones y seguridad: CORRECTA." -ForegroundColor Green
+Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green

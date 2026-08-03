@@ -27,13 +27,37 @@ public class AuditoriaRepository : IAuditoriaRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
+        await RegistrarAsync(conn, null, tabla, registroId, accion, datosAnt, datosNvo, usrId, email, ip, modulo);
+    }
+
+    public async Task RegistrarAsync(
+        OracleConnection connection,
+        OracleTransaction? transaction,
+        string tabla,
+        string registroId,
+        string accion,
+        string? datosAnt,
+        string? datosNvo,
+        long? usrId,
+        string? email,
+        string? ip,
+        string? modulo)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            throw new InvalidOperationException("La conexión compartida de auditoría debe estar abierta.");
+        }
+
         ip = string.IsNullOrWhiteSpace(ip) ? ObtenerIpCliente() : ip;
 
         if (string.IsNullOrEmpty(email) && usrId.HasValue)
         {
             try
             {
-                await using var emailCmd = conn.CreateCommand();
+                await using var emailCmd = connection.CreateCommand();
+                emailCmd.BindByName = true;
+                emailCmd.Transaction = transaction;
                 emailCmd.CommandText = "SELECT USR_EMAIL FROM RL_USUARIOS WHERE USR_ID = :usrId";
                 emailCmd.Parameters.Add(new OracleParameter("usrId", usrId.Value));
                 var res = await emailCmd.ExecuteScalarAsync();
@@ -48,7 +72,9 @@ public class AuditoriaRepository : IAuditoriaRepository
             }
         }
 
-        await using var cmd = conn.CreateCommand();
+        await using var cmd = connection.CreateCommand();
+        cmd.BindByName = true;
+        cmd.Transaction = transaction;
         cmd.CommandText = @"
             INSERT INTO RL_AUDITORIA (
                 AUD_ID, AUD_TABLA, AUD_REGISTRO_ID, AUD_ACCION, 

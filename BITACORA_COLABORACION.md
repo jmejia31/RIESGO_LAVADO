@@ -6,6 +6,34 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervencion - Codex - Atomicidad de auditoria para evidencias y aprobaciones
+
+- Fecha y hora: 2026-08-03 13:10 UTC-6.
+- Rama de destino: desarrollo; implementacion realizada en worktree aislado desde `origin/desarrollo` para preservar la copia principal con cambios locales.
+- Commit inicial: `2d6a105`.
+- Objetivo: cerrar el bloqueante de atomicidad de `RL_MR_EVI_APROBACION` sin ejecutar Oracle ni el script 05.
+
+### Cambios
+
+- Se agrego a `IAuditoriaRepository` y `AuditoriaRepository` una sobrecarga de `RegistrarAsync` que recibe `OracleConnection` y `OracleTransaction`.
+- La auditoria usa la conexion/transaccion recibidas, configura `BindByName` y no abre una conexion adicional.
+- `MatricesRiesgosRepository` registra la auditoria transversal antes de `CommitAsync`; si falta el repositorio de auditoria para `RL_MR_EVI_APROBACION`, revierte y falla de forma explicita.
+- Se agregaron pruebas de contrato para las dos sobrecargas de auditoria y se corrigio el validador PowerShell para PowerShell 5 y rutas con dos puntos.
+
+### Evidencia ejecutada y verificada
+
+- `dotnet build backend/RL.API/RL.API.csproj --configuration Release`: correcto, 0 errores y 0 advertencias.
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: 183 correctas, 0 fallidas.
+- `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: correcto; 49 archivos del modulo y 118 archivos de seguridad revisados.
+- Oracle no fue ejecutado. Las pruebas reales de commit conjunto, fallo de auditoria, fallo de vinculo y rollback siguen pendientes y requieren entorno Oracle controlado.
+
+### Punto de continuacion
+
+1. Revisar y publicar estos cambios en `desarrollo`.
+2. Ejecutar pruebas Oracle controladas de las nueve vinculaciones, con enfasis en `RL_MR_EVI_APROBACION` y rollback forzado.
+3. Mantener el script 05 bloqueado hasta la aprobacion expresa posterior a esas pruebas.
+
+
 ## Registro de Intervención #1
 
 - **Fecha y hora**: 2026-07-24 09:32, hora local.

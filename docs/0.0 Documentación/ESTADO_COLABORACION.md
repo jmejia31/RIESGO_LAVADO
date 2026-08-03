@@ -1,5 +1,7 @@
 # Estado de colaboracion y punto de continuidad
 
+> Actualizacion 2026-08-03 13:10 UTC-6: Fase 1.2 permanece ABIERTA. Se implemento auditoria transversal con conexion y transaccion Oracle compartidas para las vinculaciones de evidencias, incluida RL_MR_EVI_APROBACION. Validacion estatica, compilacion Release y 183 pruebas backend correctas en worktree aislado. Pendiente obligatorio: pruebas Oracle controladas de commit y rollback; el script 05 continua bloqueado.
+
 Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COLABORACION.md.
 
 ## 1. Linea base vigente
