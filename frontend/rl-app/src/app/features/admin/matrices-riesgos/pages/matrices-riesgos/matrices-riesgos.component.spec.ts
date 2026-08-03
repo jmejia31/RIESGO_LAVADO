@@ -89,7 +89,7 @@ describe('MatricesRiesgosComponent', () => {
     component.nuevaEvaluacion();
     expect(component.puedeGuardar()).toBe(false);
 
-    component.riesgoId = 5;
+    component.riesgoId.set(5);
     component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento');
 
     expect(component.puedeGuardar()).toBe(true);
@@ -97,7 +97,7 @@ describe('MatricesRiesgosComponent', () => {
 
   it('crea una evaluación enviando respuestas dinámicas', () => {
     component.nuevaEvaluacion();
-    component.riesgoId = 5;
+    component.riesgoId.set(5);
     component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento');
     component.guardarEvaluacion();
 
