@@ -74,46 +74,46 @@ foreach ($forbiddenFile in @($workflowTemporal, $repositoryFacade, $legacyDtos, 
     }
 }
 
-$forbiddenTokens = [ordered]@{
-    'FLU_ESTADO_NUEVO' = 'La tabla definitiva solo contiene FLU_ESTADO.'
-    'FLU_ESTADO_ANTERIOR' = 'La tabla definitiva solo contiene FLU_ESTADO.'
-    'EVA_ESTADO' = 'El estado procede del último flujo.'
-    'EVA_VRI' = 'VRI no es una columna de evaluaciones.'
-    'EVA_ETP' = 'ETP no es una columna de evaluaciones.'
-    'EVA_VRR' = 'VRR no es una columna de evaluaciones.'
-    'EVA_FECHA_EVAL' = 'La columna física es EVA_FECHA_REGISTRO.'
-    'EVA_USR_EVAL' = 'La columna física es EVA_USR_REGISTRO.'
-    'PROY_ETP' = 'La proyección definitiva no contiene ETP.'
-    'RL_MR_MODELOS' = 'Tabla retirada del modelo dinámico.'
-    'RL_MR_FACTORES' = 'Tabla retirada del modelo dinámico.'
-    'RL_MR_VARIABLES' = 'Tabla retirada del modelo dinámico.'
-    'RL_MR_ESCALAS' = 'Tabla retirada del modelo dinámico.'
-    'RL_MR_CRITERIOS' = 'Tabla retirada del modelo dinámico.'
-    'ModeloId' = 'Contrato del modelo heredado.'
-    'ModeloVersion' = 'Contrato del modelo heredado.'
-    'FactorInstitucionalDto' = 'Contrato de factores heredado.'
-    'VariableMetodologiaRespuestaDto' = 'Contrato de variables heredado.'
-    'MatrizRiesgoResumenDto' = 'Contrato de matriz basada en sujeto retirado.'
-    'MatrizRiesgoDetalleDto' = 'Contrato de matriz basada en sujeto retirado.'
-    'MatrizRiesgoVariableDetalleDto' = 'Contrato de variables retirado.'
-    'PorFactor' = 'Agrupación del modelo heredado.'
-    'factorId' = 'Identificador de factor retirado del contrato funcional.'
-    'variableId' = 'Identificador de variable retirado del contrato funcional.'
-    'FactorId' = 'Identificador de factor retirado del contrato funcional.'
-    'VariableId' = 'Identificador de variable retirado del contrato funcional.'
-    'List<Dictionary<string, object>>' = 'Los reportes deben usar DTOs tipados.'
-    'DeterminarClasificacionResidual' = 'La clasificación no puede ser rígida en código.'
-    'RegistrarAuditoriaAsync' = 'El contrato institucional expone RegistrarAsync.'
-}
+$forbiddenTokens = @(
+    [pscustomobject]@{ Token = 'FLU_ESTADO_NUEVO'; Message = 'La tabla definitiva solo contiene FLU_ESTADO.' },
+    [pscustomobject]@{ Token = 'FLU_ESTADO_ANTERIOR'; Message = 'La tabla definitiva solo contiene FLU_ESTADO.' },
+    [pscustomobject]@{ Token = 'EVA_ESTADO'; Message = 'El estado procede del último flujo.' },
+    [pscustomobject]@{ Token = 'EVA_VRI'; Message = 'VRI no es una columna de evaluaciones.' },
+    [pscustomobject]@{ Token = 'EVA_ETP'; Message = 'ETP no es una columna de evaluaciones.' },
+    [pscustomobject]@{ Token = 'EVA_VRR'; Message = 'VRR no es una columna de evaluaciones.' },
+    [pscustomobject]@{ Token = 'EVA_FECHA_EVAL'; Message = 'La columna física es EVA_FECHA_REGISTRO.' },
+    [pscustomobject]@{ Token = 'EVA_USR_EVAL'; Message = 'La columna física es EVA_USR_REGISTRO.' },
+    [pscustomobject]@{ Token = 'PROY_ETP'; Message = 'La proyección definitiva no contiene ETP.' },
+    [pscustomobject]@{ Token = 'RL_MR_MODELOS'; Message = 'Tabla retirada del modelo dinámico.' },
+    [pscustomobject]@{ Token = 'RL_MR_FACTORES'; Message = 'Tabla retirada del modelo dinámico.' },
+    [pscustomobject]@{ Token = 'RL_MR_VARIABLES'; Message = 'Tabla retirada del modelo dinámico.' },
+    [pscustomobject]@{ Token = 'RL_MR_ESCALAS'; Message = 'Tabla retirada del modelo dinámico.' },
+    [pscustomobject]@{ Token = 'RL_MR_CRITERIOS'; Message = 'Tabla retirada del modelo dinámico.' },
+    [pscustomobject]@{ Token = 'ModeloId'; Message = 'Contrato del modelo heredado.' },
+    [pscustomobject]@{ Token = 'ModeloVersion'; Message = 'Contrato del modelo heredado.' },
+    [pscustomobject]@{ Token = 'FactorInstitucionalDto'; Message = 'Contrato de factores heredado.' },
+    [pscustomobject]@{ Token = 'VariableMetodologiaRespuestaDto'; Message = 'Contrato de variables heredado.' },
+    [pscustomobject]@{ Token = 'MatrizRiesgoResumenDto'; Message = 'Contrato de matriz basada en sujeto retirado.' },
+    [pscustomobject]@{ Token = 'MatrizRiesgoDetalleDto'; Message = 'Contrato de matriz basada en sujeto retirado.' },
+    [pscustomobject]@{ Token = 'MatrizRiesgoVariableDetalleDto'; Message = 'Contrato de variables retirado.' },
+    [pscustomobject]@{ Token = 'PorFactor'; Message = 'Agrupación del modelo heredado.' },
+    [pscustomobject]@{ Token = 'factorId'; Message = 'Identificador de factor retirado del contrato funcional.' },
+    [pscustomobject]@{ Token = 'variableId'; Message = 'Identificador de variable retirado del contrato funcional.' },
+    [pscustomobject]@{ Token = 'FactorId'; Message = 'Identificador de factor retirado del contrato funcional.' },
+    [pscustomobject]@{ Token = 'VariableId'; Message = 'Identificador de variable retirado del contrato funcional.' },
+    [pscustomobject]@{ Token = 'List<Dictionary<string, object>>'; Message = 'Los reportes deben usar DTOs tipados.' },
+    [pscustomobject]@{ Token = 'DeterminarClasificacionResidual'; Message = 'La clasificación no puede ser rígida en código.' },
+    [pscustomobject]@{ Token = 'RegistrarAuditoriaAsync'; Message = 'El contrato institucional expone RegistrarAsync.' }
+)
 
 $moduleFiles = Get-SourceFiles -Roots $moduleScanRoots -Extensions $moduleExtensions
 foreach ($file in $moduleFiles) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
-    foreach ($entry in $forbiddenTokens.GetEnumerator()) {
-        if ($content.Contains($entry.Key)) {
+    foreach ($entry in $forbiddenTokens) {
+        if ($content.Contains($entry.Token)) {
             $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
-            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Key)) {
-                $errors.Add("${relativePath}:$($match.LineNumber): identificador incompatible '$($entry.Key)'. $($entry.Value)")
+            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
+                $errors.Add("${relativePath}:$($match.LineNumber): identificador incompatible '$($entry.Token)'. $($entry.Message)")
             }
         }
     }
