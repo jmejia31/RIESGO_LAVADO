@@ -1,50 +1,40 @@
-<section class="overflow-x-auto rounded-xl border border-gray-200">
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-gray-50 px-4 py-3 border-b border-gray-200">
+<section class="overflow-x-auto rounded-xl border border-slate-200">
+  <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
     <div>
-      <h4 class="font-bold text-gray-900">Matrices filtradas</h4>
-      <p class="text-xs text-gray-500">Detalle principal de las matrices que coinciden con los filtros activos.</p>
+      <h4 class="font-bold text-slate-900">Riesgos consolidados</h4>
+      <p class="text-xs text-slate-500">Proyección tipada de evaluaciones y niveles calculados.</p>
     </div>
-    <span class="text-xs font-bold text-gray-500">{{ matrices.length }} registro(s)</span>
+    <span class="text-xs font-bold text-slate-500">{{ filas.length }} registro(s)</span>
   </div>
-  <table class="min-w-[980px] w-full divide-y divide-gray-200 text-sm table-fixed">
-    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+
+  <table class="min-w-[1100px] w-full divide-y divide-slate-200 text-sm">
+    <thead class="bg-slate-50 text-left text-xs uppercase text-slate-500">
       <tr>
-        <th class="px-4 py-3 text-left w-[28%]">Sujeto</th>
-        <th class="px-4 py-3 text-left w-[12%]">Documento</th>
-        <th class="px-4 py-3 text-left w-[12%]">Tipo</th>
-        <th class="px-4 py-3 text-left w-[12%]">Estado</th>
-        <th class="px-4 py-3 text-left w-[14%]">Inherente</th>
-        <th class="px-4 py-3 text-left w-[14%]">Residual</th>
-        <th class="px-4 py-3 text-left w-[8%]">Plan</th>
+        <th class="px-4 py-3">Código</th>
+        <th class="px-4 py-3">Área</th>
+        <th class="px-4 py-3">Dueño</th>
+        <th class="px-4 py-3">VRI</th>
+        <th class="px-4 py-3">Nivel inherente</th>
+        <th class="px-4 py-3">VRR</th>
+        <th class="px-4 py-3">Nivel residual</th>
+        <th class="px-4 py-3">Respuesta</th>
+        <th class="px-4 py-3">Estado</th>
       </tr>
     </thead>
-    <tbody class="divide-y divide-gray-100">
-      <tr *ngFor="let matriz of matrices">
-        <td class="px-4 py-3">
-          <p class="rl-clamp-2 font-semibold text-gray-900" [title]="matriz.nombreSujeto">{{ matriz.nombreSujeto }}</p>
-          <p class="text-xs text-gray-500">ID {{ matriz.matrizId }} · {{ matriz.fechaEvaluacion | date:'dd/MM/yyyy' }}</p>
-        </td>
-        <td class="px-4 py-3 break-words [overflow-wrap:anywhere]">{{ matriz.documento || '-' }}</td>
-        <td class="px-4 py-3">{{ matriz.sujetoTipo }}</td>
-        <td class="px-4 py-3">{{ matriz.estado }}</td>
-        <td class="px-4 py-3">
-          <span class="inline-flex items-center gap-2">
-            <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelInherente)"></span>
-            {{ matriz.puntajeInherente ?? '-' }} {{ matriz.nivelInherente || '' }}
-          </span>
-        </td>
-        <td class="px-4 py-3">
-          <span class="inline-flex items-center gap-2">
-            <span class="h-3 w-3 rounded-full" [style.background]="colorNivel(matriz.nivelResidual)"></span>
-            {{ matriz.puntajeResidual ?? '-' }} {{ matriz.nivelResidual || '' }}
-          </span>
-        </td>
-        <td class="px-4 py-3">{{ matriz.requierePlanAccion ? 'Sí' : 'No' }}</td>
+    <tbody class="divide-y divide-slate-100">
+      <tr *ngFor="let fila of filas">
+        <td class="px-4 py-3 font-semibold text-slate-900">{{ fila.codigoRiesgo }}</td>
+        <td class="px-4 py-3">{{ fila.areaPrincipal }}</td>
+        <td class="px-4 py-3">{{ fila.duenoRiesgo }}</td>
+        <td class="px-4 py-3">{{ fila.vri }}</td>
+        <td class="px-4 py-3">{{ fila.nivelInherente }}</td>
+        <td class="px-4 py-3">{{ fila.vrr }}</td>
+        <td class="px-4 py-3">{{ fila.nivelResidual }}</td>
+        <td class="px-4 py-3">{{ fila.respuestaRiesgo }}</td>
+        <td class="px-4 py-3">{{ fila.estadoEvaluacion }}</td>
       </tr>
-      <tr *ngIf="matrices.length === 0">
-        <td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500">
-          No hay matrices con los filtros aplicados.
-        </td>
+      <tr *ngIf="filas.length === 0">
+        <td colspan="9" class="px-4 py-8 text-center text-slate-500">No hay registros disponibles.</td>
       </tr>
     </tbody>
   </table>
