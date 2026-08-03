@@ -1,89 +1,73 @@
-# Estado de colaboracion y punto de continuidad
+# Estado de colaboración y punto de continuidad
 
-> Actualizacion 2026-08-03: Cierre de la Fase 1.3 y verificación completa de la Fase 1 (Subfases 1.1 a 1.9). Se verificaron y corrigieron los cuatro validadores automatizados (alineación DDL/transacciones, enlaces de documentación, scripts de base de datos y estructura del repositorio), todos aprobados al 100%.
+> Actualización 2026-08-03: Corrección documental. La Fase 1.3 está **implementada en código y pendiente de certificación**. La Fase 1.2 permanece **abierta y pendiente de pruebas Oracle controladas de transacción y rollback**. La **Fase 1 completa no está certificada**. PR #20 se mantiene en borrador; `main` permanece intacta.
 
-Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COLABORACION.md.
+Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md`.
 
-## 1. Linea base vigente
+---
 
-- Repositorio: jmejia31/RIESGO_LAVADO
-- Rama de trabajo obligatoria: desarrollo
-- Rama estable: main
-- Aprobador final: Javier Mejia (jmejia31)
-- Arquitectura: monolito modular con Angular, ASP.NET Core y Oracle
-- Frontend: Angular 22.0.3, CLI 22.0.4, TypeScript 6.0.3, Node 24.18.0
-- Backend: .NET 10.0, Oracle.ManagedDataAccess.Core 23.4.0
+## 1. Línea base vigente
 
-## 2. Ultima intervencion
+- **Repositorio**: `jmejia31/RIESGO_LAVADO`
+- **Rama de trabajo obligatoria**: `desarrollo`
+- **Rama estable**: `main` — no modificar ni integrar sin autorización expresa de Javier Mejía
+- **Aprobador final**: Javier Mejía (`jmejia31`)
+- **Arquitectura**: monolito modular con Angular 22, ASP.NET Core 10 y Oracle 11g
+- **Frontend**: Angular `22.0.3`, CLI `22.0.4`, TypeScript `6.0.3`, Node `24.18.0`
+- **Backend**: .NET `10.0`, `Oracle.ManagedDataAccess.Core` `23.4.0`
 
-- Intervencion: Verificación y Cierre de la Fase 1.3 y Finalización de la Fase 1
-- Fecha: 2026-08-03 (Hora local)
-- Autor: Antigravity
-- Rama: desarrollo
-- Estado: Fase 1.3 y Fase 1 completas en código y validadas al 100% mediante la suite de cuatro validadores automatizados (alineación DDL dinámico, scripts SQL, estructura de repositorio y enlaces de documentación).
+---
 
-## 3. Estado de fases
+## 2. Última intervención
 
-### 3.1 Reorganizacion
-Las fases 1-21 estan completadas. No corresponde abrir nueva fase de reorganizacion.
+- **Intervención**: Corrección documental de estado de Fase 1.3 y Fase 1 / Verificación de validadores estáticos
+- **Fecha**: 2026-08-03 (Hora local)
+- **Autor**: Antigravity
+- **Rama**: `desarrollo`
+- **Estado**: Corrección de bitácora y estado de colaboración para retirar declaraciones prematuras de "cierre" o "certificación". Se confirmaron como aprobados los 4 validadores estáticos locales. La Fase 1.3 queda marcada como **implementada en código y pendiente de certificación**; la Fase 1.2 como **abierta**; la Fase 1 como **no certificada**.
 
-### 3.2 Matrices de Riesgos
+---
 
-- Fase 0: Reconciliación de Estructuras y Eliminación de Código Heredado - Completado
-- Fase 1.1: Infraestructura Oracle Segura (Script 05) - Implementado e Idempotente
-- Fase 1.2: Alineación completa del repositorio con DDL y Atomicidad - Implementado
-- Fase 1.3: Contratos neutros, DTOs dinámicos y retiro de modelos heredados - Completado
-- Fase 1.4: Metodología dinámica y reglas versionadas - Implementado
-- Fase 1.5: Separación de Evaluaciones Oficiales vs Operativas - Implementado
-- Fase 1.6: Endpoints, reportes, exportaciones y auditoría - Implementado
-- Fase 1.7: Frontend Angular dinámico, maquetador visual y mapa accesibilidad - Implementado
-- Fase 1.8: Seguridad y autorización HTTP centralizada - Implementado
-- Fase 1.9: Certificación y Validadores Automatizados - APROBADO 100%
+## 3. Estado de fases del Módulo Matrices de Riesgos
 
-### 3.3 Dictamen vigente
-Toda la Fase 1 (Subfases 1.1 a 1.9) y la Fase 1.3 están finalizadas en código, con DTOs neutros integrados y la suite completa de 4 validadores ejecutable y aprobada.
+| Fase | Descripción | Estado Real | Detalle / Pendiente |
+|---|---|---|---|
+| **Fase 0** | Reconciliación de Estructuras y Eliminación de Código Heredado | **Completada** | Código libre de tablas antiguas y `EVA_ESTADO`. |
+| **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
+| **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Pendiente)** | Pendiente de pruebas Oracle controladas de commit/rollback (`RL_MR_EVI_APROBACION`). |
+| **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Implementada en código** | Consolidado tipado, metodología dinámico/versionada y frontend adaptado; **pendiente de certificación CI y Quality Gates**. |
+| **Fase 1.4 – 1.9** | Metodología, Consultas, Endpoints, Accesibilidad, HTTP y Certificación | **Pendientes de certificación** | Avances técnicos integrados; certificación global pendiente de pruebas ejecutable y Oracle. |
+| **Fase 1 Global** | Plan de Implementación por Fases | **No Certificada (En progreso)** | PR #20 en borrador, `main` intacta, sin fusiones. |
 
-## 4. Estado de componentes
+---
 
-| Componente | Estado |
-|---|---|
-| Validadores automatizados | 4/4 aprobados (DDL, DB Scripts, Estructura, Documentación) |
-| Backend modular | DTOs neutros dinámicos integrados y compilación Release |
-| Frontend Angular | Modelos dinámicos en TypeScript y maquetador visual |
-| Oracle | Scripts de instalación dinámicos unificados e idempotentes |
+## 4. Estado de validadores y pruebas
 
-## 5. Relacion entre ramas
-
-- desarrollo es la rama activa.
-- Integrar a main requiere autorizacion expresa de Javier Mejia.
-
-## 6. Quality Gates
-
-| Metrica | Valor | Estado |
+| Verificación | Estado | Detalle |
 |---|---|---|
-| Backend lineas | 16.02% | OK (>=15.30%) |
-| Backend ramas | 16.43% | OK (>=16.30%) |
-| Frontend sentencias | 40.20% | OK |
-| Frontend lineas | 40.40% | OK |
+| `validate_matrices_dynamic_ddl_alignment.ps1` | **Aprobado** (Estático) | 46 archivos de módulo y 115 de seguridad validados sin hallazgos. |
+| `validate_documentation_links.ps1` | **Aprobado** (Estático) | 42 documentos Markdown y 145 enlaces locales verificados. |
+| `validate_database_scripts.ps1` | **Aprobado** (Estático) | 19 scripts activos raíz, 1 paquete modular, 23 alcanzables. |
+| `validate_repository_structure.ps1` | **Aprobado** (Estático) | 118 rutas obligatorias y 471 archivos rastreados validados. |
+| **Compilación Release y Cobertura Backend** | **Pendiente de ejecución CI** | Requiere SDK .NET 10 en entorno CI. |
+| **Pruebas Angular y E2E Frontend** | **Pendiente de ejecución CI** | Requiere Node 22+/24 en entorno CI. |
+| **Pruebas Oracle de Transacción / Rollback** | **Pendiente** | Entorno Oracle controlado pendiente de ejecución. |
 
-## 7. Restricciones vigentes
+---
 
-- No reducir pruebas o cobertura para aprobar cambios.
-- No declarar cierre o aprobacion final sin Javier Mejia.
-- Conservar contratos y estructura relacional Oracle.
-- Validacion de sintaxis JSON es client-side; backend debe rechazar esquemas invalidos semanticamente.
-- Pruebas de integracion Oracle pendientes antes de declarar el modulo listo para produccion.
+## 5. Directrices y restricciones activas
 
-## 8. Responsabilidades
+1. **Retiro de afirmaciones de cierre**: No declarar "cerrada", "certificada" ni "100% aprobada" la Fase 1.3 ni la Fase 1 global mientras sigan pendientes los Quality Gates reproducidos y las pruebas Oracle.
+2. **Fase 1.2 abierta**: Mantener el seguimiento de pruebas Oracle de commit conjunto y rollback forzado en `RL_MR_EVI_APROBACION`.
+3. **Oracle / Script 05**: No ejecutar en base de datos sin autorización explícita.
+4. **PR #20**: Mantener en estado borrador (*draft*); no realizar merge ni modificar `main`.
+5. **Rama `main`**: Permanece intacta y protegida.
 
-| Actividad | Responsable |
-|---|---|
-| Auditoria de codigo y calidad | Antigravity / ChatGPT |
-| Desarrollo e integracion | Codex / ChatGPT |
-| Pruebas y despliegue | Antigravity / Codex |
-| Aprobacion final y requerimientos | Javier Mejia |
+---
 
-## 9. Punto exacto de continuacion
+## 6. Punto exacto de continuación
 
-1. Ejecución de la **Fase 1: Implementación de Consultas Relacionales en Oracle 11g** (reconstrucción de metodología vigente dinámica, proyecciones optimizadas y queries de agregación y paginación en base de datos).
-2. Revisión de los socios sobre la Fase 0 completada.
+1. Mantener PR #20 en borrador y preservar `main` intacta.
+2. Ejecutar y registrar las pruebas de Quality Gates completas en el pipeline CI (compilación Release, suites de pruebas unitarias backend/frontend con cobertura, pruebas E2E).
+3. Planificar la ejecución controlada de pruebas transaccionales Oracle (commit/rollback) para poder cerrar la Fase 1.2.
+4. Proceder con la certificación formal de la Fase 1.3 tras verificar la salida de CI y Quality Gates.

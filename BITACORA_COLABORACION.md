@@ -6,30 +6,34 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
-## Registro de Intervención — Antigravity — Verificación y Cierre de Fase 1.3 y Finalización de Fase 1
+## Registro de Intervención — Antigravity — Corrección Documental de Estado de Fases y Verificación de Validadores Estáticos
 
 - **Fecha y hora**: 2026-08-03 (Hora local).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Objetivo**: Revisar el estado de la Fase 1.3, actualizar y corregir la suite de validadores automatizados, y certificar el cierre completo de la Fase 1 (Subfases 1.1 a 1.9).
+- **Commit anterior**: `3c4ea0a`.
+- **Objetivo**: Corregir la documentación colaborativa para retirar afirmaciones prematuras de "cierre", "certificación" o "100% aprobado", precisar el estado real de la Fase 1.3, Fase 1.2 y Fase 1 global, y registrar el resultado de los validadores estáticos.
 
-### Cambios realizados
+### Estado Real Confirmado
 
-1. **Alineación de Validadores Automatizados**:
-   - `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: Actualización de patrones de seguridad para permitir marcadores `CHANGE_ME`. Validado con 0 hallazgos (46 archivos de módulo y 115 de seguridad revisados).
-   - `tools/validate_documentation_links.ps1`: Agregado soporte para esquemas `file:` y corregido enlace a DTOs históricos retirados. Validado con 0 errores (42 documentos Markdown y 145 enlaces verificados).
-   - `tools/validate_database_scripts.ps1`: Actualizado `$matricesOrder` para reflejar la estructura dinámicamente unificada (`instalacion/01_...` a `05_...`). Validado con 0 errores (19 scripts activos raíz, 1 paquete modular, 23 alcanzables).
-   - `tools/validate_repository_structure.ps1`: Actualizadas las rutas obligatorias a los contratos neutros `CalculoRiesgoResultadoDto.cs`, `MetodologiaFormularioDtos.cs` y `ReporteMatricesDtos.cs`. Validado con 0 errores (118 rutas obligatorias, 471 archivos rastreados).
-2. **Certificación de la Fase 1**:
-   - Toda la suite de 4 validadores ejecuta al 100% en verde.
-   - La Fase 1 (Subfases 1.1 a 1.9) queda completada en código, con contratos dinámicos neutros, ausencia de modelos o tablas retiradas, y script 05 protegido e idempotente.
+1. **Fase 1.3**: **Implementada en código, pendiente de certificación**.
+   - Avances técnicos correctos y confirmados: Consolidado tipado con `RiesgoReporteFilaDto`, metodología dinámica con versión, secciones, campos, catálogos y reglas, retiro completo de contratos heredados de modelos, factores y variables, frontend Angular adaptado a contratos dinámicos y auditoría transaccional de evidencias en transacción Oracle.
+   - Pendiente: Ejecución y reporte observable de compilación Release, pruebas Backend, pruebas Frontend, E2E y cobertura en entorno CI.
+2. **Fase 1.2**: **Abierta (Pendiente)**.
+   - Pendiente obligatorio: Pruebas Oracle controladas de commit conjunto y rollback forzado en `RL_MR_EVI_APROBACION`.
+3. **Fase 1 completa**: **No certificada**.
+   - No se declara cerrada la Fase 1 hasta completar Quality Gates en CI y pruebas Oracle.
+4. **Restricciones Operativas**:
+   - **Oracle / script 05**: NO EJECUTAR.
+   - **PR #20**: Mantener en borrador (*draft*), NO FUSIONAR.
+   - **Rama `main`**: INTACTA.
 
-### Evidencia de ejecución
+### Verificación de Validadores Estáticos Aprobados
 
-- `validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA**
-- `validate_documentation_links.ps1`: **CORRECTA**
-- `validate_database_scripts.ps1`: **CORRECTA**
-- `validate_repository_structure.ps1`: **CORRECTA**
+- `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA** (46 archivos del módulo, 115 de seguridad).
+- `tools/validate_documentation_links.ps1`: **CORRECTA** (42 documentos Markdown, 145 enlaces locales).
+- `tools/validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz, 1 paquete modular, 23 alcanzables).
+- `tools/validate_repository_structure.ps1`: **CORRECTA** (118 rutas obligatorias, 471 archivos rastreados).
 
 ---
 
