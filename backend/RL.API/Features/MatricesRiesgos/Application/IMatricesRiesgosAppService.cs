@@ -35,7 +35,7 @@ public interface IMatricesRiesgosAppService
     // ============================================================
     Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId);
     Task<ServiceResult<EvidenciaDto>> ObtenerEvidenciaFisicaAsync(long evidenciaId);
-    
+
     Task<ServiceResult> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip);
     Task<ServiceResult> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip);
     Task<ServiceResult> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip);
@@ -48,12 +48,12 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip);
 
     // ============================================================
-    // 4. REPORTES CONSOLIDADOS
+    // 4. REPORTES CONSOLIDADOS TIPADOS
     // ============================================================
-    Task<ServiceResult<List<Dictionary<string, object>>>> ObtenerConsolidadoMatricesAsync();
+    Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoMatricesAsync();
 
     // ============================================================
-    // 5. METODOLOGÍA VIGENTE
+    // 5. METODOLOGÍA DINÁMICA VIGENTE
     // ============================================================
-    Task<ServiceResult<MetodologiaMatricesDto>> ObtenerMetodologiaVigenteAsync();
+    Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaVigenteAsync();
 }
