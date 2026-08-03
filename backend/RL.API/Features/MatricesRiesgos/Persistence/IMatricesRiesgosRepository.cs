@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -53,15 +54,65 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip);
 
-    Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, System.Func<System.Threading.Tasks.Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
+    Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, Func<Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
     // ============================================================
-    // 4. REPORTES CONSOLIDADOS TIPADOS
+    // 4. MIGRACIÓN CONTROLADA DE REPORTES A DTOs TIPADOS
     // ============================================================
-    Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoMatricesAsync();
+    [Obsolete("Contrato transitorio de Fase 1.3. Migrar consumidores a ObtenerConsolidadoTipadoAsync y eliminar antes del cierre.")]
+    Task<List<Dictionary<string, object>>> ObtenerConsolidadoMatricesAsync();
+
+    async Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()
+    {
+#pragma warning disable CS0618
+        List<Dictionary<string, object>> filas = await ObtenerConsolidadoMatricesAsync();
+#pragma warning restore CS0618
+        var resultado = new List<RiesgoReporteFilaDto>(filas.Count);
+
+        foreach (Dictionary<string, object> fila in filas)
+        {
+            resultado.Add(new RiesgoReporteFilaDto
+            {
+                EvaluacionId = Convert.ToInt64(fila["EvaluacionId"]),
+                CodigoRiesgo = Convert.ToString(fila["CodigoRiesgo"]) ?? string.Empty,
+                EstadoEvaluacion = Convert.ToString(fila["Estado"]) ?? string.Empty,
+                Vri = Convert.ToInt32(fila["Vri"]),
+                Vrr = Convert.ToInt32(fila["Vrr"]),
+                NivelInherente = Convert.ToString(fila["NivelInherente"]) ?? string.Empty,
+                NivelResidual = Convert.ToString(fila["NivelResidual"]) ?? string.Empty,
+                RespuestaRiesgo = Convert.ToString(fila["RespuestaRiesgo"]) ?? string.Empty,
+                AreaPrincipal = Convert.ToString(fila["Area"]) ?? string.Empty,
+                DuenoRiesgo = Convert.ToString(fila["Dueno"]) ?? string.Empty,
+                FechaEvaluacion = Convert.ToDateTime(fila["Fecha"])
+            });
+        }
+
+        return resultado;
+    }
 
     // ============================================================
-    // 5. METODOLOGÍA DINÁMICA VIGENTE
+    // 5. MIGRACIÓN CONTROLADA DE METODOLOGÍA A CONTRATO DINÁMICO
     // ============================================================
-    Task<MetodologiaFormularioDto?> ObtenerMetodologiaVigenteAsync();
+    [Obsolete("Contrato transitorio de Fase 1.3. Migrar consumidores a ObtenerMetodologiaDinamicaVigenteAsync y eliminar antes del cierre.")]
+    Task<MetodologiaMatricesDto?> ObtenerMetodologiaVigenteAsync();
+
+    async Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()
+    {
+#pragma warning disable CS0618
+        MetodologiaMatricesDto? legado = await ObtenerMetodologiaVigenteAsync();
+#pragma warning restore CS0618
+        if (legado is null)
+        {
+            return null;
+        }
+
+        return new MetodologiaFormularioDto
+        {
+            Codigo = legado.Version,
+            Version = 0,
+            Secciones = Array.Empty<SeccionFormularioDto>(),
+            Catalogos = Array.Empty<CatalogoMatricesDto>(),
+            Reglas = Array.Empty<ReglaCalculoMatricesDto>()
+        };
+    }
 }
