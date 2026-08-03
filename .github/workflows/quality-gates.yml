@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   quality:
-    name: Backend, frontend, coverage and E2E
+    name: Validator, build, backend, frontend, coverage and E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -42,6 +42,13 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend/rl-app
         run: npm ci
+
+      - name: Validate dynamic matrices alignment
+        shell: pwsh
+        run: ./scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
+
+      - name: Build solution in Release
+        run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
 
       - name: Install Playwright Chromium
         working-directory: frontend/rl-app
