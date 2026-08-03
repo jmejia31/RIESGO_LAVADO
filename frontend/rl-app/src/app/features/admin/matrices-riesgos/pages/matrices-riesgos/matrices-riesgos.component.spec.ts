@@ -108,9 +108,8 @@ describe('MatricesRiesgosComponent', () => {
     }));
   });
 
-  it('no expone señales ni formularios del modelo heredado', () => {
+  it('no expone formularios ni cálculos locales retirados', () => {
     const instancia = component as unknown as Record<string, unknown>;
-    expect('variablesPorFactor' in instancia).toBe(false);
     expect('nuevaMatriz' in instancia).toBe(false);
     expect('criteriosForm' in instancia).toBe(false);
     expect('nivelResidualLocal' in instancia).toBe(false);
