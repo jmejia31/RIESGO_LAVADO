@@ -2,28 +2,35 @@
 -- SISTEMA DE GESTIÓN DE RIESGOS LA/FT - IHSS
 -- Módulo: Matrices de Riesgos
 -- Script: 04_config_json_inicial_formulario.sql
--- Objetivo: Cargar la configuración JSON inicial del Formulario A - Versión 1 de manera idempotente.
--- Clasificación: SCRIPT EN FASE DE DISEÑO (BLOQUEADO HASTA FASE 5 DE INSTALACIÓN).
+-- Objetivo: Cargar la configuración JSON inicial del Formulario A - Versión 1
+--           con referencia explícita a una regla de cálculo versionada.
+-- Clasificación: SCRIPT EN FASE DE DISEÑO (NO EJECUTAR SIN REVISIÓN).
 -- ============================================================
 
--- DIRECTIVA OBLIGATORIA PARA SQL*PLUS: ABORTAR TRANSACCIÓN Y EJECUCIÓN ANTE ERROR
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
--- PARÁMETRO DE ENTRADA OBLIGATORIO PARA SQL*PLUS: &1 (Palabra clave 'EJECUTAR')
 DEFINE autorizacion = '&1';
 
--- BLOQUE DE SEGURIDAD EXPLICITO - IMPEDIR EJECUCIÓN ACCIDENTAL
 DECLARE
   v_auth           VARCHAR2(50) := q'[&autorizacion]';
   v_esquema_actual VARCHAR2(100);
 BEGIN
-  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') INTO v_esquema_actual FROM DUAL;
+  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+    INTO v_esquema_actual
+    FROM DUAL;
+
   IF UPPER(v_esquema_actual) <> 'RIESGO_LAVADO' THEN
-    RAISE_APPLICATION_ERROR(-20098, 'EJECUCIÓN BLOQUEADA: Este script solo puede ejecutarse en el esquema RIESGO_LAVADO. Esquema detectado: ' || v_esquema_actual);
+    RAISE_APPLICATION_ERROR(
+      -20098,
+      'EJECUCIÓN BLOQUEADA: Este script solo puede ejecutarse en el esquema RIESGO_LAVADO. Esquema detectado: ' || v_esquema_actual
+    );
   END IF;
 
-  IF UPPER(v_auth) <> 'EJECUTAR' THEN
-    RAISE_APPLICATION_ERROR(-20100, 'EJECUCIÓN BLOQUEADA: Script en fase de diseño. El DBA debe pasar "EJECUTAR" como primer argumento de SQL*Plus en la Fase 5.');
+  IF UPPER(TRIM(v_auth)) <> 'EJECUTAR' THEN
+    RAISE_APPLICATION_ERROR(
+      -20100,
+      'EJECUCIÓN BLOQUEADA: El DBA debe proporcionar EJECUTAR como primer argumento de SQL*Plus.'
+    );
   END IF;
 END;
 /
@@ -31,45 +38,78 @@ END;
 DECLARE
   v_familia_id   NUMBER;
   v_version_cnt  NUMBER;
+  v_regla_cnt    NUMBER;
   v_json_config  CLOB;
   v_hash         VARCHAR2(64);
   v_usr_admin_id NUMBER;
 BEGIN
-  -- 1. Obtener un ID de usuario administrador válido para auditoría
+  -- 1. Comprobar que la regla declarada por el formulario existe y está activa.
+  SELECT COUNT(*)
+    INTO v_regla_cnt
+    FROM RL_MR_REGLAS_CALCULO
+   WHERE REG_CODIGO = 'CALCULO_VRI_VRR'
+     AND REG_VERSION = '1.0'
+     AND REG_ACTIVA = 1;
+
+  IF v_regla_cnt <> 1 THEN
+    RAISE_APPLICATION_ERROR(
+      -20102,
+      'No existe una única regla activa CALCULO_VRI_VRR versión 1.0. Ejecute y valide primero el script 03.'
+    );
+  END IF;
+
+  -- 2. Obtener un usuario válido para la creación de la versión.
   BEGIN
-    SELECT USR_ID INTO v_usr_admin_id 
-      FROM RL_USUARIOS 
-     WHERE (LOWER(USR_EMAIL) = 'admin@ihss.hn' OR UPPER(USUARIO_DOMINIO) = 'ADMIN') AND ROWNUM = 1;
+    SELECT USR_ID
+      INTO v_usr_admin_id
+      FROM RL_USUARIOS
+     WHERE (LOWER(USR_EMAIL) = 'admin@ihss.hn' OR UPPER(USUARIO_DOMINIO) = 'ADMIN')
+       AND ROWNUM = 1;
   EXCEPTION
     WHEN NO_DATA_FOUND THEN
-      -- Fallback al primer usuario activo si no existe 'ADMIN'
-      SELECT USR_ID INTO v_usr_admin_id 
-        FROM RL_USUARIOS 
+      SELECT USR_ID
+        INTO v_usr_admin_id
+        FROM RL_USUARIOS
        WHERE ROWNUM = 1;
   END;
 
-  -- 2. Asegurar existencia de la familia de forma idempotente
+  -- 3. Asegurar la familia de forma idempotente.
   BEGIN
-    SELECT FAM_ID INTO v_familia_id 
-      FROM RL_MR_FAMILIAS_FORMULARIO 
+    SELECT FAM_ID
+      INTO v_familia_id
+      FROM RL_MR_FAMILIAS_FORMULARIO
      WHERE FAM_CODIGO = 'MATRIZ_RIESGOS_LAFT';
   EXCEPTION
     WHEN NO_DATA_FOUND THEN
       v_familia_id := SEQ_RL_MR_FAMILIAS.NEXTVAL;
+
       INSERT INTO RL_MR_FAMILIAS_FORMULARIO (
-        FAM_ID, FAM_CODIGO, FAM_NOMBRE, FAM_DESCRIPCION, FAM_ACTIVO
-      )
-      VALUES (
-        v_familia_id, 'MATRIZ_RIESGOS_LAFT', 'Matriz de Riesgos LA/FT', 'Formularios dinámicos de Matrices de Riesgos', 1
+        FAM_ID,
+        FAM_CODIGO,
+        FAM_NOMBRE,
+        FAM_DESCRIPCION,
+        FAM_ACTIVO
+      ) VALUES (
+        v_familia_id,
+        'MATRIZ_RIESGOS_LAFT',
+        'Matriz de Riesgos LA/FT',
+        'Formularios dinámicos de Matrices de Riesgos',
+        1
       );
-      DBMS_OUTPUT.PUT_LINE('Familia creada de forma idempotente: MATRIZ_RIESGOS_LAFT');
   END;
 
-  -- 3. Definición del JSON inicial del Formulario A
+  -- 4. Definición del Formulario A. La referencia de regla es inmutable
+  --    para las evaluaciones creadas con esta versión.
   v_json_config := '{
     "codigoFormulario": "MATRIZ_RIESGOS_LAFT",
     "nombreFormulario": "Matriz de Riesgos LA/FT - Formulario A",
     "version": 1,
+    "reglas": [
+      {
+        "codigo": "CALCULO_VRI_VRR",
+        "version": "1.0"
+      }
+    ],
     "secciones": [
       {
         "id": "identificacion",
@@ -92,37 +132,63 @@ BEGIN
     ]
   }';
 
-  -- Asignar Hash SHA-256 inmutable precalculado del JSON
-  v_hash := '7e07f893cab094a1c27dbeea258393a872c6a9acd32b445e9216e1b7c05b5774';
+  -- SHA-256 del contenido UTF-8 exacto anterior. Debe recalcularse cuando cambie VER_JSON.
+  v_hash := '3f7e0f7b3372bb1de700a12bebe986e5550b39417bdd9ffc69f89f5d79f7d9c7';
 
-  -- 4. Insertar la Versión 1 únicamente si no existe
-  SELECT COUNT(*) INTO v_version_cnt 
-    FROM RL_MR_VERSIONES_FORMULARIO 
-   WHERE VER_FAMILIA_ID = v_familia_id AND VER_VERSION = 1;
+  -- 5. Insertar o actualizar únicamente mientras la versión permanezca en DRAFT.
+  SELECT COUNT(*)
+    INTO v_version_cnt
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_FAMILIA_ID = v_familia_id
+     AND VER_VERSION = 1;
 
   IF v_version_cnt = 0 THEN
     INSERT INTO RL_MR_VERSIONES_FORMULARIO (
-      VER_ID, VER_FAMILIA_ID, VER_CODIGO, VER_VERSION, VER_JSON, VER_HASH, VER_ESTADO, VER_VIGENTE, VER_USR_CREACION
-    )
-    VALUES (
-      SEQ_RL_MR_VERSIONES.NEXTVAL, v_familia_id, 'FORM_A', 1, v_json_config, v_hash, 'DRAFT', 0, v_usr_admin_id
+      VER_ID,
+      VER_FAMILIA_ID,
+      VER_CODIGO,
+      VER_VERSION,
+      VER_JSON,
+      VER_HASH,
+      VER_ESTADO,
+      VER_VIGENTE,
+      VER_USR_CREACION
+    ) VALUES (
+      SEQ_RL_MR_VERSIONES.NEXTVAL,
+      v_familia_id,
+      'FORM_A',
+      1,
+      v_json_config,
+      v_hash,
+      'DRAFT',
+      0,
+      v_usr_admin_id
     );
-    DBMS_OUTPUT.PUT_LINE('Configuración JSON del Formulario A - Versión 1 cargada con éxito.');
   ELSE
-    -- Si ya existe y está en DRAFT, se actualiza el contenido
     UPDATE RL_MR_VERSIONES_FORMULARIO
        SET VER_JSON = v_json_config,
            VER_HASH = v_hash
-     WHERE VER_FAMILIA_ID = v_familia_id 
-       AND VER_VERSION = 1 
+     WHERE VER_FAMILIA_ID = v_familia_id
+       AND VER_VERSION = 1
        AND VER_ESTADO = 'DRAFT';
-    DBMS_OUTPUT.PUT_LINE('Configuración JSON del Formulario A - Versión 1 actualizada de forma idempotente.');
   END IF;
 
+  DBMS_OUTPUT.PUT_LINE('Formulario A versión 1 preparado con referencia de regla CALCULO_VRI_VRR 1.0.');
 EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    RAISE_APPLICATION_ERROR(
+      -20103,
+      'No existe un usuario válido en RL_USUARIOS para registrar la versión inicial.'
+    );
   WHEN OTHERS THEN
-    -- Propagar el error para abortar ejecución y gatillar ROLLBACK en SQL*Plus
-    RAISE_APPLICATION_ERROR(-20101, 'ERROR CRÍTICO en la carga del JSON inicial: ' || SQLERRM);
+    IF SQLCODE BETWEEN -20199 AND -20100 THEN
+      RAISE;
+    END IF;
+
+    RAISE_APPLICATION_ERROR(
+      -20101,
+      'ERROR CRÍTICO en la carga del JSON inicial: ' || SQLERRM
+    );
 END;
 /
 
