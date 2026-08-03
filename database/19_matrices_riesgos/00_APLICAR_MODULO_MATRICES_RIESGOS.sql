@@ -12,10 +12,11 @@ PROMPT ============================================================
 PROMPT APLICANDO MODULO MATRICES DE RIESGOS
 PROMPT ============================================================
 
-@@01_create_rl_mr_estructura.sql
+@@instalacion/01_create_rl_mr_estructura_dinamica.sql
+@@instalacion/02_create_rl_mr_restricciones_indices.sql
 @@02_register_modulo_matrices_riesgos.sql
-@@03_seed_metodologia_matrices_riesgos.sql
-@@04_fix_encoding_textos_oracle.sql
-@@05_align_estado_en_evaluacion.sql
+@@instalacion/03_seed_catalogos_iniciales.sql
+@@instalacion/04_config_json_inicial_formulario.sql
+@@instalacion/05_ajustes_dashboard_seguridad_reportes.sql
 
 PROMPT Modulo Matrices de Riesgos aplicado correctamente.

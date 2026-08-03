@@ -14,12 +14,12 @@ Documento vivo. Actualizar al finalizar cada intervencion junto con BITACORA_COL
 
 ## 2. Ultima intervencion
 
-- Intervencion: Publicación de Plan Técnico Consolidado Aprobado
-- Fecha: 2026-07-31 12:40 hora local (UTC-6)
+- Intervencion: Finalización de Fase 0: Reconciliación de Estructuras y Eliminación de Código Heredado
+- Fecha: 2026-08-03 08:18 hora local (UTC-6)
 - Autor: Antigravity
 - Rama: desarrollo
-- Commit HEAD: `8a0407a` publicado en origin/desarrollo
-- Estado: Plan técnico de ajustes de diseño, roles y reportes en Oracle aprobado y documentado en el repositorio.
+- Commit HEAD: `191c8ee` publicado en origin/desarrollo
+- Estado: Punto de entrada oficial Oracle unificado. Archivos SQL antiguos del modelo heredado eliminados del repositorio. Referencias a EVA_ESTADO removidas en todo el backend y consultas refactorizadas para usar flujos de estado. Compilación y 181 pruebas del backend aprobadas.
 
 ## 3. Estado de fases
 
@@ -37,9 +37,10 @@ Las fases 1-21 estan completadas. No corresponde abrir nueva fase de reorganizac
 - Hito 7.4: Plantillas, ciclo de vida y maquetador visual interactivo completo (CRUD sin codigo) - implementado
 - Hito 7.5: Quality Gates locales - aprobadas
 - Ajustes de Diseño, Seguridad y Reportes en Oracle: Plan técnico consolidado aprobado por los socios.
+- Fase 0 Reconciliación: Completado (Código libre de tablas antiguas y EVA_ESTADO, migración 05 creada).
 
 ### 3.3 Dictamen vigente
-Fase 7 visual y maquetador completados. Corrección de arquitectura dinámica, seguridad y reportería en ejecución en la rama `desarrollo`.
+Fase 0 de reconciliación completada con éxito. Listo para revisión de los socios antes de proceder con el dashboard, reportes y frontend.
 
 ## 4. Estado de componentes
 
@@ -48,12 +49,12 @@ Fase 7 visual y maquetador completados. Corrección de arquitectura dinámica, s
 | Backend modular | 181 pruebas unitarias correctas |
 | Frontend Angular | 183 pruebas unitarias correctas |
 | E2E Playwright | 7 pruebas correctas |
-| Oracle | Estructura instalada y sembrada al 100% |
+| Oracle | Estructura instalada y sembrada al 100% con punto de entrada dinámico unificado |
 | Matrices de Riesgos Frontend | Completo: Dashboard 5x5, captura, plantillas y maquetador visual de esquemas |
 
 ## 5. Relacion entre ramas
 
-- desarrollo es la rama activa. HEAD = `8a0407a` sincronizado con origin/desarrollo.
+- desarrollo es la rama activa. HEAD = `191c8ee` sincronizado con origin/desarrollo.
 - Integrar a main requiere autorizacion expresa de Javier Mejia.
 
 ## 6. Quality Gates
@@ -84,5 +85,5 @@ Fase 7 visual y maquetador completados. Corrección de arquitectura dinámica, s
 
 ## 9. Punto exacto de continuacion
 
-1. Ejecución del plan técnico aprobado para implementar los ajustes de diseño visual (mapa de calor 5x5 accesible, remoción de JSON técnico en frontend, ocultar archivo), roles centralizados, consultas directas Oracle 11g de dashboard y reportes con paginación, auditoría de exportación y pruebas de integración HTTP de autorización.
-2. Validación por parte de los socios y pruebas de integración finales.
+1. Ejecución de la **Fase 1: Implementación de Consultas Relacionales en Oracle 11g** (reconstrucción de metodología vigente dinámica, proyecciones optimizadas y queries de agregación y paginación en base de datos).
+2. Revisión de los socios sobre la Fase 0 completada.

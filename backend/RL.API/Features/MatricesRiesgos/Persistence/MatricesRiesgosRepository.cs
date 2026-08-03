@@ -243,11 +243,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT EVA_ID, EVA_RIESGO_ID, EVA_VERSION_ID, EVA_ESTADO, EVA_DATA_JSON, 
-                   EVA_DATA_CALC_JSON, EVA_VRI, EVA_ETP, EVA_VRR, EVA_FECHA_EVAL, 
-                   EVA_USR_EVAL, EVA_VERSION_ROW, EVA_ACTIVO
-              FROM RL_MR_EVALUACIONES_RIESGO
-             WHERE EVA_ID = :evaId";
+            SELECT e.EVA_ID, e.EVA_RIESGO_ID, e.EVA_VERSION_ID, f.FLU_ESTADO_NUEVO AS EVA_ESTADO, e.EVA_DATA_JSON, 
+                   e.EVA_DATA_CALC_JSON, e.EVA_VRI, e.EVA_ETP, e.EVA_VRR, e.EVA_FECHA_EVAL, 
+                   e.EVA_USR_EVAL, e.EVA_VERSION_ROW, e.EVA_ACTIVO
+              FROM RL_MR_EVALUACIONES_RIESGO e
+              LEFT JOIN (
+                  SELECT FLU_EVALUACION_ID, FLU_ESTADO_NUEVO
+                    FROM (
+                        SELECT FLU_EVALUACION_ID, FLU_ESTADO_NUEVO,
+                               ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_FECHA DESC, FLU_ID DESC) as rn
+                          FROM RL_MR_FLUJOS_EVALUACION
+                    ) WHERE rn = 1
+              ) f ON e.EVA_ID = f.FLU_EVALUACION_ID
+             WHERE e.EVA_ID = :evaId";
 
         await using var cmd = new OracleCommand(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evaId", evaId));
@@ -267,11 +275,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         var sql = new System.Text.StringBuilder();
         sql.Append(@"
-            SELECT e.EVA_ID, e.EVA_RIESGO_ID, e.EVA_VERSION_ID, e.EVA_ESTADO, e.EVA_DATA_JSON, 
+            SELECT e.EVA_ID, e.EVA_RIESGO_ID, e.EVA_VERSION_ID, f.FLU_ESTADO_NUEVO AS EVA_ESTADO, e.EVA_DATA_JSON, 
                    e.EVA_DATA_CALC_JSON, e.EVA_VRI, e.EVA_ETP, e.EVA_VRR, e.EVA_FECHA_EVAL, 
                    e.EVA_USR_EVAL, e.EVA_VERSION_ROW, e.EVA_ACTIVO
               FROM RL_MR_EVALUACIONES_RIESGO e
               JOIN RL_MR_PROYECCIONES_EVALUACION p ON e.EVA_ID = p.PROY_EVALUACION_ID
+              LEFT JOIN (
+                  SELECT FLU_EVALUACION_ID, FLU_ESTADO_NUEVO
+                    FROM (
+                        SELECT FLU_EVALUACION_ID, FLU_ESTADO_NUEVO,
+                               ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_FECHA DESC, FLU_ID DESC) as rn
+                          FROM RL_MR_FLUJOS_EVALUACION
+                    ) WHERE rn = 1
+              ) f ON e.EVA_ID = f.FLU_EVALUACION_ID
              WHERE e.EVA_ACTIVO = 1 ");
 
         var parameters = new List<OracleParameter>();
@@ -283,7 +299,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
         if (!string.IsNullOrWhiteSpace(filtro.Estado))
         {
-            sql.Append(" AND e.EVA_ESTADO = :estado");
+            sql.Append(" AND f.FLU_ESTADO_NUEVO = :estado");
             parameters.Add(new OracleParameter("estado", filtro.Estado.ToUpperInvariant()));
         }
         if (!string.IsNullOrWhiteSpace(filtro.Area))
@@ -342,11 +358,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             // 2. Insertar en RL_MR_EVALUACIONES_RIESGO
             const string sqlInsert = @"
                 INSERT INTO RL_MR_EVALUACIONES_RIESGO (
-                    EVA_ID, EVA_RIESGO_ID, EVA_VERSION_ID, EVA_ESTADO, EVA_DATA_JSON, 
+                    EVA_ID, EVA_RIESGO_ID, EVA_VERSION_ID, EVA_DATA_JSON, 
                     EVA_DATA_CALC_JSON, EVA_VRI, EVA_ETP, EVA_VRR, EVA_FECHA_EVAL, 
                     EVA_USR_EVAL, EVA_VERSION_ROW, EVA_ACTIVO
                 ) VALUES (
-                    :evaId, :riesgoId, :versionId, 'BORRADOR', :dataJson, 
+                    :evaId, :riesgoId, :versionId, :dataJson, 
                     :dataCalcJson, :vri, :etp, :vrr, SYSDATE, 
                     :usuarioId, 1, 1
                 )";
@@ -445,21 +461,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             // 1. Obtener la evaluación actual para resguardo e historial
-            const string sqlSelect = "SELECT EVA_ESTADO, EVA_DATA_JSON, EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :evaId FOR UPDATE";
+            const string sqlSelect = "SELECT EVA_DATA_JSON, EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :evaId FOR UPDATE";
             await using var cmdSelect = new OracleCommand(sqlSelect, conn);
             cmdSelect.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
 
             string jsonAnterior = string.Empty;
-            string estadoActual = string.Empty;
             int versionRowActual = 0;
 
             await using (var reader = await cmdSelect.ExecuteReaderAsync())
             {
                 if (await reader.ReadAsync())
                 {
-                    estadoActual = reader.GetString(0);
-                    jsonAnterior = reader.GetString(1);
-                    versionRowActual = reader.GetInt32(2);
+                    jsonAnterior = reader.GetString(0);
+                    versionRowActual = reader.GetInt32(1);
                 }
                 else
                 {
@@ -580,33 +594,31 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
-            // 1. Obtener estado anterior
-            const string sqlSelect = "SELECT EVA_ESTADO FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :evaId FOR UPDATE";
+            // 1. Obtener estado anterior consultando el flujo de estados más reciente
+            const string sqlSelect = @"
+                SELECT FLU_ESTADO_NUEVO 
+                  FROM (
+                      SELECT FLU_ESTADO_NUEVO 
+                        FROM RL_MR_FLUJOS_EVALUACION 
+                       WHERE FLU_EVALUACION_ID = :evaId 
+                       ORDER BY FLU_FECHA DESC, FLU_ID DESC
+                  ) WHERE ROWNUM = 1";
+
             await using var cmdSelect = new OracleCommand(sqlSelect, conn);
             cmdSelect.Parameters.Add(new OracleParameter("evaId", evaId));
             var anteriorObj = await cmdSelect.ExecuteScalarAsync();
-            if (anteriorObj == null)
-            {
-                await trans.RollbackAsync();
-                return false;
-            }
-            string estadoAnterior = anteriorObj.ToString()!;
+            
+            // Si es la primera transición o no tiene flujos previos (seguridad/resiliencia)
+            string estadoAnterior = anteriorObj != null ? anteriorObj.ToString()! : "NINGUNO";
 
-            // 2. Modificar estado en la tabla de Evaluaciones
-            const string sqlUpdate = "UPDATE RL_MR_EVALUACIONES_RIESGO SET EVA_ESTADO = :nuevoEstado WHERE EVA_ID = :evaId";
-            await using var cmdUpdate = new OracleCommand(sqlUpdate, conn);
-            cmdUpdate.Parameters.Add(new OracleParameter("nuevoEstado", nuevoEstado.ToUpperInvariant()));
-            cmdUpdate.Parameters.Add(new OracleParameter("evaId", evaId));
-            await cmdUpdate.ExecuteNonQueryAsync();
-
-            // 3. Modificar estado en la tabla de Proyecciones
+            // 2. Modificar estado en la tabla de Proyecciones (como desnormalización plana de lectura rápida)
             const string sqlProj = "UPDATE RL_MR_PROYECCIONES_EVALUACION SET PROY_ESTADO_EVALUACION = :nuevoEstado WHERE PROY_EVALUACION_ID = :evaId";
             await using var cmdProj = new OracleCommand(sqlProj, conn);
             cmdProj.Parameters.Add(new OracleParameter("nuevoEstado", nuevoEstado.ToUpperInvariant()));
             cmdProj.Parameters.Add(new OracleParameter("evaId", evaId));
             await cmdProj.ExecuteNonQueryAsync();
 
-            // 4. Escribir Flujo de Estados
+            // 3. Escribir Flujo de Estados
             const string sqlFlujo = @"
                 INSERT INTO RL_MR_FLUJOS_EVALUACION (
                     FLU_ID, FLU_EVALUACION_ID, FLU_ESTADO_ANTERIOR, FLU_ESTADO_NUEVO, FLU_MOTIVO, FLU_FECHA, FLU_USR_ID
@@ -1041,194 +1053,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     public async Task<MetodologiaMatricesDto?> ObtenerMetodologiaVigenteAsync()
     {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-
-        // 5.1 Modelo aprobado
-        const string sqlModelo = @"
-            SELECT MRM_ID, MRM_VERSION, MRM_ESTADO
-              FROM RL_MR_MODELOS
-             WHERE MRM_ESTADO = 'APROBADO'
-               AND MRM_ESTADO_REGISTRO = 1
-               AND ROWNUM = 1
-             ORDER BY MRM_FECHA_APROBACION DESC";
-
-        long modeloId;
-        string version;
-
-        await using (var cmd = new OracleCommand(sqlModelo, conn))
-        await using (var reader = await cmd.ExecuteReaderAsync())
+        // En la Fase 0 de reconciliación se remueven todas las consultas y dependencias de las tablas antiguas.
+        // Se retorna una estructura vacía que será reconstruida de forma dinámica desde el nuevo modelo de formularios/catálogos en la Fase 1.
+        return new MetodologiaMatricesDto
         {
-            if (!await reader.ReadAsync()) return null;
-            modeloId = reader.GetInt64(reader.GetOrdinal("MRM_ID"));
-            version  = reader.GetString(reader.GetOrdinal("MRM_VERSION"));
-        }
-
-        var dto = new MetodologiaMatricesDto
-        {
-            Version              = version,
-            PesoTotalEsperado    = 100m,
-            PuntajeMinimo        = 0m,
-            PuntajeMaximo        = 100m,
-            MitigacionMaximaPct  = 30m,
-            DecimalesCalculo     = 4,
+            Version = "1.0",
+            PesoTotalEsperado = 100m,
+            PuntajeMinimo = 0m,
+            PuntajeMaximo = 100m,
+            MitigacionMaximaPct = 30m,
+            DecimalesCalculo = 4,
             DecimalesVisualizacion = 2,
             MitigacionesPermitidas = new List<decimal> { 0m, 10m, 20m, 30m }
         };
-
-        // 5.2 Factores
-        const string sqlFactores = @"
-            SELECT MRF_ID, MRF_CODIGO, MRF_NOMBRE, MRF_PESO_INSTITUCIONAL
-              FROM RL_MR_FACTORES
-             WHERE MRF_MODELO_ID = :modeloId
-               AND MRF_ESTADO_REGISTRO = 1
-             ORDER BY MRF_ORDEN";
-
-        var factores = new Dictionary<long, FactorInstitucionalDto>();
-
-        await using (var cmd = new OracleCommand(sqlFactores, conn))
-        {
-            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var fId     = reader.GetInt64(reader.GetOrdinal("MRF_ID"));
-                var fCodigo = reader.GetString(reader.GetOrdinal("MRF_CODIGO"));
-                var fNombre = reader.GetString(reader.GetOrdinal("MRF_NOMBRE"));
-                var fPeso   = reader.GetDecimal(reader.GetOrdinal("MRF_PESO_INSTITUCIONAL"));
-                factores[fId] = new FactorInstitucionalDto
-                {
-                    Codigo = fCodigo,
-                    Nombre = fNombre,
-                    PesoInstitucional = fPeso,
-                    ObligatorioGlobal = true
-                };
-            }
-        }
-
-        dto.FactoresInstitucionales.AddRange(factores.Values);
-
-        // 5.3 Variables
-        const string sqlVariables = @"
-            SELECT v.MRV_ID, v.MRV_FACTOR_ID, v.MRV_CODIGO, v.MRV_NOMBRE,
-                   v.MRV_PESO_INTERNO, v.MRV_OBLIGATORIA
-              FROM RL_MR_VARIABLES v
-              JOIN RL_MR_FACTORES  f ON f.MRF_ID = v.MRV_FACTOR_ID
-             WHERE f.MRF_MODELO_ID   = :modeloId
-               AND v.MRV_ESTADO_REGISTRO = 1
-             ORDER BY f.MRF_ORDEN, v.MRV_ORDEN";
-
-        await using (var cmd = new OracleCommand(sqlVariables, conn))
-        {
-            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var vId      = reader.GetInt64(reader.GetOrdinal("MRV_ID"));
-                var factorId = reader.GetInt64(reader.GetOrdinal("MRV_FACTOR_ID"));
-                var vCodigo  = reader.GetString(reader.GetOrdinal("MRV_CODIGO"));
-                var vNombre  = reader.GetString(reader.GetOrdinal("MRV_NOMBRE"));
-                var vPeso    = reader.GetDecimal(reader.GetOrdinal("MRV_PESO_INTERNO"));
-                var vOblig   = reader.GetDecimal(reader.GetOrdinal("MRV_OBLIGATORIA"));
-
-                factores.TryGetValue(factorId, out var factor);
-                dto.Variables.Add(new VariableMetodologiaRespuestaDto
-                {
-                    VariableId  = vId,
-                    FactorId    = factorId,
-                    FactorCodigo = factor?.Codigo ?? string.Empty,
-                    FactorNombre = factor?.Nombre ?? string.Empty,
-                    Codigo      = vCodigo,
-                    Nombre      = vNombre,
-                    PesoInterno = vPeso,
-                    Obligatoria = vOblig != 0
-                });
-            }
-        }
-
-        // 5.4 Escalas
-        const string sqlEscalas = @"
-            SELECT MRE_ID, MRE_TIPO, MRE_NIVEL, MRE_COLOR_HEX,
-                   MRE_VALOR_MIN, MRE_VALOR_MAX
-              FROM RL_MR_ESCALAS
-             WHERE MRE_MODELO_ID   = :modeloId
-               AND MRE_ESTADO_REGISTRO = 1
-             ORDER BY MRE_TIPO, MRE_ORDEN";
-
-        await using (var cmd = new OracleCommand(sqlEscalas, conn))
-        {
-            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var escalaId = reader.GetInt64(reader.GetOrdinal("MRE_ID"));
-                var tipo     = reader.GetString(reader.GetOrdinal("MRE_TIPO"));
-                var nivel    = reader.GetString(reader.GetOrdinal("MRE_NIVEL"));
-                var color    = reader.IsDBNull(reader.GetOrdinal("MRE_COLOR_HEX"))
-                               ? "#888888"
-                               : reader.GetString(reader.GetOrdinal("MRE_COLOR_HEX"));
-                var vMin     = reader.GetDecimal(reader.GetOrdinal("MRE_VALOR_MIN"));
-                var vMax     = reader.GetDecimal(reader.GetOrdinal("MRE_VALOR_MAX"));
-
-                var escala = new EscalaRiesgoDto
-                {
-                    EscalaId           = escalaId,
-                    Tipo               = tipo,
-                    Nivel              = nivel,
-                    Color              = color,
-                    ValorMinimo        = vMin,
-                    ValorMaximo        = vMax,
-                    RequierePlanAccion = nivel is "ALTO" or "CRÍTICO" or "CRITICO"
-                };
-
-                if (tipo is "RIESGO" or "INHERENTE" or "RESIDUAL")
-                    dto.EscalasRiesgo.Add(escala);
-                else
-                    dto.EscalasCatalogo.Add(escala);
-            }
-        }
-
-        // 5.5 Criterios (tabla RL_MR_CRITERIOS — puede no existir en este ambiente)
-        try
-        {
-            const string sqlCriterios = @"
-                SELECT c.MRC_ID, c.MRC_FACTOR_ID, f.MRF_CODIGO, f.MRF_NOMBRE,
-                       c.MRC_VARIABLE_ID, v.MRV_CODIGO, v.MRV_NOMBRE,
-                       c.MRC_ESCALA_ID, c.MRC_VALOR_DESDE, c.MRC_VALOR_HASTA,
-                       c.MRC_PUNTAJE, c.MRC_DESCRIPCION
-                  FROM RL_MR_CRITERIOS c
-                  JOIN RL_MR_FACTORES  f ON f.MRF_ID = c.MRC_FACTOR_ID
-                  JOIN RL_MR_VARIABLES v ON v.MRV_ID = c.MRC_VARIABLE_ID
-                 WHERE f.MRF_MODELO_ID = :modeloId
-                   AND c.MRC_ESTADO_REGISTRO = 1";
-
-            await using var cmd = new OracleCommand(sqlCriterios, conn);
-            cmd.Parameters.Add(new OracleParameter("modeloId", modeloId));
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                dto.Criterios.Add(new CriterioCalculoRespuestaDto
-                {
-                    CriterioId    = reader.GetInt64(0),
-                    FactorId      = reader.GetInt64(1),
-                    FactorCodigo  = reader.GetString(2),
-                    FactorNombre  = reader.GetString(3),
-                    VariableId    = reader.GetInt64(4),
-                    VariableCodigo = reader.GetString(5),
-                    VariableNombre = reader.GetString(6),
-                    EscalaId      = reader.IsDBNull(7) ? null : reader.GetInt64(7),
-                    ValorDesde    = reader.IsDBNull(8) ? null : reader.GetDecimal(8),
-                    ValorHasta    = reader.IsDBNull(9) ? null : reader.GetDecimal(9),
-                    Puntaje       = reader.GetDecimal(10),
-                    Descripcion   = reader.IsDBNull(11) ? string.Empty : reader.GetString(11)
-                });
-            }
-        }
-        catch (OracleException)
-        {
-            // RL_MR_CRITERIOS puede no existir en el ambiente local; continuar sin criterios.
-        }
-
-        return dto;
     }
 }

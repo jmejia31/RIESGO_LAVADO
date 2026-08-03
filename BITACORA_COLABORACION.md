@@ -1751,3 +1751,41 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 ### Punto exacto de continuación
 1. Ejecución del plan técnico aprobado para implementar los ajustes de diseño visual (mapa de calor 5x5 accesible, remoción de JSON técnico en frontend, ocultar archivo), remoción absoluta de `EVA_ESTADO` en todo el proyecto, roles centralizados, consultas directas Oracle 11g de dashboard y reportes con paginación, auditoría de exportación, límites de descarga de reportes, migración Oracle segura e idempotente para unicidad de proyecciones y pruebas de integración HTTP de autorización.
 
+---
+
+## Registro de Intervención — Antigravity — Finalización de Fase 0: Reconciliación de Estructuras y Eliminación de Código Heredado
+
+- **Fecha y hora**: 2026-08-03 08:18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `93d8cf4` | **Commit final**: `191c8ee`.
+
+### Objetivo y alcance
+
+1. **Unificar el punto de entrada oficial Oracle**: Modificar `00_APLICAR_MODULO_MATRICES_RIESGOS.sql` para que apunte exclusivamente a los scripts de la carpeta `instalacion/` del nuevo modelo dinámico aprobado, e incorporar la llamada al nuevo script `05_ajustes_dashboard_seguridad_reportes.sql`.
+2. **Eliminar el modelo heredado**: Borrar del repositorio de forma definitiva los archivos antiguos `01_create_rl_mr_estructura.sql`, `03_seed_metodologia_matrices_riesgos.sql`, `04_fix_encoding_textos_oracle.sql` y `05_align_estado_en_evaluacion.sql`.
+3. **Eliminar todas las referencias a `EVA_ESTADO`**: Refactorizar todas las consultas transaccionales en `MatricesRiesgosRepository.cs` (`ObtenerEvaluacionAsync`, `ListarEvaluacionesPaginadasAsync`, `CrearEvaluacionAsync`, `ActualizarEvaluacionAsync` y `TransicionarEstadoEvaluacionAsync`) para obtener el estado actual uniendo con `RL_MR_FLUJOS_EVALUACION` y remover actualizaciones inválidas de la columna física inexistente.
+4. **Remover dependencias en tablas antiguas en el Backend**: Re-escribir temporalmente `ObtenerMetodologiaVigenteAsync` para retornar un DTO vacío inicial, evitando cualquier consulta SQL o dependencia ejecutable de las tablas antiguas `RL_MR_MODELOS`, `RL_MR_FACTORES`, etc.
+
+### Archivos creados o modificados
+
+- **Creado**: [`database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql`](database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql) — Migración Oracle idempotente de unicidad.
+- **Modificado**: [`database/19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql`](database/19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql) — Punto de entrada unificado.
+- **Eliminado**: `database/19_matrices_riesgos/01_create_rl_mr_estructura.sql`
+- **Eliminado**: `database/19_matrices_riesgos/03_seed_metodologia_matrices_riesgos.sql`
+- **Eliminado**: `database/19_matrices_riesgos/04_fix_encoding_textos_oracle.sql`
+- **Eliminado**: `database/19_matrices_riesgos/05_align_estado_en_evaluacion.sql`
+- **Modificado**: [`backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`](backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs) — Refactorización para usar flujos de estado y vaciar metodología.
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) — Este archivo.
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización de estado.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- Backend: **181 correctas, 0 fallidas** (Compilación correcta, `dotnet test` pasa exitosamente).
+- Frontend: **183 correctas, 0 fallidas** (Pruebas spec Angular intactas).
+- E2E Playwright: **7 correctas, 0 fallidas** (Pipeline básico local verificado).
+
+### Punto exacto de continuación
+1. Ejecución de la **Fase 1: Implementación de Consultas Relacionales en Oracle 11g** (reconstrucción de metodología vigente dinámica, proyecciones optimizadas y queries de agregación y paginación en base de datos).
+2. Revisión de los socios.
+
