@@ -85,6 +85,8 @@ export interface ConsultaEvaluacionPaginadaDto {
   riesgoId?: number;
   buscar?: string;
   estado?: string;
+  area?: string;
+  nivelResidual?: string;
   pagina: number;
   registrosPorPagina: number;
 }
@@ -92,9 +94,7 @@ export interface ConsultaEvaluacionPaginadaDto {
 export interface RevisionEvaluacionDto {
   revId: number;
   revEvaluacionId: number;
-  revEstadoAnterior: string;
-  revEstadoNuevo: string;
-  revMotivo?: string | null;
+  revDatosJson: string;
   revFecha: string;
   revUsrId: number;
 }
@@ -110,50 +110,15 @@ export interface EvidenciaDto {
   eviFechaCreacion: string;
 }
 
-export interface AsociarEvidenciaRiesgoDto {
-  evrRiesgoId: number;
-  evrEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaEvaluacionDto {
-  eveEvaluacionId: number;
-  eveEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaControlDto {
-  evcControlId: number;
-  evcEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaPlanDto {
-  evpPlanId: number;
-  evpEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaActividadDto {
-  evaActividadId: number;
-  evaEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaAlertaDto {
-  evaAlertaId: number;
-  evaEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaAutomonitoreoDto {
-  evmMonitoreoId: number;
-  evmEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaRevisionDto {
-  evvRevisionId: number;
-  evvEvidenciaId: number;
-}
-
-export interface AsociarEvidenciaAprobacionDto {
-  evapAprobacionId: number;
-  evapEvidenciaId: number;
-}
+export interface AsociarEvidenciaRiesgoDto { evrRiesgoId: number; evrEvidenciaId: number; }
+export interface AsociarEvidenciaEvaluacionDto { eveEvaluacionId: number; eveEvidenciaId: number; }
+export interface AsociarEvidenciaControlDto { evcControlId: number; evcEvidenciaId: number; }
+export interface AsociarEvidenciaPlanDto { evpPlanId: number; evpEvidenciaId: number; }
+export interface AsociarEvidenciaActividadDto { evaActividadId: number; evaEvidenciaId: number; }
+export interface AsociarEvidenciaAlertaDto { evaAlertaId: number; evaEvidenciaId: number; }
+export interface AsociarEvidenciaAutomonitoreoDto { evmMonitoreoId: number; evmEvidenciaId: number; }
+export interface AsociarEvidenciaRevisionDto { evvRevisionId: number; evvEvidenciaId: number; }
+export interface AsociarEvidenciaAprobacionDto { evapAprobacionId: number; evapEvidenciaId: number; }
 
 export interface RiesgoReporteFila {
   riesgoId: number;
