@@ -229,7 +229,9 @@ if (Test-Path -LiteralPath $script05) {
 
 if ($errors.Count -gt 0) {
     Write-Host "Validacion integral de Matrices: FALLO ($($errors.Count) hallazgos)." -ForegroundColor Red
-    foreach ($item in $errors) { Write-Error $item }
+    foreach ($item in $errors) {
+        Write-Host "- $item" -ForegroundColor Red
+    }
     exit 1
 }
 
