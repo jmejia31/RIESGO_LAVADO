@@ -24,7 +24,7 @@ import {
 } from '../models/matrices-riesgos.models';
 
 export type ApiResponse<T> = { success: boolean; datos: T; mensaje?: string };
-export type ApiMessage = { success: boolean; mensaje?: string };
+export type ApiMessage = { success: boolean; mensaje?: string; datos?: number };
 
 @Injectable({ providedIn: 'root' })
 export class MatricesRiesgosService {
@@ -128,10 +128,12 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.datos));
   }
 
-  crearEvaluacion(dto: EvaluacionRiesgoDto): Observable<number> {
-    return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/evaluaciones`, dto, this.confirmado)
-      .pipe(map(response => response.datos));
+  crearEvaluacion(dto: EvaluacionRiesgoDto): Observable<ApiMessage> {
+    return this.http.post<ApiMessage>(
+      `${this.apiUrl}/evaluaciones`,
+      dto,
+      this.confirmado
+    );
   }
 
   actualizarEvaluacion(id: number, dto: EvaluacionRiesgoDto): Observable<ApiMessage> {
