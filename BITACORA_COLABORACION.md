@@ -6,6 +6,39 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Diseño Fase 1-R: transición a 17 tablas
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Agente:** Codex.
+- **Rama:** `desarrollo`.
+- **Commit inicial:** `02e049d`.
+- **Objetivo:** especificar la transición del modelo actual de 34 tablas al modelo aprobado de 17 tablas, sin ejecutar Oracle ni alterar código.
+
+### Hallazgos y diseño
+
+1. Se documentaron las 17 tablas objetivo, reglas de integridad, índices y contratos de JSON, flujo, cálculo, evidencia, alertas y automonitoreo.
+2. `RL_MR_PROYECCIONES_EVALUACION` se mantiene para rendimiento en Oracle 11g, dashboard, mapa de calor y Matriz Consolidada.
+3. Las nueve tablas `RL_MR_EVI_*` se sustituirán por `RL_MR_EVIDENCIAS_VINCULOS`; el backend validará transaccionalmente el tipo y la entidad destino mediante lista blanca.
+4. El código actual todavía contiene nueve DTOs/endpoints de evidencia, revisiones y trazas, por lo que el retiro físico queda bloqueado hasta que backend, frontend y pruebas adopten los contratos reducidos.
+5. La autorización permanece institucional mediante `ModuloAuthorize(10)`, `RL_USUARIO_MODULOS`, roles y `RL_AUDITORIA`; no se vincula el módulo a Monitoreo de Listas.
+
+### Archivos modificados
+
+- `docs/3. Módulo Matrices de Riesgos/PLAN_FASE_1_TRANSICION_MODELO_17_TABLAS.md`.
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- `BITACORA_COLABORACION.md`.
+
+### Verificación ejecutada
+
+- Inventario estático de DDL, repositorio, DTOs, endpoints y frontend: ejecutado.
+- Oracle, script `05` y pruebas automatizadas: no ejecutados; la intervención no modifica código ejecutable.
+
+### Punto de continuación
+
+Solicitar aprobación del diseño y, luego, iniciar la codificación del DDL de transición y contratos reducidos en una fase separada. No retirar tablas antes del despliegue validado.
+
+---
+
 ## Registro de Intervención — Codex — Aprobación Fase 0-R: modelo reducido
 
 - **Fecha y hora:** 2026-08-04, hora local (UTC-6).
