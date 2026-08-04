@@ -33,6 +33,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 | Fase | Descripción | Estado Real | Detalle / Pendiente |
 |---|---|---|---|
 | **Fase 0** | Reconciliación de Estructuras y Eliminación de Código Heredado | **Completada** | Código libre de tablas antiguas y `EVA_ESTADO`. |
+| **Fase 0-R** | Rediseño reducido a 17 tablas | **Aprobada funcionalmente** | Alcance aprobado por Javier Mejía el 2026-08-04; sin ejecución Oracle ni retiro físico. Ver [`FASE_0_REDISENO_MODELO_17_TABLAS.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_0_REDISENO_MODELO_17_TABLAS.md). |
 | **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
 | **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Paso 1 NO APROBADO)** | 14 hallazgos bloqueantes documentados; plan de subsanación generado; **ejecución Oracle bloqueada**. |
 | **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente** | Certificada en CI; **pendiente de ejecución y firma del acta funcional**. |
@@ -62,6 +63,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 3. **Oracle / Script 05**: No ejecutar en base de datos sin autorización explícita.
 4. **PR #20**: Mantener en estado borrador (*draft*); no realizar merge ni modificar `main`.
 5. **Rama `main`**: Permanece intacta y protegida.
+6. **Rediseño de 17 tablas**: no retirar objetos hasta concluir la transición de DDL, backend, frontend y pruebas.
 
 ---
 

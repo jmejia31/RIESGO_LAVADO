@@ -6,6 +6,44 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Aprobación Fase 0-R: modelo reducido
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Agente:** Codex.
+- **Rama:** `desarrollo`.
+- **Commit inicial:** `6e77ee3`.
+- **Objetivo:** registrar la aprobación funcional del rediseño a 17 tablas, sin ejecutar Oracle ni alterar objetos.
+
+### Decisión y evidencia
+
+1. Javier Mejía confirmó que los datos de las tablas previstas para retiro son pruebas prescindibles.
+2. Se aprobó el modelo objetivo de 17 tablas `RL_MR_*`, reutilizando `RL_AUDITORIA` y la seguridad institucional.
+3. Se verificó localmente que DDL, repositorio, DTOs y pruebas consumen todavía el modelo de 34 tablas; por ello no se ejecutó eliminación alguna.
+4. Las nueve tablas `RL_MR_EVI_*` serán reemplazadas por `RL_MR_EVIDENCIAS_VINCULOS`, con validación transaccional de tipo y entidad en backend.
+
+### Archivos modificados
+
+- `docs/3. Módulo Matrices de Riesgos/FASE_0_REDISENO_MODELO_17_TABLAS.md`.
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- `BITACORA_COLABORACION.md`.
+
+### Verificación ejecutada
+
+- Inventario estático de DDL y consumidores: ejecutado.
+- Oracle, script `05` y pruebas automatizadas: no ejecutados; no hubo cambios de código o base de datos.
+
+### Punto de continuación
+
+Diseñar DDL y transición para las 17 tablas; el retiro físico permanece bloqueado hasta contar con backend, frontend, pruebas y respaldo aprobados.
+
+---
+
+Esta bitácora registra cronológicamente las intervenciones, verificaciones y transferencias de mando entre **Antigravity**, **Codex**, **ChatGPT** y **Javier Mejía**.
+
+Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).
+
+---
+
 ## Registro de Intervención — Antigravity — Corrección Documental de Estado de Fases y Verificación de Validadores Estáticos
 
 - **Fecha y hora**: 2026-08-03 (Hora local).
