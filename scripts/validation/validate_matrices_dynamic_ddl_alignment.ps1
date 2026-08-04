@@ -62,6 +62,13 @@ function Get-RelativeRepositoryPath {
     return $Path.Substring($root.Length).TrimStart('\', '/')
 }
 
+function Test-IsIgnoredLocalFile {
+    param([System.IO.FileInfo]$File)
+    $relativePath = Get-RelativeRepositoryPath -Path $File.FullName
+    & git -C ([string]$repositoryRoot) check-ignore --quiet -- $relativePath 2>$null
+    return $LASTEXITCODE -eq 0
+}
+
 foreach ($requiredFile in @($script05, $repositoryFile, $repositoryContract, $appServiceContract, $controllerFile, $angularModels, $programFile)) {
     if (-not (Test-Path -LiteralPath $requiredFile)) {
         $errors.Add("No se encontró un archivo obligatorio: $requiredFile")
@@ -195,7 +202,11 @@ if (Test-Path -LiteralPath $programFile) {
     }
 }
 
-$securityFiles = Get-SourceFiles -Roots $securityScanRoots -Extensions $securityExtensions
+$securityFiles = @(
+    Get-SourceFiles -Roots $securityScanRoots -Extensions $securityExtensions | Where-Object {
+        -not (Test-IsIgnoredLocalFile -File $_)
+    }
+)
 $connectionStringPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 $jsonOraclePasswordPattern = '(?is)"(?:OracleDB|ConnectionStrings?)"\s*:\s*"[^"\r\n]*(?:Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 $standalonePasswordPattern = '(?im)^\s*(?:Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$)).+'

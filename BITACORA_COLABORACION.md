@@ -6,6 +6,55 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Corrección del validador y conciliación del estado CI
+
+- **Fecha y hora**: 2026-08-04 11:40, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8c0bc3f4a5b7faf0751096fd79ec3ee93180edc0`.
+- **Commit final**: corresponde al commit de esta intervención publicado en `origin/desarrollo`.
+- **Objetivo**: verificar el informe recibido, eliminar el falso positivo local del análisis de secretos y actualizar el estado real de las Fases 1.2 y 1.3 sin ejecutar Oracle ni modificar `main`.
+
+### Hallazgos confirmados y correcciones
+
+1. `backend/RL.API/appsettings.json` es un archivo local ignorado y no rastreado. El validador lo examinaba igualmente y generaba un falso positivo.
+2. El validador ahora omite archivos que `git check-ignore` identifica como locales ignorados. Los archivos rastreados siguen sujetos al análisis, aunque una regla de exclusión coincida con su ruta.
+3. La ejecución CI `30855978597` ya había finalizado correctamente; se retiraron las referencias documentales que todavía presentaban sus resultados como pendientes.
+4. La Fase 1.3 queda certificada técnicamente en CI y pendiente de aprobación funcional de Javier Mejía.
+5. La Fase 1.2 permanece abierta porque las pruebas Oracle reales de commit conjunto y rollback no se han ejecutado.
+6. El commit `727082c` de `main` declara expresamente una integración autorizada; no se realizó ninguna modificación nueva sobre esa rama.
+
+### Archivos modificados
+
+- `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`.
+- `docs/3. Módulo Matrices de Riesgos/ESTADO_EJECUCION_FASE_1_2_2026-08-03.md`.
+- `docs/3. Módulo Matrices de Riesgos/ESTADO_EJECUCION_FASE_1_3_2026-08-03.md`.
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- `BITACORA_COLABORACION.md`.
+
+### Evidencia ejecutada y verificada en esta intervención
+
+- Validador dinámico: correcto; 46 archivos del módulo y 114 archivos no ignorados de seguridad.
+- Validador de documentación: correcto; 42 documentos Markdown y 145 enlaces locales.
+- Validador de base de datos: correcto; 19 scripts raíz, 1 paquete modular y 23 scripts alcanzables.
+- Validador estructural: correcto; 118 rutas, 471 archivos rastreados y 3 maestros SQL.
+- `git diff --check`: correcto.
+- Oracle y script `05`: no ejecutados.
+
+### Evidencia previa conciliada, no reproducida en esta intervención
+
+- GitHub Actions `30855978597`: ejecución exitosa reportada y revisada previamente sobre `8c0bc3f`, con build Release, 188 pruebas backend, 122 frontend, 7 E2E y umbrales de cobertura aprobados.
+
+### Riesgos y punto de continuación
+
+1. Mantener PR #20 en borrador y no fusionar a `main`.
+2. Obtener la aprobación funcional de Javier Mejía para la Fase 1.3.
+3. Preparar y autorizar por separado las pruebas Oracle controladas de la Fase 1.2.
+4. Mantener bloqueado el script `05` hasta autorización expresa.
+5. Rotar externamente la credencial Oracle previamente expuesta y eliminar de forma segura los respaldos locales que la contengan; no se modificaron los dos `stash` existentes sin autorización.
+
+---
+
 ## Registro de Intervención — Antigravity — Corrección Documental de Estado de Fases y Verificación de Validadores Estáticos
 
 - **Fecha y hora**: 2026-08-03 (Hora local).

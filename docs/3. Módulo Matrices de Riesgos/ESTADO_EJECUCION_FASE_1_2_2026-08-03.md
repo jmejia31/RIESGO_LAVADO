@@ -186,16 +186,14 @@ Todavía no se declara aprobada ni cerrada la Fase 1.2.
 
 Pendientes:
 
-1. ejecutar el validador en un worktree actualizado;
-2. compilar el backend en Release;
-3. ejecutar toda la suite backend;
-4. corregir contratos o pruebas heredadas que fallen;
-5. crear y ejecutar pruebas Oracle reales de creación, actualización, transición, evidencia, proyección, traza, auditoría y rollback;
-6. probar la vinculación de las nueve tablas puente;
-7. probar que una versión sin referencia de regla sea rechazada;
-8. probar que una regla inexistente o inactiva sea rechazada;
-9. revisar el tratamiento histórico de versiones retiradas o archivadas;
-10. solicitar autorización antes de ejecutar el script `05`.
+1. crear y ejecutar pruebas Oracle reales de creación, actualización, transición, evidencia, proyección, traza, auditoría y rollback;
+2. probar en Oracle la vinculación de las nueve tablas puente;
+3. probar que una versión sin referencia de regla sea rechazada;
+4. probar que una regla inexistente o inactiva sea rechazada;
+5. revisar el tratamiento histórico de versiones retiradas o archivadas;
+6. solicitar autorización antes de ejecutar el script `05`.
+
+El validador, la compilación Release y las suites automatizadas ya fueron ejecutados correctamente en local y en CI. Estos resultados reducen el pendiente, pero no sustituyen las pruebas transaccionales Oracle.
 
 No se ha ejecutado ningún DDL o DML de estos scripts en Oracle durante esta intervención.
 
@@ -212,9 +210,9 @@ Regla de traza: vinculada por código y versión a VER_JSON.
 Semilla de regla y referencia del formulario: publicadas, no ejecutadas.
 Protección contra secretos: ampliada.
 Credencial local expuesta: requiere rotación externa inmediata.
-Validador: actualizado, no ejecutado desde este entorno.
-Compilación: no ejecutada.
-Pruebas backend: no ejecutadas después de estos commits.
+Validador: ejecutado correctamente; falso positivo local de configuración ignorada corregido el 4 de agosto de 2026.
+Compilación: correcta en Release, sin errores ni advertencias.
+Pruebas backend: 188 correctas en la verificación local más reciente.
 Pruebas Oracle reales: no ejecutadas.
 Script 05: no ejecutado.
 Fase 1.2: abierta y pendiente de revisión de Codex.

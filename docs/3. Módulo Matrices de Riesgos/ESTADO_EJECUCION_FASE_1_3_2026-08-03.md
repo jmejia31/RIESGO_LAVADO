@@ -4,7 +4,7 @@
 **Fecha:** 3 de agosto de 2026  
 **Rama:** `desarrollo`  
 **Rama estable:** `main` — intacta  
-**Estado:** implementación publicada; Quality Gates en ejecución o pendientes de resultado observable.
+**Estado:** implementación publicada y Quality Gates aprobados en CI; pendiente de aprobación funcional formal de Javier Mejía.
 
 ## 1. Dependencias y restricciones
 
@@ -124,23 +124,24 @@ Commits:
 - `2818cc81ef7355403dea7f271c5468f0c4e70d59` — habilitación en `desarrollo`.
 - `3ce4eb8e2033fef369db628322e5760083bb8f9c` — validador y build Release explícitos.
 
-## 5. Validaciones pendientes
+## 5. Validaciones ejecutadas
 
-Todavía no se declara aprobada ni cerrada la Fase 1.3 hasta obtener evidencia observable de:
+La ejecución de GitHub Actions `30855978597` (workflow run 201) finalizó correctamente sobre `desarrollo` y el commit `8c0bc3f`. Se verificaron de forma observable:
 
-1. validador correcto;
-2. compilación Release sin errores;
-3. suite backend correcta;
-4. pruebas frontend afectadas correctas;
+1. validador dinámico correcto;
+2. compilación Release sin errores ni advertencias;
+3. 188 pruebas backend correctas;
+4. 122 pruebas frontend correctas en 19 archivos;
 5. build Angular correcto;
-6. Quality Gates y E2E correctos o fallos corregidos y reejecutados.
+6. 7 pruebas E2E correctas;
+7. umbrales de cobertura aprobados: backend 16.22 % de líneas y 16.60 % de ramas.
 
-El conector utilizado no muestra aún estados o ejecuciones asociados al push de `desarrollo`; por tanto, no se inventa un resultado.
+La certificación técnica automatizada no sustituye la aprobación funcional de Javier Mejía ni las pruebas Oracle pendientes de la Fase 1.2.
 
 ## 6. Estado real
 
 ```text
-Fase 1.3: IMPLEMENTADA EN CÓDIGO, PENDIENTE DE CERTIFICACIÓN
+Fase 1.3: IMPLEMENTADA Y CERTIFICADA TÉCNICAMENTE EN CI; PENDIENTE DE APROBACIÓN FUNCIONAL
 Repositorio tipado directo: IMPLEMENTADO
 AppService tipado directo: IMPLEMENTADO
 Controlador tipado: IMPLEMENTADO
@@ -149,7 +150,7 @@ DTO y renderizador heredados: ELIMINADOS
 List<Dictionary<string, object>> en reportería: ELIMINADO
 Validador Fase 1.3: ACTUALIZADO
 Quality Gates de solo lectura: CONFIGURADOS
-Resultados observables de Quality Gates: PENDIENTES
+Resultados observables de Quality Gates: APROBADOS EN LA EJECUCIÓN 30855978597
 Oracle / script 05: NO EJECUTADOS
 Fase 1.2: ABIERTA
 main: INTACTA
