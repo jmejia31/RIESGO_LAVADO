@@ -34,6 +34,7 @@ public interface IMatricesRiesgosRepository
 
     Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId);
     Task<EvidenciaDto?> ObtenerEvidenciaFisicaAsync(long evidenciaId);
+    Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip);
     Task<bool> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip);

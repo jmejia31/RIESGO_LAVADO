@@ -812,6 +812,73 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         };
     }
 
+    public async Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip)
+    {
+        if (_auditoriaRepository is null)
+            throw new InvalidOperationException("El vínculo de evidencia requiere auditoría institucional transaccional.");
+
+        string sqlEntidad = ObtenerConsultaEntidadEvidencia(dto.TipoEntidad);
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var trans = conn.BeginTransaction();
+
+        try
+        {
+            await using (var cmdEvidencia = CrearComando("SELECT EVI_ID FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id", conn, trans))
+            {
+                cmdEvidencia.Parameters.Add(new OracleParameter("id", dto.EvidenciaId));
+                if (await cmdEvidencia.ExecuteScalarAsync() is null)
+                    throw new KeyNotFoundException($"No se encontró la evidencia {dto.EvidenciaId}.");
+            }
+
+            await using (var cmdEntidad = CrearComando(sqlEntidad, conn, trans))
+            {
+                cmdEntidad.Parameters.Add(new OracleParameter("id", dto.EntidadId));
+                if (await cmdEntidad.ExecuteScalarAsync() is null)
+                    throw new KeyNotFoundException($"No se encontró la entidad {dto.TipoEntidad} con ID {dto.EntidadId}.");
+            }
+
+            long vinculoId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_EVI_VINCULOS");
+            const string sqlInsert = @"
+                INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (
+                    EVV_ID, EVV_EVIDENCIA_ID, EVV_TIPO_ENTIDAD, EVV_ENTIDAD_ID, EVV_USR_CREACION
+                ) VALUES (:id, :evidenciaId, :tipo, :entidadId, :usuarioId)";
+            await using (var cmdInsert = CrearComando(sqlInsert, conn, trans))
+            {
+                cmdInsert.Parameters.Add(new OracleParameter("id", vinculoId));
+                cmdInsert.Parameters.Add(new OracleParameter("evidenciaId", dto.EvidenciaId));
+                cmdInsert.Parameters.Add(new OracleParameter("tipo", dto.TipoEntidad.ToString().ToUpperInvariant()));
+                cmdInsert.Parameters.Add(new OracleParameter("entidadId", dto.EntidadId));
+                cmdInsert.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+                await cmdInsert.ExecuteNonQueryAsync();
+            }
+
+            await _auditoriaRepository.RegistrarAsync(
+                conn, trans, "RL_MR_EVIDENCIAS_VINCULOS", vinculoId.ToString(), "VINCULAR_EVIDENCIA",
+                null, JsonSerializer.Serialize(new { dto.EvidenciaId, TipoEntidad = dto.TipoEntidad.ToString(), dto.EntidadId }),
+                usuarioId, null, ip, ModuloAuditoria);
+            await trans.CommitAsync();
+            return true;
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    private static string ObtenerConsultaEntidadEvidencia(TipoEntidadEvidencia tipo) => tipo switch
+    {
+        TipoEntidadEvidencia.Riesgo => "SELECT RIE_ID FROM RL_MR_RIESGOS WHERE RIE_ID = :id",
+        TipoEntidadEvidencia.Evaluacion => "SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :id",
+        TipoEntidadEvidencia.Control => "SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id",
+        TipoEntidadEvidencia.Plan => "SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_ID = :id",
+        TipoEntidadEvidencia.Actividad => "SELECT ACT_ID FROM RL_MR_ACTIVIDADES WHERE ACT_ID = :id",
+        TipoEntidadEvidencia.Alerta => "SELECT ALE_ID FROM RL_MR_SENALES_ALERTA WHERE ALE_ID = :id",
+        TipoEntidadEvidencia.Automonitoreo => "SELECT MON_ID FROM RL_MR_AUTOMONITOREO WHERE MON_ID = :id",
+        _ => throw new InvalidOperationException("El tipo de entidad de evidencia no está permitido.")
+    };
+
     public Task<bool> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_RIESGO",

@@ -6,6 +6,35 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Fase 3-R: contrato único de evidencias
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Agente:** Codex.
+- **Rama:** `desarrollo`.
+- **Commit inicial:** `41b1581`.
+- **Objetivo:** introducir el contrato compatible de `RL_MR_EVIDENCIAS_VINCULOS` sin ejecutar Oracle ni retirar rutas activas.
+
+### Cambios
+
+1. Se añadieron `TipoEntidadEvidencia` y `VincularEvidenciaDto` en backend y sus equivalentes TypeScript.
+2. Se agregó `POST /api/matrices-riesgos/evidencias/vinculos` y el método único de servicio/repositorio.
+3. El repositorio valida evidencia, lista blanca de entidad, inserta en `RL_MR_EVIDENCIAS_VINCULOS` y registra auditoría institucional dentro de la misma transacción.
+4. Las nueve rutas antiguas permanecen temporalmente por compatibilidad hasta el corte físico del esquema; no deben ampliarse con nuevas funcionalidades.
+
+### Verificación ejecutada
+
+- `dotnet build backend/RL.API/RL.API.csproj --configuration Release --no-restore`: correcta, sin advertencias.
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: 195 correctas, 0 fallidas.
+- Validador dinámico y de documentación: correctos.
+- Angular: generación de bundles correcta, pero el build terminó con `EBUSY` al copiar `public/assets/login/slide3.png` a `dist`; queda pendiente repetirlo sin bloqueo del archivo.
+- Oracle y script de transición: no ejecutados.
+
+### Punto de continuación
+
+Migrar la interfaz para consumir el vínculo único y, posteriormente, retirar contratos heredados, revisiones independientes, trazas y auditoría local en una fase de corte controlado.
+
+---
+
 ## Registro de Intervención — Codex — Fase 2-R: DDL manual del modelo reducido
 
 - **Fecha y hora:** 2026-08-04, hora local (UTC-6).

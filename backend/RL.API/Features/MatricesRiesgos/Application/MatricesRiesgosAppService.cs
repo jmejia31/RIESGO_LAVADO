@@ -354,6 +354,25 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult<EvidenciaDto>.Ok(evidencia);
     }
 
+    public async Task<ServiceResult> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip)
+    {
+        if (dto.EvidenciaId <= 0 || dto.EntidadId <= 0)
+            return ServiceResult.BadRequest("La evidencia y la entidad destino son obligatorias.");
+
+        try
+        {
+            return ResponderVinculo(await _repo.VincularEvidenciaAsync(dto, usuarioId, ip));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return ServiceResult.NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.BadRequest(ex.Message);
+        }
+    }
+
     public async Task<ServiceResult> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip) =>
         ResponderVinculo(await _repo.VincularEvidenciaRiesgoAsync(dto, usuarioId, ip));
 

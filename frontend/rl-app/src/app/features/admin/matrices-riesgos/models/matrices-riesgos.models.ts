@@ -120,6 +120,9 @@ export interface AsociarEvidenciaAutomonitoreoDto { evmMonitoreoId: number; evmE
 export interface AsociarEvidenciaRevisionDto { evvRevisionId: number; evvEvidenciaId: number; }
 export interface AsociarEvidenciaAprobacionDto { evapAprobacionId: number; evapEvidenciaId: number; }
 
+export type TipoEntidadEvidencia = 'riesgo' | 'evaluacion' | 'control' | 'plan' | 'actividad' | 'alerta' | 'automonitoreo';
+export interface VincularEvidenciaDto { evidenciaId: number; tipoEntidad: TipoEntidadEvidencia; entidadId: number; }
+
 export interface RiesgoReporteFila {
   riesgoId: number;
   evaluacionId: number;

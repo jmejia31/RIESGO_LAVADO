@@ -20,6 +20,7 @@ import {
   MetodologiaFormulario,
   RevisionEvaluacionDto,
   RiesgoReporteFila,
+  VincularEvidenciaDto,
   VersionFormularioDto
 } from '../models/matrices-riesgos.models';
 
@@ -173,6 +174,10 @@ export class MatricesRiesgosService {
     return this.http
       .post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, this.confirmado)
       .pipe(map(response => response.datos));
+  }
+
+  vincularEvidencia(dto: VincularEvidenciaDto): Observable<ApiMessage> {
+    return this.http.post<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, dto, this.confirmado);
   }
 
   vincularEvidenciaRiesgo(dto: AsociarEvidenciaRiesgoDto): Observable<ApiMessage> {

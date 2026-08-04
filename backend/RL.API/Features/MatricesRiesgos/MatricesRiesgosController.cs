@@ -254,6 +254,21 @@ public sealed class MatricesRiesgosController : ControllerBase
     // 3. VINCULACIÓN DE EVIDENCIAS
     // ============================================================
 
+    [HttpPost("evidencias/vinculos")]
+    [AuditRequired("Vínculo genérico de evidencia")]
+    public async Task<IActionResult> VincularEvidencia([FromBody] VincularEvidenciaDto dto)
+    {
+        try
+        {
+            return Responder(await _service.VincularEvidenciaAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al vincular evidencia {EvidenciaId}", dto.EvidenciaId);
+            return Error500(ex);
+        }
+    }
+
     [HttpPost("evidencias/cargar")]
     [AuditRequired("Carga física de archivo de evidencia al servidor")]
     public async Task<IActionResult> CargarEvidencia(IFormFile archivo)

@@ -221,6 +221,31 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Fact]
+    public async Task VinculoUnico_ValidaDestinoYDelegaAlRepositorio()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAsync), _ => Task.FromResult(true));
+
+        ServiceResult result = await service.VincularEvidenciaAsync(
+            new VincularEvidenciaDto { EvidenciaId = 8, EntidadId = 12, TipoEntidad = TipoEntidadEvidencia.Evaluacion },
+            99,
+            null);
+
+        Assert.True(result.Success);
+    }
+
+    [Fact]
+    public async Task VinculoUnico_SinIdentificadores_RetornaBadRequest()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out _, out _, out _);
+
+        ServiceResult result = await service.VincularEvidenciaAsync(new VincularEvidenciaDto(), 99, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+    }
+
+    [Fact]
     public async Task CargarEvidencia_ArchivoVacio_RetornaBadRequest()
     {
         MatricesRiesgosAppService service = CrearServicio(out _, out _, out _);

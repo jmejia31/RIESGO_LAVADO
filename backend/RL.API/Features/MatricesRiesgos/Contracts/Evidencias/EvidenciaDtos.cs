@@ -134,3 +134,15 @@ public sealed class AsociarEvidenciaAprobacionDto
     public long EvapEvidenciaId { get; set; }
     public long UsrId { get; set; }
 }
+
+public enum TipoEntidadEvidencia
+{
+    Riesgo, Evaluacion, Control, Plan, Actividad, Alerta, Automonitoreo
+}
+
+public sealed class VincularEvidenciaDto
+{
+    public long EvidenciaId { get; set; }
+    public TipoEntidadEvidencia TipoEntidad { get; set; }
+    public long EntidadId { get; set; }
+}
