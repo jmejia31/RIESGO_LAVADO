@@ -6,55 +6,6 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
-## Registro de Intervención — Codex — Corrección del validador y conciliación del estado CI
-
-- **Fecha y hora**: 2026-08-04 11:40, hora local (UTC-6).
-- **Agente**: Codex.
-- **Rama**: `desarrollo`.
-- **Commit inicial**: `8c0bc3f4a5b7faf0751096fd79ec3ee93180edc0`.
-- **Commit final**: corresponde al commit de esta intervención publicado en `origin/desarrollo`.
-- **Objetivo**: verificar el informe recibido, eliminar el falso positivo local del análisis de secretos y actualizar el estado real de las Fases 1.2 y 1.3 sin ejecutar Oracle ni modificar `main`.
-
-### Hallazgos confirmados y correcciones
-
-1. `backend/RL.API/appsettings.json` es un archivo local ignorado y no rastreado. El validador lo examinaba igualmente y generaba un falso positivo.
-2. El validador ahora omite archivos que `git check-ignore` identifica como locales ignorados. Los archivos rastreados siguen sujetos al análisis, aunque una regla de exclusión coincida con su ruta.
-3. La ejecución CI `30855978597` ya había finalizado correctamente; se retiraron las referencias documentales que todavía presentaban sus resultados como pendientes.
-4. La Fase 1.3 queda certificada técnicamente en CI y pendiente de aprobación funcional de Javier Mejía.
-5. La Fase 1.2 permanece abierta porque las pruebas Oracle reales de commit conjunto y rollback no se han ejecutado.
-6. El commit `727082c` de `main` declara expresamente una integración autorizada; no se realizó ninguna modificación nueva sobre esa rama.
-
-### Archivos modificados
-
-- `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`.
-- `docs/3. Módulo Matrices de Riesgos/ESTADO_EJECUCION_FASE_1_2_2026-08-03.md`.
-- `docs/3. Módulo Matrices de Riesgos/ESTADO_EJECUCION_FASE_1_3_2026-08-03.md`.
-- `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
-- `BITACORA_COLABORACION.md`.
-
-### Evidencia ejecutada y verificada en esta intervención
-
-- Validador dinámico: correcto; 46 archivos del módulo y 114 archivos no ignorados de seguridad.
-- Validador de documentación: correcto; 42 documentos Markdown y 145 enlaces locales.
-- Validador de base de datos: correcto; 19 scripts raíz, 1 paquete modular y 23 scripts alcanzables.
-- Validador estructural: correcto; 118 rutas, 471 archivos rastreados y 3 maestros SQL.
-- `git diff --check`: correcto.
-- Oracle y script `05`: no ejecutados.
-
-### Evidencia previa conciliada, no reproducida en esta intervención
-
-- GitHub Actions `30855978597`: ejecución exitosa reportada y revisada previamente sobre `8c0bc3f`, con build Release, 188 pruebas backend, 122 frontend, 7 E2E y umbrales de cobertura aprobados.
-
-### Riesgos y punto de continuación
-
-1. Mantener PR #20 en borrador y no fusionar a `main`.
-2. Obtener la aprobación funcional de Javier Mejía para la Fase 1.3.
-3. Preparar y autorizar por separado las pruebas Oracle controladas de la Fase 1.2.
-4. Mantener bloqueado el script `05` hasta autorización expresa.
-5. Rotar externamente la credencial Oracle previamente expuesta y eliminar de forma segura los respaldos locales que la contengan; no se modificaron los dos `stash` existentes sin autorización.
-
----
-
 ## Registro de Intervención — Antigravity — Corrección Documental de Estado de Fases y Verificación de Validadores Estáticos
 
 - **Fecha y hora**: 2026-08-03 (Hora local).
@@ -1897,47 +1848,34 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 1. Ejecución de la **Fase 1: Implementación de Consultas Relacionales en Oracle 11g** (reconstrucción de metodología vigente dinámica, proyecciones optimizadas y queries de agregación y paginación en base de datos).
 2. Revisión de los socios.
 
-
 ---
 
-## Registro de Intervención — Antigravity — Aprobación de Fase 1.3 y Codificación de Pruebas de Integración (Fase 1.2)
+## Registro de Intervención — Antigravity — Dictamen de Evaluación y Plan de Subsanación (14 Hallazgos Bloqueantes en Fase 1.2)
 
-- **Fecha y hora**: 2026-08-04 13:19, hora local (UTC-6).
+- **Fecha y hora**: 2026-08-04 14:05, hora local (UTC-6).
 - **Agente**: Antigravity.
-- **Rama**: desarrollo.
-- **Commit inicial**: 8c0bc3f | **Commit final**: *Cambios locales en confirmación*.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8c0bc3f` | **Commit final**: *Por confirmar*.
 
 ### Objetivo y alcance
 
-1. **Registrar Aprobación de la Fase 1.3**: Documentar la aprobación funcional formal otorgada por Javier Mejía el 2026-08-04 para el Hito de Contratos Neutros, DTOs Dinámicos y Retiro Heredado.
-2. **Implementar Suite de Pruebas Oracle (Fase 1.2)**: Diseñar y codificar ackend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs cubriendo los 10 puntos de control del plan y las dos precisiones:
-   - Variable de entorno RL_ORACLE_INTEGRATION_REQUIRED y su advertencia visible en consola.
-   - Lista blanca de secuencias Oracle permitidas en infraestructura de pruebas.
-   - Atomicidad de aprobación (RL_MR_EVI_APROBACION + RL_AUDITORIA transversal) y evaluaciones.
-   - Rollback ante fallos físicos de base de datos Oracle e integraciones fallidas.
-   - Compensación física y Oracle y mención de riesgo de commit pendiente de aceptación expresa.
-   - Concurrencia optimista (evaluaciones) y pesimista (evidencias con select for update).
-   - Cálculo de reglas versionadas y trazas de cálculo.
-   - Limpieza física incondicional en bloque inally.
+1. **Formalizar Dictamen de No Aprobación (Paso 1 / Fase 1.2)**: Documentar detalladamente los 14 hallazgos bloqueantes encontrados en el commit `6e77ee3` y mantener el estado como **NO APROBADO** y la **Fase 1.2 Abierta**.
+2. **Generar Plan de Subsanación de Pruebas Oracle**: Establecer la estrategia para resolver cada uno de los 14 hallazgos sin realizar ejecuciones de pruebas contra la base de datos Oracle física (`RL_ORACLE_INTEGRATION_REQUIRED=false`).
+3. **Sincronizar Estado de Colaboración**: Actualizar `ESTADO_COLABORACION.md` señalando que la Fase 1.3 está certificada técnicamente en CI y pendiente de firma de acta funcional, y que el Script 05 y la suite de pruebas Oracle continúan bloqueados de ejecución.
 
 ### Archivos creados o modificados
 
-- **Creado**: ackend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs — Suite de pruebas de integración de base de datos Oracle.
-- **Modificado**: docs/0.0 Documentación/ESTADO_COLABORACION.md — Formalización de aprobación funcional de Fase 1.3.
-- **Modificado**: BITACORA_COLABORACION.md — Este archivo.
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/PLAN_SUBSANACION_PRUEBAS_ORACLE_FASE_1_2.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/PLAN_SUBSANACION_PRUEBAS_ORACLE_FASE_1_2.md) — Plan técnico oficial para corregir los 14 hallazgos bloqueantes.
+- **Creado**: [`docs/3. Módulo Matrices de Riesgos/ANALISIS_DICTAMEN_PRUEBAS_ORACLE_FASE_1_2.md`](docs/3.%20Módulo%20Matrices%20de%20Riesgos/ANALISIS_DICTAMEN_PRUEBAS_ORACLE_FASE_1_2.md) — Dictamen técnico detallado del Paso 1 (NO APROBADO).
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización de estado de fases y referencias a los nuevos documentos.
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) — Este archivo.
 
 ### Pruebas ejecutadas (verificadas en esta intervención)
 
-- **Compilación en Release**: exitosa (0 errores, 0 advertencias).
-- **Backend unitario ordinario**: **193 correctas, 0 fallidas, 0 omitidas** (Las pruebas de integración se omitieron de forma controlada imprimiendo la advertencia de que la Fase 1.2 no está certificada en este entorno).
-- **Validador Estático local**: exitoso (0 hallazgos en 47 archivos del módulo y 115 de seguridad).
-
-### Riesgos y restricciones
-
-- Las pruebas físicas de base de datos contra Oracle quedan bloqueadas de ejecución y requerirán una autorización nueva y separada. El riesgo de pérdida física de disco si el commit posterior de base de datos falla queda documentado y pendiente de aceptación expresa de Javier Mejía.
+- **Validación Estática Local**: Validadores de estructura, alineación DDL y enlaces documentales listos.
+- **Suite Oracle de Integración**: Bloqueada de ejecución física (`RL_ORACLE_INTEGRATION_REQUIRED=false`).
 
 ### Punto exacto de continuación
 
-1. Entregar el código a Codex para su revisión y validación de las pruebas.
-2. Solicitar autorización expresa para habilitar RL_ORACLE_INTEGRATION_REQUIRED=true y correr las pruebas físicamente contra la base de datos Oracle de desarrollo.
-3. Mantener el script  5 bloqueado de ejecución hasta contar con autorización separada.
+1. Subir los documentos de subsanación y dictamen a la rama `desarrollo` en git.
+2. Aguardar la autorización explícita para comenzar la refactorización de la suite `MatricesRiesgosRepositoryIntegrationTests.cs` en código conforme al plan.
