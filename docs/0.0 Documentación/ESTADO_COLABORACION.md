@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-04: La Fase 1.3 está **implementada y certificada técnicamente por CI**, pendiente de aprobación funcional de Javier Mejía. La Fase 1.2 permanece **abierta y pendiente de pruebas Oracle controladas de transacción y rollback**. La **Fase 1 completa no está certificada**. PR #20 se mantiene en borrador; no se autoriza ninguna nueva modificación o fusión en `main`.
+> Actualización 2026-08-04: La Fase 1.3 ha sido aprobada a nivel funcional por Javier Mejía. La Fase 1.2 permanece abierta y pendiente de la codificación y ejecución controlada de pruebas Oracle (Paso 1 del plan aprobado). PR #20 en borrador, `main` intacta.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md`.
 
@@ -20,11 +20,11 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 2. Última intervención
 
-- **Intervención**: Corrección del validador local y conciliación de evidencia CI de la Fase 1.3
+- **Intervención**: Aprobación funcional de la Fase 1.3 y autorización del Paso 1 de Fase 1.2 (Pruebas Oracle)
 - **Fecha**: 2026-08-04 (Hora local)
-- **Autor**: Codex
+- **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Estado**: Se corrigió el falso positivo que examinaba `appsettings.json` aun estando ignorado por Git, sin excluir archivos rastreados. La ejecución CI `30855978597` aprobó build, suites, cobertura y E2E. La Fase 1.3 queda **certificada técnicamente en CI y pendiente de aprobación funcional**; la Fase 1.2 sigue **abierta** por Oracle; la Fase 1 global sigue **no certificada**.
+- **Estado**: Aprobación funcional de la Fase 1.3 otorgada formalmente por Javier Mejía. Se autorizó la codificación de las pruebas de integración Oracle en `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs` (Paso 1 del plan). La Fase 1.2 continúa abierta; la Fase 1 global sigue no certificada.
 
 ---
 
@@ -35,7 +35,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 | **Fase 0** | Reconciliación de Estructuras y Eliminación de Código Heredado | **Completada** | Código libre de tablas antiguas y `EVA_ESTADO`. |
 | **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
 | **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Pendiente)** | Pendiente de pruebas Oracle controladas de commit/rollback (`RL_MR_EVI_APROBACION`). |
-| **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente en CI** | Consolidado tipado, metodología dinámica/versionada y frontend adaptado; pendiente de aprobación funcional de Javier Mejía. |
+| **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Aprobada funcionalmente** | Aprobada por Javier Mejía el 2026-08-04. Pendiente de fusión de PR #20 (mantenido en borrador). |
 | **Fase 1.4 – 1.9** | Metodología, Consultas, Endpoints, Accesibilidad, HTTP y Certificación | **Pendientes de certificación** | Avances técnicos integrados; certificación global pendiente de pruebas ejecutable y Oracle. |
 | **Fase 1 Global** | Plan de Implementación por Fases | **No Certificada (En progreso)** | PR #20 en borrador, `main` intacta, sin fusiones. |
 
@@ -57,7 +57,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 5. Directrices y restricciones activas
 
-1. **Separación de certificaciones**: La Fase 1.3 cuenta con certificación técnica CI, pero no debe declararse funcionalmente aprobada por Javier ni debe confundirse con el cierre de la Fase 1 global.
+1. **Fase 1.3 Aprobada**: La Fase 1.3 cuenta con aprobación funcional y certificación técnica en CI, pero el PR #20 debe mantenerse en borrador hasta cerrar la Fase 1.2 y la Fase 1 global.
 2. **Fase 1.2 abierta**: Mantener el seguimiento de pruebas Oracle de commit conjunto y rollback forzado en `RL_MR_EVI_APROBACION`.
 3. **Oracle / Script 05**: No ejecutar en base de datos sin autorización explícita.
 4. **PR #20**: Mantener en estado borrador (*draft*); no realizar merge ni modificar `main`.
@@ -68,6 +68,6 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 ## 6. Punto exacto de continuación
 
 1. Mantener PR #20 en borrador y preservar `main` intacta.
-2. Obtener la aprobación funcional de Javier Mejía para la Fase 1.3, sin fusionar el PR #20.
-3. Planificar y autorizar por separado la ejecución controlada de pruebas transaccionales Oracle (commit/rollback) para poder cerrar la Fase 1.2.
-4. Mantener el script `05` bloqueado hasta contar con autorización expresa posterior.
+2. Codificar la suite de pruebas de integración Oracle controladas en `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs` sin ejecutar contra Oracle de forma física.
+3. Compilar en Release, correr la suite de pruebas unitarias sin Oracle (verificando la advertencia) y ejecutar validadores estáticos locales.
+4. Entregar el código a Codex para revisión. La ejecución física contra Oracle y el script `05` requerirán una autorización nueva y separada.

@@ -1897,3 +1897,47 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 1. Ejecución de la **Fase 1: Implementación de Consultas Relacionales en Oracle 11g** (reconstrucción de metodología vigente dinámica, proyecciones optimizadas y queries de agregación y paginación en base de datos).
 2. Revisión de los socios.
 
+
+---
+
+## Registro de Intervención — Antigravity — Aprobación de Fase 1.3 y Codificación de Pruebas de Integración (Fase 1.2)
+
+- **Fecha y hora**: 2026-08-04 13:19, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: desarrollo.
+- **Commit inicial**: 8c0bc3f | **Commit final**: *Cambios locales en confirmación*.
+
+### Objetivo y alcance
+
+1. **Registrar Aprobación de la Fase 1.3**: Documentar la aprobación funcional formal otorgada por Javier Mejía el 2026-08-04 para el Hito de Contratos Neutros, DTOs Dinámicos y Retiro Heredado.
+2. **Implementar Suite de Pruebas Oracle (Fase 1.2)**: Diseñar y codificar ackend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs cubriendo los 10 puntos de control del plan y las dos precisiones:
+   - Variable de entorno RL_ORACLE_INTEGRATION_REQUIRED y su advertencia visible en consola.
+   - Lista blanca de secuencias Oracle permitidas en infraestructura de pruebas.
+   - Atomicidad de aprobación (RL_MR_EVI_APROBACION + RL_AUDITORIA transversal) y evaluaciones.
+   - Rollback ante fallos físicos de base de datos Oracle e integraciones fallidas.
+   - Compensación física y Oracle y mención de riesgo de commit pendiente de aceptación expresa.
+   - Concurrencia optimista (evaluaciones) y pesimista (evidencias con select for update).
+   - Cálculo de reglas versionadas y trazas de cálculo.
+   - Limpieza física incondicional en bloque inally.
+
+### Archivos creados o modificados
+
+- **Creado**: ackend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs — Suite de pruebas de integración de base de datos Oracle.
+- **Modificado**: docs/0.0 Documentación/ESTADO_COLABORACION.md — Formalización de aprobación funcional de Fase 1.3.
+- **Modificado**: BITACORA_COLABORACION.md — Este archivo.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- **Compilación en Release**: exitosa (0 errores, 0 advertencias).
+- **Backend unitario ordinario**: **193 correctas, 0 fallidas, 0 omitidas** (Las pruebas de integración se omitieron de forma controlada imprimiendo la advertencia de que la Fase 1.2 no está certificada en este entorno).
+- **Validador Estático local**: exitoso (0 hallazgos en 47 archivos del módulo y 115 de seguridad).
+
+### Riesgos y restricciones
+
+- Las pruebas físicas de base de datos contra Oracle quedan bloqueadas de ejecución y requerirán una autorización nueva y separada. El riesgo de pérdida física de disco si el commit posterior de base de datos falla queda documentado y pendiente de aceptación expresa de Javier Mejía.
+
+### Punto exacto de continuación
+
+1. Entregar el código a Codex para su revisión y validación de las pruebas.
+2. Solicitar autorización expresa para habilitar RL_ORACLE_INTEGRATION_REQUIRED=true y correr las pruebas físicamente contra la base de datos Oracle de desarrollo.
+3. Mantener el script  5 bloqueado de ejecución hasta contar con autorización separada.
