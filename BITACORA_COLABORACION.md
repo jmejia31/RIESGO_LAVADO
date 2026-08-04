@@ -6,6 +6,33 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Fase 2-R: DDL manual del modelo reducido
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Agente:** Codex.
+- **Rama:** `desarrollo`.
+- **Commit inicial:** `d6f5738`.
+- **Objetivo:** codificar el DDL manual y bloqueado para reconstruir el módulo con 17 tablas, sin ejecución Oracle.
+
+### Cambios
+
+1. Se creó `database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql`.
+2. El script verifica esquema `RIESGO_LAVADO`, requiere parámetro `EJECUTAR`, valida `RL_USUARIOS`, retira objetos `RL_MR_*` de prueba y reconstruye únicamente las 17 tablas y 17 secuencias aprobadas.
+3. Incluye índices para proyecciones, flujo, planes, alertas, automonitoreo y el vínculo único de evidencias.
+4. El script no se agregó al punto de entrada `00_APLICAR_MODULO_MATRICES_RIESGOS.sql`; su ejecución permanece bloqueada hasta autorización, respaldo y aplicación compatible.
+
+### Verificación ejecutada
+
+- `tools/validate_database_scripts.ps1`: correcta.
+- `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: correcta.
+- Oracle y script de transición: no ejecutados.
+
+### Punto de continuación
+
+Refactorizar contratos, repositorio, servicio, controlador y frontend para `RL_MR_EVIDENCIAS_VINCULOS`, flujo como historial y auditoría institucional antes de autorizar la transición física.
+
+---
+
 ## Registro de Intervención — Codex — Diseño Fase 1-R: transición a 17 tablas
 
 - **Fecha y hora:** 2026-08-04, hora local (UTC-6).
