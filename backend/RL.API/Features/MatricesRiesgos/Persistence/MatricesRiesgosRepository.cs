@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
@@ -485,7 +486,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
-            long reglaId = await ResolverReglaVersionFormularioAsync(conn, trans, dto.EvaVersionId, exigirVigente: true);
+            ReglaCalculoResuelta regla = await ResolverReglaVersionFormularioAsync(
+                conn,
+                trans,
+                dto.EvaVersionId,
+                exigirVigente: true);
+            string calculosJson = IncorporarMetadatosRegla(
+                dto.EvaDataCalcJson,
+                regla.Codigo,
+                regla.Version,
+                regla.AlgoritmoId);
             long evaluacionId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_EVALUACIONES");
             ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto);
             string codigoRiesgo = await ObtenerCodigoRiesgoAsync(conn, trans, dto.EvaRiesgoId);
@@ -518,13 +528,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmdInsert.Parameters.Add(new OracleParameter("riesgoId", dto.EvaRiesgoId));
             cmdInsert.Parameters.Add(new OracleParameter("versionId", dto.EvaVersionId));
             cmdInsert.Parameters.Add(new OracleParameter("dataJson", OracleDbType.Clob) { Value = dto.EvaDataJson });
-            cmdInsert.Parameters.Add(new OracleParameter("dataCalcJson", OracleDbType.Clob) { Value = dto.EvaDataCalcJson });
+            cmdInsert.Parameters.Add(new OracleParameter("dataCalcJson", OracleDbType.Clob) { Value = calculosJson });
             cmdInsert.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
             await cmdInsert.ExecuteNonQueryAsync();
 
             await InsertarProyeccionAsync(conn, trans, evaluacionId, codigoRiesgo, proyeccion, "BORRADOR");
             await InsertarFlujoAsync(conn, trans, evaluacionId, "BORRADOR", "Creación inicial", usuarioId);
-            await InsertarTrazaCalculoAsync(conn, trans, evaluacionId, reglaId, dto.EvaDataJson, dto.EvaDataCalcJson, usuarioId);
             await InsertarAuditoriaCampoAsync(conn, trans, evaluacionId, "__EVALUACION__", null, dto.EvaDataJson, usuarioId, ip);
 
             await trans.CommitAsync();
@@ -579,7 +588,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new DBConcurrencyException($"Conflicto de modificación concurrente en la evaluación {dto.EvaId}.");
             }
 
-            long reglaId = await ResolverReglaVersionFormularioAsync(conn, trans, versionFormularioId, exigirVigente: false);
+            ReglaCalculoResuelta regla = await ResolverReglaVersionFormularioAsync(
+                conn,
+                trans,
+                versionFormularioId,
+                exigirVigente: false);
+            string calculosJson = IncorporarMetadatosRegla(
+                dto.EvaDataCalcJson,
+                regla.Codigo,
+                regla.Version,
+                regla.AlgoritmoId);
 
             const string sqlUpdate = @"
                 UPDATE RL_MR_EVALUACIONES_RIESGO
@@ -592,7 +610,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             await using var cmdUpdate = CrearComando(sqlUpdate, conn, trans);
             cmdUpdate.Parameters.Add(new OracleParameter("dataJson", OracleDbType.Clob) { Value = dto.EvaDataJson });
-            cmdUpdate.Parameters.Add(new OracleParameter("dataCalcJson", OracleDbType.Clob) { Value = dto.EvaDataCalcJson });
+            cmdUpdate.Parameters.Add(new OracleParameter("dataCalcJson", OracleDbType.Clob) { Value = calculosJson });
             cmdUpdate.Parameters.Add(new OracleParameter("nuevaVersionRow", versionRowActual + 1));
             cmdUpdate.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
             cmdUpdate.Parameters.Add(new OracleParameter("versionRow", versionRowActual));
@@ -608,7 +626,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new InvalidOperationException($"La evaluación {dto.EvaId} debe tener exactamente una proyección; se actualizaron {actualizadas}.");
             }
 
-            await InsertarTrazaCalculoAsync(conn, trans, dto.EvaId, reglaId, dto.EvaDataJson, dto.EvaDataCalcJson, usuarioId);
             await InsertarAuditoriaCampoAsync(conn, trans, dto.EvaId, "__EVALUACION__", jsonAnterior, dto.EvaDataJson, usuarioId, ip);
 
             await trans.CommitAsync();
@@ -1320,6 +1337,36 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
     }
 
+    private static string IncorporarMetadatosRegla(
+        string calculosJson,
+        string reglaCodigo,
+        string reglaVersion,
+        string algoritmoId)
+    {
+        JsonNode? raiz;
+        try
+        {
+            raiz = JsonNode.Parse(calculosJson);
+        }
+        catch (JsonException ex)
+        {
+            throw new ArgumentException("Los resultados calculados no contienen JSON válido.", nameof(calculosJson), ex);
+        }
+
+        if (raiz is not JsonObject calculos)
+        {
+            throw new ArgumentException("Los resultados calculados deben ser un objeto JSON.", nameof(calculosJson));
+        }
+
+        // Estos metadatos proceden de la versión publicada y del catálogo de reglas.
+        // Se sobrescribe cualquier valor remitido por el cliente para impedir suplantación.
+        calculos["reglaCodigo"] = reglaCodigo;
+        calculos["reglaVersion"] = reglaVersion;
+        calculos["algoritmoId"] = algoritmoId;
+
+        return calculos.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
+    }
+
     private static string ObtenerTextoRequerido(
         IReadOnlyDictionary<string, JsonElement> respuestas,
         IReadOnlyDictionary<string, JsonElement> calculados,
@@ -1532,7 +1579,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
-    private static async Task<long> ResolverReglaVersionFormularioAsync(
+    private static async Task<ReglaCalculoResuelta> ResolverReglaVersionFormularioAsync(
         OracleConnection conn,
         OracleTransaction transaction,
         long versionFormularioId,
@@ -1553,9 +1600,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             throw new InvalidOperationException($"La versión {versionFormularioId} no está publicada" + (exigirVigente ? " y vigente." : "."));
         }
 
-        ReferenciaRegla referencia = ExtraerReferenciaRegla(jsonObj.ToString()!);
+        ReferenciaReglaDeclarada referencia = ExtraerReferenciaRegla(jsonObj.ToString()!);
         const string sqlRegla = @"
-            SELECT REG_ID
+            SELECT REG_ALGORITMO_ID
               FROM RL_MR_REGLAS_CALCULO
              WHERE REG_CODIGO = :codigo
                AND REG_VERSION = :version
@@ -1563,13 +1610,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var cmdRegla = CrearComando(sqlRegla, conn, transaction);
         cmdRegla.Parameters.Add(new OracleParameter("codigo", referencia.Codigo));
         cmdRegla.Parameters.Add(new OracleParameter("version", referencia.Version));
-        object? reglaObj = await cmdRegla.ExecuteScalarAsync();
-        return reglaObj is not null
-            ? Convert.ToInt64(reglaObj)
-            : throw new InvalidOperationException($"La regla {referencia.Codigo} versión {referencia.Version} declarada por el formulario no existe o está inactiva.");
+        object? algoritmoObj = await cmdRegla.ExecuteScalarAsync();
+        if (algoritmoObj is null || string.IsNullOrWhiteSpace(algoritmoObj.ToString()))
+        {
+            throw new InvalidOperationException($"La regla {referencia.Codigo} versión {referencia.Version} declarada por el formulario no existe o está inactiva.");
+        }
+
+        return new ReglaCalculoResuelta(
+            referencia.Codigo,
+            referencia.Version,
+            algoritmoObj.ToString()!);
     }
 
-    private static ReferenciaRegla ExtraerReferenciaRegla(string versionJson)
+    private static ReferenciaReglaDeclarada ExtraerReferenciaRegla(string versionJson)
     {
         using JsonDocument document = JsonDocument.Parse(versionJson);
         JsonElement root = document.RootElement;
@@ -1577,7 +1630,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         foreach (string propertyName in new[] { "reglaCalculo", "regla_calculo" })
         {
             if (TryGetPropertyIgnoreCase(root, propertyName, out JsonElement regla)
-                && TryLeerReferenciaRegla(regla, out ReferenciaRegla? referencia))
+                && TryLeerReferenciaRegla(regla, out ReferenciaReglaDeclarada? referencia))
             {
                 return referencia!;
             }
@@ -1590,15 +1643,15 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             {
                 foreach (JsonElement regla in reglas.EnumerateArray())
                 {
-                    if (TryLeerReferenciaRegla(regla, out ReferenciaRegla? referencia)) return referencia!;
+                    if (TryLeerReferenciaRegla(regla, out ReferenciaReglaDeclarada? referencia)) return referencia!;
                 }
             }
             else if (reglas.ValueKind == JsonValueKind.Object)
             {
-                if (TryLeerReferenciaRegla(reglas, out ReferenciaRegla? directa)) return directa!;
+                if (TryLeerReferenciaRegla(reglas, out ReferenciaReglaDeclarada? directa)) return directa!;
                 foreach (JsonProperty property in reglas.EnumerateObject())
                 {
-                    if (TryLeerReferenciaRegla(property.Value, out ReferenciaRegla? referencia)) return referencia!;
+                    if (TryLeerReferenciaRegla(property.Value, out ReferenciaReglaDeclarada? referencia)) return referencia!;
                 }
             }
         }
@@ -1606,7 +1659,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         throw new InvalidOperationException("La versión publicada del formulario no declara código y versión de la regla de cálculo.");
     }
 
-    private static bool TryLeerReferenciaRegla(JsonElement element, out ReferenciaRegla? referencia)
+    private static bool TryLeerReferenciaRegla(JsonElement element, out ReferenciaReglaDeclarada? referencia)
     {
         referencia = null;
         if (element.ValueKind != JsonValueKind.Object) return false;
@@ -1618,7 +1671,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string? codigo = codigoElement.GetString();
         string? version = versionElement.GetString();
         if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(version)) return false;
-        referencia = new ReferenciaRegla(codigo.Trim(), version.Trim());
+        referencia = new ReferenciaReglaDeclarada(codigo.Trim(), version.Trim());
         return true;
     }
 
@@ -1685,42 +1738,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             : predeterminado;
     }
 
-    private static async Task InsertarTrazaCalculoAsync(
-        OracleConnection conn,
-        OracleTransaction transaction,
-        long evaluacionId,
-        long reglaId,
-        string entradasJson,
-        string resultadosJson,
-        long usuarioId)
-    {
-        const string sql = @"
-            INSERT INTO RL_MR_TRAZAS_CALCULO (
-                TRA_ID,
-                TRA_EVALUACION_ID,
-                TRA_REGLA_ID,
-                TRA_ENTRADAS_JSON,
-                TRA_RESULTADOS_JSON,
-                TRA_FECHA,
-                TRA_USR_ID
-            ) VALUES (
-                SEQ_RL_MR_TRAZAS.NEXTVAL,
-                :evaluacionId,
-                :reglaId,
-                :entradasJson,
-                :resultadosJson,
-                SYSDATE,
-                :usuarioId
-            )";
-        await using var cmd = CrearComando(sql, conn, transaction);
-        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
-        cmd.Parameters.Add(new OracleParameter("reglaId", reglaId));
-        cmd.Parameters.Add(new OracleParameter("entradasJson", OracleDbType.Clob) { Value = entradasJson });
-        cmd.Parameters.Add(new OracleParameter("resultadosJson", OracleDbType.Clob) { Value = resultadosJson });
-        cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
-        await cmd.ExecuteNonQueryAsync();
-    }
-
     private static async Task InsertarAuditoriaCampoAsync(
         OracleConnection conn,
         OracleTransaction transaction,
@@ -1770,5 +1787,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string Respuesta,
         string Dueno);
 
-    private sealed record ReferenciaRegla(string Codigo, string Version);
+    private sealed record ReferenciaReglaDeclarada(string Codigo, string Version);
+
+    private sealed record ReglaCalculoResuelta(string Codigo, string Version, string AlgoritmoId);
 }
