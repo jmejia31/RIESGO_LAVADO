@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Infrastructure.Database;
@@ -27,5 +28,22 @@ public sealed class MatricesRiesgosInstitutionalAuditTests
             BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
 
         Assert.Null(metodoLocal);
+    }
+
+    [Fact]
+    public void ContratoAuditoria_ExponeRegistroConConexionYTransaccionCompartidas()
+    {
+        MethodInfo metodo = Assert.Single(
+            typeof(IAuditoriaRepository).GetMethods(),
+            candidate =>
+            {
+                ParameterInfo[] parameters = candidate.GetParameters();
+                return candidate.Name == nameof(IAuditoriaRepository.RegistrarAsync)
+                    && parameters.Length == 11
+                    && parameters[0].ParameterType == typeof(OracleConnection)
+                    && parameters[1].ParameterType == typeof(OracleTransaction);
+            });
+
+        Assert.Equal(typeof(Task), metodo.ReturnType);
     }
 }
