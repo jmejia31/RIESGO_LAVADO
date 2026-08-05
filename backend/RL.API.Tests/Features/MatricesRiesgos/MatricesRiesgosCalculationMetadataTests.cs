@@ -12,15 +12,8 @@ public sealed class MatricesRiesgosCalculationMetadataTests
     public void MetadatosDeRegla_SobrescribenValoresRemitidosPorElCliente()
     {
         MethodInfo metodo = ObtenerMetodoIncorporacion();
-        const string calculosCliente = """
-            {
-              "reglaCodigo": "REGLA_CLIENTE",
-              "reglaVersion": "999",
-              "algoritmoId": "ALGORITMO_CLIENTE",
-              "vri": 7,
-              "vrr": 4
-            }
-            """;
+        const string calculosCliente =
+            "{\"reglaCodigo\":\"REGLA_CLIENTE\",\"reglaVersion\":\"999\",\"algoritmoId\":\"ALGORITMO_CLIENTE\",\"vri\":7,\"vrr\":4}";
 
         string resultado = Assert.IsType<string>(metodo.Invoke(
             null,
@@ -59,7 +52,7 @@ public sealed class MatricesRiesgosCalculationMetadataTests
                 }));
 
         ArgumentException causa = Assert.IsType<ArgumentException>(error.InnerException);
-        Assert.Contains("objeto JSON", causa.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("objeto JSON", causa.Message);
     }
 
     private static MethodInfo ObtenerMetodoIncorporacion()
