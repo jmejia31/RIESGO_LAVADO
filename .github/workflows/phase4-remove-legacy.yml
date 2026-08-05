@@ -1,0 +1,222 @@
+name: Phase 4 remove legacy matrices contracts
+
+on:
+  push:
+    branches:
+      - desarrollo
+
+permissions:
+  contents: write
+
+jobs:
+  apply-phase-4:
+    if: ${{ !contains(github.event.head_commit.message, '[phase4-done]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 0
+
+      - name: Apply phase 4 cut
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path('.')
+          repository_path = root / 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
+          evidence_dtos_path = root / 'backend/RL.API/Features/MatricesRiesgos/Contracts/Evidencias/EvidenciaDtos.cs'
+          permission_path = root / 'backend/RL.API/Features/MatricesRiesgos/Contracts/Configuracion/PermisoFormularioDto.cs'
+          validator_path = root / 'scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1'
+          test_path = root / 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosEvidenceContractTests.cs'
+          workflow_path = root / '.github/workflows/phase4-remove-legacy.yml'
+
+          repository = repository_path.read_text(encoding='utf-8')
+
+          repository, count_adapter = re.subn(
+              r'\n    // Compatibilidad de prueba Oracle: no existe endpoint ni contrato de aplicación para esta tabla retirada\.\n'
+              r'    public Task<bool> VincularEvidenciaAprobacionAsync\(.*?\n'
+              r'    public async Task<ResultadoEliminacionEvidencia>',
+              '\n    public async Task<ResultadoEliminacionEvidencia>',
+              repository,
+              count=1,
+              flags=re.S,
+          )
+          if count_adapter != 1:
+              raise SystemExit(f'No se retiró exactamente un adaptador de aprobación: {count_adapter}')
+
+          repository, count_helper = re.subn(
+              r'\n    private async Task<bool> EjecutarVinculoEvidenciaAsync\(.*?\n'
+              r'    private static MetodologiaFormularioDto ConstruirMetodologiaDinamica',
+              '\n    private static MetodologiaFormularioDto ConstruirMetodologiaDinamica',
+              repository,
+              count=1,
+              flags=re.S,
+          )
+          if count_helper != 1:
+              raise SystemExit(f'No se retiró exactamente un helper dinámico de tablas puente: {count_helper}')
+
+          forbidden_repository_tokens = [
+              'VincularEvidenciaAprobacionAsync',
+              'AsociarEvidenciaAprobacionDto',
+              'EjecutarVinculoEvidenciaAsync',
+              'RL_MR_EVI_APROBACION',
+              'tablaPuente',
+              'columnaEntidad',
+              'columnaEvidencia',
+          ]
+          for token in forbidden_repository_tokens:
+              if token in repository:
+                  raise SystemExit(f'El repositorio todavía contiene el residuo heredado: {token}')
+          for token in ['VincularEvidenciaAsync', 'RL_MR_EVIDENCIAS_VINCULOS', 'ObtenerConsultaEntidadEvidencia']:
+              if token not in repository:
+                  raise SystemExit(f'El repositorio perdió el contrato vigente: {token}')
+          repository_path.write_text(repository, encoding='utf-8')
+
+          evidence_dtos = evidence_dtos_path.read_text(encoding='utf-8')
+          evidence_dtos, count_dto = re.subn(
+              r'\n/// <summary>\n/// Contrato temporal exclusivo de la prueba Oracle pendiente\. No se expone por API\.\n/// </summary>\n'
+              r'public sealed class AsociarEvidenciaAprobacionDto\n\{.*?\n\}\n?$',
+              '\n',
+              evidence_dtos,
+              count=1,
+              flags=re.S,
+          )
+          if count_dto != 1 or 'AsociarEvidenciaAprobacionDto' in evidence_dtos:
+              raise SystemExit('No se retiró correctamente AsociarEvidenciaAprobacionDto.')
+          evidence_dtos_path.write_text(evidence_dtos, encoding='utf-8')
+
+          if not permission_path.exists():
+              raise SystemExit('No se encontró PermisoFormularioDto.cs para su retiro controlado.')
+          permission_path.unlink()
+
+          test_content = r'''using System;
+using System.Linq;
+using System.Reflection;
+using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Persistence;
+using Xunit;
+
+namespace RL.API.Tests.Features.MatricesRiesgos;
+
+public sealed class MatricesRiesgosEvidenceContractTests
+{
+    [Fact]
+    public void RepositorioYContrato_ExponenSoloVinculoGenerico()
+    {
+        string[] contrato = typeof(IMatricesRiesgosRepository)
+            .GetMethods()
+            .Where(m => m.Name.Contains("VincularEvidencia", StringComparison.Ordinal))
+            .Select(m => m.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToArray();
+
+        string[] implementacion = typeof(MatricesRiesgosRepository)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(m => m.Name.Contains("VincularEvidencia", StringComparison.Ordinal))
+            .Select(m => m.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(new[] { nameof(IMatricesRiesgosRepository.VincularEvidenciaAsync) }, contrato);
+        Assert.Equal(new[] { nameof(MatricesRiesgosRepository.VincularEvidenciaAsync) }, implementacion);
+    }
+
+    [Fact]
+    public void Ensamblado_NoContieneContratosTemporalesRetirados()
+    {
+        Assembly assembly = typeof(VincularEvidenciaDto).Assembly;
+
+        Assert.Null(assembly.GetType(
+            "RL.API.Features.MatricesRiesgos.Contracts.AsociarEvidenciaAprobacionDto"));
+        Assert.Null(assembly.GetType(
+            "RL.API.Features.MatricesRiesgos.Contracts.PermisoFormularioDto"));
+    }
+
+    [Fact]
+    public void TipoEntidadEvidencia_ConservaListaCerradaDeSieteDestinos()
+    {
+        string[] esperados =
+        {
+            "Riesgo",
+            "Evaluacion",
+            "Control",
+            "Plan",
+            "Actividad",
+            "Alerta",
+            "Automonitoreo"
+        };
+
+        Assert.Equal(esperados, Enum.GetNames<TipoEntidadEvidencia>());
+    }
+}
+'''
+          test_path.write_text(test_content, encoding='utf-8')
+
+          validator = validator_path.read_text(encoding='utf-8')
+          marker = '$securityFiles = @('
+          if marker not in validator:
+              raise SystemExit('No se encontró el punto seguro de extensión del validador.')
+
+          phase4_block = r'''
+$phase4PermissionContract = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Configuracion/PermisoFormularioDto.cs'
+if (Test-Path -LiteralPath $phase4PermissionContract) {
+    $errors.Add('No debe permanecer PermisoFormularioDto.cs en el modelo reducido.')
+}
+
+$phase4ForbiddenTokens = @(
+    [pscustomobject]@{ Token = 'VincularEvidenciaAprobacionAsync'; Message = 'El adaptador de aprobación fue retirado.' },
+    [pscustomobject]@{ Token = 'AsociarEvidenciaAprobacionDto'; Message = 'El DTO temporal de aprobación fue retirado.' },
+    [pscustomobject]@{ Token = 'EjecutarVinculoEvidenciaAsync'; Message = 'No se permite un helper dinámico hacia tablas puente.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_'; Message = 'Las tablas puente específicas fueron sustituidas por RL_MR_EVIDENCIAS_VINCULOS.' },
+    [pscustomobject]@{ Token = 'PermisoFormularioDto'; Message = 'Los permisos granulares del formulario fueron retirados.' },
+    [pscustomobject]@{ Token = 'tablaPuente'; Message = 'No se permite construir destinos SQL dinámicos para evidencias.' },
+    [pscustomobject]@{ Token = 'columnaEntidad'; Message = 'No se permite construir columnas dinámicas para tablas puente.' },
+    [pscustomobject]@{ Token = 'columnaEvidencia'; Message = 'No se permite construir columnas dinámicas para tablas puente.' }
+)
+
+$phase4Files = Get-SourceFiles -Roots $traceScanRoots -Extensions $moduleExtensions
+foreach ($file in $phase4Files) {
+    $content = Get-Content -LiteralPath $file.FullName -Raw
+    foreach ($entry in $phase4ForbiddenTokens) {
+        if ($content.Contains($entry.Token)) {
+            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
+            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
+                $errors.Add("${relativePath}:$($match.LineNumber): contrato heredado '$($entry.Token)'. $($entry.Message)")
+            }
+        }
+    }
+}
+
+if (Test-Path -LiteralPath $repositoryFile) {
+    $content = Get-Content -LiteralPath $repositoryFile -Raw
+    foreach ($token in @(
+        'public async Task<bool> VincularEvidenciaAsync',
+        'INSERT INTO RL_MR_EVIDENCIAS_VINCULOS',
+        'ObtenerConsultaEntidadEvidencia')) {
+        if (-not $content.Contains($token)) {
+            $errors.Add("MatricesRiesgosRepository.cs no conserva el vínculo genérico obligatorio '$token'.")
+        }
+    }
+}
+
+'''
+          validator = validator.replace(marker, phase4_block + marker, 1)
+          validator_path.write_text(validator, encoding='utf-8')
+
+          if workflow_path.exists():
+              workflow_path.unlink()
+          PY
+
+      - name: Commit phase 4
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "refactor(matrices): retirar adaptadores y contratos heredados [phase4-done]"
+          git push origin HEAD:desarrollo
