@@ -1,0 +1,380 @@
+name: Phase 3 Institutional Audit Migration
+
+on:
+  push:
+    branches:
+      - desarrollo
+    paths:
+      - .github/workflows/phase3-migrate-institutional-audit.yml
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: ${{ !contains(github.event.head_commit.message, '[phase3-done]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 0
+
+      - name: Migrate local audit to institutional audit
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          root = Path.cwd()
+          repository_path = root / 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
+          validator_path = root / 'scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1'
+          test_path = root / 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosInstitutionalAuditTests.cs'
+
+          repository = repository_path.read_text(encoding='utf-8')
+
+          def replace_exact(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: se esperaba 1 coincidencia y se encontraron {count}.')
+              return text.replace(old, new, 1)
+
+          repository = replace_exact(
+              repository,
+              '''    private readonly OracleDbContext _db;
+              private readonly IAuditoriaRepository? _auditoriaRepository;
+
+              public MatricesRiesgosRepository(OracleDbContext db)
+                  : this(db, null)
+              {
+              }
+
+              public MatricesRiesgosRepository(OracleDbContext db, IAuditoriaRepository? auditoriaRepository)
+              {
+                  _db = db;
+                  _auditoriaRepository = auditoriaRepository;
+              }
+          ''',
+              '''    private readonly OracleDbContext _db;
+              private readonly IAuditoriaRepository _auditoriaRepository;
+
+              public MatricesRiesgosRepository(
+                  OracleDbContext db,
+                  IAuditoriaRepository auditoriaRepository)
+              {
+                  _db = db ?? throw new ArgumentNullException(nameof(db));
+                  _auditoriaRepository = auditoriaRepository
+                      ?? throw new ArgumentNullException(nameof(auditoriaRepository));
+              }
+          ''',
+              'constructor obligatorio de auditoria')
+
+          repository = replace_exact(
+              repository,
+              '''            await InsertarAuditoriaCampoAsync(conn, trans, evaluacionId, "__EVALUACION__", null, dto.EvaDataJson, usuarioId, ip);
+          ''',
+              '''            await _auditoriaRepository.RegistrarAsync(
+                  conn,
+                  trans,
+                  "RL_MR_EVALUACIONES_RIESGO",
+                  evaluacionId.ToString(),
+                  "CREAR_EVALUACION",
+                  null,
+                  JsonSerializer.Serialize(new
+                  {
+                      dto.EvaRiesgoId,
+                      dto.EvaVersionId,
+                      Datos = dto.EvaDataJson,
+                      Calculos = calculosJson
+                  }),
+                  usuarioId,
+                  null,
+                  ip,
+                  ModuloAuditoria);
+          ''',
+              'auditoria institucional de creacion')
+
+          repository = replace_exact(
+              repository,
+              '''            await InsertarAuditoriaCampoAsync(conn, trans, dto.EvaId, "__EVALUACION__", jsonAnterior, dto.EvaDataJson, usuarioId, ip);
+          ''',
+              '''            await _auditoriaRepository.RegistrarAsync(
+                  conn,
+                  trans,
+                  "RL_MR_EVALUACIONES_RIESGO",
+                  dto.EvaId.ToString(),
+                  "ACTUALIZAR_EVALUACION",
+                  JsonSerializer.Serialize(new
+                  {
+                      Datos = jsonAnterior,
+                      VersionRow = versionRowActual
+                  }),
+                  JsonSerializer.Serialize(new
+                  {
+                      Datos = dto.EvaDataJson,
+                      Calculos = calculosJson,
+                      VersionRow = versionRowActual + 1
+                  }),
+                  usuarioId,
+                  null,
+                  ip,
+                  ModuloAuditoria);
+          ''',
+              'auditoria institucional de actualizacion')
+
+          repository = replace_exact(
+              repository,
+              '''            await InsertarAuditoriaCampoAsync(conn, trans, evaId, "estado", anterior, estado, usuarioId, ip);
+          ''',
+              '''            await _auditoriaRepository.RegistrarAsync(
+                  conn,
+                  trans,
+                  "RL_MR_EVALUACIONES_RIESGO",
+                  evaId.ToString(),
+                  "TRANSICION_ESTADO",
+                  JsonSerializer.Serialize(new { Estado = anterior }),
+                  JsonSerializer.Serialize(new { Estado = estado, Motivo = motivo }),
+                  usuarioId,
+                  null,
+                  ip,
+                  ModuloAuditoria);
+          ''',
+              'auditoria institucional de transicion')
+
+          repository = replace_exact(
+              repository,
+              '''        if (_auditoriaRepository is null)
+                      throw new InvalidOperationException("El vínculo de evidencia requiere auditoría institucional transaccional.");
+
+          ''',
+              '',
+              'validacion nullable de vinculo generico')
+
+          repository = replace_exact(
+              repository,
+              '''        if (sqlResolverEvaluacion is null && _auditoriaRepository is null)
+                  {
+                      throw new InvalidOperationException("La vinculación de evidencias de aprobación requiere auditoría transversal institucional.");
+                  }
+
+          ''',
+              '',
+              'validacion nullable del adaptador heredado')
+
+          repository = replace_exact(
+              repository,
+              '''            if (evaluacionId.HasValue)
+                      {
+                          await InsertarAuditoriaCampoAsync(
+                              conn,
+                              trans,
+                              evaluacionId.Value,
+                              "evidencia",
+                              null,
+                              $"{tablaPuente}:{entidadId}:{evidenciaId}",
+                              usuarioId,
+                              ip);
+                      }
+
+          ''',
+              '',
+              'auditoria local del adaptador heredado')
+
+          repository = replace_exact(
+              repository,
+              '''            if (_auditoriaRepository is not null)
+                      {
+                          string datosNuevos = JsonSerializer.Serialize(new
+                          {
+                              tablaPuente,
+                              entidadId,
+                              evidenciaId,
+                              evaluacionId
+                          });
+
+                          await _auditoriaRepository.RegistrarAsync(
+                              conn,
+                              trans,
+                              tablaPuente,
+                              $"{entidadId}:{evidenciaId}",
+                              "VINCULAR_EVIDENCIA",
+                              null,
+                              datosNuevos,
+                              usuarioId,
+                              null,
+                              ip,
+                              ModuloAuditoria);
+                      }
+                      else if (string.Equals(tablaPuente, "RL_MR_EVI_APROBACION", StringComparison.Ordinal))
+                      {
+                          throw new InvalidOperationException("La vinculación de evidencia a aprobación exige auditoría transversal transaccional.");
+                      }
+          ''',
+              '''            string datosNuevos = JsonSerializer.Serialize(new
+                      {
+                          tablaPuente,
+                          entidadId,
+                          evidenciaId,
+                          evaluacionId
+                      });
+
+                      await _auditoriaRepository.RegistrarAsync(
+                          conn,
+                          trans,
+                          tablaPuente,
+                          $"{entidadId}:{evidenciaId}",
+                          "VINCULAR_EVIDENCIA",
+                          null,
+                          datosNuevos,
+                          usuarioId,
+                          null,
+                          ip,
+                          ModuloAuditoria);
+          ''',
+              'auditoria institucional obligatoria del adaptador')
+
+          repository, removed = re.subn(
+              r'\n    private static async Task InsertarAuditoriaCampoAsync\(.*?\n    \}\n\n    private sealed record ProyeccionEvaluacion',
+              '\n    private sealed record ProyeccionEvaluacion',
+              repository,
+              count=1,
+              flags=re.S)
+          if removed != 1:
+              raise SystemExit(f'eliminacion del metodo local: se esperaba 1 coincidencia y se encontraron {removed}.')
+
+          forbidden_repository = (
+              'InsertarAuditoriaCampoAsync',
+              'INSERT INTO RL_MR_AUDITORIA',
+              'SEQ_RL_MR_AUDITORIA',
+              'IAuditoriaRepository? _auditoriaRepository',
+              'this(db, null)')
+          for token in forbidden_repository:
+              if token in repository:
+                  raise SystemExit(f'El repositorio conserva el token retirado: {token}')
+
+          required_repository = (
+              'private readonly IAuditoriaRepository _auditoriaRepository;',
+              'IAuditoriaRepository auditoriaRepository',
+              '"CREAR_EVALUACION"',
+              '"ACTUALIZAR_EVALUACION"',
+              '"TRANSICION_ESTADO"',
+              '_auditoriaRepository.RegistrarAsync(')
+          for token in required_repository:
+              if token not in repository:
+                  raise SystemExit(f'El repositorio no contiene el control requerido: {token}')
+
+          repository_path.write_text(repository, encoding='utf-8')
+
+          validator = validator_path.read_text(encoding='utf-8')
+
+          anchor = '''    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
+                  if ($content.Contains($token)) {
+                      $errors.Add("MatricesRiesgosRepository.cs conserva la columna física retirada '$token'.")
+                  }
+              }
+
+          '''
+          insertion = anchor + '''    foreach ($token in @(
+                  'InsertarAuditoriaCampoAsync',
+                  'INSERT INTO RL_MR_AUDITORIA',
+                  'SEQ_RL_MR_AUDITORIA',
+                  'IAuditoriaRepository? _auditoriaRepository',
+                  'this(db, null)')) {
+                  if ($content.Contains($token)) {
+                      $errors.Add("MatricesRiesgosRepository.cs conserva auditoría local o inyección opcional retirada: '$token'.")
+                  }
+              }
+
+          '''
+          validator = replace_exact(
+              validator,
+              anchor,
+              insertion,
+              'reglas de auditoria local del validador')
+
+          validator = replace_exact(
+              validator,
+              '''        'RL_MR_EVIDENCIAS_VINCULOS' = 'La vinculación funcional debe usar la tabla genérica vigente.'
+          ''',
+              '''        'RL_MR_EVIDENCIAS_VINCULOS' = 'La vinculación funcional debe usar la tabla genérica vigente.'
+                      'private readonly IAuditoriaRepository _auditoriaRepository;' = 'La auditoría institucional debe ser obligatoria.'
+                      'IAuditoriaRepository auditoriaRepository' = 'El repositorio debe exigir auditoría institucional por constructor.'
+                      '"CREAR_EVALUACION"' = 'La creación debe registrarse en RL_AUDITORIA.'
+                      '"ACTUALIZAR_EVALUACION"' = 'La actualización debe registrarse en RL_AUDITORIA.'
+                      '"TRANSICION_ESTADO"' = 'La transición debe registrarse en RL_AUDITORIA.'
+          ''',
+              'controles obligatorios de auditoria institucional')
+
+          script_anchor = '''    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
+                  if ($content.Contains($token)) {
+                      $errors.Add("El script 06 conserva la columna física retirada '$token'.")
+                  }
+              }
+          '''
+          script_insertion = script_anchor + '''    foreach ($pattern in @(
+                  'CREATE TABLE\\s+RL_MR_AUDITORIA',
+                  'CREATE SEQUENCE\\s+SEQ_RL_MR_AUDITORIA')) {
+                  if ($content -match $pattern) {
+                      $errors.Add("El script 06 vuelve a crear un objeto de auditoría local retirado: $pattern")
+                  }
+              }
+              if (-not $content.Contains("'RL_MR_AUDITORIA'")) {
+                  $errors.Add('El script 06 debe conservar el retiro controlado de RL_MR_AUDITORIA heredada.')
+              }
+          '''
+          validator = replace_exact(
+              validator,
+              script_anchor,
+              script_insertion,
+              'validacion del script 06 para auditoria local')
+
+          validator_path.write_text(validator, encoding='utf-8')
+
+          test_path.write_text('''using System;
+          using System.Linq;
+          using System.Reflection;
+          using RL.API.Features.Auditoria.Persistence;
+          using RL.API.Features.MatricesRiesgos.Persistence;
+          using RL.API.Infrastructure.Database;
+          using Xunit;
+
+          namespace RL.API.Tests.Features.MatricesRiesgos;
+
+          public sealed class MatricesRiesgosInstitutionalAuditTests
+          {
+              [Fact]
+              public void Repositorio_ExigeAuditoriaInstitucionalPorConstructor()
+              {
+                  ConstructorInfo constructor = Assert.Single(typeof(MatricesRiesgosRepository).GetConstructors());
+                  Type[] parametros = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
+
+                  Assert.Equal(new[] { typeof(OracleDbContext), typeof(IAuditoriaRepository) }, parametros);
+              }
+
+              [Fact]
+              public void Repositorio_NoConservaMetodoDeAuditoriaLocal()
+              {
+                  MethodInfo? metodoLocal = typeof(MatricesRiesgosRepository).GetMethod(
+                      "InsertarAuditoriaCampoAsync",
+                      BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+
+                  Assert.Null(metodoLocal);
+              }
+          }
+          ''', encoding='utf-8')
+          PY
+
+      - name: Commit phase 3 migration
+        shell: bash
+        run: |
+          git config user.name "jmejia31"
+          git config user.email "93171442+jmejia31@users.noreply.github.com"
+          git rm .github/workflows/phase3-migrate-institutional-audit.yml
+          git add \
+            backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs \
+            backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosInstitutionalAuditTests.cs \
+            scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
+          git commit -m "refactor(matrices): migrar auditoria local a institucional [phase3-done]"
+          git push origin HEAD:desarrollo
