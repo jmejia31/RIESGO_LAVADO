@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
 $script05 = Join-Path $repositoryRoot 'database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql'
+$script06 = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
 $workflowTemporal = Join-Path $repositoryRoot '.github/workflows/agent-fix-matrices-phase1.yml'
 $repositoryFacade = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepositoryFacade.cs'
 $legacyDtos = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Matrices/MatrizRiesgoDtos.cs'
@@ -72,6 +73,7 @@ function Test-IsIgnoredLocalFile {
 
 foreach ($requiredFile in @(
     $script05,
+    $script06,
     $repositoryFile,
     $repositoryContract,
     $appServiceContract,
@@ -137,6 +139,13 @@ foreach ($file in $moduleFiles) {
 
 if (Test-Path -LiteralPath $repositoryFile) {
     $content = Get-Content -LiteralPath $repositoryFile -Raw
+
+    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
+        if ($content.Contains($token)) {
+            $errors.Add("MatricesRiesgosRepository.cs conserva la columna física retirada '$token'.")
+        }
+    }
+
     $required = [ordered]@{
         'command.Transaction = transaction' = 'Los comandos deben propagar OracleTransaction.'
         'FLU_ESTADO' = 'El estado debe proceder de flujos.'
@@ -144,6 +153,8 @@ if (Test-Path -LiteralPath $repositoryFile) {
         'REG_CODIGO = :codigo' = 'La regla debe resolverse por código.'
         'REG_VERSION = :version' = 'La regla debe resolverse por versión.'
         'TRA_REGLA_ID' = 'La traza debe guardar la regla exacta.'
+        'EVA_DATOS_JSON' = 'Las respuestas deben usar el nombre físico aprobado por el DDL reducido.'
+        'EVA_CALCULOS_JSON' = 'Los cálculos deben usar el nombre físico aprobado por el DDL reducido.'
         'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync' = 'El consolidado debe ser tipado.'
         'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync' = 'La metodología debe usar contrato neutro.'
         'VersionFormularioId = versionId' = 'La metodología debe conservar la versión del formulario.'
@@ -160,6 +171,20 @@ if (Test-Path -LiteralPath $repositoryFile) {
     }
     if ($content.Contains('NotSupportedException')) {
         $errors.Add('MatricesRiesgosRepository.cs contiene NotSupportedException.')
+    }
+}
+
+if (Test-Path -LiteralPath $script06) {
+    $content = Get-Content -LiteralPath $script06 -Raw
+    foreach ($token in @('EVA_DATOS_JSON', 'EVA_CALCULOS_JSON')) {
+        if (-not $content.Contains($token)) {
+            $errors.Add("El script 06 no contiene la columna física obligatoria '$token'.")
+        }
+    }
+    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
+        if ($content.Contains($token)) {
+            $errors.Add("El script 06 conserva la columna física retirada '$token'.")
+        }
     }
 }
 
