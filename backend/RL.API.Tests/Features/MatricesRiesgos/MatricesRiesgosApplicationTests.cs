@@ -196,7 +196,7 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Fact]
-    public async Task Vinculaciones_DeLasNueveEntidades_DeleganAlRepositorio()
+    public async Task VinculacionesHeredadas_ExcluyenRevisiones_DeleganAlRepositorio()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRiesgoAsync), _ => Task.FromResult(true));
@@ -206,7 +206,6 @@ public sealed class MatricesRiesgosApplicationTests
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaActividadAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAlertaAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAutomonitoreoAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRevisionAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAprobacionAsync), _ => Task.FromResult(true));
 
         Assert.True((await service.VincularEvidenciaRiesgoAsync(new AsociarEvidenciaRiesgoDto(), 99, null)).Success);
@@ -216,7 +215,6 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.True((await service.VincularEvidenciaActividadAsync(new AsociarEvidenciaActividadDto(), 99, null)).Success);
         Assert.True((await service.VincularEvidenciaAlertaAsync(new AsociarEvidenciaAlertaDto(), 99, null)).Success);
         Assert.True((await service.VincularEvidenciaAutomonitoreoAsync(new AsociarEvidenciaAutomonitoreoDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaRevisionAsync(new AsociarEvidenciaRevisionDto(), 99, null)).Success);
         Assert.True((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, null)).Success);
     }
 

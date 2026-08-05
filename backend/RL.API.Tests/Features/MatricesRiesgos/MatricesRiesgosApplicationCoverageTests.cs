@@ -348,18 +348,6 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         Assert.Equal(400, result.StatusCode);
     }
 
-    [Fact]
-    public async Task ObtenerRevisiones_RetornaHistorial()
-    {
-        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerRevisionesEvaluacionAsync), _ =>
-            Task.FromResult(new List<RevisionEvaluacionDto> { new() { RevId = 4 } }));
-
-        ServiceResult<List<RevisionEvaluacionDto>> result = await service.ObtenerRevisionesEvaluacionAsync(1);
-
-        Assert.Single(result.Data!);
-    }
-
     [Theory]
     [InlineData(true)]
     [InlineData(false)]

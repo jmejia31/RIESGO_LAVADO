@@ -287,12 +287,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult.BadRequest("No se pudo realizar la transición de estado.");
     }
 
-    public async Task<ServiceResult<List<RevisionEvaluacionDto>>> ObtenerRevisionesEvaluacionAsync(long evaId)
-    {
-        List<RevisionEvaluacionDto> revisiones = await _repo.ObtenerRevisionesEvaluacionAsync(evaId);
-        return ServiceResult<List<RevisionEvaluacionDto>>.Ok(revisiones);
-    }
-
     public async Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId) =>
         ServiceResult<List<FlujoEvaluacionDto>>.Ok(await _repo.ObtenerFlujosEvaluacionAsync(evaId));
 
@@ -396,9 +390,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public async Task<ServiceResult> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip) =>
         ResponderVinculo(await _repo.VincularEvidenciaAutomonitoreoAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaRevisionAsync(dto, usuarioId, ip));
 
     public async Task<ServiceResult> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
         ResponderVinculo(await _repo.VincularEvidenciaAprobacionAsync(dto, usuarioId, ip));

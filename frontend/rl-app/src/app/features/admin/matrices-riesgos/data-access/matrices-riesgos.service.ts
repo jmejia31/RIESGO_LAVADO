@@ -11,7 +11,6 @@ import {
   AsociarEvidenciaControlDto,
   AsociarEvidenciaEvaluacionDto,
   AsociarEvidenciaPlanDto,
-  AsociarEvidenciaRevisionDto,
   AsociarEvidenciaRiesgoDto,
   ConsultaEvaluacionPaginadaDto,
   EvidenciaDto,
@@ -19,7 +18,6 @@ import {
   EvaluacionRiesgoDto,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
-  RevisionEvaluacionDto,
   RiesgoReporteFila,
   VincularEvidenciaDto,
   VersionFormularioDto
@@ -163,12 +161,6 @@ export class MatricesRiesgosService {
     );
   }
 
-  obtenerRevisiones(id: number): Observable<RevisionEvaluacionDto[]> {
-    return this.http
-      .get<ApiResponse<RevisionEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/revisiones`)
-      .pipe(map(response => response.datos));
-  }
-
   cargarEvidencia(archivo: File): Observable<EvidenciaDto> {
     const form = new FormData();
     form.append('archivo', archivo);
@@ -213,10 +205,6 @@ export class MatricesRiesgosService {
 
   vincularEvidenciaAutomonitoreo(dto: AsociarEvidenciaAutomonitoreoDto): Observable<ApiMessage> {
     return this.vincular('automonitoreo', dto);
-  }
-
-  vincularEvidenciaRevision(dto: AsociarEvidenciaRevisionDto): Observable<ApiMessage> {
-    return this.vincular('revision', dto);
   }
 
   vincularEvidenciaAprobacion(dto: AsociarEvidenciaAprobacionDto): Observable<ApiMessage> {

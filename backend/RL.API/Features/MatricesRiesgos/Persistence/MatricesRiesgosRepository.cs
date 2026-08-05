@@ -581,27 +581,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             long reglaId = await ResolverReglaVersionFormularioAsync(conn, trans, versionFormularioId, exigirVigente: false);
 
-            const string sqlRevision = @"
-                INSERT INTO RL_MR_REVISIONES_EVALUACION (
-                    REV_ID,
-                    REV_EVALUACION_ID,
-                    REV_DATOS_JSON,
-                    REV_FECHA,
-                    REV_USR_ID
-                ) VALUES (
-                    SEQ_RL_MR_REVISIONES.NEXTVAL,
-                    :evaId,
-                    :jsonAnterior,
-                    SYSDATE,
-                    :usuarioId
-                )";
-
-            await using var cmdRevision = CrearComando(sqlRevision, conn, trans);
-            cmdRevision.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
-            cmdRevision.Parameters.Add(new OracleParameter("jsonAnterior", OracleDbType.Clob) { Value = jsonAnterior });
-            cmdRevision.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
-            await cmdRevision.ExecuteNonQueryAsync();
-
             const string sqlUpdate = @"
                 UPDATE RL_MR_EVALUACIONES_RIESGO
                    SET EVA_DATA_JSON = :dataJson,
@@ -701,40 +680,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await trans.RollbackAsync();
             throw;
         }
-    }
-
-    public async Task<List<RevisionEvaluacionDto>> ObtenerRevisionesEvaluacionAsync(long evaId)
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-
-        const string sql = @"
-            SELECT REV_ID,
-                   REV_EVALUACION_ID,
-                   REV_DATOS_JSON,
-                   REV_FECHA,
-                   REV_USR_ID
-              FROM RL_MR_REVISIONES_EVALUACION
-             WHERE REV_EVALUACION_ID = :evaId
-             ORDER BY REV_FECHA DESC, REV_ID DESC";
-
-        await using var cmd = CrearComando(sql, conn);
-        cmd.Parameters.Add(new OracleParameter("evaId", evaId));
-
-        var lista = new List<RevisionEvaluacionDto>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            lista.Add(new RevisionEvaluacionDto
-            {
-                RevId = reader.GetInt64(0),
-                RevEvaluacionId = reader.GetInt64(1),
-                RevDatosJson = reader.GetString(2),
-                RevFecha = reader.GetDateTime(3),
-                RevUsrId = reader.GetInt64(4)
-            });
-        }
-        return lista;
     }
 
     public async Task<List<FlujoEvaluacionDto>> ObtenerFlujosEvaluacionAsync(long evaId)
@@ -985,17 +930,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             usuarioId,
             ip);
 
-    public Task<bool> VincularEvidenciaRevisionAsync(AsociarEvidenciaRevisionDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_REVISION",
-            "EVV_REVISION_ID",
-            "EVV_EVIDENCIA_ID",
-            dto.EvvRevisionId,
-            dto.EvvEvidenciaId,
-            "SELECT REV_EVALUACION_ID FROM RL_MR_REVISIONES_EVALUACION WHERE REV_ID = :entidadId",
-            usuarioId,
-            ip);
-
     public Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_APROBACION",
@@ -1041,7 +975,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                      + (SELECT COUNT(*) FROM RL_MR_EVI_ACTIVIDAD WHERE EVA_EVIDENCIA_ID = :evidenciaId)
                      + (SELECT COUNT(*) FROM RL_MR_EVI_ALERTA WHERE EVA_EVIDENCIA_ID = :evidenciaId)
                      + (SELECT COUNT(*) FROM RL_MR_EVI_AUTOMONITOREO WHERE EVM_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_REVISION WHERE EVV_EVIDENCIA_ID = :evidenciaId)
                      + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :evidenciaId)
                   FROM DUAL";
 

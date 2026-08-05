@@ -91,14 +91,6 @@ export interface ConsultaEvaluacionPaginadaDto {
   registrosPorPagina: number;
 }
 
-export interface RevisionEvaluacionDto {
-  revId: number;
-  revEvaluacionId: number;
-  revDatosJson: string;
-  revFecha: string;
-  revUsrId: number;
-}
-
 export interface FlujoEvaluacionDto {
   fluId: number;
   fluEvaluacionId: number;
@@ -126,7 +118,6 @@ export interface AsociarEvidenciaPlanDto { evpPlanId: number; evpEvidenciaId: nu
 export interface AsociarEvidenciaActividadDto { evaActividadId: number; evaEvidenciaId: number; }
 export interface AsociarEvidenciaAlertaDto { evaAlertaId: number; evaEvidenciaId: number; }
 export interface AsociarEvidenciaAutomonitoreoDto { evmMonitoreoId: number; evmEvidenciaId: number; }
-export interface AsociarEvidenciaRevisionDto { evvRevisionId: number; evvEvidenciaId: number; }
 export interface AsociarEvidenciaAprobacionDto { evapAprobacionId: number; evapEvidenciaId: number; }
 
 export type TipoEntidadEvidencia = 'riesgo' | 'evaluacion' | 'control' | 'plan' | 'actividad' | 'alerta' | 'automonitoreo';

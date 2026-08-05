@@ -34,8 +34,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests : IAsyncDisposable
         "SEQ_RL_MR_PLANES",
         "SEQ_RL_MR_ACTIVIDADES",
         "SEQ_RL_MR_SENALES_ALERTA",
-        "SEQ_RL_MR_AUTOMONITOREO",
-        "SEQ_RL_MR_REVISIONES"
+        "SEQ_RL_MR_AUTOMONITOREO"
     };
 
     // Inventario en memoria para limpieza física de datos de prueba

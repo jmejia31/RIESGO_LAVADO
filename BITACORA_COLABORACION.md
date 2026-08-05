@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervencion - Codex - Retiro de revisiones heredadas
+
+- **Fecha y hora**: 2026-08-04, hora local (UTC-6).
+- **Rama de destino**: `desarrollo`, desde worktree aislado para preservar la copia principal con cambios locales.
+- **Commit inicial**: `bf8707b`.
+- **Objetivo**: retirar las revisiones heredadas, sustituidas por el historial transaccional de flujos.
+
+### Cambios
+
+- Se eliminaron el endpoint, DTOs, métodos de servicio y repositorio de revisiones.
+- La actualización de una evaluación deja de escribir en `RL_MR_REVISIONES_EVALUACION`; conserva la auditoría transversal y el historial de transiciones mediante flujos.
+- Se eliminó el vínculo de evidencia exclusivo de revisiones y sus pruebas asociadas.
+- El script manual de transición de 17 tablas ya contempla el retiro físico posterior; Oracle no fue ejecutado.
+
+### Evidencia ejecutada y verificada en esta intervención
+
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: 195 correctas, 0 fallidas.
+- `npm run build`: correcto; advertencia existente no bloqueante de `exceljs` CommonJS.
+- `npm test -- --watch=false`: 121 correctas, 0 fallidas.
+- Oracle y el script `05` no se ejecutaron.
+
+### Punto de continuación
+
+1. Retirar las rutas heredadas restantes de vínculos específicos de evidencias, ya sustituidas por `evidencias/vinculos`.
+2. Mantener bloqueadas las pruebas Oracle y el script `05` hasta autorización separada.
+
 ## Registro de Intervencion - Codex - Consumo visual del historial de flujos
 
 - **Fecha y hora**: 2026-08-04, hora local (UTC-6).

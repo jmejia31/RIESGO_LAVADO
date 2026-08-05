@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-04: Fase 5-R implementada en backend y frontend, con pruebas locales correctas. La Fase 1.2 permanece **abierta y no aprobada**; Oracle y el script 05 siguen bloqueados. `main` permanece intacta.
+> Actualización 2026-08-04: Fase 5-R retiró los contratos de revisiones heredadas; el historial usa exclusivamente flujos. La Fase 1.2 permanece **abierta y no aprobada**; Oracle y el script 05 siguen bloqueados. `main` permanece intacta.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md`.
 
@@ -20,11 +20,11 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 2. Última intervención
 
-- **Intervención**: Consumo visual del historial de flujos
+- **Intervención**: Retiro de revisiones heredadas
 - **Fecha**: 2026-08-04 (Hora local)
 - **Autor**: Codex
 - **Rama**: `desarrollo`
-- **Estado**: La interfaz Angular ya usa `GET evaluaciones/{id}/flujos` para mostrar estado, fecha y motivo de transiciones. Las revisiones heredadas se conservan temporalmente hasta retirar todos sus consumidores. Se verificaron 196 pruebas backend y 123 Angular; Oracle y el script 05 no se ejecutaron.
+- **Estado**: Se retiraron del backend y frontend los contratos, rutas y persistencia de revisiones heredadas. El historial de evaluación se obtiene exclusivamente desde `RL_MR_FLUJOS_EVALUACION`. Se verificaron 195 pruebas backend y 121 Angular; Oracle y el script 05 no se ejecutaron.
 
 ---
 
@@ -38,7 +38,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 | **Fase 2-R** | DDL manual del modelo reducido | **Implementada en código; no ejecutada** | Script de reconstrucción de 17 tablas creado fuera del flujo automático; backend y frontend aún no están migrados. |
 | **Fase 3-R** | Contrato único de evidencias | **Implementado de forma compatible; pendiente de retiro heredado** | Nueva API y DTO genéricos preparados para `RL_MR_EVIDENCIAS_VINCULOS`; las rutas antiguas siguen temporalmente hasta el corte físico. |
 | **Fase 4-R** | Consumo frontend del vínculo único | **Implementada** | La captura vincula evidencia de evaluación mediante la API única; build y pruebas Angular aprobados. |
-| **Fase 5-R** | Historial de flujos | **Implementada; pendiente de retiro heredado** | La interfaz consume `evaluaciones/{id}/flujos`; el endpoint y DTO de revisiones se conservan temporalmente hasta eliminar sus consumidores. |
+| **Fase 5-R** | Historial de flujos | **Implementada en código** | La interfaz y API usan exclusivamente `evaluaciones/{id}/flujos`; los objetos de revisiones quedaron fuera del código activo. |
 | **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
 | **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Paso 1 NO APROBADO)** | 14 hallazgos bloqueantes documentados; plan de subsanación generado; **ejecución Oracle bloqueada**. |
 | **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente** | Certificada en CI; **pendiente de ejecución y firma del acta funcional**. |

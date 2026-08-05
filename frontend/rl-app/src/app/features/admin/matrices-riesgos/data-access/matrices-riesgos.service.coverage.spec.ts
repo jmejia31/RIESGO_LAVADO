@@ -124,15 +124,6 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     request.flush({ success: true });
   });
 
-  it('obtiene revisiones de una evaluación', () => {
-    const observer = vi.fn();
-    service.obtenerRevisiones(15).subscribe(observer);
-
-    const request = http.expectOne(`${apiUrl}/evaluaciones/15/revisiones`);
-    request.flush({ success: true, datos: [{ revId: 1 }] });
-    expect(observer).toHaveBeenCalledWith([{ revId: 1 }]);
-  });
-
   it('obtiene el historial de flujos de una evaluacion', () => {
     const observer = vi.fn();
     service.obtenerFlujos(15).subscribe(observer);
@@ -149,7 +140,6 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     ['actividad', 'vincularEvidenciaActividad', { evaActividadId: 4, evaEvidenciaId: 8 }],
     ['alerta', 'vincularEvidenciaAlerta', { evaAlertaId: 5, evaEvidenciaId: 8 }],
     ['automonitoreo', 'vincularEvidenciaAutomonitoreo', { evmMonitoreoId: 6, evmEvidenciaId: 8 }],
-    ['revision', 'vincularEvidenciaRevision', { evvRevisionId: 7, evvEvidenciaId: 8 }],
     ['aprobacion', 'vincularEvidenciaAprobacion', { evapAprobacionId: 9, evapEvidenciaId: 8 }]
   ] as const;
 

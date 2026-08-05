@@ -116,16 +116,6 @@ public sealed class AsociarEvidenciaAutomonitoreoDto
 }
 
 /// <summary>
-/// Mapea la asociación en RL_MR_EVI_REVISION
-/// </summary>
-public sealed class AsociarEvidenciaRevisionDto
-{
-    public long EvvRevisionId { get; set; }
-    public long EvvEvidenciaId { get; set; }
-    public long UsrId { get; set; }
-}
-
-/// <summary>
 /// Mapea la asociación en RL_MR_EVI_APROBACION
 /// </summary>
 public sealed class AsociarEvidenciaAprobacionDto

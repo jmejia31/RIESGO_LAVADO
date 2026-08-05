@@ -235,21 +235,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    [HttpGet("evaluaciones/{id:long}/revisiones")]
-    public async Task<IActionResult> ObtenerRevisionesEvaluacion(long id)
-    {
-        try
-        {
-            var result = await _service.ObtenerRevisionesEvaluacionAsync(id);
-            return Responder(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener historial de revisiones ID {Id}", id);
-            return Error500(ex);
-        }
-    }
-
     // ============================================================
     // 3. VINCULACIÓN DE EVIDENCIAS
     // ============================================================
@@ -380,20 +365,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         try
         {
             return Responder(await _service.VincularEvidenciaAutomonitoreoAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
-        }
-        catch (Exception ex)
-        {
-            return Error500(ex);
-        }
-    }
-
-    [HttpPost("evidencias/vincular/revision")]
-    [AuditRequired("Vinculación de evidencia a Revisión de Evaluación")]
-    public async Task<IActionResult> VincularEvidenciaRevision([FromBody] AsociarEvidenciaRevisionDto dto)
-    {
-        try
-        {
-            return Responder(await _service.VincularEvidenciaRevisionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
         }
         catch (Exception ex)
         {
