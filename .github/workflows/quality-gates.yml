@@ -49,6 +49,12 @@ jobs:
           . ./scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
           exit 0
 
+      - name: Validate exact matrices object inventory
+        shell: pwsh
+        run: |
+          ./scripts/validation/validate_matrices_17_object_inventory.ps1
+          ./scripts/validation/test_matrices_17_object_inventory.ps1
+
       - name: Build solution in Release
         run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
 
