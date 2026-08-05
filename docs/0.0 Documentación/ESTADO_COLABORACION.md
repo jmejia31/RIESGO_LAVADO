@@ -20,11 +20,11 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 2. Última intervención
 
-- **Intervención**: Consolidación de vínculos de evidencias
-- **Fecha**: 2026-08-04 (Hora local)
-- **Autor**: Codex
+- **Intervención**: Sincronización y Validación de 17 Tablas en Desarrollo
+- **Fecha**: 2026-08-05 (Hora local)
+- **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Estado**: Se retiraron las rutas y contratos específicos de evidencias de backend y Angular. La interfaz usa exclusivamente `POST evidencias/vinculos`. Se verificaron 193 pruebas backend y 115 Angular; Oracle y el script 05 no se ejecutaron.
+- **Estado**: Se sincronizaron los cambios del modelo de 17 tablas (DDL, contratos neutros de evidencias y flujos). Se verificó estáticamente la estructura del repositorio (`validate_repository_structure.ps1` con codificación UTF-8 exitosa) y la compilación TypeScript del frontend (`npx tsc --noEmit` exitoso sin errores).
 
 ---
 

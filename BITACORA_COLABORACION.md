@@ -2116,3 +2116,34 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 
 1. Subir los documentos de subsanación y dictamen a la rama `desarrollo` en git.
 2. Aguardar la autorización explícita para comenzar la refactorización de la suite `MatricesRiesgosRepositoryIntegrationTests.cs` en código conforme al plan.
+
+---
+
+## Registro de Intervención — Antigravity — Sincronización y Validación de 17 Tablas en Desarrollo
+
+- **Fecha y hora**: 2026-08-05 09:15, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `fd8e3c8` | **Commit final**: *[por determinar]*.
+
+### Objetivo y alcance
+
+1. **Sincronizar rama desarrollo**: Integrar los cambios de la migración al modelo de 17 tablas (vínculo único de evidencias, historial de flujos de evaluación, DDL de 17 tablas) de `origin/desarrollo`.
+2. **Validar compilación frontend**: Verificar que el frontend en Angular compile correctamente sin errores de TypeScript tras los cambios del modelo.
+3. **Validar estructura del repositorio**: Ejecutar `validate_repository_structure.ps1` con codificación UTF-8 para asegurar la correcta alineación estructural.
+
+### Archivos creados o modificados
+
+- **Modificado**: [`BITACORA_COLABORACION.md`](file:///c:/Users/alex.morales/Desktop/Nueva%20carpeta%20%282%29/RIESGO_LAVADO/BITACORA_COLABORACION.md) — Este archivo.
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](file:///c:/Users/alex.morales/Desktop/Nueva%20carpeta%20%282%29/RIESGO_LAVADO/docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización de estado de la intervención.
+
+### Pruebas ejecutadas (verificadas en esta intervención)
+
+- **Compilación TypeScript Frontend**: Aprobada (`npx tsc --noEmit` completado sin errores).
+- **Estructura del Repositorio**: Aprobada (`validate_repository_structure.ps1` con codificación UTF-8 pasó exitosamente).
+
+### Punto exacto de continuación
+
+1. Proceder con el levantamiento de la base de datos Oracle local bajo el esquema de 17 tablas.
+2. Ejecutar y registrar las pruebas de Quality Gates completas en el pipeline CI con el SDK .NET 10.0 y Node 24.
+
