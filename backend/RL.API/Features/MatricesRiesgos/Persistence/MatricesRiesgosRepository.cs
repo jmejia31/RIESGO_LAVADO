@@ -340,8 +340,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    e.EVA_RIESGO_ID,
                    e.EVA_VERSION_ID,
                    NVL(f.FLU_ESTADO, 'BORRADOR'),
-                   e.EVA_DATA_JSON,
-                   e.EVA_DATA_CALC_JSON,
+                   e.EVA_DATOS_JSON,
+                   e.EVA_CALCULOS_JSON,
                    p.PROY_VRI,
                    CAST(NULL AS NUMBER),
                    p.PROY_VRR,
@@ -395,8 +395,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    e.EVA_RIESGO_ID,
                    e.EVA_VERSION_ID,
                    NVL(f.FLU_ESTADO, 'BORRADOR'),
-                   e.EVA_DATA_JSON,
-                   e.EVA_DATA_CALC_JSON,
+                   e.EVA_DATOS_JSON,
+                   e.EVA_CALCULOS_JSON,
                    p.PROY_VRI,
                    CAST(NULL AS NUMBER),
                    p.PROY_VRR,
@@ -495,8 +495,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     EVA_ID,
                     EVA_RIESGO_ID,
                     EVA_VERSION_ID,
-                    EVA_DATA_JSON,
-                    EVA_DATA_CALC_JSON,
+                    EVA_DATOS_JSON,
+                    EVA_CALCULOS_JSON,
                     EVA_FECHA_REGISTRO,
                     EVA_USR_REGISTRO,
                     EVA_VERSION_ROW,
@@ -548,7 +548,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             const string sqlSelect = @"
-                SELECT EVA_DATA_JSON,
+                SELECT EVA_DATOS_JSON,
                        EVA_VERSION_ROW,
                        EVA_VERSION_ID
                   FROM RL_MR_EVALUACIONES_RIESGO
@@ -583,8 +583,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             const string sqlUpdate = @"
                 UPDATE RL_MR_EVALUACIONES_RIESGO
-                   SET EVA_DATA_JSON = :dataJson,
-                       EVA_DATA_CALC_JSON = :dataCalcJson,
+                   SET EVA_DATOS_JSON = :dataJson,
+                       EVA_CALCULOS_JSON = :dataCalcJson,
                        EVA_VERSION_ROW = :nuevaVersionRow
                  WHERE EVA_ID = :evaId
                    AND EVA_VERSION_ROW = :versionRow
