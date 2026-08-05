@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervencion - Codex - Consumo visual del historial de flujos
+
+- **Fecha y hora**: 2026-08-04, hora local (UTC-6).
+- **Rama de destino**: `desarrollo`, desde worktree aislado para preservar la copia principal con cambios locales.
+- **Commit inicial**: `2340d7f`.
+- **Objetivo**: sustituir en Angular la vista de revisiones por el historial oficial de transiciones de evaluación.
+
+### Cambios
+
+- Se agregó `FlujoEvaluacionDto` al contrato TypeScript y el método `obtenerFlujos` que consulta `GET evaluaciones/{id}/flujos`.
+- La pantalla de captura carga y muestra estado, fecha y motivo de cada flujo; ya no representa datos JSON de revisiones.
+- Se agregaron pruebas de servicio Angular y AppService backend para el historial de flujos.
+- El endpoint, DTO y persistencia de revisiones se conservan temporalmente: aún deben retirarse de manera coordinada en la siguiente fase.
+
+### Evidencia ejecutada y verificada en esta intervención
+
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: 196 correctas, 0 fallidas.
+- `npm run build`: correcto; una advertencia existente de dependencia CommonJS `exceljs`, sin bloqueo.
+- `npm test -- --watch=false`: 123 correctas, 0 fallidas.
+- Oracle y el script `05` no se ejecutaron.
+
+### Punto de continuación
+
+1. Revisar y retirar los contratos, endpoint y pruebas de revisiones heredadas cuando se confirme que no quedan consumidores.
+2. Mantener bloqueadas las pruebas Oracle y el script `05` hasta autorización separada.
+
 Esta bitácora registra cronológicamente las intervenciones, verificaciones y transferencias de mando entre **Antigravity**, **Codex**, **ChatGPT** y **Javier Mejía**.
 
 Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md).

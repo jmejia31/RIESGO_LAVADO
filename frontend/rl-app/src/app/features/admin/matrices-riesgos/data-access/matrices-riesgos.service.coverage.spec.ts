@@ -133,6 +133,15 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     expect(observer).toHaveBeenCalledWith([{ revId: 1 }]);
   });
 
+  it('obtiene el historial de flujos de una evaluacion', () => {
+    const observer = vi.fn();
+    service.obtenerFlujos(15).subscribe(observer);
+
+    const request = http.expectOne(`${apiUrl}/evaluaciones/15/flujos`);
+    request.flush({ success: true, datos: [{ fluId: 1, fluEstado: 'APROBADA' }] });
+    expect(observer).toHaveBeenCalledWith([{ fluId: 1, fluEstado: 'APROBADA' }]);
+  });
+
   const vinculaciones = [
     ['riesgo', 'vincularEvidenciaRiesgo', { evrRiesgoId: 1, evrEvidenciaId: 8 }],
     ['control', 'vincularEvidenciaControl', { evcControlId: 2, evcEvidenciaId: 8 }],

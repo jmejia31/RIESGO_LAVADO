@@ -14,7 +14,7 @@ describe('MatricesRiesgosComponent', () => {
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
     crearEvaluacion: ReturnType<typeof vi.fn>;
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
-    obtenerRevisiones: ReturnType<typeof vi.fn>;
+    obtenerFlujos: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -59,7 +59,7 @@ describe('MatricesRiesgosComponent', () => {
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of(20)),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
-      obtenerRevisiones: vi.fn().mockReturnValue(of([]))
+      obtenerFlujos: vi.fn().mockReturnValue(of([]))
     };
 
     await TestBed.configureTestingModule({

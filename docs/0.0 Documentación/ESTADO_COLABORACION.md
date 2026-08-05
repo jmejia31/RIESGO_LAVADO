@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-04: Dictamen de evaluación (14 hallazgos bloqueantes) registrado. La Fase 1.3 está certificada técnicamente en CI y pendiente de firma de acta funcional. La Fase 1.2 permanece **abierta y no aprobada** (Paso 1 NO APROBADO). La **Fase 1 completa no está certificada**. PR #20 se mantiene en borrador; `main` permanece intacta.
+> Actualización 2026-08-04: Fase 5-R implementada en backend y frontend, con pruebas locales correctas. La Fase 1.2 permanece **abierta y no aprobada**; Oracle y el script 05 siguen bloqueados. `main` permanece intacta.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md`.
 
@@ -20,11 +20,11 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 2. Última intervención
 
-- **Intervención**: Registro de Dictamen de Evaluación (14 Hallazgos Bloqueantes) y Plan de Subsanación de Fase 1.2
+- **Intervención**: Consumo visual del historial de flujos
 - **Fecha**: 2026-08-04 (Hora local)
-- **Autor**: Antigravity
+- **Autor**: Codex
 - **Rama**: `desarrollo`
-- **Estado**: Se formalizó el dictamen de no aprobación del commit `6e77ee3` por 14 hallazgos bloqueantes en la suite de pruebas Oracle de Fase 1.2. Se generó el [Plan de Subsanación](file:///c:/Users/alex.morales/Desktop/Nueva%20carpeta%20%282%29/RIESGO_LAVADO/docs/3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/PLAN_SUBSANACION_PRUEBAS_ORACLE_FASE_1_2.md) y el [Dictamen de Análisis](file:///c:/Users/alex.morales/Desktop/Nueva%20carpeta%20%282%29/RIESGO_LAVADO/docs/3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/ANALISIS_DICTAMEN_PRUEBAS_ORACLE_FASE_1_2.md). La ejecución contra la base de datos Oracle permanece bloqueada (`RL_ORACLE_INTEGRATION_REQUIRED=false`).
+- **Estado**: La interfaz Angular ya usa `GET evaluaciones/{id}/flujos` para mostrar estado, fecha y motivo de transiciones. Las revisiones heredadas se conservan temporalmente hasta retirar todos sus consumidores. Se verificaron 196 pruebas backend y 123 Angular; Oracle y el script 05 no se ejecutaron.
 
 ---
 
@@ -38,7 +38,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 | **Fase 2-R** | DDL manual del modelo reducido | **Implementada en código; no ejecutada** | Script de reconstrucción de 17 tablas creado fuera del flujo automático; backend y frontend aún no están migrados. |
 | **Fase 3-R** | Contrato único de evidencias | **Implementado de forma compatible; pendiente de retiro heredado** | Nueva API y DTO genéricos preparados para `RL_MR_EVIDENCIAS_VINCULOS`; las rutas antiguas siguen temporalmente hasta el corte físico. |
 | **Fase 4-R** | Consumo frontend del vínculo único | **Implementada** | La captura vincula evidencia de evaluación mediante la API única; build y pruebas Angular aprobados. |
-| **Fase 5-R** | Historial de flujos | **Backend implementado; pendiente de migración visual** | Nueva consulta `evaluaciones/{id}/flujos`; el endpoint de revisiones se conserva temporalmente. |
+| **Fase 5-R** | Historial de flujos | **Implementada; pendiente de retiro heredado** | La interfaz consume `evaluaciones/{id}/flujos`; el endpoint y DTO de revisiones se conservan temporalmente hasta eliminar sus consumidores. |
 | **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
 | **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Paso 1 NO APROBADO)** | 14 hallazgos bloqueantes documentados; plan de subsanación generado; **ejecución Oracle bloqueada**. |
 | **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente** | Certificada en CI; **pendiente de ejecución y firma del acta funcional**. |

@@ -257,6 +257,23 @@ public sealed class MatricesRiesgosApplicationTests
         Assert.Equal(400, result.StatusCode);
     }
 
+    [Fact]
+    public async Task ObtenerFlujos_RetornaElHistorialDeEstados()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerFlujosEvaluacionAsync), _ =>
+            Task.FromResult(new List<FlujoEvaluacionDto>
+            {
+                new() { FluId = 7, FluEvaluacionId = 11, FluEstado = "APROBADA", FluFecha = DateTime.UtcNow }
+            }));
+
+        ServiceResult<List<FlujoEvaluacionDto>> result = await service.ObtenerFlujosEvaluacionAsync(11);
+
+        Assert.True(result.Success);
+        Assert.Single(result.Data!);
+        Assert.Equal("APROBADA", result.Data![0].FluEstado);
+    }
+
     private static MatricesRiesgosAppService CrearServicio(
         out InterfaceStub repoStub,
         out InterfaceStub validadorStub,

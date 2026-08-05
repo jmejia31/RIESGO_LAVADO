@@ -17,6 +17,7 @@ import {
   EvidenciaDto,
   EvidenciaPoliticaDto,
   EvaluacionRiesgoDto,
+  FlujoEvaluacionDto,
   MetodologiaFormulario,
   RevisionEvaluacionDto,
   RiesgoReporteFila,
@@ -173,6 +174,12 @@ export class MatricesRiesgosService {
     form.append('archivo', archivo);
     return this.http
       .post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerFlujos(id: number): Observable<FlujoEvaluacionDto[]> {
+    return this.http
+      .get<ApiResponse<FlujoEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/flujos`)
       .pipe(map(response => response.datos));
   }
 

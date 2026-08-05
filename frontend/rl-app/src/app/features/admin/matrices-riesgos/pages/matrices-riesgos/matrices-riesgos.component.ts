@@ -6,9 +6,9 @@ import {
   CampoFormulario,
   DefinicionFormularioEditable,
   EvaluacionRiesgoDto,
+  FlujoEvaluacionDto,
   MetodologiaFormulario,
   RespuestasFormulario,
-  RevisionEvaluacionDto,
   RiesgoReporteFila,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
@@ -36,7 +36,7 @@ export class MatricesRiesgosComponent implements OnInit {
   readonly versiones = signal<VersionFormularioDto[]>([]);
   readonly evaluaciones = signal<EvaluacionRiesgoDto[]>([]);
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
-  readonly revisiones = signal<RevisionEvaluacionDto[]>([]);
+  readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
 
   readonly pagina = signal(1);
@@ -193,7 +193,7 @@ export class MatricesRiesgosComponent implements OnInit {
     this.riesgoId.set(evaluacion.evaRiesgoId);
     this.respuestas.set(this.parsearRespuestas(evaluacion.evaDataJson));
     this.tab.set('captura');
-    this.cargarRevisiones(evaluacion.evaId);
+    this.cargarFlujos(evaluacion.evaId);
   }
 
   guardarEvaluacion(): void {
@@ -252,7 +252,7 @@ export class MatricesRiesgosComponent implements OnInit {
         this.guardando.set(false);
         this.motivoTransicion = '';
         this.cargarEvaluaciones();
-        this.cargarRevisiones(evaluacion.evaId);
+        this.cargarFlujos(evaluacion.evaId);
       },
       error: error => {
         this.guardando.set(false);
@@ -261,10 +261,10 @@ export class MatricesRiesgosComponent implements OnInit {
     });
   }
 
-  cargarRevisiones(evaluacionId: number): void {
-    this.service.obtenerRevisiones(evaluacionId).subscribe({
-      next: revisiones => this.revisiones.set(revisiones),
-      error: () => this.revisiones.set([])
+  cargarFlujos(evaluacionId: number): void {
+    this.service.obtenerFlujos(evaluacionId).subscribe({
+      next: flujos => this.flujos.set(flujos),
+      error: () => this.flujos.set([])
     });
   }
 

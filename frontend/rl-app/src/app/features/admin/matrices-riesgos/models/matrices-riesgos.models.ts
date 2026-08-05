@@ -99,6 +99,15 @@ export interface RevisionEvaluacionDto {
   revUsrId: number;
 }
 
+export interface FlujoEvaluacionDto {
+  fluId: number;
+  fluEvaluacionId: number;
+  fluEstado: string;
+  fluMotivo?: string | null;
+  fluUsrId: number;
+  fluFecha: string;
+}
+
 export interface EvidenciaDto {
   eviId: number;
   eviNombreArchivo: string;
