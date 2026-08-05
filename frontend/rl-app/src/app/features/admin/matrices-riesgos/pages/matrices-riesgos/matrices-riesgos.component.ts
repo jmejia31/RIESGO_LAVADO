@@ -282,9 +282,10 @@ export class MatricesRiesgosComponent implements OnInit {
     this.guardando.set(true);
     this.service.cargarEvidencia(this.archivoEvidencia).subscribe({
       next: evidencia => {
-        this.service.vincularEvidenciaEvaluacion({
-          eveEvaluacionId: evaluacion.evaId,
-          eveEvidenciaId: evidencia.eviId
+        this.service.vincularEvidencia({
+          entidadId: evaluacion.evaId,
+          evidenciaId: evidencia.eviId,
+          tipoEntidad: 'evaluacion'
         }).subscribe({
           next: () => {
             this.archivoEvidencia = null;

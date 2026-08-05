@@ -6,6 +6,27 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Fase 4-R: consumo frontend del vínculo único
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Agente:** Codex.
+- **Rama:** `desarrollo`.
+- **Commit inicial:** `b52d939`.
+- **Objetivo:** migrar el flujo visible de carga de evidencia de una evaluación al contrato genérico.
+
+### Cambios y verificación
+
+1. `cargarYVincularEvidencia` usa `vincularEvidencia` con tipo `evaluacion`; conserva la compensación de archivo huérfano ante error.
+2. Build Angular: correcto; se mantiene la advertencia preexistente de dependencia CommonJS `exceljs`.
+3. Pruebas Angular: 122 correctas, 0 fallidas.
+4. Oracle y el script de transición: no ejecutados.
+
+### Punto de continuación
+
+Retirar rutas y DTOs de vínculo heredados, sustituir revisiones por flujos y completar el corte de backend antes de habilitar el DDL reducido.
+
+---
+
 ## Registro de Intervención — Codex — Fase 3-R: contrato único de evidencias
 
 - **Fecha y hora:** 2026-08-04, hora local (UTC-6).
