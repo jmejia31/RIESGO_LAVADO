@@ -25,6 +25,14 @@ public sealed class MatricesRiesgosEvidenceNonOracleTests
         yield return new object[] { TipoEntidadEvidencia.Automonitoreo, "RL_MR_AUTOMONITOREO", "MON_ID" };
     }
 
+    public static IEnumerable<object[]> TiposPermitidos()
+    {
+        foreach (TipoEntidadEvidencia tipo in Enum.GetValues<TipoEntidadEvidencia>())
+        {
+            yield return new object[] { tipo };
+        }
+    }
+
     [Theory]
     [MemberData(nameof(DestinosPermitidos))]
     public void Repositorio_ResuelveCadaDestinoConSqlCerradoYParametrizado(
@@ -54,11 +62,8 @@ public sealed class MatricesRiesgosEvidenceNonOracleTests
     }
 
     [Theory]
-    [MemberData(nameof(DestinosPermitidos))]
-    public async Task AppService_DelegaLosSieteDestinosAlVinculoGenerico(
-        TipoEntidadEvidencia tipo,
-        string _,
-        string __)
+    [MemberData(nameof(TiposPermitidos))]
+    public async Task AppService_DelegaLosSieteDestinosAlVinculoGenerico(TipoEntidadEvidencia tipo)
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
         repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAsync), _ => Task.FromResult(true));
