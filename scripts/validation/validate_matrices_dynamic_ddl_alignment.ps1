@@ -23,6 +23,12 @@ $moduleScanRoots = @(
     (Join-Path $repositoryRoot 'database/19_matrices_riesgos')
 )
 
+$traceScanRoots = @(
+    (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
+    (Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos'),
+    (Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos')
+)
+
 $securityScanRoots = @(
     (Join-Path $repositoryRoot 'backend'),
     (Join-Path $repositoryRoot 'frontend'),
@@ -137,6 +143,26 @@ foreach ($file in $moduleFiles) {
     }
 }
 
+$traceForbiddenTokens = @(
+    [pscustomobject]@{ Token = 'InsertarTrazaCalculoAsync'; Message = 'El modelo reducido no escribe trazas locales de cálculo.' },
+    [pscustomobject]@{ Token = 'RL_MR_TRAZAS_CALCULO'; Message = 'La tabla de trazas fue retirada del modelo objetivo.' },
+    [pscustomobject]@{ Token = 'SEQ_RL_MR_TRAZAS'; Message = 'La secuencia de trazas fue retirada del modelo objetivo.' },
+    [pscustomobject]@{ Token = 'TRA_REGLA_ID'; Message = 'La regla utilizada se conserva dentro de EVA_CALCULOS_JSON.' }
+)
+
+$traceFiles = Get-SourceFiles -Roots $traceScanRoots -Extensions $moduleExtensions
+foreach ($file in $traceFiles) {
+    $content = Get-Content -LiteralPath $file.FullName -Raw
+    foreach ($entry in $traceForbiddenTokens) {
+        if ($content.Contains($entry.Token)) {
+            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
+            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
+                $errors.Add("${relativePath}:$($match.LineNumber): traza incompatible '$($entry.Token)'. $($entry.Message)")
+            }
+        }
+    }
+}
+
 if (Test-Path -LiteralPath $repositoryFile) {
     $content = Get-Content -LiteralPath $repositoryFile -Raw
 
@@ -152,9 +178,13 @@ if (Test-Path -LiteralPath $repositoryFile) {
         "VER_ESTADO = 'PUBLISHED'" = 'La metodología y reglas deben usar versiones publicadas.'
         'REG_CODIGO = :codigo' = 'La regla debe resolverse por código.'
         'REG_VERSION = :version' = 'La regla debe resolverse por versión.'
-        'TRA_REGLA_ID' = 'La traza debe guardar la regla exacta.'
+        'REG_ALGORITMO_ID' = 'El algoritmo debe resolverse desde el catálogo institucional de reglas.'
         'EVA_DATOS_JSON' = 'Las respuestas deben usar el nombre físico aprobado por el DDL reducido.'
         'EVA_CALCULOS_JSON' = 'Los cálculos deben usar el nombre físico aprobado por el DDL reducido.'
+        'IncorporarMetadatosRegla' = 'El servidor debe incorporar metadatos de la regla al resultado calculado.'
+        'reglaCodigo' = 'El resultado calculado debe conservar el código de regla.'
+        'reglaVersion' = 'El resultado calculado debe conservar la versión de regla.'
+        'algoritmoId' = 'El resultado calculado debe conservar el identificador de algoritmo.'
         'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync' = 'El consolidado debe ser tipado.'
         'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync' = 'La metodología debe usar contrato neutro.'
         'VersionFormularioId = versionId' = 'La metodología debe conservar la versión del formulario.'
@@ -185,6 +215,16 @@ if (Test-Path -LiteralPath $script06) {
         if ($content.Contains($token)) {
             $errors.Add("El script 06 conserva la columna física retirada '$token'.")
         }
+    }
+
+    if ($content -match '(?im)^\s*CREATE\s+TABLE\s+RL_MR_TRAZAS_CALCULO\b') {
+        $errors.Add('El script 06 no puede crear RL_MR_TRAZAS_CALCULO.')
+    }
+    if ($content -match '(?im)^\s*CREATE\s+SEQUENCE\s+SEQ_RL_MR_TRAZAS\b') {
+        $errors.Add('El script 06 no puede crear SEQ_RL_MR_TRAZAS.')
+    }
+    if (-not $content.Contains("'RL_MR_TRAZAS_CALCULO'")) {
+        $errors.Add('El script 06 debe retirar la tabla heredada RL_MR_TRAZAS_CALCULO durante la reconstrucción controlada.')
     }
 }
 
@@ -247,7 +287,10 @@ if (Test-Path -LiteralPath $oracleIntegrationTest) {
         'RL_MR_EVI_APROBACION',
         'RL_MR_APROBACIONES',
         'SEQ_RL_MR_REVISIONES',
-        'RL_MR_REVISIONES_EVALUACION')) {
+        'RL_MR_REVISIONES_EVALUACION',
+        'RL_MR_TRAZAS_CALCULO',
+        'SEQ_RL_MR_TRAZAS',
+        'TRA_REGLA_ID')) {
         if ($content.Contains($token)) {
             $errors.Add("La prueba Oracle reintroduce el objeto heredado '$token'.")
         }
@@ -308,5 +351,5 @@ if ($errors.Count -gt 0) {
     exit 1
 }
 
-Write-Host 'Validacion integral de Matrices contra DDL, contratos neutros, transacciones y seguridad: CORRECTA.' -ForegroundColor Green
-Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
+Write-Host 'Validacion integral de Matrices contra DDL, contratos neutros, metadatos de cálculo, transacciones y seguridad: CORRECTA.' -ForegroundColor Green
+Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos sin trazas revisados: $($traceFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
