@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-05: completada la Fase 3 de migración de auditoría local hacia la auditoría institucional. El backend ya no escribe en `RL_MR_AUDITORIA` ni utiliza `SEQ_RL_MR_AUDITORIA`; creación, actualización, transición y vínculos se registran mediante `IAuditoriaRepository.RegistrarAsync` en `RL_AUDITORIA`, compartiendo la misma conexión y transacción Oracle. No se ejecutaron Oracle, el script `05` ni el script `06`. `main` permanece intacta y el PR #20 continúa abierto y en borrador.
+> Actualización 2026-08-05: completada la Fase 4 de retiro definitivo de adaptadores y contratos heredados. El módulo conserva exclusivamente `VincularEvidenciaAsync` y `RL_MR_EVIDENCIAS_VINCULOS`; fueron retirados el adaptador de aprobación, el DTO temporal, el helper de tablas puente y `PermisoFormularioDto`. El Quality Gate institucional aprobó validador, Release, pruebas Backend, Frontend, cobertura, build Angular y E2E. No se ejecutaron Oracle, el script `05` ni el script `06`. `main` permanece intacta y el PR #20 continúa abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md` cuando corresponda.
 
@@ -20,39 +20,40 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 
 ## 2. Última intervención
 
-- **Intervención**: Fase 3 — Migración de auditoría local hacia auditoría institucional
+- **Intervención**: Fase 4 — Retiro definitivo de adaptadores y contratos heredados
 - **Fecha**: 2026-08-05
 - **Rama**: `desarrollo`
 - **Estado**: completada y validada sin Oracle
-- **Documento**: [`FASE_3_MIGRACION_AUDITORIA_INSTITUCIONAL_MODELO_17_TABLAS_2026-08-05.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_3_MIGRACION_AUDITORIA_INSTITUCIONAL_MODELO_17_TABLAS_2026-08-05.md)
+- **Documento**: [`FASE_4_RETIRO_ADAPTADORES_CONTRATOS_HEREDADOS_MODELO_17_TABLAS_2026-08-05.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_4_RETIRO_ADAPTADORES_CONTRATOS_HEREDADOS_MODELO_17_TABLAS_2026-08-05.md)
 
 Resultados verificados:
 
-- se eliminó `InsertarAuditoriaCampoAsync`;
-- el repositorio ya no escribe en `RL_MR_AUDITORIA` ni utiliza `SEQ_RL_MR_AUDITORIA`;
-- `IAuditoriaRepository` es una dependencia obligatoria de `MatricesRiesgosRepository`;
-- la creación de evaluaciones registra `CREAR_EVALUACION` en la misma transacción;
-- la actualización registra `ACTUALIZAR_EVALUACION` en la misma transacción;
-- las transiciones registran `TRANSICION_ESTADO` en la misma transacción;
-- la vinculación genérica y el adaptador temporal utilizan únicamente auditoría institucional;
-- el validador impide reintroducir auditoría local o inyección opcional;
-- el script `06` conserva únicamente el retiro controlado de la tabla local heredada;
-- se agregaron pruebas del constructor obligatorio, ausencia del método local y contrato transaccional compartido;
-- el Quality Gate 31045641517 terminó en `success`;
+- se eliminó `VincularEvidenciaAprobacionAsync`;
+- se eliminó `AsociarEvidenciaAprobacionDto`;
+- se eliminó `EjecutarVinculoEvidenciaAsync`;
+- se retiró la referencia activa a `RL_MR_EVI_APROBACION`;
+- se eliminó `PermisoFormularioDto.cs`;
+- se retiró la construcción dinámica de nombres de tablas y columnas puente;
+- `IMatricesRiesgosRepository` y su implementación conservan únicamente `VincularEvidenciaAsync`;
+- el vínculo funcional utiliza exclusivamente `RL_MR_EVIDENCIAS_VINCULOS`;
+- `TipoEntidadEvidencia` conserva siete destinos cerrados;
+- el validador impide reintroducir adaptadores, DTO, permisos granulares y tablas puente específicas;
+- se agregaron pruebas de contrato para el vínculo genérico y la ausencia de tipos retirados;
+- el Quality Gate 31048708788 terminó en `success` sobre `9096e5f56dbc66d879043e1b3b66bca0c75898ed`;
 - el PR #20 permanece abierto y en borrador;
 - continúan bloqueados Oracle y los scripts `05` y `06`.
 
 Commits principales:
 
 ```text
-973150d82d8cc71e3f6c65d4e68fa29aa9150355
-refactor(matrices): migrar auditoria local a institucional [phase3-done]
+47e880b1e17205ae2f00864e32426142e0b1eb22
+refactor(matrices): retirar adaptadores y contratos heredados [phase4-done]
 
-490259bf06d14df5988b4064ed253c5258ed2a58
-test(matrices): validar contrato transaccional de auditoria institucional
+9096e5f56dbc66d879043e1b3b66bca0c75898ed
+docs(matrices): registrar implementacion de fase 4
 
-3d5722657d76d170c2abb9fda5c3214b0a7c665c
-docs(matrices): cerrar fase 3 de auditoria institucional
+e4604f72edfd441712c9aed75e7dc403bee72056
+docs(matrices): cerrar fase 4 de contratos heredados
 ```
 
 ---
@@ -66,11 +67,11 @@ docs(matrices): cerrar fase 3 de auditoria institucional
 | **Fase 1** | Alineación de columnas JSON | **Completada** | Repositorio y validador usan `EVA_DATOS_JSON` y `EVA_CALCULOS_JSON`; Quality Gates correctos. |
 | **Fase 2** | Retiro de trazas de cálculo | **Completada** | Trazas locales retiradas; regla, versión y algoritmo quedan dentro de `EVA_CALCULOS_JSON`; Quality Gates correctos. |
 | **Fase 3** | Auditoría institucional | **Completada** | Auditoría local retirada; operaciones críticas utilizan `RL_AUDITORIA` dentro de la misma transacción; Quality Gates correctos. |
-| **Fase 4** | Retiro de adaptadores y contratos heredados | **Siguiente fase** | Eliminar adaptador de aprobación, lógica de tablas puente, DTO temporal y permisos granulares huérfanos. |
-| **Fase 5** | Validador exclusivo de 17 tablas | **Pendiente** | Prohibir objetos heredados y exigir inventario exacto de tablas y secuencias. |
-| **Fase 6** | Pruebas automatizadas no Oracle | **Pendiente** | Actualizar Backend, Angular y E2E para el corte definitivo. |
-| **Fase 7** | Suite Oracle del modelo reducido | **Pendiente** | Validar 17 tablas, 17 secuencias, índices, restricciones, commit y rollback. |
-| **Fase 8** | Quality Gates completos sin Oracle | **Pendiente después del corte** | Reejecutar validador, Release, pruebas, cobertura, build Angular y E2E. |
+| **Fase 4** | Retiro de adaptadores y contratos heredados | **Completada** | Adaptador, DTO temporal, helper dinámico, tablas puente activas y permisos granulares retirados; Quality Gates correctos. |
+| **Fase 5** | Validador exclusivo de 17 tablas y secuencias | **Siguiente fase** | Exigir inventario exacto y fallar ante ausencias, objetos adicionales o reintroducción heredada. |
+| **Fase 6** | Pruebas automatizadas no Oracle | **Pendiente** | Consolidar cobertura Backend, Angular y E2E del corte definitivo. |
+| **Fase 7** | Suite Oracle del modelo reducido | **Pendiente** | Validar 17 tablas, 17 secuencias, índices, restricciones, ciclo completo, commit y rollback. |
+| **Fase 8** | Quality Gates completos sin Oracle | **Pendiente después del corte** | Reejecutar todas las puertas sobre el corte completo antes de autorizar Oracle. |
 | **Fases 9–11** | Preparación, ejecución y certificación Oracle | **Bloqueadas** | Requieren respaldo, autorización y cierre correcto de Fases 1–8. |
 | **Fase 12** | Documentación y cierre técnico | **Pendiente** | No declarar terminado hasta certificar Oracle y funcionamiento integral. |
 
@@ -78,18 +79,17 @@ docs(matrices): cerrar fase 3 de auditoria institucional
 
 ## 4. Bloqueantes técnicos vigentes
 
-1. Permanecen el adaptador interno hacia `RL_MR_EVI_APROBACION` y la lógica de construcción dinámica para tablas puente heredadas.
-2. Permanecen contratos temporales como `AsociarEvidenciaAprobacionDto` y `PermisoFormularioDto`.
-3. El validador todavía debe evolucionar para exigir el inventario exacto de 17 tablas y 17 secuencias.
-4. La prueba Oracle todavía no certifica las 17 tablas, 17 secuencias, índices, restricciones ni el ciclo completo.
+1. El validador aún debe comparar el inventario exacto de las 17 tablas y 17 secuencias contra el DDL objetivo.
+2. La prueba Oracle todavía no certifica las 17 tablas, 17 secuencias, índices, restricciones ni el ciclo completo evaluación–proyección–flujo–evidencia–auditoría.
+3. El `INSERT` de riesgo de la suite Oracle debe alinearse con todas las columnas obligatorias del DDL reducido.
+4. La certificación física Oracle continúa pendiente y el script `06` permanece bloqueado.
 
 Quedaron resueltos:
 
-- la incompatibilidad de nombres `EVA_DATA_JSON`/`EVA_DATA_CALC_JSON`, corregida en la Fase 1;
-- las escrituras y dependencias de `RL_MR_TRAZAS_CALCULO`, retiradas en la Fase 2;
-- las escrituras y dependencias de `RL_MR_AUDITORIA`, retiradas en la Fase 3.
-
-Los bloqueantes restantes impiden ejecutar el script `06`.
+- nombres físicos JSON incompatibles, Fase 1;
+- trazas locales de cálculo, Fase 2;
+- auditoría local, Fase 3;
+- adaptadores, contratos y tablas puente activas heredadas, Fase 4.
 
 ---
 
@@ -110,13 +110,15 @@ Los bloqueantes restantes impiden ejecutar el script `06`.
 
 ## 6. Punto exacto de continuación
 
-La siguiente intervención es la **Fase 4 — retiro definitivo de adaptadores y contratos heredados**:
+La siguiente intervención es la **Fase 5 — validador exclusivo del inventario exacto de 17 tablas y 17 secuencias**:
 
-1. eliminar `VincularEvidenciaAprobacionAsync` del repositorio y su interfaz;
-2. eliminar `AsociarEvidenciaAprobacionDto`;
-3. eliminar `EjecutarVinculoEvidenciaAsync` y cualquier construcción dinámica de nombres de tablas o columnas puente;
-4. retirar toda referencia activa a `RL_MR_EVI_APROBACION` y a las tablas `RL_MR_EVI_*`;
-5. eliminar `PermisoFormularioDto` y cualquier consumidor residual;
-6. mantener exclusivamente `VincularEvidenciaAsync` y `RL_MR_EVIDENCIAS_VINCULOS`;
-7. actualizar validador, pruebas backend y pruebas Oracle preparatorias;
-8. ejecutar compilación Release y Quality Gates sin conectarse a Oracle.
+1. declarar una lista cerrada con las 17 tablas aprobadas;
+2. extraer del script `06` únicamente las sentencias activas `CREATE TABLE RL_MR_*`;
+3. exigir que el conjunto del DDL coincida exactamente con las 17 tablas;
+4. fallar cuando falte una tabla o aparezca una tabla número 18;
+5. declarar una lista cerrada con las 17 secuencias aprobadas;
+6. exigir coincidencia exacta entre el DDL y las 17 secuencias;
+7. prohibir secuencias y tablas retiradas;
+8. comprobar que los nombres heredados aparezcan solamente en la sección autorizada de retiro del script de transición;
+9. agregar pruebas del propio validador o fixtures controlados para demostrar que detecta ausencias y objetos adicionales;
+10. ejecutar compilación Release y Quality Gates sin conectarse a Oracle.
