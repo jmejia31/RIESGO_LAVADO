@@ -902,18 +902,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         _ => throw new InvalidOperationException("El tipo de entidad de evidencia no está permitido.")
     };
 
-    // Compatibilidad de prueba Oracle: no existe endpoint ni contrato de aplicación para esta tabla retirada.
-    public Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_APROBACION",
-            "EVAP_APROBACION_ID",
-            "EVAP_EVIDENCIA_ID",
-            dto.EvapAprobacionId,
-            dto.EvapEvidenciaId,
-            sqlResolverEvaluacion: null,
-            usuarioId,
-            ip);
-
     public async Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(
         long evidenciaId,
         Func<Task<bool>> eliminarArchivoFisico,
@@ -1069,83 +1057,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         int version = reader.GetInt32(2);
         string definicion = reader.GetString(3);
         return ConstruirMetodologiaDinamica(versionId, codigo, version, definicion);
-    }
-
-    private async Task<bool> EjecutarVinculoEvidenciaAsync(
-        string tablaPuente,
-        string columnaEntidad,
-        string columnaEvidencia,
-        long entidadId,
-        long evidenciaId,
-        string? sqlResolverEvaluacion,
-        long usuarioId,
-        string? ip)
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-        await using var trans = conn.BeginTransaction();
-        long? evaluacionId = null;
-
-        try
-        {
-            const string sqlExiste = "SELECT EVI_ID FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :evidenciaId";
-            await using var cmdExiste = CrearComando(sqlExiste, conn, trans);
-            cmdExiste.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
-            if (await cmdExiste.ExecuteScalarAsync() is null)
-            {
-                throw new KeyNotFoundException($"No se encontró la evidencia {evidenciaId}.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(sqlResolverEvaluacion))
-            {
-                await using var cmdResolver = CrearComando(sqlResolverEvaluacion, conn, trans);
-                cmdResolver.Parameters.Add(new OracleParameter("entidadId", entidadId));
-                object? resultado = await cmdResolver.ExecuteScalarAsync();
-                if (resultado is null)
-                {
-                    throw new InvalidOperationException($"No fue posible resolver la evaluación relacionada con {tablaPuente} y entidad {entidadId}.");
-                }
-                evaluacionId = Convert.ToInt64(resultado);
-            }
-
-            string sqlInsert = $@"
-                INSERT INTO {tablaPuente} ({columnaEntidad}, {columnaEvidencia})
-                VALUES (:entidadId, :evidenciaId)";
-
-            await using var cmdInsert = CrearComando(sqlInsert, conn, trans);
-            cmdInsert.Parameters.Add(new OracleParameter("entidadId", entidadId));
-            cmdInsert.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
-            await cmdInsert.ExecuteNonQueryAsync();
-
-            string datosNuevos = JsonSerializer.Serialize(new
-            {
-                tablaPuente,
-                entidadId,
-                evidenciaId,
-                evaluacionId
-            });
-
-            await _auditoriaRepository.RegistrarAsync(
-                conn,
-                trans,
-                tablaPuente,
-                $"{entidadId}:{evidenciaId}",
-                "VINCULAR_EVIDENCIA",
-                null,
-                datosNuevos,
-                usuarioId,
-                null,
-                ip,
-                ModuloAuditoria);
-
-            await trans.CommitAsync();
-            return true;
-        }
-        catch
-        {
-            await trans.RollbackAsync();
-            throw;
-        }
     }
 
     private static MetodologiaFormularioDto ConstruirMetodologiaDinamica(

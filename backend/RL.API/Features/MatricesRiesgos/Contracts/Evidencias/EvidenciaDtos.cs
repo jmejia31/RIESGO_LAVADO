@@ -49,13 +49,3 @@ public sealed class VincularEvidenciaDto
     public TipoEntidadEvidencia TipoEntidad { get; set; }
     public long EntidadId { get; set; }
 }
-
-/// <summary>
-/// Contrato temporal exclusivo de la prueba Oracle pendiente. No se expone por API.
-/// </summary>
-public sealed class AsociarEvidenciaAprobacionDto
-{
-    public long EvapAprobacionId { get; set; }
-    public long EvapEvidenciaId { get; set; }
-    public long UsrId { get; set; }
-}

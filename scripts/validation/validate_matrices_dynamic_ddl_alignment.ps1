@@ -333,6 +333,75 @@ if (Test-Path -LiteralPath $programFile) {
     }
 }
 
+
+$phase4EvidenceDtos = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Evidencias/EvidenciaDtos.cs'
+$phase4PermissionContract = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Configuracion/PermisoFormularioDto.cs'
+if (Test-Path -LiteralPath $phase4PermissionContract) {
+    $errors.Add('No debe permanecer PermisoFormularioDto.cs en el modelo reducido.')
+}
+if (Test-Path -LiteralPath $phase4EvidenceDtos) {
+    $content = Get-Content -LiteralPath $phase4EvidenceDtos -Raw
+    if ($content.Contains('AsociarEvidenciaAprobacionDto')) {
+        $errors.Add('EvidenciaDtos.cs conserva el DTO temporal de aprobación.')
+    }
+}
+
+$phase4ScanRoots = @(
+    (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
+    (Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos')
+)
+$phase4ForbiddenTokens = @(
+    [pscustomobject]@{ Token = 'VincularEvidenciaAprobacionAsync'; Message = 'El adaptador de aprobación fue retirado.' },
+    [pscustomobject]@{ Token = 'AsociarEvidenciaAprobacionDto'; Message = 'El DTO temporal de aprobación fue retirado.' },
+    [pscustomobject]@{ Token = 'EjecutarVinculoEvidenciaAsync'; Message = 'No se permite un helper dinámico hacia tablas puente.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_RIESGO'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_EVALUACION'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_CONTROL'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_PLAN'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_ACTIVIDAD'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_ALERTA'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_AUTOMONITOREO'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_REVISION'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'RL_MR_EVI_APROBACION'; Message = 'La tabla puente específica fue retirada.' },
+    [pscustomobject]@{ Token = 'PermisoFormularioDto'; Message = 'Los permisos granulares del formulario fueron retirados.' },
+    [pscustomobject]@{ Token = 'tablaPuente'; Message = 'No se permite construir destinos SQL dinámicos para evidencias.' },
+    [pscustomobject]@{ Token = 'columnaEntidad'; Message = 'No se permite construir columnas dinámicas para tablas puente.' },
+    [pscustomobject]@{ Token = 'columnaEvidencia'; Message = 'No se permite construir columnas dinámicas para tablas puente.' }
+)
+
+$phase4Files = Get-SourceFiles -Roots $phase4ScanRoots -Extensions $moduleExtensions
+foreach ($file in $phase4Files) {
+    $content = Get-Content -LiteralPath $file.FullName -Raw
+    foreach ($entry in $phase4ForbiddenTokens) {
+        if ($content.Contains($entry.Token)) {
+            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
+            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
+                $errors.Add("${relativePath}:$($match.LineNumber): contrato heredado '$($entry.Token)'. $($entry.Message)")
+            }
+        }
+    }
+}
+
+if (Test-Path -LiteralPath $repositoryFile) {
+    $content = Get-Content -LiteralPath $repositoryFile -Raw
+    foreach ($token in @(
+        'public async Task<bool> VincularEvidenciaAsync',
+        'INSERT INTO RL_MR_EVIDENCIAS_VINCULOS',
+        'ObtenerConsultaEntidadEvidencia',
+        'SEQ_RL_MR_EVI_VINCULOS')) {
+        if (-not $content.Contains($token)) {
+            $errors.Add("MatricesRiesgosRepository.cs no conserva el vínculo genérico obligatorio '$token'.")
+        }
+    }
+}
+
+if (Test-Path -LiteralPath $repositoryContract) {
+    $content = Get-Content -LiteralPath $repositoryContract -Raw
+    if ($content.Contains('VincularEvidenciaAprobacionAsync')) {
+        $errors.Add('IMatricesRiesgosRepository conserva un vínculo específico retirado.')
+    }
+}
+
 $securityFiles = @(
     Get-SourceFiles -Roots $securityScanRoots -Extensions $securityExtensions | Where-Object {
         -not (Test-IsIgnoredLocalFile -File $_)
