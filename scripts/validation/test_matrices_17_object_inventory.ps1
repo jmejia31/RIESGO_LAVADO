@@ -89,3 +89,5 @@ if ($failures.Count -gt 0) {
 if (-not $Quiet) {
     Write-Host 'Pruebas del inventario exacto: CORRECTAS (9 casos).' -ForegroundColor Green
 }
+
+exit 0
