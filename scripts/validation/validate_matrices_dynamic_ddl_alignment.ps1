@@ -13,6 +13,7 @@ $appServiceContract = Join-Path $repositoryRoot 'backend/RL.API/Features/Matrice
 $controllerFile = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs'
 $angularModels = Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts'
 $programFile = Join-Path $repositoryRoot 'backend/RL.API/Program.cs'
+$oracleIntegrationTest = Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs'
 
 $moduleScanRoots = @(
     (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
@@ -69,7 +70,15 @@ function Test-IsIgnoredLocalFile {
     return $LASTEXITCODE -eq 0
 }
 
-foreach ($requiredFile in @($script05, $repositoryFile, $repositoryContract, $appServiceContract, $controllerFile, $angularModels, $programFile)) {
+foreach ($requiredFile in @(
+    $script05,
+    $repositoryFile,
+    $repositoryContract,
+    $appServiceContract,
+    $controllerFile,
+    $angularModels,
+    $programFile,
+    $oracleIntegrationTest)) {
     if (-not (Test-Path -LiteralPath $requiredFile)) {
         $errors.Add("No se encontró un archivo obligatorio: $requiredFile")
     }
@@ -141,7 +150,8 @@ if (Test-Path -LiteralPath $repositoryFile) {
         'Secciones = secciones' = 'La metodología debe conservar secciones y campos.'
         'Catalogos = catalogos' = 'La metodología debe conservar catálogos.'
         'Reglas = reglas' = 'La metodología debe conservar reglas.'
-        'VincularEvidenciaAprobacionAsync' = 'Debe mantenerse la vinculación a aprobación.'
+        'VincularEvidenciaAsync' = 'La vinculación funcional debe usar el contrato genérico.'
+        'RL_MR_EVIDENCIAS_VINCULOS' = 'La vinculación funcional debe usar la tabla genérica vigente.'
     }
     foreach ($entry in $required.GetEnumerator()) {
         if (-not $content.Contains($entry.Key)) {
@@ -155,6 +165,9 @@ if (Test-Path -LiteralPath $repositoryFile) {
 
 if (Test-Path -LiteralPath $repositoryContract) {
     $content = Get-Content -LiteralPath $repositoryContract -Raw
+    if (-not $content.Contains('Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto')) {
+        $errors.Add('IMatricesRiesgosRepository no expone el vínculo genérico de evidencias.')
+    }
     if (-not $content.Contains('Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()')) {
         $errors.Add('IMatricesRiesgosRepository no expone el consolidado tipado.')
     }
@@ -188,6 +201,30 @@ if (Test-Path -LiteralPath $angularModels) {
     foreach ($token in @('MetodologiaFormulario', 'SeccionFormulario', 'CampoFormulario', 'CatalogoMatrices', 'ReglaCalculoMatrices', 'RiesgoReporteFila')) {
         if (-not $content.Contains($token)) {
             $errors.Add("Los modelos Angular no contienen el contrato neutro '$token'.")
+        }
+    }
+}
+
+if (Test-Path -LiteralPath $oracleIntegrationTest) {
+    $content = Get-Content -LiteralPath $oracleIntegrationTest -Raw
+    foreach ($token in @(
+        'RL_ORACLE_INTEGRATION_REQUIRED',
+        'TipoEntidadEvidencia.Riesgo',
+        'RL_MR_EVIDENCIAS_VINCULOS',
+        'RL_AUDITORIA',
+        'AuditoriaFallaDespuesDeInsertar')) {
+        if (-not $content.Contains($token)) {
+            $errors.Add("La prueba Oracle migrada no contiene el control obligatorio '$token'.")
+        }
+    }
+
+    foreach ($token in @(
+        'RL_MR_EVI_APROBACION',
+        'RL_MR_APROBACIONES',
+        'SEQ_RL_MR_REVISIONES',
+        'RL_MR_REVISIONES_EVALUACION')) {
+        if ($content.Contains($token)) {
+            $errors.Add("La prueba Oracle reintroduce el objeto heredado '$token'.")
         }
     }
 }
