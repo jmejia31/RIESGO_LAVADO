@@ -1,8 +1,8 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-04: Las rutas de evidencia usan exclusivamente el contrato único `evidencias/vinculos`. La Fase 1.2 permanece **abierta y no aprobada**; Oracle y el script 05 siguen bloqueados. `main` permanece intacta.
+> Actualización 2026-08-05: completada la Fase 0 de congelamiento técnico para el corte definitivo al modelo de 17 tablas. No se ejecutaron Oracle, el script `05` ni el script `06`. `main` permanece intacta y el PR #20 continúa abierto y en borrador.
 
-Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md`.
+Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BITACORA_COLABORACION.md` cuando corresponda.
 
 ---
 
@@ -11,70 +11,86 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 - **Repositorio**: `jmejia31/RIESGO_LAVADO`
 - **Rama de trabajo obligatoria**: `desarrollo`
 - **Rama estable**: `main` — no modificar ni integrar sin autorización expresa de Javier Mejía
+- **Ramas remotas permitidas**: únicamente `main` y `desarrollo`
 - **Aprobador final**: Javier Mejía (`jmejia31`)
-- **Arquitectura**: monolito modular con Angular 22, ASP.NET Core 10 y Oracle 11g
-- **Frontend**: Angular `22.0.3`, CLI `22.0.4`, TypeScript `6.0.3`, Node `24.18.0`
-- **Backend**: .NET `10.0`, `Oracle.ManagedDataAccess.Core` `23.4.0`
+- **PR de revisión**: #20, abierto, borrador y sin autorización de fusión
+- **Arquitectura**: monolito modular con Angular, ASP.NET Core y Oracle 11g
 
 ---
 
 ## 2. Última intervención
 
-- **Intervención**: Sincronización y Validación de 17 Tablas en Desarrollo
-- **Fecha**: 2026-08-05 (Hora local)
-- **Autor**: Antigravity
+- **Intervención**: Fase 0 — Congelamiento técnico y línea base del corte definitivo
+- **Fecha**: 2026-08-05
 - **Rama**: `desarrollo`
-- **Estado**: Se sincronizaron los cambios del modelo de 17 tablas (DDL, contratos neutros de evidencias y flujos). Se verificó estáticamente la estructura del repositorio (`validate_repository_structure.ps1` con codificación UTF-8 exitosa) y la compilación TypeScript del frontend (`npx tsc --noEmit` exitoso sin errores).
+- **Estado**: completada como fase de control e inventario
+- **Documento**: [`FASE_0_CONGELAMIENTO_CORTE_MODELO_17_TABLAS_2026-08-05.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_0_CONGELAMIENTO_CORTE_MODELO_17_TABLAS_2026-08-05.md)
+
+Resultados verificados antes de iniciar la corrección del código:
+
+- solo existen las ramas `main` y `desarrollo`;
+- `desarrollo` estaba 130 commits por delante y 0 por detrás de `main` al congelar la línea base;
+- el PR #20 permanece abierto y en borrador;
+- el último Quality Gate observable terminó correctamente;
+- el inventario objetivo queda congelado en 17 tablas `RL_MR_*`;
+- continúan bloqueados Oracle y los scripts `05` y `06`.
 
 ---
 
 ## 3. Estado de fases del Módulo Matrices de Riesgos
 
-| Fase | Descripción | Estado Real | Detalle / Pendiente |
+| Fase | Descripción | Estado real | Detalle / pendiente |
 |---|---|---|---|
-| **Fase 0** | Reconciliación de Estructuras y Eliminación de Código Heredado | **Completada** | Código libre de tablas antiguas y `EVA_ESTADO`. |
-| **Fase 0-R** | Rediseño reducido a 17 tablas | **Aprobada funcionalmente** | Alcance aprobado por Javier Mejía el 2026-08-04; sin ejecución Oracle ni retiro físico. Ver [`FASE_0_REDISENO_MODELO_17_TABLAS.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_0_REDISENO_MODELO_17_TABLAS.md). |
-| **Fase 1-R** | Diseño físico y transición a 17 tablas | **Diseñada; pendiente de aprobación de codificación** | Especificación de DDL, contratos y retiro posterior preparada; no se ejecutó Oracle. Ver [`PLAN_FASE_1_TRANSICION_MODELO_17_TABLAS.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/PLAN_FASE_1_TRANSICION_MODELO_17_TABLAS.md). |
-| **Fase 2-R** | DDL manual del modelo reducido | **Implementada en código; no ejecutada** | Script de reconstrucción de 17 tablas creado fuera del flujo automático; backend y frontend aún no están migrados. |
-| **Fase 3-R** | Contrato único de evidencias | **Implementado en código** | API y Angular usan `RL_MR_EVIDENCIAS_VINCULOS`; se mantienen únicamente adaptadores de prueba Oracle pendientes de migración. |
-| **Fase 4-R** | Consumo frontend del vínculo único | **Implementada** | La captura vincula evidencia mediante la API única; no existen rutas específicas en Angular. |
-| **Fase 5-R** | Historial de flujos | **Implementada en código** | La interfaz y API usan exclusivamente `evaluaciones/{id}/flujos`; los objetos de revisiones quedaron fuera del código activo. |
-| **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
-| **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Paso 1 NO APROBADO)** | 14 hallazgos bloqueantes documentados; plan de subsanación generado; **ejecución Oracle bloqueada**. |
-| **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente** | Certificada en CI; **pendiente de ejecución y firma del acta funcional**. |
-| **Fase 1.4 – 1.9** | Metodología, Consultas, Endpoints, Accesibilidad, HTTP y Certificación | **Pendientes de certificación** | Avances técnicos integrados; certificación global pendiente de pruebas ejecutable y Oracle. |
-| **Fase 1 Global** | Plan de Implementación por Fases | **No Certificada (En progreso)** | PR #20 en borrador, `main` intacta, sin fusiones. |
+| **Fase 0-R** | Aprobación funcional del modelo reducido | **Aprobada** | Modelo objetivo de 17 tablas aprobado; datos descartables confirmados como pruebas. |
+| **Fase 0-C** | Congelamiento técnico y línea base del corte | **Completada** | Ramas, PR, cabeceras, Quality Gate, inventario y restricciones documentados. |
+| **Fase 1** | Alineación de columnas JSON | **Pendiente** | Cambiar `EVA_DATA_JSON`/`EVA_DATA_CALC_JSON` por `EVA_DATOS_JSON`/`EVA_CALCULOS_JSON` en SQL, pruebas y validador. |
+| **Fase 2** | Retiro de trazas de cálculo | **Pendiente** | Eliminar `RL_MR_TRAZAS_CALCULO`, secuencia, método y llamadas; conservar metadatos de regla en cálculos JSON. |
+| **Fase 3** | Auditoría institucional | **Pendiente** | Sustituir `RL_MR_AUDITORIA` por `RL_AUDITORIA` dentro de la misma transacción. |
+| **Fase 4** | Retiro de adaptadores y contratos heredados | **Pendiente** | Eliminar adaptador de aprobación, tablas puente, DTO temporal y permisos granulares huérfanos. |
+| **Fase 5** | Validador exclusivo de 17 tablas | **Pendiente** | Prohibir objetos heredados y exigir inventario exacto de tablas y secuencias. |
+| **Fase 6** | Pruebas automatizadas no Oracle | **Pendiente** | Actualizar Backend, Angular y E2E para el corte definitivo. |
+| **Fase 7** | Suite Oracle del modelo reducido | **Pendiente** | Validar 17 tablas, 17 secuencias, índices, restricciones, commit y rollback. |
+| **Fase 8** | Quality Gates completos sin Oracle | **Pendiente después del corte** | Reejecutar validador, Release, pruebas, cobertura, build Angular y E2E. |
+| **Fases 9–11** | Preparación, ejecución y certificación Oracle | **Bloqueadas** | Requieren respaldo, autorización y cierre correcto de Fases 1–8. |
+| **Fase 12** | Documentación y cierre técnico | **Pendiente** | No declarar terminado hasta certificar Oracle y funcionamiento integral. |
 
 ---
 
-## 4. Estado de validadores y pruebas
+## 4. Bloqueantes técnicos vigentes
 
-| Verificación | Estado | Detalle |
-|---|---|---|
-| `validate_matrices_dynamic_ddl_alignment.ps1` | **Aprobado** (Estático) | 46 archivos de módulo y 115 de seguridad validados sin hallazgos. |
-| `validate_documentation_links.ps1` | **Aprobado** (Estático) | 42 documentos Markdown y 145 enlaces locales verificados. |
-| `validate_database_scripts.ps1` | **Aprobado** (Estático) | 19 scripts activos raíz, 1 paquete modular, 23 alcanzables. |
-| `validate_repository_structure.ps1` | **Aprobado** (Estático) | 118 rutas obligatorias y 471 archivos rastreados validados. |
-| **Compilación Release y Cobertura Backend** | **Pendiente de ejecución CI** | Requiere SDK .NET 10 en entorno CI. |
-| **Pruebas Angular y E2E Frontend** | **Pendiente de ejecución CI** | Requiere Node 22+/24 en entorno CI. |
-| **Pruebas Oracle de Transacción / Rollback** | **Pendiente** | Entorno Oracle controlado pendiente de ejecución. |
+1. DDL y repositorio utilizan nombres de columnas JSON distintos.
+2. El repositorio todavía conserva escrituras en `RL_MR_TRAZAS_CALCULO`.
+3. El repositorio todavía conserva escrituras en `RL_MR_AUDITORIA`.
+4. Permanecen adaptadores internos hacia `RL_MR_EVI_APROBACION` y lógica de tablas puente heredadas.
+5. Permanecen contratos temporales como `AsociarEvidenciaAprobacionDto` y `PermisoFormularioDto`.
+6. La prueba Oracle todavía no certifica las 17 tablas, 17 secuencias, índices, restricciones ni el ciclo completo.
+
+Estos puntos impiden ejecutar el script `06`.
 
 ---
 
 ## 5. Directrices y restricciones activas
 
-1. **Retiro de afirmaciones de cierre**: No declarar "cerrada", "certificada" ni "100% aprobada" la Fase 1.3 ni la Fase 1 global mientras sigan pendientes los Quality Gates reproducidos y las pruebas Oracle.
-2. **Fase 1.2 abierta**: Mantener el seguimiento de pruebas Oracle de commit conjunto y rollback forzado en `RL_MR_EVI_APROBACION`.
-3. **Oracle / Script 05**: No ejecutar en base de datos sin autorización explícita.
-4. **PR #20**: Mantener en estado borrador (*draft*); no realizar merge ni modificar `main`.
-5. **Rama `main`**: Permanece intacta y protegida.
-6. **Rediseño de 17 tablas**: no retirar objetos hasta concluir la transición de DDL, backend, frontend y pruebas.
+1. Trabajar únicamente en `desarrollo`.
+2. No modificar ni fusionar `main`.
+3. Mantener el PR #20 abierto y en borrador.
+4. No habilitar auto-merge.
+5. No ejecutar Oracle.
+6. No ejecutar los scripts `05` o `06`.
+7. No retirar tablas físicamente ni ejecutar `DROP TABLE`.
+8. No versionar credenciales o cadenas de conexión.
+9. No declarar certificado el modelo reducido antes de las pruebas Oracle.
+10. Cada fase debe cerrar con commit identificable, validación y documentación de resultado.
 
 ---
 
 ## 6. Punto exacto de continuación
 
-1. Mantener PR #20 en borrador y preservar `main` intacta.
-2. Ejecutar y registrar las pruebas de Quality Gates completas en el pipeline CI (compilación Release, suites de pruebas unitarias backend/frontend con cobertura, pruebas E2E).
-3. Planificar la ejecución controlada de pruebas transaccionales Oracle (commit/rollback) para poder cerrar la Fase 1.2.
-4. Proceder con la certificación formal de la Fase 1.3 tras verificar la salida de CI y Quality Gates.
+La siguiente intervención es la **Fase 1 — alineación del contrato físico y nombres de columnas**:
+
+```text
+EVA_DATA_JSON       → EVA_DATOS_JSON
+EVA_DATA_CALC_JSON  → EVA_CALCULOS_JSON
+```
+
+La corrección debe abarcar consultas, inserciones, actualizaciones, lecturas, mapeos, pruebas, documentación técnica activa y validador. Después se ejecutarán compilación Release y pruebas sin conectarse a Oracle.
