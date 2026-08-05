@@ -133,21 +133,11 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     expect(observer).toHaveBeenCalledWith([{ fluId: 1, fluEstado: 'APROBADA' }]);
   });
 
-  const vinculaciones = [
-    ['riesgo', 'vincularEvidenciaRiesgo', { evrRiesgoId: 1, evrEvidenciaId: 8 }],
-    ['control', 'vincularEvidenciaControl', { evcControlId: 2, evcEvidenciaId: 8 }],
-    ['plan', 'vincularEvidenciaPlan', { evpPlanId: 3, evpEvidenciaId: 8 }],
-    ['actividad', 'vincularEvidenciaActividad', { evaActividadId: 4, evaEvidenciaId: 8 }],
-    ['alerta', 'vincularEvidenciaAlerta', { evaAlertaId: 5, evaEvidenciaId: 8 }],
-    ['automonitoreo', 'vincularEvidenciaAutomonitoreo', { evmMonitoreoId: 6, evmEvidenciaId: 8 }],
-    ['aprobacion', 'vincularEvidenciaAprobacion', { evapAprobacionId: 9, evapEvidenciaId: 8 }]
-  ] as const;
+  it('vincula evidencia con el contrato unico', () => {
+    const dto = { evidenciaId: 8, tipoEntidad: 'evaluacion' as const, entidadId: 15 };
+    service.vincularEvidencia(dto).subscribe();
 
-  it.each(vinculaciones)('vincula evidencia a %s', (tipo, metodo, dto) => {
-    const invocacion = service[metodo] as (valor: typeof dto) => ReturnType<MatricesRiesgosService[typeof metodo]>;
-    invocacion.call(service, dto).subscribe();
-
-    const request = http.expectOne(`${apiUrl}/evidencias/vincular/${tipo}`);
+    const request = http.expectOne(`${apiUrl}/evidencias/vinculos`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(dto);
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');

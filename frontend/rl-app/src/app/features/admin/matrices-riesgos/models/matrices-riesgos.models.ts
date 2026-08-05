@@ -111,15 +111,6 @@ export interface EvidenciaDto {
   eviFechaCreacion: string;
 }
 
-export interface AsociarEvidenciaRiesgoDto { evrRiesgoId: number; evrEvidenciaId: number; }
-export interface AsociarEvidenciaEvaluacionDto { eveEvaluacionId: number; eveEvidenciaId: number; }
-export interface AsociarEvidenciaControlDto { evcControlId: number; evcEvidenciaId: number; }
-export interface AsociarEvidenciaPlanDto { evpPlanId: number; evpEvidenciaId: number; }
-export interface AsociarEvidenciaActividadDto { evaActividadId: number; evaEvidenciaId: number; }
-export interface AsociarEvidenciaAlertaDto { evaAlertaId: number; evaEvidenciaId: number; }
-export interface AsociarEvidenciaAutomonitoreoDto { evmMonitoreoId: number; evmEvidenciaId: number; }
-export interface AsociarEvidenciaAprobacionDto { evapAprobacionId: number; evapEvidenciaId: number; }
-
 export type TipoEntidadEvidencia = 'riesgo' | 'evaluacion' | 'control' | 'plan' | 'actividad' | 'alerta' | 'automonitoreo';
 export interface VincularEvidenciaDto { evidenciaId: number; tipoEntidad: TipoEntidadEvidencia; entidadId: number; }
 

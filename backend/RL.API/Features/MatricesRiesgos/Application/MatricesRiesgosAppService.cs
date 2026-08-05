@@ -370,30 +370,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
     }
 
-    public async Task<ServiceResult> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaRiesgoAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaEvaluacionAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaControlAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaPlanAsync(AsociarEvidenciaPlanDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaPlanAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaActividadAsync(AsociarEvidenciaActividadDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaActividadAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaAlertaAsync(AsociarEvidenciaAlertaDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaAlertaAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaAutomonitoreoAsync(dto, usuarioId, ip));
-
-    public async Task<ServiceResult> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
-        ResponderVinculo(await _repo.VincularEvidenciaAprobacionAsync(dto, usuarioId, ip));
-
     public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip)
     {
         EvidenciaDto? evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);

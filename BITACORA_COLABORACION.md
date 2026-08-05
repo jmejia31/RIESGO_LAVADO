@@ -1,5 +1,32 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervencion - Codex - Consolidacion de vinculos de evidencias
+
+- **Fecha y hora**: 2026-08-04, hora local (UTC-6).
+- **Rama de destino**: `desarrollo`, desde worktree aislado para preservar la copia principal con cambios locales.
+- **Commit inicial**: `3f3d9d4`.
+- **Objetivo**: retirar endpoints y contratos de las tablas puente heredadas en favor del vínculo único.
+
+### Cambios
+
+- Se retiraron rutas, DTOs, métodos de servicio y consumo Angular de `evidencias/vincular/*`.
+- El único contrato funcional es `POST evidencias/vinculos`, validado por tipo de entidad y con auditoría transaccional.
+- La eliminación de evidencia consulta `RL_MR_EVIDENCIAS_VINCULOS` para determinar si el archivo ya tiene vínculos.
+- Permanece un adaptador interno sin endpoint para la prueba Oracle pendiente de aprobación; deberá migrarse con la prueba de Fase 1.2.
+
+### Evidencia ejecutada y verificada en esta intervención
+
+- `dotnet build backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: correcto, 0 errores.
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-restore`: 193 correctas, 0 fallidas.
+- `npm run build`: correcto; advertencia existente no bloqueante de `exceljs` CommonJS.
+- `npm test -- --watch=false`: 115 correctas, 0 fallidas.
+- Oracle y el script `05` no se ejecutaron.
+
+### Punto de continuación
+
+1. Migrar el adaptador de prueba Oracle restante al modelo `RL_MR_EVIDENCIAS_VINCULOS` antes de retirar definitivamente los objetos heredados de prueba.
+2. Mantener bloqueadas las pruebas Oracle y el script `05` hasta autorización separada.
+
 ## Registro de Intervencion - Codex - Retiro de revisiones heredadas
 
 - **Fecha y hora**: 2026-08-04, hora local (UTC-6).

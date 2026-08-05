@@ -138,10 +138,10 @@ describe('MatricesRiesgosService', () => {
     expect(carga.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     carga.flush({ success: true, datos: { eviId: 8 } });
 
-    service.vincularEvidenciaEvaluacion({ eveEvaluacionId: 15, eveEvidenciaId: 8 }).subscribe();
-    const vinculo = http.expectOne(`${apiUrl}/evidencias/vincular/evaluacion`);
+    service.vincularEvidencia({ evidenciaId: 8, tipoEntidad: 'evaluacion', entidadId: 15 }).subscribe();
+    const vinculo = http.expectOne(`${apiUrl}/evidencias/vinculos`);
     expect(vinculo.request.method).toBe('POST');
-    expect(vinculo.request.body).toEqual({ eveEvaluacionId: 15, eveEvidenciaId: 8 });
+    expect(vinculo.request.body).toEqual({ evidenciaId: 8, tipoEntidad: 'evaluacion', entidadId: 15 });
     expect(vinculo.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     vinculo.flush({ success: true });
   });

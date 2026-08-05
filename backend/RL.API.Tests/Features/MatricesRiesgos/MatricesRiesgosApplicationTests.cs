@@ -196,29 +196,6 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Fact]
-    public async Task VinculacionesHeredadas_ExcluyenRevisiones_DeleganAlRepositorio()
-    {
-        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaRiesgoAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaEvaluacionAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaControlAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaPlanAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaActividadAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAlertaAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAutomonitoreoAsync), _ => Task.FromResult(true));
-        repo.On(nameof(IMatricesRiesgosRepository.VincularEvidenciaAprobacionAsync), _ => Task.FromResult(true));
-
-        Assert.True((await service.VincularEvidenciaRiesgoAsync(new AsociarEvidenciaRiesgoDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaEvaluacionAsync(new AsociarEvidenciaEvaluacionDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaControlAsync(new AsociarEvidenciaControlDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaPlanAsync(new AsociarEvidenciaPlanDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaActividadAsync(new AsociarEvidenciaActividadDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaAlertaAsync(new AsociarEvidenciaAlertaDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaAutomonitoreoAsync(new AsociarEvidenciaAutomonitoreoDto(), 99, null)).Success);
-        Assert.True((await service.VincularEvidenciaAprobacionAsync(new AsociarEvidenciaAprobacionDto(), 99, null)).Success);
-    }
-
-    [Fact]
     public async Task VinculoUnico_ValidaDestinoYDelegaAlRepositorio()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);

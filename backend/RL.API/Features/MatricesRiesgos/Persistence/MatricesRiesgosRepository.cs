@@ -842,94 +842,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         _ => throw new InvalidOperationException("El tipo de entidad de evidencia no está permitido.")
     };
 
-    public Task<bool> VincularEvidenciaRiesgoAsync(AsociarEvidenciaRiesgoDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_RIESGO",
-            "EVR_RIESGO_ID",
-            "EVR_EVIDENCIA_ID",
-            dto.EvrRiesgoId,
-            dto.EvrEvidenciaId,
-            @"SELECT EVA_ID
-                FROM (
-                      SELECT EVA_ID
-                        FROM RL_MR_EVALUACIONES_RIESGO
-                       WHERE EVA_RIESGO_ID = :entidadId
-                         AND EVA_ACTIVO = 1
-                       ORDER BY EVA_FECHA_REGISTRO DESC, EVA_ID DESC
-                     )
-               WHERE ROWNUM = 1",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaEvaluacionAsync(AsociarEvidenciaEvaluacionDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_EVALUACION",
-            "EVE_EVALUACION_ID",
-            "EVE_EVIDENCIA_ID",
-            dto.EveEvaluacionId,
-            dto.EveEvidenciaId,
-            "SELECT EVA_ID FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :entidadId",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaControlAsync(AsociarEvidenciaControlDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_CONTROL",
-            "EVC_CONTROL_ID",
-            "EVC_EVIDENCIA_ID",
-            dto.EvcControlId,
-            dto.EvcEvidenciaId,
-            "SELECT CON_EVALUACION_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :entidadId",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaPlanAsync(AsociarEvidenciaPlanDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_PLAN",
-            "EVP_PLAN_ID",
-            "EVP_EVIDENCIA_ID",
-            dto.EvpPlanId,
-            dto.EvpEvidenciaId,
-            "SELECT PLA_EVALUACION_ID FROM RL_MR_PLANES WHERE PLA_ID = :entidadId",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaActividadAsync(AsociarEvidenciaActividadDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_ACTIVIDAD",
-            "EVA_ACTIVIDAD_ID",
-            "EVA_EVIDENCIA_ID",
-            dto.EvaActividadId,
-            dto.EvaEvidenciaId,
-            @"SELECT p.PLA_EVALUACION_ID
-                FROM RL_MR_ACTIVIDADES a
-                JOIN RL_MR_PLANES p ON p.PLA_ID = a.ACT_PLAN_ID
-               WHERE a.ACT_ID = :entidadId",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaAlertaAsync(AsociarEvidenciaAlertaDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_ALERTA",
-            "EVA_ALERTA_ID",
-            "EVA_EVIDENCIA_ID",
-            dto.EvaAlertaId,
-            dto.EvaEvidenciaId,
-            "SELECT ALE_EVALUACION_ID FROM RL_MR_SENALES_ALERTA WHERE ALE_ID = :entidadId",
-            usuarioId,
-            ip);
-
-    public Task<bool> VincularEvidenciaAutomonitoreoAsync(AsociarEvidenciaAutomonitoreoDto dto, long usuarioId, string? ip) =>
-        EjecutarVinculoEvidenciaAsync(
-            "RL_MR_EVI_AUTOMONITOREO",
-            "EVM_MONITOREO_ID",
-            "EVM_EVIDENCIA_ID",
-            dto.EvmMonitoreoId,
-            dto.EvmEvidenciaId,
-            "SELECT MON_EVALUACION_ID FROM RL_MR_AUTOMONITOREO WHERE MON_ID = :entidadId",
-            usuarioId,
-            ip);
-
+    // Compatibilidad de prueba Oracle: no existe endpoint ni contrato de aplicación para esta tabla retirada.
     public Task<bool> VincularEvidenciaAprobacionAsync(AsociarEvidenciaAprobacionDto dto, long usuarioId, string? ip) =>
         EjecutarVinculoEvidenciaAsync(
             "RL_MR_EVI_APROBACION",
@@ -968,15 +881,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             const string sqlVinculos = @"
-                SELECT (SELECT COUNT(*) FROM RL_MR_EVI_RIESGO WHERE EVR_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_EVALUACION WHERE EVE_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_CONTROL WHERE EVC_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_PLAN WHERE EVP_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_ACTIVIDAD WHERE EVA_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_ALERTA WHERE EVA_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_AUTOMONITOREO WHERE EVM_EVIDENCIA_ID = :evidenciaId)
-                     + (SELECT COUNT(*) FROM RL_MR_EVI_APROBACION WHERE EVAP_EVIDENCIA_ID = :evidenciaId)
-                  FROM DUAL";
+                SELECT COUNT(*)
+                  FROM RL_MR_EVIDENCIAS_VINCULOS
+                 WHERE EVV_EVIDENCIA_ID = :evidenciaId";
 
             await using var cmdVinculos = CrearComando(sqlVinculos, conn, trans);
             cmdVinculos.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));

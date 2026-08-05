@@ -4,14 +4,6 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
 import {
-  AsociarEvidenciaActividadDto,
-  AsociarEvidenciaAlertaDto,
-  AsociarEvidenciaAprobacionDto,
-  AsociarEvidenciaAutomonitoreoDto,
-  AsociarEvidenciaControlDto,
-  AsociarEvidenciaEvaluacionDto,
-  AsociarEvidenciaPlanDto,
-  AsociarEvidenciaRiesgoDto,
   ConsultaEvaluacionPaginadaDto,
   EvidenciaDto,
   EvidenciaPoliticaDto,
@@ -179,38 +171,6 @@ export class MatricesRiesgosService {
     return this.http.post<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, dto, this.confirmado);
   }
 
-  vincularEvidenciaRiesgo(dto: AsociarEvidenciaRiesgoDto): Observable<ApiMessage> {
-    return this.vincular('riesgo', dto);
-  }
-
-  vincularEvidenciaEvaluacion(dto: AsociarEvidenciaEvaluacionDto): Observable<ApiMessage> {
-    return this.vincular('evaluacion', dto);
-  }
-
-  vincularEvidenciaControl(dto: AsociarEvidenciaControlDto): Observable<ApiMessage> {
-    return this.vincular('control', dto);
-  }
-
-  vincularEvidenciaPlan(dto: AsociarEvidenciaPlanDto): Observable<ApiMessage> {
-    return this.vincular('plan', dto);
-  }
-
-  vincularEvidenciaActividad(dto: AsociarEvidenciaActividadDto): Observable<ApiMessage> {
-    return this.vincular('actividad', dto);
-  }
-
-  vincularEvidenciaAlerta(dto: AsociarEvidenciaAlertaDto): Observable<ApiMessage> {
-    return this.vincular('alerta', dto);
-  }
-
-  vincularEvidenciaAutomonitoreo(dto: AsociarEvidenciaAutomonitoreoDto): Observable<ApiMessage> {
-    return this.vincular('automonitoreo', dto);
-  }
-
-  vincularEvidenciaAprobacion(dto: AsociarEvidenciaAprobacionDto): Observable<ApiMessage> {
-    return this.vincular('aprobacion', dto);
-  }
-
   eliminarEvidenciaHuerfana(id: number): Observable<ApiMessage> {
     return this.http.delete<ApiMessage>(`${this.apiUrl}/evidencias/${id}`, this.confirmado);
   }
@@ -219,14 +179,6 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<EvidenciaPoliticaDto>>(`${environment.apiUrl}/listas/evidencias/politica`)
       .pipe(map(response => response.datos));
-  }
-
-  private vincular(tipo: string, dto: object): Observable<ApiMessage> {
-    return this.http.post<ApiMessage>(
-      `${this.apiUrl}/evidencias/vincular/${tipo}`,
-      dto,
-      this.confirmado
-    );
   }
 
   private construirParams(filtro: object): HttpParams {

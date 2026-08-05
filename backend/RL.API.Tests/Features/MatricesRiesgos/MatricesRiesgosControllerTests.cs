@@ -106,18 +106,6 @@ public sealed class MatricesRiesgosControllerTests
     }
 
     [Fact]
-    public async Task VinculacionAprobacion_Ok_RetornaRespuestaExitosa()
-    {
-        MatricesRiesgosController controller = CrearController(out InterfaceStub service);
-        service.On(nameof(IMatricesRiesgosAppService.VincularEvidenciaAprobacionAsync), _ =>
-            Task.FromResult(ServiceResult.Ok("Vinculado")));
-
-        IActionResult result = await controller.VincularEvidenciaAprobacion(new AsociarEvidenciaAprobacionDto());
-
-        Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
     public async Task ServicioRetornaNotFound_ControladorConservaStatusCode()
     {
         MatricesRiesgosController controller = CrearController(out InterfaceStub service);
