@@ -172,6 +172,17 @@ if (Test-Path -LiteralPath $repositoryFile) {
         }
     }
 
+    foreach ($token in @(
+        'InsertarAuditoriaCampoAsync',
+        'INSERT INTO RL_MR_AUDITORIA',
+        'SEQ_RL_MR_AUDITORIA',
+        'IAuditoriaRepository? _auditoriaRepository',
+        'this(db, null)')) {
+        if ($content.Contains($token)) {
+            $errors.Add("MatricesRiesgosRepository.cs conserva auditoría local o inyección opcional retirada: '$token'.")
+        }
+    }
+
     $required = [ordered]@{
         'command.Transaction = transaction' = 'Los comandos deben propagar OracleTransaction.'
         'FLU_ESTADO' = 'El estado debe proceder de flujos.'
@@ -193,6 +204,11 @@ if (Test-Path -LiteralPath $repositoryFile) {
         'Reglas = reglas' = 'La metodología debe conservar reglas.'
         'VincularEvidenciaAsync' = 'La vinculación funcional debe usar el contrato genérico.'
         'RL_MR_EVIDENCIAS_VINCULOS' = 'La vinculación funcional debe usar la tabla genérica vigente.'
+            'private readonly IAuditoriaRepository _auditoriaRepository;' = 'La auditoría institucional debe ser obligatoria.'
+            'IAuditoriaRepository auditoriaRepository' = 'El repositorio debe exigir auditoría institucional por constructor.'
+            '"CREAR_EVALUACION"' = 'La creación debe registrarse en RL_AUDITORIA.'
+            '"ACTUALIZAR_EVALUACION"' = 'La actualización debe registrarse en RL_AUDITORIA.'
+            '"TRANSICION_ESTADO"' = 'La transición debe registrarse en RL_AUDITORIA.'
     }
     foreach ($entry in $required.GetEnumerator()) {
         if (-not $content.Contains($entry.Key)) {
@@ -215,6 +231,16 @@ if (Test-Path -LiteralPath $script06) {
         if ($content.Contains($token)) {
             $errors.Add("El script 06 conserva la columna física retirada '$token'.")
         }
+    }
+    foreach ($pattern in @(
+        'CREATE TABLE\s+RL_MR_AUDITORIA',
+        'CREATE SEQUENCE\s+SEQ_RL_MR_AUDITORIA')) {
+        if ($content -match $pattern) {
+            $errors.Add("El script 06 vuelve a crear un objeto de auditoría local retirado: $pattern")
+        }
+    }
+    if (-not $content.Contains("'RL_MR_AUDITORIA'")) {
+        $errors.Add('El script 06 debe conservar el retiro controlado de RL_MR_AUDITORIA heredada.')
     }
 
     if ($content -match '(?im)^\s*CREATE\s+TABLE\s+RL_MR_TRAZAS_CALCULO\b') {

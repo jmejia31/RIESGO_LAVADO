@@ -27,17 +27,15 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     };
 
     private readonly OracleDbContext _db;
-    private readonly IAuditoriaRepository? _auditoriaRepository;
+    private readonly IAuditoriaRepository _auditoriaRepository;
 
-    public MatricesRiesgosRepository(OracleDbContext db)
-        : this(db, null)
+    public MatricesRiesgosRepository(
+        OracleDbContext db,
+        IAuditoriaRepository auditoriaRepository)
     {
-    }
-
-    public MatricesRiesgosRepository(OracleDbContext db, IAuditoriaRepository? auditoriaRepository)
-    {
-        _db = db;
-        _auditoriaRepository = auditoriaRepository;
+        _db = db ?? throw new ArgumentNullException(nameof(db));
+        _auditoriaRepository = auditoriaRepository
+            ?? throw new ArgumentNullException(nameof(auditoriaRepository));
     }
 
     public async Task<VersionFormularioDto?> ObtenerVersionVigenteFormularioAsync(string familiaCodigo)
@@ -534,7 +532,24 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             await InsertarProyeccionAsync(conn, trans, evaluacionId, codigoRiesgo, proyeccion, "BORRADOR");
             await InsertarFlujoAsync(conn, trans, evaluacionId, "BORRADOR", "Creación inicial", usuarioId);
-            await InsertarAuditoriaCampoAsync(conn, trans, evaluacionId, "__EVALUACION__", null, dto.EvaDataJson, usuarioId, ip);
+            await _auditoriaRepository.RegistrarAsync(
+        conn,
+        trans,
+        "RL_MR_EVALUACIONES_RIESGO",
+        evaluacionId.ToString(),
+        "CREAR_EVALUACION",
+        null,
+        JsonSerializer.Serialize(new
+        {
+            dto.EvaRiesgoId,
+            dto.EvaVersionId,
+            Datos = dto.EvaDataJson,
+            Calculos = calculosJson
+        }),
+        usuarioId,
+        null,
+        ip,
+        ModuloAuditoria);
 
             await trans.CommitAsync();
             return evaluacionId;
@@ -626,7 +641,27 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new InvalidOperationException($"La evaluación {dto.EvaId} debe tener exactamente una proyección; se actualizaron {actualizadas}.");
             }
 
-            await InsertarAuditoriaCampoAsync(conn, trans, dto.EvaId, "__EVALUACION__", jsonAnterior, dto.EvaDataJson, usuarioId, ip);
+            await _auditoriaRepository.RegistrarAsync(
+        conn,
+        trans,
+        "RL_MR_EVALUACIONES_RIESGO",
+        dto.EvaId.ToString(),
+        "ACTUALIZAR_EVALUACION",
+        JsonSerializer.Serialize(new
+        {
+            Datos = jsonAnterior,
+            VersionRow = versionRowActual
+        }),
+        JsonSerializer.Serialize(new
+        {
+            Datos = dto.EvaDataJson,
+            Calculos = calculosJson,
+            VersionRow = versionRowActual + 1
+        }),
+        usuarioId,
+        null,
+        ip,
+        ModuloAuditoria);
 
             await trans.CommitAsync();
             return true;
@@ -688,7 +723,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             await InsertarFlujoAsync(conn, trans, evaId, estado, motivo, usuarioId);
-            await InsertarAuditoriaCampoAsync(conn, trans, evaId, "estado", anterior, estado, usuarioId, ip);
+            await _auditoriaRepository.RegistrarAsync(
+        conn,
+        trans,
+        "RL_MR_EVALUACIONES_RIESGO",
+        evaId.ToString(),
+        "TRANSICION_ESTADO",
+        JsonSerializer.Serialize(new { Estado = anterior }),
+        JsonSerializer.Serialize(new { Estado = estado, Motivo = motivo }),
+        usuarioId,
+        null,
+        ip,
+        ModuloAuditoria);
             await trans.CommitAsync();
             return true;
         }
@@ -794,9 +840,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
     public async Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip)
     {
-        if (_auditoriaRepository is null)
-            throw new InvalidOperationException("El vínculo de evidencia requiere auditoría institucional transaccional.");
-
         string sqlEntidad = ObtenerConsultaEntidadEvidencia(dto.TipoEntidad);
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
@@ -1038,11 +1081,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         long usuarioId,
         string? ip)
     {
-        if (sqlResolverEvaluacion is null && _auditoriaRepository is null)
-        {
-            throw new InvalidOperationException("La vinculación de evidencias de aprobación requiere auditoría transversal institucional.");
-        }
-
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
         await using var trans = conn.BeginTransaction();
@@ -1079,46 +1117,26 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmdInsert.Parameters.Add(new OracleParameter("evidenciaId", evidenciaId));
             await cmdInsert.ExecuteNonQueryAsync();
 
-            if (evaluacionId.HasValue)
+            string datosNuevos = JsonSerializer.Serialize(new
             {
-                await InsertarAuditoriaCampoAsync(
-                    conn,
-                    trans,
-                    evaluacionId.Value,
-                    "evidencia",
-                    null,
-                    $"{tablaPuente}:{entidadId}:{evidenciaId}",
-                    usuarioId,
-                    ip);
-            }
+                tablaPuente,
+                entidadId,
+                evidenciaId,
+                evaluacionId
+            });
 
-            if (_auditoriaRepository is not null)
-            {
-                string datosNuevos = JsonSerializer.Serialize(new
-                {
-                    tablaPuente,
-                    entidadId,
-                    evidenciaId,
-                    evaluacionId
-                });
-
-                await _auditoriaRepository.RegistrarAsync(
-                    conn,
-                    trans,
-                    tablaPuente,
-                    $"{entidadId}:{evidenciaId}",
-                    "VINCULAR_EVIDENCIA",
-                    null,
-                    datosNuevos,
-                    usuarioId,
-                    null,
-                    ip,
-                    ModuloAuditoria);
-            }
-            else if (string.Equals(tablaPuente, "RL_MR_EVI_APROBACION", StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException("La vinculación de evidencia a aprobación exige auditoría transversal transaccional.");
-            }
+            await _auditoriaRepository.RegistrarAsync(
+                conn,
+                trans,
+                tablaPuente,
+                $"{entidadId}:{evidenciaId}",
+                "VINCULAR_EVIDENCIA",
+                null,
+                datosNuevos,
+                usuarioId,
+                null,
+                ip,
+                ModuloAuditoria);
 
             await trans.CommitAsync();
             return true;
@@ -1736,46 +1754,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 _ => predeterminado
             }
             : predeterminado;
-    }
-
-    private static async Task InsertarAuditoriaCampoAsync(
-        OracleConnection conn,
-        OracleTransaction transaction,
-        long evaluacionId,
-        string campoClave,
-        string? valorAnterior,
-        string? valorNuevo,
-        long usuarioId,
-        string? ip)
-    {
-        const string sql = @"
-            INSERT INTO RL_MR_AUDITORIA (
-                AUD_ID,
-                AUD_EVALUACION_ID,
-                AUD_CAMPO_CLAVE,
-                AUD_VALOR_ANT,
-                AUD_VALOR_NVO,
-                AUD_IP,
-                AUD_USR_ID,
-                AUD_FECHA
-            ) VALUES (
-                SEQ_RL_MR_AUDITORIA.NEXTVAL,
-                :evaluacionId,
-                :campoClave,
-                :valorAnterior,
-                :valorNuevo,
-                :ip,
-                :usuarioId,
-                SYSDATE
-            )";
-        await using var cmd = CrearComando(sql, conn, transaction);
-        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
-        cmd.Parameters.Add(new OracleParameter("campoClave", campoClave));
-        cmd.Parameters.Add(new OracleParameter("valorAnterior", OracleDbType.Clob) { Value = valorAnterior ?? (object)DBNull.Value });
-        cmd.Parameters.Add(new OracleParameter("valorNuevo", OracleDbType.Clob) { Value = valorNuevo ?? (object)DBNull.Value });
-        cmd.Parameters.Add(new OracleParameter("ip", ip ?? (object)DBNull.Value));
-        cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
-        await cmd.ExecuteNonQueryAsync();
     }
 
     private sealed record ProyeccionEvaluacion(
