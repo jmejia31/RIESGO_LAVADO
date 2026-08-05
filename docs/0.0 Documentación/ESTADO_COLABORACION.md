@@ -38,6 +38,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención junto con `BIT
 | **Fase 2-R** | DDL manual del modelo reducido | **Implementada en código; no ejecutada** | Script de reconstrucción de 17 tablas creado fuera del flujo automático; backend y frontend aún no están migrados. |
 | **Fase 3-R** | Contrato único de evidencias | **Implementado de forma compatible; pendiente de retiro heredado** | Nueva API y DTO genéricos preparados para `RL_MR_EVIDENCIAS_VINCULOS`; las rutas antiguas siguen temporalmente hasta el corte físico. |
 | **Fase 4-R** | Consumo frontend del vínculo único | **Implementada** | La captura vincula evidencia de evaluación mediante la API única; build y pruebas Angular aprobados. |
+| **Fase 5-R** | Historial de flujos | **Backend implementado; pendiente de migración visual** | Nueva consulta `evaluaciones/{id}/flujos`; el endpoint de revisiones se conserva temporalmente. |
 | **Fase 1.1** | Infraestructura Oracle Segura (Script 05) | **Implementada en código** | Script 05 idempotente; **bloqueado de ejecución en Oracle**. |
 | **Fase 1.2** | Alineación DDL y Atomicidad de Transacciones | **Abierta (Paso 1 NO APROBADO)** | 14 hallazgos bloqueantes documentados; plan de subsanación generado; **ejecución Oracle bloqueada**. |
 | **Fase 1.3** | Contratos Neutros, DTOs Dinámicos y Retiro Heredado | **Certificada técnicamente** | Certificada en CI; **pendiente de ejecución y firma del acta funcional**. |

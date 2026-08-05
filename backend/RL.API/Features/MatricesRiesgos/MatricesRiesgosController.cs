@@ -269,6 +269,10 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("evaluaciones/{id:long}/flujos")]
+    public async Task<IActionResult> ObtenerFlujosEvaluacion(long id) =>
+        Responder(await _service.ObtenerFlujosEvaluacionAsync(id));
+
     [HttpPost("evidencias/cargar")]
     [AuditRequired("Carga física de archivo de evidencia al servidor")]
     public async Task<IActionResult> CargarEvidencia(IFormFile archivo)

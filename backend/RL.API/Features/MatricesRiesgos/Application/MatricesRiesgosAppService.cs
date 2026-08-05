@@ -293,6 +293,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<List<RevisionEvaluacionDto>>.Ok(revisiones);
     }
 
+    public async Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId) =>
+        ServiceResult<List<FlujoEvaluacionDto>>.Ok(await _repo.ObtenerFlujosEvaluacionAsync(evaId));
+
     public async Task<ServiceResult<EvidenciaDto>> CargarArchivoEvidenciaFisicaAsync(IFormFile archivo, long usuarioId)
     {
         if (archivo is null || archivo.Length == 0)

@@ -737,6 +737,24 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return lista;
     }
 
+    public async Task<List<FlujoEvaluacionDto>> ObtenerFlujosEvaluacionAsync(long evaId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        const string sql = @"SELECT FLU_ID, FLU_EVALUACION_ID, FLU_ESTADO, FLU_MOTIVO, FLU_USR_ID, FLU_FECHA
+                               FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID = :evaId
+                              ORDER BY FLU_FECHA DESC, FLU_ID DESC";
+        await using var cmd = CrearComando(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("evaId", evaId));
+        var lista = new List<FlujoEvaluacionDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            lista.Add(new FlujoEvaluacionDto { FluId = reader.GetInt64(0), FluEvaluacionId = reader.GetInt64(1), FluEstado = reader.GetString(2), FluMotivo = reader.IsDBNull(3) ? null : reader.GetString(3), FluUsrId = reader.GetInt64(4), FluFecha = reader.GetDateTime(5) });
+        }
+        return lista;
+    }
+
     public async Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId)
     {
         await using var conn = _db.CreateConnection();

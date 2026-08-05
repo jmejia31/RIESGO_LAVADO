@@ -6,6 +6,16 @@ Para el estado consolidado vigente consulte [`docs/0.0 Documentación/ESTADO_COL
 
 ---
 
+## Registro de Intervención — Codex — Fase 5-R: historial de flujos
+
+- **Fecha y hora:** 2026-08-04, hora local (UTC-6).
+- **Objetivo:** crear el reemplazo operativo de revisiones mediante `RL_MR_FLUJOS_EVALUACION`.
+- **Cambios:** DTO, repositorio, servicio y endpoint `GET evaluaciones/{id}/flujos` añadidos.
+- **Verificación:** backend Release compiló correctamente, sin advertencias. Oracle no ejecutado.
+- **Pendiente:** cambiar la pantalla de revisiones al nuevo historial y retirar el contrato heredado solo después.
+
+---
+
 ## Registro de Intervención — Codex — Fase 4-R: consumo frontend del vínculo único
 
 - **Fecha y hora:** 2026-08-04, hora local (UTC-6).

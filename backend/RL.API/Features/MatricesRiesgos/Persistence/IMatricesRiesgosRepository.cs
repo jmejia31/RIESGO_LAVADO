@@ -31,6 +31,7 @@ public interface IMatricesRiesgosRepository
     Task<bool> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
     Task<bool> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip);
     Task<List<RevisionEvaluacionDto>> ObtenerRevisionesEvaluacionAsync(long evaId);
+    Task<List<FlujoEvaluacionDto>> ObtenerFlujosEvaluacionAsync(long evaId);
 
     Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId);
     Task<EvidenciaDto?> ObtenerEvidenciaFisicaAsync(long evidenciaId);
