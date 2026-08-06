@@ -1,26 +1,46 @@
 # Manifiesto de scripts aprobados de base de datos
 
-Este manifiesto define que scripts forman parte del flujo aprobado de base de datos del SGRLA-IHSS. Cualquier script no listado aqui debe considerarse experimental, borrador o utilitario y no debe ejecutarse en ambientes oficiales sin revision previa.
+Este manifiesto define los scripts que forman parte de los flujos automáticos aprobados del SGRLA-IHSS. Cualquier archivo no alcanzable desde los maestros debe considerarse manual, experimental, de transición o de apoyo y requiere autorización específica.
 
-## Regla de separacion
+## Reglas generales
 
-- Scripts aprobados: archivos numerados en la raiz de `database` y paquetes modulares llamados por `00_EJECUCION_PRIMERA_VEZ.sql` o `00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql`.
-- Scripts experimentales: deben ubicarse en `database/_experimental_no_ejecutar` y nunca deben ser llamados por scripts maestros.
-- Utilitarios: deben ubicarse en `database/_utilitarios`; sirven como plantillas o consultas de apoyo, pero no forman parte del flujo automatico.
+- Los scripts automáticos aprobados son los incluidos mediante `@@` por `00_EJECUCION_PRIMERA_VEZ.sql` o `00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql`.
+- Los scripts destructivos o de transición nunca deben ser llamados desde un maestro automático.
+- El flujo de actualización segura no puede alcanzar `DROP TABLE`, `TRUNCATE` ni `DELETE FROM`.
+- Todo punto de entrada debe conservar `WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK`.
+- Ningún script puede contener credenciales o cadenas de conexión reales.
 
-## Orden aprobado
+## Primera instalación aprobada
 
-### Primera instalacion
-
-Ejecutar solo en base nueva o esquema vacio aprobado:
+Ejecutar únicamente sobre una base nueva o un esquema vacío aprobado:
 
 ```sql
 @00_EJECUCION_PRIMERA_VEZ.sql
 ```
 
-Orden interno: `01`, `02`, `03`, `04`, `05`, `06`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `18`, paquete `19_matrices_riesgos`, validacion final `17`.
+Orden interno:
 
-### Actualizacion segura
+```text
+01_create_tables.sql
+02_seed_data.sql
+03_create_modules_table.sql
+04_alter_config_sistema.sql
+05_register_monitoreo_listas.sql
+06_alter_usuarios_change_pass.sql
+08_register_bitacora.sql
+09_create_detalle_evidencia.sql
+10_register_tipo_listas_module.sql
+11_register_cargar_listas_module.sql
+12_register_coincidencias_patrono_module.sql
+13_create_calificaciones_coincidencias.sql
+14_register_coincidencias_empleado_module.sql
+15_update_detalle_evidencia_soft_delete.sql
+16_alter_lista_positivos_origen_registro.sql
+18_add_missing_comments.sql
+17_validate_module_ids.sql
+```
+
+## Actualización segura aprobada
 
 Ejecutar sobre ambientes existentes con datos:
 
@@ -28,76 +48,108 @@ Ejecutar sobre ambientes existentes con datos:
 @00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql
 ```
 
-Orden interno: `03`, `04`, `05`, `06`, `08`, `09`, `10`, `11`, `12`, `13`, `14`, `15`, `16`, `18`, paquete `19_matrices_riesgos`, validacion final `17`.
+Orden interno:
 
-`01_create_tables.sql` y `02_seed_data.sql` no se incluyen en actualizaciones porque el primero contiene `DROP` controlados y el segundo inserta semillas iniciales directas.
-
-## Inventario
-
-| Script | Uso | Idempotencia | Objetos principales | Respaldo recomendado |
-|---|---|---|---|---|
-| `01_create_tables.sql` | Primera instalacion | No para produccion existente | `RL_DOMINIO`, `RL_ROLES`, `RL_USUARIOS`, `RL_REFRESH_TOKENS`, `RL_PASSWORD_RESET_TOKENS`, `RL_AUDITORIA`, `RL_CONFIG_SISTEMA`, `RL_LOGIN_SLIDES`, secuencias base | Respaldo completo del esquema antes de ejecutar; no usar en base con datos reales |
-| `02_seed_data.sql` | Primera instalacion | No idempotente | Dominios, roles, configuracion, slides, usuarios iniciales | No ejecutar sobre base existente sin depuracion previa |
-| `03_create_modules_table.sql` | Primera instalacion y actualizacion | Idempotente | `RL_MODULOS`, `RL_USUARIO_MODULOS`, `SEQ_RL_MODULOS`, modulo 2 Usuarios | Respaldo de `RL_MODULOS`, `RL_USUARIO_MODULOS` si ya existen |
-| `04_alter_config_sistema.sql` | Actualizacion | Idempotente por columnas y ruta | Columnas de configuracion/login/usuarios, modulo 3 Configuracion | `RL_CONFIG_SISTEMA`, `RL_LOGIN_SLIDES`, `RL_USUARIOS`, `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `05_register_monitoreo_listas.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 4 Monitoreo de Listas | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `06_alter_usuarios_change_pass.sql` | Actualizacion | Idempotente | Cambio obligatorio de clave y vigencia de clave temporal | `RL_USUARIOS`, `RL_CONFIG_SISTEMA` |
-| `07` | Reservado | No aplica | Numero reservado/no usado | No aplica |
-| `08_register_bitacora.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 5 Bitacora | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `09_create_detalle_evidencia.sql` | Actualizacion | Idempotente | `RL_DETALLE_EVIDENCIA`, `SEQ_RL_DETALLE_EVIDENCIA`, indices | `RL_DETALLE_EVIDENCIA` si ya existe |
-| `10_register_tipo_listas_module.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 6 Tipo Listas | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `11_register_cargar_listas_module.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 7 Cargar Listas | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `12_register_coincidencias_patrono_module.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 8 Coincidencias Patrono | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `13_create_calificaciones_coincidencias.sql` | Actualizacion | Idempotente | `RL_CALIF_COINCIDENCIAS`, `SEQ_RL_CALIFICACIONES`, indices | `RL_CALIF_COINCIDENCIAS` si ya existe |
-| `14_register_coincidencias_empleado_module.sql` | Actualizacion | Idempotente por ruta/asignacion | Modulo 9 Coincidencias Empleado | `RL_MODULOS`, `RL_USUARIO_MODULOS` |
-| `15_update_detalle_evidencia_soft_delete.sql` | Actualizacion | Controlado; modifica constraint FK | Eliminacion logica de evidencias | `RL_DETALLE_EVIDENCIA` |
-| `16_alter_lista_positivos_origen_registro.sql` | Actualizacion | Idempotente | `RL_LISTA_POSITIVOS.LSP_ORIGEN_REGISTRO`, constraint e indice | `RL_LISTA_POSITIVOS` |
-| `17_validate_module_ids.sql` | Validacion final | Solo lectura | Valida modulos 2 a 10 contra backend/frontend | No aplica |
-| `18_add_missing_comments.sql` | Instalacion y actualizacion | Idempotente | Comentarios de tablas y columnas base | No aplica; no modifica datos ni estructura |
-| `19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql` | Instalacion y actualizacion | Idempotente y validado | Estructura `RL_MR_*`, modulo 10, metodologia, textos y estado `EN_EVALUACION` | Respaldo de objetos `RL_MR_*`, `RL_MODULOS` y `RL_USUARIO_MODULOS` |
-
-## Modulos registrados y permisos iniciales
-
-| MOD_ID | Ruta | Modulo | Permiso inicial |
-|---:|---|---|---|
-| 2 | `/usuarios` | Usuarios del Sistema | Usuarios administradores iniciales `USR_ID` 1 y/o 2 si existen |
-| 3 | `/configuracion` | Configuracion del Sistema | `USR_ID` 1 y 2 si existen |
-| 4 | `/monitoreo-listas` | Monitoreo de Listas | `USR_ID` 1 y 2 si existen |
-| 5 | `/bitacora` | Bitacora de Sistema | `USR_ID` 1 y 2 si existen |
-| 6 | `/tipo-listas` | Tipo Listas | `USR_ID` 1 y 2 si existen |
-| 7 | `/cargar-listas` | Cargar Listas | `USR_ID` 1 y 2 si existen |
-| 8 | `/coincidencias-patrono` | Coincidencias Patrono | `USR_ID` 1 y 2 si existen |
-| 9 | `/coincidencias-empleado` | Coincidencias Empleado | `USR_ID` 1 y 2 si existen |
-| 10 | `/matrices-riesgos` | Matrices de Riesgos | Usuarios administradores iniciales segun el paquete aprobado |
-
-## Secuencias
-
-- `SEQ_RL_DOMINIO`
-- `SEQ_RL_ROLES`
-- `SEQ_RL_USUARIOS`
-- `SEQ_RL_REFRESH_TOKENS`
-- `SEQ_RL_RESET_TOKENS`
-- `SEQ_RL_AUDITORIA`
-- `SEQ_RL_MODULOS` debe conservarse por encima de los IDs reservados `2` a `10`.
-- `SEQ_RL_DETALLE_EVIDENCIA`
-- `SEQ_RL_CALIFICACIONES`
-
-## Validacion final obligatoria
-
-Despues de ejecutar scripts, confirmar:
-
-```sql
-@17_validate_module_ids.sql
+```text
+03_create_modules_table.sql
+04_alter_config_sistema.sql
+05_register_monitoreo_listas.sql
+06_alter_usuarios_change_pass.sql
+08_register_bitacora.sql
+09_create_detalle_evidencia.sql
+10_register_tipo_listas_module.sql
+11_register_cargar_listas_module.sql
+12_register_coincidencias_patrono_module.sql
+13_create_calificaciones_coincidencias.sql
+14_register_coincidencias_empleado_module.sql
+15_update_detalle_evidencia_soft_delete.sql
+16_alter_lista_positivos_origen_registro.sql
+18_add_missing_comments.sql
+17_validate_module_ids.sql
 ```
 
-Si falla, no continuar con nuevos modulos hasta alinear `RL_MODULOS` y `RL_USUARIO_MODULOS` con los IDs `2` a `10` esperados por backend y Angular.
+`01_create_tables.sql` y `02_seed_data.sql` no se incluyen en actualizaciones porque pertenecen exclusivamente a primera instalación.
 
-## Validacion automatizada del inventario
+## Inventario de scripts raíz
 
-Antes de confirmar cambios en `database`, ejecutar desde la raiz del repositorio:
+| Script | Uso aprobado | Observación |
+|---|---|---|
+| `00_EJECUCION_PRIMERA_VEZ.sql` | Maestro de primera instalación | Base nueva o esquema vacío. |
+| `00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql` | Maestro de actualización | No debe alcanzar operaciones destructivas. |
+| `01_create_tables.sql` | Primera instalación | No usar en una base con datos reales. |
+| `02_seed_data.sql` | Primera instalación | Semillas iniciales directas. |
+| `03_create_modules_table.sql` | Ambos flujos | Estructura y registro base de módulos. |
+| `04_alter_config_sistema.sql` | Ambos flujos | Ajustes idempotentes de configuración. |
+| `05_register_monitoreo_listas.sql` | Ambos flujos | Registra Monitoreo de Listas. |
+| `06_alter_usuarios_change_pass.sql` | Ambos flujos | Vigencia y cambio obligatorio de contraseña. |
+| `08_register_bitacora.sql` | Ambos flujos | Registra Bitácora. |
+| `09_create_detalle_evidencia.sql` | Ambos flujos | Estructura de evidencia base. |
+| `10_register_tipo_listas_module.sql` | Ambos flujos | Registra Tipo Listas. |
+| `11_register_cargar_listas_module.sql` | Ambos flujos | Registra Cargar Listas. |
+| `12_register_coincidencias_patrono_module.sql` | Ambos flujos | Registra Coincidencias Patrono. |
+| `13_create_calificaciones_coincidencias.sql` | Ambos flujos | Calificaciones de coincidencias. |
+| `14_register_coincidencias_empleado_module.sql` | Ambos flujos | Registra Coincidencias Empleado. |
+| `15_update_detalle_evidencia_soft_delete.sql` | Ambos flujos | Eliminación lógica de evidencias. |
+| `16_alter_lista_positivos_origen_registro.sql` | Ambos flujos | Origen de registros positivos. |
+| `17_validate_module_ids.sql` | Validación final | Solo lectura. |
+| `18_add_missing_comments.sql` | Ambos flujos | Comentarios de tablas y columnas. |
+
+## Paquete 19 — Matrices de Riesgos
+
+El paquete:
+
+```text
+19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql
+```
+
+permanece **fuera de los dos maestros automáticos** y su punto de entrada está bloqueado intencionalmente. Esta exclusión es obligatoria hasta completar la preparación, ejecución controlada y certificación física Oracle del modelo reducido.
+
+La definición física objetivo es exclusivamente:
+
+```text
+19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql
+```
+
+El script `06` es manual, destructivo y no aprobado para ejecución automática. Solo podrá ejecutarse con:
+
+- base Oracle exclusiva de pruebas;
+- respaldo validado;
+- esquema `RIESGO_LAVADO`;
+- parámetro literal `EJECUTAR`;
+- autorización expresa de Javier Mejía y del DBA.
+
+Los instaladores heredados de 34 tablas fueron retirados de `19_matrices_riesgos/instalacion` y no deben restaurarse:
+
+```text
+01_create_rl_mr_estructura_dinamica.sql
+02_create_rl_mr_restricciones_indices.sql
+```
+
+Los scripts `02_register_modulo_matrices_riesgos.sql` y `instalacion/03` a `05` permanecen preparados para una fase Oracle posterior, pero no forman parte del flujo automático vigente.
+
+## Módulos registrados
+
+| MOD_ID | Ruta | Módulo |
+|---:|---|---|
+| 2 | `/usuarios` | Usuarios del Sistema |
+| 3 | `/configuracion` | Configuración del Sistema |
+| 4 | `/monitoreo-listas` | Monitoreo de Listas |
+| 5 | `/bitacora` | Bitácora de Sistema |
+| 6 | `/tipo-listas` | Tipo Listas |
+| 7 | `/cargar-listas` | Cargar Listas |
+| 8 | `/coincidencias-patrono` | Coincidencias Patrono |
+| 9 | `/coincidencias-empleado` | Coincidencias Empleado |
+| 10 | `/matrices-riesgos` | Matrices de Riesgos — registro bloqueado hasta la fase Oracle correspondiente |
+
+## Validaciones obligatorias
+
+Desde la raíz del repositorio:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
+./tools/validate_database_scripts.ps1
+./scripts/validation/validate_matrices_preoracle_readiness.ps1
 ```
 
-El validador exige el orden aprobado de ambos maestros y del paquete 19, comprueba todos los `@@include`, verifica que cada script activo sea alcanzable y rechaza operaciones destructivas dentro del flujo de actualizacion segura.
+Además deben aprobar las validaciones dinámicas, el inventario exacto de 17 objetos, compilación, Backend, Frontend, cobertura y E2E.
+
+La aprobación estática de estas puertas no equivale a certificación física Oracle.
