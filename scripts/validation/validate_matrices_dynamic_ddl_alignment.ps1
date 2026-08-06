@@ -150,7 +150,11 @@ $traceForbiddenTokens = @(
     [pscustomobject]@{ Token = 'TRA_REGLA_ID'; Message = 'La regla utilizada se conserva dentro de EVA_CALCULOS_JSON.' }
 )
 
-$traceFiles = Get-SourceFiles -Roots $traceScanRoots -Extensions $moduleExtensions
+$traceFiles = @(
+    Get-SourceFiles -Roots $traceScanRoots -Extensions $moduleExtensions | Where-Object {
+        $_.FullName -ne $oracleIntegrationTest
+    }
+)
 foreach ($file in $traceFiles) {
     $content = Get-Content -LiteralPath $file.FullName -Raw
     foreach ($entry in $traceForbiddenTokens) {
@@ -300,26 +304,58 @@ if (Test-Path -LiteralPath $oracleIntegrationTest) {
     $content = Get-Content -LiteralPath $oracleIntegrationTest -Raw
     foreach ($token in @(
         'RL_ORACLE_INTEGRATION_REQUIRED',
-        'TipoEntidadEvidencia.Riesgo',
+        'TipoEntidadEvidencia.Evaluacion',
         'RL_MR_EVIDENCIAS_VINCULOS',
         'RL_AUDITORIA',
-        'AuditoriaFallaDespuesDeInsertar')) {
+        'SEQ_RL_AUDITORIA',
+        'AuditoriaFallaDespuesDeInsertar',
+        'TablasModelo17',
+        'SecuenciasModelo17',
+        'IndicesPrincipales',
+        'RestriccionesPrincipales',
+        'RIE_NOMBRE',
+        'RIE_USR_CREACION',
+        'EsquemaModelo17_InventarioIndicesRestriccionesYAusencias_CumplenContrato',
+        'CicloCompleto_Commit_PersisteFamiliaVersionRiesgoEvaluacionProyeccionFlujoEvidenciaVinculoYAuditoria',
+        'CicloCompleto_Rollback_NoPersisteRegistrosBase')) {
         if (-not $content.Contains($token)) {
-            $errors.Add("La prueba Oracle migrada no contiene el control obligatorio '$token'.")
+            $errors.Add("La suite Oracle del modelo reducido no contiene el control obligatorio '$token'.")
         }
     }
 
-    foreach ($token in @(
+    $retiredOracleObjects = @(
         'RL_MR_EVI_APROBACION',
-        'RL_MR_APROBACIONES',
-        'SEQ_RL_MR_REVISIONES',
-        'RL_MR_REVISIONES_EVALUACION',
+        'RL_MR_EVI_REVISION',
+        'RL_MR_EVI_AUTOMONITOREO',
+        'RL_MR_EVI_ALERTA',
+        'RL_MR_EVI_ACTIVIDAD',
+        'RL_MR_EVI_PLAN',
+        'RL_MR_EVI_CONTROL',
+        'RL_MR_EVI_EVALUACION',
+        'RL_MR_EVI_RIESGO',
+        'RL_MR_DETALLES_IMPORTACION',
+        'RL_MR_LOTES_IMPORTACION',
         'RL_MR_TRAZAS_CALCULO',
+        'RL_MR_AUDITORIA',
+        'RL_MR_PERMISOS_FORMULARIO',
+        'RL_MR_APROBACIONES_FORMULARIO',
+        'RL_MR_CAMPOS_FORMULARIO',
+        'RL_MR_RELACIONES_RIESGO',
+        'RL_MR_REVISIONES_EVALUACION',
+        'SEQ_RL_MR_AUDITORIA',
         'SEQ_RL_MR_TRAZAS',
-        'TRA_REGLA_ID')) {
-        if ($content.Contains($token)) {
-            $errors.Add("La prueba Oracle reintroduce el objeto heredado '$token'.")
+        'SEQ_RL_MR_REVISIONES')
+
+    foreach ($token in $retiredOracleObjects) {
+        $escaped = [regex]::Escape($token)
+        $activeSqlPattern = "(?im)\b(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|MERGE\s+INTO|FROM)\s+$escaped\b"
+        if ($content -match $activeSqlPattern) {
+            $errors.Add("La suite Oracle ejecuta SQL activo contra el objeto heredado '$token'.")
         }
+    }
+
+    if ($content.Contains('TRA_REGLA_ID')) {
+        $errors.Add("La suite Oracle reintroduce la columna heredada 'TRA_REGLA_ID'.")
     }
 }
 
