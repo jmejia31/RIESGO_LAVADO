@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-06: la Fase 9 del Módulo Matrices de Riesgos quedó completada técnicamente. El expediente Oracle, el preflight de inventario de solo lectura, el formato separado de autorización para la Fase 10 y la puerta automática fueron preparados y validados mediante Quality Gate completo. Oracle y los scripts `05` y `06` no fueron ejecutados. La Fase 10 queda preparada, pero continúa bloqueada hasta recibir ambiente exclusivo, respaldo, restauración, responsables, ventana, evidencias y autorización expresa separada. `main` permanece intacta y el PR #20 debe continuar abierto y en borrador.
+> Actualización 2026-08-06: la Fase 10 del Módulo Matrices de Riesgos inició en su alcance técnico no destructivo. Se prepararon el postflight Oracle de solo lectura, el manifiesto local de hashes, el acta operativa pendiente, la validación automática del paquete y su integración al Quality Gate. La transición física continúa bloqueada: Oracle, el preflight `07`, el script `06` y el postflight `08` no fueron ejecutados. La autorización permanece en `NO OTORGADA`. `main` continúa intacta y el PR #20 debe permanecer abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,69 +20,74 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención:** Fase 9 — Ambiente Oracle exclusivo y expediente de autorización
+- **Intervención:** Fase 10 — Preparación técnica de transición física Oracle
 - **Fecha:** 2026-08-06
 - **Rama:** `desarrollo`
-- **Estado técnico:** completada y validada; ejecución física bloqueada
-- **Expediente:** [`FASE_9_EXPEDIENTE_AUTORIZACION_ORACLE_MODELO_17_TABLAS_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_EXPEDIENTE_AUTORIZACION_ORACLE_MODELO_17_TABLAS_2026-08-06.md)
-- **Formato de autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
-- **Registro CI:** [`FASE_9_REGISTRO_VALIDACION_CI_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_REGISTRO_VALIDACION_CI_2026-08-06.md)
+- **Estado técnico:** preparación no destructiva implementada; ejecución física bloqueada
+- **Plan:** [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
+- **Acta:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md)
+- **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
 
-### Entregables completados
+### Entregables técnicos preparados
 
-1. `database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql`.
-2. Expediente integral de identificación, responsables, respaldo, restauración, permisos, ejecución, contingencia y evidencias.
-3. Formato separado de autorización para la Fase 10, actualmente en `NO OTORGADA`.
-4. `scripts/validation/validate_matrices_phase9_oracle_dossier.ps1`.
-5. Integración de la puerta de Fase 9 al Quality Gate.
-6. Actualización del README del paquete Oracle.
-7. Registro de incidentes externos de GitHub Actions y ejecución final aprobada.
-
-### Controles del preflight
-
-El script `07`:
-
-- valida `CURRENT_SCHEMA = RIESGO_LAVADO`;
-- exige `RL_USUARIOS`, `RL_AUDITORIA` y `SEQ_RL_AUDITORIA`;
-- identifica base, host, usuario y fecha del servidor;
-- lista tablas y secuencias `RL_MR_*`;
-- cuenta registros por tabla;
-- reporta objetos inválidos y restricciones deshabilitadas;
-- no contiene DDL ni DML;
-- no incluye ni ejecuta el script `06`;
-- no fue ejecutado contra Oracle.
+1. `database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql`.
+2. `database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql`.
+3. `database/19_matrices_riesgos/transicion/08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`.
+4. `database/19_matrices_riesgos/transicion/modelo_17_objetos.json`.
+5. `scripts/operations/prepare_matrices_phase10_evidence.ps1`.
+6. `scripts/validation/validate_matrices_phase10_transition_package.ps1`.
+7. Acta de ejecución e incidente pendiente de diligenciamiento.
+8. Integración de la puerta de Fase 10 al Quality Gate.
+9. README operativo actualizado con el orden `manifiesto → preflight → transición → postflight → Fase 11`.
 
 ---
 
-## 3. Validación final de Fase 9
+## 3. Controles incorporados en Fase 10
 
-```text
-Quality Gate: 31118658925
-Commit validado: 276a39fc7f1cb2b05b52a04740cd8100e33d33c6
-Resultado: SUCCESS
-```
+### Preparador de evidencias
 
-### Resultados
+El script `prepare_matrices_phase10_evidence.ps1`:
 
-| Control | Resultado |
-|---|---:|
-| Validación general de base de datos | Correcta |
-| Preparación pre-Oracle | Correcta |
-| Expediente Oracle Fase 9 | Correcto |
-| Alineación dinámica | Correcta |
-| Tablas objetivo | 17 |
-| Secuencias objetivo | 17 |
-| Pruebas negativas de inventario | 9 aprobadas |
-| Compilación Release | 0 errores, 0 advertencias |
-| Pruebas Backend | 222 aprobadas |
-| Pruebas Frontend | 123 aprobadas en 20 archivos |
-| Pruebas E2E | 8 aprobadas |
-| Cobertura Backend — líneas | 16.72 % |
-| Cobertura Backend — ramas | 17.18 % |
-| Cobertura Frontend — sentencias | 34.41 % |
-| Cobertura Frontend — ramas | 31.52 % |
-| Cobertura Frontend — funciones | 31.69 % |
-| Cobertura Frontend — líneas | 33.87 % |
+- exige la rama `desarrollo`;
+- exige árbol de trabajo limpio;
+- registra el commit exacto;
+- calcula hashes SHA-256 de los artefactos autorizables;
+- genera un manifiesto y resumen en una carpeta temporal;
+- no lee cadenas de conexión;
+- no conecta a Oracle;
+- no ejecuta SQL*Plus;
+- registra que la autorización y la ejecución permanecen negativas.
+
+### Postflight `08`
+
+El script `08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`:
+
+- exige `CURRENT_SCHEMA = RIESGO_LAVADO`;
+- confirma `RL_USUARIOS`, `RL_AUDITORIA` y `SEQ_RL_AUDITORIA`;
+- exige exactamente 17 tablas `RL_MR_*`;
+- exige exactamente 17 secuencias `SEQ_RL_MR_*`;
+- detecta objetos faltantes e inesperados;
+- detecta tablas y secuencias heredadas;
+- exige claves primarias habilitadas;
+- exige cero restricciones inactivas;
+- exige cero objetos inválidos `RL_MR_*`;
+- lista tablas, secuencias, restricciones e índices;
+- no contiene DDL ni DML;
+- no autoriza ni ejecuta el script `06`.
+
+### Validador automático
+
+`validate_matrices_phase10_transition_package.ps1` controla:
+
+- presencia de todos los artefactos;
+- permanencia de las salvaguardas del script `06`;
+- carácter de solo lectura de `07` y `08`;
+- correspondencia con `modelo_17_objetos.json`;
+- inventario exacto 17/17;
+- control de objetos retirados;
+- estado negativo de autorización y ejecución;
+- ausencia de credenciales codificadas;
+- integración de la puerta al workflow.
 
 ---
 
@@ -101,46 +106,52 @@ Resultado: SUCCESS
 | **Fase 7** | Suite Oracle del modelo reducido | **Completada en código; certificación física pendiente** |
 | **Fase 8** | Revisión final no Oracle y cuarentena | **Completada** |
 | **Fase 9** | Ambiente Oracle exclusivo y expediente de autorización | **Completada técnicamente** |
-| **Fase 10** | Transición física controlada | **Preparada y bloqueada; autorización no otorgada** |
+| **Fase 10** | Transición física controlada | **Preparación técnica en curso; ejecución física bloqueada** |
 | **Fase 11** | Certificación física y funcional Oracle | **Bloqueada** |
 | **Fase 12** | Documentación y cierre técnico | **Pendiente** |
 
 ---
 
-## 5. Estado actual de autorización
+## 5. Estado actual de ejecución y autorización
 
 ```text
-EXPEDIENTE TECNICO: PREPARADO Y VALIDADO
-PREFLIGHT DE SOLO LECTURA: PREPARADO, NO EJECUTADO
-AMBIENTE ORACLE EXCLUSIVO: PENDIENTE DE IDENTIFICACION Y EVIDENCIA
+FASE 9: COMPLETADA
+FASE 10: PREPARACION TECNICA EN CURSO
+TRANSICION FISICA: NO INICIADA
+AMBIENTE ORACLE EXCLUSIVO: PENDIENTE
+CONFIRMACION DE NO PRODUCCION: PENDIENTE
 RESPALDO: PENDIENTE
 PRUEBA DE RESTAURACION: PENDIENTE
-RESPONSABLES DBA Y FUNCIONALES: PENDIENTES DE DESIGNACION
+RESPONSABLES: PENDIENTES
 VENTANA DE CAMBIO: PENDIENTE
 AUTORIZACION FASE 10: NO OTORGADA
+PREFLIGHT 07: NO EJECUTADO
 SCRIPT 05: NO EJECUTADO
 SCRIPT 06: NO EJECUTADO
+POSTFLIGHT 08: NO EJECUTADO
 CERTIFICACION ORACLE: PENDIENTE
 ```
 
-La existencia del expediente, del preflight o del formato de autorización no permite inferir aprobación.
+La instrucción del usuario para continuar la Fase 10 habilita el trabajo técnico no destructivo, pero no sustituye las evidencias de ambiente, respaldo, restauración, participantes ni la autorización separada requerida antes del DDL.
 
 ---
 
-## 6. Bloqueantes vigentes para Fase 10
+## 6. Bloqueantes vigentes para la transición física
 
-1. No se ha identificado ni aprobado formalmente una base Oracle exclusiva de pruebas.
+1. No se ha identificado ni aprobado una base Oracle exclusiva de pruebas.
 2. No existe confirmación escrita de ausencia de datos productivos.
 3. No se han designado DBA ejecutor, DBA revisor, responsable funcional y custodio de evidencias.
 4. No existe evidencia de respaldo completo.
 5. No existe evidencia de restauración validada.
 6. El preflight `07` no se ha ejecutado contra Oracle.
-7. No existe decisión escrita sobre datos `RL_MR_*` que pudieran encontrarse.
-8. No se ha definido la ventana de cambio ni el plan de contingencia operativo.
-9. No se ha entregado la conexión mediante un mecanismo seguro y no versionado.
-10. No se ha otorgado autorización expresa para ejecutar el script `06`.
-11. El modelo no ha sido instalado ni certificado físicamente en Oracle.
-12. La suite Oracle no se ha ejecutado con `RL_ORACLE_INTEGRATION_REQUIRED=true`.
+7. No existe decisión escrita sobre objetos o datos `RL_MR_*` existentes.
+8. No se ha definido ni aprobado la ventana de cambio.
+9. No se ha suministrado la conexión mediante un mecanismo seguro y no versionado.
+10. No se han calculado los hashes definitivos dentro de la ventana autorizada.
+11. No se ha diligenciado ni firmado el acta operativa.
+12. No se ha otorgado autorización expresa separada para ejecutar el script `06`.
+13. El modelo no ha sido instalado ni verificado físicamente mediante el postflight `08`.
+14. La suite Oracle de Fase 11 no se ha ejecutado.
 
 ---
 
@@ -150,69 +161,65 @@ La existencia del expediente, del preflight o del formato de autorización no pe
 2. No modificar ni fusionar `main`.
 3. Mantener el PR #20 abierto y en borrador.
 4. No habilitar auto-merge.
-5. No ejecutar Oracle.
+5. No ejecutar Oracle sin el ambiente y la autorización requeridos.
 6. No ejecutar los scripts `05` o `06`.
 7. No ejecutar `CREATE`, `DROP`, `TRUNCATE` ni migraciones.
-8. El preflight `07` solo podrá ejecutarse cuando el DBA proporcione un ambiente autorizado mediante un mecanismo seguro.
-9. No incorporar el paquete 19 a los maestros automáticos.
-10. No restaurar los instaladores heredados de 34 tablas.
+8. Los scripts `07` y `08` solo podrán ejecutarse en la ventana autorizada y con custodia de evidencias.
+9. No incorporar el paquete 19 a maestros automáticos.
+10. No restaurar instaladores heredados de 34 tablas.
 11. No versionar credenciales o cadenas de conexión.
 12. No declarar certificado el modelo antes de las pruebas Oracle reales.
 13. No cambiar `NO OTORGADA` a `OTORGADA` sin evidencia externa verificable.
-14. Mantener commits identificables, validación y documentación por fase.
+14. Detenerse ante cualquier discrepancia de esquema, hashes, datos, inventario o participantes.
 
 ---
 
-## 8. Punto exacto de continuación — Fase 10
+## 8. Punto exacto de continuación
 
-La Fase 10 está preparada, pero no iniciada. El orden obligatorio será:
+El siguiente paso no es ejecutar el script `06`. El orden obligatorio es:
 
-1. Recibir la identificación formal de la base Oracle exclusiva de pruebas.
-2. Recibir confirmación escrita de que no contiene datos productivos.
-3. Designar DBA ejecutor, DBA revisor, responsable funcional y custodio de evidencias.
-4. Obtener respaldo completo y evidencia verificable.
-5. Ejecutar y documentar una prueba de restauración.
-6. Definir ventana de cambio, plan de ejecución y contingencia.
-7. Proporcionar la conexión mediante secretos o variables de entorno, nunca en Git.
-8. Ejecutar únicamente el preflight `07` de solo lectura.
-9. Revisar el inventario físico y resolver cualquier dato u objeto existente.
-10. Completar y firmar el formato de autorización de Fase 10.
-11. Recibir autorización expresa separada de Javier Mejía y de los responsables designados.
-12. Solo después considerar la ejecución manual del script `06`.
-
-Hasta completar los once primeros pasos, la transición física permanece bloqueada.
+1. Esperar el resultado completo del Quality Gate sobre el paquete de Fase 10.
+2. Corregir cualquier hallazgo del nuevo validador.
+3. Recibir identificación formal de la base Oracle exclusiva de pruebas.
+4. Recibir declaración escrita de no Producción y ausencia de datos productivos.
+5. Designar los responsables de la ventana.
+6. Obtener respaldo completo y prueba de restauración.
+7. Definir y aprobar la ventana de cambio.
+8. Proporcionar la conexión mediante un secreto temporal.
+9. Generar el manifiesto de hashes desde el commit autorizado.
+10. Ejecutar únicamente el preflight `07`.
+11. Revisar y resolver el inventario previo.
+12. Completar y firmar la autorización y el acta.
+13. Recibir autorización expresa separada.
+14. Solo después ejecutar manualmente el script `06`.
+15. Ejecutar el postflight `08`.
+16. Entregar el ambiente a la Fase 11.
 
 ---
 
-## 9. Commits principales de la Fase 9
+## 9. Commits principales de la preparación Fase 10
 
 ```text
-42c4dd554b7bc8db1911d2a91fb1db3514bdceef
-feat(matrices): preparar preflight Oracle de solo lectura fase 9
+7a10692267e5ecebf912af265d11305ebff9ecc4
+feat(matrices): agregar postflight Oracle de fase 10
 
-57ab5d6cebac58d616f6707b4ef00950cfa5acd4
-docs(matrices): preparar expediente Oracle fase 9
+7a23b69feeb8105bd5d0be8b26f51b44a22dc8d5
+docs(matrices): preparar acta operativa de fase 10
 
-5403887b1985fe6d338d7a59288f16ddc98b1874
-docs(matrices): agregar formato de autorizacion Oracle fase 10
+ad4f997204a81aa1e046f5adbce0c99ed9b90a9f
+feat(matrices): preparar manifiesto de evidencias fase 10
 
-2798677224ceb412e2565bdbb60805917121445e
-test(matrices): validar expediente Oracle fase 9
+cb5eb2f4962a5d0c92c8d629325cd0b233715a6c
+test(matrices): validar paquete operativo de fase 10
 
-1beec70e85d4d8e6a360e908fbd1ac286a3346ac
-ci(matrices): exigir expediente Oracle fase 9
+12335ecdabf51c39c94e8e596abda5a2ceb49944
+docs(matrices): iniciar preparacion tecnica fase 10
 
-f1368c6c06b62292db4130ea7016be678e5979f1
-fix(matrices): alinear validador del expediente Oracle fase 9
+ce1d4cc4bfd448635d474dd1c28bb2d783bd96da
+docs(matrices): documentar paquete de transicion fase 10
 
-02329345d5336b209d249b0a74a0dace7a95b121
-docs(matrices): documentar controles Oracle fase 9
-
-276a39fc7f1cb2b05b52a04740cd8100e33d33c6
-docs(matrices): registrar incidente CI y reintento fase 9
-
-9b19149264c586229d474c63850be811a10190f7
-docs(matrices): cerrar validacion CI de fase 9
+6b720f6166d3449dbd3dbbd3250baf0a8a9f9292
+ci(matrices): exigir paquete operativo fase 10
 ```
 
 ---
