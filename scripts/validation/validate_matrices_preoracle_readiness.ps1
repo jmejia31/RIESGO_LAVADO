@@ -173,7 +173,7 @@ Assert-ContainsTokens $integrationTest @(
     'configuration.GetConnectionString("OracleDB")',
     'if (!_integrationRequired)',
     'Este resultado no certifica físicamente el modelo de 17 tablas.',
-    "string.Equals(esquema, \"RIESGO_LAVADO\"",
+    'string.Equals(esquema, "RIESGO_LAVADO"',
     'ValidarContratoFisicoAsync(conn)',
     'TablasModelo17',
     'SecuenciasModelo17',
