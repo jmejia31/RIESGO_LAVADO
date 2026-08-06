@@ -38,7 +38,7 @@ $securityScanRoots = @(
 
 $moduleExtensions = @('.cs', '.ts', '.html', '.sql', '.json')
 $securityExtensions = @('.cs', '.json', '.config', '.xml', '.runsettings', '.ps1', '.yml', '.yaml', '.env', '.txt')
-$excludedDirectoryNames = @('bin', 'obj', 'node_modules', 'dist', 'coverage', 'Historico', 'retiro_controlado', '.git')
+$excludedDirectoryNames = @('bin', 'obj', 'node_modules', 'dist', 'coverage', 'Historico', 'retiro_controlado', 'transicion', '.git')
 $errors = New-Object System.Collections.Generic.List[string]
 
 function Test-IsExcludedPath {
