@@ -1,0 +1,31 @@
+name: Phase 7 fix Oracle validator
+
+on:
+  push:
+    branches:
+      - desarrollo
+
+permissions:
+  contents: write
+
+jobs:
+  apply-validator-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 0
+
+      - name: Apply phase 7 validator fix
+        run: python scripts/maintenance/apply_phase7_validator.py
+
+      - name: Commit validator fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "test(matrices): alinear validador con certificacion Oracle fase 7"
+          git push origin HEAD:desarrollo
