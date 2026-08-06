@@ -30,7 +30,7 @@ function Get-SqlIncludes {
     $baseDirectory = Split-Path -Parent $EntrypointPath
 
     foreach ($line in Get-Content -LiteralPath $EntrypointPath) {
-        if ($line -match '^\s*@@(?<include>.+\.sql)\s*$') {
+        if ($line -match '^\s*@@(?<include>[^\s]+\.sql)(?:\s+.*)?$') {
             $includePath = [System.IO.Path]::GetFullPath((Join-Path $baseDirectory $Matches.include.Trim()))
             if (-not $includePath.StartsWith($databasePrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $errors.Add("Include fuera de database: $(Get-DatabaseRelativePath $EntrypointPath) -> $($Matches.include)")
@@ -44,7 +44,7 @@ function Get-SqlIncludes {
 
             $includes.Add($includePath)
         }
-        elseif ($line -match '^\s*@[^@].+\.sql\s*$') {
+        elseif ($line -match '^\s*@[^@].+\.sql(?:\s+.*)?$') {
             $errors.Add("Include SQL debe usar @@ para resolver rutas relativas: $(Get-DatabaseRelativePath $EntrypointPath) -> $($line.Trim())")
         }
     }
@@ -102,7 +102,11 @@ function Get-ExecutableSql {
     param([string]$Path)
 
     $content = Get-Content -LiteralPath $Path -Raw
-    $withoutBlocks = [System.Text.RegularExpressions.Regex]::Replace($content, '/\*.*?\*/', '', [System.Text.RegularExpressions.RegexOptions]::Singleline)
+    $withoutBlocks = [System.Text.RegularExpressions.Regex]::Replace(
+        $content,
+        '/\*.*?\*/',
+        '',
+        [System.Text.RegularExpressions.RegexOptions]::Singleline)
     $executableLines = $withoutBlocks -split "`r?`n" | Where-Object {
         $_ -notmatch '^\s*--' -and $_ -notmatch '^\s*PROMPT(?:\s|$)'
     }
@@ -127,31 +131,22 @@ $firstInstallOrder = @(
     '15_update_detalle_evidencia_soft_delete.sql',
     '16_alter_lista_positivos_origen_registro.sql',
     '18_add_missing_comments.sql',
-    '19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql',
     '17_validate_module_ids.sql'
 )
 
-$safeUpdateOrder = $firstInstallOrder | Where-Object { $_ -notin @('01_create_tables.sql', '02_seed_data.sql') }
-$matricesOrder = @(
-    '19_matrices_riesgos/instalacion/01_create_rl_mr_estructura_dinamica.sql',
-    '19_matrices_riesgos/instalacion/02_create_rl_mr_restricciones_indices.sql',
-    '19_matrices_riesgos/02_register_modulo_matrices_riesgos.sql',
-    '19_matrices_riesgos/instalacion/03_seed_catalogos_iniciales.sql',
-    '19_matrices_riesgos/instalacion/04_config_json_inicial_formulario.sql',
-    '19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql'
-)
+$safeUpdateOrder = $firstInstallOrder | Where-Object {
+    $_ -notin @('01_create_tables.sql', '02_seed_data.sql')
+}
 
 Assert-IncludeOrder '00_EJECUCION_PRIMERA_VEZ.sql' $firstInstallOrder
 Assert-IncludeOrder '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql' $safeUpdateOrder
-Assert-IncludeOrder '19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql' $matricesOrder
 
-$entrypoints = @(
+$rootEntrypoints = @(
     '00_EJECUCION_PRIMERA_VEZ.sql',
-    '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql',
-    '19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql'
+    '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql'
 )
 
-foreach ($entrypoint in $entrypoints) {
+foreach ($entrypoint in $rootEntrypoints) {
     $path = Join-Path $databaseRoot $entrypoint
     if ((Test-Path -LiteralPath $path) -and (Get-Content -LiteralPath $path -Raw) -notmatch '(?im)^\s*WHENEVER\s+SQLERROR\s+EXIT\s+SQL\.SQLCODE\s+ROLLBACK\s*$') {
         $errors.Add("Punto de entrada sin cierre controlado ante error Oracle: $entrypoint")
@@ -188,10 +183,10 @@ if ($validationSql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DRO
     $errors.Add('La validacion final 17_validate_module_ids.sql dejo de ser de solo lectura')
 }
 
-$activeRootScripts = Get-ChildItem -LiteralPath $databaseRoot -File -Filter '*.sql' |
-    Where-Object { $_.Name -match '^\d{2}_.+\.sql$' }
 $manifestPath = Join-Path $databaseRoot '00_MANIFIESTO_SCRIPTS_APROBADOS.md'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw
+$activeRootScripts = Get-ChildItem -LiteralPath $databaseRoot -File -Filter '*.sql' |
+    Where-Object { $_.Name -match '^\d{2}_.+\.sql$' }
 
 foreach ($script in $activeRootScripts) {
     if (-not $firstClosure.Contains($script.FullName) -and $script.Name -notin @('00_EJECUCION_PRIMERA_VEZ.sql', '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql')) {
@@ -203,8 +198,97 @@ foreach ($script in $activeRootScripts) {
     }
 }
 
+$matricesRoot = Join-Path $databaseRoot '19_matrices_riesgos'
+$matricesEntrypoint = Join-Path $matricesRoot '00_APLICAR_MODULO_MATRICES_RIESGOS.sql'
+$transitionScript = Join-Path $matricesRoot 'transicion/06_reconstruir_modelo_17_tablas.sql'
+$legacyStructure = Join-Path $matricesRoot 'instalacion/01_create_rl_mr_estructura_dinamica.sql'
+$legacyConstraints = Join-Path $matricesRoot 'instalacion/02_create_rl_mr_restricciones_indices.sql'
+
+foreach ($requiredPath in @($matricesEntrypoint, $transitionScript)) {
+    if (-not (Test-Path -LiteralPath $requiredPath -PathType Leaf)) {
+        $errors.Add("Archivo obligatorio de Matrices inexistente: $(Get-DatabaseRelativePath $requiredPath)")
+    }
+}
+
+foreach ($legacyPath in @($legacyStructure, $legacyConstraints)) {
+    if (Test-Path -LiteralPath $legacyPath -PathType Leaf) {
+        $errors.Add("Instalador heredado restaurado en la ruta activa: $(Get-DatabaseRelativePath $legacyPath)")
+    }
+}
+
+if (Test-Path -LiteralPath $matricesEntrypoint -PathType Leaf) {
+    $entrypointContent = Get-Content -LiteralPath $matricesEntrypoint -Raw
+    $entrypointIncludes = @(Get-SqlIncludes $matricesEntrypoint)
+
+    if ($entrypointIncludes.Count -ne 0) {
+        $errors.Add('El punto de entrada bloqueado de Matrices no puede contener includes SQL.')
+    }
+
+    foreach ($token in @(
+        'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
+        "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')",
+        "UPPER(v_esquema_actual) <> 'RIESGO_LAVADO'",
+        'EJECUCION BLOQUEADA',
+        'cuarentena pre-Oracle')) {
+        if (-not $entrypointContent.Contains($token)) {
+            $errors.Add("El punto de entrada bloqueado de Matrices no contiene: $token")
+        }
+    }
+
+    $entrypointSql = Get-ExecutableSql $matricesEntrypoint
+    if ($entrypointSql -match '(?im)\b(?:CREATE|ALTER|DROP|TRUNCATE|INSERT|UPDATE|MERGE|DELETE|COMMIT)\b') {
+        $errors.Add('El punto de entrada bloqueado de Matrices contiene operaciones de esquema o datos.')
+    }
+
+    if ($firstClosure.Contains($matricesEntrypoint) -or $safeClosure.Contains($matricesEntrypoint)) {
+        $errors.Add('El paquete Matrices no puede ser alcanzable desde los maestros durante la cuarentena pre-Oracle.')
+    }
+}
+
+if (Test-Path -LiteralPath $transitionScript -PathType Leaf) {
+    $transitionContent = Get-Content -LiteralPath $transitionScript -Raw
+    foreach ($token in @(
+        'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
+        "DEFINE autorizacion = '&1'",
+        "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')",
+        "UPPER(v_schema) <> 'RIESGO_LAVADO'",
+        "UPPER(v_auth) <> 'EJECUTAR'",
+        "TABLE_NAME = 'RL_USUARIOS'",
+        'CREATE TABLE RL_MR_FAMILIAS_FORMULARIO',
+        'CREATE TABLE RL_MR_AUTOMONITOREO')) {
+        if (-not $transitionContent.Contains($token)) {
+            $errors.Add("El script de transicion 06 no contiene: $token")
+        }
+    }
+
+    if ($firstClosure.Contains($transitionScript) -or $safeClosure.Contains($transitionScript)) {
+        $errors.Add('El script destructivo 06 no puede pertenecer a un flujo automatico.')
+    }
+}
+
+$allSqlFiles = Get-ChildItem -LiteralPath $databaseRoot -Recurse -File -Filter '*.sql'
+foreach ($sqlFile in $allSqlFiles) {
+    if ($sqlFile.FullName -eq $transitionScript) {
+        continue
+    }
+
+    $content = Get-Content -LiteralPath $sqlFile.FullName -Raw
+    if ($content -match '(?im)^\s*@@[^\r\n]*06_reconstruir_modelo_17_tablas\.sql(?:\s|$)') {
+        $errors.Add("El script 06 fue incorporado mediante include: $(Get-DatabaseRelativePath $sqlFile.FullName)")
+    }
+}
+
+foreach ($requiredManifestToken in @(
+    '19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql',
+    '19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql',
+    'fuera de los dos maestros automáticos')) {
+    if (-not $manifest.Contains($requiredManifestToken)) {
+        $errors.Add("El manifiesto no documenta el control de Matrices: $requiredManifestToken")
+    }
+}
+
 $packageDirectories = Get-ChildItem -LiteralPath $databaseRoot -Directory |
-    Where-Object { $_.Name -match '^\d{2}_' }
+    Where-Object { $_.Name -match '^\d{2}_' -and $_.Name -ne '19_matrices_riesgos' }
 foreach ($directory in $packageDirectories) {
     $packageEntrypoints = @(Get-ChildItem -LiteralPath $directory.FullName -File -Filter '00_APLICAR_*.sql')
     if ($packageEntrypoints.Count -ne 1) {
@@ -247,5 +331,6 @@ if ($errors.Count -gt 0) {
 
 Write-Host 'Validacion de base de datos correcta.' -ForegroundColor Green
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
-Write-Host "Paquetes modulares: $($packageDirectories.Count)"
 Write-Host "Scripts alcanzables desde actualizacion segura: $($safeClosure.Count)"
+Write-Host 'Matrices de Riesgos: fuera de maestros, punto de entrada bloqueado y transicion 06 manual.'
+exit 0
