@@ -201,9 +201,10 @@ if (Test-Path -LiteralPath $integrationTest -PathType Leaf) {
 }
 
 Assert-ContainsTokens $contractTest @(
-    'TablasModelo17_TieneExactamenteDiecisieteSinDuplicados',
-    'SecuenciasModelo17_TieneExactamenteDiecisieteSinDuplicados',
-    'EscenariosOracle_CubrenContratoCommitRollbackYAuditoria') 'Pruebas de contrato Oracle no conectadas'
+    'InventarioOracle_DeclaraExactamenteDiecisieteTablasYSecuencias',
+    'InventarioOracle_NoMezclaObjetosActivosYRetirados',
+    'SuiteOracle_ConservaEscenariosFisicoCommitRollbackYAuditoria',
+    'SuiteOracle_DeclaraIndicesYRestriccionesPrincipalesSinDuplicados') 'Pruebas de contrato Oracle no conectadas'
 
 Assert-ContainsTokens $qualityWorkflow @(
     './tools/validate_database_scripts.ps1',
