@@ -20,11 +20,13 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención:** Fase 10 — Preparación técnica de transición física Oracle
-- **Fecha:** 2026-08-06
-- **Rama:** `desarrollo`
-- **Estado técnico:** preparación no destructiva implementada; ejecución física bloqueada
-- **Plan:** [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
+- **Intervención**: Verificación de Repositorio, Artefactos y Manifiesto de Evidencias de Fase 10
+- **Fecha**: 2026-08-06 (Hora local)
+- **Autor**: Antigravity
+- **Rama**: `desarrollo`
+- **Commit evaluado y publicado**: `2c2cabd81101258f147bdf4d5d285677a7fc897e`
+- **Estado**: Se completaron con éxito las Fases A, B y E de la instrucción operativa de Fase 10. Se sanitizó la credencial en `appsettings.json`, se corrigieron los scripts de validación en PowerShell para el manejo de rutas acentuadas, se verificaron todos los validadores estáticos (exit code 0) y se generó el manifiesto de evidencias con SHA-256 sin conectar a Oracle. La autorización de Fase 10 permanece **NO OTORGADA**, y el script 06 permanece **NO EJECUTADO**.
+- **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
 

@@ -2147,3 +2147,44 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 1. Proceder con el levantamiento de la base de datos Oracle local bajo el esquema de 17 tablas.
 2. Ejecutar y registrar las pruebas de Quality Gates completas en el pipeline CI con el SDK .NET 10.0 y Node 24.
 
+---
+
+## Registro de Intervención — Antigravity — Verificación de Repositorio, Artefactos y Manifiesto de Evidencias de Fase 10
+
+- **Fecha y hora**: 2026-08-06 11:53, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit evaluado y publicado**: `2c2cabd81101258f147bdf4d5d285677a7fc897e`.
+
+### Objetivo y alcance
+
+1. **Fase A (Verificación del Repositorio)**: Actualizar la rama `desarrollo`, verificar alineación de HEAD (`2c2cabd`), árbol de trabajo limpio y estado del PR #20 (abierto y en borrador).
+2. **Fase B (Revisión de Artefactos)**: Validar la presencia y validez estática de los scripts 06, 07 y 08, `modelo_17_objetos.json`, scripts de preparación/validación de Fase 10 y documentos de plan/acta. Confirmar que la autorización de ejecución física permanece **NO OTORGADA**.
+3. **Sanitización y Compatibilidad**: Sanitizar credencial en `appsettings.json` y resolver la codificación de rutas con tildes en scripts PowerShell de validación y preparación.
+4. **Fase E (Manifiesto de Evidencias)**: Ejecutar `prepare_matrices_phase10_evidence.ps1` para generar el manifiesto e inventario SHA-256 de Fase 10 sin conectar a Oracle.
+
+### Archivos modificados
+
+- **Modificado**: [`backend/RL.API/appsettings.json`](file:///c:/RIESGO_LAVADO/backend/RL.API/appsettings.json) — Sanitización de cadena de conexión (`Password=CHANGE_ME;`).
+- **Modificado**: [`scripts/validation/validate_matrices_phase10_transition_package.ps1`](file:///c:/RIESGO_LAVADO/scripts/validation/validate_matrices_phase10_transition_package.ps1) — Resolución robusta de rutas con caracteres acentuados.
+- **Modificado**: [`scripts/operations/prepare_matrices_phase10_evidence.ps1`](file:///c:/RIESGO_LAVADO/scripts/operations/prepare_matrices_phase10_evidence.ps1) — Resolución robusta de rutas con caracteres acentuados.
+- **Creado**: [`docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260806.sql`](file:///c:/RIESGO_LAVADO/docs/1.%20Bases%20de%20Datos/Base%20de%20Datos%20RIESGO_LAVADO_Actualizada_20260806.sql) — Respaldo DDL actualizado del esquema.
+- **Modificado**: [`BITACORA_COLABORACION.md`](file:///c:/RIESGO_LAVADO/BITACORA_COLABORACION.md) — Este archivo.
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](file:///c:/RIESGO_LAVADO/docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización del estado de colaboración.
+
+### Validaciones ejecutadas
+
+- `validate_matrices_phase10_transition_package.ps1`: **CORRECTA** (exit code 0).
+- `validate_matrices_preoracle_readiness.ps1`: **CORRECTA** (exit code 0).
+- `validate_repository_structure.ps1`: **CORRECTA** (118 rutas, 506 archivos).
+- `validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz).
+- `validate_documentation_links.ps1`: **CORRECTA** (63 markdown, 155 enlaces).
+- `prepare_matrices_phase10_evidence.ps1`: **CORRECTA** (Manifiesto SHA-256 generado).
+
+### Punto de continuación
+
+1. Presentar el informe técnico de la verificación del repositorio y artefactos a Javier Mejía.
+2. Confirmar la información del ambiente Oracle de pruebas (Fase C) y la existencia/prueba de restauración de respaldos (Fase D) antes de cualquier ejecución de preflight solo lectura (Fase G).
+3. Mantener el script 06 **sin ejecutar**, el PR #20 abierto y en borrador, y la rama `main` intacta.
+
+
