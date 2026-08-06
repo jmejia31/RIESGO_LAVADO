@@ -43,6 +43,12 @@ jobs:
         working-directory: frontend/rl-app
         run: npm ci
 
+      - name: Validate database flows and pre-Oracle quarantine
+        shell: pwsh
+        run: |
+          ./tools/validate_database_scripts.ps1
+          ./scripts/validation/validate_matrices_preoracle_readiness.ps1
+
       - name: Validate dynamic matrices alignment
         shell: pwsh
         run: ./scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
