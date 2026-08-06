@@ -50,6 +50,7 @@ jobs:
           ./scripts/validation/validate_matrices_preoracle_readiness.ps1
           ./scripts/validation/validate_matrices_phase9_oracle_dossier.ps1
           ./scripts/validation/validate_matrices_phase10_transition_package.ps1
+          ./scripts/validation/validate_matrices_phase11_block1.ps1
 
       - name: Validate dynamic matrices alignment
         shell: pwsh
