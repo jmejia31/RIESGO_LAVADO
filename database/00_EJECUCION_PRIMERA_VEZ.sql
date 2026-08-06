@@ -6,6 +6,12 @@
 -- Proceso DBA: usar exclusivamente cuando la base no contiene informacion
 -- productiva. Este flujo puede crear estructura y datos iniciales, por eso
 -- no debe mezclarse con actualizaciones seguras de ambientes existentes.
+--
+-- MATRICES DE RIESGOS:
+-- El paquete 19 permanece excluido durante la preparacion y certificacion
+-- Oracle del modelo reducido de 17 tablas. No debe instalarse automaticamente
+-- hasta completar la transicion manual, la certificacion fisica y la
+-- autorizacion expresa correspondiente.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -13,6 +19,7 @@ WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 PROMPT ============================================================
 PROMPT EJECUCION PRIMERA VEZ - AMBIENTE NUEVO
 PROMPT Valide respaldo y aprobacion DBA antes de continuar.
+PROMPT Matrices de Riesgos permanece fuera del flujo automatico.
 PROMPT ============================================================
 
 @@01_create_tables.sql
@@ -31,7 +38,6 @@ PROMPT ============================================================
 @@15_update_detalle_evidencia_soft_delete.sql
 @@16_alter_lista_positivos_origen_registro.sql
 @@18_add_missing_comments.sql
-@@19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql
 @@17_validate_module_ids.sql
 
 PROMPT ============================================================
