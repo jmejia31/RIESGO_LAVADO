@@ -6,6 +6,12 @@
 -- Proceso DBA: ejecutar solo despues de respaldo validado, ventana aprobada
 -- y revision del orden de scripts. Cada archivo incluido debe ser idempotente
 -- o estar documentado como correctivo seguro para ambientes existentes.
+--
+-- MATRICES DE RIESGOS:
+-- El paquete 19 permanece excluido de este flujo durante la preparacion y
+-- certificacion Oracle del modelo reducido de 17 tablas. Su transicion fisica
+-- solo puede realizarse manualmente mediante el script 06, con respaldo y
+-- autorizacion expresa. No agregarlo a este maestro antes del cierre Oracle.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -14,6 +20,7 @@ PROMPT ============================================================
 PROMPT EJECUCION DE ACTUALIZACIONES SEGURAS
 PROMPT No se ejecutan DROP TABLE, TRUNCATE ni DELETE masivo.
 PROMPT Valide respaldo y ventana de cambio antes de continuar.
+PROMPT Matrices de Riesgos permanece fuera del flujo automatico.
 PROMPT ============================================================
 
 @@03_create_modules_table.sql
@@ -30,7 +37,6 @@ PROMPT ============================================================
 @@15_update_detalle_evidencia_soft_delete.sql
 @@16_alter_lista_positivos_origen_registro.sql
 @@18_add_missing_comments.sql
-@@19_matrices_riesgos/00_APLICAR_MODULO_MATRICES_RIESGOS.sql
 @@17_validate_module_ids.sql
 
 PROMPT ============================================================
