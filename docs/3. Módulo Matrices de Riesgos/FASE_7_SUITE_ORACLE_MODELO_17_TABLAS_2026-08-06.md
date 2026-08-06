@@ -5,7 +5,7 @@
 - **Fecha:** 2026-08-06.
 - **Rama de trabajo:** `desarrollo`.
 - **Rama estable:** `main` — no modificada.
-- **Estado:** implementación completada en código; validación institucional en ejecución.
+- **Estado:** implementación completada en código; validación institucional definitiva en ejecución.
 - **Oracle:** no ejecutado.
 
 ---
@@ -155,10 +155,11 @@ Estas pruebas se ejecutan siempre y comprueban que:
 
 ## 8. Validador y Quality Gate
 
-Durante la intervención se detectaron y corrigieron dos debilidades de calidad:
+Durante la intervención se detectaron y corrigieron tres debilidades de calidad:
 
 1. el validador trataba las listas de objetos cuya ausencia se certifica como si fueran referencias SQL activas;
-2. el workflow terminaba la etapa del validador con `exit 0`, ocultando su código de fallo.
+2. el workflow terminaba la etapa del validador con `exit 0`, ocultando su código de fallo;
+3. al eliminar ese bypass, PowerShell heredaba el código `1` del último `git check-ignore`, incluso cuando el validador concluía correctamente.
 
 El validador ahora:
 
@@ -166,9 +167,11 @@ El validador ahora:
 - exige el inventario, los campos obligatorios y los cuatro escenarios nuevos;
 - permite mencionar objetos retirados solo como inventario de ausencia;
 - rechaza `INSERT`, `UPDATE`, `DELETE`, `MERGE` o `FROM` contra objetos retirados;
-- continúa prohibiendo `TRA_REGLA_ID`.
+- continúa prohibiendo `TRA_REGLA_ID`;
+- ejecuta `exit 1` cuando existen hallazgos;
+- ejecuta `exit 0` explícitamente solo después de comprobar que no existen hallazgos.
 
-El Quality Gate ya no fuerza una salida exitosa: cualquier hallazgo del validador bloqueará realmente la ejecución.
+El Quality Gate ya no fuerza una salida exitosa desde el workflow: el código de resultado procede exclusivamente del validador.
 
 ---
 
@@ -183,6 +186,9 @@ ci(matrices): hacer vinculante el validador dinamico
 
 75e70ced4c7b474ba8c4f89bf5c5ae705629511b
 test(matrices): alinear validador con certificacion Oracle fase 7
+
+8d09af9fee3b28e2dea2c2149821686d79f09638
+fix(matrices): normalizar salida exitosa del validador
 ```
 
 Los archivos auxiliares de aplicación fueron eliminados automáticamente y no permanecen en la rama.
@@ -203,7 +209,7 @@ Los archivos auxiliares de aplicación fueron eliminados automáticamente y no p
 
 ## 11. Criterio pendiente de cierre
 
-La Fase 7 se declarará completada en código cuando el Quality Gate institucional apruebe, con el validador ahora vinculante:
+La Fase 7 se declarará completada en código cuando el Quality Gate institucional apruebe, con el validador ahora vinculante y con salida propia normalizada:
 
 - alineación dinámica;
 - inventario exacto de 17 tablas y 17 secuencias;
