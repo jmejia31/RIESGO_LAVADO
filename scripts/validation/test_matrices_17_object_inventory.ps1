@@ -5,7 +5,8 @@ $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
 $validatorPath = Join-Path $PSScriptRoot 'validate_matrices_17_object_inventory.ps1'
 $ddlPath = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
 $manifestPath = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/modelo_17_objetos.json'
-$pwshPath = (Get-Command pwsh -ErrorAction Stop).Source
+$pwshCmd = Get-Command pwsh -ErrorAction SilentlyContinue
+$pwshPath = if ($pwshCmd) { $pwshCmd.Source } else { (Get-Command powershell -ErrorAction Stop).Source }
 $failures = [System.Collections.Generic.List[string]]::new()
 $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("matrices-17-inventory-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $tempRoot | Out-Null
