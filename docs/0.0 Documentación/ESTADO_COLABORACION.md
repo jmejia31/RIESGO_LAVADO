@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-06: la Fase 10 del Módulo Matrices de Riesgos inició en su alcance técnico no destructivo. Se prepararon el postflight Oracle de solo lectura, el manifiesto local de hashes, el acta operativa pendiente, la validación automática del paquete y su integración al Quality Gate. La transición física continúa bloqueada: Oracle, el preflight `07`, el script `06` y el postflight `08` no fueron ejecutados. La autorización permanece en `NO OTORGADA`. `main` continúa intacta y el PR #20 debe permanecer abierto y en borrador.
+> Actualización 2026-08-06: La Fase 10 del Módulo Matrices de Riesgos (Transición Física Oracle al modelo de 17 tablas y 17 secuencias) fue ejecutada exitosamente en el ambiente de Desarrollo (`desdb` / `hpprod1` / `RIESGO_LAVADO`). Se completaron el Preflight 07, el respaldo de contingencia (`B10_*`), el Script 06, el retiro de 7 tablas heredadas no contempladas inicialmente y el Postflight 08 (con dictamen de inventario 17/17). Se ejecutó el cierre correctivo en el commit `1c33b6f3680ae61b31d7938a75b95878c7c2bffd`. La Fase 10 queda **COMPLETADA Y CERRADA**. La Fase 11 queda **HABILITADA**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,15 +20,15 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: Alineación Interna y Cierre Documental de Fase 10
+- **Intervención**: Cierre Final Consolidado — Fase 10 Transición Física Oracle
 - **Fecha**: 2026-08-06 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit certificado**: `4cc3a1f154546d8d4b547ac301fdf0a44d742025`
-- **Quality Gate CI**: Run `31126687057` en **SUCCESS**.
-- **Estado**: Se corrigió la Sección 11 del Plan Operativo de Fase 10 para alineación interna exacta con la preparación técnica completada y certificada. La transición física Oracle permanece **NO INICIADA**, el ambiente de pruebas permanece **PENDIENTE DEL DBA**, el preflight `07`, el script `05`, el script `06` y el postflight `08` **NO FUERON EJECUTADOS**, la autorización de Fase 10 permanece **NO OTORGADA** y la Fase 11 permanece **BLOQUEADA**.
+- **Commit de ejecución física**: `541d7ef3e35933bd883f02df254eeb8d81b69bed`
+- **Commit de reproducibilidad / cierre**: `1c33b6f3680ae61b31d7938a75b95878c7c2bffd`
+- **Estado**: Transición Física Oracle **COMPLETADA Y CERTIFICADA**. Postflight 08 Aprobado 17/17. Respaldos `B10_*` conservados para Fase 11. Fase 11 **HABILITADA**.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
-- **Acta:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md)
+- **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
 
 ### Entregables técnicos preparados
@@ -109,8 +109,8 @@ El script `08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`:
 | **Fase 7** | Suite Oracle del modelo reducido | **Completada en código; certificación física pendiente** |
 | **Fase 8** | Revisión final no Oracle y cuarentena | **Completada** |
 | **Fase 9** | Ambiente Oracle exclusivo y expediente de autorización | **Completada técnicamente** |
-| **Fase 10** | Transición física controlada | **Preparación técnica en curso; ejecución física bloqueada** |
-| **Fase 11** | Certificación física y funcional Oracle | **Bloqueada** |
+| **Fase 10** | Transición física controlada | **Completada y certificada** |
+| **Fase 11** | Certificación física y funcional Oracle | **Habilitada** |
 | **Fase 12** | Documentación y cierre técnico | **Pendiente** |
 
 ---
@@ -119,20 +119,16 @@ El script `08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`:
 
 ```text
 FASE 9: COMPLETADA
-FASE 10: PREPARACION TECNICA EN CURSO
-TRANSICION FISICA: NO INICIADA
-AMBIENTE ORACLE EXCLUSIVO: PENDIENTE
-CONFIRMACION DE NO PRODUCCION: PENDIENTE
-RESPALDO: PENDIENTE
-PRUEBA DE RESTAURACION: PENDIENTE
-RESPONSABLES: PENDIENTES
-VENTANA DE CAMBIO: PENDIENTE
-AUTORIZACION FASE 10: NO OTORGADA
-PREFLIGHT 07: NO EJECUTADO
+FASE 10 — PREPARACIÓN TÉCNICA: COMPLETADA
+FASE 10 — TRANSICIÓN FÍSICA ORACLE: COMPLETADA
+PREFLIGHT 07: APROBADO
 SCRIPT 05: NO EJECUTADO
-SCRIPT 06: NO EJECUTADO
-POSTFLIGHT 08: NO EJECUTADO
-CERTIFICACION ORACLE: PENDIENTE
+SCRIPT 06: EJECUTADO
+POSTFLIGHT 08: APROBADO 17/17
+RESPALDO B10_*: CONSERVADO PARA FASE 11
+FASE 11: HABILITADA
+MAIN: INTACTA
+PR #20: ABIERTO Y EN BORRADOR
 ```
 
 La instrucción del usuario para continuar la Fase 10 habilita el trabajo técnico no destructivo, pero no sustituye las evidencias de ambiente, respaldo, restauración, participantes ni la autorización separada requerida antes del DDL.

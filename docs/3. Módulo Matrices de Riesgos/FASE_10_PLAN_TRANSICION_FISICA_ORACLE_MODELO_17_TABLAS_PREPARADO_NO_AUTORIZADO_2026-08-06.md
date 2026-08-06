@@ -7,15 +7,15 @@
 - **Rama técnica:** `desarrollo`.
 - **PR:** #20, abierto y en borrador.
 - **Modelo objetivo:** 17 tablas y 17 secuencias `RL_MR_*`.
-- **Estado:** PREPARACIÓN TÉCNICA COMPLETADA Y CERTIFICADA (Quality Gate Run 31126687057 - SUCCESS); EJECUCIÓN FÍSICA NO INICIADA.
-- **Commit certificado:** `4cc3a1f154546d8d4b547ac301fdf0a44d742025`.
-- **Quality Gate CI:** Run ID `31126687057` — SUCCESS.
-- **Autorización de ejecución:** NO OTORGADA.
-- **Oracle ejecutado:** NO.
-- **Preflight `07` ejecutado:** NO.
+- **Estado:** DOCUMENTO PREOPERATIVO — TRANSICIÓN FÍSICA EJECUTADA Y CERTIFICADA (Remitirse a FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md).
+- **Commit de ejecución:** `541d7ef3e35933bd883f02df254eeb8d81b69bed`.
+- **Commit de reproducibilidad:** `1c33b6f3680ae61b31d7938a75b95878c7c2bffd`.
+- **Autorización de ejecución:** OTORGADA POR JAVIER MEJÍA.
+- **Oracle ejecutado:** SÍ.
+- **Preflight `07` ejecutado:** SÍ — APROBADO.
 - **Script `05` ejecutado:** NO.
-- **Script `06` ejecutado:** NO.
-- **Postflight `08` ejecutado:** NO.
+- **Script `06` ejecutado:** SÍ — COMPLETADO.
+- **Postflight `08` ejecutado:** SÍ — APROBADO 17/17.
 
 ---
 
@@ -323,20 +323,16 @@ El cierre de Fase 10 no equivale a certificación funcional.
 
 ```text
 FASE 9: COMPLETADA
-FASE 10 — PREPARACION TECNICA: COMPLETADA Y CERTIFICADA
-COMMIT TECNICO CERTIFICADO: 4cc3a1f154546d8d4b547ac301fdf0a44d742025
-QUALITY GATE TECNICO: RUN 31126687057 — SUCCESS
-TRANSICION FISICA ORACLE: NO INICIADA
-AUTORIZACION FASE 10: NO OTORGADA
-AMBIENTE ORACLE: PENDIENTE DEL DBA
-RESPALDO Y RESTAURACION: PENDIENTES
-PREFLIGHT 07: NO EJECUTADO
+FASE 10 — PREPARACIÓN TÉCNICA: COMPLETADA
+FASE 10 — TRANSICIÓN FÍSICA ORACLE: COMPLETADA
+PREFLIGHT 07: APROBADO
 SCRIPT 05: NO EJECUTADO
-SCRIPT 06: NO EJECUTADO Y NO AUTORIZADO
-POSTFLIGHT 08: NO EJECUTADO
-FASE 11: BLOQUEADA
+SCRIPT 06: EJECUTADO
+POSTFLIGHT 08: APROBADO 17/17
+RESPALDO B10_*: CONSERVADO PARA FASE 11
+FASE 11: HABILITADA
 MAIN: INTACTA
-PR 20: ABIERTO Y EN BORRADOR
+PR #20: ABIERTO Y EN BORRADOR
 ```
 
 ---

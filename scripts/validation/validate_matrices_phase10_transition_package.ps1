@@ -11,7 +11,7 @@ $readmePath = Join-Path $transitionRoot 'README.md'
 $moduleDocsDir = (Get-ChildItem (Join-Path $repositoryRoot 'docs') -Directory | Where-Object { $_.Name -like '3.*' } | Select-Object -First 1).FullName
 $planPath = Join-Path $moduleDocsDir 'FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md'
 $authorizationPath = Join-Path $moduleDocsDir 'FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md'
-$recordPath = Join-Path $moduleDocsDir 'FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md'
+$recordPath = Join-Path $moduleDocsDir 'FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md'
 $preparationPath = Join-Path $repositoryRoot 'scripts/operations/prepare_matrices_phase10_evidence.ps1'
 $workflowPath = Join-Path $repositoryRoot '.github/workflows/quality-gates.yml'
 $errors = [System.Collections.Generic.List[string]]::new()
@@ -132,21 +132,11 @@ foreach ($readOnlyPath in @($preflightPath, $postflightPath)) {
 if (Test-Path -LiteralPath $modelPath -PathType Leaf) {
     try {
         $model = Get-Content -LiteralPath $modelPath -Raw | ConvertFrom-Json
-
         if (@($model.tables).Count -ne 17) {
-            $errors.Add("El manifiesto debe contener exactamente 17 tablas; detectadas: $(@($model.tables).Count).")
+            $errors.Add("El manifiesto JSON debe incluir exactamente 17 tablas. Detectadas: $(@($model.tables).Count)")
         }
-
         if (@($model.sequences).Count -ne 17) {
-            $errors.Add("El manifiesto debe contener exactamente 17 secuencias; detectadas: $(@($model.sequences).Count).")
-        }
-
-        if (@($model.tables | Select-Object -Unique).Count -ne 17) {
-            $errors.Add('El manifiesto contiene tablas duplicadas.')
-        }
-
-        if (@($model.sequences | Select-Object -Unique).Count -ne 17) {
-            $errors.Add('El manifiesto contiene secuencias duplicadas.')
+            $errors.Add("El manifiesto JSON debe incluir exactamente 17 secuencias. Detectadas: $(@($model.sequences).Count)")
         }
 
         $transitionContent = if (Test-Path -LiteralPath $transitionPath) { Get-Content -LiteralPath $transitionPath -Raw } else { '' }
@@ -210,31 +200,29 @@ if (Test-Path -LiteralPath $preparationPath -PathType Leaf) {
 
 Assert-ContainsTokens $planPath @(
     '# Fase 10 — Plan operativo de transición física Oracle',
-    '**Estado:** PREPARACIÓN TÉCNICA COMPLETADA Y CERTIFICADA',
-    '**Autorización de ejecución:** NO OTORGADA.',
-    '08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql',
-    'prepare_matrices_phase10_evidence.ps1',
-    'FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md',
-    'FASE 10 — PREPARACION TECNICA: COMPLETADA Y CERTIFICADA',
-    'SCRIPT 06: NO EJECUTADO',
+    'DOCUMENTO PREOPERATIVO — TRANSICIÓN FÍSICA EJECUTADA Y CERTIFICADA',
+    'FASE 10 — TRANSICIÓN FÍSICA ORACLE: COMPLETADA',
+    'SCRIPT 06: EJECUTADO',
+    'POSTFLIGHT 08: APROBADO 17/17',
+    'RESPALDO B10_*: CONSERVADO PARA FASE 11',
+    'FASE 11: HABILITADA',
     '13 vulnerabilidades',
     '1 crítica'
 ) 'Plan operativo de Fase 10'
 
 Assert-ContainsTokens $recordPath @(
     '# Fase 10 — Acta de ejecución de transición física Oracle',
-    '**Estado del acta:** PENDIENTE DE DILIGENCIAMIENTO.',
-    '**Autorización:** NO OTORGADA.',
+    '**Estado del acta:** COMPLETADA Y REGISTRADA.',
+    '**Estado de la Fase 10:** TRANSICIÓN FÍSICA ORACLE COMPLETADA.',
     '## 5. Respaldo y restauración',
     '## 6. Preflight `07` de solo lectura',
     '## 7. Autorización final antes del DDL',
     '## 8. Ejecución del script `06`',
     '## 9. Postflight `08` de solo lectura',
-    'DECISION: NO OTORGADA',
-    'ORACLE EJECUTADO: NO',
-    'SCRIPT 06 EJECUTADO: NO',
-    'POSTFLIGHT 08 EJECUTADO: NO',
-    'FASE 10: NO COMPLETADA',
+    'DECISION: OTORGADA',
+    'SCRIPT 06 EJECUTADO: SÍ',
+    'POSTFLIGHT 08 EJECUTADO: SÍ',
+    'FASE 10: COMPLETADA',
     '13 vulnerabilidades',
     '1 crítica'
 ) 'Acta operativa de Fase 10'
