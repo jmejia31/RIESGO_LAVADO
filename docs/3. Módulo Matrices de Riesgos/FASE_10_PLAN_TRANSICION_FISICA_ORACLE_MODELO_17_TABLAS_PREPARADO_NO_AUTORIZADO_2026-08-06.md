@@ -7,7 +7,9 @@
 - **Rama técnica:** `desarrollo`.
 - **PR:** #20, abierto y en borrador.
 - **Modelo objetivo:** 17 tablas y 17 secuencias `RL_MR_*`.
-- **Estado:** PREPARACIÓN TÉCNICA EN CURSO; EJECUCIÓN FÍSICA NO INICIADA.
+- **Estado:** PREPARACIÓN TÉCNICA COMPLETADA Y CERTIFICADA (Quality Gate Run 31126687057 - SUCCESS); EJECUCIÓN FÍSICA NO INICIADA.
+- **Commit certificado:** `4cc3a1f154546d8d4b547ac301fdf0a44d742025`.
+- **Quality Gate CI:** Run ID `31126687057` — SUCCESS.
 - **Autorización de ejecución:** NO OTORGADA.
 - **Oracle ejecutado:** NO.
 - **Preflight `07` ejecutado:** NO.
