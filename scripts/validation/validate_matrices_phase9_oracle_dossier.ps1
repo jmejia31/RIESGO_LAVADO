@@ -70,8 +70,8 @@ Assert-ContainsTokens $preflightPath @(
     "TABLE_NAME = 'RL_USUARIOS'",
     "TABLE_NAME = 'RL_AUDITORIA'",
     "SEQUENCE_NAME = 'SEQ_RL_AUDITORIA'",
-    "TABLE_NAME LIKE 'RL\\_MR\\_%' ESCAPE '\\'",
-    "SEQUENCE_NAME LIKE 'SEQ\\_RL\\_MR\\_%' ESCAPE '\\'",
+    "TABLE_NAME LIKE 'RL\_MR\_%'",
+    "SEQUENCE_NAME LIKE 'SEQ\_RL\_MR\_%'",
     'CONTEO REAL DE REGISTROS EN TABLAS RL_MR_*',
     'OBJETOS INVALIDOS DEL ESQUEMA',
     'RESTRICCIONES DESHABILITADAS EN OBJETOS RL_MR_*',
@@ -153,7 +153,7 @@ if (Test-Path -LiteralPath $authorizationPath -PathType Leaf) {
     foreach ($placeholder in @(
         'PENDIENTE_DBA',
         'PENDIENTE',
-        'Aprobación verificable: PENDIENTE')) {
+        '**Aprobación verificable:** PENDIENTE.')) {
         if (-not $authorizationContent.Contains($placeholder)) {
             $errors.Add("El formato de autorización perdió el marcador obligatorio: $placeholder")
         }
