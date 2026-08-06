@@ -484,3 +484,4 @@ if ($errors.Count -gt 0) {
 
 Write-Host 'Validacion integral de Matrices contra DDL, contratos neutros, metadatos de cálculo, transacciones y seguridad: CORRECTA.' -ForegroundColor Green
 Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos sin trazas revisados: $($traceFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
+exit 0
