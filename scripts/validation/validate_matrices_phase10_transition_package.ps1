@@ -207,12 +207,12 @@ if (Test-Path -LiteralPath $preparationPath -PathType Leaf) {
 
 Assert-ContainsTokens $planPath @(
     '# Fase 10 — Plan operativo de transición física Oracle',
-    '**Estado:** PREPARACIÓN TÉCNICA EN CURSO; EJECUCIÓN FÍSICA NO INICIADA.',
+    '**Estado:** PREPARACIÓN TÉCNICA COMPLETADA Y CERTIFICADA',
     '**Autorización de ejecución:** NO OTORGADA.',
     '08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql',
     'prepare_matrices_phase10_evidence.ps1',
     'FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md',
-    'FASE 10: PREPARACION TECNICA EN CURSO',
+    'FASE 10 — PREPARACION TECNICA: COMPLETADA Y CERTIFICADA',
     'SCRIPT 06: NO EJECUTADO',
     '13 vulnerabilidades',
     '1 crítica'
