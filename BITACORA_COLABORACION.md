@@ -2187,4 +2187,46 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 2. Confirmar la información del ambiente Oracle de pruebas (Fase C) y la existencia/prueba de restauración de respaldos (Fase D) antes de cualquier ejecución de preflight solo lectura (Fase G).
 3. Mantener el script 06 **sin ejecutar**, el PR #20 abierto y en borrador, y la rama `main` intacta.
 
+---
+
+## Registro de Intervención — Antigravity — Retiro de Exportación DDL Accidental de Fase 10
+
+- **Fecha y hora**: 2026-08-06 13:00, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `b181cccd9df0fab2e986194033431196e5c904da`.
+
+### Objetivo y alcance
+
+1. **Retiro de DDL accidental**: Eliminar `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260806.sql` introducido por error mediante `git add -A`.
+2. **Aclaración explícita sobre el archivo**:
+   - Fue agregado accidentalmente al staging local.
+   - Fue eliminado del repositorio mediante `git rm`.
+   - **NO fue ejecutado** en ninguna base de datos.
+   - **NO fue utilizado como respaldo** ni prueba de restauración.
+   - **NO fue utilizado como script de despliegue**.
+   - El script [`database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql`](database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql) permanece como el **único artefacto oficial de transición**.
+   - La autorización de ejecución Oracle permanece **NO OTORGADA**.
+3. **Re-ejecución de Validadores Estáticos**: Ejecutar la suite completa de scripts de validación de estructura, base de datos, enlaces documentales y preparación pre-Oracle.
+
+### Archivos modificados
+
+- **Eliminado**: `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260806.sql` (Retirado del control de versiones con `git rm`).
+- **Modificado**: [`BITACORA_COLABORACION.md`](BITACORA_COLABORACION.md) — Registro de la intervención.
+- **Modificado**: [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](docs/0.0%20Documentación/ESTADO_COLABORACION.md) — Sincronización del estado colaborativo.
+
+### Validaciones ejecutadas (verificadas en esta intervención)
+
+- `validate_repository_structure.ps1`: **CORRECTA** (exit code 0).
+- `validate_database_scripts.ps1`: **CORRECTA** (exit code 0).
+- `validate_documentation_links.ps1`: **CORRECTA** (exit code 0).
+- `validate_matrices_preoracle_readiness.ps1`: **CORRECTA** (exit code 0).
+- `validate_matrices_phase10_transition_package.ps1`: **CORRECTA** (exit code 0).
+
+### Punto de continuación
+
+1. Aguardar los 18 prerrequisitos formales del ambiente Oracle de pruebas por parte del DBA y la rotación de credenciales.
+2. Mantener el script 06 **sin ejecutar**, la autorización en **NO OTORGADA**, el PR #20 abierto y en borrador, y `main` intacta.
+
+
 

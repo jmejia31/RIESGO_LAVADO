@@ -20,12 +20,11 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: Verificación de Repositorio, Artefactos y Manifiesto de Evidencias de Fase 10
+- **Intervención**: Retiro de Exportación DDL Accidental de Fase 10
 - **Fecha**: 2026-08-06 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit evaluado y publicado**: `2c2cabd81101258f147bdf4d5d285677a7fc897e`
-- **Estado**: Se completaron con éxito las Fases A, B y E de la instrucción operativa de Fase 10. Se sanitizó la credencial en `appsettings.json`, se corrigieron los scripts de validación en PowerShell para el manejo de rutas acentuadas, se verificaron todos los validadores estáticos (exit code 0) y se generó el manifiesto de evidencias con SHA-256 sin conectar a Oracle. La autorización de Fase 10 permanece **NO OTORGADA**, y el script 06 permanece **NO EJECUTADO**.
+- **Estado**: Se eliminó del repositorio el archivo `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260806.sql` incorporado por error. Se confirmó que dicho archivo no fue ejecutado, no se utilizó como respaldo ni como script de despliegue, y no sustituye al script 06. El script `06_reconstruir_modelo_17_tablas.sql` permanece como el único artefacto oficial de transición. Se re-ejecutaron los 5 scripts de validación estática de repositorio (exit code 0). La autorización de Fase 10 permanece **NO OTORGADA**, y la conexión Oracle permanece **BLOQUEADA**.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
