@@ -23,14 +23,16 @@ function Invoke-GitText {
     return (($output | Out-String).Trim())
 }
 
+$moduleDocsRel = (Get-ChildItem (Join-Path $repositoryRoot 'docs') -Directory | Where-Object { $_.Name -like '3.*' } | Select-Object -First 1).Name
+
 $requiredFiles = [ordered]@{
     TransitionScript = 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
     PreflightScript  = 'database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql'
     PostflightScript = 'database/19_matrices_riesgos/transicion/08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql'
     ObjectManifest   = 'database/19_matrices_riesgos/transicion/modelo_17_objetos.json'
-    Phase10Plan      = 'docs/3. Módulo Matrices de Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md'
-    Authorization    = 'docs/3. Módulo Matrices de Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md'
-    ExecutionRecord  = 'docs/3. Módulo Matrices de Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md'
+    Phase10Plan      = "docs/$moduleDocsRel/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md"
+    Authorization    = "docs/$moduleDocsRel/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md"
+    ExecutionRecord  = "docs/$moduleDocsRel/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_PENDIENTE_2026-08-06.md"
 }
 
 foreach ($entry in $requiredFiles.GetEnumerator()) {
