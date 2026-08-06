@@ -171,6 +171,9 @@ if (Test-Path -LiteralPath $modelPath -PathType Leaf) {
         }
 
         foreach ($retiredTable in @($model.retired_tables)) {
+            if (-not $transitionContent.Contains($retiredTable)) {
+                $errors.Add("El script 06 no retira la tabla heredada: $retiredTable")
+            }
             if (-not $postflightContent.Contains($retiredTable)) {
                 $errors.Add("El postflight 08 no controla la tabla retirada: $retiredTable")
             }
