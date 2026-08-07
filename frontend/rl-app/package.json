@@ -60,7 +60,6 @@
     "karma-coverage": "^2.2.1",
     "karma-jasmine": "^5.1.0",
     "karma-jasmine-html-reporter": "^2.1.0",
-    "lucide-angular": "^0.577.0",
     "postcss": "^8.4.40",
     "prettier": "^3.8.2",
     "tailwindcss": "^4.2.1",
