@@ -537,7 +537,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         trans,
         "RL_MR_EVALUACIONES_RIESGO",
         evaluacionId.ToString(),
-        "CREAR_EVALUACION",
+        "INSERT",
         null,
         JsonSerializer.Serialize(new
         {
@@ -646,7 +646,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         trans,
         "RL_MR_EVALUACIONES_RIESGO",
         dto.EvaId.ToString(),
-        "ACTUALIZAR_EVALUACION",
+        "UPDATE",
         JsonSerializer.Serialize(new
         {
             Datos = jsonAnterior,
@@ -728,7 +728,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         trans,
         "RL_MR_EVALUACIONES_RIESGO",
         evaId.ToString(),
-        "TRANSICION_ESTADO",
+        "UPDATE",
         JsonSerializer.Serialize(new { Estado = anterior }),
         JsonSerializer.Serialize(new { Estado = estado, Motivo = motivo }),
         usuarioId,
@@ -877,7 +877,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             await _auditoriaRepository.RegistrarAsync(
-                conn, trans, "RL_MR_EVIDENCIAS_VINCULOS", vinculoId.ToString(), "VINCULAR_EVIDENCIA",
+                conn, trans, "RL_MR_EVIDENCIAS_VINCULOS", vinculoId.ToString(), "INSERT",
                 null, JsonSerializer.Serialize(new { dto.EvidenciaId, TipoEntidad = dto.TipoEntidad.ToString(), dto.EntidadId }),
                 usuarioId, null, ip, ModuloAuditoria);
             await trans.CommitAsync();

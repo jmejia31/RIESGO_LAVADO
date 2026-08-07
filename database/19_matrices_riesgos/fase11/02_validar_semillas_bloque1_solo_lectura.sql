@@ -90,7 +90,7 @@ DECLARE
 BEGIN
     exigir(
         UPPER(SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')) = 'RIESGO_LAVADO',
-        -21201,
+        -20201,
         'CURRENT_SCHEMA debe ser RIESGO_LAVADO.'
     );
 
@@ -110,7 +110,7 @@ BEGIN
        AND v.VER_VIGENTE = 1
        AND LOWER(v.VER_HASH) = c_hash
        AND DBMS_LOB.GETLENGTH(v.VER_JSON) > 0;
-    exigir(v_conteo = 1, -21202, 'La familia/version oficial no esta publicada, vigente o integra.');
+    exigir(v_conteo = 1, -20202, 'La familia/version oficial no esta publicada, vigente o integra.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -119,7 +119,7 @@ BEGIN
         ON f.FAM_ID = v.VER_FAMILIA_ID
      WHERE f.FAM_CODIGO = 'MATRIZ_RIESGOS_LAFT'
        AND v.VER_VIGENTE = 1;
-    exigir(v_conteo = 1, -21203, 'Debe existir exactamente una version vigente para la familia.');
+    exigir(v_conteo = 1, -20203, 'Debe existir exactamente una version vigente para la familia.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -131,7 +131,7 @@ BEGIN
         'MR_RESPUESTA_RIESGO'
      )
        AND CAT_ACTIVO = 1;
-    exigir(v_conteo = 4, -21204, 'Deben existir cuatro catalogos activos.');
+    exigir(v_conteo = 4, -20204, 'Deben existir cuatro catalogos activos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -145,7 +145,7 @@ BEGIN
         'MR_RESPUESTA_RIESGO'
      )
        AND e.ELE_ACTIVO = 1;
-    exigir(v_conteo = 18, -21205, 'Deben existir dieciocho elementos activos.');
+    exigir(v_conteo = 18, -20205, 'Deben existir dieciocho elementos activos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -154,7 +154,7 @@ BEGIN
        AND REG_VERSION = '1.0'
        AND REG_ALGORITMO_ID = 'MATRICES_VRI_ADITIVO_1_9'
        AND REG_ACTIVA = 1;
-    exigir(v_conteo = 1, -21206, 'La regla oficial no existe o no esta activa.');
+    exigir(v_conteo = 1, -20206, 'La regla oficial no existe o no esta activa.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -162,7 +162,7 @@ BEGIN
      WHERE NOT EXISTS (
         SELECT 1 FROM RL_MR_CATALOGOS c WHERE c.CAT_ID = e.ELE_CATALOGO_ID
      );
-    exigir(v_conteo = 0, -21207, 'Existen elementos de catalogo huerfanos.');
+    exigir(v_conteo = 0, -20207, 'Existen elementos de catalogo huerfanos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -170,7 +170,7 @@ BEGIN
      WHERE NOT EXISTS (
         SELECT 1 FROM RL_MR_FAMILIAS_FORMULARIO f WHERE f.FAM_ID = v.VER_FAMILIA_ID
      );
-    exigir(v_conteo = 0, -21208, 'Existen versiones huerfanas.');
+    exigir(v_conteo = 0, -20208, 'Existen versiones huerfanas.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -178,7 +178,7 @@ BEGIN
         SELECT FAM_CODIGO FROM RL_MR_FAMILIAS_FORMULARIO
          GROUP BY FAM_CODIGO HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21209, 'Existen familias duplicadas.');
+    exigir(v_conteo = 0, -20209, 'Existen familias duplicadas.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -186,7 +186,7 @@ BEGIN
         SELECT CAT_CODIGO FROM RL_MR_CATALOGOS
          GROUP BY CAT_CODIGO HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21210, 'Existen catalogos duplicados.');
+    exigir(v_conteo = 0, -20210, 'Existen catalogos duplicados.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -194,21 +194,21 @@ BEGIN
         SELECT REG_CODIGO, REG_VERSION FROM RL_MR_REGLAS_CALCULO
          GROUP BY REG_CODIGO, REG_VERSION HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21211, 'Existen reglas duplicadas.');
+    exigir(v_conteo = 0, -20211, 'Existen reglas duplicadas.');
 
     SELECT COUNT(*)
       INTO v_conteo
       FROM USER_OBJECTS
      WHERE OBJECT_NAME LIKE 'RL_MR_%'
        AND STATUS <> 'VALID';
-    exigir(v_conteo = 0, -21212, 'Existen objetos RL_MR_* invalidos.');
+    exigir(v_conteo = 0, -20212, 'Existen objetos RL_MR_* invalidos.');
 
     SELECT COUNT(*)
       INTO v_conteo
       FROM USER_CONSTRAINTS
      WHERE TABLE_NAME LIKE 'RL_MR_%'
        AND STATUS <> 'ENABLED';
-    exigir(v_conteo = 0, -21213, 'Existen restricciones RL_MR_* inactivas.');
+    exigir(v_conteo = 0, -20213, 'Existen restricciones RL_MR_* inactivas.');
 
     DBMS_OUTPUT.PUT_LINE('VALIDACION FASE 11 BLOQUE 1: CORRECTA');
 END;

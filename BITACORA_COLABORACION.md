@@ -1,5 +1,61 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Certificación Física Completa Fase 11 en Oracle Desarrollo
+
+- **Fecha y hora**: 2026-08-07, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `eb1d616dd3d8c374d4fb2e13f2108123d8bab0e5`.
+- **Objetivo**: Ejecutar la certificación física completa de 11 pasos contra Oracle Desarrollo (esquema `RIESGO_LAVADO`), validar la idempotencia del Bloque 1, la lectura de los Bloques B1 a B6, y probar los 18 endpoints REST funcionales (incluyendo reportes tipados Excel/PDF) en backend y frontend.
+
+### Resumen de la Certificación
+
+1. **Git Sync & Confirmación de Entorno**:
+   - Sincronización y confirmación exacta en commit `eb1d616dd3d8c374d4fb2e13f2108123d8bab0e5`.
+   - Conexión verificada exclusivamente a Oracle Desarrollo / esquema `RIESGO_LAVADO` (`CURRENT_SCHEMA: RIESGO_LAVADO`, Oracle 11g Enterprise Edition).
+2. **Idempotencia y Validadores Oracle Bloques B1 → B6**:
+   - **Bloque 1**: Ejecutado dos veces consecutivas mediante ODP.NET/CLOB sin alteración de JSON. Resultado: `SEMILLAS FASE 11 BLOQUE 1: APLICADAS Y VALIDADAS` en ambas corridas.
+   - **B1 (`02_validar...sql`)**: `VALIDACION FASE 11 BLOQUE 1: CORRECTA`.
+   - **B2 (`03_validar...sql`)**: `VALIDACION FASE 11 BLOQUE 2: CORRECTA`.
+   - **B3 (`04_validar...sql`)**: Adaptada subconsulta anidada ORA-00904 para compatibilidad Oracle 11g. Resultado: `VALIDACION FASE 11 BLOQUE 3: CORRECTA`.
+   - **B4 (`05_validar...sql`)**: `VALIDACION FASE 11 BLOQUE 4: CORRECTA`.
+   - **B5 (`06_validar...sql`)**: `VALIDACION FASE 11 BLOQUE 5: CORRECTA`.
+   - **B6 (`07_validar...sql`)**: Ajustado rango de errores PL/SQL (`-207xx`) y verbo AUD_ACCION `'INSERT'`. Resultado: `PRUEBA ROLLBACK DATO + AUDITORIA: CORRECTA` y `VALIDACION FASE 11 BLOQUE 6: CORRECTA`.
+3. **Pruebas de Integración y Endpoints REST (Backend ↔ Oracle)**:
+   - Normalización de verbos `AUD_ACCION` (`INSERT`, `UPDATE`) en repositorios para cumplir con restricción de columna `VARCHAR2(10)` y check constraint `CK_RL_AUD_ACCION`.
+   - **Pruebas de Integración xUnit OracleIntegration**: 5/5 PASADAS (0 errores).
+   - **End-to-End PowerShell Script (`tmp/test_fase11_backend_oracle.ps1`)**: 18/18 ENDPOINTS VERIFICADOS AL 100% CONTRA ORACLE REAL:
+     - Step 1: `POST /api/auth/login` -> 200 OK (Token JWT recibido)
+     - Step 2: `GET /api/matrices-riesgos/riesgos` -> 200 OK
+     - Step 3: `POST /api/matrices-riesgos/riesgos` -> 200 OK
+     - Step 4: `PUT /api/matrices-riesgos/riesgos/{id}` -> 200 OK
+     - Step 5: `POST /api/matrices-riesgos/evaluaciones` -> 200 OK
+     - Step 6: Comprobación de valoración VRI (6) y VRR (5) -> 200 OK
+     - Step 7: `POST /api/matrices-riesgos/evaluaciones/{id}/transiciones?nuevoEstado=EN_REVISION` -> 200 OK
+     - Step 8: `GET /api/matrices-riesgos/evaluaciones/{id}/flujos` -> 200 OK
+     - Step 9: `POST /api/matrices-riesgos/mitigacion/controles` -> 200 OK
+     - Step 10: `POST /api/matrices-riesgos/mitigacion/controles/{id}/evaluaciones` -> 200 OK
+     - Step 11: `POST /api/matrices-riesgos/mitigacion/planes` -> 200 OK
+     - Step 12: `POST /api/matrices-riesgos/mitigacion/actividades` -> 200 OK
+     - Step 13: `POST /api/matrices-riesgos/evidencias/cargar` & `POST /api/matrices-riesgos/evidencias/vinculos` -> 200 OK
+     - Step 14: `POST /api/matrices-riesgos/monitoreo/alertas` & `PUT .../estado` -> 200 OK
+     - Step 15: `POST /api/matrices-riesgos/monitoreo/automonitoreo` -> 200 OK
+     - Step 16: `GET /api/matrices-riesgos/monitoreo/resumen` -> 200 OK
+     - Step 17: `GET /api/matrices-riesgos/reportes/consolidado.xlsx` -> 200 OK (3,978 bytes)
+     - Step 18: `GET /api/matrices-riesgos/reportes/consolidado.pdf` -> 200 OK (2,065 bytes)
+4. **Verificación Estructural y Puertas de Calidad**:
+   - `validate_repository_structure.ps1`: PASÓ.
+   - `validate_database_scripts.ps1`: PASÓ.
+   - `validate_documentation_links.ps1`: PASÓ (65 docs, 165 links).
+   - `dotnet test`: 244/244 backend unit tests PASARON.
+   - `ng test`: 128/128 frontend unit tests PASARON.
+   - `npm run build`: Angular build OK.
+   - `npm run e2e`: 8/8 E2E Playwright tests PASARON.
+5. **Estado de Certificación**:
+   - **FASE 11 COMPLETADA Y CERTIFICADA FÍSICAMENTE AL 100% CONTRA ORACLE DESARROLLO**.
+
+---
+
 ## Registro de Intervención — Antigravity — Cierre Final Consolidado Transición Física Oracle (Fase 10)
 
 - **Fecha y hora**: 2026-08-06 15:20, hora local (UTC-6).

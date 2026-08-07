@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-06: La Fase 10 del Módulo Matrices de Riesgos (Transición Física Oracle al modelo de 17 tablas y 17 secuencias) fue ejecutada exitosamente en el ambiente de Desarrollo (`desdb` / `hpprod1` / `RIESGO_LAVADO`). Se completaron el Preflight 07, el respaldo de contingencia (`B10_*`), el Script 06, el retiro de 7 tablas heredadas no contempladas inicialmente y el Postflight 08 (con dictamen de inventario 17/17). Se ejecutó el cierre correctivo en el commit `1c33b6f3680ae61b31d7938a75b95878c7c2bffd`. La Fase 10 queda **COMPLETADA Y CERRADA**. La Fase 11 queda **HABILITADA**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
+> Actualización 2026-08-07: La Fase 11 del Módulo Matrices de Riesgos (Certificación Física contra Oracle Desarrollo) ha sido ejecutada, validada y **COMPLETADA Y CERTIFICADA AL 100%**. Se verificaron la idempotencia del Bloque 1 (`01_semillas...sql`), los validadores Oracle B1 a B6, y los 18 endpoints REST funcionales (incluyendo la descarga tipada de reportes Excel y PDF). Todas las puertas de calidad (Backend 244/244 tests, Frontend 128/128 tests, E2E 8/8 tests, validadores de enlaces y estructura) se encuentran en estado PASADO. La Fase 11 se declara **OFICIALMENTE COMPLETADA Y CERTIFICADA FÍSICAMENTE**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,13 +20,12 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: Cierre Final Consolidado — Fase 10 Transición Física Oracle
-- **Fecha**: 2026-08-06 (Hora local)
+- **Intervención**: Certificación Física Completa Fase 11 en Oracle Desarrollo
+- **Fecha**: 2026-08-07 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit de ejecución física**: `541d7ef3e35933bd883f02df254eeb8d81b69bed`
-- **Commit de reproducibilidad / cierre**: `1c33b6f3680ae61b31d7938a75b95878c7c2bffd`
-- **Estado**: Transición Física Oracle **COMPLETADA Y CERTIFICADA**. Postflight 08 Aprobado 17/17. Respaldos `B10_*` conservados para Fase 11. Fase 11 **HABILITADA**.
+- **Commit inicial**: `eb1d616dd3d8c374d4fb2e13f2108123d8bab0e5`
+- **Estado**: Certificación Física Fase 11 **COMPLETADA Y CERTIFICADA AL 100% CONTRA ORACLE DESARROLLO**. Idempotencia de semillas, validadores B1-B6 y 18 endpoints REST verificados. Puertas de calidad 100% pasadas.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)

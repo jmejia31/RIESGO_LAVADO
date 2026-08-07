@@ -91,7 +91,7 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
             cmd.Parameters.Add(new OracleParameter("estadoFecha", estado));
             await cmd.ExecuteNonQueryAsync();
 
-            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_SENALES_ALERTA", id.ToString(), "CREAR_ALERTA",
+            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_SENALES_ALERTA", id.ToString(), "INSERT",
                 null, JsonSerializer.Serialize(new { dto.AleEvaluacionId, Codigo = codigo, dto.AleIndicador, Estado = estado }),
                 usuarioId, null, ip, Modulo);
             await tx.CommitAsync();
@@ -130,7 +130,7 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
             cmd.Parameters.Add(new OracleParameter("id", alertaId));
             await cmd.ExecuteNonQueryAsync();
 
-            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_SENALES_ALERTA", alertaId.ToString(), "CAMBIAR_ESTADO_ALERTA",
+            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_SENALES_ALERTA", alertaId.ToString(), "UPDATE",
                 JsonSerializer.Serialize(new { Estado = anterior }), JsonSerializer.Serialize(new { Estado = nuevo }),
                 usuarioId, null, ip, Modulo);
             await tx.CommitAsync();
@@ -188,7 +188,7 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
             cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
             await cmd.ExecuteNonQueryAsync();
 
-            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_AUTOMONITOREO", id.ToString(), "REGISTRAR_AUTOMONITOREO",
+            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_AUTOMONITOREO", id.ToString(), "INSERT",
                 null, JsonSerializer.Serialize(new { dto.MonEvaluacionId, dto.MonEstadoRiesgo, dto.MonEstadoContr, dto.MonResultado }),
                 usuarioId, null, ip, Modulo);
             await tx.CommitAsync();

@@ -21,24 +21,24 @@ DECLARE
         IF NOT p_cond THEN RAISE_APPLICATION_ERROR(p_code, p_message); END IF;
     END;
 BEGIN
-    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -21501,
+    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -20501,
            'CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_CONTROLES_RIESGO c
      WHERE NOT EXISTS (SELECT 1 FROM RL_MR_EVALUACIONES_RIESGO e WHERE e.EVA_ID = c.CON_EVALUACION_ID);
-    exigir(v_count = 0, -21502, 'Existen controles huérfanos.');
+    exigir(v_count = 0, -20502, 'Existen controles huérfanos.');
 
     SELECT COUNT(*) INTO v_count FROM RL_MR_CONTROLES_RIESGO
      WHERE CON_TIPO NOT IN ('PREVENTIVO','DETECTIVO','CORRECTIVO')
         OR CON_AUTOMATIZACION NOT IN ('MANUAL','SEMIAUTOMATICO','AUTOMATICO');
-    exigir(v_count = 0, -21503, 'Existen controles fuera de los dominios oficiales.');
+    exigir(v_count = 0, -20503, 'Existen controles fuera de los dominios oficiales.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_EVALUACIONES_CONTROL ec
      WHERE NOT EXISTS (SELECT 1 FROM RL_MR_CONTROLES_RIESGO c WHERE c.CON_ID = ec.ECO_CONTROL_ID)
         OR ec.ECO_EFECTIVIDAD < 0 OR ec.ECO_EFECTIVIDAD > 100;
-    exigir(v_count = 0, -21504, 'Existen evaluaciones de control inválidas o huérfanas.');
+    exigir(v_count = 0, -20504, 'Existen evaluaciones de control inválidas o huérfanas.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_PLANES p
@@ -46,14 +46,14 @@ BEGIN
         OR p.PLA_AVANCE < 0 OR p.PLA_AVANCE > 100
         OR p.PLA_PRESUPUESTO < 0
         OR p.PLA_FECHA_FIN < p.PLA_FECHA_INICIO;
-    exigir(v_count = 0, -21505, 'Existen planes inválidos o huérfanos.');
+    exigir(v_count = 0, -20505, 'Existen planes inválidos o huérfanos.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_ACTIVIDADES a
      WHERE NOT EXISTS (SELECT 1 FROM RL_MR_PLANES p WHERE p.PLA_ID = a.ACT_PLAN_ID)
         OR a.ACT_AVANCE < 0 OR a.ACT_AVANCE > 100
         OR a.ACT_FECHA_FIN < a.ACT_FECHA_INICIO;
-    exigir(v_count = 0, -21506, 'Existen actividades inválidas o huérfanas.');
+    exigir(v_count = 0, -20506, 'Existen actividades inválidas o huérfanas.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_EVIDENCIAS e
@@ -61,14 +61,14 @@ BEGIN
         OR e.EVI_HASH IS NULL
         OR LENGTH(e.EVI_HASH) <> 64
         OR NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = e.EVI_USR_CREACION);
-    exigir(v_count = 0, -21507, 'Existen evidencias con metadatos o usuario inválidos.');
+    exigir(v_count = 0, -20507, 'Existen evidencias con metadatos o usuario inválidos.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_EVIDENCIAS_VINCULOS v
      WHERE v.EVV_TIPO_ENTIDAD NOT IN ('RIESGO','EVALUACION','CONTROL','PLAN','ACTIVIDAD','ALERTA','AUTOMONITOREO')
         OR NOT EXISTS (SELECT 1 FROM RL_MR_EVIDENCIAS e WHERE e.EVI_ID = v.EVV_EVIDENCIA_ID)
         OR NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = v.EVV_USR_CREACION);
-    exigir(v_count = 0, -21508, 'Existen vínculos de evidencia inválidos.');
+    exigir(v_count = 0, -20508, 'Existen vínculos de evidencia inválidos.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_EVIDENCIAS_VINCULOS v
@@ -79,7 +79,7 @@ BEGIN
         OR (v.EVV_TIPO_ENTIDAD = 'ACTIVIDAD' AND NOT EXISTS (SELECT 1 FROM RL_MR_ACTIVIDADES a WHERE a.ACT_ID = v.EVV_ENTIDAD_ID))
         OR (v.EVV_TIPO_ENTIDAD = 'ALERTA' AND NOT EXISTS (SELECT 1 FROM RL_MR_SENALES_ALERTA s WHERE s.ALE_ID = v.EVV_ENTIDAD_ID))
         OR (v.EVV_TIPO_ENTIDAD = 'AUTOMONITOREO' AND NOT EXISTS (SELECT 1 FROM RL_MR_AUTOMONITOREO m WHERE m.MON_ID = v.EVV_ENTIDAD_ID));
-    exigir(v_count = 0, -21509, 'Existen vínculos apuntando a entidades inexistentes.');
+    exigir(v_count = 0, -20509, 'Existen vínculos apuntando a entidades inexistentes.');
 
     SELECT COUNT(*) INTO v_count FROM (
         SELECT EVV_EVIDENCIA_ID, EVV_TIPO_ENTIDAD, EVV_ENTIDAD_ID
@@ -87,7 +87,7 @@ BEGIN
          GROUP BY EVV_EVIDENCIA_ID, EVV_TIPO_ENTIDAD, EVV_ENTIDAD_ID
         HAVING COUNT(*) > 1
     );
-    exigir(v_count = 0, -21510, 'Existen vínculos de evidencia duplicados.');
+    exigir(v_count = 0, -20510, 'Existen vínculos de evidencia duplicados.');
 
     DBMS_OUTPUT.PUT_LINE('VALIDACION FASE 11 BLOQUE 4: CORRECTA');
 END;

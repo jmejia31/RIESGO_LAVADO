@@ -82,7 +82,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("automatizacion", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
             cmd.Parameters.Add(new OracleParameter("estado", dto.ConEstado.Trim().ToUpperInvariant()));
             await cmd.ExecuteNonQueryAsync();
-            await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", id, "CREAR_CONTROL", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", id, "INSERT", dto, usuarioId, ip);
             await tx.CommitAsync();
             return id;
         }
@@ -113,7 +113,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("estado", dto.ConEstado.Trim().ToUpperInvariant()));
             cmd.Parameters.Add(new OracleParameter("id", controlId));
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
-            await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", controlId, "ACTUALIZAR_CONTROL", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", controlId, "UPDATE", dto, usuarioId, ip);
             await tx.CommitAsync();
             return true;
         }
@@ -164,7 +164,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("efectividad", dto.EcoEfectividad));
             cmd.Parameters.Add(new OracleParameter("comentario", (object?)dto.EcoComentario?.Trim() ?? DBNull.Value));
             await cmd.ExecuteNonQueryAsync();
-            await AuditarAsync(conn, tx, "RL_MR_EVALUACIONES_CONTROL", id, "EVALUAR_CONTROL", new { ControlId = controlId, dto.EcoEfectividad, dto.EcoComentario }, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_EVALUACIONES_CONTROL", id, "INSERT", new { ControlId = controlId, dto.EcoEfectividad, dto.EcoComentario }, usuarioId, ip);
             await tx.CommitAsync();
             return id;
         }
@@ -213,7 +213,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosPlan(cmd, id, dto);
             await cmd.ExecuteNonQueryAsync();
-            await AuditarAsync(conn, tx, "RL_MR_PLANES", id, "CREAR_PLAN", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_PLANES", id, "INSERT", dto, usuarioId, ip);
             await tx.CommitAsync();
             return id;
         }
@@ -237,7 +237,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosPlan(cmd, planId, dto);
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
-            await AuditarAsync(conn, tx, "RL_MR_PLANES", planId, "ACTUALIZAR_PLAN", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_PLANES", planId, "UPDATE", dto, usuarioId, ip);
             await tx.CommitAsync();
             return true;
         }
@@ -285,7 +285,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosActividad(cmd, id, dto);
             await cmd.ExecuteNonQueryAsync();
-            await AuditarAsync(conn, tx, "RL_MR_ACTIVIDADES", id, "CREAR_ACTIVIDAD", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_ACTIVIDADES", id, "INSERT", dto, usuarioId, ip);
             await tx.CommitAsync();
             return id;
         }
@@ -308,7 +308,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosActividad(cmd, actividadId, dto);
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
-            await AuditarAsync(conn, tx, "RL_MR_ACTIVIDADES", actividadId, "ACTUALIZAR_ACTIVIDAD", dto, usuarioId, ip);
+            await AuditarAsync(conn, tx, "RL_MR_ACTIVIDADES", actividadId, "UPDATE", dto, usuarioId, ip);
             await tx.CommitAsync();
             return true;
         }

@@ -740,7 +740,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
               FROM RL_AUDITORIA
              WHERE AUD_TABLA = 'RL_MR_EVIDENCIAS_VINCULOS'
                AND AUD_REGISTRO_ID = :registroId
-               AND AUD_ACCION = 'VINCULAR_EVIDENCIA'", conn)
+               AND AUD_ACCION = 'INSERT'", conn)
         {
             BindByName = true
         };

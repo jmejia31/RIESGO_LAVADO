@@ -87,7 +87,7 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
             cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
             await cmd.ExecuteNonQueryAsync();
 
-            await _auditoria.RegistrarAsync(conn, trans, "RL_MR_RIESGOS", id.ToString(), "CREAR_RIESGO",
+            await _auditoria.RegistrarAsync(conn, trans, "RL_MR_RIESGOS", id.ToString(), "INSERT",
                 null, JsonSerializer.Serialize(new { Codigo = codigo, dto.RieNombre, dto.RieDescripcion, dto.RieActivo }),
                 usuarioId, null, ip, ModuloAuditoria);
             await trans.CommitAsync();
@@ -149,7 +149,7 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
             cmd.Parameters.Add(new OracleParameter("id", riesgoId));
             await cmd.ExecuteNonQueryAsync();
 
-            await _auditoria.RegistrarAsync(conn, trans, "RL_MR_RIESGOS", riesgoId.ToString(), "ACTUALIZAR_RIESGO",
+            await _auditoria.RegistrarAsync(conn, trans, "RL_MR_RIESGOS", riesgoId.ToString(), "UPDATE",
                 JsonSerializer.Serialize(new { Codigo = codigoAnterior, Nombre = nombreAnterior, Descripcion = descripcionAnterior, Activo = activoAnterior }),
                 JsonSerializer.Serialize(new { Codigo = codigo, dto.RieNombre, dto.RieDescripcion, dto.RieActivo }),
                 usuarioId, null, ip, ModuloAuditoria);

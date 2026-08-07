@@ -138,7 +138,7 @@ BEGIN
 
     exigir(
         UPPER(v_schema) = 'RIESGO_LAVADO',
-        -21101,
+        -20101,
         'EJECUCION BLOQUEADA: CURRENT_SCHEMA debe ser RIESGO_LAVADO.'
     );
 
@@ -153,7 +153,7 @@ BEGIN
         'RL_MR_ELEMENTOS_CATALOGO',
         'RL_MR_REGLAS_CALCULO'
      );
-    exigir(v_conteo = 6, -21102, 'EJECUCION BLOQUEADA: faltan tablas obligatorias.');
+    exigir(v_conteo = 6, -20102, 'EJECUCION BLOQUEADA: faltan tablas obligatorias.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -165,16 +165,16 @@ BEGIN
         'SEQ_RL_MR_ELEMENTOS',
         'SEQ_RL_MR_REGLAS'
      );
-    exigir(v_conteo = 5, -21103, 'EJECUCION BLOQUEADA: faltan secuencias obligatorias.');
+    exigir(v_conteo = 5, -20103, 'EJECUCION BLOQUEADA: faltan secuencias obligatorias.');
 
     SELECT MIN(USR_ID)
       INTO v_usuario_id
       FROM RL_USUARIOS
      WHERE USR_ACTIVO = 1;
-    exigir(v_usuario_id IS NOT NULL, -21104, 'EJECUCION BLOQUEADA: no existe un usuario institucional activo.');
+    exigir(v_usuario_id IS NOT NULL, -20104, 'EJECUCION BLOQUEADA: no existe un usuario institucional activo.');
 
-    exigir(DBMS_LOB.GETLENGTH(v_json) > 0, -21105, 'EJECUCION BLOQUEADA: la definicion JSON esta vacia.');
-    exigir(LENGTH(c_hash) = 64, -21106, 'EJECUCION BLOQUEADA: el hash SHA-256 no tiene 64 caracteres.');
+    exigir(DBMS_LOB.GETLENGTH(v_json) > 0, -20105, 'EJECUCION BLOQUEADA: la definicion JSON esta vacia.');
+    exigir(LENGTH(c_hash) = 64, -20106, 'EJECUCION BLOQUEADA: el hash SHA-256 no tiene 64 caracteres.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -184,7 +184,7 @@ BEGIN
          GROUP BY FAM_CODIGO
         HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21107, 'EJECUCION BLOQUEADA: existen codigos de familia duplicados.');
+    exigir(v_conteo = 0, -20107, 'EJECUCION BLOQUEADA: existen codigos de familia duplicados.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -194,7 +194,7 @@ BEGIN
          GROUP BY CAT_CODIGO
         HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21108, 'EJECUCION BLOQUEADA: existen codigos de catalogo duplicados.');
+    exigir(v_conteo = 0, -20108, 'EJECUCION BLOQUEADA: existen codigos de catalogo duplicados.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -204,7 +204,7 @@ BEGIN
          GROUP BY REG_CODIGO, REG_VERSION
         HAVING COUNT(*) > 1
       );
-    exigir(v_conteo = 0, -21109, 'EJECUCION BLOQUEADA: existen reglas duplicadas.');
+    exigir(v_conteo = 0, -20109, 'EJECUCION BLOQUEADA: existen reglas duplicadas.');
 
     MERGE INTO RL_MR_FAMILIAS_FORMULARIO destino
     USING (
@@ -281,7 +281,7 @@ BEGIN
      WHERE VER_FAMILIA_ID = v_familia_id
        AND VER_VERSION = c_version_numero;
 
-    exigir(v_conteo <= 1, -21110, 'EJECUCION BLOQUEADA: existe mas de una version 1 para la familia.');
+    exigir(v_conteo <= 1, -20110, 'EJECUCION BLOQUEADA: existe mas de una version 1 para la familia.');
 
     IF v_conteo = 0 THEN
         SELECT COUNT(*)
@@ -292,7 +292,7 @@ BEGIN
 
         exigir(
             v_conteo = 0,
-            -21111,
+            -20111,
             'EJECUCION BLOQUEADA: ya existe otra version vigente; no se reemplazara automaticamente.'
         );
 
@@ -336,12 +336,12 @@ BEGIN
 
         exigir(
             DBMS_LOB.COMPARE(v_json_existente, v_json) = 0,
-            -21112,
+            -20112,
             'EJECUCION BLOQUEADA: la version 1 existente tiene una definicion diferente.'
         );
         exigir(
             LOWER(v_hash_existente) = c_hash,
-            -21113,
+            -20113,
             'EJECUCION BLOQUEADA: la version 1 existente tiene un hash diferente.'
         );
 
@@ -354,7 +354,7 @@ BEGIN
 
         exigir(
             v_conteo = 0,
-            -21114,
+            -20114,
             'EJECUCION BLOQUEADA: existe otra version vigente para la familia.'
         );
 
@@ -373,7 +373,7 @@ BEGIN
      WHERE VER_FAMILIA_ID = v_familia_id
        AND VER_ESTADO = 'PUBLISHED'
        AND VER_VIGENTE = 1;
-    exigir(v_conteo = 1, -21115, 'VALIDACION FALLIDA: debe existir exactamente una version publicada y vigente.');
+    exigir(v_conteo = 1, -20115, 'VALIDACION FALLIDA: debe existir exactamente una version publicada y vigente.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -385,7 +385,7 @@ BEGIN
         'MR_RESPUESTA_RIESGO'
      )
        AND CAT_ACTIVO = 1;
-    exigir(v_conteo = 4, -21116, 'VALIDACION FALLIDA: faltan catalogos requeridos.');
+    exigir(v_conteo = 4, -20116, 'VALIDACION FALLIDA: faltan catalogos requeridos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -398,7 +398,7 @@ BEGIN
         'MR_RESPUESTA_RIESGO'
      )
        AND e.ELE_ACTIVO = 1;
-    exigir(v_conteo = 18, -21117, 'VALIDACION FALLIDA: los catalogos requieren exactamente 18 elementos activos.');
+    exigir(v_conteo = 18, -20117, 'VALIDACION FALLIDA: los catalogos requieren exactamente 18 elementos activos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -407,7 +407,7 @@ BEGIN
        AND REG_VERSION = '1.0'
        AND REG_ALGORITMO_ID = 'MATRICES_VRI_ADITIVO_1_9'
        AND REG_ACTIVA = 1;
-    exigir(v_conteo = 1, -21118, 'VALIDACION FALLIDA: falta la regla de calculo requerida.');
+    exigir(v_conteo = 1, -20118, 'VALIDACION FALLIDA: falta la regla de calculo requerida.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -417,7 +417,7 @@ BEGIN
           FROM RL_MR_CATALOGOS c
          WHERE c.CAT_ID = e.ELE_CATALOGO_ID
      );
-    exigir(v_conteo = 0, -21119, 'VALIDACION FALLIDA: existen elementos de catalogo huerfanos.');
+    exigir(v_conteo = 0, -20119, 'VALIDACION FALLIDA: existen elementos de catalogo huerfanos.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -427,7 +427,7 @@ BEGIN
           FROM RL_MR_FAMILIAS_FORMULARIO f
          WHERE f.FAM_ID = v.VER_FAMILIA_ID
      );
-    exigir(v_conteo = 0, -21120, 'VALIDACION FALLIDA: existen versiones huerfanas.');
+    exigir(v_conteo = 0, -20120, 'VALIDACION FALLIDA: existen versiones huerfanas.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -438,7 +438,7 @@ BEGIN
               FROM RL_USUARIOS u
              WHERE u.USR_ID = v.VER_USR_CREACION
         );
-    exigir(v_conteo = 0, -21121, 'VALIDACION FALLIDA: existe una version sin usuario institucional valido.');
+    exigir(v_conteo = 0, -20121, 'VALIDACION FALLIDA: existe una version sin usuario institucional valido.');
 
     SELECT COUNT(*)
       INTO v_conteo
@@ -446,7 +446,7 @@ BEGIN
      WHERE VER_ID = v_version_id
        AND LOWER(VER_HASH) = c_hash
        AND DBMS_LOB.COMPARE(VER_JSON, v_json) = 0;
-    exigir(v_conteo = 1, -21122, 'VALIDACION FALLIDA: JSON y hash no corresponden al contrato oficial.');
+    exigir(v_conteo = 1, -20122, 'VALIDACION FALLIDA: JSON y hash no corresponden al contrato oficial.');
 
     COMMIT;
 

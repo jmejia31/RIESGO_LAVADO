@@ -25,14 +25,14 @@ DECLARE
         IF NOT p_cond THEN RAISE_APPLICATION_ERROR(p_code, p_message); END IF;
     END;
 BEGIN
-    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -21601,
+    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -20601,
            'CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_SENALES_ALERTA a
      WHERE a.ALE_ESTADO NOT IN ('ACTIVO','INACTIVO')
         OR NOT EXISTS (SELECT 1 FROM RL_MR_EVALUACIONES_RIESGO e WHERE e.EVA_ID = a.ALE_EVALUACION_ID);
-    exigir(v_count = 0, -21602, 'Existen alertas inválidas o huérfanas.');
+    exigir(v_count = 0, -20602, 'Existen alertas inválidas o huérfanas.');
 
     SELECT COUNT(*) INTO v_count FROM (
         SELECT ALE_EVALUACION_ID, ALE_CODIGO
@@ -40,12 +40,12 @@ BEGIN
          GROUP BY ALE_EVALUACION_ID, ALE_CODIGO
         HAVING COUNT(*) > 1
     );
-    exigir(v_count = 0, -21603, 'Existen códigos de alerta duplicados dentro de una evaluación.');
+    exigir(v_count = 0, -20603, 'Existen códigos de alerta duplicados dentro de una evaluación.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_SENALES_ALERTA
      WHERE ALE_ESTADO = 'ACTIVO' AND ALE_FECHA_DISPARO IS NULL;
-    exigir(v_count = 0, -21604, 'Existen alertas activas sin fecha de disparo.');
+    exigir(v_count = 0, -20604, 'Existen alertas activas sin fecha de disparo.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_AUTOMONITOREO m
@@ -54,7 +54,7 @@ BEGIN
         OR TRIM(m.MON_ESTADO_RIESGO) IS NULL
         OR TRIM(m.MON_ESTADO_CONTR) IS NULL
         OR TRIM(m.MON_RESULTADO) IS NULL;
-    exigir(v_count = 0, -21605, 'Existen registros de automonitoreo inválidos.');
+    exigir(v_count = 0, -20605, 'Existen registros de automonitoreo inválidos.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_PROYECCIONES_EVALUACION p
@@ -65,13 +65,13 @@ BEGIN
         OR TRIM(p.PROY_NIVEL_RESIDUAL) IS NULL
         OR TRIM(p.PROY_RESPUESTA_RIESGO) IS NULL
         OR TRIM(p.PROY_ESTADO_EVALUACION) IS NULL;
-    exigir(v_count = 0, -21606, 'Existen proyecciones incompletas para reportería.');
+    exigir(v_count = 0, -20606, 'Existen proyecciones incompletas para reportería.');
 
     SELECT COUNT(*) INTO v_count
       FROM USER_OBJECTS
      WHERE OBJECT_NAME IN ('RL_MR_SENALES_ALERTA','RL_MR_AUTOMONITOREO','RL_MR_PROYECCIONES_EVALUACION')
        AND STATUS <> 'VALID';
-    exigir(v_count = 0, -21607, 'Existen objetos de Bloque 5 inválidos.');
+    exigir(v_count = 0, -20607, 'Existen objetos de Bloque 5 inválidos.');
 
     DBMS_OUTPUT.PUT_LINE('VALIDACION FASE 11 BLOQUE 5: CORRECTA');
 END;
