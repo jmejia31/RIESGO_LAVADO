@@ -9,8 +9,8 @@
 
   <label class="block max-w-xl text-sm font-semibold">Evaluación
     <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
-      <option [ngValue]="0">Seleccione una evaluación</option>
-      @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [ngValue]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
+      <option value="0">Seleccione una evaluación</option>
+      @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [value]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
     </select>
   </label>
 
