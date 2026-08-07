@@ -1,5 +1,48 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Cierre de Remediación de Seguridad NPM y Refuerzo de Quality Gate
+
+- **Fecha y hora**: 2026-08-07, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `bf0cef17290d955bf3081bf247cab3abb846e671`.
+- **Commit final publicado**: `63cdd08`.
+- **Objetivo**: Subsanar al 100% las vulnerabilidades de seguridad en el lockfile NPM de Angular (`frontend/rl-app`), asegurar instalación reproducible mediante `npm ci`, hacer bloqueante el paso `npm audit` en el workflow de CI (`quality-gates.yml`) y certificar localmente la totalidad de los Quality Gates.
+
+### Resumen de la Intervención
+
+1. **Diagnóstico del Quality Gate CI (Run #502)**:
+   - Se identificó que la falla previa del CI provenía de la modificación dinámica en caliente de `package-lock.json` (`npm audit fix || true`), lo cual dejaba diffs no confirmados y ocultaba las vulnerabilidades reales.
+2. **Remediación Dirigida de Vulnerabilidades NPM**:
+   - Se analizaron y resolvieron las 14 vulnerabilidades previas (7 moderadas, 6 altas, 1 crítica) mediante `overrides` quirúrgicos en `package.json` hacia versiones seguras exactas:
+     - `@babel/core`: `7.29.7`
+     - `esbuild`: `0.28.1`
+     - `@modelcontextprotocol/sdk`: `1.30.0`
+     - `@hono/node-server`: `2.0.12`
+     - `hono`: `4.12.34`
+     - `dompurify`: `3.4.13`
+     - `fast-uri`: `3.1.5`
+     - `immutable`: `5.1.8`
+     - `ip-address`: `10.3.1`
+     - `tar`: `7.5.21`
+     - `undici`: `7.29.0`
+     - `brace-expansion`: `2.1.4`
+     - `exceljs/uuid`: `11.1.1`
+   - Resultado final de `npm audit`: **0 vulnerabilidades**.
+3. **Endurecimiento del Workflow CI (`.github/workflows/quality-gates.yml`)**:
+   - Se eliminó la regeneración dinámica de lockfile y el flag `|| true`.
+   - El paso de auditoría `npm audit` se convirtió en un Quality Gate bloqueante estricto.
+4. **Verificación Total de Quality Gates Locales**:
+   - **Estructura y Base de Datos**: `validate_repository_structure.ps1`, `validate_database_scripts.ps1`, `validate_documentation_links.ps1` -> PASARON.
+   - **Validadores de Matrices**: Pre-Oracle, Fase 9 Expediente, Fase 10 Paquete Operativo, Fase 11 Bloque 1 y Bloques 2-6, Alineación DDL Dinámico, Contrato de Autorización e Inventario Exacto de 17 Tablas -> PASARON AL 100%.
+   - **Backend (.NET Core 10)**: 252/252 pruebas unitarias e integración pasaron exitosamente.
+   - **Frontend (Angular 22)**: 128/128 pruebas unitarias pasaron exitosamente across 20 archivos de prueba. Cobertura V8 recolectada.
+   - **Pruebas End-to-End (Playwright)**: 10/10 pruebas E2E pasaron exitosamente.
+5. **Estado de Git**:
+   - Publicado exitosamente en `origin/desarrollo` (`63cdd08`). Tree 100% limpio.
+
+---
+
 ## Registro de Intervención — Antigravity — Certificación Física Completa Fase 11 en Oracle Desarrollo
 
 - **Fecha y hora**: 2026-08-07, hora local (UTC-6).

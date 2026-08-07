@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-07: La Fase 11 del Módulo Matrices de Riesgos (Certificación Física contra Oracle Desarrollo) ha sido ejecutada, validada y **COMPLETADA Y CERTIFICADA AL 100%**. Se verificaron la idempotencia del Bloque 1 (`01_semillas...sql`), los validadores Oracle B1 a B6, y los 18 endpoints REST funcionales (incluyendo la descarga tipada de reportes Excel y PDF). Todas las puertas de calidad (Backend 244/244 tests, Frontend 128/128 tests, E2E 8/8 tests, validadores de enlaces y estructura) se encuentran en estado PASADO. La Fase 11 se declara **OFICIALMENTE COMPLETADA Y CERTIFICADA FÍSICAMENTE**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
+> Actualización 2026-08-07: La remediación de seguridad NPM del Módulo Frontend (`frontend/rl-app`) ha sido completada al **100% con 0 vulnerabilidades** en `npm audit`. El workflow de CI (`quality-gates.yml`) fue reforzado para hacer bloqueante la auditoría de seguridad y verificar la instalación reproducible mediante `npm ci`. Todos los validadores locales (Estructura, BD, Enlaces, Expediente Fase 9, Paquete Operativo Fase 10, Bloque 1 y Bloques 2-6 de Fase 11, Alineación DDL, Autorización e Inventario de 17 Tablas) y todas las suites de prueba (Backend 252/252 pasadas, Frontend 128/128 pasadas, E2E 10/10 pasadas) se encuentran **100% VERDES Y PASADAS**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,12 +20,13 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: Certificación Física Completa Fase 11 en Oracle Desarrollo
+- **Intervención**: Cierre de Remediación de Seguridad NPM y Refuerzo de Quality Gate
 - **Fecha**: 2026-08-07 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit inicial**: `eb1d616dd3d8c374d4fb2e13f2108123d8bab0e5`
-- **Estado**: Certificación Física Fase 11 **COMPLETADA Y CERTIFICADA AL 100% CONTRA ORACLE DESARROLLO**. Idempotencia de semillas, validadores B1-B6 y 18 endpoints REST verificados. Puertas de calidad 100% pasadas.
+- **Commit inicial**: `bf0cef17290d955bf3081bf247cab3abb846e671`
+- **Commit final publicado**: `63cdd08`
+- **Estado**: Remediación de Seguridad NPM **COMPLETADA AL 100% (0 vulnerabilidades)**. Quality Gate de CI reforzado y bloqueante. Todos los Quality Gates locales (252 backend, 128 frontend, 10 E2E y validadores) 100% PASADOS.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
