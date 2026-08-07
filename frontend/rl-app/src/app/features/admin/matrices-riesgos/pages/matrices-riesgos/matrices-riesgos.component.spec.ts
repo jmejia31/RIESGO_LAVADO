@@ -9,6 +9,7 @@ describe('MatricesRiesgosComponent', () => {
   let service: {
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
     metodologiaVigente: ReturnType<typeof vi.fn>;
+    listarRiesgos: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
@@ -54,6 +55,14 @@ describe('MatricesRiesgosComponent', () => {
         catalogos: [],
         reglas: [{ codigo: 'CALCULO_VRI_VRR', version: '1.0', algoritmoId: 'MATRICES_VRI_ADITIVO_1_9' }]
       })),
+      listarRiesgos: vi.fn().mockReturnValue(of([{
+        rieId: 5,
+        rieCodigo: 'R-005',
+        rieNombre: 'Riesgo institucional',
+        rieActivo: true,
+        rieUsrCreacion: 1,
+        rieFechaCreacion: '2026-08-07T08:00:00'
+      }])),
       listarEvaluaciones: vi.fn().mockReturnValue(of([])),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
@@ -72,11 +81,13 @@ describe('MatricesRiesgosComponent', () => {
     fixture.detectChanges();
   });
 
-  it('crea el componente y carga la versión dinámica', () => {
+  it('crea el componente y carga la versión dinámica y los riesgos reales', () => {
     expect(component).toBeTruthy();
     expect(service.obtenerVersionVigenteFormulario).toHaveBeenCalled();
     expect(service.metodologiaVigente).toHaveBeenCalled();
+    expect(service.listarRiesgos).toHaveBeenCalled();
     expect(component.versionVigente()?.verId).toBe(10);
+    expect(component.riesgos()[0].rieCodigo).toBe('R-005');
   });
 
   it('construye secciones y campos desde la versión del formulario', () => {
@@ -85,7 +96,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.totalCampos()).toBe(1);
   });
 
-  it('bloquea el guardado hasta completar riesgo y campos obligatorios', () => {
+  it('bloquea el guardado hasta seleccionar un riesgo real y completar campos obligatorios', () => {
     component.nuevaEvaluacion();
     expect(component.puedeGuardar()).toBe(false);
 
