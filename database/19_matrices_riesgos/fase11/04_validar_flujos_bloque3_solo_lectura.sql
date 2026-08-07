@@ -1,0 +1,81 @@
+-- ============================================================
+-- FASE 11 - BLOQUE 3
+-- Flujos de Evaluación - validación de solo lectura
+-- Estados oficiales: BORRADOR, EN_REVISION, OBSERVADA, APROBADA,
+-- RECHAZADA, CERRADA.
+-- ============================================================
+SET SERVEROUTPUT ON SIZE UNLIMITED
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+
+PROMPT === DISTRIBUCION DE ESTADOS ===
+SELECT FLU_ESTADO, COUNT(*) TOTAL
+  FROM RL_MR_FLUJOS_EVALUACION
+ GROUP BY FLU_ESTADO
+ ORDER BY FLU_ESTADO;
+
+PROMPT === ULTIMO ESTADO POR EVALUACION ===
+SELECT FLU_EVALUACION_ID, FLU_ESTADO, FLU_MOTIVO, FLU_USR_ID, FLU_FECHA
+  FROM (
+        SELECT f.*,
+               ROW_NUMBER() OVER (
+                   PARTITION BY FLU_EVALUACION_ID
+                   ORDER BY FLU_FECHA DESC, FLU_ID DESC
+               ) RN
+          FROM RL_MR_FLUJOS_EVALUACION f
+       )
+ WHERE RN = 1
+ ORDER BY FLU_EVALUACION_ID;
+
+DECLARE
+    v_count NUMBER;
+    PROCEDURE exigir(p_cond BOOLEAN, p_code NUMBER, p_message VARCHAR2) IS
+    BEGIN
+        IF NOT p_cond THEN RAISE_APPLICATION_ERROR(p_code, p_message); END IF;
+    END;
+BEGIN
+    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -21401,
+           'CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_FLUJOS_EVALUACION
+     WHERE FLU_ESTADO NOT IN ('BORRADOR','EN_REVISION','OBSERVADA','APROBADA','RECHAZADA','CERRADA');
+    exigir(v_count = 0, -21402, 'Existen estados de flujo fuera del dominio oficial.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_FLUJOS_EVALUACION f
+     WHERE NOT EXISTS (SELECT 1 FROM RL_MR_EVALUACIONES_RIESGO e WHERE e.EVA_ID = f.FLU_EVALUACION_ID)
+        OR NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = f.FLU_USR_ID);
+    exigir(v_count = 0, -21403, 'Existen flujos con referencias inválidas.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_EVALUACIONES_RIESGO e
+     WHERE e.EVA_ACTIVO = 1
+       AND NOT EXISTS (
+           SELECT 1 FROM RL_MR_FLUJOS_EVALUACION f WHERE f.FLU_EVALUACION_ID = e.EVA_ID
+       );
+    exigir(v_count = 0, -21404, 'Existen evaluaciones activas sin historial de flujo.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM (
+            SELECT e.EVA_ID,
+                   p.PROY_ESTADO_EVALUACION,
+                   (
+                       SELECT FLU_ESTADO
+                         FROM (
+                               SELECT f.FLU_ESTADO, f.FLU_FECHA, f.FLU_ID
+                                 FROM RL_MR_FLUJOS_EVALUACION f
+                                WHERE f.FLU_EVALUACION_ID = e.EVA_ID
+                                ORDER BY f.FLU_FECHA DESC, f.FLU_ID DESC
+                              )
+                        WHERE ROWNUM = 1
+                   ) ULTIMO_ESTADO
+              FROM RL_MR_EVALUACIONES_RIESGO e
+              JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
+             WHERE e.EVA_ACTIVO = 1
+           )
+     WHERE NVL(PROY_ESTADO_EVALUACION, '#') <> NVL(ULTIMO_ESTADO, '#');
+    exigir(v_count = 0, -21405, 'La proyección no coincide con el último estado del flujo.');
+
+    DBMS_OUTPUT.PUT_LINE('VALIDACION FASE 11 BLOQUE 3: CORRECTA');
+END;
+/
