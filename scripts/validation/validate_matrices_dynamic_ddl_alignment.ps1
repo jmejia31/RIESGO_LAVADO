@@ -59,9 +59,6 @@ $oracleIntegration = Read-RepoFile $oracleIntegrationRelative
 $script05 = Read-RepoFile $script05Relative
 $script06 = Read-RepoFile $script06Relative
 
-# ---------------------------------------------------------------------------
-# 1. Archivos/contratos retirados que no deben reintroducirse.
-# ---------------------------------------------------------------------------
 foreach ($relative in @(
     '.github/workflows/agent-fix-matrices-phase1.yml',
     'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepositoryFacade.cs',
@@ -100,14 +97,11 @@ foreach ($file in $moduleFiles) {
     foreach ($token in $legacyTokens) {
         if ($content.Contains($token)) {
             $relative = $file.FullName.Substring(([string]$repositoryRoot).Length).TrimStart('\','/')
-            Add-Error "$relative reintroduce el contrato heredado '$token'."
+            Add-Error "${relative} reintroduce el contrato heredado '$token'."
         }
     }
 }
 
-# ---------------------------------------------------------------------------
-# 2. Contrato físico y dinámico del repositorio reducido.
-# ---------------------------------------------------------------------------
 foreach ($token in @('EVA_DATA_JSON','EVA_DATA_CALC_JSON')) {
     Assert-NotContains $repository $token "MatricesRiesgosRepository.cs conserva la columna física retirada '$token'."
 }
@@ -147,10 +141,6 @@ foreach ($entry in $requiredRepositoryTokens.GetEnumerator()) {
 }
 Assert-NotContains $repository 'NotSupportedException' 'MatricesRiesgosRepository.cs contiene NotSupportedException.'
 
-# ---------------------------------------------------------------------------
-# 3. Auditoría: AUD_ACCION debe respetar CK_RL_AUD_ACCION de Oracle 11g.
-#    La semántica funcional se comprueba por método + tabla + payload.
-# ---------------------------------------------------------------------------
 $auditPhysicalContract = Read-RepoFile 'database/01_create_tables.sql'
 Assert-Contains $auditPhysicalContract "AUD_ACCION IN ('INSERT','UPDATE','DELETE','LOGIN','LOGOUT','EXPORT')" 'El DDL institucional no contiene el dominio esperado de AUD_ACCION.'
 
@@ -169,16 +159,12 @@ if ($repository -notmatch $transitionPattern) {
     Add-Error 'TransicionarEstadoEvaluacionAsync no conserva flujo + auditoría UPDATE con estado anterior, nuevo y motivo.'
 }
 
-# No se permiten acciones semánticas largas en AUD_ACCION: violarían VARCHAR2(10)/CK_RL_AUD_ACCION.
 foreach ($forbiddenAuditAction in @('"CREAR_EVALUACION"','"ACTUALIZAR_EVALUACION"','"TRANSICION_ESTADO"')) {
     if ($repository.Contains($forbiddenAuditAction)) {
         Add-Error "AUD_ACCION no puede volver a usar $forbiddenAuditAction; Oracle exige el dominio físico institucional."
     }
 }
 
-# ---------------------------------------------------------------------------
-# 4. Script 06: solo se valida su contrato; nunca se ejecuta aquí.
-# ---------------------------------------------------------------------------
 foreach ($token in @('EVA_DATOS_JSON','EVA_CALCULOS_JSON')) {
     Assert-Contains $script06 $token "El script 06 no contiene la columna física obligatoria '$token'."
 }
@@ -193,9 +179,6 @@ if ($script06 -match '(?im)^\s*CREATE\s+TABLE\s+RL_MR_TRAZAS_CALCULO\b') { Add-E
 if ($script06 -match '(?im)^\s*CREATE\s+SEQUENCE\s+SEQ_RL_MR_TRAZAS\b') { Add-Error 'El script 06 no puede crear SEQ_RL_MR_TRAZAS.' }
 Assert-Contains $script06 "'RL_MR_TRAZAS_CALCULO'" 'El script 06 debe retirar RL_MR_TRAZAS_CALCULO durante la transición controlada.'
 
-# ---------------------------------------------------------------------------
-# 5. Contratos Backend/Angular y suite Oracle.
-# ---------------------------------------------------------------------------
 foreach ($token in @(
     'Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto',
     'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()',
@@ -226,9 +209,6 @@ foreach ($token in @(
     Assert-Contains $oracleIntegration $token "La suite Oracle no contiene el control '$token'."
 }
 
-# ---------------------------------------------------------------------------
-# 6. Controles de secretos en archivos versionados relevantes.
-# ---------------------------------------------------------------------------
 $securityFiles = @(Get-SourceFiles @('backend','frontend','scripts','.github') @('.cs','.json','.config','.xml','.runsettings','.ps1','.yml','.yaml','.env','.txt'))
 $connectionStringPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 $jsonOraclePasswordPattern = '(?is)"(?:OracleDB|ConnectionStrings?)"\s*:\s*"[^"\r\n]*(?:Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
@@ -241,12 +221,9 @@ foreach ($file in $securityFiles) {
     $content = [System.IO.File]::ReadAllText($file.FullName)
     $containsSecret = $content -match $connectionStringPattern -or $content -match $jsonOraclePasswordPattern
     if ($file.Extension -ne '.cs') { $containsSecret = $containsSecret -or ($content -match $standalonePasswordPattern) }
-    if ($containsSecret) { Add-Error "$relative: posible credencial Oracle codificada." }
+    if ($containsSecret) { Add-Error "${relative}: posible credencial Oracle codificada." }
 }
 
-# ---------------------------------------------------------------------------
-# 7. Script 05: solo se valida su bloqueo; nunca se ejecuta aquí.
-# ---------------------------------------------------------------------------
 foreach ($token in @(
     'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
     "DEFINE autorizacion = '&1'",
