@@ -106,7 +106,7 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
 
         var version = await repository.ObtenerVersionVigenteFormularioAsync(FamiliaCodigo);
         Assert.NotNull(version);
-        Assert.True(string.Equals(HashEsperado, version!.VerHash, StringComparison.OrdinalIgnoreCase));
+        Assert.Equal(HashEsperado, version!.VerHash, ignoreCase: true);
         Assert.Equal("PUBLISHED", version.VerEstado);
         Assert.True(version.VerVigente);
 
