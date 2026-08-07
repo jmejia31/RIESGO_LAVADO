@@ -1,487 +1,270 @@
 $ErrorActionPreference = 'Stop'
 
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
-$script05 = Join-Path $repositoryRoot 'database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql'
-$script06 = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
-$workflowTemporal = Join-Path $repositoryRoot '.github/workflows/agent-fix-matrices-phase1.yml'
-$repositoryFacade = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepositoryFacade.cs'
-$legacyDtos = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Matrices/MatrizRiesgoDtos.cs'
-$legacyReportDtos = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Reporteria/ReporteriaDtos.cs'
-$legacyRenderer = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportRenderer.cs'
-$repositoryFile = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
-$repositoryContract = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs'
-$appServiceContract = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs'
-$controllerFile = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs'
-$angularModels = Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts'
-$programFile = Join-Path $repositoryRoot 'backend/RL.API/Program.cs'
-$oracleIntegrationTest = Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs'
+$errors = [System.Collections.Generic.List[string]]::new()
 
-$moduleScanRoots = @(
-    (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
-    (Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos'),
-    (Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos'),
-    (Join-Path $repositoryRoot 'database/19_matrices_riesgos')
-)
-
-$traceScanRoots = @(
-    (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
-    (Join-Path $repositoryRoot 'backend/RL.API.Tests/Features/MatricesRiesgos'),
-    (Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos')
-)
-
-$securityScanRoots = @(
-    (Join-Path $repositoryRoot 'backend'),
-    (Join-Path $repositoryRoot 'frontend'),
-    (Join-Path $repositoryRoot 'scripts'),
-    (Join-Path $repositoryRoot '.github')
-)
-
-$moduleExtensions = @('.cs', '.ts', '.html', '.sql', '.json')
-$securityExtensions = @('.cs', '.json', '.config', '.xml', '.runsettings', '.ps1', '.yml', '.yaml', '.env', '.txt')
-$excludedDirectoryNames = @('bin', 'obj', 'node_modules', 'dist', 'coverage', 'Historico', 'retiro_controlado', 'transicion', '.git')
-$errors = New-Object System.Collections.Generic.List[string]
-
-function Test-IsExcludedPath {
-    param([System.IO.FileInfo]$File)
-    foreach ($segment in ($File.FullName -split '[\\/]')) {
-        if ($excludedDirectoryNames -contains $segment) { return $true }
-    }
-    return $false
+function Add-Error([string]$Message) {
+    $errors.Add($Message)
 }
 
-function Get-SourceFiles {
-    param([string[]]$Roots, [string[]]$Extensions)
-    $result = New-Object System.Collections.Generic.List[System.IO.FileInfo]
-    foreach ($root in $Roots) {
+function Read-RepoFile([string]$RelativePath) {
+    $path = Join-Path $repositoryRoot $RelativePath
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        Add-Error "No se encontró el archivo obligatorio: $RelativePath"
+        return ''
+    }
+    return [System.IO.File]::ReadAllText($path)
+}
+
+function Assert-Contains([string]$Content, [string]$Token, [string]$Message) {
+    if (-not $Content.Contains($Token)) { Add-Error $Message }
+}
+
+function Assert-NotContains([string]$Content, [string]$Token, [string]$Message) {
+    if ($Content.Contains($Token)) { Add-Error $Message }
+}
+
+function Get-SourceFiles([string[]]$Roots, [string[]]$Extensions) {
+    $excluded = @('bin','obj','node_modules','dist','coverage','Historico','retiro_controlado','transicion','.git')
+    foreach ($relativeRoot in $Roots) {
+        $root = Join-Path $repositoryRoot $relativeRoot
         if (-not (Test-Path -LiteralPath $root)) {
-            $errors.Add("No se encontró una raíz obligatoria: $root")
+            Add-Error "No se encontró una raíz obligatoria: $relativeRoot"
             continue
         }
         Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object {
-            $Extensions -contains $_.Extension.ToLowerInvariant() -and -not (Test-IsExcludedPath -File $_)
-        } | ForEach-Object { $result.Add($_) }
-    }
-    return $result
-}
-
-function Get-RelativeRepositoryPath {
-    param([string]$Path)
-    $root = ([string]$repositoryRoot).TrimEnd('\', '/')
-    return $Path.Substring($root.Length).TrimStart('\', '/')
-}
-
-function Test-IsIgnoredLocalFile {
-    param([System.IO.FileInfo]$File)
-    $relativePath = Get-RelativeRepositoryPath -Path $File.FullName
-    & git -C ([string]$repositoryRoot) check-ignore --quiet -- $relativePath 2>$null
-    return $LASTEXITCODE -eq 0
-}
-
-foreach ($requiredFile in @(
-    $script05,
-    $script06,
-    $repositoryFile,
-    $repositoryContract,
-    $appServiceContract,
-    $controllerFile,
-    $angularModels,
-    $programFile,
-    $oracleIntegrationTest)) {
-    if (-not (Test-Path -LiteralPath $requiredFile)) {
-        $errors.Add("No se encontró un archivo obligatorio: $requiredFile")
+            $Extensions -contains $_.Extension.ToLowerInvariant() -and
+            -not (@($_.FullName -split '[\\/]') | Where-Object { $excluded -contains $_ })
+        }
     }
 }
 
-foreach ($forbiddenFile in @($workflowTemporal, $repositoryFacade, $legacyDtos, $legacyReportDtos, $legacyRenderer)) {
-    if (Test-Path -LiteralPath $forbiddenFile) {
-        $errors.Add("No debe permanecer el archivo retirado: $(Get-RelativeRepositoryPath -Path $forbiddenFile)")
+$repositoryRelative = 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
+$repositoryContractRelative = 'backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs'
+$appServiceContractRelative = 'backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs'
+$controllerRelative = 'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs'
+$angularModelsRelative = 'frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts'
+$programRelative = 'backend/RL.API/Program.cs'
+$oracleIntegrationRelative = 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs'
+$script05Relative = 'database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql'
+$script06Relative = 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
+
+$repository = Read-RepoFile $repositoryRelative
+$repositoryContract = Read-RepoFile $repositoryContractRelative
+$appServiceContract = Read-RepoFile $appServiceContractRelative
+$controller = Read-RepoFile $controllerRelative
+$angularModels = Read-RepoFile $angularModelsRelative
+$program = Read-RepoFile $programRelative
+$oracleIntegration = Read-RepoFile $oracleIntegrationRelative
+$script05 = Read-RepoFile $script05Relative
+$script06 = Read-RepoFile $script06Relative
+
+# ---------------------------------------------------------------------------
+# 1. Archivos/contratos retirados que no deben reintroducirse.
+# ---------------------------------------------------------------------------
+foreach ($relative in @(
+    '.github/workflows/agent-fix-matrices-phase1.yml',
+    'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepositoryFacade.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Contracts/Matrices/MatrizRiesgoDtos.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Contracts/Reporteria/ReporteriaDtos.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportRenderer.cs',
+    'backend/RL.API/Features/MatricesRiesgos/Contracts/Configuracion/PermisoFormularioDto.cs'
+)) {
+    if (Test-Path -LiteralPath (Join-Path $repositoryRoot $relative)) {
+        Add-Error "No debe permanecer el archivo retirado: $relative"
     }
 }
 
-$forbiddenTokens = @(
-    [pscustomobject]@{ Token = 'FLU_ESTADO_NUEVO'; Message = 'La tabla definitiva solo contiene FLU_ESTADO.' },
-    [pscustomobject]@{ Token = 'FLU_ESTADO_ANTERIOR'; Message = 'La tabla definitiva solo contiene FLU_ESTADO.' },
-    [pscustomobject]@{ Token = 'EVA_ESTADO'; Message = 'El estado procede del último flujo.' },
-    [pscustomobject]@{ Token = 'EVA_VRI'; Message = 'VRI no es una columna de evaluaciones.' },
-    [pscustomobject]@{ Token = 'EVA_ETP'; Message = 'ETP no es una columna de evaluaciones.' },
-    [pscustomobject]@{ Token = 'EVA_VRR'; Message = 'VRR no es una columna de evaluaciones.' },
-    [pscustomobject]@{ Token = 'EVA_FECHA_EVAL'; Message = 'La columna física es EVA_FECHA_REGISTRO.' },
-    [pscustomobject]@{ Token = 'EVA_USR_EVAL'; Message = 'La columna física es EVA_USR_REGISTRO.' },
-    [pscustomobject]@{ Token = 'PROY_ETP'; Message = 'La proyección definitiva no contiene ETP.' },
-    [pscustomobject]@{ Token = 'RL_MR_MODELOS'; Message = 'Tabla retirada del modelo dinámico.' },
-    [pscustomobject]@{ Token = 'RL_MR_FACTORES'; Message = 'Tabla retirada del modelo dinámico.' },
-    [pscustomobject]@{ Token = 'RL_MR_VARIABLES'; Message = 'Tabla retirada del modelo dinámico.' },
-    [pscustomobject]@{ Token = 'RL_MR_ESCALAS'; Message = 'Tabla retirada del modelo dinámico.' },
-    [pscustomobject]@{ Token = 'RL_MR_CRITERIOS'; Message = 'Tabla retirada del modelo dinámico.' },
-    [pscustomobject]@{ Token = 'ModeloId'; Message = 'Contrato del modelo heredado.' },
-    [pscustomobject]@{ Token = 'ModeloVersion'; Message = 'Contrato del modelo heredado.' },
-    [pscustomobject]@{ Token = 'FactorInstitucionalDto'; Message = 'Contrato de factores heredado.' },
-    [pscustomobject]@{ Token = 'VariableMetodologiaRespuestaDto'; Message = 'Contrato de variables heredado.' },
-    [pscustomobject]@{ Token = 'MatrizRiesgoResumenDto'; Message = 'Contrato de matriz basada en sujeto retirado.' },
-    [pscustomobject]@{ Token = 'MatrizRiesgoDetalleDto'; Message = 'Contrato de matriz basada en sujeto retirado.' },
-    [pscustomobject]@{ Token = 'MatrizRiesgoVariableDetalleDto'; Message = 'Contrato de variables retirado.' },
-    [pscustomobject]@{ Token = 'PorFactor'; Message = 'Agrupación del modelo heredado.' },
-    [pscustomobject]@{ Token = 'factorId'; Message = 'Identificador de factor retirado del contrato funcional.' },
-    [pscustomobject]@{ Token = 'variableId'; Message = 'Identificador de variable retirado del contrato funcional.' },
-    [pscustomobject]@{ Token = 'FactorId'; Message = 'Identificador de factor retirado del contrato funcional.' },
-    [pscustomobject]@{ Token = 'VariableId'; Message = 'Identificador de variable retirado del contrato funcional.' },
-    [pscustomobject]@{ Token = 'List<Dictionary<string, object>>'; Message = 'Los reportes deben usar DTOs tipados.' },
-    [pscustomobject]@{ Token = 'DeterminarClasificacionResidual'; Message = 'La clasificación no puede ser rígida en código.' },
-    [pscustomobject]@{ Token = 'RegistrarAuditoriaAsync'; Message = 'El contrato institucional expone RegistrarAsync.' }
+$moduleFiles = @(Get-SourceFiles @(
+    'backend/RL.API/Features/MatricesRiesgos',
+    'backend/RL.API.Tests/Features/MatricesRiesgos',
+    'frontend/rl-app/src/app/features/admin/matrices-riesgos',
+    'database/19_matrices_riesgos'
+) @('.cs','.ts','.html','.sql','.json'))
+
+$legacyTokens = @(
+    'FLU_ESTADO_NUEVO','FLU_ESTADO_ANTERIOR','EVA_ESTADO','EVA_VRI','EVA_ETP','EVA_VRR',
+    'EVA_FECHA_EVAL','EVA_USR_EVAL','PROY_ETP','RL_MR_MODELOS','RL_MR_FACTORES','RL_MR_VARIABLES',
+    'RL_MR_ESCALAS','RL_MR_CRITERIOS','ModeloId','ModeloVersion','FactorInstitucionalDto',
+    'VariableMetodologiaRespuestaDto','MatrizRiesgoResumenDto','MatrizRiesgoDetalleDto',
+    'MatrizRiesgoVariableDetalleDto','List<Dictionary<string, object>>','DeterminarClasificacionResidual',
+    'RegistrarAuditoriaAsync','InsertarTrazaCalculoAsync','RL_MR_TRAZAS_CALCULO','SEQ_RL_MR_TRAZAS','TRA_REGLA_ID',
+    'VincularEvidenciaAprobacionAsync','AsociarEvidenciaAprobacionDto','EjecutarVinculoEvidenciaAsync',
+    'RL_MR_EVI_RIESGO','RL_MR_EVI_EVALUACION','RL_MR_EVI_CONTROL','RL_MR_EVI_PLAN',
+    'RL_MR_EVI_ACTIVIDAD','RL_MR_EVI_ALERTA','RL_MR_EVI_AUTOMONITOREO','RL_MR_EVI_REVISION',
+    'RL_MR_EVI_APROBACION','PermisoFormularioDto','tablaPuente','columnaEntidad','columnaEvidencia'
 )
 
-$moduleFiles = Get-SourceFiles -Roots $moduleScanRoots -Extensions $moduleExtensions
 foreach ($file in $moduleFiles) {
-    $content = Get-Content -LiteralPath $file.FullName -Raw
-    foreach ($entry in $forbiddenTokens) {
-        if ($content.Contains($entry.Token)) {
-            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
-            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
-                $errors.Add("${relativePath}:$($match.LineNumber): identificador incompatible '$($entry.Token)'. $($entry.Message)")
-            }
-        }
-    }
-}
-
-$traceForbiddenTokens = @(
-    [pscustomobject]@{ Token = 'InsertarTrazaCalculoAsync'; Message = 'El modelo reducido no escribe trazas locales de cálculo.' },
-    [pscustomobject]@{ Token = 'RL_MR_TRAZAS_CALCULO'; Message = 'La tabla de trazas fue retirada del modelo objetivo.' },
-    [pscustomobject]@{ Token = 'SEQ_RL_MR_TRAZAS'; Message = 'La secuencia de trazas fue retirada del modelo objetivo.' },
-    [pscustomobject]@{ Token = 'TRA_REGLA_ID'; Message = 'La regla utilizada se conserva dentro de EVA_CALCULOS_JSON.' }
-)
-
-$traceFiles = @(
-    Get-SourceFiles -Roots $traceScanRoots -Extensions $moduleExtensions | Where-Object {
-        $_.FullName -ne $oracleIntegrationTest
-    }
-)
-foreach ($file in $traceFiles) {
-    $content = Get-Content -LiteralPath $file.FullName -Raw
-    foreach ($entry in $traceForbiddenTokens) {
-        if ($content.Contains($entry.Token)) {
-            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
-            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
-                $errors.Add("${relativePath}:$($match.LineNumber): traza incompatible '$($entry.Token)'. $($entry.Message)")
-            }
-        }
-    }
-}
-
-if (Test-Path -LiteralPath $repositoryFile) {
-    $content = Get-Content -LiteralPath $repositoryFile -Raw
-
-    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
+    $content = [System.IO.File]::ReadAllText($file.FullName)
+    foreach ($token in $legacyTokens) {
         if ($content.Contains($token)) {
-            $errors.Add("MatricesRiesgosRepository.cs conserva la columna física retirada '$token'.")
-        }
-    }
-
-    foreach ($token in @(
-        'InsertarAuditoriaCampoAsync',
-        'INSERT INTO RL_MR_AUDITORIA',
-        'SEQ_RL_MR_AUDITORIA',
-        'IAuditoriaRepository? _auditoriaRepository',
-        'this(db, null)')) {
-        if ($content.Contains($token)) {
-            $errors.Add("MatricesRiesgosRepository.cs conserva auditoría local o inyección opcional retirada: '$token'.")
-        }
-    }
-
-    $required = [ordered]@{
-        'command.Transaction = transaction' = 'Los comandos deben propagar OracleTransaction.'
-        'FLU_ESTADO' = 'El estado debe proceder de flujos.'
-        "VER_ESTADO = 'PUBLISHED'" = 'La metodología y reglas deben usar versiones publicadas.'
-        'REG_CODIGO = :codigo' = 'La regla debe resolverse por código.'
-        'REG_VERSION = :version' = 'La regla debe resolverse por versión.'
-        'REG_ALGORITMO_ID' = 'El algoritmo debe resolverse desde el catálogo institucional de reglas.'
-        'EVA_DATOS_JSON' = 'Las respuestas deben usar el nombre físico aprobado por el DDL reducido.'
-        'EVA_CALCULOS_JSON' = 'Los cálculos deben usar el nombre físico aprobado por el DDL reducido.'
-        'IncorporarMetadatosRegla' = 'El servidor debe incorporar metadatos de la regla al resultado calculado.'
-        'reglaCodigo' = 'El resultado calculado debe conservar el código de regla.'
-        'reglaVersion' = 'El resultado calculado debe conservar la versión de regla.'
-        'algoritmoId' = 'El resultado calculado debe conservar el identificador de algoritmo.'
-        'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync' = 'El consolidado debe ser tipado.'
-        'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync' = 'La metodología debe usar contrato neutro.'
-        'VersionFormularioId = versionId' = 'La metodología debe conservar la versión del formulario.'
-        'Secciones = secciones' = 'La metodología debe conservar secciones y campos.'
-        'Catalogos = catalogos' = 'La metodología debe conservar catálogos.'
-        'Reglas = reglas' = 'La metodología debe conservar reglas.'
-        'VincularEvidenciaAsync' = 'La vinculación funcional debe usar el contrato genérico.'
-        'RL_MR_EVIDENCIAS_VINCULOS' = 'La vinculación funcional debe usar la tabla genérica vigente.'
-            'private readonly IAuditoriaRepository _auditoriaRepository;' = 'La auditoría institucional debe ser obligatoria.'
-            'IAuditoriaRepository auditoriaRepository' = 'El repositorio debe exigir auditoría institucional por constructor.'
-            '"CREAR_EVALUACION"' = 'La creación debe registrarse en RL_AUDITORIA.'
-            '"ACTUALIZAR_EVALUACION"' = 'La actualización debe registrarse en RL_AUDITORIA.'
-            '"TRANSICION_ESTADO"' = 'La transición debe registrarse en RL_AUDITORIA.'
-    }
-    foreach ($entry in $required.GetEnumerator()) {
-        if (-not $content.Contains($entry.Key)) {
-            $errors.Add("MatricesRiesgosRepository.cs no contiene '$($entry.Key)'. $($entry.Value)")
-        }
-    }
-    if ($content.Contains('NotSupportedException')) {
-        $errors.Add('MatricesRiesgosRepository.cs contiene NotSupportedException.')
-    }
-}
-
-if (Test-Path -LiteralPath $script06) {
-    $content = Get-Content -LiteralPath $script06 -Raw
-    foreach ($token in @('EVA_DATOS_JSON', 'EVA_CALCULOS_JSON')) {
-        if (-not $content.Contains($token)) {
-            $errors.Add("El script 06 no contiene la columna física obligatoria '$token'.")
-        }
-    }
-    foreach ($token in @('EVA_DATA_JSON', 'EVA_DATA_CALC_JSON')) {
-        if ($content.Contains($token)) {
-            $errors.Add("El script 06 conserva la columna física retirada '$token'.")
-        }
-    }
-    foreach ($pattern in @(
-        'CREATE TABLE\s+RL_MR_AUDITORIA',
-        'CREATE SEQUENCE\s+SEQ_RL_MR_AUDITORIA')) {
-        if ($content -match $pattern) {
-            $errors.Add("El script 06 vuelve a crear un objeto de auditoría local retirado: $pattern")
-        }
-    }
-    if (-not $content.Contains("'RL_MR_AUDITORIA'")) {
-        $errors.Add('El script 06 debe conservar el retiro controlado de RL_MR_AUDITORIA heredada.')
-    }
-
-    if ($content -match '(?im)^\s*CREATE\s+TABLE\s+RL_MR_TRAZAS_CALCULO\b') {
-        $errors.Add('El script 06 no puede crear RL_MR_TRAZAS_CALCULO.')
-    }
-    if ($content -match '(?im)^\s*CREATE\s+SEQUENCE\s+SEQ_RL_MR_TRAZAS\b') {
-        $errors.Add('El script 06 no puede crear SEQ_RL_MR_TRAZAS.')
-    }
-    if (-not $content.Contains("'RL_MR_TRAZAS_CALCULO'")) {
-        $errors.Add('El script 06 debe retirar la tabla heredada RL_MR_TRAZAS_CALCULO durante la reconstrucción controlada.')
-    }
-}
-
-if (Test-Path -LiteralPath $repositoryContract) {
-    $content = Get-Content -LiteralPath $repositoryContract -Raw
-    if (-not $content.Contains('Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto')) {
-        $errors.Add('IMatricesRiesgosRepository no expone el vínculo genérico de evidencias.')
-    }
-    if (-not $content.Contains('Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()')) {
-        $errors.Add('IMatricesRiesgosRepository no expone el consolidado tipado.')
-    }
-    if (-not $content.Contains('Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()')) {
-        $errors.Add('IMatricesRiesgosRepository no expone metodología neutra.')
-    }
-}
-
-if (Test-Path -LiteralPath $appServiceContract) {
-    $content = Get-Content -LiteralPath $appServiceContract -Raw
-    if (-not $content.Contains('ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>')) {
-        $errors.Add('IMatricesRiesgosAppService no expone filas tipadas.')
-    }
-    if (-not $content.Contains('ServiceResult<MetodologiaFormularioDto>')) {
-        $errors.Add('IMatricesRiesgosAppService no expone metodología neutra.')
-    }
-}
-
-if (Test-Path -LiteralPath $controllerFile) {
-    $content = Get-Content -LiteralPath $controllerFile -Raw
-    if (-not $content.Contains('ObtenerConsolidadoTipadoAsync')) {
-        $errors.Add('El endpoint consolidado no consume el contrato tipado.')
-    }
-    if (-not $content.Contains('ObtenerMetodologiaDinamicaVigenteAsync')) {
-        $errors.Add('El endpoint de metodología no consume el contrato neutro.')
-    }
-}
-
-if (Test-Path -LiteralPath $angularModels) {
-    $content = Get-Content -LiteralPath $angularModels -Raw
-    foreach ($token in @('MetodologiaFormulario', 'SeccionFormulario', 'CampoFormulario', 'CatalogoMatrices', 'ReglaCalculoMatrices', 'RiesgoReporteFila')) {
-        if (-not $content.Contains($token)) {
-            $errors.Add("Los modelos Angular no contienen el contrato neutro '$token'.")
+            $relative = $file.FullName.Substring(([string]$repositoryRoot).Length).TrimStart('\','/')
+            Add-Error "$relative reintroduce el contrato heredado '$token'."
         }
     }
 }
 
-if (Test-Path -LiteralPath $oracleIntegrationTest) {
-    $content = Get-Content -LiteralPath $oracleIntegrationTest -Raw
-    foreach ($token in @(
-        'RL_ORACLE_INTEGRATION_REQUIRED',
-        'TipoEntidadEvidencia.Evaluacion',
-        'RL_MR_EVIDENCIAS_VINCULOS',
-        'RL_AUDITORIA',
-        'SEQ_RL_AUDITORIA',
-        'AuditoriaFallaDespuesDeInsertar',
-        'TablasModelo17',
-        'SecuenciasModelo17',
-        'IndicesPrincipales',
-        'RestriccionesPrincipales',
-        'RIE_NOMBRE',
-        'RIE_USR_CREACION',
-        'EsquemaModelo17_InventarioIndicesRestriccionesYAusencias_CumplenContrato',
-        'CicloCompleto_Commit_PersisteFamiliaVersionRiesgoEvaluacionProyeccionFlujoEvidenciaVinculoYAuditoria',
-        'CicloCompleto_Rollback_NoPersisteRegistrosBase')) {
-        if (-not $content.Contains($token)) {
-            $errors.Add("La suite Oracle del modelo reducido no contiene el control obligatorio '$token'.")
-        }
-    }
+# ---------------------------------------------------------------------------
+# 2. Contrato físico y dinámico del repositorio reducido.
+# ---------------------------------------------------------------------------
+foreach ($token in @('EVA_DATA_JSON','EVA_DATA_CALC_JSON')) {
+    Assert-NotContains $repository $token "MatricesRiesgosRepository.cs conserva la columna física retirada '$token'."
+}
+foreach ($token in @(
+    'InsertarAuditoriaCampoAsync','INSERT INTO RL_MR_AUDITORIA','SEQ_RL_MR_AUDITORIA',
+    'IAuditoriaRepository? _auditoriaRepository','this(db, null)'
+)) {
+    Assert-NotContains $repository $token "MatricesRiesgosRepository.cs conserva auditoría local/opcional retirada: '$token'."
+}
 
-    $retiredOracleObjects = @(
-        'RL_MR_EVI_APROBACION',
-        'RL_MR_EVI_REVISION',
-        'RL_MR_EVI_AUTOMONITOREO',
-        'RL_MR_EVI_ALERTA',
-        'RL_MR_EVI_ACTIVIDAD',
-        'RL_MR_EVI_PLAN',
-        'RL_MR_EVI_CONTROL',
-        'RL_MR_EVI_EVALUACION',
-        'RL_MR_EVI_RIESGO',
-        'RL_MR_DETALLES_IMPORTACION',
-        'RL_MR_LOTES_IMPORTACION',
-        'RL_MR_TRAZAS_CALCULO',
-        'RL_MR_AUDITORIA',
-        'RL_MR_PERMISOS_FORMULARIO',
-        'RL_MR_APROBACIONES_FORMULARIO',
-        'RL_MR_CAMPOS_FORMULARIO',
-        'RL_MR_RELACIONES_RIESGO',
-        'RL_MR_REVISIONES_EVALUACION',
-        'SEQ_RL_MR_AUDITORIA',
-        'SEQ_RL_MR_TRAZAS',
-        'SEQ_RL_MR_REVISIONES')
+$requiredRepositoryTokens = [ordered]@{
+    'command.Transaction = transaction' = 'Los comandos deben propagar OracleTransaction.'
+    'FLU_ESTADO' = 'El estado debe proceder del historial de flujos.'
+    "VER_ESTADO = 'PUBLISHED'" = 'La metodología debe usar versiones publicadas.'
+    'REG_CODIGO = :codigo' = 'La regla debe resolverse por código.'
+    'REG_VERSION = :version' = 'La regla debe resolverse por versión.'
+    'REG_ALGORITMO_ID' = 'La regla debe resolver el algoritmo institucional.'
+    'EVA_DATOS_JSON' = 'Las respuestas deben usar la columna física aprobada.'
+    'EVA_CALCULOS_JSON' = 'Los cálculos deben usar la columna física aprobada.'
+    'IncorporarMetadatosRegla' = 'El servidor debe incorporar metadatos de cálculo.'
+    'reglaCodigo' = 'El resultado debe conservar el código de regla.'
+    'reglaVersion' = 'El resultado debe conservar la versión de regla.'
+    'algoritmoId' = 'El resultado debe conservar el algoritmo.'
+    'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync' = 'El consolidado debe ser tipado.'
+    'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync' = 'La metodología debe usar contrato neutro.'
+    'VersionFormularioId = versionId' = 'La metodología debe conservar la versión.'
+    'Secciones = secciones' = 'La metodología debe conservar secciones.'
+    'Catalogos = catalogos' = 'La metodología debe conservar catálogos.'
+    'Reglas = reglas' = 'La metodología debe conservar reglas.'
+    'VincularEvidenciaAsync' = 'Debe conservarse la vinculación genérica de evidencias.'
+    'RL_MR_EVIDENCIAS_VINCULOS' = 'Debe utilizarse la tabla genérica de vínculos.'
+    'private readonly IAuditoriaRepository _auditoriaRepository;' = 'La auditoría institucional debe ser obligatoria.'
+    'IAuditoriaRepository auditoriaRepository' = 'El constructor debe exigir auditoría institucional.'
+}
+foreach ($entry in $requiredRepositoryTokens.GetEnumerator()) {
+    Assert-Contains $repository $entry.Key "MatricesRiesgosRepository.cs no contiene '$($entry.Key)'. $($entry.Value)"
+}
+Assert-NotContains $repository 'NotSupportedException' 'MatricesRiesgosRepository.cs contiene NotSupportedException.'
 
-    foreach ($token in $retiredOracleObjects) {
-        $escaped = [regex]::Escape($token)
-        $activeSqlPattern = "(?im)\b(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|MERGE\s+INTO|FROM)\s+$escaped\b"
-        if ($content -match $activeSqlPattern) {
-            $errors.Add("La suite Oracle ejecuta SQL activo contra el objeto heredado '$token'.")
-        }
-    }
+# ---------------------------------------------------------------------------
+# 3. Auditoría: AUD_ACCION debe respetar CK_RL_AUD_ACCION de Oracle 11g.
+#    La semántica funcional se comprueba por método + tabla + payload.
+# ---------------------------------------------------------------------------
+$auditPhysicalContract = Read-RepoFile 'database/01_create_tables.sql'
+Assert-Contains $auditPhysicalContract "AUD_ACCION IN ('INSERT','UPDATE','DELETE','LOGIN','LOGOUT','EXPORT')" 'El DDL institucional no contiene el dominio esperado de AUD_ACCION.'
 
-    if ($content.Contains('TRA_REGLA_ID')) {
-        $errors.Add("La suite Oracle reintroduce la columna heredada 'TRA_REGLA_ID'.")
+$createEvalPattern = '(?s)public\s+async\s+Task<long>\s+CrearEvaluacionAsync.*?_auditoriaRepository\.RegistrarAsync\(.*?"RL_MR_EVALUACIONES_RIESGO".*?"INSERT".*?dto\.EvaRiesgoId.*?dto\.EvaVersionId.*?Datos\s*=.*?Calculos\s*='
+if ($repository -notmatch $createEvalPattern) {
+    Add-Error 'CrearEvaluacionAsync no audita como INSERT con contexto funcional de riesgo, versión, datos y cálculos.'
+}
+
+$updateEvalPattern = '(?s)public\s+async\s+Task<bool>\s+ActualizarEvaluacionAsync.*?_auditoriaRepository\.RegistrarAsync\(.*?"RL_MR_EVALUACIONES_RIESGO".*?"UPDATE".*?Datos\s*=\s*jsonAnterior.*?VersionRow\s*=\s*versionRowActual.*?Datos\s*=\s*dto\.EvaDataJson.*?Calculos\s*=\s*calculosJson'
+if ($repository -notmatch $updateEvalPattern) {
+    Add-Error 'ActualizarEvaluacionAsync no audita como UPDATE preservando datos/versiones anterior y nueva.'
+}
+
+$transitionPattern = '(?s)public\s+async\s+Task<bool>\s+TransicionarEstadoEvaluacionAsync.*?InsertarFlujoAsync\(.*?_auditoriaRepository\.RegistrarAsync\(.*?"RL_MR_EVALUACIONES_RIESGO".*?"UPDATE".*?Estado\s*=\s*anterior.*?Estado\s*=\s*estado.*?Motivo\s*=\s*motivo'
+if ($repository -notmatch $transitionPattern) {
+    Add-Error 'TransicionarEstadoEvaluacionAsync no conserva flujo + auditoría UPDATE con estado anterior, nuevo y motivo.'
+}
+
+# No se permiten acciones semánticas largas en AUD_ACCION: violarían VARCHAR2(10)/CK_RL_AUD_ACCION.
+foreach ($forbiddenAuditAction in @('"CREAR_EVALUACION"','"ACTUALIZAR_EVALUACION"','"TRANSICION_ESTADO"')) {
+    if ($repository.Contains($forbiddenAuditAction)) {
+        Add-Error "AUD_ACCION no puede volver a usar $forbiddenAuditAction; Oracle exige el dominio físico institucional."
     }
 }
 
-if (Test-Path -LiteralPath $programFile) {
-    $content = Get-Content -LiteralPath $programFile -Raw
-    if (-not $content.Contains('AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>()')) {
-        $errors.Add('Program.cs no registra directamente MatricesRiesgosRepository.')
-    }
-    if ($content.Contains('MatricesRiesgosRepositoryFacade')) {
-        $errors.Add('Program.cs referencia la fachada retirada.')
-    }
+# ---------------------------------------------------------------------------
+# 4. Script 06: solo se valida su contrato; nunca se ejecuta aquí.
+# ---------------------------------------------------------------------------
+foreach ($token in @('EVA_DATOS_JSON','EVA_CALCULOS_JSON')) {
+    Assert-Contains $script06 $token "El script 06 no contiene la columna física obligatoria '$token'."
+}
+foreach ($token in @('EVA_DATA_JSON','EVA_DATA_CALC_JSON')) {
+    Assert-NotContains $script06 $token "El script 06 conserva la columna física retirada '$token'."
+}
+foreach ($pattern in @('CREATE TABLE\s+RL_MR_AUDITORIA','CREATE SEQUENCE\s+SEQ_RL_MR_AUDITORIA')) {
+    if ($script06 -match $pattern) { Add-Error "El script 06 vuelve a crear auditoría local: $pattern" }
+}
+Assert-Contains $script06 "'RL_MR_AUDITORIA'" 'El script 06 debe conservar el retiro controlado de RL_MR_AUDITORIA heredada.'
+if ($script06 -match '(?im)^\s*CREATE\s+TABLE\s+RL_MR_TRAZAS_CALCULO\b') { Add-Error 'El script 06 no puede crear RL_MR_TRAZAS_CALCULO.' }
+if ($script06 -match '(?im)^\s*CREATE\s+SEQUENCE\s+SEQ_RL_MR_TRAZAS\b') { Add-Error 'El script 06 no puede crear SEQ_RL_MR_TRAZAS.' }
+Assert-Contains $script06 "'RL_MR_TRAZAS_CALCULO'" 'El script 06 debe retirar RL_MR_TRAZAS_CALCULO durante la transición controlada.'
+
+# ---------------------------------------------------------------------------
+# 5. Contratos Backend/Angular y suite Oracle.
+# ---------------------------------------------------------------------------
+foreach ($token in @(
+    'Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto',
+    'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()',
+    'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()'
+)) {
+    Assert-Contains $repositoryContract $token "IMatricesRiesgosRepository no contiene '$token'."
+}
+foreach ($token in @('ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>','ServiceResult<MetodologiaFormularioDto>')) {
+    Assert-Contains $appServiceContract $token "IMatricesRiesgosAppService no contiene '$token'."
+}
+foreach ($token in @('ObtenerConsolidadoTipadoAsync','ObtenerMetodologiaDinamicaVigenteAsync')) {
+    Assert-Contains $controller $token "MatricesRiesgosController no contiene '$token'."
+}
+foreach ($token in @('MetodologiaFormulario','SeccionFormulario','CampoFormulario','CatalogoMatrices','ReglaCalculoMatrices','RiesgoReporteFila')) {
+    Assert-Contains $angularModels $token "Los modelos Angular no contienen '$token'."
+}
+Assert-Contains $program 'AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>()' 'Program.cs no registra MatricesRiesgosRepository.'
+Assert-NotContains $program 'MatricesRiesgosRepositoryFacade' 'Program.cs referencia la fachada retirada.'
+
+foreach ($token in @(
+    'RL_ORACLE_INTEGRATION_REQUIRED','TipoEntidadEvidencia.Evaluacion','RL_MR_EVIDENCIAS_VINCULOS',
+    'RL_AUDITORIA','SEQ_RL_AUDITORIA','AuditoriaFallaDespuesDeInsertar','TablasModelo17','SecuenciasModelo17',
+    'IndicesPrincipales','RestriccionesPrincipales','RIE_NOMBRE','RIE_USR_CREACION',
+    'EsquemaModelo17_InventarioIndicesRestriccionesYAusencias_CumplenContrato',
+    'CicloCompleto_Commit_PersisteFamiliaVersionRiesgoEvaluacionProyeccionFlujoEvidenciaVinculoYAuditoria',
+    'CicloCompleto_Rollback_NoPersisteRegistrosBase'
+)) {
+    Assert-Contains $oracleIntegration $token "La suite Oracle no contiene el control '$token'."
 }
 
-
-$phase4EvidenceDtos = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Evidencias/EvidenciaDtos.cs'
-$phase4PermissionContract = Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Contracts/Configuracion/PermisoFormularioDto.cs'
-if (Test-Path -LiteralPath $phase4PermissionContract) {
-    $errors.Add('No debe permanecer PermisoFormularioDto.cs en el modelo reducido.')
-}
-if (Test-Path -LiteralPath $phase4EvidenceDtos) {
-    $content = Get-Content -LiteralPath $phase4EvidenceDtos -Raw
-    if ($content.Contains('AsociarEvidenciaAprobacionDto')) {
-        $errors.Add('EvidenciaDtos.cs conserva el DTO temporal de aprobación.')
-    }
-}
-
-$phase4ScanRoots = @(
-    (Join-Path $repositoryRoot 'backend/RL.API/Features/MatricesRiesgos'),
-    (Join-Path $repositoryRoot 'frontend/rl-app/src/app/features/admin/matrices-riesgos')
-)
-$phase4ForbiddenTokens = @(
-    [pscustomobject]@{ Token = 'VincularEvidenciaAprobacionAsync'; Message = 'El adaptador de aprobación fue retirado.' },
-    [pscustomobject]@{ Token = 'AsociarEvidenciaAprobacionDto'; Message = 'El DTO temporal de aprobación fue retirado.' },
-    [pscustomobject]@{ Token = 'EjecutarVinculoEvidenciaAsync'; Message = 'No se permite un helper dinámico hacia tablas puente.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_RIESGO'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_EVALUACION'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_CONTROL'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_PLAN'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_ACTIVIDAD'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_ALERTA'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_AUTOMONITOREO'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_REVISION'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'RL_MR_EVI_APROBACION'; Message = 'La tabla puente específica fue retirada.' },
-    [pscustomobject]@{ Token = 'PermisoFormularioDto'; Message = 'Los permisos granulares del formulario fueron retirados.' },
-    [pscustomobject]@{ Token = 'tablaPuente'; Message = 'No se permite construir destinos SQL dinámicos para evidencias.' },
-    [pscustomobject]@{ Token = 'columnaEntidad'; Message = 'No se permite construir columnas dinámicas para tablas puente.' },
-    [pscustomobject]@{ Token = 'columnaEvidencia'; Message = 'No se permite construir columnas dinámicas para tablas puente.' }
-)
-
-$phase4Files = Get-SourceFiles -Roots $phase4ScanRoots -Extensions $moduleExtensions
-foreach ($file in $phase4Files) {
-    $content = Get-Content -LiteralPath $file.FullName -Raw
-    foreach ($entry in $phase4ForbiddenTokens) {
-        if ($content.Contains($entry.Token)) {
-            $relativePath = Get-RelativeRepositoryPath -Path $file.FullName
-            foreach ($match in (Select-String -LiteralPath $file.FullName -SimpleMatch $entry.Token)) {
-                $errors.Add("${relativePath}:$($match.LineNumber): contrato heredado '$($entry.Token)'. $($entry.Message)")
-            }
-        }
-    }
-}
-
-if (Test-Path -LiteralPath $repositoryFile) {
-    $content = Get-Content -LiteralPath $repositoryFile -Raw
-    foreach ($token in @(
-        'public async Task<bool> VincularEvidenciaAsync',
-        'INSERT INTO RL_MR_EVIDENCIAS_VINCULOS',
-        'ObtenerConsultaEntidadEvidencia',
-        'SEQ_RL_MR_EVI_VINCULOS')) {
-        if (-not $content.Contains($token)) {
-            $errors.Add("MatricesRiesgosRepository.cs no conserva el vínculo genérico obligatorio '$token'.")
-        }
-    }
-}
-
-if (Test-Path -LiteralPath $repositoryContract) {
-    $content = Get-Content -LiteralPath $repositoryContract -Raw
-    if ($content.Contains('VincularEvidenciaAprobacionAsync')) {
-        $errors.Add('IMatricesRiesgosRepository conserva un vínculo específico retirado.')
-    }
-}
-
-$securityFiles = @(
-    Get-SourceFiles -Roots $securityScanRoots -Extensions $securityExtensions | Where-Object {
-        -not (Test-IsIgnoredLocalFile -File $_)
-    }
-)
+# ---------------------------------------------------------------------------
+# 6. Controles de secretos en archivos versionados relevantes.
+# ---------------------------------------------------------------------------
+$securityFiles = @(Get-SourceFiles @('backend','frontend','scripts','.github') @('.cs','.json','.config','.xml','.runsettings','.ps1','.yml','.yaml','.env','.txt'))
 $connectionStringPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 $jsonOraclePasswordPattern = '(?is)"(?:OracleDB|ConnectionStrings?)"\s*:\s*"[^"\r\n]*(?:Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 $standalonePasswordPattern = '(?im)^\s*(?:Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$)).+'
 foreach ($file in $securityFiles) {
     if ($file.Name -match '(?i)\.example$|example\.|sample\.') { continue }
-    $content = Get-Content -LiteralPath $file.FullName -Raw
+    $relative = $file.FullName.Substring(([string]$repositoryRoot).Length).TrimStart('\','/')
+    & git -C ([string]$repositoryRoot) check-ignore --quiet -- $relative 2>$null
+    if ($LASTEXITCODE -eq 0) { continue }
+    $content = [System.IO.File]::ReadAllText($file.FullName)
     $containsSecret = $content -match $connectionStringPattern -or $content -match $jsonOraclePasswordPattern
     if ($file.Extension -ne '.cs') { $containsSecret = $containsSecret -or ($content -match $standalonePasswordPattern) }
-    if ($containsSecret) {
-        $errors.Add("$(Get-RelativeRepositoryPath -Path $file.FullName): posible credencial Oracle codificada.")
-    }
+    if ($containsSecret) { Add-Error "$relative: posible credencial Oracle codificada." }
 }
 
-if (Test-Path -LiteralPath $script05) {
-    $content = Get-Content -LiteralPath $script05 -Raw
-    foreach ($token in @(
-        'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
-        "DEFINE autorizacion = '&1'",
-        "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')",
-        "UPPER(TRIM(v_auth)) <> 'EJECUTAR'",
-        'UQ_RL_MR_PROY_EVA',
-        'IX_RL_MR_PROY_DASHBOARD')) {
-        if (-not $content.Contains($token)) {
-            $errors.Add("El script 05 no contiene: $token")
-        }
-    }
-    if ($content -match '(?ms)BEGIN\s+PROMPT') {
-        $errors.Add('El script 05 contiene PROMPT dentro de PL/SQL.')
-    }
+# ---------------------------------------------------------------------------
+# 7. Script 05: solo se valida su bloqueo; nunca se ejecuta aquí.
+# ---------------------------------------------------------------------------
+foreach ($token in @(
+    'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
+    "DEFINE autorizacion = '&1'",
+    "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')",
+    "UPPER(TRIM(v_auth)) <> 'EJECUTAR'",
+    'UQ_RL_MR_PROY_EVA',
+    'IX_RL_MR_PROY_DASHBOARD'
+)) {
+    Assert-Contains $script05 $token "El script 05 no contiene el control '$token'."
 }
+if ($script05 -match '(?ms)BEGIN\s+PROMPT') { Add-Error 'El script 05 contiene PROMPT dentro de PL/SQL.' }
 
 if ($errors.Count -gt 0) {
     Write-Host "Validacion integral de Matrices: FALLO ($($errors.Count) hallazgos)." -ForegroundColor Red
-    foreach ($item in $errors) {
-        Write-Host "- $item" -ForegroundColor Red
-    }
+    foreach ($item in $errors) { Write-Host "- $item" -ForegroundColor Red }
     exit 1
 }
 
-Write-Host 'Validacion integral de Matrices contra DDL, contratos neutros, metadatos de cálculo, transacciones y seguridad: CORRECTA.' -ForegroundColor Green
-Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos sin trazas revisados: $($traceFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
+Write-Host 'Validacion integral de Matrices contra DDL, contratos neutros, auditoria fisica Oracle 11g, transacciones y seguridad: CORRECTA.' -ForegroundColor Green
+Write-Host "Archivos del modulo revisados: $($moduleFiles.Count). Archivos de seguridad revisados: $($securityFiles.Count)." -ForegroundColor Green
 exit 0

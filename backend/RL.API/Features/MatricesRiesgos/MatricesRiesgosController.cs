@@ -34,7 +34,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     // ============================================================
 
     [HttpPost("formularios/borrador")]
-    [Authorize(Roles = "ADMIN, DBA, RIESGOS_ADMIN")]
+    [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Creación de borrador de formulario")]
     public async Task<IActionResult> CrearBorradorFormulario([FromQuery] long familiaId, [FromQuery] string codigoFormulario, [FromBody] string jsonConfig)
     {
@@ -51,7 +51,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPost("formularios/{id:long}/clonar")]
-    [Authorize(Roles = "ADMIN, DBA, RIESGOS_ADMIN")]
+    [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Clonación de versión de formulario")]
     public async Task<IActionResult> ClonarVersionFormulario(long id)
     {
@@ -68,7 +68,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPut("formularios/{id:long}")]
-    [Authorize(Roles = "ADMIN, DBA, RIESGOS_ADMIN")]
+    [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Actualización de borrador de formulario")]
     public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] string jsonConfig)
     {
@@ -85,7 +85,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPost("formularios/{id:long}/publicar")]
-    [Authorize(Roles = "ADMIN, DBA, RIESGOS_ADMIN")]
+    [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Publicación y vigencia de versión de formulario")]
     public async Task<IActionResult> PublicarVersionFormulario(long id)
     {
@@ -102,7 +102,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpPut("formularios/{id:long}/estado")]
-    [Authorize(Roles = "ADMIN, DBA, RIESGOS_ADMIN")]
+    [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Cambio de vigencia de versión de formulario")]
     public async Task<IActionResult> CambiarEstadoVigenciaFormulario(long id, [FromQuery] bool vigente)
     {

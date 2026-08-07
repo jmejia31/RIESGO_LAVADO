@@ -53,9 +53,11 @@ jobs:
           ./scripts/validation/validate_matrices_phase11_block1.ps1
           ./scripts/validation/validate_matrices_phase11_remaining_blocks.ps1
 
-      - name: Validate dynamic matrices alignment
+      - name: Validate dynamic matrices and authorization alignment
         shell: pwsh
-        run: ./scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
+        run: |
+          ./scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1
+          ./scripts/validation/validate_matrices_authorization_contract.ps1
 
       - name: Validate exact matrices object inventory
         shell: pwsh
