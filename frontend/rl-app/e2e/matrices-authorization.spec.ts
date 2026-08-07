@@ -124,7 +124,7 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
   await page.getByRole('button', { name: 'Clonar' }).click();
 
   await expect.poll(() => clonaciones).toBe(1);
-  await expect(page).not.toHaveURL(/\/acceso-denegado/);
+  await expect(page).not.toHaveURL(/\/sin-acceso/);
   await expect(page.getByRole('status')).toContainText('Versión clonada como borrador');
 });
 
@@ -139,6 +139,6 @@ test('un 403 real del Backend conserva la protección y redirige a Acceso Denega
   await page.getByRole('button', { name: 'Plantillas' }).click();
   await page.getByRole('button', { name: 'Clonar' }).click();
 
-  await expect(page).toHaveURL(/\/acceso-denegado$/);
+  await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Acceso Denegado' })).toBeVisible();
 });
