@@ -20,12 +20,13 @@
     </dl>
   }
 
-  <label class="block max-w-xl text-sm font-semibold">Evaluación
-    <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
+  <div class="max-w-xl">
+    <label for="evaluacion-monitoreo" class="block text-sm font-semibold">Evaluación</label>
+    <select id="evaluacion-monitoreo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
       <option value="0">Seleccione una evaluación</option>
       @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [value]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
     </select>
-  </label>
+  </div>
 
   @if (evaluacionId > 0) {
     <div class="grid gap-5 xl:grid-cols-2">
