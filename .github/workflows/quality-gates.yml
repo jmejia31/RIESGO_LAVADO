@@ -43,13 +43,23 @@ jobs:
         working-directory: frontend/rl-app
         run: npm ci
 
-      - name: Diagnose npm security advisories
+      - name: Simulate safe npm remediation
         working-directory: frontend/rl-app
         shell: bash
         run: |
-          echo '=== NPM AUDIT JSON BEGIN ==='
+          npm audit fix --package-lock-only --ignore-scripts || true
+          npm ci
+          echo '=== NPM AUDIT AFTER SAFE FIX BEGIN ==='
           npm audit --json || true
-          echo '=== NPM AUDIT JSON END ==='
+          echo '=== NPM AUDIT AFTER SAFE FIX END ==='
+
+      - name: Preserve remediated lockfile candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-security-lockfile-candidate
+          path: frontend/rl-app/package-lock.json
+          if-no-files-found: error
+          retention-days: 1
 
       - name: Validate database flows and Oracle preparation controls
         shell: pwsh
