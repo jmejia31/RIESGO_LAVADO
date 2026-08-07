@@ -37,7 +37,7 @@ foreach ($role in @('ADMINISTRADOR','SUPERVISOR','ANALISTA')) {
 }
 
 Require $authService 'new Claim(ClaimTypes.Role, usuario.Rol.RolNombre)' 'AuthService no emite el rol institucional real en ClaimTypes.Role.'
-Require $authService 'new Claim("modulos", modulosCsv)' 'AuthService no emite el claim de módulos institucional.'
+Require $authService 'new Claim("modulos", string.Join(",", usuario.ModulosIds ?? new List<int>()))' 'AuthService no emite el claim modulos desde los módulos reales del usuario.'
 
 Require $moduleAuthorize 'StatusCodes.Status403Forbidden' 'ModuloAuthorize no conserva respuesta 403.'
 Require $moduleAuthorize 'new UnauthorizedObjectResult' 'ModuloAuthorize no conserva respuesta 401 para no autenticados.'
@@ -51,28 +51,17 @@ foreach ($entry in @(
     @{ Name = 'MatricesRiesgosReportesController'; Content = $reportes }
 )) {
     Require $entry.Content '[Authorize]' "$($entry.Name) perdió [Authorize]."
-    if ($entry.Content -notmatch '\[ModuloAuthorize\((?:10|ModuloId)\)\]') {
-        $errors.Add("$($entry.Name) no conserva autorización del módulo 10.")
-    }
+    if ($entry.Content -notmatch '\[ModuloAuthorize\((?:10|ModuloId)\)\]') { $errors.Add("$($entry.Name) no conserva autorización del módulo 10.") }
     Forbid $entry.Content '[AllowAnonymous]' "$($entry.Name) no puede introducir [AllowAnonymous]."
 }
 
 $adminAttribute = '[Authorize(Roles = SystemRoles.Administrador)]'
 $adminAttributeCount = ([regex]::Matches($controller, [regex]::Escape($adminAttribute))).Count
-if ($adminAttributeCount -ne 5) {
-    $errors.Add("MatricesRiesgosController debe contener exactamente 5 protecciones administrativas canónicas; actual=$adminAttributeCount.")
-}
+if ($adminAttributeCount -ne 5) { $errors.Add("MatricesRiesgosController debe contener exactamente 5 protecciones administrativas canónicas; actual=$adminAttributeCount.") }
 
-foreach ($method in @(
-    'CrearBorradorFormulario',
-    'ClonarVersionFormulario',
-    'ActualizarBorradorFormulario',
-    'PublicarVersionFormulario',
-    'CambiarEstadoVigenciaFormulario'
-)) {
+foreach ($method in @('CrearBorradorFormulario','ClonarVersionFormulario','ActualizarBorradorFormulario','PublicarVersionFormulario','CambiarEstadoVigenciaFormulario')) {
     Require $controller $method "Falta la operación administrativa $method."
 }
-
 foreach ($legacy in @('ADMIN, DBA, RIESGOS_ADMIN','RIESGOS_ADMIN')) {
     Forbid $controller $legacy "MatricesRiesgosController conserva rol heredado/inexistente '$legacy'."
 }
@@ -84,9 +73,7 @@ foreach ($token in @(
     'ModuloMatrices_AdministradorConModulo10_PasaFiltroDeModulo',
     'OperacionesAdministrativasFormulario_ExigenAdministradorCanonico',
     'RolesAliasesHeredados_NoFormanParteDelContratoDePlantillas'
-)) {
-    Require $tests $token "La suite de autorización no contiene '$token'."
-}
+)) { Require $tests $token "La suite de autorización no contiene '$token'." }
 
 if ($errors.Count -gt 0) {
     Write-Host "VALIDACION AUTORIZACION MATRICES: INCORRECTA ($($errors.Count) hallazgos)" -ForegroundColor Red
