@@ -322,7 +322,7 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   const guardar = page.getByRole('button', { name: 'Guardar' });
   await expect(guardar).toBeDisabled();
 
-  await page.getByLabel('Riesgo').selectOption({ label: 'R-502 · Riesgo tecnológico' });
+  await page.locator('select').selectOption({ label: 'R-502 · Riesgo tecnológico' });
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
   await expect(guardar).toBeEnabled();
