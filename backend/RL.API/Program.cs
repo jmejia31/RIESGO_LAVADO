@@ -123,6 +123,7 @@ builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IListasRepository, ListasRepository>();
 builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
 builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
+builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
 
 // Proceso de negocio: registra servicios que concentran validaciones, auditoría y reglas funcionales.
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
@@ -139,6 +140,7 @@ builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
 builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
 builder.Services.AddScoped<IMatricesRiesgosAppService, MatricesRiesgosAppService>();
 builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestionService>();
+builder.Services.AddScoped<IMatricesRiesgosMitigacionService, MatricesRiesgosMitigacionService>();
 
 // Proceso de contexto: permite obtener IP, usuario y datos de solicitud para auditoría.
 builder.Services.AddHttpContextAccessor();
