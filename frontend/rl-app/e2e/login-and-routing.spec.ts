@@ -95,6 +95,27 @@ const metodologiaFormulario = {
   ],
 };
 
+const riesgos = [
+  {
+    rieId: 501,
+    rieCodigo: 'R-501',
+    rieNombre: 'Riesgo de cumplimiento',
+    rieDescripcion: 'Riesgo institucional de prueba E2E',
+    rieActivo: true,
+    rieUsrCreacion: 27,
+    rieFechaCreacion: '2026-08-03T09:00:00Z',
+  },
+  {
+    rieId: 502,
+    rieCodigo: 'R-502',
+    rieNombre: 'Riesgo tecnológico',
+    rieDescripcion: 'Riesgo tecnológico de prueba E2E',
+    rieActivo: true,
+    rieUsrCreacion: 27,
+    rieFechaCreacion: '2026-08-03T09:00:00Z',
+  },
+];
+
 const evaluaciones = [
   {
     evaId: 200,
@@ -196,6 +217,8 @@ async function stubAuthenticatedMatrices(page: Page) {
       datos = [versionFormulario];
     } else if (path.endsWith('/consolidado')) {
       datos = consolidadoTipado;
+    } else if (path.endsWith('/riesgos') && method === 'GET') {
+      datos = riesgos;
     } else if (path.endsWith('/evaluaciones') && method === 'GET') {
       datos = evaluaciones;
     } else if (path.endsWith('/evaluaciones') && method === 'POST') {
@@ -299,7 +322,7 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   const guardar = page.getByRole('button', { name: 'Guardar' });
   await expect(guardar).toBeDisabled();
 
-  await page.getByLabel('Riesgo ID').fill('502');
+  await page.getByLabel('Riesgo').selectOption({ label: 'R-502 · Riesgo tecnológico' });
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
   await expect(guardar).toBeEnabled();
