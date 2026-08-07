@@ -43,6 +43,14 @@ jobs:
         working-directory: frontend/rl-app
         run: npm ci
 
+      - name: Diagnose npm security advisories
+        working-directory: frontend/rl-app
+        shell: bash
+        run: |
+          echo '=== NPM AUDIT JSON BEGIN ==='
+          npm audit --json || true
+          echo '=== NPM AUDIT JSON END ==='
+
       - name: Validate database flows and Oracle preparation controls
         shell: pwsh
         run: |
