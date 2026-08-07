@@ -48,6 +48,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
         catalogos: [],
         reglas: []
       })),
+      listarRiesgos: vi.fn().mockReturnValue(of([{ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo', rieActivo: true }])),
       listarEvaluaciones: vi.fn().mockReturnValue(of([evaluacion])),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([version])),
