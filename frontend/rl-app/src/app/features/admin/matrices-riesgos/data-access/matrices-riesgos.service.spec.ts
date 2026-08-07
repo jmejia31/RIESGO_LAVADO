@@ -32,9 +32,7 @@ describe('MatricesRiesgosService', () => {
       catalogos: [],
       reglas: []
     };
-
     service.metodologiaVigente().subscribe(resultado);
-
     const request = http.expectOne(`${apiUrl}/metodologia/vigente`);
     expect(request.request.method).toBe('GET');
     request.flush({ success: true, datos: metodologia });
@@ -58,22 +56,35 @@ describe('MatricesRiesgosService', () => {
       estadoEvaluacion: 'APROBADA',
       fechaEvaluacion: '2026-08-03T10:00:00'
     }];
-
     service.obtenerConsolidado().subscribe(resultado);
-
     const request = http.expectOne(`${apiUrl}/consolidado`);
     expect(request.request.method).toBe('GET');
     request.flush({ success: true, datos: filas });
     expect(resultado).toHaveBeenCalledWith(filas);
   });
 
-  it('lista evaluaciones con paginación compatible con el backend', () => {
-    service.listarEvaluaciones({
-      estado: 'BORRADOR',
-      pagina: 2,
-      registrosPorPagina: 25
-    }).subscribe();
+  it('lista riesgos maestros desde Oracle', () => {
+    const observer = vi.fn();
+    service.listarRiesgos().subscribe(observer);
+    const request = http.expectOne(req => req.url === `${apiUrl}/riesgos`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.get('incluirInactivos')).toBe('false');
+    request.flush({ success: true, datos: [{ rieId: 1, rieCodigo: 'R-001' }] });
+    expect(observer).toHaveBeenCalledWith([{ rieId: 1, rieCodigo: 'R-001' }]);
+  });
 
+  it('crea riesgo maestro con confirmación de cambio', () => {
+    const dto = { rieCodigo: 'R-001', rieNombre: 'Riesgo', rieDescripcion: 'Descripción', rieActivo: true };
+    service.crearRiesgo(dto).subscribe();
+    const request = http.expectOne(`${apiUrl}/riesgos`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(dto);
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 1 });
+  });
+
+  it('lista evaluaciones con paginación compatible con el backend', () => {
+    service.listarEvaluaciones({ estado: 'BORRADOR', pagina: 2, registrosPorPagina: 25 }).subscribe();
     const request = http.expectOne(req => req.url === `${apiUrl}/evaluaciones`);
     expect(request.request.params.get('estado')).toBe('BORRADOR');
     expect(request.request.params.get('pagina')).toBe('2');
@@ -94,9 +105,7 @@ describe('MatricesRiesgosService', () => {
       evaVersionRow: 1,
       evaActivo: true
     };
-
     service.crearEvaluacion(dto).subscribe();
-
     const request = http.expectOne(`${apiUrl}/evaluaciones`);
     expect(request.request.method).toBe('POST');
     expect(request.request.body).toEqual(dto);
@@ -106,7 +115,6 @@ describe('MatricesRiesgosService', () => {
 
   it('transiciona una evaluación mediante el endpoint canónico', () => {
     service.transicionarEvaluacion(15, 'EN_REVISION', 'Captura completada').subscribe();
-
     const request = http.expectOne(req => req.url === `${apiUrl}/evaluaciones/15/transiciones`);
     expect(request.request.method).toBe('POST');
     expect(request.request.params.get('nuevoEstado')).toBe('EN_REVISION');
@@ -118,7 +126,6 @@ describe('MatricesRiesgosService', () => {
   it('crea un borrador de formulario con familia y código', () => {
     const resultado = vi.fn();
     service.crearBorradorFormulario(1, 'FORM_A', '{"secciones":[]}').subscribe(resultado);
-
     const request = http.expectOne(req => req.url === `${apiUrl}/formularios/borrador`);
     expect(request.request.method).toBe('POST');
     expect(request.request.params.get('familiaId')).toBe('1');
@@ -128,10 +135,70 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith(22);
   });
 
+  it('crea control y plan mediante contratos reducidos de 17 tablas', () => {
+    service.crearControl({
+      conEvaluacionId: 15,
+      conTipo: 'PREVENTIVO',
+      conDescripcion: 'Control institucional',
+      conAutomatizacion: 'MANUAL',
+      conEstado: 'ACTIVO'
+    }).subscribe();
+    const control = http.expectOne(`${apiUrl}/mitigacion/controles`);
+    expect(control.request.method).toBe('POST');
+    expect(control.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    control.flush({ success: true, datos: 9 });
+
+    service.crearPlan({
+      plaEvaluacionId: 15,
+      plaDescripcion: 'Mitigación',
+      plaAvance: 0,
+      plaPresupuesto: 1000,
+      plaFechaInicio: '2026-08-07',
+      plaFechaFin: '2026-09-07',
+      plaEstado: 'ABIERTO'
+    }).subscribe();
+    const plan = http.expectOne(`${apiUrl}/mitigacion/planes`);
+    expect(plan.request.method).toBe('POST');
+    expect(plan.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    plan.flush({ success: true, datos: 4 });
+  });
+
+  it('opera alertas y automonitoreo por endpoints del Bloque 5', () => {
+    service.crearAlerta({ aleEvaluacionId: 15, aleCodigo: 'ALE-01', aleIndicador: 'Indicador', aleEstado: 'ACTIVO' }).subscribe();
+    const alerta = http.expectOne(`${apiUrl}/monitoreo/alertas`);
+    expect(alerta.request.method).toBe('POST');
+    expect(alerta.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    alerta.flush({ success: true, datos: 2 });
+
+    service.registrarAutomonitoreo({
+      monEvaluacionId: 15,
+      monEstadoRiesgo: 'ALTO',
+      monEstadoContr: 'EN_SEGUIMIENTO',
+      monResultado: 'Sin novedades'
+    }).subscribe();
+    const monitor = http.expectOne(`${apiUrl}/monitoreo/automonitoreo`);
+    expect(monitor.request.method).toBe('POST');
+    expect(monitor.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    monitor.flush({ success: true, datos: 3 });
+  });
+
+  it('descarga los reportes consolidados como blobs Excel y PDF', () => {
+    service.descargarConsolidadoExcel().subscribe();
+    const excel = http.expectOne(`${apiUrl}/reportes/consolidado.xlsx`);
+    expect(excel.request.method).toBe('GET');
+    expect(excel.request.responseType).toBe('blob');
+    excel.flush(new Blob(['xlsx']));
+
+    service.descargarConsolidadoPdf().subscribe();
+    const pdf = http.expectOne(`${apiUrl}/reportes/consolidado.pdf`);
+    expect(pdf.request.method).toBe('GET');
+    expect(pdf.request.responseType).toBe('blob');
+    pdf.flush(new Blob(['pdf']));
+  });
+
   it('carga y vincula una evidencia a una evaluación', () => {
     const archivo = new File(['evidencia'], 'evidencia.pdf', { type: 'application/pdf' });
     service.cargarEvidencia(archivo).subscribe();
-
     const carga = http.expectOne(`${apiUrl}/evidencias/cargar`);
     expect(carga.request.method).toBe('POST');
     expect(carga.request.body instanceof FormData).toBe(true);
@@ -146,11 +213,11 @@ describe('MatricesRiesgosService', () => {
     vinculo.flush({ success: true });
   });
 
-  it('no expone métodos del modelo heredado', () => {
+  it('no reintroduce métodos del modelo heredado retirado', () => {
     const metodos = service as unknown as Record<string, unknown>;
     expect('dashboard' in metodos).toBe(false);
     expect('listarCriterios' in metodos).toBe(false);
-    expect('crearPlan' in metodos).toBe(false);
     expect('recalcular' in metodos).toBe(false);
+    expect('guardarMatriz' in metodos).toBe(false);
   });
 });
