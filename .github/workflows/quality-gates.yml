@@ -39,19 +39,19 @@ jobs:
       - name: Restore backend
         run: dotnet restore RIESGO_LAVADO.sln
 
-      - name: Install frontend dependencies
-        working-directory: frontend/rl-app
-        run: npm ci
-
-      - name: Simulate safe npm remediation
+      - name: Build remediated npm lockfile candidate
         working-directory: frontend/rl-app
         shell: bash
         run: |
+          npm install --package-lock-only --ignore-scripts
           npm audit fix --package-lock-only --ignore-scripts || true
           npm ci
-          echo '=== NPM AUDIT AFTER SAFE FIX BEGIN ==='
+          echo '=== NPM AUDIT AFTER TARGETED REMEDIATION BEGIN ==='
           npm audit --json || true
-          echo '=== NPM AUDIT AFTER SAFE FIX END ==='
+          echo '=== NPM AUDIT AFTER TARGETED REMEDIATION END ==='
+          echo '=== PACKAGE LOCK DIFF BEGIN ==='
+          git diff -- package-lock.json
+          echo '=== PACKAGE LOCK DIFF END ==='
 
       - name: Preserve remediated lockfile candidate
         uses: actions/upload-artifact@v4
