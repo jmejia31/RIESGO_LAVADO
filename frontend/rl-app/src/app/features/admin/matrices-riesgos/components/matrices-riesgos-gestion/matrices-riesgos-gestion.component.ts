@@ -43,14 +43,14 @@ export class MatricesRiesgosGestionComponent implements OnInit {
     });
   }
 
-  nuevo(): void {
+  nuevo(limpiarMensajes = true): void {
     this.editandoId.set(0);
     this.codigo = '';
     this.nombre = '';
     this.descripcion = '';
     this.activo = true;
     this.error.set(null);
-    this.mensaje.set(null);
+    if (limpiarMensajes) this.mensaje.set(null);
   }
 
   editar(riesgo: RiesgoDto): void {
@@ -93,7 +93,7 @@ export class MatricesRiesgosGestionComponent implements OnInit {
       next: () => {
         this.guardando.set(false);
         this.mensaje.set(id > 0 ? 'Riesgo actualizado correctamente.' : 'Riesgo creado correctamente.');
-        this.nuevo();
+        this.nuevo(false);
         this.cargar();
       },
       error: (error: unknown) => {
