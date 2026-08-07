@@ -1,0 +1,77 @@
+-- ============================================================
+-- FASE 11 - BLOQUE 2
+-- Gestión de Riesgos y Evaluaciones - validación de solo lectura
+-- ============================================================
+SET SERVEROUTPUT ON SIZE UNLIMITED
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+
+PROMPT === CONTEOS OPERATIVOS ===
+SELECT 'RL_MR_RIESGOS' OBJETO, COUNT(*) TOTAL FROM RL_MR_RIESGOS
+UNION ALL SELECT 'RL_MR_EVALUACIONES_RIESGO', COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO
+UNION ALL SELECT 'RL_MR_PROYECCIONES_EVALUACION', COUNT(*) FROM RL_MR_PROYECCIONES_EVALUACION;
+
+PROMPT === RIESGOS ACTIVOS ===
+SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_ACTIVO, RIE_USR_CREACION, RIE_FECHA_CREACION
+  FROM RL_MR_RIESGOS
+ ORDER BY RIE_CODIGO;
+
+PROMPT === EVALUACIONES Y PROYECCION ===
+SELECT e.EVA_ID, e.EVA_RIESGO_ID, e.EVA_VERSION_ID, e.EVA_VERSION_ROW, e.EVA_ACTIVO,
+       p.PROY_ID, p.PROY_VRI, p.PROY_VRR, p.PROY_NIVEL_INHERENTE, p.PROY_NIVEL_RESIDUAL,
+       p.PROY_ESTADO_EVALUACION
+  FROM RL_MR_EVALUACIONES_RIESGO e
+  LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
+ ORDER BY e.EVA_ID;
+
+DECLARE
+    v_count NUMBER;
+    PROCEDURE exigir(p_cond BOOLEAN, p_code NUMBER, p_message VARCHAR2) IS
+    BEGIN
+        IF NOT p_cond THEN RAISE_APPLICATION_ERROR(p_code, p_message); END IF;
+    END;
+BEGIN
+    exigir(UPPER(SYS_CONTEXT('USERENV','CURRENT_SCHEMA')) = 'RIESGO_LAVADO', -21301,
+           'CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
+
+    SELECT COUNT(*) INTO v_count FROM (
+        SELECT RIE_CODIGO FROM RL_MR_RIESGOS GROUP BY RIE_CODIGO HAVING COUNT(*) > 1
+    );
+    exigir(v_count = 0, -21302, 'Existen códigos de riesgo duplicados.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_RIESGOS r
+     WHERE NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = r.RIE_USR_CREACION);
+    exigir(v_count = 0, -21303, 'Existen riesgos con usuario de creación inválido.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_EVALUACIONES_RIESGO e
+     WHERE NOT EXISTS (SELECT 1 FROM RL_MR_RIESGOS r WHERE r.RIE_ID = e.EVA_RIESGO_ID)
+        OR NOT EXISTS (SELECT 1 FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_ID = e.EVA_VERSION_ID)
+        OR NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = e.EVA_USR_REGISTRO);
+    exigir(v_count = 0, -21304, 'Existen evaluaciones con referencias inválidas.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_EVALUACIONES_RIESGO e
+     WHERE e.EVA_ACTIVO = 1
+       AND (DBMS_LOB.GETLENGTH(e.EVA_DATOS_JSON) = 0 OR DBMS_LOB.GETLENGTH(e.EVA_CALCULOS_JSON) = 0);
+    exigir(v_count = 0, -21305, 'Existen evaluaciones activas con JSON vacío.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_EVALUACIONES_RIESGO e
+     WHERE e.EVA_ACTIVO = 1
+       AND (SELECT COUNT(*) FROM RL_MR_PROYECCIONES_EVALUACION p WHERE p.PROY_EVALUACION_ID = e.EVA_ID) <> 1;
+    exigir(v_count = 0, -21306, 'Cada evaluación activa debe tener exactamente una proyección.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_PROYECCIONES_EVALUACION p
+     WHERE NOT EXISTS (SELECT 1 FROM RL_MR_EVALUACIONES_RIESGO e WHERE e.EVA_ID = p.PROY_EVALUACION_ID);
+    exigir(v_count = 0, -21307, 'Existen proyecciones huérfanas.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_PROYECCIONES_EVALUACION
+     WHERE PROY_VRI < 1 OR PROY_VRI > 9 OR PROY_VRR < 1 OR PROY_VRR > 9;
+    exigir(v_count = 0, -21308, 'Existen proyecciones fuera del dominio institucional 1-9.');
+
+    DBMS_OUTPUT.PUT_LINE('VALIDACION FASE 11 BLOQUE 2: CORRECTA');
+END;
+/
