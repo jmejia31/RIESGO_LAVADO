@@ -25,6 +25,7 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
 
     [HttpGet("consolidado.xlsx")]
     [Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")]
+    [AuditRequired("Descarga de reporte consolidado Excel")]
     public async Task<IActionResult> DescargarExcel()
     {
         var resultado = await _matrices.ObtenerConsolidadoTipadoAsync();
@@ -37,6 +38,7 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
 
     [HttpGet("consolidado.pdf")]
     [Produces("application/pdf")]
+    [AuditRequired("Descarga de reporte consolidado PDF")]
     public async Task<IActionResult> DescargarPdf()
     {
         var resultado = await _matrices.ObtenerConsolidadoTipadoAsync();
