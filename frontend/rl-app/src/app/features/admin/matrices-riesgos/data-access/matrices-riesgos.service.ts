@@ -14,6 +14,23 @@ import {
   VincularEvidenciaDto,
   VersionFormularioDto
 } from '../models/matrices-riesgos.models';
+import {
+  ActividadPlanDto,
+  ActividadPlanGuardarDto,
+  AutomonitoreoDto,
+  AutomonitoreoGuardarDto,
+  ControlRiesgoDto,
+  ControlRiesgoGuardarDto,
+  EvaluacionControlDto,
+  EvaluacionControlGuardarDto,
+  PlanMitigacionDto,
+  PlanMitigacionGuardarDto,
+  ResumenMatricesOperativoDto,
+  RiesgoDto,
+  RiesgoGuardarDto,
+  SenalAlertaDto,
+  SenalAlertaGuardarDto
+} from '../models/matrices-riesgos-fase11.models';
 
 export type ApiResponse<T> = { success: boolean; datos: T; mensaje?: string };
 export type ApiMessage = { success: boolean; mensaje?: string; datos?: number };
@@ -104,6 +121,29 @@ export class MatricesRiesgosService {
     );
   }
 
+  listarRiesgos(incluirInactivos = false): Observable<RiesgoDto[]> {
+    const params = new HttpParams().set('incluirInactivos', String(incluirInactivos));
+    return this.http
+      .get<ApiResponse<RiesgoDto[]>>(`${this.apiUrl}/riesgos`, { params })
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerRiesgo(id: number): Observable<RiesgoDto> {
+    return this.http
+      .get<ApiResponse<RiesgoDto>>(`${this.apiUrl}/riesgos/${id}`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearRiesgo(dto: RiesgoGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/riesgos`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarRiesgo(id: number, dto: RiesgoGuardarDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/riesgos/${id}`, dto, this.confirmado);
+  }
+
   listarEvaluaciones(
     filtro: ConsultaEvaluacionPaginadaDto
   ): Observable<EvaluacionRiesgoDto[]> {
@@ -153,17 +193,123 @@ export class MatricesRiesgosService {
     );
   }
 
+  obtenerFlujos(id: number): Observable<FlujoEvaluacionDto[]> {
+    return this.http
+      .get<ApiResponse<FlujoEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/flujos`)
+      .pipe(map(response => response.datos));
+  }
+
+  listarControles(evaluacionId: number): Observable<ControlRiesgoDto[]> {
+    return this.http
+      .get<ApiResponse<ControlRiesgoDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/controles`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearControl(dto: ControlRiesgoGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/controles`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarControl(id: number, dto: ControlRiesgoGuardarDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/mitigacion/controles/${id}`, dto, this.confirmado);
+  }
+
+  listarEvaluacionesControl(controlId: number): Observable<EvaluacionControlDto[]> {
+    return this.http
+      .get<ApiResponse<EvaluacionControlDto[]>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`)
+      .pipe(map(response => response.datos));
+  }
+
+  evaluarControl(controlId: number, dto: EvaluacionControlGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/controles/${controlId}/evaluaciones`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  listarPlanes(evaluacionId: number): Observable<PlanMitigacionDto[]> {
+    return this.http
+      .get<ApiResponse<PlanMitigacionDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/planes`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearPlan(dto: PlanMitigacionGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/planes`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarPlan(id: number, dto: PlanMitigacionGuardarDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/mitigacion/planes/${id}`, dto, this.confirmado);
+  }
+
+  listarActividades(planId: number): Observable<ActividadPlanDto[]> {
+    return this.http
+      .get<ApiResponse<ActividadPlanDto[]>>(`${this.apiUrl}/mitigacion/planes/${planId}/actividades`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearActividad(dto: ActividadPlanGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/mitigacion/actividades`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarActividad(id: number, dto: ActividadPlanGuardarDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/mitigacion/actividades/${id}`, dto, this.confirmado);
+  }
+
+  listarAlertas(evaluacionId: number): Observable<SenalAlertaDto[]> {
+    return this.http
+      .get<ApiResponse<SenalAlertaDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/alertas`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearAlerta(dto: SenalAlertaGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/alertas`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  cambiarEstadoAlerta(id: number, estado: 'ACTIVO' | 'INACTIVO'): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(
+      `${this.apiUrl}/monitoreo/alertas/${id}/estado`,
+      { aleEstado: estado },
+      this.confirmado
+    );
+  }
+
+  listarAutomonitoreo(evaluacionId: number): Observable<AutomonitoreoDto[]> {
+    return this.http
+      .get<ApiResponse<AutomonitoreoDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/automonitoreo`)
+      .pipe(map(response => response.datos));
+  }
+
+  registrarAutomonitoreo(dto: AutomonitoreoGuardarDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/monitoreo/automonitoreo`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerResumenOperativo(): Observable<ResumenMatricesOperativoDto> {
+    return this.http
+      .get<ApiResponse<ResumenMatricesOperativoDto>>(`${this.apiUrl}/monitoreo/resumen`)
+      .pipe(map(response => response.datos));
+  }
+
+  descargarConsolidadoExcel(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/reportes/consolidado.xlsx`, { responseType: 'blob' });
+  }
+
+  descargarConsolidadoPdf(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/reportes/consolidado.pdf`, { responseType: 'blob' });
+  }
+
   cargarEvidencia(archivo: File): Observable<EvidenciaDto> {
     const form = new FormData();
     form.append('archivo', archivo);
     return this.http
       .post<ApiResponse<EvidenciaDto>>(`${this.apiUrl}/evidencias/cargar`, form, this.confirmado)
-      .pipe(map(response => response.datos));
-  }
-
-  obtenerFlujos(id: number): Observable<FlujoEvaluacionDto[]> {
-    return this.http
-      .get<ApiResponse<FlujoEvaluacionDto[]>>(`${this.apiUrl}/evaluaciones/${id}/flujos`)
       .pipe(map(response => response.datos));
   }
 
