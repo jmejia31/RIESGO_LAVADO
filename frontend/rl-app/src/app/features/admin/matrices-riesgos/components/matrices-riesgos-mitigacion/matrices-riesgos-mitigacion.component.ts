@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto } from '../../models/matrices-riesgos.models';
 import {
@@ -87,10 +88,10 @@ export class MatricesRiesgosMitigacionComponent {
             this.planes.set(planes);
             this.cargando.set(false);
           },
-          error: error => this.finalizarError(error, 'No se pudieron cargar los planes de mitigación.')
+          error: (error: unknown) => this.finalizarError(error, 'No se pudieron cargar los planes de mitigación.')
         });
       },
-      error: error => this.finalizarError(error, 'No se pudieron cargar los controles.')
+      error: (error: unknown) => this.finalizarError(error, 'No se pudieron cargar los controles.')
     });
   }
 
@@ -126,7 +127,7 @@ export class MatricesRiesgosMitigacionComponent {
       conEstado: this.controlEstado.trim() || 'ACTIVO'
     };
     this.guardando.set(true);
-    const solicitud = this.controlEditandoId > 0
+    const solicitud: Observable<unknown> = this.controlEditandoId > 0
       ? this.service.actualizarControl(this.controlEditandoId, dto)
       : this.service.crearControl(dto);
     solicitud.subscribe({
@@ -136,7 +137,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.nuevoControl();
         this.cargarMitigacion();
       },
-      error: error => this.finalizarGuardadoError(error, 'No se pudo guardar el control.')
+      error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar el control.')
     });
   }
 
@@ -144,7 +145,7 @@ export class MatricesRiesgosMitigacionComponent {
     this.controlSeleccionadoId = controlId;
     this.service.listarEvaluacionesControl(controlId).subscribe({
       next: items => this.evaluacionesControl.set(items),
-      error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar la efectividad del control.'))
+      error: (error: unknown) => this.error.set(this.mensajeError(error, 'No se pudo cargar la efectividad del control.'))
     });
   }
 
@@ -166,7 +167,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.mensaje.set('Efectividad del control registrada correctamente.');
         this.cargarEvaluacionesControl(this.controlSeleccionadoId);
       },
-      error: error => this.finalizarGuardadoError(error, 'No se pudo registrar la efectividad del control.')
+      error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo registrar la efectividad del control.')
     });
   }
 
@@ -211,7 +212,7 @@ export class MatricesRiesgosMitigacionComponent {
       plaEstado: this.planEstado.trim() || 'ABIERTO'
     };
     this.guardando.set(true);
-    const solicitud = this.planEditandoId > 0
+    const solicitud: Observable<unknown> = this.planEditandoId > 0
       ? this.service.actualizarPlan(this.planEditandoId, dto)
       : this.service.crearPlan(dto);
     solicitud.subscribe({
@@ -221,7 +222,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.nuevoPlan();
         this.cargarMitigacion();
       },
-      error: error => this.finalizarGuardadoError(error, 'No se pudo guardar el plan de mitigación.')
+      error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar el plan de mitigación.')
     });
   }
 
@@ -229,7 +230,7 @@ export class MatricesRiesgosMitigacionComponent {
     this.planSeleccionadoId = planId;
     this.service.listarActividades(planId).subscribe({
       next: actividades => this.actividades.set(actividades),
-      error: error => this.error.set(this.mensajeError(error, 'No se pudieron cargar las actividades.'))
+      error: (error: unknown) => this.error.set(this.mensajeError(error, 'No se pudieron cargar las actividades.'))
     });
   }
 
@@ -273,7 +274,7 @@ export class MatricesRiesgosMitigacionComponent {
       actEstado: this.actividadEstado.trim() || 'PENDIENTE'
     };
     this.guardando.set(true);
-    const solicitud = this.actividadEditandoId > 0
+    const solicitud: Observable<unknown> = this.actividadEditandoId > 0
       ? this.service.actualizarActividad(this.actividadEditandoId, dto)
       : this.service.crearActividad(dto);
     solicitud.subscribe({
@@ -283,7 +284,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.nuevaActividad();
         this.cargarActividades(this.planSeleccionadoId);
       },
-      error: error => this.finalizarGuardadoError(error, 'No se pudo guardar la actividad.')
+      error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar la actividad.')
     });
   }
 

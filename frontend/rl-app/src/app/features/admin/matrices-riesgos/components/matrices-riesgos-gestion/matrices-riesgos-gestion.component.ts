@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase11.models';
 
@@ -38,7 +39,7 @@ export class MatricesRiesgosGestionComponent implements OnInit {
         this.riesgos.set(riesgos);
         this.cargando.set(false);
       },
-      error: error => this.finalizarError(error, 'No se pudieron cargar los riesgos.')
+      error: (error: unknown) => this.finalizarError(error, 'No se pudieron cargar los riesgos.')
     });
   }
 
@@ -85,7 +86,9 @@ export class MatricesRiesgosGestionComponent implements OnInit {
     this.guardando.set(true);
     this.error.set(null);
     const id = this.editandoId();
-    const solicitud = id > 0 ? this.service.actualizarRiesgo(id, dto) : this.service.crearRiesgo(dto);
+    const solicitud: Observable<unknown> = id > 0
+      ? this.service.actualizarRiesgo(id, dto)
+      : this.service.crearRiesgo(dto);
     solicitud.subscribe({
       next: () => {
         this.guardando.set(false);
@@ -93,7 +96,7 @@ export class MatricesRiesgosGestionComponent implements OnInit {
         this.nuevo();
         this.cargar();
       },
-      error: error => {
+      error: (error: unknown) => {
         this.guardando.set(false);
         this.error.set(this.mensajeError(error, 'No se pudo guardar el riesgo.'));
       }
