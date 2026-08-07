@@ -79,13 +79,49 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
 
 test('UAT registra control, efectividad, plan y actividad', async ({ page }) => {
   const recibidos: Record<string, any> = {};
+  let controlCreado = false;
+  let planCreado = false;
+
   await page.route('**/api/matrices-riesgos/mitigacion/**', route => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
-    if (req.method() === 'POST' && path.endsWith('/mitigacion/controles')) { recibidos.control = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 31 }) }); }
-    if (req.method() === 'POST' && path.endsWith('/mitigacion/controles/31/evaluaciones')) { recibidos.efectividad = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 32 }) }); }
-    if (req.method() === 'POST' && path.endsWith('/mitigacion/planes')) { recibidos.plan = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 41 }) }); }
-    if (req.method() === 'POST' && path.endsWith('/mitigacion/actividades')) { recibidos.actividad = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 51 }) }); }
+
+    if (req.method() === 'POST' && path.endsWith('/mitigacion/controles')) {
+      recibidos.control = req.postDataJSON();
+      controlCreado = true;
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 31 }) });
+    }
+    if (req.method() === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/controles')) {
+      const datos = controlCreado
+        ? [{ conId: 31, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'Control preventivo UAT', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }]
+        : [];
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
+    }
+    if (req.method() === 'POST' && path.endsWith('/mitigacion/controles/31/evaluaciones')) {
+      recibidos.efectividad = req.postDataJSON();
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 32 }) });
+    }
+    if (req.method() === 'GET' && path.endsWith('/mitigacion/controles/31/evaluaciones')) {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) });
+    }
+    if (req.method() === 'POST' && path.endsWith('/mitigacion/planes')) {
+      recibidos.plan = req.postDataJSON();
+      planCreado = true;
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 41 }) });
+    }
+    if (req.method() === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/planes')) {
+      const datos = planCreado
+        ? [{ plaId: 41, plaEvaluacionId: 20, plaDescripcion: 'Plan UAT', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-08-08T00:00:00Z', plaEstado: 'ABIERTO' }]
+        : [];
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
+    }
+    if (req.method() === 'POST' && path.endsWith('/mitigacion/actividades')) {
+      recibidos.actividad = req.postDataJSON();
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 51 }) });
+    }
+    if (req.method() === 'GET' && path.endsWith('/mitigacion/planes/41/actividades')) {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) });
+    }
     return route.fallback();
   });
 
@@ -95,9 +131,6 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
   await page.getByRole('button', { name: 'Crear control' }).click();
   await expect.poll(() => recibidos.control?.conEvaluacionId).toBe(20);
-
-  await page.route('**/api/matrices-riesgos/mitigacion/evaluaciones/20/controles', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ conId: 31, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'Control preventivo UAT', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }] }) }));
-  await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
   await page.getByRole('button', { name: 'Editar / evaluar' }).click();
   await page.getByLabel('Efectividad %').fill('85');
   await page.getByRole('button', { name: 'Registrar efectividad' }).click();
@@ -106,9 +139,6 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
   await page.getByRole('button', { name: 'Crear plan' }).click();
   await expect.poll(() => recibidos.plan?.plaEvaluacionId).toBe(20);
-
-  await page.route('**/api/matrices-riesgos/mitigacion/evaluaciones/20/planes', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ plaId: 41, plaEvaluacionId: 20, plaDescripcion: 'Plan UAT', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-08-08T00:00:00Z', plaEstado: 'ABIERTO' }] }) }));
-  await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
   await page.getByRole('button', { name: 'Editar / actividades' }).click();
   await page.getByLabel('Descripción', { exact: true }).last().fill('Actividad UAT');
   await page.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
