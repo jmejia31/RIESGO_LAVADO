@@ -12,6 +12,7 @@ import {
   RiesgoReporteFila,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
+import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
@@ -34,6 +35,7 @@ export class MatricesRiesgosComponent implements OnInit {
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
+  readonly riesgos = signal<RiesgoDto[]>([]);
   readonly evaluaciones = signal<EvaluacionRiesgoDto[]>([]);
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
@@ -87,6 +89,7 @@ export class MatricesRiesgosComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.cargarRiesgos();
     this.cargarModulo();
   }
 
@@ -111,6 +114,13 @@ export class MatricesRiesgosComponent implements OnInit {
         this.cargarEvaluaciones();
       },
       error: error => this.finalizarConError(error, 'No se pudo cargar la versión vigente del formulario.')
+    });
+  }
+
+  cargarRiesgos(): void {
+    this.service.listarRiesgos().subscribe({
+      next: riesgos => this.riesgos.set(riesgos),
+      error: () => this.riesgos.set([])
     });
   }
 
@@ -149,6 +159,25 @@ export class MatricesRiesgosComponent implements OnInit {
         this.cargando.set(false);
       },
       error: error => this.finalizarConError(error, 'No se pudo cargar la matriz consolidada.')
+    });
+  }
+
+  descargarConsolidado(formato: 'excel' | 'pdf'): void {
+    this.error.set(null);
+    const solicitud = formato === 'excel'
+      ? this.service.descargarConsolidadoExcel()
+      : this.service.descargarConsolidadoPdf();
+
+    solicitud.subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const enlace = document.createElement('a');
+        enlace.href = url;
+        enlace.download = formato === 'excel' ? 'Matriz_Riesgos.xlsx' : 'Matriz_Riesgos.pdf';
+        enlace.click();
+        URL.revokeObjectURL(url);
+      },
+      error: error => this.error.set(this.obtenerMensajeError(error, `No se pudo generar el reporte ${formato.toUpperCase()}.`))
     });
   }
 
