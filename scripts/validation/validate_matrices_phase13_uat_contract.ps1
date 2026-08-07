@@ -28,6 +28,12 @@ $reportes = Read-Required 'backend/RL.API/Features/MatricesRiesgos/MatricesRiesg
 $frontend = Read-Required 'frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts'
 $uatTests = Read-Required 'backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosPhase13UatContractTests.cs'
 $authE2e = Read-Required 'frontend/rl-app/e2e/matrices-authorization.spec.ts'
+$uatE2e = Read-Required 'frontend/rl-app/e2e/matrices-uat-integral.spec.ts'
+$rutas = Read-Required 'frontend/rl-app/src/app/app.routes.ts'
+$ciclo = Read-Required 'frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos-ciclo-integral/matrices-riesgos-ciclo-integral.component.ts'
+$uiGestion = Read-Required 'frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-gestion/matrices-riesgos-gestion.component.ts'
+$uiMitigacion = Read-Required 'frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.ts'
+$uiMonitoreo = Read-Required 'frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.ts'
 
 foreach ($entry in @(
     @{ Name = 'MatricesRiesgosController'; Content = $principal },
@@ -70,6 +76,19 @@ foreach ($method in @(
     'descargarConsolidadoPdf','cargarEvidencia','vincularEvidencia','eliminarEvidenciaHuerfana'
 )) { Require $frontend "$method(" "Angular no contiene el consumo UAT '$method'." }
 
+Require $rutas 'MatricesRiesgosCicloIntegralComponent' 'La ruta del módulo no apunta al ciclo integral de UAT.'
+foreach ($token in @("'riesgos'", "'mitigacion'", "'monitoreo'")) {
+    Require $ciclo $token "El ciclo integral no expone la vista $token."
+}
+foreach ($token in @('crearRiesgo','actualizarRiesgo')) { Require $uiGestion $token "La UI de riesgos perdió '$token'." }
+foreach ($token in @('crearControl','actualizarControl','evaluarControl','crearPlan','actualizarPlan','crearActividad','actualizarActividad')) { Require $uiMitigacion $token "La UI de mitigación perdió '$token'." }
+foreach ($token in @('crearAlerta','cambiarEstadoAlerta','registrarAutomonitoreo')) { Require $uiMonitoreo $token "La UI de monitoreo perdió '$token'." }
+foreach ($token in @(
+    'UAT administra un riesgo desde la interfaz integral',
+    'UAT registra control, efectividad, plan y actividad',
+    'UAT registra alerta y automonitoreo operativo'
+)) { Require $uatE2e $token "Falta recorrido E2E '$token'." }
+
 foreach ($legacy in @('RL_MR_REVISIONES_EVALUACION','RL_MR_TRAZAS_CALCULO','RL_MR_AUDITORIA','RL_MR_EVI_APROBACION','AsociarEvidenciaAprobacionDto')) {
     Forbid ($principal + $gestion + $mitigacion + $monitoreo + $reportes) $legacy "Los controllers reintroducen contrato heredado '$legacy'."
 }
@@ -93,4 +112,4 @@ if ($errors.Count -gt 0) {
 }
 
 Write-Host 'VALIDACION FASE 13 UAT MATRICES: CORRECTA' -ForegroundColor Green
-Write-Host 'Cobertura contractual: Plantillas, riesgos, evaluaciones, flujos, mitigación, evidencias, monitoreo, reportes, autenticación, módulo 10 y auditoría.' -ForegroundColor Green
+Write-Host 'Cobertura contractual y operativa: Plantillas, riesgos, evaluaciones, flujos, mitigación, evidencias, monitoreo, reportes, autenticación, módulo 10 y auditoría.' -ForegroundColor Green

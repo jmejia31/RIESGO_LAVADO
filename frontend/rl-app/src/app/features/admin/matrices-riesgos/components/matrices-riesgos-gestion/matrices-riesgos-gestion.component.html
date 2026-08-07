@@ -1,0 +1,42 @@
+<section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-gestion-riesgos">
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div>
+      <h2 id="titulo-gestion-riesgos" class="text-lg font-bold text-slate-900">Gestión de riesgos</h2>
+      <p class="text-sm text-slate-600">Administre la identidad permanente del riesgo antes de sus evaluaciones.</p>
+    </div>
+    <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="nuevo()">Nuevo riesgo</button>
+  </div>
+
+  @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
+  @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
+
+  <form class="grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-2" (ngSubmit)="guardar()">
+    <label class="text-sm font-medium">Código
+      <input name="codigoRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="codigo" maxlength="30" required>
+    </label>
+    <label class="text-sm font-medium">Nombre
+      <input name="nombreRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nombre" maxlength="250" required>
+    </label>
+    <label class="text-sm font-medium md:col-span-2">Descripción
+      <textarea name="descripcionRiesgo" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="descripcion" maxlength="2000"></textarea>
+    </label>
+    <label class="flex items-center gap-2 text-sm font-medium">
+      <input name="activoRiesgo" type="checkbox" class="h-4 w-4" [(ngModel)]="activo"> Activo
+    </label>
+    <div class="flex justify-end gap-2 md:col-span-2">
+      @if (editandoId() > 0) { <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="nuevo()">Cancelar edición</button> }
+      <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()">{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}</button>
+    </div>
+  </form>
+
+  <div class="overflow-x-auto rounded-xl border border-slate-200">
+    <table class="min-w-[760px] w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Descripción</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acción</th></tr></thead>
+      <tbody class="divide-y divide-slate-100">
+        @for (riesgo of riesgos(); track riesgo.rieId) {
+          <tr><td class="px-4 py-3 font-semibold">{{ riesgo.rieCodigo }}</td><td class="px-4 py-3">{{ riesgo.rieNombre }}</td><td class="px-4 py-3">{{ riesgo.rieDescripcion || '-' }}</td><td class="px-4 py-3">{{ riesgo.rieActivo ? 'Activo' : 'Inactivo' }}</td><td class="px-4 py-3"><button type="button" class="font-semibold text-blue-700" (click)="editar(riesgo)">Editar</button></td></tr>
+        } @empty { <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">Sin riesgos registrados.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</section>

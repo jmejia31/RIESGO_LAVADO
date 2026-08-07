@@ -120,7 +120,7 @@ export const routes: Routes = [
       },
       {
         path: 'matrices-riesgos',
-        loadComponent: () => import('./features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component').then(m => m.MatricesRiesgosComponent),
+        loadComponent: () => import('./features/admin/matrices-riesgos/pages/matrices-riesgos-ciclo-integral/matrices-riesgos-ciclo-integral.component').then(m => m.MatricesRiesgosCicloIntegralComponent),
         canActivate: [moduloGuard(10)]
       },
       { path: '', redirectTo: 'home', pathMatch: 'full' }

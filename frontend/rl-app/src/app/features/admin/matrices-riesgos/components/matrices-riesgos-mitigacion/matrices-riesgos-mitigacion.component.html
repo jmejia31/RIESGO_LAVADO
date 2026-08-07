@@ -1,0 +1,66 @@
+<section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-mitigacion">
+  <div>
+    <h2 id="titulo-mitigacion" class="text-lg font-bold text-slate-900">Mitigación y controles</h2>
+    <p class="text-sm text-slate-600">Administre controles, efectividad, planes y actividades de la evaluación seleccionada.</p>
+  </div>
+
+  @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
+  @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
+
+  <label class="block max-w-xl text-sm font-semibold">Evaluación
+    <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
+      <option [ngValue]="0">Seleccione una evaluación</option>
+      @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [ngValue]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
+    </select>
+  </label>
+
+  @if (evaluacionId > 0) {
+    <div class="grid gap-5 xl:grid-cols-2">
+      <section class="space-y-4 rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between"><h3 class="font-bold">Controles</h3><button type="button" class="text-sm font-semibold text-blue-700" (click)="nuevoControl()">Nuevo</button></div>
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="text-sm font-medium">Tipo<select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlTipo"><option value="PREVENTIVO">Preventivo</option><option value="DETECTIVO">Detectivo</option><option value="CORRECTIVO">Correctivo</option></select></label>
+          <label class="text-sm font-medium">Automatización<select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlAutomatizacion"><option value="MANUAL">Manual</option><option value="SEMIAUTOMATICO">Semiautomático</option><option value="AUTOMATICO">Automático</option></select></label>
+          <label class="text-sm font-medium md:col-span-2">Descripción<textarea class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlDescripcion" maxlength="500"></textarea></label>
+          <label class="text-sm font-medium">Estado<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlEstado" maxlength="20"></label>
+        </div>
+        <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()" (click)="guardarControl()">{{ controlEditandoId > 0 ? 'Actualizar control' : 'Crear control' }}</button>
+        <div class="space-y-2">@for (control of controles(); track control.conId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ control.conTipo }}</strong> · {{ control.conEstado }}<p class="mt-1 text-slate-600">{{ control.conDescripcion }}</p></div><button type="button" class="font-semibold text-blue-700" (click)="editarControl(control)">Editar / evaluar</button></div></article> } @empty { <p class="text-sm text-slate-500">Sin controles.</p> }</div>
+
+        @if (controlSeleccionadoId > 0) {
+          <div class="rounded-lg bg-slate-50 p-3">
+            <h4 class="font-semibold">Evaluar efectividad</h4>
+            <div class="mt-2 grid gap-3 md:grid-cols-2"><label class="text-sm">Efectividad %<input type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="efectividad"></label><label class="text-sm">Comentario<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="comentarioEfectividad" maxlength="500"></label></div>
+            <button type="button" class="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="evaluarControl()">Registrar efectividad</button>
+            <div class="mt-3 space-y-1 text-sm">@for (item of evaluacionesControl(); track item.ecoId) { <p>{{ item.ecoEfectividad }}% · {{ item.ecoComentario || 'Sin comentario' }}</p> } @empty { <p class="text-slate-500">Sin evaluaciones de efectividad.</p> }</div>
+          </div>
+        }
+      </section>
+
+      <section class="space-y-4 rounded-xl border border-slate-200 p-4">
+        <div class="flex items-center justify-between"><h3 class="font-bold">Planes de mitigación</h3><button type="button" class="text-sm font-semibold text-blue-700" (click)="nuevoPlan()">Nuevo</button></div>
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="text-sm font-medium md:col-span-2">Descripción<textarea class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planDescripcion" maxlength="500"></textarea></label>
+          <label class="text-sm">Avance %<input type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planAvance"></label>
+          <label class="text-sm">Presupuesto<input type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planPresupuesto"></label>
+          <label class="text-sm">Inicio<input type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaInicio"></label>
+          <label class="text-sm">Fin<input type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaFin"></label>
+          <label class="text-sm">Estado<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planEstado" maxlength="30"></label>
+        </div>
+        <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarPlan()">{{ planEditandoId > 0 ? 'Actualizar plan' : 'Crear plan' }}</button>
+        <div class="space-y-2">@for (plan of planes(); track plan.plaId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ plan.plaEstado }}</strong> · {{ plan.plaAvance }}%<p class="mt-1 text-slate-600">{{ plan.plaDescripcion }}</p></div><button type="button" class="font-semibold text-blue-700" (click)="editarPlan(plan)">Editar / actividades</button></div></article> } @empty { <p class="text-sm text-slate-500">Sin planes.</p> }</div>
+
+        @if (planSeleccionadoId > 0) {
+          <div class="rounded-lg bg-slate-50 p-3">
+            <div class="flex items-center justify-between"><h4 class="font-semibold">Actividades del plan</h4><button type="button" class="text-sm font-semibold text-blue-700" (click)="nuevaActividad()">Nueva</button></div>
+            <div class="mt-3 grid gap-3 md:grid-cols-2"><label class="text-sm md:col-span-2">Descripción<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadDescripcion" maxlength="500"></label><label class="text-sm">Responsable<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadResponsable" maxlength="150"></label><label class="text-sm">Avance %<input type="number" min="0" max="100" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadAvance"></label><label class="text-sm">Inicio<input type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadFechaInicio"></label><label class="text-sm">Fin<input type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadFechaFin"></label><label class="text-sm">Estado<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="actividadEstado" maxlength="30"></label></div>
+            <button type="button" class="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarActividad()">{{ actividadEditandoId > 0 ? 'Actualizar actividad' : 'Crear actividad' }}</button>
+            <div class="mt-3 space-y-2">@for (actividad of actividades(); track actividad.actId) { <article class="rounded-lg border border-slate-200 bg-white p-3 text-sm"><div class="flex items-center justify-between"><span>{{ actividad.actDescripcion }} · {{ actividad.actAvance }}%</span><button type="button" class="font-semibold text-blue-700" (click)="editarActividad(actividad)">Editar</button></div></article> } @empty { <p class="text-sm text-slate-500">Sin actividades.</p> }</div>
+          </div>
+        }
+      </section>
+    </div>
+  } @else {
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Seleccione una evaluación para administrar controles y mitigación.</div>
+  }
+</section>
