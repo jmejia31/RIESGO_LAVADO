@@ -37,9 +37,7 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             MethodInfo[] actions = controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
             foreach (MethodInfo action in actions.Where(EsMutacionHttp))
             {
-                Assert.True(
-                    action.GetCustomAttributes().Any(a => a.GetType().Name == "AuditRequiredAttribute"),
-                    $"{controller.Name}.{action.Name} debe conservar AuditRequired.");
+                Assert.Contains(action.GetCustomAttributes(), a => a.GetType().Name == "AuditRequiredAttribute");
             }
         }
     }
@@ -51,7 +49,7 @@ public sealed class MatricesRiesgosPhase13UatContractTests
         {
             MethodInfo method = typeof(MatricesRiesgosReportesController).GetMethod(methodName)
                 ?? throw new InvalidOperationException($"No existe {methodName}.");
-            Assert.True(method.GetCustomAttributes().Any(a => a.GetType().Name == "AuditRequiredAttribute"));
+            Assert.Contains(method.GetCustomAttributes(), a => a.GetType().Name == "AuditRequiredAttribute");
         }
     }
 
