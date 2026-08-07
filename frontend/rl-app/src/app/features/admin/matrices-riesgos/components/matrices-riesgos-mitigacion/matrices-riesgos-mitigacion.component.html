@@ -7,12 +7,13 @@
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
   @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
 
-  <label class="block max-w-xl text-sm font-semibold">Evaluación
-    <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
+  <div class="max-w-xl">
+    <label for="evaluacion-mitigacion" class="block text-sm font-semibold">Evaluación</label>
+    <select id="evaluacion-mitigacion" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
       <option value="0">Seleccione una evaluación</option>
       @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [value]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
     </select>
-  </label>
+  </div>
 
   @if (evaluacionId > 0) {
     <div class="grid gap-5 xl:grid-cols-2">
