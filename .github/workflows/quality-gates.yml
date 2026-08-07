@@ -39,27 +39,12 @@ jobs:
       - name: Restore backend
         run: dotnet restore RIESGO_LAVADO.sln
 
-      - name: Build remediated npm lockfile candidate
+      - name: Verify npm security audit and reproducible installation
         working-directory: frontend/rl-app
         shell: bash
         run: |
-          npm install --package-lock-only --ignore-scripts
-          npm audit fix --package-lock-only --ignore-scripts || true
           npm ci
-          echo '=== NPM AUDIT AFTER TARGETED REMEDIATION BEGIN ==='
-          npm audit --json || true
-          echo '=== NPM AUDIT AFTER TARGETED REMEDIATION END ==='
-          echo '=== PACKAGE LOCK DIFF BEGIN ==='
-          git diff -- package-lock.json
-          echo '=== PACKAGE LOCK DIFF END ==='
-
-      - name: Preserve remediated lockfile candidate
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-security-lockfile-candidate
-          path: frontend/rl-app/package-lock.json
-          if-no-files-found: error
-          retention-days: 1
+          npm audit
 
       - name: Validate database flows and Oracle preparation controls
         shell: pwsh

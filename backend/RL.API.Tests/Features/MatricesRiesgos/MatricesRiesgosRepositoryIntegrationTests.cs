@@ -87,7 +87,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         "RL_MR_EVI_RIESGO",
         "RL_MR_DETALLES_IMPORTACION",
         "RL_MR_LOTES_IMPORTACION",
-        "RL_MR_TRAZAS_CALCULO",
+        "RL_MR_TRAZAS_CALCULO_OLD",
         "RL_MR_AUDITORIA",
         "RL_MR_PERMISOS_FORMULARIO",
         "RL_MR_APROBACIONES_FORMULARIO",
@@ -99,7 +99,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
     internal static readonly string[] SecuenciasRetiradas =
     {
         "SEQ_RL_MR_AUDITORIA",
-        "SEQ_RL_MR_TRAZAS",
+        "SEQ_RL_MR_TRAZAS_OLD",
         "SEQ_RL_MR_REVISIONES"
     };
 

@@ -3,8 +3,9 @@ $ErrorActionPreference = 'Stop'
 $repositoryRoot = Resolve-Path (Join-Path $PSScriptRoot '../..')
 $preflightPath = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql'
 $transitionPath = Join-Path $repositoryRoot 'database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql'
-$dossierPath = Join-Path $repositoryRoot 'docs/3. Módulo Matrices de Riesgos/FASE_9_EXPEDIENTE_AUTORIZACION_ORACLE_MODELO_17_TABLAS_2026-08-06.md'
-$authorizationPath = Join-Path $repositoryRoot 'docs/3. Módulo Matrices de Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md'
+$docsFolder = (Get-ChildItem -LiteralPath (Join-Path $repositoryRoot 'docs') -Directory | Where-Object { $_.Name -like '*Matrices de Riesgos*' }).FullName
+$dossierPath = Join-Path $docsFolder 'FASE_9_EXPEDIENTE_AUTORIZACION_ORACLE_MODELO_17_TABLAS_2026-08-06.md'
+$authorizationPath = Join-Path $docsFolder 'FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md'
 $workflowPath = Join-Path $repositoryRoot '.github/workflows/quality-gates.yml'
 $errors = [System.Collections.Generic.List[string]]::new()
 

@@ -20,7 +20,11 @@ if ($errors.Count -eq 0) {
     $validationContent = [System.IO.File]::ReadAllText($validationPath, $utf8NoBom)
 
     try {
-        $definition = $jsonRaw | ConvertFrom-Json -Depth 100
+        if ($PSVersionTable.PSVersion.Major -ge 6) {
+            $definition = $jsonRaw | ConvertFrom-Json -Depth 100
+        } else {
+            $definition = $jsonRaw | ConvertFrom-Json
+        }
     }
     catch {
         $errors.Add("La definición JSON oficial no es válida: $($_.Exception.Message)")
