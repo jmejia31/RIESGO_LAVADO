@@ -74,6 +74,7 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.getByLabel('Descripción', { exact: true }).fill('Creado por prueba UAT');
   await page.getByRole('button', { name: 'Crear riesgo' }).click();
   await expect.poll(() => payload?.rieCodigo).toBe('R-008');
+  await expect(page.getByText('Riesgo creado correctamente.')).toBeVisible();
 });
 
 test('UAT registra control, efectividad, plan y actividad', async ({ page }) => {
@@ -95,7 +96,6 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByRole('button', { name: 'Crear control' }).click();
   await expect.poll(() => recibidos.control?.conEvaluacionId).toBe(20);
 
-  // Simular que el control recién creado ya está disponible para evaluar.
   await page.route('**/api/matrices-riesgos/mitigacion/evaluaciones/20/controles', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ conId: 31, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'Control preventivo UAT', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }] }) }));
   await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
   await page.getByRole('button', { name: 'Editar / evaluar' }).click();
@@ -106,6 +106,14 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
   await page.getByRole('button', { name: 'Crear plan' }).click();
   await expect.poll(() => recibidos.plan?.plaEvaluacionId).toBe(20);
+
+  await page.route('**/api/matrices-riesgos/mitigacion/evaluaciones/20/planes', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [{ plaId: 41, plaEvaluacionId: 20, plaDescripcion: 'Plan UAT', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-08-08T00:00:00Z', plaEstado: 'ABIERTO' }] }) }));
+  await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
+  await page.getByRole('button', { name: 'Editar / actividades' }).click();
+  await page.getByLabel('Descripción', { exact: true }).last().fill('Actividad UAT');
+  await page.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
+  await page.getByRole('button', { name: 'Crear actividad' }).click();
+  await expect.poll(() => recibidos.actividad?.actPlanId).toBe(41);
 });
 
 test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
