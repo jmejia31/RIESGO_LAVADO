@@ -11,11 +11,17 @@
 
 @layer base {
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: 'Inter', system-ui, sans-serif;
     @apply text-gray-900 antialiased bg-gray-50;
   }
   input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.7; }
+
+  :focus-visible {
+    outline: 3px solid rgb(var(--ihss-accent-rgb));
+    outline-offset: 3px;
+  }
 }
 
 @layer components {
@@ -35,6 +41,34 @@
   .card {
     @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
   }
+}
+
+.skip-link {
+  position: fixed;
+  top: -5rem;
+  left: 1rem;
+  z-index: 1000;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #111827;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  box-shadow: 0 10px 25px rgb(15 23 42 / 0.2);
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.skeleton-block {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Scrollbar personalizado */
@@ -60,4 +94,20 @@
 
 .animate-bounce-short {
   animation: bounce-short 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton-block {
+    animation: none !important;
+    background: #e2e8f0;
+  }
 }

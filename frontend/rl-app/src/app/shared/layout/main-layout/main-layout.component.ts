@@ -6,11 +6,12 @@ import { ConfiguracionService } from '../../../core/configuration/configuracion.
 import { CatalogoService } from '../../../core/configuration/catalogo.service';
 import { Modulo } from '../../../core/configuration/catalogo.models';
 import { GlobalHttpStateService } from '../../../core/services/global-http-state.service';
+import { SkeletonLoaderComponent } from '../../components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SkeletonLoaderComponent],
   templateUrl: './main-layout.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
@@ -49,6 +50,14 @@ export class MainLayoutComponent implements OnInit {
     }
   }
 
+  enfocarContenido(): void {
+    if (typeof document === 'undefined') return;
+
+    setTimeout(() => {
+      document.getElementById('contenido-principal')?.focus({ preventScroll: true });
+    });
+  }
+
   /** Módulos que el usuario logueado tiene asignados */
   linksVisibles = computed(() => {
     const usr   = this.auth.usuario();
@@ -61,8 +70,7 @@ export class MainLayoutComponent implements OnInit {
   /** Agrupación por sección para el menú lateral */
   menuAgrupado = computed(() => {
     const links = this.linksVisibles();
-    
-    // Mapeo local de rutas a secciones recomendadas para asegurar orden y limpieza visual
+
     const getSeccion = (ruta: string, defaultSec: string): string => {
       const r = ruta.toLowerCase();
       if (r.includes('matrices-riesgos')) return 'Riesgos LA/FT';
@@ -74,7 +82,7 @@ export class MainLayoutComponent implements OnInit {
     };
 
     const seccionesMap = new Map<string, Modulo[]>();
-    
+
     links.forEach(item => {
       const secNombre = getSeccion(item.modRuta, item.modSeccion);
       if (!seccionesMap.has(secNombre)) {
@@ -83,7 +91,6 @@ export class MainLayoutComponent implements OnInit {
       seccionesMap.get(secNombre)!.push(item);
     });
 
-    // Definir un orden de prioridad para las secciones en el menú
     const ordenSecciones = ['Riesgos LA/FT', 'Monitoreo y Operación', 'Listas de Cautela', 'Seguridad y Accesos', 'Configuración del Sistema'];
 
     return Array.from(seccionesMap.keys())
