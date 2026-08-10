@@ -103,6 +103,42 @@ public sealed class ApplicationMemoryCacheTests
     }
 
     [Fact]
+    public async Task InvalidacionConcurrente_NoPermiteRepoblarConLecturaObsoleta()
+    {
+        using var memory = new MemoryCache(new MemoryCacheOptions());
+        using var cache = new ApplicationMemoryCache(memory);
+        var lecturaIniciada = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var liberarLectura = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task<int> staleRead = cache.GetOrCreateAsync(
+            "scope",
+            "key",
+            TimeSpan.FromMinutes(1),
+            async () =>
+            {
+                lecturaIniciada.SetResult();
+                await liberarLectura.Task;
+                return 1;
+            });
+
+        await lecturaIniciada.Task;
+        cache.Invalidate("scope");
+        liberarLectura.SetResult();
+
+        Assert.Equal(1, await staleRead);
+
+        int freshFactoryCalls = 0;
+        int fresh = await cache.GetOrCreateAsync(
+            "scope",
+            "key",
+            TimeSpan.FromMinutes(1),
+            () => Task.FromResult(Interlocked.Increment(ref freshFactoryCalls) + 1));
+
+        Assert.Equal(2, fresh);
+        Assert.Equal(1, freshFactoryCalls);
+    }
+
+    [Fact]
     public void Settings_AcotaTtlEntreCincoYNovecientosSegundos()
     {
         var settings = new ApplicationCacheSettings
