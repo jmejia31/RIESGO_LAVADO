@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Health;
 using RL.API.Middleware;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;
@@ -114,6 +115,11 @@ builder.Services.AddCors(options =>
 // Proceso de infraestructura: registra la conexión Oracle usada por repositorios y servicios.
 builder.Services.AddSingleton<OracleDbContext>(sp =>
     new OracleDbContext(builder.Configuration.GetConnectionString("OracleDB")!));
+
+// BE-03: registra readiness con timeout acotado. /healthz no depende de Oracle;
+// /readyz usa una consulta mínima de solo lectura y devuelve únicamente estado agregado.
+builder.Services.Configure<HealthProbeOptions>(builder.Configuration.GetSection("HealthChecks"));
+builder.Services.AddSingleton<ISystemReadinessProbe, OracleReadinessProbe>();
 
 // Proceso de persistencia: registra repositorios responsables de acceso a tablas y consultas Oracle.
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
