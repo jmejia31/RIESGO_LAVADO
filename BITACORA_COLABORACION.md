@@ -1379,7 +1379,7 @@ Verificar que no exista acoplamiento físico o lógico en la base de datos (y ca
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 443 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
-| `tools/validate_documentation_links.ps1` | **Correcto**; 35 Markdown revisados, 48 enlaces locales |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 35 Markdown revisados, 48 Enlaces locales |
 
 ### Punto exacto de continuación
 
@@ -1473,7 +1473,7 @@ Implementar el mecanismo de aborto automático ante errores SQL para consola SQL
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `949a0fa154c13886566085a6dbd418706d87e076`.
-- **Commit final**: pendiente hasta publicar esta intervención.
+- **Commit final**: pendiente hasta publicar esta actualización documental.
 
 ### Objetivo
 
@@ -1603,7 +1603,7 @@ Resolver las observaciones de calidad de la Fase 2 de diseño (Contrato JSON for
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
 ---
@@ -1634,7 +1634,7 @@ Cierre formal administrativo de la Fase 2 y handoff documental actualizando los 
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
 ### Punto exacto de continuación
@@ -1680,7 +1680,7 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
 
 ### Punto exacto de continuación
@@ -2497,3 +2497,55 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 
 
 
+---
+
+## Registro de Intervención — ChatGPT — Cierre técnico de hallazgos BE-01 + FE-02 posterior a revisión
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Commit inicial efectivo**: `dbf9a72d4af9cda530029a819d545e0c617e8e26`.
+- **Commit técnico publicado y certificado**: `50067cfccebac85527f94ab8a97ba8aa03fea21e`.
+- **Objetivo**: cerrar los hallazgos de seguridad y resiliencia detectados en la revisión de BE-01 + FE-02 sin reescribir entradas históricas, sin modificar `main` y sin ejecutar Oracle.
+
+### Archivos creados o modificados
+
+- **Creado**: `backend/RL.API/Exceptions/PublicProblemException.cs`.
+- **Modificado**: `backend/RL.API/Middleware/ErrorHandlingMiddleware.cs`.
+- **Modificado**: `backend/RL.API.Tests/Middleware/ErrorHandlingMiddlewareTests.cs`.
+- **Modificado**: `frontend/rl-app/src/app/core/interceptors/http-resilience.interceptor.ts`.
+- **Modificado**: `frontend/rl-app/src/app/core/interceptors/http-resilience.interceptor.spec.ts`.
+- **Modificado por handoff**: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+
+### Cambios funcionales y técnicos
+
+1. **BE-01 — Exposición pública explícita por tipo**: se retiró la heurística Regex `EsMensajeFuncionalSeguro`. Solo `PublicProblemException` puede transportar un mensaje de excepción al cliente. Las excepciones técnicas o genéricas no reutilizan automáticamente `exception.Message`.
+2. **Mapeo HTTP seguro**: `ArgumentException` usa fallback fijo 400; `KeyNotFoundException` fallback fijo 404; `UnauthorizedAccessException` fallback fijo 403; `InvalidOperationException` genérica deja de convertirse universalmente en 400 y cae en 500.
+3. **Pruebas adversariales Backend**: se añadieron escenarios con `ORA-00942`, SQL en mayúsculas/minúsculas, nombres de tablas, mensajes de timeout y procedimientos para demostrar que el detalle técnico no alcanza `detail`/`mensaje`.
+4. **FE-02 — Backoff exponencial explícito**: `300 * 2^(retryCount-1)`, máximo dos reintentos; exclusivamente `GET` ante status `0`, `503` o `504`.
+5. **Cobertura FE-02 ampliada**: pruebas para red status 0, 504, límite exacto 300/600 ms, GET 400/500/502 sin retry, POST/PUT/DELETE/PATCH sin retry, concurrencia del contador global y exclusión de 401/403/499 del banner global.
+6. **Gobernanza inmutable**: este registro se agrega como nueva entrada sin reescribir el registro histórico previo de BE-01 + FE-02.
+
+### Verificación ejecutada y observada en CI
+
+- **GitHub Actions / Quality Gates**: Run `31400466132` (#538) — **SUCCESS**.
+- **Build Release**: 0 errores, 0 advertencias.
+- **Backend**: **269/269** pruebas aprobadas, 0 fallidas, 0 omitidas.
+- **Frontend**: **162/162** pruebas aprobadas en 25 archivos; `http-resilience.interceptor.spec.ts`: **16/16**.
+- **E2E Playwright**: **13/13** recorridos aprobados.
+- **NPM audit**: **0 vulnerabilidades**.
+- **Cobertura Backend**: líneas 20.68%, ramas 23.34%.
+- **Cobertura Frontend**: sentencias 39.53%, ramas 35.24%, funciones 35.99%, líneas 39.15%.
+- **Validadores Oracle/UAT/inventario**: correctos.
+- **Oracle en esta intervención**: **NO conectado ni ejecutado**; no se realizaron DDL/DML.
+
+### Estado Git, restricciones y pendientes
+
+- `desarrollo`: commit técnico `50067cfccebac85527f94ab8a97ba8aa03fea21e` publicado.
+- `main`: sin modificación durante esta intervención.
+- PR #20: debe permanecer abierto y en borrador; no se autoriza fusión.
+- Pendiente operativo independiente: validación visual del login y, si la cuenta Oracle continúa bloqueada, desbloqueo exclusivo por el DBA correspondiente.
+
+### Punto exacto de continuación
+
+BE-01 + FE-02 quedan técnicamente cerrados con evidencia CI. El siguiente elemento priorizado del plan es **BE-03 — `/healthz` y `/readyz`**, únicamente cuando Javier Mejía autorice continuar.
