@@ -65,7 +65,10 @@ export type SkeletonVariant = 'content' | 'table' | 'cards' | 'form';
             <div class="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
               <span class="skeleton-block block h-5 w-1/3 rounded-md"></span>
               @for (row of filasArray; track row) {
-                <span class="skeleton-block block h-4 rounded-md" [class.w-4/5]="row === filasArray.length - 1" data-skeleton-row></span>
+                <span
+                  class="skeleton-block block h-4 rounded-md"
+                  [ngClass]="row === filasArray.length - 1 ? 'w-4/5' : 'w-full'"
+                  data-skeleton-row></span>
               }
             </div>
           }
