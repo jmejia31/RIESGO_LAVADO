@@ -25,24 +25,21 @@ jobs:
         run: |
           from pathlib import Path
 
-          def replace_once(path: str, old: str, new: str):
+          def one(path, old, new):
               p = Path(path)
               text = p.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != 1:
-                  raise SystemExit(f'{path}: expected exactly 1 occurrence, found {count}: {old[:80]!r}')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: patrón no único ({text.count(old)}): {old[:80]}')
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
-          def replace_count(path: str, old: str, new: str, expected: int):
+          def exact(path, old, new, expected):
               p = Path(path)
               text = p.read_text(encoding='utf-8')
-              count = text.count(old)
-              if count != expected:
-                  raise SystemExit(f'{path}: expected {expected} occurrences, found {count}: {old[:80]!r}')
+              if text.count(old) != expected:
+                  raise SystemExit(f'{path}: esperado {expected}, encontrado {text.count(old)}: {old[:80]}')
               p.write_text(text.replace(old, new), encoding='utf-8')
 
-          # Signal-based components should use OnPush.
-          for path in [
+          targets = [
               'frontend/rl-app/src/app/app.ts',
               'frontend/rl-app/src/app/shared/layout/main-layout/main-layout.component.ts',
               'frontend/rl-app/src/app/shared/pages/sin-acceso/sin-acceso.component.ts',
@@ -50,69 +47,51 @@ jobs:
               'frontend/rl-app/src/app/features/admin/bitacora/pages/bitacora/bitacora.component.ts',
               'frontend/rl-app/src/app/features/auth/pages/login/login.component.ts',
               'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts',
-          ]:
-              replace_once(path, 'ChangeDetectionStrategy.Eager', 'ChangeDetectionStrategy.OnPush')
+          ]
+          for path in targets:
+              one(path, 'ChangeDetectionStrategy.Eager', 'ChangeDetectionStrategy.OnPush')
 
-          # Login: migrate carousel state from mutable array to typed Signals + computed selection.
-          login_ts = 'frontend/rl-app/src/app/features/auth/pages/login/login.component.ts'
-          replace_once(
-              login_ts,
+          login = 'frontend/rl-app/src/app/features/auth/pages/login/login.component.ts'
+          one(login,
               "import { ChangeDetectionStrategy, Component, signal, OnInit, OnDestroy, inject } from '@angular/core';",
-              "import { ChangeDetectionStrategy, Component, computed, signal, OnInit, OnDestroy, inject } from '@angular/core';"
-          )
-          replace_once(
-              login_ts,
+              "import { ChangeDetectionStrategy, Component, computed, signal, OnInit, OnDestroy, inject } from '@angular/core';")
+          one(login,
               "import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';",
-              "import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';\nimport { LoginSlide } from '../../../../core/configuration/configuracion.models';"
-          )
-          replace_once(
-              login_ts,
+              "import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';\nimport { LoginSlide } from '../../../../core/configuration/configuracion.models';")
+          one(login,
               "  // Carrusel\n  slideActual = signal(0);\n  intervalo: any;\n  slides: any[] = [];",
-              "  // Carrusel: estado de presentación local gestionado con Signals.\n  readonly slideActual = signal(0);\n  readonly slides = signal<LoginSlide[]>([]);\n  readonly slideSeleccionado = computed(() => {\n    const items = this.slides();\n    if (items.length === 0) return null;\n    return items[Math.min(this.slideActual(), items.length - 1)] ?? null;\n  });\n  private intervalo: ReturnType<typeof setInterval> | null = null;"
-          )
-          replace_once(
-              login_ts,
+              "  // Carrusel: estado de presentación local gestionado con Signals.\n  readonly slideActual = signal(0);\n  readonly slides = signal<LoginSlide[]>([]);\n  readonly slideSeleccionado = computed(() => {\n    const items = this.slides();\n    if (items.length === 0) return null;\n    return items[Math.min(this.slideActual(), items.length - 1)] ?? null;\n  });\n  private intervalo: ReturnType<typeof setInterval> | null = null;")
+          one(login,
               "        this.slides = data;\n        if (this.slides.length > 0) this.iniciarCarrusel();",
-              "        this.slides.set(data);\n        this.ajustarSlideActual();\n        if (data.length > 1) this.iniciarCarrusel();"
-          )
-          replace_once(login_ts, "        this.slides = [", "        this.slides.set([")
-          replace_once(
-              login_ts,
+              "        this.slides.set(data);\n        this.ajustarSlideActual();\n        if (data.length > 1) this.iniciarCarrusel();")
+          one(login, "        this.slides = [", "        this.slides.set([")
+          one(login,
               "          { id: 3, imagenUrl: 'assets/login/slide3.png', titulo: 'Cumplimiento Normativo IHSS', descripcion: 'Alineación institucional con regulaciones de transparencia y control interno.', orden: 3, activo: true }\n        ];",
-              "          { id: 3, imagenUrl: 'assets/login/slide3.png', titulo: 'Cumplimiento Normativo IHSS', descripcion: 'Alineación institucional con regulaciones de transparencia y control interno.', orden: 3, activo: true }\n        ]);\n        this.ajustarSlideActual();"
-          )
-          replace_once(
-              login_ts,
+              "          { id: 3, imagenUrl: 'assets/login/slide3.png', titulo: 'Cumplimiento Normativo IHSS', descripcion: 'Alineación institucional con regulaciones de transparencia y control interno.', orden: 3, activo: true }\n        ]);\n        this.ajustarSlideActual();")
+          one(login,
               "  ngOnDestroy(): void {\n    if (this.intervalo) clearInterval(this.intervalo);\n  }\n\n  iniciarCarrusel() {\n    this.intervalo = setInterval(() => {\n      this.slideActual.update(val => (val + 1) % this.slides.length);\n    }, 5000);\n  }\n\n  seleccionarSlide(idx: number) {\n    this.slideActual.set(idx);\n    if (this.intervalo) {\n      clearInterval(this.intervalo);\n      this.iniciarCarrusel();\n    }\n  }",
-              "  ngOnDestroy(): void {\n    if (this.intervalo) {\n      clearInterval(this.intervalo);\n      this.intervalo = null;\n    }\n  }\n\n  iniciarCarrusel(): void {\n    if (this.intervalo) clearInterval(this.intervalo);\n    if (this.slides().length <= 1) {\n      this.intervalo = null;\n      return;\n    }\n\n    this.intervalo = setInterval(() => {\n      const total = this.slides().length;\n      if (total > 1) this.slideActual.update(val => (val + 1) % total);\n    }, 5000);\n  }\n\n  seleccionarSlide(idx: number): void {\n    if (idx < 0 || idx >= this.slides().length) return;\n    this.slideActual.set(idx);\n    this.iniciarCarrusel();\n  }\n\n  private ajustarSlideActual(): void {\n    const total = this.slides().length;\n    if (total === 0) {\n      this.slideActual.set(0);\n      return;\n    }\n    if (this.slideActual() >= total) this.slideActual.set(total - 1);\n  }"
-          )
+              "  ngOnDestroy(): void {\n    if (this.intervalo) {\n      clearInterval(this.intervalo);\n      this.intervalo = null;\n    }\n  }\n\n  iniciarCarrusel(): void {\n    if (this.intervalo) clearInterval(this.intervalo);\n    if (this.slides().length <= 1) {\n      this.intervalo = null;\n      return;\n    }\n    this.intervalo = setInterval(() => {\n      const total = this.slides().length;\n      if (total > 1) this.slideActual.update(val => (val + 1) % total);\n    }, 5000);\n  }\n\n  seleccionarSlide(idx: number): void {\n    if (idx < 0 || idx >= this.slides().length) return;\n    this.slideActual.set(idx);\n    this.iniciarCarrusel();\n  }\n\n  private ajustarSlideActual(): void {\n    const total = this.slides().length;\n    if (total === 0) {\n      this.slideActual.set(0);\n      return;\n    }\n    if (this.slideActual() >= total) this.slideActual.set(total - 1);\n  }")
 
           login_html = 'frontend/rl-app/src/app/features/auth/pages/login/login.component.html'
-          replace_once(login_html, '@for (slide of slides; track $index)', '@for (slide of slides(); track slide.id)')
-          replace_once(login_html, '@if (slides.length > 0)', '@if (slideSeleccionado())')
-          replace_once(login_html, '{{ slides[slideActual()]?.titulo }}', '{{ slideSeleccionado()?.titulo }}')
-          replace_once(login_html, '{{ slides[slideActual()]?.descripcion }}', '{{ slideSeleccionado()?.descripcion }}')
-          replace_once(login_html, '@for (s of slides; track $index)', '@for (s of slides(); track s.id)')
+          one(login_html, '@for (slide of slides; track $index)', '@for (slide of slides(); track slide.id)')
+          one(login_html, '@if (slides.length > 0)', '@if (slideSeleccionado())')
+          one(login_html, '{{ slides[slideActual()]?.titulo }}', '{{ slideSeleccionado()?.titulo }}')
+          one(login_html, '{{ slides[slideActual()]?.descripcion }}', '{{ slideSeleccionado()?.descripcion }}')
+          one(login_html, '@for (s of slides; track $index)', '@for (s of slides(); track s.id)')
 
-          # Carga de listas: selected File is local UI state, so expose it as a Signal.
-          cargar_ts = 'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts'
-          replace_once(cargar_ts, '  archivoSeleccionado: File | null = null;', '  readonly archivoSeleccionado = signal<File | null>(null);')
-          replace_count(cargar_ts, '      this.archivoSeleccionado = null;', '      this.archivoSeleccionado.set(null);', 3)
-          replace_once(cargar_ts, '    this.archivoSeleccionado = file;', '    this.archivoSeleccionado.set(file);')
-          replace_once(
-              cargar_ts,
+          cargar = 'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts'
+          one(cargar, '  archivoSeleccionado: File | null = null;', '  readonly archivoSeleccionado = signal<File | null>(null);')
+          exact(cargar, 'this.archivoSeleccionado = null;', 'this.archivoSeleccionado.set(null);', 3)
+          one(cargar, '    this.archivoSeleccionado = file;', '    this.archivoSeleccionado.set(file);')
+          one(cargar,
               "    if (!this.archivoSeleccionado) {\n      import('sweetalert2').then((Swal) => {",
-              "    const archivoSeleccionado = this.archivoSeleccionado();\n    if (!archivoSeleccionado) {\n      import('sweetalert2').then((Swal) => {"
-          )
-          replace_once(
-              cargar_ts,
+              "    const archivoSeleccionado = this.archivoSeleccionado();\n    if (!archivoSeleccionado) {\n      import('sweetalert2').then((Swal) => {")
+          one(cargar,
               '      this.listasService.uploadListaCautela(this.archivoSeleccionado!, tipoListaId).subscribe({',
-              '      this.listasService.uploadListaCautela(archivoSeleccionado, tipoListaId).subscribe({'
-          )
-          replace_once(cargar_ts, '          this.archivoSeleccionado = null;', '          this.archivoSeleccionado.set(null);')
+              '      this.listasService.uploadListaCautela(archivoSeleccionado, tipoListaId).subscribe({')
 
           cargar_html = 'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.html'
-          replace_once(cargar_html, '!archivoSeleccionado"', '!archivoSeleccionado()"')
+          one(cargar_html, '!archivoSeleccionado"', '!archivoSeleccionado()"')
 
       - name: Build frontend after migration
         working-directory: frontend/rl-app
