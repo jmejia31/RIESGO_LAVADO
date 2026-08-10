@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: **DB-01 — Política de archivado de `RL_AUDITORIA`** fue implementada y certificada técnicamente en `desarrollo`. Se estableció una política `COPY_ONLY`, sin borrado automático, sin purga manual autorizada por DB-01, sin tabla histórica creada y sin movimiento físico de registros. La retención institucional permanece **NO DEFINIDA** hasta aprobación expresa de Cumplimiento/Legal. El HEAD técnico `ce2193cd60ff441ebfba4920be7df20c0ca8b29e` fue certificado por Quality Gates Run `31418050903` (#633) en **SUCCESS**: DB-01 Validator correcto, Backend 304/304, Frontend 162/162, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. Oracle no fue conectado ni ejecutado durante DB-01.
+> Actualización 2026-08-10: **FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders** quedó implementada y certificada técnicamente en `desarrollo`. Se incorporaron semántica y navegación accesible transversal, gestión de foco para SPA, estados `aria-busy`/regiones vivas sin competir con los mensajes funcionales `role="status"`, foco visible, reducción de movimiento y un componente reusable de skeleton loader. El HEAD técnico `59757b3af5cf5ad89c841ee0f7a7d93b8fc0e0fc` fue certificado por Quality Gates Run `31420468597` (#647) en **SUCCESS**: FE-03/FE-04 Validator correcto, Backend 304/304, Frontend 165/165 en 26 archivos, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. No se modificaron Backend, contratos API, Oracle ni datos.
 
 Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
 
@@ -10,143 +10,172 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria:** `desarrollo`
-- **Base DB-01:** `ba8aaa9429aff7357bec12f0e8f1bd4e9eb94aac`
-- **HEAD técnico DB-01 certificado:** `ce2193cd60ff441ebfba4920be7df20c0ca8b29e`
+- **Base FE-03 + FE-04:** `a0793fe8d56b09be6bdfb4caf022e5acdd07fbcc`
+- **HEAD técnico FE-03 + FE-04 certificado:** `59757b3af5cf5ad89c841ee0f7a7d93b8fc0e0fc`
 - **Rama estable:** `main`
 - **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
 - **PR #20:** debe permanecer abierto, en borrador y sin fusión
 - **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
 - **DB-03:** cerrado físicamente; 11 planes ejecutados; sin índices nuevos
-- **DB-01:** política y controles de repositorio completados; no hubo ejecución física Oracle
+- **DB-01:** política y controles de repositorio completados; sin purga automática
+- **FE-03 + FE-04:** completado y certificado técnicamente
 
 ---
 
-## 2. DB-01 — estado certificado
+## 2. FE-03 — Accesibilidad / WAI-ARIA
 
-### Política aprobada técnicamente
+### Semántica y navegación
 
-1. `RL_AUDITORIA` continúa siendo la fuente de verdad de auditoría.
-2. La primera implementación física futura deberá seguir `COPY_ONLY`:
-   - identificar lote candidato con fecha de corte aprobada;
-   - excluir retenciones extraordinarias / `LEGAL_HOLD`;
-   - copiar a destino histórico previamente autorizado;
-   - reconciliar origen e histórico;
-   - certificar el lote;
-   - conservar intacta la fuente.
-3. **Borrado automático: PROHIBIDO.**
-4. DB-01 tampoco autoriza purga manual de la fuente.
-5. No se configura `DBMS_SCHEDULER`, `DBMS_JOB`, trigger ni tarea periódica de limpieza.
-6. No se crea tabla histórica ni esquema histórico durante DB-01.
-7. No se crea ningún índice nuevo; DB-03 determinó que no se justifica con el volumen actual.
-8. No se presupone Oracle Partitioning ni su licenciamiento.
+1. El documento principal declara `lang="es-HN"`.
+2. Se incorporó skip-link: **Saltar al contenido principal**.
+3. El layout identifica navegación principal y módulos mediante landmarks y etiquetas accesibles.
+4. El contenido principal tiene `id="contenido-principal"` y `tabindex="-1"` para gestión programática de foco sin introducir `tabindex` positivo.
+5. Las rutas activas anuncian `aria-current="page"` mediante `ariaCurrentWhenActive`.
+6. El control del sidebar expone `aria-controls`, `aria-expanded` y etiqueta dinámica.
+7. Los enlaces del sidebar colapsado conservan nombre accesible para tecnologías asistivas.
+8. Los íconos puramente decorativos se excluyen del árbol accesible con `aria-hidden="true"` y `focusable="false"`.
+9. El botón de cierre de sesión tiene nombre accesible explícito.
+10. Los errores globales conservan `role="alert"` y anuncio asertivo.
 
-### Retención
+### Gestión de foco SPA
 
-- **Plazo institucional:** NO DEFINIDO.
-- **Fecha de corte:** NO DEFINIDA.
-- Hasta que Cumplimiento/Legal apruebe ambos elementos, ningún registro se considera elegible para purga.
-- Una investigación, requerimiento legal, incidente, litigio o auditoría puede imponer retención extraordinaria aunque el registro sea antiguo.
+- Cada activación del `router-outlet` reubica el foco en `#contenido-principal` mediante `focus({ preventScroll: true })`.
+- Esto permite que navegación por teclado/lector de pantalla perciba el cambio de vista sin depender del puntero.
+- No se introdujo ningún `tabindex` positivo.
 
-### Reconciliación futura obligatoria
+### Foco visible y movimiento
 
-Todo lote físico futuro deberá registrar y validar, como mínimo:
+- Se añadió estilo global `:focus-visible` de alto contraste.
+- Se respeta `prefers-reduced-motion: reduce`:
+  - scroll suave desactivado;
+  - transiciones/animaciones reducidas;
+  - skeleton sin animación.
 
-- identificador de lote;
-- fecha de corte aprobada;
-- cantidad candidata y cantidad copiada;
-- `MIN/MAX(AUD_ID)`;
-- `MIN/MAX(AUD_FECHA)`;
-- ausencia de IDs faltantes;
-- ausencia de duplicados;
-- resultado `CONCILIADO` o `RECHAZADO`;
-- responsable técnico y aprobador funcional.
+### Estados dinámicos
 
-Una copia finalizada sin error **no** equivale por sí sola a un lote certificado.
+- `<main>` expone `[attr.aria-busy]="globalState.cargando()"`.
+- El indicador global de carga utiliza región viva `aria-live="polite"` + `aria-atomic="true"`.
+- Los estados funcionales existentes que usan `role="status"` se preservan sin interferencia.
 
 ---
 
-## 3. Artefactos DB-01
+## 3. FE-04 — Skeleton Loaders
 
-### Política y diseño
+### Componente reusable
 
-`docs/4. Base de Datos/DB_01_POLITICA_ARCHIVADO_RL_AUDITORIA_2026-08-10.md`
+Ubicación:
 
-Contiene:
+`frontend/rl-app/src/app/shared/components/skeleton-loader/skeleton-loader.component.ts`
 
-- estado físico y contrato actual de `RL_AUDITORIA`;
-- política de retención;
-- `COPY_ONLY`;
-- `LEGAL_HOLD`;
-- reconciliación;
-- seguridad y privacidad;
-- destino histórico futuro;
-- reversibilidad;
-- matriz de autorizaciones;
-- criterios de cierre.
+Variantes disponibles:
 
-### Diagnóstico agregado de solo lectura
+- `content`
+- `table`
+- `cards`
+- `form`
 
-`database/auditoria/archivado/01_db01_diagnostico_rl_auditoria_solo_lectura.sql`
+Características:
 
-Mide únicamente:
+- standalone component;
+- `ChangeDetectionStrategy.OnPush`;
+- filas configurables y limitadas entre 1 y 12;
+- geometría del skeleton marcada como decorativa con `aria-hidden="true"`;
+- etiqueta accesible `sr-only`;
+- `aria-live="polite"`, `aria-atomic="true"` y `aria-busy="true"`;
+- no utiliza `role="status"`, para no competir con confirmaciones funcionales;
+- animación visual controlada por CSS;
+- modo estático cuando el usuario solicita reducción de movimiento.
 
-- total de registros;
-- fecha mínima/máxima;
-- crecimiento mensual;
-- distribución por acción;
-- distribución por módulo;
-- top 20 tablas auditadas;
-- longitud agregada de CLOB.
+### Integración transversal
 
-No proyecta correos, IP ni contenido de CLOB y no ejecuta DDL/DML.
+El skeleton se integra al `MainLayoutComponent` utilizando el estado HTTP global ya existente (`GlobalHttpStateService`). No se duplicó lógica de carga ni se alteraron interceptores o contratos HTTP.
 
-### Validador bloqueante
+### Pruebas unitarias
 
-`scripts/validation/validate_db01_auditoria_archiving.ps1`
+`frontend/rl-app/src/app/shared/components/skeleton-loader/skeleton-loader.component.spec.ts`
 
-Quality Gates verifica que:
+Cubre:
 
-- exista la política y el diagnóstico;
-- el paquete SQL permanezca de solo lectura;
-- no exista DDL/DML de archivo;
-- no exista scheduler/job Oracle;
-- no se alcance transición 05/06 ni `B10_*`;
-- se mantenga el contrato físico esperado de `RL_AUDITORIA`;
-- se mantenga el contrato Backend de inserción + consulta/paginación;
-- no se versionen secretos.
+1. región viva accesible sin colisión con estados funcionales;
+2. número de filas solicitado;
+3. límites seguros de filas 1..12.
 
 ---
 
-## 4. Evidencia CI DB-01
+## 4. Hallazgo de regresión y corrección
 
-**Quality Gates Run:** `31418050903` (#633) — **SUCCESS**
+La primera certificación candidata sobre `d1515471185bd3fd5f58abac9f5762a6b0cc6017` detectó un problema semántico en Quality Gates Run `31420010414` (#645):
 
-- DB-01 Validator: **CORRECTO**.
-- Política `COPY_ONLY`, sin borrado automático, DDL/DML físico ni scheduler: **CORRECTA**.
-- Retención: **NO DEFINIDA** hasta aprobación institucional.
+- Backend, build, unit tests y validador FE-03/FE-04 estaban correctos;
+- dos E2E fallaron porque los nuevos indicadores de carga habían agregado dos `role="status"` globales;
+- los selectores accesibles existentes `getByRole('status')` dejaron de ser únicos cuando coexistían con mensajes funcionales como `Estado actualizado correctamente.` y `Versión clonada como borrador.`.
+
+Corrección aplicada:
+
+- las regiones de carga mantienen `aria-live`, `aria-atomic` y `aria-busy`;
+- se retiró `role="status"` exclusivamente de la infraestructura nueva de carga;
+- se preservaron intactos los `role="status"` funcionales existentes;
+- el validador FE-03/FE-04 ahora bloquea explícitamente una futura reintroducción de esa colisión.
+
+Resultado final: Quality Gates #647 volvió a **SUCCESS** con E2E 13/13.
+
+---
+
+## 5. Validador bloqueante FE-03 + FE-04
+
+Ubicación:
+
+`scripts/validation/validate_fe03_fe04_accessibility_loading.ps1`
+
+Quality Gates verifica:
+
+- `lang="es-HN"`;
+- skip-link;
+- landmark principal y foco programático;
+- `aria-busy` global;
+- contrato accesible del sidebar;
+- ruta activa anunciable;
+- región viva de carga sin colisión de `role="status"`;
+- skeleton transversal;
+- skeleton accesible y decorativo para lector de pantalla;
+- foco visible;
+- `prefers-reduced-motion`;
+- animación skeleton controlada;
+- ausencia de `tabindex` positivo.
+
+El workflow `.github/workflows/quality-gates.yml` ejecuta este validador como puerta bloqueante.
+
+---
+
+## 6. Evidencia CI FE-03 + FE-04
+
+**Quality Gates Run:** `31420468597` (#647) — **SUCCESS**
+
+- FE-03/FE-04 Validator: **CORRECTO**.
 - Build Release: **0 errores / 0 advertencias**.
 - Backend: **304/304** pruebas aprobadas.
-- Frontend: **162/162** pruebas aprobadas en 25 archivos.
+- Frontend: **165/165** pruebas aprobadas en 26 archivos.
+- Skeleton loader: **3/3** pruebas aprobadas.
 - E2E Playwright: **13/13** aprobadas.
 - `npm audit`: **0 vulnerabilidades**.
 - Cobertura Backend: **22.19% líneas / 24.83% ramas**.
-- Cobertura Frontend: **39.53% sentencias / 35.24% ramas / 35.99% funciones / 39.15% líneas**.
+- Cobertura Frontend: **39.92% sentencias / 35.65% ramas / 36.10% funciones / 39.48% líneas**.
 - Inventario exacto Matrices: **17 tablas / 17 secuencias**.
-- Autorización/UAT Matrices: **correctos**.
+- Contrato autorización/UAT Matrices: **correcto**.
 
-### Oracle durante DB-01
+### Alcance no modificado
 
-- **NO** se abrió conexión Oracle.
-- **NO** se ejecutó DDL.
-- **NO** se ejecutó DML.
-- **NO** se creó tabla histórica.
-- **NO** se movió ni eliminó un registro de `RL_AUDITORIA`.
+- **NO** se modificó Backend funcional.
+- **NO** se alteraron endpoints ni contratos API.
+- **NO** se conectó ni ejecutó Oracle durante FE-03/FE-04.
+- **NO** se ejecutó DDL/DML.
 - **NO** se ejecutaron scripts 05/06.
 - **NO** se modificaron `B10_*`.
+- **NO** se modificó Producción.
 
 ---
 
-## 5. Estado consolidado del Plan de Mejoras Integrales
+## 7. Estado consolidado del Plan de Mejoras Integrales
 
 | Orden | Código | Estado |
 |---:|---|---|
@@ -157,35 +186,34 @@ Quality Gates verifica que:
 | 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado** |
 | 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Completado físicamente; sin índices nuevos** |
 | 7 | DB-01 — Política de archivado de auditoría | **Completado y certificado técnicamente** |
-| 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | **Siguiente** |
-| 9 | FE-01 — Signals gradual | Pendiente |
+| 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | **Completado y certificado** |
+| 9 | FE-01 — Signals gradual | **Siguiente** |
 | 10 | GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa | Pendiente |
 
 ---
 
-## 6. Directrices activas
+## 8. Directrices activas
 
 1. Trabajar exclusivamente sobre `desarrollo`.
 2. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
 3. Mantener PR #20 abierto y en borrador; no auto-merge.
 4. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
 5. No versionar secretos ni cadenas de conexión.
-6. DB-01 no autoriza eliminación automática ni manual de `RL_AUDITORIA`.
-7. Cualquier plazo de retención/fecha de corte requiere aprobación formal de Cumplimiento/Legal.
-8. Cualquier destino histórico requiere autorización DDL separada.
-9. Cualquier copia física requiere autorización DML separada y reconciliación obligatoria.
-10. Cualquier futura purga requiere una política separada, archivo reconciliado y autorización específica.
-11. Si la cardinalidad degrada Q09/Q10, volver a perfilar conforme DB-03 antes de crear índices.
-12. La bitácora histórica es append-only; las correcciones se agregan, no reescriben entradas anteriores.
+6. Mantener HTML semántico como primera opción; usar ARIA únicamente cuando agrega información que el HTML nativo no expresa.
+7. No introducir `tabindex` positivo.
+8. No reutilizar `role="status"` para infraestructura global de carga si puede coexistir con mensajes funcionales que ya usan ese rol.
+9. Todo estado de carga animado debe respetar `prefers-reduced-motion`.
+10. Mantener el componente skeleton independiente de la lógica de negocio y del contrato HTTP.
+11. La bitácora histórica es append-only; las correcciones se agregan, no reescriben entradas anteriores.
 
 ---
 
-## 7. Punto exacto de continuación
+## 9. Punto exacto de continuación
 
-**DB-01 queda cerrada a nivel de política, diseño y controles de repositorio sin modificar físicamente Oracle.**
+**FE-03 + FE-04 queda cerrada técnicamente con accesibilidad transversal, skeleton loaders reutilizables y regresión UAT completa en verde.**
 
 La siguiente fase de la secuencia aprobada es:
 
-### FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders
+### FE-01 — Adopción gradual de Angular Signals
 
-Debe mejorar accesibilidad y estados de carga de forma transversal sin alterar contratos funcionales ni degradar las pruebas UAT existentes.
+Debe realizarse de forma incremental, priorizando estado local y derivado donde Signals aporte claridad/rendimiento, sin reescritura masiva ni alteración de contratos API/servicios estables.
