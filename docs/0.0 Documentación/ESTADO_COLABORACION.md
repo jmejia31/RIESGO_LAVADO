@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-07: La remediación de seguridad NPM del Módulo Frontend (`frontend/rl-app`) ha sido completada al **100% con 0 vulnerabilidades** en `npm audit`. El workflow de CI (`quality-gates.yml`) fue reforzado para hacer bloqueante la auditoría de seguridad y verificar la instalación reproducible mediante `npm ci`. Todos los validadores locales (Estructura, BD, Enlaces, Expediente Fase 9, Paquete Operativo Fase 10, Bloque 1 y Bloques 2-6 de Fase 11, Alineación DDL, Autorización e Inventario de 17 Tablas) y todas las suites de prueba (Backend 252/252 pasadas, Frontend 128/128 pasadas, E2E 10/10 pasadas) se encuentran **100% VERDES Y PASADAS**. `main` continúa intacta y el PR #20 permanece abierto y en borrador.
+> Actualización 2026-08-10: Sincronización de Gobernanza y Handoff UAT (Fase 13). La línea base del repositorio se encuentra en el commit `d8f5869` en la rama `desarrollo`. La remediación de seguridad NPM del Módulo Frontend se mantiene al **100% con 0 vulnerabilidades** en `npm audit` y el workflow de CI (`quality-gates.yml`) bloqueante. Se incorporaron los componentes UAT de Matrices de Riesgos, contratos C# y E2E Playwright. Todos los validadores y suites de prueba locales están verificados. `main` continúa intacta y el PR #20 permanece abierto en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -10,6 +10,7 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria:** `desarrollo`
+- **Commit línea base:** `d8f5869`
 - **Rama estable:** `main` — no modificar ni integrar sin autorización expresa de Javier Mejía
 - **Ramas remotas permitidas:** únicamente `main` y `desarrollo`
 - **PR de revisión:** #20, abierto, borrador y sin autorización de fusión
@@ -20,14 +21,13 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: Cierre de Remediación de Seguridad NPM y Refuerzo de Quality Gate
-- **Fecha**: 2026-08-07 (Hora local)
+- **Intervención**: GOV-01 — Sincronización de Bitácora y Estado UAT
+- **Fecha**: 2026-08-10 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit inicial**: `bf0cef17290d955bf3081bf247cab3abb846e671`
-- **Commit final publicado**: `63cdd08`
-- **Estado**: Remediación de Seguridad NPM **COMPLETADA AL 100% (0 vulnerabilidades)**. Quality Gate de CI reforzado y bloqueante. Todos los Quality Gates locales (252 backend, 128 frontend, 10 E2E y validadores) 100% PASADOS.
-- **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
+- **Commit línea base**: `d8f5869`
+- **Estado**: Gobernanza y Bitácora sincronizadas al commit `d8f5869`. Remediación NPM en 0 vulnerabilidades. Fase 13 UAT en desarrollo integrada en validadores.
+- **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
 
@@ -223,15 +223,7 @@ ci(matrices): exigir paquete operativo fase 10
 
 ---
 
-## 10. Pendiente independiente de seguridad
+## 10. Estado de Seguridad NPM
 
-`npm ci` continúa reportando:
+El módulo Frontend (`frontend/rl-app`) cuenta con **0 vulnerabilidades** en `npm audit` tras la remediación mediante overrides exactos en `package.json`. La instalación reproducible con `npm ci` y la verificación de auditoría de seguridad son controladas de forma bloqueante en la puerta de calidad `.github/workflows/quality-gates.yml`.
 
-```text
-13 vulnerabilidades
-6 moderadas
-6 altas
-1 crítica
-```
-
-No se aplicó `npm audit fix --force`, porque podría introducir cambios incompatibles. Este pendiente requiere una fase de seguridad separada antes de Producción y debe recordarse al final de cada fase hasta su resolución formal.
