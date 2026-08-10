@@ -1,0 +1,87 @@
+name: One-time BE03 Governance
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - '.github/workflows/one-time-be03-governance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  append-be03:
+    name: Append BE-03 immutable bitacora entry
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 1
+
+      - name: Append BE-03 entry only
+        shell: bash
+        run: |
+          cat >> BITACORA_COLABORACION.md <<'EOF'
+
+---
+
+## Registro de Intervención — ChatGPT — BE-03 Health & Readiness Probes
+
+- **Fecha**: 2026-08-10, hora local (UTC-6).
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Base de inicio**: `fad9abd579a4aec76a2b174d8bb9edcb8d943d38`.
+- **HEAD técnico certificado**: `c095c437be544899186dd945bc1b3040c32f7156`.
+- **Quality Gate técnico**: Run `31404261933` (#563) — **SUCCESS**.
+
+### Objetivo y alcance
+
+Implementar **BE-03** separando liveness y readiness de forma segura, sin modificar `main`, sin ejecutar Oracle durante desarrollo/CI y sin exponer información sensible.
+
+### Cambios realizados
+
+1. `GET /healthz` devuelve `200` con estado `Healthy` y no consulta Oracle ni servicios externos.
+2. `GET /readyz` valida Oracle mediante una consulta mínima de solo lectura `SELECT 1 FROM DUAL`.
+3. Readiness devuelve `200/Healthy` cuando la dependencia está disponible y `503/Unhealthy` cuando no lo está.
+4. Los endpoints son anónimos para infraestructura y exponen únicamente estado agregado mínimo.
+5. Se añadió timeout configurable `HealthChecks:OracleTimeoutSeconds`, con valor por defecto de 3 segundos y límites efectivos de 1 a 10 segundos.
+6. El probe no expone cadenas de conexión, credenciales, SQL, errores `ORA-*`, stack traces ni mensajes de excepción; el logging registra únicamente el tipo de excepción.
+7. Se añadieron pruebas para liveness independiente, readiness saludable/no saludable, rutas exactas, acceso anónimo y límites del timeout.
+8. `appsettings.example.json` y `RL.API.http` quedaron actualizados para documentar el contrato operativo.
+
+### Evidencia CI
+
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **277/277** pruebas aprobadas.
+- Frontend: **162/162** pruebas aprobadas.
+- E2E Playwright: **13/13** aprobadas.
+- NPM audit: **0 vulnerabilidades**.
+- Cobertura Backend: líneas **20.79%**, ramas **23.44%**.
+- Cobertura Frontend: sentencias **39.53%**, ramas **35.24%**, funciones **35.99%**, líneas **39.15%**.
+- Validadores BD/Oracle/UAT/inventario: **correctos**.
+
+### Restricciones preservadas
+
+- `main` no fue modificado.
+- PR #20 debe permanecer abierto y en borrador.
+- Oracle real no fue conectado ni ejecutado durante esta intervención ni por CI.
+- No se ejecutó DDL ni DML.
+- No se ejecutaron scripts de transición.
+- La lógica `SELECT 1 FROM DUAL` solo se ejecutará en runtime cuando `/readyz` sea invocado en un ambiente configurado.
+
+### Punto exacto de continuación
+
+**BE-03 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **BE-04 — Rate Limiting**, manteniendo las restricciones vigentes de rama, PR, `main` y Oracle.
+EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add BITACORA_COLABORACION.md
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "docs(governance): registrar cierre append-only BE-03"
+          git push origin HEAD:desarrollo
