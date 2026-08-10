@@ -1,130 +1,94 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: **BE-02 — Caché con invalidación explícita** fue implementado y certificado técnicamente en `desarrollo`. Se incorporó una abstracción de caché en memoria por instancia, con TTL acotados, prevención de cache stampede, invalidación explícita por alcance y protección frente a la carrera lectura/invalidation para impedir repoblación obsoleta. Solo se cachean lecturas estables de versiones/metodología de formularios de Matrices, configuración del sistema y slides de login. Evaluaciones, evidencias, flujos, auditoría, consolidado/reportes dinámicos y demás información transaccional permanecen fuera de caché. El HEAD técnico `a81e9a2747b9e1097baee0cc7773c4b8eedcbd1f` fue certificado por GitHub Actions Quality Gates Run `31408706366` (#607) en **SUCCESS**: Backend 304/304, Frontend 162/162, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` con 0 vulnerabilidades. Oracle no fue conectado ni ejecutado; `main` permanece intacta y el PR #20 debe continuar abierto y en borrador.
+> Actualización 2026-08-10: **DB-03 — Profiling Oracle / `EXPLAIN PLAN`** quedó preparado y certificado a nivel de repositorio en `desarrollo`. El paquete identifica 11 consultas críticas reales del backend, levanta estadísticas/cardinalidad/índices existentes, genera `EXPLAIN PLAN` con `DBMS_XPLAN` y está protegido contra DDL de índices, DML sobre tablas `RL_*`, scripts de transición, limpieza `B10_*` y credenciales versionadas. El HEAD técnico `8c34b62bce9a962b160129419a54125391922360` fue certificado por Quality Gates Run `31411370593` (#619) en **SUCCESS**. **La ejecución física Oracle permanece pendiente** porque esta intervención no dispone de una conexión institucional autorizada ni secretos Oracle; no se inventaron planes, costes ni cardinalidades.
 
-Documento vivo. Debe actualizarse al finalizar cada intervención. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
+Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
 
 ---
 
 ## 1. Línea base vigente
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
-- **Rama obligatoria de trabajo:** `desarrollo`
-- **Base BE-02:** `79fe291b133de880d7d20830837eace0b72d1f91`
-- **HEAD técnico BE-02 certificado:** `a81e9a2747b9e1097baee0cc7773c4b8eedcbd1f`
+- **Rama obligatoria:** `desarrollo`
+- **Base DB-03:** `ff1cc95c72566223274b23574d4ff4db3e310fe1`
+- **HEAD técnico DB-03 certificado:** `8c34b62bce9a962b160129419a54125391922360`
 - **Rama estable:** `main`
 - **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
-- **Política `main`:** no modificar ni integrar sin autorización expresa de Javier Mejía
-- **Ramas remotas permitidas por protocolo:** únicamente `main` y `desarrollo`
-- **PR de revisión:** #20 — abierto, en borrador y sin autorización de fusión
-- **Arquitectura:** monolito modular con Angular, ASP.NET Core y Oracle 11g
-- **Modelo vigente de Matrices:** 17 tablas `RL_MR_*` y 17 secuencias
+- **PR #20:** debe permanecer abierto, en borrador y sin fusión
+- **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
+- **Oracle físico ejecutado en DB-03:** **NO**
+- **DDL/DML de negocio ejecutado en DB-03:** **NO**
 
 ---
 
-## 2. Última intervención — BE-02
+## 2. DB-03 — estado certificado
 
-- **Intervención:** BE-02 — Caché con invalidación explícita
-- **Fecha:** 2026-08-10 (UTC-6)
-- **Autor:** ChatGPT
-- **Rama:** `desarrollo`
-- **Base de inicio:** `79fe291b133de880d7d20830837eace0b72d1f91`
-- **HEAD técnico certificado:** `a81e9a2747b9e1097baee0cc7773c4b8eedcbd1f`
-- **Quality Gate técnico:** Run `31408706366` (#607) — **SUCCESS**
-- **Estado:** **BE-02 completado y certificado técnicamente**.
+### Paquete técnico
 
-### Cambios certificados
+Ubicación: `database/19_matrices_riesgos/performance/`
 
-1. **Infraestructura de caché explícita**
-   - `IApplicationCache` desacopla negocio de la implementación concreta.
-   - `ApplicationMemoryCache` usa `IMemoryCache` por instancia.
-   - Claves deterministas por alcance + clave funcional.
-   - TTL configurables y normalizados entre 5 y 900 segundos.
-   - Bloqueo por alcance para prevenir `cache stampede`.
-   - Resultados fallidos/no encontrados no se cachean donde corresponda.
+- `00_db03_ejecutar_profiling_autorizado.sql`
+  - exige `CURRENT_SCHEMA = RIESGO_LAVADO`;
+  - exige token manual `EJECUTAR_DB03`;
+  - ejecuta únicamente inventario + profiling DB-03;
+  - no invoca transición 06 ni limpieza B10.
+- `01_db03_inventario_estadisticas_solo_lectura.sql`
+  - identidad del ambiente sin credenciales;
+  - `USER_TAB_STATISTICS`;
+  - cardinalidad real de tablas críticas;
+  - `USER_INDEXES` / `USER_IND_COLUMNS`;
+  - estadísticas de columnas relevantes.
+- `02_db03_explain_plan_consultas_criticas.sql`
+  - 11 `EXPLAIN PLAN`;
+  - 11 salidas `DBMS_XPLAN.DISPLAY`;
+  - binds tipados de referencia;
+  - `ROLLBACK` final de las filas diagnósticas de `PLAN_TABLE`;
+  - sin `COMMIT`.
 
-2. **Invalidación por alcance**
-   - Alcance `be02:matrices-formularios` para definiciones/versiones/metodología dinámica de Matrices.
-   - Alcance `be02:configuracion-sistema` para configuración institucional del sistema.
-   - Alcance `be02:login-slides` para slides activos/todos.
-   - Cada mutación exitosa invalida explícitamente el alcance relacionado.
-   - Las mutaciones fallidas no destruyen entradas válidas.
+### Consultas críticas incluidas
 
-3. **Protección contra repoblación obsoleta concurrente**
-   - La generación/token del alcance se captura antes de consultar el origen.
-   - Si una invalidación ocurre mientras una lectura está en vuelo, ese resultado puede completar la solicitud original pero **no puede repoblar la nueva generación de caché**.
-   - Se añadió una prueba específica de esta carrera.
+| ID | Alcance |
+|---|---|
+| DB03_Q01 | Versión vigente de formulario por familia |
+| DB03_Q02 | Evaluaciones paginadas sin filtros opcionales |
+| DB03_Q03 | Evaluaciones paginadas con riesgo/estado/área/residual |
+| DB03_Q04 | Consolidado tipado de Matrices |
+| DB03_Q05 | Historial de flujos por evaluación |
+| DB03_Q06 | Resumen operativo / dashboard |
+| DB03_Q07 | Alertas por evaluación |
+| DB03_Q08 | Automonitoreo por evaluación |
+| DB03_Q09 | Auditoría paginada con filtros exactos/fecha |
+| DB03_Q10 | Auditoría con búsqueda de subcadena |
+| DB03_Q11 | Metodología dinámica vigente |
 
-4. **Matrices — superficie cacheada**
-   - Versión vigente por familia.
-   - Versión por ID.
-   - Historial de versiones por familia.
-   - Metodología dinámica vigente.
-   - Invalidación después de crear borrador, clonar, actualizar borrador, publicar y cambiar vigencia.
-   - **No se cachean:** evaluaciones, paginación de evaluaciones, flujos, evidencias, consolidado tipado ni reportes transaccionales.
+### Política de optimización
 
-5. **Configuración — superficie cacheada**
-   - Configuración del sistema.
-   - Slides activos.
-   - Todos los slides.
-   - Invalidación después de guardar configuración y crear/actualizar/eliminar slides.
-
-6. **Catálogos**
-   - No se cachearon en BE-02 porque no se identificó una ruta de mantenimiento/mutación con invalidación explícita dentro del alcance revisado.
-   - Permanecen consultados desde su fuente de verdad; una futura caché de catálogos deberá incorporar primero los puntos reales de escritura e invalidación.
-
-7. **Configuración operativa**
-   - `FormularioVersionTtlSeconds`: 120 segundos por defecto.
-   - `ConfiguracionSistemaTtlSeconds`: 120 segundos por defecto.
-   - `LoginSlidesTtlSeconds`: 60 segundos por defecto.
-   - Valores efectivos acotados a 5–900 segundos.
-
-8. **Restricción de topología**
-   - La implementación actual es caché local por proceso, adecuada al monolito/instancia actual.
-   - Si el API se escala horizontalmente a múltiples instancias, la invalidación local no invalida procesos hermanos; antes de ese despliegue deberá migrarse la abstracción a caché/invalidation distribuida.
+- **No se creó ningún índice nuevo.**
+- Los índices existentes se evalúan antes de proponer otros.
+- `TABLE ACCESS FULL` no se considera automáticamente un defecto.
+- Estados/flags de baja cardinalidad no se indexan por intuición.
+- La búsqueda `LOWER(...) LIKE '%texto%'` de Auditoría se trata como caso especial y no como candidato automático a B-tree.
+- Si estadísticas están ausentes u obsoletas, DB-03 registra el hallazgo; no ejecuta `DBMS_STATS` automáticamente.
+- Un cambio futuro de índice requiere evidencia física Oracle saneada.
 
 ---
 
-## 3. Evidencia de verificación BE-02
+## 3. Evidencia CI DB-03
 
-### GitHub Actions — Quality Gates
+**Quality Gates Run:** `31411370593` (#619) — **SUCCESS**
 
-- **Run:** `31408706366`
-- **Número:** #607
-- **Conclusión:** **SUCCESS**
-- **Build Release:** 0 errores, 0 advertencias
-- **Backend:** 304/304 pruebas aprobadas; 0 fallidas; 0 omitidas
-- **Frontend:** 162/162 pruebas aprobadas en 25 archivos
-- **E2E Playwright:** 13/13 aprobadas
-- **NPM audit:** 0 vulnerabilidades
-- **Cobertura Backend:** líneas 22.19%; ramas 24.83%
-- **Cobertura Frontend:** sentencias 39.53%; ramas 35.24%; funciones 35.99%; líneas 39.15%
-- **Validadores de BD, preparación Oracle, inventario 17/17, autorización y contrato UAT:** aprobados
-
-### Pruebas BE-02 añadidas
-
-- Reutilización de valor dentro del TTL.
-- Invalidación selectiva por alcance.
-- No-cache cuando el predicado de seguridad rechaza el resultado.
-- Prevención de `cache stampede` con solicitudes concurrentes.
-- Carrera lectura/invalidation: una lectura previa no puede repoblar caché después de una mutación.
-- Acotamiento de TTL.
-- Configuración cacheada + invalidación tras guardado exitoso.
-- Slides cacheados + invalidación tras mutación.
-- Mutación fallida conserva caché vigente.
-
-### Oracle
-
-Durante desarrollo y certificación CI de BE-02:
-
-- **NO** se abrió conexión a Oracle real;
-- **NO** se ejecutó DDL;
-- **NO** se ejecutó DML;
-- **NO** se ejecutaron scripts de transición;
-- **NO** se modificó el esquema;
-- **NO** se modificaron respaldos `B10_*`.
-
-Los validadores Oracle ejecutados por CI son controles estáticos/de preparación y no constituyen una ejecución física de Oracle.
+- Validador DB-03: **CORRECTO**.
+- Paquete protegido contra DDL/DML de negocio: **CORRECTO**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304** pruebas aprobadas.
+- Frontend: **162/162** pruebas aprobadas en 25 archivos.
+- E2E Playwright: **13/13** aprobadas.
+- `npm audit`: **0 vulnerabilidades**.
+- Cobertura Backend: **22.19% líneas / 24.83% ramas**.
+- Cobertura Frontend: **39.53% sentencias / 35.24% ramas / 35.99% funciones / 39.15% líneas**.
+- Inventario exacto Matrices: **17 tablas / 17 secuencias**.
+- Contrato UAT/autorización Matrices: **correcto**.
+- CI declara expresamente que **no ejecuta Oracle real ni genera planes físicos**.
 
 ---
 
@@ -136,65 +100,39 @@ Los validadores Oracle ejecutados por CI son controles estáticos/de preparació
 | 2 | BE-01 + FE-02 — ProblemDetails + Interceptor HTTP | **Completado y certificado** |
 | 3 | BE-03 — `/healthz` + `/readyz` | **Completado y certificado** |
 | 4 | BE-04 — Rate Limiting | **Completado y certificado** |
-| 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado técnicamente** |
-| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Siguiente; sujeto a autorización/ambiente Oracle** |
-| 7 | DB-01 — Política de archivado de auditoría | Pendiente de diseño; sin borrado automático |
+| 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado** |
+| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Paquete/CI completado; ejecución física pendiente** |
+| 7 | DB-01 — Política de archivado de auditoría | **Pendiente; no iniciar hasta resolver continuidad DB-03** |
 | 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | Pendiente |
 | 9 | FE-01 — Signals gradual | Pendiente |
-| 10 | GOV-02 + GOV-03 — Linter/Sonar + Docker multietapa | Pendiente |
+| 10 | GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa | Pendiente |
 
 ---
 
-## 5. Estado consolidado de Matrices de Riesgos
+## 5. Directrices activas
 
-| Bloque | Estado vigente |
-|---|---|
-| Modelo reducido Oracle | **17 tablas + 17 secuencias** |
-| Fase 10 — transición física | **Completada según evidencia histórica del proyecto** |
-| Fase 11 — certificación funcional/Oracle | **Completada y certificada según evidencia histórica registrada** |
-| Fase 12 — hardening NPM | **Completada — 0 vulnerabilidades** |
-| Fase 13 — contrato/UAT automatizado | **Certificación de repositorio completada; validación local residual pendiente según PR #20** |
-
-La validación local residual de UAT permanece como actividad funcional/operativa independiente y no fue sustituida por BE-02.
-
----
-
-## 6. Directrices activas e inviolables
-
-1. Trabajar únicamente sobre `desarrollo`.
-2. No modificar, fusionar ni publicar en `main` sin autorización expresa de Javier Mejía.
-3. Mantener el PR #20 abierto y en borrador.
-4. No habilitar auto-merge.
-5. No ejecutar Oracle, DDL ni DML salvo autorización formal y alcance específico.
-6. No exponer credenciales, cadenas de conexión, secretos, errores Oracle ni detalles internos al cliente.
-7. `/healthz` debe permanecer independiente de Oracle y dependencias externas.
-8. `/readyz` debe conservar respuesta agregada mínima y una comprobación de solo lectura.
-9. Las políticas BE-04 deben conservar particiones separadas y no confiar en cabeceras de forwarding hasta configurar proxies confiables.
-10. Reintentos automáticos HTTP únicamente para `GET` y solo ante `0/503/504`.
-11. Nunca reintentar automáticamente `POST`, `PUT`, `DELETE` o `PATCH`.
-12. Toda superficie agregada a caché debe tener TTL acotado e invalidación explícita en sus mutaciones relacionadas.
-13. No cachear datos transaccionales sensibles/dinámicos sin una justificación y contrato de invalidación verificables.
-14. Antes de crear índices Oracle, ejecutar y documentar profiling/`EXPLAIN PLAN` en el ambiente autorizado.
-15. La bitácora es histórica e inmutable: las correcciones futuras se agregan mediante una nueva entrada, no reescribiendo registros previos.
-16. `ESTADO_COLABORACION.md` es el documento vivo y puede consolidarse conforme cambie el estado real.
+1. Trabajar solo sobre `desarrollo`.
+2. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
+3. Mantener PR #20 abierto y en borrador; no auto-merge.
+4. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
+5. No versionar secretos ni cadenas de conexión.
+6. DB-03 puede ejecutar `EXPLAIN PLAN` únicamente en el ambiente Oracle institucional autorizado y mediante el paquete versionado.
+7. DB-03 **no autoriza** `CREATE INDEX`, `ALTER TABLE`, DML de negocio ni `DBMS_STATS` automático.
+8. Toda evidencia Oracle debe sanearse antes de incorporarse a documentación/versionado.
+9. La bitácora es histórica e inmutable: nuevas correcciones se agregan, no reescriben entradas anteriores.
 
 ---
 
-## 7. Pendientes independientes
+## 6. Punto exacto de continuación
 
-- Validación UAT local residual indicada en PR #20.
-- Si la cuenta Oracle de Desarrollo continúa bloqueada, el desbloqueo corresponde exclusivamente al DBA/administrador autorizado.
-- Configurar proxies confiables antes de habilitar `ForwardedHeaders` como fuente de IP cliente.
-- Si en el futuro existen múltiples instancias del API, sustituir la caché local por una implementación distribuida mediante `IApplicationCache` antes de depender de invalidación cross-node.
+### DB-03 — ejecución física pendiente
 
----
+El repositorio ya está preparado y certificado. Para completar la evidencia física se debe ejecutar, desde un cliente SQL*Plus autorizado contra el esquema institucional correcto:
 
-## 8. Punto exacto de continuación
+```sql
+@database/19_matrices_riesgos/performance/00_db03_ejecutar_profiling_autorizado.sql EJECUTAR_DB03
+```
 
-**GOV-01, BE-01, FE-02, BE-03, BE-04 y BE-02 quedan cerrados técnicamente.**
+Después deben registrarse de forma saneada los 11 planes, estadísticas/cardinalidades y un dictamen por consulta: `SIN_CAMBIO`, `REQUIERE_ESTADISTICAS`, `REQUIERE_REESCRITURA` o `CANDIDATO_INDICE`.
 
-El siguiente paso de la secuencia aprobada es:
-
-### DB-03 — Profiling Oracle / `EXPLAIN PLAN`
-
-DB-03 deberá medir consultas reales y documentar planes de ejecución antes de proponer índices. **No ejecutar `EXPLAIN PLAN`, SQL de profiling, DDL, DML ni conexiones Oracle hasta contar con autorización formal de Javier Mejía y un ambiente Oracle autorizado.**
+**No avanzar a creación de índices ni declarar DB-03 físicamente cerrada sin esa evidencia real.**
