@@ -4,6 +4,8 @@
 
 Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
 
+> Actualización posterior 2026-08-10: se ejecutaron físicamente el inventario DB-03 y los 11 `EXPLAIN PLAN` en `RIESGO_LAVADO`. El inventario confirmó estadísticas vigentes, volumen bajo e índices existentes válidos; no se justifica crear índices. La primera ejecución expuso dos correcciones del paquete: DBeaver no resuelve los includes relativos de `00`, y SQL*Plus 11g no admite `VARIABLE ... DATE`. La corrección versionada reemplaza esos binds por `VARCHAR2(10)` + `TO_DATE`, agrega guardas de esquema/`PLAN_TABLE` a los scripts hijos y documenta el flujo DBeaver. **DB-03 sigue pendiente de repetir únicamente `02` con la versión corregida; no crear índices.**
+
 ---
 
 ## 1. Línea base vigente
@@ -16,8 +18,8 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 - **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
 - **PR #20:** debe permanecer abierto, en borrador y sin fusión
 - **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
-- **Oracle físico ejecutado en DB-03:** **NO**
-- **DDL/DML de negocio ejecutado en DB-03:** **NO**
+- **Oracle físico ejecutado en DB-03:** inventario y planes iniciales ejecutados; repetición corregida de Q09 pendiente.
+- **DDL/DML de negocio ejecutado en DB-03:** no se ejecutó DML de negocio; se creó únicamente `PLAN_TABLE` diagnóstica vacía para `EXPLAIN PLAN`.
 
 ---
 
@@ -101,7 +103,7 @@ Ubicación: `database/19_matrices_riesgos/performance/`
 | 3 | BE-03 — `/healthz` + `/readyz` | **Completado y certificado** |
 | 4 | BE-04 — Rate Limiting | **Completado y certificado** |
 | 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado** |
-| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Paquete/CI completado; ejecución física pendiente** |
+| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Ejecución física iniciada; repetir Q09 con script corregido y emitir dictamen** |
 | 7 | DB-01 — Política de archivado de auditoría | **Pendiente; no iniciar hasta resolver continuidad DB-03** |
 | 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | Pendiente |
 | 9 | FE-01 — Signals gradual | Pendiente |

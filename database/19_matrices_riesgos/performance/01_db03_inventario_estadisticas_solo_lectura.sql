@@ -3,6 +3,20 @@
 -- Prohibido agregar DDL/DML a este archivo.
 -- ============================================================
 
+DECLARE
+  v_schema VARCHAR2(128);
+BEGIN
+  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+    INTO v_schema
+    FROM DUAL;
+
+  IF UPPER(v_schema) <> 'RIESGO_LAVADO' THEN
+    RAISE_APPLICATION_ERROR(-20301,
+      'DB-03 BLOQUEADO: CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
+  END IF;
+END;
+/
+
 PROMPT === IDENTIDAD DEL AMBIENTE (SIN CREDENCIALES) ===
 SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') AS CURRENT_SCHEMA,
        SYS_CONTEXT('USERENV', 'SESSION_USER')   AS SESSION_USER,

@@ -73,6 +73,7 @@ if (Test-Path -LiteralPath $inventoryPath -PathType Leaf) {
 
     Assert-ContainsTokens $inventoryPath @(
         "SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')",
+        "UPPER(v_schema) <> 'RIESGO_LAVADO'",
         'USER_TAB_STATISTICS',
         'USER_INDEXES',
         'USER_IND_COLUMNS',
@@ -89,6 +90,13 @@ if (Test-Path -LiteralPath $explainPath -PathType Leaf) {
     $explainSql = Get-ExecutableSql $explainPath
 
     Assert-ContainsTokens $explainPath @(
+        'WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK',
+        "UPPER(v_schema) <> 'RIESGO_LAVADO'",
+        "TABLE_NAME = 'PLAN_TABLE'",
+        'VARIABLE fechaInicioFilter VARCHAR2(10)',
+        'VARIABLE fechaFinFilter VARCHAR2(10)',
+        "TO_DATE(:fechaInicioFilter, 'YYYY-MM-DD')",
+        "TO_DATE(:fechaFinFilter, 'YYYY-MM-DD') + 1",
         'EXPLAIN PLAN SET STATEMENT_ID',
         "DBMS_XPLAN.DISPLAY('PLAN_TABLE'",
         'ROLLBACK;',

@@ -2826,3 +2826,37 @@ La continuidad correcta es ejecutar manualmente, desde un cliente SQL*Plus autor
 Luego se deben registrar de forma saneada los 11 planes y emitir por consulta uno de estos dictamenes: `SIN_CAMBIO`, `REQUIERE_ESTADISTICAS`, `REQUIERE_REESCRITURA` o `CANDIDATO_INDICE`.
 
 No avanzar a creacion de indices ni declarar DB-03 fisicamente cerrada sin esa evidencia real.
+
+---
+
+## Registro de Intervención — Codex — Corrección de compatibilidad Oracle 11g para DB-03
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `c8df3a0`.
+- **Objetivo**: corregir hallazgos de la primera ejecución física de DB-03 en DBeaver/SQL*Plus Oracle 11g, sin crear índices ni modificar datos de negocio.
+
+### Hechos físicos reportados por el propietario
+
+1. `01_db03_inventario_estadisticas_solo_lectura.sql` se ejecutó correctamente en `RIESGO_LAVADO`: estadísticas vigentes, volumen actual bajo e índices existentes válidos.
+2. `02_db03_explain_plan_consultas_criticas.sql` generó los 11 planes y terminó con `ROLLBACK`; no se creó ningún índice ni se ejecutó DML de negocio.
+3. El cliente DBeaver no resolvió los includes relativos del entrypoint `00`; por ello se documenta la ejecución directa, ordenada y protegida de `01` y `02` desde ese cliente.
+4. SQL*Plus 11g rechazó `VARIABLE ... DATE`, dejando Q09 con binds de fecha no declarados. El plan no se certifica hasta repetirlo con el script corregido.
+5. Se creó una `PLAN_TABLE` vacía y técnica en el esquema para habilitar `EXPLAIN PLAN`; no pertenece al modelo funcional de 17 tablas ni contiene datos de negocio.
+
+### Correcciones versionadas
+
+1. `01` valida explícitamente `CURRENT_SCHEMA = RIESGO_LAVADO` cuando se ejecuta de forma directa.
+2. `02` aborta ante error SQL, valida esquema y existencia de `PLAN_TABLE`.
+3. Los binds de fecha pasan a `VARCHAR2(10)` con `TO_DATE(..., 'YYYY-MM-DD')`, compatible con SQL*Plus 11g y sin conversión implícita.
+4. El README describe el procedimiento DBeaver y sus restricciones reales.
+5. El validador DB-03 ahora exige estas salvaguardas.
+
+### Verificación en esta intervención
+
+- `scripts/validation/validate_db03_oracle_profiling.ps1`: **CORRECTA**.
+- Oracle no fue conectado por Codex en esta intervención; la repetición física del `02` corregido queda a cargo del propietario autorizado.
+
+### Punto de continuación
+
+Publicar la corrección, ejecutar una sola vez `02_db03_explain_plan_consultas_criticas.sql` actualizado desde DBeaver SQL*Plus y registrar el dictamen final por las 11 consultas. No crear índices.

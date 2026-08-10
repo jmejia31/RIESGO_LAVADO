@@ -20,6 +20,16 @@ Desde SQL*Plus, con credenciales suministradas por canal seguro y nunca versiona
 @database/19_matrices_riesgos/performance/00_db03_ejecutar_profiling_autorizado.sql EJECUTAR_DB03
 ```
 
+### Ejecucion desde DBeaver
+
+El ejecutor **Execute in SQL*Plus** de DBeaver puede perder la carpeta de origen del archivo y no resolver los includes relativos (`@@`) del punto de entrada `00`. En ese caso, no repetir `00`:
+
+1. Ejecute `01_db03_inventario_estadisticas_solo_lectura.sql` mediante **Execute in SQL*Plus**.
+2. Confirme que `PLAN_TABLE` existe. Si no existe, debe crearse una unica vez con el script oficial de Oracle compatible con la version institucional.
+3. Ejecute `02_db03_explain_plan_consultas_criticas.sql` mediante **Execute in SQL*Plus**.
+
+Los scripts `01` y `02` validan que el esquema sea `RIESGO_LAVADO`; el `02` tambien aborta si falta `PLAN_TABLE`. No requieren parametro en DBeaver.
+
 No colocar usuario, contraseña, host ni cadena de conexión en scripts, capturas o bitácoras.
 
 ## Salvaguardas

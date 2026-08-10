@@ -5,10 +5,36 @@
 -- El ROLLBACK final descarta las filas diagnosticas de esta sesion.
 -- ============================================================
 
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 SET PAGESIZE 500
 SET LINESIZE 240
 SET LONG 100000
 SET LONGCHUNKSIZE 100000
+
+DECLARE
+  v_schema     VARCHAR2(128);
+  v_plan_table NUMBER;
+BEGIN
+  SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA')
+    INTO v_schema
+    FROM DUAL;
+
+  IF UPPER(v_schema) <> 'RIESGO_LAVADO' THEN
+    RAISE_APPLICATION_ERROR(-20301,
+      'DB-03 BLOQUEADO: CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
+  END IF;
+
+  SELECT COUNT(*)
+    INTO v_plan_table
+    FROM USER_TABLES
+   WHERE TABLE_NAME = 'PLAN_TABLE';
+
+  IF v_plan_table <> 1 THEN
+    RAISE_APPLICATION_ERROR(-20303,
+      'DB-03 BLOQUEADO: PLAN_TABLE no existe en el esquema actual.');
+  END IF;
+END;
+/
 
 COLUMN DB03_RUN_ID NEW_VALUE DB03_RUN_ID NOPRINT
 SELECT TO_CHAR(SYSTIMESTAMP, 'MMDDHH24MISSFF3') AS DB03_RUN_ID FROM DUAL;
@@ -25,8 +51,8 @@ VARIABLE evaluacionId NUMBER
 VARIABLE moduloFilter VARCHAR2(100)
 VARIABLE tablaFilter VARCHAR2(100)
 VARIABLE accionFilter VARCHAR2(30)
-VARIABLE fechaInicioFilter DATE
-VARIABLE fechaFinFilter DATE
+VARIABLE fechaInicioFilter VARCHAR2(10)
+VARIABLE fechaFinFilter VARCHAR2(10)
 VARIABLE buscarFilter VARCHAR2(200)
 VARIABLE maxRow NUMBER
 VARIABLE minRow NUMBER
@@ -43,8 +69,8 @@ EXEC :evaluacionId := 1;
 EXEC :moduloFilter := 'MatricesRiesgos';
 EXEC :tablaFilter := 'RL_MR_EVALUACIONES_RIESGO';
 EXEC :accionFilter := 'UPDATE';
-EXEC :fechaInicioFilter := TRUNC(SYSDATE) - 30;
-EXEC :fechaFinFilter := TRUNC(SYSDATE) + 1 - (1/86400);
+EXEC :fechaInicioFilter := TO_CHAR(TRUNC(SYSDATE) - 30, 'YYYY-MM-DD');
+EXEC :fechaFinFilter := TO_CHAR(TRUNC(SYSDATE), 'YYYY-MM-DD');
 EXEC :buscarFilter := '%admin%';
 EXEC :maxRow := 50;
 EXEC :minRow := 0;
@@ -240,8 +266,8 @@ SELECT * FROM (
          WHERE AUD_ACCION = :accionFilter
            AND AUD_MODULO = :moduloFilter
            AND AUD_TABLA = :tablaFilter
-           AND AUD_FECHA >= :fechaInicioFilter
-           AND AUD_FECHA <= :fechaFinFilter
+           AND AUD_FECHA >= TO_DATE(:fechaInicioFilter, 'YYYY-MM-DD')
+           AND AUD_FECHA < TO_DATE(:fechaFinFilter, 'YYYY-MM-DD') + 1
          ORDER BY AUD_FECHA DESC, AUD_ID DESC
     ) a WHERE ROWNUM <= :maxRow
 ) WHERE rnum > :minRow;

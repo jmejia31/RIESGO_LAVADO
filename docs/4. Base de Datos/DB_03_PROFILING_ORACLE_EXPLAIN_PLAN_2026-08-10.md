@@ -10,6 +10,8 @@
 **DDL de índices:** **NO EJECUTADO**.  
 **DML sobre tablas de negocio:** **NO EJECUTADO**.
 
+> Actualización 2026-08-10: el inventario se ejecutó en `RIESGO_LAVADO` y confirmó estadísticas vigentes, tablas de volumen bajo e índices válidos. Los once planes se generaron sin DDL de índices ni DML de negocio. Se detectó una incompatibilidad de SQL*Plus 11g en los binds `DATE` de Q09; se corrigió en el paquete con `VARCHAR2(10)` y conversión explícita `TO_DATE`. Debe repetirse el script `02` corregido antes del cierre físico definitivo.
+
 ---
 
 ## 1. Objetivo
@@ -168,7 +170,7 @@ DB-03 no ejecutará automáticamente las consultas funcionales solo para obtener
 
 ## 9. Estado de la ejecución física
 
-**Ejecución física Oracle:** **PENDIENTE**.
+**Ejecución física Oracle:** **INICIADA; repetición corregida de Q09 pendiente**.
 
 Motivo: esta intervención tiene autorización funcional para DB-03, pero el entorno operativo de ChatGPT/GitHub no expone una conexión Oracle institucional autorizada ni credenciales seguras que permitan ejecutar SQL*Plus contra el ambiente. No se inventan costos, cardinalidades ni planes.
 
