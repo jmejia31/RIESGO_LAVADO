@@ -2959,3 +2959,88 @@ Definir una política segura para controlar el crecimiento futuro de `RL_AUDITOR
 **DB-01 queda cerrada técnicamente como política/diseño/control de repositorio.**
 
 La siguiente fase del plan aprobado es **FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders**.
+
+
+---
+
+## Registro de Intervención — ChatGPT — FE-03 + FE-04 Accesibilidad / WAI-ARIA + Skeleton Loaders
+
+- **Fecha:** 2026-08-10, hora local (UTC-6).
+- **Agente:** ChatGPT.
+- **Rama:** `desarrollo`.
+- **Base de inicio:** `a0793fe8d56b09be6bdfb4caf022e5acdd07fbcc`.
+- **HEAD técnico certificado:** `59757b3af5cf5ad89c841ee0f7a7d93b8fc0e0fc`.
+- **Quality Gate técnico:** Run `31420468597` (#647) — **SUCCESS**.
+- **Estado:** FE-03 + FE-04 implementado y certificado; sin cambios de Backend, API, Oracle o Producción.
+
+### FE-03 — Accesibilidad
+
+1. Documento principal normalizado a `lang="es-HN"`.
+2. Skip-link a `#contenido-principal`.
+3. Landmarks de navegación y contenido principal identificables.
+4. Gestión de foco SPA al activar rutas, usando `tabindex="-1"` únicamente para foco programático.
+5. Foco global visible mediante `:focus-visible`.
+6. Sidebar con `aria-controls`, `aria-expanded`, etiquetas accesibles y `aria-current="page"` en ruta activa.
+7. Íconos decorativos excluidos del árbol accesible.
+8. `aria-busy` en contenido principal mientras existen solicitudes HTTP activas.
+9. Regiones vivas `aria-live="polite"` para carga y `role="alert"` para error global.
+10. `prefers-reduced-motion` desactiva/reduce animaciones, transiciones y movimiento no esencial.
+
+### FE-04 — Skeleton Loaders
+
+1. Nuevo componente reusable `SkeletonLoaderComponent`.
+2. Variantes: `content`, `table`, `cards`, `form`.
+3. Filas configurables y limitadas a 1..12.
+4. Geometría visual marcada `aria-hidden="true"`.
+5. Etiqueta accesible para tecnologías asistivas.
+6. Integración transversal con `GlobalHttpStateService`; no se duplicó lógica HTTP.
+7. Animación visual compatible con reducción de movimiento.
+8. Tres pruebas unitarias específicas del skeleton.
+
+### Regresión detectada y corrección
+
+La primera corrida candidata, Run `31420010414` (#645), detectó dos fallos E2E por una colisión semántica: la infraestructura nueva de carga había agregado dos `role="status"` globales y los selectores accesibles de confirmaciones funcionales dejaron de ser únicos.
+
+La corrección:
+
+- mantuvo `aria-live`, `aria-atomic` y `aria-busy` para carga;
+- retiró `role="status"` únicamente de la infraestructura nueva de carga;
+- conservó intactos los `role="status"` funcionales existentes;
+- endureció el validador FE-03/FE-04 para impedir reintroducir esa colisión.
+
+La certificación posterior #647 recuperó E2E **13/13**.
+
+### Controles automáticos
+
+Se incorporó `scripts/validation/validate_fe03_fe04_accessibility_loading.ps1` y se conectó a Quality Gates. Valida idioma, skip-link, landmark principal, foco programático, `aria-busy`, contrato del sidebar, ruta activa, regiones vivas sin colisión, skeleton transversal, foco visible, reducción de movimiento, animación controlada y ausencia de `tabindex` positivo.
+
+### Evidencia CI
+
+- FE-03/FE-04 Validator: **CORRECTO**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304**.
+- Frontend: **165/165** en 26 archivos.
+- Skeleton loader: **3/3**.
+- E2E Playwright: **13/13**.
+- `npm audit`: **0 vulnerabilidades**.
+- Cobertura Backend: **22.19% líneas / 24.83% ramas**.
+- Cobertura Frontend: **39.92% sentencias / 35.65% ramas / 36.10% funciones / 39.48% líneas**.
+- Inventario Matrices: **17 tablas / 17 secuencias**.
+- Autorización/UAT Matrices: **correctos**.
+
+### Restricciones preservadas
+
+- No se modificó Backend funcional ni contratos API.
+- Oracle no fue conectado ni ejecutado durante FE-03/FE-04.
+- No hubo DDL/DML.
+- No se ejecutaron scripts 05/06.
+- No se modificaron `B10_*`.
+- Producción no fue modificada.
+- `main` permanece fuera de alcance.
+- PR #20 debe permanecer abierto y en borrador.
+
+### Punto exacto de continuación
+
+**FE-03 + FE-04 queda cerrada técnicamente y certificada.**
+
+La siguiente fase del plan aprobado es **FE-01 — adopción gradual de Angular Signals**, sin reescritura masiva ni cambios de contrato.
