@@ -2621,3 +2621,63 @@ Implementar **BE-03** separando liveness y readiness de forma segura, sin modifi
 ### Punto exacto de continuación
 
 **BE-03 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **BE-04 — Rate Limiting**, manteniendo las restricciones vigentes de rama, PR, `main` y Oracle.
+
+
+
+---
+
+## Registro de Intervención — ChatGPT — BE-04 Rate Limiting
+
+- **Fecha**: 2026-08-10, hora local (UTC-6).
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Base de inicio**: `97563cad0344121acb23ce179a42c2557063fa3e`.
+- **HEAD técnico certificado**: `f7225a243642b510727a663aaa0576120f5b0280`.
+- **Quality Gate técnico**: Run `31406175762` (#582) — **SUCCESS**.
+
+### Objetivo y alcance
+
+Implementar **BE-04 — Rate Limiting** para operaciones sensibles del API sin modificar `main`, sin ejecutar Oracle y sin introducir confianza en cabeceras de forwarding no verificadas.
+
+### Cambios realizados
+
+1. Se incorporó rate limiting nativo ASP.NET Core mediante `System.Threading.RateLimiting` y un `GlobalLimiter` centralizado por método + ruta.
+2. `POST /api/auth/login`: 5 solicitudes por 60 segundos, particionadas por `RemoteIpAddress`.
+3. `POST /api/auth/recuperar-password`: 3 solicitudes por 900 segundos, particionadas por `RemoteIpAddress`.
+4. `POST /api/auth/refresh`: 20 solicitudes por 60 segundos, particionadas por `RemoteIpAddress`.
+5. Exportaciones `consolidado.xlsx` y `consolidado.pdf`: 6 solicitudes por 60 segundos, particionadas por usuario autenticado con fallback a IP.
+6. `POST /api/matrices-riesgos/evidencias/cargar`: 10 solicitudes por 60 segundos, particionadas por usuario autenticado con fallback a IP.
+7. Se configuró `QueueLimit = 0` para rechazo inmediato de exceso en operaciones sensibles.
+8. La respuesta de rechazo usa HTTP 429, contrato ProblemDetails seguro, `traceId` y `Retry-After` cuando el limiter lo informa.
+9. No se confía directamente en `X-Forwarded-For` ni `X-Real-IP`; un futuro despliegue detrás de proxy deberá configurar `ForwardedHeaders` únicamente con proxies/redes confiables.
+10. `appsettings.example.json` documenta límites/ventanas configurables, con normalización defensiva de valores inválidos o excesivos.
+11. Se agregaron pruebas de rutas sensibles, rutas fuera de alcance, aislamiento por usuario, IP real de conexión, no-confianza en headers reenviados, límite exacto, `RetryAfter`, configuración inválida y rutas sin limitación.
+
+### Incidencia intermedia resuelta
+
+El Run `31405971032` (#580) falló en el proyecto de pruebas por una omisión de `using Xunit;` en el archivo nuevo. El API productivo compilaba. La importación fue corregida en `f7225a243642b510727a663aaa0576120f5b0280` y se repitió la certificación completa exitosamente.
+
+### Evidencia CI vigente
+
+- GitHub Actions Quality Gates: Run `31406175762` (#582) — **SUCCESS**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **295/295** pruebas aprobadas.
+- Frontend: **162/162** pruebas aprobadas.
+- E2E Playwright: **13/13** aprobadas.
+- NPM audit: **0 vulnerabilidades**.
+- Cobertura Backend: líneas **21.40%**, ramas **24.11%**.
+- Cobertura Frontend: sentencias **39.53%**, ramas **35.24%**, funciones **35.99%**, líneas **39.15%**.
+- Validadores BD/Oracle/UAT/inventario: **correctos**.
+
+### Restricciones preservadas
+
+- `main` no fue modificado.
+- PR #20 debe permanecer abierto y en borrador.
+- Oracle real no fue conectado ni ejecutado durante esta intervención ni por CI.
+- No se ejecutó DDL ni DML.
+- No se ejecutaron scripts de transición.
+- No se modificaron respaldos `B10_*`.
+
+### Punto exacto de continuación
+
+**BE-04 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **BE-02 — Caché con invalidación explícita**, preservando las restricciones vigentes de rama, PR, `main` y Oracle.
