@@ -1,0 +1,27 @@
+name: One-time FE03 FE04 Governance
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - '.github/workflows/one-time-fe03-fe04-governance.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  append-fe03-fe04:
+    name: Append FE-03 FE-04 immutable bitacora entry
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 1
+
+      - name: Append FE-03 FE-04 entry only
+        shell: bash
+        run: |
+          echo 'CgotLS0KCiMjIFJlZ2lzdHJvIGRlIEludGVydmVuY2nDs24g4oCUIENoYXRHUFQg4oCUIEZFLTAzICsgRkUtMDQgQWNjZXNpYmlsaWRhZCAvIFdBSS1BUklBICsgU2tlbGV0b24gTG9hZGVycwoKLSAqKkZlY2hhOioqIDIwMjYtMDgtMTAsIGhvcmEgbG9jYWwgKFVUQy02KS4KLSAqKkFnZW50ZToqKiBDaGF0R1BULgotICoqUmFtYToqKiBgZGVzYXJyb2xsb2AuCi0gKipCYXNlIGRlIGluaWNpbzoqKiBgYTA3OTNmZThkNTZiMDliZTZiZGZiNGNhZjAyMmU1YWNkZDA3ZmJjY2AuCi0gKipIRUFEIHTDqWNuaWNvIGNlcnRpZmljYWRvOioqIGA1OTc1N2IzYWY1Y2Y1YWQ4OWM4NDFlZTBmN2E3ZDkzYjhmYzBlMGZjYC4KLSAqKlF1YWxpdHkgR2F0ZSB0w6ljbmljbzoqKiBSdW4gYDMxNDIwNDY4NTk3YCAoIzY0Nykg4oCUICoqU1VDQ0VTUyoqLgotICoqRXN0YWRvOioqIEZFLTAzICsgRkUtMDQgaW1wbGVtZW50YWRvIHkgY2VydGlmaWNhZG87IHNpbiBjYW1iaW9zIGRlIEJhY2tlbmQsIEFQSSwgT3JhY2xlIG8gUHJvZHVjY2nDs24uCgojIyMgRkUtMDMg4oCUIEFjY2VzaWJpbGlkYWQKCjEuIERvY3VtZW50byBwcmluY2lwYWwgbm9ybWFsaXphZG8gYSBgbGFuZz0iZXMtSE4iYC4KMi4gU2tpcC1saW5rIGEgYCNjb250ZW5pZG8tcHJpbmNpcGFsYC4KMy4gTGFuZG1hcmtzIGRlIG5hdmVnYWNpw7NuIHkgY29udGVuaWRvIHByaW5jaXBhbCBpZGVudGlmaWNhYmxlcy4KNC4gR2VzdGnDs24gZGUgZm9jbyBTUEEgYWwgYWN0aXZhciBydXRhcywgdXNhbmRvIGB0YWJpbmRleD0iLTEiYCDDum5pY2FtZW50ZSBwYXJhIGZvY28gcHJvZ3JhbcOhdGljby4KNS4gRm9jbyBnbG9iYWwgdmlzaWJsZSBtZWRpYW50ZSBgOmZvY3VzLXZpc2libGVgLgo2LiBTaWRlYmFyIGNvbiBgYXJpYS1jb250cm9sc2AsIGBhcmlhLWV4cGFuZGVkYCwgZXRpcXVldGFzIGFjY2VzaWJsZXMgeSBgYXJpYS1jdXJyZW50PSJwYWdlImAgZW4gcnV0YSBhY3RpdmEuCjcuIMONY29ub3MgZGVjb3JhdGl2b3MgZXhjbHVpZG9zIGRlbCDDoXJib2wgYWNjZXNpYmxlLgo4LiBgYXJpYS1idXN5YCBlbiBjb250ZW5pZG8gcHJpbmNpcGFsIG1pZW50cmFzIGV4aXN0ZW4gc29saWNpdHVkZXMgSFRUUCBhY3RpdmFzLgo5LiBSZWdpb25lcyB2aXZhcyBgYXJpYS1saXZlPSJwb2xpdGUiYCBwYXJhIGNhcmdhIHkgYHJvbGU9ImFsZXJ0ImAgcGFyYSBlcnJvciBnbG9iYWwuCjEwLiBgcHJlZmVycy1yZWR1Y2VkLW1vdGlvbmAgZGVzYWN0aXZhL3JlZHVjZSBhbmltYWNpb25lcywgdHJhbnNpY2lvbmVzIHkgbW92aW1pZW50byBubyBlc2VuY2lhbC4KCiMjIyBGRS0wNCDigJQgU2tlbGV0b24gTG9hZGVycwoKMS4gTnVldm8gY29tcG9uZW50ZSByZXVzYWJsZSBgU2tlbGV0b25Mb2FkZXJDb21wb25lbnRgLgo'y
