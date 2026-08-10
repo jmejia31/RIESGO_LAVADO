@@ -89,15 +89,25 @@ public sealed class ApplicationMemoryCache : IApplicationCache, IDisposable
                 return cached!;
             }
 
+            // La generación se captura ANTES de consultar el origen. Si una mutación
+            // invalida el alcance mientras la lectura está en vuelo, el resultado viejo
+            // se devuelve al llamador original pero jamás repuebla la nueva generación.
+            CancellationTokenSource scopeToken = _scopeTokens.GetOrAdd(
+                scope,
+                static _ => new CancellationTokenSource());
+
             T value = await factory();
             if (shouldCache is not null && !shouldCache(value))
             {
                 return value;
             }
 
-            CancellationTokenSource scopeToken = _scopeTokens.GetOrAdd(
-                scope,
-                static _ => new CancellationTokenSource());
+            if (scopeToken.IsCancellationRequested
+                || !_scopeTokens.TryGetValue(scope, out CancellationTokenSource? currentToken)
+                || !ReferenceEquals(scopeToken, currentToken))
+            {
+                return value;
+            }
 
             var options = new MemoryCacheEntryOptions
             {
