@@ -1,0 +1,67 @@
+name: One-time Bitacora Repair
+
+on:
+  push:
+    branches: [desarrollo]
+    paths:
+      - '.github/workflows/one-time-bitacora-repair.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    name: Restore immutable bitacora prefix
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout desarrollo
+        uses: actions/checkout@v4
+        with:
+          ref: desarrollo
+          fetch-depth: 0
+
+      - name: Restore exact historical prefix and keep appended ChatGPT entry
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess
+
+          path = Path('BITACORA_COLABORACION.md')
+          original = subprocess.check_output([
+              'git', 'show',
+              '50067cfccebac85527f94ab8a97ba8aa03fea21e:BITACORA_COLABORACION.md'
+          ])
+          current = path.read_bytes()
+          marker = '## Registro de Intervención — ChatGPT — Cierre técnico de hallazgos BE-01 + FE-02 posterior a revisión'.encode('utf-8')
+
+          if current.count(marker) != 1:
+              raise SystemExit('No se encontró exactamente una entrada ChatGPT de cierre en la bitácora actual.')
+
+          entry = current[current.index(marker):]
+          repaired = original + b'\n---\n\n' + entry
+
+          if not repaired.startswith(original):
+              raise SystemExit('La reconstrucción no preserva byte-a-byte el prefijo histórico.')
+
+          path.write_bytes(repaired)
+          print(f'Prefijo histórico restaurado exactamente: {len(original)} bytes.')
+          print(f'Entrada nueva preservada: {len(entry)} bytes.')
+          PY
+
+          git diff --check
+
+      - name: Commit repaired bitacora
+        shell: bash
+        run: |
+          if git diff --quiet -- BITACORA_COLABORACION.md; then
+            echo 'No hay diferencias que publicar.'
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add BITACORA_COLABORACION.md
+          git commit -m 'docs(governance): restaurar prefijo inmutable de bitacora'
+          git push origin HEAD:desarrollo
