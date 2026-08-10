@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: **FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders** quedó implementada y certificada técnicamente en `desarrollo`. Se incorporaron semántica y navegación accesible transversal, gestión de foco para SPA, estados `aria-busy`/regiones vivas sin competir con los mensajes funcionales `role="status"`, foco visible, reducción de movimiento y un componente reusable de skeleton loader. El HEAD técnico `59757b3af5cf5ad89c841ee0f7a7d93b8fc0e0fc` fue certificado por Quality Gates Run `31420468597` (#647) en **SUCCESS**: FE-03/FE-04 Validator correcto, Backend 304/304, Frontend 165/165 en 26 archivos, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. No se modificaron Backend, contratos API, Oracle ni datos.
+> Actualización 2026-08-10: **FE-01 — Adopción gradual de Angular Signals** quedó implementada y certificada técnicamente en `desarrollo`. La fase consolidó Signals para estado local/derivado, migró a `OnPush` la primera ola de componentes ya compatibles, tipó y signalizó el carrusel de Login y el archivo seleccionado de Carga de Listas, preservando RxJS para asincronía HTTP y Reactive Forms para formularios. El HEAD técnico certificado es `479e95f6089d098942dffaff75ee6a76b0412039`; Quality Gates Run `31422869343` (#668) finalizó **SUCCESS** con FE-01 Validator correcto, Backend 304/304, Frontend 165/165, E2E 13/13, build 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. No se modificaron Backend funcional, contratos API, Oracle ni Producción.
 
 Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
 
@@ -10,172 +10,161 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria:** `desarrollo`
-- **Base FE-03 + FE-04:** `a0793fe8d56b09be6bdfb4caf022e5acdd07fbcc`
-- **HEAD técnico FE-03 + FE-04 certificado:** `59757b3af5cf5ad89c841ee0f7a7d93b8fc0e0fc`
+- **Base FE-01:** `7d7b9f093a881154e7f5d2373d393cc0ffef31f9`
+- **HEAD técnico FE-01 certificado:** `479e95f6089d098942dffaff75ee6a76b0412039`
 - **Rama estable:** `main`
 - **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
 - **PR #20:** debe permanecer abierto, en borrador y sin fusión
 - **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
 - **DB-03:** cerrado físicamente; 11 planes ejecutados; sin índices nuevos
 - **DB-01:** política y controles de repositorio completados; sin purga automática
-- **FE-03 + FE-04:** completado y certificado técnicamente
+- **FE-03 + FE-04:** completado y certificado
+- **FE-01:** completado y certificado técnicamente
 
 ---
 
-## 2. FE-03 — Accesibilidad / WAI-ARIA
+## 2. FE-01 — decisión arquitectónica
 
-### Semántica y navegación
+FE-01 es una adopción **gradual**, no una reescritura global.
 
-1. El documento principal declara `lang="es-HN"`.
-2. Se incorporó skip-link: **Saltar al contenido principal**.
-3. El layout identifica navegación principal y módulos mediante landmarks y etiquetas accesibles.
-4. El contenido principal tiene `id="contenido-principal"` y `tabindex="-1"` para gestión programática de foco sin introducir `tabindex` positivo.
-5. Las rutas activas anuncian `aria-current="page"` mediante `ariaCurrentWhenActive`.
-6. El control del sidebar expone `aria-controls`, `aria-expanded` y etiqueta dinámica.
-7. Los enlaces del sidebar colapsado conservan nombre accesible para tecnologías asistivas.
-8. Los íconos puramente decorativos se excluyen del árbol accesible con `aria-hidden="true"` y `focusable="false"`.
-9. El botón de cierre de sesión tiene nombre accesible explícito.
-10. Los errores globales conservan `role="alert"` y anuncio asertivo.
+### Signals se utilizan para
 
-### Gestión de foco SPA
+- estado local síncrono consumido por templates;
+- estado derivado mediante `computed`;
+- selección y flags de interfaz;
+- colecciones locales cuya mutación debe ser explícita.
 
-- Cada activación del `router-outlet` reubica el foco en `#contenido-principal` mediante `focus({ preventScroll: true })`.
-- Esto permite que navegación por teclado/lector de pantalla perciba el cambio de vista sin depender del puntero.
-- No se introdujo ningún `tabindex` positivo.
+### RxJS se conserva para
 
-### Foco visible y movimiento
+- `HttpClient` y respuestas asíncronas;
+- interceptores;
+- composición temporal/cancelación y pipelines donde sus operadores siguen siendo el modelo apropiado.
 
-- Se añadió estilo global `:focus-visible` de alto contraste.
-- Se respeta `prefers-reduced-motion: reduce`:
-  - scroll suave desactivado;
-  - transiciones/animaciones reducidas;
-  - skeleton sin animación.
+### Reactive Forms se conserva para
 
-### Estados dinámicos
+- formularios existentes;
+- validaciones y contratos de captura ya certificados.
 
-- `<main>` expone `[attr.aria-busy]="globalState.cargando()"`.
-- El indicador global de carga utiliza región viva `aria-live="polite"` + `aria-atomic="true"`.
-- Los estados funcionales existentes que usan `role="status"` se preservan sin interferencia.
+FE-01 no introduce una migración experimental de formularios ni reemplaza servicios HTTP estables.
 
 ---
 
-## 3. FE-04 — Skeleton Loaders
+## 3. Primera ola `OnPush`
 
-### Componente reusable
+Quedaron protegidos con `ChangeDetectionStrategy.OnPush`:
+
+1. `App`.
+2. `MainLayoutComponent`.
+3. `SinAccesoComponent`.
+4. `ConfiguracionComponent`.
+5. `BitacoraComponent`.
+6. `LoginComponent`.
+7. `CargarListasComponent`.
+
+`MatricesRiesgosComponent` ya utilizaba Signals + `OnPush` antes de FE-01 y se preservó sin reescritura masiva.
+
+---
+
+## 4. Migraciones concretas
+
+### Login
+
+El carrusel dejó de mezclar un Signal de índice con un arreglo `any[]` mutable:
+
+- `slides` → `signal<LoginSlide[]>([])`;
+- `slideSeleccionado` → `computed(...)`;
+- temporizador → `ReturnType<typeof setInterval> | null`;
+- template → `slides()` y `slideSeleccionado()`;
+- `track` estable por `slide.id`;
+- protección ante lista vacía, una única diapositiva e índice fuera de rango.
+
+El contrato de `ConfiguracionService` no cambió.
+
+### Carga de Listas
+
+`archivoSeleccionado` pasó de campo mutable a:
+
+`signal<File | null>(null)`
+
+La operación HTTP conserva exactamente el mismo servicio y contrato; antes de subir se captura una instantánea local no nula del Signal.
+
+---
+
+## 5. Adopciones previas preservadas
+
+El validador FE-01 protege también:
+
+- `AuthService`: `signal`, `computed`, `effect`;
+- `GlobalHttpStateService`: estado con `signal` + `computed`;
+- `MainLayoutComponent`: navegación derivada mediante Signals;
+- `SinAccesoComponent`: `toSignal` para parámetros de ruta;
+- `MatricesRiesgosComponent`: Signals + `computed` + `OnPush`.
+
+No se introduce `BehaviorSubject` para reemplazar estado local Signal en estas superficies.
+
+---
+
+## 6. Validador bloqueante
 
 Ubicación:
 
-`frontend/rl-app/src/app/shared/components/skeleton-loader/skeleton-loader.component.ts`
+`scripts/validation/validate_fe01_signals_adoption.ps1`
 
-Variantes disponibles:
+Quality Gates valida:
 
-- `content`
-- `table`
-- `cards`
-- `form`
-
-Características:
-
-- standalone component;
-- `ChangeDetectionStrategy.OnPush`;
-- filas configurables y limitadas entre 1 y 12;
-- geometría del skeleton marcada como decorativa con `aria-hidden="true"`;
-- etiqueta accesible `sr-only`;
-- `aria-live="polite"`, `aria-atomic="true"` y `aria-busy="true"`;
-- no utiliza `role="status"`, para no competir con confirmaciones funcionales;
-- animación visual controlada por CSS;
-- modo estático cuando el usuario solicita reducción de movimiento.
-
-### Integración transversal
-
-El skeleton se integra al `MainLayoutComponent` utilizando el estado HTTP global ya existente (`GlobalHttpStateService`). No se duplicó lógica de carga ni se alteraron interceptores o contratos HTTP.
-
-### Pruebas unitarias
-
-`frontend/rl-app/src/app/shared/components/skeleton-loader/skeleton-loader.component.spec.ts`
-
-Cubre:
-
-1. región viva accesible sin colisión con estados funcionales;
-2. número de filas solicitado;
-3. límites seguros de filas 1..12.
+- `OnPush` en los siete componentes de la primera ola;
+- ausencia de `Eager` en esas superficies;
+- carrusel de Login tipado y derivado mediante Signals;
+- archivo seleccionado de Carga de Listas como Signal;
+- conservación de Signals en Auth, estado HTTP, layout, Sin Acceso y Matrices;
+- ausencia de `BehaviorSubject` como regresión de estado local en las superficies protegidas;
+- conexión del propio validador con `.github/workflows/quality-gates.yml`.
 
 ---
 
-## 4. Hallazgo de regresión y corrección
+## 7. Dossier técnico
 
-La primera certificación candidata sobre `d1515471185bd3fd5f58abac9f5762a6b0cc6017` detectó un problema semántico en Quality Gates Run `31420010414` (#645):
+`docs/0.0 Documentación/FE_01_ADOPCION_GRADUAL_ANGULAR_SIGNALS_2026-08-10.md`
 
-- Backend, build, unit tests y validador FE-03/FE-04 estaban correctos;
-- dos E2E fallaron porque los nuevos indicadores de carga habían agregado dos `role="status"` globales;
-- los selectores accesibles existentes `getByRole('status')` dejaron de ser únicos cuando coexistían con mensajes funcionales como `Estado actualizado correctamente.` y `Versión clonada como borrador.`.
-
-Corrección aplicada:
-
-- las regiones de carga mantienen `aria-live`, `aria-atomic` y `aria-busy`;
-- se retiró `role="status"` exclusivamente de la infraestructura nueva de carga;
-- se preservaron intactos los `role="status"` funcionales existentes;
-- el validador FE-03/FE-04 ahora bloquea explícitamente una futura reintroducción de esa colisión.
-
-Resultado final: Quality Gates #647 volvió a **SUCCESS** con E2E 13/13.
+Documenta estrategia, límites, primera ola, migraciones, criterios de aceptación y continuidad.
 
 ---
 
-## 5. Validador bloqueante FE-03 + FE-04
+## 8. Evidencia CI FE-01
 
-Ubicación:
+**Quality Gates Run:** `31422869343` (#668) — **SUCCESS**
 
-`scripts/validation/validate_fe03_fe04_accessibility_loading.ps1`
-
-Quality Gates verifica:
-
-- `lang="es-HN"`;
-- skip-link;
-- landmark principal y foco programático;
-- `aria-busy` global;
-- contrato accesible del sidebar;
-- ruta activa anunciable;
-- región viva de carga sin colisión de `role="status"`;
-- skeleton transversal;
-- skeleton accesible y decorativo para lector de pantalla;
-- foco visible;
-- `prefers-reduced-motion`;
-- animación skeleton controlada;
-- ausencia de `tabindex` positivo.
-
-El workflow `.github/workflows/quality-gates.yml` ejecuta este validador como puerta bloqueante.
-
----
-
-## 6. Evidencia CI FE-03 + FE-04
-
-**Quality Gates Run:** `31420468597` (#647) — **SUCCESS**
-
+- FE-01 Validator: **CORRECTO**.
 - FE-03/FE-04 Validator: **CORRECTO**.
+- Validadores DB/Oracle/DB-03/DB-01: **CORRECTOS**.
+- Autorización/UAT Matrices: **CORRECTOS**.
+- Inventario Matrices: **17 tablas / 17 secuencias**.
 - Build Release: **0 errores / 0 advertencias**.
-- Backend: **304/304** pruebas aprobadas.
-- Frontend: **165/165** pruebas aprobadas en 26 archivos.
-- Skeleton loader: **3/3** pruebas aprobadas.
-- E2E Playwright: **13/13** aprobadas.
+- Backend: **304/304**.
+- Frontend: **165/165** en 26 archivos.
+- E2E Playwright: **13/13**.
 - `npm audit`: **0 vulnerabilidades**.
 - Cobertura Backend: **22.19% líneas / 24.83% ramas**.
-- Cobertura Frontend: **39.92% sentencias / 35.65% ramas / 36.10% funciones / 39.48% líneas**.
-- Inventario exacto Matrices: **17 tablas / 17 secuencias**.
-- Contrato autorización/UAT Matrices: **correcto**.
+- Cobertura Frontend: **39.69% sentencias / 35.39% ramas / 36.03% funciones / 39.27% líneas**.
 
-### Alcance no modificado
+La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde al aumento de líneas/ramas defensivas del carrusel y no a pérdida de pruebas: la suite permanece 165/165 y E2E 13/13.
+
+---
+
+## 9. Alcance no modificado
 
 - **NO** se modificó Backend funcional.
 - **NO** se alteraron endpoints ni contratos API.
-- **NO** se conectó ni ejecutó Oracle durante FE-03/FE-04.
+- **NO** se conectó ni ejecutó Oracle durante FE-01.
 - **NO** se ejecutó DDL/DML.
 - **NO** se ejecutaron scripts 05/06.
 - **NO** se modificaron `B10_*`.
 - **NO** se modificó Producción.
+- **NO** se modificó/fusionó `main`.
 
 ---
 
-## 7. Estado consolidado del Plan de Mejoras Integrales
+## 10. Estado consolidado del Plan de Mejoras Integrales
 
 | Orden | Código | Estado |
 |---:|---|---|
@@ -187,33 +176,32 @@ El workflow `.github/workflows/quality-gates.yml` ejecuta este validador como pu
 | 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Completado físicamente; sin índices nuevos** |
 | 7 | DB-01 — Política de archivado de auditoría | **Completado y certificado técnicamente** |
 | 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | **Completado y certificado** |
-| 9 | FE-01 — Signals gradual | **Siguiente** |
-| 10 | GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa | Pendiente |
+| 9 | FE-01 — Signals gradual | **Completado y certificado** |
+| 10 | GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa | **Siguiente** |
 
 ---
 
-## 8. Directrices activas
+## 11. Directrices activas
 
 1. Trabajar exclusivamente sobre `desarrollo`.
 2. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
 3. Mantener PR #20 abierto y en borrador; no auto-merge.
 4. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
 5. No versionar secretos ni cadenas de conexión.
-6. Mantener HTML semántico como primera opción; usar ARIA únicamente cuando agrega información que el HTML nativo no expresa.
-7. No introducir `tabindex` positivo.
-8. No reutilizar `role="status"` para infraestructura global de carga si puede coexistir con mensajes funcionales que ya usan ese rol.
-9. Todo estado de carga animado debe respetar `prefers-reduced-motion`.
-10. Mantener el componente skeleton independiente de la lógica de negocio y del contrato HTTP.
-11. La bitácora histórica es append-only; las correcciones se agregan, no reescriben entradas anteriores.
+6. Usar Signals para estado local/derivado cuando simplifique el modelo; no forzar su uso sobre flujos RxJS naturalmente asíncronos.
+7. Mantener `OnPush` en las superficies protegidas por FE-01.
+8. No reintroducir estado mutable paralelo al Signal de Login/Carga de Listas.
+9. No convertir futuras adopciones de Signals en reescrituras masivas sin evidencia técnica y regresión completa.
+10. La bitácora histórica es append-only; las correcciones se agregan, no se reescriben entradas anteriores.
 
 ---
 
-## 9. Punto exacto de continuación
+## 12. Punto exacto de continuación
 
-**FE-03 + FE-04 queda cerrada técnicamente con accesibilidad transversal, skeleton loaders reutilizables y regresión UAT completa en verde.**
+**FE-01 queda cerrada técnicamente con adopción gradual de Signals, primera ola `OnPush`, contratos existentes preservados y regresión completa en verde.**
 
-La siguiente fase de la secuencia aprobada es:
+La siguiente fase aprobada es:
 
-### FE-01 — Adopción gradual de Angular Signals
+### GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa
 
-Debe realizarse de forma incremental, priorizando estado local y derivado donde Signals aporte claridad/rendimiento, sin reescritura masiva ni alteración de contratos API/servicios estables.
+Debe elevar análisis estático, observabilidad de calidad y reproducibilidad de empaquetado sin modificar Producción ni fusionar `main`.
