@@ -2883,3 +2883,79 @@ Publicar la corrección, ejecutar una sola vez `02_db03_explain_plan_consultas_c
 ### Punto de continuación
 
 Continuar con **DB-01 — política de archivado de `RL_AUDITORIA`**, diseñada sin borrado automático.
+
+---
+
+## Registro de Intervención — ChatGPT — DB-01 Política de archivado de RL_AUDITORIA
+
+- **Fecha:** 2026-08-10, hora local (UTC-6).
+- **Agente:** ChatGPT.
+- **Rama:** `desarrollo`.
+- **Base de inicio:** `ba8aaa9429aff7357bec12f0e8f1bd4e9eb94aac`.
+- **HEAD técnico certificado:** `ce2193cd60ff441ebfba4920be7df20c0ca8b29e`.
+- **Quality Gate técnico:** Run `31418050903` (#633) — **SUCCESS**.
+- **Estado DB-01:** política, diseño, diagnóstico y controles de repositorio completados; sin ejecución física Oracle.
+
+### Objetivo
+
+Definir una política segura para controlar el crecimiento futuro de `RL_AUDITORIA` sin perder trazabilidad, integridad ni evidencia, y sin autorizar borrado automático.
+
+### Estado verificado de la auditoría
+
+1. `RL_AUDITORIA` conserva `AUD_ID`, tabla/registro/acción, CLOB anterior/nuevo, usuario, correo, IP, fecha y módulo.
+2. El backend registra eventos mediante `INSERT INTO RL_AUDITORIA` con `SEQ_RL_AUDITORIA.NEXTVAL`.
+3. La bitácora funcional pagina sobre Oracle 11g y ordena por `AUD_FECHA DESC, AUD_ID DESC`.
+4. DB-03 cerró Q09/Q10 con `SIN_CAMBIO`; con el volumen actual no se justifica crear un índice adicional.
+
+### Política DB-01
+
+1. **Retención institucional aprobada: NO DEFINIDA.**
+2. Hasta que Cumplimiento/Legal apruebe plazo y fecha de corte, ningún registro es elegible para purga.
+3. Modelo futuro obligatorio: `COPY_ONLY`.
+4. Todo lote futuro deberá considerar exclusiones `LEGAL_HOLD`.
+5. Toda copia deberá reconciliar candidatos/copiados, rango de `AUD_ID`, rango de `AUD_FECHA`, faltantes y duplicados.
+6. Una copia exitosa no equivale a lote certificado si no existe reconciliación.
+7. **Borrado automático: PROHIBIDO.**
+8. DB-01 tampoco autoriza purga manual.
+9. No se crea `DBMS_SCHEDULER`, `DBMS_JOB`, trigger ni tarea periódica de limpieza.
+10. No se creó tabla/esquema histórico ni índice.
+11. No se presupone disponibilidad/licenciamiento de Oracle Partitioning.
+12. Cualquier DDL histórico, copia DML o purga futura requerirá autorización separada.
+
+### Artefactos
+
+- `docs/4. Base de Datos/DB_01_POLITICA_ARCHIVADO_RL_AUDITORIA_2026-08-10.md`
+- `database/auditoria/archivado/README.md`
+- `database/auditoria/archivado/01_db01_diagnostico_rl_auditoria_solo_lectura.sql`
+- `scripts/validation/validate_db01_auditoria_archiving.ps1`
+- Quality Gates actualizado para ejecutar el validador DB-01.
+
+### Evidencia CI
+
+- DB-01 Validator: **CORRECTO**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304**.
+- Frontend: **162/162** en 25 archivos.
+- E2E Playwright: **13/13**.
+- `npm audit`: **0 vulnerabilidades**.
+- Cobertura Backend: **22.19% líneas / 24.83% ramas**.
+- Cobertura Frontend: **39.53% sentencias / 35.24% ramas / 35.99% funciones / 39.15% líneas**.
+- Inventario Matrices: **17 tablas / 17 secuencias**.
+- Autorización/UAT Matrices: **correctos**.
+
+### Estado Oracle y restricciones
+
+- Oracle **NO** fue conectado ni ejecutado durante DB-01.
+- No se ejecutó DDL ni DML.
+- No se creó destino histórico.
+- No se movió ni eliminó ningún registro de `RL_AUDITORIA`.
+- No se ejecutaron scripts 05/06.
+- No se modificaron `B10_*`.
+- `main` permanece fuera de alcance.
+- PR #20 debe permanecer abierto y en borrador.
+
+### Punto exacto de continuación
+
+**DB-01 queda cerrada técnicamente como política/diseño/control de repositorio.**
+
+La siguiente fase del plan aprobado es **FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders**.
