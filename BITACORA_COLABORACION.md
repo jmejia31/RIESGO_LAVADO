@@ -3044,3 +3044,117 @@ Se incorporó `scripts/validation/validate_fe03_fe04_accessibility_loading.ps1` 
 **FE-03 + FE-04 queda cerrada técnicamente y certificada.**
 
 La siguiente fase del plan aprobado es **FE-01 — adopción gradual de Angular Signals**, sin reescritura masiva ni cambios de contrato.
+
+
+---
+
+## Registro de Intervención — ChatGPT — FE-01 Adopción gradual de Angular Signals
+
+- **Fecha:** 2026-08-10, hora local (UTC-6).
+- **Agente:** ChatGPT.
+- **Rama:** `desarrollo`.
+- **Base de inicio:** `7d7b9f093a881154e7f5d2373d393cc0ffef31f9`.
+- **Commit técnico principal:** `c1df3fddf75a8295c1bc63db78e669bb737ab72a`.
+- **HEAD técnico certificado:** `479e95f6089d098942dffaff75ee6a76b0412039`.
+- **Quality Gate técnico:** Run `31422869343` (#668) — **SUCCESS**.
+- **Estado:** FE-01 implementado y certificado; sin cambios de Backend funcional, API, Oracle, Producción o `main`.
+
+### Decisión arquitectónica
+
+FE-01 se ejecutó como adopción gradual, no como reescritura masiva:
+
+1. Angular Signals para estado local síncrono consumido por templates y estado derivado mediante `computed`.
+2. RxJS se conserva para `HttpClient`, interceptores y pipelines asíncronos donde sus operadores siguen siendo el modelo apropiado.
+3. Reactive Forms se conserva para formularios y validaciones ya certificadas.
+4. No se sustituyeron contratos de servicios ni se modificó el módulo de Matrices que ya utilizaba Signals + `OnPush`.
+
+### Primera ola `OnPush`
+
+Quedaron migrados/protegidos con `ChangeDetectionStrategy.OnPush`:
+
+1. `App`.
+2. `MainLayoutComponent`.
+3. `SinAccesoComponent`.
+4. `ConfiguracionComponent`.
+5. `BitacoraComponent`.
+6. `LoginComponent`.
+7. `CargarListasComponent`.
+
+### Login — carrusel signalizado
+
+- `slides` pasó de `any[]` mutable a `signal<LoginSlide[]>([])`.
+- `slideSeleccionado` se deriva con `computed`.
+- El temporizador se tipó como `ReturnType<typeof setInterval> | null`.
+- El template consume `slides()` y `slideSeleccionado()`.
+- El tracking usa `slide.id`.
+- Se añadieron defensas para colección vacía, una sola diapositiva e índice fuera de rango.
+- `ConfiguracionService.ObtenerSlides()` y su contrato permanecen intactos.
+
+### Carga de Listas — archivo seleccionado
+
+- `archivoSeleccionado` pasó de `File | null` mutable a `signal<File | null>(null)`.
+- La carga obtiene una instantánea local no nula antes de invocar el servicio.
+- Endpoint, servicio, formatos permitidos, formulario y flujo funcional permanecen intactos.
+
+### Controles automáticos
+
+Se incorporó `scripts/validation/validate_fe01_signals_adoption.ps1` y se conectó a Quality Gates. Protege:
+
+- `OnPush` en la primera ola;
+- Signals tipados y `computed` en Login;
+- archivo seleccionado como Signal;
+- adopciones previas en Auth, estado HTTP global, layout, Sin Acceso y Matrices;
+- ausencia de `BehaviorSubject` como regresión del estado local en las superficies protegidas;
+- preservación explícita de RxJS/Reactive Forms donde corresponden.
+
+### Dossier
+
+`docs/0.0 Documentación/FE_01_ADOPCION_GRADUAL_ANGULAR_SIGNALS_2026-08-10.md`
+
+Documenta objetivo, línea base, estrategia, alcance, primera ola, criterios de aceptación, restricciones y continuidad.
+
+### Ejecuciones temporales de migración
+
+Los dos primeros intentos del workflow temporal de migración fallaron en validaciones del mecanismo de parche **antes de build y antes de publicar cambios funcionales**:
+
+- Run `31422347446` (#1): detectó cardinalidad inesperada de asignaciones `archivoSeleccionado = null`.
+- Run `31422445748` (#2): detectó una sustitución redundante ya cubierta.
+
+No produjeron commit técnico de frontend. El tercer intento, Run `31422590091` (#3), aplicó el parche determinista, compiló correctamente y publicó `c1df3fddf75a8295c1bc63db78e669bb737ab72a`.
+
+### Evidencia CI
+
+Quality Gates Run `31422869343` (#668) sobre `479e95f6089d098942dffaff75ee6a76b0412039`:
+
+- FE-01 Validator: **CORRECTO**.
+- FE-03/FE-04 Validator: **CORRECTO**.
+- Validadores DB/Oracle/DB-03/DB-01: **CORRECTOS**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304**.
+- Frontend: **165/165** en 26 archivos.
+- E2E Playwright: **13/13**.
+- `npm audit`: **0 vulnerabilidades**.
+- Cobertura Backend: **22.19% líneas / 24.83% ramas**.
+- Cobertura Frontend: **39.69% sentencias / 35.39% ramas / 36.03% funciones / 39.27% líneas**.
+- Inventario Matrices: **17 tablas / 17 secuencias**.
+- Autorización/UAT Matrices: **correctos**.
+
+La variación menor de cobertura Frontend frente a FE-03/FE-04 corresponde a nuevas ramas defensivas del carrrusel; no disminuyó la cantidad de pruebas aprobadas.
+
+### Restricciones preservadas
+
+- No se modificó Backend funcional ni contratos API.
+- Oracle no fue conectado ni ejecutado durante FE-01.
+- No hubo DDL/DML.
+- No se ejecutaron scripts 05/06.
+- No se modificaron `B10_*`.
+- Producción no fue modificada.
+- `main` permanece fuera de alcance.
+- PR #20 debe permanecer abierto, en borrador y sin fusión.
+- La bitácora histórica permanece append-only.
+
+### Punto exacto de continuación
+
+**FE-01 queda cerrada técnicamente y certificada.**
+
+La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa**.
