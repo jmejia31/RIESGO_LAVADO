@@ -1379,7 +1379,7 @@ Verificar que no exista acoplamiento físico o lógico en la base de datos (y ca
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 443 archivos rastreados |
 | `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
-| `tools/validate_documentation_links.ps1` | **Correcto**; 35 Markdown revisados, 48 Enlaces locales |
+| `tools/validate_documentation_links.ps1` | **Correcto**; 35 Markdown revisados, 48 enlaces locales |
 
 ### Punto exacto de continuación
 
@@ -1473,7 +1473,7 @@ Implementar el mecanismo de aborto automático ante errores SQL para consola SQL
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `949a0fa154c13886566085a6dbd418706d87e076`.
-- **Commit final**: pendiente hasta publicar esta actualización documental.
+- **Commit final**: pendiente hasta publicar esta intervención.
 
 ### Objetivo
 
@@ -1603,7 +1603,7 @@ Resolver las observaciones de calidad de la Fase 2 de diseño (Contrato JSON for
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
 ---
@@ -1634,7 +1634,7 @@ Cierre formal administrativo de la Fase 2 y handoff documental actualizando los 
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 88 Enlaces locales |
 
 ### Punto exacto de continuación
@@ -1680,7 +1680,7 @@ Diseñar e implementar físicamente los scripts DDL y DML preliminares de la bas
 | Validación | Resultado Real |
 |---|---|
 | `tools/validate_repository_structure.ps1` | **Correcto**; 119 rutas obligatorias, 455 archivos rastreados |
-| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts raíz, 1 paquete modular, 22 scripts alcanzables |
+| `tools/validate_database_scripts.ps1` | **Correcto**; 19 scripts activos raíz, 1 paquete modular, 22 scripts alcanzables |
 | `tools/validate_documentation_links.ps1` | **Correcto**; 37 Markdown revisados, 92 Enlaces locales |
 
 ### Punto exacto de continuación
@@ -2492,6 +2492,7 @@ HEAD         → 1f319d5 (coincide con origin/desarrollo)
 
 1. Mantener `main` intacta y PR #20 abierto y en borrador.
 2. Aguardar la llegada de los 18 prerrequisitos por parte del DBA.
+
 
 
 
