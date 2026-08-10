@@ -3194,5 +3194,7 @@ La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + D
 - Validaciones ejecutadas: `validate_database_scripts.ps1` y `validate_documentation_links.ps1`, ambas correctas.
 - Oracle no fue ejecutado durante esta intervención. Para corregir los comentarios ya degradados por SQL*Plus, el script independiente debe ejecutarse desde el editor SQL Unicode de DBeaver, no mediante «Execute in SQL*Plus».
 
+> **Corrección append-only — 2026-08-10:** El script independiente contenía dos directivas exclusivas de SQL*Plus (`SET DEFINE OFF` y `PROMPT`) que el editor SQL de DBeaver rechaza. Se eliminaron; el archivo conserva únicamente comentarios SQL y puede ejecutarse directamente desde dicho editor.
+
 
 > **Corrección append-only FE-01 — 2026-08-10:** En la entrada inmediatamente anterior, donde se escribió “carrrusel”, debe leerse **“carrusel”**. No se reescribe el registro histórico; esta nota preserva su inmutabilidad.

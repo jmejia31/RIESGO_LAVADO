@@ -213,4 +213,4 @@ Debe elevar análisis estático, observabilidad de calidad y reproducibilidad de
 
 Los scripts `01_comentarios_y_estandares_modelo_17_tablas.sql` y `transicion/06_reconstruir_modelo_17_tablas.sql` mantienen alineados los comentarios de las **17 tablas** y **121 columnas** `RL_MR_*`.
 
-La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción institucional corregidas. Si los comentarios existentes se muestran con caracteres sustituidos, debe ejecutarse únicamente el script `01_comentarios_y_estandares_modelo_17_tablas.sql` desde el editor SQL Unicode de DBeaver, no desde SQL*Plus. No implica recreación de tablas ni modificación de datos.
+La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción institucional corregidas. Si los comentarios existentes se muestran con caracteres sustituidos, debe ejecutarse únicamente el script `01_comentarios_y_estandares_modelo_17_tablas.sql` desde el editor SQL Unicode de DBeaver, no desde SQL*Plus. El script no contiene directivas exclusivas de SQL*Plus. No implica recreación de tablas ni modificación de datos.

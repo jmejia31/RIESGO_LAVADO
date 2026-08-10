@@ -7,9 +7,6 @@
 -- Reglas: solo COMMENT ON; sin cambios estructurales, sin DML, sin DROP, sin TRUNCATE.
 -- ============================================================
 
-SET DEFINE OFF;
-
-PROMPT === Comentarios de Tablas (RL_MR_*) ===
 COMMENT ON TABLE RL_MR_FAMILIAS_FORMULARIO IS 'Catálogo institucional de familias de formularios de evaluación de riesgos LA/FT.';
 COMMENT ON TABLE RL_MR_VERSIONES_FORMULARIO IS 'Versiones publicadas y borradores de formularios dinámicos con definición de campos en CLOB JSON.';
 COMMENT ON TABLE RL_MR_CATALOGOS IS 'Encabezado de catálogos institucionales parametrizables para formularios de riesgos.';
@@ -27,8 +24,6 @@ COMMENT ON TABLE RL_MR_EVIDENCIAS IS 'Repositorio de archivos cargados como evid
 COMMENT ON TABLE RL_MR_EVIDENCIAS_VINCULOS IS 'Relación genérica entre archivos de evidencia y entidades funcionales.';
 COMMENT ON TABLE RL_MR_SENALES_ALERTA IS 'Señales de alerta e indicadores para el monitoreo continuo del riesgo LA/FT.';
 COMMENT ON TABLE RL_MR_AUTOMONITOREO IS 'Registro de automonitoreo realizado por las áreas institucionales.';
-
-PROMPT === Comentarios de Columnas (RL_MR_*) ===
 
 -- 1. RL_MR_FAMILIAS_FORMULARIO
 COMMENT ON COLUMN RL_MR_FAMILIAS_FORMULARIO.FAM_ID IS 'Identificador único de la familia de formulario.';
