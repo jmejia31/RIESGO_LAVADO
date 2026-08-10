@@ -2,27 +2,39 @@
 
 Fecha: 2026-08-10
 Rama: `desarrollo`
-Estado inicial de esta entrega: IMPLEMENTADO, pendiente de certificacion CI del commit tecnico.
+Estado: IMPLEMENTADO; certificacion CI final pendiente del HEAD de cierre.
 
 ## 1. Objetivo
 
 Cerrar el ultimo bloque del Plan de Mejoras Integrales sin modificar reglas de negocio, Oracle ni Produccion:
 
-- GOV-02: establecer analisis estatico reproducible y bloqueante para Backend y Frontend, y dejar SonarQube Cloud preparado sin versionar secretos ni inventar identificadores externos.
+- GOV-02: establecer analisis estatico reproducible para Backend y Frontend, con una adopcion incremental que no convierta deuda heredada en una refactorizacion masiva, y dejar SonarQube Cloud preparado sin versionar secretos ni inventar identificadores externos.
 - GOV-03: contenerizar Backend y Frontend mediante builds multietapa, runtimes minimos y ejecucion no-root.
 
-## 2. GOV-02 — Analizadores locales bloqueantes
+## 2. GOV-02 — Analizadores locales y linea base incremental
 
 ### Backend .NET
 
 `Directory.Build.props` aplica a la solucion:
 
-- `AnalysisLevel=latest-recommended`;
-- `AnalysisMode=Recommended`;
-- `EnforceCodeStyleInBuild=true`;
-- analizadores habilitados durante build y analisis en IDE.
+- `AnalysisLevel=10-recommended`, fijando el conjunto recomendado correspondiente a .NET 10;
+- analizadores habilitados durante build e IDE;
+- warnings propios del compilador bloqueantes mediante `TreatWarningsAsErrors=true`;
+- diagnostics CA heredados visibles pero no promovidos masivamente a error mediante `CodeAnalysisTreatWarningsAsErrors=false`;
+- deuda IDE de estilo no se incorpora como bloqueo masivo en esta primera ola (`EnforceCodeStyleInBuild=false`).
 
-El workflow `quality-gates.yml` ejecuta una compilacion adicional con `-p:RunAnalyzers=true -warnaserror`. Por tanto, cualquier warning emitido por el build/analyzers en CI bloquea la entrega.
+El primer ensayo estricto de GOV-02 ejecutado con `-warnaserror` en Quality Gates #694 evidencio 184 diagnostics CA/IDE ya presentes en la base de codigo. Entre ellos existen reglas de mantenimiento, rendimiento, estilo y seguridad como CA2100 en construccion de comandos SQL internos. Convertir las 184 observaciones en errores dentro de esta fase ampliaria el alcance hacia una refactorizacion transversal no autorizada y elevaria el riesgo funcional.
+
+Por ello, GOV-02 adopta el patron de linea base incremental recomendado para un sistema existente:
+
+1. los analizadores se ejecutan en CI y sus hallazgos permanecen visibles;
+2. los warnings del compilador C# continuan siendo bloqueantes;
+3. no se agregan `NoWarn` globales ni supresiones masivas para ocultar deuda;
+4. el frontend mantiene ESLint como gate bloqueante;
+5. SonarQube Cloud queda preparado para gobernar deuda nueva mediante su Quality Gate cuando las credenciales/variables institucionales sean configuradas;
+6. los diagnostics heredados deben abordarse en bloques tecnicos separados, priorizando seguridad/correctitud antes que estilo o micro-optimizaciones.
+
+Esta separacion sigue la semantica oficial de MSBuild: `CodeAnalysisTreatWarningsAsErrors=false` mantiene visibles los warnings CA aun cuando no se desea convertir la deuda de analisis existente en un fallo de compilacion.
 
 ### Frontend Angular/TypeScript
 
@@ -60,7 +72,7 @@ Si los tres valores no existen, el workflow informa que Sonar remoto esta pendie
 
 El frontend genera LCOV para que Sonar pueda consumir cobertura JavaScript/TypeScript. La cobertura Backend se prepara como OpenCover en el workflow Sonar.
 
-Nota de certificacion: los analizadores locales forman parte del Quality Gate base y son certificables sin servicios externos. La certificacion remota Sonar solo puede afirmarse despues de configurar las tres credenciales/variables institucionales y observar un Quality Gate remoto exitoso.
+La corrida `31426469159` confirmo el comportamiento seguro sin configuracion: el workflow completo termino correctamente, pero scanner, build analizado, coberturas y Quality Gate remoto fueron omitidos porque las tres configuraciones externas no estaban presentes. Por tanto, la integracion Sonar queda preparada, pero **no se afirma certificacion Sonar Cloud remota** hasta que esos valores sean provistos y exista una corrida real exitosa del Quality Gate externo.
 
 ## 4. GOV-03 — Docker multietapa
 
@@ -114,8 +126,8 @@ Issuer, audience y origen frontend admiten valores no sensibles por defecto para
 El workflow principal debe certificar en el mismo HEAD:
 
 - validador GOV-02/GOV-03;
-- analizadores .NET con warnings como errores;
-- ESLint;
+- analizadores .NET ejecutados con warnings del compilador como errores y deuda CA heredada visible;
+- ESLint bloqueante;
 - controles DB/Oracle existentes;
 - FE-01 y FE-03/FE-04;
 - build Release;

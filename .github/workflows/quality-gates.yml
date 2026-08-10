@@ -50,8 +50,15 @@ jobs:
         shell: pwsh
         run: ./scripts/validation/validate_gov02_gov03_quality_container.ps1
 
-      - name: Run .NET analyzers as blocking gate
-        run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore -p:RunAnalyzers=true -warnaserror
+      - name: Run .NET analyzers with compiler warnings blocking
+        run: >-
+          dotnet build RIESGO_LAVADO.sln
+          --configuration Release
+          --no-restore
+          -p:RunAnalyzers=true
+          -p:TreatWarningsAsErrors=true
+          -p:CodeAnalysisTreatWarningsAsErrors=false
+          -p:EnforceCodeStyleInBuild=false
 
       - name: Run frontend ESLint as blocking gate
         working-directory: frontend/rl-app

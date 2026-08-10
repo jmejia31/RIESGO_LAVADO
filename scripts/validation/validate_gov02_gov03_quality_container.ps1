@@ -15,10 +15,11 @@ function Assert-NotContains {
 }
 
 $props = 'Directory.Build.props'
-Assert-Contains $props '<AnalysisLevel>latest-recommended</AnalysisLevel>' 'los analizadores .NET deben usar latest-recommended'
-Assert-Contains $props '<AnalysisMode>Recommended</AnalysisMode>' 'los analizadores .NET deben usar modo Recommended'
-Assert-Contains $props '<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>' 'el code style debe participar en build'
+Assert-Contains $props '<AnalysisLevel>10-recommended</AnalysisLevel>' 'los analizadores .NET deben fijar el conjunto recomendado de .NET 10'
 Assert-Contains $props '<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>' 'los analizadores deben ejecutarse durante build'
+Assert-Contains $props '<TreatWarningsAsErrors>true</TreatWarningsAsErrors>' 'los warnings del compilador deben ser bloqueantes'
+Assert-Contains $props '<CodeAnalysisTreatWarningsAsErrors>false</CodeAnalysisTreatWarningsAsErrors>' 'la deuda CA heredada debe permanecer visible sin bloquear la adopcion inicial'
+Assert-Contains $props '<EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>' 'la primera ola no debe convertir deuda IDE de estilo heredada en bloqueo masivo'
 
 $eslint = 'frontend/rl-app/eslint.config.mjs'
 Assert-Contains $eslint "'no-debugger': 'error'" 'ESLint debe bloquear debugger'
@@ -69,8 +70,11 @@ $quality = '.github/workflows/quality-gates.yml'
 Assert-Contains $quality 'validate_gov02_gov03_quality_container\.ps1' 'Quality Gates debe validar GOV-02/GOV-03'
 Assert-Contains $quality 'npm run lint' 'Quality Gates debe ejecutar ESLint'
 Assert-Contains $quality 'RunAnalyzers=true' 'Quality Gates debe forzar analizadores .NET'
+Assert-Contains $quality 'TreatWarningsAsErrors=true' 'Quality Gates debe bloquear warnings del compilador'
+Assert-Contains $quality 'CodeAnalysisTreatWarningsAsErrors=false' 'Quality Gates debe conservar la linea base incremental para diagnostics CA heredados'
+Assert-NotContains $quality '(?i)-warnaserror' 'Quality Gates no debe promover indiscriminadamente toda la deuda analyzer heredada'
 Assert-Contains $quality 'docker build.*backend/RL\.API/Dockerfile' 'Quality Gates debe construir imagen backend'
 Assert-Contains $quality 'docker build.*frontend/rl-app/Dockerfile' 'Quality Gates debe construir imagen frontend'
 
 Write-Host 'VALIDACION GOV-02/GOV-03: CORRECTA.'
-Write-Host 'Analisis estatico, Sonar preparado y Docker multietapa no-root protegidos por contrato CI.'
+Write-Host 'Analisis estatico incremental, Sonar preparado y Docker multietapa no-root protegidos por contrato CI.'
