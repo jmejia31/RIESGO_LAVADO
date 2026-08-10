@@ -2760,3 +2760,69 @@ Esta nota corrige exclusivamente dos defectos tipograficos de la entrada BE-02 i
 2. En el punto exacto de continuacion, donde el marcado Markdown de **DB-03 — Profiling Oracle / `EXPLAIN PLAN`** quedo con un asterisco de cierre incompleto, debe leerse exactamente: **DB-03 — Profiling Oracle / `EXPLAIN PLAN`**.
 
 No cambia ningun dato tecnico, commit, evidencia CI, alcance, restriccion ni dictamen de BE-02.
+
+
+---
+
+## Registro de Intervencion — ChatGPT — DB-03 Profiling Oracle / EXPLAIN PLAN
+
+- **Fecha**: 2026-08-10, hora local (UTC-6).
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Base de inicio**: `ff1cc95c72566223274b23574d4ff4db3e310fe1`.
+- **HEAD tecnico certificado**: `8c34b62bce9a962b160129419a54125391922360`.
+- **Quality Gate tecnico**: Run `31411370593` (#619) — **SUCCESS**.
+- **Estado DB-03**: paquete y certificacion estatica completados; ejecucion fisica Oracle pendiente.
+
+### Objetivo y alcance
+
+Preparar DB-03 para medir consultas Oracle reales antes de proponer indices, sin modificar `main`, sin ejecutar scripts de transicion, sin tocar `B10_*` y sin introducir DDL/DML de negocio.
+
+### Cambios realizados
+
+1. Se creo `database/19_matrices_riesgos/performance/` como paquete DB-03 aislado de los maestros de instalacion/actualizacion.
+2. El entrypoint `00_db03_ejecutar_profiling_autorizado.sql` exige `CURRENT_SCHEMA = RIESGO_LAVADO` y token manual `EJECUTAR_DB03`.
+3. `01_db03_inventario_estadisticas_solo_lectura.sql` releva identidad de ambiente sin credenciales, estadisticas, cardinalidades, indices y estadisticas de columnas criticas.
+4. `02_db03_explain_plan_consultas_criticas.sql` contiene exactamente 11 `EXPLAIN PLAN` basados en SQL real del backend y 11 salidas `DBMS_XPLAN.DISPLAY`.
+5. Se incluyeron perfiles para version vigente de formulario, paginacion de evaluaciones con/sin filtros, consolidado, flujos, dashboard, alertas, automonitoreo, auditoria exacta, auditoria con busqueda de subcadena y metodologia vigente.
+6. El script de planes no contiene `CREATE INDEX`, `ALTER TABLE`, `DROP`, `TRUNCATE`, `COMMIT` ni DML directo sobre tablas `RL_*`; finaliza con `ROLLBACK` para descartar filas diagnosticas de `PLAN_TABLE`.
+7. No se propone ningun indice nuevo sin evidencia fisica del ambiente autorizado.
+8. Se documento el inventario de indices existentes del modelo reducido y las hipotesis que deben validarse, no asumirse.
+9. Se agrego `scripts/validation/validate_db03_oracle_profiling.ps1` y se incorporo como control bloqueante en Quality Gates.
+10. El expediente `docs/4. Base de Datos/DB_03_PROFILING_ORACLE_EXPLAIN_PLAN_2026-08-10.md` separa explicitamente certificacion de repositorio de ejecucion fisica Oracle.
+
+### Evidencia CI
+
+- Quality Gates Run `31411370593` (#619): **SUCCESS**.
+- Validador DB-03: **CORRECTO**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304** pruebas aprobadas.
+- Frontend: **162/162** pruebas aprobadas en 25 archivos.
+- E2E Playwright: **13/13** aprobadas.
+- `npm audit`: **0 vulnerabilidades**.
+- Cobertura Backend: **22.19% lineas / 24.83% ramas**.
+- Cobertura Frontend: **39.53% sentencias / 35.24% ramas / 35.99% funciones / 39.15% lineas**.
+- Inventario Matrices: **17 tablas / 17 secuencias**.
+- CI declara expresamente que no ejecuta Oracle real ni genera planes fisicos.
+
+### Estado Oracle y restricciones
+
+- Oracle real **NO** fue conectado ni ejecutado por esta intervencion.
+- No se ejecuto `EXPLAIN PLAN` fisico en Oracle porque el entorno de ChatGPT/GitHub no expone una conexion institucional autorizada ni secretos.
+- No se ejecuto DDL ni DML de negocio.
+- No se ejecutaron scripts 05/06.
+- No se modificaron respaldos `B10_*`.
+- `main` permanece fuera de alcance.
+- PR #20 debe permanecer abierto y en borrador.
+
+### Punto exacto de continuacion
+
+**DB-03 queda completado a nivel de paquete y certificacion de repositorio, pero NO fisicamente cerrado en Oracle.**
+
+La continuidad correcta es ejecutar manualmente, desde un cliente SQL*Plus autorizado contra el ambiente Oracle institucional:
+
+`@database/19_matrices_riesgos/performance/00_db03_ejecutar_profiling_autorizado.sql EJECUTAR_DB03`
+
+Luego se deben registrar de forma saneada los 11 planes y emitir por consulta uno de estos dictamenes: `SIN_CAMBIO`, `REQUIERE_ESTADISTICAS`, `REQUIERE_REESCRITURA` o `CANDIDATO_INDICE`.
+
+No avanzar a creacion de indices ni declarar DB-03 fisicamente cerrada sin esa evidencia real.
