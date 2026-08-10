@@ -133,7 +133,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         if (err.status === 429) {
           this.error.set('Demasiados intentos. Su IP ha sido bloqueada temporalmente. Intente en 1 minuto.');
         } else {
-          this.error.set(err.error?.mensaje ?? 'Credenciales inválidas o error de conexión');
+          // La pantalla de acceso no debe mostrar mensajes recibidos de infraestructura.
+          // El backend ya los sanitiza; este texto fijo es una segunda barrera de seguridad.
+          this.error.set('No fue posible iniciar sesión. Verifique sus credenciales o contacte al administrador del sistema.');
         }
         this.cargando.set(false);
       }

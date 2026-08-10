@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: BE-01 + FE-02 Completados, Blindados y Certificados. Se aplicó una política estricta de Allowlist y mensajes públicos fijos por defecto a los errores `ProblemDetails` (RFC 7807) en el Backend. En el Frontend se conectaron los indicadores visuales globales (`cargando` y banner descartable `ultimoError`) consumidos desde `GlobalHttpStateService` en `MainLayoutComponent`, manteniendo la política estricta de reintentos restringidos a `GET` ante fallos 0/503/504. Todos los Quality Gates (260 backend, 135 frontend, 10 E2E y validadores) están **100% VERDES Y PASADOS**. `main` continúa intacta y el PR #20 permanece abierto en borrador.
+> Actualización 2026-08-10: se blindó el inicio de sesión para que no exponga mensajes de infraestructura como `ORA-28000` ni enlaces técnicos. El backend registra el detalle y retorna un aviso público fijo; el frontend aplica el mismo aviso como segunda barrera. En esta intervención se verificaron 261 pruebas backend y 149 frontend. Oracle no fue ejecutado y `main` continúa intacta.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,12 +20,12 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: BE-01 + FE-02 — Blindaje de Errores RFC 7807 (Allowlist 4xx) y Componente Visual HTTP Global
+- **Intervención**: Blindaje de mensajes de infraestructura en inicio de sesión
 - **Fecha**: 2026-08-10 (Hora local)
-- **Autor**: Antigravity
+- **Autor**: Codex
 - **Rama**: `desarrollo`
-- **Commit inicial**: `0f5dcc5`
-- **Estado**: BE-01 + FE-02 **COMPLETADOS AL 100%**. Respuestas `ProblemDetails` RFC 7807 con política de Allowlist estricta. Componentes visuales globales de carga y banner de notificaciones de error conectados en `MainLayoutComponent`. Pruebas Backend (260/260), Frontend (135/135), E2E (10/10) y validadores 100% PASADAS.
+- **Commit inicial**: `6b9191a`
+- **Estado**: el inicio de sesión no devuelve mensajes Oracle, URL técnicas ni otros detalles de infraestructura. Pruebas ejecutadas en esta intervención: backend 261/261 y frontend 149/149. Pendiente: validación visual manual y desbloqueo de la cuenta Oracle por el administrador correspondiente.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)

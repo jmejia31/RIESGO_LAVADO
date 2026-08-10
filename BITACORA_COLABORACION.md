@@ -1,5 +1,21 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Blindaje de errores de acceso
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `6b9191a`.
+- **Objetivo**: impedir la exposición de mensajes técnicos de Oracle en la pantalla de inicio de sesión.
+
+### Cambios y validación ejecutada
+
+1. `AuthController.Login` registra el detalle técnico exclusivamente en el servidor y devuelve un mensaje público fijo con `traceId` cuando el servicio de autenticación produce una excepción controlada.
+2. La pantalla Angular de inicio de sesión usa el mismo mensaje seguro como segunda barrera, sin mostrar `mensaje` devuelto por la infraestructura.
+3. Se agregó una prueba de regresión que confirma que un error `ORA-28000` y su URL no forman parte de la respuesta HTTP pública.
+4. Pruebas ejecutadas en esta intervención: backend Release **261/261** y frontend **149/149**. No se ejecutó Oracle ni se modificó `main`.
+
+**Punto de continuación**: validar visualmente el acceso tras reiniciar API y frontend; la cuenta Oracle bloqueada debe resolverse por el administrador de la base de datos, nunca exponiendo su detalle al usuario final.
+
 ## Registro de Intervención — Antigravity — BE-01 + FE-02: Blindaje de Errores RFC 7807 (Allowlist 4xx) y Componente Visual HTTP Global
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).

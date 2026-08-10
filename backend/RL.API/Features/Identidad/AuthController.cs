@@ -47,7 +47,15 @@ public class AuthController : ControllerBase
         }
         catch (System.InvalidOperationException ex)
         {
-            return BadRequest(new { success = false, mensaje = ex.Message });
+            // El servicio puede propagar detalles de infraestructura (por ejemplo, Oracle o AD).
+            // El inicio de sesión es anónimo: nunca deben regresar al navegador.
+            _logger.LogWarning(ex, "Error controlado durante el inicio de sesión. TraceId: {TraceId}", HttpContext.TraceIdentifier);
+            return BadRequest(new
+            {
+                success = false,
+                mensaje = "No fue posible iniciar sesión. Verifique sus credenciales o contacte al administrador del sistema.",
+                traceId = HttpContext.TraceIdentifier
+            });
         }
     }
 

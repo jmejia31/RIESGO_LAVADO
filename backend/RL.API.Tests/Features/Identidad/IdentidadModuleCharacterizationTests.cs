@@ -103,6 +103,23 @@ public sealed class IdentidadModuleCharacterizationTests
     }
 
     [Fact]
+    public async Task AuthController_Login_NoExponeDetallesDeInfraestructura()
+    {
+        var controller = CrearController(
+            new AuthServiceFake { ExcepcionLogin = new InvalidOperationException("ORA-28000: la cuenta está bloqueada https://oracle.example/error") },
+            new ActivoDirectorioServiceFake());
+
+        var result = await controller.Login(new LoginRequestDto { Email = "ana@ihss.hn", Password = "ClaveSegura123!" });
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result);
+        var json = JsonSerializer.Serialize(badRequest.Value);
+        using var documento = JsonDocument.Parse(json);
+        Assert.DoesNotContain("ORA-28000", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("oracle.example", json, StringComparison.Ordinal);
+        Assert.Contains("No fue posible iniciar sesión", documento.RootElement.GetProperty("mensaje").GetString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task AuthService_RefreshValido_RevocaYRotaToken()
     {
         const string tokenAnterior = "refresh-token-anterior";
@@ -224,7 +241,12 @@ public sealed class IdentidadModuleCharacterizationTests
 
     private sealed class AuthServiceFake : IAuthService
     {
-        public Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip) => Task.FromResult<LoginResponseDto?>(null);
+        public Exception? ExcepcionLogin { get; init; }
+        public Task<LoginResponseDto?> LoginAsync(LoginRequestDto dto, string ip)
+        {
+            if (ExcepcionLogin is not null) return Task.FromException<LoginResponseDto?>(ExcepcionLogin);
+            return Task.FromResult<LoginResponseDto?>(null);
+        }
         public Task<LoginResponseDto?> RefreshTokenAsync(string refreshToken, string ip) => Task.FromResult<LoginResponseDto?>(null);
         public Task LogoutAsync(long usrId, string refreshToken) => Task.CompletedTask;
         public Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto) => Task.FromResult(false);
