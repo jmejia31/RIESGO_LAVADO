@@ -77,8 +77,11 @@ if (Test-Path -LiteralPath $diagnosticPath -PathType Leaf) {
     if ($withoutComments -match '(?i)DBMS_SCHEDULER|DBMS_JOB') {
         $errors.Add('DB-01: el diagnóstico no puede crear ni invocar automatización Oracle.')
     }
-    if ($sql -match '(?i)AUD_USR_EMAIL\s*,|AUD_IP\s*,|SELECT\s+.*AUD_DATOS_(?:ANT|NVO)') {
-        $errors.Add('DB-01: el diagnóstico agregado no debe exponer correo, IP ni contenido CLOB.')
+
+    # Se permite únicamente calcular longitud agregada de los CLOB; nunca proyectar su contenido.
+    if ($withoutComments -match '(?im)^\s*SELECT\s+(?:AUD_USR_EMAIL|AUD_IP|AUD_DATOS_ANT|AUD_DATOS_NVO)\b' -or
+        $withoutComments -match '(?im),\s*(?:AUD_USR_EMAIL|AUD_IP|AUD_DATOS_ANT|AUD_DATOS_NVO)\b\s*(?:,|FROM|AS)') {
+        $errors.Add('DB-01: el diagnóstico agregado no debe proyectar correo, IP ni contenido CLOB.')
     }
 }
 
