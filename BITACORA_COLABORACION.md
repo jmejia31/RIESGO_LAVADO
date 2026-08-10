@@ -2748,3 +2748,15 @@ Implementar **BE-02 — Caché con invalidación explícita** sin modificar `mai
 ### Punto exacto de continuación
 
 **BE-02 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **DB-03 — Profiling Oracle / `EXPLAIN PLAN`*, que requiere autorización formal y ambiente Oracle autorizado antes de ejecutar cualquier conexión o SQL de profiling.
+
+
+---
+
+### Fe de erratas append-only — Registro BE-02
+
+Esta nota corrige exclusivamente dos defectos tipograficos de la entrada BE-02 inmediatamente anterior, sin reescribirla:
+
+1. Donde aparece `invalidacion de slides tras mutacion^a;` debe leerse: `invalidacion de slides tras mutacion;`.
+2. En el punto exacto de continuacion, donde el marcado Markdown de **DB-03 — Profiling Oracle / `EXPLAIN PLAN`** quedo con un asterisco de cierre incompleto, debe leerse exactamente: **DB-03 — Profiling Oracle / `EXPLAIN PLAN`**.
+
+No cambia ningun dato tecnico, commit, evidencia CI, alcance, restriccion ni dictamen de BE-02.
