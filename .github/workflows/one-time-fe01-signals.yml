@@ -33,6 +33,14 @@ jobs:
                   raise SystemExit(f'{path}: expected exactly 1 occurrence, found {count}: {old[:80]!r}')
               p.write_text(text.replace(old, new, 1), encoding='utf-8')
 
+          def replace_count(path: str, old: str, new: str, expected: int):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              count = text.count(old)
+              if count != expected:
+                  raise SystemExit(f'{path}: expected {expected} occurrences, found {count}: {old[:80]!r}')
+              p.write_text(text.replace(old, new), encoding='utf-8')
+
           # Signal-based components should use OnPush.
           for path in [
               'frontend/rl-app/src/app/app.ts',
@@ -67,11 +75,7 @@ jobs:
               "        this.slides = data;\n        if (this.slides.length > 0) this.iniciarCarrusel();",
               "        this.slides.set(data);\n        this.ajustarSlideActual();\n        if (data.length > 1) this.iniciarCarrusel();"
           )
-          replace_once(
-              login_ts,
-              "        this.slides = [",
-              "        this.slides.set(["
-          )
+          replace_once(login_ts, "        this.slides = [", "        this.slides.set([")
           replace_once(
               login_ts,
               "          { id: 3, imagenUrl: 'assets/login/slide3.png', titulo: 'Cumplimiento Normativo IHSS', descripcion: 'Alineación institucional con regulaciones de transparencia y control interno.', orden: 3, activo: true }\n        ];",
@@ -93,8 +97,7 @@ jobs:
           # Carga de listas: selected File is local UI state, so expose it as a Signal.
           cargar_ts = 'frontend/rl-app/src/app/features/admin/listas/pages/cargar-listas/cargar-listas.component.ts'
           replace_once(cargar_ts, '  archivoSeleccionado: File | null = null;', '  readonly archivoSeleccionado = signal<File | null>(null);')
-          replace_once(cargar_ts, '      this.archivoSeleccionado = null;', '      this.archivoSeleccionado.set(null);')
-          replace_once(cargar_ts, '      this.archivoSeleccionado = null;', '      this.archivoSeleccionado.set(null);')
+          replace_count(cargar_ts, '      this.archivoSeleccionado = null;', '      this.archivoSeleccionado.set(null);', 3)
           replace_once(cargar_ts, '    this.archivoSeleccionado = file;', '    this.archivoSeleccionado.set(file);')
           replace_once(
               cargar_ts,
