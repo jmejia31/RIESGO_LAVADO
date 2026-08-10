@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- Sistema de Gestión de Riesgos LA/FT - IHSS
 -- Script: 01_comentarios_y_estandares_modelo_17_tablas.sql
 -- Objetivo: Agregar comentarios institucionales con ortografía perfecta en español (tildes, ñ, diéresis) a las 17 tablas y columnas del Módulo Matrices de Riesgos (RL_MR_*).

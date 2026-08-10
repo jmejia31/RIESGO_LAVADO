@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- MODULO MATRICES DE RIESGOS - TRANSICION AL MODELO REDUCIDO
 -- Script: 06_reconstruir_modelo_17_tablas.sql
 -- Uso: SOLO manual, con respaldo validado y autorizacion expresa.
