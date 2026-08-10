@@ -11,7 +11,6 @@ export type SkeletonVariant = 'content' | 'table' | 'cards' | 'form';
   template: `
     <div
       class="w-full"
-      role="status"
       aria-live="polite"
       aria-atomic="true"
       aria-busy="true"

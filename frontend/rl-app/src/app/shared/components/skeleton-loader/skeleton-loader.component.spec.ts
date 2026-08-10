@@ -14,17 +14,18 @@ describe('SkeletonLoaderComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('expone un unico estado accesible y oculta la geometria decorativa', () => {
+  it('expone una region viva accesible sin competir con estados funcionales', () => {
     component.label = 'Cargando auditoría';
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const status = host.querySelector('[role="status"]');
-    const visual = status?.querySelector('[aria-hidden="true"]');
+    const liveRegion = host.querySelector('[data-testid="skeleton-loader"]');
+    const visual = liveRegion?.querySelector('[aria-hidden="true"]');
 
-    expect(status?.getAttribute('aria-live')).toBe('polite');
-    expect(status?.getAttribute('aria-busy')).toBe('true');
-    expect(status?.getAttribute('aria-label')).toBe('Cargando auditoría');
+    expect(liveRegion?.getAttribute('role')).toBeNull();
+    expect(liveRegion?.getAttribute('aria-live')).toBe('polite');
+    expect(liveRegion?.getAttribute('aria-busy')).toBe('true');
+    expect(liveRegion?.getAttribute('aria-label')).toBe('Cargando auditoría');
     expect(visual).not.toBeNull();
   });
 

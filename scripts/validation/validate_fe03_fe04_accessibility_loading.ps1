@@ -28,9 +28,9 @@ $checks = @(
     @{ Name = 'Estado aria-busy global'; Ok = $layout -match '\[attr\.aria-busy\]="globalState\.cargando\(\)"' },
     @{ Name = 'Control sidebar relacionado'; Ok = $layout -match 'aria-controls="navegacion-principal"' -and $layout -match '\[attr\.aria-expanded\]="sidebarAbierto\(\)"' },
     @{ Name = 'Ruta activa anunciable'; Ok = $layout -match 'ariaCurrentWhenActive="page"' },
-    @{ Name = 'Estado de carga live'; Ok = $layout -match 'role="status"' -and $layout -match 'aria-live="polite"' },
+    @{ Name = 'Carga global como region viva sin colision de rol'; Ok = $layout -match 'data-global-loading-status' -and $layout -match 'aria-live="polite"' -and $layout -notmatch 'data-global-loading-status[^>]*role="status"' },
     @{ Name = 'Skeleton transversal'; Ok = $layout -match '<app-skeleton-loader' -and $layoutTs -match 'SkeletonLoaderComponent' },
-    @{ Name = 'Skeleton accesible'; Ok = $skeleton -match 'role="status"' -and $skeleton -match 'aria-busy="true"' -and $skeleton -match 'aria-hidden="true"' },
+    @{ Name = 'Skeleton accesible sin competir con status funcional'; Ok = $skeleton -match 'aria-live="polite"' -and $skeleton -match 'aria-busy="true"' -and $skeleton -match 'aria-hidden="true"' -and $skeleton -notmatch 'role="status"' },
     @{ Name = 'Foco visible'; Ok = $styles -match ':focus-visible' },
     @{ Name = 'Reduccion de movimiento'; Ok = $styles -match 'prefers-reduced-motion:\s*reduce' },
     @{ Name = 'Animacion skeleton controlada'; Ok = $styles -match '\.skeleton-block' -and $styles -match '@keyframes skeleton-pulse' }
@@ -54,4 +54,4 @@ foreach ($file in @(
 }
 
 Write-Host 'VALIDACION FE-03/FE-04: CORRECTA.'
-Write-Host 'Semántica, foco, estados WAI-ARIA, reducción de movimiento y skeleton transversal protegidos.'
+Write-Host 'Semántica, foco, regiones vivas, reducción de movimiento y skeleton transversal protegidos sin colisionar con estados funcionales.'
