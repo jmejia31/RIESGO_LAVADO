@@ -55,7 +55,7 @@ Assert-Contains $httpState 'peticionesActivas\s*=\s*signal\(' 'el estado HTTP gl
 Assert-Contains $httpState 'cargando\s*=\s*computed\(' 'el estado de carga HTTP debe conservar computed'
 
 $sinAcceso = 'frontend/rl-app/src/app/shared/pages/sin-acceso/sin-acceso.component.ts'
-Assert-Contains $sinAcceso 'toSignal\(' 'la adaptación Observable→Signal de parámetros de ruta debe conservarse'
+Assert-Contains $sinAcceso 'toSignal\(' 'la adaptacion Observable->Signal de parametros de ruta debe conservarse'
 
 $layout = 'frontend/rl-app/src/app/shared/layout/main-layout/main-layout.component.ts'
 Assert-Contains $layout 'sidebarAbierto\s*=\s*signal\(' 'el layout debe conservar estado local mediante signal'
