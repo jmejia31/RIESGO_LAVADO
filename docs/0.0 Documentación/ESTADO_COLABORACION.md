@@ -1,12 +1,8 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: **DB-03 — Profiling Oracle / `EXPLAIN PLAN`** quedó preparado y certificado a nivel de repositorio en `desarrollo`. El paquete identifica 11 consultas críticas reales del backend, levanta estadísticas/cardinalidad/índices existentes, genera `EXPLAIN PLAN` con `DBMS_XPLAN` y está protegido contra DDL de índices, DML sobre tablas `RL_*`, scripts de transición, limpieza `B10_*` y credenciales versionadas. El HEAD técnico `8c34b62bce9a962b160129419a54125391922360` fue certificado por Quality Gates Run `31411370593` (#619) en **SUCCESS**. **La ejecución física Oracle permanece pendiente** porque esta intervención no dispone de una conexión institucional autorizada ni secretos Oracle; no se inventaron planes, costes ni cardinalidades.
+> Actualización 2026-08-10: **DB-01 — Política de archivado de `RL_AUDITORIA`** fue implementada y certificada técnicamente en `desarrollo`. Se estableció una política `COPY_ONLY`, sin borrado automático, sin purga manual autorizada por DB-01, sin tabla histórica creada y sin movimiento físico de registros. La retención institucional permanece **NO DEFINIDA** hasta aprobación expresa de Cumplimiento/Legal. El HEAD técnico `ce2193cd60ff441ebfba4920be7df20c0ca8b29e` fue certificado por Quality Gates Run `31418050903` (#633) en **SUCCESS**: DB-01 Validator correcto, Backend 304/304, Frontend 162/162, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. Oracle no fue conectado ni ejecutado durante DB-01.
 
 Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
-
-> Actualización posterior 2026-08-10: se ejecutaron físicamente el inventario DB-03 y los 11 `EXPLAIN PLAN` en `RIESGO_LAVADO`. El inventario confirmó estadísticas vigentes, volumen bajo e índices existentes válidos; no se justifica crear índices. La primera ejecución expuso dos correcciones del paquete: DBeaver no resuelve los includes relativos de `00`, y SQL*Plus 11g no admite `VARIABLE ... DATE`. La corrección versionada reemplaza esos binds por `VARCHAR2(10)` + `TO_DATE`, agrega guardas de esquema/`PLAN_TABLE` a los scripts hijos y documenta el flujo DBeaver. **DB-03 sigue pendiente de repetir únicamente `02` con la versión corregida; no crear índices.**
-
-> Cierre físico 2026-08-10: `02_db03_explain_plan_consultas_criticas.sql` corregido se ejecutó sin errores y produjo los 11 planes, incluido Q09 con fechas tipadas mediante `TO_DATE`. El `ROLLBACK` final se confirmó. Dictamen: **DB-03 cerrado; no se requieren índices nuevos ni cambios de SQL con el volumen actual**. La reevaluación se realizará cuando crezcan de forma material auditoría, evaluaciones o flujos.
 
 ---
 
@@ -14,75 +10,120 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria:** `desarrollo`
-- **Base DB-03:** `ff1cc95c72566223274b23574d4ff4db3e310fe1`
-- **HEAD técnico DB-03 certificado:** `8c34b62bce9a962b160129419a54125391922360`
+- **Base DB-01:** `ba8aaa9429aff7357bec12f0e8f1bd4e9eb94aac`
+- **HEAD técnico DB-01 certificado:** `ce2193cd60ff441ebfba4920be7df20c0ca8b29e`
 - **Rama estable:** `main`
 - **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
 - **PR #20:** debe permanecer abierto, en borrador y sin fusión
 - **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
-- **Oracle físico ejecutado en DB-03:** inventario y planes iniciales ejecutados; repetición corregida de Q09 pendiente.
-- **DDL/DML de negocio ejecutado en DB-03:** no se ejecutó DML de negocio; se creó únicamente `PLAN_TABLE` diagnóstica vacía para `EXPLAIN PLAN`.
+- **DB-03:** cerrado físicamente; 11 planes ejecutados; sin índices nuevos
+- **DB-01:** política y controles de repositorio completados; no hubo ejecución física Oracle
 
 ---
 
-## 2. DB-03 — estado certificado
+## 2. DB-01 — estado certificado
 
-### Paquete técnico
+### Política aprobada técnicamente
 
-Ubicación: `database/19_matrices_riesgos/performance/`
+1. `RL_AUDITORIA` continúa siendo la fuente de verdad de auditoría.
+2. La primera implementación física futura deberá seguir `COPY_ONLY`:
+   - identificar lote candidato con fecha de corte aprobada;
+   - excluir retenciones extraordinarias / `LEGAL_HOLD`;
+   - copiar a destino histórico previamente autorizado;
+   - reconciliar origen e histórico;
+   - certificar el lote;
+   - conservar intacta la fuente.
+3. **Borrado automático: PROHIBIDO.**
+4. DB-01 tampoco autoriza purga manual de la fuente.
+5. No se configura `DBMS_SCHEDULER`, `DBMS_JOB`, trigger ni tarea periódica de limpieza.
+6. No se crea tabla histórica ni esquema histórico durante DB-01.
+7. No se crea ningún índice nuevo; DB-03 determinó que no se justifica con el volumen actual.
+8. No se presupone Oracle Partitioning ni su licenciamiento.
 
-- `00_db03_ejecutar_profiling_autorizado.sql`
-  - exige `CURRENT_SCHEMA = RIESGO_LAVADO`;
-  - exige token manual `EJECUTAR_DB03`;
-  - ejecuta únicamente inventario + profiling DB-03;
-  - no invoca transición 06 ni limpieza B10.
-- `01_db03_inventario_estadisticas_solo_lectura.sql`
-  - identidad del ambiente sin credenciales;
-  - `USER_TAB_STATISTICS`;
-  - cardinalidad real de tablas críticas;
-  - `USER_INDEXES` / `USER_IND_COLUMNS`;
-  - estadísticas de columnas relevantes.
-- `02_db03_explain_plan_consultas_criticas.sql`
-  - 11 `EXPLAIN PLAN`;
-  - 11 salidas `DBMS_XPLAN.DISPLAY`;
-  - binds tipados de referencia;
-  - `ROLLBACK` final de las filas diagnósticas de `PLAN_TABLE`;
-  - sin `COMMIT`.
+### Retención
 
-### Consultas críticas incluidas
+- **Plazo institucional:** NO DEFINIDO.
+- **Fecha de corte:** NO DEFINIDA.
+- Hasta que Cumplimiento/Legal apruebe ambos elementos, ningún registro se considera elegible para purga.
+- Una investigación, requerimiento legal, incidente, litigio o auditoría puede imponer retención extraordinaria aunque el registro sea antiguo.
 
-| ID | Alcance |
-|---|---|
-| DB03_Q01 | Versión vigente de formulario por familia |
-| DB03_Q02 | Evaluaciones paginadas sin filtros opcionales |
-| DB03_Q03 | Evaluaciones paginadas con riesgo/estado/área/residual |
-| DB03_Q04 | Consolidado tipado de Matrices |
-| DB03_Q05 | Historial de flujos por evaluación |
-| DB03_Q06 | Resumen operativo / dashboard |
-| DB03_Q07 | Alertas por evaluación |
-| DB03_Q08 | Automonitoreo por evaluación |
-| DB03_Q09 | Auditoría paginada con filtros exactos/fecha |
-| DB03_Q10 | Auditoría con búsqueda de subcadena |
-| DB03_Q11 | Metodología dinámica vigente |
+### Reconciliación futura obligatoria
 
-### Política de optimización
+Todo lote físico futuro deberá registrar y validar, como mínimo:
 
-- **No se creó ningún índice nuevo.**
-- Los índices existentes se evalúan antes de proponer otros.
-- `TABLE ACCESS FULL` no se considera automáticamente un defecto.
-- Estados/flags de baja cardinalidad no se indexan por intuición.
-- La búsqueda `LOWER(...) LIKE '%texto%'` de Auditoría se trata como caso especial y no como candidato automático a B-tree.
-- Si estadísticas están ausentes u obsoletas, DB-03 registra el hallazgo; no ejecuta `DBMS_STATS` automáticamente.
-- Un cambio futuro de índice requiere evidencia física Oracle saneada.
+- identificador de lote;
+- fecha de corte aprobada;
+- cantidad candidata y cantidad copiada;
+- `MIN/MAX(AUD_ID)`;
+- `MIN/MAX(AUD_FECHA)`;
+- ausencia de IDs faltantes;
+- ausencia de duplicados;
+- resultado `CONCILIADO` o `RECHAZADO`;
+- responsable técnico y aprobador funcional.
+
+Una copia finalizada sin error **no** equivale por sí sola a un lote certificado.
 
 ---
 
-## 3. Evidencia CI DB-03
+## 3. Artefactos DB-01
 
-**Quality Gates Run:** `31411370593` (#619) — **SUCCESS**
+### Política y diseño
 
-- Validador DB-03: **CORRECTO**.
-- Paquete protegido contra DDL/DML de negocio: **CORRECTO**.
+`docs/4. Base de Datos/DB_01_POLITICA_ARCHIVADO_RL_AUDITORIA_2026-08-10.md`
+
+Contiene:
+
+- estado físico y contrato actual de `RL_AUDITORIA`;
+- política de retención;
+- `COPY_ONLY`;
+- `LEGAL_HOLD`;
+- reconciliación;
+- seguridad y privacidad;
+- destino histórico futuro;
+- reversibilidad;
+- matriz de autorizaciones;
+- criterios de cierre.
+
+### Diagnóstico agregado de solo lectura
+
+`database/auditoria/archivado/01_db01_diagnostico_rl_auditoria_solo_lectura.sql`
+
+Mide únicamente:
+
+- total de registros;
+- fecha mínima/máxima;
+- crecimiento mensual;
+- distribución por acción;
+- distribución por módulo;
+- top 20 tablas auditadas;
+- longitud agregada de CLOB.
+
+No proyecta correos, IP ni contenido de CLOB y no ejecuta DDL/DML.
+
+### Validador bloqueante
+
+`scripts/validation/validate_db01_auditoria_archiving.ps1`
+
+Quality Gates verifica que:
+
+- exista la política y el diagnóstico;
+- el paquete SQL permanezca de solo lectura;
+- no exista DDL/DML de archivo;
+- no exista scheduler/job Oracle;
+- no se alcance transición 05/06 ni `B10_*`;
+- se mantenga el contrato físico esperado de `RL_AUDITORIA`;
+- se mantenga el contrato Backend de inserción + consulta/paginación;
+- no se versionen secretos.
+
+---
+
+## 4. Evidencia CI DB-01
+
+**Quality Gates Run:** `31418050903` (#633) — **SUCCESS**
+
+- DB-01 Validator: **CORRECTO**.
+- Política `COPY_ONLY`, sin borrado automático, DDL/DML físico ni scheduler: **CORRECTA**.
+- Retención: **NO DEFINIDA** hasta aprobación institucional.
 - Build Release: **0 errores / 0 advertencias**.
 - Backend: **304/304** pruebas aprobadas.
 - Frontend: **162/162** pruebas aprobadas en 25 archivos.
@@ -91,12 +132,21 @@ Ubicación: `database/19_matrices_riesgos/performance/`
 - Cobertura Backend: **22.19% líneas / 24.83% ramas**.
 - Cobertura Frontend: **39.53% sentencias / 35.24% ramas / 35.99% funciones / 39.15% líneas**.
 - Inventario exacto Matrices: **17 tablas / 17 secuencias**.
-- Contrato UAT/autorización Matrices: **correcto**.
-- CI declara expresamente que **no ejecuta Oracle real ni genera planes físicos**.
+- Autorización/UAT Matrices: **correctos**.
+
+### Oracle durante DB-01
+
+- **NO** se abrió conexión Oracle.
+- **NO** se ejecutó DDL.
+- **NO** se ejecutó DML.
+- **NO** se creó tabla histórica.
+- **NO** se movió ni eliminó un registro de `RL_AUDITORIA`.
+- **NO** se ejecutaron scripts 05/06.
+- **NO** se modificaron `B10_*`.
 
 ---
 
-## 4. Estado consolidado del Plan de Mejoras Integrales
+## 5. Estado consolidado del Plan de Mejoras Integrales
 
 | Orden | Código | Estado |
 |---:|---|---|
@@ -106,35 +156,36 @@ Ubicación: `database/19_matrices_riesgos/performance/`
 | 4 | BE-04 — Rate Limiting | **Completado y certificado** |
 | 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado** |
 | 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Completado físicamente; sin índices nuevos** |
-| 7 | DB-01 — Política de archivado de auditoría | **Pendiente; no iniciar hasta resolver continuidad DB-03** |
-| 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | Pendiente |
+| 7 | DB-01 — Política de archivado de auditoría | **Completado y certificado técnicamente** |
+| 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | **Siguiente** |
 | 9 | FE-01 — Signals gradual | Pendiente |
 | 10 | GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa | Pendiente |
 
 ---
 
-## 5. Directrices activas
+## 6. Directrices activas
 
-1. Trabajar solo sobre `desarrollo`.
+1. Trabajar exclusivamente sobre `desarrollo`.
 2. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
 3. Mantener PR #20 abierto y en borrador; no auto-merge.
 4. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
 5. No versionar secretos ni cadenas de conexión.
-6. DB-03 puede ejecutar `EXPLAIN PLAN` únicamente en el ambiente Oracle institucional autorizado y mediante el paquete versionado.
-7. DB-03 **no autoriza** `CREATE INDEX`, `ALTER TABLE`, DML de negocio ni `DBMS_STATS` automático.
-8. Toda evidencia Oracle debe sanearse antes de incorporarse a documentación/versionado.
-9. La bitácora es histórica e inmutable: nuevas correcciones se agregan, no reescriben entradas anteriores.
+6. DB-01 no autoriza eliminación automática ni manual de `RL_AUDITORIA`.
+7. Cualquier plazo de retención/fecha de corte requiere aprobación formal de Cumplimiento/Legal.
+8. Cualquier destino histórico requiere autorización DDL separada.
+9. Cualquier copia física requiere autorización DML separada y reconciliación obligatoria.
+10. Cualquier futura purga requiere una política separada, archivo reconciliado y autorización específica.
+11. Si la cardinalidad degrada Q09/Q10, volver a perfilar conforme DB-03 antes de crear índices.
+12. La bitácora histórica es append-only; las correcciones se agregan, no reescriben entradas anteriores.
 
 ---
 
-## 6. Punto exacto de continuación
+## 7. Punto exacto de continuación
 
-### DB-03 — cerrado físicamente
+**DB-01 queda cerrada a nivel de política, diseño y controles de repositorio sin modificar físicamente Oracle.**
 
-El inventario y los 11 planes fueron ejecutados en el esquema autorizado. Las conclusiones son: estadísticas vigentes, índices existentes adecuados y tablas aún de bajo volumen; por ello no se autoriza crear índices ni cambiar SQL.
+La siguiente fase de la secuencia aprobada es:
 
-```sql
-@database/19_matrices_riesgos/performance/00_db03_ejecutar_profiling_autorizado.sql EJECUTAR_DB03
-```
+### FE-03 + FE-04 — Accesibilidad / WAI-ARIA + Skeleton Loaders
 
-El siguiente bloque priorizado es **DB-01 — política de archivado de auditoría**, sin borrado automático.
+Debe mejorar accesibilidad y estados de carga de forma transversal sin alterar contratos funcionales ni degradar las pruebas UAT existentes.
