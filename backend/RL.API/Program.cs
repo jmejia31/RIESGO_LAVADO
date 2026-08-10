@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using System.Text;
+using RL.API.Infrastructure.Caching;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Health;
 using RL.API.Infrastructure.RateLimiting;
@@ -104,6 +105,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // por RemoteIpAddress y las autenticadas por identificador de usuario, sin confiar en headers spoofeables.
 builder.Services.AddApplicationRateLimiting(builder.Configuration);
 
+// BE-02: caché en memoria solo para lecturas estables con TTL acotado e invalidación explícita.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IApplicationCache, ApplicationMemoryCache>();
+builder.Services.AddSingleton(
+    builder.Configuration.GetSection("Caching").Get<ApplicationCacheSettings>()
+    ?? new ApplicationCacheSettings());
+
 // Proceso de integración frontend-backend: limita los orígenes permitidos según configuración.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
 builder.Services.AddCors(options =>
@@ -143,14 +151,16 @@ builder.Services.AddScoped<IActivoDirectorioService, ActiveDirectorioService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 builder.Services.AddScoped<ICatalogoService, CatalogoService>();
-builder.Services.AddScoped<IConfiguracionService, ConfiguracionService>();
+builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddScoped<IConfiguracionService, CachedConfiguracionService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IListasService, ListasService>();
 builder.Services.AddScoped<IEvidenciasService, EvidenciasService>();
 builder.Services.AddScoped<ICoincidenciasService, CoincidenciasService>();
 builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
 builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
-builder.Services.AddScoped<IMatricesRiesgosAppService, MatricesRiesgosAppService>();
+builder.Services.AddScoped<MatricesRiesgosAppService>();
+builder.Services.AddScoped<IMatricesRiesgosAppService, CachedMatricesRiesgosAppService>();
 builder.Services.AddScoped<IMatricesRiesgosGestionService, MatricesRiesgosGestionService>();
 builder.Services.AddScoped<IMatricesRiesgosMitigacionService, MatricesRiesgosMitigacionService>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoService, MatricesRiesgosMonitoreoService>();
