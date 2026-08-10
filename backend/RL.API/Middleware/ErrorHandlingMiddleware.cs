@@ -50,13 +50,17 @@ public class ErrorHandlingMiddleware
                 statusCode = StatusCodes.Status400BadRequest;
                 title = "Solicitud incorrecta";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
-                detail = SanitizarMensajePublico(exception.Message, "La solicitud contiene parámetros no válidos.");
+                detail = EsMensajeFuncionalSeguro(exception.Message)
+                    ? exception.Message.Trim()
+                    : "La solicitud contiene parámetros no válidos o incompletos.";
                 break;
             case KeyNotFoundException:
                 statusCode = StatusCodes.Status404NotFound;
                 title = "Recurso no encontrado";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
-                detail = SanitizarMensajePublico(exception.Message, "El recurso solicitado no existe o no se encuentra disponible.");
+                detail = EsMensajeFuncionalSeguro(exception.Message)
+                    ? exception.Message.Trim()
+                    : "El recurso solicitado no existe o no se encuentra disponible.";
                 break;
             case UnauthorizedAccessException:
                 statusCode = StatusCodes.Status403Forbidden;
@@ -91,17 +95,24 @@ public class ErrorHandlingMiddleware
         return context.Response.WriteAsync(json);
     }
 
-    private static string SanitizarMensajePublico(string rawMessage, string fallback)
+    private static bool EsMensajeFuncionalSeguro(string message)
     {
-        if (string.IsNullOrWhiteSpace(rawMessage)) return fallback;
-        if (rawMessage.Contains("ORA-") || rawMessage.Contains("SELECT") || rawMessage.Contains("INSERT") ||
-            rawMessage.Contains("UPDATE") || rawMessage.Contains("DELETE") || rawMessage.Contains("System.") ||
-            rawMessage.Contains("Exception") || rawMessage.Contains("at ") || rawMessage.Contains(@"\"))
-        {
-            return fallback;
-        }
-        return rawMessage.Trim();
+        if (string.IsNullOrWhiteSpace(message) || message.Length > 150)
+            return false;
+
+        // Lista blanca estricta: sólo texto funcional en español básico sin dos puntos, sin rutas, sin clases ni tokens técnicos.
+        return System.Text.RegularExpressions.Regex.IsMatch(message, @"^[a-zA-Z0-9 áéíóúÁÉÍÓÚñÑüÜ,.\?¿!¡\-]+$")
+            && !message.Contains(":")
+            && !message.Contains("System.")
+            && !message.Contains("Exception")
+            && !message.Contains("ORA-")
+            && !message.Contains("SQL")
+            && !message.Contains("RL_")
+            && !message.Contains("Null")
+            && !message.Contains("Object")
+            && !message.Contains("http");
     }
 }
+
 
 

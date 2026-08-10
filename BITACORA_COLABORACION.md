@@ -1,24 +1,29 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — BE-01 + FE-02: Blindaje de Errores RFC 7807, Sanitización 4xx e Interceptor HTTP con Estado Global
+## Registro de Intervención — Antigravity — BE-01 + FE-02: Blindaje de Errores RFC 7807 (Allowlist 4xx) y Componente Visual HTTP Global
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `a0edb63`.
-- **Objetivo**: Implementar la respuesta de errores estandarizada `ProblemDetails` (RFC 7807) en el Backend con sanitización estricta de mensajes 4xx para evitar filtraciones de BD/internas, e incorporar el interceptor de resiliencia HTTP (`httpResilienceInterceptor`) y el servicio global (`GlobalHttpStateService`) en el Frontend para indicador global de carga, notificación unificada de errores y reintentos seguros restringidos a `GET` ante errores 0/503/504.
+- **Commit inicial**: `0f5dcc5`.
+- **Objetivo**: Reforzar BE-01 mediante política estricta de lista blanca (Allowlist) y mensajes públicos fijos por defecto para errores 4xx/5xx sin filtrar información interna, e integrar los indicadores visuales globales de carga (`cargando`) y el banner flotante de errores (`ultimoError`) consumidos desde `GlobalHttpStateService` en el layout principal Angular (`MainLayoutComponent`).
 
 ### Resumen de la Intervención
 1. **Backend (`backend/RL.API/Middleware/ErrorHandlingMiddleware.cs`)**:
-   - Estandarizado el formato a `application/problem+json` (RFC 7807) con soporte para `title`, `status`, `detail`, `instance`, `type` y `traceId`.
-   - **Sanitización de Errores 4xx/5xx**: Implementada la función `SanitizarMensajePublico` para que excepciones 400, 403 y 404 filtren cualquier indicio de consultas SQL, `ORA-xxxx`, tipos de excepción o trazas de pila, retornando mensajes públicos seguros. Las excepciones no controladas 500 continúan mostrando un mensaje interno genérico en entornos de Producción/Staging.
-   - **Mapeo**: `ArgumentException`/`InvalidOperationException` -> 400 Bad Request (sanitizado), `KeyNotFoundException` -> 404 Not Found (sanitizado), `UnauthorizedAccessException` -> 403 Forbidden ("No tiene privilegios suficientes").
-   - Pruebas unitarias en `ErrorHandlingMiddlewareTests.cs` amplias (260/260 pruebas backend pasadas).
-2. **Frontend (`frontend/rl-app/src/app/core/services/global-http-state.service.ts` & `http-resilience.interceptor.ts`)**:
-   - Creado `GlobalHttpStateService` con Signals para gestionar la carga global (`cargando`) basada en peticiones HTTP activas y la notificación centralizada de errores (`notificarError`, `ultimoError`).
-   - `httpResilienceInterceptor`: Integrado con `GlobalHttpStateService` para activar/desactivar `cargando` mediante `finalize()` y notificar errores.
-   - **Reintentos Estrictos**: Reintentos automáticos (*Exponential Backoff*) aplicados **únicamente** a solicitudes `GET` ante fallos 0, 503 o 504. Peticiones mutantes (`POST`, `PUT`, `DELETE`, `PATCH`) jamás son reintentadas.
-   - Creada suite unitaria en `http-resilience.interceptor.spec.ts` (135/135 pruebas frontend pasadas).
+   - Estandarizado el formato `application/problem+json` (RFC 7807) con `type`, `title`, `status`, `detail`, `instance` y `traceId`.
+   - **Política de Lista Blanca (Allowlist Estricta)**: La función `EsMensajeFuncionalSeguro` exige que el mensaje de excepción sea texto funcional corto en español básico sin dos puntos (`:`), sin clases `System.*`, sin palabras clave SQL/ORA- ni rutas. Ante cualquier mensaje que no cumpla la lista blanca, se retorna un mensaje público fijo por defecto:
+     - 400 Bad Request: *"La solicitud contiene parámetros no válidos o incompletos."*
+     - 403 Forbidden: *"No tiene privilegios suficientes para realizar esta acción."*
+     - 404 Not Found: *"El recurso solicitado no existe o no se encuentra disponible."*
+     - 500 Internal Server Error: *"Ocurrió un error interno en el servidor. Por favor intente más tarde."*
+   - Detalles técnicos registrados exclusivamente en logs del servidor con `traceId` (260/260 pruebas backend pasadas).
+2. **Frontend (`frontend/rl-app/src/app/shared/layout/main-layout`)**:
+   - Inyectado `GlobalHttpStateService` en `MainLayoutComponent`.
+   - Renderizados en `main-layout.component.html`:
+     - **Barra/Indicador Global de Carga**: Barra superior animada y badge *"Cargando..."* en el Topbar cuando `globalState.cargando()` está activo.
+     - **Banner Global de Notificación de Errores**: Alerta flotante accesible y descartable en la parte superior del contenido principal cuando `globalState.ultimoError()` recibe un mensaje de `ProblemDetails`.
+   - **Reintentos Estrictos Intactos**: Reintentos automáticos (*Exponential Backoff*) aplicados **únicamente** a métodos de lectura `GET` ante errores 0, 503 o 504. Operaciones mutantes (`POST`, `PUT`, `DELETE`, `PATCH`) nunca son reintentadas.
+   - Pruebas unitarias actualizadas en `http-resilience.interceptor.spec.ts` (135/135 pruebas frontend pasadas).
 3. **Verificación Completa de Quality Gates**:
    - `dotnet test`: 260/260 backend unit tests pasados.
    - `ng test`: 135/135 frontend unit tests pasados.

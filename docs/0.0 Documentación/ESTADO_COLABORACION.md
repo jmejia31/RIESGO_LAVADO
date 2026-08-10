@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: BE-01 + FE-02 Completados y Certificados. Se aplicó sanitización estricta a mensajes de error 4xx/5xx `ProblemDetails` (RFC 7807) en Backend, evitando cualquier filtración de consultas SQL o trazas de pila. En Frontend se integró `GlobalHttpStateService` en `httpResilienceInterceptor` para gestionar el estado de carga global `cargando` y la notificación centralizada `ultimoError`, manteniendo la política estricta de reintentos restringidos a `GET` ante errores 0/503/504. Todos los Quality Gates (260 backend, 135 frontend, 10 E2E y validadores de BD/estructura) están **100% VERDES Y PASADOS**. `main` continúa intacta y el PR #20 permanece abierto en borrador.
+> Actualización 2026-08-10: BE-01 + FE-02 Completados, Blindados y Certificados. Se aplicó una política estricta de Allowlist y mensajes públicos fijos por defecto a los errores `ProblemDetails` (RFC 7807) en el Backend. En el Frontend se conectaron los indicadores visuales globales (`cargando` y banner descartable `ultimoError`) consumidos desde `GlobalHttpStateService` en `MainLayoutComponent`, manteniendo la política estricta de reintentos restringidos a `GET` ante fallos 0/503/504. Todos los Quality Gates (260 backend, 135 frontend, 10 E2E y validadores) están **100% VERDES Y PASADOS**. `main` continúa intacta y el PR #20 permanece abierto en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -20,12 +20,12 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: BE-01 + FE-02 — Errores Uniformes RFC 7807, Sanitización 4xx e Interceptor HTTP con Estado Global
+- **Intervención**: BE-01 + FE-02 — Blindaje de Errores RFC 7807 (Allowlist 4xx) y Componente Visual HTTP Global
 - **Fecha**: 2026-08-10 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit inicial**: `a0edb63`
-- **Estado**: BE-01 + FE-02 **COMPLETADOS AL 100%**. Respuestas `ProblemDetails` RFC 7807 con sanitización pública de mensajes 4xx/5xx. Interceptor HTTP con gestión global de carga/notificación de error y reintentos restringidos a `GET`. Pruebas Backend (260/260), Frontend (135/135), E2E (10/10) y validadores 100% PASADAS.
+- **Commit inicial**: `0f5dcc5`
+- **Estado**: BE-01 + FE-02 **COMPLETADOS AL 100%**. Respuestas `ProblemDetails` RFC 7807 con política de Allowlist estricta. Componentes visuales globales de carga y banner de notificaciones de error conectados en `MainLayoutComponent`. Pruebas Backend (260/260), Frontend (135/135), E2E (10/10) y validadores 100% PASADAS.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)

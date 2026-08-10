@@ -115,7 +115,10 @@
   <div class="flex flex-col flex-1 overflow-hidden">
 
     <!-- Topbar -->
-    <header class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-20 shadow-sm">
+    <header class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between z-20 shadow-sm relative">
+      @if (globalState.cargando()) {
+        <div class="absolute top-0 left-0 right-0 h-1 bg-ihss-600 animate-pulse z-50"></div>
+      }
       <div class="flex items-center gap-3">
         <!-- Toggle sidebar -->
         <button (click)="toggleSidebar()"
@@ -130,6 +133,15 @@
       </div>
 
       <div class="flex items-center gap-2">
+        @if (globalState.cargando()) {
+          <span class="text-xs text-ihss-700 font-medium animate-pulse flex items-center gap-1.5 bg-ihss-50 px-2.5 py-1 rounded-lg">
+            <svg class="w-3.5 h-3.5 animate-spin text-ihss-600" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Cargando...
+          </span>
+        }
         <!-- Logout -->
         <button (click)="auth.logout()"
           class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600
@@ -145,6 +157,21 @@
 
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto bg-gray-100 p-4 sm:p-6">
+      @if (globalState.ultimoError(); as err) {
+        <div class="mb-4 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center justify-between shadow-sm animate-fade-in" role="alert">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-sm font-medium">{{ err }}</span>
+          </div>
+          <button type="button" (click)="globalState.limpiarError()" class="text-red-500 hover:text-red-800 p-1 rounded-lg hover:bg-red-100 transition-colors" aria-label="Cerrar notificacion">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      }
       <router-outlet/>
     </main>
   </div>

@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ConfiguracionService } from '../../../core/configuration/configuracion.service';
 import { CatalogoService } from '../../../core/configuration/catalogo.service';
 import { Modulo } from '../../../core/configuration/catalogo.models';
+import { GlobalHttpStateService } from '../../../core/services/global-http-state.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -22,6 +23,7 @@ export class MainLayoutComponent implements OnInit {
   constructor(
     readonly auth: AuthService,
     readonly configService: ConfiguracionService,
+    readonly globalState: GlobalHttpStateService,
     private catalogoService: CatalogoService
   ) {}
 

@@ -102,7 +102,7 @@ public sealed class ErrorHandlingMiddlewareTests
         Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
         Assert.DoesNotContain("ORA-00942", body, StringComparison.Ordinal);
         Assert.DoesNotContain("SELECT", body, StringComparison.Ordinal);
-        Assert.Contains("La solicitud contiene parámetros no válidos.", body, StringComparison.Ordinal);
+        Assert.Contains("La solicitud contiene parámetros no válidos o incompletos.", body, StringComparison.Ordinal);
     }
 }
 
