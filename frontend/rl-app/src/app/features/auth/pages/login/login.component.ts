@@ -1,16 +1,17 @@
-import { ChangeDetectionStrategy, Component, signal, OnInit, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule }      from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';
+import { LoginSlide } from '../../../../core/configuration/configuracion.models';
 
 @Component({
   selector:    'app-login',
   standalone:  true,
   imports:     [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
@@ -24,10 +25,15 @@ export class LoginComponent implements OnInit, OnDestroy {
   error     = signal('');
   mostrarPw = signal(false);
 
-  // Carrusel
-  slideActual = signal(0);
-  intervalo: any;
-  slides: any[] = [];
+  // Carrusel: estado de presentación local gestionado con Signals.
+  readonly slideActual = signal(0);
+  readonly slides = signal<LoginSlide[]>([]);
+  readonly slideSeleccionado = computed(() => {
+    const items = this.slides();
+    if (items.length === 0) return null;
+    return items[Math.min(this.slideActual(), items.length - 1)] ?? null;
+  });
+  private intervalo: ReturnType<typeof setInterval> | null = null;
 
   readonly currentYear = new Date().getFullYear();
 
@@ -80,36 +86,54 @@ export class LoginComponent implements OnInit, OnDestroy {
   cargarSlides() {
     this.configService.ObtenerSlides().subscribe({
       next: (data) => {
-        this.slides = data;
-        if (this.slides.length > 0) this.iniciarCarrusel();
+        this.slides.set(data);
+        this.ajustarSlideActual();
+        if (data.length > 1) this.iniciarCarrusel();
       },
       error: () => {
         // Fallback en caso de error
-        this.slides = [
+        this.slides.set([
           { id: 1, imagenUrl: 'assets/login/slide1.png', titulo: 'Prevención de Lavado de Activos', descripcion: 'Gestión integral de riesgos y alertas para proteger la institución.', orden: 1, activo: true },
           { id: 2, imagenUrl: 'assets/login/slide2.png', titulo: 'Monitoreo de Listas', descripcion: 'Detección oportuna de personas expuestas políticamente o de interés.', orden: 2, activo: true },
           { id: 3, imagenUrl: 'assets/login/slide3.png', titulo: 'Cumplimiento Normativo IHSS', descripcion: 'Alineación institucional con regulaciones de transparencia y control interno.', orden: 3, activo: true }
-        ];
+        ]);
+        this.ajustarSlideActual();
       }
     });
   }
 
   ngOnDestroy(): void {
-    if (this.intervalo) clearInterval(this.intervalo);
+    if (this.intervalo) {
+      clearInterval(this.intervalo);
+      this.intervalo = null;
+    }
   }
 
-  iniciarCarrusel() {
+  iniciarCarrusel(): void {
+    if (this.intervalo) clearInterval(this.intervalo);
+    if (this.slides().length <= 1) {
+      this.intervalo = null;
+      return;
+    }
     this.intervalo = setInterval(() => {
-      this.slideActual.update(val => (val + 1) % this.slides.length);
+      const total = this.slides().length;
+      if (total > 1) this.slideActual.update(val => (val + 1) % total);
     }, 5000);
   }
 
-  seleccionarSlide(idx: number) {
+  seleccionarSlide(idx: number): void {
+    if (idx < 0 || idx >= this.slides().length) return;
     this.slideActual.set(idx);
-    if (this.intervalo) {
-      clearInterval(this.intervalo);
-      this.iniciarCarrusel();
+    this.iniciarCarrusel();
+  }
+
+  private ajustarSlideActual(): void {
+    const total = this.slides().length;
+    if (total === 0) {
+      this.slideActual.set(0);
+      return;
     }
+    if (this.slideActual() >= total) this.slideActual.set(total - 1);
   }
 
   onSubmit() {

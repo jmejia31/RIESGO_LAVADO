@@ -8,7 +8,7 @@ import { AuditoriaDto } from '../../models/auditoria.models';
   selector: 'app-bitacora',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bitacora.component.html',
 })
 export class BitacoraComponent implements OnInit {

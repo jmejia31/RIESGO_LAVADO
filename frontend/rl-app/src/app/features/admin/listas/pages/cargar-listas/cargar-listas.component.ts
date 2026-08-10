@@ -11,7 +11,7 @@ import * as XLSX from '../../../../../core/utils/excel-export.util';
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cargar-listas.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CargarListasComponent implements OnInit {
   tiposListas = signal<TipoListaCautela[]>([]);
@@ -79,18 +79,18 @@ export class CargarListasComponent implements OnInit {
     });
   }
 
-  archivoSeleccionado: File | null = null;
+  readonly archivoSeleccionado = signal<File | null>(null);
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) {
-      this.archivoSeleccionado = null;
+      this.archivoSeleccionado.set(null);
       return;
     }
 
     const extension = this.obtenerExtension(file.name);
     if (!this.extensionesPermitidas.includes(extension)) {
-      this.archivoSeleccionado = null;
+      this.archivoSeleccionado.set(null);
       event.target.value = '';
       import('sweetalert2').then((Swal) => {
         Swal.default.fire({
@@ -104,7 +104,7 @@ export class CargarListasComponent implements OnInit {
       return;
     }
 
-    this.archivoSeleccionado = file;
+    this.archivoSeleccionado.set(file);
   }
 
   cargarArchivo() {
@@ -113,7 +113,8 @@ export class CargarListasComponent implements OnInit {
       return;
     }
 
-    if (!this.archivoSeleccionado) {
+    const archivoSeleccionado = this.archivoSeleccionado();
+    if (!archivoSeleccionado) {
       import('sweetalert2').then((Swal) => {
         Swal.default.fire({
           allowOutsideClick: false,
@@ -139,7 +140,7 @@ export class CargarListasComponent implements OnInit {
         }
       });
 
-      this.listasService.uploadListaCautela(this.archivoSeleccionado!, tipoListaId).subscribe({
+      this.listasService.uploadListaCautela(archivoSeleccionado, tipoListaId).subscribe({
         next: (res) => {
           this.procesandoCarga.set(false);
           Swal.default.fire({
@@ -150,7 +151,7 @@ export class CargarListasComponent implements OnInit {
             confirmButtonColor: '#1e3a8a'
           });
           // Limpiar archivo seleccionado
-          this.archivoSeleccionado = null;
+          this.archivoSeleccionado.set(null);
           this.form.reset({ tipoListaId: '' });
           // Restablecer el input file visualmente si es necesario
           const fileInput = document.getElementById('fileUploadInput') as HTMLInputElement;

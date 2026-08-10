@@ -8,7 +8,7 @@ import { ConfigSistema, LoginSlide } from '../../../../../core/configuration/con
   selector: 'app-configuracion',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './configuracion.component.html',
 })
 export class ConfiguracionComponent implements OnInit {

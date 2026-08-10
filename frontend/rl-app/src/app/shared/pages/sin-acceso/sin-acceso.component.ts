@@ -7,7 +7,7 @@ import { map } from 'rxjs';
   selector: 'app-sin-acceso',
   standalone: true,
   imports: [RouterLink],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-8">
       <div class="text-center max-w-md">

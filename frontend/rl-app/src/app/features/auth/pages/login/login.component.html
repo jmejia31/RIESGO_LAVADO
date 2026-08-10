@@ -4,7 +4,7 @@
   <div class="relative w-full lg:w-3/5 xl:w-[65%] h-64 lg:h-screen overflow-hidden">
     
     <!-- Imágenes del Carrusel -->
-    @for (slide of slides; track $index) {
+    @for (slide of slides(); track slide.id) {
       <div 
         class="absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-1000 ease-in-out"
         [style.opacity]="slideActual() === $index ? 1 : 0"
@@ -40,18 +40,18 @@
 
       <!-- Texto Dinámico del Slide -->
       <div class="max-w-2xl mb-12">
-        @if (slides.length > 0) {
+        @if (slideSeleccionado()) {
           <h2 class="text-4xl lg:text-5xl xl:text-6xl font-extrabold mb-6 leading-tight animate-slide-up">
-            {{ slides[slideActual()]?.titulo }}
+            {{ slideSeleccionado()?.titulo }}
           </h2>
           <p class="text-xl text-ihss-100/90 leading-relaxed font-light animate-fade-in">
-            {{ slides[slideActual()]?.descripcion }}
+            {{ slideSeleccionado()?.descripcion }}
           </p>
         }
 
         <!-- Indicadores de Slides -->
         <div class="flex gap-3 mt-10">
-          @for (s of slides; track $index) {
+          @for (s of slides(); track s.id) {
             <button 
               (click)="seleccionarSlide($index)"
               class="h-1.5 transition-all duration-300 rounded-full"

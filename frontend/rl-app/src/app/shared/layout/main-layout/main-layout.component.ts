@@ -13,7 +13,7 @@ import { SkeletonLoaderComponent } from '../../components/skeleton-loader/skelet
   standalone: true,
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SkeletonLoaderComponent],
   templateUrl: './main-layout.component.html',
-  changeDetection: ChangeDetectionStrategy.Eager
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MainLayoutComponent implements OnInit {
   sidebarAbierto = signal(true);
