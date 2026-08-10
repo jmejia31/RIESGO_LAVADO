@@ -16,6 +16,7 @@ public static class RateLimitPolicies
     public const string RefreshToken = "be04-refresh-token";
     public const string ReportExport = "be04-report-export";
     public const string EvidenceUpload = "be04-evidence-upload";
+    public const string Unlimited = "be04-unlimited";
 }
 
 /// <summary>
@@ -46,9 +47,36 @@ public sealed class RateLimitingSettings
 /// </summary>
 public static class ApplicationRateLimitPartitions
 {
+    public static RateLimitPartition<string> ForRequest(HttpContext context, RateLimitingSettings settings)
+    {
+        var path = context.Request.Path.Value ?? string.Empty;
+        var method = context.Request.Method;
+
+        if (HttpMethods.IsPost(method) && PathEquals(path, "/api/auth/login"))
+            return Login(context, settings);
+
+        if (HttpMethods.IsPost(method) && PathEquals(path, "/api/auth/recuperar-password"))
+            return PasswordRecovery(context, settings);
+
+        if (HttpMethods.IsPost(method) && PathEquals(path, "/api/auth/refresh"))
+            return RefreshToken(context, settings);
+
+        if (HttpMethods.IsGet(method) &&
+            (PathEquals(path, "/api/matrices-riesgos/reportes/consolidado.xlsx") ||
+             PathEquals(path, "/api/matrices-riesgos/reportes/consolidado.pdf")))
+        {
+            return ReportExport(context, settings);
+        }
+
+        if (HttpMethods.IsPost(method) && PathEquals(path, "/api/matrices-riesgos/evidencias/cargar"))
+            return EvidenceUpload(context, settings);
+
+        return RateLimitPartition.GetNoLimiter<string>(RateLimitPolicies.Unlimited);
+    }
+
     public static RateLimitPartition<string> Login(HttpContext context, RateLimitingSettings settings) =>
         FixedWindow(
-            AnonymousPartitionKey(context),
+            $"{RateLimitPolicies.Login}:{AnonymousPartitionKey(context)}",
             settings.LoginPermitLimit,
             settings.LoginWindowSeconds,
             maxPermitLimit: 30,
@@ -56,7 +84,7 @@ public static class ApplicationRateLimitPartitions
 
     public static RateLimitPartition<string> PasswordRecovery(HttpContext context, RateLimitingSettings settings) =>
         FixedWindow(
-            AnonymousPartitionKey(context),
+            $"{RateLimitPolicies.PasswordRecovery}:{AnonymousPartitionKey(context)}",
             settings.PasswordRecoveryPermitLimit,
             settings.PasswordRecoveryWindowSeconds,
             maxPermitLimit: 20,
@@ -64,7 +92,7 @@ public static class ApplicationRateLimitPartitions
 
     public static RateLimitPartition<string> RefreshToken(HttpContext context, RateLimitingSettings settings) =>
         FixedWindow(
-            AnonymousPartitionKey(context),
+            $"{RateLimitPolicies.RefreshToken}:{AnonymousPartitionKey(context)}",
             settings.RefreshTokenPermitLimit,
             settings.RefreshTokenWindowSeconds,
             maxPermitLimit: 100,
@@ -72,7 +100,7 @@ public static class ApplicationRateLimitPartitions
 
     public static RateLimitPartition<string> ReportExport(HttpContext context, RateLimitingSettings settings) =>
         FixedWindow(
-            AuthenticatedPartitionKey(context),
+            $"{RateLimitPolicies.ReportExport}:{AuthenticatedPartitionKey(context)}",
             settings.ReportExportPermitLimit,
             settings.ReportExportWindowSeconds,
             maxPermitLimit: 60,
@@ -80,7 +108,7 @@ public static class ApplicationRateLimitPartitions
 
     public static RateLimitPartition<string> EvidenceUpload(HttpContext context, RateLimitingSettings settings) =>
         FixedWindow(
-            AuthenticatedPartitionKey(context),
+            $"{RateLimitPolicies.EvidenceUpload}:{AuthenticatedPartitionKey(context)}",
             settings.EvidenceUploadPermitLimit,
             settings.EvidenceUploadWindowSeconds,
             maxPermitLimit: 60,
@@ -96,6 +124,9 @@ public static class ApplicationRateLimitPartitions
             ? $"user:{userId.Trim()}"
             : AnonymousPartitionKey(context);
     }
+
+    private static bool PathEquals(string actual, string expected) =>
+        string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
 
     private static string NormalizeIp(System.Net.IPAddress? address)
     {
@@ -144,23 +175,21 @@ public static class ApplicationRateLimitingServiceCollectionExtensions
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
+                context => ApplicationRateLimitPartitions.ForRequest(context, settings));
 
             options.AddPolicy(
                 RateLimitPolicies.Login,
                 context => ApplicationRateLimitPartitions.Login(context, settings));
-
             options.AddPolicy(
                 RateLimitPolicies.PasswordRecovery,
                 context => ApplicationRateLimitPartitions.PasswordRecovery(context, settings));
-
             options.AddPolicy(
                 RateLimitPolicies.RefreshToken,
                 context => ApplicationRateLimitPartitions.RefreshToken(context, settings));
-
             options.AddPolicy(
                 RateLimitPolicies.ReportExport,
                 context => ApplicationRateLimitPartitions.ReportExport(context, settings));
-
             options.AddPolicy(
                 RateLimitPolicies.EvidenceUpload,
                 context => ApplicationRateLimitPartitions.EvidenceUpload(context, settings));
