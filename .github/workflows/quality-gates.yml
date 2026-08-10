@@ -62,6 +62,10 @@ jobs:
         shell: pwsh
         run: ./scripts/validation/validate_fe03_fe04_accessibility_loading.ps1
 
+      - name: Validate FE-01 gradual Angular Signals adoption
+        shell: pwsh
+        run: ./scripts/validation/validate_fe01_signals_adoption.ps1
+
       - name: Validate dynamic matrices, authorization and Phase 13 UAT contract
         shell: pwsh
         run: |
