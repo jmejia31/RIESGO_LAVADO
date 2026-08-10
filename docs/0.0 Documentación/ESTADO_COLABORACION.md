@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: los hallazgos pendientes de **BE-01 + FE-02** fueron corregidos y certificados en `desarrollo` mediante el commit técnico `50067cfccebac85527f94ab8a97ba8aa03fea21e`. El Backend dejó de exponer mensajes técnicos mediante heurísticas Regex: solo una excepción pública explícita (`PublicProblemException`) puede transportar detalle funcional al cliente; `InvalidOperationException` genérica vuelve a 500. El Frontend mantiene reintentos exclusivamente para `GET` ante status `0/503/504`, con backoff exponencial explícito y cobertura ampliada. GitHub Actions Quality Gates Run `31400466132` (#538) terminó en **SUCCESS**: Backend 269/269, Frontend 162/162, E2E 13/13 y `npm audit` con 0 vulnerabilidades. Oracle no fue conectado ni ejecutado en esta intervención; `main` permanece intacta y el PR #20 debe continuar abierto y en borrador.
+> Actualización 2026-08-10: **BE-03 — Health & Readiness Probes** fue implementado y certificado en `desarrollo`. `/healthz` confirma exclusivamente liveness del proceso HTTP y no consulta Oracle ni servicios externos. `/readyz` valida la disponibilidad mínima de Oracle mediante una consulta de solo lectura `SELECT 1 FROM DUAL`, con timeout configurable y acotado, respuesta agregada mínima y sin exposición de cadenas de conexión, SQL, credenciales ni mensajes de excepción. El HEAD técnico `c095c437be544899186dd945bc1b3040c32f7156` fue certificado por GitHub Actions Quality Gates Run `31404261933` (#563) en **SUCCESS**: Backend 277/277, Frontend 162/162, E2E 13/13, build Release 0 errores/0 advertencias y `npm audit` con 0 vulnerabilidades. Oracle no fue conectado ni ejecutado por CI ni por esta intervención; `main` permanece intacta y el PR #20 debe continuar abierto y en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).
 
@@ -10,9 +10,9 @@ Documento vivo. Debe actualizarse al finalizar cada intervención. Los anteceden
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria de trabajo:** `desarrollo`
-- **Commit técnico BE-01 + FE-02 certificado:** `50067cfccebac85527f94ab8a97ba8aa03fea21e`
+- **HEAD técnico BE-03 certificado:** `c095c437be544899186dd945bc1b3040c32f7156`
 - **Rama estable:** `main`
-- **HEAD de `main` verificado antes del cierre:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
+- **HEAD de `main`:** `727082c6fcf90f95ce6db5eadf5c4b152397d080`
 - **Política `main`:** no modificar ni integrar sin autorización expresa de Javier Mejía
 - **Ramas remotas permitidas por protocolo:** únicamente `main` y `desarrollo`
 - **PR de revisión:** #20 — abierto, en borrador y sin autorización de fusión
@@ -21,127 +21,92 @@ Documento vivo. Debe actualizarse al finalizar cada intervención. Los anteceden
 
 ---
 
-## 2. Última intervención
+## 2. Última intervención — BE-03
 
-- **Intervención:** DB-RESPALDO — Script de Limpieza de Tablas de Respaldo `B10_*`
+- **Intervención:** BE-03 — `/healthz` + `/readyz`
 - **Fecha:** 2026-08-10 (UTC-6)
-- **Autor:** Antigravity
+- **Autor:** ChatGPT
 - **Rama:** `desarrollo`
-- **Commit inicial:** `6b9191a`
-- **Estado:** Creado e incorporado el script PL/SQL controlado [09_limpieza_tablas_respaldo_b10.sql](file:///c:/RIESGO_LAVADO/database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql) para la eliminación idempotente y segura de respaldos temporales `B10_001` .. `B10_041`, `BKP_F10_MAP` y `BKP_F10_SECUENCIAS` en Oracle RIESGO_LAVADO, respondiendo a la solicitud del usuario. Validadores de base de datos y enlaces 100% VERDES.
-- **Archivos creados/modificados:**
-  - `database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql` (NUEVO)
-  - `database/19_matrices_riesgos/transicion/README.md`
-  - `BITACORA_COLABORACION.md`
-  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
-- **Commit técnico publicado:** `50067cfccebac85527f94ab8a97ba8aa03fea21e`
-- **Quality Gate remoto:** Run `31400466132` (#538) — **SUCCESS**
-- **Estado:** **BE-01 + FE-02 técnicamente cerrados con evidencia CI**. No se otorga autorización implícita para fusionar a `main`, ejecutar Oracle ni iniciar trabajos fuera de la secuencia priorizada.
+- **Base de inicio:** `fad9abd579a4aec76a2b174d8bb9edcb8d943d38`
+- **HEAD técnico certificado:** `c095c437be544899186dd945bc1b3040c32f7156`
+- **Quality Gate técnico:** Run `31404261933` (#563) — **SUCCESS**
+- **Estado:** **BE-03 completado y certificado técnicamente**.
 
 ### Cambios certificados
 
-1. **BE-01 — ProblemDetails / exposición segura**
-   - Se eliminó la heurística `EsMensajeFuncionalSeguro` basada en Regex/lista negra.
-   - Se creó `PublicProblemException` como única vía explícita para publicar un mensaje funcional de excepción.
-   - `ArgumentException` genérica devuelve 400 con mensaje fijo.
-   - `KeyNotFoundException` genérica devuelve 404 con mensaje fijo.
-   - `UnauthorizedAccessException` devuelve 403 con mensaje fijo.
-   - `InvalidOperationException` genérica ya no se clasifica universalmente como 400; cae en 500.
-   - Los 500 muestran detalle técnico únicamente en ambiente Development; fuera de Development usan mensaje público fijo.
-   - El log del servidor conserva la excepción y el `traceId` para diagnóstico.
+1. **Liveness `/healthz`**
+   - Ruta raíz `GET /healthz`.
+   - Acceso anónimo para infraestructura/orquestadores.
+   - Respuesta `200` con contrato mínimo `{ "status": "Healthy" }`.
+   - No invoca readiness, Oracle ni servicios externos.
 
-2. **BE-01 — regresión adversarial**
-   - Se añadieron pruebas para mensajes con `ORA-00942`, `SELECT`, SQL en minúsculas, nombres de tablas, timeouts y procedimientos.
-   - Se verifica que esos mensajes no aparecen en la respuesta pública.
-   - Se verifica expresamente que `InvalidOperationException` produce 500 y no 400.
+2. **Readiness `/readyz`**
+   - Ruta raíz `GET /readyz`.
+   - Acceso anónimo para infraestructura/orquestadores.
+   - Ejecuta una comprobación mínima de Oracle en solo lectura mediante `SELECT 1 FROM DUAL`.
+   - Responde `200` con `Healthy` cuando Oracle está disponible.
+   - Responde `503` con `Unhealthy` cuando la dependencia no está disponible.
+   - No expone host, service name, usuario, contraseña, connection string, SQL, `ORA-*`, stack traces ni mensajes de excepción.
 
-3. **FE-02 — resiliencia HTTP**
-   - Máximo de 2 reintentos.
-   - Solo métodos `GET`.
-   - Solo errores de red/status `0`, `503` o `504`.
-   - `POST`, `PUT`, `DELETE` y `PATCH` no se reintentan automáticamente.
-   - Backoff exponencial explícito: 300 ms y 600 ms para los dos reintentos permitidos.
+3. **Timeout y resiliencia del probe**
+   - Configuración `HealthChecks:OracleTimeoutSeconds`.
+   - Valor por defecto: 3 segundos.
+   - Límite efectivo: mínimo 1 segundo, máximo 10 segundos.
+   - Cancelación del cliente se propaga; timeout interno produce readiness negativa segura.
+   - Logging operativo registra únicamente el tipo de excepción, no el mensaje técnico.
 
-4. **FE-02 — estado global y pruebas**
-   - Se conserva el contador concurrente de peticiones activas de `GlobalHttpStateService`.
-   - Se añadieron pruebas de concurrencia para evitar apagado prematuro del indicador global.
-   - `401`, `403` y `499` quedan fuera del banner global porque sus flujos se gestionan por autenticación/cancelación.
-   - Se añadieron pruebas de no-reintento para GET 400/500/502 y todos los verbos mutantes relevantes.
+4. **Pruebas BE-03**
+   - `/healthz` devuelve 200/Healthy y demuestra que no llama al probe de readiness.
+   - `/readyz` disponible devuelve 200/Healthy.
+   - `/readyz` no disponible devuelve 503/Unhealthy sin detalle técnico.
+   - Se verifica `AllowAnonymous` y rutas exactas `/healthz` y `/readyz`.
+   - Se verifica el acotamiento del timeout Oracle.
 
-5. **Gobernanza**
-   - La intervención se registra como una nueva entrada de `BITACORA_COLABORACION.md` sin reescribir el registro histórico anterior de Antigravity.
-   - Este documento vivo se consolida al estado real vigente y deja los antecedentes en la bitácora.
+5. **Documentación operativa**
+   - `appsettings.example.json` documenta el timeout de readiness sin secretos reales.
+   - `RL.API.http` incluye llamadas manuales a `/healthz` y `/readyz`.
 
 ---
 
-## 3. Evidencia de verificación de esta intervención
+## 3. Evidencia de verificación BE-03
 
 ### GitHub Actions — Quality Gates
 
-- **Run:** `31400466132`
-- **Número:** #538
+- **Run:** `31404261933`
+- **Número:** #563
 - **Conclusión:** **SUCCESS**
 - **Build Release:** 0 errores, 0 advertencias
-- **Backend:** 269/269 pruebas aprobadas; 0 fallidas; 0 omitidas
+- **Backend:** 277/277 pruebas aprobadas; 0 fallidas; 0 omitidas
 - **Frontend:** 162/162 pruebas aprobadas en 25 archivos
-- **Suite específica FE-02:** `http-resilience.interceptor.spec.ts` — 16/16 aprobadas
 - **E2E Playwright:** 13/13 aprobadas
 - **NPM audit:** 0 vulnerabilidades
-- **Cobertura Backend:** líneas 20.68%; ramas 23.34%
+- **Cobertura Backend:** líneas 20.79%; ramas 23.44%
 - **Cobertura Frontend:** sentencias 39.53%; ramas 35.24%; funciones 35.99%; líneas 39.15%
-- **Validadores de estructura, BD, inventario 17/17, autorización y contrato UAT:** aprobados
+- **Validadores de BD, preparación Oracle, inventario 17/17, autorización y contrato UAT:** aprobados
 
 ### Oracle
 
-En esta intervención:
+Durante desarrollo y certificación CI de BE-03:
 
-- **NO** se abrió conexión Oracle;
+- **NO** se abrió conexión a Oracle real;
+- **NO** se ejecutó el endpoint `/readyz` contra el ambiente Oracle;
 - **NO** se ejecutó DDL;
 - **NO** se ejecutó DML;
 - **NO** se ejecutaron scripts de transición;
 - **NO** se modificó el esquema ni los respaldos `B10_*`.
 
-Los validadores de preparación Oracle ejecutados por CI son validaciones estáticas/controladas y no equivalen a una nueva ejecución física de Oracle.
+La consulta `SELECT 1 FROM DUAL` existe únicamente como lógica runtime de `/readyz`; será ejecutada solo cuando el endpoint sea invocado en un ambiente configurado.
 
 ---
 
-## 4. Estado consolidado de Matrices de Riesgos
-
-| Bloque | Estado vigente |
-|---|---|
-| Modelo reducido Oracle | **17 tablas + 17 secuencias** |
-| Fase 10 — transición física | **Completada según evidencia histórica del proyecto** |
-| Fase 11 — certificación funcional/Oracle | **Completada y certificada según evidencia histórica registrada** |
-| Fase 12 — hardening NPM | **Completada — 0 vulnerabilidades** |
-| Fase 13 — contrato/UAT automatizado | **Certificación de repositorio completada; validación local residual pendiente según PR #20** |
-| GOV-01 | **Completado** |
-| BE-01 | **Completado y corregido** |
-| FE-02 | **Completado y corregido** |
-| BE-03 | **Siguiente elemento priorizado; no iniciado en esta intervención** |
-
-### Validación local residual de UAT registrada en PR #20
-
-Permanece como actividad funcional/operativa independiente:
-
-1. login con roles institucionales autorizados;
-2. recorrido real Plantillas → Riesgos → Evaluaciones → Flujos → Mitigación → Monitoreo;
-3. evidencia real controlada;
-4. descarga real Excel/PDF;
-5. confirmación visual/UX sin errores bloqueantes;
-6. confirmación de conservación de respaldos y restricciones operativas aplicables.
-
-La corrección BE-01 + FE-02 no sustituye esa validación UAT local.
-
----
-
-## 5. Secuencia priorizada vigente del Plan de Mejoras Integrales
+## 4. Estado consolidado del Plan de Mejoras Integrales
 
 | Orden | Código | Estado |
 |---:|---|---|
 | 1 | GOV-01 — Sincronización Bitácora / UAT | **Completado** |
-| 2 | BE-01 + FE-02 — ProblemDetails + Interceptor HTTP | **Completado y certificado tras correcciones** |
-| 3 | BE-03 — `/healthz` + `/readyz` | **Siguiente** |
-| 4 | BE-04 — Rate Limiting | Pendiente |
+| 2 | BE-01 + FE-02 — ProblemDetails + Interceptor HTTP | **Completado y certificado** |
+| 3 | BE-03 — `/healthz` + `/readyz` | **Completado y certificado** |
+| 4 | BE-04 — Rate Limiting | **Siguiente** |
 | 5 | BE-02 — Caché con invalidación explícita | Pendiente |
 | 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | Pendiente y sujeto a autorización/ambiente |
 | 7 | DB-01 — Política de archivado de auditoría | Pendiente de diseño; sin borrado automático |
@@ -151,43 +116,60 @@ La corrección BE-01 + FE-02 no sustituye esa validación UAT local.
 
 ---
 
+## 5. Estado consolidado de Matrices de Riesgos
+
+| Bloque | Estado vigente |
+|---|---|
+| Modelo reducido Oracle | **17 tablas + 17 secuencias** |
+| Fase 10 — transición física | **Completada según evidencia histórica del proyecto** |
+| Fase 11 — certificación funcional/Oracle | **Completada y certificada según evidencia histórica registrada** |
+| Fase 12 — hardening NPM | **Completada — 0 vulnerabilidades** |
+| Fase 13 — contrato/UAT automatizado | **Certificación de repositorio completada; validación local residual pendiente según PR #20** |
+
+La validación local residual de UAT permanece como actividad funcional/operativa independiente y no fue sustituida por BE-03.
+
+---
+
 ## 6. Directrices activas e inviolables
 
 1. Trabajar únicamente sobre `desarrollo`.
 2. No modificar, fusionar ni publicar en `main` sin autorización expresa de Javier Mejía.
 3. Mantener el PR #20 abierto y en borrador.
 4. No habilitar auto-merge.
-5. No ejecutar Oracle, DDL ni DML como parte de las mejoras pendientes salvo autorización formal y alcance específico.
+5. No ejecutar Oracle, DDL ni DML como parte de mejoras pendientes salvo autorización formal y alcance específico.
 6. No exponer credenciales, cadenas de conexión, secretos, errores Oracle ni detalles internos al cliente.
-7. Reintentos automáticos HTTP únicamente para `GET` y solo ante `0/503/504`.
-8. Nunca reintentar automáticamente `POST`, `PUT`, `DELETE` o `PATCH`.
-9. La caché futura deberá tener invalidación explícita ante publicación de versiones y cambios de catálogos/reglas.
-10. Antes de crear índices Oracle, ejecutar y documentar profiling/`EXPLAIN PLAN` en el ambiente autorizado.
-11. La bitácora es histórica e inmutable: las correcciones futuras se agregan mediante una nueva entrada, no reescribiendo registros previos.
-12. `ESTADO_COLABORACION.md` es el documento vivo y puede consolidarse conforme cambie el estado real.
+7. `/healthz` debe permanecer independiente de Oracle y dependencias externas.
+8. `/readyz` debe conservar respuesta agregada mínima y una comprobación de solo lectura.
+9. Reintentos automáticos HTTP únicamente para `GET` y solo ante `0/503/504`.
+10. Nunca reintentar automáticamente `POST`, `PUT`, `DELETE` o `PATCH`.
+11. La caché futura deberá tener invalidación explícita ante publicación de versiones y cambios de catálogos/reglas.
+12. Antes de crear índices Oracle, ejecutar y documentar profiling/`EXPLAIN PLAN` en el ambiente autorizado.
+13. La bitácora es histórica e inmutable: las correcciones futuras se agregan mediante una nueva entrada, no reescribiendo registros previos.
+14. `ESTADO_COLABORACION.md` es el documento vivo y puede consolidarse conforme cambie el estado real.
 
 ---
 
-## 7. Pendientes independientes que no bloquean el cierre BE-01 + FE-02
+## 7. Pendientes independientes
 
-- Validación visual manual del login tras el endurecimiento realizado por Codex.
-- Si la cuenta Oracle de Desarrollo continúa bloqueada, el desbloqueo corresponde exclusivamente al DBA/administrador autorizado.
 - Validación UAT local residual indicada en PR #20.
-
-Ninguno de estos pendientes autoriza cambios en Producción ni en `main`.
+- Si la cuenta Oracle de Desarrollo continúa bloqueada, el desbloqueo corresponde exclusivamente al DBA/administrador autorizado.
+- Prueba operativa futura de `/readyz` contra Oracle Desarrollo solo cuando exista ambiente/autorización apropiados; no bloquea la certificación de repositorio de BE-03.
 
 ---
 
 ## 8. Punto exacto de continuación
 
-**BE-01 + FE-02 quedan cerrados técnicamente.**
+**GOV-01, BE-01, FE-02 y BE-03 quedan cerrados técnicamente.**
 
 El siguiente paso de la secuencia aprobada es:
 
-### BE-03 — Health Checks
+### BE-04 — Rate Limiting
 
-- `/healthz`: liveness del proceso API, sin dependencia de Oracle.
-- `/readyz`: readiness de persistencia/servicios críticos, sin exponer credenciales, detalles Oracle o información interna.
-- La implementación debe incluir pruebas unitarias/integración apropiadas y pasar nuevamente los Quality Gates.
+Priorizar protección de:
 
-No iniciar DB-03, DDL/DML Oracle ni otras fases fuera de secuencia sin la autorización correspondiente.
+- autenticación/login;
+- exportación de reportes;
+- carga de evidencias;
+- otros endpoints de alto costo o abuso potencial identificados durante la implementación.
+
+No iniciar BE-02, DB-03, DDL/DML Oracle ni otras fases fuera de secuencia hasta cerrar y certificar BE-04.
