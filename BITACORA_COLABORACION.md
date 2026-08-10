@@ -3158,3 +3158,6 @@ La variación menor de cobertura Frontend frente a FE-03/FE-04 corresponde a nue
 **FE-01 queda cerrada técnicamente y certificada.**
 
 La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa**.
+
+
+> **Corrección append-only FE-01 — 2026-08-10:** En la entrada inmediatamente anterior, donde se escribió “carrrusel”, debe leerse **“carrusel”**. No se reescribe el registro histórico; esta nota preserva su inmutabilidad.
