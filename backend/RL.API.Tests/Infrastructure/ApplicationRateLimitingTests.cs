@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http;
 using RL.API.Infrastructure.RateLimiting;
+using Xunit;
 
 namespace RL.API.Tests.Infrastructure;
 
