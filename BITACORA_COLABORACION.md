@@ -2681,3 +2681,70 @@ El Run `31405971032` (#580) falló en el proyecto de pruebas por una omisión de
 ### Punto exacto de continuación
 
 **BE-04 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **BE-02 — Caché con invalidación explícita**, preservando las restricciones vigentes de rama, PR, `main` y Oracle.
+
+
+---
+
+## Registro de Intervención — ChatGPT — BE-02 Caché con invalidación explícita
+
+- **Fecha**: 2026-08-10, hora local (UTC-6).
+- **Agente**: ChatGPT.
+- **Rama**: `desarrollo`.
+- **Base de inicio**: `79fe291b133de880d7d20830837eace0b72d1f91`.
+- **HEAD técnico certificado**: `a81e9a2747b9e1097baee0cc7773c4b8eedcbd1f`.
+- **Quality Gate técnico**: Run `31408706366` (#607) — **SUCCESS**.
+
+### Objetivo y alcance
+
+Implementar **BE-02 — Caché con invalidación explícita** sin modificar `main`, sin ejecutar Oracle y sin introducir caché sobre datos transaccionales cuya obsolescencia no pueda controlarse de forma explícita.
+
+### Cambios realizados
+
+1. Se incorporó `IApplicationCache` como abstracción y `ApplicationMemoryCache` sobre `IMemoryCache` para la topología monolítica/por instancia actual.
+2. La caché usa claves deterministas por alcance, TTL configurables y acotados entre 5 y 900 segundos, y bloqueo por alcance para prevenir `cache stampede`.
+3. Se implementaron tres alcances: formularios de Matrices, configuración del sistema y slides de login.
+4. Matrices cachea únicamente versión vigente por familia, versión por ID, historial de versiones y metodología dinámica vigente.
+5. El alcance de formularios se invalida explícitamente después de crear borrador, clonar, actualizar borrador, publicar y cambiar vigencia, únicamente si la mutación fue exitosa.
+6. Configuración cachea configuración institucional, slides activos y todos los slides; se invalida después de guardar configuración y crear/actualizar/eliminar slides con éxito.
+7. Evaluaciones, evidencias, flujos, auditoría, consolidado/reportes dinámicos y demás información transaccional permanecen fuera de caché.
+8. Catálogos permanecen fuera de caché hasta disponer de puntos de escritura/mantenimiento con invalidación explícita verificable.
+9. Se endureció la concurrencia: una lectura iniciada antes de una invalidación puede completar su solicitud original, pero no puede repoblar la nueva generación de caché con datos obsoletos.
+10. `appsettings.example.json` documenta TTL por defecto: formularios 120 s, configuración 120 s y slides 60 s.
+11. La abstracción deja preparada una futura implementación distribuida. En un despliegue multi-instancia, la caché local no deberá considerarse suficiente para invalidación cross-node.
+
+### Evidencia CI vigente
+
+- GitHub Actions Quality Gates: Run `31408706366` (#607) — **SUCCESS**.
+- Build Release: **0 errores / 0 advertencias**.
+- Backend: **304/304** pruebas aprobadas.
+- Frontend: **162/162** pruebas aprobadas.
+- E2E Playwright: **13/13** aprobadas.
+- NPM audit: **0 vulnerabilidades**.
+- Cobertura Backend: líneas **22.19%**, ramas **24.83%**.
+- Cobertura Frontend: sentencias **39.53%**, ramas **35.24%**, funciones **35.99%**, líneas **39.15%**.
+- Validadores BD/Oracle/UAT/inventario: **correctos**.
+
+### Pruebas BE-02 agregadas
+
+- reutilización dentro del TTL;
+- invalidación selectiva por alcance;
+- no-cache de resultados rechazados por predicado;
+- prevención de `cache stampede`;
+- carrera lectura/invalidation sin repoblación obsoleta;
+- normalización de TTL;
+- invalidación de configuración tras guardado exitoso;
+- invalidación de slides tras mutación^á;
+- mutación fallida conserva la caché vigente.
+
+### Restricciones preservadas
+
+- `main` no fue modificado.
+- PR #20 debe permanecer abierto y en borrador.
+- Oracle real no fue conectado ni ejecutado durante esta intervención ni por CI.
+- No se ejecutó DDL ni DML.
+- No se ejecutaron scripts de transición.
+- No se modificaron respaldos `B10_*`.
+
+### Punto exacto de continuación
+
+**BE-02 queda técnicamente completado y certificado.** El siguiente elemento priorizado del Plan de Mejoras Integrales es **DB-03 — Profiling Oracle / `EXPLAIN PLAN`*, que requiere autorización formal y ambiente Oracle autorizado antes de ejecutar cualquier conexión o SQL de profiling.
