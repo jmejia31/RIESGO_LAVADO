@@ -18,6 +18,7 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 - **Modelo Matrices:** 17 tablas `RL_MR_*` + 17 secuencias
 - **DB-03:** cerrado físicamente; 11 planes ejecutados; sin índices nuevos
 - **DB-01:** política y controles de repositorio completados; sin purga automática
+- **DB-ESTANDARES:** Comentarios institucionales DDL (`COMMENT ON TABLE` y `COMMENT ON COLUMN`) integrados en las 17 tablas y 98 columnas `RL_MR_*` (`01_comentarios_y_estandares_modelo_17_tablas.sql` y `06_reconstruir_modelo_17_tablas.sql`).
 - **FE-03 + FE-04:** completado y certificado
 - **FE-01:** completado y certificado técnicamente
 
@@ -104,7 +105,7 @@ No se introduce `BehaviorSubject` para reemplazar estado local Signal en estas s
 
 ---
 
-## 6. Validador bloqueante
+## 7. Validador bloqueante
 
 Ubicación:
 
@@ -122,7 +123,7 @@ Quality Gates valida:
 
 ---
 
-## 7. Dossier técnico
+## 8. Dossier técnico
 
 `docs/0.0 Documentación/FE_01_ADOPCION_GRADUAL_ANGULAR_SIGNALS_2026-08-10.md`
 
@@ -130,7 +131,7 @@ Documenta estrategia, límites, primera ola, migraciones, criterios de aceptaci�
 
 ---
 
-## 8. Evidencia CI FE-01
+## 9. Evidencia CI FE-01
 
 **Quality Gates Run:** `31422869343` (#668) — **SUCCESS**
 

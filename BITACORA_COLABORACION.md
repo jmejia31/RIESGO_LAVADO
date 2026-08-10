@@ -1,5 +1,23 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — DB-ESTANDARES: Comentarios Institucionales en las 17 Tablas y Columnas RL_MR_*
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9604575`.
+- **Objetivo**: Incorporar los comentarios institucionales DDL (`COMMENT ON TABLE` y `COMMENT ON COLUMN`) para las 17 tablas operativas y todas sus columnas en el Módulo Matrices de Riesgos (`RL_MR_*`), garantizando la misma nomenclatura, estándares y metadatos documentales de la base de datos exigidos por el propietario del proyecto.
+
+### Resumen de la Intervención
+1. **Scripts DDL/PLSQL (`database/19_matrices_riesgos/01_comentarios_y_estandares_modelo_17_tablas.sql` & `transicion/06_reconstruir_modelo_17_tablas.sql`)**:
+   - Creado [01_comentarios_y_estandares_modelo_17_tablas.sql](file:///c:/RIESGO_LAVADO/database/19_matrices_riesgos/01_comentarios_y_estandares_modelo_17_tablas.sql) con la suite completa de 17 `COMMENT ON TABLE` y 98 `COMMENT ON COLUMN` para la totalidad de las entidades `RL_MR_*`.
+   - Actualizado el script de reconstrucción [06_reconstruir_modelo_17_tablas.sql](file:///c:/RIESGO_LAVADO/database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql) para incluir automáticamente todas las sentencias `COMMENT ON` de forma nativa.
+2. **Validaciones**:
+   - `tools/validate_database_scripts.ps1`: **VERDE**.
+   - `tools/validate_documentation_links.ps1`: **VERDE** (163 enlaces en 70 archivos).
+
+---
+
 ## Registro de Intervención — Antigravity — DB-RESPALDO: Script de Limpieza de Tablas de Respaldo B10_*
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).
