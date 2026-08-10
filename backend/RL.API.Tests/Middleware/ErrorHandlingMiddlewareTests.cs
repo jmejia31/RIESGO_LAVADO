@@ -29,7 +29,56 @@ public sealed class ErrorHandlingMiddlewareTests
         var body = await reader.ReadToEndAsync();
 
         Assert.Equal(StatusCodes.Status500InternalServerError, context.Response.StatusCode);
+        Assert.Equal("application/problem+json", context.Response.ContentType);
         Assert.DoesNotContain(detalleSensible, body, StringComparison.Ordinal);
         Assert.Contains("trace-prueba-123", body, StringComparison.Ordinal);
+        Assert.Contains("application/problem+json", context.Response.ContentType, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Invoke_ValidacionFallida_Retorna400BadRequestProblemDetails()
+    {
+        var middleware = new ErrorHandlingMiddleware(
+            _ => throw new ArgumentException("El campo nombre es requerido"),
+            NullLogger<ErrorHandlingMiddleware>.Instance);
+        var context = new DefaultHttpContext
+        {
+            TraceIdentifier = "trace-400-test",
+            Response = { Body = new MemoryStream() }
+        };
+
+        await middleware.Invoke(context);
+
+        context.Response.Body.Position = 0;
+        using var reader = new StreamReader(context.Response.Body);
+        var body = await reader.ReadToEndAsync();
+
+        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
+        Assert.Contains("Solicitud incorrecta", body, StringComparison.Ordinal);
+        Assert.Contains("El campo nombre es requerido", body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Invoke_RecursoNoEncontrado_Retorna404NotFoundProblemDetails()
+    {
+        var middleware = new ErrorHandlingMiddleware(
+            _ => throw new KeyNotFoundException("No se encontró la matriz especificada"),
+            NullLogger<ErrorHandlingMiddleware>.Instance);
+        var context = new DefaultHttpContext
+        {
+            TraceIdentifier = "trace-404-test",
+            Response = { Body = new MemoryStream() }
+        };
+
+        await middleware.Invoke(context);
+
+        context.Response.Body.Position = 0;
+        using var reader = new StreamReader(context.Response.Body);
+        var body = await reader.ReadToEndAsync();
+
+        Assert.Equal(StatusCodes.Status404NotFound, context.Response.StatusCode);
+        Assert.Contains("Recurso no encontrado", body, StringComparison.Ordinal);
+        Assert.Contains("No se encontró la matriz especificada", body, StringComparison.Ordinal);
     }
 }
+

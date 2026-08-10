@@ -1,5 +1,32 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — BE-01 + FE-02: Errores Uniformes RFC 7807 e Interceptor HTTP de Resiliencia
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `a0edb63`.
+- **Objetivo**: Implementar la respuesta de errores estandarizada `ProblemDetails` (RFC 7807) en el middleware global del Backend ocultando detalles internos en entornos no de desarrollo, e incorporar el interceptor de resiliencia HTTP (`httpResilienceInterceptor`) en el Frontend restringiendo reintentos exclusivamente a peticiones `GET` ante errores temporales (0, 503, 504).
+
+### Resumen de la Intervención
+1. **Backend (`backend/RL.API/Middleware/ErrorHandlingMiddleware.cs`)**:
+   - Estandarizado el formato de error a `application/problem+json` (RFC 7807) con soporte para `title`, `status`, `detail`, `instance`, `type` y `traceId`.
+   - Se asegura la supresión de trazas y detalles internos de base de datos (`ORA-xxxx`) en producción/staging.
+   - Mapeo de excepciones comunes: `ArgumentException`/`InvalidOperationException` -> 400 Bad Request, `KeyNotFoundException` -> 404 Not Found, `UnauthorizedAccessException` -> 403 Forbidden.
+   - Pruebas unitarias en `ErrorHandlingMiddlewareTests.cs` ampliadas de 1 a 3 para validar `application/problem+json` y códigos 400/404/500 (259/259 pruebas backend pasadas).
+2. **Frontend (`frontend/rl-app/src/app/core/interceptors/http-resilience.interceptor.ts`)**:
+   - Creado e integrado el interceptor funcional `httpResilienceInterceptor` en `app.config.ts`.
+   - Política de reintentos (*Exponential Backoff*): Aplicada **únicamente** a métodos de lectura `GET` ante errores 0, 503 o 504 (máximo 2 reintentos con 300ms de retraso).
+   - **Prohibición estricta**: Peticiones mutantes (`POST`, `PUT`, `DELETE`, `PATCH`) jamás son reintentadas automáticamente.
+   - Creada la suite `http-resilience.interceptor.spec.ts` con pruebas unitarias deterministas usando `vi.useFakeTimers()` (135/135 pruebas frontend pasadas).
+3. **Verificación Completa de Quality Gates**:
+   - `dotnet test`: 259/259 backend unit tests pasados.
+   - `ng test`: 135/135 frontend unit tests pasados.
+   - `npm run e2e`: 10/10 pruebas integrales Playwright pasadas.
+   - Validadores de estructura, base de datos y enlaces: 100% VERDES.
+
+---
+
 ## Registro de Intervención — Antigravity — GOV-01: Sincronización de Bitácora y Estado UAT
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).

@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-> Actualización 2026-08-10: Sincronización de Gobernanza y Handoff UAT (Fase 13). La línea base del repositorio se encuentra en el commit `d8f5869` en la rama `desarrollo`. La remediación de seguridad NPM del Módulo Frontend se mantiene al **100% con 0 vulnerabilidades** en `npm audit` y el workflow de CI (`quality-gates.yml`) bloqueante. Se incorporaron los componentes UAT de Matrices de Riesgos, contratos C# y E2E Playwright. Todos los validadores y suites de prueba locales están verificados. `main` continúa intacta y el PR #20 permanece abierto en borrador.
+> Actualización 2026-08-10: BE-01 + FE-02 Completados y Verificados. Se implementó la estandarización de errores `ProblemDetails` (RFC 7807) en el Backend y el interceptor de resiliencia HTTP (`httpResilienceInterceptor`) en el Frontend restringiendo reintentos a peticiones `GET` ante fallos temporales. Todos los Quality Gates (259 backend, 135 frontend, 10 E2E y validadores de BD/estructura) están **100% VERDES Y PASADOS**. `main` continúa intacta y el PR #20 permanece abierto en borrador.
 
 Documento vivo. Debe actualizarse al finalizar cada intervención.
 
@@ -10,7 +10,6 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 - **Repositorio:** `jmejia31/RIESGO_LAVADO`
 - **Rama obligatoria:** `desarrollo`
-- **Commit línea base:** `d8f5869`
 - **Rama estable:** `main` — no modificar ni integrar sin autorización expresa de Javier Mejía
 - **Ramas remotas permitidas:** únicamente `main` y `desarrollo`
 - **PR de revisión:** #20, abierto, borrador y sin autorización de fusión
@@ -21,12 +20,12 @@ Documento vivo. Debe actualizarse al finalizar cada intervención.
 
 ## 2. Última intervención
 
-- **Intervención**: GOV-01 — Sincronización de Bitácora y Estado UAT
+- **Intervención**: BE-01 + FE-02 — Errores Uniformes RFC 7807 e Interceptor HTTP de Resiliencia
 - **Fecha**: 2026-08-10 (Hora local)
 - **Autor**: Antigravity
 - **Rama**: `desarrollo`
-- **Commit línea base**: `d8f5869`
-- **Estado**: Gobernanza y Bitácora sincronizadas al commit `d8f5869`. Remediación NPM en 0 vulnerabilidades. Fase 13 UAT en desarrollo integrada en validadores.
+- **Commit inicial**: `a0edb63`
+- **Estado**: BE-01 + FE-02 **COMPLETADOS AL 100%**. Respuestas `ProblemDetails` RFC 7807 sin fugas de detalles internos. Interceptor de reintentos restringido a `GET`. Pruebas Backend (259/259), Frontend (135/135), E2E (10/10) y validadores 100% PASADAS.
 - **Plan**: [`FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md`](../3.%20M%C3%B3dulo%20Matrices%20de%20Riesgos/FASE_10_PLAN_TRANSICION_FISICA_ORACLE_MODELO_17_TABLAS_PREPARADO_NO_AUTORIZADO_2026-08-06.md)
 - **Acta Final:** [`FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_10_ACTA_EJECUCION_TRANSICION_ORACLE_MODELO_17_TABLAS_FINAL_2026-08-06.md)
 - **Autorización:** [`FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md`](../3.%20Módulo%20Matrices%20de%20Riesgos/FASE_9_FORMATO_AUTORIZACION_EJECUCION_ORACLE_FASE_10_2026-08-06.md)
