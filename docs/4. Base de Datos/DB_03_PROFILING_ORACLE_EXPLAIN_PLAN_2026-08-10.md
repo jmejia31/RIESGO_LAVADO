@@ -10,7 +10,7 @@
 **DDL de índices:** **NO EJECUTADO**.  
 **DML sobre tablas de negocio:** **NO EJECUTADO**.
 
-> Actualización 2026-08-10: el inventario se ejecutó en `RIESGO_LAVADO` y confirmó estadísticas vigentes, tablas de volumen bajo e índices válidos. Los once planes se generaron sin DDL de índices ni DML de negocio. Se detectó una incompatibilidad de SQL*Plus 11g en los binds `DATE` de Q09; se corrigió en el paquete con `VARCHAR2(10)` y conversión explícita `TO_DATE`. Debe repetirse el script `02` corregido antes del cierre físico definitivo.
+> Actualización 2026-08-10: el inventario se ejecutó en `RIESGO_LAVADO` y confirmó estadísticas vigentes, tablas de volumen bajo e índices válidos. Los once planes se generaron sin DDL de índices ni DML de negocio. Se detectó una incompatibilidad de SQL*Plus 11g en los binds `DATE` de Q09; se corrigió en el paquete con `VARCHAR2(10)` y conversión explícita `TO_DATE`. La repetición de `02` terminó sin errores, generó los 11 planes y confirmó el `ROLLBACK` final.
 
 ---
 
@@ -170,7 +170,18 @@ DB-03 no ejecutará automáticamente las consultas funcionales solo para obtener
 
 ## 9. Estado de la ejecución física
 
-**Ejecución física Oracle:** **INICIADA; repetición corregida de Q09 pendiente**.
+**Ejecución física Oracle:** **COMPLETADA**.
+
+### Dictamen físico por consulta
+
+| Consultas | Dictamen | Justificación |
+|---|---|---|
+| Q01, Q03, Q05, Q07, Q08, Q11 | `SIN_CAMBIO` | El optimizador utiliza los índices existentes adecuados. |
+| Q02, Q04, Q06 | `SIN_CAMBIO` | Los `TABLE ACCESS FULL` y ordenamientos son correctos con tablas de 12 a 21 filas. |
+| Q09 | `SIN_CAMBIO` | Filtros de auditoría correctos; Q09 se repitió sin errores de bind de fecha. |
+| Q10 | `SIN_CAMBIO` | La búsqueda `LIKE '%texto%'` usa lectura completa, esperable y no candidata a B-tree. |
+
+No se crea ningún índice nuevo. Reevaluar cuando aumente materialmente la cardinalidad de auditoría, evaluaciones o flujos.
 
 Motivo: esta intervención tiene autorización funcional para DB-03, pero el entorno operativo de ChatGPT/GitHub no expone una conexión Oracle institucional autorizada ni credenciales seguras que permitan ejecutar SQL*Plus contra el ambiente. No se inventan costos, cardinalidades ni planes.
 

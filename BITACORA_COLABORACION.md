@@ -2860,3 +2860,26 @@ No avanzar a creacion de indices ni declarar DB-03 fisicamente cerrada sin esa e
 ### Punto de continuación
 
 Publicar la corrección, ejecutar una sola vez `02_db03_explain_plan_consultas_criticas.sql` actualizado desde DBeaver SQL*Plus y registrar el dictamen final por las 11 consultas. No crear índices.
+
+---
+
+## Registro de Intervención — Javier Mejía / Codex — Cierre físico DB-03
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Rama de paquete ejecutado**: `desarrollo`, corrección `c1b492f`.
+- **Alcance**: repetición autorizada de `02_db03_explain_plan_consultas_criticas.sql` en Oracle 11g mediante DBeaver SQL*Plus.
+
+### Resultado verificable
+
+1. Los 11 `EXPLAIN PLAN` (Q01 a Q11) fueron generados con la versión corregida.
+2. Q09 ya no presentó errores de variables/binds de fecha; los predicados muestran `TO_DATE(..., 'YYYY-MM-DD')` explícito.
+3. La salida confirmó `Rollback terminado`; no se modificaron tablas de negocio, no se creó ningún índice y no hubo DML de negocio.
+4. Las estadísticas están vigentes y el volumen actual es bajo. Los `TABLE ACCESS FULL` observados son apropiados para ese tamaño; la búsqueda con comodín inicial de auditoría no justifica un B-tree.
+
+### Dictamen
+
+**DB-03 queda cerrado físicamente.** Las 11 consultas se clasifican `SIN_CAMBIO`; no se autoriza crear índices ni reescribir SQL en esta etapa. Reevaluar cuando Auditoría, Evaluaciones o Flujos crezcan de forma material.
+
+### Punto de continuación
+
+Continuar con **DB-01 — política de archivado de `RL_AUDITORIA`**, diseñada sin borrado automático.

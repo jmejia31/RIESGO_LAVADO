@@ -6,6 +6,8 @@ Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACI
 
 > Actualización posterior 2026-08-10: se ejecutaron físicamente el inventario DB-03 y los 11 `EXPLAIN PLAN` en `RIESGO_LAVADO`. El inventario confirmó estadísticas vigentes, volumen bajo e índices existentes válidos; no se justifica crear índices. La primera ejecución expuso dos correcciones del paquete: DBeaver no resuelve los includes relativos de `00`, y SQL*Plus 11g no admite `VARIABLE ... DATE`. La corrección versionada reemplaza esos binds por `VARCHAR2(10)` + `TO_DATE`, agrega guardas de esquema/`PLAN_TABLE` a los scripts hijos y documenta el flujo DBeaver. **DB-03 sigue pendiente de repetir únicamente `02` con la versión corregida; no crear índices.**
 
+> Cierre físico 2026-08-10: `02_db03_explain_plan_consultas_criticas.sql` corregido se ejecutó sin errores y produjo los 11 planes, incluido Q09 con fechas tipadas mediante `TO_DATE`. El `ROLLBACK` final se confirmó. Dictamen: **DB-03 cerrado; no se requieren índices nuevos ni cambios de SQL con el volumen actual**. La reevaluación se realizará cuando crezcan de forma material auditoría, evaluaciones o flujos.
+
 ---
 
 ## 1. Línea base vigente
@@ -103,7 +105,7 @@ Ubicación: `database/19_matrices_riesgos/performance/`
 | 3 | BE-03 — `/healthz` + `/readyz` | **Completado y certificado** |
 | 4 | BE-04 — Rate Limiting | **Completado y certificado** |
 | 5 | BE-02 — Caché con invalidación explícita | **Completado y certificado** |
-| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Ejecución física iniciada; repetir Q09 con script corregido y emitir dictamen** |
+| 6 | DB-03 — Profiling Oracle / `EXPLAIN PLAN` | **Completado físicamente; sin índices nuevos** |
 | 7 | DB-01 — Política de archivado de auditoría | **Pendiente; no iniciar hasta resolver continuidad DB-03** |
 | 8 | FE-03 + FE-04 — Accesibilidad + Skeleton Loaders | Pendiente |
 | 9 | FE-01 — Signals gradual | Pendiente |
@@ -127,14 +129,12 @@ Ubicación: `database/19_matrices_riesgos/performance/`
 
 ## 6. Punto exacto de continuación
 
-### DB-03 — ejecución física pendiente
+### DB-03 — cerrado físicamente
 
-El repositorio ya está preparado y certificado. Para completar la evidencia física se debe ejecutar, desde un cliente SQL*Plus autorizado contra el esquema institucional correcto:
+El inventario y los 11 planes fueron ejecutados en el esquema autorizado. Las conclusiones son: estadísticas vigentes, índices existentes adecuados y tablas aún de bajo volumen; por ello no se autoriza crear índices ni cambiar SQL.
 
 ```sql
 @database/19_matrices_riesgos/performance/00_db03_ejecutar_profiling_autorizado.sql EJECUTAR_DB03
 ```
 
-Después deben registrarse de forma saneada los 11 planes, estadísticas/cardinalidades y un dictamen por consulta: `SIN_CAMBIO`, `REQUIERE_ESTADISTICAS`, `REQUIERE_REESCRITURA` o `CANDIDATO_INDICE`.
-
-**No avanzar a creación de índices ni declarar DB-03 físicamente cerrada sin esa evidencia real.**
+El siguiente bloque priorizado es **DB-01 — política de archivado de auditoría**, sin borrado automático.
