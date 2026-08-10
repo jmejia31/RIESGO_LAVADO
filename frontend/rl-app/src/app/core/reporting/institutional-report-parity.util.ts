@@ -113,7 +113,10 @@ export function construirExcelInstitucionalDesdeReporte(
     pushRow([]);
   }
 
-  while (data.length && data[data.length - 1].every(value => value == null || value === '')) {
+  while (
+    data.length &&
+    data[data.length - 1].every(value => value === null || value === undefined || value === '')
+  ) {
     data.pop();
   }
 
@@ -128,7 +131,7 @@ export function construirExcelInstitucionalDesdeReporte(
   worksheet['!cols'] = Array.from({ length: maxColumns }, (_, index) => {
     const maxLength = data.reduce((max, row) => {
       const value = row[index];
-      return Math.max(max, value == null ? 0 : String(value).length);
+      return Math.max(max, value === null || value === undefined ? 0 : String(value).length);
     }, 0);
     return { wch: Math.min(Math.max(maxLength + 2, 12), 45) };
   });
