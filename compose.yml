@@ -1,0 +1,28 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/RL.API/Dockerfile
+    image: riesgo-lavado-api:local
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__OracleDB: ${RL_ORACLE_CONNECTION_STRING:?Defina RL_ORACLE_CONNECTION_STRING fuera del repositorio}
+      Jwt__SecretKey: ${RL_JWT_SECRET:?Defina RL_JWT_SECRET fuera del repositorio}
+      Jwt__Issuer: ${RL_JWT_ISSUER:-RIESGO_LAVADO}
+      Jwt__Audience: ${RL_JWT_AUDIENCE:-RIESGO_LAVADO_CLIENT}
+      Cors__AllowedOrigins__0: ${RL_FRONTEND_ORIGIN:-http://localhost:8081}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/rl-app/Dockerfile
+    image: riesgo-lavado-frontend:local
+    depends_on:
+      - backend
+    ports:
+      - "8081:8080"
+    restart: unless-stopped

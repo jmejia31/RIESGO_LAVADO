@@ -1,0 +1,16 @@
+.git
+.github
+.vs
+.vscode
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/coverage
+**/playwright-report
+**/test-results
+**/*.user
+**/*.suo
+docs
+database
+*.log

@@ -1,0 +1,117 @@
+name: Sonar Analysis
+
+on:
+  push:
+    branches: [desarrollo]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: sonar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: SonarQube Cloud analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect Sonar configuration
+        id: sonar-config
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          if [[ -n "$SONAR_TOKEN" && -n "$SONAR_PROJECT_KEY" && -n "$SONAR_ORGANIZATION" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Sonar configuration detected."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Sonar analysis skipped: configure SONAR_TOKEN secret plus SONAR_PROJECT_KEY and SONAR_ORGANIZATION repository variables."
+          fi
+
+      - name: Setup .NET
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Setup Node.js
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/rl-app/package-lock.json
+
+      - name: Setup Java 21
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install SonarScanner for .NET
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: dotnet tool install --global dotnet-sonarscanner --version 11.2.0
+
+      - name: Install frontend dependencies
+        if: steps.sonar-config.outputs.enabled == 'true'
+        working-directory: frontend/rl-app
+        run: npm ci
+
+      - name: Begin Sonar analysis
+        if: steps.sonar-config.outputs.enabled == 'true'
+        shell: bash
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"$SONAR_PROJECT_KEY" \
+            /o:"$SONAR_ORGANIZATION" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.qualitygate.wait=true \
+            /d:sonar.scanner.scanAll=true \
+            /d:sonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/bin/**,**/obj/**,database/**,docs/**" \
+            /d:sonar.javascript.lcov.reportPaths="frontend/rl-app/coverage/rl-app/lcov.info" \
+            /d:sonar.cs.opencover.reportsPaths=".sonar/coverage/**/coverage.opencover.xml"
+
+      - name: Build analyzed solution
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: dotnet build RIESGO_LAVADO.sln --configuration Release
+
+      - name: Collect backend coverage
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: >-
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
+          --configuration Release
+          --no-build
+          --collect:"XPlat Code Coverage;Format=opencover"
+          --results-directory .sonar/coverage
+
+      - name: Collect frontend coverage
+        if: steps.sonar-config.outputs.enabled == 'true'
+        working-directory: frontend/rl-app
+        run: npm run test:coverage
+
+      - name: End Sonar analysis and wait for Quality Gate
+        if: steps.sonar-config.outputs.enabled == 'true'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"

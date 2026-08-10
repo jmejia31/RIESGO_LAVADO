@@ -16,9 +16,9 @@ concurrency:
 
 jobs:
   quality:
-    name: Validator, build, backend, frontend, coverage and E2E
+    name: Validator, analyzers, build, tests, coverage, E2E and containers
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 55
 
     steps:
       - name: Checkout
@@ -45,6 +45,17 @@ jobs:
         run: |
           npm ci
           npm audit
+
+      - name: Validate GOV-02 analyzers and GOV-03 container contracts
+        shell: pwsh
+        run: ./scripts/validation/validate_gov02_gov03_quality_container.ps1
+
+      - name: Run .NET analyzers as blocking gate
+        run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore -p:RunAnalyzers=true -warnaserror
+
+      - name: Run frontend ESLint as blocking gate
+        working-directory: frontend/rl-app
+        run: npm run lint
 
       - name: Validate database flows and Oracle preparation controls
         shell: pwsh
@@ -89,3 +100,26 @@ jobs:
       - name: Run repository quality gates
         shell: pwsh
         run: ./tools/run_quality_gates.ps1
+
+      - name: Validate compose configuration without secrets in repository
+        shell: bash
+        env:
+          RL_ORACLE_CONNECTION_STRING: Data Source=ci.invalid:1521/CI;User Id=ci;Password=ci;
+          RL_JWT_SECRET: CI_ONLY_NOT_A_REAL_SECRET_0123456789ABCDEF
+        run: docker compose -f compose.yml config --quiet
+
+      - name: Build multistage backend container
+        run: docker build --file backend/RL.API/Dockerfile --tag riesgo-lavado-api:ci .
+
+      - name: Build multistage frontend container
+        run: docker build --file frontend/rl-app/Dockerfile --tag riesgo-lavado-frontend:ci .
+
+      - name: Verify final container users are non-root
+        shell: bash
+        run: |
+          api_user="$(docker image inspect riesgo-lavado-api:ci --format '{{.Config.User}}')"
+          frontend_user="$(docker image inspect riesgo-lavado-frontend:ci --format '{{.Config.User}}')"
+          test "$api_user" = "app"
+          test "$frontend_user" = "nginx"
+          echo "Backend runtime user: $api_user"
+          echo "Frontend runtime user: $frontend_user"
