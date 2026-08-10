@@ -56,6 +56,7 @@ jobs:
           ./scripts/validation/validate_matrices_phase11_block1.ps1
           ./scripts/validation/validate_matrices_phase11_remaining_blocks.ps1
           ./scripts/validation/validate_db03_oracle_profiling.ps1
+          ./scripts/validation/validate_db01_auditoria_archiving.ps1
 
       - name: Validate dynamic matrices, authorization and Phase 13 UAT contract
         shell: pwsh
