@@ -1,6 +1,11 @@
 @RL.API_HostAddress = http://localhost:5043
 
-GET {{RL.API_HostAddress}}/weatherforecast/
+### Liveness — no consulta Oracle ni servicios externos
+GET {{RL.API_HostAddress}}/healthz
+Accept: application/json
+
+### Readiness — valida disponibilidad mínima de Oracle en solo lectura
+GET {{RL.API_HostAddress}}/readyz
 Accept: application/json
 
 ###
