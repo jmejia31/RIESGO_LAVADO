@@ -5,6 +5,7 @@ using Serilog;
 using System.Text;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Health;
+using RL.API.Infrastructure.RateLimiting;
 using RL.API.Middleware;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Persistence;
@@ -99,6 +100,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// BE-04: aplica rate limiting por operación sensible. Las solicitudes anónimas se particionan
+// por RemoteIpAddress y las autenticadas por identificador de usuario, sin confiar en headers spoofeables.
+builder.Services.AddApplicationRateLimiting(builder.Configuration);
+
 // Proceso de integración frontend-backend: limita los orígenes permitidos según configuración.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
 builder.Services.AddCors(options =>
@@ -156,7 +161,9 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-// Proceso de ejecución HTTP: aplica manejo de errores, CORS, archivos estáticos, autenticación y autorización.
+// Proceso de ejecución HTTP: aplica manejo de errores, routing, CORS, autenticación,
+// rate limiting y autorización en un orden explícito para que las políticas por endpoint
+// puedan usar identidad autenticada sin debilitar la protección de rutas.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -168,9 +175,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
-app.UseCors("RLPolicy");
 app.UseStaticFiles();
+app.UseRouting();
+app.UseCors("RLPolicy");
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
