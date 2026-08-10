@@ -237,20 +237,20 @@ CREATE INDEX IDX_RL_MR_MON_EVAL_FEC ON RL_MR_AUTOMONITOREO(MON_EVALUACION_ID,MON
 COMMENT ON TABLE RL_MR_FAMILIAS_FORMULARIO IS 'Catálogo institucional de familias de formularios de evaluación de riesgos LA/FT.';
 COMMENT ON TABLE RL_MR_VERSIONES_FORMULARIO IS 'Versiones publicadas y borradores de formularios dinámicos con definición de campos en CLOB JSON.';
 COMMENT ON TABLE RL_MR_CATALOGOS IS 'Encabezado de catálogos institucionales parametrizables para formularios de riesgos.';
-COMMENT ON TABLE RL_MR_ELEMENTOS_CATALOGO IS 'Elementos o ítems pertenecientes a cada catálogo parametrizable.';
-COMMENT ON TABLE RL_MR_REGLAS_CALCULO IS 'Reglas y algoritmos para el cálculo del riesgo inherente y residual.';
+COMMENT ON TABLE RL_MR_ELEMENTOS_CATALOGO IS 'Elementos que integran cada catálogo parametrizable.';
+COMMENT ON TABLE RL_MR_REGLAS_CALCULO IS 'Reglas y algoritmos para calcular el riesgo inherente y residual.';
 COMMENT ON TABLE RL_MR_RIESGOS IS 'Registro de riesgos institucionales identificados para evaluación LA/FT.';
 COMMENT ON TABLE RL_MR_EVALUACIONES_RIESGO IS 'Instancias de evaluación registradas para los riesgos institucionales.';
-COMMENT ON TABLE RL_MR_PROYECCIONES_EVALUACION IS 'Proyección optimizada en columnas de los valores consolidados de la evaluación (VRI, VRR, niveles).';
-COMMENT ON TABLE RL_MR_FLUJOS_EVALUACION IS 'Historial de transiciones de flujo de trabajo y estados de las evaluaciones de riesgo.';
+COMMENT ON TABLE RL_MR_PROYECCIONES_EVALUACION IS 'Proyección optimizada en columnas de los valores consolidados de la evaluación (VRI, VRR y niveles).';
+COMMENT ON TABLE RL_MR_FLUJOS_EVALUACION IS 'Historial de las transiciones de flujo de trabajo y de los estados de las evaluaciones de riesgo.';
 COMMENT ON TABLE RL_MR_CONTROLES_RIESGO IS 'Controles de mitigación asociados a las evaluaciones de riesgo.';
 COMMENT ON TABLE RL_MR_EVALUACIONES_CONTROL IS 'Calificación de efectividad y pruebas de los controles de mitigación.';
 COMMENT ON TABLE RL_MR_PLANES IS 'Planes de acción para la mitigación y tratamiento de riesgos.';
-COMMENT ON TABLE RL_MR_ACTIVIDADES IS 'Actividades específicas componentes de cada plan de acción de mitigación.';
-COMMENT ON TABLE RL_MR_EVIDENCIAS IS 'Repositorio de archivos físicos subidos como evidencia documental.';
-COMMENT ON TABLE RL_MR_EVIDENCIAS_VINCULOS IS 'Relación polimórfica entre archivos de evidencia y entidades funcionales.';
-COMMENT ON TABLE RL_MR_SENALES_ALERTA IS 'Señales de alerta e indicadores de monitoreo continuo de riesgo LA/FT.';
-COMMENT ON TABLE RL_MR_AUTOMONITOREO IS 'Registro de automonitoreo operativo efectuado por las áreas institucionales.';
+COMMENT ON TABLE RL_MR_ACTIVIDADES IS 'Actividades específicas que integran cada plan de acción de mitigación.';
+COMMENT ON TABLE RL_MR_EVIDENCIAS IS 'Repositorio de archivos cargados como evidencia documental.';
+COMMENT ON TABLE RL_MR_EVIDENCIAS_VINCULOS IS 'Relación genérica entre archivos de evidencia y entidades funcionales.';
+COMMENT ON TABLE RL_MR_SENALES_ALERTA IS 'Señales de alerta e indicadores para el monitoreo continuo del riesgo LA/FT.';
+COMMENT ON TABLE RL_MR_AUTOMONITOREO IS 'Registro de automonitoreo realizado por las áreas institucionales.';
 
 COMMENT ON COLUMN RL_MR_FAMILIAS_FORMULARIO.FAM_ID IS 'Identificador único de la familia de formulario.';
 COMMENT ON COLUMN RL_MR_FAMILIAS_FORMULARIO.FAM_CODIGO IS 'Código institucional único de la familia (ej. LAFT_MATRIZ_INSTITUCIONAL).';
@@ -268,7 +268,7 @@ COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_HASH IS 'Hash SHA-256 de verifi
 COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_ESTADO IS 'Estado del ciclo de vida (DRAFT, IN_REVIEW, APPROVED, PUBLISHED, RETIRED, ARCHIVED).';
 COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_VIGENTE IS 'Indicador de versión vigente activa (1) o no vigente (0).';
 COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_FECHA_INICIO IS 'Fecha de inicio de vigencia oficial de la versión.';
-COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_FECHA_FIN IS 'Fecha de término o retiro de vigencia oficial de la versión.';
+COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_FECHA_FIN IS 'Fecha de finalización o retiro de la vigencia oficial de la versión.';
 COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_FECHA_CREACION IS 'Fecha de creación de la versión.';
 COMMENT ON COLUMN RL_MR_VERSIONES_FORMULARIO.VER_USR_CREACION IS 'Usuario responsable de la creación de la versión.';
 
@@ -313,8 +313,8 @@ COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_ID IS 'Identificador único
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_EVALUACION_ID IS 'Evaluación de riesgo proyectada.';
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_CODIGO_RIESGO IS 'Código del riesgo asociado para rápida indexación.';
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_AREA_PRINCIPAL IS 'Área institucional principal responsable del riesgo.';
-COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_VRI IS 'Valor del Riesgo Inherente (VRI) calculated.';
-COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_VRR IS 'Valor del Riesgo Residual (VRR) calculated.';
+COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_VRI IS 'Valor calculado del Riesgo Inherente (VRI).';
+COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_VRR IS 'Valor calculado del Riesgo Residual (VRR).';
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_NIVEL_INHERENTE IS 'Nivel cualitativo del riesgo inherente (BAJO, MEDIO, ALTO, CRÍTICO).';
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_NIVEL_RESIDUAL IS 'Nivel cualitativo del riesgo residual (BAJO, MEDIO, ALTO, CRÍTICO).';
 COMMENT ON COLUMN RL_MR_PROYECCIONES_EVALUACION.PROY_RESPUESTA_RIESGO IS 'Estrategia institucional ante el riesgo (ACEPTAR, MITIGAR, EVITAR, TRANSFERIR).';
@@ -333,7 +333,7 @@ COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_ID IS 'Identificador único del con
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_EVALUACION_ID IS 'Evaluación a la cual se aplica el control.';
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_TIPO IS 'Tipo de control (PREVENTIVO, DETECTIVO, CORRECTIVO).';
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_DESCRIPCION IS 'Descripción detallada del mecanismo de control.';
-COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION IS 'Nivel de automatización (MANUAL, SEMIAUTOMATICO, AUTOMATICO).';
+COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION IS 'Nivel de automatización (MANUAL, SEMIAUTOMÁTICO, AUTOMÁTICO).';
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_ESTADO IS 'Estado operativo del control (ACTIVO, INACTIVO, EN_REVISION).';
 
 COMMENT ON COLUMN RL_MR_EVALUACIONES_CONTROL.ECO_ID IS 'Identificador único de la evaluación del control.';
@@ -356,7 +356,7 @@ COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_DESCRIPCION IS 'Descripción de la tarea
 COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_RESPONSABLE IS 'Nombre o cargo del responsable de la ejecución.';
 COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_AVANCE IS 'Porcentaje de avance de la actividad (0 a 100%).';
 COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_FECHA_INICIO IS 'Fecha de inicio programada o real de la actividad.';
-COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_FECHA_FIN IS 'Fecha de término programada o real de la actividad.';
+COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_FECHA_FIN IS 'Fecha de finalización programada o real de la actividad.';
 COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_ESTADO IS 'Estado de la actividad (PENDIENTE, EN_PROCESO, FINALIZADA, CANCELADA).';
 
 COMMENT ON COLUMN RL_MR_EVIDENCIAS.EVI_ID IS 'Identificador único del archivo de evidencia.';
@@ -378,12 +378,12 @@ COMMENT ON COLUMN RL_MR_EVIDENCIAS_VINCULOS.EVV_FECHA_CREACION IS 'Fecha y hora 
 COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_ID IS 'Identificador único de la señal de alerta.';
 COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_EVALUACION_ID IS 'Evaluación de riesgo monitoreada por la alerta.';
 COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_CODIGO IS 'Código identificador de la señal de alerta.';
-COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_INDICADOR IS 'Nombre o descripción del indicador gatillador.';
+COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_INDICADOR IS 'Nombre o descripción del indicador que activa la alerta.';
 COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_ESTADO IS 'Estado del indicador (ACTIVO, INACTIVO).';
 COMMENT ON COLUMN RL_MR_SENALES_ALERTA.ALE_FECHA_DISPARO IS 'Fecha y hora en que se disparó o activó la alerta.';
 
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_ID IS 'Identificador único del registro de automonitoreo.';
-COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_EVALUACION_ID IS 'Evaluación de riesgo sobre la cual se automonitorea.';
+COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_EVALUACION_ID IS 'Evaluación de riesgo sobre la que se realiza el automonitoreo.';
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_ESTADO_RIESGO IS 'Estado del riesgo al momento del automonitoreo.';
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_ESTADO_CONTR IS 'Estado de los controles al momento del automonitoreo.';
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_RESULTADO IS 'Resultado, hallazgos u observaciones del automonitoreo.';

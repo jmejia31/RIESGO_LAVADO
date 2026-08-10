@@ -3177,5 +3177,22 @@ La variación menor de cobertura Frontend frente a FE-03/FE-04 corresponde a nue
 
 La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa**.
 
+---
+
+## Registro de Intervención — Codex — Corrección lingüística de comentarios Oracle del módulo Matrices de Riesgos
+
+- **Fecha y hora**: 2026-08-10 14:40 UTC-6.
+- **Rama**: `desarrollo`.
+- **Objetivo**: corregir redacción, tildes y consistencia lingüística de los comentarios DDL de las 17 tablas operativas `RL_MR_*` y de sus columnas.
+- **Archivos modificados**: `database/19_matrices_riesgos/01_comentarios_y_estandares_modelo_17_tablas.sql` y `database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql`.
+
+### Resultado
+
+- Se corrigieron las expresiones no institucionales o incompletas, incluida la palabra inglesa `calculated` en los comentarios de VRI y VRR.
+- Se normalizaron «finalización», «semiautomático», «automático», «señal que activa la alerta» y la redacción de automonitoreo.
+- Ambos scripts conservan exactamente **17** comentarios de tabla y **121** comentarios de columna, sin DDL estructural ni DML.
+- Validaciones ejecutadas: `validate_database_scripts.ps1` y `validate_documentation_links.ps1`, ambas correctas.
+- Oracle no fue ejecutado durante esta intervención. Para corregir los comentarios ya degradados por SQL*Plus, el script independiente debe ejecutarse desde el editor SQL Unicode de DBeaver, no mediante «Execute in SQL*Plus».
+
 
 > **Corrección append-only FE-01 — 2026-08-10:** En la entrada inmediatamente anterior, donde se escribió “carrrusel”, debe leerse **“carrusel”**. No se reescribe el registro histórico; esta nota preserva su inmutabilidad.
