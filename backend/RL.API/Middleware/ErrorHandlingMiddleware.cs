@@ -46,23 +46,23 @@ public class ErrorHandlingMiddleware
 
         switch (exception)
         {
-            case ArgumentException or InvalidOperationException when exception.Message.Contains("no válido") || exception.Message.Contains("requerido"):
+            case ArgumentException or InvalidOperationException:
                 statusCode = StatusCodes.Status400BadRequest;
                 title = "Solicitud incorrecta";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.5.1";
-                detail = exception.Message;
+                detail = SanitizarMensajePublico(exception.Message, "La solicitud contiene parámetros no válidos.");
                 break;
             case KeyNotFoundException:
                 statusCode = StatusCodes.Status404NotFound;
                 title = "Recurso no encontrado";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.5.4";
-                detail = exception.Message;
+                detail = SanitizarMensajePublico(exception.Message, "El recurso solicitado no existe o no se encuentra disponible.");
                 break;
             case UnauthorizedAccessException:
                 statusCode = StatusCodes.Status403Forbidden;
                 title = "Acceso no autorizado";
                 type = "https://tools.ietf.org/html/rfc7231#section-6.5.3";
-                detail = exception.Message;
+                detail = "No tiene privilegios suficientes para realizar esta acción.";
                 break;
             default:
                 statusCode = StatusCodes.Status500InternalServerError;
@@ -90,5 +90,18 @@ public class ErrorHandlingMiddleware
         var json = JsonConvert.SerializeObject(problemDetails);
         return context.Response.WriteAsync(json);
     }
+
+    private static string SanitizarMensajePublico(string rawMessage, string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(rawMessage)) return fallback;
+        if (rawMessage.Contains("ORA-") || rawMessage.Contains("SELECT") || rawMessage.Contains("INSERT") ||
+            rawMessage.Contains("UPDATE") || rawMessage.Contains("DELETE") || rawMessage.Contains("System.") ||
+            rawMessage.Contains("Exception") || rawMessage.Contains("at ") || rawMessage.Contains(@"\"))
+        {
+            return fallback;
+        }
+        return rawMessage.Trim();
+    }
 }
+
 

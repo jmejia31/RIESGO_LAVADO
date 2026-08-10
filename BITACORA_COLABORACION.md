@@ -1,26 +1,26 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — BE-01 + FE-02: Errores Uniformes RFC 7807 e Interceptor HTTP de Resiliencia
+## Registro de Intervención — Antigravity — BE-01 + FE-02: Blindaje de Errores RFC 7807, Sanitización 4xx e Interceptor HTTP con Estado Global
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `a0edb63`.
-- **Objetivo**: Implementar la respuesta de errores estandarizada `ProblemDetails` (RFC 7807) en el middleware global del Backend ocultando detalles internos en entornos no de desarrollo, e incorporar el interceptor de resiliencia HTTP (`httpResilienceInterceptor`) en el Frontend restringiendo reintentos exclusivamente a peticiones `GET` ante errores temporales (0, 503, 504).
+- **Objetivo**: Implementar la respuesta de errores estandarizada `ProblemDetails` (RFC 7807) en el Backend con sanitización estricta de mensajes 4xx para evitar filtraciones de BD/internas, e incorporar el interceptor de resiliencia HTTP (`httpResilienceInterceptor`) y el servicio global (`GlobalHttpStateService`) en el Frontend para indicador global de carga, notificación unificada de errores y reintentos seguros restringidos a `GET` ante errores 0/503/504.
 
 ### Resumen de la Intervención
 1. **Backend (`backend/RL.API/Middleware/ErrorHandlingMiddleware.cs`)**:
-   - Estandarizado el formato de error a `application/problem+json` (RFC 7807) con soporte para `title`, `status`, `detail`, `instance`, `type` y `traceId`.
-   - Se asegura la supresión de trazas y detalles internos de base de datos (`ORA-xxxx`) en producción/staging.
-   - Mapeo de excepciones comunes: `ArgumentException`/`InvalidOperationException` -> 400 Bad Request, `KeyNotFoundException` -> 404 Not Found, `UnauthorizedAccessException` -> 403 Forbidden.
-   - Pruebas unitarias en `ErrorHandlingMiddlewareTests.cs` ampliadas de 1 a 3 para validar `application/problem+json` y códigos 400/404/500 (259/259 pruebas backend pasadas).
-2. **Frontend (`frontend/rl-app/src/app/core/interceptors/http-resilience.interceptor.ts`)**:
-   - Creado e integrado el interceptor funcional `httpResilienceInterceptor` en `app.config.ts`.
-   - Política de reintentos (*Exponential Backoff*): Aplicada **únicamente** a métodos de lectura `GET` ante errores 0, 503 o 504 (máximo 2 reintentos con 300ms de retraso).
-   - **Prohibición estricta**: Peticiones mutantes (`POST`, `PUT`, `DELETE`, `PATCH`) jamás son reintentadas automáticamente.
-   - Creada la suite `http-resilience.interceptor.spec.ts` con pruebas unitarias deterministas usando `vi.useFakeTimers()` (135/135 pruebas frontend pasadas).
+   - Estandarizado el formato a `application/problem+json` (RFC 7807) con soporte para `title`, `status`, `detail`, `instance`, `type` y `traceId`.
+   - **Sanitización de Errores 4xx/5xx**: Implementada la función `SanitizarMensajePublico` para que excepciones 400, 403 y 404 filtren cualquier indicio de consultas SQL, `ORA-xxxx`, tipos de excepción o trazas de pila, retornando mensajes públicos seguros. Las excepciones no controladas 500 continúan mostrando un mensaje interno genérico en entornos de Producción/Staging.
+   - **Mapeo**: `ArgumentException`/`InvalidOperationException` -> 400 Bad Request (sanitizado), `KeyNotFoundException` -> 404 Not Found (sanitizado), `UnauthorizedAccessException` -> 403 Forbidden ("No tiene privilegios suficientes").
+   - Pruebas unitarias en `ErrorHandlingMiddlewareTests.cs` amplias (260/260 pruebas backend pasadas).
+2. **Frontend (`frontend/rl-app/src/app/core/services/global-http-state.service.ts` & `http-resilience.interceptor.ts`)**:
+   - Creado `GlobalHttpStateService` con Signals para gestionar la carga global (`cargando`) basada en peticiones HTTP activas y la notificación centralizada de errores (`notificarError`, `ultimoError`).
+   - `httpResilienceInterceptor`: Integrado con `GlobalHttpStateService` para activar/desactivar `cargando` mediante `finalize()` y notificar errores.
+   - **Reintentos Estrictos**: Reintentos automáticos (*Exponential Backoff*) aplicados **únicamente** a solicitudes `GET` ante fallos 0, 503 o 504. Peticiones mutantes (`POST`, `PUT`, `DELETE`, `PATCH`) jamás son reintentadas.
+   - Creada suite unitaria en `http-resilience.interceptor.spec.ts` (135/135 pruebas frontend pasadas).
 3. **Verificación Completa de Quality Gates**:
-   - `dotnet test`: 259/259 backend unit tests pasados.
+   - `dotnet test`: 260/260 backend unit tests pasados.
    - `ng test`: 135/135 frontend unit tests pasados.
    - `npm run e2e`: 10/10 pruebas integrales Playwright pasadas.
    - Validadores de estructura, base de datos y enlaces: 100% VERDES.

@@ -14,7 +14,7 @@ public sealed class ErrorHandlingMiddlewareTests
     {
         const string detalleSensible = "ORA-00942: tabla RL_SECRETA no existe";
         var middleware = new ErrorHandlingMiddleware(
-            _ => throw new InvalidOperationException(detalleSensible),
+            _ => throw new Exception(detalleSensible),
             NullLogger<ErrorHandlingMiddleware>.Instance);
         var context = new DefaultHttpContext
         {
@@ -80,5 +80,30 @@ public sealed class ErrorHandlingMiddlewareTests
         Assert.Contains("Recurso no encontrado", body, StringComparison.Ordinal);
         Assert.Contains("No se encontró la matriz especificada", body, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task Invoke_ExcepcionConSqlSensible_SanitizaMensajeYDevuelveFallback()
+    {
+        var middleware = new ErrorHandlingMiddleware(
+            _ => throw new ArgumentException("Error en consulta ORA-00942: SELECT * FROM RL_MR_MODELOS"),
+            NullLogger<ErrorHandlingMiddleware>.Instance);
+        var context = new DefaultHttpContext
+        {
+            TraceIdentifier = "trace-sanitizar-test",
+            Response = { Body = new MemoryStream() }
+        };
+
+        await middleware.Invoke(context);
+
+        context.Response.Body.Position = 0;
+        using var reader = new StreamReader(context.Response.Body);
+        var body = await reader.ReadToEndAsync();
+
+        Assert.Equal(StatusCodes.Status400BadRequest, context.Response.StatusCode);
+        Assert.DoesNotContain("ORA-00942", body, StringComparison.Ordinal);
+        Assert.DoesNotContain("SELECT", body, StringComparison.Ordinal);
+        Assert.Contains("La solicitud contiene parámetros no válidos.", body, StringComparison.Ordinal);
+    }
 }
+
 
