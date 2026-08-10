@@ -23,11 +23,17 @@ Documento vivo. Debe actualizarse al finalizar cada intervención. Los anteceden
 
 ## 2. Última intervención
 
-- **Intervención:** cierre técnico de hallazgos BE-01 + FE-02 posterior a revisión
+- **Intervención:** DB-RESPALDO — Script de Limpieza de Tablas de Respaldo `B10_*`
 - **Fecha:** 2026-08-10 (UTC-6)
-- **Autor:** ChatGPT
+- **Autor:** Antigravity
 - **Rama:** `desarrollo`
-- **Commit inicial efectivo:** `dbf9a72d4af9cda530029a819d545e0c617e8e26`
+- **Commit inicial:** `6b9191a`
+- **Estado:** Creado e incorporado el script PL/SQL controlado [09_limpieza_tablas_respaldo_b10.sql](file:///c:/RIESGO_LAVADO/database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql) para la eliminación idempotente y segura de respaldos temporales `B10_001` .. `B10_041`, `BKP_F10_MAP` y `BKP_F10_SECUENCIAS` en Oracle RIESGO_LAVADO, respondiendo a la solicitud del usuario. Validadores de base de datos y enlaces 100% VERDES.
+- **Archivos creados/modificados:**
+  - `database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql` (NUEVO)
+  - `database/19_matrices_riesgos/transicion/README.md`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
 - **Commit técnico publicado:** `50067cfccebac85527f94ab8a97ba8aa03fea21e`
 - **Quality Gate remoto:** Run `31400466132` (#538) — **SUCCESS**
 - **Estado:** **BE-01 + FE-02 técnicamente cerrados con evidencia CI**. No se otorga autorización implícita para fusionar a `main`, ejecutar Oracle ni iniciar trabajos fuera de la secuencia priorizada.

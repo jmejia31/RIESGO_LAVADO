@@ -1,5 +1,26 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — DB-RESPALDO: Script de Limpieza de Tablas de Respaldo B10_*
+
+- **Fecha y hora**: 2026-08-10, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `6b9191a`.
+- **Objetivo**: Crear el script controlado y seguro `database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql` para la eliminación idempotente en Oracle de las tablas temporales de respaldo (`B10_001` a `B10_041`, `BKP_F10_MAP`, `BKP_F10_SECUENCIAS`) generadas durante la transición física de Fase 10, previa solicitud explícita del usuario.
+
+### Resumen de la Intervención
+1. **Script DDL/PLSQL (`database/19_matrices_riesgos/transicion/09_limpieza_tablas_respaldo_b10.sql`)**:
+   - Creado script PL/SQL idempotente con prevalidaciones de seguridad obligatorias:
+     - Verificación de esquema `SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') = 'RIESGO_LAVADO'`.
+     - Exigencia del parámetro obligatorio `EJECUTAR`.
+     - Comprobación de que las 17 tablas operativas `RL_MR_*` existan antes de ejecutar cualquier eliminación.
+   - Bucle dinámico que ejecuta `DROP TABLE <nombre> PURGE` para las tablas `B10_%`, `BKP_F10_MAP` y `BKP_F10_SECUENCIAS`, ignorando el error `-942` (tabla inexistente).
+2. **Documentación y Validaciones**:
+   - Actualizado [README.md](file:///c:/RIESGO_LAVADO/database/19_matrices_riesgos/transicion/README.md) en el directorio de transición.
+   - Ejecutados los validadores `validate_database_scripts.ps1` y `validate_documentation_links.ps1` (100% VERDES).
+
+---
+
 ## Registro de Intervención — Codex — Blindaje de errores de acceso
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).

@@ -31,6 +31,11 @@ Esta carpeta contiene el paquete controlado para la transición física del Mód
    - Ejecuta la certificación física y funcional Oracle.
    - El postflight de Fase 10 no sustituye la suite de integración.
 
+6. `09_limpieza_tablas_respaldo_b10.sql`
+   - Limpieza idempotente y segura de respaldos temporales (`B10_001` .. `B10_041`, `BKP_F10_MAP`, `BKP_F10_SECUENCIAS`).
+   - Solo se ejecuta manualmente tras autorizar la eliminación definitiva de respaldos del modelo previo.
+
+
 ## Restricciones
 
 El script `06` no está incluido en `00_APLICAR_MODULO_MATRICES_RIESGOS.sql` ni en instaladores automáticos.
