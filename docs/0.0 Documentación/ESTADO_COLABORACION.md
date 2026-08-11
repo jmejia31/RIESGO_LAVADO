@@ -238,7 +238,12 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Usuarios no-root verificados en ejecución: Backend como `app` (`uid=1654`), Frontend como `nginx` (`uid=101`).
   - Healthchecks HTTP en verde: `/healthz` Backend (8080) y Nginx (8081).
   - Proxying Nginx a Backend verificado. Limpieza `docker compose down` ejecutada exitosamente.
-- **Siguiente objetivo**: Continuar la gobernanza de código Sonar Cloud (integración remota pendiente de credenciales reales) en `desarrollo`.
+- **Configuración de codificación SonarCloud (2026-08-11)**:
+  - Se añadió `.sonarcloud.properties` con `sonar.sourceEncoding=UTF-8` como ajuste mínimo para el análisis automático.
+  - No se configuraron exclusiones, perfiles, Quality Gate, Python, `NOSONAR` ni supresiones.
+  - `validate_documentation_links.ps1`: correcto (71 documentos y 163 enlaces). `validate_repository_structure.ps1` reporta dos rutas heredadas no intervenidas bajo `frontend/rl-app/src/app/core/services`; su saneamiento queda como pendiente separado.
+  - Pendiente: confirmar en el siguiente análisis automático del PR #20 la eliminación de la advertencia de codificación y revisar los hallazgos reales antes de cualquier remediación.
+- **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 
 ---
 

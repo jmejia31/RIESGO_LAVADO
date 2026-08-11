@@ -1,5 +1,20 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Configuración mínima de codificación para SonarCloud
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `c3b7999`.
+- **Objetivo**: Corregir la advertencia de codificación del análisis automático de SonarCloud sin reducir el alcance ni ocultar hallazgos.
+- **Cambio técnico**: Se agrega `.sonarcloud.properties`, codificado en UTF-8, con la única propiedad `sonar.sourceEncoding=UTF-8`.
+- **Alcance excluido**: No se agregan exclusiones, `NOSONAR`, cambios de Quality Gate, perfiles, severidades, configuración Python ni modificaciones de código, SQL, Docker o workflows.
+- **Evidencia pendiente externa**: El próximo análisis automático de SonarCloud del PR #20 debe confirmar si desaparece la advertencia de codificación y exponer los hallazgos accionables. Esta intervención no cierra GOV-02 + GOV-03.
+- **Validaciones locales**: `validate_documentation_links.ps1` correcto (71 documentos y 163 enlaces). `validate_repository_structure.ps1` queda pendiente de saneamiento separado: reporta las rutas heredadas `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y `frontend/rl-app/src/app/core/services`, no modificadas por esta intervención.
+- **Restricciones preservadas**: No se modifican `main`, PR #20, Oracle, DDL/DML, scripts 05/06 ni `B10_*`.
+
+---
+
 ## Registro de Intervención — Codex — Regla compartida de entornos y publicación
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).
