@@ -1,5 +1,17 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Regla compartida de entornos y publicación
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Objetivo**: Formalizar el canal de trabajo de cada colaborador y la publicación obligatoria en el repositorio remoto.
+- **Cambio documental**: `AGENTS.md` y `.agents/AGENTS.md` ahora establecen que Codex y Antigravity trabajan en `C:\RIESGO_LAVADO` y publican cada cambio confirmado en `origin/desarrollo`; ChatGPT usa prioritariamente el repositorio remoto y solo un checkout local que confirme disponible.
+- **Resultado exigido**: Todo handoff debe reportar commit, archivos modificados, pruebas ejecutadas y publicación en `desarrollo`; las limitaciones locales deben declararse expresamente.
+- **Restricciones preservadas**: No se modifican `main`, PR #20, Oracle, DDL/DML, scripts 05/06 ni `B10_*`.
+
+---
+
 ## Registro de Intervención — Antigravity — Certificación Docker Multietapa Local (GOV-02 + GOV-03 Punto 3)
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).

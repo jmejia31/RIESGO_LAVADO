@@ -185,15 +185,17 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
 ## 11. Directrices activas
 
 1. Trabajar exclusivamente sobre `desarrollo`.
-2. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
-3. Mantener PR #20 abierto y en borrador; no auto-merge.
-4. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
-5. No versionar secretos ni cadenas de conexión.
-6. Usar Signals para estado local/derivado cuando simplifique el modelo; no forzar su uso sobre flujos RxJS naturalmente asíncronos.
-7. Mantener `OnPush` en las superficies protegidas por FE-01.
-8. No reintroducir estado mutable paralelo al Signal de Login/Carga de Listas.
-9. No convertir futuras adopciones de Signals en reescrituras masivas sin evidencia técnica y regresión completa.
-10. La bitácora histórica es append-only; las correcciones se agregan, no se reescriben entradas anteriores.
+2. Codex y Antigravity usan `C:\RIESGO_LAVADO` y publican cada cambio confirmado en `origin/desarrollo`; ChatGPT usa el repositorio remoto y solo un checkout local que haya confirmado disponible.
+3. Todo handoff debe indicar commit, archivos, pruebas y publicación; una limitación de acceso local debe quedar explícitamente pendiente.
+4. No modificar/fusionar `main` sin autorización expresa de Javier Mejía.
+5. Mantener PR #20 abierto y en borrador; no auto-merge.
+6. No ejecutar transición 05/06 ni modificar/eliminar `B10_*`.
+7. No versionar secretos ni cadenas de conexión.
+8. Usar Signals para estado local/derivado cuando simplifique el modelo; no forzar su uso sobre flujos RxJS naturalmente asíncronos.
+9. Mantener `OnPush` en las superficies protegidas por FE-01.
+10. No reintroducir estado mutable paralelo al Signal de Login/Carga de Listas.
+11. No convertir futuras adopciones de Signals en reescrituras masivas sin evidencia técnica y regresión completa.
+12. La bitácora histórica es append-only; las correcciones se agregan, no se reescriben entradas anteriores.
 
 ---
 

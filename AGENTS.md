@@ -20,6 +20,12 @@
 
 Ningún agente puede atribuirse aprobación funcional, cierre de fase, validación Oracle institucional o autorización para publicar en `main` si Javier Mejía no la ha otorgado expresamente.
 
+### 1.1 Entorno de trabajo y fuente compartida
+
+- **Codex y Antigravity** trabajan en el checkout local `C:\RIESGO_LAVADO` y en el repositorio oficial remoto. Todo cambio local confirmado debe publicarse inmediatamente en `origin/desarrollo`; el remoto es la fuente de verdad compartida.
+- **ChatGPT** trabaja prioritariamente mediante el repositorio remoto `https://github.com/jmejia31/RIESGO_LAVADO`. Puede trabajar en un checkout local únicamente si confirma que su entorno realmente dispone de acceso; no se le exigirá una ruta local concreta.
+- Todo resultado de cualquier colaborador debe informar el commit, los archivos modificados, las pruebas ejecutadas y la publicación en `desarrollo`. Si una verificación local no fue posible, debe declararse como pendiente y explicar la limitación.
+
 ---
 
 ## 2. Política de ramas
