@@ -1,5 +1,15 @@
 # Bitácora de Colaboración Transversal
 
+## Fe de erratas — SHA certificado de la corrección E2E
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Alcance**: Corrección documental de la entrada de certificación E2E inmediatamente siguiente.
+- **Corrección**: Donde se registró `9112e83344ae4b988f57fa9bd3f16d795b54a323`, el SHA real del commit certificado es `9112e83e713803f5a9b827aef684aab344315f1a`.
+- **Evidencia**: Los runs `31531986586`, `31531989896`, `31531986706` y `31531989895` reportan dicho SHA real como `headSha` y concluyeron `success`.
+- **Restricciones**: No se modificó código, SQL, Oracle, `main`, el PR #20 ni el respaldo local no rastreado.
+
+---
+
 ## Registro de Intervención — Antigravity — Certificación CI Quality Gates Commit 9112e83 (E2E Node Typings + Section Scoping)
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).

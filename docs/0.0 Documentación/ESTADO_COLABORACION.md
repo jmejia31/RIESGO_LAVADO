@@ -223,7 +223,7 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Subsanada condición de carrera en `e2e/matrices-uat-integral.spec.ts` (`UAT registra control, efectividad, plan y actividad`) mediante sincronización explícita de confirmación UI Angular (`toBeVisible()`).
   - Suite E2E completa **13/13 VERDE**, Backend **304/304 VERDE**, Frontend **165/165 VERDE**, `npm audit` **0 vulnerabilidades**.
 - **Tipado E2E Node y Certificación CI (2026-08-11)**:
-  - Commit técnico certificado: `9112e83344ae4b988f57fa9bd3f16d795b54a323`.
+  - Commit técnico certificado: `9112e83e713803f5a9b827aef684aab344315f1a`.
   - Quality Gates Runs `31531986586` (push) y `31531989896` (PR #20): **SUCCESS 100% (21/21 pasos en verde)**.
   - Sonar Analysis Runs `31531986706` (push) y `31531989895` (PR #20): **SUCCESS**.
   - Corregido el diagnóstico TypeScript `TS2580` de `Buffer` en `matrices-uat-integral.spec.ts` mediante importación desde `node:buffer`, dependencia directa `@types/node` y configuración de compilación `e2e/tsconfig.json`.
