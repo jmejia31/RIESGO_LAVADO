@@ -1,5 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Certificación CI Quality Gates Commit 9112e83 (E2E Node Typings + Section Scoping)
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit certificado**: `9112e83344ae4b988f57fa9bd3f16d795b54a323`.
+- **Objetivo**: Subsanar la desincronización de acotamiento de localizadores por modo estricto en la prueba E2E Playwright (`matrices-uat-integral.spec.ts`) y certificar al 100% (SUCCESS) la totalidad de Quality Gates en GitHub Actions.
+
+### Resumen de la Certificación
+1. **Remediación de Localizador Playwright (`frontend/rl-app/e2e/matrices-uat-integral.spec.ts`)**:
+   - Acotado el localizador de la sección de actividades al contenedor unívoco `div.bg-slate-50` identificado por el encabezado `Actividades del plan`, eliminando violaciones de modo estricto causadas por locadores ancestros posicionales.
+2. **Ejecuciones Certificadas en GitHub Actions (SHA `9112e83`)**:
+   - **Quality Gates (push `desarrollo`)** — Run `31531986586` (Job `93913979309`): **SUCCESS** (6m 7s).
+   - **Quality Gates (pull_request PR #20)** — Run `31531989896`: **SUCCESS** (6m 3s).
+   - **Sonar Analysis (push `desarrollo`)** — Run `31531986706`: **SUCCESS** (2m 0s).
+   - **Sonar Analysis (pull_request PR #20)** — Run `31531989895`: **SUCCESS** (2m 9s).
+3. **Pasos Certificados (21/21 en Verde)**:
+   - TypeScript E2E `tsc -p e2e/tsconfig.json --noEmit` y ESLint: **VERDES**.
+   - Build Angular Release y compilación .NET (0 errores/advertencias bloqueantes): **VERDES**.
+   - Pruebas Backend (304/304), Frontend (165/165) y Playwright E2E (13/13 pasaron): **VERDES**.
+   - Validadores de Matrices, inventario de 17 tablas / 17 secuencias y enlaces de documentación: **VERDES**.
+   - Empaquetado multietapa Docker (backend `app`, frontend `nginx` usuarios non-root): **VERDES**.
+4. **Control de Alcance y Restricciones**:
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20 (permanece abierto y en borrador).
+   - **No** se ejecutó Oracle, DDL/DML, scripts `05/06` ni `B10_*`.
+   - Se conservó intacto y no rastreado el archivo de respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso** (Sonar Cloud remoto continúa pendiente a la espera de credenciales reales).
+
+---
+
 ## Registro de Intervención — Codex — Tipado explícito de Node en pruebas E2E
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).
