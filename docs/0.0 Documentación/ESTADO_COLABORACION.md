@@ -216,9 +216,12 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
     Enlaces locales revisados: 163
     ```
   - Restricciones confirmadas: No se ejecutó Oracle ni se modificó/fusionó la rama `main` ni el PR #20.
-- **Remediación E2E Playwright (2026-08-11)**:
-  - Subsanada condición de carrera en `e2e/matrices-uat-integral.spec.ts` (`UAT registra control, efectividad, plan y actividad`) mediante sincronización explicita de confirmación UI Angular (`toBeVisible()`).
-  - Suite E2E completa **13/13 VERDE**, Backend **304/304 VERDE**, Frontend **165/165 VERDE**.
+- **Remediación E2E Playwright y Certificación CI (2026-08-11)**:
+  - Commit técnico certificado: `43a30bf7675dd7ddaabb84a91dc4e26da49ac680`.
+  - Quality Gates Runs `31529552815` (push) y `31529557756` (PR #20): **SUCCESS 100% (21/21 pasos en verde)**.
+  - Sonar Analysis Runs `31529552784` (push) y `31529557739` (PR #20): **SUCCESS**.
+  - Subsanada condición de carrera en `e2e/matrices-uat-integral.spec.ts` (`UAT registra control, efectividad, plan y actividad`) mediante sincronización explícita de confirmación UI Angular (`toBeVisible()`).
+  - Suite E2E completa **13/13 VERDE**, Backend **304/304 VERDE**, Frontend **165/165 VERDE**, `npm audit` **0 vulnerabilidades**.
 - **Siguiente objetivo**: Continuar la implementación incremental de gobernanza de código (analizadores/Sonar) y containerización multietapa Docker en `desarrollo`.
 
 ---
