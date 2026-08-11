@@ -1,5 +1,23 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Tipado explícito de Node en pruebas E2E
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `c5e60c3`.
+- **Objetivo**: Corregir el diagnóstico TypeScript `TS2580` sobre `Buffer` en `frontend/rl-app/e2e/matrices-uat-integral.spec.ts` sin alterar el comportamiento de las pruebas UAT.
+
+### Cambios y validación ejecutada
+
+1. Se declaró `@types/node` como dependencia directa de desarrollo y se importó `Buffer` desde `node:buffer` en la prueba E2E.
+2. Se creó `frontend/rl-app/e2e/tsconfig.json` para que el editor y TypeScript apliquen explícitamente los tipos de Node y Playwright al directorio E2E.
+3. Se corrigieron doce accesos a `Record<string, any>` mediante notación de índice, exigida por `noPropertyAccessFromIndexSignature`; no cambia los datos interceptados ni la lógica UAT.
+4. Validaciones ejecutadas: `tsc -p e2e/tsconfig.json --noEmit` y ESLint sobre la prueba E2E, ambas correctas.
+5. No se ejecutó Oracle, no se modificó `main`, no se fusionó el PR #20 y el respaldo local no rastreado quedó fuera del cambio.
+
+---
+
 ## Registro de Intervención — Antigravity — Certificación CI Quality Gates Commit 43a30bf
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).

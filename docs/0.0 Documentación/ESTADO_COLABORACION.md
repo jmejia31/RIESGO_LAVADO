@@ -222,6 +222,9 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Sonar Analysis Runs `31529552784` (push) y `31529557739` (PR #20): **SUCCESS**.
   - Subsanada condición de carrera en `e2e/matrices-uat-integral.spec.ts` (`UAT registra control, efectividad, plan y actividad`) mediante sincronización explícita de confirmación UI Angular (`toBeVisible()`).
   - Suite E2E completa **13/13 VERDE**, Backend **304/304 VERDE**, Frontend **165/165 VERDE**, `npm audit` **0 vulnerabilidades**.
+- **Tipado E2E Node (2026-08-11)**:
+  - Corregido el diagnóstico TypeScript `TS2580` de `Buffer` mediante importación explícita desde `node:buffer`, dependencia directa `@types/node` y proyecto `e2e/tsconfig.json`.
+  - `tsc -p e2e/tsconfig.json --noEmit` y ESLint específico: correctos. El respaldo local no rastreado permanece fuera de este cambio.
 - **Siguiente objetivo**: Continuar la implementación incremental de gobernanza de código (analizadores/Sonar) y containerización multietapa Docker en `desarrollo`.
 
 ---

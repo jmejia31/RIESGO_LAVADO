@@ -1,4 +1,5 @@
 import { expect, Page, test } from '@playwright/test';
+import { Buffer } from 'node:buffer';
 
 function tokenAdministrador(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -87,7 +88,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
     const path = new URL(req.url()).pathname;
 
     if (req.method() === 'POST' && path.endsWith('/mitigacion/controles')) {
-      recibidos.control = req.postDataJSON();
+      recibidos['control'] = req.postDataJSON();
       controlCreado = true;
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 31 }) });
     }
@@ -98,14 +99,14 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
     }
     if (req.method() === 'POST' && path.endsWith('/mitigacion/controles/31/evaluaciones')) {
-      recibidos.efectividad = req.postDataJSON();
+      recibidos['efectividad'] = req.postDataJSON();
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 32 }) });
     }
     if (req.method() === 'GET' && path.endsWith('/mitigacion/controles/31/evaluaciones')) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) });
     }
     if (req.method() === 'POST' && path.endsWith('/mitigacion/planes')) {
-      recibidos.plan = req.postDataJSON();
+      recibidos['plan'] = req.postDataJSON();
       planCreado = true;
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 41 }) });
     }
@@ -116,7 +117,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
     }
     if (req.method() === 'POST' && path.endsWith('/mitigacion/actividades')) {
-      recibidos.actividad = req.postDataJSON();
+      recibidos['actividad'] = req.postDataJSON();
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 51 }) });
     }
     if (req.method() === 'GET' && path.endsWith('/mitigacion/planes/41/actividades')) {
@@ -130,23 +131,23 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
   await page.getByRole('button', { name: 'Crear control' }).click();
-  await expect.poll(() => recibidos.control?.conEvaluacionId).toBe(20);
+  await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
   await expect(page.getByText('Control creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar / evaluar' }).click();
   await page.getByLabel('Efectividad %').fill('85');
   await page.getByRole('button', { name: 'Registrar efectividad' }).click();
-  await expect.poll(() => recibidos.efectividad?.ecoEfectividad).toBe(85);
+  await expect.poll(() => recibidos['efectividad']?.ecoEfectividad).toBe(85);
   await expect(page.getByText('Efectividad del control registrada correctamente.')).toBeVisible();
 
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
   await page.getByRole('button', { name: 'Crear plan' }).click();
-  await expect.poll(() => recibidos.plan?.plaEvaluacionId).toBe(20);
+  await expect.poll(() => recibidos['plan']?.plaEvaluacionId).toBe(20);
   await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar / actividades' }).click();
   await page.getByLabel('Descripción', { exact: true }).last().fill('Actividad UAT');
   await page.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
   await page.getByRole('button', { name: 'Crear actividad' }).click();
-  await expect.poll(() => recibidos.actividad?.actPlanId).toBe(41);
+  await expect.poll(() => recibidos['actividad']?.actPlanId).toBe(41);
   await expect(page.getByText('Actividad creada correctamente.')).toBeVisible();
 });
 
@@ -155,8 +156,8 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.route('**/api/matrices-riesgos/monitoreo/**', route => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
-    if (req.method() === 'POST' && path.endsWith('/monitoreo/alertas')) { recibidos.alerta = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 61 }) }); }
-    if (req.method() === 'POST' && path.endsWith('/monitoreo/automonitoreo')) { recibidos.monitoreo = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 71 }) }); }
+    if (req.method() === 'POST' && path.endsWith('/monitoreo/alertas')) { recibidos['alerta'] = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 61 }) }); }
+    if (req.method() === 'POST' && path.endsWith('/monitoreo/automonitoreo')) { recibidos['monitoreo'] = req.postDataJSON(); return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: 71 }) }); }
     return route.fallback();
   });
 
@@ -166,11 +167,11 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.getByLabel('Código', { exact: true }).fill('ALE-UAT');
   await page.getByLabel('Indicador', { exact: true }).fill('Umbral operativo UAT');
   await page.getByRole('button', { name: 'Registrar alerta' }).click();
-  await expect.poll(() => recibidos.alerta?.aleCodigo).toBe('ALE-UAT');
+  await expect.poll(() => recibidos['alerta']?.aleCodigo).toBe('ALE-UAT');
 
   await page.getByLabel('Estado del riesgo').fill('CONTROLADO');
   await page.getByLabel('Estado de controles').fill('EFECTIVO');
   await page.getByLabel('Resultado').fill('Seguimiento conforme');
   await page.getByRole('button', { name: 'Registrar automonitoreo' }).click();
-  await expect.poll(() => recibidos.monitoreo?.monResultado).toBe('Seguimiento conforme');
+  await expect.poll(() => recibidos['monitoreo']?.monResultado).toBe('Seguimiento conforme');
 });
