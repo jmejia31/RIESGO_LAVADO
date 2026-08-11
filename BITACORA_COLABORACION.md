@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — FIX-E2E: Sincronización Asíncrona UI en Prueba UAT Mitigación
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Objetivo**: Subsanar la condición de carrera asíncrona en la prueba Playwright `e2e/matrices-uat-integral.spec.ts` (`UAT registra control, efectividad, plan y actividad`) reportada en el Quality Gate #713.
+
+### Causa Raíz
+La prueba enviaba acciones síncronas consecutivas de clic (`Crear control`, `Registrar efectividad`, `Crear plan`) verificando únicamente la recepción de la petición en la variable interceptora `recibidos.*`. Esta verificación se cumplía en cuanto el navegador emitía la petición HTTP, pero antes de que la respuesta mock retornara a Angular y el componente completara el ciclo de renderizado (reset de `guardando.set(false)` y recarga de listas). Al llegar al clic final `'Crear actividad'`, el botón aún se encontraba deshabilitado o en transición de estado `[disabled]="guardando()"`, impidiendo la ejecución de `guardarActividad()` antes de agotar los 5 segundos de timeout.
+
+### Resumen de Cambios y Verificación
+1. **Prueba E2E (`frontend/rl-app/e2e/matrices-uat-integral.spec.ts`)**:
+   - Sincronizada la interacción UI mediante afirmaciones de visibilidad para cada alerta de confirmación renderizada por el componente (`Control creado correctamente.`, `Efectividad del control registrada correctamente.`, `Plan creado correctamente.` y `Actividad creada correctamente.`). Esto garantiza que el componente Angular finalizó el ciclo HTTP/state antes de realizar clics dependientes.
+2. **Pruebas y Quality Gate**:
+   - Prueba individual E2E: **1/1 PASÓ** (1.9s).
+   - Suite completa E2E Playwright: **13/13 PASARON** (24.7s).
+   - Backend Release tests: **304/304 PASARON**.
+   - Frontend Vitest tests: **165/165 PASARON**.
+   - `tools/run_quality_gates.ps1`: **VERDE** (0 errores, 100% Quality Gates superados).
+3. **Control de Alcance y Restricciones**:
+   - **No** se modificó la rama `main`, PR #20, backend, SQL, scripts 05/06, `B10_*`, Docker ni Sonar.
+   - **No** se alteró lógica de negocio.
+   - La fase **GOV-02 + GOV-03** permanece abierta (no cerrada ni certificada).
+
+---
+
 ## Registro de Intervención — Antigravity — GOV-02/GOV-03: Cierre Documental Fixture Sintético CI Oracle
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).

@@ -131,19 +131,23 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
   await page.getByRole('button', { name: 'Crear control' }).click();
   await expect.poll(() => recibidos.control?.conEvaluacionId).toBe(20);
+  await expect(page.getByText('Control creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar / evaluar' }).click();
   await page.getByLabel('Efectividad %').fill('85');
   await page.getByRole('button', { name: 'Registrar efectividad' }).click();
   await expect.poll(() => recibidos.efectividad?.ecoEfectividad).toBe(85);
+  await expect(page.getByText('Efectividad del control registrada correctamente.')).toBeVisible();
 
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
   await page.getByRole('button', { name: 'Crear plan' }).click();
   await expect.poll(() => recibidos.plan?.plaEvaluacionId).toBe(20);
+  await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar / actividades' }).click();
   await page.getByLabel('Descripción', { exact: true }).last().fill('Actividad UAT');
   await page.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
   await page.getByRole('button', { name: 'Crear actividad' }).click();
   await expect.poll(() => recibidos.actividad?.actPlanId).toBe(41);
+  await expect(page.getByText('Actividad creada correctamente.')).toBeVisible();
 });
 
 test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
