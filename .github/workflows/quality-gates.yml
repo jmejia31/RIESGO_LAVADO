@@ -111,7 +111,7 @@ jobs:
       - name: Validate compose configuration without secrets in repository
         shell: bash
         env:
-          RL_ORACLE_CONNECTION_STRING: Data Source=ci.invalid:1521/CI;User Id=ci;Password=ci;
+          RL_ORACLE_CONNECTION_STRING: Data Source=ci.invalid:1521/CI;User Id=ci;Password=CHANGE_ME;
           RL_JWT_SECRET: CI_ONLY_NOT_A_REAL_SECRET_0123456789ABCDEF
         run: docker compose -f compose.yml config --quiet
 
