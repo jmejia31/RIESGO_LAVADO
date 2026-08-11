@@ -144,11 +144,13 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await expect.poll(() => recibidos['plan']?.plaEvaluacionId).toBe(20);
   await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar / actividades' }).click();
-  await page.getByLabel('Descripción', { exact: true }).last().fill('Actividad UAT');
-  await expect(page.getByLabel('Descripción', { exact: true }).last()).toHaveValue('Actividad UAT');
-  await page.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
-  await expect(page.getByLabel('Responsable', { exact: true })).toHaveValue('Responsable UAT');
-  await page.getByRole('button', { name: 'Crear actividad' }).click();
+  await expect(page.getByRole('heading', { name: 'Actividades del plan' })).toBeVisible();
+  const seccionActividades = page.locator('div.bg-slate-50', { has: page.getByRole('heading', { name: 'Actividades del plan' }) });
+  await seccionActividades.getByLabel('Descripción', { exact: true }).fill('Actividad UAT');
+  await expect(seccionActividades.getByLabel('Descripción', { exact: true })).toHaveValue('Actividad UAT');
+  await seccionActividades.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
+  await expect(seccionActividades.getByLabel('Responsable', { exact: true })).toHaveValue('Responsable UAT');
+  await seccionActividades.getByRole('button', { name: 'Crear actividad' }).click();
   await expect.poll(() => recibidos['actividad']?.actPlanId).toBe(41);
   await expect(page.getByText('Actividad creada correctamente.')).toBeVisible();
 });
