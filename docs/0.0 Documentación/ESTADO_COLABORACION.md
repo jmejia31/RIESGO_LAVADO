@@ -228,8 +228,15 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Sonar Analysis Runs `31531986706` (push) y `31531989895` (PR #20): **SUCCESS**.
   - Corregido el diagnóstico TypeScript `TS2580` de `Buffer` en `matrices-uat-integral.spec.ts` mediante importación desde `node:buffer`, dependencia directa `@types/node` y configuración de compilación `e2e/tsconfig.json`.
   - Subsanada la condición de carrera por modo estricto en Playwright acotando los localizadores de actividades de plan al contenedor unívoco `div.bg-slate-50`.
-  - Suite E2E completa **13/13 VERDE**, Backend **304/304 VERDE**, Frontend **165/165 VERDE**, `npm audit` **0 vulnerabilidades**. El respaldo local no rastreado permanece intacto y fuera de los cambios.
-- **Siguiente objetivo**: Continuar la implementación incremental de gobernanza de código (analizadores/Sonar) y containerización multietapa Docker en `desarrollo`.
+- **Certificación Docker Multietapa Local — GOV-02 + GOV-03 Punto 3 (2026-08-11)**:
+  - Commit certificado: `83c21ab1844621ffb8f9e612ea21a6a6a9b407e3`.
+  - Punto 3 del plan GOV-02 + GOV-03 completado al 100% en entorno local controlado.
+  - Validación estática `docker compose config` sin exponer secretos.
+  - Construidas imágenes multietapa: `riesgo-lavado-api:local` (112MB) y `riesgo-lavado-frontend:local` (29MB).
+  - Usuarios no-root verificados en ejecución: Backend como `app` (`uid=1654`), Frontend como `nginx` (`uid=101`).
+  - Healthchecks HTTP en verde: `/healthz` Backend (8080) y Nginx (8081).
+  - Proxying Nginx a Backend verificado. Limpieza `docker compose down` ejecutada exitosamente.
+- **Siguiente objetivo**: Continuar la gobernanza de código Sonar Cloud (integración remota pendiente de credenciales reales) en `desarrollo`.
 
 ---
 

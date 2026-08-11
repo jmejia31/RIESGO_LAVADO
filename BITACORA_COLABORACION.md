@@ -1,5 +1,41 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Certificación Docker Multietapa Local (GOV-02 + GOV-03 Punto 3)
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit evaluado y certificado**: `83c21ab1844621ffb8f9e612ea21a6a6a9b407e3`.
+- **Objetivo**: Certificar formalmente el **Punto 3 del plan GOV-02 + GOV-03** mediante validación estática, construcción multietapa, ejecución local controlada, verificación de usuarios finales no-root (`app` / `nginx`), healthchecks HTTP y proxying Nginx-Backend.
+
+### Evidencia de la Certificación Local
+1. **Validación Estática Compose**:
+   - `docker compose config` ejecutado exitosamente con variables de entorno sintéticas sin exponer secretos en repositorio.
+   - Verificado `compose.yml` libre de credenciales o cadenas Oracle reales hardcodeadas.
+2. **Construcción de Imágenes Multietapa (`docker compose build`)**:
+   - **Backend Image**: `riesgo-lavado-api:local` (ID: `d3ef0d5adc2d`, 112MB content size).
+   - **Frontend Image**: `riesgo-lavado-frontend:local` (ID: `c067d8c278b6`, 29MB content size).
+   - Ambas imágenes construidas exitosamente en multietapa (`restore` -> `publish` -> `runtime` en Backend; `build` -> `runtime` en Frontend).
+3. **Ejecución Local Controlada y Verificación de Seguridad (`docker compose up -d`)**:
+   - **Contenedores activos**: `riesgo_lavado-backend-1` y `riesgo_lavado-frontend-1` ambos en estado **Up (healthy)**.
+   - **Usuarios No-Root Confirmados (`docker exec`)**:
+     - Backend: Usuario `app` (`uid=1654(app) gid=1654(app)`), nunca `root`.
+     - Frontend: Usuario `nginx` (`uid=101(nginx) gid=101(nginx)`), nunca `root`.
+   - **Healthchecks HTTP y Conectividad**:
+     - Backend `/healthz` (puerto 8080): HTTP 200 `{"status":"Healthy"}`.
+     - Frontend `/healthz` (puerto 8081): HTTP 200 `Healthy`.
+     - Frontend root `/` (puerto 8081): Sirve bundle Angular producción (`<!doctype html><html lang="es-HN"...`).
+     - Proxying Nginx `/api/`: Canaliza peticiones al contenedor Backend a través del puerto 8080.
+4. **Limpieza y Cierre**:
+   - `docker compose down` ejecutado limpiando contenedores y red local sin afectar recursos del sistema host.
+5. **Control de Alcance y Restricciones**:
+   - **No** se modificó `main` ni se alteró/fusionó/cerró el PR #20.
+   - **No** se ejecutó Oracle, DDL/DML, scripts `05/06` ni `B10_*`.
+   - Se conservó intacto el respaldo local no rastreado `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso** (Punto 3 completado; integración remota Sonar Cloud pendiente de credenciales reales).
+
+---
+
 ## Fe de erratas — SHA certificado de la corrección E2E
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).
