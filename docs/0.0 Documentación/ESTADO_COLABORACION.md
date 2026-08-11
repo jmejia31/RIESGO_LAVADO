@@ -199,13 +199,24 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
 
 ## 12. Punto exacto de continuación
 
-**FE-01 queda cerrada técnicamente con adopción gradual de Signals, primera ola `OnPush`, contratos existentes preservados y regresión completa en verde.**
-
-La siguiente fase aprobada es:
+**Fase activa en desarrollo:**
 
 ### GOV-02 + GOV-03 — Analyzers/Sonar + Docker multietapa
 
-Debe elevar análisis estático, observabilidad de calidad y reproducibilidad de empaquetado sin modificar Producción ni fusionar `main`.
+- **Estado de la fase**: **Abierta y en progreso** (no se declara cerrada ni certificada en esta intervención).
+- **Actualización de seguridad en CI (2026-08-11)**:
+  - Commit técnico certificado: `eb05a6316dceabad2cbb138c9d33693aacb9c8bb`.
+  - Quality Gate #711 (`31513734376`): **SUCCESS**.
+  - Cambio realizado: Sustitución del marcador sintético de la cadena de conexión de prueba en `.github/workflows/quality-gates.yml` de `Password=ci` a `Password=CHANGE_ME`.
+  - Naturaleza del fixture: Utiliza el dominio de prueba reservado `ci.invalid` y no corresponde a una conexión, credencial ni entorno Oracle real ni institucional.
+  - Validador local de enlaces de documentación (`tools/validate_documentation_links.ps1`):
+    ```text
+    Validacion de documentacion correcta.
+    Documentos Markdown revisados: 71
+    Enlaces locales revisados: 163
+    ```
+  - Restricciones confirmadas: No se ejecutó Oracle ni se modificó/fusionó la rama `main` ni el PR #20.
+- **Siguiente objetivo**: Continuar la implementación incremental de gobernanza de código (analizadores/Sonar) y containerización multietapa Docker en `desarrollo`.
 
 ---
 

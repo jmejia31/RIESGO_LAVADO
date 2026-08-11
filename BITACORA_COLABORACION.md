@@ -1,5 +1,34 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — GOV-02/GOV-03: Cierre Documental Fixture Sintético CI Oracle
+
+- **Fecha y hora**: 2026-08-11, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit técnico certificado**: `eb05a6316dceabad2cbb138c9d33693aacb9c8bb`.
+- **Objetivo**: Registrar el cierre documental del ajuste de seguridad en CI correspondiente a la sustitución del marcador del fixture sintético de conexión Oracle.
+
+### Resumen de la Intervención
+1. **Ajuste de Seguridad en CI (`.github/workflows/quality-gates.yml`)**:
+   - Se actualizó el marcador de la cadena de conexión de prueba sintética utilizada exclusivamente en el pipeline de validación CI de `Password=ci` a `Password=CHANGE_ME`.
+   - Se confirma que dicho fixture utiliza el dominio de prueba reservado `ci.invalid` y no corresponde a una conexión, credencial ni entorno Oracle real ni institucional.
+2. **Evidencia de Calidad y CI**:
+   - Commit técnico publicado previamente en `desarrollo`: `eb05a6316dceabad2cbb138c9d33693aacb9c8bb`.
+   - Quality Gate #711 (`31513734376`) ejecutado exitosamente con resultado **SUCCESS**.
+   - Resultado literal del validador local de enlaces de documentación (`tools/validate_documentation_links.ps1`):
+     ```text
+     Validacion de documentacion correcta.
+     Documentos Markdown revisados: 71
+     Enlaces locales revisados: 163
+     ```
+3. **Control de Alcance y Restricciones**:
+   - **No** se ejecutó ni conectó la base de datos Oracle.
+   - **No** se modificó la rama `main` ni el PR #20.
+   - **No** se alteraron scripts SQL, reglas de secretos, workflows ni código funcional.
+   - La fase **GOV-02 + GOV-03** permanece abierta y **no** se declara cerrada ni certificada en esta intervención.
+
+---
+
 ## Registro de Intervención — Antigravity — DB-ESTANDARES: Comentarios Institucionales en las 17 Tablas y Columnas RL_MR_*
 
 - **Fecha y hora**: 2026-08-10, hora local (UTC-6).
