@@ -1,5 +1,34 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección de guardado JSON de plantillas
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `64a2330`.
+- **Objetivo**: Resolver el error interno al guardar la definición JSON de un borrador de formulario de Matrices.
+
+### Causa y corrección
+
+- La traza local registrada para `PUT /api/matrices-riesgos/formularios/17` comprobó que el JSON llegaba con `application/json`, pero el parámetro `JsonElement` estaba en estado inválido y lanzaba `InvalidOperationException` al invocar `GetRawText()`.
+- Los endpoints de crear y actualizar borrador ahora reciben `JsonDocument` y obtienen el contenido mediante `RootElement.GetRawText()`. El JSON se entrega intacto al servicio y a Oracle; no hubo cambios de esquema ni DDL/DML manual.
+- Se agregó una prueba de controlador que confirma que el documento JSON con un campo dinámico llega completo al servicio, y se actualizó el contrato UAT para exigir `JsonDocument` con `[FromBody]`.
+
+### Verificaciones ejecutadas
+
+- Pruebas de controlador y contrato de plantillas: 14/14 correctas.
+- Suite backend: 306/306 correcta.
+- `validate_matrices_dynamic_ddl_alignment.ps1`: correcto.
+- `validate_database_scripts.ps1`: correcto.
+- `git diff --check`: correcto.
+
+### Restricciones y continuación
+
+- No se conectó Oracle ni se ejecutaron scripts, DDL o DML; `main`, PR #20, producción y `B10_*` permanecen sin cambios.
+- Reiniciar la API local para cargar el binario actualizado y volver a guardar la definición desde la interfaz. Si el navegador conserva una versión anterior, recargar con `Ctrl+F5`.
+
+---
+
 ## Registro de Intervención — Codex — Corrección 415 al guardar definición dinámica
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

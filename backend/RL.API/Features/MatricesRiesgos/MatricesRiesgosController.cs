@@ -40,14 +40,14 @@ public sealed class MatricesRiesgosController : ControllerBase
     public async Task<IActionResult> CrearBorradorFormulario(
         [FromQuery] long familiaId,
         [FromQuery] string codigoFormulario,
-        [FromBody] JsonElement jsonConfig)
+        [FromBody] JsonDocument jsonConfig)
     {
         try
         {
             var result = await _service.CrearBorradorFormularioAsync(
                 familiaId,
                 codigoFormulario,
-                jsonConfig.GetRawText(),
+                jsonConfig.RootElement.GetRawText(),
                 ObtenerUsuarioId());
             return Responder(result);
         }
@@ -78,11 +78,11 @@ public sealed class MatricesRiesgosController : ControllerBase
     [HttpPut("formularios/{id:long}")]
     [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Actualización de borrador de formulario")]
-    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JsonElement jsonConfig)
+    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JsonDocument jsonConfig)
     {
         try
         {
-            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.GetRawText(), ObtenerUsuarioId());
+            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.RootElement.GetRawText(), ObtenerUsuarioId());
             return Responder(result);
         }
         catch (Exception ex)

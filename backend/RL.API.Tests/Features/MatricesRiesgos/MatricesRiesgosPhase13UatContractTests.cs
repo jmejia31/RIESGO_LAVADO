@@ -116,7 +116,7 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             MethodInfo method = typeof(MatricesRiesgosController).GetMethod(methodName)!;
             ParameterInfo body = Assert.Single(method.GetParameters().Where(parameter => parameter.Name == "jsonConfig"));
 
-            Assert.Equal(typeof(JsonElement), body.ParameterType);
+            Assert.Equal(typeof(JsonDocument), body.ParameterType);
             Assert.NotNull(body.GetCustomAttribute<FromBodyAttribute>());
         }
     }

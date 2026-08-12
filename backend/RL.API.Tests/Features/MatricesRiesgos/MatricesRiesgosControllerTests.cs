@@ -1,6 +1,7 @@
 #pragma warning disable CA1416
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -116,6 +117,22 @@ public sealed class MatricesRiesgosControllerTests
 
         ObjectResult response = Assert.IsType<ObjectResult>(result);
         Assert.Equal(404, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ActualizarBorrador_DocumentoJson_EntregaElContenidoAlServicio()
+    {
+        MatricesRiesgosController controller = CrearController(out InterfaceStub service);
+        service.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
+            Task.FromResult(ServiceResult.Ok()));
+        const string contenido = "{\"secciones\":[{\"clave\":\"prueba1\"}]}";
+        using JsonDocument documento = JsonDocument.Parse(contenido);
+
+        IActionResult result = await controller.ActualizarBorradorFormulario(17, documento);
+
+        Assert.IsType<OkObjectResult>(result);
+        StubInvocation llamada = Assert.Single(service.CallsTo(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync)));
+        Assert.Equal(contenido, llamada.Arguments[1]);
     }
 
     private static MatricesRiesgosController CrearController(out InterfaceStub serviceStub)

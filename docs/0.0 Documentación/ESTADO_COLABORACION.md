@@ -271,8 +271,8 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Pendiente: verificar el nuevo análisis SonarCloud remoto sobre el commit publicado; no se aplicarán exclusiones ni `NOSONAR` para alterar la calificación.
 - **Corrección de guardado de plantilla Matrices (2026-08-12)**:
   - Corregido `415 Unsupported Media Type` en `PUT /api/matrices-riesgos/formularios/{id}` y en la creación de borrador.
-  - Angular envía el documento de definición con `Content-Type: application/json`; la API recibe `JsonElement` y conserva el JSON con `GetRawText()` antes de validar y persistir.
-  - Pruebas locales: contrato backend 6/6, suite backend 305/305, frontend 165/165, build Angular y Playwright 13/13 correctos.
+  - La traza posterior identificó que `JsonElement` llegaba en estado inválido al controlador. La API ahora recibe `JsonDocument` y usa `RootElement.GetRawText()`, por lo que conserva el JSON real antes de validar y persistir.
+  - Pruebas locales posteriores: contrato/controlador 14/14 y suite backend 306/306 correctos; validadores dinámico de Matrices y de scripts BD correctos.
   - Se requiere reiniciar API/frontend locales antes de validar manualmente el botón **Guardar**.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
