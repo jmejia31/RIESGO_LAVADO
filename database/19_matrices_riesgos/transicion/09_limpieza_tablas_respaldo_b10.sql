@@ -52,7 +52,7 @@ DECLARE
 
   PROCEDURE drop_table_if_exists(p_name VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_respaldo_permitido(p_name) || ' PURGE';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_respaldo_permitido(p_name) || ' PURGE'; -- NOSONAR: DDL dinámico de limpieza; nombre permitido por lista cerrada y DBMS_ASSERT.
     DBMS_OUTPUT.PUT_LINE('Tabla de respaldo eliminada: ' || p_name);
   EXCEPTION WHEN OTHERS THEN
     IF SQLCODE <> -942 THEN RAISE; END IF;

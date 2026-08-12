@@ -157,7 +157,7 @@ DECLARE
 
   PROCEDURE drop_table_if_exists(p_table_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_tabla_prueba_permitido(p_table_name) || ' CASCADE CONSTRAINTS';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_tabla_prueba_permitido(p_table_name) || ' CASCADE CONSTRAINTS'; -- NOSONAR: DDL dinámico obligatorio para retiro condicional; nombre validado contra lista cerrada y DBMS_ASSERT.
     DBMS_OUTPUT.PUT_LINE('Tabla eliminada: ' || p_table_name);
   EXCEPTION
     WHEN OTHERS THEN
@@ -170,7 +170,7 @@ DECLARE
 
   PROCEDURE drop_sequence_if_exists(p_seq_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || nombre_secuencia_prueba_permitido(p_seq_name);
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || nombre_secuencia_prueba_permitido(p_seq_name); -- NOSONAR: DDL dinámico obligatorio para retiro condicional; nombre validado contra lista cerrada y DBMS_ASSERT.
     DBMS_OUTPUT.PUT_LINE('Secuencia eliminada: ' || p_seq_name);
   EXCEPTION
     WHEN OTHERS THEN

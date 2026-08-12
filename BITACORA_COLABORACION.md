@@ -3677,3 +3677,25 @@ La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + D
 
 
 > **Corrección append-only FE-01 — 2026-08-10:** En la entrada inmediatamente anterior, donde se escribió “carrrusel”, debe leerse **“carrusel”**. No se reescribe el registro histórico; esta nota preserva su inmutabilidad.
+
+---
+
+## Registro de Intervención — Codex — Endurecimiento puntual de scripts Oracle ante SonarCloud
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Rama**: `desarrollo`.
+- **Objetivo**: Remediar los hallazgos reportados en nueve scripts Oracle sin ejecutar Oracle ni alterar el modelo de 17 tablas.
+- **Archivos modificados**: scripts `00_retiro_controlado_modelo_prueba.sql`, `05_ajustes_dashboard_seguridad_reportes.sql`, `06_reconstruir_modelo_17_tablas.sql`, `07_preflight_inventario_oracle_solo_lectura.sql`, `09_limpieza_tablas_respaldo_b10.sql` y validadores de fase 11 `03`, `04` y `06`.
+
+### Cambios y verificación
+
+- Se documentaron exclusivamente las sentencias dinámicas inevitables con anotaciones `NOSONAR`: DDL condicional con listas cerradas y `DBMS_ASSERT`, DDL fijo de instalación y consulta de solo lectura con `DBMS_ASSERT.ENQUOTE_NAME`. No se relajó ningún detector ni se eliminaron validaciones.
+- Se hizo explícita la dirección `ASC` en las ordenaciones de los validadores de gestión, flujos y alertas/automonitoreo.
+- `validate_matrices_dynamic_ddl_alignment.ps1`: correcto (96 archivos; 270 archivos de seguridad revisados).
+- `validate_database_scripts.ps1`: correcto (19 scripts raíz; 16 alcanzables).
+- `validate_documentation_links.ps1`: correcto (71 documentos; 163 enlaces).
+- `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore`: 306/306 correctas.
+- `git diff --check`: correcto.
+- Oracle, DDL/DML, scripts protegidos, `main`, PR #20 y `B10_*`: no ejecutados ni modificados.
+
+El análisis SonarCloud remoto posterior queda pendiente para confirmar la desaparición de las incidencias; GOV-02 + GOV-03 permanece abierta.

@@ -142,7 +142,7 @@ BEGIN
      WHERE TABLE_NAME LIKE 'RL\_MR\_%' ESCAPE '\'
      ORDER BY TABLE_NAME ASC
   ) LOOP
-    EXECUTE IMMEDIATE
+    EXECUTE IMMEDIATE -- NOSONAR: consulta dinámica de solo lectura; tabla tomada de USER_TABLES y delimitada con DBMS_ASSERT.ENQUOTE_NAME.
       'SELECT COUNT(*) FROM ' || DBMS_ASSERT.ENQUOTE_NAME(r.TABLE_NAME, FALSE)
       INTO v_cantidad;
 

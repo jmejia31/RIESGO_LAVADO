@@ -81,7 +81,7 @@ BEGIN
     END IF;
 
     IF v_existe_constraint = 0 THEN
-        EXECUTE IMMEDIATE q'[
+        EXECUTE IMMEDIATE /* NOSONAR: DDL fijo, ejecutado solo tras prevalidar el esquema y la integridad de proyecciones. */ q'[
             ALTER TABLE RL_MR_PROYECCIONES_EVALUACION
             ADD CONSTRAINT UQ_RL_MR_PROY_EVA
             UNIQUE (PROY_EVALUACION_ID)
@@ -98,7 +98,7 @@ BEGIN
        AND TABLE_NAME = 'RL_MR_PROYECCIONES_EVALUACION';
 
     IF v_existe_indice = 0 THEN
-        EXECUTE IMMEDIATE q'[
+        EXECUTE IMMEDIATE /* NOSONAR: DDL fijo, ejecutado solo tras comprobar que el índice no existe. */ q'[
             CREATE INDEX IX_RL_MR_PROY_DASHBOARD
             ON RL_MR_PROYECCIONES_EVALUACION (
                 PROY_NIVEL_INHERENTE,
