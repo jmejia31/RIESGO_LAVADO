@@ -43,7 +43,7 @@ jobs:
         working-directory: frontend/rl-app
         shell: bash
         run: |
-          npm ci
+          npm ci --ignore-scripts
           npm audit
 
       - name: Validate GOV-02 analyzers and GOV-03 container contracts

@@ -39,9 +39,9 @@
         <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" (click)="nuevaEvaluacion()">Nueva evaluación</button>
       </div>
       <div class="grid gap-3 md:grid-cols-4">
-        <label class="text-sm font-medium md:col-span-2">Buscar<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></label>
-        <label class="text-sm font-medium">Estado<select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></label>
-        <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarEvaluaciones()">Aplicar filtros</button>
+        <div><label for="filtro-buscar" class="block text-sm font-medium">Buscar</label><input id="filtro-buscar" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></div>
+        <div><label for="filtro-estado" class="block text-sm font-medium">Estado</label><select id="filtro-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
+        <div class="flex items-end"><button type="button" class="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarEvaluaciones()">Aplicar filtros</button></div>
       </div>
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="min-w-[900px] w-full divide-y divide-slate-200 text-sm">
@@ -60,25 +60,27 @@
     <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 class="text-lg font-bold">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p></div>
-        <label class="text-sm font-semibold">Riesgo<select class="ml-2 min-w-72 rounded-lg border border-slate-300 px-3 py-2" [ngModel]="riesgoId()" (ngModelChange)="riesgoId.set(+$event)"><option [ngValue]="0">Seleccione un riesgo</option>@for (riesgo of riesgos(); track riesgo.rieId) { <option [ngValue]="riesgo.rieId">{{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}</option> }</select></label>
+        <div><label for="selector-riesgo" class="text-sm font-semibold">Riesgo</label><select id="selector-riesgo" class="ml-2 min-w-72 rounded-lg border border-slate-300 px-3 py-2" [ngModel]="riesgoId()" (ngModelChange)="riesgoId.set(+$event)"><option [ngValue]="0">Seleccione un riesgo</option>@for (riesgo of riesgos(); track riesgo.rieId) { <option [ngValue]="riesgo.rieId">{{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}</option> }</select></div>
       </div>
       @for (seccion of secciones(); track seccion.clave) {
         <fieldset class="rounded-xl border border-slate-200 p-4">
           <legend class="px-2 font-bold">{{ seccion.titulo }}</legend>
           <div class="grid gap-4 md:grid-cols-2">
             @for (campo of seccion.campos; track campo.clave) {
-              <label class="text-sm font-medium">
-                {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600">*</span> }
+              <div>
+                <label [for]="'campo-' + campo.clave" class="block text-sm font-medium">
+                  {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600">*</span> }
+                </label>
                 @if (opcionesCatalogo(campo).length) {
-                  <select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"><option [ngValue]="null">Seleccione</option>@for (opcion of opcionesCatalogo(campo); track opcion.codigo) { <option [value]="opcion.codigo">{{ opcion.valor }}</option> }</select>
+                  <select [attr.id]="'campo-' + campo.clave" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"><option [ngValue]="null">Seleccione</option>@for (opcion of opcionesCatalogo(campo); track opcion.codigo) { <option [value]="opcion.codigo">{{ opcion.valor }}</option> }</select>
                 } @else if (campo.tipo === 'booleano' || campo.tipo === 'checkbox') {
-                  <input class="ml-3 h-4 w-4" type="checkbox" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
+                  <input [attr.id]="'campo-' + campo.clave" class="ml-3 h-4 w-4" type="checkbox" [disabled]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
                 } @else if (campo.tipo === 'textarea') {
-                  <textarea class="mt-1 min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
+                  <textarea [attr.id]="'campo-' + campo.clave" class="mt-1 min-h-28 w-full rounded-lg border border-slate-300 px-3 py-2" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
                 } @else {
-                  <input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [type]="campo.tipo === 'numero' ? 'number' : campo.tipo === 'fecha' ? 'date' : 'text'" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
+                  <input [attr.id]="'campo-' + campo.clave" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [type]="campo.tipo === 'numero' ? 'number' : campo.tipo === 'fecha' ? 'date' : 'text'" [readOnly]="campo.soloLectura" [ngModel]="valorRespuesta(campo)" (ngModelChange)="actualizarRespuesta(campo, $event)">
                 }
-              </label>
+              </div>
             }
           </div>
         </fieldset>

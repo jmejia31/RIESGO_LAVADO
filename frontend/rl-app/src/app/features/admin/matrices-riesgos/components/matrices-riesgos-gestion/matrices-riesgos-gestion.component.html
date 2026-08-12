@@ -11,18 +11,22 @@
   @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
 
   <form class="grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-2" (ngSubmit)="guardar()">
-    <label class="text-sm font-medium">Código
-      <input name="codigoRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="codigo" maxlength="30" required>
-    </label>
-    <label class="text-sm font-medium">Nombre
-      <input name="nombreRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nombre" maxlength="250" required>
-    </label>
-    <label class="text-sm font-medium md:col-span-2">Descripción
-      <textarea name="descripcionRiesgo" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="descripcion" maxlength="2000"></textarea>
-    </label>
-    <label class="flex items-center gap-2 text-sm font-medium">
-      <input name="activoRiesgo" type="checkbox" class="h-4 w-4" [(ngModel)]="activo"> Activo
-    </label>
+    <div>
+      <label for="codigo-riesgo" class="block text-sm font-medium">Código</label>
+      <input id="codigo-riesgo" name="codigoRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="codigo" maxlength="30" required>
+    </div>
+    <div>
+      <label for="nombre-riesgo" class="block text-sm font-medium">Nombre</label>
+      <input id="nombre-riesgo" name="nombreRiesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nombre" maxlength="250" required>
+    </div>
+    <div class="md:col-span-2">
+      <label for="descripcion-riesgo" class="block text-sm font-medium">Descripción</label>
+      <textarea id="descripcion-riesgo" name="descripcionRiesgo" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="descripcion" maxlength="2000"></textarea>
+    </div>
+    <div class="flex items-center gap-2">
+      <input id="activo-riesgo" name="activoRiesgo" type="checkbox" class="h-4 w-4" [(ngModel)]="activo">
+      <label for="activo-riesgo" class="text-sm font-medium">Activo</label>
+    </div>
     <div class="flex justify-end gap-2 md:col-span-2">
       @if (editandoId() > 0) { <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="nuevo()">Cancelar edición</button> }
       <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()">{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}</button>

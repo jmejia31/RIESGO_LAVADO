@@ -33,9 +33,9 @@
       <section class="space-y-4 rounded-xl border border-slate-200 p-4">
         <h3 class="font-bold">Señales de alerta</h3>
         <div class="grid gap-3 md:grid-cols-2">
-          <label class="text-sm font-medium">Código<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaCodigo" maxlength="50"></label>
-          <label class="text-sm font-medium">Estado<select class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></label>
-          <label class="text-sm font-medium md:col-span-2">Indicador<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaIndicador" maxlength="150"></label>
+          <div><label for="alerta-codigo" class="block text-sm font-medium">Código</label><input id="alerta-codigo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaCodigo" maxlength="50"></div>
+          <div><label for="alerta-estado" class="block text-sm font-medium">Estado</label><select id="alerta-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></div>
+          <div class="md:col-span-2"><label for="alerta-indicador" class="block text-sm font-medium">Indicador</label><input id="alerta-indicador" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaIndicador" maxlength="150"></div>
         </div>
         <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()" (click)="crearAlerta()">Registrar alerta</button>
         <div class="space-y-2">@for (alerta of alertas(); track alerta.aleId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ alerta.aleCodigo }}</strong> · {{ alerta.aleEstado }}<p class="mt-1 text-slate-600">{{ alerta.aleIndicador }}</p></div><button type="button" class="font-semibold text-blue-700" [disabled]="guardando()" (click)="cambiarEstado(alerta)">{{ alerta.aleEstado === 'ACTIVO' ? 'Inactivar' : 'Activar' }}</button></div></article> } @empty { <p class="text-sm text-slate-500">Sin señales de alerta.</p> }</div>
@@ -44,9 +44,9 @@
       <section class="space-y-4 rounded-xl border border-slate-200 p-4">
         <h3 class="font-bold">Automonitoreo</h3>
         <div class="grid gap-3 md:grid-cols-2">
-          <label class="text-sm font-medium">Estado del riesgo<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"></label>
-          <label class="text-sm font-medium">Estado de controles<input class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"></label>
-          <label class="text-sm font-medium md:col-span-2">Resultado<textarea class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado"></textarea></label>
+          <div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><input id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"></div>
+          <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><input id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"></div>
+          <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado"></textarea></div>
         </div>
         <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()" (click)="registrarAutomonitoreo()">Registrar automonitoreo</button>
         <div class="space-y-2">@for (mon of automonitoreos(); track mon.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex justify-between gap-3"><strong>{{ mon.monEstadoRiesgo }}</strong><span class="text-slate-500">{{ mon.monFecha | date:'dd/MM/yyyy HH:mm' }}</span></div><p class="mt-1 text-slate-600">Controles: {{ mon.monEstadoContr }}</p><p class="mt-1">{{ mon.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin automonitoreos.</p> }</div>

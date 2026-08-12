@@ -1,5 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Remediación de Hallazgos SonarCloud No-SQL (Accesibilidad Frontend, npm ci y Seguridad Docker)
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `a9bff6a`.
+- **Objetivo**: Corregir los hallazgos reales de SonarCloud no relacionados con SQL dinámico en el Frontend (asociaciones accesibles `<label for="..." id="...">`), instalación npm (`npm ci --ignore-scripts`) y seguridad Docker Frontend (pertenencia `root:root` de archivos estáticos en `/usr/share/nginx/html`).
+
+### Cambios Ejecutados
+1. **Accesibilidad HTML Frontend**:
+   - `frontend/rl-app/.../matrices-riesgos-monitoreo-operativo.component.html`: Sustituidas etiquetas `<label>` implícitas por explícitas con asociación unívoca `for="..."` e `id="..."` (`alerta-codigo`, `alerta-estado`, `alerta-indicador`, `mon-estado-riesgo`, `mon-estado-controles`, `mon-resultado`). Se mantuvieron los contenedores `<dl>` para `<dt>`/`<dd>`.
+   - `frontend/rl-app/.../matrices-riesgos.component.html`: Asignados identificadores unívocos `id` y `for` para filtros (`filtro-buscar`, `filtro-estado`), selector de riesgo (`selector-riesgo`) y campos dinámicos de captura (`campo-{{clave}}`).
+   - `frontend/rl-app/.../matrices-riesgos-mitigacion.component.html`: Asignadas asociaciones explícitas `for`/`id` para controles, efectividad, planes y actividades.
+   - `frontend/rl-app/.../matrices-riesgos-gestion.component.html`: Asignadas asociaciones explícitas `for`/`id` para creación/edición de riesgos.
+2. **Instalación npm & CI**:
+   - `frontend/rl-app/Dockerfile`, `.github/workflows/quality-gates.yml`, `.github/workflows/sonar-analysis.yml`: Aplicada la bandera `npm ci --ignore-scripts` tras verificar que build, pruebas unitarias y E2E ejecutan exitosamente.
+3. **Seguridad Docker Frontend**:
+   - `frontend/rl-app/Dockerfile`: Configurada la pertenencia `root:root` con permisos `755` para los archivos estáticos en `/usr/share/nginx/html` (`RUN chown -R root:root /usr/share/nginx/html && chmod -R 755 /usr/share/nginx/html`), asegurando que la imagen ejecute como usuario no-root `nginx` (`uid=101`) sin permitir modificaciones al código web estático si se compromete el worker. Los directorios temporales `/tmp/nginx` se conservan con pertenencia `nginx:nginx`.
+4. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `npm test -- --watch=false`: **165/165 PRUEBAS PASARON** (26/26 archivos de prueba).
+   - `npm run build`: **CONSTRUCCIÓN EXITOSA**.
+   - `npm run e2e`: **13/13 PRUEBAS E2E PASARON**.
+   - `docker build` & verificación de contenedor: **USUARIO NGINX NO-ROOT (`uid=101`), ARCHIVOS ESTÁTICOS `root:root` (755)**.
+   - `tools/validate_documentation_links.ps1`: **71 DOCUMENTOS / 163 ENLACES VÁLIDOS**.
+   - `git diff --check`: Correcto sin advertencias de formato.
+5. **Control de Alcance y Restricciones Preservadas**:
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20.
+   - **No** se ejecutó Oracle, DDL/DML, scripts `05/06`, SQL dinámico ni `B10_*`.
+   - Se conservó intacto el respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso**.
+
+---
+
 ## Registro de Intervención — Antigravity — Corrección del Validador Integral de Matrices (Objetos Retirados)
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

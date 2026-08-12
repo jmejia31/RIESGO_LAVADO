@@ -251,6 +251,11 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Restablecida la nomenclatura oficial `RL_MR_TRAZAS_CALCULO` y `SEQ_RL_MR_TRAZAS` en los arreglos de objetos retirados de `MatricesRiesgosRepositoryIntegrationTests.cs`.
   - Normalizada la comparación de separadores de ruta en `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1` para compatibilidad Windows/CI.
   - Validador integral de Matrices, validador de scripts BD, suite .NET (304/304) y enlaces de documentación en verde.
+- **Remediación de Hallazgos SonarCloud No-SQL (2026-08-12)**:
+  - Frontend: Asignadas asociaciones explícitas `<label for="..." id="...">` en plantillas de Matrices de Riesgos (`matrices-riesgos-monitoreo-operativo`, `matrices-riesgos`, `matrices-riesgos-mitigacion`, `matrices-riesgos-gestion`).
+  - Instalación npm: Configurado `npm ci --ignore-scripts` en `frontend/rl-app/Dockerfile`, `quality-gates.yml` y `sonar-analysis.yml`.
+  - Docker Frontend: Configurada la pertenencia `root:root` con permisos `755` para los archivos estáticos en `/usr/share/nginx/html`, manteniendo el usuario no-root `nginx` (`uid=101`) y directorios temporales `/tmp/nginx`.
+  - Pruebas unitarias Angular (165/165), build, Playwright E2E (13/13), contenedor Docker y enlaces de documentación en verde.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 

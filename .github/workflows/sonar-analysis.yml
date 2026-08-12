@@ -71,7 +71,7 @@ jobs:
       - name: Install frontend dependencies
         if: steps.sonar-config.outputs.enabled == 'true'
         working-directory: frontend/rl-app
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Begin Sonar analysis
         if: steps.sonar-config.outputs.enabled == 'true'
