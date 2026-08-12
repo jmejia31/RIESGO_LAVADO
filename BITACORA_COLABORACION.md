@@ -1,5 +1,32 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 0: Revisión Técnica de Línea Base (Form Builder)
+
+- **Fecha y hora**: 2026-08-12, 15:04 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial / final**: `0105fc3`.
+- **Objetivo**: Ejecutar la Fase 0 (100% de sólo lectura) de revisión técnica de línea base para verificar el estado de Git, endpoints Backend, componentes Frontend, validadores de contratos y auditoría de base de datos Oracle antes de iniciar la construcción del Form Builder.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Verificación de Git y Ramas**:
+   - Confirmado que la rama actual `desarrollo` está sincronizada al 100% con `origin/desarrollo` (commit `0105fc3`). Arbol de trabajo completamente limpio.
+2. **Auditoría de Endpoints y Contratos Backend (.NET)**:
+   - Auditados `MatricesRiesgosController.cs`, `MatricesRiesgosAppService.cs` y `MatricesRiesgosRepository.cs`.
+   - Confirmados endpoints existentes para `POST /formularios/borrador`, `POST /formularios/{id}/clonar`, `PUT /formularios/{id}`, `POST /formularios/{id}/publicar`, `PUT /formularios/{id}/estado` y `DELETE /formularios/{id}`.
+   - Verificado validador `FormularioValidador.cs` para el esquema `secciones -> campos` y manejo de `VER_JSON` / `EVA_DATOS_JSON`.
+3. **Auditoría de Servicios y Componentes Frontend (Angular)**:
+   - Auditados `matrices-riesgos.service.ts` y `matrices-riesgos.component.ts`.
+4. **Verificación Estricta de Base de Datos Oracle**:
+   - Comprobada ausencia absoluta de modificaciones DDL o scripts `ALTER TABLE`.
+   - Ejecutado `validate_database_scripts.ps1`: Exitoso ("Validacion de base de datos correcta").
+5. **Ejecución de Pruebas**:
+   - `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore`: **313 pruebas superadas al 100% (0 errores)**.
+   - `npm test -- --watch=false`: 25 suites superadas. Se detectaron 2 desajustes leves de aserción en cadenas de texto de prueba (`matrices-riesgos.component.workflow.spec.ts`) que serán corregidos en la Fase 1.
+   - `git diff --check`: 0 alertas de espacio en blanco.
+
+---
+
 ## Registro de Intervención — Antigravity — Integración de 'Ver Definición' y CRUD Completo de Formularios por Familia
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
