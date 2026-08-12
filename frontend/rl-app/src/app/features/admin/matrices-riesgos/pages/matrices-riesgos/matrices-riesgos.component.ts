@@ -17,8 +17,8 @@ import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
-
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { recalcularFórmulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
@@ -357,7 +357,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   actualizarRespuesta(campo: CampoFormulario, valor: string | number | boolean | null): void {
-    this.respuestas.update(actuales => ({ ...actuales, [campo.clave]: valor }));
+    this.respuestas.update(actuales => {
+      const nuevas = { ...actuales, [campo.clave]: valor };
+      const todosLosCampos = this.secciones().flatMap(s => s.campos);
+      const { respuestasActualizadas } = recalcularFórmulasEvaluacion(todosLosCampos, nuevas);
+      return respuestasActualizadas;
+    });
   }
 
   valorRespuesta(campo: CampoFormulario): string | number | boolean | null {
@@ -399,13 +404,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.guardando.set(true);
     this.limpiarAlertas();
     const actual = this.evaluacionSeleccionada();
+
+    const todosLosCampos = this.secciones().flatMap(s => s.campos);
+    const { respuestasActualizadas, calculosJson } = recalcularFórmulasEvaluacion(todosLosCampos, this.respuestas());
+
     const dto: EvaluacionRiesgoDto = {
       evaId: actual?.evaId ?? 0,
       evaRiesgoId: this.riesgoId(),
       evaVersionId: version.verId,
       evaEstado: actual?.evaEstado ?? 'BORRADOR',
-      evaDataJson: JSON.stringify(this.respuestas()),
-      evaDataCalcJson: actual?.evaDataCalcJson ?? '{}',
+      evaDataJson: JSON.stringify(respuestasActualizadas),
+      evaDataCalcJson: JSON.stringify(calculosJson),
       evaVri: actual?.evaVri ?? null,
       evaVrr: actual?.evaVrr ?? null,
       evaFechaEval: actual?.evaFechaEval ?? new Date().toISOString(),
