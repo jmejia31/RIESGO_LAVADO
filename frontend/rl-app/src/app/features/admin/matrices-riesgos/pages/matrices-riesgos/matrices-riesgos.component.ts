@@ -35,7 +35,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR', 'ANALISTA_RIESGO']));
+  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
 
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
