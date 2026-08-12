@@ -1,5 +1,28 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Eliminación de new Function, Evaluador Seguro Shunting-Yard, Resolución de Ciclos y UTF-8 Estricto
+
+- **Fecha y hora**: 2026-08-12, 15:49 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `58a4885`.
+- **Commit final**: `bf2d8ab`.
+- **Objetivo**: Sustituir la evaluación dinámica `new Function` por un algoritmo de parseo seguro Shunting-Yard RPN (0 ejecuciones dinámicas), incorporar soporte para dependencias encadenadas entre fórmulas, agregar detección preventiva de ciclos de referencias circulares y limpiar cualquier mojibake restante en comentarios y especificaciones.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Evaluador Matemático Seguro Shunting-Yard RPN (`dynamic-formula-evaluator.util.ts`)**:
+   - Reemplazada completamente la llamada `new Function(...)` por un tokenizador y evaluador de pila RPN (Reverse Polish Notation) estricto. Soporta sumas, restas, multiplicaciones, divisiones y paréntesis sin riesgo de inyección.
+2. **Resolución de Dependencias Encadenadas y Detección de Ciclos**:
+   - `recalcularFormulasEvaluacion` resuelve dependencias multinivel (ej: Fórmula B que depende del resultado de Fórmula A) en múltiples pasadas deterministas.
+   - `evaluarFormulaCampo` rastrea `visitados: Set<string>` cancelando la evaluación y retornando error en caso de referencias circulares o autofórmulas.
+3. **Limpieza Completa UTF-8 y Pruebas Unitarias (`dynamic-formula-evaluator.util.spec.ts`)**:
+   - Eliminado todo el mojibake en utilidades, comentarios y especificaciones.
+   - **Resultado `npm test`**: **28 de 28 suites pasadas (176 de 176 pruebas unitarias 100% pasadas sin errores)**.
+   - **Resultado `npm run build`**: Compilación Angular limpia sin advertencias ni errores.
+   - Publicado en `origin/desarrollo` (Commit `bf2d8ab`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Motor de Cálculo Dinámico de Fórmulas y Normalización UTF-8
 
 - **Fecha y hora**: 2026-08-12, 15:43 (UTC-6).
