@@ -11,7 +11,13 @@
 
 @layer base {
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    scroll-behavior: smooth;
+  }
   body {
     font-family: 'Inter', system-ui, sans-serif;
     @apply text-gray-900 antialiased bg-gray-50;
