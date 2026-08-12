@@ -127,9 +127,37 @@ END;
 -- Nivel 3 (hojas) → Nivel 2 (transaccionales) → Nivel 1 (maestras)
 -- ============================================================
 DECLARE
+  FUNCTION nombre_tabla_prueba_permitido(p_table_name IN VARCHAR2) RETURN VARCHAR2 IS
+  BEGIN
+    IF p_table_name NOT IN (
+      'RL_MR_INTEGRACION_DNP', 'RL_MR_HISTORIAL', 'RL_MR_EVIDENCIAS',
+      'RL_MR_PLANES_ACCION', 'RL_MR_CONTROLES', 'RL_MR_RESULTADOS', 'RL_MR_DETALLE',
+      'RL_MR_MATRICES', 'RL_MR_CRITERIOS', 'RL_MR_ESCALAS', 'RL_MR_VARIABLES',
+      'RL_MR_FACTORES', 'RL_MR_MODELOS'
+    ) THEN
+      RAISE_APPLICATION_ERROR(-20095, 'Objeto de tabla no autorizado para retiro: ' || p_table_name);
+    END IF;
+
+    RETURN DBMS_ASSERT.SIMPLE_SQL_NAME(p_table_name);
+  END;
+
+  FUNCTION nombre_secuencia_prueba_permitido(p_seq_name IN VARCHAR2) RETURN VARCHAR2 IS
+  BEGIN
+    IF p_seq_name NOT IN (
+      'SEQ_RL_MR_INTEGRACION_DNP', 'SEQ_RL_MR_HISTORIAL', 'SEQ_RL_MR_EVIDENCIAS',
+      'SEQ_RL_MR_PLANES_ACCION', 'SEQ_RL_MR_RESULTADOS', 'SEQ_RL_MR_CONTROLES',
+      'SEQ_RL_MR_DETALLE', 'SEQ_RL_MR_MATRICES', 'SEQ_RL_MR_CRITERIOS',
+      'SEQ_RL_MR_ESCALAS', 'SEQ_RL_MR_VARIABLES', 'SEQ_RL_MR_FACTORES', 'SEQ_RL_MR_MODELOS'
+    ) THEN
+      RAISE_APPLICATION_ERROR(-20094, 'Objeto de secuencia no autorizado para retiro: ' || p_seq_name);
+    END IF;
+
+    RETURN DBMS_ASSERT.SIMPLE_SQL_NAME(p_seq_name);
+  END;
+
   PROCEDURE drop_table_if_exists(p_table_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_table_name) || ' CASCADE CONSTRAINTS';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_tabla_prueba_permitido(p_table_name) || ' CASCADE CONSTRAINTS';
     DBMS_OUTPUT.PUT_LINE('Tabla eliminada: ' || p_table_name);
   EXCEPTION
     WHEN OTHERS THEN
@@ -142,7 +170,7 @@ DECLARE
 
   PROCEDURE drop_sequence_if_exists(p_seq_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_seq_name);
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || nombre_secuencia_prueba_permitido(p_seq_name);
     DBMS_OUTPUT.PUT_LINE('Secuencia eliminada: ' || p_seq_name);
   EXCEPTION
     WHEN OTHERS THEN

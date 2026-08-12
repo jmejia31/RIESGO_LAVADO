@@ -40,23 +40,31 @@ END;
 
 DECLARE
   v_eliminadas NUMBER := 0;
+  FUNCTION nombre_respaldo_permitido(p_name IN VARCHAR2) RETURN VARCHAR2 IS
+  BEGIN
+  IF NOT REGEXP_LIKE(p_name, '^B10_0(0[1-9]|[1-3][0-9]|4[0-1])$')
+       AND p_name NOT IN ('BKP_F10_MAP', 'BKP_F10_SECUENCIAS') THEN
+      RAISE_APPLICATION_ERROR(-20204, 'Objeto de respaldo no autorizado para eliminar: ' || p_name);
+    END IF;
+
+    RETURN DBMS_ASSERT.SIMPLE_SQL_NAME(p_name);
+  END;
+
   PROCEDURE drop_table_if_exists(p_name VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || p_name || ' PURGE';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || nombre_respaldo_permitido(p_name) || ' PURGE';
     DBMS_OUTPUT.PUT_LINE('Tabla de respaldo eliminada: ' || p_name);
   EXCEPTION WHEN OTHERS THEN
-    IF SQLCODE <> -942 THEN
-      DBMS_OUTPUT.PUT_LINE('Error al eliminar ' || p_name || ': ' || SQLERRM);
-    END IF;
+    IF SQLCODE <> -942 THEN RAISE; END IF;
   END;
 BEGIN
   -- Eliminar respaldos B10_001 a B10_041, BKP_F10_MAP y BKP_F10_SECUENCIAS
   FOR t IN (
     SELECT TABLE_NAME
       FROM USER_TABLES
-     WHERE TABLE_NAME LIKE 'B10_%'
+    WHERE REGEXP_LIKE(TABLE_NAME, '^B10_0(0[1-9]|[1-3][0-9]|4[0-1])$')
         OR TABLE_NAME IN ('BKP_F10_MAP', 'BKP_F10_SECUENCIAS')
-     ORDER BY TABLE_NAME
+     ORDER BY TABLE_NAME ASC
   ) LOOP
     drop_table_if_exists(t.TABLE_NAME);
     v_eliminadas := v_eliminadas + 1;

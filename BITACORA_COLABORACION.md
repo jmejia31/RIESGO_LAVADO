@@ -1,5 +1,37 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Endurecimiento de retiros SQL y accesibilidad de Matrices
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `82844f9`.
+- **Objetivo**: Corregir defectos reales reportados por SonarCloud sin suprimir reglas, sin ejecutar Oracle y sin modificar `main` ni el PR #20.
+
+### Cambios ejecutados
+1. **Retiro controlado**: `00_retiro_controlado_modelo_prueba.sql` ahora usa listas cerradas de las 13 tablas y 13 secuencias históricas permitidas, además de `DBMS_ASSERT.SIMPLE_SQL_NAME`, antes de construir cualquier `DROP` dinámico.
+2. **Limpieza B10**: `09_limpieza_tablas_respaldo_b10.sql` limita sus candidatos exactamente a `B10_001`–`B10_041`, `BKP_F10_MAP` y `BKP_F10_SECUENCIAS`; valida cada nombre con lista cerrada y propaga cualquier error distinto de objeto inexistente. No se ejecutó el script ni se eliminó ninguna tabla.
+3. **Frontend accesible**: `matrices-riesgos.component.html` usa un `<dl>` por métrica y añade etiquetas asociadas a estado, motivo de transición, archivo de evidencia y definición técnica.
+4. **ESLint reproducible**: el comando `lint` analiza solamente código mantenido (`src`, `e2e`, `scripts`) y no archivos generados en `.angular/cache`; no se deshabilitó ninguna regla ni se alteró la configuración de reglas.
+
+### Verificaciones ejecutadas
+
+- `git diff --check`: correcto.
+- `tools/validate_database_scripts.ps1`: correcto (19 scripts raíz, 16 alcanzables).
+- `validate_matrices_dynamic_ddl_alignment.ps1`: correcto (96 archivos de módulo, 270 de seguridad).
+- `npm run lint --prefix frontend/rl-app`: correcto.
+- `npm test -- --watch=false`: correcto (exit code 0).
+- `npm run build`: correcto; mantiene una advertencia preexistente de dependencia CommonJS `exceljs`.
+- `npm run e2e`: 13/13 correctas.
+
+### Restricciones y pendiente
+
+- No se conectó ni ejecutó Oracle; no hubo DDL/DML real ni cambios a `B10_*`.
+- No se modificó `main` ni se fusionó/cerró el PR #20.
+- La calificación SonarCloud solo podrá verificarse tras el siguiente análisis remoto del mismo commit; la detección residual sobre DDL fijo o dinámico con validación cerrada debe revisarse como hallazgo del escáner, no ocultarse con `NOSONAR`.
+
+---
+
 ## Registro de Intervención — Antigravity — Remediación de Hallazgos SonarCloud de Scripts Oracle (DBMS_ASSERT y ORDER BY ASC)
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

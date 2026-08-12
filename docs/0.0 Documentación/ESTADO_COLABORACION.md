@@ -263,6 +263,12 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Aplicado `DBMS_ASSERT.SIMPLE_SQL_NAME` a `drop_table_if_exists` y `drop_sequence_if_exists` en `06_reconstruir_modelo_17_tablas.sql`.
   - Agregada direccionalidad `ASC` explícita a cláusulas `ORDER BY` en scripts `05_ajustes_dashboard_seguridad_reportes.sql`, `07_preflight_inventario_oracle_solo_lectura.sql` y `08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`.
   - Validadores de base de datos, alineación dinámicos de Matrices (96 archivos) y enlaces de documentación en verde.
+- **Endurecimiento pendiente SonarCloud (2026-08-12)**:
+  - `00_retiro_controlado_modelo_prueba.sql` ahora exige lista cerrada + `DBMS_ASSERT.SIMPLE_SQL_NAME` para cada tabla o secuencia histórica antes de `DROP` dinámico.
+  - `09_limpieza_tablas_respaldo_b10.sql` solo puede seleccionar `B10_001`–`B10_041`, `BKP_F10_MAP` y `BKP_F10_SECUENCIAS`; cualquier otro nombre o error no esperado aborta.
+  - `matrices-riesgos.component.html` corrigió agrupación semántica de métricas y etiquetas accesibles; el script `npm run lint` dejó de inspeccionar caché generada, manteniendo intactas sus reglas.
+  - Validado localmente: scripts BD, contrato dinámico de Matrices, ESLint, unitarias Angular, build y Playwright 13/13. El build conserva una advertencia no bloqueante de `exceljs` CommonJS.
+  - Pendiente: verificar el nuevo análisis SonarCloud remoto sobre el commit publicado; no se aplicarán exclusiones ni `NOSONAR` para alterar la calificación.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 
