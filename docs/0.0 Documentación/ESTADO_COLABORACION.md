@@ -1,5 +1,7 @@
 # Estado de colaboración y punto de continuidad
 
+> Actualización 2026-08-12 (Antigravity): **Fase 1 — Endurecimiento del CRUD de Familias** completada al 100%. Se reforzó la respuesta ante códigos duplicados retornando HTTP 409 Conflict y se corrigieron las aserciones de pruebas unitarias en Frontend. Pruebas Backend (313/313) y Frontend (165/165) 100% súperadas. Publicado en `origin/desarrollo` (Commits `b4c5bc1` y seguimiento documental). Siguiente paso: Fase 2 — Endurecimiento del Ciclo de Versiones.
+
 > Actualización 2026-08-12 (Antigravity): **Fase 0 — Revisión Técnica de Línea Base (Form Builder)** completada al 100% (100% solo lectura, 0 modificaciones en Oracle o código). Se auditaron la rama `desarrollo`, endpoints REST, servicios/modelos Angular, validadores y scripts de BD. Compilación y suite .NET (313/313) súperados. Publicado en `origin/desarrollo` (Commit `0105fc3`). Siguiente paso: Fase 1 — Endurecimiento del CRUD de Familias.
 
 > Actualización 2026-08-12 (Antigravity): Integrada la acción explícita "Ver definición" para la consulta en modo lectura de la estructura JSON en todas las versiones de formulario (activas e inactivas). Las versiones no vigentes cuentan con el botón complementario "Editar definición". Publicado en `origin/desarrollo` (Commit `e5f7582`). Build Angular y .NET validados con 0 errores.

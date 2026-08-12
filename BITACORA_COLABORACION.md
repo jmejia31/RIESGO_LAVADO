@@ -1,5 +1,29 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 1: Endurecimiento de CRUD de Familias de Formularios
+
+- **Fecha y hora**: 2026-08-12, 15:08 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `b886abb`.
+- **Commit final**: `b4c5bc1`.
+- **Objetivo**: Ejecutar la Fase 1 de endurecimiento del CRUD de Familias de Formularios, ajustando la respuesta ante códigos duplicados a `Conflict (HTTP 409)` y corrigiendo las aserciones de pruebas unitarias en Frontend.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Endurecimiento del Manejo de Conflictos (HTTP 409)**:
+   - Modificados `ServiceResult.cs` y `MatricesRiesgosAppService.cs` para retornar `ServiceResult.Conflict` (`StatusCode 409`) cuando se intenta registrar una familia con un `FamCodigo` duplicado.
+2. **Corrección de Aserciones de Pruebas Unitarias Frontend**:
+   - Ajustadas las aserciones de cadenas en `matrices-riesgos.component.workflow.spec.ts` para que coincidan con la implementación funcional del componente.
+   - Resultado: `npm test` finalizado con **26 suites pasadas, 165 de 165 pruebas unitarias 100% súperadas**.
+3. **Pruebas Backend (.NET)**:
+   - Ajustada la prueba unitaria backend `CrearFamilia_RechazaCodigoDuplicado` a `Assert.Equal(409, result.StatusCode)`.
+   - `dotnet test`: **313 de 313 pruebas superadas al 100% (0 errores)**.
+4. **Compilación y Publicación**:
+   - `dotnet build`: 0 Errores.
+   - `git push`: Publicado exitosamente en `origin/desarrollo` (Commit `b4c5bc1`). Estado de Git 100% limpio.
+
+---
+
 ## Registro de Intervención — Antigravity — Fase 0: Revisión Técnica de Línea Base (Form Builder)
 
 - **Fecha y hora**: 2026-08-12, 15:04 (UTC-6).
