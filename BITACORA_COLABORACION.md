@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Optimización de Mantenibilidad en Scripts de Validación Fase 11
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `e5c0ada`.
+- **Objetivo**: Elevar la calificación de mantenibilidad SonarCloud de los scripts de validación de solo lectura en `database/19_matrices_riesgos/fase11/` (`02_validar_semillas_bloque1_solo_lectura.sql`, `03_validar_gestion_riesgos_bloque2_solo_lectura.sql`, `05_validar_mitigacion_bloque4_solo_lectura.sql`, `06_validar_alertas_automonitoreo_bloque5_solo_lectura.sql`).
+
+### Cambios Ejecutados
+1. **Estructura y Direccionalidad SQL**:
+   - Agregada la direccionalidad `ORDER BY ... ASC` explícita en consultas `UNION ALL` y ordenamientos de listas de validación en los scripts de Fase 11 (`02`, `03`, `05` y `06`), satisfaciendo la regla de mantenibilidad SonarCloud `plsql:S5939` sin alterar las invariantes de prueba ni la estructura física Oracle.
+2. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA** (96 archivos del módulo).
+   - `validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz, 16 alcanzables).
+   - `tools/validate_documentation_links.ps1`: **71 DOCUMENTOS / 163 ENLACES VÁLIDOS**.
+   - `git diff --check`: Correcto sin advertencias de formato.
+3. **Control de Gobernanza y Restricciones**:
+   - `main` permanece intacta. PR #20 continúa abierto en estado Draft.
+   - Respaldo SQL local `Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql` conservado intacto sin staging.
+
+---
+
 ## Registro de Intervención — Antigravity — Clasificación Integral de Deuda Técnica y Verificación SonarCloud (~150 Problemas)
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
