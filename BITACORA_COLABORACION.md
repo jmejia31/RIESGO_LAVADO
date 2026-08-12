@@ -1,5 +1,24 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Restricción Estricta de Rol Administrador para Edición JSON Técnico
+
+- **Fecha y hora**: 2026-08-12, 15:33 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `3d35971`.
+- **Commit final**: `b18e99c`.
+- **Objetivo**: Retirar el rol `ANALISTA_RIESGO` del cálculo `esAdministrador` en `MatricesRiesgosComponent`, garantizando que la visualización y edición del JSON técnico avanzado quede reservada exclusivamente para los roles de administración `ADMIN` y `ADMINISTRADOR`.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Política Estricta de Rol (`MatricesRiesgosComponent.ts`)**:
+   - Ajustada la expresión a `esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']))`.
+2. **Pruebas y Verificación Integral**:
+   - `npm run build`: Compilación Angular **100% limpia sin errores**.
+   - `npm test`: **27 de 27 suites y 171 de 171 pruebas unitarias súperadas al 100% (reproducción fresca y limpia efectuada)**.
+   - Publicado en `origin/desarrollo` (Commit `b18e99c`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Reparación de Permiso esAdministrador Predeterminado y Enlace AuthService
 
 - **Fecha y hora**: 2026-08-12, 15:30 (UTC-6).
