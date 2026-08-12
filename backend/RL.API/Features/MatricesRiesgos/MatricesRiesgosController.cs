@@ -32,7 +32,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     // ============================================================
-    // 1. ADMINISTRACIÓN DEL CICLO DE VIDA DEL FORMULARIO
+    // 1. ADMINISTRACIÓN DEL CICLO DE VIDA DEL FORMULARIO Y FAMILIAS
     // ============================================================
 
     [HttpPost("formularios/borrador")]
@@ -127,6 +127,23 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpDelete("formularios/{id:long}")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Eliminación de versión de formulario")]
+    public async Task<IActionResult> EliminarVersionFormulario(long id)
+    {
+        try
+        {
+            var result = await _service.EliminarVersionFormularioAsync(id);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar versión de formulario ID {Id}", id);
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("formularios/historial")]
     public async Task<IActionResult> ListarHistorialVersionesFormulario([FromQuery] string familiaCodigo)
     {
@@ -142,10 +159,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    // ============================================================
-    // 2. EVALUACIONES E HISTORIAL
-    // ============================================================
-
     [HttpGet("formulario/version-vigente")]
     public async Task<IActionResult> ObtenerVersionVigenteFormulario([FromQuery] string familiaCodigo = "MATRIZ_RIESGOS_LAFT")
     {
@@ -160,6 +173,91 @@ public sealed class MatricesRiesgosController : ControllerBase
             return Error500(ex);
         }
     }
+
+    [HttpGet("familias")]
+    public async Task<IActionResult> ListarFamiliasFormulario()
+    {
+        try
+        {
+            var result = await _service.ListarFamiliasFormularioAsync();
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al listar las familias de formulario.");
+            return Error500(ex);
+        }
+    }
+
+    [HttpGet("familias/{id:long}")]
+    public async Task<IActionResult> ObtenerFamiliaFormularioPorId(long id)
+    {
+        try
+        {
+            var result = await _service.ObtenerFamiliaFormularioPorIdAsync(id);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener la familia de formulario ID {Id}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPost("familias")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Creación de familia de formulario")]
+    public async Task<IActionResult> CrearFamiliaFormulario([FromBody] CrearFamiliaFormularioDto dto)
+    {
+        try
+        {
+            var result = await _service.CrearFamiliaFormularioAsync(dto);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al crear la familia de formulario.");
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("familias/{id:long}")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Actualización de familia de formulario")]
+    public async Task<IActionResult> ActualizarFamiliaFormulario(long id, [FromBody] ActualizarFamiliaFormularioDto dto)
+    {
+        try
+        {
+            var result = await _service.ActualizarFamiliaFormularioAsync(id, dto);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar la familia de formulario ID {Id}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("familias/{id:long}/desactivar")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Desactivación atómica de familia de formulario")]
+    public async Task<IActionResult> DesactivarFamiliaFormulario(long id)
+    {
+        try
+        {
+            var result = await _service.DesactivarFamiliaFormularioAsync(id);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al desactivar la familia de formulario ID {Id}", id);
+            return Error500(ex);
+        }
+    }
+
+    // ============================================================
+    // 2. EVALUACIONES E HISTORIAL
+    // ============================================================
 
     [HttpGet("evaluaciones/{id:long}")]
     public async Task<IActionResult> ObtenerEvaluacion(long id)

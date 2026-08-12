@@ -21,6 +21,29 @@ export interface VersionFormularioDto {
   verUsrCreacion: number;
 }
 
+export interface FamiliaFormularioDto {
+  famId: number;
+  famCodigo: string;
+  famNombre: string;
+  famDescripcion?: string | null;
+  famActivo: boolean;
+  famFechaCreacion: string;
+  totalVersiones: number;
+  tieneVersionVigente: boolean;
+}
+
+export interface CrearFamiliaFormularioDto {
+  famCodigo: string;
+  famNombre: string;
+  famDescripcion?: string | null;
+}
+
+export interface ActualizarFamiliaFormularioDto {
+  famNombre: string;
+  famDescripcion?: string | null;
+  famActivo: boolean;
+}
+
 export interface CampoFormulario {
   campoCanonicoId?: number | null;
   clave: string;

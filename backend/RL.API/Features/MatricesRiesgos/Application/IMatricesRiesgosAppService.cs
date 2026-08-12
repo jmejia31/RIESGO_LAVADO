@@ -15,7 +15,14 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> ActualizarBorradorFormularioAsync(long versionId, string jsonConfig, long usuarioId);
     Task<ServiceResult> PublicarVersionFormularioAsync(long versionId, long usuarioId);
     Task<ServiceResult> CambiarEstadoVigenciaFormularioAsync(long versionId, bool vigente, long usuarioId);
+    Task<ServiceResult> EliminarVersionFormularioAsync(long versionId);
     Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
+
+    Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync();
+    Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId);
+    Task<ServiceResult<long>> CrearFamiliaFormularioAsync(CrearFamiliaFormularioDto dto);
+    Task<ServiceResult> ActualizarFamiliaFormularioAsync(long famId, ActualizarFamiliaFormularioDto dto);
+    Task<ServiceResult> DesactivarFamiliaFormularioAsync(long famId);
 
     Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId);
     Task<ServiceResult<List<EvaluacionRiesgoDto>>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);

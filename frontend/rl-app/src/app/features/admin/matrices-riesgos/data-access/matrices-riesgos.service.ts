@@ -4,10 +4,13 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CONFIRMACION_CAMBIOS_HEADER } from '../../../../core/interceptors/confirmacion-cambios.interceptor';
 import {
+  ActualizarFamiliaFormularioDto,
   ConsultaEvaluacionPaginadaDto,
+  CrearFamiliaFormularioDto,
   EvidenciaDto,
   EvidenciaPoliticaDto,
   EvaluacionRiesgoDto,
+  FamiliaFormularioDto,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
   RiesgoReporteFila,
@@ -59,6 +62,36 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<RiesgoReporteFila[]>>(`${this.apiUrl}/consolidado`)
       .pipe(map(response => response.datos));
+  }
+
+  listarFamiliasFormulario(): Observable<FamiliaFormularioDto[]> {
+    return this.http
+      .get<ApiResponse<FamiliaFormularioDto[]>>(`${this.apiUrl}/familias`)
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerFamiliaFormularioPorId(id: number): Observable<FamiliaFormularioDto> {
+    return this.http
+      .get<ApiResponse<FamiliaFormularioDto>>(`${this.apiUrl}/familias/${id}`)
+      .pipe(map(response => response.datos));
+  }
+
+  crearFamiliaFormulario(dto: CrearFamiliaFormularioDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/familias`, dto, this.confirmadoJson)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarFamiliaFormulario(id: number, dto: ActualizarFamiliaFormularioDto): Observable<boolean> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}`, dto, this.confirmadoJson)
+      .pipe(map(response => response.success));
+  }
+
+  desactivarFamiliaFormulario(id: number): Observable<boolean> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/desactivar`, {}, this.confirmado)
+      .pipe(map(response => response.success));
   }
 
   obtenerVersionVigenteFormulario(
@@ -126,6 +159,13 @@ export class MatricesRiesgosService {
       `${this.apiUrl}/formularios/${id}/estado`,
       {},
       { params, ...this.confirmado }
+    );
+  }
+
+  eliminarVersionFormulario(id: number): Observable<ApiMessage> {
+    return this.http.delete<ApiMessage>(
+      `${this.apiUrl}/formularios/${id}`,
+      this.confirmado
     );
   }
 

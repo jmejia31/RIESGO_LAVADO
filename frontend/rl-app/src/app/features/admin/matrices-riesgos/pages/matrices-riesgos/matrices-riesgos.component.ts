@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -6,6 +6,7 @@ import {
   CampoFormulario,
   DefinicionFormularioEditable,
   EvaluacionRiesgoDto,
+  FamiliaFormularioDto,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
   RespuestasFormulario,
@@ -13,6 +14,7 @@ import {
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
 import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
@@ -23,18 +25,35 @@ type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
   templateUrl: './matrices-riesgos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MatricesRiesgosComponent implements OnInit {
+export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
+  private readonly globalState = inject(GlobalHttpStateService);
+  private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
+  readonly errorModal = signal<string | null>(null);
 
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
+  readonly familias = signal<FamiliaFormularioDto[]>([]);
+  readonly familiaSeleccionada = signal<string>('MATRIZ_RIESGOS_LAFT');
+  readonly modalFamiliaAbierto = signal<boolean>(false);
+  readonly modoEdicionFamilia = signal<boolean>(false);
+  familiaIdEditando = 0;
+  nuevaFamiliaCodigo = '';
+  nuevaFamiliaNombre = '';
+  nuevaFamiliaDescripcion = '';
+  nuevaFamiliaActivo = true;
+
+  readonly modalFormularioAbierto = signal<boolean>(false);
+  nuevoFormularioCodigo = '';
+  nuevoFormularioNombre = '';
+
   readonly riesgos = signal<RiesgoDto[]>([]);
   readonly evaluaciones = signal<EvaluacionRiesgoDto[]>([]);
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
@@ -56,12 +75,20 @@ export class MatricesRiesgosComponent implements OnInit {
   definicionTecnica = '';
 
   readonly secciones = computed(() => {
+    const versionVigente = this.versionVigente();
+    if (versionVigente?.verJson) {
+      const def = this.extraerDefinicionVersion(versionVigente);
+      if (def.secciones.length > 0) {
+        return def.secciones.sort((a, b) => a.orden - b.orden);
+      }
+    }
+
     const metodologia = this.metodologia();
     if (metodologia?.secciones?.length) {
       return [...metodologia.secciones].sort((a, b) => a.orden - b.orden);
     }
 
-    return this.extraerDefinicionVersion(this.versionVigente()).secciones;
+    return [];
   });
 
   readonly totalCampos = computed(() =>
@@ -89,17 +116,159 @@ export class MatricesRiesgosComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.cargarFamilias();
     this.cargarRiesgos();
     this.cargarModulo();
   }
 
+  ngOnDestroy(): void {
+    this.limpiarAutoDismiss();
+  }
+
   seleccionarTab(tab: TabMatrices): void {
     this.tab.set(tab);
-    this.error.set(null);
-    this.mensaje.set(null);
+    this.limpiarAlertas();
+    this.globalState.limpiarError();
 
     if (tab === 'consolidado') this.cargarConsolidado();
-    if (tab === 'plantillas') this.cargarVersiones();
+    if (tab === 'plantillas') {
+      this.cargarFamilias();
+      this.cargarVersiones();
+    }
+  }
+
+  cargarFamilias(): void {
+    if (typeof this.service.listarFamiliasFormulario !== 'function') {
+      this.familias.set([]);
+      return;
+    }
+
+    this.service.listarFamiliasFormulario().subscribe({
+      next: familias => {
+        this.familias.set(familias);
+        if (familias.length > 0 && !familias.some(f => f.famCodigo === this.familiaSeleccionada())) {
+          const activa = familias.find(f => f.famActivo);
+          if (activa) {
+            this.familiaSeleccionada.set(activa.famCodigo);
+          }
+        }
+      },
+      error: () => this.familias.set([])
+    });
+  }
+
+  seleccionarFamilia(codigo: string): void {
+    this.familiaSeleccionada.set(codigo);
+    this.cargarVersiones();
+    this.cargarVersionVigentePorFamilia(codigo);
+  }
+
+  abrirModalCrearFamilia(): void {
+    this.modoEdicionFamilia.set(false);
+    this.familiaIdEditando = 0;
+    this.nuevaFamiliaCodigo = '';
+    this.nuevaFamiliaNombre = '';
+    this.nuevaFamiliaDescripcion = '';
+    this.nuevaFamiliaActivo = true;
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+    this.modalFamiliaAbierto.set(true);
+  }
+
+  abrirModalEditarFamilia(fam: FamiliaFormularioDto): void {
+    this.modoEdicionFamilia.set(true);
+    this.familiaIdEditando = fam.famId;
+    this.nuevaFamiliaCodigo = fam.famCodigo;
+    this.nuevaFamiliaNombre = fam.famNombre;
+    this.nuevaFamiliaDescripcion = fam.famDescripcion ?? '';
+    this.nuevaFamiliaActivo = fam.famActivo;
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+    this.modalFamiliaAbierto.set(true);
+  }
+
+  cerrarModalFamilia(): void {
+    this.modalFamiliaAbierto.set(false);
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+  }
+
+  guardarFamilia(): void {
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+
+    if (this.modoEdicionFamilia()) {
+      this.guardando.set(true);
+      this.service.actualizarFamiliaFormulario(this.familiaIdEditando, {
+        famNombre: this.nuevaFamiliaNombre,
+        famDescripcion: this.nuevaFamiliaDescripcion,
+        famActivo: this.nuevaFamiliaActivo
+      }).subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.modalFamiliaAbierto.set(false);
+          this.errorModal.set(null);
+          this.globalState.limpiarError();
+          this.mostrarMensaje(`Familia «${this.nuevaFamiliaNombre}» actualizada correctamente.`);
+          this.cargarFamilias();
+        },
+        error: error => {
+          this.guardando.set(false);
+          this.globalState.limpiarError();
+          this.errorModal.set(this.obtenerMensajeError(error, 'No se pudo actualizar la familia. Verifique los datos e intente nuevamente.'));
+        }
+      });
+    } else {
+      this.guardando.set(true);
+      this.service.crearFamiliaFormulario({
+        famCodigo: this.nuevaFamiliaCodigo,
+        famNombre: this.nuevaFamiliaNombre,
+        famDescripcion: this.nuevaFamiliaDescripcion
+      }).subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.modalFamiliaAbierto.set(false);
+          this.errorModal.set(null);
+          this.globalState.limpiarError();
+          this.mostrarMensaje(`Familia «${this.nuevaFamiliaNombre}» creada correctamente.`);
+          this.cargarFamilias();
+        },
+        error: error => {
+          this.guardando.set(false);
+          this.globalState.limpiarError();
+          this.errorModal.set(this.obtenerMensajeError(error, 'No se pudo crear la familia. Verifique el código y los datos ingresados.'));
+        }
+      });
+    }
+  }
+
+  desactivarFamilia(fam: FamiliaFormularioDto): void {
+    this.guardando.set(true);
+    this.limpiarAlertas();
+    this.service.desactivarFamiliaFormulario(fam.famId).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje(`Familia «${fam.famCodigo}» desactivada correctamente.`);
+        this.cargarFamilias();
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo desactivar la familia. Verifique que no tenga versiones vigentes.'));
+      }
+    });
+  }
+
+  cargarVersiones(): void {
+    this.cargando.set(true);
+    const codigo = this.familiaSeleccionada() || 'MATRIZ_RIESGOS_LAFT';
+    this.service.listarHistorialVersionesFormulario(codigo).subscribe({
+      next: versiones => {
+        this.versiones.set(versiones);
+        this.cargando.set(false);
+      },
+      error: error => this.finalizarConError(error, 'No se pudo cargar el historial de formularios.')
+    });
   }
 
   cargarModulo(): void {
@@ -163,7 +332,7 @@ export class MatricesRiesgosComponent implements OnInit {
   }
 
   descargarConsolidado(formato: 'excel' | 'pdf'): void {
-    this.error.set(null);
+    this.limpiarAlertas();
     const solicitud = formato === 'excel'
       ? this.service.descargarConsolidadoExcel()
       : this.service.descargarConsolidadoPdf();
@@ -177,18 +346,7 @@ export class MatricesRiesgosComponent implements OnInit {
         enlace.click();
         URL.revokeObjectURL(url);
       },
-      error: error => this.error.set(this.obtenerMensajeError(error, `No se pudo generar el reporte ${formato.toUpperCase()}.`))
-    });
-  }
-
-  cargarVersiones(): void {
-    this.cargando.set(true);
-    this.service.listarHistorialVersionesFormulario().subscribe({
-      next: versiones => {
-        this.versiones.set(versiones);
-        this.cargando.set(false);
-      },
-      error: error => this.finalizarConError(error, 'No se pudo cargar el historial de formularios.')
+      error: error => this.mostrarError(this.obtenerMensajeError(error, `No se pudo generar el reporte ${formato.toUpperCase()}.`))
     });
   }
 
@@ -228,12 +386,12 @@ export class MatricesRiesgosComponent implements OnInit {
   guardarEvaluacion(): void {
     const version = this.versionVigente();
     if (!version || !this.puedeGuardar()) {
-      this.error.set('Complete el riesgo y todos los campos obligatorios antes de guardar.');
+      this.mostrarError('Complete el riesgo y todos los campos obligatorios antes de guardar.');
       return;
     }
 
     this.guardando.set(true);
-    this.error.set(null);
+    this.limpiarAlertas();
     const actual = this.evaluacionSeleccionada();
     const dto: EvaluacionRiesgoDto = {
       evaId: actual?.evaId ?? 0,
@@ -256,36 +414,39 @@ export class MatricesRiesgosComponent implements OnInit {
 
     solicitud.subscribe({
       next: () => {
-        this.mensaje.set(actual ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
         this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje(actual ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
         this.tab.set('evaluaciones');
         this.cargarEvaluaciones();
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo guardar la evaluación.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo guardar la evaluación. Verifique los datos e intente nuevamente.'));
       }
     });
   }
 
   transicionarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
+    this.limpiarAlertas();
     if (!this.nuevoEstado.trim()) {
-      this.error.set('Seleccione un estado de destino.');
+      this.mostrarError('Seleccione un estado de destino para la transición.');
       return;
     }
 
     this.guardando.set(true);
     this.service.transicionarEvaluacion(evaluacion.evaId, this.nuevoEstado, this.motivoTransicion).subscribe({
       next: () => {
-        this.mensaje.set('Estado actualizado correctamente.');
         this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Estado de evaluación actualizado correctamente.');
         this.motivoTransicion = '';
         this.cargarEvaluaciones();
         this.cargarFlujos(evaluacion.evaId);
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo realizar la transición.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo realizar la transición de estado.'));
       }
     });
   }
@@ -304,11 +465,12 @@ export class MatricesRiesgosComponent implements OnInit {
 
   cargarYVincularEvidencia(evaluacion: EvaluacionRiesgoDto): void {
     if (!this.archivoEvidencia) {
-      this.error.set('Seleccione un archivo de evidencia.');
+      this.mostrarError('Seleccione un archivo de evidencia antes de continuar.');
       return;
     }
 
     this.guardando.set(true);
+    this.limpiarAlertas();
     this.service.cargarEvidencia(this.archivoEvidencia).subscribe({
       next: evidencia => {
         this.service.vincularEvidencia({
@@ -319,18 +481,19 @@ export class MatricesRiesgosComponent implements OnInit {
           next: () => {
             this.archivoEvidencia = null;
             this.guardando.set(false);
-            this.mensaje.set('Evidencia cargada y vinculada correctamente.');
+            this.globalState.limpiarError();
+            this.mostrarMensaje('Evidencia cargada y vinculada correctamente.');
           },
           error: error => {
             this.service.eliminarEvidenciaHuerfana(evidencia.eviId).subscribe();
             this.guardando.set(false);
-            this.error.set(this.obtenerMensajeError(error, 'No se pudo vincular la evidencia.'));
+            this.mostrarError(this.obtenerMensajeError(error, 'No se pudo vincular la evidencia al expediente.'));
           }
         });
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo cargar la evidencia.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo cargar el archivo de evidencia.'));
       }
     });
   }
@@ -340,12 +503,13 @@ export class MatricesRiesgosComponent implements OnInit {
     this.service.clonarVersionFormulario(version.verId).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set('Versión clonada como borrador.');
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Versión clonada como borrador exitosamente.');
         this.cargarVersiones();
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo clonar la versión.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo clonar la versión del formulario.'));
       }
     });
   }
@@ -363,7 +527,7 @@ export class MatricesRiesgosComponent implements OnInit {
       JSON.parse(this.definicionTecnica);
     } catch (error) {
       const detalle = error instanceof SyntaxError ? error.message : '';
-      this.error.set(`La definición JSON no es válida${detalle ? `: ${detalle}` : '.'}`);
+      this.mostrarError(`La definición JSON no es válida${detalle ? `: ${detalle}` : '.'}`);
       return;
     }
 
@@ -372,12 +536,13 @@ export class MatricesRiesgosComponent implements OnInit {
       next: () => {
         this.guardando.set(false);
         this.versionEditando.set(null);
-        this.mensaje.set('Definición del formulario actualizada.');
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Definición del formulario actualizada correctamente.');
         this.cargarVersiones();
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo actualizar la definición.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la definición del formulario.'));
       }
     });
   }
@@ -387,13 +552,150 @@ export class MatricesRiesgosComponent implements OnInit {
     this.service.publicarVersionFormulario(version.verId).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.mensaje.set('Versión publicada correctamente.');
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Versión publicada correctamente.');
         this.cargarVersiones();
-        this.cargarModulo();
+        this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
       },
       error: error => {
         this.guardando.set(false);
-        this.error.set(this.obtenerMensajeError(error, 'No se pudo publicar la versión.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
+      }
+    });
+  }
+
+  cambiarVigenciaVersion(version: VersionFormularioDto, vigente: boolean): void {
+    this.guardando.set(true);
+    this.service.cambiarVigenciaFormulario(version.verId, vigente).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje(vigente ? 'Versión establecida como activa exitosamente.' : 'Versión desactivada.');
+        this.cargarVersiones();
+        this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la vigencia de la versión.'));
+      }
+    });
+  }
+
+  eliminarVersionFormulario(version: VersionFormularioDto): void {
+    if (version.verVigente) {
+      this.mostrarError('No se puede eliminar el formulario activo de la familia.');
+      return;
+    }
+
+    if (!confirm(`¿Está seguro de eliminar permanentemente la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`)) {
+      return;
+    }
+
+    this.guardando.set(true);
+    this.service.eliminarVersionFormulario(version.verId).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
+        this.cargarVersiones();
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo eliminar la versión del formulario.'));
+      }
+    });
+  }
+
+  abrirModalCrearFormulario(): void {
+    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
+    this.nuevoFormularioCodigo = famObj?.famCodigo || 'MATRIZ_NUEVA';
+    this.nuevoFormularioNombre = famObj?.famNombre || 'Nueva Matriz de Riesgos';
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+    this.modalFormularioAbierto.set(true);
+  }
+
+  cerrarModalFormulario(): void {
+    this.modalFormularioAbierto.set(false);
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+  }
+
+  guardarNuevoFormulario(): void {
+    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
+    if (!famObj) {
+      this.errorModal.set('Seleccione una familia válida para crear el formulario.');
+      return;
+    }
+
+    const plantillaBase = {
+      codigoFormulario: this.nuevoFormularioCodigo.trim().toUpperCase(),
+      nombreFormulario: this.nuevoFormularioNombre.trim(),
+      version: "1.0",
+      secciones: [
+        {
+          id: "identificacion",
+          clave: "identificacion",
+          titulo: "Identificación del riesgo",
+          orden: 1,
+          campos: [
+            {
+              id: "area_principal",
+              clave: "area_principal",
+              etiqueta: "Área principal",
+              tipo: "texto",
+              obligatorio: true,
+              soloLectura: false
+            },
+            {
+              id: "dueno_riesgo",
+              clave: "dueno_riesgo",
+              etiqueta: "Dueño del riesgo",
+              tipo: "texto",
+              obligatorio: true,
+              soloLectura: false
+            }
+          ]
+        }
+      ],
+      catalogos: [],
+      reglas: []
+    };
+
+    this.guardando.set(true);
+    this.errorModal.set(null);
+    this.globalState.limpiarError();
+
+    this.service.crearBorradorFormulario(
+      famObj.famId,
+      this.nuevoFormularioCodigo.trim().toUpperCase(),
+      JSON.stringify(plantillaBase)
+    ).subscribe({
+      next: verId => {
+        this.guardando.set(false);
+        this.modalFormularioAbierto.set(false);
+        this.errorModal.set(null);
+        this.globalState.limpiarError();
+        this.mostrarMensaje(`Formulario borrador creado exitosamente con ID #${verId}.`);
+        this.cargarVersiones();
+      },
+      error: error => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.errorModal.set(this.obtenerMensajeError(error, 'No se pudo crear el borrador del formulario.'));
+      }
+    });
+  }
+
+  cargarVersionVigentePorFamilia(familiaCodigo: string): void {
+    this.service.obtenerVersionVigenteFormulario(familiaCodigo).subscribe({
+      next: version => {
+        this.versionVigente.set(version);
+        this.inicializarRespuestas();
+      },
+      error: () => {
+        this.versionVigente.set(null);
+        this.globalState.limpiarError();
       }
     });
   }
@@ -455,7 +757,41 @@ export class MatricesRiesgosComponent implements OnInit {
 
   private finalizarConError(error: unknown, mensaje: string): void {
     this.cargando.set(false);
-    this.error.set(this.obtenerMensajeError(error, mensaje));
+    this.mostrarError(this.obtenerMensajeError(error, mensaje));
+  }
+
+  private mostrarMensaje(texto: string): void {
+    this.error.set(null);
+    this.mensaje.set(texto);
+    this.programarAutoDismiss(5000);
+  }
+
+  private mostrarError(texto: string): void {
+    this.mensaje.set(null);
+    this.error.set(texto);
+    this.programarAutoDismiss(8000);
+  }
+
+  private limpiarAlertas(): void {
+    this.error.set(null);
+    this.mensaje.set(null);
+    this.limpiarAutoDismiss();
+  }
+
+  private programarAutoDismiss(ms: number): void {
+    this.limpiarAutoDismiss();
+    this.autoDismissTimer = setTimeout(() => {
+      this.error.set(null);
+      this.mensaje.set(null);
+      this.globalState.limpiarError();
+    }, ms);
+  }
+
+  private limpiarAutoDismiss(): void {
+    if (this.autoDismissTimer) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
+    }
   }
 
   private obtenerMensajeError(error: unknown, mensaje: string): string {

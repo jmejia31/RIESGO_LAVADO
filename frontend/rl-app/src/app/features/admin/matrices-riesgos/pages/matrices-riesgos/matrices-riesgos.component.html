@@ -14,8 +14,20 @@
     </div>
   </header>
 
-  @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
-  @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
+  @if (error(); as errorTexto) {
+    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
+      <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="flex-1">{{ errorTexto }}</span>
+      <button type="button" class="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800 transition-colors" aria-label="Cerrar notificación" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+  }
+  @if (mensaje(); as mensajeTexto) {
+    <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm animate-fade-in" role="status" aria-live="polite">
+      <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <span class="flex-1">{{ mensajeTexto }}</span>
+      <button type="button" class="rounded-lg p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" aria-label="Cerrar notificación" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+  }
 
   <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos">
     @for (opcion of [
@@ -60,7 +72,20 @@
     <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 class="text-lg font-bold">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p></div>
-        <div><label for="selector-riesgo" class="text-sm font-semibold">Riesgo</label><select id="selector-riesgo" class="ml-2 min-w-72 rounded-lg border border-slate-300 px-3 py-2" [ngModel]="riesgoId()" (ngModelChange)="riesgoId.set(+$event)"><option [ngValue]="0">Seleccione un riesgo</option>@for (riesgo of riesgos(); track riesgo.rieId) { <option [ngValue]="riesgo.rieId">{{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}</option> }</select></div>
+        <div>
+          <label for="selector-riesgo" class="text-sm font-semibold text-slate-700">Riesgo:</label>
+          <select id="selector-riesgo"
+                  class="ml-2 max-w-[340px] min-w-[200px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm truncate focus:border-blue-500 focus:outline-none"
+                  [ngModel]="riesgoId()"
+                  (ngModelChange)="riesgoId.set(+$event)">
+            <option [ngValue]="0" class="text-sm">Seleccione un riesgo</option>
+            @for (riesgo of riesgos(); track riesgo.rieId) {
+              <option [ngValue]="riesgo.rieId" [title]="riesgo.rieCodigo + ' · ' + riesgo.rieNombre" class="text-sm">
+                {{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}
+              </option>
+            }
+          </select>
+        </div>
       </div>
       @for (seccion of secciones(); track seccion.clave) {
         <fieldset class="rounded-xl border border-slate-200 p-4">
@@ -101,6 +126,238 @@
   }
 
   @if (!cargando() && tab() === 'plantillas') {
-    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div><h2 class="text-lg font-bold">Versiones del formulario</h2><p class="text-sm text-slate-600">Mantenimiento de versión, vigencia y definición dinámica.</p></div><div class="grid gap-3">@for (version of versiones(); track version.verId) { <article class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 lg:flex-row lg:items-center lg:justify-between"><div><h3 class="font-bold">{{ version.verCodigo }} · v{{ version.verVersion }}</h3><p class="text-sm text-slate-600">{{ version.verEstado }} · {{ version.verVigente ? 'Vigente' : 'No vigente' }}</p></div><div class="flex gap-2"><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="abrirDefinicion(version)">Abrir definición</button><button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" (click)="clonarVersion(version)">Clonar</button>@if (version.verEstado === 'DRAFT') { <button type="button" class="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white" (click)="publicarVersion(version)">Publicar</button> }</div></article> } @empty { <p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">Sin versiones.</p> }</div>@if (versionEditando()) { <div class="rounded-xl border border-blue-200 bg-blue-50 p-4"><h3 class="font-bold">Definición técnica de {{ versionEditando()?.verCodigo }}</h3><label class="sr-only" for="definicion-tecnica">Definición técnica del formulario</label><textarea id="definicion-tecnica" class="mt-3 min-h-80 w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs" [(ngModel)]="definicionTecnica"></textarea><div class="mt-3 flex gap-2"><button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="guardarDefinicion()">Guardar</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="versionEditando.set(null)">Cerrar</button></div></div> }</section>
+    <section class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 class="text-lg font-bold">Versiones del formulario</h2>
+          <p class="text-sm text-slate-600">Mantenimiento de familias, versión, vigencia y definición dinámica.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label for="selector-familia" class="text-sm font-semibold text-slate-700">Familia:</label>
+            <select id="selector-familia"
+                    class="max-w-[320px] min-w-[220px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm focus:border-blue-500 focus:outline-none"
+                    [ngModel]="familiaSeleccionada()"
+                    (ngModelChange)="seleccionarFamilia($event)">
+              @for (fam of familias(); track fam.famId) {
+                <option [value]="fam.famCodigo" class="text-sm">
+                  {{ fam.famNombre }}{{ fam.famActivo ? '' : ' [Inactiva]' }}
+                </option>
+              }
+            </select>
+          </div>
+          <button type="button" class="rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 transition-colors" (click)="abrirModalCrearFormulario()">+ Nuevo Formulario</button>
+          <button type="button" class="rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors" (click)="abrirModalCrearFamilia()">Nueva Familia</button>
+        </div>
+      </div>
+
+      <div class="grid gap-3">
+        @for (version of versiones(); track version.verId) {
+          <article class="flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between transition-all"
+                   [class.border-emerald-300]="version.verVigente"
+                   [class.bg-emerald-50\/40]="version.verVigente"
+                   [class.border-slate-200]="!version.verVigente">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="rounded-md bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">ID #{{ version.verId }}</span>
+                <h3 class="font-bold text-slate-900">{{ version.verCodigo }} · v{{ version.verVersion }}</h3>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span class="rounded px-2 py-0.5 font-semibold"
+                      [class.bg-blue-100]="version.verEstado === 'DRAFT'"
+                      [class.text-blue-800]="version.verEstado === 'DRAFT'"
+                      [class.bg-purple-100]="version.verEstado === 'PUBLISHED'"
+                      [class.text-purple-800]="version.verEstado === 'PUBLISHED'">
+                  {{ version.verEstado === 'DRAFT' ? 'Borrador' : 'Publicado' }}
+                </span>
+                <span class="rounded px-2 py-0.5 font-semibold"
+                      [class.bg-emerald-100]="version.verVigente"
+                      [class.text-emerald-800]="version.verVigente"
+                      [class.bg-slate-100]="!version.verVigente"
+                      [class.text-slate-600]="!version.verVigente">
+                  {{ version.verVigente ? '● Activo (Vigente)' : 'Inactivo' }}
+                </span>
+                @if (version.verVigente) {
+                  <span class="text-slate-500 italic">(Solo lectura por estar activo)</span>
+                }
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors" (click)="abrirDefinicion(version)">
+                {{ version.verVigente ? 'Ver definición' : 'Editar definición' }}
+              </button>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors" (click)="clonarVersion(version)">
+                Clonar
+              </button>
+              @if (version.verEstado === 'DRAFT') {
+                <button type="button" class="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition-colors shadow-sm" (click)="publicarVersion(version)">
+                  Publicar
+                </button>
+              } @else if (version.verEstado === 'PUBLISHED') {
+                <button type="button"
+                        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shadow-sm"
+                        [class.bg-emerald-700]="!version.verVigente"
+                        [class.text-white]="!version.verVigente"
+                        [class.hover:bg-emerald-800]="!version.verVigente"
+                        [class.border]="version.verVigente"
+                        [class.border-amber-300]="version.verVigente"
+                        [class.bg-amber-50]="version.verVigente"
+                        [class.text-amber-800]="version.verVigente"
+                        [class.hover:bg-amber-100]="version.verVigente"
+                        (click)="cambiarVigenciaVersion(version, !version.verVigente)">
+                  {{ version.verVigente ? 'Desactivar' : 'Activar' }}
+                </button>
+              }
+              @if (!version.verVigente) {
+                <button type="button" class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors" (click)="eliminarVersionFormulario(version)">
+                  Eliminar
+                </button>
+              }
+            </div>
+          </article>
+        } @empty {
+          <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50\/70 p-8 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200/80 text-slate-500 mb-3">
+              <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h4 class="font-semibold text-slate-800 text-sm">Sin versiones en esta familia</h4>
+            <p class="mt-1 max-w-sm text-xs text-slate-500">Esta familia de formulario aún no cuenta con versiones registradas o borradores creados.</p>
+            <button type="button" class="mt-4 rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-800 transition-colors" (click)="abrirModalCrearFormulario()">
+              + Crear primer formulario
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (versionEditando(); as versionActual) {
+        <div class="rounded-xl border p-4 shadow-sm"
+             [class.border-amber-200]="versionActual.verVigente"
+             [class.bg-amber-50\/60]="versionActual.verVigente"
+             [class.border-blue-200]="!versionActual.verVigente"
+             [class.bg-blue-50\/60]="!versionActual.verVigente">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900">
+              Definición técnica (ID #{{ versionActual.verId }} - {{ versionActual.verCodigo }} v{{ versionActual.verVersion }})
+            </h3>
+            <span class="rounded px-2.5 py-1 text-xs font-semibold"
+                  [class.bg-amber-100]="versionActual.verVigente"
+                  [class.text-amber-800]="versionActual.verVigente"
+                  [class.bg-blue-100]="!versionActual.verVigente"
+                  [class.text-blue-800]="!versionActual.verVigente">
+              {{ versionActual.verVigente ? 'Modo Lectura (Formulario Activo)' : 'Modo Edición' }}
+            </span>
+          </div>
+
+          @if (versionActual.verVigente) {
+            <p class="mt-2 text-xs font-medium text-amber-800">
+              ⚠️ El formulario se encuentra activo en producción. Para modificar su estructura, clone esta versión como borrador o desactívela primero.
+            </p>
+          }
+
+          <label class="sr-only" for="definicion-tecnica">Definición técnica del formulario</label>
+          <textarea id="definicion-tecnica"
+                    class="mt-3 min-h-80 w-full rounded-lg border border-slate-300 bg-white p-3 font-mono text-xs shadow-inner disabled:bg-slate-100 disabled:text-slate-700"
+                    [disabled]="versionActual.verVigente"
+                    [(ngModel)]="definicionTecnica"></textarea>
+          <div class="mt-3 flex gap-2">
+            @if (!versionActual.verVigente) {
+              <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50 transition-colors" [disabled]="guardando()" (click)="guardarDefinicion()">Guardar</button>
+            }
+            <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors" (click)="versionEditando.set(null)">Cerrar</button>
+          </div>
+        </div>
+      }
+    </section>
+  }
+
+  @if (modalFamiliaAbierto()) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
+      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <h3 id="titulo-modal-familia" class="text-lg font-bold text-slate-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
+          <button type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">✕</button>
+        </div>
+
+        @if (errorModal(); as errorModalTexto) {
+          <div class="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800" role="alert" aria-live="assertive">
+            <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="flex-1">{{ errorModalTexto }}</span>
+            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          </div>
+        }
+
+        <div class="space-y-4 text-sm">
+          <div>
+            <label for="fam-codigo" class="block font-semibold text-slate-700">Código Institucional</label>
+            <input id="fam-codigo" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" [disabled]="modoEdicionFamilia()" [(ngModel)]="nuevaFamiliaCodigo" placeholder="Ej. GTIC_MATRIZ" />
+            <p class="mt-1 text-xs text-slate-500">Único e inmutable tras su creación. Solo letras, números y guion bajo.</p>
+          </div>
+
+          <div>
+            <label for="fam-nombre" class="block font-semibold text-slate-700">Nombre Descriptivo</label>
+            <input id="fam-nombre" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevaFamiliaNombre" placeholder="Ej. Matriz de Riesgos GTIC" />
+          </div>
+
+          <div>
+            <label for="fam-descripcion" class="block font-semibold text-slate-700">Descripción / Propósito</label>
+            <textarea id="fam-descripcion" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevaFamiliaDescripcion" placeholder="Ámbito y alcance de la familia..."></textarea>
+          </div>
+
+          @if (modoEdicionFamilia()) {
+            <div class="flex items-center gap-2 pt-2">
+              <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" [(ngModel)]="nuevaFamiliaActivo" />
+              <label for="fam-activo" class="font-semibold text-slate-700">Familia Activa</label>
+            </div>
+          }
+        </div>
+
+        <div class="flex justify-end gap-3 border-t border-slate-200 pt-3">
+          <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
+          <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50 transition-colors" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (modalFormularioAbierto()) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
+      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div>
+            <h3 id="titulo-modal-formulario" class="text-lg font-bold text-slate-900">Nuevo Formulario de Matriz</h3>
+            <p class="text-xs text-slate-500">Se asociará a la familia seleccionada: <strong>{{ familiaSeleccionada() }}</strong></p>
+          </div>
+          <button type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFormulario()">✕</button>
+        </div>
+
+        @if (errorModal(); as errorModalTexto) {
+          <div class="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800" role="alert" aria-live="assertive">
+            <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="flex-1">{{ errorModalTexto }}</span>
+            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          </div>
+        }
+
+        <div class="space-y-4 text-sm">
+          <div>
+            <label for="form-codigo" class="block font-semibold text-slate-700">Código del Formulario</label>
+            <input id="form-codigo" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
+            <p class="mt-1 text-xs text-slate-500">Identificador técnico del formulario dentro de la familia.</p>
+          </div>
+
+          <div>
+            <label for="form-nombre" class="block font-semibold text-slate-700">Nombre Descriptivo</label>
+            <input id="form-nombre" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 border-t border-slate-200 pt-3">
+          <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
+          <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50 transition-colors" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
+        </div>
+      </div>
+    </div>
   }
 </section>

@@ -191,7 +191,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                SET VER_JSON = :jsonConfig,
                    VER_HASH = :hash
              WHERE VER_ID = :versionId
-               AND VER_ESTADO = 'DRAFT'";
+               AND VER_VIGENTE = 0";
 
         await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });
@@ -271,25 +271,106 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
     {
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
+        await using var trans = conn.BeginTransaction();
 
-        const string sql = @"
-            UPDATE RL_MR_VERSIONES_FORMULARIO
-               SET VER_VIGENTE = :vigente,
-                   VER_FECHA_INICIO = CASE
-                       WHEN :vigente = 1 THEN NVL(VER_FECHA_INICIO, SYSDATE)
-                       ELSE VER_FECHA_INICIO
-                   END,
-                   VER_FECHA_FIN = CASE
-                       WHEN :vigente = 0 THEN SYSDATE
-                       ELSE NULL
-                   END
+        try
+        {
+            if (vigente)
+            {
+                const string sqlSelectFam = @"
+                    SELECT VER_FAMILIA_ID
+                      FROM RL_MR_VERSIONES_FORMULARIO
+                     WHERE VER_ID = :versionId
+                     FOR UPDATE";
+
+                await using var cmdFam = CrearComando(sqlSelectFam, conn, trans);
+                cmdFam.Parameters.Add(new OracleParameter("versionId", versionId));
+                object? famIdObj = await cmdFam.ExecuteScalarAsync();
+                if (famIdObj is null)
+                {
+                    await trans.RollbackAsync();
+                    return false;
+                }
+
+                long familiaId = Convert.ToInt64(famIdObj);
+
+                const string sqlApagar = @"
+                    UPDATE RL_MR_VERSIONES_FORMULARIO
+                       SET VER_VIGENTE = 0,
+                           VER_FECHA_FIN = SYSDATE
+                     WHERE VER_FAMILIA_ID = :familiaId
+                       AND VER_VIGENTE = 1
+                       AND VER_ID <> :versionId";
+
+                await using var cmdApagar = CrearComando(sqlApagar, conn, trans);
+                cmdApagar.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                cmdApagar.Parameters.Add(new OracleParameter("versionId", versionId));
+                await cmdApagar.ExecuteNonQueryAsync();
+            }
+
+            const string sql = @"
+                UPDATE RL_MR_VERSIONES_FORMULARIO
+                   SET VER_VIGENTE = :vigente,
+                       VER_FECHA_INICIO = CASE
+                           WHEN :vigente = 1 THEN NVL(VER_FECHA_INICIO, SYSDATE)
+                           ELSE VER_FECHA_INICIO
+                       END,
+                       VER_FECHA_FIN = CASE
+                           WHEN :vigente = 0 THEN SYSDATE
+                           ELSE NULL
+                       END
+                 WHERE VER_ID = :versionId
+                   AND VER_ESTADO = 'PUBLISHED'";
+
+            await using var cmd = CrearComando(sql, conn, trans);
+            cmd.Parameters.Add(new OracleParameter("vigente", vigente ? 1 : 0));
+            cmd.Parameters.Add(new OracleParameter("versionId", versionId));
+            bool exito = await cmd.ExecuteNonQueryAsync() > 0;
+
+            if (exito)
+            {
+                await trans.CommitAsync();
+                return true;
+            }
+
+            await trans.RollbackAsync();
+            return false;
+        }
+        catch
+        {
+            await trans.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<bool> EliminarVersionFormularioAsync(long versionId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        // Verificar que no sea la versión activa
+        const string sqlCheck = @"
+            SELECT VER_VIGENTE
+              FROM RL_MR_VERSIONES_FORMULARIO
+             WHERE VER_ID = :versionId";
+
+        await using var cmdCheck = CrearComando(sqlCheck, conn);
+        cmdCheck.Parameters.Add(new OracleParameter("versionId", versionId));
+        object? vigenteObj = await cmdCheck.ExecuteScalarAsync();
+        if (vigenteObj is null || Convert.ToInt32(vigenteObj) == 1)
+        {
+            return false;
+        }
+
+        // Eliminar versión inactiva
+        const string sqlDelete = @"
+            DELETE FROM RL_MR_VERSIONES_FORMULARIO
              WHERE VER_ID = :versionId
-               AND VER_ESTADO = 'PUBLISHED'";
+               AND VER_VIGENTE = 0";
 
-        await using var cmd = CrearComando(sql, conn);
-        cmd.Parameters.Add(new OracleParameter("vigente", vigente ? 1 : 0));
-        cmd.Parameters.Add(new OracleParameter("versionId", versionId));
-        return await cmd.ExecuteNonQueryAsync() > 0;
+        await using var cmdDelete = CrearComando(sqlDelete, conn);
+        cmdDelete.Parameters.Add(new OracleParameter("versionId", versionId));
+        return await cmdDelete.ExecuteNonQueryAsync() > 0;
     }
 
     public async Task<List<VersionFormularioDto>> ListarHistorialVersionesFormularioAsync(string familiaCodigo)
@@ -327,6 +408,231 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
 
         return lista;
+    }
+
+    public async Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync()
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT f.FAM_ID,
+                   f.FAM_CODIGO,
+                   f.FAM_NOMBRE,
+                   f.FAM_DESCRIPCION,
+                   f.FAM_ACTIVO,
+                   f.FAM_FECHA_CREACION,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
+              FROM RL_MR_FAMILIAS_FORMULARIO f
+             ORDER BY f.FAM_CODIGO ASC";
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+
+        var lista = new List<FamiliaFormularioDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            lista.Add(new FamiliaFormularioDto
+            {
+                FamId = reader.GetInt64(0),
+                FamCodigo = reader.GetString(1),
+                FamNombre = reader.GetString(2),
+                FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
+                FamActivo = reader.GetInt32(4) == 1,
+                FamFechaCreacion = reader.GetDateTime(5),
+                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
+                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+            });
+        }
+
+        return lista;
+    }
+
+    public async Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT f.FAM_ID,
+                   f.FAM_CODIGO,
+                   f.FAM_NOMBRE,
+                   f.FAM_DESCRIPCION,
+                   f.FAM_ACTIVO,
+                   f.FAM_FECHA_CREACION,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
+              FROM RL_MR_FAMILIAS_FORMULARIO f
+             WHERE f.FAM_ID = :famId";
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Parameters.Add(new OracleParameter("famId", famId));
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return new FamiliaFormularioDto
+            {
+                FamId = reader.GetInt64(0),
+                FamCodigo = reader.GetString(1),
+                FamNombre = reader.GetString(2),
+                FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
+                FamActivo = reader.GetInt32(4) == 1,
+                FamFechaCreacion = reader.GetDateTime(5),
+                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
+                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+            };
+        }
+
+        return null;
+    }
+
+    public async Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT f.FAM_ID,
+                   f.FAM_CODIGO,
+                   f.FAM_NOMBRE,
+                   f.FAM_DESCRIPCION,
+                   f.FAM_ACTIVO,
+                   f.FAM_FECHA_CREACION,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
+              FROM RL_MR_FAMILIAS_FORMULARIO f
+             WHERE UPPER(f.FAM_CODIGO) = :famCodigo";
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Parameters.Add(new OracleParameter("famCodigo", (famCodigo ?? string.Empty).Trim().ToUpperInvariant()));
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return new FamiliaFormularioDto
+            {
+                FamId = reader.GetInt64(0),
+                FamCodigo = reader.GetString(1),
+                FamNombre = reader.GetString(2),
+                FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
+                FamActivo = reader.GetInt32(4) == 1,
+                FamFechaCreacion = reader.GetDateTime(5),
+                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
+                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+            };
+        }
+
+        return null;
+    }
+
+    public async Task<long> CrearFamiliaFormularioAsync(string famCodigo, string famNombre, string? famDescripcion, bool famActivo)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sqlSeq = "SELECT SEQ_RL_MR_FAMILIAS.NEXTVAL FROM DUAL";
+        await using var cmdSeq = conn.CreateCommand();
+        cmdSeq.CommandText = sqlSeq;
+        long newId = Convert.ToInt64(await cmdSeq.ExecuteScalarAsync());
+
+        const string sqlInsert = @"
+            INSERT INTO RL_MR_FAMILIAS_FORMULARIO (
+                FAM_ID, FAM_CODIGO, FAM_NOMBRE, FAM_DESCRIPCION, FAM_ACTIVO, FAM_FECHA_CREACION
+            ) VALUES (
+                :famId, :famCodigo, :famNombre, :famDescripcion, :famActivo, SYSDATE
+            )";
+
+        await using var cmdInsert = conn.CreateCommand();
+        cmdInsert.CommandText = sqlInsert;
+        cmdInsert.Parameters.Add(new OracleParameter("famId", newId));
+        cmdInsert.Parameters.Add(new OracleParameter("famCodigo", (famCodigo ?? string.Empty).Trim().ToUpperInvariant()));
+        cmdInsert.Parameters.Add(new OracleParameter("famNombre", (famNombre ?? string.Empty).Trim()));
+        cmdInsert.Parameters.Add(new OracleParameter("famDescripcion", (object?)famDescripcion?.Trim() ?? DBNull.Value));
+        cmdInsert.Parameters.Add(new OracleParameter("famActivo", famActivo ? 1 : 0));
+
+        await cmdInsert.ExecuteNonQueryAsync();
+        return newId;
+    }
+
+    public async Task<bool> ActualizarFamiliaFormularioAsync(long famId, string famNombre, string? famDescripcion, bool famActivo)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            UPDATE RL_MR_FAMILIAS_FORMULARIO
+               SET FAM_NOMBRE = :famNombre,
+                   FAM_DESCRIPCION = :famDescripcion,
+                   FAM_ACTIVO = :famActivo
+             WHERE FAM_ID = :famId";
+
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = sql;
+        cmd.Parameters.Add(new OracleParameter("famNombre", (famNombre ?? string.Empty).Trim()));
+        cmd.Parameters.Add(new OracleParameter("famDescripcion", (object?)famDescripcion?.Trim() ?? DBNull.Value));
+        cmd.Parameters.Add(new OracleParameter("famActivo", famActivo ? 1 : 0));
+        cmd.Parameters.Add(new OracleParameter("famId", famId));
+
+        int rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0;
+    }
+
+    public async Task<bool> DesactivarFamiliaFormularioAtomicoAsync(long famId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var tx = await conn.BeginTransactionAsync();
+
+        try
+        {
+            const string sqlCheckVigente = @"
+                SELECT COUNT(*)
+                  FROM RL_MR_VERSIONES_FORMULARIO
+                 WHERE VER_FAMILIA_ID = :famId
+                   AND VER_VIGENTE = 1";
+
+            await using (var cmdCheck = conn.CreateCommand())
+            {
+                cmdCheck.Transaction = (OracleTransaction)tx;
+                cmdCheck.CommandText = sqlCheckVigente;
+                cmdCheck.Parameters.Add(new OracleParameter("famId", famId));
+
+                int vigentes = Convert.ToInt32(await cmdCheck.ExecuteScalarAsync());
+                if (vigentes > 0)
+                {
+                    await tx.RollbackAsync();
+                    return false;
+                }
+            }
+
+            const string sqlUpdate = @"
+                UPDATE RL_MR_FAMILIAS_FORMULARIO
+                   SET FAM_ACTIVO = 0
+                 WHERE FAM_ID = :famId";
+
+            int rows;
+            await using (var cmdUpdate = conn.CreateCommand())
+            {
+                cmdUpdate.Transaction = (OracleTransaction)tx;
+                cmdUpdate.CommandText = sqlUpdate;
+                cmdUpdate.Parameters.Add(new OracleParameter("famId", famId));
+
+                rows = await cmdUpdate.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+            return rows > 0;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<EvaluacionRiesgoDto?> ObtenerEvaluacionAsync(long evaId)

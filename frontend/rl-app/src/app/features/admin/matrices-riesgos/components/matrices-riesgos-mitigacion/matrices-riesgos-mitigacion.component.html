@@ -8,10 +8,14 @@
   @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
 
   <div class="max-w-xl">
-    <label for="evaluacion-mitigacion" class="block text-sm font-semibold">Evaluación</label>
-    <select id="evaluacion-mitigacion" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
-      <option value="0">Seleccione una evaluación</option>
-      @for (evaluacion of evaluaciones; track evaluacion.evaId) { <option [value]="evaluacion.evaId">#{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}</option> }
+    <label for="evaluacion-mitigacion" class="block text-sm font-semibold text-slate-700">Evaluación</label>
+    <select id="evaluacion-mitigacion" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium shadow-sm truncate focus:border-blue-500 focus:outline-none" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
+      <option value="0" class="text-sm">Seleccione una evaluación</option>
+      @for (evaluacion of evaluaciones; track evaluacion.evaId) {
+        <option [value]="evaluacion.evaId" [title]="'#' + evaluacion.evaId + ' · Riesgo ' + evaluacion.evaRiesgoId + ' · ' + evaluacion.evaEstado" class="text-sm">
+          #{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}
+        </option>
+      }
     </select>
   </div>
 

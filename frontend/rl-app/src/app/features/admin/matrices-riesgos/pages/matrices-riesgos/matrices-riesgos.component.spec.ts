@@ -13,6 +13,7 @@ describe('MatricesRiesgosComponent', () => {
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
+    listarFamiliasFormulario: ReturnType<typeof vi.fn>;
     crearEvaluacion: ReturnType<typeof vi.fn>;
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
     obtenerFlujos: ReturnType<typeof vi.fn>;
@@ -20,6 +21,9 @@ describe('MatricesRiesgosComponent', () => {
 
   beforeEach(async () => {
     service = {
+      listarFamiliasFormulario: vi.fn().mockReturnValue(of([
+        { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
+      ])),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of({
         verId: 10,
         verFamiliaId: 1,

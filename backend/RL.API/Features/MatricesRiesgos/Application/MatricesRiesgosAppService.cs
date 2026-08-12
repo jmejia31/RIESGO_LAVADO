@@ -156,10 +156,146 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult.NotFound($"No se encontró una versión publicada con ID {versionId}.");
     }
 
+    public async Task<ServiceResult> EliminarVersionFormularioAsync(long versionId)
+    {
+        VersionFormularioDto? v = await _repo.ObtenerVersionFormularioAsync(versionId);
+        if (v is null)
+        {
+            return ServiceResult.NotFound($"No se encontró el formulario con ID {versionId}.");
+        }
+
+        if (v.VerVigente)
+        {
+            return ServiceResult.BadRequest("No se puede eliminar el formulario activo (vigente) de la familia.");
+        }
+
+        bool eliminado = await _repo.EliminarVersionFormularioAsync(versionId);
+        return eliminado
+            ? ServiceResult.Ok("Formulario eliminado correctamente.")
+            : ServiceResult.BadRequest("No se pudo eliminar el formulario. Verifique que no esté activo.");
+    }
+
     public async Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo)
     {
         List<VersionFormularioDto> versiones = await _repo.ListarHistorialVersionesFormularioAsync(familiaCodigo);
         return ServiceResult<List<VersionFormularioDto>>.Ok(versiones);
+    }
+
+    public async Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync()
+    {
+        List<FamiliaFormularioDto> familias = await _repo.ListarFamiliasFormularioAsync();
+        return ServiceResult<List<FamiliaFormularioDto>>.Ok(familias);
+    }
+
+    public async Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId)
+    {
+        if (famId <= 0)
+        {
+            return ServiceResult<FamiliaFormularioDto>.BadRequest("El ID de familia especificado es inválido.");
+        }
+
+        FamiliaFormularioDto? familia = await _repo.ObtenerFamiliaFormularioPorIdAsync(famId);
+        return familia is null
+            ? ServiceResult<FamiliaFormularioDto>.NotFound($"No se encontró la familia de formulario con ID {famId}.")
+            : ServiceResult<FamiliaFormularioDto>.Ok(familia);
+    }
+
+    public async Task<ServiceResult<long>> CrearFamiliaFormularioAsync(CrearFamiliaFormularioDto dto)
+    {
+        if (dto is null)
+        {
+            return ServiceResult<long>.BadRequest("Los datos de la familia son obligatorios.");
+        }
+
+        string codigoNormalizado = (dto.FamCodigo ?? string.Empty).Trim().ToUpperInvariant();
+        if (string.IsNullOrWhiteSpace(codigoNormalizado) || codigoNormalizado.Length < 3 || codigoNormalizado.Length > 50)
+        {
+            return ServiceResult<long>.BadRequest("El código de la familia debe tener entre 3 y 50 caracteres.");
+        }
+
+        if (codigoNormalizado.Any(c => !char.IsLetterOrDigit(c) && c != '_'))
+        {
+            return ServiceResult<long>.BadRequest("El código de la familia solo permite letras, números y guion bajo.");
+        }
+
+        string nombreNormalizado = (dto.FamNombre ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(nombreNormalizado))
+        {
+            return ServiceResult<long>.BadRequest("El nombre de la familia es obligatorio.");
+        }
+
+        FamiliaFormularioDto? existente = await _repo.ObtenerFamiliaFormularioPorCodigoAsync(codigoNormalizado);
+        if (existente is not null)
+        {
+            return ServiceResult<long>.BadRequest($"Ya existe una familia de formulario registrada con el código '{codigoNormalizado}'.");
+        }
+
+        long famId = await _repo.CrearFamiliaFormularioAsync(
+            codigoNormalizado,
+            nombreNormalizado,
+            dto.FamDescripcion?.Trim(),
+            famActivo: true);
+
+        return ServiceResult<long>.Ok(famId, "Familia de formulario creada exitosamente.");
+    }
+
+    public async Task<ServiceResult> ActualizarFamiliaFormularioAsync(long famId, ActualizarFamiliaFormularioDto dto)
+    {
+        if (famId <= 0)
+        {
+            return ServiceResult.BadRequest("El ID de familia especificado es inválido.");
+        }
+
+        if (dto is null)
+        {
+            return ServiceResult.BadRequest("Los datos a actualizar son obligatorios.");
+        }
+
+        FamiliaFormularioDto? existente = await _repo.ObtenerFamiliaFormularioPorIdAsync(famId);
+        if (existente is null)
+        {
+            return ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}.");
+        }
+
+        string nombreNormalizado = (dto.FamNombre ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(nombreNormalizado))
+        {
+            return ServiceResult.BadRequest("El nombre de la familia es obligatorio.");
+        }
+
+        if (!dto.FamActivo && existente.TieneVersionVigente)
+        {
+            return ServiceResult.BadRequest("No se puede desactivar la familia mientras posea una versión publicada vigente.");
+        }
+
+        bool actualizado = await _repo.ActualizarFamiliaFormularioAsync(
+            famId,
+            nombreNormalizado,
+            dto.FamDescripcion?.Trim(),
+            dto.FamActivo);
+
+        return actualizado
+            ? ServiceResult.Ok("Familia de formulario actualizada correctamente.")
+            : ServiceResult.BadRequest("No se pudo actualizar la familia de formulario.");
+    }
+
+    public async Task<ServiceResult> DesactivarFamiliaFormularioAsync(long famId)
+    {
+        if (famId <= 0)
+        {
+            return ServiceResult.BadRequest("El ID de familia especificado es inválido.");
+        }
+
+        FamiliaFormularioDto? existente = await _repo.ObtenerFamiliaFormularioPorIdAsync(famId);
+        if (existente is null)
+        {
+            return ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}.");
+        }
+
+        bool desactivado = await _repo.DesactivarFamiliaFormularioAtomicoAsync(famId);
+        return desactivado
+            ? ServiceResult.Ok("Familia de formulario desactivada exitosamente.")
+            : ServiceResult.BadRequest("No se pudo desactivar la familia. Verifique que no posea una versión publicada vigente.");
     }
 
     public async Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId)

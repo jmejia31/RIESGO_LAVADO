@@ -1,14 +1,19 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, OnDestroy } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
-export class GlobalHttpStateService {
+export class GlobalHttpStateService implements OnDestroy {
   private readonly peticionesActivas = signal(0);
   readonly ultimoError = signal<string | null>(null);
+  private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly cargando = computed(() => this.peticionesActivas() > 0);
+
+  ngOnDestroy(): void {
+    this.cancelarAutoDismiss();
+  }
 
   iniciarPeticion(): void {
     this.peticionesActivas.update(c => c + 1);
@@ -36,9 +41,26 @@ export class GlobalHttpStateService {
     }
 
     this.ultimoError.set(mensaje);
+    this.programarAutoDismiss();
   }
 
   limpiarError(): void {
+    this.cancelarAutoDismiss();
     this.ultimoError.set(null);
   }
+
+  private programarAutoDismiss(): void {
+    this.cancelarAutoDismiss();
+    this.autoDismissTimer = setTimeout(() => {
+      this.ultimoError.set(null);
+    }, 8000);
+  }
+
+  private cancelarAutoDismiss(): void {
+    if (this.autoDismissTimer) {
+      clearTimeout(this.autoDismissTimer);
+      this.autoDismissTimer = null;
+    }
+  }
 }
+

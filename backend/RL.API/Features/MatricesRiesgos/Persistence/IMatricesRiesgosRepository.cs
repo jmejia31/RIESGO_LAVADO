@@ -23,7 +23,15 @@ public interface IMatricesRiesgosRepository
     Task<bool> ActualizarBorradorFormularioAsync(long versionId, string jsonConfig, string hash, long usuarioId);
     Task<bool> PublicarVersionFormularioAsync(long versionId, string hash, long usuarioId);
     Task<bool> CambiarEstadoVigenciaFormularioAsync(long versionId, bool vigente, long usuarioId);
+    Task<bool> EliminarVersionFormularioAsync(long versionId);
     Task<List<VersionFormularioDto>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
+
+    Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync();
+    Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId);
+    Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo);
+    Task<long> CrearFamiliaFormularioAsync(string famCodigo, string famNombre, string? famDescripcion, bool famActivo);
+    Task<bool> ActualizarFamiliaFormularioAsync(long famId, string famNombre, string? famDescripcion, bool famActivo);
+    Task<bool> DesactivarFamiliaFormularioAtomicoAsync(long famId);
 
     Task<EvaluacionRiesgoDto?> ObtenerEvaluacionAsync(long evaId);
     Task<List<EvaluacionRiesgoDto>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);

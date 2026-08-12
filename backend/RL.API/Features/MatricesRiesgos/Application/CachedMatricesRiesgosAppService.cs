@@ -90,6 +90,13 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
         return result;
     }
 
+    public async Task<ServiceResult> EliminarVersionFormularioAsync(long versionId)
+    {
+        ServiceResult result = await _inner.EliminarVersionFormularioAsync(versionId);
+        InvalidateIfSuccessful(result.Success);
+        return result;
+    }
+
     public Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo) =>
         _cache.GetOrCreateAsync(
             ApplicationCacheScopes.MatricesFormularios,
@@ -97,6 +104,43 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
             _settings.FormularioVersionTtl,
             () => _inner.ListarHistorialVersionesFormularioAsync(familiaCodigo),
             static result => result.Success);
+
+    public Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync() =>
+        _cache.GetOrCreateAsync(
+            ApplicationCacheScopes.MatricesFormularios,
+            "familias-list",
+            _settings.FormularioVersionTtl,
+            _inner.ListarFamiliasFormularioAsync,
+            static result => result.Success);
+
+    public Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId) =>
+        _cache.GetOrCreateAsync(
+            ApplicationCacheScopes.MatricesFormularios,
+            $"familia-id:{famId}",
+            _settings.FormularioVersionTtl,
+            () => _inner.ObtenerFamiliaFormularioPorIdAsync(famId),
+            static result => result.Success);
+
+    public async Task<ServiceResult<long>> CrearFamiliaFormularioAsync(CrearFamiliaFormularioDto dto)
+    {
+        ServiceResult<long> result = await _inner.CrearFamiliaFormularioAsync(dto);
+        InvalidateIfSuccessful(result.Success);
+        return result;
+    }
+
+    public async Task<ServiceResult> ActualizarFamiliaFormularioAsync(long famId, ActualizarFamiliaFormularioDto dto)
+    {
+        ServiceResult result = await _inner.ActualizarFamiliaFormularioAsync(famId, dto);
+        InvalidateIfSuccessful(result.Success);
+        return result;
+    }
+
+    public async Task<ServiceResult> DesactivarFamiliaFormularioAsync(long famId)
+    {
+        ServiceResult result = await _inner.DesactivarFamiliaFormularioAsync(famId);
+        InvalidateIfSuccessful(result.Success);
+        return result;
+    }
 
     public Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId) =>
         _inner.ObtenerEvaluacionAsync(evaId);
