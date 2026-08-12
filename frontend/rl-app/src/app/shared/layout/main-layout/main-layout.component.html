@@ -168,12 +168,6 @@
         </div>
       }
 
-      @if (globalState.cargando()) {
-        <div class="mb-4" data-global-skeleton>
-          <app-skeleton-loader variant="content" [rows]="3" label="Actualizando contenido del sistema"></app-skeleton-loader>
-        </div>
-      }
-
       <router-outlet (activate)="enfocarContenido()"/>
     </main>
   </div>

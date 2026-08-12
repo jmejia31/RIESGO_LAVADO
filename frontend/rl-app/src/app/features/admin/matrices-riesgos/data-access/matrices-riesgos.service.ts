@@ -87,9 +87,10 @@ export class MatricesRiesgosService {
     const params = new HttpParams()
       .set('familiaId', String(familiaId))
       .set('codigoFormulario', codigoFormulario);
+    const cuerpo = JSON.parse(definicion) as unknown;
 
     return this.http
-      .post<ApiResponse<number>>(`${this.apiUrl}/formularios/borrador`, definicion, {
+      .post<ApiResponse<number>>(`${this.apiUrl}/formularios/borrador`, cuerpo, {
         params,
         ...this.confirmadoJson
       })
@@ -103,9 +104,10 @@ export class MatricesRiesgosService {
   }
 
   actualizarBorradorFormulario(id: number, definicion: string): Observable<ApiMessage> {
+    const cuerpo = JSON.parse(definicion) as unknown;
     return this.http.put<ApiMessage>(
       `${this.apiUrl}/formularios/${id}`,
-      definicion,
+      cuerpo,
       this.confirmadoJson
     );
   }

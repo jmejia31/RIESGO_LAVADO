@@ -59,7 +59,7 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
 
     const request = http.expectOne(`${apiUrl}/formularios/10`);
     expect(request.request.method).toBe('PUT');
-    expect(request.request.body).toBe('{"secciones":[]}');
+    expect(request.request.body).toEqual({ secciones: [] });
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     expect(request.request.headers.get('Content-Type')).toBe('application/json');
     request.flush({ success: true });

@@ -177,6 +177,6 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     component.guardarDefinicion();
 
     expect(service['actualizarBorradorFormulario']).not.toHaveBeenCalled();
-    expect(component.error()).toBe('La definición técnica no tiene una estructura válida.');
+    expect(component.error()).toContain('La definición JSON no es válida');
   });
 });

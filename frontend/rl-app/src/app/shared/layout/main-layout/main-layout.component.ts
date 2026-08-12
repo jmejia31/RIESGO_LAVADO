@@ -6,12 +6,11 @@ import { ConfiguracionService } from '../../../core/configuration/configuracion.
 import { CatalogoService } from '../../../core/configuration/catalogo.service';
 import { Modulo } from '../../../core/configuration/catalogo.models';
 import { GlobalHttpStateService } from '../../../core/services/global-http-state.service';
-import { SkeletonLoaderComponent } from '../../components/skeleton-loader/skeleton-loader.component';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, SkeletonLoaderComponent],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './main-layout.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

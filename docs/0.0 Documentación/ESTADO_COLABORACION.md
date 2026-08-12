@@ -1,5 +1,7 @@
 # Estado de colaboración y punto de continuidad
 
+> Actualización 2026-08-12: la carga HTTP global ya no inserta un skeleton grande sobre contenido disponible; permanece como indicador compacto en cabecera. El editor de Plantillas valida y envía la definición como objeto JSON, mostrando errores de validación legibles. Verificación local: Frontend 165/165, E2E 13/13, ESLint y build correctos, validadores FE-03/FE-04, Matrices y enlaces documentales correctos. Pendiente únicamente la comprobación visual del usuario tras actualizar/reiniciar el frontend.
+
 > Actualización 2026-08-10: **FE-01 — Adopción gradual de Angular Signals** quedó implementada y certificada técnicamente en `desarrollo`. La fase consolidó Signals para estado local/derivado, migró a `OnPush` la primera ola de componentes ya compatibles, tipó y signalizó el carrusel de Login y el archivo seleccionado de Carga de Listas, preservando RxJS para asincronía HTTP y Reactive Forms para formularios. El HEAD técnico certificado es `479e95f6089d098942dffaff75ee6a76b0412039`; Quality Gates Run `31422869343` (#668) finalizó **SUCCESS** con FE-01 Validator correcto, Backend 304/304, Frontend 165/165, E2E 13/13, build 0 errores/0 advertencias y `npm audit` 0 vulnerabilidades. No se modificaron Backend funcional, contratos API, Oracle ni Producción.
 
 Documento vivo. Los antecedentes históricos permanecen en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md).

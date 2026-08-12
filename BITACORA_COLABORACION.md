@@ -1,5 +1,20 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Carga global discreta y guardado JSON estable
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `c50baee`.
+- **Objetivo**: Evitar que el indicador global de carga desplace contenido ya renderizado y estabilizar el envío de definiciones JSON desde Plantillas.
+
+### Cambios y verificación
+
+- Se retiró el bloque skeleton global de gran tamaño. La espera conserva únicamente la barra superior y el indicador compacto de cabecera, sin ocultar ni desplazar la pantalla activa.
+- La definición de formulario se parsea en el cliente y se envía como objeto JSON real; los errores de sintaxis y validación se presentan en español y sin depender del mensaje técnico de `HttpErrorResponse`.
+- Pruebas frontend: 165/165 correctas; E2E Playwright: 13/13 correctas; ESLint: correcto; build Angular: correcto; validadores FE-03/FE-04, Matrices y enlaces documentales: correctos; `git diff --check`: correcto.
+- No se conectó Oracle ni se ejecutaron DDL/DML o scripts; `main`, PR #20, producción y `B10_*` permanecen sin cambios.
+
 ## Registro de Intervención — Codex — Corrección de guardado JSON de plantillas
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

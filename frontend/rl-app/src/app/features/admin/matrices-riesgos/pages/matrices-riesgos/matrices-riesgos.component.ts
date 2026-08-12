@@ -361,8 +361,9 @@ export class MatricesRiesgosComponent implements OnInit {
 
     try {
       JSON.parse(this.definicionTecnica);
-    } catch {
-      this.error.set('La definición técnica no tiene una estructura válida.');
+    } catch (error) {
+      const detalle = error instanceof SyntaxError ? error.message : '';
+      this.error.set(`La definición JSON no es válida${detalle ? `: ${detalle}` : '.'}`);
       return;
     }
 
@@ -458,7 +459,22 @@ export class MatricesRiesgosComponent implements OnInit {
   }
 
   private obtenerMensajeError(error: unknown, mensaje: string): string {
-    const respuesta = error as { error?: { mensaje?: string }; message?: string };
-    return respuesta?.error?.mensaje || respuesta?.message || mensaje;
+    const respuesta = error as {
+      error?: {
+        detail?: string;
+        mensaje?: string;
+        title?: string;
+        errors?: Record<string, string[]>;
+      };
+    };
+    const errorValidacion = Object.values(respuesta?.error?.errors ?? {}).flat().find(Boolean);
+
+    return respuesta?.error?.detail
+      || respuesta?.error?.mensaje
+      || errorValidacion
+      || (respuesta?.error?.title === 'One or more validation errors occurred.'
+        ? 'La definición enviada contiene errores de validación.'
+        : respuesta?.error?.title)
+      || mensaje;
   }
 }

@@ -29,7 +29,7 @@ $checks = @(
     @{ Name = 'Control sidebar relacionado'; Ok = $layout -match 'aria-controls="navegacion-principal"' -and $layout -match '\[attr\.aria-expanded\]="sidebarAbierto\(\)"' },
     @{ Name = 'Ruta activa anunciable'; Ok = $layout -match 'ariaCurrentWhenActive="page"' },
     @{ Name = 'Carga global como region viva sin colision de rol'; Ok = $layout -match 'data-global-loading-status' -and $layout -match 'aria-live="polite"' -and $layout -notmatch 'data-global-loading-status[^>]*role="status"' },
-    @{ Name = 'Skeleton transversal'; Ok = $layout -match '<app-skeleton-loader' -and $layoutTs -match 'SkeletonLoaderComponent' },
+    @{ Name = 'Carga global discreta sin skeleton que desplace contenido'; Ok = $layout -notmatch 'data-global-skeleton' -and $layout -notmatch '<app-skeleton-loader' -and $layoutTs -notmatch 'SkeletonLoaderComponent' },
     @{ Name = 'Skeleton accesible sin competir con status funcional'; Ok = $skeleton -match 'aria-live="polite"' -and $skeleton -match 'aria-busy="true"' -and $skeleton -match 'aria-hidden="true"' -and $skeleton -notmatch 'role="status"' },
     @{ Name = 'Foco visible'; Ok = $styles -match ':focus-visible' },
     @{ Name = 'Reduccion de movimiento'; Ok = $styles -match 'prefers-reduced-motion:\s*reduce' },
