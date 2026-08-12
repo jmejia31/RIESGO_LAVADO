@@ -1,5 +1,33 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 4: Motor de Validación de Definición Espejo y Cobertura de Pruebas Form Builder
+
+- **Fecha y hora**: 2026-08-12, 15:26 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `0c6fa38`.
+- **Commit final**: `80ad3b3`.
+- **Objetivo**: Implementar la Fase 4 de validación de definición espejo (Frontend preventivo / Backend autoridad final), restringir el visor de JSON técnico al rol de administrador y agregar la suite de pruebas unitarias específicas para `FormBuilderComponent` y sus adaptadores.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Validador Espejo Frontend (`form-builder-validator.util.ts`)**:
+   - Creada la utilidad de validación preventiva `validarFormBuilderModel` que verifica:
+     - Presencia obligatoria de al menos 1 sección con título.
+     - Presencia de al menos 1 campo por sección.
+     - Unicidad absoluta de claves técnicas (`clave`) en todo el formulario (previene claves duplicadas).
+     - Etiquetas no vacías, código de catálogo obligatorio en listas/multiselect y fórmulas no vacías en campos calculados.
+   - Integrado el banner de alerta de validación en `FormBuilderComponent.html` impidiendo la emisión del evento de guardado mientras existan inconsistencias.
+2. **Restricción por Rol del Modo JSON Técnico**:
+   - Incorporada la propiedad `esAdministrador: boolean` a `FormBuilderComponent`, ocultando y bloqueando el acceso al editor JSON plano salvo que el usuario cuente con los privilegios correspondientes.
+3. **Suite de Pruebas Unitarias del Form Builder (`form-builder.component.spec.ts`)**:
+   - Creadas 5 pruebas unitarias específicas que verifican la creación del componente, la normalización/serialización del adaptador `form-builder.models.ts`, la detección de claves duplicadas y el bloqueo de guardado con errores.
+   - **Resultado `npm test`**: **27 de 27 suites pasadas (170 de 170 pruebas unitarias 100% súperadas sin errores)**.
+4. **Publicación y Git**:
+   - Compilación Angular (`npm run build`) limpia.
+   - Publicado exitosamente en `origin/desarrollo` (Commit `80ad3b3`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Fase 3: Construcción del Constructor Visual de Formularios (Form Builder)
 
 - **Fecha y hora**: 2026-08-12, 15:20 (UTC-6).
