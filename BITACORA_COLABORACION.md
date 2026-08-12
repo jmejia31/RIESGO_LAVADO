@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Corrección del Validador Integral de Matrices (Objetos Retirados)
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9b287a7`.
+- **Objetivo**: Desbloquear el validador integral de Matrices (`scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`) restaurando la nomenclatura oficial de los objetos retirados `RL_MR_TRAZAS_CALCULO` y `SEQ_RL_MR_TRAZAS` en la suite de certificación Oracle y normalizando la comparación de rutas relativas en Windows.
+
+### Cambios Ejecutados
+1. **`backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosRepositoryIntegrationTests.cs`**:
+   - Sustituidos los identificadores `RL_MR_TRAZAS_CALCULO_OLD` por `RL_MR_TRAZAS_CALCULO` y `SEQ_RL_MR_TRAZAS_OLD` por `SEQ_RL_MR_TRAZAS` en los arreglos estáticos de inventario de objetos retirados `TablasRetiradas` y `SecuenciasRetiradas`.
+2. **`scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`**:
+   - Normalizados los separadores de ruta en el filtro de exclusión de la suite de integración Oracle (`((Relative-Path $_) -replace '\\','/') -ne $oracleIntegrationRelative`) para asegurar comportamiento idéntico en Windows y Linux/CI.
+3. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA** (96 archivos del módulo revisados, 0 hallazgos).
+   - `tools/validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz, 16 alcanzables).
+   - `dotnet test RIESGO_LAVADO.sln --configuration Release --no-restore`: **304/304 PRUEBAS PASARON** (0 fallos).
+   - `git diff --check`: Correcto sin advertencias de formato.
+4. **Control de Alcance y Restricciones Preservadas**:
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20.
+   - **No** se ejecutó Oracle, DDL/DML, scripts `05/06` ni `B10_*`.
+   - Se conservó intacto el respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso**.
+
+---
+
 ## Registro de Intervención — Antigravity — Remediacon de Seguridad SQL Dinámico SonarCloud (PR #20 Bloque 1)
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

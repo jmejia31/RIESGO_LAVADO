@@ -104,7 +104,7 @@ $traceFiles = @(Get-SourceFiles @(
     'backend/RL.API/Features/MatricesRiesgos',
     'backend/RL.API.Tests/Features/MatricesRiesgos',
     'frontend/rl-app/src/app/features/admin/matrices-riesgos'
-) @('.cs','.ts','.html','.sql','.json') | Where-Object { (Relative-Path $_) -ne $oracleIntegrationRelative })
+) @('.cs','.ts','.html','.sql','.json') | Where-Object { ((Relative-Path $_) -replace '\\','/') -ne $oracleIntegrationRelative })
 foreach ($file in $traceFiles) {
     $content = [System.IO.File]::ReadAllText($file.FullName)
     foreach ($token in @('InsertarTrazaCalculoAsync','RL_MR_TRAZAS_CALCULO','SEQ_RL_MR_TRAZAS','TRA_REGLA_ID')) {
