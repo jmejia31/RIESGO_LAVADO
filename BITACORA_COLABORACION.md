@@ -1,5 +1,30 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 3: Construcción del Constructor Visual de Formularios (Form Builder)
+
+- **Fecha y hora**: 2026-08-12, 15:20 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `b57a14a`.
+- **Commit final**: `2284722`.
+- **Objetivo**: Construir e integrar el componente visual `FormBuilderComponent` (3 paneles) para la pestaña de Plantillas en el módulo de Matrices de Riesgos, reemplazando la edición manual de JSON por una interfaz gráfica interactiva.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Modelos y Normalizador (`form-builder.models.ts`)**:
+   - Creados los modelos `FormBuilderModel`, `SeccionBuilderModel`, `CampoBuilderModel` y las funciones de conversión bi-direccionales `normalizarJsonABuilderModel` y `serializarBuilderModelAJson` preservando el contrato JSON oficial.
+2. **Componente Visual de 3 Paneles (`FormBuilderComponent`)**:
+   - *Panel 1 (Paleta Izquierda)*: Controles soportados (Texto, Número, Fecha, Texto largo, Lista desplegable, Radio, Multiselect, Checkbox y Fórmula).
+   - *Panel 2 (Lienzo Central)*: Creación, reordenamiento, duplicación y eliminación de secciones/campos con configuración flexible de 1 a 6 columnas por fila.
+   - *Panel 3 (Inspector de Propiedades)*: Configuración contextual de claves JSON, etiquetas, reglas de obligatoriedad, solo lectura, catálogos asociados y fórmulas de cálculo.
+3. **Integración en la Pestaña Plantillas (`matrices-riesgos.component.html`)**:
+   - Sustituido el `textarea` directo por `<app-form-builder>`, activando automáticamente el constructor visual al presionar `"Editar definición"` o el modo lectura al presionar `"Ver definición"`.
+4. **Verificación de Calidad y Pruebas**:
+   - `npm run build`: **Compilación exitosa (100% libre de errores TypeScript/Angular)**.
+   - `npm test`: **26 suites pasadas (165 de 165 pruebas unitarias pasadas al 100%)**.
+   - `git push`: Publicado exitosamente en `origin/desarrollo` (Commit `2284722`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Fase 2: Endurecimiento del Ciclo de Vida de Versiones (Corrección de Inmutabilidad Histórica)
 
 - **Fecha y hora**: 2026-08-12, 15:15 (UTC-6).
