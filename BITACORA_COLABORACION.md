@@ -3701,3 +3701,12 @@ La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + D
 El análisis SonarCloud remoto posterior queda pendiente para confirmar la desaparición de las incidencias; GOV-02 + GOV-03 permanece abierta.
 
 > **Fe de erratas append-only:** El validador de mitigación de fase 11 también normalizó los alias `AS OBJETO` y `AS TOTAL` en su consulta de conteos, sin modificar datos ni semántica.
+## Registro de Intervención — Codex — Normalización de alias SQL en validadores Fase 11
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Rama**: `desarrollo`.
+- **Objetivo**: Corregir patrones de alias implícitos detectados por SonarCloud en validadores de solo lectura, sin cambiar consultas ni efectos.
+- **Archivos modificados**: `fase11/03_validar_gestion_riesgos_bloque2_solo_lectura.sql`, `fase11/04_validar_flujos_bloque3_solo_lectura.sql`, `fase11/06_validar_alertas_automonitoreo_bloque5_solo_lectura.sql`.
+- **Cambio**: Alias explícitos `AS OBJETO` y `AS TOTAL` en conteos y consultas `UNION ALL`; se conservaron ordenaciones y comportamiento de solo lectura.
+- **Oracle/DDL/DML**: no ejecutados.
+- **Pendiente**: nuevo análisis remoto de SonarCloud; GOV-02 + GOV-03 continúa abierta.
