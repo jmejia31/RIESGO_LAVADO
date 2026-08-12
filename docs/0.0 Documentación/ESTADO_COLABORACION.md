@@ -278,6 +278,11 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - La traza posterior identificó que `JsonElement` llegaba en estado inválido al controlador. La API ahora recibe `JsonDocument` y usa `RootElement.GetRawText()`, por lo que conserva el JSON real antes de validar y persistir.
   - Pruebas locales posteriores: contrato/controlador 14/14 y suite backend 306/306 correctos; validadores dinámico de Matrices y de scripts BD correctos.
   - Se requiere reiniciar API/frontend locales antes de validar manualmente el botón **Guardar**.
+- **Clasificación Integral de Deuda Técnica SonarCloud (~150 Problemas) (2026-08-12)**:
+  - Clasificados e inventariados los ~150 problemas observados en SonarCloud: 100% de los hallazgos de código nuevo en el PR #20 remediados (SQL dinámico `DBMS_ASSERT`, accesibilidad `<label>`/`<dl>`, `npm ci --ignore-scripts`, permisos Nginx Docker 755 y direccionalidad `ORDER BY ... ASC`).
+  - Excluido de análisis el volcado SQL legatario masivo `Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql` en `sonar-analysis.yml` (`a6f8bc6`).
+  - Suite .NET Release (306/306), ESLint (0 errores), unitarias Angular (165/165), Playwright E2E (13/13), validadores BD y enlaces de documentación en verde.
+- **Siguiente objetivo**: Verificar la Quality Gate en la plataforma web de SonarCloud tras la ejecución remota sobre `origin/desarrollo`.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 

@@ -1,5 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Clasificación Integral de Deuda Técnica y Verificación SonarCloud (~150 Problemas)
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `a6f8bc6`.
+- **Objetivo**: Inspeccionar, clasificar e inventariar los ~150 problemas abiertos en SonarCloud para el PR #20 y la rama `desarrollo`, separando el código nuevo, la deuda histórica de módulos activos y los volcados SQL no ejecutables.
+
+### Clasificación y Diagnóstico Integral
+1. **Código Nuevo del PR #20 (100% Remediado)**:
+   - **SQL Dinámico / Inyección**: Aplicado `DBMS_ASSERT.SIMPLE_SQL_NAME` y `DBMS_ASSERT.ENQUOTE_NAME` en scripts Oracle (`00_retiro_controlado_modelo_prueba.sql`, `06_reconstruir_modelo_17_tablas.sql`, `07_preflight_inventario_oracle_solo_lectura.sql`).
+   - **Accesibilidad y Semántica HTML**: Aplicadas etiquetas explícitas `<label for="..." id="...">` y tarjetas `<dl>`/`<dt>`/`<dd>` individuales en las 4 plantillas de Matrices de Riesgos.
+   - **Seguridad Docker / CI**: Implementado `npm ci --ignore-scripts` y permisos `root:root` (755) sobre `/usr/share/nginx/html`.
+   - **Direccionalidad SQL**: Agregado `ASC` explícito a cláusulas `ORDER BY` en scripts `05`, `07` y `08`.
+2. **Volcados SQL e Históricos (Exclusión Justificada)**:
+   - `Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql`: Volcado legatario masivo (1.2MB+) excluido formalmente en `sonar-analysis.yml` (`a6f8bc6`) para evitar falsos positivos por DDLs heredados descontinuados.
+3. **Deuda Histórica de Módulos Activos (Preservada sin Alteraciones Masivas)**:
+   - Convenciones de código legatario en Backend (`RL.API`/`RL.Core`) y Frontend (`listas`, `bitacora`, `usuarios`), mantenidas sin supresiones masivas ni `NOSONAR`.
+4. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA** (96 archivos del módulo).
+   - `validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz, 16 alcanzables).
+   - `tools/validate_documentation_links.ps1`: **71 DOCUMENTOS / 163 ENLACES VÁLIDOS**.
+   - Build .NET Release: **ÉXITO**. Suite .NET: **306/306 PRUEBAS PASARON**.
+   - ESLint: **0 ERRORES**. Pruebas unitarias Angular: **165/165 PRUEBAS PASARON**.
+   - Playwright E2E: **13/13 PRUEBAS PASARON**.
+   - `git diff --check`: Correcto sin advertencias de formato.
+5. **Control de Gobernanza y Restricciones**:
+   - `main` permanece intacta. PR #20 continúa abierto en estado Draft.
+   - Respaldo SQL local `Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql` conservado intacto sin staging.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso** a la espera de la ejecución remota de SonarCloud.
+
+---
+
 ## Registro de Intervención — Codex — Corrección de vinculación JSON con Newtonsoft
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
