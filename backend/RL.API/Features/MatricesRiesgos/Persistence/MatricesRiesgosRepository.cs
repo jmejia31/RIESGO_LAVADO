@@ -191,7 +191,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                SET VER_JSON = :jsonConfig,
                    VER_HASH = :hash
              WHERE VER_ID = :versionId
-               AND VER_VIGENTE = 0";
+               AND VER_VIGENTE = 0
+               AND VER_ESTADO = 'DRAFT'";
 
         await using var cmd = CrearComando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("jsonConfig", OracleDbType.Clob) { Value = jsonConfig });

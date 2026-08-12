@@ -141,4 +141,20 @@ public sealed class MatricesRiesgosFamiliasServiceValidationTests
         Assert.Contains("desactivada exitosamente", result.Message);
         Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.DesactivarFamiliaFormularioAtomicoAsync)));
     }
+
+    [Fact]
+    public async Task ActualizarBorrador_RechazaModificacionDeVersionPublicadaHistorica()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
+        repo.On(nameof(IMatricesRiesgosRepository.ActualizarBorradorFormularioAsync), _ => Task.FromResult(false));
+
+        ServiceResult result = await service.ActualizarBorradorFormularioAsync(
+            versionId: 10,
+            jsonConfig: "{\"secciones\":[]}",
+            usuarioId: 1);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Contains("permanezca en DRAFT", result.Message);
+    }
 }
