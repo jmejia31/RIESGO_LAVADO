@@ -12,6 +12,8 @@ import {
 } from '../../models/form-builder.models';
 import { ElementoCatalogoMatrices } from '../../models/matrices-riesgos.models';
 
+import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
+
 @Component({
   selector: 'app-form-builder',
   standalone: true,
@@ -22,6 +24,7 @@ import { ElementoCatalogoMatrices } from '../../models/matrices-riesgos.models';
 export class FormBuilderComponent implements OnInit {
   @Input() jsonDefinicion: string = '';
   @Input() soloLectura: boolean = false;
+  @Input() esAdministrador: boolean = true;
   @Input() versionCodigo: string = 'V1.0';
   @Input() versionNumero: number = 1;
   @Input() catalogosDisponibles: Array<{ codigo: string; nombre: string }> = [
@@ -46,6 +49,7 @@ export class FormBuilderComponent implements OnInit {
   readonly campoActivo = signal<CampoBuilderModel | null>(null);
   readonly mostrarJsonAvanzado = signal<boolean>(false);
   readonly jsonAvanzadoStr = signal<string>('');
+  readonly erroresValidacion = signal<FormBuilderValidationError[]>([]);
 
   ngOnInit(): void {
     const parsed = normalizarJsonABuilderModel(this.jsonDefinicion, this.versionCodigo, 'Formulario Dinámico');
@@ -199,6 +203,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   toggleModoJson(): void {
+    if (!this.esAdministrador) return;
     if (!this.mostrarJsonAvanzado()) {
       this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
     }
@@ -206,18 +211,28 @@ export class FormBuilderComponent implements OnInit {
   }
 
   aplicarJsonAvanzado(): void {
-    if (this.soloLectura) return;
+    if (this.soloLectura || !this.esAdministrador) return;
     try {
       const parsed = normalizarJsonABuilderModel(this.jsonAvanzadoStr(), this.versionCodigo, 'Formulario Dinámico');
       this.model.set(parsed);
       this.mostrarJsonAvanzado.set(false);
+      this.erroresValidacion.set([]);
     } catch {
-      alert('El formato JSON ingresado no es válido.');
+      this.erroresValidacion.set([{ campo: 'JSON', mensaje: 'El formato JSON ingresado no es válido.' }]);
     }
+  }
+
+  validarYObtenerErrores(): boolean {
+    const errs = validarFormBuilderModel(this.model());
+    this.erroresValidacion.set(errs);
+    return errs.length === 0;
   }
 
   emitirGuardado(): void {
     if (this.soloLectura) return;
+    if (!this.validarYObtenerErrores()) {
+      return;
+    }
     const jsonOutput = serializarBuilderModelAJson(this.model());
     this.guardarJson.emit(jsonOutput);
   }
