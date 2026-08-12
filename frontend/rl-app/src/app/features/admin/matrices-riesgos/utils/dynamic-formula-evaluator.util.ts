@@ -8,7 +8,7 @@ export interface ResultadoEvaluacionFormula {
 
 /**
  * Evaluador matemático seguro Shunting-Yard (sin eval ni new Function).
- * Soporta operaciones binarias básicas (+, -, *, /), paréntesis, constantes y variables numéricas.
+ * Soporta +, -, *, /, paréntesis, constantes y variables numéricas.
  */
 function evaluarExpresionMatematicaSegura(expresion: string): number {
   const tokens: string[] = [];
@@ -38,10 +38,10 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
       continue;
     }
 
-    throw new Error(`Carácter no permitido en expresión matemática: '${ch}'`);
+    throw new Error(`Caracter no permitido en expresion matematica: '${ch}'`);
   }
 
-  // Algoritmo Shunting-yard para pasar a notación RPN
+  // Algoritmo Shunting-yard RPN
   const outputQueue: string[] = [];
   const operatorStack: string[] = [];
 
@@ -71,7 +71,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
         outputQueue.push(operatorStack.pop()!);
       }
       if (operatorStack.length === 0) {
-        throw new Error('Paréntesis desbalanceados en la fórmula.');
+        throw new Error('Parentesis desbalanceados en la formula.');
       }
       operatorStack.pop();
     }
@@ -80,12 +80,11 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
   while (operatorStack.length > 0) {
     const op = operatorStack.pop()!;
     if (op === '(' || op === ')') {
-      throw new Error('Paréntesis desbalanceados en la fórmula.');
+      throw new Error('Parentesis desbalanceados en la formula.');
     }
     outputQueue.push(op);
   }
 
-  // Evaluación de la cola RPN
   const evalStack: number[] = [];
 
   for (const token of outputQueue) {
@@ -93,7 +92,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
       evalStack.push(Number(token));
     } else {
       if (evalStack.length < 2) {
-        throw new Error('Expresión matemática incompleta.');
+        throw new Error('Expresion matematica incompleta.');
       }
       const b = evalStack.pop()!;
       const a = evalStack.pop()!;
@@ -110,7 +109,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
           break;
         case '/':
           if (b === 0) {
-            throw new Error('División por cero en el cálculo.');
+            throw new Error('Division por cero en el calculo.');
           }
           evalStack.push(a / b);
           break;
@@ -119,32 +118,69 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
   }
 
   if (evalStack.length !== 1) {
-    throw new Error('Error al evaluar el resultado de la fórmula.');
+    throw new Error('Error al evaluar el resultado de la formula.');
   }
 
   return evalStack[0];
+}
+
+/**
+ * Extrae las variables dependientes (claves de campos) presentes en la fórmula.
+ */
+export function obtenerDependenciasDeFormula(formula: string): string[] {
+  if (!formula || formula.trim() === '') return [];
+  const regexClaves = /[a-zA-Z_][a-zA-Z0-9_]*/g;
+  const coincidencias = formula.match(regexClaves) || [];
+  const reservadas = new Set(['VRI', 'VRR', 'MATH', 'ABS', 'MIN', 'MAX']);
+  return Array.from(new Set(coincidencias.filter(c => !reservadas.has(c.toUpperCase()))));
+}
+
+/**
+ * Detecta si existe un ciclo de dependencias directas o indirectas (ej. A -> B -> A).
+ */
+export function detectarCicloEnFormulas(
+  claveCampoActual: string,
+  camposMap: Map<string, CampoFormulario>,
+  visitados: Set<string> = new Set()
+): boolean {
+  const claveLower = claveCampoActual.toLowerCase();
+  if (visitados.has(claveLower)) {
+    return true; // Ciclo encontrado
+  }
+
+  visitados.add(claveLower);
+  const campo = camposMap.get(claveLower);
+  if (!campo || !campo.formula) return false;
+
+  const dependencias = obtenerDependenciasDeFormula(campo.formula);
+  for (const dep of dependencias) {
+    if (detectarCicloEnFormulas(dep, camposMap, new Set(visitados))) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export function evaluarFormulaCampo(
   formula: string | undefined | null,
   respuestas: RespuestasFormulario,
   claveCampoActual?: string,
-  visitados: Set<string> = new Set()
+  camposMap: Map<string, CampoFormulario> = new Map()
 ): ResultadoEvaluacionFormula {
   if (!formula || formula.trim() === '') {
     return { valorCalculado: null, exito: true };
   }
 
-  // Detección de referencias circulares
-  if (claveCampoActual) {
-    if (visitados.has(claveCampoActual.toLowerCase())) {
+  // Deteccion previa de referencias circulares directas e indirectas
+  if (claveCampoActual && camposMap.size > 0) {
+    if (detectarCicloEnFormulas(claveCampoActual, camposMap)) {
       return {
         valorCalculado: null,
         exito: false,
         error: `Referencia circular detectada en el campo '${claveCampoActual}'.`
       };
     }
-    visitados.add(claveCampoActual.toLowerCase());
   }
 
   const exprLimpia = formula.trim();
@@ -181,7 +217,7 @@ export function evaluarFormulaCampo(
     return {
       valorCalculado: null,
       exito: false,
-      error: err instanceof Error ? err.message : 'Error en cálculo'
+      error: err instanceof Error ? err.message : 'Error en calculo'
     };
   }
 }
@@ -193,12 +229,15 @@ export function recalcularFormulasEvaluacion(
   const respuestasNuevas = { ...respuestas };
   const calculosMap: Record<string, any> = {};
 
+  const camposMap = new Map<string, CampoFormulario>();
+  campos.forEach(c => camposMap.set(c.clave.toLowerCase(), c));
+
   const camposFormula = campos.filter(c => c.tipo === 'formula' || (c.formula && c.formula.trim() !== ''));
   if (camposFormula.length === 0) {
     return { respuestasActualizadas: respuestasNuevas, calculosJson: calculosMap };
   }
 
-  // Resolver en múltiples pasadas (hasta N pasadas para resolver dependencias encadenadas de fórmulas)
+  // Resolver en pasadas iterativas con limite maximo
   let huboCambios = true;
   let iteracion = 0;
   const maxIteraciones = camposFormula.length * 2;
@@ -208,7 +247,7 @@ export function recalcularFormulasEvaluacion(
     iteracion++;
 
     for (const campo of camposFormula) {
-      const res = evaluarFormulaCampo(campo.formula, respuestasNuevas, campo.clave);
+      const res = evaluarFormulaCampo(campo.formula, respuestasNuevas, campo.clave, camposMap);
       if (res.exito && res.valorCalculado !== null) {
         if (respuestasNuevas[campo.clave] !== res.valorCalculado) {
           respuestasNuevas[campo.clave] = res.valorCalculado;
