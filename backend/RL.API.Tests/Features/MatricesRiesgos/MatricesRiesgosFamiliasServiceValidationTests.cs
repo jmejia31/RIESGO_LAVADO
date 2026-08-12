@@ -103,7 +103,7 @@ public sealed class MatricesRiesgosFamiliasServiceValidationTests
         ServiceResult<long> result = await service.CrearFamiliaFormularioAsync(dto);
 
         Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
+        Assert.Equal(409, result.StatusCode);
         Assert.Contains("Ya existe una familia", result.Message);
     }
 

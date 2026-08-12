@@ -227,7 +227,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         FamiliaFormularioDto? existente = await _repo.ObtenerFamiliaFormularioPorCodigoAsync(codigoNormalizado);
         if (existente is not null)
         {
-            return ServiceResult<long>.BadRequest($"Ya existe una familia de formulario registrada con el código '{codigoNormalizado}'.");
+            return ServiceResult<long>.Conflict($"Ya existe una familia de formulario registrada con el código '{codigoNormalizado}'.");
         }
 
         long famId = await _repo.CrearFamiliaFormularioAsync(

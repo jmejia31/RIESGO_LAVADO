@@ -104,7 +104,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
 
     expect(service['transicionarEvaluacion']).toHaveBeenCalledWith(15, 'EN_REVISION', 'Revisión técnica');
     expect(component.motivoTransicion).toBe('');
-    expect(component.mensaje()).toBe('Estado actualizado correctamente.');
+    expect(component.mensaje()).toBe('Estado de evaluación actualizado correctamente.');
   });
 
   it('muestra el mensaje funcional cuando la transición falla', () => {
@@ -138,7 +138,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     component.cargarYVincularEvidencia(evaluacion);
 
     expect(service['eliminarEvidenciaHuerfana']).toHaveBeenCalledWith(88);
-    expect(component.error()).toBe('No se pudo vincular la evidencia.');
+    expect(component.error()).toBe('No se pudo vincular la evidencia al expediente.');
   });
 
   it('vacía el historial cuando no puede consultar los flujos', () => {
