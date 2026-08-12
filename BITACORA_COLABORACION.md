@@ -1,5 +1,30 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 5: Integración del Constructor Visual con la Captura Dinámica y EVA_DATOS_JSON
+
+- **Fecha y hora**: 2026-08-12, 15:38 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d80ce3d`.
+- **Commit final**: `649bffd`.
+- **Objetivo**: Integrar la captura de evaluaciones dinámicas en la pestaña "Captura" con las definiciones generadas por el Form Builder, soportando el diseño dinámico por columnas por fila (`columnasPorFila`), ancho individual de campo (`anchoColumnas`), fórmulas calculadas e inmutabilidad en `EVA_DATOS_JSON`.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Modelos Extendidos (`matrices-riesgos.models.ts`)**:
+   - Añadidos `columnasPorFila` a `SeccionFormulario` y `anchoColumnas`, `formula` a `CampoFormulario`.
+2. **Transformación de Definiciones (`MatricesRiesgosComponent.ts`)**:
+   - Actualizada la función `extraerDefinicionVersion` para preservar los atributos de maquetación visual de 1 a 6 columnas y las fórmulas configuradas en el Form Builder.
+3. **Renderizado por Grid Dinámico (`matrices-riesgos.component.html`)**:
+   - Adaptada la pestaña "Captura" para renderizar dinámicamente cada sección respetando las clases CSS `grid-cols-1` a `grid-cols-6` y los anchos individuales de campo `col-span-1` a `col-span-6`.
+   - Soporte para etiquetas con obligatoriedad (`*`), campos de texto largo (`textarea`), selectores de catálogos, campos calculados con badge de fórmula y almacenamiento limpio en `EVA_DATOS_JSON`.
+4. **Verificación de Calidad y Pruebas**:
+   - `npm run build`: **Compilación Angular exitosa al 100% (0 errores)**.
+   - `npm test`: **27 de 27 suites y 171 de 171 pruebas unitarias 100% pasadas sin fallos**.
+   - `dotnet test`: **314 de 314 pruebas backend 100% súperadas**.
+   - Publicado en `origin/desarrollo` (Commit `649bffd`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Restricción Estricta de Rol Administrador para Edición JSON Técnico
 
 - **Fecha y hora**: 2026-08-12, 15:33 (UTC-6).
