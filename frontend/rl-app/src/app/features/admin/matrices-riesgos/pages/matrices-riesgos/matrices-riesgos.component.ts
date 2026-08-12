@@ -72,6 +72,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   archivoEvidencia: File | null = null;
 
   readonly versionEditando = signal<VersionFormularioDto | null>(null);
+  readonly soloLecturaDefinicion = signal<boolean>(false);
   definicionTecnica = '';
 
   readonly secciones = computed(() => {
@@ -155,6 +156,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   seleccionarFamilia(codigo: string): void {
     this.familiaSeleccionada.set(codigo);
     this.versionEditando.set(null);
+    this.soloLecturaDefinicion.set(false);
     this.definicionTecnica = '';
     this.cargarVersiones();
     this.cargarVersionVigentePorFamilia(codigo);
@@ -511,8 +513,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  abrirDefinicion(version: VersionFormularioDto): void {
+  abrirDefinicion(version: VersionFormularioDto, soloLectura = false): void {
     this.versionEditando.set(version);
+    this.soloLecturaDefinicion.set(soloLectura || version.verVigente);
     this.definicionTecnica = this.formatearDefinicion(version.verJson);
   }
 
