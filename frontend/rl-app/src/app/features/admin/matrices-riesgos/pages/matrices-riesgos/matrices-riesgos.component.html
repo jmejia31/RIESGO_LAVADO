@@ -240,6 +240,7 @@
         <div class="mt-6 h-[720px] max-h-[85vh] animate-fade-in">
           <app-form-builder [jsonDefinicion]="definicionTecnica"
                             [soloLectura]="soloLecturaDefinicion()"
+                            [esAdministrador]="esAdministrador()"
                             [versionCodigo]="versionActual.verCodigo"
                             [versionNumero]="versionActual.verVersion"
                             (guardarJson)="definicionTecnica = $event; guardarDefinicion()"

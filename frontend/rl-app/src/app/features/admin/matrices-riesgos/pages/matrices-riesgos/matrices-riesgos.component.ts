@@ -18,6 +18,8 @@ import { GlobalHttpStateService } from '../../../../../core/services/global-http
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
 
+import { AuthService } from '../../../../../core/auth/auth.service';
+
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
 @Component({
@@ -30,7 +32,10 @@ type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly globalState = inject(GlobalHttpStateService);
+  private readonly authService = inject(AuthService);
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR', 'ANALISTA_RIESGO']));
 
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);

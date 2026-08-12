@@ -24,7 +24,7 @@ import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils
 export class FormBuilderComponent implements OnInit {
   @Input() jsonDefinicion: string = '';
   @Input() soloLectura: boolean = false;
-  @Input() esAdministrador: boolean = true;
+  @Input() esAdministrador: boolean = false;
   @Input() versionCodigo: string = 'V1.0';
   @Input() versionNumero: number = 1;
   @Input() catalogosDisponibles: Array<{ codigo: string; nombre: string }> = [

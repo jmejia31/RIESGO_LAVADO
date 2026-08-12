@@ -30,11 +30,18 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     fixture = TestBed.createComponent(FormBuilderComponent);
     component = fixture.componentInstance;
     component.jsonDefinicion = jsonPruebaValido;
+    component.esAdministrador = true;
     fixture.detectChanges();
   });
 
   it('debe crear el componente FormBuilderComponent', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('bloquea la visualización del editor JSON técnico si esAdministrador es false', () => {
+    component.esAdministrador = false;
+    component.toggleModoJson();
+    expect(component.mostrarJsonAvanzado()).toBe(false);
   });
 
   it('normalizarJsonABuilderModel convierte correctamente la estructura JSON en BuilderModel', () => {
