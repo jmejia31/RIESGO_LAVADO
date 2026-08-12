@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Reparación de Permiso esAdministrador Predeterminado y Enlace AuthService
+
+- **Fecha y hora**: 2026-08-12, 15:30 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `fad01d4`.
+- **Commit final**: `e99c3e4`.
+- **Objetivo**: Corregir el valor predeterminado del permiso `@Input() esAdministrador: boolean = false` en `FormBuilderComponent` y enlazarlo con los roles del usuario autenticado en `MatricesRiesgosComponent` mediante `AuthService`.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Endurecimiento de Permiso Predeterminado (`FormBuilderComponent`)**:
+   - Cambiado el valor predeterminado de `esAdministrador` de `true` a `false`.
+   - Si no se transmite explícitamente el permiso desde el componente padre, la vista del JSON técnico permanece totalmente inhabilitada y oculta por seguridad.
+2. **Enlace Contextual con Sesión Activa (`MatricesRiesgosComponent`)**:
+   - Inyectado `AuthService` en `MatricesRiesgosComponent`.
+   - Creado el valor calculado `esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR', 'ANALISTA_RIESGO']))`.
+   - Transmitido `[esAdministrador]="esAdministrador()"` al componente `<app-form-builder>`.
+3. **Verificación de Codificación UTF-8**:
+   - Confirmado que los archivos fuentes de la aplicación están guardados estrictamente en **UTF-8 sin BOM**.
+4. **Verificación de Pruebas**:
+   - `npm run build`: Compilación Angular **100% limpia sin errores**.
+   - `npm test`: **27 suites y 171 pruebas unitarias 100% pasadas sin errores** (incluida la nueva prueba que comprueba el bloqueo de JSON cuando `esAdministrador` es `false`).
+   - Publicado en `origin/desarrollo` (Commit `e99c3e4`). Estado de Git 100% limpio.
+
+---
+
 ## Registro de Intervención — Antigravity — Fase 4: Motor de Validación de Definición Espejo y Cobertura de Pruebas Form Builder
 
 - **Fecha y hora**: 2026-08-12, 15:26 (UTC-6).
