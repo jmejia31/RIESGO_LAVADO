@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- MODULO MATRICES DE RIESGOS - TRANSICION AL MODELO REDUCIDO
 -- Script: 06_reconstruir_modelo_17_tablas.sql
 -- Uso: SOLO manual, con respaldo validado y autorizacion expresa.
@@ -32,13 +32,13 @@ END;
 DECLARE
   PROCEDURE drop_table_if_exists(p_name VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || p_name || ' CASCADE CONSTRAINTS PURGE';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_name) || ' CASCADE CONSTRAINTS PURGE';
   EXCEPTION WHEN OTHERS THEN
     IF SQLCODE <> -942 THEN RAISE; END IF;
   END;
   PROCEDURE drop_sequence_if_exists(p_name VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || p_name;
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_name);
   EXCEPTION WHEN OTHERS THEN
     IF SQLCODE <> -2289 THEN RAISE; END IF;
   END;

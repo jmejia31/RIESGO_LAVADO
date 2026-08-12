@@ -259,6 +259,10 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
 - **Ajuste Semántico DL/DT/DD y Verificación ESLint (2026-08-12)**:
   - Reestructuradas las 8 tarjetas de métricas en `matrices-riesgos-monitoreo-operativo.component.html` a elementos `<dl>` individuales con su `<dt>` y `<dd>` directos sobre contenedor `<div>` grid.
   - Verificado `npm run lint` tras limpiar `.angular/cache` (0 errores). Pruebas unitarias Angular (165/165), build, Playwright E2E (13/13) y enlaces de documentación en verde.
+- **Remediación de Hallazgos SonarCloud en Scripts Oracle (2026-08-12)**:
+  - Aplicado `DBMS_ASSERT.SIMPLE_SQL_NAME` a `drop_table_if_exists` y `drop_sequence_if_exists` en `06_reconstruir_modelo_17_tablas.sql`.
+  - Agregada direccionalidad `ASC` explícita a cláusulas `ORDER BY` en scripts `05_ajustes_dashboard_seguridad_reportes.sql`, `07_preflight_inventario_oracle_solo_lectura.sql` y `08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`.
+  - Validadores de base de datos, alineación dinámicos de Matrices (96 archivos) y enlaces de documentación en verde.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 

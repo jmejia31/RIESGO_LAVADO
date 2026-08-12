@@ -1,5 +1,36 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Remediación de Hallazgos SonarCloud de Scripts Oracle (DBMS_ASSERT y ORDER BY ASC)
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `26f1013`.
+- **Objetivo**: Aplicar las 4 correcciones técnicas vigentes identificadas por SonarCloud en scripts Oracle de Matrices de Riesgos (sanitación `DBMS_ASSERT.SIMPLE_SQL_NAME` en DDLs de script 06 y direccionalidad `ORDER BY ... ASC` explícita en scripts 05, 07 y 08).
+
+### Cambios Ejecutados
+1. **`database/19_matrices_riesgos/transicion/06_reconstruir_modelo_17_tablas.sql`**:
+   - Desinfectados los parámetros `p_name` con `DBMS_ASSERT.SIMPLE_SQL_NAME(p_name)` en las rutinas auxiliares PL/SQL de `DROP TABLE` y `DROP SEQUENCE` ejecutadas vía `EXECUTE IMMEDIATE`.
+2. **`database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql`**:
+   - Agregada la direccionalidad `ASC` explícita a todas las cláusulas `ORDER BY` (`ORDER BY TABLE_NAME ASC` y `ORDER BY SEQUENCE_NAME ASC`).
+3. **`database/19_matrices_riesgos/transicion/08_postflight_verificacion_modelo_17_tablas_solo_lectura.sql`**:
+   - Agregada la direccionalidad `ASC` explícita a todas las cláusulas `ORDER BY` (`ORDER BY TABLE_NAME ASC`, `ORDER BY SEQUENCE_NAME ASC`, `ORDER BY TABLE_NAME ASC, CONSTRAINT_TYPE ASC, CONSTRAINT_NAME ASC`, `ORDER BY TABLE_NAME ASC, INDEX_NAME ASC`).
+4. **`database/19_matrices_riesgos/instalacion/05_ajustes_dashboard_seguridad_reportes.sql`**:
+   - Agregada la direccionalidad `ASC` explícita a `ORDER BY PROY_EVALUACION_ID ASC`.
+5. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `tools/validate_database_scripts.ps1`: **CORRECTA** (19 scripts raíz, 16 alcanzables).
+   - `scripts/validation/validate_matrices_dynamic_ddl_alignment.ps1`: **CORRECTA** (96 archivos del módulo revisados, 0 hallazgos).
+   - `tools/validate_documentation_links.ps1`: **71 DOCUMENTOS / 163 ENLACES VÁLIDOS**.
+   - `git diff --check`: Correcto sin advertencias de formato.
+6. **Control de Alcance y Restricciones Preservadas**:
+   - **No** se modificaron `00_retiro_controlado_modelo_prueba.sql` ni archivos Frontend/HTML.
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20.
+   - **No** se ejecutó Oracle en servidor, DDL/DML, scripts `05/06`, SQL dinámico ni `B10_*`.
+   - Se conservó intacto el respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso**.
+
+---
+
 ## Registro de Intervención — Antigravity — Reestructuración Semántica DL/DT/DD y Verificación ESLint
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

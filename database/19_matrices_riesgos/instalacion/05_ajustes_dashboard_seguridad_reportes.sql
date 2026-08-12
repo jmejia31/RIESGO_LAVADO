@@ -66,7 +66,7 @@ BEGIN
               FROM RL_MR_PROYECCIONES_EVALUACION
              GROUP BY PROY_EVALUACION_ID
             HAVING COUNT(*) > 1
-             ORDER BY PROY_EVALUACION_ID
+             ORDER BY PROY_EVALUACION_ID ASC
         ) LOOP
             DBMS_OUTPUT.PUT_LINE(
                 'Evaluación conflictiva: ' || r.PROY_EVALUACION_ID ||
