@@ -1,12 +1,13 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Core.Security;
@@ -40,14 +41,14 @@ public sealed class MatricesRiesgosController : ControllerBase
     public async Task<IActionResult> CrearBorradorFormulario(
         [FromQuery] long familiaId,
         [FromQuery] string codigoFormulario,
-        [FromBody] JsonDocument jsonConfig)
+        [FromBody] JToken jsonConfig)
     {
         try
         {
             var result = await _service.CrearBorradorFormularioAsync(
                 familiaId,
                 codigoFormulario,
-                jsonConfig.RootElement.GetRawText(),
+                jsonConfig.ToString(Formatting.None),
                 ObtenerUsuarioId());
             return Responder(result);
         }
@@ -78,11 +79,11 @@ public sealed class MatricesRiesgosController : ControllerBase
     [HttpPut("formularios/{id:long}")]
     [Authorize(Roles = SystemRoles.Administrador)]
     [AuditRequired("Actualización de borrador de formulario")]
-    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JsonDocument jsonConfig)
+    public async Task<IActionResult> ActualizarBorradorFormulario(long id, [FromBody] JToken jsonConfig)
     {
         try
         {
-            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.RootElement.GetRawText(), ObtenerUsuarioId());
+            var result = await _service.ActualizarBorradorFormularioAsync(id, jsonConfig.ToString(Formatting.None), ObtenerUsuarioId());
             return Responder(result);
         }
         catch (Exception ex)

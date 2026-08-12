@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Json;
+using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -126,7 +127,7 @@ public sealed class MatricesRiesgosControllerTests
         service.On(nameof(IMatricesRiesgosAppService.ActualizarBorradorFormularioAsync), _ =>
             Task.FromResult(ServiceResult.Ok()));
         const string contenido = "{\"secciones\":[{\"clave\":\"prueba1\"}]}";
-        using JsonDocument documento = JsonDocument.Parse(contenido);
+        JToken documento = JToken.Parse(contenido);
 
         IActionResult result = await controller.ActualizarBorradorFormulario(17, documento);
 

@@ -1,5 +1,20 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección de vinculación JSON con Newtonsoft
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `bcd4596`.
+- **Objetivo**: Resolver el 400 `jsonConfig field is required` al guardar cambios de una plantilla con campos dinámicos.
+
+### Cambios y verificación
+
+- Los endpoints de crear y actualizar borradores reciben ahora `Newtonsoft.Json.Linq.JToken`, compatible con el formateador JSON configurado por la API, y serializan el token sin alterar la definición dinámica.
+- Se actualizaron las pruebas de controlador y del contrato UAT para verificar el tipo de cuerpo efectivo.
+- Pruebas dirigidas: 14/14 correctas; no se conectó Oracle ni se ejecutaron DDL/DML o scripts protegidos.
+- `main`, PR #20, producción, `B10_*` y el respaldo SQL local permanecen fuera del cambio.
+
 ## Registro de Intervención — Codex — Carga global discreta y guardado JSON estable
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
