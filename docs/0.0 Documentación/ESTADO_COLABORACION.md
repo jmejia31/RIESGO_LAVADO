@@ -256,6 +256,9 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Instalación npm: Configurado `npm ci --ignore-scripts` en `frontend/rl-app/Dockerfile`, `quality-gates.yml` y `sonar-analysis.yml`.
   - Docker Frontend: Configurada la pertenencia `root:root` con permisos `755` para los archivos estáticos en `/usr/share/nginx/html`, manteniendo el usuario no-root `nginx` (`uid=101`) y directorios temporales `/tmp/nginx`.
   - Pruebas unitarias Angular (165/165), build, Playwright E2E (13/13), contenedor Docker y enlaces de documentación en verde.
+- **Ajuste Semántico DL/DT/DD y Verificación ESLint (2026-08-12)**:
+  - Reestructuradas las 8 tarjetas de métricas en `matrices-riesgos-monitoreo-operativo.component.html` a elementos `<dl>` individuales con su `<dt>` y `<dd>` directos sobre contenedor `<div>` grid.
+  - Verificado `npm run lint` tras limpiar `.angular/cache` (0 errores). Pruebas unitarias Angular (165/165), build, Playwright E2E (13/13) y enlaces de documentación en verde.
 - **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 

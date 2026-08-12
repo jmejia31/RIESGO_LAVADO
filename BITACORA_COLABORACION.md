@@ -1,5 +1,34 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Reestructuración Semántica DL/DT/DD y Verificación ESLint
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `e327aff`.
+- **Objetivo**: Reestructurar las tarjetas de métricas en `matrices-riesgos-monitoreo-operativo.component.html` para que cada tarjeta sea un `<dl>` individual con su `<dt>` y `<dd>` directos (eliminando hallazgos Sonar S1082/S1079), y verificar ESLint tras limpiar únicamente la caché `.angular/cache`.
+
+### Cambios Ejecutados
+1. **Reestructuración Semántica HTML**:
+   - `frontend/rl-app/.../matrices-riesgos-monitoreo-operativo.component.html`: Reemplazado el `<dl>` contenedor exterior por un `<div>` grid y transformadas las 8 tarjetas individuales en elementos `<dl class="rounded-xl bg-slate-50 p-3">` conteniendo directamente sus etiquetas `<dt>` y `<dd>`, garantizando conformidad HTML5 y WCAG sin alterar estilos, datos ni funcionalidad.
+2. **Verificación y Ejecución de ESLint**:
+   - Eliminada la carpeta de caché `frontend/rl-app/.angular/cache`.
+   - Ejecutado `npm run lint` (`eslint .`): **0 ERRORES / 0 ADVERTENCIAS** (exit code 0).
+3. **Validaciones Ejecutadas (Todas en Verde)**:
+   - `npm test -- --watch=false`: **165/165 PRUEBAS PASARON** (26/26 archivos de prueba).
+   - `npm run build`: **CONSTRUCCIÓN EXITOSA**.
+   - `npm run e2e`: **13/13 PRUEBAS E2E PASARON**.
+   - `tools/validate_documentation_links.ps1`: **71 DOCUMENTOS / 163 ENLACES VÁLIDOS**.
+   - `git diff --check`: Correcto sin advertencias de formato.
+4. **Control de Alcance y Restricciones Preservadas**:
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20.
+   - **No** se modificaron workflows, Dockerfiles ni `package-lock.json` en este seguimiento.
+   - **No** se ejecutó Oracle, DDL/DML, scripts `05/06`, SQL dinámico ni `B10_*`.
+   - Se conservó intacto el respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso**.
+
+---
+
 ## Registro de Intervención — Antigravity — Remediación de Hallazgos SonarCloud No-SQL (Accesibilidad Frontend, npm ci y Seguridad Docker)
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
