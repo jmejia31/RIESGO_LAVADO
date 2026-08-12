@@ -18,7 +18,7 @@ import { GlobalHttpStateService } from '../../../../../core/services/global-http
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
-import { recalcularFórmulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
+import { recalcularFormulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
@@ -360,7 +360,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.respuestas.update(actuales => {
       const nuevas = { ...actuales, [campo.clave]: valor };
       const todosLosCampos = this.secciones().flatMap(s => s.campos);
-      const { respuestasActualizadas } = recalcularFórmulasEvaluacion(todosLosCampos, nuevas);
+      const { respuestasActualizadas } = recalcularFormulasEvaluacion(todosLosCampos, nuevas);
       return respuestasActualizadas;
     });
   }
@@ -406,7 +406,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const actual = this.evaluacionSeleccionada();
 
     const todosLosCampos = this.secciones().flatMap(s => s.campos);
-    const { respuestasActualizadas, calculosJson } = recalcularFórmulasEvaluacion(todosLosCampos, this.respuestas());
+    const { respuestasActualizadas, calculosJson } = recalcularFormulasEvaluacion(todosLosCampos, this.respuestas());
 
     const dto: EvaluacionRiesgoDto = {
       evaId: actual?.evaId ?? 0,

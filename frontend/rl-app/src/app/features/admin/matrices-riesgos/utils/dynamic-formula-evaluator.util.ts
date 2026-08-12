@@ -1,23 +1,155 @@
 import { CampoFormulario, RespuestasFormulario } from '../models/matrices-riesgos.models';
 
 export interface ResultadoEvaluacionFormula {
-  valorCalculado: number | string | null;
+  valorCalculado: number | null;
   exito: boolean;
   error?: string;
+}
+
+/**
+ * Evaluador matemático seguro Shunting-Yard (sin eval ni new Function).
+ * Soporta operaciones binarias básicas (+, -, *, /), paréntesis, constantes y variables numéricas.
+ */
+function evaluarExpresionMatematicaSegura(expresion: string): number {
+  const tokens: string[] = [];
+  let i = 0;
+
+  while (i < expresion.length) {
+    const ch = expresion[i];
+
+    if (/\s/.test(ch)) {
+      i++;
+      continue;
+    }
+
+    if (/[0-9.]/.test(ch)) {
+      let numStr = '';
+      while (i < expresion.length && /[0-9.]/.test(expresion[i])) {
+        numStr += expresion[i];
+        i++;
+      }
+      tokens.push(numStr);
+      continue;
+    }
+
+    if (['+', '-', '*', '/', '(', ')'].includes(ch)) {
+      tokens.push(ch);
+      i++;
+      continue;
+    }
+
+    throw new Error(`Carácter no permitido en expresión matemática: '${ch}'`);
+  }
+
+  // Algoritmo Shunting-yard para pasar a notación RPN
+  const outputQueue: string[] = [];
+  const operatorStack: string[] = [];
+
+  const precedencia: Record<string, number> = {
+    '+': 1,
+    '-': 1,
+    '*': 2,
+    '/': 2
+  };
+
+  for (const token of tokens) {
+    if (!isNaN(Number(token))) {
+      outputQueue.push(token);
+    } else if (['+', '-', '*', '/'].includes(token)) {
+      while (
+        operatorStack.length > 0 &&
+        operatorStack[operatorStack.length - 1] !== '(' &&
+        precedencia[operatorStack[operatorStack.length - 1]] >= precedencia[token]
+      ) {
+        outputQueue.push(operatorStack.pop()!);
+      }
+      operatorStack.push(token);
+    } else if (token === '(') {
+      operatorStack.push(token);
+    } else if (token === ')') {
+      while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
+        outputQueue.push(operatorStack.pop()!);
+      }
+      if (operatorStack.length === 0) {
+        throw new Error('Paréntesis desbalanceados en la fórmula.');
+      }
+      operatorStack.pop();
+    }
+  }
+
+  while (operatorStack.length > 0) {
+    const op = operatorStack.pop()!;
+    if (op === '(' || op === ')') {
+      throw new Error('Paréntesis desbalanceados en la fórmula.');
+    }
+    outputQueue.push(op);
+  }
+
+  // Evaluación de la cola RPN
+  const evalStack: number[] = [];
+
+  for (const token of outputQueue) {
+    if (!isNaN(Number(token))) {
+      evalStack.push(Number(token));
+    } else {
+      if (evalStack.length < 2) {
+        throw new Error('Expresión matemática incompleta.');
+      }
+      const b = evalStack.pop()!;
+      const a = evalStack.pop()!;
+
+      switch (token) {
+        case '+':
+          evalStack.push(a + b);
+          break;
+        case '-':
+          evalStack.push(a - b);
+          break;
+        case '*':
+          evalStack.push(a * b);
+          break;
+        case '/':
+          if (b === 0) {
+            throw new Error('División por cero en el cálculo.');
+          }
+          evalStack.push(a / b);
+          break;
+      }
+    }
+  }
+
+  if (evalStack.length !== 1) {
+    throw new Error('Error al evaluar el resultado de la fórmula.');
+  }
+
+  return evalStack[0];
 }
 
 export function evaluarFormulaCampo(
   formula: string | undefined | null,
   respuestas: RespuestasFormulario,
-  campos: CampoFormulario[]
+  claveCampoActual?: string,
+  visitados: Set<string> = new Set()
 ): ResultadoEvaluacionFormula {
   if (!formula || formula.trim() === '') {
     return { valorCalculado: null, exito: true };
   }
 
+  // Detección de referencias circulares
+  if (claveCampoActual) {
+    if (visitados.has(claveCampoActual.toLowerCase())) {
+      return {
+        valorCalculado: null,
+        exito: false,
+        error: `Referencia circular detectada en el campo '${claveCampoActual}'.`
+      };
+    }
+    visitados.add(claveCampoActual.toLowerCase());
+  }
+
   const exprLimpia = formula.trim();
 
-  // Caso especial predeterminado VRI / VRR (multiplicación o combinación probabilística si aplica)
+  // Caso especial predeterminado VRI / VRR
   if (exprLimpia.toUpperCase() === 'VRI' || exprLimpia.toUpperCase() === 'VRR' || exprLimpia.toUpperCase() === 'VRI/VRR') {
     const prob = Number(respuestas['probabilidad'] ?? respuestas['PROBABILIDAD'] ?? 0);
     const imp = Number(respuestas['impacto'] ?? respuestas['IMPACTO'] ?? 0);
@@ -28,16 +160,10 @@ export function evaluarFormulaCampo(
   }
 
   try {
-    // Reemplazar claves técnicas por sus valores numéricos en respuestas
     let expresionSustituida = exprLimpia;
     const regexClaves = /[a-zA-Z_][a-zA-Z0-9_]*/g;
 
     expresionSustituida = expresionSustituida.replace(regexClaves, (match) => {
-      // Ignorar palabras clave matematicas reservadas si las hubiera
-      if (['Math', 'abs', 'min', 'max', 'round'].includes(match)) {
-        return match;
-      }
-
       const val = respuestas[match] ?? respuestas[match.toLowerCase()] ?? respuestas[match.toUpperCase()];
       if (val === null || val === undefined || val === '') {
         return '0';
@@ -47,20 +173,10 @@ export function evaluarFormulaCampo(
       return isNaN(num) ? '0' : num.toString();
     });
 
-    // Sanitizar caracteres permitidos para evaluacion matematica segura (numeros, +, -, *, /, (, ), ., espacio)
-    if (!/^[0-9+\-*/().\s]+$/.test(expresionSustituida)) {
-      return { valorCalculado: null, exito: false, error: 'Expresión contiene caracteres no numéricos desautorizados' };
-    }
+    const resultadoNum = evaluarExpresionMatematicaSegura(expresionSustituida);
+    const valorRedondeado = Math.round(resultadoNum * 100) / 100;
 
-    // Evaluacion matematica segura usando Function
-    const func = new Function(`"use strict"; return (${expresionSustituida});`);
-    const res = func();
-
-    if (typeof res === 'number' && !isNaN(res) && isFinite(res)) {
-      return { valorCalculado: Math.round(res * 100) / 100, exito: true };
-    }
-
-    return { valorCalculado: res ?? null, exito: true };
+    return { valorCalculado: valorRedondeado, exito: true };
   } catch (err) {
     return {
       valorCalculado: null,
@@ -70,7 +186,7 @@ export function evaluarFormulaCampo(
   }
 }
 
-export function recalcularFórmulasEvaluacion(
+export function recalcularFormulasEvaluacion(
   campos: CampoFormulario[],
   respuestas: RespuestasFormulario
 ): { respuestasActualizadas: RespuestasFormulario; calculosJson: Record<string, any> } {
@@ -78,16 +194,32 @@ export function recalcularFórmulasEvaluacion(
   const calculosMap: Record<string, any> = {};
 
   const camposFormula = campos.filter(c => c.tipo === 'formula' || (c.formula && c.formula.trim() !== ''));
+  if (camposFormula.length === 0) {
+    return { respuestasActualizadas: respuestasNuevas, calculosJson: calculosMap };
+  }
 
-  for (const campo of camposFormula) {
-    const res = evaluarFormulaCampo(campo.formula, respuestasNuevas, campos);
-    if (res.exito && res.valorCalculado !== null) {
-      respuestasNuevas[campo.clave] = res.valorCalculado;
-      calculosMap[campo.clave] = {
-        formula: campo.formula,
-        resultado: res.valorCalculado,
-        fechaCalculo: new Date().toISOString()
-      };
+  // Resolver en múltiples pasadas (hasta N pasadas para resolver dependencias encadenadas de fórmulas)
+  let huboCambios = true;
+  let iteracion = 0;
+  const maxIteraciones = camposFormula.length * 2;
+
+  while (huboCambios && iteracion < maxIteraciones) {
+    huboCambios = false;
+    iteracion++;
+
+    for (const campo of camposFormula) {
+      const res = evaluarFormulaCampo(campo.formula, respuestasNuevas, campo.clave);
+      if (res.exito && res.valorCalculado !== null) {
+        if (respuestasNuevas[campo.clave] !== res.valorCalculado) {
+          respuestasNuevas[campo.clave] = res.valorCalculado;
+          calculosMap[campo.clave] = {
+            formula: campo.formula,
+            resultado: res.valorCalculado,
+            fechaCalculo: new Date().toISOString()
+          };
+          huboCambios = true;
+        }
+      }
     }
   }
 
