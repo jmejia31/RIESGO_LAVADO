@@ -1,5 +1,7 @@
 # Estado de colaboración y punto de continuidad
 
+> Actualización 2026-08-12 (Antigravity): **Fase 2 — Endurecimiento del Ciclo de Versiones** completada y certificada al 100%. Auditados el flujo transaccional `DRAFT → PUBLISHED → VIGENTE`, la inmutabilidad de versiones activas (`WHERE VER_VIGENTE = 0`), el bloqueo de concurrencia `FOR UPDATE` para garantizar una sola versión vigente por familia y la clonación de versiones a borradores. Pruebas Backend de Matrices (199/199) súperadas. Siguiente paso: Fase 3 — Constructor Visual de Formularios (Form Builder).
+
 > Actualización 2026-08-12 (Antigravity): **Fase 1 — Endurecimiento del CRUD de Familias** completada al 100%. Se reforzó la respuesta ante códigos duplicados retornando HTTP 409 Conflict y se corrigieron las aserciones de pruebas unitarias en Frontend. Pruebas Backend (313/313) y Frontend (165/165) 100% súperadas. Publicado en `origin/desarrollo` (Commits `b4c5bc1` y seguimiento documental). Siguiente paso: Fase 2 — Endurecimiento del Ciclo de Versiones.
 
 > Actualización 2026-08-12 (Antigravity): **Fase 0 — Revisión Técnica de Línea Base (Form Builder)** completada al 100% (100% solo lectura, 0 modificaciones en Oracle o código). Se auditaron la rama `desarrollo`, endpoints REST, servicios/modelos Angular, validadores y scripts de BD. Compilación y suite .NET (313/313) súperados. Publicado en `origin/desarrollo` (Commit `0105fc3`). Siguiente paso: Fase 1 — Endurecimiento del CRUD de Familias.
