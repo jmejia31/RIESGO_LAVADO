@@ -1,5 +1,28 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Validación Explícita de Campos Inexistentes y Limpieza ASCII Total
+
+- **Fecha y hora**: 2026-08-12, 15:58 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `3b2bd6a`.
+- **Commit final**: `d73b7a5`.
+- **Objetivo**: Incorporar la validación sintáctico-semántica preventiva contra campos no pertenecientes a la definición del formulario, sanitizar la codificación del archivo `dynamic-formula-evaluator.util.ts` a ASCII puro y agregar la prueba unitaria correspondiente.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Validación de Campos Inexistentes (`dynamic-formula-evaluator.util.ts`)**:
+   - Se actualizó `evaluarFormulaCampo` para verificar si alguna variable extraída mediante `obtenerDependenciasDeFormula` no existe dentro de `camposMap`. En dicho caso, retorna inmediatamente `exito: false` con el mensaje `"Referencia a campo inexistente '<nombre>' en la formula."`, evitando que errores de configuración se oculten como ceros.
+   - En `recalcularFormulasEvaluacion`, los errores de fórmulas inválidas o referencias a campos inexistentes quedan registrados explícitamente en el mapa de traza `calculosJson` con el detalle de `error`.
+2. **Limpieza ASCII Total (0 Mojibake)**:
+   - Se reescribió `dynamic-formula-evaluator.util.ts` en ASCII puro sin acentuación susceptible a mojibake.
+3. **Prueba Unitaria Específica (`dynamic-formula-evaluator.util.spec.ts`)**:
+   - Creada prueba que verifica que intentar evaluar una fórmula con una variable fantasma (`campo_fantasma`) es rechazado explícitamente.
+   - **Resultado `npm test`**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas sin fallos)**.
+   - **Resultado `npm run build`**: Compilación Angular 100% limpia.
+   - Publicado en `origin/desarrollo` (Commit `d73b7a5`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Análisis Real del Grafo de Dependencias, Detección de Ciclos Indirectos y Limpieza ASCII Total
 
 - **Fecha y hora**: 2026-08-12, 15:52 (UTC-6).
