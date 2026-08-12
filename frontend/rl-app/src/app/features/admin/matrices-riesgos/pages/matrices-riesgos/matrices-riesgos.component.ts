@@ -83,11 +83,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       }
     }
 
-    const metodologia = this.metodologia();
-    if (metodologia?.secciones?.length) {
-      return [...metodologia.secciones].sort((a, b) => a.orden - b.orden);
-    }
-
     return [];
   });
 
@@ -159,6 +154,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   seleccionarFamilia(codigo: string): void {
     this.familiaSeleccionada.set(codigo);
+    this.versionEditando.set(null);
+    this.definicionTecnica = '';
     this.cargarVersiones();
     this.cargarVersionVigentePorFamilia(codigo);
   }
