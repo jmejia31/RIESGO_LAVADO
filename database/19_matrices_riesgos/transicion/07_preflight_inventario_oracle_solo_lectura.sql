@@ -143,7 +143,7 @@ BEGIN
      ORDER BY TABLE_NAME
   ) LOOP
     EXECUTE IMMEDIATE
-      'SELECT COUNT(*) FROM "' || REPLACE(r.TABLE_NAME, '"', '""') || '"'
+      'SELECT COUNT(*) FROM ' || DBMS_ASSERT.ENQUOTE_NAME(r.TABLE_NAME, FALSE)
       INTO v_cantidad;
 
     v_total_registros := v_total_registros + v_cantidad;

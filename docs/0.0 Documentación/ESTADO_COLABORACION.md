@@ -242,7 +242,12 @@ La ligera variación de cobertura frontend respecto de FE-03/FE-04 corresponde a
   - Se añadió `.sonarcloud.properties` con `sonar.sourceEncoding=UTF-8` como ajuste mínimo para el análisis automático.
   - No se configuraron exclusiones, perfiles, Quality Gate, Python, `NOSONAR` ni supresiones.
   - `validate_documentation_links.ps1`: correcto (71 documentos y 163 enlaces). `validate_repository_structure.ps1` reporta dos rutas heredadas no intervenidas bajo `frontend/rl-app/src/app/core/services`; su saneamiento queda como pendiente separado.
-  - Pendiente: confirmar en el siguiente análisis automático del PR #20 la eliminación de la advertencia de codificación y revisar los hallazgos reales antes de cualquier remediación.
+- **Remediación de Seguridad SQL Dinámico SonarCloud — PR #20 Bloque 1 (2026-08-12)**:
+  - Aplicado `DBMS_ASSERT.SIMPLE_SQL_NAME` en `00_retiro_controlado_modelo_prueba.sql` (líneas 132 y 145) para sentencias DDL `EXECUTE IMMEDIATE`.
+  - Aplicado `DBMS_ASSERT.ENQUOTE_NAME` en `07_preflight_inventario_oracle_solo_lectura.sql` (línea 145) para consulta dinámica `COUNT(*)`.
+  - Clasificados 6 archivos/bloques como falsos positivos por corresponder a SQL estático puro o DDL estático fijo en PL/SQL (`01_db03_inventario_estadisticas_solo_lectura.sql`, `02_db03_explain_plan_consultas_criticas.sql`, `05_ajustes_dashboard_seguridad_reportes.sql`, `03_seed_catalogos_iniciales.sql`, `01_semillas_datos_iniciales_modelo_17_tablas.sql`, `02_validar_semillas_bloque1_solo_lectura.sql`).
+  - Validaciones `validate_database_scripts.ps1` y `validate_documentation_links.ps1` ejecutadas en verde (71 Markdown docs, 163 enlaces).
+- **Siguiente objetivo**: Presentar la revisión del Bloque 1 SonarCloud y continuar la gobernanza de código en `desarrollo`.
 - **Siguiente objetivo**: Revisar el resultado del próximo análisis automático SonarCloud del PR #20 y corregir únicamente hallazgos reales, sin debilitar controles.
 
 ---

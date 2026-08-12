@@ -1,5 +1,36 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Remediacon de Seguridad SQL Dinámico SonarCloud (PR #20 Bloque 1)
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8288c21`.
+- **Objetivo**: Remediar los hallazgos reales de seguridad SonarCloud relacionados con inyección de SQL dinámico en scripts de base de datos Oracle, clasificando formalmente los falsos positivos detectados.
+
+### Cambios y Clasificación Técnica Ejecutada
+1. **Remediación de Riesgos Reales de SQL Dinámico**:
+   - `database/19_matrices_riesgos/retiro_controlado/00_retiro_controlado_modelo_prueba.sql` (líneas 132 y 145): Aplicado `DBMS_ASSERT.SIMPLE_SQL_NAME(p_table_name)` y `DBMS_ASSERT.SIMPLE_SQL_NAME(p_seq_name)` en sentencias `EXECUTE IMMEDIATE` para eliminación segura de tablas y secuencias.
+   - `database/19_matrices_riesgos/transicion/07_preflight_inventario_oracle_solo_lectura.sql` (línea 145): Aplicado `DBMS_ASSERT.ENQUOTE_NAME(r.TABLE_NAME, FALSE)` en consulta dinámica `SELECT COUNT(*) FROM ...`.
+2. **Diagnóstico Técnico de Falsos Positivos (Sin Modificación)**:
+   - `07_preflight_inventario_oracle_solo_lectura.sql` (línea 69): Consulta estática `WHERE TABLE_NAME LIKE ... ESCAPE '\'`; interpretada erróneamente por el analizador estático.
+   - `01_db03_inventario_estadisticas_solo_lectura.sql` (líneas 9, 45, 48): Consultas SQL estáticas `SELECT SYS_CONTEXT...` y cláusulas `IN (...)` con literales de texto fijos.
+   - `02_db03_explain_plan_consultas_criticas.sql` (línea 30): Consulta SQL estática `WHERE TABLE_NAME = 'PLAN_TABLE'`.
+   - `05_ajustes_dashboard_seguridad_reportes.sql` (líneas 84, 101): Bloques PL/SQL con `EXECUTE IMMEDIATE` ejecutando DDLs estáticos fijos `ALTER TABLE...` y `CREATE INDEX...` (requerido por sintaxis Oracle PL/SQL).
+   - `03_seed_catalogos_iniciales.sql` (línea 157) y `01_semillas_datos_iniciales_modelo_17_tablas.sql` (línea 244): Procedimientos PL/SQL pasando cadenas literales estáticas a DMLs estáticos `INSERT`/`MERGE`.
+   - `02_validar_semillas_bloque1_solo_lectura.sql` (líneas 61, 62, 64): Consulta SQL estática `WHERE c.CAT_CODIGO IN (...)`.
+3. **Validaciones Ejecutadas**:
+   - `tools/validate_database_scripts.ps1`: Correcto (19 scripts raíz, 16 alcanzables).
+   - `tools/validate_documentation_links.ps1`: Correcto (71 Markdown docs, 163 enlaces).
+   - `git diff --check`: Correcto sin advertencias de formato.
+4. **Control de Alcance y Restricciones Preservadas**:
+   - **No** se modificó `main` ni se fusionó/cerró el PR #20.
+   - **No** se ejecutó Oracle, DDL/DML en servidor, scripts `05/06` ni `B10_*`.
+   - Se conservó intacto y sin incluir en commit el respaldo local `docs/1. Bases de Datos/Base de Datos RIESGO_LAVADO_Actualizada_20260811.sql`.
+   - La fase **GOV-02 + GOV-03** permanece **abierta y en progreso**.
+
+---
+
 ## Registro de Intervención — Codex — Configuración mínima de codificación para SonarCloud
 
 - **Fecha y hora**: 2026-08-11, hora local (UTC-6).

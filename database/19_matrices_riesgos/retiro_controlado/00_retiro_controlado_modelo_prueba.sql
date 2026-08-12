@@ -129,7 +129,7 @@ END;
 DECLARE
   PROCEDURE drop_table_if_exists(p_table_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP TABLE ' || p_table_name || ' CASCADE CONSTRAINTS';
+    EXECUTE IMMEDIATE 'DROP TABLE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_table_name) || ' CASCADE CONSTRAINTS';
     DBMS_OUTPUT.PUT_LINE('Tabla eliminada: ' || p_table_name);
   EXCEPTION
     WHEN OTHERS THEN
@@ -142,7 +142,7 @@ DECLARE
 
   PROCEDURE drop_sequence_if_exists(p_seq_name IN VARCHAR2) IS
   BEGIN
-    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || p_seq_name;
+    EXECUTE IMMEDIATE 'DROP SEQUENCE ' || DBMS_ASSERT.SIMPLE_SQL_NAME(p_seq_name);
     DBMS_OUTPUT.PUT_LINE('Secuencia eliminada: ' || p_seq_name);
   EXCEPTION
     WHEN OTHERS THEN
