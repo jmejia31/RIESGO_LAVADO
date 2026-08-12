@@ -7,8 +7,8 @@ export interface ResultadoEvaluacionFormula {
 }
 
 /**
- * Evaluador matemático seguro Shunting-Yard (sin eval ni new Function).
- * Soporta +, -, *, /, paréntesis, constantes y variables numéricas.
+ * Evaluador matematico seguro Shunting-Yard (sin eval ni new Function).
+ * Soporta +, -, *, /, parentesis, constantes y variables numericas.
  */
 function evaluarExpresionMatematicaSegura(expresion: string): number {
   const tokens: string[] = [];
@@ -125,7 +125,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
 }
 
 /**
- * Extrae las variables dependientes (claves de campos) presentes en la fórmula.
+ * Extrae las variables dependientes (claves de campos) presentes en la formula.
  */
 export function obtenerDependenciasDeFormula(formula: string): string[] {
   if (!formula || formula.trim() === '') return [];
@@ -184,6 +184,20 @@ export function evaluarFormulaCampo(
   }
 
   const exprLimpia = formula.trim();
+
+  // Validar si la formula contiene referencias a campos inexistentes en el formulario
+  if (camposMap.size > 0) {
+    const dependencias = obtenerDependenciasDeFormula(exprLimpia);
+    for (const dep of dependencias) {
+      if (!camposMap.has(dep.toLowerCase())) {
+        return {
+          valorCalculado: null,
+          exito: false,
+          error: `Referencia a campo inexistente '${dep}' en la formula.`
+        };
+      }
+    }
+  }
 
   // Caso especial predeterminado VRI / VRR
   if (exprLimpia.toUpperCase() === 'VRI' || exprLimpia.toUpperCase() === 'VRR' || exprLimpia.toUpperCase() === 'VRI/VRR') {
@@ -258,6 +272,12 @@ export function recalcularFormulasEvaluacion(
           };
           huboCambios = true;
         }
+      } else if (!res.exito) {
+        calculosMap[campo.clave] = {
+          formula: campo.formula,
+          error: res.error,
+          fechaCalculo: new Date().toISOString()
+        };
       }
     }
   }

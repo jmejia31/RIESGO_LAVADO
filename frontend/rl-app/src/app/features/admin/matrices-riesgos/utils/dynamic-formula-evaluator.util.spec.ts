@@ -44,6 +44,15 @@ describe('Motor de Evaluacion de Formulas Dinamicas Seguro (Fase 5)', () => {
     expect(resultado.error).toContain('Referencia circular detectada');
   });
 
+  it('rechaza expliticamente referencias a campos inexistentes en la formula', () => {
+    const camposMap = new Map<string, CampoFormulario>();
+    camposMap.set('probabilidad', { clave: 'probabilidad', etiqueta: 'Probabilidad', tipo: 'numero', obligatorio: true, soloLectura: false });
+
+    const resultado = evaluarFormulaCampo('probabilidad + campo_fantasma', { probabilidad: 5 }, 'formula_invalida', camposMap);
+    expect(resultado.exito).toBe(false);
+    expect(resultado.error).toContain("Referencia a campo inexistente 'campo_fantasma'");
+  });
+
   it('soporta la formula predeterminada VRI/VRR', () => {
     const respuestas: RespuestasFormulario = { probabilidad: 2, impacto: 5 };
     const resultado = evaluarFormulaCampo('VRI/VRR', respuestas, 'vri');
