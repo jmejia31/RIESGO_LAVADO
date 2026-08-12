@@ -16,12 +16,14 @@ import {
 import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
+import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
+
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FormBuilderComponent],
   templateUrl: './matrices-riesgos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
