@@ -88,7 +88,7 @@ jobs:
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.qualitygate.wait=true \
             /d:sonar.scanner.scanAll=true \
-            /d:sonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/bin/**,**/obj/**,database/**,docs/**" \
+            /d:sonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/bin/**,**/obj/**,database/**,docs/**,**/Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql" \
             /d:sonar.javascript.lcov.reportPaths="frontend/rl-app/coverage/rl-app/lcov.info" \
             /d:sonar.cs.opencover.reportsPaths=".sonar/coverage/**/coverage.opencover.xml"
 

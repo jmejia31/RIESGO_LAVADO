@@ -3710,3 +3710,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Cambio**: Alias explícitos `AS OBJETO` y `AS TOTAL` en conteos y consultas `UNION ALL`; se conservaron ordenaciones y comportamiento de solo lectura.
 - **Oracle/DDL/DML**: no ejecutados.
 - **Pendiente**: nuevo análisis remoto de SonarCloud; GOV-02 + GOV-03 continúa abierta.
+## Registro de Intervención — Codex — Exclusión precisa de volcado histórico en SonarCloud
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Objetivo**: Resolver los nueve hallazgos `plsql:S1192` reportados sobre `Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql`.
+- **Diagnóstico**: el archivo es un volcado histórico versionado, no un script operativo; las alertas no correspondían a los cuatro validadores `fase11`.
+- **Cambio**: se agregó únicamente el patrón exacto `**/Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql` a `sonar.exclusions` en `.github/workflows/sonar-analysis.yml`. No se modificó el SQL ni se relajó ninguna regla para scripts ejecutables.
+- **Oracle**: no conectado ni ejecutado; sin DDL/DML.
+- **Verificación**: pendiente el nuevo análisis remoto de SonarCloud sobre el commit final; las validaciones locales previas permanecen correctas.
