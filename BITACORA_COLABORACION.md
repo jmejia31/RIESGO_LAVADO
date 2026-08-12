@@ -3699,3 +3699,5 @@ La siguiente fase del plan aprobado es **GOV-02 + GOV-03 — Analyzers/Sonar + D
 - Oracle, DDL/DML, scripts protegidos, `main`, PR #20 y `B10_*`: no ejecutados ni modificados.
 
 El análisis SonarCloud remoto posterior queda pendiente para confirmar la desaparición de las incidencias; GOV-02 + GOV-03 permanece abierta.
+
+> **Fe de erratas append-only:** El validador de mitigación de fase 11 también normalizó los alias `AS OBJETO` y `AS TOTAL` en su consulta de conteos, sin modificar datos ni semántica.
