@@ -131,6 +131,7 @@ describe('MatricesRiesgosService', () => {
     expect(request.request.params.get('familiaId')).toBe('1');
     expect(request.request.params.get('codigoFormulario')).toBe('FORM_A');
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(request.request.headers.get('Content-Type')).toBe('application/json');
     request.flush({ success: true, datos: 22 });
     expect(resultado).toHaveBeenCalledWith(22);
   });

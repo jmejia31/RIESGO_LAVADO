@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Core.Security;
@@ -100,6 +101,23 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             MethodInfo method = typeof(MatricesRiesgosController).GetMethod(methodName)!;
             AuthorizeAttribute authorize = Assert.Single(method.GetCustomAttributes<AuthorizeAttribute>());
             Assert.Equal(SystemRoles.Administrador, authorize.Roles);
+        }
+    }
+
+    [Fact]
+    public void Plantillas_AceptanDocumentoJsonEnLugarDeTextoPlano()
+    {
+        foreach (string methodName in new[]
+        {
+            nameof(MatricesRiesgosController.CrearBorradorFormulario),
+            nameof(MatricesRiesgosController.ActualizarBorradorFormulario)
+        })
+        {
+            MethodInfo method = typeof(MatricesRiesgosController).GetMethod(methodName)!;
+            ParameterInfo body = Assert.Single(method.GetParameters().Where(parameter => parameter.Name == "jsonConfig"));
+
+            Assert.Equal(typeof(JsonElement), body.ParameterType);
+            Assert.NotNull(body.GetCustomAttribute<FromBodyAttribute>());
         }
     }
 

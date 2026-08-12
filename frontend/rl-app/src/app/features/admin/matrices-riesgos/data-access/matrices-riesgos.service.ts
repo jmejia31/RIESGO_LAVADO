@@ -42,6 +42,12 @@ export class MatricesRiesgosService {
   private readonly confirmado = {
     headers: new HttpHeaders({ [CONFIRMACION_CAMBIOS_HEADER]: '1' })
   };
+  private readonly confirmadoJson = {
+    headers: new HttpHeaders({
+      [CONFIRMACION_CAMBIOS_HEADER]: '1',
+      'Content-Type': 'application/json'
+    })
+  };
 
   metodologiaVigente(): Observable<MetodologiaFormulario> {
     return this.http
@@ -85,7 +91,7 @@ export class MatricesRiesgosService {
     return this.http
       .post<ApiResponse<number>>(`${this.apiUrl}/formularios/borrador`, definicion, {
         params,
-        ...this.confirmado
+        ...this.confirmadoJson
       })
       .pipe(map(response => response.datos));
   }
@@ -100,7 +106,7 @@ export class MatricesRiesgosService {
     return this.http.put<ApiMessage>(
       `${this.apiUrl}/formularios/${id}`,
       definicion,
-      this.confirmado
+      this.confirmadoJson
     );
   }
 

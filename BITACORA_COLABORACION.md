@@ -1,5 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección 415 al guardar definición dinámica
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `49bf2cc`.
+- **Objetivo**: Eliminar el `415 Unsupported Media Type` al guardar JSON de una versión de formulario de Matrices.
+
+### Causa y corrección
+
+- El servicio Angular enviaba la definición JSON como `string`, por lo que `HttpClient` aplicaba `text/plain`; el endpoint ASP.NET Core no dispone de formatter para ese contenido.
+- El frontend ahora usa `Content-Type: application/json` para crear o actualizar borradores.
+- El controlador recibe `JsonElement` y entrega `GetRawText()` al servicio de aplicación, conservando el JSON original y aceptando el objeto JSON real enviado por la interfaz.
+- Se agregaron pruebas que exigen `application/json` en Angular y `JsonElement` con `[FromBody]` en ambos endpoints de plantilla.
+
+### Verificaciones ejecutadas
+
+- Contrato backend de plantillas: 6/6 correcto.
+- Suite backend: 305/305 correcta.
+- Suite frontend: 165/165 correcta.
+- Build Angular: correcto; persiste advertencia preexistente de dependencia CommonJS `exceljs`.
+- Playwright E2E: 13/13 correcto.
+
+### Restricciones y continuación
+
+- No se conectó Oracle ni se modificaron scripts SQL, `main`, PR #20, producción ni objetos `B10_*`.
+- Para probar manualmente, reiniciar la API y recargar el frontend para que ambos procesos incorporen el contrato publicado.
+
+---
+
 ## Registro de Intervención — Codex — Endurecimiento de retiros SQL y accesibilidad de Matrices
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).

@@ -61,6 +61,7 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toBe('{"secciones":[]}');
     expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(request.request.headers.get('Content-Type')).toBe('application/json');
     request.flush({ success: true });
   });
 
