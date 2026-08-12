@@ -1,5 +1,7 @@
 # Estado de colaboración y punto de continuidad
 
+> Actualización 2026-08-12 (Antigravity): Integrada la acción explícita "Ver definición" para la consulta en modo lectura de la estructura JSON en todas las versiones de formulario (activas e inactivas). Las versiones no vigentes cuentan con el botón complementario "Editar definición". Publicado en `origin/desarrollo` (Commit `e5f7582`). Build Angular y .NET validados con 0 errores.
+
 > Actualización 2026-08-12: corregido el 400 `jsonConfig field is required` del editor de Plantillas. La causa era la incompatibilidad entre `JsonDocument` y el formateador Newtonsoft activo en `Program.cs`; los endpoints de borrador usan ahora `JToken` y conservan el JSON dinámico. Pruebas dirigidas del controlador y contrato UAT: 14/14 correctas. Pendiente verificación visual del usuario tras reiniciar API y frontend.
 
 > Actualización 2026-08-12: la carga HTTP global ya no inserta un skeleton grande sobre contenido disponible; permanece como indicador compacto en cabecera. El editor de Plantillas valida y envía la definición como objeto JSON, mostrando errores de validación legibles. Verificación local: Frontend 165/165, E2E 13/13, ESLint y build correctos, validadores FE-03/FE-04, Matrices y enlaces documentales correctos. Pendiente únicamente la comprobación visual del usuario tras actualizar/reiniciar el frontend.

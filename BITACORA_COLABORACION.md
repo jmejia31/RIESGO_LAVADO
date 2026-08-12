@@ -1,5 +1,28 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Integración de 'Ver Definición' y CRUD Completo de Formularios por Familia
+
+- **Fecha y hora**: 2026-08-12, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9dc0478`.
+- **Commit final**: `e5f7582`.
+- **Objetivo**: Integrar el botón explícito de acción "Ver definición" (lectura de estructura JSON) para todas las versiones de formularios (activas e inactivas) e implementar la creación desde cero, eliminación segura y corrección de métricas al seleccionar familias de formularios.
+
+### Cambios Ejecutados
+1. **Acción 'Ver Definición' Unificada**:
+   - Integrado el botón explícito `"Ver definición"` en la barra de acciones de cada tarjeta de versión de formulario en `matrices-riesgos.component.html`, permitiendo tanto la consulta en modo lectura de cualquier versión como el botón diferido `"Editar definición"` para borradores.
+2. **Creación y Eliminación por Familia**:
+   - Agregada la creación de borradores desde cero (`+ Nuevo Formulario`) con plantilla base predeterminada por familia y la eliminación atómica (`DELETE /api/matrices-riesgos/formularios/{id}`) de versiones inactivas.
+3. **Reseteo Dinámico y Métricas**:
+   - Corregida la métrica superior (`Campos: 0`, `Formulario: -`, `Versión: -`) al seleccionar familias sin versiones vigentes y reseteado del visor técnico `versionEditando` al conmutar entre familias.
+4. **Verificación y Calidad**:
+   - `dotnet build`: Exitoso sin errores de compilación.
+   - `npm run build`: Exitoso (100% libre de errores TypeScript/Angular).
+   - `git push`: Publicado exitosamente en `origin/desarrollo` (Commit `e5f7582`).
+
+---
+
 ## Registro de Intervención — Antigravity — Optimización de Mantenibilidad en Scripts de Validación Fase 11
 
 - **Fecha y hora**: 2026-08-12, hora local (UTC-6).
