@@ -52,12 +52,15 @@ export interface CampoFormulario {
   codigoCatalogo?: string | null;
   obligatorio: boolean;
   soloLectura: boolean;
+  anchoColumnas?: number;
+  formula?: string;
 }
 
 export interface SeccionFormulario {
   clave: string;
   titulo: string;
   orden: number;
+  columnasPorFila?: number;
   campos: CampoFormulario[];
 }
 
@@ -202,6 +205,7 @@ export interface DefinicionFormularioEditable {
     clave: string;
     titulo: string;
     orden: number;
+    columnasPorFila?: number;
     campos: CampoFormulario[];
   }>;
   reglas?: Array<{ codigo: string; version: string }>;

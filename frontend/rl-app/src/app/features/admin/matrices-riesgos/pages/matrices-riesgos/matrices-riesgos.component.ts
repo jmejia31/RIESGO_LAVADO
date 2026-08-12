@@ -731,7 +731,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               clave: seccion.clave || `seccion_${indice + 1}`,
               titulo: seccion.titulo || `Sección ${indice + 1}`,
               orden: Number(seccion.orden ?? indice + 1),
-              campos: Array.isArray(seccion.campos) ? seccion.campos : []
+              columnasPorFila: Number(seccion.columnasPorFila ?? 2),
+              campos: Array.isArray(seccion.campos) ? seccion.campos.map(c => ({
+                ...c,
+                anchoColumnas: Number(c.anchoColumnas ?? 1),
+                formula: c.formula || undefined
+              })) : []
             }))
           : [],
         reglas: Array.isArray(definicion.reglas) ? definicion.reglas : []
