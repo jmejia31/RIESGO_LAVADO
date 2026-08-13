@@ -1,192 +1,84 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
 
-const familia = {
-  famId: 1,
-  famCodigo: 'MATRIZ_RIESGOS_LAFT',
-  famNombre: 'Matriz de Riesgos LA/FT',
-  famDescripcion: 'Familia E2E para validar bloqueo modal',
-  famActivo: true
-};
-
 const definicion = JSON.stringify({
-  codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V2',
-  nombreFormulario: 'Matriz de Riesgos LA/FT',
-  secciones: [
-    {
-      clave: 'identificacion',
-      titulo: 'Identificación',
-      orden: 1,
-      columnasPorFila: 1,
-      campos: [
-        {
-          clave: 'area_responsable',
-          etiqueta: 'Área responsable',
-          tipo: 'texto',
-          obligatorio: true,
-          soloLectura: false
-        }
-      ]
-    }
-  ]
+  codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V2', nombreFormulario: 'Matriz UAT',
+  secciones: [{ clave: 'identificacion', titulo: 'Identificación', orden: 1, columnasPorFila: 1,
+    campos: [{ clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false }] }]
 });
+const publicada = { verId: 10, verFamiliaId: 1, verCodigo: 'MATRIZ_RIESGOS_LAFT_V1', verVersion: 1,
+  verJson: '{"secciones":[]}', verHash: 'vigente', verEstado: 'PUBLISHED', verVigente: true,
+  verFechaCreacion: '2026-08-13T12:00:00Z', verUsrCreacion: 1 };
+const borrador = { ...publicada, verId: 11, verCodigo: 'MATRIZ_RIESGOS_LAFT_V2', verVersion: 2,
+  verJson: definicion, verHash: 'borrador', verEstado: 'DRAFT', verVigente: false };
 
-const versionVigente = {
-  verId: 10,
-  verFamiliaId: 1,
-  verCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
-  verVersion: 1,
-  verJson: definicion,
-  verHash: 'modal-shell-vigente',
-  verEstado: 'PUBLISHED',
-  verVigente: true,
-  verFechaCreacion: '2026-08-13T12:00:00Z',
-  verUsrCreacion: 1
-};
-
-const versionBorrador = {
-  ...versionVigente,
-  verId: 11,
-  verCodigo: 'MATRIZ_RIESGOS_LAFT_V2',
-  verVersion: 2,
-  verHash: 'modal-shell-draft',
-  verEstado: 'DRAFT',
-  verVigente: false
-};
-
-function tokenAdministrador(): string {
-  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
-  return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
-    nameid: '1',
-    uid: 'admin.modal.e2e',
-    email: 'admin.modal.e2e@ihss.hn',
-    given_name: 'Admin',
-    family_name: 'Modal',
-    role: 'ADMINISTRADOR',
-    rol_id: '1',
-    modulos: '10',
-    debe_cambiar_pass: '0',
-    exp: Math.floor(Date.now() / 1000) + 3600
-  })}.`;
+function token(): string {
+  const codificar = (valor: object) => Buffer.from(JSON.stringify(valor)).toString('base64url');
+  return `${codificar({ alg: 'none' })}.${codificar({ nameid: '1', uid: 'admin.modal', role: 'ADMINISTRADOR', rol_id: '1', modulos: '10', debe_cambiar_pass: '0', exp: Math.floor(Date.now() / 1000) + 3600 })}.`;
 }
 
 async function preparar(page: Page): Promise<void> {
-  await page.addInitScript(token => {
-    localStorage.setItem('access_token', token);
+  await page.addInitScript(jwt => {
+    localStorage.setItem('access_token', jwt);
     localStorage.setItem('refresh_token', 'modal-refresh');
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
-  }, tokenAdministrador());
-
-  await page.route('**/api/configuracion/sistema', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({
-      success: true,
-      datos: {
-        nombreSistema: 'SGRLA-IHSS',
-        nombreInstitucion: 'IHSS',
-        colorPrimario: '#1e3a8a',
-        colorSecundario: '#1d4ed8',
-        timeoutSesion: 30
-      }
-    })
-  }));
-
-  await page.route('**/api/configuracion/login', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: true, datos: [] })
-  }));
-
+  }, token());
+  await page.route('**/api/configuracion/sistema', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', timeoutSesion: 30 } }) }));
+  await page.route('**/api/configuracion/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"datos":[]}' }));
   await page.route('**/api/matrices-riesgos/**', route => {
-    const request = route.request();
-    const path = new URL(request.url()).pathname;
+    const ruta = new URL(route.request().url()).pathname;
     let datos: unknown = [];
-
-    if (path.endsWith('/familias')) datos = [familia];
-    else if (path.endsWith('/formulario/version-vigente')) datos = versionVigente;
-    else if (path.endsWith('/metodologia/vigente')) datos = {
-      versionFormularioId: versionVigente.verId,
-      codigo: versionVigente.verCodigo,
-      version: versionVigente.verVersion,
-      secciones: [],
-      catalogos: [],
-      reglas: []
-    };
-    else if (path.endsWith('/formularios/historial')) datos = [versionVigente, versionBorrador];
-    else if (path.endsWith('/riesgos')) datos = [];
-    else if (path.endsWith('/evaluaciones')) datos = [];
-    else if (path.endsWith('/consolidado')) datos = [];
-
-    return route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ success: true, datos })
-    });
+    if (ruta.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famActivo: true }];
+    else if (ruta.endsWith('/formulario/version-vigente')) datos = publicada;
+    else if (ruta.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: publicada.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
+    else if (ruta.endsWith('/formularios/historial')) datos = [publicada, borrador];
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
   });
-
-  await page.route('**/api/matrices-riesgos*', route => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ success: true, datos: [] })
-  }));
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
 
-test('el Form Builder bloquea Salir, navegación y foco del shell mientras el modal está abierto', async ({ page }) => {
+test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {
   await page.goto('/matrices-riesgos');
   await page.getByRole('tab', { name: 'Plantillas' }).click();
-
-  const editarDefinicion = page.getByRole('button', { name: 'Editar definición' }).first();
-  await expect(editarDefinicion).toBeVisible();
-  await editarDefinicion.focus();
-  await editarDefinicion.click();
+  const editar = page.getByRole('button', { name: 'Editar definición' }).first();
+  await editar.focus();
+  await editar.click();
 
   const dialogo = page.locator('[role="dialog"][aria-modal="true"]:has(app-form-builder)');
+  const header = page.locator('app-main-layout > div > div > header');
+  const aside = page.locator('app-main-layout > div > aside');
+  const salir = header.locator('button[aria-label="Cerrar sesión"]');
   await expect(dialogo).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Constructor de Formularios Dinámicos' })).toBeVisible();
+  await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(true);
+  await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(true);
 
-  const headerPrincipal = page.locator('app-main-layout > div > div > header');
-  const menuPrincipal = page.locator('app-main-layout > div > aside');
-  const salir = page.locator('app-main-layout > div > div > header button[aria-label="Cerrar sesión"]');
-
-  await expect.poll(() => headerPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(true);
-  await expect.poll(() => menuPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(true);
-
-  const cajaSalir = await salir.boundingBox();
-  expect(cajaSalir).not.toBeNull();
-  if (!cajaSalir) throw new Error('No se pudo obtener la posición del botón Salir.');
-
-  await page.mouse.move(cajaSalir.x + cajaSalir.width / 2, cajaSalir.y + cajaSalir.height / 2);
-  await expect.poll(() => salir.evaluate(elemento => elemento.matches(':hover'))).toBe(false);
-
-  await page.mouse.click(cajaSalir.x + cajaSalir.width / 2, cajaSalir.y + cajaSalir.height / 2);
+  const caja = await salir.boundingBox();
+  expect(caja).not.toBeNull();
+  if (!caja) throw new Error('No se pudo localizar físicamente el botón Salir.');
+  await page.mouse.move(caja.x + caja.width / 2, caja.y + caja.height / 2);
+  await expect.poll(() => salir.evaluate(el => el.matches(':hover'))).toBe(false);
+  await page.mouse.click(caja.x + caja.width / 2, caja.y + caja.height / 2);
   await expect(page).toHaveURL(/\/matrices-riesgos$/);
   expect(await page.evaluate(() => localStorage.getItem('access_token'))).toBeTruthy();
 
-  for (let intento = 0; intento < 20; intento++) {
+  for (let i = 0; i < 20; i++) {
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => {
-      const modal = document.querySelector('[role="dialog"][aria-modal="true"]');
-      return Boolean(modal?.contains(document.activeElement));
-    })).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('[role="dialog"][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
   }
-  await expect(salir).not.toBeFocused();
 
   await page.getByText('Área responsable', { exact: true }).click();
   const inspector = page.getByText('Propiedades del Campo', { exact: true }).locator('..');
-  const claveTecnica = inspector.locator('input[type="text"]').first();
-  await expect(claveTecnica).toBeEnabled();
-  await claveTecnica.fill('area_responsable_actualizada');
-  await expect(claveTecnica).toHaveValue('area_responsable_actualizada');
+  const clave = inspector.locator('input[type="text"]').first();
+  await expect(clave).toBeEnabled();
+  await clave.fill('area_responsable_actualizada');
+  await expect(clave).toHaveValue('area_responsable_actualizada');
 
   await page.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
   await expect(dialogo).toBeHidden();
-  await expect.poll(() => headerPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(false);
-  await expect.poll(() => menuPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(false);
-  await expect(editarDefinicion).toBeFocused();
-
+  await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
+  await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(false);
+  await expect(editar).toBeFocused();
   await salir.hover();
   await expect(salir).toHaveCSS('pointer-events', 'auto');
 });
