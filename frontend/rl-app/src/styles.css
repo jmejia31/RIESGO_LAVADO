@@ -124,19 +124,24 @@
   }
 }
 
-/* Regla de inhabilitación absoluta de la interfaz trasera cuando hay un modal abierto */
-body:has([role="dialog"]), body.modal-abierto {
+/*
+ * Defensa visual adicional al bloqueo robusto con `inert` administrado por MainLayoutComponent.
+ * Los selectores apuntan únicamente al aside y al header del shell principal. El header interno
+ * del Form Builder permanece dentro del diálogo y no se ve afectado.
+ */
+body:has([role="dialog"][aria-modal="true"]),
+body.modal-abierto {
   overflow: hidden !important;
 }
 
-body:has([role="dialog"]) > app-root > app-main-layout > div > header,
-body:has([role="dialog"]) > app-root > app-main-layout > div > div > aside,
-body:has([role="dialog"]) > app-root > app-main-layout > div > div > main > #contenido-principal {
+body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > aside,
+body.modal-abierto app-main-layout > div > aside,
+body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > div > header,
+body.modal-abierto app-main-layout > div > div > header {
   pointer-events: none !important;
   user-select: none !important;
 }
 
-[role="dialog"] {
+[role="dialog"][aria-modal="true"] {
   pointer-events: auto !important;
 }
-
