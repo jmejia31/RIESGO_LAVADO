@@ -4433,6 +4433,7 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Correccion: se agregaron manejadores `keydown.enter` y `keydown.space` a las superficies de seleccion de seccion y campo, preservando los botones semanticos y el foco del modal.
 - Verificado: ESLint, build Angular (0 errores; advertencia informativa preexistente de `exceljs` CommonJS), 28/181 pruebas unitarias y 14/14 E2E.
 - Pendiente: publicar y esperar el analisis remoto posterior; el hallazgo estructural heredado de `core/services/global-http-state.service.ts` permanece separado y no fue modificado.
+- Resultado remoto: el workflow `Sonar Analysis` del commit `9cb3bb1` termino correctamente, pero omitio el escaneo porque no estan configurados `SONAR_TOKEN`, `SONAR_PROJECT_KEY` ni `SONAR_ORGANIZATION`; el Quality Gate visible permanece con datos historicos.
 
 ## Registro de intervencion - ChatGPT - endurecimiento SonarCloud y regresion final
 
