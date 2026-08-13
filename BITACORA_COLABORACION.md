@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 7: Cobertura de Pruebas Unitarias Backend (.NET) para Familias, Versiones y Permisos
+
+- **Fecha y hora**: 2026-08-13, 09:21 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `4f9da15`.
+- **Commit final**: `911bbb5`.
+- **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Creación de la Suite de Pruebas Backend (`MatricesRiesgosPhase07BackendCoverageTests.cs`)**:
+   - `CrearBorradorFormulario_ValidaJsonInvalido_RetornaBadRequest400`: Verifica la sintaxis estricta del JSON enviado.
+   - `CrearBorradorFormulario_ValidaFamiliaInexistente_Retorna404` / `CrearBorradorFormulario_ValidaBorradorExistente_RetornaConflict409`: Comprueba el control preventivo de duplicidad y relaciones de familia.
+   - `PublicarVersion_ValidaVersionInexistente_Retorna404` / `CambiarEstadoVigencia_ValidaVigenciaInexistente_Retorna404` / `EliminarVersionFormulario_ValidaVersionInexistente_Retorna404`: Garantiza que las mutaciones de versión validen la existencia previa.
+   - `EndpointsSensibles_ExigenRolAdministrador`: Verifica mediante reflexión que todos los métodos de mutación de plantillas exijan explícitamente `SystemRoles.Administrador`.
+2. **Pruebas y Verificación**:
+   - **Resultado `dotnet test` (Release)**: **314 de 314 pruebas backend 100% superadas (0 fallos, 0 omitidas)**.
+   - **Resultado `npm test` (Frontend)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `911bbb5`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Inhabilitación CSS Absoluta (`pointer-events: none`) en Cabecera y Menú al Abrir Modales
 
 - **Fecha y hora**: 2026-08-13, 08:58 (UTC-6).
