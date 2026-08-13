@@ -10,7 +10,10 @@
 - **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
 
 ### Cambios y Verificaciones Ejecutadas
-1. **Creación de la Suite de Pruebas Backend (`MatricesRiesgosPhase07BackendCoverageTests.cs`)**:
+1. **Restauración del Diseño de Barra de Pestañas (`matrices-riesgos.component.html`)**:
+   - Se restauró la estructura de contenedor único continuo tipo píldora flotante integrada (`p-1.5 bg-white rounded-2xl border border-gray-200/80 shadow-sm inline-flex items-center`).
+   - Se mantuvieron intactos los colores corporativos actuales (`bg-ihss-900`, `text-white` en la pestaña activa y `text-gray-600 hover:bg-gray-100/70` en las inactivas), conservando además el soporte completo WAI-ARIA 1.2 (`role="tab"`, `aria-selected`, `tabindex` y `onKeydownTab`).
+2. **Creación de la Suite de Pruebas Backend (`MatricesRiesgosPhase07BackendCoverageTests.cs`)**:
    - `CrearBorradorFormulario_ValidaJsonInvalido_RetornaBadRequest400`: Verifica la sintaxis estricta del JSON enviado.
    - `CrearBorradorFormulario_ValidaFamiliaInexistente_Retorna404` / `CrearBorradorFormulario_ValidaBorradorExistente_RetornaConflict409`: Comprueba el control preventivo de duplicidad y relaciones de familia.
    - `PublicarVersion_ValidaVersionInexistente_Retorna404` / `CambiarEstadoVigencia_ValidaVigenciaInexistente_Retorna404` / `EliminarVersionFormulario_ValidaVersionInexistente_Retorna404`: Garantiza que las mutaciones de versión validen la existencia previa.
