@@ -1,5 +1,26 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Sanitización ASCII de Comentario HTML y Registro de Advertencia `exceljs`
+
+- **Fecha y hora**: 2026-08-13, 08:48 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `18a8bc8`.
+- **Commit final**: `1859c34`.
+- **Objetivo**: Sanitizar a ASCII nativo puro (`MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER`) el comentario interno dentro de `matrices-riesgos.component.html` para evitar mojibake en visualizadores de texto antiguos, y documentar formalmente la advertencia técnica preexistente de empaquetado Angular para la librería `exceljs` (CommonJS / non-ESM).
+
+### Cambios y Verificaciones Ejecutadas
+1. **Sanitización de Comentario HTML (`matrices-riesgos.component.html`)**:
+   - Reemplazada la tilde en el comentario técnico por ASCII nativo (`MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER`), dejando el 100% de la plantilla libre de mojibake.
+2. **Constatación de Advertencia de Compilación (`npm run build`)**:
+   - Compilación 100% exitosa con 0 errores técnicos.
+   - Declarada explícitamente la advertencia preexistente: `▲ [WARNING] Module 'exceljs' used by 'src/app/core/utils/excel-export.util.ts' is not ESM`.
+3. **Pruebas y Verificación**:
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `1859c34`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Restauración de Modal Flotante Estético y Corrección de Cobertura de Cabecera (`z-[1000]`)
 
 - **Fecha y hora**: 2026-08-13, 08:36 (UTC-6).
