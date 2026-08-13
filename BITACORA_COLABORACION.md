@@ -1,5 +1,30 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Modal Amplio Superpuesto (Form Builder) y Paridad Gráfica con Monitoreo de Listas
+
+- **Fecha y hora**: 2026-08-13, 08:22 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d6d1497`.
+- **Commit final**: `30f0bcb`.
+- **Objetivo**: Refactorizar la apertura del Form Builder eliminando la expansión/desplazamiento vertical en la parte baja de la pantalla e implementando un modal superpuesto amplio (`96vw x 92vh` con backdrop blur), y alinear la paleta de colores, tarjetas KPI, badges, iconos y botones de acción a la estética exacta del módulo de Monitoreo de Listas.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Despliegue del Form Builder en Modal Amplio (`matrices-riesgos.component.html`)**:
+   - Se reemplazó el contenedor embebido inferior por un diálogo modal superpuesto (`fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-3 backdrop-blur-sm`).
+   - El lienzo dinámico del Form Builder ahora se renderiza a alta densidad (`max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100`) evitando distorsionar o expandir la página de plantillas.
+2. **Paridad Visual Integral con Monitoreo de Listas**:
+   - **Gama Cromática Institucional**: Aplicada la paleta idéntica (`bg-ihss-900` `#0d254c`, `text-ihss-600`, `bg-gray-50/70`, `border-gray-100`).
+   - **Tarjetas Resumen KPI**: Encabezado estilizado con métricas en tarjetas `border-gray-100 bg-gray-50/80`.
+   - **Botones de Categoría / Nav**: Las pestañas `tablist` adoptaron el diseño exacto de las categorías de Monitoreo de Listas (`bg-gray-50/70 border border-gray-100`, activa en `bg-ihss-900 text-white ring-2 ring-ihss-600/20 shadow-sm`).
+   - **Acciones y Tablas**: Botones de acción enriquecidos con iconos SVG + tooltips estilizados en celdas (`bg-blue-50 text-blue-600 border-blue-200`, `bg-emerald-600 text-white`, `bg-red-600 text-white`).
+3. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `30f0bcb`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Navegación de Teclado WAI-ARIA 1.2 Roving Tabindex y Ortografía UTF-8 Restaurada
 
 - **Fecha y hora**: 2026-08-13, 08:14 (UTC-6).
