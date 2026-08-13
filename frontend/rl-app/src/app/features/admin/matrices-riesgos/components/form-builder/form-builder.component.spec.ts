@@ -141,13 +141,13 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     const campo = component.model().secciones[0].campos[0];
     component.seleccionarCampo(campo);
 
-    // Modificaciones en Inspector
-    component.campoActivo.update(c => c ? { ...c, etiqueta: 'Nuevo Nombre Evaluacion', tipo: 'formula', formula: 'val1 * val2', obligatorio: true } : null);
-    component.model.update(m => {
-      const sec = { ...m.secciones[0] };
-      sec.campos[0] = component.campoActivo()!;
-      return { ...m, secciones: [sec] };
-    });
+    // Modificaciones en Inspector con alCambiarPropiedadCampo
+    const activo = component.campoActivo()!;
+    activo.etiqueta = 'Nuevo Nombre Evaluacion';
+    activo.tipo = 'formula';
+    activo.formula = 'val1 * val2';
+    activo.obligatorio = true;
+    component.alCambiarPropiedadCampo();
 
     const jsonFinal = serializarBuilderModelAJson(component.model());
     const parsed = JSON.parse(jsonFinal);

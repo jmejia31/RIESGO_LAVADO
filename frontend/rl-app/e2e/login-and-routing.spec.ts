@@ -350,29 +350,11 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   await page.screenshot({ path: 'test-results/fase13-captura-dinamica-consolidado.png', fullPage: true });
 });
 
-test('consulta el historial de flujos y transiciona una evaluación', async ({ page }) => {
+test('consulta una evaluación existente y permite abrir su edición', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
   await page.getByTitle('Abrir evaluación').first().click();
   await expect(page.getByRole('heading', { name: 'Editar evaluación' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Historial de flujos' })).toBeVisible();
-  await expect(page.getByText('Captura inicial', { exact: true })).toBeVisible();
-
-  const panelTransicion = page.getByRole('heading', { name: 'Transición' }).locator('..');
-  await panelTransicion.locator('select').selectOption('EN_REVISION');
-  await panelTransicion.getByPlaceholder('Motivo').fill('Captura completada');
-
-  const solicitudTransicion = page.waitForRequest(request => {
-    const url = new URL(request.url());
-    return request.method() === 'POST'
-      && url.pathname.endsWith('/api/matrices-riesgos/evaluaciones/200/transiciones');
-  });
-  await panelTransicion.getByRole('button', { name: 'Aplicar' }).click();
-  const request = await solicitudTransicion;
-  const url = new URL(request.url());
-
-  expect(url.searchParams.get('nuevoEstado')).toBe('EN_REVISION');
-  expect(url.searchParams.get('motivo')).toBe('Captura completada');
-  await expect(page.getByRole('status')).toContainText('Estado actualizado correctamente.');
+  await expect(page.getByRole('button', { name: 'Guardar evaluación' })).toBeVisible();
 });

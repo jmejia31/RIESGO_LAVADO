@@ -188,9 +188,11 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           etiqueta: cmp.etiqueta || `Campo ${cmpIdx + 1}`,
           tipo: tipoMapeado,
           codigoCatalogo: cmp.codigoCatalogo || undefined,
+          opciones: Array.isArray(cmp.opciones) ? cmp.opciones : undefined,
+          formula: cmp.formula || undefined,
           obligatorio: !!cmp.obligatorio,
           soloLectura: !!cmp.soloLectura || tipoMapeado === 'formula',
-          anchoColumnas: 1
+          anchoColumnas: cmp.anchoColumnas && cmp.anchoColumnas >= 1 && cmp.anchoColumnas <= 6 ? cmp.anchoColumnas : 1
         };
       });
 
@@ -199,7 +201,7 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
         clave: sec.clave || `seccion_${secIdx + 1}`,
         titulo: sec.titulo || `Sección ${secIdx + 1}`,
         orden: sec.orden || secIdx + 1,
-        columnasPorFila: 2,
+        columnasPorFila: sec.columnasPorFila && sec.columnasPorFila >= 1 && sec.columnasPorFila <= 6 ? sec.columnasPorFila : 2,
         campos
       };
     });
@@ -244,14 +246,18 @@ export function serializarBuilderModelAJson(model: FormBuilderModel): string {
       clave: sec.clave || `seccion_${secIdx + 1}`,
       titulo: sec.titulo || `Sección ${secIdx + 1}`,
       orden: secIdx + 1,
+      columnasPorFila: sec.columnasPorFila,
       campos: sec.campos.map(cmp => {
         const campoForm: CampoFormulario = {
           clave: cmp.clave,
           etiqueta: cmp.etiqueta,
           tipo: cmp.tipo,
           codigoCatalogo: cmp.codigoCatalogo || null,
+          opciones: cmp.opciones && cmp.opciones.length > 0 ? cmp.opciones : null,
+          formula: cmp.formula || null,
           obligatorio: cmp.obligatorio,
-          soloLectura: cmp.soloLectura
+          soloLectura: cmp.soloLectura,
+          anchoColumnas: cmp.anchoColumnas
         };
         return campoForm;
       })

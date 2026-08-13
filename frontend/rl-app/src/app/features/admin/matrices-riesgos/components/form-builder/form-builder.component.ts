@@ -131,6 +131,20 @@ export class FormBuilderComponent implements OnInit {
     this.campoActivo.set(campo);
   }
 
+  alCambiarPropiedadCampo(): void {
+    const activo = this.campoActivo();
+    if (!activo || this.soloLectura) return;
+    const current = this.model();
+    const secciones = current.secciones.map(sec => ({
+      ...sec,
+      campos: sec.campos.map(c => c.id === activo.id ? { ...activo } : c)
+    }));
+    this.model.set({
+      ...current,
+      secciones
+    });
+  }
+
   eliminarCampo(seccionId: string, campoId: string): void {
     if (this.soloLectura) return;
     const current = this.model();

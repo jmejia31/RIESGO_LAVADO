@@ -50,10 +50,11 @@ export interface CampoFormulario {
   etiqueta: string;
   tipo: string;
   codigoCatalogo?: string | null;
+  opciones?: string[] | null;
+  formula?: string | null;
   obligatorio: boolean;
   soloLectura: boolean;
   anchoColumnas?: number;
-  formula?: string;
 }
 
 export interface SeccionFormulario {
