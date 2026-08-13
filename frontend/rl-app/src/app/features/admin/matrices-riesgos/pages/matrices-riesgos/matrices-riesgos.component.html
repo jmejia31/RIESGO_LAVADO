@@ -383,10 +383,10 @@
     </section>
   }
 
-  <!-- MODAL AMPLIO DEL FORM BUILDER (EN LUGAR DE EXPANDIR LA PANTALLA) -->
+  <!-- MODAL FULL-SCREEN 100% PANTALLA COMPLETA DEL FORM BUILDER (SIN MARGEN SUPERIOR NI BORDES EXPUESTOS) -->
   @if (versionEditando(); as versionActual) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
-      <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100">
+    <div class="fixed inset-0 z-[999] flex flex-col bg-slate-900/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
+      <div class="w-full h-full flex flex-col bg-white overflow-hidden shadow-2xl">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"
@@ -402,7 +402,7 @@
 
   <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 id="titulo-modal-familia" class="text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
@@ -454,7 +454,7 @@
 
   <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div>
