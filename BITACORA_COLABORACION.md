@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Verificación Reproducida Backend .NET y Traza Incondicional Completa en `calculosJson`
+
+- **Fecha y hora**: 2026-08-13, 08:02 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `e579ba8`.
+- **Commit final**: `0300d02`.
+- **Objetivo**: Ejecutar y reproducir formalmente la suite de pruebas unitarias/integración del backend .NET (`dotnet test`), y asegurar la trazabilidad incondicional completa de todas las fórmulas en `calculosJson` en cada guardado de evaluación.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Ejecución y Reproducción de Pruebas Backend (`dotnet test RIESGO_LAVADO.sln --configuration Release`)**:
+   - Compilación Release completada sin errores.
+   - **Resultado `dotnet test`**: **314 de 314 pruebas backend superadas con éxito (0 fallos, 0 omitidas)**.
+2. **Trazabilidad Incondicional de Fórmulas (`dynamic-formula-evaluator.util.ts`)**:
+   - Se ajustó `recalcularFormulasEvaluacion` para que registre incondicionalmente en `calculosMap` la traza de todas las fórmulas válidas del formulario (`formula`, `resultado`, `fechaCalculo`), independientemente de si el valor numérico sufrió cambios respecto al estado previo o no.
+3. **Re-ejecución y Reproducción de Pruebas Frontend (`npm test`)**:
+   - **Resultado `npm test`**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas sin fallos)**.
+4. **Estado de Git y Publicación**:
+   - Publicado en `origin/desarrollo` (Commit `0300d02`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Validación Explícita de Campos Inexistentes y Limpieza ASCII Total
 
 - **Fecha y hora**: 2026-08-12, 15:58 (UTC-6).
