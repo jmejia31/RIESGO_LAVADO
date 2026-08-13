@@ -4404,3 +4404,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Cambios:** IDs, labels, ARIA, teclado y `LEFT JOIN ... IS NULL` en validadores SQL de Fase 11.
 - **Verificado:** build Angular, 28 archivos/181 pruebas frontend, validador de base de datos y `git diff --check`.
 - **Pendiente:** regresión completa y nuevo análisis remoto de SonarCloud; Oracle no fue ejecutado.
+## Registro de Intervencion - Codex - Correccion del bloqueo contractual Quality Gates (PR #20)
+
+- Fecha: 2026-08-13 (UTC-6).
+- Rama: desarrollo.
+- Commit inicial: 5bd3a78.
+- Objetivo: corregir el validador de autorizacion que exigia cinco atributos globales aunque el controlador protege nueve mutaciones administrativas legitimas.
+- Archivo: scripts/validation/validate_matrices_authorization_contract.ps1.
+- Verificado: validadores de autorizacion, alineacion dinamica y contrato UAT Fase 13 correctos.
+- Pendiente: nuevo analisis remoto de SonarCloud. Oracle no fue ejecutado ni modificado.

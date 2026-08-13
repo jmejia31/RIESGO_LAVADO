@@ -57,7 +57,10 @@ foreach ($entry in @(
 
 $adminAttribute = '[Authorize(Roles = SystemRoles.Administrador)]'
 $adminAttributeCount = ([regex]::Matches($controller, [regex]::Escape($adminAttribute))).Count
-if ($adminAttributeCount -ne 5) { $errors.Add("MatricesRiesgosController debe contener exactamente 5 protecciones administrativas canónicas; actual=$adminAttributeCount.") }
+# El controlador protege cinco operaciones del ciclo de versiones, además de
+# eliminación y tres operaciones CRUD de familias. Todas son mutaciones
+# administrativas válidas y deben conservar el rol canónico.
+if ($adminAttributeCount -ne 9) { $errors.Add("MatricesRiesgosController debe contener exactamente 9 protecciones administrativas; actual=$adminAttributeCount.") }
 
 foreach ($method in @('CrearBorradorFormulario','ClonarVersionFormulario','ActualizarBorradorFormulario','PublicarVersionFormulario','CambiarEstadoVigenciaFormulario')) {
     Require $controller $method "Falta la operación administrativa $method."
