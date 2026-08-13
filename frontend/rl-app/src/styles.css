@@ -123,3 +123,20 @@
     background: #e2e8f0;
   }
 }
+
+/* Regla de inhabilitación absoluta de la interfaz trasera cuando hay un modal abierto */
+body:has([role="dialog"]), body.modal-abierto {
+  overflow: hidden !important;
+}
+
+body:has([role="dialog"]) header,
+body:has([role="dialog"]) aside,
+body:has([role="dialog"]) #contenido-principal {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+[role="dialog"] {
+  pointer-events: auto !important;
+}
+
