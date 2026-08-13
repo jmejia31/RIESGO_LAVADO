@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Fase 6: UX, Accesibilidad ARIA y Modos de Lectura Estrictos
+
+- **Fecha y hora**: 2026-08-13, 08:07 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `a14a53c`.
+- **Commit final**: `f597685`.
+- **Objetivo**: Implementar la Fase 6 mejorando la accesibilidad web (estándares WAI-ARIA `role="tablist"`, `role="tab"`, `aria-selected`, `aria-controls`), integrar spinners SVG animados para retroalimentación de carga institucional con `aria-busy="true"` y `aria-live="polite"`, y verificar la inmutabilidad de modos solo lectura.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Accesibilidad ARIA y Navegación por Teclado (`matrices-riesgos.component.html`)**:
+   - `nav` transformado en contenedor semántico `role="tablist"`.
+   - Botones de pestañas marcados dinámicamente con `role="tab"`, `aria-selected` y `aria-controls`.
+2. **Indicadores de Carga y Retroalimentación Visual Institucional**:
+   - Reemplazado el texto plano de carga por un indicador animado SVG con `aria-busy="true"` y texto descriptivo institucional.
+3. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `f597685`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Verificación Reproducida Backend .NET y Traza Incondicional Completa en `calculosJson`
 
 - **Fecha y hora**: 2026-08-13, 08:02 (UTC-6).
