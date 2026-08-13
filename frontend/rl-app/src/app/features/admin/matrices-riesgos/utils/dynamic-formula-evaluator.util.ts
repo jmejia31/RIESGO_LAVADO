@@ -265,13 +265,14 @@ export function recalcularFormulasEvaluacion(
       if (res.exito && res.valorCalculado !== null) {
         if (respuestasNuevas[campo.clave] !== res.valorCalculado) {
           respuestasNuevas[campo.clave] = res.valorCalculado;
-          calculosMap[campo.clave] = {
-            formula: campo.formula,
-            resultado: res.valorCalculado,
-            fechaCalculo: new Date().toISOString()
-          };
           huboCambios = true;
         }
+        // Registrar siempre la traza incondicional de calculo exitoso en calculosMap
+        calculosMap[campo.clave] = {
+          formula: campo.formula,
+          resultado: res.valorCalculado,
+          fechaCalculo: new Date().toISOString()
+        };
       } else if (!res.exito) {
         calculosMap[campo.clave] = {
           formula: campo.formula,
