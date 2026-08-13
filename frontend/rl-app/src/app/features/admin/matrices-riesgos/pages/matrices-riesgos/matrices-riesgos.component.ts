@@ -627,7 +627,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       JSON.parse(this.definicionTecnica);
     } catch (error) {
       const detalle = error instanceof SyntaxError ? error.message : '';
-      this.mostrarError(`La definición JSON no es válida${detalle ? `: ${detalle}` : '.'}`);
+      const sufijo = detalle ? `: ${detalle}` : '.';
+      this.mostrarError(`La definición JSON no es válida${sufijo}`);
       return;
     }
 
@@ -900,7 +901,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private tieneValor(valor: unknown): boolean {
-    return valor !== null && valor !== undefined && `${valor}`.trim() !== '';
+    if (valor === null || valor === undefined) return false;
+    if (typeof valor === 'object') return Object.keys(valor).length > 0;
+    return String(valor).trim() !== '';
   }
 
   private finalizarConError(error: unknown, mensaje: string): void {

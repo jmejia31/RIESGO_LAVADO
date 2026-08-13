@@ -46,11 +46,11 @@
     </div>
   }
   @if (mensaje(); as mensajeTexto) {
-    <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm animate-fade-in" role="status" aria-live="polite">
+    <output class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm animate-fade-in" aria-live="polite">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
       <button type="button" class="rounded-lg p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" aria-label="Cerrar notificación" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-    </div>
+     </output>
   }
 
   <!-- Navegación de Categorías Estilo Píldora Flotante Integrada -->
@@ -409,7 +409,8 @@
 
   <!-- MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER -->
   @if (versionEditando(); as versionActual) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
+     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
+     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
       <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100 relative">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
@@ -420,13 +421,14 @@
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
                           (cerrar)="versionEditando.set(null)">
         </app-form-builder>
-      </div>
-    </div>
+       </div>
+     </div>
   }
 
   <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
+     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
+     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 id="titulo-modal-familia" class="text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
@@ -471,14 +473,15 @@
         <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
           <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
           <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
-        </div>
-      </div>
-    </div>
+       </div>
+       </div>
+     </div>
   }
 
   <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
+     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
+     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div>
@@ -507,15 +510,15 @@
 
           <div>
             <label for="form-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
-            <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
-          </div>
-        </div>
+             <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
+           </div>
+         </div>
 
         <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
           <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
           <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
         </div>
       </div>
-    </div>
+     </div>
   }
 </section>

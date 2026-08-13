@@ -10,118 +10,62 @@ export interface ResultadoEvaluacionFormula {
  * Evaluador matematico seguro Shunting-Yard (sin eval ni new Function).
  * Soporta +, -, *, /, parentesis, constantes y variables numericas.
  */
-function evaluarExpresionMatematicaSegura(expresion: string): number {
+function tokenizarExpresion(expresion: string): string[] {
   const tokens: string[] = [];
-  let i = 0;
-
-  while (i < expresion.length) {
+  for (let i = 0; i < expresion.length;) {
     const ch = expresion[i];
-
-    if (/\s/.test(ch)) {
-      i++;
-      continue;
-    }
-
+    if (/\s/.test(ch)) { i++; continue; }
     if (/[0-9.]/.test(ch)) {
-      let numStr = '';
-      while (i < expresion.length && /[0-9.]/.test(expresion[i])) {
-        numStr += expresion[i];
-        i++;
-      }
-      tokens.push(numStr);
+      let numero = '';
+      while (i < expresion.length && /[0-9.]/.test(expresion[i])) numero += expresion[i++];
+      tokens.push(numero);
       continue;
     }
-
-    if (['+', '-', '*', '/', '(', ')'].includes(ch)) {
-      tokens.push(ch);
-      i++;
-      continue;
-    }
-
+    if (['+', '-', '*', '/', '(', ')'].includes(ch)) { tokens.push(ch); i++; continue; }
     throw new Error(`Caracter no permitido en expresion matematica: '${ch}'`);
   }
+  return tokens;
+}
 
-  // Algoritmo Shunting-yard RPN
-  const outputQueue: string[] = [];
-  const operatorStack: string[] = [];
-
-  const precedencia: Record<string, number> = {
-    '+': 1,
-    '-': 1,
-    '*': 2,
-    '/': 2
-  };
-
+function convertirARpn(tokens: string[]): string[] {
+  const salida: string[] = [];
+  const operadores: string[] = [];
+  const precedencia: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
   for (const token of tokens) {
-    if (!Number.isNaN(Number(token))) {
-      outputQueue.push(token);
-    } else if (['+', '-', '*', '/'].includes(token)) {
-      while (
-        operatorStack.length > 0 &&
-        operatorStack.at(-1) !== '(' &&
-        precedencia[operatorStack.at(-1)!] >= precedencia[token]
-      ) {
-        outputQueue.push(operatorStack.pop()!);
-      }
-      operatorStack.push(token);
-    } else if (token === '(') {
-      operatorStack.push(token);
-    } else if (token === ')') {
-      while (operatorStack.length > 0 && operatorStack.at(-1) !== '(') {
-        outputQueue.push(operatorStack.pop()!);
-      }
-      if (operatorStack.length === 0) {
-        throw new Error('Parentesis desbalanceados en la formula.');
-      }
-      operatorStack.pop();
+    if (!Number.isNaN(Number(token))) salida.push(token);
+    else if (['+', '-', '*', '/'].includes(token)) {
+      while (operadores.at(-1) !== undefined && operadores.at(-1) !== '(' && precedencia[operadores.at(-1)!] >= precedencia[token]) salida.push(operadores.pop()!);
+      operadores.push(token);
+    } else if (token === '(') operadores.push(token);
+    else {
+      while (operadores.at(-1) !== undefined && operadores.at(-1) !== '(') salida.push(operadores.pop()!);
+      if (operadores.pop() !== '(') throw new Error('Parentesis desbalanceados en la formula.');
     }
   }
-
-  while (operatorStack.length > 0) {
-    const op = operatorStack.pop()!;
-    if (op === '(' || op === ')') {
-      throw new Error('Parentesis desbalanceados en la formula.');
-    }
-    outputQueue.push(op);
+  while (operadores.length) {
+    const op = operadores.pop()!;
+    if (op === '(' || op === ')') throw new Error('Parentesis desbalanceados en la formula.');
+    salida.push(op);
   }
+  return salida;
+}
 
-  const evalStack: number[] = [];
-
-  for (const token of outputQueue) {
-    if (!Number.isNaN(Number(token))) {
-      evalStack.push(Number(token));
-    } else {
-      if (evalStack.length < 2) {
-        throw new Error('Expresion matematica incompleta.');
-      }
-      const b = evalStack.pop()!;
-      const a = evalStack.pop()!;
-
-      switch (token) {
-        case '+':
-          evalStack.push(a + b);
-          break;
-        case '-':
-          evalStack.push(a - b);
-          break;
-        case '*':
-          evalStack.push(a * b);
-          break;
-        case '/':
-          if (b === 0) {
-            throw new Error('Division por cero en el calculo.');
-          }
-          evalStack.push(a / b);
-          break;
-      }
-    }
+function evaluarRpn(rpn: string[]): number {
+  const pila: number[] = [];
+  for (const token of rpn) {
+    if (!Number.isNaN(Number(token))) { pila.push(Number(token)); continue; }
+    if (pila.length < 2) throw new Error('Expresion matematica incompleta.');
+    const b = pila.pop()!;
+    const a = pila.pop()!;
+    if (token === '/' && b === 0) throw new Error('Division por cero en el calculo.');
+    pila.push(token === '+' ? a + b : token === '-' ? a - b : token === '*' ? a * b : a / b);
   }
+  if (pila.length !== 1) throw new Error('Error al evaluar el resultado de la formula.');
+  return pila[0];
+}
 
-  if (evalStack.length !== 1) {
-    throw new Error('Error al evaluar el resultado de la formula.');
-  }
-
-  return evalStack[0];
+function evaluarExpresionMatematicaSegura(expresion: string): number {
+  return evaluarRpn(convertirARpn(tokenizarExpresion(expresion)));
 }
 
 /**
@@ -153,13 +97,7 @@ export function detectarCicloEnFormulas(
   if (!campo?.formula) return false;
 
   const dependencias = obtenerDependenciasDeFormula(campo.formula);
-  for (const dep of dependencias) {
-    if (detectarCicloEnFormulas(dep, camposMap, new Set(visitados))) {
-      return true;
-    }
-  }
-
-  return false;
+  return dependencias.some(dep => detectarCicloEnFormulas(dep, camposMap, new Set(visitados)));
 }
 
 export function evaluarFormulaCampo(

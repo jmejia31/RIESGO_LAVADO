@@ -4421,6 +4421,7 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Objetivo: corregir los tres avisos `Prefer Number.isNaN a isNaN` y dos patrones de expresion regular/indice detectados en `dynamic-formula-evaluator.util.ts`.
 - Archivo modificado: `frontend/rl-app/src/app/features/admin/matrices-riesgos/utils/dynamic-formula-evaluator.util.ts`.
 - Cambios: `Number.isNaN`, acceso `Array.at`, expresion regular equivalente y optional chaining; sin modificar contrato de formulas ni persistencia Oracle.
+- Registro 2026-08-13 (ChatGPT): endurecidos accesibilidad y semantica de modales/Form Builder, labels ARIA, roles interactivos, foco modal, imports no usados, complejidad del evaluador y conversiones de valores. Verificados build Angular, 181 pruebas frontend, 319 backend, 14 E2E, quality gates locales, validador BD y enlaces documentales. Oracle, SQL, DDL, DML, main y PR #20 no fueron modificados. Pendiente confirmar el analisis remoto SonarCloud; la deuda historica de duplicacion no se declara resuelta sin esa evidencia.
 - Verificado en esta intervencion: build Angular exitoso (advertencia informativa preexistente de `exceljs` CommonJS), 181/181 pruebas frontend, 319/319 pruebas backend, validacion de scripts de base de datos, enlaces documentales, `git diff --check` y `tools/run_quality_gates.ps1` con salida correcta.
 - Oracle, DDL/DML, `main` y PR #20 no fueron modificados ni ejecutados.
 - Pendiente externo: nuevo analisis remoto de SonarCloud para confirmar el estado del Quality Gate y la duplicacion historica del PR.

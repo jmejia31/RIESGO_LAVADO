@@ -10,8 +10,6 @@ import {
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
-import { ElementoCatalogoMatrices } from '../../models/matrices-riesgos.models';
-
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
 
 @Component({

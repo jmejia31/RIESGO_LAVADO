@@ -18,7 +18,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   sidebarAbierto = signal(true);
 
   /** Lista completa de módulos activos cargados desde la API */
-  todosLosModulos = signal<Modulo[]>([]);
+  readonly todosLosModulos = signal<Modulo[]>([]);
 
   private observadorDialogos?: MutationObserver;
   private dialogoActivo: HTMLElement | null = null;
@@ -92,9 +92,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof document === 'undefined') return;
 
     const dialogos = Array.from(
-      this.host.nativeElement.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')
+      this.host.nativeElement.querySelectorAll<HTMLElement>('dialog[open][aria-modal="true"], [role="dialog"][aria-modal="true"]')
     );
-    const dialogo = dialogos.length > 0 ? dialogos[dialogos.length - 1] : null;
+    const dialogo = dialogos.at(-1) ?? null;
 
     if (dialogo === this.dialogoActivo) return;
 
@@ -208,7 +208,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const primero = elementosEnfocables[0];
-    const ultimo = elementosEnfocables[elementosEnfocables.length - 1];
+    const ultimo = elementosEnfocables.at(-1);
+    if (!ultimo) return;
     const activo = document.activeElement;
 
     if (event.shiftKey) {

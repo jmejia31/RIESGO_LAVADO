@@ -47,9 +47,9 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   it('normalizarJsonABuilderModel convierte correctamente la estructura JSON en BuilderModel', () => {
     const model = normalizarJsonABuilderModel(jsonPruebaValido, 'CODIGO_DEFAULT', 'Nombre Default');
     expect(model.codigoFormulario).toBe('MATRIZ_LAFT_TEST');
-    expect(model.secciones.length).toBe(1);
+    expect(model.secciones).toHaveLength(1);
     expect(model.secciones[0].titulo).toBe('Identificación');
-    expect(model.secciones[0].campos.length).toBe(1);
+    expect(model.secciones[0].campos).toHaveLength(1);
     expect(model.secciones[0].campos[0].clave).toBe('area');
   });
 
@@ -165,11 +165,11 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
 
     const ctrlNumero = component.tiposControles.find(t => t.tipo === 'numero')!;
     component.agregarCampoASeccion(seccionId, ctrlNumero);
-    expect(component.model().secciones[0].campos.length).toBe(camposIniciales + 1);
+    expect(component.model().secciones[0].campos).toHaveLength(camposIniciales + 1);
 
     const nuevoCampoId = component.model().secciones[0].campos[component.model().secciones[0].campos.length - 1].id;
     component.eliminarCampo(seccionId, nuevoCampoId);
-    expect(component.model().secciones[0].campos.length).toBe(camposIniciales);
+    expect(component.model().secciones[0].campos).toHaveLength(camposIniciales);
   });
 
   it('bloquea modificaciones cuando soloLectura es true (versión PUBLISHED o VIGENTE)', () => {
@@ -179,10 +179,10 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
 
     const ctrlTexto = component.tiposControles.find(t => t.tipo === 'texto')!;
     component.agregarCampoASeccion(seccionId, ctrlTexto);
-    expect(component.model().secciones[0].campos.length).toBe(camposIniciales);
+    expect(component.model().secciones[0].campos).toHaveLength(camposIniciales);
 
     component.agregarSeccion();
-    expect(component.model().secciones.length).toBe(1);
+    expect(component.model().secciones).toHaveLength(1);
   });
 
   it('emite el evento de cierre correctamente al presionar el botón de cerrar', () => {
