@@ -29,19 +29,34 @@
     </div>
   }
 
-  <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos">
+  <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos" role="tablist">
     @for (opcion of [
       { id: 'evaluaciones', texto: 'Evaluaciones' },
       { id: 'captura', texto: 'Captura dinámica' },
       { id: 'consolidado', texto: 'Consolidado' },
       { id: 'plantillas', texto: 'Plantillas' }
     ]; track opcion.id) {
-      <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="tab() === opcion.id" [class.text-white]="tab() === opcion.id" (click)="seleccionarTab($any(opcion.id))">{{ opcion.texto }}</button>
+      <button type="button"
+              role="tab"
+              [attr.aria-selected]="tab() === opcion.id"
+              [attr.aria-controls]="'panel-' + opcion.id"
+              class="rounded-xl px-4 py-2 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-900"
+              [class.bg-slate-900]="tab() === opcion.id"
+              [class.text-white]="tab() === opcion.id"
+              (click)="seleccionarTab($any(opcion.id))">{{ opcion.texto }}</button>
     }
   </nav>
 
   @if (cargando()) {
-    <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Cargando información...</div>
+    <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 space-y-4" aria-busy="true" aria-live="polite">
+      <div class="inline-flex items-center gap-3">
+        <svg class="h-5 w-5 animate-spin text-slate-700" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="font-medium text-slate-700">Cargando información institucional...</span>
+      </div>
+    </div>
   }
 
   @if (!cargando() && tab() === 'evaluaciones') {
