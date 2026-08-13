@@ -383,10 +383,19 @@
     </section>
   }
 
-  <!-- MODAL FULL-SCREEN 100% PANTALLA COMPLETA DEL FORM BUILDER (SIN MARGEN SUPERIOR NI BORDES EXPUESTOS) -->
+  <!-- MODAL ESTÉTICO SUPERPUESTO DEL FORM BUILDER -->
   @if (versionEditando(); as versionActual) {
-    <div class="fixed inset-0 z-[999] flex flex-col bg-slate-900/80 backdrop-blur-md animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
-      <div class="w-full h-full flex flex-col bg-white overflow-hidden shadow-2xl">
+    <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
+      <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100 relative">
+        <button type="button"
+                (click)="versionEditando.set(null)"
+                class="absolute top-4 right-4 z-20 rounded-xl bg-slate-900/80 hover:bg-slate-900 text-white p-2 shadow-lg backdrop-blur-sm transition-all focus:outline-none focus:ring-2 focus:ring-white"
+                aria-label="Cerrar modal de formulario">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"
