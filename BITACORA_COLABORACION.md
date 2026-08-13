@@ -1,5 +1,26 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Restauración de Modal Flotante Estético y Corrección de Cobertura de Cabecera (`z-[1000]`)
+
+- **Fecha y hora**: 2026-08-13, 08:36 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `217ed54`.
+- **Commit final**: `fbb9251`.
+- **Objetivo**: Revertir el diseño cuadrado sin bordes y restaurar la tarjeta flotante redondeada estética con alta densidad (`max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100 relative`), corrigiendo el `z-index` a `z-[1000]` para que la sombra oscura superpuesta y el filtro `backdrop-blur-sm` cubran la barra superior/cabecera del sistema que quedaba visible en capas intermedias.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Restauración del Modal Estético Flotante (`matrices-riesgos.component.html`)**:
+   - Revertido el layout a la tarjeta redondeada premium con sombra flotante profunda (`shadow-2xl rounded-2xl border-gray-100`).
+   - Elevado el `z-index` de la capa superpuesta a `fixed inset-0 z-[1000]`, logrando que la sombra traslúcida (`bg-slate-900/60 backdrop-blur-sm`) cubra completamente la franja de la cabecera del layout sin distorsionar los bordes del modal.
+   - Añadido un botón de cierre flotante de alta visibilidad (`absolute top-4 right-4 z-20 rounded-xl bg-slate-900/80 text-white`).
+2. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `fbb9251`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Modal 100% Pantalla Completa (Full-Screen) y Bloqueo Absoluto Trasero
 
 - **Fecha y hora**: 2026-08-13, 08:31 (UTC-6).
