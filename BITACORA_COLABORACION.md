@@ -10,7 +10,10 @@
 - **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
 
 ### Cambios y Verificaciones Ejecutadas
-1. **Restauración del Diseño de Barra de Pestañas (`matrices-riesgos.component.html`)**:
+1. **Sustitución de Diálogos Nativos por Modales Institucionales (`matrices-riesgos.component.ts`)**:
+   - Se eliminó el cuadro de diálogo nativo del navegador `confirm(...)` en la acción de eliminar versión de formulario.
+   - Se implementó la integración con la librería estandarizada **SweetAlert2** (`Swal.fire`) en las tres acciones de confirmación de plantillas: `eliminarVersionFormulario` (alerta roja de advertencia), `publicarVersion` (modal azul de confirmación de publicación) y `cambiarVigenciaVersion` (modal verde/naranja para activación o desactivación).
+2. **Restauración del Diseño de Barra de Pestañas (`matrices-riesgos.component.html`)**:
    - Se restauró la estructura de contenedor único continuo tipo píldora flotante integrada (`p-1.5 bg-white rounded-2xl border border-gray-200/80 shadow-sm inline-flex items-center`).
    - Se mantuvieron intactos los colores corporativos actuales (`bg-ihss-900`, `text-white` en la pestaña activa y `text-gray-600 hover:bg-gray-100/70` en las inactivas), conservando además el soporte completo WAI-ARIA 1.2 (`role="tab"`, `aria-selected`, `tabindex` y `onKeydownTab`).
 2. **Creación de la Suite de Pruebas Backend (`MatricesRiesgosPhase07BackendCoverageTests.cs`)**:
