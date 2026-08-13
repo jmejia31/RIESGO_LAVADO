@@ -30,14 +30,14 @@
     </div>
   }
 
-  <!-- Navegación de Categorías Estilo Monitoreo de Listas -->
-  <div class="p-2 bg-gray-50/70 rounded-2xl border border-gray-100 shadow-sm">
-    <nav class="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="Secciones de Matrices de Riesgos" role="tablist">
+  <!-- Navegación de Categorías Estilo Píldora Flotante Integrada -->
+  <div class="p-1.5 bg-white rounded-2xl border border-gray-200/80 shadow-sm inline-flex w-full sm:w-auto items-center">
+    <nav class="flex w-full sm:w-auto items-center gap-1 sm:gap-1.5" aria-label="Secciones de Matrices de Riesgos" role="tablist">
       @for (opcion of [
-        { id: 'evaluaciones', texto: 'Evaluaciones', subtitulo: 'Registro y flujo' },
-        { id: 'captura', texto: 'Captura dinámica', subtitulo: 'Diligenciamiento' },
-        { id: 'consolidado', texto: 'Consolidado', subtitulo: 'Matriz e informes' },
-        { id: 'plantillas', texto: 'Plantillas', subtitulo: 'Constructor dinámico' }
+        { id: 'evaluaciones', texto: 'Evaluaciones' },
+        { id: 'captura', texto: 'Captura dinámica' },
+        { id: 'consolidado', texto: 'Consolidado' },
+        { id: 'plantillas', texto: 'Plantillas' }
       ]; track opcion.id) {
         <button type="button"
                 role="tab"
@@ -45,21 +45,16 @@
                 [attr.aria-selected]="tab() === opcion.id"
                 [attr.aria-controls]="'panel-' + opcion.id"
                 [attr.tabindex]="tab() === opcion.id ? 0 : -1"
-                class="flex flex-col items-start justify-center p-3 sm:p-4 rounded-xl font-semibold transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
+                class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-center whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
                 [class.bg-ihss-900]="tab() === opcion.id"
                 [class.text-white]="tab() === opcion.id"
-                [class.ring-2]="tab() === opcion.id"
-                [class.ring-ihss-600\/20]="tab() === opcion.id"
-                [class.shadow-sm]="tab() === opcion.id"
-                [class.bg-white]="tab() !== opcion.id"
-                [class.text-gray-700]="tab() !== opcion.id"
-                [class.hover:bg-gray-50]="tab() !== opcion.id"
-                [class.border]="tab() !== opcion.id"
-                [class.border-gray-200]="tab() !== opcion.id"
+                [class.shadow-md]="tab() === opcion.id"
+                [class.text-gray-600]="tab() !== opcion.id"
+                [class.hover:text-gray-900]="tab() !== opcion.id"
+                [class.hover:bg-gray-100/70]="tab() !== opcion.id"
                 (keydown)="onKeydownTab($event, $any(opcion.id))"
                 (click)="seleccionarTab($any(opcion.id))">
-          <span class="block text-sm font-bold">{{ opcion.texto }}</span>
-          <span class="block text-xs font-medium opacity-75 mt-0.5" [class.text-gray-500]="tab() !== opcion.id" [class.text-gray-200]="tab() === opcion.id">{{ opcion.subtitulo }}</span>
+          {{ opcion.texto }}
         </button>
       }
     </nav>
