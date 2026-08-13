@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Navegación de Teclado WAI-ARIA 1.2 Roving Tabindex y Ortografía UTF-8 Restaurada
+
+- **Fecha y hora**: 2026-08-13, 08:14 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9c842e1`.
+- **Commit final**: `616caca`.
+- **Objetivo**: Implementar la especificación completa WAI-ARIA 1.2 para el componente de pestañas (manejo de eventos de teclado `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Home`, `End`, `tabindex` roving dinámico y foco programático), y restaurar la ortografía estándar con tildes y caracteres institucionales en UTF-8 nativo limpio sin mojibake.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Navegación WAI-ARIA 1.2 por Teclado (`MatricesRiesgosComponent.ts` y `.html`)**:
+   - Creado el método `onKeydownTab` que intercepta las teclas de dirección, `Home` y `End`, cambiando dinámicamente la pestaña activa y asignando el foco programático sobre el botón correspondiente (`document.getElementById('tab-' + nuevaTab).focus()`).
+   - Configurado `[attr.tabindex]="tab() === opcion.id ? 0 : -1"` (Roving Tabindex), permitiendo que solo la pestaña seleccionada sea accesible mediante la tecla `Tab` estándar y las demás se naveguen con flechas.
+2. **Restauración de Ortografía en UTF-8 Limpio**:
+   - Restauradas todas las tildes y acentuación en castellano (`Captura dinámica`, `Cargando información institucional...`, `Nueva evaluación`, `En revisión`, `Versión`, `Fórmula`, `descripción`) garantizando excelente presentación visual y 0 mojibake.
+3. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `616caca`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Vinculación Semántica Estricta WAI-ARIA `tab/tabpanel` y Sanitización ASCII Pura
 
 - **Fecha y hora**: 2026-08-13, 08:11 (UTC-6).
