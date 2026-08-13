@@ -601,36 +601,67 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   publicarVersion(version: VersionFormularioDto): void {
-    this.guardando.set(true);
-    this.service.publicarVersionFormulario(version.verId).subscribe({
-      next: () => {
-        this.guardando.set(false);
-        this.globalState.limpiarError();
-        this.mostrarMensaje('Versión publicada correctamente.');
-        this.cargarVersiones();
-        this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
-      },
-      error: error => {
-        this.guardando.set(false);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
-      }
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: '¿Publicar versión?',
+        text: `¿Desea publicar la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})? Esta acción creará la versión oficial de la plantilla.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, publicar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.guardando.set(true);
+          this.service.publicarVersionFormulario(version.verId).subscribe({
+            next: () => {
+              this.guardando.set(false);
+              this.globalState.limpiarError();
+              this.mostrarMensaje('Versión publicada correctamente.');
+              this.cargarVersiones();
+              this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+            },
+            error: error => {
+              this.guardando.set(false);
+              this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
+            }
+          });
+        }
+      });
     });
   }
 
   cambiarVigenciaVersion(version: VersionFormularioDto, vigente: boolean): void {
-    this.guardando.set(true);
-    this.service.cambiarVigenciaFormulario(version.verId, vigente).subscribe({
-      next: () => {
-        this.guardando.set(false);
-        this.globalState.limpiarError();
-        this.mostrarMensaje(vigente ? 'Versión establecida como activa exitosamente.' : 'Versión desactivada.');
-        this.cargarVersiones();
-        this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
-      },
-      error: error => {
-        this.guardando.set(false);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la vigencia de la versión.'));
-      }
+    const accion = vigente ? 'activar' : 'desactivar';
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: vigente ? '¿Activar versión?' : '¿Desactivar versión?',
+        text: `¿Está seguro de ${accion} la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: vigente ? '#059669' : '#d97706',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: vigente ? 'Sí, activar' : 'Sí, desactivar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.guardando.set(true);
+          this.service.cambiarVigenciaFormulario(version.verId, vigente).subscribe({
+            next: () => {
+              this.guardando.set(false);
+              this.globalState.limpiarError();
+              this.mostrarMensaje(vigente ? 'Versión establecida como activa exitosamente.' : 'Versión desactivada.');
+              this.cargarVersiones();
+              this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+            },
+            error: error => {
+              this.guardando.set(false);
+              this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la vigencia de la versión.'));
+            }
+          });
+        }
+      });
     });
   }
 
@@ -640,22 +671,34 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!confirm(`¿Está seguro de eliminar permanentemente la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`)) {
-      return;
-    }
-
-    this.guardando.set(true);
-    this.service.eliminarVersionFormulario(version.verId).subscribe({
-      next: () => {
-        this.guardando.set(false);
-        this.globalState.limpiarError();
-        this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
-        this.cargarVersiones();
-      },
-      error: error => {
-        this.guardando.set(false);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo eliminar la versión del formulario.'));
-      }
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: '¿Eliminar versión?',
+        text: `¿Está seguro de eliminar permanentemente la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        focusCancel: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.guardando.set(true);
+          this.service.eliminarVersionFormulario(version.verId).subscribe({
+            next: () => {
+              this.guardando.set(false);
+              this.globalState.limpiarError();
+              this.mostrarMensaje(`Formulario ID #${version.verId} eliminado correctamente.`);
+              this.cargarVersiones();
+            },
+            error: error => {
+              this.guardando.set(false);
+              this.mostrarError(this.obtenerMensajeError(error, 'No se pudo eliminar la versión del formulario.'));
+            }
+          });
+        }
+      });
     });
   }
 
