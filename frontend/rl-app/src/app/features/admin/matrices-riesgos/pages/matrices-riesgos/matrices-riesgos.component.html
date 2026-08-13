@@ -1,85 +1,129 @@
-<section class="w-full space-y-5" aria-labelledby="titulo-matrices">
-  <header class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">SGRLA · IHSS</p>
-    <div class="mt-1 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <div>
-        <h1 id="titulo-matrices" class="text-2xl font-bold text-slate-900">Matrices de Riesgos</h1>
-        <p class="mt-2 text-sm text-slate-600">Formulario versionado, campos dinámicos, catálogos y reglas trazables.</p>
-      </div>
-      <div class="grid grid-cols-3 gap-3 rounded-xl bg-slate-50 px-4 py-3 text-sm">
-        <dl><dt class="font-semibold text-slate-500">Formulario</dt><dd>{{ versionVigente()?.verCodigo || '-' }}</dd></dl>
-        <dl><dt class="font-semibold text-slate-500">Versión</dt><dd>{{ versionVigente()?.verVersion || '-' }}</dd></dl>
-        <dl><dt class="font-semibold text-slate-500">Campos</dt><dd>{{ totalCampos() }}</dd></dl>
-      </div>
+<section class="w-full space-y-6" aria-labelledby="titulo-matrices">
+  <!-- Encabezado Estilo Monitoreo de Listas -->
+  <header class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col xl:flex-row xl:items-start xl:justify-between gap-5">
+    <div class="min-w-0">
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-ihss-600">SGRLA · IHSS</p>
+      <h1 id="titulo-matrices" class="mt-1 text-2xl font-bold text-gray-900">Matrices de Riesgos</h1>
+      <p class="mt-1 text-sm text-gray-500 max-w-3xl">
+        Formulario versionado, campos dinámicos, catálogos y reglas trazables del Sistema de Gestión LA/FT.
+      </p>
+    </div>
+    <div class="grid grid-cols-3 gap-3 rounded-xl bg-gray-50/80 p-3 text-sm border border-gray-100">
+      <dl class="px-2"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Formulario</dt><dd class="mt-1 font-bold text-gray-900 truncate">{{ versionVigente()?.verCodigo || '-' }}</dd></dl>
+      <dl class="px-2 border-l border-gray-200"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Versión</dt><dd class="mt-1 font-bold text-gray-900">{{ versionVigente()?.verVersion ? 'v' + versionVigente()?.verVersion : '-' }}</dd></dl>
+      <dl class="px-2 border-l border-gray-200"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Campos</dt><dd class="mt-1 font-bold text-ihss-700">{{ totalCampos() }}</dd></dl>
     </div>
   </header>
 
   @if (error(); as errorTexto) {
-    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
+    <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span class="flex-1">{{ errorTexto }}</span>
+      <span class="flex-1 font-medium">{{ errorTexto }}</span>
       <button type="button" class="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800 transition-colors" aria-label="Cerrar notificación" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
   }
   @if (mensaje(); as mensajeTexto) {
-    <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 shadow-sm animate-fade-in" role="status" aria-live="polite">
+    <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm animate-fade-in" role="status" aria-live="polite">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <span class="flex-1">{{ mensajeTexto }}</span>
+      <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
       <button type="button" class="rounded-lg p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" aria-label="Cerrar notificación" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
   }
 
-  <nav class="flex flex-wrap gap-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-sm" aria-label="Secciones de Matrices de Riesgos" role="tablist">
-    @for (opcion of [
-      { id: 'evaluaciones', texto: 'Evaluaciones' },
-      { id: 'captura', texto: 'Captura dinámica' },
-      { id: 'consolidado', texto: 'Consolidado' },
-      { id: 'plantillas', texto: 'Plantillas' }
-    ]; track opcion.id) {
-      <button type="button"
-              role="tab"
-              [attr.id]="'tab-' + opcion.id"
-              [attr.aria-selected]="tab() === opcion.id"
-              [attr.aria-controls]="'panel-' + opcion.id"
-              [attr.tabindex]="tab() === opcion.id ? 0 : -1"
-              class="rounded-xl px-4 py-2 text-sm font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-slate-900"
-              [class.bg-slate-900]="tab() === opcion.id"
-              [class.text-white]="tab() === opcion.id"
-              (keydown)="onKeydownTab($event, $any(opcion.id))"
-              (click)="seleccionarTab($any(opcion.id))">{{ opcion.texto }}</button>
-    }
-  </nav>
+  <!-- Navegación de Categorías Estilo Monitoreo de Listas -->
+  <div class="p-2 bg-gray-50/70 rounded-2xl border border-gray-100 shadow-sm">
+    <nav class="grid grid-cols-2 sm:grid-cols-4 gap-2" aria-label="Secciones de Matrices de Riesgos" role="tablist">
+      @for (opcion of [
+        { id: 'evaluaciones', texto: 'Evaluaciones', subtitulo: 'Registro y flujo' },
+        { id: 'captura', texto: 'Captura dinámica', subtitulo: 'Diligenciamiento' },
+        { id: 'consolidado', texto: 'Consolidado', subtitulo: 'Matriz e informes' },
+        { id: 'plantillas', texto: 'Plantillas', subtitulo: 'Constructor dinámico' }
+      ]; track opcion.id) {
+        <button type="button"
+                role="tab"
+                [attr.id]="'tab-' + opcion.id"
+                [attr.aria-selected]="tab() === opcion.id"
+                [attr.aria-controls]="'panel-' + opcion.id"
+                [attr.tabindex]="tab() === opcion.id ? 0 : -1"
+                class="flex flex-col items-start justify-center p-3 sm:p-4 rounded-xl font-semibold transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
+                [class.bg-ihss-900]="tab() === opcion.id"
+                [class.text-white]="tab() === opcion.id"
+                [class.ring-2]="tab() === opcion.id"
+                [class.ring-ihss-600\/20]="tab() === opcion.id"
+                [class.shadow-sm]="tab() === opcion.id"
+                [class.bg-white]="tab() !== opcion.id"
+                [class.text-gray-700]="tab() !== opcion.id"
+                [class.hover:bg-gray-50]="tab() !== opcion.id"
+                [class.border]="tab() !== opcion.id"
+                [class.border-gray-200]="tab() !== opcion.id"
+                (keydown)="onKeydownTab($event, $any(opcion.id))"
+                (click)="seleccionarTab($any(opcion.id))">
+          <span class="block text-sm font-bold">{{ opcion.texto }}</span>
+          <span class="block text-xs font-medium opacity-75 mt-0.5" [class.text-gray-500]="tab() !== opcion.id" [class.text-gray-200]="tab() === opcion.id">{{ opcion.subtitulo }}</span>
+        </button>
+      }
+    </nav>
+  </div>
 
   @if (cargando()) {
-    <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-600 space-y-4" aria-busy="true" aria-live="polite">
+    <div class="rounded-2xl border border-gray-100 bg-white p-12 text-center text-sm text-gray-600 space-y-4 shadow-sm" aria-busy="true" aria-live="polite">
       <div class="inline-flex items-center gap-3">
-        <svg class="h-5 w-5 animate-spin text-slate-700" fill="none" viewBox="0 0 24 24">
+        <svg class="h-6 w-6 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span class="font-medium text-slate-700">Cargando información institucional...</span>
+        <span class="font-bold text-gray-700">Cargando información institucional...</span>
       </div>
     </div>
   }
 
   @if (!cargando() && tab() === 'evaluaciones') {
-    <section id="panel-evaluaciones" role="tabpanel" aria-labelledby="tab-evaluaciones" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div><h2 class="text-lg font-bold text-slate-900">Evaluaciones</h2><p class="text-sm text-slate-600">El estado proviene del último flujo registrado.</p></div>
-        <button type="button" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white" (click)="nuevaEvaluacion()">Nueva evaluación</button>
+    <section id="panel-evaluaciones" role="tabpanel" aria-labelledby="tab-evaluaciones" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-gray-900">Evaluaciones de Riesgo</h2>
+          <p class="text-xs text-gray-500">Estado operativo proveniente del último flujo transaccional registrado.</p>
+        </div>
+        <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="nuevaEvaluacion()">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Nueva evaluación</span>
+        </button>
       </div>
       <div class="grid gap-3 md:grid-cols-4">
-        <div><label for="filtro-buscar" class="block text-sm font-medium">Buscar</label><input id="filtro-buscar" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" type="search" [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></div>
-        <div><label for="filtro-estado" class="block text-sm font-medium">Estado</label><select id="filtro-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
-        <div class="flex items-end"><button type="button" class="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarEvaluaciones()">Aplicar filtros</button></div>
+        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código..." [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></div>
+        <div><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
+        <div class="flex items-end"><button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm" (click)="cargarEvaluaciones()">Aplicar filtros</button></div>
       </div>
-      <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="min-w-[900px] w-full divide-y divide-slate-200 text-sm">
-          <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Evaluación</th><th class="px-4 py-3">Riesgo</th><th class="px-4 py-3">Versión</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Fecha</th><th class="px-4 py-3">Acción</th></tr></thead>
-          <tbody class="divide-y divide-slate-100">
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+            <tr><th class="px-6 py-3">Evaluación</th><th class="px-6 py-3">Riesgo</th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Estado</th><th class="px-6 py-3">VRI</th><th class="px-6 py-3">VRR</th><th class="px-6 py-3">Fecha</th><th class="px-6 py-3 text-center">Acción</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (evaluacion of evaluaciones(); track evaluacion.evaId) {
-              <tr><td class="px-4 py-3 font-semibold">{{ evaluacion.evaId }}</td><td class="px-4 py-3">{{ evaluacion.evaRiesgoId }}</td><td class="px-4 py-3">{{ evaluacion.evaVersionId }}</td><td class="px-4 py-3">{{ evaluacion.evaEstado }}</td><td class="px-4 py-3">{{ evaluacion.evaVri ?? '-' }}</td><td class="px-4 py-3">{{ evaluacion.evaVrr ?? '-' }}</td><td class="px-4 py-3">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td><td class="px-4 py-3"><button type="button" class="font-semibold text-blue-700" (click)="editarEvaluacion(evaluacion)">Abrir</button></td></tr>
-            } @empty { <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">Sin evaluaciones.</td></tr> }
+              <tr class="hover:bg-gray-50/50 transition-colors">
+                <td class="px-6 py-4 font-bold text-gray-900">#{{ evaluacion.evaId }}</td>
+                <td class="px-6 py-4 font-medium">{{ evaluacion.evaRiesgoId }}</td>
+                <td class="px-6 py-4 text-gray-500">v{{ evaluacion.evaVersionId }}</td>
+                <td class="px-6 py-4">
+                  <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold"
+                        [class.bg-amber-50]="evaluacion.evaEstado === 'BORRADOR'" [class.text-amber-700]="evaluacion.evaEstado === 'BORRADOR'" [class.ring-1]="evaluacion.evaEstado === 'BORRADOR'" [class.ring-amber-600\/20]="evaluacion.evaEstado === 'BORRADOR'"
+                        [class.bg-blue-50]="evaluacion.evaEstado === 'EN_REVISION'" [class.text-blue-700]="evaluacion.evaEstado === 'EN_REVISION'"
+                        [class.bg-emerald-50]="evaluacion.evaEstado === 'APROBADA'" [class.text-emerald-700]="evaluacion.evaEstado === 'APROBADA'"
+                        [class.bg-red-50]="evaluacion.evaEstado === 'RECHAZADA'" [class.text-red-700]="evaluacion.evaEstado === 'RECHAZADA'">
+                    {{ evaluacion.evaEstado }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.evaVri ?? '-' }}</td>
+                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.evaVrr ?? '-' }}</td>
+                <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="px-6 py-4 text-center">
+                  <button type="button" class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200" title="Abrir evaluación" (click)="editarEvaluacion(evaluacion)">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  </button>
+                </td>
+              </tr>
+            } @empty { <tr><td colspan="8" class="px-6 py-12 text-center text-gray-400 text-sm">Sin evaluaciones registradas.</td></tr> }
           </tbody>
         </table>
       </div>
@@ -87,16 +131,16 @@
   }
 
   @if (!cargando() && tab() === 'captura') {
-    <section id="panel-captura" role="tabpanel" aria-labelledby="tab-captura" class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <section id="panel-captura" role="tabpanel" aria-labelledby="tab-captura" class="space-y-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div><h2 class="text-lg font-bold">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-sm text-slate-600">{{ totalCompletados() }} de {{ totalCampos() }} campos completados.</p></div>
+        <div><h2 class="text-lg font-bold text-gray-900">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-xs text-gray-500">{{ totalCompletados() }} de {{ totalCampos() }} campos completados en la plantilla.</p></div>
         <div class="flex items-center gap-2">
-          <label for="selector-riesgo" class="text-xs font-bold text-slate-700 whitespace-nowrap">Riesgo:</label>
+          <label for="selector-riesgo" class="text-xs font-bold text-gray-700 whitespace-nowrap">Riesgo Asociado:</label>
           <select id="selector-riesgo"
-                  class="w-full max-w-[480px] sm:max-w-[400px] md:max-w-[480px] lg:max-w-[520px] rounded-lg border border-slate-300 bg-white pl-2.5 pr-7 py-1.5 text-[11px] sm:text-xs font-medium text-slate-800 shadow-sm truncate focus:border-blue-600 focus:ring-1 focus:ring-blue-600 focus:outline-none transition-all"
+                  class="w-full max-w-[480px] sm:max-w-[400px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none transition-all"
                   [ngModel]="riesgoId()"
                   (ngModelChange)="riesgoId.set(+$event)">
-            <option [ngValue]="0" class="text-xs">Seleccione un riesgo</option>
+            <option [ngValue]="0" class="text-xs">Seleccione un riesgo institucional</option>
             @for (riesgo of riesgos(); track riesgo.rieId) {
               <option [ngValue]="riesgo.rieId" [title]="riesgo.rieCodigo + ' · ' + riesgo.rieNombre" class="text-xs">
                 {{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}
@@ -106,9 +150,9 @@
         </div>
       </div>
       @for (seccion of secciones(); track seccion.clave) {
-        <fieldset class="rounded-xl border border-slate-200 p-4">
-          <legend class="px-2 font-bold text-slate-800">{{ seccion.titulo }}</legend>
-          <div class="grid gap-4"
+        <fieldset class="rounded-xl border border-gray-200 p-5 bg-gray-50/40">
+          <legend class="px-3 font-bold text-sm text-gray-900 bg-white rounded-lg border border-gray-200 py-0.5 shadow-sm">{{ seccion.titulo }}</legend>
+          <div class="grid gap-4 mt-2"
                [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
                [class.grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
                [class.grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
@@ -120,13 +164,13 @@
                    [class.col-span-3]="(campo.anchoColumnas || 1) === 3"
                    [class.col-span-4]="(campo.anchoColumnas || 1) === 4"
                    [class.col-span-6]="(campo.anchoColumnas || 1) === 6">
-                <label [for]="'campo-' + campo.clave" class="block text-xs font-semibold text-slate-700">
+                <label [for]="'campo-' + campo.clave" class="block text-xs font-bold text-gray-700 mb-1">
                   {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600 font-bold">*</span> }
                 </label>
 
                 @if (opcionesCatalogo(campo).length) {
                   <select [attr.id]="'campo-' + campo.clave"
-                          class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-600"
+                          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                           [disabled]="campo.soloLectura"
                           [ngModel]="valorRespuesta(campo)"
                           (ngModelChange)="actualizarRespuesta(campo, $event)">
@@ -138,27 +182,27 @@
                 } @else if (campo.tipo === 'booleano' || campo.tipo === 'checkbox') {
                   <div class="mt-2 flex items-center gap-2">
                     <input [attr.id]="'campo-' + campo.clave"
-                           class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                            type="checkbox"
                            [disabled]="campo.soloLectura"
                            [ngModel]="valorRespuesta(campo)"
                            (ngModelChange)="actualizarRespuesta(campo, $event)">
-                    <span class="text-xs text-slate-600 font-medium">Marcar confirmación</span>
+                    <span class="text-xs text-gray-600 font-medium">Marcar confirmación</span>
                   </div>
                 } @else if (campo.tipo === 'textarea' || campo.tipo === 'texto-largo') {
                   <textarea [attr.id]="'campo-' + campo.clave"
-                            class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 p-2.5 text-xs text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-600"
+                            class="min-h-24 w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                             [readOnly]="campo.soloLectura"
                             [ngModel]="valorRespuesta(campo)"
                             (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
                 } @else if (campo.tipo === 'formula') {
-                  <div class="mt-1 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-mono font-semibold text-slate-700 shadow-inner">
+                  <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-mono font-bold text-ihss-900 shadow-inner">
                     <span>{{ valorRespuesta(campo) ?? 'Calculado automáticamente' }}</span>
-                    <span class="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] text-blue-800 font-sans">Fórmula: {{ campo.formula || 'VRI/VRR' }}</span>
+                    <span class="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 border border-blue-100 font-sans">Fórmula: {{ campo.formula || 'VRI/VRR' }}</span>
                   </div>
                 } @else {
                   <input [attr.id]="'campo-' + campo.clave"
-                         class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-600"
+                         class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                          [type]="campo.tipo === 'numero' ? 'number' : campo.tipo === 'fecha' ? 'date' : 'text'"
                          [readOnly]="campo.soloLectura"
                          [ngModel]="valorRespuesta(campo)"
@@ -169,48 +213,83 @@
           </div>
         </fieldset>
       } @empty {
-        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 font-medium">
           La versión vigente del formulario no contiene secciones configuradas.
         </div>
       }
-      <div class="flex gap-3"><button type="button" class="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando() || !puedeGuardar()" (click)="guardarEvaluacion()">Guardar</button><button type="button" class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold" (click)="seleccionarTab('evaluaciones')">Cancelar</button></div>
-      @if (evaluacionSeleccionada(); as evaluacion) {
-        <div class="grid gap-4 border-t border-slate-200 pt-5 lg:grid-cols-2">
-          <div class="rounded-xl bg-slate-50 p-4"><h3 class="font-bold">Transición</h3><label class="sr-only" for="transicion-estado">Nuevo estado</label><select id="transicion-estado" class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoEstado"><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select><label class="sr-only" for="transicion-motivo">Motivo de la transición</label><textarea id="transicion-motivo" class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="motivoTransicion" placeholder="Motivo"></textarea><button type="button" class="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando()" (click)="transicionarEvaluacion(evaluacion)">Aplicar</button></div>
-          <div class="rounded-xl bg-slate-50 p-4"><h3 class="font-bold">Evidencia</h3><label class="sr-only" for="evidencia-archivo">Archivo de evidencia</label><input id="evidencia-archivo" class="mt-3 block w-full text-sm" type="file" (change)="seleccionarArchivo($event)"><button type="button" class="mt-3 rounded-lg bg-slate-700 px-4 py-2 text-sm font-semibold text-white" [disabled]="guardando() || !archivoEvidencia" (click)="cargarYVincularEvidencia(evaluacion)">Cargar y vincular</button></div>
-        </div>
-        <div class="border-t border-slate-200 pt-5"><h3 class="font-bold">Historial de flujos</h3><div class="mt-3 space-y-2">@for (flujo of flujos(); track flujo.fluId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex justify-between"><span class="font-semibold">{{ flujo.fluEstado }}</span><span class="text-slate-500">{{ flujo.fluFecha | date:'dd/MM/yyyy HH:mm' }}</span></div><p class="mt-2 text-slate-600">{{ flujo.fluMotivo || 'Sin observación.' }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin transiciones registradas.</p> }</div></div>
-      }
+      <div class="flex gap-3 pt-2"><button type="button" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !puedeGuardar()" (click)="guardarEvaluacion()">Guardar evaluación</button><button type="button" class="px-5 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold transition-colors" (click)="seleccionarTab('evaluaciones')">Cancelar</button></div>
     </section>
   }
 
   @if (!cargando() && tab() === 'consolidado') {
-    <section id="panel-consolidado" role="tabpanel" aria-labelledby="tab-consolidado" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h2 class="text-lg font-bold">Matriz consolidada</h2><p class="text-sm text-slate-600">Proyección relacional tipada y exportable.</p></div><div class="flex flex-wrap gap-2"><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="cargarConsolidado()">Actualizar</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="descargarConsolidado('excel')">Excel</button><button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold" (click)="descargarConsolidado('pdf')">PDF</button></div></div><div class="overflow-x-auto rounded-xl border border-slate-200"><table class="min-w-[1100px] w-full divide-y divide-slate-200 text-sm"><thead class="bg-slate-100 text-left text-xs uppercase"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Área</th><th class="px-4 py-3">Dueño</th><th class="px-4 py-3">VRI</th><th class="px-4 py-3">Inherente</th><th class="px-4 py-3">VRR</th><th class="px-4 py-3">Residual</th><th class="px-4 py-3">Respuesta</th><th class="px-4 py-3">Estado</th></tr></thead><tbody class="divide-y divide-slate-100">@for (fila of consolidado(); track fila.evaluacionId) { <tr><td class="px-4 py-3 font-semibold">{{ fila.codigoRiesgo }}</td><td class="px-4 py-3">{{ fila.areaPrincipal }}</td><td class="px-4 py-3">{{ fila.duenoRiesgo }}</td><td class="px-4 py-3">{{ fila.vri }}</td><td class="px-4 py-3">{{ fila.nivelInherente }}</td><td class="px-4 py-3">{{ fila.vrr }}</td><td class="px-4 py-3">{{ fila.nivelResidual }}</td><td class="px-4 py-3">{{ fila.respuestaRiesgo }}</td><td class="px-4 py-3">{{ fila.estadoEvaluacion }}</td></tr> } @empty { <tr><td colspan="9" class="px-4 py-8 text-center text-slate-500">Sin proyecciones.</td></tr> }</tbody></table></div></section>
+    <section id="panel-consolidado" role="tabpanel" aria-labelledby="tab-consolidado" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div><h2 class="text-lg font-bold text-gray-900">Matriz Consolidada</h2><p class="text-xs text-gray-500">Proyección relacional tipada y exportable institucionalmente.</p></div>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm" (click)="cargarConsolidado()">Actualizar</button>
+          <button type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="descargarConsolidado('excel')">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Exportar Excel</span>
+          </button>
+          <button type="button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="descargarConsolidado('pdf')">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h6M5 3h10l4 4v14H5V3z"/></svg>
+            <span>Generar PDF</span>
+          </button>
+        </div>
+      </div>
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+            <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Área</th><th class="px-6 py-3">Dueño</th><th class="px-6 py-3">VRI</th><th class="px-6 py-3">Inherente</th><th class="px-6 py-3">VRR</th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3">Estado</th></tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
+            @for (fila of consolidado(); track fila.evaluacionId) {
+              <tr class="hover:bg-gray-50/50 transition-colors">
+                <td class="px-6 py-4 font-bold text-gray-900">{{ fila.codigoRiesgo }}</td>
+                <td class="px-6 py-4">{{ fila.areaPrincipal }}</td>
+                <td class="px-6 py-4">{{ fila.duenoRiesgo }}</td>
+                <td class="px-6 py-4 font-mono font-bold">{{ fila.vri }}</td>
+                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ fila.nivelInherente }}</span></td>
+                <td class="px-6 py-4 font-mono font-bold">{{ fila.vrr }}</td>
+                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ fila.nivelResidual }}</span></td>
+                <td class="px-6 py-4">{{ fila.respuestaRiesgo }}</td>
+                <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
+              </tr>
+            } @empty { <tr><td colspan="9" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+    </section>
   }
 
   @if (!cargando() && tab() === 'plantillas') {
-    <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
+    <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div class="flex flex-col gap-4 border-b border-gray-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h2 class="text-lg font-bold">Versiones del formulario</h2>
-          <p class="text-sm text-slate-600">Mantenimiento de familias, versión, vigencia y definición dinámica.</p>
+          <h2 class="text-lg font-bold text-gray-900">Versiones de Formulario</h2>
+          <p class="text-xs text-gray-500">Gestión de familias, versiones, vigencia y definición gráfica.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
           <div class="flex items-center gap-2">
-            <label for="selector-familia" class="text-sm font-semibold text-slate-700">Familia:</label>
+            <label for="selector-familia" class="text-xs font-bold text-gray-700">Familia:</label>
             <select id="selector-familia"
-                    class="max-w-[320px] min-w-[220px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm focus:border-blue-500 focus:outline-none"
+                    class="max-w-[320px] min-w-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
                     [ngModel]="familiaSeleccionada()"
                     (ngModelChange)="seleccionarFamilia($event)">
               @for (fam of familias(); track fam.famId) {
-                <option [value]="fam.famCodigo" class="text-sm">
+                <option [value]="fam.famCodigo" class="text-xs">
                   {{ fam.famNombre }}{{ fam.famActivo ? '' : ' [Inactiva]' }}
                 </option>
               }
             </select>
           </div>
-          <button type="button" class="rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 transition-colors" (click)="abrirModalCrearFormulario()">+ Nuevo Formulario</button>
-          <button type="button" class="rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors" (click)="abrirModalCrearFamilia()">Nueva Familia</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalCrearFormulario()">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Nuevo Formulario</span>
+          </button>
+          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalCrearFamilia()">
+            <span>Nueva Familia</span>
+          </button>
         </div>
       </div>
 
@@ -218,186 +297,199 @@
         @for (version of versiones(); track version.verId) {
           <article class="flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between transition-all"
                    [class.border-emerald-300]="version.verVigente"
-                   [class.bg-emerald-50\/40]="version.verVigente"
-                   [class.border-slate-200]="!version.verVigente">
+                   [class.bg-emerald-50\/30]="version.verVigente"
+                   [class.border-gray-200]="!version.verVigente">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="rounded-md bg-slate-800 px-2 py-0.5 font-mono text-xs font-bold text-white">ID #{{ version.verId }}</span>
-                <h3 class="font-bold text-slate-900">{{ version.verCodigo }} · v{{ version.verVersion }}</h3>
+                <span class="rounded-md bg-ihss-900 px-2.5 py-0.5 font-mono text-xs font-bold text-white shadow-xs">ID #{{ version.verId }}</span>
+                <h3 class="font-bold text-gray-900 text-base">{{ version.verCodigo }} · v{{ version.verVersion }}</h3>
               </div>
-              <div class="flex items-center gap-2 text-xs">
-                <span class="rounded px-2 py-0.5 font-semibold"
-                      [class.bg-blue-100]="version.verEstado === 'DRAFT'"
-                      [class.text-blue-800]="version.verEstado === 'DRAFT'"
-                      [class.bg-purple-100]="version.verEstado === 'PUBLISHED'"
-                      [class.text-purple-800]="version.verEstado === 'PUBLISHED'">
+              <div class="flex items-center gap-2 text-xs pt-0.5">
+                <span class="rounded-md px-2.5 py-0.5 font-semibold"
+                      [class.bg-blue-50]="version.verEstado === 'DRAFT'"
+                      [class.text-blue-700]="version.verEstado === 'DRAFT'"
+                      [class.ring-1]="version.verEstado === 'DRAFT'"
+                      [class.ring-blue-600\/20]="version.verEstado === 'DRAFT'"
+                      [class.bg-purple-50]="version.verEstado === 'PUBLISHED'"
+                      [class.text-purple-700]="version.verEstado === 'PUBLISHED'">
                   {{ version.verEstado === 'DRAFT' ? 'Borrador' : 'Publicado' }}
                 </span>
-                <span class="rounded px-2 py-0.5 font-semibold"
-                      [class.bg-emerald-100]="version.verVigente"
-                      [class.text-emerald-800]="version.verVigente"
-                      [class.bg-slate-100]="!version.verVigente"
-                      [class.text-slate-600]="!version.verVigente">
-                  {{ version.verVigente ? '● Activo (Vigente)' : 'Inactivo' }}
+                <span class="rounded-md px-2.5 py-0.5 font-semibold"
+                      [class.bg-emerald-50]="version.verVigente"
+                      [class.text-emerald-700]="version.verVigente"
+                      [class.ring-1]="version.verVigente"
+                      [class.ring-emerald-600\/20]="version.verVigente"
+                      [class.bg-gray-100]="!version.verVigente"
+                      [class.text-gray-500]="!version.verVigente">
+                  {{ version.verVigente ? 'Activo (Vigente)' : 'Inactivo' }}
                 </span>
                 @if (version.verVigente) {
-                  <span class="text-slate-500 italic">(Solo lectura por estar activo)</span>
+                  <span class="text-gray-400 italic text-[11px]">(Modo solo lectura por estar activo)</span>
                 }
               </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition-colors" (click)="abrirDefinicion(version, true)">
+              <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="abrirDefinicion(version, true)">
                 Ver definición
               </button>
               @if (!version.verVigente) {
-                <button type="button" class="rounded-lg border border-blue-300 bg-blue-50/60 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors" (click)="abrirDefinicion(version, false)">
+                <button type="button" class="px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="abrirDefinicion(version, false)">
                   Editar definición
                 </button>
               }
-              <button type="button" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold hover:bg-slate-50 transition-colors" (click)="clonarVersion(version)">
+              <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="clonarVersion(version)">
                 Clonar
               </button>
               @if (version.verEstado === 'DRAFT') {
-                <button type="button" class="rounded-lg bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-800 transition-colors shadow-sm" (click)="publicarVersion(version)">
+                <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all shadow-xs" (click)="publicarVersion(version)">
                   Publicar
                 </button>
               } @else if (version.verEstado === 'PUBLISHED') {
                 <button type="button"
-                        class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors shadow-sm"
-                        [class.bg-emerald-700]="!version.verVigente"
+                        class="px-3 py-1.5 font-bold text-xs rounded-lg transition-all shadow-xs"
+                        [class.bg-emerald-600]="!version.verVigente"
                         [class.text-white]="!version.verVigente"
-                        [class.hover:bg-emerald-800]="!version.verVigente"
+                        [class.hover:bg-emerald-700]="!version.verVigente"
                         [class.border]="version.verVigente"
-                        [class.border-amber-300]="version.verVigente"
+                        [class.border-amber-200]="version.verVigente"
                         [class.bg-amber-50]="version.verVigente"
                         [class.text-amber-800]="version.verVigente"
-                        [class.hover:bg-amber-100]="version.verVigente"
                         (click)="cambiarVigenciaVersion(version, !version.verVigente)">
                   {{ version.verVigente ? 'Desactivar' : 'Activar' }}
                 </button>
               }
               @if (!version.verVigente) {
-                <button type="button" class="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors" (click)="eliminarVersionFormulario(version)">
+                <button type="button" class="px-3 py-1.5 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="eliminarVersionFormulario(version)">
                   Eliminar
                 </button>
               }
             </div>
           </article>
         } @empty {
-          <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50\/70 p-8 text-center">
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200/80 text-slate-500 mb-3">
+          <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-10 text-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200/80 text-gray-500 mb-3">
               <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h4 class="font-semibold text-slate-800 text-sm">Sin versiones en esta familia</h4>
-            <p class="mt-1 max-w-sm text-xs text-slate-500">Esta familia de formulario aún no cuenta con versiones registradas o borradores creados.</p>
-            <button type="button" class="mt-4 rounded-lg bg-blue-700 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-800 transition-colors" (click)="abrirModalCrearFormulario()">
+            <h4 class="font-bold text-gray-800 text-sm">Sin versiones en esta familia</h4>
+            <p class="mt-1 max-w-sm text-xs text-gray-500">Esta familia de formulario aún no cuenta con versiones registradas o borradores creados.</p>
+            <button type="button" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm" (click)="abrirModalCrearFormulario()">
               + Crear primer formulario
             </button>
           </div>
         }
       </div>
-
-      @if (versionEditando(); as versionActual) {
-        <div class="mt-6 h-[720px] max-h-[85vh] animate-fade-in">
-          <app-form-builder [jsonDefinicion]="definicionTecnica"
-                            [soloLectura]="soloLecturaDefinicion()"
-                            [esAdministrador]="esAdministrador()"
-                            [versionCodigo]="versionActual.verCodigo"
-                            [versionNumero]="versionActual.verVersion"
-                            (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
-                            (cerrar)="versionEditando.set(null)">
-          </app-form-builder>
-        </div>
-      }
     </section>
   }
 
+  <!-- MODAL AMPLIO DEL FORM BUILDER (EN LUGAR DE EXPANDIR LA PANTALLA) -->
+  @if (versionEditando(); as versionActual) {
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
+      <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100">
+        <app-form-builder class="w-full h-full flex flex-col min-h-0"
+                          [jsonDefinicion]="definicionTecnica"
+                          [soloLectura]="soloLecturaDefinicion()"
+                          [esAdministrador]="esAdministrador()"
+                          [versionCodigo]="versionActual.verCodigo"
+                          [versionNumero]="versionActual.verVersion"
+                          (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
+                          (cerrar)="versionEditando.set(null)">
+        </app-form-builder>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
-      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-          <h3 id="titulo-modal-familia" class="text-lg font-bold text-slate-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
-          <button type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">✕</button>
+      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+          <h3 id="titulo-modal-familia" class="text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
+          <button type="button" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
         @if (errorModal(); as errorModalTexto) {
-          <div class="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800" role="alert" aria-live="assertive">
+          <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="flex-1">{{ errorModalTexto }}</span>
-            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
+            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
           </div>
         }
 
         <div class="space-y-4 text-sm">
           <div>
-            <label for="fam-codigo" class="block font-semibold text-slate-700">Código Institucional</label>
-            <input id="fam-codigo" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100" [disabled]="modoEdicionFamilia()" [(ngModel)]="nuevaFamiliaCodigo" placeholder="Ej. GTIC_MATRIZ" />
-            <p class="mt-1 text-xs text-slate-500">Único e inmutable tras su creación. Solo letras, números y guion bajo.</p>
+            <label for="fam-codigo" class="block font-bold text-gray-700 mb-1">Código Institucional</label>
+            <input id="fam-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 disabled:bg-gray-100 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [disabled]="modoEdicionFamilia()" [(ngModel)]="nuevaFamiliaCodigo" placeholder="Ej. GTIC_MATRIZ" />
+            <p class="mt-1 text-xs text-gray-500">Único e inmutable tras su creación. Solo letras, números y guion bajo.</p>
           </div>
 
           <div>
-            <label for="fam-nombre" class="block font-semibold text-slate-700">Nombre Descriptivo</label>
-            <input id="fam-nombre" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevaFamiliaNombre" placeholder="Ej. Matriz de Riesgos GTIC" />
+            <label for="fam-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
+            <input id="fam-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaNombre" placeholder="Ej. Matriz de Riesgos GTIC" />
           </div>
 
           <div>
-            <label for="fam-descripcion" class="block font-semibold text-slate-700">Descripción / Propósito</label>
-            <textarea id="fam-descripcion" rows="3" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevaFamiliaDescripcion" placeholder="Ámbito y alcance de la familia..."></textarea>
+            <label for="fam-descripcion" class="block font-bold text-gray-700 mb-1">Descripción / Propósito</label>
+            <textarea id="fam-descripcion" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaDescripcion" placeholder="Ámbito y alcance de la familia..."></textarea>
           </div>
 
           @if (modoEdicionFamilia()) {
-            <div class="flex items-center gap-2 pt-2">
-              <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600" [(ngModel)]="nuevaFamiliaActivo" />
-              <label for="fam-activo" class="font-semibold text-slate-700">Familia Activa</label>
+            <div class="flex items-center gap-2 pt-1">
+              <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" [(ngModel)]="nuevaFamiliaActivo" />
+              <label for="fam-activo" class="font-bold text-gray-700 text-sm">Familia Activa</label>
             </div>
           }
         </div>
 
-        <div class="flex justify-end gap-3 border-t border-slate-200 pt-3">
-          <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
-          <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50 transition-colors" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
+        <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
         </div>
       </div>
     </div>
   }
 
+  <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
-      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
-        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div>
-            <h3 id="titulo-modal-formulario" class="text-lg font-bold text-slate-900">Nuevo Formulario de Matriz</h3>
-            <p class="text-xs text-slate-500">Se asociará a la familia seleccionada: <strong>{{ familiaSeleccionada() }}</strong></p>
+            <h3 id="titulo-modal-formulario" class="text-lg font-bold text-gray-900">Nuevo Formulario de Matriz</h3>
+            <p class="text-xs text-gray-500">Se asociará a la familia seleccionada: <strong class="text-gray-900">{{ familiaSeleccionada() }}</strong></p>
           </div>
-          <button type="button" class="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFormulario()">✕</button>
+          <button type="button" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFormulario()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
         </div>
 
         @if (errorModal(); as errorModalTexto) {
-          <div class="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800" role="alert" aria-live="assertive">
+          <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="flex-1">{{ errorModalTexto }}</span>
-            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
+            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
           </div>
         }
 
         <div class="space-y-4 text-sm">
           <div>
-            <label for="form-codigo" class="block font-semibold text-slate-700">Código del Formulario</label>
-            <input id="form-codigo" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
-            <p class="mt-1 text-xs text-slate-500">Identificador técnico del formulario dentro de la familia.</p>
+            <label for="form-codigo" class="block font-bold text-gray-700 mb-1">Código del Formulario</label>
+            <input id="form-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
+            <p class="mt-1 text-xs text-gray-500">Identificador técnico del formulario dentro de la familia.</p>
           </div>
 
           <div>
-            <label for="form-nombre" class="block font-semibold text-slate-700">Nombre Descriptivo</label>
-            <input id="form-nombre" type="text" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
+            <label for="form-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
+            <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
           </div>
         </div>
 
-        <div class="flex justify-end gap-3 border-t border-slate-200 pt-3">
-          <button type="button" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50 transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
-          <button type="button" class="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50 transition-colors" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
+        <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
         </div>
       </div>
     </div>
