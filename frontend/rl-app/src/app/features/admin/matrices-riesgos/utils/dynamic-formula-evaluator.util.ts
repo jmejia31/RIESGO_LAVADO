@@ -53,13 +53,13 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
   };
 
   for (const token of tokens) {
-    if (!isNaN(Number(token))) {
+    if (!Number.isNaN(Number(token))) {
       outputQueue.push(token);
     } else if (['+', '-', '*', '/'].includes(token)) {
       while (
         operatorStack.length > 0 &&
-        operatorStack[operatorStack.length - 1] !== '(' &&
-        precedencia[operatorStack[operatorStack.length - 1]] >= precedencia[token]
+        operatorStack.at(-1) !== '(' &&
+        precedencia[operatorStack.at(-1)!] >= precedencia[token]
       ) {
         outputQueue.push(operatorStack.pop()!);
       }
@@ -67,7 +67,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
     } else if (token === '(') {
       operatorStack.push(token);
     } else if (token === ')') {
-      while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== '(') {
+      while (operatorStack.length > 0 && operatorStack.at(-1) !== '(') {
         outputQueue.push(operatorStack.pop()!);
       }
       if (operatorStack.length === 0) {
@@ -88,7 +88,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
   const evalStack: number[] = [];
 
   for (const token of outputQueue) {
-    if (!isNaN(Number(token))) {
+    if (!Number.isNaN(Number(token))) {
       evalStack.push(Number(token));
     } else {
       if (evalStack.length < 2) {
@@ -129,7 +129,7 @@ function evaluarExpresionMatematicaSegura(expresion: string): number {
  */
 export function obtenerDependenciasDeFormula(formula: string): string[] {
   if (!formula || formula.trim() === '') return [];
-  const regexClaves = /[a-zA-Z_][a-zA-Z0-9_]*/g;
+  const regexClaves = /[A-Za-z_]\w*/g;
   const coincidencias = formula.match(regexClaves) || [];
   const reservadas = new Set(['VRI', 'VRR', 'MATH', 'ABS', 'MIN', 'MAX']);
   return Array.from(new Set(coincidencias.filter(c => !reservadas.has(c.toUpperCase()))));
@@ -150,7 +150,7 @@ export function detectarCicloEnFormulas(
 
   visitados.add(claveLower);
   const campo = camposMap.get(claveLower);
-  if (!campo || !campo.formula) return false;
+  if (!campo?.formula) return false;
 
   const dependencias = obtenerDependenciasDeFormula(campo.formula);
   for (const dep of dependencias) {
@@ -211,7 +211,7 @@ export function evaluarFormulaCampo(
 
   try {
     let expresionSustituida = exprLimpia;
-    const regexClaves = /[a-zA-Z_][a-zA-Z0-9_]*/g;
+    const regexClaves = /[A-Za-z_]\w*/g;
 
     expresionSustituida = expresionSustituida.replace(regexClaves, (match) => {
       const val = respuestas[match] ?? respuestas[match.toLowerCase()] ?? respuestas[match.toUpperCase()];
@@ -220,7 +220,7 @@ export function evaluarFormulaCampo(
       }
 
       const num = Number(val);
-      return isNaN(num) ? '0' : num.toString();
+      return Number.isNaN(num) ? '0' : num.toString();
     });
 
     const resultadoNum = evaluarExpresionMatematicaSegura(expresionSustituida);

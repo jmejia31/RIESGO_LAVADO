@@ -4413,3 +4413,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Archivo: scripts/validation/validate_matrices_authorization_contract.ps1.
 - Verificado: validadores de autorizacion, alineacion dinamica y contrato UAT Fase 13 correctos.
 - Pendiente: nuevo analisis remoto de SonarCloud. Oracle no fue ejecutado ni modificado.
+
+## Registro de Intervencion - Codex - Correccion de hallazgos del evaluador de formulas
+
+- Fecha y hora: 2026-08-13 14:56:22 (UTC-6).
+- Rama: desarrollo. Commit inicial: 74f19fa.
+- Objetivo: corregir los tres avisos `Prefer Number.isNaN a isNaN` y dos patrones de expresion regular/indice detectados en `dynamic-formula-evaluator.util.ts`.
+- Archivo modificado: `frontend/rl-app/src/app/features/admin/matrices-riesgos/utils/dynamic-formula-evaluator.util.ts`.
+- Cambios: `Number.isNaN`, acceso `Array.at`, expresion regular equivalente y optional chaining; sin modificar contrato de formulas ni persistencia Oracle.
+- Verificado en esta intervencion: build Angular exitoso (advertencia informativa preexistente de `exceljs` CommonJS), 181/181 pruebas frontend, 319/319 pruebas backend, validacion de scripts de base de datos, enlaces documentales, `git diff --check` y `tools/run_quality_gates.ps1` con salida correcta.
+- Oracle, DDL/DML, `main` y PR #20 no fueron modificados ni ejecutados.
+- Pendiente externo: nuevo analisis remoto de SonarCloud para confirmar el estado del Quality Gate y la duplicacion historica del PR.
