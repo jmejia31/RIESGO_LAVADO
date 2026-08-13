@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Estandarización Global de Modales (`z-[1000]`) y Aislamiento Absoluto de Interfaz Trasera
+
+- **Fecha y hora**: 2026-08-13, 08:55 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d973c29`.
+- **Commit final**: `8304281`.
+- **Objetivo**: Aplicar de forma estandarizada y global en **todos los módulos del sistema SGRLA-IHSS** (`Monitoreo de Listas`, `Coincidencias Patrono`, `Coincidencias Empleado`, `Tipo de Listas`, `Usuarios`, `Bitácora`, `Configuración` y `Matrices de Riesgos`) la regla de modales superpuestos con nivel `z-[1000]` y backdrop blur denso (`fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm`).
+
+### Cambios y Verificaciones Ejecutadas
+1. **Estandarización Global de Capas Modales**:
+   - Actualizadas las vistas HTML de los 7 módulos principales asignando `z-[1000]` a la capa superpuesta externa.
+   - La sombra oscura con desenfoque (`bg-slate-900/60 backdrop-blur-sm`) cubre en todo el sistema el 100% del viewport (incluida cabecera superior y navegación lateral), inhabilitando cualquier acción o clic trasero hasta cerrar la ventana modal actual.
+2. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `8304281`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Sanitización ASCII de Comentario HTML y Registro de Advertencia `exceljs`
 
 - **Fecha y hora**: 2026-08-13, 08:48 (UTC-6).
