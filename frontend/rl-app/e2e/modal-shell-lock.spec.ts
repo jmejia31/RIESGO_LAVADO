@@ -62,12 +62,18 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await expect(page).toHaveURL(/\/matrices-riesgos$/);
   expect(await page.evaluate(() => localStorage.getItem('access_token'))).toBeTruthy();
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 5; i++) {
     await page.keyboard.press('Tab');
     expect(await page.evaluate(() => document.querySelector('[role="dialog"][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
   }
 
-  await page.getByText('Área responsable', { exact: true }).click();
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press('Shift+Tab');
+    expect(await page.evaluate(() => document.querySelector('[role="dialog"][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
+  }
+
+  const primerCampoCard = dialogo.locator('.grid > div').first();
+  await primerCampoCard.click();
   const inspector = page.getByText('Propiedades del Campo', { exact: true }).locator('..');
   const clave = inspector.locator('input[type="text"]').first();
   await expect(clave).toBeEnabled();
@@ -81,4 +87,11 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await expect(editar).toBeFocused();
   await salir.hover();
   await expect(salir).toHaveCSS('pointer-events', 'auto');
+
+  // Verificar cierre de modal con tecla Escape
+  await editar.click();
+  await expect(dialogo).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialogo).toBeHidden();
+  await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
 });

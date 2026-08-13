@@ -10,7 +10,12 @@
 - **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
 
 ### Cambios y Verificaciones Ejecutadas
-1. **Preservación Completa de Propiedades en Serialización y Deserialización JSON (`form-builder.models.ts` / `matrices-riesgos.models.ts`)**:
+1. **Aislamiento Modal e Inhabilitación Estricta `inert` (`main-layout.component.ts` / `modal-shell-lock.spec.ts`)**:
+   - Se validó el MutationObserver en `MainLayoutComponent` que aplica la propiedad nativa W3C `inert` al `header` principal (incluyendo el botón de "Salir") y `aside` lateral de forma jerárquica cuando se detecta un diálogo `[role="dialog"][aria-modal="true"]`.
+   - Se verificó que el botón "Salir" no responda a clics del mouse, hovers ni navegación por teclado mientras el modal esté desplegado, atrapando el foco mediante `Tab` y `Shift+Tab` de forma bidireccional dentro del Form Builder.
+   - Se implementó la tecla `Escape` (`@HostListener('document:keydown.escape')`) para permitir el cierre limpio de modales restaurando el foco original.
+2. **Preservación Completa de Propiedades en Serialización y Deserialización JSON (`form-builder.models.ts` / `matrices-riesgos.models.ts`)**:
+   - Se extendió el mapeo en `normalizarJsonABuilderModel` y `serializarBuilderModelAJson` para preservar en el JSON de salida todos los atributos avanzados: `formula`, `opciones`, `codigoCatalogo`, `anchoColumnas`, `columnasPorFila`, `obligatorio` y `soloLectura`.
    - Se extendió el mapeo en `normalizarJsonABuilderModel` y `serializarBuilderModelAJson` para preservar en el JSON de salida todos los atributos avanzados: `formula`, `opciones`, `codigoCatalogo`, `anchoColumnas`, `columnasPorFila`, `obligatorio` y `soloLectura`.
    - Se implementó la sincronización bidireccional inmediata en `FormBuilderComponent` mediante el manejador `alCambiarPropiedadCampo()` vinculado al evento `(ngModelChange)` de cada control del Inspector de Propiedades.
 2. **Prueba Unitaria de Interacción Real del Inspector (`form-builder.component.spec.ts`)**:

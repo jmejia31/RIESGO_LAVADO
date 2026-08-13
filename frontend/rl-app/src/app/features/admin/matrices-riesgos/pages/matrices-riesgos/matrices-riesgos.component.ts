@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -121,6 +121,20 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       .filter(campo => campo.obligatorio)
       .every(campo => this.tieneValor(respuestas[campo.clave]));
   });
+
+  @HostListener('document:keydown.escape', ['$event'])
+  manejarTeclaEscape(event: Event): void {
+    if (this.versionEditando()) {
+      event.preventDefault();
+      this.versionEditando.set(null);
+    } else if (this.modalFamiliaAbierto()) {
+      event.preventDefault();
+      this.cerrarModalFamilia();
+    } else if (this.modalFormularioAbierto()) {
+      event.preventDefault();
+      this.cerrarModalFormulario();
+    }
+  }
 
   ngOnInit(): void {
     this.cargarFamilias();

@@ -131,7 +131,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     let actual: HTMLElement | null = dialogo;
 
     while (actual && actual !== limite) {
-      const padre = actual.parentElement;
+      const padre: HTMLElement | null = actual.parentElement;
       if (!padre) break;
 
       for (const hermano of Array.from(padre.children)) {
