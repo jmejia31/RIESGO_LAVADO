@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Inhabilitación CSS Absoluta (`pointer-events: none`) en Cabecera y Menú al Abrir Modales
+
+- **Fecha y hora**: 2026-08-13, 08:58 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d55068f`.
+- **Commit final**: `745f759`.
+- **Objetivo**: Garantizar el bloqueo absoluto de la interfaz trasera (incluyendo el botón de "Salir", menú de usuario y navegación lateral) agregando reglas CSS globales `:has([role="dialog"])` que aplican `pointer-events: none !important` y `user-select: none !important` a la cabecera (`header`), menú lateral (`aside`) y contenedor principal (`#contenido-principal`), restringiendo los eventos de clic (`pointer-events: auto !important`) única y exclusivamente al diálogo activo (`[role="dialog"]`).
+
+### Cambios y Verificaciones Ejecutadas
+1. **Regla Global de Inhabilitación de Eventos (`src/styles.css`)**:
+   - Añadido selector dinámico: `body:has([role="dialog"]) header, body:has([role="dialog"]) aside, body:has([role="dialog"]) #contenido-principal { pointer-events: none !important; user-select: none !important; }`.
+   - Garantizado que ningún elemento trasero (incluido el botón "Salir") responda a clics, pasadas del ratón ni foco de teclado mientras exista cualquier modal abierto en la aplicación.
+2. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `745f759`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Estandarización Global de Modales (`z-[1000]`) y Aislamiento Absoluto de Interfaz Trasera
 
 - **Fecha y hora**: 2026-08-13, 08:55 (UTC-6).
