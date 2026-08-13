@@ -20,7 +20,7 @@ SELECT FLU_EVALUACION_ID, FLU_ESTADO, FLU_MOTIVO, FLU_USR_ID, FLU_FECHA
                ROW_NUMBER() OVER (
                    PARTITION BY FLU_EVALUACION_ID
                    ORDER BY FLU_FECHA DESC, FLU_ID DESC
-               ) RN
+                ) AS RN
           FROM RL_MR_FLUJOS_EVALUACION f
        )
  WHERE RN = 1
@@ -43,16 +43,15 @@ BEGIN
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_FLUJOS_EVALUACION f
-     WHERE NOT EXISTS (SELECT 1 FROM RL_MR_EVALUACIONES_RIESGO e WHERE e.EVA_ID = f.FLU_EVALUACION_ID)
-        OR NOT EXISTS (SELECT 1 FROM RL_USUARIOS u WHERE u.USR_ID = f.FLU_USR_ID);
+      LEFT JOIN RL_MR_EVALUACIONES_RIESGO e ON e.EVA_ID = f.FLU_EVALUACION_ID
+      LEFT JOIN RL_USUARIOS u ON u.USR_ID = f.FLU_USR_ID
+     WHERE e.EVA_ID IS NULL OR u.USR_ID IS NULL;
     exigir(v_count = 0, -20403, 'Existen flujos con referencias inválidas.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_EVALUACIONES_RIESGO e
-     WHERE e.EVA_ACTIVO = 1
-       AND NOT EXISTS (
-           SELECT 1 FROM RL_MR_FLUJOS_EVALUACION f WHERE f.FLU_EVALUACION_ID = e.EVA_ID
-       );
+      LEFT JOIN RL_MR_FLUJOS_EVALUACION f ON f.FLU_EVALUACION_ID = e.EVA_ID
+     WHERE e.EVA_ACTIVO = 1 AND f.FLU_EVALUACION_ID IS NULL;
     exigir(v_count = 0, -20404, 'Existen evaluaciones activas sin historial de flujo.');
 
     SELECT COUNT(*) INTO v_count

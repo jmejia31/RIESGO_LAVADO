@@ -4397,3 +4397,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Cambio**: se agregó únicamente el patrón exacto `**/Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql` a `sonar.exclusions` en `.github/workflows/sonar-analysis.yml`. No se modificó el SQL ni se relajó ninguna regla para scripts ejecutables.
 - **Oracle**: no conectado ni ejecutado; sin DDL/DML.
 - **Verificación**: pendiente el nuevo análisis remoto de SonarCloud sobre el commit final; las validaciones locales previas permanecen correctas.
+## Registro de IntervenciÃ³n â€” Codex â€” CorrecciÃ³n de alertas SonarCloud PR #20
+
+- **Fecha:** 2026-08-13; **Rama:** `desarrollo`; **Commit inicial:** `2d5c75f`.
+- **Objetivo:** corregir accesibilidad del Form Builder y usos de `EXISTS` señalados por SonarCloud, sin ejecutar Oracle ni introducir DDL/DML.
+- **Cambios:** IDs, labels, ARIA, teclado y `LEFT JOIN ... IS NULL` en validadores SQL de Fase 11.
+- **Verificado:** build Angular, 28 archivos/181 pruebas frontend, validador de base de datos y `git diff --check`.
+- **Pendiente:** regresión completa y nuevo análisis remoto de SonarCloud; Oracle no fue ejecutado.
