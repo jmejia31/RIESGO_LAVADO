@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Vinculación Semántica Estricta WAI-ARIA `tab/tabpanel` y Sanitización ASCII Pura
+
+- **Fecha y hora**: 2026-08-13, 08:11 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `7628922`.
+- **Commit final**: `ffdc559`.
+- **Objetivo**: Corregir la semántica de accesibilidad WAI-ARIA asignando identificadores explícitos a cada pestaña (`id="tab-<id>"`) y panel (`id="panel-<id>"`, `role="tabpanel"`, `aria-labelledby="tab-<id>"`), y sanitizar el archivo de plantilla a ASCII puro libre de mojibake.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Vinculación Semántica Accesible `tab` y `tabpanel` (`matrices-riesgos.component.html`)**:
+   - Cada pestaña declara su identificador `id="tab-evaluaciones"`, `id="tab-captura"`, `id="tab-consolidado"`, `id="tab-plantillas"`.
+   - Cada contenedor de panel declara `role="tabpanel"`, `id="panel-<id>"` y `aria-labelledby="tab-<id>"`, completando formalmente la especificación WAI-ARIA 1.2.
+2. **Sanitización ASCII Pura (0 Mojibake)**:
+   - Sanitizados todos los textos dentro de la plantilla HTML (`Captura dinamica`, `Cargando informacion institucional...`, `Nueva evaluacion`, `En revision`, `Version`, `Formula`).
+3. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `ffdc559`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Fase 6: UX, Accesibilidad ARIA y Modos de Lectura Estrictos
 
 - **Fecha y hora**: 2026-08-13, 08:07 (UTC-6).
