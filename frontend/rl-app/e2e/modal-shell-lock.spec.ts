@@ -45,7 +45,7 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await editar.focus();
   await editar.click();
 
-  const dialogo = page.locator('[role="dialog"][aria-modal="true"]:has(app-form-builder)');
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const header = page.locator('app-main-layout > div > div > header');
   const aside = page.locator('app-main-layout > div > aside');
   const salir = header.locator('button[aria-label="Cerrar sesión"]');
@@ -64,12 +64,12 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
 
   for (let i = 0; i < 5; i++) {
     await page.keyboard.press('Tab');
-    expect(await page.evaluate(() => document.querySelector('[role="dialog"][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('dialog[open][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
   }
 
   for (let i = 0; i < 5; i++) {
     await page.keyboard.press('Shift+Tab');
-    expect(await page.evaluate(() => document.querySelector('[role="dialog"][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
+    expect(await page.evaluate(() => document.querySelector('dialog[open][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
   }
 
   const primerCampoCard = dialogo.locator('.grid > div').first();

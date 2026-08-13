@@ -903,7 +903,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private tieneValor(valor: unknown): boolean {
     if (valor === null || valor === undefined) return false;
     if (typeof valor === 'object') return Object.keys(valor).length > 0;
-    return String(valor).trim() !== '';
+    if (typeof valor === 'string') return valor.trim() !== '';
+    if (typeof valor === 'number') return !Number.isNaN(valor);
+    return typeof valor === 'boolean';
   }
 
   private finalizarConError(error: unknown, mensaje: string): void {

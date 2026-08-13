@@ -27,20 +27,53 @@ function tokenizarExpresion(expresion: string): string[] {
   return tokens;
 }
 
+const OPERADORES = new Set(['+', '-', '*', '/']);
+const PRECEDENCIA: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
+
+function esNumeroToken(token: string): boolean {
+  return token !== '' && !Number.isNaN(Number(token));
+}
+
+function esOperador(token: string): boolean {
+  return OPERADORES.has(token);
+}
+
+function vaciarOperadoresHastaParentesis(salida: string[], operadores: string[]): void {
+  while (operadores.at(-1) !== undefined && operadores.at(-1) !== '(') {
+    salida.push(operadores.pop()!);
+  }
+}
+
+function procesarOperador(token: string, salida: string[], operadores: string[]): void {
+  while (operadores.at(-1) !== undefined && operadores.at(-1) !== '('
+    && PRECEDENCIA[operadores.at(-1)!] >= PRECEDENCIA[token]) {
+    salida.push(operadores.pop()!);
+  }
+  operadores.push(token);
+}
+
 function convertirARpn(tokens: string[]): string[] {
   const salida: string[] = [];
   const operadores: string[] = [];
-  const precedencia: Record<string, number> = { '+': 1, '-': 1, '*': 2, '/': 2 };
   for (const token of tokens) {
-    if (!Number.isNaN(Number(token))) salida.push(token);
-    else if (['+', '-', '*', '/'].includes(token)) {
-      while (operadores.at(-1) !== undefined && operadores.at(-1) !== '(' && precedencia[operadores.at(-1)!] >= precedencia[token]) salida.push(operadores.pop()!);
-      operadores.push(token);
-    } else if (token === '(') operadores.push(token);
-    else {
-      while (operadores.at(-1) !== undefined && operadores.at(-1) !== '(') salida.push(operadores.pop()!);
-      if (operadores.pop() !== '(') throw new Error('Parentesis desbalanceados en la formula.');
+    if (esNumeroToken(token)) {
+      salida.push(token);
+      continue;
     }
+    if (esOperador(token)) {
+      procesarOperador(token, salida, operadores);
+      continue;
+    }
+    if (token === '(') {
+      operadores.push(token);
+      continue;
+    }
+    if (token === ')') {
+      vaciarOperadoresHastaParentesis(salida, operadores);
+      if (operadores.pop() !== '(') throw new Error('Parentesis desbalanceados en la formula.');
+      continue;
+    }
+    throw new Error('Token no permitido en la formula.');
   }
   while (operadores.length) {
     const op = operadores.pop()!;
@@ -52,13 +85,24 @@ function convertirARpn(tokens: string[]): string[] {
 
 function evaluarRpn(rpn: string[]): number {
   const pila: number[] = [];
+  const operaciones: Record<string, (a: number, b: number) => number> = {
+    '+': (a, b) => a + b,
+    '-': (a, b) => a - b,
+    '*': (a, b) => a * b,
+    '/': (a, b) => a / b
+  };
   for (const token of rpn) {
-    if (!Number.isNaN(Number(token))) { pila.push(Number(token)); continue; }
+    if (esNumeroToken(token)) {
+      pila.push(Number(token));
+      continue;
+    }
     if (pila.length < 2) throw new Error('Expresion matematica incompleta.');
     const b = pila.pop()!;
     const a = pila.pop()!;
     if (token === '/' && b === 0) throw new Error('Division por cero en el calculo.');
-    pila.push(token === '+' ? a + b : token === '-' ? a - b : token === '*' ? a * b : a / b);
+    const operacion = operaciones[token];
+    if (!operacion) throw new Error('Operador no permitido en la formula.');
+    pila.push(operacion(a, b));
   }
   if (pila.length !== 1) throw new Error('Error al evaluar el resultado de la formula.');
   return pila[0];

@@ -4425,3 +4425,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Verificado en esta intervencion: build Angular exitoso (advertencia informativa preexistente de `exceljs` CommonJS), 181/181 pruebas frontend, 319/319 pruebas backend, validacion de scripts de base de datos, enlaces documentales, `git diff --check` y `tools/run_quality_gates.ps1` con salida correcta.
 - Oracle, DDL/DML, `main` y PR #20 no fueron modificados ni ejecutados.
 - Pendiente externo: nuevo analisis remoto de SonarCloud para confirmar el estado del Quality Gate y la duplicacion historica del PR.
+
+## Registro de intervencion - ChatGPT - endurecimiento SonarCloud y regresion final
+
+- Fecha: 2026-08-13 (UTC-6). Rama: `desarrollo`. Commit inicial: `89e74d9`.
+- Objetivo: corregir hallazgos frontend de accesibilidad, fiabilidad y mantenibilidad sin modificar Oracle, SQL operativo ni `main`.
+- Cambios: overlays convertidos a `dialog` nativo; aislamiento y foco del modal conservados; controles semanticamente interactivos en Form Builder; parser de formulas simplificado; conversiones y accesos de coleccion endurecidos; ajustes Docker y matcher de pruebas.
+- Verificado en esta intervencion: build Angular (0 errores; advertencia informativa preexistente de `exceljs` CommonJS), 28 archivos/181 pruebas frontend, 319 pruebas backend, 14/14 E2E, validadores de base de datos/documentacion, `run_quality_gates.ps1` y `git diff --check`.
+- `validate_repository_structure.ps1` permanece pendiente por un hallazgo heredado no modificado: `frontend/rl-app/src/app/core/services/global-http-state.service.ts`.
+- Restricciones: no se ejecutaron Oracle ni scripts SQL; no hubo DDL/DML; `main` y PR #20 no fueron modificados.
+- Pendiente externo: nuevo analisis remoto SonarCloud para confirmar el Quality Gate y la deuda historica de duplicacion.

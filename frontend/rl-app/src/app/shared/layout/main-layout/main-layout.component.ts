@@ -30,7 +30,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     readonly auth: AuthService,
     readonly configService: ConfiguracionService,
     readonly globalState: GlobalHttpStateService,
-    private catalogoService: CatalogoService,
+    private readonly catalogoService: CatalogoService,
     private readonly host: ElementRef<HTMLElement>
   ) {}
 

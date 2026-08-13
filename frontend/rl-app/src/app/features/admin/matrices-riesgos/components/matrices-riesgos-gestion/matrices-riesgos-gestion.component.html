@@ -8,7 +8,7 @@
   </div>
 
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
-  @if (mensaje()) { <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ mensaje() }}</div> }
+  @if (mensaje()) { <output class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite">{{ mensaje() }}</output> }
 
   <form class="grid gap-4 rounded-xl bg-slate-50 p-4 md:grid-cols-2" (ngSubmit)="guardar()">
     <div>

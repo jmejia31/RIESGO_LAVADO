@@ -9,7 +9,12 @@ RUN npm run build -- --configuration production
 
 FROM nginx:1.31.3-alpine AS runtime
 RUN rm -f /etc/nginx/conf.d/default.conf \
-    && mkdir -p /tmp/nginx/client_temp /tmp/nginx/proxy_temp /tmp/nginx/fastcgi_temp /tmp/nginx/uwsgi_temp /tmp/nginx/scgi_temp \
+    && mkdir -p \
+       /tmp/nginx/client_temp \
+       /tmp/nginx/proxy_temp \
+       /tmp/nginx/fastcgi_temp \
+       /tmp/nginx/uwsgi_temp \
+       /tmp/nginx/scgi_temp \
     && chown -R nginx:nginx /tmp/nginx
 COPY frontend/rl-app/nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/dist/rl-app/browser/ /usr/share/nginx/html/

@@ -202,7 +202,7 @@ describe('MatricesRiesgosService', () => {
     service.cargarEvidencia(archivo).subscribe();
     const carga = http.expectOne(`${apiUrl}/evidencias/cargar`);
     expect(carga.request.method).toBe('POST');
-    expect(carga.request.body instanceof FormData).toBe(true);
+    expect(carga.request.body).toBeInstanceOf(FormData);
     expect(carga.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
     carga.flush({ success: true, datos: { eviId: 8 } });
 

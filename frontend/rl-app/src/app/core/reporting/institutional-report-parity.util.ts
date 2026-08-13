@@ -115,7 +115,7 @@ export function construirExcelInstitucionalDesdeReporte(
 
   while (
     data.length &&
-    data[data.length - 1].every(value => value === null || value === undefined || value === '')
+    data.at(-1)!.every(value => value === null || value === undefined || value === '')
   ) {
     data.pop();
   }

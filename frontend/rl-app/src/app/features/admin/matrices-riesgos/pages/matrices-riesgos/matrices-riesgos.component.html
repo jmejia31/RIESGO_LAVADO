@@ -410,7 +410,7 @@
   <!-- MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER -->
   @if (versionEditando(); as versionActual) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-builder">
+     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" aria-modal="true" aria-labelledby="titulo-modal-builder">
       <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100 relative">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
@@ -422,13 +422,13 @@
                           (cerrar)="versionEditando.set(null)">
         </app-form-builder>
        </div>
-     </div>
+     </dialog>
   }
 
   <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-familia">
+     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" aria-modal="true" aria-labelledby="titulo-modal-familia">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <h3 id="titulo-modal-familia" class="text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
@@ -475,13 +475,13 @@
           <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
        </div>
        </div>
-     </div>
+     </dialog>
   }
 
   <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <div class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-formulario">
+     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" aria-modal="true" aria-labelledby="titulo-modal-formulario">
       <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
         <div class="flex items-center justify-between border-b border-gray-100 pb-3">
           <div>
@@ -519,6 +519,6 @@
           <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
         </div>
       </div>
-     </div>
+     </dialog>
   }
 </section>
