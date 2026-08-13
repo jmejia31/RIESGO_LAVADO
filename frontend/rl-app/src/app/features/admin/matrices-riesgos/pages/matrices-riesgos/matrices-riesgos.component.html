@@ -14,6 +14,29 @@
       <dl class="px-2 border-l border-gray-200"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Campos</dt><dd class="mt-1 font-bold text-ihss-700">{{ totalCampos() }}</dd></dl>
     </div>
   </header>
+  <!-- Tarjetas de Métricas Coloreadas Estilo Monitoreo de Listas -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+    <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+      <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total Evaluaciones</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900">{{ evaluaciones().length }}</p>
+      <p class="text-xs text-gray-500">Total consolidado del módulo</p>
+    </article>
+    <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+      <p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">En Borrador</p>
+      <p class="mt-2 text-3xl font-bold text-amber-700">{{ contarEvaluacionesPorEstado('BORRADOR') }}</p>
+      <p class="text-xs text-amber-700/80">Pendientes de completar diligenciamiento</p>
+    </article>
+    <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
+      <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">En Revisión</p>
+      <p class="mt-2 text-3xl font-bold text-blue-700">{{ contarEvaluacionesPorEstado('EN_REVISION') }}</p>
+      <p class="text-xs text-blue-700/80">En proceso de análisis de Cumplimiento</p>
+    </article>
+    <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
+      <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Aprobadas</p>
+      <p class="mt-2 text-3xl font-bold text-emerald-700">{{ contarEvaluacionesPorEstado('APROBADA') }}</p>
+      <p class="text-xs text-emerald-700/80">Evaluaciones oficiales vigentes</p>
+    </article>
+  </div>
 
   @if (error(); as errorTexto) {
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
@@ -85,9 +108,13 @@
         </button>
       </div>
       <div class="grid gap-3 md:grid-cols-4">
-        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código..." [ngModel]="filtroBuscar()" (ngModelChange)="filtroBuscar.set($event)"></div>
-        <div><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
-        <div class="flex items-end"><button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm" (click)="cargarEvaluaciones()">Aplicar filtros</button></div>
+        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
+        <div><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
+        <div class="flex items-end">
+          <button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
+            Limpiar filtros
+          </button>
+        </div>
       </div>
       <div class="overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
@@ -319,7 +346,9 @@
                   {{ version.verVigente ? 'Activo (Vigente)' : 'Inactivo' }}
                 </span>
                 @if (version.verVigente) {
-                  <span class="text-gray-400 italic text-[11px]">(Modo solo lectura por estar activo)</span>
+                  <span class="text-gray-400 italic text-[11px]">(Modo solo lectura por estar activo en producción)</span>
+                } @else if (version.verEstado === 'PUBLISHED') {
+                  <span class="text-purple-600 italic text-[11px]">(Modo solo lectura por estar publicada. Para modificar, clone la versión a borrador)</span>
                 }
               </div>
             </div>
@@ -327,7 +356,7 @@
               <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="abrirDefinicion(version, true)">
                 Ver definición
               </button>
-              @if (!version.verVigente) {
+              @if (version.verEstado === 'DRAFT' && !version.verVigente) {
                 <button type="button" class="px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="abrirDefinicion(version, false)">
                   Editar definición
                 </button>

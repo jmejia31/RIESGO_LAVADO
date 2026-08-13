@@ -98,6 +98,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.secciones().reduce((total, seccion) => total + seccion.campos.length, 0)
   );
 
+  contarEvaluacionesPorEstado(estado: string): number {
+    return this.evaluaciones().filter(e => (e.evaEstado || '').toUpperCase() === estado.toUpperCase()).length;
+  }
+
   readonly totalCompletados = computed(() => {
     const respuestas = this.respuestas();
     return this.secciones()
@@ -126,6 +130,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.limpiarAutoDismiss();
+    if (this.timerDebounceBuscar) {
+      clearTimeout(this.timerDebounceBuscar);
+    }
   }
 
   seleccionarTab(tab: TabMatrices): void {
@@ -345,6 +352,32 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: error => this.finalizarConError(error, 'No se pudo cargar la metodología dinámica vigente.')
     });
+  }
+
+  private timerDebounceBuscar: ReturnType<typeof setTimeout> | null = null;
+
+  alCambiarFiltroBuscar(valor: string): void {
+    this.filtroBuscar.set(valor);
+    if (this.timerDebounceBuscar) {
+      clearTimeout(this.timerDebounceBuscar);
+    }
+    this.timerDebounceBuscar = setTimeout(() => {
+      this.cargarEvaluaciones();
+    }, 300);
+  }
+
+  alCambiarFiltroEstado(valor: string): void {
+    this.filtroEstado.set(valor);
+    this.cargarEvaluaciones();
+  }
+
+  limpiarFiltrosEvaluaciones(): void {
+    if (this.timerDebounceBuscar) {
+      clearTimeout(this.timerDebounceBuscar);
+    }
+    this.filtroBuscar.set('');
+    this.filtroEstado.set('');
+    this.cargarEvaluaciones();
   }
 
   cargarEvaluaciones(): void {
