@@ -118,7 +118,7 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
   });
 
   await page.goto('/matrices-riesgos');
-  await page.getByRole('button', { name: 'Plantillas' }).click();
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
   await expect(page.getByText('MATRIZ_RIESGOS_LAFT_V1 · v1')).toBeVisible();
 
   await page.getByRole('button', { name: 'Clonar' }).click();
@@ -136,7 +136,7 @@ test('un 403 real del Backend conserva la protección y redirige a Acceso Denega
   }));
 
   await page.goto('/matrices-riesgos');
-  await page.getByRole('button', { name: 'Plantillas' }).click();
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
   await page.getByRole('button', { name: 'Clonar' }).click();
 
   await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);

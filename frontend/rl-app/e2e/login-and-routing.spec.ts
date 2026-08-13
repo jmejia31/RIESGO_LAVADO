@@ -315,7 +315,7 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
-  await page.getByRole('button', { name: 'Captura dinámica' }).click();
+  await page.getByRole('tab', { name: 'Captura dinámica' }).click();
   await expect(page.getByRole('heading', { name: 'Nueva evaluación' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Identificación del riesgo' })).toBeVisible();
 
@@ -341,7 +341,7 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
     dueno_riesgo: 'Gerencia de Tecnología',
   });
 
-  await page.getByRole('button', { name: 'Consolidado' }).click();
+  await page.getByRole('tab', { name: 'Consolidado' }).click();
   await expect(page.getByRole('heading', { name: 'Matriz consolidada' })).toBeVisible();
   await expect(page.getByText('R-501', { exact: true })).toBeVisible();
   await expect(page.getByText('Cumplimiento', { exact: true })).toBeVisible();
@@ -354,7 +354,7 @@ test('consulta el historial de flujos y transiciona una evaluación', async ({ p
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
-  await page.getByRole('button', { name: 'Abrir' }).click();
+  await page.getByTitle('Abrir evaluación').first().click();
   await expect(page.getByRole('heading', { name: 'Editar evaluación' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Historial de flujos' })).toBeVisible();
   await expect(page.getByText('Captura inicial', { exact: true })).toBeVisible();

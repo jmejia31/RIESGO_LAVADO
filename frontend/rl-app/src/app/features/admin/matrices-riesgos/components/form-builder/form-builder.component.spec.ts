@@ -131,4 +131,63 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.erroresValidacion().length).toBeGreaterThan(0);
     expect(component.guardarJson.emit).not.toHaveBeenCalled();
   });
+
+  it('permite editar etiqueta, tipo, obligatoriedad y fórmula de un campo en modo DRAFT y actualiza la serialización JSON', () => {
+    component.soloLectura = false;
+    const seccionId = component.model().secciones[0].id;
+    const ctrlTexto = component.tiposControles.find(t => t.tipo === 'texto')!;
+    component.agregarCampoASeccion(seccionId, ctrlTexto);
+
+    const campo = component.model().secciones[0].campos[0];
+    component.seleccionarCampo(campo);
+
+    // Modificaciones en Inspector
+    component.campoActivo.update(c => c ? { ...c, etiqueta: 'Nuevo Nombre Evaluacion', tipo: 'formula', formula: 'val1 * val2', obligatorio: true } : null);
+    component.model.update(m => {
+      const sec = { ...m.secciones[0] };
+      sec.campos[0] = component.campoActivo()!;
+      return { ...m, secciones: [sec] };
+    });
+
+    const jsonFinal = serializarBuilderModelAJson(component.model());
+    const parsed = JSON.parse(jsonFinal);
+
+    expect(parsed.secciones[0].campos[0].etiqueta).toBe('Nuevo Nombre Evaluacion');
+    expect(parsed.secciones[0].campos[0].tipo).toBe('formula');
+    expect(parsed.secciones[0].campos[0].formula).toBe('val1 * val2');
+    expect(parsed.secciones[0].campos[0].obligatorio).toBe(true);
+  });
+
+  it('permite agregar y eliminar campos en modo DRAFT', () => {
+    component.soloLectura = false;
+    const seccionId = component.model().secciones[0].id;
+    const camposIniciales = component.model().secciones[0].campos.length;
+
+    const ctrlNumero = component.tiposControles.find(t => t.tipo === 'numero')!;
+    component.agregarCampoASeccion(seccionId, ctrlNumero);
+    expect(component.model().secciones[0].campos.length).toBe(camposIniciales + 1);
+
+    const nuevoCampoId = component.model().secciones[0].campos[component.model().secciones[0].campos.length - 1].id;
+    component.eliminarCampo(seccionId, nuevoCampoId);
+    expect(component.model().secciones[0].campos.length).toBe(camposIniciales);
+  });
+
+  it('bloquea modificaciones cuando soloLectura es true (versión PUBLISHED o VIGENTE)', () => {
+    component.soloLectura = true;
+    const seccionId = component.model().secciones[0].id;
+    const camposIniciales = component.model().secciones[0].campos.length;
+
+    const ctrlTexto = component.tiposControles.find(t => t.tipo === 'texto')!;
+    component.agregarCampoASeccion(seccionId, ctrlTexto);
+    expect(component.model().secciones[0].campos.length).toBe(camposIniciales);
+
+    component.agregarSeccion();
+    expect(component.model().secciones.length).toBe(1);
+  });
+
+  it('emite el evento de cierre correctamente al presionar el botón de cerrar', () => {
+    vi.spyOn(component.cerrar, 'emit');
+    component.cerrar.emit();
+    expect(component.cerrar.emit).toHaveBeenCalled();
+  });
 });

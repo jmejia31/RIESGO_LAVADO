@@ -61,26 +61,26 @@ public sealed class MatricesRiesgosPhase07BackendCoverageTests
     public async Task CambiarEstadoVigencia_ValidaVigenciaInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
+        repo.On(nameof(IMatricesRiesgosRepository.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(false));
 
         ServiceResult result = await service.CambiarEstadoVigenciaFormularioAsync(888, true, 1);
 
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("No se encontró la versión", result.Message);
+        Assert.Contains("No se encontró una versión publicada", result.Message);
     }
 
     [Fact]
     public async Task EliminarVersionFormulario_ValidaVersionInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
-        repo.On(nameof(IMatricesRiesgosRepository.EliminarVersionFormularioInactivaAsync), _ => Task.FromResult(false));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
 
-        ServiceResult result = await service.EliminarVersionFormularioInactivaAsync(777, 1);
+        ServiceResult result = await service.EliminarVersionFormularioAsync(777);
 
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("No se pudo eliminar", result.Message);
+        Assert.Contains("No se encontró el formulario", result.Message);
     }
 
     [Fact]

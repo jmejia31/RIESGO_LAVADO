@@ -129,9 +129,9 @@ body:has([role="dialog"]), body.modal-abierto {
   overflow: hidden !important;
 }
 
-body:has([role="dialog"]) header,
-body:has([role="dialog"]) aside,
-body:has([role="dialog"]) #contenido-principal {
+body:has([role="dialog"]) > app-root > app-main-layout > div > header,
+body:has([role="dialog"]) > app-root > app-main-layout > div > div > aside,
+body:has([role="dialog"]) > app-root > app-main-layout > div > div > main > #contenido-principal {
   pointer-events: none !important;
   user-select: none !important;
 }
