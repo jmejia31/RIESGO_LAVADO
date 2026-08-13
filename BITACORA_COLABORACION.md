@@ -10,7 +10,14 @@
 - **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
 
 ### Cambios y Verificaciones Ejecutadas
-1. **Sustitución de Diálogos Nativos por Modales Institucionales (`matrices-riesgos.component.ts`)**:
+1. **Tarjetas de Métricas Coloreadas KPI (`matrices-riesgos.component.html`)**:
+   - Se incorporó la cuadrícula superior de 4 tarjetas de métricas coloreadas con el mismo estilo y estructura visual que Monitoreo de Listas (`Total Evaluaciones` [neutro], `En Borrador` [ámbar], `En Revisión` [azul] y `Aprobadas` [esmeralda]).
+2. **Búsqueda Automática y Limpieza de Filtros (`matrices-riesgos.component.ts` / `.html`)**:
+   - Se configuró la **búsqueda automática e inmediata** en el campo de texto con técnica de *debounce* de 300 ms al comenzar a escribir.
+   - Se renombró y reconfiguró el botón de acción a **"Limpiar filtros"**, que se habilita dinámicamente al tener algún filtro aplicado y limpia los controles regresando a la consulta completa.
+3. **Reglas de Edición de Plantillas**:
+   - Se confirmó y reforzó la regla de inmutabilidad: Las versiones inactivas en estado `DRAFT` (Borrador) permiten edición con el botón **"Editar definición"**. Las versiones vigentes o `PUBLISHED` (Publicadas) se mantienen protegidas en **modo solo lectura** con aviso explicativo.
+4. **Sustitución de Diálogos Nativos por Modales Institucionales (`matrices-riesgos.component.ts`)**:
    - Se eliminó el cuadro de diálogo nativo del navegador `confirm(...)` en la acción de eliminar versión de formulario.
    - Se implementó la integración con la librería estandarizada **SweetAlert2** (`Swal.fire`) en las tres acciones de confirmación de plantillas: `eliminarVersionFormulario` (alerta roja de advertencia), `publicarVersion` (modal azul de confirmación de publicación) y `cambiarVigenciaVersion` (modal verde/naranja para activación o desactivación).
 2. **Restauración del Diseño de Barra de Pestañas (`matrices-riesgos.component.html`)**:
