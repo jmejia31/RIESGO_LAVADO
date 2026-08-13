@@ -10,7 +10,12 @@
 - **Objetivo**: Ejecutar e implementar la **Fase 7 — Pruebas Backend (.NET)** creando la suite dedicada `MatricesRiesgosPhase07BackendCoverageTests.cs` para validar exhaustivamente las invariantes de negocio del CRUD de Familias, el ciclo de vida de versiones de formularios dinámicos, la inmutabilidad de borradores/publicados, la gestión transaccional de vigencias y el control de accesos restringido al rol de Administrador.
 
 ### Cambios y Verificaciones Ejecutadas
-1. **Tarjetas de Métricas Coloreadas KPI (`matrices-riesgos.component.html`)**:
+1. **Preservación Completa de Propiedades en Serialización y Deserialización JSON (`form-builder.models.ts` / `matrices-riesgos.models.ts`)**:
+   - Se extendió el mapeo en `normalizarJsonABuilderModel` y `serializarBuilderModelAJson` para preservar en el JSON de salida todos los atributos avanzados: `formula`, `opciones`, `codigoCatalogo`, `anchoColumnas`, `columnasPorFila`, `obligatorio` y `soloLectura`.
+   - Se implementó la sincronización bidireccional inmediata en `FormBuilderComponent` mediante el manejador `alCambiarPropiedadCampo()` vinculado al evento `(ngModelChange)` de cada control del Inspector de Propiedades.
+2. **Prueba Unitaria de Interacción Real del Inspector (`form-builder.component.spec.ts`)**:
+   - Se actualizó la suite de pruebas unitarias verificando la modificación de propiedades a través de `alCambiarPropiedadCampo()`, confirmando que el valor de la fórmula (`formula`) se conserva y serializa de manera integra en el JSON final.
+3. **Tarjetas de Métricas Coloreadas KPI (`matrices-riesgos.component.html`)**:
    - Se incorporó la cuadrícula superior de 4 tarjetas de métricas coloreadas con el mismo estilo y estructura visual que Monitoreo de Listas (`Total Evaluaciones` [neutro], `En Borrador` [ámbar], `En Revisión` [azul] y `Aprobadas` [esmeralda]).
 2. **Búsqueda Automática y Limpieza de Filtros (`matrices-riesgos.component.ts` / `.html`)**:
    - Se configuró la **búsqueda automática e inmediata** en el campo de texto con técnica de *debounce* de 300 ms al comenzar a escribir.
