@@ -149,7 +149,7 @@ test('el Form Builder bloquea Salir, navegación y foco del shell mientras el mo
 
   const headerPrincipal = page.locator('app-main-layout > div > div > header');
   const menuPrincipal = page.locator('app-main-layout > div > aside');
-  const salir = page.getByRole('button', { name: 'Cerrar sesión' });
+  const salir = page.locator('app-main-layout > div > div > header button[aria-label="Cerrar sesión"]');
 
   await expect.poll(() => headerPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(true);
   await expect.poll(() => menuPrincipal.evaluate(elemento => (elemento as HTMLElement).inert)).toBe(true);
