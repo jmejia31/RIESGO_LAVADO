@@ -1,5 +1,27 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Modal 100% Pantalla Completa (Full-Screen) y Bloqueo Absoluto Trasero
+
+- **Fecha y hora**: 2026-08-13, 08:31 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `b51a556`.
+- **Commit final**: `a35492b`.
+- **Objetivo**: Corregir el despliegue de los modales de pantalla completa para que ocupen estrictamente el 100% de la ventana (`fixed inset-0 z-[999] w-full h-full flex flex-col`) sin dejar franja o borde expuesto en la parte superior, e inhabilitar de forma absoluta cualquier clic o interacción sobre elementos inferiores/posteriores mediante backdrop superpuesto e inmovilización de capas.
+
+### Cambios y Verificaciones Ejecutadas
+1. **Modal 100% Pantalla Completa Real (`matrices-riesgos.component.html`)**:
+   - Refactorizado el contenedor modal del Form Builder asignando `fixed inset-0 z-[999] flex flex-col bg-slate-900/80 backdrop-blur-md` junto a `w-full h-full border-none rounded-none`.
+   - Se eliminaron los padding exteriores (`p-3`, `p-6`) y redondeados de esquinas que dejaban expuesta la franja superior del layout principal.
+2. **Inhabilitación Absoluta de Interacción Trasera**:
+   - Elevado el `z-index` a `[999]` y `[1000]`, asegurando la captura completa de puntero y eventos de teclado.
+3. **Pruebas y Verificación**:
+   - **Compilación Angular (`npm run build`)**: Exitoso al 100% (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **28 de 28 suites pasadas (177 de 177 pruebas unitarias 100% pasadas)**.
+   - Publicado en `origin/desarrollo` (Commit `a35492b`). Estado de Git 100% limpio. 0 cambios en Oracle o DDL.
+
+---
+
 ## Registro de Intervención — Antigravity — Modal Amplio Superpuesto (Form Builder) y Paridad Gráfica con Monitoreo de Listas
 
 - **Fecha y hora**: 2026-08-13, 08:22 (UTC-6).
