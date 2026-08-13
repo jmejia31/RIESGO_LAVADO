@@ -140,6 +140,43 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
   }
 
+  onKeydownTab(event: KeyboardEvent, tabActual: TabMatrices): void {
+    const tabs: TabMatrices[] = ['evaluaciones', 'captura', 'consolidado', 'plantillas'];
+    const indexActual = tabs.indexOf(tabActual);
+
+    if (indexActual === -1) return;
+
+    let nuevoIndex = -1;
+
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        nuevoIndex = (indexActual + 1) % tabs.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        nuevoIndex = (indexActual - 1 + tabs.length) % tabs.length;
+        break;
+      case 'Home':
+        nuevoIndex = 0;
+        break;
+      case 'End':
+        nuevoIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    const nuevaTab = tabs[nuevoIndex];
+    this.seleccionarTab(nuevaTab);
+
+    setTimeout(() => {
+      const el = document.getElementById('tab-' + nuevaTab);
+      el?.focus();
+    }, 0);
+  }
+
   cargarFamilias(): void {
     if (typeof this.service.listarFamiliasFormulario !== 'function') {
       this.familias.set([]);
