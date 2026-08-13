@@ -4426,6 +4426,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Oracle, DDL/DML, `main` y PR #20 no fueron modificados ni ejecutados.
 - Pendiente externo: nuevo analisis remoto de SonarCloud para confirmar el estado del Quality Gate y la duplicacion historica del PR.
 
+## Registro de intervencion - ChatGPT - equivalentes de teclado SonarCloud
+
+- Fecha: 2026-08-13 (UTC-6). Rama: `desarrollo`. Commit base: `ad5f723`.
+- Hallazgo: el nuevo analisis remoto marco dos incidencias Web de mouse sin equivalente de teclado en el Form Builder.
+- Correccion: se agregaron manejadores `keydown.enter` y `keydown.space` a las superficies de seleccion de seccion y campo, preservando los botones semanticos y el foco del modal.
+- Verificado: ESLint, build Angular (0 errores; advertencia informativa preexistente de `exceljs` CommonJS), 28/181 pruebas unitarias y 14/14 E2E.
+- Pendiente: publicar y esperar el analisis remoto posterior; el hallazgo estructural heredado de `core/services/global-http-state.service.ts` permanece separado y no fue modificado.
+
 ## Registro de intervencion - ChatGPT - endurecimiento SonarCloud y regresion final
 
 - Fecha: 2026-08-13 (UTC-6). Rama: `desarrollo`. Commit inicial: `89e74d9`.
