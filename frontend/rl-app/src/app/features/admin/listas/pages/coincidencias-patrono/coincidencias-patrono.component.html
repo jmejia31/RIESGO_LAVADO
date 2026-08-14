@@ -159,11 +159,11 @@
 
 <!-- Modal de Detalle de Coincidencias -->
 @if (mostrarModal()) {
-  <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" aria-modal="true">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[85vh] flex flex-col border border-gray-100 overflow-hidden transform scale-100 transition-all duration-200">
+  <dialog open class="modal-backdrop-overlay" aria-modal="true">
+    <div class="modal-container-card w-full max-w-6xl max-h-[90vh]">
       
       <!-- Cabecera del Modal -->
-      <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+      <div class="modal-header-institutional">
         <div>
           <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
             <svg class="w-5 h-5 text-ihss-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -175,7 +175,7 @@
             Fecha de hallazgo: {{ formatearFechaSimple(fechaSeleccionada()) }}
           </p>
         </div>
-        <button (click)="cerrarModal()" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors">
+        <button (click)="cerrarModal()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal detalles">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
@@ -325,7 +325,7 @@
       </div>
 
       <!-- Pie del Modal -->
-      <div class="px-6 py-3 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+      <div class="modal-footer-institutional justify-between text-xs text-gray-500">
         <span>
           Mostrando {{ detalleFiltrado().length === 0 ? 0 : ((paginaDetalleActual() - 1) * registrosDetallePorPagina()) + 1 }}
           al {{ Math.min(paginaDetalleActual() * registrosDetallePorPagina(), detalleFiltrado().length) }}
@@ -342,7 +342,7 @@
             Siguiente
           </button>
         </div>
-        <button (click)="cerrarModal()" class="px-4 py-2 rounded-xl bg-ihss-800 hover:bg-ihss-900 text-white font-medium transition-colors">
+        <button (click)="cerrarModal()" class="px-4 py-2 rounded-xl bg-ihss-900 hover:bg-ihss-800 text-white font-medium text-xs transition-colors">
           Cerrar
         </button>
       </div>

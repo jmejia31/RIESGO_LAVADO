@@ -53,6 +53,33 @@
   .card {
     @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
   }
+  /* Contenedores y estructura de modales unificados */
+  .modal-backdrop-overlay {
+    @apply fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in;
+  }
+  /* Los elementos <dialog> conservan dimensiones y márgenes propios del navegador.
+     Al usarlos como overlay se neutralizan para que el backdrop cubra realmente toda la aplicación. */
+  dialog.modal-backdrop-overlay {
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+  .modal-container-card {
+    @apply relative min-h-0 bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-slate-200 flex flex-col;
+  }
+  .modal-header-institutional {
+    @apply bg-white px-6 py-4 flex items-center justify-between border-b border-slate-200 shrink-0;
+  }
+  .modal-body-scrollable {
+    @apply min-h-0 flex-1 overflow-y-auto p-6;
+  }
+  .modal-footer-institutional {
+    @apply bg-white px-6 py-3 flex items-center justify-end gap-2.5 border-t border-slate-200 shrink-0;
+  }
 }
 
 .skip-link {

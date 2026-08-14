@@ -410,8 +410,8 @@
   <!-- MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER -->
   @if (versionEditando(); as versionActual) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-3 sm:p-6 backdrop-blur-sm animate-fade-in" aria-modal="true" aria-labelledby="titulo-modal-builder">
-      <div class="w-full max-w-[96vw] h-[92vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden border border-gray-100 relative">
+     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-builder">
+      <div class="modal-container-card h-[calc(100dvh-1.5rem)] max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-none sm:h-[calc(100dvh-3rem)] sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"
@@ -428,52 +428,57 @@
   <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" aria-modal="true" aria-labelledby="titulo-modal-familia">
-      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-          <h3 id="titulo-modal-familia" class="text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
-          <button type="button" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">
+     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-familia">
+      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-familia" class="text-base sm:text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
+            <p class="text-xs text-gray-500">Configuración de agrupador institucional de matrices</p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
-        @if (errorModal(); as errorModalTexto) {
-          <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
-            <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
-            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-          </div>
-        }
-
-        <div class="space-y-4 text-sm">
-          <div>
-            <label for="fam-codigo" class="block font-bold text-gray-700 mb-1">Código Institucional</label>
-            <input id="fam-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 disabled:bg-gray-100 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [disabled]="modoEdicionFamilia()" [(ngModel)]="nuevaFamiliaCodigo" placeholder="Ej. GTIC_MATRIZ" />
-            <p class="mt-1 text-xs text-gray-500">Único e inmutable tras su creación. Solo letras, números y guion bajo.</p>
-          </div>
-
-          <div>
-            <label for="fam-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
-            <input id="fam-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaNombre" placeholder="Ej. Matriz de Riesgos GTIC" />
-          </div>
-
-          <div>
-            <label for="fam-descripcion" class="block font-bold text-gray-700 mb-1">Descripción / Propósito</label>
-            <textarea id="fam-descripcion" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaDescripcion" placeholder="Ámbito y alcance de la familia..."></textarea>
-          </div>
-
-          @if (modoEdicionFamilia()) {
-            <div class="flex items-center gap-2 pt-1">
-              <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" [(ngModel)]="nuevaFamiliaActivo" />
-              <label for="fam-activo" class="font-bold text-gray-700 text-sm">Familia Activa</label>
+        <div class="modal-body-scrollable space-y-4">
+          @if (errorModal(); as errorModalTexto) {
+            <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
+              <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
+              <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
           }
+
+          <div class="space-y-4 text-sm">
+            <div>
+              <label for="fam-codigo" class="block font-bold text-gray-700 mb-1">Código Institucional</label>
+              <input id="fam-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 disabled:bg-gray-100 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [disabled]="modoEdicionFamilia()" [(ngModel)]="nuevaFamiliaCodigo" placeholder="Ej. GTIC_MATRIZ" />
+              <p class="mt-1 text-xs text-gray-500">Único e inmutable tras su creación. Solo letras, números y guion bajo.</p>
+            </div>
+
+            <div>
+              <label for="fam-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
+              <input id="fam-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaNombre" placeholder="Ej. Matriz de Riesgos GTIC" />
+            </div>
+
+            <div>
+              <label for="fam-descripcion" class="block font-bold text-gray-700 mb-1">Descripción / Propósito</label>
+              <textarea id="fam-descripcion" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevaFamiliaDescripcion" placeholder="Ámbito y alcance de la familia..."></textarea>
+            </div>
+
+            @if (modoEdicionFamilia()) {
+              <div class="flex items-center gap-2 pt-1">
+                <input id="fam-activo" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" [(ngModel)]="nuevaFamiliaActivo" />
+                <label for="fam-activo" class="font-bold text-gray-700 text-sm">Familia Activa</label>
+              </div>
+            }
+          </div>
         </div>
 
-        <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
-       </div>
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
+        </div>
        </div>
      </dialog>
   }
@@ -481,42 +486,44 @@
   <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
      <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
-     <dialog open class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" aria-modal="true" aria-labelledby="titulo-modal-formulario">
-      <div class="w-full max-w-lg space-y-4 rounded-2xl bg-white p-6 shadow-2xl border border-gray-100">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-formulario">
+      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
+        <div class="modal-header-institutional">
           <div>
-            <h3 id="titulo-modal-formulario" class="text-lg font-bold text-gray-900">Nuevo Formulario de Matriz</h3>
+            <h3 id="titulo-modal-formulario" class="text-base sm:text-lg font-bold text-gray-900">Nuevo Formulario de Matriz</h3>
             <p class="text-xs text-gray-500">Se asociará a la familia seleccionada: <strong class="text-gray-900">{{ familiaSeleccionada() }}</strong></p>
           </div>
-          <button type="button" class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFormulario()">
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFormulario()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
 
-        @if (errorModal(); as errorModalTexto) {
-          <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
-            <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
-            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <div class="modal-body-scrollable space-y-4">
+          @if (errorModal(); as errorModalTexto) {
+            <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
+              <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
+              <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+          }
+
+          <div class="space-y-4 text-sm">
+            <div>
+              <label for="form-codigo" class="block font-bold text-gray-700 mb-1">Código del Formulario</label>
+              <input id="form-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
+              <p class="mt-1 text-xs text-gray-500">Identificador técnico del formulario dentro de la familia.</p>
+            </div>
+
+            <div>
+              <label for="form-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
+              <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
+            </div>
           </div>
-        }
+        </div>
 
-        <div class="space-y-4 text-sm">
-          <div>
-            <label for="form-codigo" class="block font-bold text-gray-700 mb-1">Código del Formulario</label>
-            <input id="form-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
-            <p class="mt-1 text-xs text-gray-500">Identificador técnico del formulario dentro de la familia.</p>
-          </div>
-
-          <div>
-            <label for="form-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
-             <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
-           </div>
-         </div>
-
-        <div class="flex justify-end gap-3 border-t border-gray-100 pt-4">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalFormulario()">Cancelar</button>
+          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
         </div>
       </div>
      </dialog>

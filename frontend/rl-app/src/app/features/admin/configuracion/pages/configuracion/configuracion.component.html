@@ -386,108 +386,111 @@
 
   <!-- Modal de Creación / Edición de Slide -->
   @if (modalSlideAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
-
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full border border-gray-100 flex flex-col">
-        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
-          <h3 class="text-lg font-bold text-gray-900">
-            {{ slideEditando() ? 'Editar Slide de Login' : 'Agregar Nuevo Slide' }}
-          </h3>
-          <button (click)="cerrarModalSlide()" class="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
+      <div class="modal-container-card max-w-lg w-full max-h-[90vh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-gray-900">
+              {{ slideEditando() ? 'Editar Slide de Login' : 'Agregar Nuevo Slide' }}
+            </h3>
+            <p class="text-xs text-gray-500">Configuración visual e informativa del carrusel</p>
+          </div>
+          <button (click)="cerrarModalSlide()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal slide">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form [formGroup]="slideForm" (ngSubmit)="guardarSlide()" class="p-6 space-y-4">
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-500 uppercase">Ruta / URL de la Imagen *</label>
-            <div class="flex gap-2">
-              <input type="text" formControlName="imagenUrl" placeholder="Ej. assets/login/slide1.png o /uploads/..."
-                class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+        <form [formGroup]="slideForm" (ngSubmit)="guardarSlide()" class="flex flex-col flex-1 min-h-0">
+          <div class="modal-body-scrollable space-y-4">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-gray-500 uppercase">Ruta / URL de la Imagen *</label>
+              <div class="flex gap-2">
+                <input type="text" formControlName="imagenUrl" placeholder="Ej. assets/login/slide1.png o /uploads/..."
+                  class="flex-1 px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
 
-              <input type="file" #fileInput (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden" />
+                <input type="file" #fileInput (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden" />
 
-              <button type="button" (click)="fileInput.click()" [disabled]="subiendoImagen()"
-                class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
-                @if (subiendoImagen()) {
-                  <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Subiendo...
-                } @else {
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  Subir Imagen
-                }
-              </button>
+                <button type="button" (click)="fileInput.click()" [disabled]="subiendoImagen()"
+                  class="px-4 py-2 bg-ihss-600 text-white rounded-xl hover:bg-ihss-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+                  @if (subiendoImagen()) {
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Subiendo...
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Subir Imagen
+                  }
+                </button>
+              </div>
+              @if (slideForm.get('imagenUrl')?.invalid && slideForm.get('imagenUrl')?.touched) {
+                <p class="text-xs text-red-500">La URL de la imagen es obligatoria.</p>
+              }
             </div>
-            @if (slideForm.get('imagenUrl')?.invalid && slideForm.get('imagenUrl')?.touched) {
-              <p class="text-xs text-red-500">La URL de la imagen es obligatoria.</p>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Orden de Aparición *</label>
+                <input type="number" formControlName="orden" min="1" max="99"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-semibold text-gray-500 uppercase">Icono del Slide</label>
+                <input type="text" formControlName="imagenIcono" placeholder="Ej. key, lock, shield"
+                  class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-gray-500 uppercase">Título del Slide</label>
+              <input type="text" formControlName="titulo" placeholder="Título que se mostrará en pantalla"
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-gray-500 uppercase">Descripción / Subtítulo</label>
+              <textarea formControlName="descripcion" rows="3" placeholder="Información detallada..."
+                class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"
+                [attr.maxlength]="maxTextoTextarea"></textarea>
+              <div class="flex justify-end">
+                <span class="text-xs font-medium text-gray-400">
+                  {{ longitudCampo(slideForm, 'descripcion') }}/{{ maxTextoTextarea }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 py-2">
+              <input type="checkbox" id="slideActivo" formControlName="activo" class="w-4 h-4 text-ihss-600 border-gray-300 rounded focus:ring-ihss-500" />
+              <label for="slideActivo" class="text-sm text-gray-700 font-medium cursor-pointer">El slide está activo e informativo</label>
+            </div>
+
+            <!-- Vista previa rápida de la imagen en el modal -->
+            @if (slideForm.get('imagenUrl')?.value) {
+              <div class="pt-2">
+                <span class="text-xs font-semibold text-gray-500 uppercase block mb-1">Vista Previa de Imagen</span>
+                <div class="w-full h-32 rounded-xl border border-gray-200 overflow-hidden bg-gray-150 flex items-center justify-center shadow-inner">
+                  <img [src]="configService.resolverUrlImagen(slideForm.get('imagenUrl')?.value)" class="w-full h-full object-cover" onerror="this.style.display='none'" />
+                </div>
+              </div>
             }
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-500 uppercase">Orden de Aparición *</label>
-              <input type="number" formControlName="orden" min="1" max="99"
-                class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-semibold text-gray-500 uppercase">Icono del Slide</label>
-              <input type="text" formControlName="imagenIcono" placeholder="Ej. key, lock, shield"
-                class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-500 uppercase">Título del Slide</label>
-            <input type="text" formControlName="titulo" placeholder="Título que se mostrará en pantalla"
-              class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-gray-500 uppercase">Descripción / Subtítulo</label>
-            <textarea formControlName="descripcion" rows="3" placeholder="Información detallada..."
-              class="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm"
-              [attr.maxlength]="maxTextoTextarea"></textarea>
-            <div class="flex justify-end">
-              <span class="text-xs font-medium text-gray-400">
-                {{ longitudCampo(slideForm, 'descripcion') }}/{{ maxTextoTextarea }}
-              </span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2 py-2">
-            <input type="checkbox" id="slideActivo" formControlName="activo" class="w-4 h-4 text-ihss-600 border-gray-300 rounded focus:ring-ihss-500" />
-            <label for="slideActivo" class="text-sm text-gray-700 font-medium cursor-pointer">El slide está activo e informativo</label>
-          </div>
-
-          <!-- Vista previa rápida de la imagen en el modal -->
-          @if (slideForm.get('imagenUrl')?.value) {
-            <div class="pt-2">
-              <span class="text-xs font-semibold text-gray-500 uppercase block mb-1">Vista Previa de Imagen</span>
-              <div class="w-full h-32 rounded-xl border border-gray-200 overflow-hidden bg-gray-150 flex items-center justify-center shadow-inner">
-                <img [src]="configService.resolverUrlImagen(slideForm.get('imagenUrl')?.value)" class="w-full h-full object-cover" onerror="this.style.display='none'" />
-              </div>
-            </div>
-          }
-
-          <div class="bg-gray-50 -mx-6 -mb-6 px-6 py-3 flex justify-end gap-2 border-t border-gray-200">
+          <div class="modal-footer-institutional">
+            <button type="button" (click)="cerrarModalSlide()" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
+              Cancelar
+            </button>
             <button type="submit" [disabled]="slideForm.invalid || guardandoSlide()"
-              class="px-4 py-2 bg-ihss-900 text-white rounded-xl hover:bg-ihss-800 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
+              class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50">
               @if (guardandoSlide()) {
                 Guardando...
               } @else {
                 Guardar Slide
               }
-            </button>
-            <button type="button" (click)="cerrarModalSlide()" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
-              Cancelar
             </button>
           </div>
         </form>

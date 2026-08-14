@@ -88,14 +88,17 @@
 
   <!-- Modal / Formulario Overlay -->
   @if (mostrarForm()) {
-    <dialog open class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[1000] flex items-center justify-center p-4 transition-all" aria-modal="true">
-      <div class="bg-white rounded-2xl shadow-xl border border-gray-100 max-w-lg w-full overflow-hidden animate-scale-in max-h-[94vh] flex flex-col">
+    <dialog open class="modal-backdrop-overlay" aria-modal="true">
+      <div class="modal-container-card max-w-lg w-full max-h-[90vh]">
         <!-- Header del Formulario -->
-        <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-          <h3 class="font-bold text-gray-800 text-lg">
-            {{ editando() ? 'Editar Tipo de Lista' : 'Nuevo Tipo de Lista' }}
-          </h3>
-          <button (click)="cancelar()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 class="font-bold text-gray-800 text-base sm:text-lg">
+              {{ editando() ? 'Editar Tipo de Lista' : 'Nuevo Tipo de Lista' }}
+            </h3>
+            <p class="text-xs text-gray-500">Parámetros del tipo de archivo y estructura</p>
+          </div>
+          <button (click)="cancelar()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal tipo lista">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -103,58 +106,60 @@
         </div>
 
         <!-- Formulario -->
-        <form [formGroup]="form" (ngSubmit)="guardar()" class="p-6 space-y-4 overflow-y-auto custom-scrollbar">
-          @if (errorGuardar()) {
-            <div class="p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-              {{ errorGuardar() }}
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="flex flex-col flex-1 min-h-0">
+          <div class="modal-body-scrollable space-y-4">
+            @if (errorGuardar()) {
+              <div class="p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
+                {{ errorGuardar() }}
+              </div>
+            }
+
+            <div class="space-y-1">
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción del Tipo de Lista *</label>
+              <input type="text" formControlName="descripcion"
+                class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
+                [class]="esInvalido('descripcion') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'"
+                placeholder="Ej: LISTA OFAC, LISTA ONU, etc.">
+              @if (esInvalido('descripcion')) {
+                <p class="text-xs text-red-500 mt-1">La descripción es requerida (máximo 250 caracteres).</p>
+              }
             </div>
-          }
 
-          <div class="space-y-1">
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Descripción del Tipo de Lista *</label>
-            <input type="text" formControlName="descripcion"
-              class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
-              [class]="esInvalido('descripcion') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'"
-              placeholder="Ej: LISTA OFAC, LISTA ONU, etc.">
-            @if (esInvalido('descripcion')) {
-              <p class="text-xs text-red-500 mt-1">La descripción es requerida (máximo 250 caracteres).</p>
-            }
-          </div>
+            <div class="space-y-1">
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo de Archivo *</label>
+              <select formControlName="tipoArchivo"
+                class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
+                [class]="esInvalido('tipoArchivo') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'">
+                <option value="">-- Seleccione --</option>
+                <option value="xlsx">xlsx</option>
+                <option value="xml">xml</option>
+                <option value="csv">csv</option>
+              </select>
+              @if (esInvalido('tipoArchivo')) {
+                <p class="text-xs text-red-500 mt-1">El tipo de archivo es requerido.</p>
+              }
+            </div>
 
-          <div class="space-y-1">
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Tipo de Archivo *</label>
-            <select formControlName="tipoArchivo"
-              class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
-              [class]="esInvalido('tipoArchivo') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'">
-              <option value="">-- Seleccione --</option>
-              <option value="xlsx">xlsx</option>
-              <option value="xml">xml</option>
-              <option value="csv">csv</option>
-            </select>
-            @if (esInvalido('tipoArchivo')) {
-              <p class="text-xs text-red-500 mt-1">El tipo de archivo es requerido.</p>
-            }
-          </div>
-
-          <div class="space-y-1">
-            <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Cantidad de Columnas *</label>
-            <input type="number" formControlName="cantidadColumnas"
-              class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
-              [class]="esInvalido('cantidadColumnas') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'"
-              placeholder="Ej: 5" min="1">
-            @if (esInvalido('cantidadColumnas')) {
-              <p class="text-xs text-red-500 mt-1">La cantidad de columnas es requerida y debe ser mayor o igual a 1.</p>
-            }
+            <div class="space-y-1">
+              <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider">Cantidad de Columnas *</label>
+              <input type="number" formControlName="cantidadColumnas"
+                class="w-full px-4 py-2.5 rounded-xl border transition-all text-sm outline-none focus:ring-2"
+                [class]="esInvalido('cantidadColumnas') ? 'border-red-300 focus:ring-red-100 focus:border-red-400' : 'border-gray-200 focus:ring-ihss-100 focus:border-ihss-600'"
+                placeholder="Ej: 5" min="1">
+              @if (esInvalido('cantidadColumnas')) {
+                <p class="text-xs text-red-500 mt-1">La cantidad de columnas es requerida y debe ser mayor o igual a 1.</p>
+              }
+            </div>
           </div>
 
           <!-- Botones de Acción -->
-          <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t border-gray-100">
+          <div class="modal-footer-institutional">
             <button type="button" (click)="cancelar()" [disabled]="guardando()"
-              class="px-4 py-2 rounded-xl text-gray-600 hover:bg-gray-100 font-medium text-sm transition-colors w-full sm:w-auto">
+              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
               Cancelar
             </button>
             <button type="submit" [disabled]="guardando() || form.invalid"
-              class="inline-flex items-center justify-center gap-2 bg-ihss-600 hover:bg-ihss-700 disabled:bg-ihss-400 text-white px-5 py-2 rounded-xl font-medium text-sm transition-colors shadow-sm w-full sm:w-auto">
+              class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors shadow-sm">
               @if (guardando()) {
                 <div class="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
                 Guardando...

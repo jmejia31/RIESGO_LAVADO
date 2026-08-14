@@ -217,16 +217,13 @@
 
   <!-- Modal de Visor de Cambios JSON -->
   @if (modalDetalleAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
+      <div class="modal-container-card max-w-4xl w-full max-h-[90vh]">
 
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
-
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-4xl w-full border border-gray-100 flex flex-col max-h-[90vh] z-50">
-
-          <div class="bg-gray-50 px-6 py-4 flex items-start justify-between gap-4 border-b border-gray-200">
+          <div class="modal-header-institutional items-start">
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Detalle de Valores Auditados</h3>
-              <p class="text-xs text-gray-500">
+              <h3 class="text-base sm:text-lg font-bold text-gray-900">Detalle de Valores Auditados</h3>
+              <p class="text-xs text-gray-500 mt-0.5">
                 Registro ID: {{ registroSeleccionado()?.audId }} | Tabla: {{ registroSeleccionado()?.tabla }}
                 <span class="mx-2 text-gray-300">|</span>
                 Usuario: <span class="font-semibold text-gray-700">{{ registroSeleccionado()?.usrEmail || 'Sistema' }}</span>
@@ -234,14 +231,14 @@
                 Fecha: <span class="font-semibold text-gray-700">{{ registroSeleccionado()?.fecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
               </p>
             </div>
-            <button (click)="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button (click)="cerrarModalDetalle()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal auditoría">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div class="p-6 overflow-y-auto space-y-4">
+          <div class="modal-body-scrollable space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               <!-- Datos Anteriores -->
@@ -293,7 +290,7 @@
             </div>
           </div>
 
-          <div class="bg-gray-50 px-6 py-3 flex justify-end border-t border-gray-200">
+          <div class="modal-footer-institutional">
             <button (click)="cerrarModalDetalle()" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
               Cerrar
             </button>

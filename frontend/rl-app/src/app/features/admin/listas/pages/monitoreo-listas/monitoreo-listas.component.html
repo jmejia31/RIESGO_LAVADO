@@ -664,13 +664,11 @@
 
   <!-- Modal de Detalle -->
   @if (modalDetalleAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
 
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
+      <div class="modal-container-card max-w-6xl w-full max-h-[90vh]">
 
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-6xl w-full border border-gray-100 flex flex-col max-h-[90vh]">
-
-           <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+           <div class="modal-header-institutional">
             <div>
               <h3 class="text-lg font-bold text-gray-900">Detalle de coincidencia</h3>
               <p class="text-xs text-gray-500">
@@ -688,7 +686,7 @@
             </button>
           </div>
 
-          <div class="p-6 space-y-4 overflow-y-auto">
+          <div class="modal-body-scrollable space-y-4">
             @if (detalleCargando()) {
               <div class="py-12 flex flex-col items-center justify-center gap-3">
                 <svg class="animate-spin h-8 w-8 text-ihss-900" fill="none" viewBox="0 0 24 24">
@@ -821,7 +819,7 @@
             }
           </div>
 
-          <div class="bg-gray-50 px-6 py-3 flex justify-end gap-2 border-t border-gray-200">
+          <div class="modal-footer-institutional">
             <button (click)="exportarExcel()" class="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -845,31 +843,27 @@
 
   <!-- Modal de Visor PDF -->
   @if (pdfModalAbierto()) {
-    <div class="fixed inset-0 z-[1050] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
-
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
-
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-5xl w-full border border-gray-100 flex flex-col max-h-[95vh]">
-
-          <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
+      <div class="modal-container-card max-w-5xl w-full max-h-[92vh]">
+          <div class="modal-header-institutional">
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Reporte PDF Generado</h3>
+              <h3 class="text-base sm:text-lg font-bold text-gray-900">Reporte PDF Generado</h3>
               <p class="text-xs text-gray-500">Visualización del documento de coincidencias</p>
             </div>
-            <button (click)="cerrarPdfModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button (click)="cerrarPdfModal()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar visor PDF">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div class="p-6 overflow-y-auto">
+          <div class="modal-body-scrollable">
             @if (pdfUrl()) {
               <iframe [src]="pdfUrl()!" class="w-full h-[650px] rounded-xl border border-gray-200 shadow-sm" type="application/pdf"></iframe>
             }
           </div>
 
-          <div class="bg-gray-50 px-6 py-3 flex justify-end gap-2 border-t border-gray-200">
+          <div class="modal-footer-institutional">
             <button (click)="cerrarPdfModal()" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
               Cerrar
             </button>
@@ -881,25 +875,21 @@
 
   <!-- Modal de Registrar Motivo -->
   @if (modalMotivoAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
-
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
-
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-lg w-full border border-gray-100 flex flex-col z-50">
-
-          <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
+      <div class="modal-container-card max-w-lg w-full max-h-[90vh]">
+          <div class="modal-header-institutional">
             <div>
-              <h3 class="text-lg font-bold text-gray-900">Registrar Motivo en Lista de Positivos</h3>
+              <h3 class="text-base sm:text-lg font-bold text-gray-900">Registrar Motivo en Lista de Positivos</h3>
               <p class="text-xs text-gray-500">Ingrese los detalles para registrar a la entidad en la lista de positivos.</p>
             </div>
-            <button (click)="cerrarModalMotivo()" class="text-gray-400 hover:text-gray-600 transition-colors">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button (click)="cerrarModalMotivo()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar diálogo motivo">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <div class="modal-body-scrollable space-y-4">
             <!-- Nombre Completo -->
             <div>
               <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Nombre Completo</label>
@@ -1044,7 +1034,7 @@
             </div>
           </div>
 
-          <div class="bg-gray-50 px-6 py-3 flex justify-end gap-2 border-t border-gray-200">
+          <div class="modal-footer-institutional">
             <button (click)="cerrarModalMotivo()" [disabled]="guardandoMotivo()"
               class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50">
               Cancelar
@@ -1069,26 +1059,24 @@
 
   <!-- Modal de Seguimiento -->
   @if (modalSeguimientoAbierto()) {
-    <div class="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-gray-500/75 transition-opacity"></div>
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
+      <div class="modal-container-card max-w-5xl w-full max-h-[90vh]">
 
-      <div class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all max-w-5xl w-full border border-gray-100 flex flex-col z-50 max-h-[90vh]">
-
-        <div class="bg-gray-50 px-6 py-4 flex justify-between items-center border-b border-gray-200">
+        <div class="modal-header-institutional">
           <div>
-            <h3 class="text-lg font-bold text-gray-900">Seguimiento e Historial de Controles</h3>
+            <h3 class="text-base sm:text-lg font-bold text-gray-900">Seguimiento e Historial de Controles</h3>
             <p class="text-xs text-gray-500">
               {{ entidadSeleccionada()?.nombreCompleto }} (Documento: {{ entidadSeleccionada()?.noDocumento }})
             </p>
           </div>
-          <button (click)="cerrarModalSeguimiento()" class="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button (click)="cerrarModalSeguimiento()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal seguimiento">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[450px]">
+        <div class="modal-body-scrollable grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[450px]">
 
           <!-- Columna Izquierda: Historial -->
           <div class="md:col-span-7 flex flex-col space-y-4 border-r border-gray-100 pr-0 md:pr-6">
@@ -1292,7 +1280,7 @@
 
         </div>
 
-        <div class="bg-gray-50 px-6 py-3 flex justify-end border-t border-gray-200">
+        <div class="modal-footer-institutional">
           <button (click)="cerrarModalSeguimiento()" [disabled]="guardandoSeguimiento()"
             class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
             Cerrar

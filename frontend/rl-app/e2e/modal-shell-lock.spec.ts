@@ -94,4 +94,18 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await page.keyboard.press('Escape');
   await expect(dialogo).toBeHidden();
   await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
+  await expect(editar).toBeFocused();
+
+  // Verificar modal institucional de Nueva Familia (apertura, backdrop, foco, Escape y retorno)
+  const botonNuevaFamilia = page.getByRole('button', { name: 'Nueva Familia', exact: true });
+  await botonNuevaFamilia.focus();
+  await botonNuevaFamilia.click();
+  const dialogoFamilia = page.locator('dialog[open][aria-modal="true"]:has(#titulo-modal-familia)');
+  await expect(dialogoFamilia).toBeVisible();
+  await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(true);
+  await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialogoFamilia).toBeHidden();
+  await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
+  await expect(botonNuevaFamilia).toBeFocused();
 });

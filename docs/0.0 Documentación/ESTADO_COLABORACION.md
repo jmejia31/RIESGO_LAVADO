@@ -391,3 +391,12 @@ La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción ins
 - Limitaciones declaradas: `run_quality_gates.ps1` fue iniciado pero el host no devolvio su codigo final antes de cortar la captura; `validate_repository_structure.ps1` sigue fallando por `core/services/global-http-state.service.ts`, ruta heredada no intervenida.
 - Estado remoto comprobado mediante `gh pr checks 20`: el check de validadores/build/tests/cobertura/E2E/contenedores esta verde, pero los dos checks de SonarCloud siguen fallando. La cobertura de codigo nuevo remota aun no puede declararse >=80% sin un analisis nuevo y exitoso del PR #20.
 - **Punto de continuidad**: publicar el bloque, ejecutar SonarCloud sobre el PR #20 y usar su cobertura de codigo nuevo como unica evidencia de cierre de Fase 9. Fase 10 continua pendiente de UAT y aprobacion formal de Javier Mejia.
+
+## Estado de continuidad - normalizacion de modales (2026-08-14)
+
+- La estandarizacion global de modales fue corregida para recuperar el patron limpio institucional: backdrop de viewport completo con blur, tarjeta blanca con bordes redondeados, header y footer claros, y cuerpo desplazable sin marcos grises duplicados.
+- El detalle de Coincidencias de Monitoreo dejo de renderizar una segunda capa de fondo dentro del dialogo. Los `dialog` nativos ahora neutralizan sus margenes y tamano propios antes de aplicar el overlay institucional.
+- El Form Builder de Matrices sigue siendo excepcional por diseno: usa una tarjeta casi a pantalla completa para preservar el lienzo, la paleta y el inspector; no es un modal pequeno forzado.
+- Evidencia de esta intervencion: Angular build correcto (advertencia conocida `exceljs` CommonJS), frontend 29/252, Playwright 14/14, backend Release 348/348, validadores de BD y enlaces correctos y quality gates locales correctos. La cobertura frontend local global de lineas fue 48.20%; no equivale a cobertura de codigo nuevo del PR.
+- Limitaciones registradas: build .NET independiente bloqueado por `.NET Host` local reteniendo `RL.API.dll`; estructura de repositorio falla por el archivo/carpeta heredados `core/services/global-http-state.service.ts`, fuera de alcance. No se finalizo ningun proceso del usuario.
+- Oracle, SQL, DDL/DML, `main`, configuracion/umbrales/exclusiones SonarCloud permanecieron intactos. El analisis remoto SonarCloud y UAT final son condiciones pendientes para cerrar las Fases 9 y 10.
