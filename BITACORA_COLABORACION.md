@@ -1,13 +1,41 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — Auditoría, Subsanación y Certificación de Alertas SonarCloud (PR #20)
+## Registro de Intervención — Antigravity — Ampliación de Cobertura Real Frontend (Gestión, Mitigación y Monitoreo Operativo de Matrices)
 
-- **Fecha y hora**: 2026-08-13, 14:26 (UTC-6).
+- **Fecha y hora**: 2026-08-14, 10:26 (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `1f2bc24`.
-- **Commit final**: `1f2bc24`.
-- **Objetivo**: Atender, auditar y certificar las observaciones reportadas por el análisis de SonarCloud en el PR #20 sobre `form-builder.component.html` y los scripts SQL de validación de solo lectura (`03`, `04`, `05`, `06`), asegurando el cumplimiento estricto de las reglas inviolables de arquitectura y calidad.
+- **Commit inicial**: `816c2b7`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivo**: Aumentar la cobertura real del módulo Matrices de Riesgos creando pruebas unitarias exhaustivas para los componentes operativos: `matrices-riesgos-gestion`, `matrices-riesgos-mitigacion` y `matrices-riesgos-monitoreo-operativo`, cubriendo flujos de usuario, validaciones de entrada/longitud, manejo de errores HTTP y cambios de estado.
+
+### Archivos Modificados
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-gestion/matrices-riesgos-gestion.component.spec.ts`
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.spec.ts`
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.spec.ts`
+- `BITACORA_COLABORACION.md`
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+
+### Cambios y Verificaciones Ejecutadas
+1. **Ampliación de Pruebas Unitarias Reales**:
+   - **Gestión de Riesgos (`matrices-riesgos-gestion.component.spec.ts`)**: Ampliado de 5 a **13 pruebas unitarias**. Cubre carga de activos/inactivos, fallos HTTP al listar (fallback por defecto y mensaje institucional), creación con descripción nula/espacios, edición con mapeo de campos, reseteo de formulario vía `nuevo()`, validación de campos obligatorios, longitudes máximas (código >30, nombre >250, descripción >2000), error de guardado con mensaje fallback y error con estructura `message`.
+   - **Mitigación y Controles (`matrices-riesgos-mitigacion.component.spec.ts`)**: Ampliado de 5 a **15 pruebas unitarias**. Cubre carga paralela de controles/planes al seleccionar evaluación, reinicio de selecciones con evaluación 0, fallos HTTP en listados de controles y planes, creación de controles con reseteo, actualización de controles con estado fallback, validación de evaluación y descripción, evaluación de efectividad y validación de rango (0-100), fallos HTTP al listar efectividad, creación y edición de planes con validación de avance (0-100), presupuesto positivo y fechas coherentes (fin >= inicio), creación y edición de actividades con validación de avance/fechas/responsable, y propagación de errores HTTP en guardados.
+   - **Monitoreo Operativo y Alertas (`matrices-riesgos-monitoreo-operativo.component.spec.ts`)**: Ampliado de 5 a **12 pruebas unitarias**. Cubre carga inicial de resumen KPI, manejo de errores en resumen, carga y deselección de alertas/automonitoreo, fallos HTTP en alertas y automonitoreo, registro de alerta con validación de obligatoriedad y longitudes (código >50, indicador >150), alternancia de estado (activo/inactivo), propagación de error al alternar estado, registro completo de automonitoreo con validación de campos requeridos y manejo de errores HTTP.
+2. **Resultados de Ejecución y Métricas Reales**:
+   - **Compilación Frontend (`npm run build`)**: Exitoso en 12.9s.
+   - **Pruebas Unitarias Frontend (`npm test`)**: **220 de 220 pruebas 100% pasadas** (28 archivos de prueba) vs 195 pruebas previas (+25 pruebas nuevas).
+   - **Pruebas E2E Playwright (`npm run e2e`)**: **14 de 14 pruebas E2E 100% pasadas** (25.9s).
+   - **Compilación Backend .NET (`dotnet build Release`)**: 0 Errores.
+   - **Pruebas Backend .NET (`dotnet test`)**: **319 de 319 pruebas 100% pasadas**.
+   - **Validador de Scripts BD (`validate_database_scripts.ps1`)**: Exitoso (Exit code 0).
+   - **Quality Gates Institucionales (`run_quality_gates.ps1`)**: Exitoso (Exit code 0).
+     - Cobertura Frontend: **Sentencias = 45.43%, Líneas = 45.36%, Funciones = 43.00%, Ramas = 40.77%**.
+     - Cobertura Backend: **Líneas = 22.07%, Ramas = 24.89%**.
+   - **Formato Git (`git diff --check`)**: 100% limpio (0 advertencias/errores).
+3. **Respeto a Reglas Inviolables**:
+   - 0 modificaciones a base de datos Oracle, tablas, columnas o scripts SQL.
+   - PR #20 preservado en estado Draft; rama `main` sin cambios.
+   - Código de producción en Frontend/Backend intacto sin modificaciones innecesarias.
 
 ### Cambios y Verificaciones Ejecutadas
 1. **Auditoría del Componente Frontend (`form-builder.component.html`)**:
