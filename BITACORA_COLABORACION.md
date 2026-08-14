@@ -4444,3 +4444,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - `validate_repository_structure.ps1` permanece pendiente por un hallazgo heredado no modificado: `frontend/rl-app/src/app/core/services/global-http-state.service.ts`.
 - Restricciones: no se ejecutaron Oracle ni scripts SQL; no hubo DDL/DML; `main` y PR #20 no fueron modificados.
 - Pendiente externo: nuevo analisis remoto SonarCloud para confirmar el Quality Gate y la deuda historica de duplicacion.
+
+## Registro de intervencion - Codex - Correccion de ejecuciones manuales SonarCloud
+
+- **Fecha y hora**: 2026-08-14, hora local (UTC-6).
+- **Rama**: `desarrollo`; **commit inicial**: `86b5fd8`.
+- **Objetivo**: impedir que una ejecucion manual de SonarCloud clasifique un commit de `desarrollo` como analisis de la rama principal y asegurar que actualice el PR indicado.
+- **Diagnostico**: la ejecucion `workflow_dispatch` no contiene contexto de pull request. El escaner remoto registro el commit `86b5fd8` como analisis de la rama principal, por lo que su Quality Gate no representaba el PR #20.
+- **Archivo modificado**: `.github/workflows/sonar-analysis.yml`.
+- **Cambio**: la ejecucion manual exige el input `pull_request_number`; al recibirlo, envia de forma explicita `sonar.pullrequest.key`, `sonar.pullrequest.branch` y `sonar.pullrequest.base=main`. Los disparadores automaticos `push` y `pull_request` conservan su comportamiento.
+- **Restricciones**: no se modificaron Oracle, scripts SQL, DDL/DML, `main`, reglas del Quality Gate ni exclusiones de SonarCloud.
+- **Verificacion pendiente externa**: ejecutar manualmente `Sonar Analysis` con `pull_request_number=20` y comprobar que el analisis del PR #20, no la rama principal, recibe el resultado actualizado.

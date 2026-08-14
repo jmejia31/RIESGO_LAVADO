@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      pull_request_number:
+        description: 'Numero del pull request que se analizara manualmente'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -80,17 +85,36 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          DISPATCH_PULL_REQUEST_NUMBER: ${{ inputs.pull_request_number }}
         run: |
-          dotnet sonarscanner begin \
-            /k:"$SONAR_PROJECT_KEY" \
-            /o:"$SONAR_ORGANIZATION" \
-            /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="$SONAR_TOKEN" \
-            /d:sonar.qualitygate.wait=true \
-            /d:sonar.scanner.scanAll=true \
-            /d:sonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/bin/**,**/obj/**,database/**,docs/**,**/Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql" \
-            /d:sonar.javascript.lcov.reportPaths="frontend/rl-app/coverage/rl-app/lcov.info" \
+          scanner_args=(
+            /k:"$SONAR_PROJECT_KEY"
+            /o:"$SONAR_ORGANIZATION"
+            /d:sonar.host.url="https://sonarcloud.io"
+            /d:sonar.token="$SONAR_TOKEN"
+            /d:sonar.qualitygate.wait=true
+            /d:sonar.scanner.scanAll=true
+            /d:sonar.exclusions="**/node_modules/**,**/dist/**,**/coverage/**,**/bin/**,**/obj/**,database/**,docs/**,**/Analisis Matrices de riesgos v2/RIESGO_LAVADO.sql"
+            /d:sonar.javascript.lcov.reportPaths="frontend/rl-app/coverage/rl-app/lcov.info"
             /d:sonar.cs.opencover.reportsPaths=".sonar/coverage/**/coverage.opencover.xml"
+          )
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ ! "$DISPATCH_PULL_REQUEST_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::Ingrese un numero de pull request valido al ejecutar manualmente este workflow."
+              exit 1
+            fi
+
+            scanner_args+=(
+              "/d:sonar.pullrequest.key=$DISPATCH_PULL_REQUEST_NUMBER"
+              "/d:sonar.pullrequest.branch=$GITHUB_REF_NAME"
+              "/d:sonar.pullrequest.base=main"
+            )
+          fi
+
+          dotnet sonarscanner begin "${scanner_args[@]}"
 
       - name: Build analyzed solution
         if: steps.sonar-config.outputs.enabled == 'true'
