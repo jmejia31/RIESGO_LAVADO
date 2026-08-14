@@ -374,3 +374,10 @@ La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción ins
 - Ultima evidencia local: Angular build correcto (advertencia conocida `exceljs` CommonJS); frontend 28/189; E2E 14/14; backend Release 319/319; quality gates locales, validadores BD y enlaces documentales correctos.
 - Cobertura local del foco intervenido: servicio Matrices 92/102 lineas; componente Matrices 295/454 lineas. La cobertura global frontend local es 43.29% y no sustituye el calculo de codigo nuevo en SonarCloud.
 - **Punto de continuidad**: publicar esta intervencion, ejecutar SonarCloud sobre PR #20 y continuar la cobertura real de los modulos nuevos que aun impiden el minimo remoto de 80%. Fase 9 y Fase 10 siguen abiertas; UAT final sigue siendo responsabilidad de Javier Mejia.
+
+## Estado de continuidad - cobertura Form Builder (2026-08-14)
+
+- Se agrego un segundo bloque de cobertura real, limitado a pruebas del Constructor Visual y su validador semantico; no hubo cambios de produccion, Oracle, SQL, DDL, DML, reglas de SonarCloud ni exclusiones.
+- La suite ahora registra frontend 28/195, E2E 14/14 y backend Release 319/319 correctas. Build Angular, validadores de BD/documentacion y `run_quality_gates.ps1` estan correctos; persiste la advertencia no bloqueante de `exceljs` CommonJS.
+- Cobertura local: Form Builder 102/103 lineas y 23/23 funciones; validador 30/30 lineas y 3/3 funciones; frontend global 44.55% de lineas.
+- **Punto de continuidad**: ejecutar SonarCloud del PR #20 despues de publicar este bloque y seguir ampliando pruebas reales en los demas modulos nuevos hasta superar el 80% remoto. Fase 9 y Fase 10 permanecen abiertas; el cierre UAT requiere aprobacion expresa de Javier Mejia.

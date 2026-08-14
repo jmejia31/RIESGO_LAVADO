@@ -4467,3 +4467,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Cobertura local**: frontend global 43.29% de lineas; `matrices-riesgos.service.ts` 92/102 lineas y `matrices-riesgos.component.ts` 295/454 lineas. No se presenta como equivalente a la cobertura de codigo nuevo remota.
 - **Pendiente externo**: el Quality Gate remoto exige 80% de cobertura de codigo nuevo. Este bloque mejora cobertura real de Matrices, pero no permite declarar cerrada la Fase 9 hasta una nueva ejecucion SonarCloud y una campana adicional de cobertura sobre el resto del codigo nuevo.
 - **Riesgo heredado**: `validate_repository_structure.ps1` continua reportando `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta heredada; no fueron modificados en esta intervencion.
+
+## Registro de intervencion - Codex - cobertura Form Builder y validador
+
+- **Fecha y hora**: 2026-08-14 10:12 (UTC-6).
+- **Rama y commit inicial**: `desarrollo`, `73e96a4`.
+- **Objetivo**: ampliar cobertura real del Constructor Visual y su validacion semantica para avanzar el Quality Gate del PR #20, sin cambiar codigo de produccion, umbrales, exclusiones, Oracle, SQL, DDL o DML.
+- **Archivo modificado**: `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.spec.ts`.
+- **Cobertura funcional agregada**: gestion de secciones y seleccion activa, proteccion de la ultima seccion, controles de catalogo y formula, orden y columnas, aplicacion de JSON tecnico valido, emision de guardado, bloqueo de solo lectura y validacion semantica de secciones, catalogos y formulas.
+- **Evidencia ejecutada en esta intervencion**: build Angular correcto con la advertencia conocida `exceljs` CommonJS; frontend 28 archivos/195 pruebas correctas; E2E Playwright 14/14 correctas; backend Release 319/319 correctas; validadores de base de datos y enlaces documentales correctos; `tools/run_quality_gates.ps1` correcto; `git diff --check` correcto.
+- **Cobertura local**: Form Builder 102/103 lineas y 23/23 funciones; validador del Form Builder 30/30 lineas y 3/3 funciones; frontend global 44.55% de lineas. Estas metricas no sustituyen el calculo remoto de codigo nuevo.
+- **Pendiente externo**: publicar este bloque y ejecutar SonarCloud contra el PR #20. La Fase 9 sigue abierta hasta que el Quality Gate remoto alcance el minimo institucional de 80% de cobertura de codigo nuevo. UAT final sigue bajo aprobacion de Javier Mejia.
