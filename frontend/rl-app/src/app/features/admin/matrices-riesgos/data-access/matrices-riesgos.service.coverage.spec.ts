@@ -162,4 +162,94 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     request.flush({ success: true, datos: { maximoMb: 10 } });
     expect(observer).toHaveBeenCalledWith({ maximoMb: 10 });
   });
+  it('administra familias, riesgos y borradores con los contratos HTTP confirmados', () => {
+    service.obtenerFamiliaFormularioPorId(3).subscribe();
+    let request = http.expectOne(`${apiUrl}/familias/3`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: { famId: 3 } });
+
+    service.crearFamiliaFormulario({ famCodigo: 'FORM_B', famNombre: 'Formulario B', famDescripcion: '' }).subscribe();
+    request = http.expectOne(`${apiUrl}/familias`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: 3 });
+
+    service.actualizarFamiliaFormulario(3, { famNombre: 'Formulario actualizado', famDescripcion: 'Detalle', famActivo: true }).subscribe();
+    request = http.expectOne(`${apiUrl}/familias/3`);
+    expect(request.request.method).toBe('PUT');
+    request.flush({ success: true });
+
+    service.desactivarFamiliaFormulario(3).subscribe();
+    request = http.expectOne(`${apiUrl}/familias/3/desactivar`);
+    expect(request.request.method).toBe('PUT');
+    request.flush({ success: true });
+
+    service.listarRiesgos(true).subscribe();
+    request = http.expectOne(req => req.url === `${apiUrl}/riesgos`);
+    expect(request.request.params.get('incluirInactivos')).toBe('true');
+    request.flush({ success: true, datos: [] });
+
+    service.obtenerRiesgo(9).subscribe();
+    request = http.expectOne(`${apiUrl}/riesgos/9`);
+    request.flush({ success: true, datos: { rieId: 9 } });
+
+    service.crearBorradorFormulario(3, 'FORM_B', '{"codigoFormulario":"FORM_B","secciones":[]}').subscribe();
+    request = http.expectOne(req => req.url === `${apiUrl}/formularios/borrador`);
+    expect(request.request.params.get('familiaId')).toBe('3');
+    expect(request.request.params.get('codigoFormulario')).toBe('FORM_B');
+    expect(request.request.body).toEqual({ codigoFormulario: 'FORM_B', secciones: [] });
+    request.flush({ success: true, datos: 21 });
+
+    service.eliminarVersionFormulario(21).subscribe();
+    request = http.expectOne(`${apiUrl}/formularios/21`);
+    expect(request.request.method).toBe('DELETE');
+    request.flush({ success: true });
+  });
+
+  it('ejecuta los contratos de mitigacion y monitoreo operativo', () => {
+    service.listarControles(4).subscribe();
+    let request = http.expectOne(`${apiUrl}/mitigacion/evaluaciones/4/controles`);
+    request.flush({ success: true, datos: [] });
+
+    service.listarEvaluacionesControl(1).subscribe();
+    request = http.expectOne(`${apiUrl}/mitigacion/controles/1/evaluaciones`);
+    request.flush({ success: true, datos: [] });
+
+    service.listarPlanes(4).subscribe();
+    request = http.expectOne(`${apiUrl}/mitigacion/evaluaciones/4/planes`);
+    request.flush({ success: true, datos: [] });
+
+    service.listarActividades(2).subscribe();
+    request = http.expectOne(`${apiUrl}/mitigacion/planes/2/actividades`);
+    request.flush({ success: true, datos: [] });
+
+    service.listarAlertas(4).subscribe();
+    request = http.expectOne(`${apiUrl}/monitoreo/evaluaciones/4/alertas`);
+    request.flush({ success: true, datos: [] });
+
+    service.cambiarEstadoAlerta(4, 'INACTIVO').subscribe();
+    request = http.expectOne(`${apiUrl}/monitoreo/alertas/4/estado`);
+    expect(request.request.body).toEqual({ aleEstado: 'INACTIVO' });
+    request.flush({ success: true });
+
+    service.listarAutomonitoreo(4).subscribe();
+    request = http.expectOne(`${apiUrl}/monitoreo/evaluaciones/4/automonitoreo`);
+    request.flush({ success: true, datos: [] });
+
+    service.obtenerResumenOperativo().subscribe();
+    request = http.expectOne(`${apiUrl}/monitoreo/resumen`);
+    request.flush({ success: true, datos: { totalAlertas: 0 } });
+  });
+
+  it('descarga ambos formatos del consolidado', () => {
+    service.descargarConsolidadoExcel().subscribe();
+    let request = http.expectOne(`${apiUrl}/reportes/consolidado.xlsx`);
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['excel']));
+
+    service.descargarConsolidadoPdf().subscribe();
+    request = http.expectOne(`${apiUrl}/reportes/consolidado.pdf`);
+    expect(request.request.responseType).toBe('blob');
+    request.flush(new Blob(['pdf']));
+  });
 });

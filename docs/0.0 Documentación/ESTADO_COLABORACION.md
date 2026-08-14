@@ -366,3 +366,11 @@ La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción ins
 - El fallo remoto observado sobre `86b5fd8` se produjo en una ejecucion manual `workflow_dispatch`: SonarCloud la interpreto como analisis de rama y asocio ese commit a la rama principal. No es evidencia valida del estado actual del PR #20.
 - `.github/workflows/sonar-analysis.yml` ahora exige el numero del pull request para toda ejecucion manual y proporciona los parametros de PR a SonarCloud. Para el PR activo debe ingresarse `20`.
 - **Punto de continuidad**: esperar el push de este ajuste, abrir **Actions > Sonar Analysis > Run workflow**, seleccionar `desarrollo`, escribir `20` en `pull_request_number` y ejecutar. Revisar luego el resultado del PR #20 en SonarCloud. No cerrar la Fase 9 ni la Fase 10 hasta contar con esa evidencia remota.
+
+## Estado de continuidad - cobertura real Matrices (2026-08-14)
+
+- Se inicio una campana de cobertura real para el Quality Gate del PR #20 sin exclusiones, `NOSONAR`, reduccion de umbrales ni cambios a Oracle.
+- El bloque publicado agrega pruebas frontend de contratos y flujos de Matrices: familias, formularios, evaluaciones, mitigacion, monitoreo, exportaciones y evidencia.
+- Ultima evidencia local: Angular build correcto (advertencia conocida `exceljs` CommonJS); frontend 28/189; E2E 14/14; backend Release 319/319; quality gates locales, validadores BD y enlaces documentales correctos.
+- Cobertura local del foco intervenido: servicio Matrices 92/102 lineas; componente Matrices 295/454 lineas. La cobertura global frontend local es 43.29% y no sustituye el calculo de codigo nuevo en SonarCloud.
+- **Punto de continuidad**: publicar esta intervencion, ejecutar SonarCloud sobre PR #20 y continuar la cobertura real de los modulos nuevos que aun impiden el minimo remoto de 80%. Fase 9 y Fase 10 siguen abiertas; UAT final sigue siendo responsabilidad de Javier Mejia.

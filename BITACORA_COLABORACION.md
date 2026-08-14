@@ -4455,3 +4455,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Cambio**: la ejecucion manual exige el input `pull_request_number`; al recibirlo, envia de forma explicita `sonar.pullrequest.key`, `sonar.pullrequest.branch` y `sonar.pullrequest.base=main`. Los disparadores automaticos `push` y `pull_request` conservan su comportamiento.
 - **Restricciones**: no se modificaron Oracle, scripts SQL, DDL/DML, `main`, reglas del Quality Gate ni exclusiones de SonarCloud.
 - **Verificacion pendiente externa**: ejecutar manualmente `Sonar Analysis` con `pull_request_number=20` y comprobar que el analisis del PR #20, no la rama principal, recibe el resultado actualizado.
+
+## Registro de intervencion - Codex - primer bloque real de cobertura Matrices
+
+- **Fecha y hora**: 2026-08-14 09:59 (UTC-6).
+- **Rama y commit inicial**: `desarrollo`, `9e2b530`.
+- **Objetivo**: iniciar remediacion real de cobertura para el Quality Gate del PR #20, sin reducir umbrales, excluir codigo ni modificar produccion, Oracle, SQL, DDL o DML.
+- **Archivos modificados**: `frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.coverage.spec.ts` y `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts`.
+- **Cambio funcional de pruebas**: se incorporaron contratos HTTP de familias, riesgos, formularios, mitigacion, monitoreo y exportaciones; se agregaron flujos de componente para CRUD de familias, navegacion por teclado, edicion/transicion de evaluacion, validacion de borrador JSON y evidencia.
+- **Evidencia ejecutada**: build Angular correcto con la advertencia preexistente `exceljs` CommonJS; frontend 28 archivos y 189 pruebas correctas; E2E Playwright 14/14 correctas; backend Release 319/319 correctas; `tools/run_quality_gates.ps1` correcto; validadores de BD y enlaces documentales correctos; `git diff --check` correcto.
+- **Cobertura local**: frontend global 43.29% de lineas; `matrices-riesgos.service.ts` 92/102 lineas y `matrices-riesgos.component.ts` 295/454 lineas. No se presenta como equivalente a la cobertura de codigo nuevo remota.
+- **Pendiente externo**: el Quality Gate remoto exige 80% de cobertura de codigo nuevo. Este bloque mejora cobertura real de Matrices, pero no permite declarar cerrada la Fase 9 hasta una nueva ejecucion SonarCloud y una campana adicional de cobertura sobre el resto del codigo nuevo.
+- **Riesgo heredado**: `validate_repository_structure.ps1` continua reportando `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta heredada; no fueron modificados en esta intervencion.

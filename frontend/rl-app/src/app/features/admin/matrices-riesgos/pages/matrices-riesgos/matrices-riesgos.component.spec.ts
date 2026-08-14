@@ -14,9 +14,20 @@ describe('MatricesRiesgosComponent', () => {
     obtenerConsolidado: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
     listarFamiliasFormulario: ReturnType<typeof vi.fn>;
+    obtenerFamiliaFormularioPorId: ReturnType<typeof vi.fn>;
+    crearFamiliaFormulario: ReturnType<typeof vi.fn>;
+    actualizarFamiliaFormulario: ReturnType<typeof vi.fn>;
+    desactivarFamiliaFormulario: ReturnType<typeof vi.fn>;
     crearEvaluacion: ReturnType<typeof vi.fn>;
     actualizarEvaluacion: ReturnType<typeof vi.fn>;
+    transicionarEvaluacion: ReturnType<typeof vi.fn>;
     obtenerFlujos: ReturnType<typeof vi.fn>;
+    crearBorradorFormulario: ReturnType<typeof vi.fn>;
+    actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
+    clonarVersionFormulario: ReturnType<typeof vi.fn>;
+    cargarEvidencia: ReturnType<typeof vi.fn>;
+    vincularEvidencia: ReturnType<typeof vi.fn>;
+    eliminarEvidenciaHuerfana: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -24,6 +35,10 @@ describe('MatricesRiesgosComponent', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
+      obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
+      crearFamiliaFormulario: vi.fn().mockReturnValue(of(2)),
+      actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
+      desactivarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of({
         verId: 10,
         verFamiliaId: 1,
@@ -72,7 +87,14 @@ describe('MatricesRiesgosComponent', () => {
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of(20)),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
-      obtenerFlujos: vi.fn().mockReturnValue(of([]))
+      transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
+      obtenerFlujos: vi.fn().mockReturnValue(of([])),
+      crearBorradorFormulario: vi.fn().mockReturnValue(of(21)),
+      actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
+      clonarVersionFormulario: vi.fn().mockReturnValue(of(22)),
+      cargarEvidencia: vi.fn().mockReturnValue(of({ eviId: 32 })),
+      vincularEvidencia: vi.fn().mockReturnValue(of({ success: true })),
+      eliminarEvidenciaHuerfana: vi.fn().mockReturnValue(of({ success: true }))
     };
 
     await TestBed.configureTestingModule({
@@ -128,5 +150,106 @@ describe('MatricesRiesgosComponent', () => {
     expect('nuevaMatriz' in instancia).toBe(false);
     expect('criteriosForm' in instancia).toBe(false);
     expect('nivelResidualLocal' in instancia).toBe(false);
+  });
+
+  it('permite crear, editar y desactivar familias desde la interfaz', () => {
+    component.abrirModalCrearFamilia();
+    component.nuevaFamiliaCodigo = 'FORM_B';
+    component.nuevaFamiliaNombre = 'Formulario B';
+    component.nuevaFamiliaDescripcion = 'Definicion institucional';
+    component.guardarFamilia();
+
+    expect(service.crearFamiliaFormulario).toHaveBeenCalledWith({
+      famCodigo: 'FORM_B',
+      famNombre: 'Formulario B',
+      famDescripcion: 'Definicion institucional'
+    });
+    expect(component.modalFamiliaAbierto()).toBe(false);
+
+    const familia = component.familias()[0];
+    component.abrirModalEditarFamilia(familia);
+    component.nuevaFamiliaNombre = 'Formulario LAFT actualizado';
+    component.guardarFamilia();
+    expect(service.actualizarFamiliaFormulario).toHaveBeenCalledWith(1, expect.objectContaining({
+      famNombre: 'Formulario LAFT actualizado'
+    }));
+
+    component.desactivarFamilia(familia);
+    expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1);
+  });
+
+  it('navega por pestanas con teclado y carga el consolidado al activarlo', () => {
+    const evento = new KeyboardEvent('keydown', { key: 'End' });
+    const preventDefault = vi.spyOn(evento, 'preventDefault');
+    component.onKeydownTab(evento, 'evaluaciones');
+
+    expect(preventDefault).toHaveBeenCalled();
+    expect(component.tab()).toBe('plantillas');
+
+    component.seleccionarTab('consolidado');
+    expect(component.tab()).toBe('consolidado');
+    expect(service.obtenerConsolidado).toHaveBeenCalled();
+  });
+
+  it('edita una evaluacion existente, transiciona su estado y recarga sus flujos', () => {
+    const evaluacion = {
+      evaId: 20,
+      evaRiesgoId: 5,
+      evaVersionId: 10,
+      evaEstado: 'BORRADOR',
+      evaDataJson: '{"area_principal":"Cumplimiento"}',
+      evaFechaEval: '2026-08-14T00:00:00',
+      evaUsrEval: 1,
+      evaVersionRow: 1,
+      evaActivo: true
+    };
+
+    component.editarEvaluacion(evaluacion);
+    expect(component.tab()).toBe('captura');
+    expect(component.riesgoId()).toBe(5);
+    expect(component.valorRespuesta(component.secciones()[0].campos[0])).toBe('Cumplimiento');
+    expect(service.obtenerFlujos).toHaveBeenCalledWith(20);
+
+    component.nuevoEstado = 'EN_REVISION';
+    component.motivoTransicion = 'Revision completa';
+    component.transicionarEvaluacion(evaluacion);
+    expect(service.transicionarEvaluacion).toHaveBeenCalledWith(20, 'EN_REVISION', 'Revision completa');
+    expect(component.motivoTransicion).toBe('');
+  });
+
+  it('guarda un borrador de formulario valido y bloquea JSON invalido', () => {
+    const version = { ...component.versionVigente()!, verVigente: false, verEstado: 'DRAFT' as const };
+    component.abrirDefinicion(version);
+    component.definicionTecnica = '{invalido';
+    component.guardarDefinicion();
+    expect(service.actualizarBorradorFormulario).not.toHaveBeenCalled();
+    expect(component.error()).toContain('JSON');
+
+    component.definicionTecnica = '{"codigoFormulario":"FORM_A","secciones":[]}';
+    component.guardarDefinicion();
+    expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(10, component.definicionTecnica);
+    expect(component.versionEditando()).toBeNull();
+  });
+
+  it('crea el borrador base de una familia seleccionada y vincula evidencia', () => {
+    component.abrirModalCrearFormulario();
+    component.nuevoFormularioCodigo = 'FORM_NUEVO';
+    component.nuevoFormularioNombre = 'Formulario nuevo';
+    component.guardarNuevoFormulario();
+    expect(service.crearBorradorFormulario).toHaveBeenCalledWith(
+      1,
+      'FORM_NUEVO',
+      expect.stringContaining('FORM_NUEVO')
+    );
+
+    const archivo = new File(['evidencia'], 'evidencia.pdf', { type: 'application/pdf' });
+    component.seleccionarArchivo({ target: { files: { item: () => archivo } } } as unknown as Event);
+    component.cargarYVincularEvidencia({ evaId: 20 } as never);
+    expect(service.cargarEvidencia).toHaveBeenCalledWith(archivo);
+    expect(service.vincularEvidencia).toHaveBeenCalledWith({
+      entidadId: 20,
+      evidenciaId: 32,
+      tipoEntidad: 'evaluacion'
+    });
   });
 });
