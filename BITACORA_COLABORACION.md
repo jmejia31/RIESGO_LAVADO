@@ -1,5 +1,47 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Ampliación de Cobertura Real Backend (.NET) de Controladores y Contratos de Matrices de Riesgos
+
+- **Fecha y hora**: 2026-08-14, 12:48 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `4159a255d9cad32e69560fe25f710f76b235c636`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivo**: Aumentar la cobertura real del backend .NET del módulo Matrices de Riesgos para contribuir al Quality Gate remoto del PR #20, cubriendo de forma exhaustiva controladores (`MatricesRiesgosGestionController`, `MatricesRiesgosMitigacionController`, `MatricesRiesgosMonitoreoController`, `MatricesRiesgosReportesController`, `MatricesRiesgosController`), resolución de IP cliente (`X-Forwarded-For`, `X-Real-IP`, remote IP), manejo de errores y excepciones (400, 404, 500), descargas de archivos binarios (Excel y PDF), DTOs y contratos.
+
+### Archivos Modificados / Creados
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllersContractTests.cs` (Nuevo)
+- `BITACORA_COLABORACION.md`
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+
+### Cambios y Verificaciones Ejecutadas
+1. **Ampliación de Pruebas Unitarias Backend Reales**:
+   - **Nueva Suite (`MatricesRiesgosControllersContractTests.cs`)**: Creada con **29 pruebas unitarias** que cubren:
+     - `MatricesRiesgosGestionController`: `Listar`, `Obtener` (404), `Crear` con resolución de IP (`X-Forwarded-For` parseado por coma, `X-Real-IP`), `Actualizar` (éxito y 400).
+     - `MatricesRiesgosMitigacionController`: CRUD de controles, evaluaciones de control (efectividad y comentario), planes de mitigación y actividades de plan, junto con propagación de errores (400 y 404).
+     - `MatricesRiesgosMonitoreoController`: CRUD y transiciones de estado de alertas, registro y consulta de automonitoreo operativo, y resumen KPI institucional.
+     - `MatricesRiesgosReportesController`: Descarga de consolidado Excel (`.xlsx` OpenXML MIME type y payload binario) y consolidado PDF (`application/pdf`), así como propagación de status codes de error.
+     - `MatricesRiesgosController`: Ramas y capturas de excepciones que generan HTTP 500 seguro (`Error500`), ciclo de vida de formularios, familias, evaluaciones y transiciones de estados, y carga/eliminación de evidencias con `IFormFile`.
+     - `DTOs & Contracts`: Cobertura íntegra de propiedades de los DTOs de matrices, mitigación, monitoreo, evidencias y configuración.
+2. **Resultados de Ejecución y Métricas Reales**:
+   - **Restauración Backend (`dotnet restore`)**: Exitoso (0 errores).
+   - **Compilación Backend .NET (`dotnet build Release`)**: Exitoso (0 errores).
+   - **Pruebas Backend .NET (`dotnet test Release`)**: **377 de 377 pruebas 100% pasadas** (+29 pruebas nuevas respecto a las 348 iniciales).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **252 de 252 pruebas 100% pasadas** (29 archivos de prueba).
+   - **Compilación Frontend (`npm run build`)**: Exitoso (0 errores).
+   - **Pruebas E2E Playwright (`npm run e2e`)**: **14 de 14 pruebas E2E 100% pasadas** (20.0s).
+   - **Validador de Scripts BD (`validate_database_scripts.ps1`)**: Exitoso (Exit code 0).
+   - **Quality Gates Institucionales (`run_quality_gates.ps1`)**: Exitoso (Exit code 0).
+     - Cobertura Backend Local: **Líneas = 26.56% (1,895 / 7,136 líneas), Ramas = 27.11% (805 / 2,969 ramas)**.
+     - Cobertura Frontend Local: **Sentencias = 48.15%, Líneas = 48.20%, Funciones = 46.33%, Ramas = 42.88%**.
+   - **Formato Git (`git diff --check`)**: 100% limpio (0 advertencias/errores).
+3. **Respeto a Reglas Inviolables**:
+   - 0 modificaciones a base de datos Oracle, tablas, columnas o scripts SQL.
+   - 0 modificaciones a código frontend Angular.
+   - 0 modificaciones a workflows CI/CD o configuración SonarCloud.
+   - PR #20 preservado en estado Draft; rama `main` intacta.
+   - Archivo reservado `MatricesRiesgosBackendCoverageExpansionTests.cs` preservado intacto.
+
 ## Registro de Intervención — Antigravity — Ampliación de Cobertura Real en Componente Principal MatricesRiesgosComponent
 
 - **Fecha y hora**: 2026-08-14, 11:47 (UTC-6).
