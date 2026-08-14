@@ -172,3 +172,20 @@ body.modal-abierto app-main-layout > div > div > header {
 [role="dialog"][aria-modal="true"] {
   pointer-events: auto !important;
 }
+
+/*
+ * Separación visual exclusiva del modal del Form Builder.
+ * El overlay sigue cubriendo el viewport completo; solo se reduce ligeramente la tarjeta interna
+ * para que respire respecto a los bordes superior e inferior y se perciba inequívocamente flotante.
+ */
+dialog.modal-backdrop-overlay:has(app-form-builder) > .modal-container-card {
+  height: calc(100dvh - 2.5rem);
+  max-height: calc(100dvh - 2.5rem);
+}
+
+@media (min-width: 640px) {
+  dialog.modal-backdrop-overlay:has(app-form-builder) > .modal-container-card {
+    height: calc(100dvh - 4rem);
+    max-height: calc(100dvh - 4rem);
+  }
+}
