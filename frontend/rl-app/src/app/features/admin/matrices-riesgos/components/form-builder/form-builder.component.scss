@@ -1,15 +1,194 @@
+:host {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+:host > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/*
+ * El encabezado debe poder contraerse y envolver sus acciones sin forzar
+ * un ancho mayor al disponible dentro del modal.
+ */
+header.modal-header-institutional {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+header.modal-header-institutional > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+header.modal-header-institutional > div:first-child {
+  flex: 1 1 22rem;
+}
+
+header.modal-header-institutional > div:last-child {
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+#titulo-modal-builder {
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  overflow-wrap: anywhere;
+}
+
+#titulo-modal-builder > span {
+  max-width: 100%;
+  white-space: normal;
+}
+
+/*
+ * Los laterales dejan de imponer 256/320 px rígidos. Mantienen una medida
+ * cómoda en escritorio, pero ceden espacio al lienzo central cuando el
+ * viewport o el zoom reducen el ancho efectivo.
+ */
+aside[aria-label='Paleta de controles'] {
+  width: clamp(10.5rem, 18vw, 16rem) !important;
+  min-width: 10.5rem;
+  max-width: 16rem;
+  overflow-x: hidden;
+}
+
+aside[aria-label='Inspector de propiedades del campo'] {
+  width: clamp(15rem, 25vw, 20rem) !important;
+  min-width: 15rem;
+  max-width: 20rem;
+  overflow-x: hidden;
+}
+
+aside[aria-label='Paleta de controles'] *,
+aside[aria-label='Inspector de propiedades del campo'] * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * flex items tienen min-width:auto por defecto. En un editor de tres paneles
+ * eso permite que el contenido técnico ensanche el canvas. Forzamos el lienzo
+ * a encogerse dentro del espacio real y evitamos cualquier overflow horizontal.
+ */
+main {
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden !important;
+  container-type: inline-size;
+}
+
+main > *,
+main .grid,
+main .grid > *,
+main .flex {
+  min-width: 0;
+  max-width: 100%;
+}
+
+main input,
+main select,
+main textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+main label,
+main .font-mono {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Clave técnica + tipo: puede partir línea sin empujar los botones de orden. */
+main span.font-mono {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 8rem;
+  white-space: normal;
+}
+
+main span.font-mono + div {
+  flex: 0 0 auto;
+}
+
+/* Fórmulas largas nunca deben ensanchar la tarjeta del campo. */
+main div.font-mono {
+  white-space: normal;
+}
+
+/*
+ * La cantidad de columnas sigue intacta en el modelo. Solo la PREVISUALIZACIÓN
+ * del editor se adapta cuando el canvas es estrecho, evitando tarjetas de pocos
+ * píxeles y texto recortado. Al recuperar ancho vuelve la grilla configurada.
+ */
+@container (max-width: 44rem) {
+  main .grid.gap-4 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/*
+ * En viewports pequeños no existe espacio útil para tres columnas laterales.
+ * Se apilan los paneles dentro del mismo modal, conservando toda la funcionalidad
+ * y eliminando por completo el scroll horizontal.
+ */
+@media (max-width: 720px) {
+  :host > div > .flex-1.flex {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  aside[aria-label='Paleta de controles'],
+  aside[aria-label='Inspector de propiedades del campo'] {
+    width: 100% !important;
+    min-width: 0;
+    max-width: none;
+    flex-shrink: 0;
+  }
+
+  aside[aria-label='Paleta de controles'] {
+    max-height: 12rem;
+    border-right: 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  aside[aria-label='Inspector de propiedades del campo'] {
+    max-height: 18rem;
+    border-left: 0;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  main {
+    width: 100%;
+    min-height: 28rem;
+    flex: 0 0 auto;
+  }
+}
+
 .custom-scrollbar {
   &::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
+
   &::-webkit-scrollbar-track {
     background: transparent;
   }
+
   &::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 9999px;
   }
+
   &::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
