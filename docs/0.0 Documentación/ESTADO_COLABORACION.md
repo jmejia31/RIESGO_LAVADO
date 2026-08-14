@@ -383,3 +383,11 @@ La fuente se conserva en UTF-8 con BOM y contiene tildes, eñes y redacción ins
 - La suite ahora registra frontend 28/195, E2E 14/14 y backend Release 319/319 correctas. Build Angular, validadores de BD/documentacion y `run_quality_gates.ps1` estan correctos; persiste la advertencia no bloqueante de `exceljs` CommonJS.
 - Cobertura local: Form Builder 102/103 lineas y 23/23 funciones; validador 30/30 lineas y 3/3 funciones; frontend global 44.55% de lineas.
 - **Punto de continuidad**: ejecutar SonarCloud del PR #20 despues de publicar este bloque y seguir ampliando pruebas reales en los demas modulos nuevos hasta superar el 80% remoto. Fase 9 y Fase 10 permanecen abiertas; el cierre UAT requiere aprobacion expresa de Javier Mejia.
+
+## Estado de continuidad - cobertura operativa de Matrices (2026-08-14)
+
+- Se agrego una suite dedicada para la pagina principal de Matrices: familias, versiones, filtros, consolidado, capturas, evidencia, errores HTTP, descarga, Escape y modos de solo lectura. No hubo cambios de produccion, Oracle, SQL, DDL, DML, reglas de SonarCloud, exclusiones ni `main`.
+- Evidencia reproducida sobre el HEAD integrado con el bloque backend `000d207`: frontend 29/230 correcto y cobertura global 47.13% de lineas; build Angular correcto con advertencia conocida `exceljs` CommonJS; E2E Playwright 14/14 correcto; backend Release 348/348 correcto; validadores de BD/documentacion y `git diff --check` correctos. La compilacion .NET termino sin errores, con advertencias de analizadores heredadas.
+- Limitaciones declaradas: `run_quality_gates.ps1` fue iniciado pero el host no devolvio su codigo final antes de cortar la captura; `validate_repository_structure.ps1` sigue fallando por `core/services/global-http-state.service.ts`, ruta heredada no intervenida.
+- Estado remoto comprobado mediante `gh pr checks 20`: el check de validadores/build/tests/cobertura/E2E/contenedores esta verde, pero los dos checks de SonarCloud siguen fallando. La cobertura de codigo nuevo remota aun no puede declararse >=80% sin un analisis nuevo y exitoso del PR #20.
+- **Punto de continuidad**: publicar el bloque, ejecutar SonarCloud sobre el PR #20 y usar su cobertura de codigo nuevo como unica evidencia de cierre de Fase 9. Fase 10 continua pendiente de UAT y aprobacion formal de Javier Mejia.
