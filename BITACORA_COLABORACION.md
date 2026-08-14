@@ -1,5 +1,37 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Ampliación P1/P2 de Cobertura Backend .NET (Lógica de Negocio, Parseo String, Validadores y Delegaciones)
+
+- **Fecha y hora**: 2026-08-14, 14:34 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `97e4996af205e86d0bd7a68d5819d0a103aa4791`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivo**: Aumentar la cobertura sobre New Code en el backend .NET para Matrices de Riesgos atacando directamente ramas y líneas sin hits identificadas en `coverage.cobertura.xml`: parseo string y propiedades faltantes en `LeerEntero`/`LeerDecimal` (`MatricesRiesgosAppService`), ramas de validación/concurrencia en `ActualizarEvaluacionAsync`, rama `default` en `EliminarEvidenciaAsync`, delegaciones pass-through sin caché en `CachedMatricesRiesgosAppService`, casos límite en `FormularioValidador` (respuestas nulas, malformadas, tipos incompatibles, expresiones regulares inválidas) e instanciación completa de contratos DTO.
+
+### Archivos Modificados / Creados
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosNewCodeCoverageTests.cs` (Nuevo)
+- `BITACORA_COLABORACION.md`
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+
+### Cambios y Verificaciones Ejecutadas
+1. **Ampliación de Pruebas Unitarias Backend Reales**:
+   - **Nueva Suite (`MatricesRiesgosNewCodeCoverageTests.cs`)**: Creada con **18 pruebas unitarias** que cubren:
+     - `MatricesRiesgosAppService`: Ramas `ValueKind.String` y propiedades faltantes en `LeerEntero`/`LeerDecimal` (líneas 657, 663-664), error de validación en `ActualizarEvaluacionAsync` (línea 368), cálculo fallido, concurrencia `DBConcurrencyException` (HTTP 409), operación inválida `InvalidOperationException` (HTTP 400), y rama `default` desconocida en el switch de `EliminarEvidenciaAsync` (línea 573).
+     - `CachedMatricesRiesgosAppService`: Invocación directa a los métodos pass-through del inner service (`ListarEvaluacionesPaginadasAsync`, `ObtenerEvaluacionAsync`, `TransicionarEstadoEvaluacionAsync`, `ObtenerFlujosEvaluacionAsync`, `ObtenerEvidenciaFisicaAsync`, `ObtenerConsolidadoTipadoAsync`).
+     - `FormularioValidador`: Fallbacks de respuestas nulas con y sin campos obligatorios (línea 24), excepciones `JsonException` en respuestas y configuraciones corruptas (líneas 135-138), payloads de entrada con raíz tipo arreglo (línea 187), expresiones regulares malformadas en plantilla (captura `ArgumentException`), y validación de tipos `catalogo-multiple` y `numero`.
+     - `DTOs & Contracts`: Serialización JSON completa de propiedades y contratos de planes de acción, dashboards, filtros, evaluaciones y metodología.
+2. **Resultados de Ejecución y Métricas Reales**:
+   - **Compilación Backend .NET (`dotnet build Release`)**: Exitoso (0 errores).
+   - **Pruebas Backend .NET (`dotnet test Release`)**: **395 de 395 pruebas 100% pasadas** (+18 pruebas nuevas respecto a las 377 iniciales).
+   - **Validador de Scripts BD (`validate_database_scripts.ps1`)**: Exitoso (Exit code 0).
+   - **Formato Git (`git diff --check`)**: 100% limpio (0 advertencias/errores).
+3. **Respeto a Reglas Inviolables**:
+   - 0 modificaciones a base de datos Oracle, tablas, columnas o scripts SQL.
+   - 0 modificaciones a código frontend Angular.
+   - 0 modificaciones a código de producción backend ni suites de pruebas existentes.
+   - PR #20 preservado en estado Draft; rama `main` intacta.
+
 ## Registro de Intervención — Antigravity — Ampliación de Cobertura Real Backend (.NET) de Controladores y Contratos de Matrices de Riesgos
 
 - **Fecha y hora**: 2026-08-14, 12:48 (UTC-6).
