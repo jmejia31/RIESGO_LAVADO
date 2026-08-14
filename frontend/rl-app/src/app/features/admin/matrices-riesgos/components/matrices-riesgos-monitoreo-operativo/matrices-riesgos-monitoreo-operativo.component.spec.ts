@@ -221,4 +221,26 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.error()).toBe('Error base de datos');
     expect(component.guardando()).toBe(false);
   });
+
+  it('renderiza tarjetas de resumen KPI y secciones de alerta/automonitoreo en el DOM', () => {
+    component.seleccionarEvaluacion(20);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Riesgos activos');
+    expect(element.textContent).toContain('ALE-01');
+    expect(element.textContent).toContain('Indicador UAT');
+    expect(element.textContent).toContain('Sin novedad');
+
+    const botonesAccionAlerta = element.querySelectorAll('article button');
+    expect(botonesAccionAlerta.length).toBeGreaterThanOrEqual(1);
+    (botonesAccionAlerta[0] as HTMLButtonElement).click();
+    expect(service['cambiarEstadoAlerta']).toHaveBeenCalled();
+  });
+
+  it('renderiza aviso cuando no hay evaluación seleccionada', () => {
+    component.seleccionarEvaluacion(0);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Seleccione una evaluación para consultar y registrar seguimiento operativo.');
+  });
 });

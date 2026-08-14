@@ -177,4 +177,25 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(component.error()).toBe('Error de red en servidor');
     expect(component.guardando()).toBe(false);
   });
+
+  it('renderiza la lista de riesgos en el DOM y permite accionar el botón de editar', () => {
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('R-007');
+    expect(element.textContent).toContain('Riesgo UAT');
+    expect(element.textContent).toContain('R-009');
+    expect(element.textContent).toContain('Inactivo');
+
+    const botonesEditar = element.querySelectorAll('table tbody button');
+    expect(botonesEditar.length).toBe(2);
+    (botonesEditar[0] as HTMLButtonElement).click();
+    expect(component.editandoId()).toBe(7);
+  });
+
+  it('renderiza mensaje cuando no existen riesgos registrados', () => {
+    component.riesgos.set([]);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Sin riesgos registrados.');
+  });
 });

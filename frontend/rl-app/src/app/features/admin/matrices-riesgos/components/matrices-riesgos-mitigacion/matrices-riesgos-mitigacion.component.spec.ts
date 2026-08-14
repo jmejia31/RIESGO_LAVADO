@@ -296,4 +296,24 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(component.error()).toBe('No se pudo guardar la actividad.');
     expect(component.guardando()).toBe(false);
   });
+
+  it('renderiza secciones de mitigación en el DOM al seleccionar una evaluación', () => {
+    component.seleccionarEvaluacion(20);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Control UAT');
+    expect(element.textContent).toContain('Plan UAT');
+
+    const botonesEditarControl = element.querySelectorAll('article button');
+    expect(botonesEditarControl.length).toBeGreaterThanOrEqual(1);
+    (botonesEditarControl[0] as HTMLButtonElement).click();
+    expect(component.controlSeleccionadoId).toBe(3);
+  });
+
+  it('renderiza advertencia cuando no hay evaluación seleccionada', () => {
+    component.seleccionarEvaluacion(0);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.textContent).toContain('Seleccione una evaluación para administrar controles y mitigación.');
+  });
 });
