@@ -1,12 +1,47 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Ampliación de Cobertura Real en Componente Principal MatricesRiesgosComponent
+
+- **Fecha y hora**: 2026-08-14, 11:47 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `60d3790`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivo**: Aumentar la cobertura real del frontend del módulo Matrices de Riesgos priorizando rutas y ramas pendientes en el componente principal `matrices-riesgos.component.ts`, cubriendo navegación por teclado WAI-ARIA (todas las combinaciones de flechas, Home y teclas no procesadas), manejo de tecla Escape secuencial en modales/editor, conteo case-insensitive de evaluaciones, evaluación exhaustiva de `puedeGuardar` y `tieneValor` ante estructuras complejas y tipos de datos, validación preventiva de transiciones sin estado destino, fallback seguro ante definiciones JSON corruptas, y ciclo de vida de versiones con SweetAlert2 (publicación, alternancia de vigencia y eliminación segura).
+
+### Archivos Modificados
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts`
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts`
+- `BITACORA_COLABORACION.md`
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+
+### Cambios y Verificaciones Ejecutadas
+1. **Ampliación de Pruebas Unitarias Reales**:
+   - **Suite Principal (`matrices-riesgos.component.spec.ts`)**: Ampliado de 10 a **17 pruebas unitarias** (+7 tests). Cubre navegación por teclado completa (`ArrowRight`, `ArrowLeft`, `ArrowDown`, `ArrowUp`, `Home`, `Enter`), manejo de tecla Escape con cierre ordenado (editor de definición -> modal familia -> modal formulario), conteo de evaluaciones por estado ignorando case, cálculo de completitud `totalCompletados` y condición `puedeGuardar` ante valores vacíos, nulos, numéricos y booleanos, rechazo de transición con estado destino vacío, extracción segura de definición cuando `verJson` contiene sintaxis inválida, y debounce reactivo de búsqueda textual con filtros de estado.
+   - **Suite de Flujos y Ciclo de Versiones (`matrices-riesgos.component.workflow.spec.ts`)**: Ampliado de 8 a **12 pruebas unitarias** (+4 tests). Cubre publicación de versión en borrador mediante confirmación SweetAlert2, activación y desactivación de vigencia de versión, eliminación permanente de versión inactiva con SweetAlert2, y bloqueo de eliminación cuando la versión es vigente.
+2. **Resultados de Ejecución y Métricas Reales**:
+   - **Compilación Frontend (`npm run build`)**: Exitoso (0 errores).
+   - **Pruebas Unitarias Frontend (`npm test`)**: **252 de 252 pruebas 100% pasadas** (29 archivos de prueba) vs 241 pruebas al inicio del bloque (+11 pruebas nuevas).
+   - **Pruebas E2E Playwright (`npm run e2e`)**: **14 de 14 pruebas E2E 100% pasadas** (25.5s).
+   - **Compilación Backend .NET (`dotnet build Release`)**: 0 Errores.
+   - **Pruebas Backend .NET (`dotnet test Release`)**: **348 de 348 pruebas 100% pasadas**.
+   - **Validador de Scripts BD (`validate_database_scripts.ps1`)**: Exitoso (Exit code 0).
+   - **Quality Gates Institucionales (`run_quality_gates.ps1`)**: Exitoso (Exit code 0).
+     - Cobertura Frontend: **Sentencias = 48.15%, Líneas = 48.20%, Funciones = 46.33%, Ramas = 42.88%**.
+     - Cobertura Backend: **Líneas = 23.74%, Ramas = 25.90%**.
+   - **Formato Git (`git diff --check`)**: 100% limpio (0 advertencias/errores).
+3. **Respeto a Reglas Inviolables**:
+   - 0 modificaciones a base de datos Oracle, tablas, columnas o scripts SQL.
+   - PR #20 preservado en estado Draft; rama `main` sin cambios.
+   - Bloque Form Builder (`form-builder.*`, modelos, validadores y evaluador) preservado intacto sin modificaciones.
+
 ## Registro de Intervención — Antigravity — Ampliación de Cobertura Real Frontend (Gestión, Mitigación, Monitoreo Operativo y Ciclo Integral de Matrices)
 
 - **Fecha y hora**: 2026-08-14, 11:13 (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `816c2b7`.
-- **Commit final**: Por generar en esta intervención.
+- **Commit final**: `60d3790`.
 - **Objetivo**: Aumentar la cobertura real del módulo Matrices de Riesgos creando pruebas unitarias exhaustivas para los componentes operativos y vistas del ciclo integral: `matrices-riesgos-gestion`, `matrices-riesgos-mitigacion`, `matrices-riesgos-monitoreo-operativo`, `matrices-reporte-tabla` y `matrices-riesgos-ciclo-integral`, cubriendo flujos de usuario, interacciones DOM, validaciones de entrada/longitud, renderizado condicional, manejo de errores HTTP y cambios de estado.
 
 ### Archivos Modificados

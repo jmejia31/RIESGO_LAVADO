@@ -252,4 +252,129 @@ describe('MatricesRiesgosComponent', () => {
       tipoEntidad: 'evaluacion'
     });
   });
+
+  it('cubre navegación por teclado en pestañas para todas las teclas (ArrowRight, ArrowLeft, ArrowDown, ArrowUp, Home, tecla no manejada)', () => {
+    component.seleccionarTab('evaluaciones');
+
+    const evRight = new KeyboardEvent('keydown', { key: 'ArrowRight' });
+    vi.spyOn(evRight, 'preventDefault');
+    component.onKeydownTab(evRight, 'evaluaciones');
+    expect(component.tab()).toBe('captura');
+
+    const evDown = new KeyboardEvent('keydown', { key: 'ArrowDown' });
+    vi.spyOn(evDown, 'preventDefault');
+    component.onKeydownTab(evDown, 'captura');
+    expect(component.tab()).toBe('consolidado');
+
+    const evLeft = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
+    vi.spyOn(evLeft, 'preventDefault');
+    component.onKeydownTab(evLeft, 'consolidado');
+    expect(component.tab()).toBe('captura');
+
+    const evUp = new KeyboardEvent('keydown', { key: 'ArrowUp' });
+    vi.spyOn(evUp, 'preventDefault');
+    component.onKeydownTab(evUp, 'captura');
+    expect(component.tab()).toBe('evaluaciones');
+
+    const evHome = new KeyboardEvent('keydown', { key: 'Home' });
+    vi.spyOn(evHome, 'preventDefault');
+    component.onKeydownTab(evHome, 'plantillas');
+    expect(component.tab()).toBe('evaluaciones');
+
+    const evOther = new KeyboardEvent('keydown', { key: 'Enter' });
+    const spyPrevent = vi.spyOn(evOther, 'preventDefault');
+    component.onKeydownTab(evOther, 'evaluaciones');
+    expect(spyPrevent).not.toHaveBeenCalled();
+
+    // Tab no encontrada en lista
+    component.onKeydownTab(evRight, 'invalida' as never);
+  });
+
+  it('maneja tecla Escape cerrando modales y editor de definición secuencialmente', () => {
+    const ev = new CustomEvent('keydown');
+    const spy = vi.spyOn(ev, 'preventDefault');
+
+    // 1. Editor de versión abierto
+    component.abrirDefinicion(component.versionVigente()!);
+    expect(component.versionEditando()).not.toBeNull();
+    component.manejarTeclaEscape(ev);
+    expect(spy).toHaveBeenCalled();
+    expect(component.versionEditando()).toBeNull();
+
+    // 2. Modal familia abierto
+    component.abrirModalCrearFamilia();
+    expect(component.modalFamiliaAbierto()).toBe(true);
+    component.manejarTeclaEscape(ev);
+    expect(component.modalFamiliaAbierto()).toBe(false);
+
+    // 3. Modal formulario abierto
+    component.abrirModalCrearFormulario();
+    expect(component.modalFormularioAbierto()).toBe(true);
+    component.manejarTeclaEscape(ev);
+    expect(component.modalFormularioAbierto()).toBe(false);
+  });
+
+  it('cuenta evaluaciones por estado sin distinción de mayúsculas/minúsculas', () => {
+    component.evaluaciones.set([
+      { evaId: 1, evaEstado: 'BORRADOR' } as never,
+      { evaId: 2, evaEstado: 'borrador' } as never,
+      { evaId: 3, evaEstado: 'EN_REVISION' } as never
+    ]);
+
+    expect(component.contarEvaluacionesPorEstado('BORRADOR')).toBe(2);
+    expect(component.contarEvaluacionesPorEstado('en_revision')).toBe(1);
+    expect(component.contarEvaluacionesPorEstado('APROBADA')).toBe(0);
+  });
+
+  it('valida total de campos completados y estado de puedeGuardar ante diversos tipos de valores', () => {
+    component.nuevaEvaluacion();
+    component.riesgoId.set(5);
+
+    // Valores nulos, indefinidos, cadenas vacías
+    component.respuestas.set({ area_principal: '' });
+    expect(component.totalCompletados()).toBe(0);
+    expect(component.puedeGuardar()).toBe(false);
+
+    component.respuestas.set({ area_principal: null });
+    expect(component.totalCompletados()).toBe(0);
+    expect(component.puedeGuardar()).toBe(false);
+
+    component.respuestas.set({ area_principal: {} as unknown as string });
+    expect(component.totalCompletados()).toBe(0);
+    expect(component.puedeGuardar()).toBe(false);
+
+    component.respuestas.set({ area_principal: 123 });
+    expect(component.totalCompletados()).toBe(1);
+    expect(component.puedeGuardar()).toBe(true);
+
+    component.respuestas.set({ area_principal: true });
+    expect(component.totalCompletados()).toBe(1);
+    expect(component.puedeGuardar()).toBe(true);
+  });
+
+  it('bloquea transición de estado cuando nuevoEstado está vacío', () => {
+    component.nuevoEstado = '   ';
+    component.transicionarEvaluacion({ evaId: 20 } as never);
+    expect(service.transicionarEvaluacion).not.toHaveBeenCalled();
+    expect(component.error()).toContain('Seleccione un estado');
+  });
+
+  it('extrae definición con fallback seguro cuando verJson está corrupto o es nulo', () => {
+    const versionCorrupta = { ...component.versionVigente()!, verJson: 'invalido{' };
+    component.abrirDefinicion(versionCorrupta);
+    expect(component.definicionTecnica).toBe('invalido{');
+  });
+
+  it('gestiona debounce de búsqueda y filtrado de estado', async () => {
+    vi.useFakeTimers();
+    component.alCambiarFiltroBuscar('LAFT');
+    expect(component.filtroBuscar()).toBe('LAFT');
+
+    vi.advanceTimersByTime(350);
+    expect(service.listarEvaluaciones).toHaveBeenCalled();
+
+    component.alCambiarFiltroEstado('APROBADA');
+    expect(component.filtroEstado()).toBe('APROBADA');
+    vi.useRealTimers();
+  });
 });

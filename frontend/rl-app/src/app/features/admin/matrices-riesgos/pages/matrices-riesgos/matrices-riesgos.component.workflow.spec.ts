@@ -4,6 +4,12 @@ import { EvaluacionRiesgoDto, VersionFormularioDto } from '../../models/matrices
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
+vi.mock('sweetalert2', () => ({
+  default: {
+    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+  }
+}));
+
 describe('MatricesRiesgosComponent flujos y evidencias', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
@@ -73,7 +79,9 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
       eliminarEvidenciaHuerfana: vi.fn().mockReturnValue(of({ success: true })),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
       clonarVersionFormulario: vi.fn().mockReturnValue(of(11)),
-      publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true }))
+      publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
+      cambiarVigenciaFormulario: vi.fn().mockReturnValue(of({ success: true })),
+      eliminarVersionFormulario: vi.fn().mockReturnValue(of({ success: true }))
     };
 
     await TestBed.configureTestingModule({
@@ -155,5 +163,46 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
 
     expect(service['actualizarBorradorFormulario']).not.toHaveBeenCalled();
     expect(component.error()).toContain('La definición JSON no es válida');
+  });
+
+  it('publica una versión no vigente mediante SweetAlert2 de confirmación', async () => {
+    const draftVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
+    component.publicarVersion(draftVersion);
+
+    // Esperar promesa dinámica de SweetAlert2
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(service['publicarVersionFormulario']).toHaveBeenCalledWith(10);
+    expect(component.mensaje()).toBe('Versión publicada correctamente.');
+  });
+
+  it('cambia la vigencia de una versión (activar / desactivar) mediante SweetAlert2', async () => {
+    const draftVersion = { ...version, verVigente: false };
+    component.cambiarVigenciaVersion(draftVersion, true);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(service['cambiarVigenciaFormulario']).toHaveBeenCalledWith(10, true);
+    expect(component.mensaje()).toBe('Versión establecida como activa exitosamente.');
+
+    component.cambiarVigenciaVersion(draftVersion, false);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(service['cambiarVigenciaFormulario']).toHaveBeenCalledWith(10, false);
+    expect(component.mensaje()).toBe('Versión desactivada.');
+  });
+
+  it('elimina permanentemente una versión inactiva mediante SweetAlert2', async () => {
+    const inactivaVersion = { ...version, verVigente: false };
+    component.eliminarVersionFormulario(inactivaVersion);
+
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(service['eliminarVersionFormulario']).toHaveBeenCalledWith(10);
+    expect(component.mensaje()).toContain('eliminado correctamente');
+  });
+
+  it('bloquea eliminar versión cuando es vigente mostrando error', () => {
+    const vigenteVersion = { ...version, verVigente: true };
+    component.eliminarVersionFormulario(vigenteVersion);
+
+    expect(component.error()).toBe('No se puede eliminar el formulario activo de la familia.');
+    expect(service['eliminarVersionFormulario']).not.toHaveBeenCalled();
   });
 });
