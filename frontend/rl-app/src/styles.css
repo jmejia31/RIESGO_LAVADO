@@ -174,18 +174,12 @@ body.modal-abierto app-main-layout > div > div > header {
 }
 
 /*
- * Separación visual exclusiva del modal del Form Builder.
- * El overlay sigue cubriendo el viewport completo; solo se reduce ligeramente la tarjeta interna
- * para que respire respecto a los bordes superior e inferior y se perciba inequívocamente flotante.
+ * Envolvente visual canónica de todos los modales institucionales.
+ * El backdrop ocupa el 100% del viewport, mientras la tarjeta activa conserva aproximadamente
+ * un 5% de separación vertical por lado, replicando el patrón visual de Detalles de Coincidencias.
+ * Cada modal mantiene su ancho funcional; solo se normaliza el límite vertical para evitar
+ * ventanas pegadas a los bordes y preservar la percepción de capa flotante.
  */
-dialog.modal-backdrop-overlay:has(app-form-builder) > .modal-container-card {
-  height: calc(100dvh - 2.5rem);
-  max-height: calc(100dvh - 2.5rem);
-}
-
-@media (min-width: 640px) {
-  dialog.modal-backdrop-overlay:has(app-form-builder) > .modal-container-card {
-    height: calc(100dvh - 4rem);
-    max-height: calc(100dvh - 4rem);
-  }
+dialog.modal-backdrop-overlay > .modal-container-card {
+  max-height: 90dvh !important;
 }
