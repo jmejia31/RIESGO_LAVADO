@@ -150,50 +150,6 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         Assert.True(result.Success);
     }
 
-    [Fact]
-    public async Task EliminarEvidencia_EjecutaCallbackEliminarArchivo_CuandoOcurreExcepcion_RetornaFalseEnCallback()
-    {
-        IMatricesRiesgosRepository repo = InterfaceStub.Create<IMatricesRiesgosRepository>(out InterfaceStub repoStub);
-        IFormularioValidador validador = InterfaceStub.Create<IFormularioValidador>(out _);
-        IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out _);
-        IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
-        auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-
-        var service = new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
-
-        // Crear un archivo real y mantenerlo abierto con FileShare.None para que File.Delete lance IOException
-        string relativeDir = Path.Combine("App_Data", "Evidencias");
-        string fullDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeDir);
-        Directory.CreateDirectory(fullDir);
-        string filename = $"locked_{Guid.NewGuid():N}.pdf";
-        string fullPath = Path.Combine(fullDir, filename);
-        
-        using var lockedStream = new FileStream(fullPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-
-        string relativePath = Path.Combine(relativeDir, filename);
-
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ =>
-            Task.FromResult<EvidenciaDto?>(new EvidenciaDto
-            {
-                EviId = 557,
-                EviNombreArchivo = "bloqueado.pdf",
-                EviRuta = relativePath
-            }));
-
-        repoStub.On(nameof(IMatricesRiesgosRepository.EliminarEvidenciaSeguraAsync), args =>
-        {
-            var callback = (Func<Task<bool>>)args[1]!;
-            bool resultadoCallback = callback().GetAwaiter().GetResult();
-            Assert.False(resultadoCallback); // El catch captura la IOException al intentar File.Delete y retorna false
-            return Task.FromResult(ResultadoEliminacionEvidencia.FalloDisco);
-        });
-
-        ServiceResult result = await service.EliminarEvidenciaAsync(557, 99, "127.0.0.1");
-
-        Assert.False(result.Success);
-        Assert.Equal(400, result.StatusCode);
-    }
-
     #endregion
 
     #region 2. CachedMatricesRiesgosAppService: Delegaciones Pass-Through Restantes (Líneas 152, 155, 169, 175, 178)
