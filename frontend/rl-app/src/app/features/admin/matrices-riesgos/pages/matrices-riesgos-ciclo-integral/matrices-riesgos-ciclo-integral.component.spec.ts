@@ -8,28 +8,30 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
   let component: MatricesRiesgosCicloIntegralComponent;
   let service: { listarEvaluaciones: ReturnType<typeof vi.fn> };
 
+  const paginadoOperativo = {
+    items: [{
+      evaId: 20,
+      evaRiesgoId: 7,
+      riesgoCodigo: 'RIE-007',
+      riesgoNombre: 'Riesgo 7',
+      evaVersionId: 10,
+      versionCodigo: 'FORM_A',
+      versionNumero: 2,
+      estado: 'BORRADOR',
+      vri: 7,
+      vrr: 4,
+      nivelResidual: 'MEDIO',
+      fechaEval: '2026-08-07'
+    }],
+    pagina: 1,
+    registrosPorPagina: 200,
+    totalRegistros: 1,
+    totalPaginas: 1
+  };
+
   beforeEach(async () => {
     service = {
-      listarEvaluaciones: vi.fn().mockReturnValue(of({
-        items: [{
-          evaId: 20,
-          evaRiesgoId: 7,
-          riesgoCodigo: 'RIE-007',
-          riesgoNombre: 'Riesgo 7',
-          evaVersionId: 10,
-          versionCodigo: 'FORM_A',
-          versionNumero: 2,
-          estado: 'BORRADOR',
-          vri: 7,
-          vrr: 4,
-          nivelResidual: 'MEDIO',
-          fechaEval: '2026-08-07'
-        }],
-        pagina: 1,
-        registrosPorPagina: 200,
-        totalRegistros: 1,
-        totalPaginas: 1
-      }))
+      listarEvaluaciones: vi.fn().mockReturnValue(of(paginadoOperativo))
     };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosCicloIntegralComponent],
@@ -42,31 +44,46 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     fixture.detectChanges();
   });
 
-  it('inicia en la matriz y precarga evaluaciones operativas', () => {
+  it('F3 inicia en matriz sin precargar 200 evaluaciones operativas', () => {
     expect(component.vista()).toBe('matriz');
-    expect(component.evaluaciones()).toHaveLength(1);
-    expect(service.listarEvaluaciones).toHaveBeenCalledWith({ pagina: 1, registrosPorPagina: 200 });
+    expect(component.evaluaciones()).toEqual([]);
+    expect(service.listarEvaluaciones).not.toHaveBeenCalled();
   });
 
-  it('cambia a vista riesgos sin invocar recarga adicional de evaluaciones', () => {
-    const llamadasPrevias = service.listarEvaluaciones.mock.calls.length;
+  it('cambia a vista riesgos sin consultar evaluaciones operativas', () => {
     component.seleccionarVista('riesgos');
     expect(component.vista()).toBe('riesgos');
     expect(component.error()).toBeNull();
-    expect(service.listarEvaluaciones.mock.calls.length).toBe(llamadasPrevias);
+    expect(service.listarEvaluaciones).not.toHaveBeenCalled();
   });
 
-  it('recarga evaluaciones al entrar a mitigación y monitoreo', () => {
+  it('carga evaluaciones solo al entrar a mitigacion y monitoreo', () => {
     component.seleccionarVista('mitigacion');
     expect(component.vista()).toBe('mitigacion');
+    expect(component.evaluaciones()).toHaveLength(1);
+
     component.seleccionarVista('monitoreo');
     expect(component.vista()).toBe('monitoreo');
-    expect(service.listarEvaluaciones).toHaveBeenCalledTimes(3);
+    expect(service.listarEvaluaciones).toHaveBeenCalledTimes(2);
+    expect(service.listarEvaluaciones).toHaveBeenNthCalledWith(1, { pagina: 1, registrosPorPagina: 200 });
+    expect(service.listarEvaluaciones).toHaveBeenNthCalledWith(2, { pagina: 1, registrosPorPagina: 200 });
   });
 
-  it('conserva error funcional cuando falla la carga operativa con estructura error.mensaje', () => {
-    service.listarEvaluaciones.mockReturnValue(throwError(() => ({ error: { mensaje: 'Consulta fallida' } })));
+  it('normaliza items no-array a arreglo vacio', () => {
+    service.listarEvaluaciones.mockReturnValue(of({ ...paginadoOperativo, items: null }));
     component.seleccionarVista('mitigacion');
+    expect(component.evaluaciones()).toEqual([]);
+    expect(component.error()).toBeNull();
+  });
+
+  it('limpia datos operativos obsoletos y conserva error.mensaje al fallar', () => {
+    component.seleccionarVista('mitigacion');
+    expect(component.evaluaciones()).toHaveLength(1);
+
+    service.listarEvaluaciones.mockReturnValue(throwError(() => ({ error: { mensaje: 'Consulta fallida' } })));
+    component.seleccionarVista('monitoreo');
+
+    expect(component.evaluaciones()).toEqual([]);
     expect(component.error()).toBe('Consulta fallida');
   });
 
@@ -76,7 +93,7 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     expect(component.error()).toBe('Fallo de red al listar evaluaciones');
   });
 
-  it('usa mensaje fallback cuando el objeto de error está vacío', () => {
+  it('usa mensaje fallback cuando el objeto de error esta vacio', () => {
     service.listarEvaluaciones.mockReturnValue(throwError(() => ({})));
     component.seleccionarVista('mitigacion');
     expect(component.error()).toBe('No se pudieron cargar las evaluaciones operativas.');
