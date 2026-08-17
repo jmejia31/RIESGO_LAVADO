@@ -145,9 +145,9 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.totalPaginas()).toBe(4);
 
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
-    const texto = (panel.textContent || '').replace(/\s+/g, ' ');
-    expect(texto).toContain('de 37 registros');
-    expect(texto).toContain('Pág. 1 de 4');
+    const textoSinEspacios = (panel.textContent || '').replace(/\s+/g, '');
+    expect(textoSinEspacios).toContain('de37registros');
+    expect(textoSinEspacios).toContain('Pág.1de4');
   });
 
   it('F3 normaliza items nulos sin romper el contrato Array de la tabla', () => {
