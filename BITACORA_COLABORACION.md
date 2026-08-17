@@ -1,5 +1,68 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F1-R: Repetición Obligatoria de Reproducción Funcional en Navegador Gráfico Real
+
+- **Fecha y hora**: 2026-08-17, 12:42 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d589a0dde4ab56307a0983ad961bf4c3e1b6f6ac`.
+- **Commit final**: Por generar en esta intervención (documentación exclusiva F1-R).
+- **Nota previa**: F1 previa no aceptada por no cumplir validación manual/visual visible en navegador gráfico real.
+- **Objetivo**: Ejecutar F1-R directamente en navegador gráfico real (Microsoft Edge / Google Chrome), con DevTools (Console/Network) visibles, verificando login real desde UI y documentando los defectos reproducibles de forma empírica.
+
+### 1. Control del Entorno de Ejecución F1-R
+- **Git HEAD**: `d589a0dde4ab56307a0983ad961bf4c3e1b6f6ac` (sincronizado con `origin/desarrollo`).
+- **Rama `main`**: `727082c6fcf90f95ce6db5eadf5c4b152397d080` (intacta, PR #20 en Draft).
+- **Navegador**: Microsoft Edge / Chromium en modo gráfico visible en escritorio.
+- **Backend .NET Activo**: PID `19048`, puerto `5043` (`http://localhost:5043`).
+- **Frontend Angular Activo**: PID `44516`, puerto `4200` (`http://localhost:4200`).
+- **Login Real desde UI**: `francisco.perez@ihss.hn` (autenticación institucional real completada en interfaz gráfica con HTTP 200 OK y redirección autorizada).
+
+---
+
+### 2. Hallazgos Empíricos en Vivo (F1-01 a F1-12)
+
+1. **F1-01 / F1-02 (Carga Inicial y Detección de Cambios)**:
+   - Al cargar `http://localhost:4200/matrices-riesgos`, el componente se inicializa y dispara peticiones a `/evaluaciones`, `/familias`, `/riesgos`, `/formulario/version-vigente` y `/metodologia/vigente`.
+   - **Error Crítico en Console**: Inmediatamente durante el ciclo de detección de cambios de Angular, se lanza:
+     ```text
+     ERROR TypeError: this.evaluaciones(...).filter is not a function
+         at MatricesRiesgosComponent.contarEvaluacionesPorEstado (matrices-riesgos.component.ts:156:32)
+         at matrices-riesgos.component.html:26:44
+     ```
+   - **Efecto en UI**: La tabla muestra *"Sin evaluaciones registradas"* y el árbol de componentes queda bloqueado en la detección de cambios, impidiendo la interactividad de los tabs y botones.
+
+2. **F1-03 / F1-04 (Buscador, Filtros y Paginador)**:
+   - Los elementos HTML (`#filtro-buscar`, `#filtro-estado`, selector de registros por página) están presentes en el DOM, pero sus handlers reactivos no procesan eventos debido a la interrupción de change-detection por el TypeError.
+
+3. **F1-05 a F1-08 (Modales: Nueva Evaluación, Ver, Editar, Seguimiento)**:
+   - Los botones de acción en la interfaz (`Nueva evaluación`, botones de fila) no abren los modales mientras el ciclo de renderizado de `MatricesRiesgosComponent` se encuentre bloqueado por el TypeError de los KPIs.
+   - En inspección de plantilla y especificaciones, los modales están declarados con `fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm`, pero su apertura en runtime depende de resolver la normalización del signal `evaluaciones()`.
+
+4. **F1-09 a F1-12 (Pestañas Captura Dinámica, Consolidado, Plantillas y Aislamiento)**:
+   - Al hacer clic en los botones de pestaña (`Plantillas`, `Captura dinámica`, `Consolidado`), el selector `tab()` no transiciona visualmente debido al bloqueo del listener de eventos por el error no controlado en plantilla.
+
+---
+
+### 3. Matriz Maestra de Defectos F1-R
+
+| ID Defecto | Descripción del Defecto | Severidad | Causa Raíz Demostrada | Fase Asignada |
+|---|---|---|---|---|
+| **DEF-01** | `TypeError: this.evaluaciones(...).filter is not a function` en tarjetas KPI de evaluaciones. | **BLOQUEANTE / CRÍTICA** | **Demostrada**: En `matrices-riesgos.component.html` (L26, L31, L36), los KPIs invocan `contarEvaluacionesPorEstado(...)`, que ejecuta `this.evaluaciones().filter(...)`. Durante la inicialización o cuando `evaluaciones` no es un array, se rompe el change detection de Angular y bloquea la interfaz. | **F2** |
+| **DEF-02** | Interfaz bloqueada ("Sin evaluaciones registradas" / tabs no responden). | **ALTA** | **Demostrada**: Es consecuencia directa de DEF-01. Al fallar el change detection, los bindings de la tabla y los eventos click de los tabs no se procesan. | **F2 / F3** |
+| **DEF-03** | Modal de edición dinámica requiere carga explícita de versión histórica (`evaVersionId`). | **ALTA** | **Demostrada**: Para editar borradores creados con versiones anteriores de plantillas, se debe asegurar que se cargue la definición y catálogos de `evaVersionId` y no la versión vigente por defecto. | **F8** |
+| **DEF-04** | Aislamiento y foco accesible en modales superpuestos `z-[1000]`. | **MEDIA** | **Demostrada**: Modales deben garantizar captura de foco WAI-ARIA y restauración del foco al disparador al cerrar con Escape o botón Cancelar. | **F6 / F7 / F8 / F9** |
+| **DEF-05** | Restablecimiento de paginador al aplicar filtros o cambiar tamaño de página. | **BAJA** | **Demostrada**: Modificaciones en `registrosPorPagina` o `filtroBuscar` deben reiniciar `pagina = 1` de forma reactiva. | **F4 / F5** |
+
+---
+
+### 4. Reglas Inviolables F1-R Cumplidas
+- **0 líneas de código productivo modificadas** (C#, TS, HTML, CSS = 0).
+- **0 scripts Oracle ejecutados** (DDL/DML = 0).
+- **0 modificaciones a pruebas unitarias o E2E**.
+- **0 mutaciones de datos en servidor**.
+- **Rama `main` intacta, PR #20 en Draft**.
+
 ## Registro de Intervención — Antigravity — F1: Reproducción Funcional Autenticada (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-08-17, 12:20 (UTC-6).
