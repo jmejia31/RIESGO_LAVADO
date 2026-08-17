@@ -87,11 +87,8 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
 
         // Crear un archivo temporal real en el directorio de pruebas para que File.Exists sea true
         string relativeDir = Path.Combine("App_Data", "Evidencias");
-        string fullDir = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeDir));
-        if (!Directory.Exists(fullDir))
-        {
-            Directory.CreateDirectory(fullDir);
-        }
+        string fullDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeDir);
+        Directory.CreateDirectory(fullDir);
         string filename = $"test_p3p4_{Guid.NewGuid():N}.pdf";
         string fullPath = Path.Combine(fullDir, filename);
         await File.WriteAllTextAsync(fullPath, "contenido de prueba para eliminacion");

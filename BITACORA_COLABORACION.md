@@ -1,12 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F2.2 Residual Final de Cierre F2
+
+- **Fecha y hora**: 2026-08-17, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `1bd65f658b6f7fa96361bb12cb5b69d7604bee7c`.
+- **Commit final publicado**: Por generar en esta intervención (`test(matrices): completar cobertura funcional F2`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F2.2
+
+1. **Publicación y Cobertura de Tests F2.1**:
+   - Se creó y versionó el archivo oficial de pruebas dedicadas: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.f2.1.spec.ts` (11 pruebas dedicadas F2.1).
+   - **Conteo Total de Pruebas Frontend**: **263 / 263 PASS** (30 archivos de prueba aprobados al 100%).
+   - **Compilación Frontend (`npm run build`)**: **PASS** (Generación de bundle de producción en `dist/rl-app`).
+2. **Reversión de Cambio Backend Fuera de Alcance**:
+   - Se revirtió el archivo `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosNewCodeCoverageP3P4Tests.cs` al contenido exacto del commit padre `163982e`.
+   - **`dotnet test`**: **406 / 406 PASS** (100% pruebas backend .NET superadas con el archivo revertido).
+3. **Corrección de Dictamen Documental**:
+   - **DEF-01 Histórico**: **REPRODUCIDO en F1-R**.
+   - **DEF-01 POST-F2.1**: **NO REPRODUCIDO**.
+   - **Causa Raíz Histórica**: **NO DETERMINADA** (sin atribuir causas no demostradas).
+   - **Solución Efectiva en F2/F2.1**: Desacoplamiento de cargas por pestaña, normalización defensiva de `paginado.items || []` y corrección de la doble carga en Plantillas.
+
+---
+
 ## Registro de Intervención — Antigravity — Cierre de Validación Residual F2.1 y QA Manual Final
 
 - **Fecha y hora**: 2026-08-17, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial**: `ab46fd6907662fc72899c37d8801482691256976`.
-- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar validacion residual F2.1`).
+- **Commit inicial**: `163982e64973d9ec27318257c81f7942b728a8b4`.
+- **Commit final publicado**: `1bd65f658b6f7fa96361bb12cb5b69d7604bee7c`.
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Validación y QA Manual F2.1
@@ -29,22 +55,22 @@
 
 ---
 
-## Registro de Intervención — Antigravity — F2: Carga Independiente de Pestañas y Corrección DEF-01
+## Registro de Intervención — Antigravity — F2: Carga Independiente de Pestañas y Desacoplamiento Módulos
 
 - **Fecha y hora**: 2026-08-17, 13:08 (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `ab46fd6907662fc72899c37d8801482691256976`.
-- **Commit final**: Por generar en esta intervención.
-- **Objetivos Cumplidos**:
-  1. **Diagnóstico y Corrección DEF-01**:
-     - **Causa Raíz Demostrada**: El método `contarEvaluacionesPorEstado(estado)` en `matrices-riesgos.component.ts` ejecutaba `this.evaluaciones().filter(...)` asumiendo que `this.evaluaciones()` siempre retornaba un array. En estados iniciales o de error, si `evaluaciones()` contenía un valor no-array (`undefined`, `null` u objeto no iterable), el motor de Change Detection de Angular fallaba catastróficamente con `TypeError: this.evaluaciones(...).filter is not a function`, bloqueando por completo la interfaz (DEF-02).
-     - **Corrección Aplicada**: Se implementó una verificación estricta `if (!Array.isArray(list)) return 0;` dentro de `contarEvaluacionesPorEstado` y se garantizó la asignación defensiva de `paginado.items || []` en `cargarEvaluaciones()`.
-  2. **Desacoplamiento de Carga por Pestaña**:
-     - Se eliminó el indicador global `@if (cargando())` en `matrices-riesgos.component.html`.
-     - Se crearon señales de estado independientes para cada sección: `cargandoEvaluaciones`, `errorEvaluaciones`, `cargandoFormulario`, `errorFormulario`, `cargandoConsolidado`, `errorConsolidado`, `cargandoPlantillas`, `errorPlantillas`.
-     - En `ngOnInit()`, `cargarEvaluaciones()` y `cargarFormularioVigente()` se invocan de manera paralela e independiente. Si una consulta falla, solo su panel correspondiente muestra un estado de error local con botón de reintento, dejando el resto de pestañas e interfaz 100% operativas.
-- **Verificación**: Suite Backend .NET **406/406 (100%)**, Suite Frontend Angular **252/252 (100%)**, 0 mutaciones Oracle, `main` intacta (`727082c`), PR #20 en Draft.
+- **Commit final**: `163982e64973d9ec27318257c81f7942b728a8b4`.
+- **Dictamen de Defectos**:
+  - **DEF-01 Histórico**: **REPRODUCIDO en F1-R**.
+  - **DEF-01 POST-F2.1**: **NO REPRODUCIDO**.
+  - **Causa Raíz Histórica**: **NO DETERMINADA** (sin atribuir una causa histórica no demostrada).
+- **Solución Efectiva Observada en F2**:
+  - Desacoplamiento de cargas por pestaña.
+  - Normalización defensiva de `paginado.items || []`.
+  - Eliminación del indicador global `@if (cargando())` en favor de signals independientes por pestaña (`cargandoEvaluaciones`, `errorEvaluaciones`, `cargandoFormulario`, `errorFormulario`, `cargandoConsolidado`, `errorConsolidado`, `cargandoPlantillas`, `errorPlantillas`).
+- **Verificación**: Suite Backend .NET **406/406 (100%)**, Suite Frontend Angular **252/252 (100%)**, 0 mutaciones Oracle, `main` intacta, PR #20 en Draft.
 
 ---
 
