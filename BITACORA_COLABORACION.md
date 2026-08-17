@@ -1,12 +1,37 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F2.3 Último Ajuste de Prueba Antes del Cierre F2
+
+- **Fecha y hora**: 2026-08-17, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `9d4f271400101c87680066457ecb7582e3530434`.
+- **Commit final publicado**: Por generar en esta intervención (`test(matrices): corregir escenario metodologia F2`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F2.3
+
+1. **Ajuste Técnico en Prueba Nº 5**:
+   - Se ajustó el escenario de prueba `"5. fallo metodologia no bloquea Evaluaciones"` en `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.f2.1.spec.ts`.
+   - Se configuró `serviceMock.metodologiaVigente.mockReturnValue(throwError(() => new Error('Error metodologia')))` manteniendo una versión vigente válida (`of(mockVersion)`), simulando un fallo real del servicio de metodología dinámica.
+   - **Verificación**: `errorFormulario()` contiene mensaje de error, `cargandoFormulario()` finaliza en `false`, `evaluaciones()` se mantiene como Array de 2 elementos y `errorEvaluaciones()` permanece `null`.
+2. **Verificación de Pruebas y Compilación**:
+   - **`npm test -- --watch=false`**: **263 / 263 PASS** (100% de la suite frontend Angular superada en 30 archivos de prueba).
+   - **`npm run build`**: **PASS** (Generación de bundle de producción en `dist/rl-app` completada).
+3. **Preservación del Dictamen de Defectos**:
+   - **DEF-01 Histórico**: **REPRODUCIDO en F1-R**.
+   - **DEF-01 POST-F2.1**: **NO REPRODUCIDO**.
+   - **Causa Raíz Histórica**: **NO DETERMINADA**.
+
+---
+
 ## Registro de Intervención — Antigravity — F2.2 Residual Final de Cierre F2
 
 - **Fecha y hora**: 2026-08-17, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `1bd65f658b6f7fa96361bb12cb5b69d7604bee7c`.
-- **Commit final publicado**: Por generar en esta intervención (`test(matrices): completar cobertura funcional F2`).
+- **Commit final publicado**: `9d4f271400101c87680066457ecb7582e3530434`.
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F2.2

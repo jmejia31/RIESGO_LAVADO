@@ -158,13 +158,17 @@ describe('MatricesRiesgosComponent F2.1 Residual Coverage Spec', () => {
 
   // 5. fallo metodología no bloquea Evaluaciones.
   it('5. fallo metodologia no bloquea Evaluaciones', () => {
-    serviceMock.obtenerVersionVigenteFormulario.mockReturnValue(of(null));
+    serviceMock.obtenerVersionVigenteFormulario.mockReturnValue(of(mockVersion));
+    serviceMock.metodologiaVigente.mockReturnValue(throwError(() => new Error('Error metodologia')));
+
     component.cargarFormularioVigente();
     component.cargarEvaluaciones();
 
-    expect(component.versionVigente()).toBeNull();
+    expect(component.errorFormulario()).toBeTruthy();
+    expect(component.cargandoFormulario()).toBe(false);
     expect(Array.isArray(component.evaluaciones())).toBe(true);
     expect(component.evaluaciones().length).toBe(2);
+    expect(component.errorEvaluaciones()).toBeNull();
   });
 
   // 6. fallo Evaluaciones no bloquea otras tabs.
