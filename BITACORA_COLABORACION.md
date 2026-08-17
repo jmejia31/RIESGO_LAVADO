@@ -1,5 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F0: Línea Base Ejecutable y Control del Entorno (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-08-17, 11:55 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `2d5c9c17ee4ed317df29d80b151ca667a225ec6b`.
+- **Commit final**: Por generar en esta intervención (solo documentación F0).
+- **Objetivo**: Establecer y auditar con evidencia reproducible la línea base exacta entre el repositorio Git (`origin/desarrollo`), el checkout local `C:\RIESGO_LAVADO`, los procesos activos de Backend .NET y Frontend Angular, la sesión autenticada y el comportamiento de Console/Network en el navegador.
+
+### Estado y Procesos Auditados
+- **Git HEAD**: `2d5c9c17ee4ed317df29d80b151ca667a225ec6b` (sincronizado al 100% con `origin/desarrollo`).
+- **Rama `main`**: `727082c6fcf90f95ce6db5eadf5c4b152397d080` (intacta). PR #20 en Draft / no fusionado.
+- **Backend .NET Activo**:
+  - PID: `19048` (hijo de `12168`, `dotnet run` sobre `C:\RIESGO_LAVADO\backend\RL.API\bin\Debug\net10.0\RL.API.dll`).
+  - Puerto: `5043` (`http://localhost:5043`).
+  - Endpoint de prueba `GET /api/configuracion/sistema`: HTTP 200 OK.
+- **Frontend Angular Activo**:
+  - PID: `44516` (`ng serve -o` sobre `C:\RIESGO_LAVADO\frontend\rl-app`).
+  - Puerto: `4200` (`http://localhost:4200`).
+  - Versiones: Angular CLI 22.0.4, Angular 22.0.3, Node.js v24.18.0, npm 11.12.1.
+- **Navegación e Inspección en Vivo (`http://localhost:4200/matrices-riesgos`)**:
+  - **Sesión / Autenticación**: Token JWT firmado con clave `RL-API` (`ADMINISTRADOR`, módulo `10`).
+  - **Network**: Solicitudes iniciales a `/api/matrices-riesgos/evaluaciones?pagina=1&registrosPorPagina=200`, `/api/matrices-riesgos/familias`, `/api/matrices-riesgos/riesgos`, `/api/matrices-riesgos/formulario/version-vigente` y `/api/matrices-riesgos/metodologia/vigente` retornan **HTTP 200 OK**.
+  - **Console**: Se identificó un error JavaScript en runtime: `TypeError: this.evaluaciones(...).filter is not a function` en `contarEvaluacionesPorEstado`, debido a que el servicio frontend mapea la respuesta paginada a objeto `EvaluacionesPaginadasDto` ({ items, totalRegistros, ... }) y `evaluaciones()` en ciertos flujos espera un array directo.
+  - **Discrepancia de Runtime**: Detectada y tipificada para F1. Cero código productivo modificado en F0.
+- **Reglas Inviolables F0**:
+  - 0 modificaciones a código productivo (C#, TS, HTML, CSS).
+  - 0 ejecuciones de scripts Oracle (DDL/DML = 0).
+  - 0 modificaciones a tests.
+
 ## Registro de Intervención — Antigravity — Bloque Funcional: Evaluaciones de Riesgo (Modales + Edición Dinámica + Paginado + Semántica de Datos)
 
 - **Fecha y hora**: 2026-08-17, 10:18 (UTC-6).
