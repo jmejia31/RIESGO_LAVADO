@@ -1,5 +1,34 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Cierre de Validación Residual F2.1 y QA Manual Final
+
+- **Fecha y hora**: 2026-08-17, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `ab46fd6907662fc72899c37d8801482691256976`.
+- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar validacion residual F2.1`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Validación y QA Manual F2.1
+
+1. **Resultados de Automatización Pre-QA**:
+   - **`dotnet test`**: **406 / 406 PASS** (100% pruebas backend .NET Core pasadas).
+   - **`npm test -- --watch=false`**: **252 / 252 PASS** (100% pruebas frontend Angular pasadas en 29 archivos de prueba).
+   - **`npm run build`**: **PASS** (Generación de bundle de producción Angular finalizada correctamente en `dist/rl-app`).
+
+2. **Resultados de QA Manual en Navegador Gráfico Real**:
+   - **Recorrido Evaluado**: `Evaluaciones` → `Captura` → `Consolidado` → `Plantillas` → `Evaluaciones`.
+   - **DEF-01 POST-F2.1**: **NO REPRODUCIDO** (`TypeError: this.evaluaciones(...).filter is not a function` no apareció durante la validación).
+   - **Causa Raíz Histórica DEF-01**: **NO DETERMINADA** (se mantiene sin declarar causa distinta por ausencia de evidencia histórica).
+   - **Corrección Doble Carga de Plantillas**: Verificada la eliminación de la doble petición/redistribución en la pestaña Plantillas.
+   - **Spinner Global Bloqueante**: **AUSENTE**.
+   - **Navegación entre Pestañas**: **PASS**.
+   - **Carga Independiente**: **PASS**.
+   - **Pestaña Plantillas**: **PASS**.
+   - **Consola y Red (DevTools)**: Sin errores bloqueantes relacionados con F2.1.
+
+---
+
 ## Registro de Intervención — Antigravity — F2: Carga Independiente de Pestañas y Corrección DEF-01
 
 - **Fecha y hora**: 2026-08-17, 13:08 (UTC-6).

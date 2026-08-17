@@ -245,7 +245,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (tab === 'consolidado') this.cargarConsolidado();
     if (tab === 'plantillas') {
       this.cargarFamilias();
-      this.cargarVersiones();
     }
   }
 
