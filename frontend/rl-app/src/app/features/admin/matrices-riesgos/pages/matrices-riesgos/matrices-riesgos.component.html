@@ -83,20 +83,19 @@
     </nav>
   </div>
 
-  @if (cargando()) {
-    <div class="rounded-2xl border border-gray-100 bg-white p-12 text-center text-sm text-gray-600 space-y-4 shadow-sm" aria-busy="true" aria-live="polite">
-      <div class="inline-flex items-center gap-3">
-        <svg class="h-6 w-6 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="font-bold text-gray-700">Cargando información institucional...</span>
-      </div>
-    </div>
-  }
-
-  @if (!cargando() && tab() === 'evaluaciones') {
+  @if (tab() === 'evaluaciones') {
     <section id="panel-evaluaciones" role="tabpanel" aria-labelledby="tab-evaluaciones" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      @if (cargandoEvaluaciones()) {
+        <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+          <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span class="font-semibold text-gray-700">Cargando evaluaciones...</span>
+        </div>
+      } @else if (errorEvaluaciones(); as errorEv) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
+          <span>{{ errorEv }}</span>
+          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarEvaluaciones()">Reintentar</button>
+        </div>
+      }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 class="text-lg font-bold text-gray-900">Evaluaciones de Riesgo</h2>
@@ -249,8 +248,19 @@
     </section>
   }
 
-  @if (!cargando() && tab() === 'captura') {
+  @if (tab() === 'captura') {
     <section id="panel-captura" role="tabpanel" aria-labelledby="tab-captura" class="space-y-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      @if (cargandoFormulario()) {
+        <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+          <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span class="font-semibold text-gray-700">Cargando formulario dinámico...</span>
+        </div>
+      } @else if (errorFormulario(); as errorForm) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
+          <span>{{ errorForm }}</span>
+          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarFormularioVigente()">Reintentar</button>
+        </div>
+      }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 class="text-lg font-bold text-gray-900">{{ evaluacionSeleccionada() ? 'Editar evaluación' : 'Nueva evaluación' }}</h2><p class="text-xs text-gray-500">{{ totalCompletados() }} de {{ totalCampos() }} campos completados en la plantilla.</p></div>
         <div class="flex items-center gap-2">
@@ -340,8 +350,19 @@
     </section>
   }
 
-  @if (!cargando() && tab() === 'consolidado') {
+  @if (tab() === 'consolidado') {
     <section id="panel-consolidado" role="tabpanel" aria-labelledby="tab-consolidado" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      @if (cargandoConsolidado()) {
+        <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+          <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span class="font-semibold text-gray-700">Cargando consolidado...</span>
+        </div>
+      } @else if (errorConsolidado(); as errorCons) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
+          <span>{{ errorCons }}</span>
+          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarConsolidado()">Reintentar</button>
+        </div>
+      }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 class="text-lg font-bold text-gray-900">Matriz Consolidada</h2><p class="text-xs text-gray-500">Proyección relacional tipada y exportable institucionalmente.</p></div>
         <div class="flex flex-wrap gap-2">
@@ -381,8 +402,19 @@
     </section>
   }
 
-  @if (!cargando() && tab() === 'plantillas') {
+  @if (tab() === 'plantillas') {
     <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+      @if (cargandoPlantillas()) {
+        <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
+          <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span class="font-semibold text-gray-700">Cargando plantillas...</span>
+        </div>
+      } @else if (errorPlantillas(); as errorPlant) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
+          <span>{{ errorPlant }}</span>
+          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarVersiones()">Reintentar</button>
+        </div>
+      }
       <div class="flex flex-col gap-4 border-b border-gray-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 class="text-lg font-bold text-gray-900">Versiones de Formulario</h2>

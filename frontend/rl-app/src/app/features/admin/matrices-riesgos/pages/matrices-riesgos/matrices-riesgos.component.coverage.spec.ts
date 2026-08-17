@@ -193,13 +193,13 @@ describe('MatricesRiesgosComponent cobertura operativa', () => {
   it('muestra los detalles HTTP al fallar consultas de evaluaciones y consolidado', () => {
     service['listarEvaluaciones'].mockReturnValue(throwError(() => ({ error: { detail: 'Evaluaciones no disponibles' } })));
     component.cargarEvaluaciones();
-    expect(component.error()).toBe('Evaluaciones no disponibles');
-    expect(component.cargando()).toBe(false);
+    expect(component.errorEvaluaciones()).toBe('Evaluaciones no disponibles');
+    expect(component.cargandoEvaluaciones()).toBe(false);
 
     service['obtenerConsolidado'].mockReturnValue(throwError(() => ({ error: { errors: { filtro: ['Filtro invalido'] } } })));
     component.cargarConsolidado();
-    expect(component.error()).toBe('Filtro invalido');
-    expect(component.cargando()).toBe(false);
+    expect(component.errorConsolidado()).toBe('Filtro invalido');
+    expect(component.cargandoConsolidado()).toBe(false);
   });
 
   it('ordena catalogos, protege versiones vigentes de edicion y bloquea la eliminacion activa', () => {

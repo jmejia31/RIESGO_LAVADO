@@ -1,5 +1,24 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F2: Carga Independiente de Pestañas y Corrección DEF-01
+
+- **Fecha y hora**: 2026-08-17, 13:08 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `ab46fd6907662fc72899c37d8801482691256976`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivos Cumplidos**:
+  1. **Diagnóstico y Corrección DEF-01**:
+     - **Causa Raíz Demostrada**: El método `contarEvaluacionesPorEstado(estado)` en `matrices-riesgos.component.ts` ejecutaba `this.evaluaciones().filter(...)` asumiendo que `this.evaluaciones()` siempre retornaba un array. En estados iniciales o de error, si `evaluaciones()` contenía un valor no-array (`undefined`, `null` u objeto no iterable), el motor de Change Detection de Angular fallaba catastróficamente con `TypeError: this.evaluaciones(...).filter is not a function`, bloqueando por completo la interfaz (DEF-02).
+     - **Corrección Aplicada**: Se implementó una verificación estricta `if (!Array.isArray(list)) return 0;` dentro de `contarEvaluacionesPorEstado` y se garantizó la asignación defensiva de `paginado.items || []` en `cargarEvaluaciones()`.
+  2. **Desacoplamiento de Carga por Pestaña**:
+     - Se eliminó el indicador global `@if (cargando())` en `matrices-riesgos.component.html`.
+     - Se crearon señales de estado independientes para cada sección: `cargandoEvaluaciones`, `errorEvaluaciones`, `cargandoFormulario`, `errorFormulario`, `cargandoConsolidado`, `errorConsolidado`, `cargandoPlantillas`, `errorPlantillas`.
+     - En `ngOnInit()`, `cargarEvaluaciones()` y `cargarFormularioVigente()` se invocan de manera paralela e independiente. Si una consulta falla, solo su panel correspondiente muestra un estado de error local con botón de reintento, dejando el resto de pestañas e interfaz 100% operativas.
+- **Verificación**: Suite Backend .NET **406/406 (100%)**, Suite Frontend Angular **252/252 (100%)**, 0 mutaciones Oracle, `main` intacta (`727082c`), PR #20 en Draft.
+
+---
+
 ## Registro de Intervención — Antigravity — F1-R.1: Corrección Documental de Cierre F1-R
 
 - **Fecha y hora**: 2026-08-17, 12:47 (UTC-6).

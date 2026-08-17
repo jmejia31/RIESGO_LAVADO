@@ -46,6 +46,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly mensaje = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
 
+  // Estados de Carga y Error Independientes por Sección (F2)
+  readonly cargandoEvaluaciones = signal(false);
+  readonly errorEvaluaciones = signal<string | null>(null);
+
+  readonly cargandoFormulario = signal(false);
+  readonly errorFormulario = signal<string | null>(null);
+
+  readonly cargandoConsolidado = signal(false);
+  readonly errorConsolidado = signal<string | null>(null);
+
+  readonly cargandoPlantillas = signal(false);
+  readonly errorPlantillas = signal<string | null>(null);
+
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
@@ -213,7 +226,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cargarFamilias();
     this.cargarRiesgos();
-    this.cargarModulo();
+    this.cargarEvaluaciones();
+    this.cargarFormularioVigente();
   }
 
   ngOnDestroy(): void {
@@ -402,29 +416,42 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarVersiones(): void {
-    this.cargando.set(true);
+    this.cargandoPlantillas.set(true);
+    this.errorPlantillas.set(null);
     const codigo = this.familiaSeleccionada() || 'MATRIZ_RIESGOS_LAFT';
     this.service.listarHistorialVersionesFormulario(codigo).subscribe({
       next: versiones => {
         this.versiones.set(versiones);
-        this.cargando.set(false);
+        this.cargandoPlantillas.set(false);
       },
-      error: error => this.finalizarConError(error, 'No se pudo cargar el historial de formularios.')
+      error: error => {
+        const msg = this.obtenerMensajeError(error, 'No se pudo cargar el historial de formularios.');
+        this.errorPlantillas.set(msg);
+        this.cargandoPlantillas.set(false);
+      }
     });
   }
 
   cargarModulo(): void {
-    this.cargando.set(true);
-    this.error.set(null);
+    this.cargarFormularioVigente();
+    this.cargarEvaluaciones();
+  }
+
+  cargarFormularioVigente(): void {
+    this.cargandoFormulario.set(true);
+    this.errorFormulario.set(null);
 
     this.service.obtenerVersionVigenteFormulario().subscribe({
       next: version => {
         this.versionVigente.set(version);
         this.inicializarRespuestas();
         this.cargarMetodologia();
-        this.cargarEvaluaciones();
       },
-      error: error => this.finalizarConError(error, 'No se pudo cargar la versión vigente del formulario.')
+      error: error => {
+        const msg = this.obtenerMensajeError(error, 'No se pudo cargar la versión vigente del formulario.');
+        this.errorFormulario.set(msg);
+        this.cargandoFormulario.set(false);
+      }
     });
   }
 
@@ -440,9 +467,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: metodologia => {
         this.metodologia.set(metodologia);
         this.inicializarRespuestas();
-        this.cargando.set(false);
+        this.cargandoFormulario.set(false);
       },
-      error: error => this.finalizarConError(error, 'No se pudo cargar la metodología dinámica vigente.')
+      error: error => {
+        const msg = this.obtenerMensajeError(error, 'No se pudo cargar la metodología dinámica vigente.');
+        this.errorFormulario.set(msg);
+        this.cargandoFormulario.set(false);
+      }
     });
   }
 
@@ -490,7 +521,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarEvaluaciones(): void {
-    this.cargando.set(true);
+    this.cargandoEvaluaciones.set(true);
+    this.errorEvaluaciones.set(null);
     this.service.listarEvaluaciones({
       buscar: this.filtroBuscar().trim() || undefined,
       estado: this.filtroEstado().trim() || undefined,
@@ -498,23 +530,33 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       registrosPorPagina: this.registrosPorPagina()
     }).subscribe({
       next: paginado => {
-        this.evaluaciones.set(paginado.items);
+        this.evaluaciones.set(paginado.items || []);
         this.totalRegistros.set(paginado.totalRegistros);
         this.totalPaginas.set(paginado.totalPaginas);
-        this.cargando.set(false);
+        this.cargandoEvaluaciones.set(false);
       },
-      error: error => this.finalizarConError(error, 'No se pudieron consultar las evaluaciones.')
+      error: error => {
+        const msg = this.obtenerMensajeError(error, 'No se pudieron consultar las evaluaciones.');
+        this.errorEvaluaciones.set(msg);
+        this.evaluaciones.set([]);
+        this.cargandoEvaluaciones.set(false);
+      }
     });
   }
 
   cargarConsolidado(): void {
-    this.cargando.set(true);
+    this.cargandoConsolidado.set(true);
+    this.errorConsolidado.set(null);
     this.service.obtenerConsolidado().subscribe({
       next: filas => {
         this.consolidado.set(filas);
-        this.cargando.set(false);
+        this.cargandoConsolidado.set(false);
       },
-      error: error => this.finalizarConError(error, 'No se pudo cargar la matriz consolidada.')
+      error: error => {
+        const msg = this.obtenerMensajeError(error, 'No se pudo cargar la matriz consolidada.');
+        this.errorConsolidado.set(msg);
+        this.cargandoConsolidado.set(false);
+      }
     });
   }
 
