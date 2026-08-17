@@ -220,7 +220,30 @@ async function stubAuthenticatedMatrices(page: Page) {
     } else if (path.endsWith('/riesgos') && method === 'GET') {
       datos = riesgos;
     } else if (path.endsWith('/evaluaciones') && method === 'GET') {
-      datos = evaluaciones;
+      datos = {
+        items: [{
+          evaId: 200,
+          evaRiesgoId: 501,
+          riesgoCodigo: 'R-501',
+          riesgoNombre: 'Riesgo de cumplimiento',
+          evaVersionId: 10,
+          versionCodigo: 'FORM_MATRIZ_LAFT',
+          versionNumero: 1,
+          estado: 'BORRADOR',
+          vri: 7,
+          vrr: 4,
+          nivelResidual: 'MODERADO',
+          fechaEval: '2026-08-03T10:00:00Z'
+        }],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 1,
+        totalPaginas: 1
+      };
+    } else if (/\/evaluaciones\/\d+$/.test(path) && method === 'GET') {
+      datos = evaluaciones[0];
+    } else if (/\/metodologia\/version\/\d+$/.test(path) && method === 'GET') {
+      datos = metodologiaFormulario;
     } else if (path.endsWith('/evaluaciones') && method === 'POST') {
       datos = 201;
     } else if (/\/evaluaciones\/\d+$/.test(path) && method === 'PUT') {
@@ -241,7 +264,29 @@ async function stubAuthenticatedMatrices(page: Page) {
   await page.route('**/api/matrices-riesgos*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify({ success: true, datos: evaluaciones }),
+    body: JSON.stringify({
+      success: true,
+      datos: {
+        items: [{
+          evaId: 200,
+          evaRiesgoId: 501,
+          riesgoCodigo: 'R-501',
+          riesgoNombre: 'Riesgo de cumplimiento',
+          evaVersionId: 10,
+          versionCodigo: 'FORM_MATRIZ_LAFT',
+          versionNumero: 1,
+          estado: 'BORRADOR',
+          vri: 7,
+          vrr: 4,
+          nivelResidual: 'MODERADO',
+          fechaEval: '2026-08-03T10:00:00Z'
+        }],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 1,
+        totalPaginas: 1
+      }
+    }),
   }));
 }
 
@@ -305,8 +350,7 @@ test('abre Matrices de Riesgos con una sesión autenticada y contratos dinámico
 
   await expect(page).toHaveURL(/\/matrices-riesgos$/);
   await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
-  await expect(page.getByText('FORM_MATRIZ_LAFT', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Evaluaciones' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await expect(page.getByText('BORRADOR', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Nueva evaluación' })).toBeVisible();
 });
@@ -319,10 +363,10 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   await expect(page.getByRole('heading', { name: 'Nueva evaluación' })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Identificación del riesgo' })).toBeVisible();
 
-  const guardar = page.getByRole('button', { name: 'Guardar' });
+  const guardar = page.getByRole('button', { name: 'Guardar evaluación' });
   await expect(guardar).toBeDisabled();
 
-  await page.locator('select').selectOption({ label: 'R-502 · Riesgo tecnológico' });
+  await page.locator('#selector-riesgo').selectOption('502');
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
   await expect(guardar).toBeEnabled();
@@ -354,7 +398,7 @@ test('consulta una evaluación existente y permite abrir su edición', async ({ 
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
-  await page.getByTitle('Abrir evaluación').first().click();
-  await expect(page.getByRole('heading', { name: 'Editar evaluación' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Guardar evaluación' })).toBeVisible();
+  await page.getByTitle('Editar evaluación').first().click();
+  await expect(page.getByRole('heading', { name: 'Editar Evaluación' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
 });

@@ -315,7 +315,7 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
 
         // 1. ListarEvaluacionesPaginadas (line 149)
         repoStub.On(nameof(IMatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync), _ =>
-            Task.FromResult(new List<EvaluacionRiesgoDto>()));
+            Task.FromResult(new EvaluacionesPaginadasDto()));
         var r1 = await cached.ListarEvaluacionesPaginadasAsync(new ConsultaEvaluacionPaginadaDto());
         Assert.True(r1.Success);
 

@@ -73,7 +73,8 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
     }
 
     let datos: unknown = [];
-    if (path.endsWith('/formulario/version-vigente')) datos = versionPublicada;
+    if (path.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famActivo: true }];
+    else if (path.endsWith('/formulario/version-vigente')) datos = versionPublicada;
     else if (path.endsWith('/metodologia/vigente')) datos = {
       versionFormularioId: 10,
       codigo: 'MATRIZ_RIESGOS_LAFT_V1',
@@ -84,7 +85,7 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
     };
     else if (path.endsWith('/formularios/historial')) datos = [versionPublicada];
     else if (path.endsWith('/riesgos')) datos = [];
-    else if (path.endsWith('/evaluaciones')) datos = [];
+    else if (path.endsWith('/evaluaciones')) datos = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 0, totalPaginas: 0 };
     else if (path.endsWith('/consolidado')) datos = [];
 
     return route.fulfill({
@@ -125,7 +126,7 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
 
   await expect.poll(() => clonaciones).toBe(1);
   await expect(page).not.toHaveURL(/\/sin-acceso/);
-  await expect(page.getByRole('status')).toContainText('Versión clonada como borrador');
+  await expect(page.getByText('Versión clonada como borrador')).toBeVisible();
 });
 
 test('un 403 real del Backend conserva la protección y redirige a Acceso Denegado', async ({ page }) => {

@@ -678,9 +678,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.Parameters.Add(new OracleParameter("evaId", evaId));
         await using var reader = await cmd.ExecuteReaderAsync();
         return await reader.ReadAsync() ? MapearEvaluacion(reader) : null;
-    }
-
-    public async Task<List<EvaluacionRiesgoDto>> ListarEvaluacionesPaginadasAsync(
+    }    public async Task<EvaluacionesPaginadasDto> ListarEvaluacionesPaginadasAsync(
         ConsultaEvaluacionPaginadaDto filtro)
     {
         if (filtro.Pagina < 1)
@@ -696,21 +694,48 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        var baseSql = new StringBuilder(@"
-            SELECT e.EVA_ID,
-                   e.EVA_RIESGO_ID,
-                   e.EVA_VERSION_ID,
-                   NVL(f.FLU_ESTADO, 'BORRADOR'),
-                   e.EVA_DATOS_JSON,
-                   e.EVA_CALCULOS_JSON,
-                   p.PROY_VRI,
-                   CAST(NULL AS NUMBER),
-                   p.PROY_VRR,
-                   e.EVA_FECHA_REGISTRO,
-                   e.EVA_USR_REGISTRO,
-                   e.EVA_VERSION_ROW,
-                   e.EVA_ACTIVO
+        var whereSql = new StringBuilder(@"
+             WHERE e.EVA_ACTIVO = 1");
+
+        var parameters = new List<OracleParameter>();
+        if (filtro.RiesgoId.HasValue)
+        {
+            whereSql.Append(" AND e.EVA_RIESGO_ID = :riesgoId");
+            parameters.Add(new OracleParameter("riesgoId", filtro.RiesgoId.Value));
+        }
+        if (!string.IsNullOrWhiteSpace(filtro.Estado))
+        {
+            whereSql.Append(" AND f.FLU_ESTADO = :estado");
+            parameters.Add(new OracleParameter("estado", filtro.Estado.Trim().ToUpperInvariant()));
+        }
+        if (!string.IsNullOrWhiteSpace(filtro.Area))
+        {
+            whereSql.Append(" AND p.PROY_AREA_PRINCIPAL = :area");
+            parameters.Add(new OracleParameter("area", filtro.Area.Trim()));
+        }
+        if (!string.IsNullOrWhiteSpace(filtro.NivelResidual))
+        {
+            whereSql.Append(" AND p.PROY_NIVEL_RESIDUAL = :nivelResidual");
+            parameters.Add(new OracleParameter("nivelResidual", filtro.NivelResidual.Trim()));
+        }
+        if (!string.IsNullOrWhiteSpace(filtro.Buscar))
+        {
+            string busqueda = $"%{filtro.Buscar.Trim().ToUpperInvariant()}%";
+            whereSql.Append(@" AND (
+                UPPER(r.RIE_CODIGO) LIKE :buscar
+                OR UPPER(r.RIE_NOMBRE) LIKE :buscar
+                OR UPPER(v.VER_CODIGO) LIKE :buscar
+                OR TO_CHAR(e.EVA_ID) LIKE :buscar
+            )");
+            parameters.Add(new OracleParameter("buscar", busqueda));
+        }
+
+        const string joinsSql = @"
               FROM RL_MR_EVALUACIONES_RIESGO e
+              JOIN RL_MR_RIESGOS r
+                ON r.RIE_ID = e.EVA_RIESGO_ID
+              JOIN RL_MR_VERSIONES_FORMULARIO v
+                ON v.VER_ID = e.EVA_VERSION_ID
               LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p
                 ON p.PROY_EVALUACION_ID = e.EVA_ID
               LEFT JOIN (
@@ -726,59 +751,85 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                            )
                      WHERE RN = 1
               ) f
-                ON f.FLU_EVALUACION_ID = e.EVA_ID
-             WHERE e.EVA_ACTIVO = 1");
+                ON f.FLU_EVALUACION_ID = e.EVA_ID";
 
-        var parameters = new List<OracleParameter>();
-        if (filtro.RiesgoId.HasValue)
+        string countQuery = $@"
+            SELECT COUNT(*)
+            {joinsSql}
+            {whereSql}";
+
+        await using var cmdCount = CrearComando(countQuery, conn);
+        foreach (OracleParameter parameter in parameters)
         {
-            baseSql.Append(" AND e.EVA_RIESGO_ID = :riesgoId");
-            parameters.Add(new OracleParameter("riesgoId", filtro.RiesgoId.Value));
+            cmdCount.Parameters.Add(new OracleParameter(parameter.ParameterName, parameter.Value));
         }
-        if (!string.IsNullOrWhiteSpace(filtro.Estado))
-        {
-            baseSql.Append(" AND f.FLU_ESTADO = :estado");
-            parameters.Add(new OracleParameter("estado", filtro.Estado.Trim().ToUpperInvariant()));
-        }
-        if (!string.IsNullOrWhiteSpace(filtro.Area))
-        {
-            baseSql.Append(" AND p.PROY_AREA_PRINCIPAL = :area");
-            parameters.Add(new OracleParameter("area", filtro.Area.Trim()));
-        }
-        if (!string.IsNullOrWhiteSpace(filtro.NivelResidual))
-        {
-            baseSql.Append(" AND p.PROY_NIVEL_RESIDUAL = :nivelResidual");
-            parameters.Add(new OracleParameter("nivelResidual", filtro.NivelResidual.Trim()));
-        }
+        int totalRegistros = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
 
         int offset = (filtro.Pagina - 1) * filtro.RegistrosPorPagina;
-        string query = $@"
+        string selectDataSql = $@"
+            SELECT e.EVA_ID,
+                   e.EVA_RIESGO_ID,
+                   r.RIE_CODIGO,
+                   r.RIE_NOMBRE,
+                   e.EVA_VERSION_ID,
+                   v.VER_CODIGO,
+                   v.VER_VERSION,
+                   NVL(f.FLU_ESTADO, 'BORRADOR') AS ESTADO,
+                   p.PROY_VRI,
+                   p.PROY_VRR,
+                   p.PROY_NIVEL_RESIDUAL,
+                   e.EVA_FECHA_REGISTRO
+            {joinsSql}
+            {whereSql}";
+
+        string paginatedQuery = $@"
             SELECT *
               FROM (
                     SELECT q.*, ROWNUM NUMERO_FILA
                       FROM (
-                            {baseSql}
+                            {selectDataSql}
                             ORDER BY e.EVA_FECHA_REGISTRO DESC, e.EVA_ID DESC
                            ) q
                      WHERE ROWNUM <= :filaFinal
                    )
              WHERE NUMERO_FILA > :filaInicial";
 
-        await using var cmd = CrearComando(query, conn);
+        await using var cmd = CrearComando(paginatedQuery, conn);
         foreach (OracleParameter parameter in parameters)
         {
-            cmd.Parameters.Add(parameter);
+            cmd.Parameters.Add(new OracleParameter(parameter.ParameterName, parameter.Value));
         }
         cmd.Parameters.Add(new OracleParameter("filaFinal", offset + filtro.RegistrosPorPagina));
         cmd.Parameters.Add(new OracleParameter("filaInicial", offset));
 
-        var lista = new List<EvaluacionRiesgoDto>();
+        var lista = new List<EvaluacionRiesgoResumenDto>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            lista.Add(MapearEvaluacion(reader));
+            lista.Add(new EvaluacionRiesgoResumenDto
+            {
+                EvaId = reader.GetInt64(0),
+                EvaRiesgoId = reader.GetInt64(1),
+                RiesgoCodigo = reader.GetString(2),
+                RiesgoNombre = reader.GetString(3),
+                EvaVersionId = reader.GetInt64(4),
+                VersionCodigo = reader.GetString(5),
+                VersionNumero = reader.GetInt32(6),
+                Estado = reader.GetString(7),
+                Vri = reader.IsDBNull(8) ? null : Convert.ToInt32(reader.GetValue(8)),
+                Vrr = reader.IsDBNull(9) ? null : Convert.ToInt32(reader.GetValue(9)),
+                NivelResidual = reader.IsDBNull(10) ? null : reader.GetString(10),
+                FechaEval = reader.GetDateTime(11)
+            });
         }
-        return lista;
+
+        return new EvaluacionesPaginadasDto
+        {
+            Items = lista,
+            Pagina = filtro.Pagina,
+            RegistrosPorPagina = filtro.RegistrosPorPagina,
+            TotalRegistros = totalRegistros
+        };
     }
 
     public async Task<long> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip)
@@ -1364,6 +1415,31 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         int version = reader.GetInt32(2);
         string definicion = reader.GetString(3);
         return ConstruirMetodologiaDinamica(versionId, codigo, version, definicion);
+    }
+
+    public async Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaPorVersionAsync(long versionId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT VER_ID, VER_CODIGO, VER_VERSION, VER_JSON
+              FROM RL_MR_VERSIONES_FORMULARIO
+             WHERE VER_ID = :versionId";
+
+        await using var cmd = CrearComando(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("versionId", versionId));
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        long id = reader.GetInt64(0);
+        string codigo = reader.GetString(1);
+        int version = reader.GetInt32(2);
+        string definicion = reader.GetString(3);
+        return ConstruirMetodologiaDinamica(id, codigo, version, definicion);
     }
 
     private static MetodologiaFormularioDto ConstruirMetodologiaDinamica(

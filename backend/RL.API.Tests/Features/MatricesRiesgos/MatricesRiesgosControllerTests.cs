@@ -63,9 +63,27 @@ public sealed class MatricesRiesgosControllerTests
     {
         MatricesRiesgosController controller = CrearController(out InterfaceStub service);
         service.On(nameof(IMatricesRiesgosAppService.ListarEvaluacionesPaginadasAsync), _ =>
-            Task.FromResult(ServiceResult<List<EvaluacionRiesgoDto>>.Ok(new List<EvaluacionRiesgoDto>())));
+            Task.FromResult(ServiceResult<EvaluacionesPaginadasDto>.Ok(new EvaluacionesPaginadasDto())));
 
         IActionResult result = await controller.ListarEvaluacionesPaginadas(new ConsultaEvaluacionPaginadaDto());
+
+        Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task ObtenerMetodologiaPorVersion_RetornaOk()
+    {
+        MatricesRiesgosController controller = CrearController(out InterfaceStub service);
+        var metodologia = new MetodologiaFormularioDto
+        {
+            VersionFormularioId = 10,
+            Codigo = "FORM_A",
+            Version = 2
+        };
+        service.On(nameof(IMatricesRiesgosAppService.ObtenerMetodologiaDinamicaPorVersionAsync), _ =>
+            Task.FromResult(ServiceResult<MetodologiaFormularioDto>.Ok(metodologia)));
+
+        IActionResult result = await controller.ObtenerMetodologiaPorVersion(10);
 
         Assert.IsType<OkObjectResult>(result);
     }

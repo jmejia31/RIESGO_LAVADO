@@ -206,12 +206,35 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
         repo.On(nameof(IMatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync), _ =>
-            Task.FromResult(new List<EvaluacionRiesgoDto> { new() { EvaId = 1 } }));
+            Task.FromResult(new EvaluacionesPaginadasDto
+            {
+                Items = new List<EvaluacionRiesgoResumenDto> { new() { EvaId = 1, RiesgoCodigo = "RIE-001" } },
+                Pagina = 1,
+                RegistrosPorPagina = 20,
+                TotalRegistros = 1
+            }));
 
-        ServiceResult<List<EvaluacionRiesgoDto>> result = await service.ListarEvaluacionesPaginadasAsync(
+        ServiceResult<EvaluacionesPaginadasDto> result = await service.ListarEvaluacionesPaginadasAsync(
             new ConsultaEvaluacionPaginadaDto { Pagina = 1, RegistrosPorPagina = 20 });
 
-        Assert.Single(result.Data!);
+        Assert.True(result.Success);
+        Assert.Single(result.Data!.Items);
+        Assert.Equal(1, result.Data.TotalRegistros);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ObtenerMetodologiaPorVersion_RetornaResultadoEsperado(bool existe)
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaPorVersionAsync), _ =>
+            Task.FromResult(existe ? new MetodologiaFormularioDto { VersionFormularioId = 42, Codigo = "FORM_V1" } : null));
+
+        ServiceResult<MetodologiaFormularioDto> result = await service.ObtenerMetodologiaDinamicaPorVersionAsync(42);
+
+        Assert.Equal(existe, result.Success);
+        Assert.Equal(existe ? 200 : 404, result.StatusCode);
     }
 
     [Fact]

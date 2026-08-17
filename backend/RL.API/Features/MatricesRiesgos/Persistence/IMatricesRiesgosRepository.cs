@@ -34,7 +34,7 @@ public interface IMatricesRiesgosRepository
     Task<bool> DesactivarFamiliaFormularioAtomicoAsync(long famId);
 
     Task<EvaluacionRiesgoDto?> ObtenerEvaluacionAsync(long evaId);
-    Task<List<EvaluacionRiesgoDto>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);
+    Task<EvaluacionesPaginadasDto> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);
     Task<long> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
     Task<bool> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
     Task<bool> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip);
@@ -47,4 +47,5 @@ public interface IMatricesRiesgosRepository
 
     Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync();
     Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync();
+    Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaPorVersionAsync(long versionId);
 }

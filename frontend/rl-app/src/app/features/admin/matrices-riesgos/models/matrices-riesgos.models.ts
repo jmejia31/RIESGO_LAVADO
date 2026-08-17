@@ -108,6 +108,31 @@ export interface EvaluacionRiesgoDto {
   evaActivo: boolean;
 }
 
+export interface EvaluacionRiesgoResumenDto {
+  evaId: number;
+  evaRiesgoId: number;
+  riesgoCodigo: string;
+  riesgoNombre: string;
+  evaVersionId: number;
+  versionCodigo: string;
+  versionNumero: number;
+  estado: string;
+  evaEstado?: string;
+  vri?: number | null;
+  vrr?: number | null;
+  nivelResidual?: string | null;
+  fechaEval: string;
+  evaFechaEval?: string;
+}
+
+export interface EvaluacionesPaginadasDto {
+  items: EvaluacionRiesgoResumenDto[];
+  pagina: number;
+  registrosPorPagina: number;
+  totalRegistros: number;
+  totalPaginas: number;
+}
+
 export interface ConsultaEvaluacionPaginadaDto {
   riesgoId?: number;
   buscar?: string;
@@ -209,5 +234,6 @@ export interface DefinicionFormularioEditable {
     columnasPorFila?: number;
     campos: CampoFormulario[];
   }>;
-  reglas?: Array<{ codigo: string; version: string }>;
+  catalogos?: CatalogoMatrices[];
+  reglas?: Array<{ codigo: string; version: string; algoritmoId?: string; parametros?: unknown }>;
 }

@@ -10,20 +10,26 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
 
   beforeEach(async () => {
     service = {
-      listarEvaluaciones: vi.fn().mockReturnValue(of([{
-        evaId: 20,
-        evaRiesgoId: 7,
-        evaVersionId: 10,
-        evaEstado: 'BORRADOR',
-        evaDataJson: '{}',
-        evaDataCalcJson: '{}',
-        evaVri: 7,
-        evaVrr: 4,
-        evaFechaEval: '2026-08-07',
-        evaUsrEval: 1,
-        evaVersionRow: 1,
-        evaActivo: true
-      }]))
+      listarEvaluaciones: vi.fn().mockReturnValue(of({
+        items: [{
+          evaId: 20,
+          evaRiesgoId: 7,
+          riesgoCodigo: 'RIE-007',
+          riesgoNombre: 'Riesgo 7',
+          evaVersionId: 10,
+          versionCodigo: 'FORM_A',
+          versionNumero: 2,
+          estado: 'BORRADOR',
+          vri: 7,
+          vrr: 4,
+          nivelResidual: 'MEDIO',
+          fechaEval: '2026-08-07'
+        }],
+        pagina: 1,
+        registrosPorPagina: 200,
+        totalRegistros: 1,
+        totalPaginas: 1
+      }))
     };
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosCicloIntegralComponent],

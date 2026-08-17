@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { EvaluacionRiesgoDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
@@ -43,6 +43,21 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     evaActivo: true
   };
 
+  const evaluacionResumen: EvaluacionRiesgoResumenDto = {
+    evaId: 15,
+    evaRiesgoId: 5,
+    riesgoCodigo: 'RIE-005',
+    riesgoNombre: 'Riesgo 5',
+    evaVersionId: 10,
+    versionCodigo: 'FORM_A',
+    versionNumero: 2,
+    estado: 'BORRADOR',
+    vri: 7,
+    vrr: 4,
+    nivelResidual: 'MEDIO',
+    fechaEval: '2026-08-05T10:00:00Z'
+  };
+
   beforeEach(async () => {
     service = {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
@@ -57,26 +72,33 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
         catalogos: [],
         reglas: []
       })),
+      obtenerEvaluacion: vi.fn().mockReturnValue(of(evaluacion)),
+      metodologiaPorVersion: vi.fn().mockReturnValue(of({
+        versionFormularioId: 10,
+        codigo: 'FORM_A',
+        version: 2,
+        secciones: [],
+        catalogos: [],
+        reglas: []
+      })),
       listarRiesgos: vi.fn().mockReturnValue(of([{ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo', rieActivo: true }])),
-      listarEvaluaciones: vi.fn().mockReturnValue(of([evaluacion])),
+      listarEvaluaciones: vi.fn().mockReturnValue(of({
+        items: [evaluacionResumen],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 1,
+        totalPaginas: 1
+      })),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([version])),
       crearEvaluacion: vi.fn().mockReturnValue(of({ success: true, datos: 20 })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
-      obtenerFlujos: vi.fn().mockReturnValue(of([
-        {
-          fluId: 1,
-          fluEvaluacionId: 15,
-          fluEstado: 'BORRADOR',
-          fluMotivo: 'Captura inicial',
-          fluUsrId: 1,
-          fluFecha: '2026-08-05T10:00:00Z'
-        }
-      ])),
       transicionarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
+      obtenerFlujos: vi.fn().mockReturnValue(of([{ fluId: 1, fluEstado: 'BORRADOR', fluFecha: '2026-08-05T10:00:00Z', fluUsrId: 1, fluMotivo: 'Registro' }])),
       cargarEvidencia: vi.fn().mockReturnValue(of({ eviId: 88 })),
       vincularEvidencia: vi.fn().mockReturnValue(of({ success: true })),
       eliminarEvidenciaHuerfana: vi.fn().mockReturnValue(of({ success: true })),
+      crearBorradorFormulario: vi.fn().mockReturnValue(of(10)),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
       clonarVersionFormulario: vi.fn().mockReturnValue(of(11)),
       publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
@@ -94,25 +116,27 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     fixture.detectChanges();
   });
 
-  it('carga el historial de flujos al editar una evaluación', () => {
-    component.editarEvaluacion(evaluacion);
+  it('carga el historial de flujos al abrir seguimiento de una evaluación', () => {
+    component.abrirModalSeguimiento(evaluacionResumen);
     expect(service['obtenerFlujos']).toHaveBeenCalledWith(15);
     expect(component.flujos()).toHaveLength(1);
   });
 
   it('descarta respuestas JSON que no sean un objeto durante la edición', () => {
-    component.editarEvaluacion({ ...evaluacion, evaDataJson: '"invalido"' });
+    service['obtenerEvaluacion'].mockReturnValue(of({ ...evaluacion, evaDataJson: '"invalido"' }));
+    component.editarEvaluacion(evaluacionResumen);
     expect(component.respuestas()).toEqual({});
   });
 
   it('transiciona, limpia el motivo y recarga evaluación e historial', () => {
+    component.abrirModalSeguimiento(evaluacionResumen);
     component.nuevoEstado = 'EN_REVISION';
     component.motivoTransicion = 'Revisión técnica';
-    component.transicionarEvaluacion(evaluacion);
+    component.transicionarEvaluacionModal();
 
     expect(service['transicionarEvaluacion']).toHaveBeenCalledWith(15, 'EN_REVISION', 'Revisión técnica');
     expect(component.motivoTransicion).toBe('');
-    expect(component.mensaje()).toBe('Estado de evaluación actualizado correctamente.');
+    expect(component.mensaje()).toBe('Estado de la evaluación #15 actualizado a EN_REVISION correctamente.');
   });
 
   it('muestra el mensaje funcional cuando la transición falla', () => {
@@ -120,8 +144,9 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
       error: { detail: 'Transición inválida desde el estado actual.' }
     })));
 
+    component.abrirModalSeguimiento(evaluacionResumen);
     component.nuevoEstado = 'APROBADA';
-    component.transicionarEvaluacion(evaluacion);
+    component.transicionarEvaluacionModal();
 
     expect(component.error()).toBe('Transición inválida desde el estado actual.');
   });
@@ -151,7 +176,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
 
   it('vacía el historial cuando no puede consultar los flujos', () => {
     service['obtenerFlujos'].mockReturnValue(throwError(() => new Error('Error flujos')));
-    component.editarEvaluacion(evaluacion);
+    component.abrirModalSeguimiento(evaluacionResumen);
 
     expect(component.flujos()).toEqual([]);
   });

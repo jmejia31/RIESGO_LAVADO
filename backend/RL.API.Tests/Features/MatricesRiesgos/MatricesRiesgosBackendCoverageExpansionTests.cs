@@ -136,7 +136,7 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
     {
         MatricesRiesgosAppService inner = CrearInner(out InterfaceStub repo);
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(null));
-        repo.On(nameof(IMatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync), _ => Task.FromResult(new List<EvaluacionRiesgoDto>()));
+        repo.On(nameof(IMatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync), _ => Task.FromResult(new EvaluacionesPaginadasDto()));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerFlujosEvaluacionAsync), _ => Task.FromResult(new List<FlujoEvaluacionDto>()));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync), _ =>

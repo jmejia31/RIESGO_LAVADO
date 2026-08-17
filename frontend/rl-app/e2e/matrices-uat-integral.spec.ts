@@ -39,7 +39,26 @@ async function preparar(page: Page): Promise<void> {
     if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: version.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (path.endsWith('/formularios/historial')) datos = [version];
-    else if (path.endsWith('/evaluaciones') && method === 'GET') datos = [evaluacion];
+    else if (path.endsWith('/evaluaciones') && method === 'GET') datos = {
+      items: [{
+        evaId: 20,
+        evaRiesgoId: 7,
+        riesgoCodigo: 'R-007',
+        riesgoNombre: 'Riesgo UAT',
+        evaVersionId: 10,
+        versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
+        versionNumero: 1,
+        estado: 'BORRADOR',
+        vri: 7,
+        vrr: 4,
+        nivelResidual: 'MEDIO',
+        fechaEval: '2026-08-07T12:00:00Z'
+      }],
+      pagina: 1,
+      registrosPorPagina: 10,
+      totalRegistros: 1,
+      totalPaginas: 1
+    };
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
     else if (path.endsWith('/consolidado')) datos = [];
     else if (path.endsWith('/mitigacion/evaluaciones/20/controles')) datos = [];
@@ -52,7 +71,29 @@ async function preparar(page: Page): Promise<void> {
 
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
   });
-  await page.route('**/api/matrices-riesgos*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [evaluacion] }) }));
+  await page.route('**/api/matrices-riesgos*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+    success: true,
+    datos: {
+      items: [{
+        evaId: 20,
+        evaRiesgoId: 7,
+        riesgoCodigo: 'R-007',
+        riesgoNombre: 'Riesgo UAT',
+        evaVersionId: 10,
+        versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
+        versionNumero: 1,
+        estado: 'BORRADOR',
+        vri: 7,
+        vrr: 4,
+        nivelResidual: 'MEDIO',
+        fechaEval: '2026-08-07T12:00:00Z'
+      }],
+      pagina: 1,
+      registrosPorPagina: 10,
+      totalRegistros: 1,
+      totalPaginas: 1
+    }
+  }) }));
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
@@ -176,6 +217,6 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.getByLabel('Estado del riesgo').fill('CONTROLADO');
   await page.getByLabel('Estado de controles').fill('EFECTIVO');
   await page.getByLabel('Resultado').fill('Seguimiento conforme');
-  await page.getByRole('button', { name: 'Registrar automonitoreo' }).click();
+  await page.getByRole('button', { name: 'Guardar monitoreo' }).click();
   await expect.poll(() => recibidos['monitoreo']?.monResultado).toBe('Seguimiento conforme');
 });

@@ -6,6 +6,8 @@ import {
   CampoFormulario,
   DefinicionFormularioEditable,
   EvaluacionRiesgoDto,
+  EvaluacionRiesgoResumenDto,
+  EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
@@ -62,13 +64,24 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   nuevoFormularioNombre = '';
 
   readonly riesgos = signal<RiesgoDto[]>([]);
-  readonly evaluaciones = signal<EvaluacionRiesgoDto[]>([]);
+  readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
+  readonly totalRegistros = signal(0);
+  readonly totalPaginas = signal(0);
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
+  readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
 
+  // Modales de Evaluaciones
+  readonly modalVerAbierto = signal<boolean>(false);
+  readonly modalEditarAbierto = signal<boolean>(false);
+  readonly modalSeguimientoAbierto = signal<boolean>(false);
+  readonly modalNuevaEvaluacionAbierto = signal<boolean>(false);
+  readonly metodologiaHistorica = signal<MetodologiaFormulario | null>(null);
+  readonly versionHistorica = signal<VersionFormularioDto | null>(null);
+
   readonly pagina = signal(1);
-  readonly registrosPorPagina = signal(20);
+  readonly registrosPorPagina = signal(10);
   readonly filtroBuscar = signal('');
   readonly filtroEstado = signal('');
   readonly riesgoId = signal(0);
@@ -81,6 +94,47 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly versionEditando = signal<VersionFormularioDto | null>(null);
   readonly soloLecturaDefinicion = signal<boolean>(false);
   definicionTecnica = '';
+
+  readonly seccionesModal = computed(() => {
+    // 1. Si tenemos metodologiaHistorica con secciones, usar esas
+    const metHist = this.metodologiaHistorica();
+    if (metHist && metHist.secciones && metHist.secciones.length > 0) {
+      return metHist.secciones.map(sec => ({
+        clave: sec.clave,
+        titulo: sec.titulo || sec.clave,
+        orden: sec.orden,
+        columnasPorFila: 2,
+        campos: sec.campos.map(c => ({
+          clave: c.clave,
+          etiqueta: c.etiqueta,
+          tipo: c.tipo as 'texto' | 'numero' | 'selector-catalogo' | 'calculado' | 'archivo',
+          obligatorio: c.obligatorio,
+          soloLectura: c.soloLectura,
+          formula: c.formula,
+          codigoCatalogo: c.codigoCatalogo
+        }))
+      })).sort((a, b) => a.orden - b.orden);
+    }
+
+    // 2. Si estamos en modal de ver/editar histórico, usar la versión histórica
+    const vHist = this.versionHistorica();
+    if (vHist?.verJson) {
+      const def = this.extraerDefinicionVersion(vHist);
+      if (def.secciones.length > 0) {
+        return def.secciones.sort((a, b) => a.orden - b.orden);
+      }
+    }
+
+    // 3. Fallback a la versión vigente
+    const vVig = this.versionVigente();
+    if (vVig?.verJson) {
+      const def = this.extraerDefinicionVersion(vVig);
+      if (def.secciones.length > 0) {
+        return def.secciones.sort((a, b) => a.orden - b.orden);
+      }
+    }
+    return [];
+  });
 
   readonly secciones = computed(() => {
     const versionVigente = this.versionVigente();
@@ -99,7 +153,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   );
 
   contarEvaluacionesPorEstado(estado: string): number {
-    return this.evaluaciones().filter(e => (e.evaEstado || '').toUpperCase() === estado.toUpperCase()).length;
+    return this.evaluaciones().filter(e => (e.estado || '').toUpperCase() === estado.toUpperCase()).length;
   }
 
   readonly totalCompletados = computed(() => {
@@ -112,11 +166,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly puedeGuardar = computed(() => {
     const respuestas = this.respuestas();
-    if (this.riesgoId() <= 0 || !this.versionVigente()) {
+    const versionActiva = this.modalEditarAbierto()
+      ? (this.versionHistorica() || this.metodologiaHistorica() || this.versionVigente())
+      : this.versionVigente();
+
+    if (this.riesgoId() <= 0 || !versionActiva) {
       return false;
     }
 
-    return this.secciones()
+    const seccionesEval = this.modalEditarAbierto() || this.modalNuevaEvaluacionAbierto()
+      ? this.seccionesModal()
+      : this.secciones();
+
+    return seccionesEval
       .flatMap(seccion => seccion.campos)
       .filter(campo => campo.obligatorio)
       .every(campo => this.tieneValor(respuestas[campo.clave]));
@@ -124,7 +186,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape', ['$event'])
   manejarTeclaEscape(event: Event): void {
-    if (this.versionEditando()) {
+    if (this.modalVerAbierto()) {
+      event.preventDefault();
+      this.cerrarModalVer();
+    } else if (this.modalEditarAbierto()) {
+      event.preventDefault();
+      this.cerrarModalEditar();
+    } else if (this.modalSeguimientoAbierto()) {
+      event.preventDefault();
+      this.cerrarModalSeguimiento();
+    } else if (this.modalNuevaEvaluacionAbierto()) {
+      event.preventDefault();
+      this.cerrarModalNuevaEvaluacion();
+    } else if (this.versionEditando()) {
       event.preventDefault();
       this.versionEditando.set(null);
     } else if (this.modalFamiliaAbierto()) {
@@ -207,11 +281,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarFamiliasFormulario().subscribe({
       next: familias => {
         this.familias.set(familias);
-        if (familias.length > 0 && !familias.some(f => f.famCodigo === this.familiaSeleccionada())) {
-          const activa = familias.find(f => f.famActivo);
-          if (activa) {
+        if (familias.length > 0) {
+          const actualValida = familias.some(f => f.famCodigo === this.familiaSeleccionada());
+          if (!actualValida) {
+            const activa = familias.find(f => f.famActivo) ?? familias[0];
             this.familiaSeleccionada.set(activa.famCodigo);
           }
+        }
+        if (this.tab() === 'plantillas') {
+          this.cargarVersiones();
         }
       },
       error: () => this.familias.set([])
@@ -372,6 +450,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   alCambiarFiltroBuscar(valor: string): void {
     this.filtroBuscar.set(valor);
+    this.pagina.set(1);
     if (this.timerDebounceBuscar) {
       clearTimeout(this.timerDebounceBuscar);
     }
@@ -382,6 +461,21 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   alCambiarFiltroEstado(valor: string): void {
     this.filtroEstado.set(valor);
+    this.pagina.set(1);
+    this.cargarEvaluaciones();
+  }
+
+  cambiarRegistrosPorPagina(cantidad: number): void {
+    this.registrosPorPagina.set(Number(cantidad));
+    this.pagina.set(1);
+    this.cargarEvaluaciones();
+  }
+
+  cambiarPagina(nuevaPagina: number): void {
+    if (nuevaPagina < 1 || (this.totalPaginas() > 0 && nuevaPagina > this.totalPaginas())) {
+      return;
+    }
+    this.pagina.set(nuevaPagina);
     this.cargarEvaluaciones();
   }
 
@@ -391,6 +485,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
     this.filtroBuscar.set('');
     this.filtroEstado.set('');
+    this.pagina.set(1);
     this.cargarEvaluaciones();
   }
 
@@ -402,8 +497,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       pagina: this.pagina(),
       registrosPorPagina: this.registrosPorPagina()
     }).subscribe({
-      next: evaluaciones => {
-        this.evaluaciones.set(evaluaciones);
+      next: paginado => {
+        this.evaluaciones.set(paginado.items);
+        this.totalRegistros.set(paginado.totalRegistros);
+        this.totalPaginas.set(paginado.totalPaginas);
         this.cargando.set(false);
       },
       error: error => this.finalizarConError(error, 'No se pudieron consultar las evaluaciones.')
@@ -443,7 +540,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   actualizarRespuesta(campo: CampoFormulario, valor: string | number | boolean | null): void {
     this.respuestas.update(actuales => {
       const nuevas = { ...actuales, [campo.clave]: valor };
-      const todosLosCampos = this.secciones().flatMap(s => s.campos);
+      const seccionesActuales = this.modalEditarAbierto() || this.modalNuevaEvaluacionAbierto()
+        ? this.seccionesModal()
+        : this.secciones();
+      const todosLosCampos = seccionesActuales.flatMap(s => s.campos);
       const { respuestasActualizadas } = recalcularFormulasEvaluacion(todosLosCampos, nuevas);
       return respuestasActualizadas;
     });
@@ -456,46 +556,196 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
     if (!campo.codigoCatalogo) return [];
 
-    return this.metodologia()?.catalogos
+    const met = this.modalVerAbierto() || this.modalEditarAbierto()
+      ? this.metodologiaHistorica() ?? this.metodologia()
+      : this.metodologia();
+
+    return met?.catalogos
       .find(catalogo => catalogo.codigo === campo.codigoCatalogo)
       ?.elementos
       .slice()
       .sort((a, b) => a.orden - b.orden) ?? [];
   }
 
-  nuevaEvaluacion(): void {
-    this.evaluacionSeleccionada.set(null);
-    this.riesgoId.set(0);
-    this.inicializarRespuestas();
-    this.tab.set('captura');
+  obtenerEtiquetaCatalogo(campo: CampoFormulario, valor: unknown): string {
+    if (valor === null || valor === undefined || valor === '') return '-';
+    const opciones = this.opcionesCatalogo(campo);
+    const item = opciones.find(o => String(o.codigo) === String(valor));
+    return item ? `${item.valor} (${item.codigo})` : String(valor);
   }
 
-  editarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
-    this.evaluacionSeleccionada.set(evaluacion);
-    this.riesgoId.set(evaluacion.evaRiesgoId);
-    this.respuestas.set(this.parsearRespuestas(evaluacion.evaDataJson));
-    this.tab.set('captura');
+  // --- MODAL: NUEVA EVALUACIÓN ---
+  nuevaEvaluacion(): void {
+    this.limpiarAlertas();
+    this.evaluacionSeleccionada.set(null);
+    this.evaluacionResumenSeleccionada.set(null);
+    this.riesgoId.set(0);
+    this.versionHistorica.set(null);
+    this.metodologiaHistorica.set(null);
+    this.inicializarRespuestas();
+    this.modalNuevaEvaluacionAbierto.set(true);
+  }
+
+  cerrarModalNuevaEvaluacion(): void {
+    this.modalNuevaEvaluacionAbierto.set(false);
+    this.globalState.limpiarError();
+  }
+
+  // --- MODAL: VER DETALLE FRESCO ---
+  abrirModalVer(resumen: EvaluacionRiesgoResumenDto): void {
+    this.limpiarAlertas();
+    this.cargando.set(true);
+    this.evaluacionResumenSeleccionada.set(resumen);
+
+    // 1. GET /evaluaciones/{id} para detalle fresco
+    this.service.obtenerEvaluacion(resumen.evaId).subscribe({
+      next: detalle => {
+        this.evaluacionSeleccionada.set(detalle);
+        this.riesgoId.set(detalle.evaRiesgoId);
+        this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
+
+        // 2. Cargar metodología y versión exacta de evaVersionId
+        this.service.metodologiaPorVersion(detalle.evaVersionId).subscribe({
+          next: met => {
+            this.metodologiaHistorica.set(met);
+            this.service.obtenerFamiliaFormularioPorId(1).subscribe({
+              next: () => {
+                // Obtenemos historial o versión si es necesario
+                this.cargando.set(false);
+                this.modalVerAbierto.set(true);
+              },
+              error: () => {
+                this.cargando.set(false);
+                this.modalVerAbierto.set(true);
+              }
+            });
+          },
+          error: () => {
+            // Fallback a metodología vigente si fallara
+            this.metodologiaHistorica.set(this.metodologia());
+            this.cargando.set(false);
+            this.modalVerAbierto.set(true);
+          }
+        });
+      },
+      error: error => {
+        this.cargando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo obtener el detalle de la evaluación.'));
+      }
+    });
+  }
+
+  cerrarModalVer(): void {
+    this.modalVerAbierto.set(false);
+    this.globalState.limpiarError();
+  }
+
+  // --- MODAL: EDITAR (SOLO BORRADOR) ---
+  editarEvaluacion(evaluacion: EvaluacionRiesgoResumenDto): void {
+    if ((evaluacion.estado || '').toUpperCase() !== 'BORRADOR') {
+      this.mostrarError('Solo se permite editar evaluaciones en estado BORRADOR.');
+      return;
+    }
+
+    this.limpiarAlertas();
+    this.cargando.set(true);
+    this.evaluacionResumenSeleccionada.set(evaluacion);
+
+    // 1. GET /evaluaciones/{id} para detalle fresco
+    this.service.obtenerEvaluacion(evaluacion.evaId).subscribe({
+      next: detalle => {
+        this.evaluacionSeleccionada.set(detalle);
+        this.riesgoId.set(detalle.evaRiesgoId);
+        this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
+
+        // 2. Cargar metodología histórica exacta
+        this.service.metodologiaPorVersion(detalle.evaVersionId).subscribe({
+          next: met => {
+            this.metodologiaHistorica.set(met);
+            this.cargando.set(false);
+            this.modalEditarAbierto.set(true);
+          },
+          error: () => {
+            this.metodologiaHistorica.set(this.metodologia());
+            this.cargando.set(false);
+            this.modalEditarAbierto.set(true);
+          }
+        });
+      },
+      error: error => {
+        this.cargando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo obtener el detalle fresco para editar la evaluación.'));
+      }
+    });
+  }
+
+  cerrarModalEditar(): void {
+    this.modalEditarAbierto.set(false);
+    this.globalState.limpiarError();
+  }
+
+  // --- MODAL: SEGUIMIENTO ---
+  abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {
+    this.limpiarAlertas();
+    this.evaluacionResumenSeleccionada.set(evaluacion);
+    this.motivoTransicion = '';
+    this.nuevoEstado = this.obtenerTransicionPorDefecto(evaluacion.estado);
     this.cargarFlujos(evaluacion.evaId);
+    this.modalSeguimientoAbierto.set(true);
+  }
+
+  cerrarModalSeguimiento(): void {
+    this.modalSeguimientoAbierto.set(false);
+    this.globalState.limpiarError();
+  }
+
+  obtenerTransicionesValidas(estadoActual: string): string[] {
+    switch ((estadoActual || '').toUpperCase()) {
+      case 'BORRADOR':
+        return ['EN_REVISION'];
+      case 'EN_REVISION':
+        return ['OBSERVADA', 'APROBADA', 'RECHAZADA'];
+      case 'OBSERVADA':
+        return ['BORRADOR'];
+      case 'APROBADA':
+        return ['CERRADA'];
+      default:
+        return [];
+    }
+  }
+
+  obtenerTransicionPorDefecto(estadoActual: string): string {
+    const validas = this.obtenerTransicionesValidas(estadoActual);
+    return validas.length > 0 ? validas[0] : '';
   }
 
   guardarEvaluacion(): void {
-    const version = this.versionVigente();
-    if (!version || !this.puedeGuardar()) {
+    const esEdicion = this.modalEditarAbierto();
+    const actual = this.evaluacionSeleccionada();
+
+    const versionIdFinal = esEdicion && actual
+      ? actual.evaVersionId
+      : this.versionVigente()?.verId ?? 0;
+
+    if (versionIdFinal <= 0 || !this.puedeGuardar()) {
       this.mostrarError('Complete el riesgo y todos los campos obligatorios antes de guardar.');
       return;
     }
 
     this.guardando.set(true);
     this.limpiarAlertas();
-    const actual = this.evaluacionSeleccionada();
 
-    const todosLosCampos = this.secciones().flatMap(s => s.campos);
+    const seccionesEval = esEdicion || this.modalNuevaEvaluacionAbierto()
+      ? this.seccionesModal()
+      : this.secciones();
+
+    const todosLosCampos = seccionesEval.flatMap(s => s.campos);
     const { respuestasActualizadas, calculosJson } = recalcularFormulasEvaluacion(todosLosCampos, this.respuestas());
 
     const dto: EvaluacionRiesgoDto = {
       evaId: actual?.evaId ?? 0,
       evaRiesgoId: this.riesgoId(),
-      evaVersionId: version.verId,
+      evaVersionId: versionIdFinal,
       evaEstado: actual?.evaEstado ?? 'BORRADOR',
       evaDataJson: JSON.stringify(respuestasActualizadas),
       evaDataCalcJson: JSON.stringify(calculosJson),
@@ -507,7 +757,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       evaActivo: true
     };
 
-    const solicitud = actual
+    const solicitud = esEdicion && actual
       ? this.service.actualizarEvaluacion(actual.evaId, dto)
       : this.service.crearEvaluacion(dto);
 
@@ -515,33 +765,47 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.mostrarMensaje(actual ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
-        this.tab.set('evaluaciones');
+        this.mostrarMensaje(esEdicion ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
+        this.modalEditarAbierto.set(false);
+        this.modalNuevaEvaluacionAbierto.set(false);
         this.cargarEvaluaciones();
       },
       error: error => {
         this.guardando.set(false);
-        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo guardar la evaluación. Verifique los datos e intente nuevamente.'));
+        if (error?.status === 409) {
+          this.mostrarError('La evaluación fue modificada por otro usuario. Recargue los datos antes de continuar.');
+        } else {
+          this.mostrarError(this.obtenerMensajeError(error, 'No se pudo guardar la evaluación. Verifique los datos e intente nuevamente.'));
+        }
       }
     });
   }
 
-  transicionarEvaluacion(evaluacion: EvaluacionRiesgoDto): void {
+  transicionarEvaluacionModal(): void {
+    const resumen = this.evaluacionResumenSeleccionada();
+    if (!resumen) return;
+
     this.limpiarAlertas();
     if (!this.nuevoEstado.trim()) {
-      this.mostrarError('Seleccione un estado de destino para la transición.');
+      this.mostrarError('Seleccione un estado de destino válido.');
       return;
     }
 
     this.guardando.set(true);
-    this.service.transicionarEvaluacion(evaluacion.evaId, this.nuevoEstado, this.motivoTransicion).subscribe({
+    this.service.transicionarEvaluacion(resumen.evaId, this.nuevoEstado, this.motivoTransicion).subscribe({
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.mostrarMensaje('Estado de evaluación actualizado correctamente.');
+        this.mostrarMensaje(`Estado de la evaluación #${resumen.evaId} actualizado a ${this.nuevoEstado} correctamente.`);
         this.motivoTransicion = '';
         this.cargarEvaluaciones();
-        this.cargarFlujos(evaluacion.evaId);
+        this.cargarFlujos(resumen.evaId);
+        // Actualizamos estado en el resumen seleccionado localmente
+        this.evaluacionResumenSeleccionada.set({
+          ...resumen,
+          estado: this.nuevoEstado
+        });
+        this.nuevoEstado = this.obtenerTransicionPorDefecto(this.nuevoEstado);
       },
       error: error => {
         this.guardando.set(false);

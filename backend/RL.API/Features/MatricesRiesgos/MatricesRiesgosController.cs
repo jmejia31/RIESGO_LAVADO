@@ -430,6 +430,21 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("metodologia/version/{versionId:long}")]
+    public async Task<IActionResult> ObtenerMetodologiaPorVersion(long versionId)
+    {
+        try
+        {
+            var result = await _service.ObtenerMetodologiaDinamicaPorVersionAsync(versionId);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener metodología dinámica para la versión ID {VersionId}", versionId);
+            return Error500(ex);
+        }
+    }
+
     private long ObtenerUsuarioId()
     {
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);

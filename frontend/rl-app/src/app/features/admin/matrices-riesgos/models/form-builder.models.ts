@@ -1,4 +1,4 @@
-import { CampoFormulario, DefinicionFormularioEditable } from './matrices-riesgos.models';
+import { CampoFormulario, CatalogoMatrices, DefinicionFormularioEditable, ReglaCalculoMatrices } from './matrices-riesgos.models';
 
 export type TipoControlBuilder =
   | 'texto'
@@ -51,6 +51,8 @@ export interface FormBuilderModel {
   nombreFormulario: string;
   descripcion?: string;
   secciones: SeccionBuilderModel[];
+  catalogos?: CatalogoMatrices[];
+  reglas?: ReglaCalculoMatrices[];
 }
 
 export const TIPOS_CONTROLES_DISPONIBLES: TipoControlDefinicion[] = [
@@ -165,12 +167,12 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
   }
 
   try {
-    const raw = JSON.parse(jsonStr) as DefinicionFormularioEditable;
+    const raw = JSON.parse(jsonStr) as DefinicionFormularioEditable & Record<string, unknown>;
     const seccionesRaw = Array.isArray(raw.secciones) ? raw.secciones : [];
 
     const secciones: SeccionBuilderModel[] = seccionesRaw.map((sec, secIdx) => {
       const camposRaw = Array.isArray(sec.campos) ? sec.campos : [];
-      const campos: CampoBuilderModel[] = camposRaw.map((cmp, cmpIdx) => {
+      const campos: CampoBuilderModel[] = camposRaw.map((cmp: any, cmpIdx) => {
         let tipoMapeado: TipoControlBuilder = 'texto';
         const t = (cmp.tipo || 'texto').toLowerCase();
         if (t === 'numero' || t === 'numérico') tipoMapeado = 'numero';
@@ -182,12 +184,14 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
         else if (t === 'checkbox' || t === 'sino' || t === 'bool') tipoMapeado = 'checkbox';
         else if (t === 'formula' || t === 'calculado') tipoMapeado = 'formula';
 
+        const catalogoCodigo = cmp.codigoCatalogo || cmp.catalogoCodigo || undefined;
+
         return {
           id: `field_${cmp.clave || 'cmp_' + (cmpIdx + 1)}`,
           clave: cmp.clave || `campo_${cmpIdx + 1}`,
           etiqueta: cmp.etiqueta || `Campo ${cmpIdx + 1}`,
           tipo: tipoMapeado,
-          codigoCatalogo: cmp.codigoCatalogo || undefined,
+          codigoCatalogo: catalogoCodigo,
           opciones: Array.isArray(cmp.opciones) ? cmp.opciones : undefined,
           formula: cmp.formula || undefined,
           obligatorio: !!cmp.obligatorio,
@@ -206,6 +210,13 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
       };
     });
 
+    const catalogosPreservados = Array.isArray(raw.catalogos) ? raw.catalogos : undefined;
+    const reglasPreservadas = Array.isArray(raw.reglas)
+      ? (raw.reglas as ReglaCalculoMatrices[])
+      : Array.isArray(raw['reglasCalculo'])
+        ? (raw['reglasCalculo'] as ReglaCalculoMatrices[])
+        : undefined;
+
     return {
       codigoFormulario: raw.codigoFormulario || defaultCodigo,
       nombreFormulario: raw.nombreFormulario || defaultNombre,
@@ -218,7 +229,9 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           columnasPorFila: 2,
           campos: []
         }
-      ]
+      ],
+      catalogos: catalogosPreservados,
+      reglas: reglasPreservadas
     };
   } catch {
     return {
@@ -261,7 +274,9 @@ export function serializarBuilderModelAJson(model: FormBuilderModel): string {
         };
         return campoForm;
       })
-    }))
+    })),
+    catalogos: model.catalogos && model.catalogos.length > 0 ? model.catalogos : undefined,
+    reglas: model.reglas && model.reglas.length > 0 ? model.reglas : undefined
   };
 
   return JSON.stringify(definicion, null, 2);

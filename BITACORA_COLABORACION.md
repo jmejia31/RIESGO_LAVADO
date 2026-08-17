@@ -1,5 +1,77 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Bloque Funcional: Evaluaciones de Riesgo (Modales + Edición Dinámica + Paginado + Semántica de Datos)
+
+- **Fecha y hora**: 2026-08-17, 10:18 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `99255e962f4368afc6397fc09ed4142701638647`.
+- **Commit final**: Por generar en esta intervención.
+- **Objetivo**: Completar el Bloque Funcional de Evaluaciones de Riesgo en `Matrices de Riesgos -> Evaluaciones de Riesgo` (`frontend/rl-app/src/app/features/admin/matrices-riesgos`):
+  1. Integración de modales bloqueantes institucionales superpuestos (`z-[1000]`) para Ver detalle, Editar evaluación dinámica, Seguimiento operativo e Iniciar nueva evaluación sin redirecciones de pestaña.
+  2. Implementación de recuperación y edición dinámica con la versión exacta de la plantilla (`evaVersionId`) y preservación reactiva de catálogos y reglas.
+  3. Soporte de paginación institucional, búsqueda reactiva con debounce (300ms) y filtros combinados.
+  4. Backend con paginación optimizada (`GET /api/matrices-riesgos/evaluaciones?pagina=X&registrosPorPagina=Y&busqueda=Z`) con retrocompatibilidad completa y caché selectiva.
+  5. Aseguramiento de accesibilidad WAI-ARIA, foco seguro y aislamiento backdrop modal.
+  6. Suite de pruebas unitarias Backend (406/406), Frontend (252/252) y E2E Playwright (14/14) aprobadas al 100%.
+
+### Archivos Modificados / Creados
+- `backend/RL.API/Features/MatricesRiesgos/Contracts/Evaluaciones/EvaluacionRiesgoResumenDto.cs` (Nuevo)
+- `backend/RL.API/Features/MatricesRiesgos/Contracts/Evaluaciones/EvaluacionesPaginadasDto.cs` (Nuevo)
+- `backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs` (Modificado)
+- `backend/RL.API/Features/MatricesRiesgos/Application/IMatricesRiesgosAppService.cs` (Modificado)
+- `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs` (Modificado)
+- `backend/RL.API/Features/MatricesRiesgos/Application/CachedMatricesRiesgosAppService.cs` (Modificado)
+- `backend/RL.API/Features/MatricesRiesgos/Persistence/IMatricesRiesgosRepository.cs` (Modificado)
+- `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs` (Modificado)
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosControllerTests.cs` (Modificado)
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationCoverageTests.cs` (Modificado)
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosBackendCoverageExpansionTests.cs` (Modificado)
+- `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosNewCodeCoverageTests.cs` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matrices-riesgos.models.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/models/form-builder.models.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.coverage.spec.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos-ciclo-integral/matrices-riesgos-ciclo-integral.component.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos-ciclo-integral/matrices-riesgos-ciclo-integral.component.spec.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.html` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component.ts` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.html` (Modificado)
+- `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component.ts` (Modificado)
+- `frontend/rl-app/e2e/login-and-routing.spec.ts` (Modificado)
+- `frontend/rl-app/e2e/matrices-authorization.spec.ts` (Modificado)
+- `frontend/rl-app/e2e/matrices-uat-integral.spec.ts` (Modificado)
+- `frontend/rl-app/e2e/modal-shell-lock.spec.ts` (Modificado)
+- `BITACORA_COLABORACION.md`
+- `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+
+### Cambios y Verificaciones Ejecutadas
+1. **Frontend & UX/UI**:
+   - Modales bloqueantes con backdrop blur institucional (`z-[1000]`) para Crear Evaluación, Ver Evaluación, Editar Evaluación y Seguimiento de Evaluación sin salir de la vista de listado.
+   - Paginación dinámica con selector de registros por página (10, 25, 50, 100), botones de anterior/siguiente y resumen de totales.
+   - Búsqueda reactiva con debounce de 300ms y filtros por estado y versión.
+   - Edición dinámica que recupera la versión exacta (`evaVersionId`) del formulario asociada a la evaluación e hidrata catálogos y respuestas.
+2. **Backend .NET**:
+   - Endpoint paginado `GET /api/matrices-riesgos/evaluaciones` con parámetros de paginación y búsqueda, retornando `EvaluacionesPaginadasDto`.
+   - Compatibilidad hacia atrás preservada para clientes que esperen lista completa.
+   - Limpieza selectiva de caché ante mutaciones de evaluaciones.
+3. **Resultados de Verificación y Quality Gates**:
+   - **Compilación .NET (`dotnet build`)**: 0 errores, 0 advertencias.
+   - **Pruebas Unitarias Backend (`dotnet test Release`)**: **406 de 406 pruebas pasadas al 100%** (0 fallos).
+   - **Compilación Angular (`npm run build`)**: 0 errores de TypeScript / build exitoso.
+   - **Pruebas Unitarias Frontend (`ng test --watch=false`)**: **252 de 252 pruebas pasadas al 100%** (29 archivos de prueba).
+   - **Pruebas E2E Playwright (`npm run e2e`)**: **14 de 14 pruebas E2E pasadas al 100%** (27.7s).
+   - **Validación Scripts BD (`validate_database_scripts.ps1`)**: Exitoso (19 scripts raíz, 16 alcanzables).
+   - **Validación Enlaces Documentación (`validate_documentation_links.ps1`)**: Exitoso (71 docs, 163 enlaces).
+   - **Quality Gates Institucionales (`run_quality_gates.ps1`)**: Exitoso (Exit code 0).
+4. **Reglas Inviolables**:
+   - 0 alteraciones en esquemas Oracle / sin sentencias DDL/DML.
+   - Rama `main` intacta; trabajo realizado 100% en `desarrollo`.
+
 ## Registro de Intervención — Antigravity — Corrección de Portabilidad en CI / GitHub Actions (P3/P4 Backend .NET)
 
 - **Fecha y hora**: 2026-08-14, 15:56 (UTC-6).

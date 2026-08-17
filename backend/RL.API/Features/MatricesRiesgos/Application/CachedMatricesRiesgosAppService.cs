@@ -145,7 +145,7 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public Task<ServiceResult<EvaluacionRiesgoDto>> ObtenerEvaluacionAsync(long evaId) =>
         _inner.ObtenerEvaluacionAsync(evaId);
 
-    public Task<ServiceResult<List<EvaluacionRiesgoDto>>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro) =>
+    public Task<ServiceResult<EvaluacionesPaginadasDto>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro) =>
         _inner.ListarEvaluacionesPaginadasAsync(filtro);
 
     public Task<ServiceResult<long>> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip) =>
@@ -186,6 +186,14 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
             "metodologia-vigente",
             _settings.FormularioVersionTtl,
             _inner.ObtenerMetodologiaDinamicaVigenteAsync,
+            static result => result.Success);
+
+    public Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaPorVersionAsync(long versionId) =>
+        _cache.GetOrCreateAsync(
+            ApplicationCacheScopes.MatricesFormularios,
+            $"metodologia-version:{versionId}",
+            _settings.FormularioVersionTtl,
+            () => _inner.ObtenerMetodologiaDinamicaPorVersionAsync(versionId),
             static result => result.Success);
 
     private void InvalidateIfSuccessful(bool success)

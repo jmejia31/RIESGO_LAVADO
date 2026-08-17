@@ -108,7 +108,7 @@
         </button>
       </div>
       <div class="grid gap-3 md:grid-cols-4">
-        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
+        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código, nombre o evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
         <div><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
         <div class="flex items-end">
           <button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
@@ -119,35 +119,132 @@
       <div class="overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-            <tr><th class="px-6 py-3">Evaluación</th><th class="px-6 py-3">Riesgo</th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Estado</th><th class="px-6 py-3">VRI</th><th class="px-6 py-3">VRR</th><th class="px-6 py-3">Fecha</th><th class="px-6 py-3 text-center">Acción</th></tr>
+            <tr>
+              <th class="px-6 py-3">EVALUACIÓN</th>
+              <th class="px-6 py-3">RIESGO</th>
+              <th class="px-6 py-3">VERSIÓN</th>
+              <th class="px-6 py-3">ESTADO</th>
+              <th class="px-6 py-3">VRI</th>
+              <th class="px-6 py-3">VRR</th>
+              <th class="px-6 py-3">NIVEL RESIDUAL</th>
+              <th class="px-6 py-3">FECHA</th>
+              <th class="px-6 py-3 text-center">ACCIONES</th>
+            </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (evaluacion of evaluaciones(); track evaluacion.evaId) {
               <tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="px-6 py-4 font-bold text-gray-900">#{{ evaluacion.evaId }}</td>
-                <td class="px-6 py-4 font-medium">{{ evaluacion.evaRiesgoId }}</td>
-                <td class="px-6 py-4 text-gray-500">v{{ evaluacion.evaVersionId }}</td>
+                <td class="px-6 py-4 font-medium">
+                  <div class="font-bold text-gray-900">{{ evaluacion.riesgoCodigo }}</div>
+                  <div class="text-xs text-gray-500 truncate max-w-[220px]" title="{{ evaluacion.riesgoNombre }}">{{ evaluacion.riesgoNombre }}</div>
+                </td>
+                <td class="px-6 py-4 text-xs font-semibold text-gray-600">
+                  {{ evaluacion.versionCodigo }} · v{{ evaluacion.versionNumero }}
+                </td>
                 <td class="px-6 py-4">
                   <span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold"
-                        [class.bg-amber-50]="evaluacion.evaEstado === 'BORRADOR'" [class.text-amber-700]="evaluacion.evaEstado === 'BORRADOR'" [class.ring-1]="evaluacion.evaEstado === 'BORRADOR'" [class.ring-amber-600\/20]="evaluacion.evaEstado === 'BORRADOR'"
-                        [class.bg-blue-50]="evaluacion.evaEstado === 'EN_REVISION'" [class.text-blue-700]="evaluacion.evaEstado === 'EN_REVISION'"
-                        [class.bg-emerald-50]="evaluacion.evaEstado === 'APROBADA'" [class.text-emerald-700]="evaluacion.evaEstado === 'APROBADA'"
-                        [class.bg-red-50]="evaluacion.evaEstado === 'RECHAZADA'" [class.text-red-700]="evaluacion.evaEstado === 'RECHAZADA'">
-                    {{ evaluacion.evaEstado }}
+                        [class.bg-amber-50]="evaluacion.estado === 'BORRADOR'" [class.text-amber-700]="evaluacion.estado === 'BORRADOR'" [class.ring-1]="evaluacion.estado === 'BORRADOR'" [class.ring-amber-600\/20]="evaluacion.estado === 'BORRADOR'"
+                        [class.bg-blue-50]="evaluacion.estado === 'EN_REVISION'" [class.text-blue-700]="evaluacion.estado === 'EN_REVISION'"
+                        [class.bg-purple-50]="evaluacion.estado === 'OBSERVADA'" [class.text-purple-700]="evaluacion.estado === 'OBSERVADA'"
+                        [class.bg-emerald-50]="evaluacion.estado === 'APROBADA'" [class.text-emerald-700]="evaluacion.estado === 'APROBADA'"
+                        [class.bg-red-50]="evaluacion.estado === 'RECHAZADA'" [class.text-red-700]="evaluacion.estado === 'RECHAZADA'"
+                        [class.bg-gray-100]="evaluacion.estado === 'CERRADA'" [class.text-gray-700]="evaluacion.estado === 'CERRADA'">
+                    {{ evaluacion.estado }}
                   </span>
                 </td>
-                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.evaVri ?? '-' }}</td>
-                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.evaVrr ?? '-' }}</td>
-                <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.vri ?? '-' }}</td>
+                <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.vrr ?? '-' }}</td>
+                <td class="px-6 py-4 text-xs font-bold"
+                    [class.text-emerald-600]="evaluacion.nivelResidual === 'BAJO'"
+                    [class.text-amber-600]="evaluacion.nivelResidual === 'MEDIO'"
+                    [class.text-red-600]="evaluacion.nivelResidual === 'ALTO' || evaluacion.nivelResidual === 'CRITICO'">
+                  {{ evaluacion.nivelResidual ?? '-' }}
+                </td>
+                <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.fechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="px-6 py-4 text-center">
-                  <button type="button" class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200" title="Abrir evaluación" (click)="editarEvaluacion(evaluacion)">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                  </button>
+                  <div class="inline-flex items-center justify-center gap-1.5">
+                    <!-- VER -->
+                    <button type="button"
+                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                            title="Ver evaluación"
+                            aria-label="Ver evaluación"
+                            (click)="abrirModalVer(evaluacion)">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+
+                    <!-- EDITAR (Solo BORRADOR) -->
+                    @if (evaluacion.estado === 'BORRADOR') {
+                      <button type="button"
+                              class="inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200"
+                              title="Editar evaluación"
+                              aria-label="Editar evaluación"
+                              (click)="editarEvaluacion(evaluacion)">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      </button>
+                    }
+
+                    <!-- SEGUIMIENTO -->
+                    <button type="button"
+                            class="inline-flex items-center justify-center p-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
+                            title="Seguimiento de evaluación"
+                            aria-label="Seguimiento de evaluación"
+                            (click)="abrirModalSeguimiento(evaluacion)">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
-            } @empty { <tr><td colspan="8" class="px-6 py-12 text-center text-gray-400 text-sm">Sin evaluaciones registradas.</td></tr> }
+            } @empty { <tr><td colspan="9" class="px-6 py-12 text-center text-gray-400 text-sm">Sin evaluaciones registradas con los filtros seleccionados.</td></tr> }
           </tbody>
         </table>
+      </div>
+
+      <!-- PAGINADOR SERVER-SIDE INSTITUCIONAL -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 border-t border-gray-100 text-xs text-gray-600">
+        <div class="flex items-center gap-2">
+          <span>Mostrando</span>
+          <span class="font-bold text-gray-900">
+            {{ totalRegistros() === 0 ? 0 : ((pagina() - 1) * registrosPorPagina()) + 1 }}
+            –
+            {{ totalRegistros() === 0 ? 0 : (pagina() * registrosPorPagina() > totalRegistros() ? totalRegistros() : pagina() * registrosPorPagina()) }}
+          </span>
+          <span>de</span>
+          <span class="font-bold text-gray-900">{{ totalRegistros() }}</span>
+          <span>registros</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-1.5">
+            <label for="pag-registros-por-pagina" class="font-semibold text-gray-500">Registros por página:</label>
+            <select id="pag-registros-por-pagina"
+                    class="border border-gray-200 rounded-lg px-2 py-1 bg-white font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600"
+                    [ngModel]="registrosPorPagina()"
+                    (ngModelChange)="cambiarRegistrosPorPagina($event)">
+              <option [value]="10">10</option>
+              <option [value]="20">20</option>
+              <option [value]="50">50</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button type="button"
+                    class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    [disabled]="pagina() <= 1"
+                    (click)="cambiarPagina(pagina() - 1)">
+              Anterior
+            </button>
+            <span class="px-2 font-medium text-gray-700">
+              Pág. <strong class="text-gray-900">{{ totalPaginas() === 0 ? 0 : pagina() }}</strong> de <strong class="text-gray-900">{{ totalPaginas() }}</strong>
+            </span>
+            <button type="button"
+                    class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    [disabled]="totalPaginas() === 0 || pagina() >= totalPaginas()"
+                    (click)="cambiarPagina(pagina() + 1)">
+              Siguiente
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   }
@@ -162,9 +259,9 @@
                   class="w-full max-w-[480px] sm:max-w-[400px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none transition-all"
                   [ngModel]="riesgoId()"
                   (ngModelChange)="riesgoId.set(+$event)">
-            <option [ngValue]="0" class="text-xs">Seleccione un riesgo institucional</option>
+            <option value="0" class="text-xs">Seleccione un riesgo institucional</option>
             @for (riesgo of riesgos(); track riesgo.rieId) {
-              <option [ngValue]="riesgo.rieId" [title]="riesgo.rieCodigo + ' · ' + riesgo.rieNombre" class="text-xs">
+              <option [value]="riesgo.rieId" [title]="riesgo.rieCodigo + ' · ' + riesgo.rieNombre" class="text-xs">
                 {{ riesgo.rieCodigo }} · {{ riesgo.rieNombre }}
               </option>
             }
@@ -527,5 +624,436 @@
         </div>
       </div>
      </dialog>
+  }
+
+  <!-- MODAL VER EVALUACIÓN (Solo Lectura) -->
+  @if (modalVerAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
+      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-ver" class="text-base sm:text-lg font-bold text-gray-900">
+              Evaluación #{{ evaluacionSeleccionada()?.evaId }} · {{ evaluacionResumenSeleccionada()?.riesgoCodigo }}
+            </h3>
+            <p class="text-xs text-gray-500">
+              {{ evaluacionResumenSeleccionada()?.riesgoNombre }} | Versión: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
+            </p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar vista" (click)="cerrarModalVer()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable space-y-5">
+          <!-- Tarjeta de Resumen -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
+            <div>
+              <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">Estado</span>
+              <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaEstado }}</span>
+            </div>
+            <div>
+              <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">VRI (Inherente)</span>
+              <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaVri ?? '-' }}</span>
+            </div>
+            <div>
+              <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">VRR (Residual)</span>
+              <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaVrr ?? '-' }}</span>
+            </div>
+            <div>
+              <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">Fecha Evaluación</span>
+              <span class="font-bold text-gray-900">{{ evaluacionSeleccionada()?.evaFechaEval | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+
+          <!-- Formulario Dinámico en Modo Solo Lectura -->
+          @for (seccion of seccionesModal(); track seccion.clave) {
+            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
+              <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2 flex items-center justify-between">
+                <span>{{ seccion.titulo }}</span>
+                <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Sección {{ seccion.orden }}</span>
+              </h4>
+
+              <div class="grid gap-3"
+                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
+                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+                @for (campo of seccion.campos; track campo.clave) {
+                  <div class="space-y-1">
+                    <span class="block text-xs font-bold text-gray-600">{{ campo.etiqueta }}</span>
+                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
+                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
+                        {{ obtenerEtiquetaCatalogo(campo, valorRespuesta(campo)) }}
+                      </div>
+                    } @else if (campo.tipo === 'checkbox') {
+                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
+                        {{ valorRespuesta(campo) ? 'Sí' : 'No' }}
+                      </div>
+                    } @else if (campo.tipo === 'texto-largo') {
+                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 min-h-[50px] whitespace-pre-wrap">
+                        {{ valorRespuesta(campo) || '-' }}
+                      </div>
+                    } @else {
+                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
+                        {{ valorRespuesta(campo) || '-' }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalVer()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </dialog>
+  }
+
+  <!-- MODAL EDITAR EVALUACIÓN (Solo BORRADOR) -->
+  @if (modalEditarAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-editar">
+      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-editar" class="text-base sm:text-lg font-bold text-gray-900">
+              Editar Evaluación #{{ evaluacionSeleccionada()?.evaId }} · {{ evaluacionResumenSeleccionada()?.riesgoCodigo }}
+            </h3>
+            <p class="text-xs text-gray-500">
+              Metodología Histórica: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
+            </p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar edición" (click)="cerrarModalEditar()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable space-y-5">
+          <!-- Riesgo no editable en histórico -->
+          <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs">
+            <div>
+              <span class="text-gray-500 font-semibold">Riesgo Institucional:</span>
+              <span class="ml-1.5 font-bold text-gray-900">{{ evaluacionResumenSeleccionada()?.riesgoCodigo }} — {{ evaluacionResumenSeleccionada()?.riesgoNombre }}</span>
+            </div>
+            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">BORRADOR</span>
+          </div>
+
+          <!-- Campos Dinámicos con Tipos Fieles -->
+          @for (seccion of seccionesModal(); track seccion.clave) {
+            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+              <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
+
+              <div class="grid gap-4"
+                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
+                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+                @for (campo of seccion.campos; track campo.clave) {
+                  <div class="space-y-1">
+                    <label [for]="'campo-edit-' + campo.clave" class="block text-xs font-bold text-gray-700">
+                      {{ campo.etiqueta }}
+                      @if (campo.obligatorio) { <span class="text-red-500">*</span> }
+                    </label>
+
+                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
+                      <select [id]="'campo-edit-' + campo.clave"
+                              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                              [disabled]="campo.soloLectura"
+                              [ngModel]="valorRespuesta(campo)"
+                              (ngModelChange)="actualizarRespuesta(campo, $event)">
+                        <option [ngValue]="null">Seleccione una opción</option>
+                        @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
+                          <option [value]="opcion.codigo">{{ opcion.valor }} ({{ opcion.codigo }})</option>
+                        }
+                      </select>
+                    } @else if (campo.tipo === 'numero') {
+                      <input [id]="'campo-edit-' + campo.clave"
+                             type="number"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event !== '' ? +$event : null)" />
+                    } @else if (campo.tipo === 'fecha') {
+                      <input [id]="'campo-edit-' + campo.clave"
+                             type="date"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
+                    } @else if (campo.tipo === 'checkbox') {
+                      <div class="flex items-center gap-2 pt-1">
+                        <input [id]="'campo-edit-' + campo.clave"
+                               type="checkbox"
+                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                               [disabled]="campo.soloLectura"
+                               [ngModel]="valorRespuesta(campo)"
+                               (ngModelChange)="actualizarRespuesta(campo, !!$event)" />
+                        <span class="text-xs text-gray-600 font-medium">Marcar como afirmativo</span>
+                      </div>
+                    } @else if (campo.tipo === 'texto-largo') {
+                      <textarea [id]="'campo-edit-' + campo.clave"
+                                rows="3"
+                                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                                [disabled]="campo.soloLectura"
+                                [ngModel]="valorRespuesta(campo)"
+                                (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
+                    } @else if (campo.tipo === 'formula') {
+                      <input [id]="'campo-edit-' + campo.clave"
+                             type="text"
+                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-800 shadow-sm cursor-not-allowed"
+                             disabled
+                             [ngModel]="valorRespuesta(campo)" />
+                    } @else {
+                      <input [id]="'campo-edit-' + campo.clave"
+                             type="text"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalEditar()">
+            Cancelar
+          </button>
+          <button type="button"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  [disabled]="guardando() || !puedeGuardar()"
+                  (click)="guardarEvaluacion()">
+            {{ guardando() ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </div>
+      </div>
+    </dialog>
+  }
+
+  <!-- MODAL SEGUIMIENTO Y TRANSICIONES -->
+  @if (modalSeguimientoAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-seguimiento">
+      <div class="modal-container-card w-full max-w-3xl max-h-[90dvh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-seguimiento" class="text-base sm:text-lg font-bold text-gray-900">
+              Seguimiento de Evaluación #{{ evaluacionResumenSeleccionada()?.evaId }}
+            </h3>
+            <p class="text-xs text-gray-500">
+              {{ evaluacionResumenSeleccionada()?.riesgoCodigo }} · Estado Actual: <strong class="text-gray-900">{{ evaluacionResumenSeleccionada()?.estado }}</strong>
+            </p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable space-y-6">
+          <!-- Transición de Estado Controlada -->
+          @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
+            <section class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Gestionar Transición de Estado</h4>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label for="seg-nuevo-estado" class="block font-bold text-gray-700 mb-1">Estado de Destino</label>
+                  <select id="seg-nuevo-estado"
+                          class="w-full border border-gray-200 rounded-xl px-3 py-2 bg-white font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600"
+                          [(ngModel)]="nuevoEstado">
+                    @for (estadoDest of obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || ''); track estadoDest) {
+                      <option [value]="estadoDest">{{ estadoDest }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label for="seg-motivo" class="block font-bold text-gray-700 mb-1">Motivo / Justificación</label>
+                  <input id="seg-motivo"
+                         type="text"
+                         class="w-full border border-gray-200 rounded-xl px-3 py-2 bg-white font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600"
+                         placeholder="Detalle el motivo de la transición..."
+                         [(ngModel)]="motivoTransicion" />
+                </div>
+              </div>
+              <div class="flex justify-end pt-1">
+                <button type="button"
+                        class="px-4 py-2 bg-ihss-900 hover:bg-ihss-800 text-white font-bold text-xs rounded-xl transition-all shadow-sm disabled:opacity-50"
+                        [disabled]="guardando() || !nuevoEstado"
+                        (click)="transicionarEvaluacionModal()">
+                  {{ guardando() ? 'Procesando...' : 'Aplicar Transición' }}
+                </button>
+              </div>
+            </section>
+          } @else {
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs text-gray-500 text-center">
+              Esta evaluación se encuentra en estado terminal <strong>{{ evaluacionResumenSeleccionada()?.estado }}</strong> y no admite transiciones automáticas.
+            </div>
+          }
+
+          <!-- Timeline de Historial de Flujos -->
+          <section class="space-y-3">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Línea de Tiempo de Auditoría</h4>
+            <div class="relative border-l-2 border-gray-200 ml-4 space-y-4 py-1">
+              @for (flujo of flujos(); track flujo.fluId) {
+                <div class="relative pl-6">
+                  <span class="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full border-2 border-white bg-blue-600"></span>
+                  <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm text-xs space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-gray-900">{{ flujo.fluEstado }}</span>
+                      <span class="text-gray-400 text-[11px]">{{ flujo.fluFecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+                    </div>
+                    <p class="text-gray-600">{{ flujo.fluMotivo || 'Sin motivo especificado' }}</p>
+                    <p class="text-gray-400 text-[10px]">Usuario ID: {{ flujo.fluUsrId }}</p>
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-xs text-gray-400 pl-6">Sin historial de flujo registrado.</p>
+              }
+            </div>
+          </section>
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalSeguimiento()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </dialog>
+  }
+
+  <!-- MODAL NUEVA EVALUACIÓN -->
+  @if (modalNuevaEvaluacionAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-nueva-eval">
+      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-nueva-eval" class="text-base sm:text-lg font-bold text-gray-900">
+              Nueva Evaluación de Riesgo
+            </h3>
+            <p class="text-xs text-gray-500">
+              Plantilla Vigente: <strong>{{ versionVigente()?.verCodigo }} · v{{ versionVigente()?.verVersion }}</strong>
+            </p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar creación" (click)="cerrarModalNuevaEvaluacion()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable space-y-5">
+          <!-- Selector de Riesgo -->
+          <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-1">
+            <label for="modal-selector-riesgo" class="block text-xs font-bold text-gray-700">
+              Riesgo Institucional a Evaluar <span class="text-red-500">*</span>
+            </label>
+            <select id="modal-selector-riesgo"
+                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                    [ngModel]="riesgoId()"
+                    (ngModelChange)="riesgoId.set(+$event)">
+              <option [ngValue]="0">Seleccione un riesgo institucional</option>
+              @for (riesgo of riesgos(); track riesgo.rieId) {
+                <option [ngValue]="riesgo.rieId">{{ riesgo.rieCodigo }} — {{ riesgo.rieNombre }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Campos Dinámicos con Tipos Fieles -->
+          @for (seccion of secciones(); track seccion.clave) {
+            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+              <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
+
+              <div class="grid gap-4"
+                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
+                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
+                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+                @for (campo of seccion.campos; track campo.clave) {
+                  <div class="space-y-1">
+                    <label [for]="'campo-new-' + campo.clave" class="block text-xs font-bold text-gray-700">
+                      {{ campo.etiqueta }}
+                      @if (campo.obligatorio) { <span class="text-red-500">*</span> }
+                    </label>
+
+                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
+                      <select [id]="'campo-new-' + campo.clave"
+                              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                              [disabled]="campo.soloLectura"
+                              [ngModel]="valorRespuesta(campo)"
+                              (ngModelChange)="actualizarRespuesta(campo, $event)">
+                        <option [ngValue]="null">Seleccione una opción</option>
+                        @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
+                          <option [value]="opcion.codigo">{{ opcion.valor }} ({{ opcion.codigo }})</option>
+                        }
+                      </select>
+                    } @else if (campo.tipo === 'numero') {
+                      <input [id]="'campo-new-' + campo.clave"
+                             type="number"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event !== '' ? +$event : null)" />
+                    } @else if (campo.tipo === 'fecha') {
+                      <input [id]="'campo-new-' + campo.clave"
+                             type="date"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
+                    } @else if (campo.tipo === 'checkbox') {
+                      <div class="flex items-center gap-2 pt-1">
+                        <input [id]="'campo-new-' + campo.clave"
+                               type="checkbox"
+                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                               [disabled]="campo.soloLectura"
+                               [ngModel]="valorRespuesta(campo)"
+                               (ngModelChange)="actualizarRespuesta(campo, !!$event)" />
+                        <span class="text-xs text-gray-600 font-medium">Marcar como afirmativo</span>
+                      </div>
+                    } @else if (campo.tipo === 'texto-largo') {
+                      <textarea [id]="'campo-new-' + campo.clave"
+                                rows="3"
+                                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                                [disabled]="campo.soloLectura"
+                                [ngModel]="valorRespuesta(campo)"
+                                (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
+                    } @else if (campo.tipo === 'formula') {
+                      <input [id]="'campo-new-' + campo.clave"
+                             type="text"
+                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-800 shadow-sm cursor-not-allowed"
+                             disabled
+                             [ngModel]="valorRespuesta(campo)" />
+                    } @else {
+                      <input [id]="'campo-new-' + campo.clave"
+                             type="text"
+                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
+                             [disabled]="campo.soloLectura"
+                             [ngModel]="valorRespuesta(campo)"
+                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
+                    }
+                  </div>
+                }
+              </div>
+            </section>
+          }
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalNuevaEvaluacion()">
+            Cancelar
+          </button>
+          <button type="button"
+                  class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
+                  [disabled]="guardando() || !puedeGuardar()"
+                  (click)="guardarEvaluacion()">
+            {{ guardando() ? 'Guardando...' : 'Crear Evaluación' }}
+          </button>
+        </div>
+      </div>
+    </dialog>
   }
 </section>

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import {
   AutomonitoreoDto,
   AutomonitoreoGuardarDto,
@@ -21,7 +21,7 @@ import {
 export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private readonly service = inject(MatricesRiesgosService);
 
-  @Input() evaluaciones: EvaluacionRiesgoDto[] = [];
+  @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
 
   readonly resumen = signal<ResumenMatricesOperativoDto | null>(null);
   readonly alertas = signal<SenalAlertaDto[]>([]);
@@ -32,6 +32,13 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly mensaje = signal<string | null>(null);
 
   evaluacionId = 0;
+
+  obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
+    if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
+    if ('estado' in evaluacion && evaluacion.estado) return evaluacion.estado;
+    return '';
+  }
+
   alertaCodigo = '';
   alertaIndicador = '';
   alertaEstado: 'ACTIVO' | 'INACTIVO' = 'ACTIVO';

@@ -10,6 +10,7 @@ import {
   EvidenciaDto,
   EvidenciaPoliticaDto,
   EvaluacionRiesgoDto,
+  EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
@@ -55,6 +56,12 @@ export class MatricesRiesgosService {
   metodologiaVigente(): Observable<MetodologiaFormulario> {
     return this.http
       .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/vigente`)
+      .pipe(map(response => response.datos));
+  }
+
+  metodologiaPorVersion(versionId: number): Observable<MetodologiaFormulario> {
+    return this.http
+      .get<ApiResponse<MetodologiaFormulario>>(`${this.apiUrl}/metodologia/version/${versionId}`)
       .pipe(map(response => response.datos));
   }
 
@@ -194,9 +201,9 @@ export class MatricesRiesgosService {
 
   listarEvaluaciones(
     filtro: ConsultaEvaluacionPaginadaDto
-  ): Observable<EvaluacionRiesgoDto[]> {
+  ): Observable<EvaluacionesPaginadasDto> {
     return this.http
-      .get<ApiResponse<EvaluacionRiesgoDto[]>>(`${this.apiUrl}/evaluaciones`, {
+      .get<ApiResponse<EvaluacionesPaginadasDto>>(`${this.apiUrl}/evaluaciones`, {
         params: this.construirParams(filtro)
       })
       .pipe(map(response => response.datos));

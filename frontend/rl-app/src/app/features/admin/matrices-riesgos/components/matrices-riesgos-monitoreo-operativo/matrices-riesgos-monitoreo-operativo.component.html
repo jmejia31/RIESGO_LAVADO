@@ -1,57 +1,40 @@
 <section class="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-monitoreo">
   <div>
-    <h2 id="titulo-monitoreo" class="text-lg font-bold text-slate-900">Alertas y automonitoreo</h2>
-    <p class="text-sm text-slate-600">Seguimiento operativo de señales de alerta y revisiones periódicas del riesgo.</p>
+    <h2 id="titulo-monitoreo" class="text-lg font-bold text-slate-900">Monitoreo operativo</h2>
+    <p class="text-sm text-slate-600">Supervise señales de alerta, automonitoreo y efectividad continua de matrices.</p>
   </div>
 
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
   @if (mensaje()) { <output class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite">{{ mensaje() }}</output> }
 
-@if (resumen(); as datos) {
-  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Riesgos activos</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.riesgosActivos }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Evaluaciones</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.evaluacionesActivas }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Aprobadas</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.evaluacionesAprobadas }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Alto / crítico</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.riesgosAltoCritico }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Alertas activas</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.alertasActivas }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Planes abiertos</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.planesAbiertos }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Actividades vencidas</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.actividadesVencidas }}</dd>
-    </dl>
-    <dl class="rounded-xl bg-slate-50 p-3">
-      <dt class="text-xs font-semibold text-slate-500">Monitoreos 30 días</dt>
-      <dd class="mt-1 text-xl font-bold">{{ datos.automonitoreosUltimos30Dias }}</dd>
-    </dl>
-  </div>
-}
-
+  @if (resumen(); as datos) {
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <dl class="rounded-xl bg-slate-50 p-3">
+        <dt class="text-xs font-semibold text-slate-500">Riesgos activos</dt>
+        <dd class="mt-1 text-xl font-bold">{{ datos.riesgosActivos }}</dd>
+      </dl>
+      <dl class="rounded-xl bg-slate-50 p-3">
+        <dt class="text-xs font-semibold text-slate-500">Alertas activas</dt>
+        <dd class="mt-1 text-xl font-bold">{{ datos.alertasActivas }}</dd>
+      </dl>
+      <dl class="rounded-xl bg-slate-50 p-3">
+        <dt class="text-xs font-semibold text-slate-500">Actividades vencidas</dt>
+        <dd class="mt-1 text-xl font-bold">{{ datos.actividadesVencidas }}</dd>
+      </dl>
+      <dl class="rounded-xl bg-slate-50 p-3">
+        <dt class="text-xs font-semibold text-slate-500">Monitoreos 30 días</dt>
+        <dd class="mt-1 text-xl font-bold">{{ datos.automonitoreosUltimos30Dias }}</dd>
+      </dl>
+    </div>
+  }
 
   <div class="max-w-xl">
     <label for="evaluacion-monitoreo" class="block text-sm font-semibold text-slate-700">Evaluación</label>
     <select id="evaluacion-monitoreo" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium shadow-sm truncate focus:border-blue-500 focus:outline-none" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
       <option value="0" class="text-sm">Seleccione una evaluación</option>
       @for (evaluacion of evaluaciones; track evaluacion.evaId) {
-        <option [value]="evaluacion.evaId" [title]="'#' + evaluacion.evaId + ' · Riesgo ' + evaluacion.evaRiesgoId + ' · ' + evaluacion.evaEstado" class="text-sm">
-          #{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ evaluacion.evaEstado }}
+        <option [value]="evaluacion.evaId" [title]="'#' + evaluacion.evaId + ' · Riesgo ' + evaluacion.evaRiesgoId + ' · ' + obtenerEstadoEvaluacion(evaluacion)" class="text-sm">
+          #{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ obtenerEstadoEvaluacion(evaluacion) }}
         </option>
       }
     </select>
@@ -75,10 +58,10 @@
         <div class="grid gap-3 md:grid-cols-2">
           <div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><input id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"></div>
           <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><input id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"></div>
-          <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-24 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado"></textarea></div>
+          <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado" maxlength="500"></textarea></div>
         </div>
-        <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()" (click)="registrarAutomonitoreo()">Registrar automonitoreo</button>
-        <div class="space-y-2">@for (mon of automonitoreos(); track mon.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex justify-between gap-3"><strong>{{ mon.monEstadoRiesgo }}</strong><span class="text-slate-500">{{ mon.monFecha | date:'dd/MM/yyyy HH:mm' }}</span></div><p class="mt-1 text-slate-600">Controles: {{ mon.monEstadoContr }}</p><p class="mt-1">{{ mon.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin automonitoreos.</p> }</div>
+        <button type="button" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50" [disabled]="guardando()" (click)="registrarAutomonitoreo()">Guardar monitoreo</button>
+        <div class="space-y-2">@for (item of automonitoreos(); track item.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><strong>{{ item.monFecha | date:'short' }}</strong><p class="text-slate-600">{{ item.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin registros de automonitoreo.</p> }</div>
       </section>
     </div>
   } @else {

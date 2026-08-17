@@ -306,11 +306,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             : ServiceResult<EvaluacionRiesgoDto>.Ok(evaluacion);
     }
 
-    public async Task<ServiceResult<List<EvaluacionRiesgoDto>>> ListarEvaluacionesPaginadasAsync(
+    public async Task<ServiceResult<EvaluacionesPaginadasDto>> ListarEvaluacionesPaginadasAsync(
         ConsultaEvaluacionPaginadaDto filtro)
     {
-        List<EvaluacionRiesgoDto> evaluaciones = await _repo.ListarEvaluacionesPaginadasAsync(filtro);
-        return ServiceResult<List<EvaluacionRiesgoDto>>.Ok(evaluaciones);
+        EvaluacionesPaginadasDto evaluaciones = await _repo.ListarEvaluacionesPaginadasAsync(filtro);
+        return ServiceResult<EvaluacionesPaginadasDto>.Ok(evaluaciones);
     }
 
     public async Task<ServiceResult<long>> CrearEvaluacionAsync(
@@ -585,6 +585,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         MetodologiaFormularioDto? metodologia = await _repo.ObtenerMetodologiaDinamicaVigenteAsync();
         return metodologia is null
             ? ServiceResult<MetodologiaFormularioDto>.NotFound("No existe una metodología dinámica publicada y vigente.")
+            : ServiceResult<MetodologiaFormularioDto>.Ok(metodologia);
+    }
+
+    public async Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaPorVersionAsync(long versionId)
+    {
+        MetodologiaFormularioDto? metodologia = await _repo.ObtenerMetodologiaDinamicaPorVersionAsync(versionId);
+        return metodologia is null
+            ? ServiceResult<MetodologiaFormularioDto>.NotFound($"No existe una metodología dinámica para la versión ID {versionId}.")
             : ServiceResult<MetodologiaFormularioDto>.Ok(metodologia);
     }
 

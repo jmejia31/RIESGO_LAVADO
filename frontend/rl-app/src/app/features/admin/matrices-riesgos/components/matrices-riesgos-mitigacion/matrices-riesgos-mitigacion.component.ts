@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import {
   ActividadPlanDto,
   ActividadPlanGuardarDto,
@@ -25,7 +25,7 @@ import {
 export class MatricesRiesgosMitigacionComponent {
   private readonly service = inject(MatricesRiesgosService);
 
-  @Input() evaluaciones: EvaluacionRiesgoDto[] = [];
+  @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
 
   readonly controles = signal<ControlRiesgoDto[]>([]);
   readonly evaluacionesControl = signal<EvaluacionControlDto[]>([]);
@@ -37,6 +37,12 @@ export class MatricesRiesgosMitigacionComponent {
   readonly mensaje = signal<string | null>(null);
 
   evaluacionId = 0;
+
+  obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
+    if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
+    if ('estado' in evaluacion && evaluacion.estado) return evaluacion.estado;
+    return '';
+  }
   controlSeleccionadoId = 0;
   planSeleccionadoId = 0;
 

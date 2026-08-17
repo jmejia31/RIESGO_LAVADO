@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
 describe('MatricesRiesgosComponent', () => {
@@ -9,6 +10,8 @@ describe('MatricesRiesgosComponent', () => {
   let service: {
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
     metodologiaVigente: ReturnType<typeof vi.fn>;
+    metodologiaPorVersion: ReturnType<typeof vi.fn>;
+    obtenerEvaluacion: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
@@ -66,6 +69,25 @@ describe('MatricesRiesgosComponent', () => {
         verFechaCreacion: '2026-08-03T10:00:00',
         verUsrCreacion: 1
       })),
+      obtenerEvaluacion: vi.fn().mockReturnValue(of({
+        evaId: 20,
+        evaRiesgoId: 5,
+        evaVersionId: 10,
+        evaEstado: 'BORRADOR',
+        evaDataJson: '{"area_principal":"Cumplimiento"}',
+        evaFechaEval: '2026-08-14T00:00:00',
+        evaUsrEval: 1,
+        evaVersionRow: 1,
+        evaActivo: true
+      })),
+      metodologiaPorVersion: vi.fn().mockReturnValue(of({
+        versionFormularioId: 10,
+        codigo: 'FORM_A',
+        version: 2,
+        secciones: [],
+        catalogos: [],
+        reglas: []
+      })),
       metodologiaVigente: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',
@@ -82,7 +104,13 @@ describe('MatricesRiesgosComponent', () => {
         rieUsrCreacion: 1,
         rieFechaCreacion: '2026-08-07T08:00:00'
       }])),
-      listarEvaluaciones: vi.fn().mockReturnValue(of([])),
+      listarEvaluaciones: vi.fn().mockReturnValue(of({
+        items: [],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 0,
+        totalPaginas: 0
+      })),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of(20)),
@@ -191,8 +219,23 @@ describe('MatricesRiesgosComponent', () => {
     expect(service.obtenerConsolidado).toHaveBeenCalled();
   });
 
-  it('edita una evaluacion existente, transiciona su estado y recarga sus flujos', () => {
-    const evaluacion = {
+  it('edita una evaluacion existente en modal, transiciona su estado y recarga sus flujos', () => {
+    const resumen: EvaluacionRiesgoResumenDto = {
+      evaId: 20,
+      evaRiesgoId: 5,
+      riesgoCodigo: 'RIE-005',
+      riesgoNombre: 'Riesgo 005',
+      evaVersionId: 10,
+      versionCodigo: 'FORM_A',
+      versionNumero: 2,
+      estado: 'BORRADOR',
+      vri: 3.0,
+      vrr: 1.5,
+      nivelResidual: 'BAJO',
+      fechaEval: '2026-08-14T00:00:00'
+    };
+
+    service.obtenerEvaluacion = vi.fn().mockReturnValue(of({
       evaId: 20,
       evaRiesgoId: 5,
       evaVersionId: 10,
@@ -202,17 +245,28 @@ describe('MatricesRiesgosComponent', () => {
       evaUsrEval: 1,
       evaVersionRow: 1,
       evaActivo: true
-    };
+    }));
+    service.metodologiaPorVersion = vi.fn().mockReturnValue(of({
+      versionFormularioId: 10,
+      codigo: 'FORM_A',
+      version: 2,
+      secciones: [],
+      catalogos: [],
+      reglas: []
+    }));
 
-    component.editarEvaluacion(evaluacion);
-    expect(component.tab()).toBe('captura');
+    component.editarEvaluacion(resumen);
+    expect(component.modalEditarAbierto()).toBe(true);
     expect(component.riesgoId()).toBe(5);
     expect(component.valorRespuesta(component.secciones()[0].campos[0])).toBe('Cumplimiento');
+
+    component.abrirModalSeguimiento(resumen);
+    expect(component.modalSeguimientoAbierto()).toBe(true);
     expect(service.obtenerFlujos).toHaveBeenCalledWith(20);
 
     component.nuevoEstado = 'EN_REVISION';
     component.motivoTransicion = 'Revision completa';
-    component.transicionarEvaluacion(evaluacion);
+    component.transicionarEvaluacionModal();
     expect(service.transicionarEvaluacion).toHaveBeenCalledWith(20, 'EN_REVISION', 'Revision completa');
     expect(component.motivoTransicion).toBe('');
   });
@@ -316,9 +370,9 @@ describe('MatricesRiesgosComponent', () => {
 
   it('cuenta evaluaciones por estado sin distinción de mayúsculas/minúsculas', () => {
     component.evaluaciones.set([
-      { evaId: 1, evaEstado: 'BORRADOR' } as never,
-      { evaId: 2, evaEstado: 'borrador' } as never,
-      { evaId: 3, evaEstado: 'EN_REVISION' } as never
+      { evaId: 1, estado: 'BORRADOR' } as never,
+      { evaId: 2, estado: 'borrador' } as never,
+      { evaId: 3, estado: 'EN_REVISION' } as never
     ]);
 
     expect(component.contarEvaluacionesPorEstado('BORRADOR')).toBe(2);
@@ -353,8 +407,22 @@ describe('MatricesRiesgosComponent', () => {
   });
 
   it('bloquea transición de estado cuando nuevoEstado está vacío', () => {
+    component.evaluacionResumenSeleccionada.set({
+      evaId: 20,
+      evaRiesgoId: 5,
+      riesgoCodigo: 'RIE-005',
+      riesgoNombre: 'Riesgo 005',
+      evaVersionId: 10,
+      versionCodigo: 'FORM_A',
+      versionNumero: 2,
+      estado: 'BORRADOR',
+      vri: 3.0,
+      vrr: 1.5,
+      nivelResidual: 'BAJO',
+      fechaEval: '2026-08-14T00:00:00'
+    });
     component.nuevoEstado = '   ';
-    component.transicionarEvaluacion({ evaId: 20 } as never);
+    component.transicionarEvaluacionModal();
     expect(service.transicionarEvaluacion).not.toHaveBeenCalled();
     expect(component.error()).toContain('Seleccione un estado');
   });

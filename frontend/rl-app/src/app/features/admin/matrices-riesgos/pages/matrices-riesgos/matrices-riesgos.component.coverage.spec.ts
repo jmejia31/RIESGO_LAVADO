@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
 describe('MatricesRiesgosComponent cobertura operativa', () => {
@@ -46,15 +46,45 @@ describe('MatricesRiesgosComponent cobertura operativa', () => {
     evaActivo: true
   };
 
+  const evaluacionResumen: EvaluacionRiesgoResumenDto = {
+    evaId: 31,
+    evaRiesgoId: 5,
+    riesgoCodigo: 'RIE-005',
+    riesgoNombre: 'Riesgo 5',
+    evaVersionId: 10,
+    versionCodigo: 'FORM_A',
+    versionNumero: 2,
+    estado: 'BORRADOR',
+    vri: null,
+    vrr: null,
+    nivelResidual: null,
+    fechaEval: '2026-08-14T00:00:00Z'
+  };
+
   beforeEach(async () => {
     service = {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }
       ])),
+      obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
       crearFamiliaFormulario: vi.fn().mockReturnValue(of(2)),
       actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       desactivarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
+      obtenerEvaluacion: vi.fn().mockReturnValue(of(evaluacion)),
+      metodologiaPorVersion: vi.fn().mockReturnValue(of({
+        versionFormularioId: 10,
+        codigo: 'FORM_A',
+        version: 2,
+        secciones: [{
+          clave: 'identificacion',
+          titulo: 'Identificacion',
+          orden: 1,
+          campos: [{ clave: 'area', etiqueta: 'Area', tipo: 'texto', obligatorio: true, soloLectura: false }]
+        }],
+        catalogos: [],
+        reglas: []
+      })),
       metodologiaVigente: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',
@@ -67,7 +97,13 @@ describe('MatricesRiesgosComponent cobertura operativa', () => {
         reglas: []
       })),
       listarRiesgos: vi.fn().mockReturnValue(of([{ rieId: 5, rieCodigo: 'R-5', rieNombre: 'Riesgo', rieActivo: true }])),
-      listarEvaluaciones: vi.fn().mockReturnValue(of([evaluacion])),
+      listarEvaluaciones: vi.fn().mockReturnValue(of({
+        items: [evaluacionResumen],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 1,
+        totalPaginas: 1
+      })),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       descargarConsolidadoExcel: vi.fn().mockReturnValue(of(new Blob(['excel']))),
       descargarConsolidadoPdf: vi.fn().mockReturnValue(of(new Blob(['pdf']))),
@@ -179,14 +215,14 @@ describe('MatricesRiesgosComponent cobertura operativa', () => {
   });
 
   it('actualiza una evaluacion existente y expone el error de guardado sin ocultarlo', () => {
-    component.editarEvaluacion(evaluacion);
-    component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento actualizado');
+    component.editarEvaluacion(evaluacionResumen);
+    component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cumplimiento actualizado');
     component.guardarEvaluacion();
     expect(service['actualizarEvaluacion']).toHaveBeenCalledWith(31, expect.objectContaining({ evaId: 31, evaRiesgoId: 5 }));
 
     service['actualizarEvaluacion'].mockReturnValue(throwError(() => ({ error: { mensaje: 'Conflicto de version' } })));
-    component.editarEvaluacion(evaluacion);
-    component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento actualizado');
+    component.editarEvaluacion(evaluacionResumen);
+    component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cumplimiento actualizado');
     component.guardarEvaluacion();
     expect(component.error()).toBe('Conflicto de version');
     expect(component.guardando()).toBe(false);
