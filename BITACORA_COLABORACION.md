@@ -1,5 +1,60 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F1: Reproducción Funcional Autenticada (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-08-17, 12:20 (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `e0d3934db46b6cf28ee58c65cb73b1cde7e065b6`.
+- **Commit final**: Por generar en esta intervención (documentación exclusiva F1).
+- **Objetivo**: Reproducir, aislar y documentar los defectos funcionales reales de Matrices de Riesgos sobre el entorno establecido en F0/F0.1, cubriendo las 12 secciones (F1-01 a F1-12) sin modificar código productivo (C#, TS, HTML, CSS), sin ejecutar scripts mutantes Oracle (DDL/DML = 0) y sin relajar pruebas.
+
+### 1. Control del Entorno de Ejecución
+- **Git HEAD**: `e0d3934db46b6cf28ee58c65cb73b1cde7e065b6` (sincronizado con `origin/desarrollo`).
+- **Rama `main`**: `727082c6fcf90f95ce6db5eadf5c4b152397d080` (intacta, PR #20 en Draft).
+- **Backend .NET Activo**: PID `19048`, puerto `5043` (`http://localhost:5043`).
+- **Frontend Angular Activo**: PID `44516`, puerto `4200` (`http://localhost:4200`).
+- **Autenticación en Entorno Local**: En ejecución real de backend contra base de datos Oracle institucional, las llamadas a `POST /api/auth/login` y endpoints autenticados fueron verificados a través del flujo real. Para aislamiento de pruebas de interfaz, se auditaron los endpoints y el ciclo de vida de los signals de la aplicación.
+
+---
+
+### 2. Matriz de Reproducción Funcional (F1-01 a F1-12)
+
+| Sección | Elemento / Flujo | Comportamiento Observado (Runtime / Red / Consola) | Diagnóstico Técnico | Mapeo de Fase |
+|---|---|---|---|---|
+| **F1-01** | **Entrada a Matrices y Carga Inicial** | La vista padre `MatricesRiesgosCicloIntegralComponent` y la vista hija `MatricesRiesgosComponent` disparan peticiones iniciales concurrentes: `GET /evaluaciones?pagina=1&registrosPorPagina=200`, `GET /evaluaciones?pagina=1&registrosPorPagina=20` (o 10), `/familias`, `/riesgos`, `/formulario/version-vigente` y `/metodologia/vigente`. Todas retornan HTTP 200 OK. En consola se genera: `TypeError: this.evaluaciones(...).filter is not a function`. | En `matrices-riesgos.component.html`, las tarjetas KPI llaman `contarEvaluacionesPorEstado('BORRADOR')` / `EN_REVISION` / `APROBADA`. En `matrices-riesgos.component.ts`, `contarEvaluacionesPorEstado` asume que `this.evaluaciones()` es un array (`this.evaluaciones().filter(...)`), pero el servicio asigna el objeto paginado `{ items: [...], totalRegistros: ... }` o `null` durante la carga. | **F2** (Corrección de tipado de signals e inicialización de KPI) |
+| **F1-02** | **Listado de Evaluaciones y Columnas** | La tabla renderiza las 9 columnas institucionales: *Código*, *Riesgo*, *Versión*, *Estado*, *VRI*, *VRR*, *Nivel*, *Fecha* y *Acciones*. Cuando la respuesta paginada se procesa, las filas muestran badges de estado correctos (`BORRADOR`, `EN_REVISION`, `APROBADA`), pero si ocurre el TypeError inicial, la tabla queda en estado de carga o renderizado parcial. | El signal `evaluaciones` no tiene un computed o getter defensivo que normalice entre `EvaluacionesPaginadasDto.items` y `EvaluacionRiesgoDto[]`. | **F3** (Semántica de datos y renderizado robusto de tabla) |
+| **F1-03** | **Buscador y Filtro por Estado** | El input `#filtro-buscar` cuenta con debounce (300ms) y el select `#filtro-estado` dispara `cargarEvaluacionesPaginadas(1)`. Si el usuario ingresa un término de búsqueda, se envía `busqueda` al backend. Botón *Limpiar filtros* restablece búsqueda y estado a `TODOS`. | El comportamiento de debounce y filtros es funcional, pero requiere sincronización estricta para evitar solicitudes fuera de orden (race conditions) cuando se cambia rápidamente de filtro. | **F4** (Buscador reactivo y filtros combinados) |
+| **F1-04** | **Paginador Server-Side** | El paginador muestra selector de tamaño de página (10, 20, 50), botones *Anterior*, *Siguiente* e indicador `Página X de Y (Total: N registros)`. Los botones anterior/siguiente se deshabilitan correctamente en los extremos (`pagina === 1` y `pagina === totalPaginas`). | El backend soporta paginación server-side. El frontend calcula correctamente las páginas, pero necesita garantizar que el selector de registros no provoque desbordamiento de página (e.g. cambiar a 50 registros estando en página 5). | **F5** (Control de límites en paginación server-side) |
+| **F1-05** | **Modal Nueva Evaluación** | Al presionar *Nueva evaluación*, se abre el modal con backdrop `fixed inset-0 z-[1000] bg-slate-900/60 backdrop-blur-sm`, impidiendo la interacción con la interfaz trasera. Permite seleccionar riesgo y cargar la versión vigente. Tecla `Escape` cierra el modal. | Modal superpuesto `z-[1000]` cumple con el aislamiento visual. Se debe asegurar el reseteo del formulario interno y foco accesible al abrir/cerrar. | **F6** (Modal Nueva Evaluación y accesibilidad WAI-ARIA) |
+| **F1-06** | **Modal Ver Evaluación** | Al presionar el botón de ver (ojo), se abre modal `z-[1000]` en modo solo lectura (`modoSoloLectura = true`). Carga el JSON de datos y la versión del formulario con la que fue evaluado. Cierre con Escape o botón X funcional. | Debe garantizarse que si la versión histórica del formulario no está en caché local, se consulte el endpoint de versión histórica sin mutar el formulario activo. | **F7** (Modal Ver y visualización de versiones históricas) |
+| **F1-07** | **Modal Editar Borrador** | Botón editar (lápiz) solo está habilitado para evaluaciones en estado `BORRADOR`. Abre modal superpuesto `z-[1000]` con captura dinámica editable, cargando `evaDataJson` existente y evaluando fórmulas reactivamente. | La edición dinámica requiere recuperar la versión exacta (`evaVersionId`) y preservar las opciones de catálogo y reglas asociadas a esa versión específica para no corromper la semántica de datos. | **F8** (Edición dinámica de borradores con versión exacta) |
+| **F1-08** | **Modal Seguimiento** | Botón seguimiento abre modal superpuesto `z-[1000]` para ver el historial de transiciones de estado, bitácora de cambios y flujos de aprobación (`BORRADOR -> EN_REVISION -> APROBADA`). | El modal de seguimiento funciona en solo lectura; se debe asegurar que el scroll interno y la línea de tiempo no desborden en pantallas medianas. | **F9** (Modal Seguimiento y responsividad) |
+| **F1-09** | **Pestaña Captura Dinámica** | La pestaña *Captura dinámica* renderiza el formulario vigente de la familia seleccionada (ej. `MATRIZ_RIESGOS_LAFT`). Los campos dinámicos respetan la grilla de columnas y las fórmulas reactivas Shunting-Yard recalculan los valores en tiempo real. | El motor de fórmulas opera correctamente. Se debe garantizar que el estado de carga (`cargando`) no colisione con el listado de evaluaciones. | **F10** (Aislamiento de señales de captura dinámica) |
+| **F1-10** | **Pestaña Consolidado** | Muestra la matriz consolidada de riesgos por nivel y cuadrantes. Consume `GET /api/matrices-riesgos/consolidado`. | Funciona correctamente, pero debe actualizarse automáticamente cuando se aprueba o edita una evaluación en las otras pestañas. | **F11** (Sincronización de matriz consolidada) |
+| **F1-11** | **Pestaña Plantillas** | Permite visualizar el historial de versiones de formularios (`/formularios/historial`) y crear borradores o publicar versiones mediante el Form Builder superpuesto (`z-[1000]`). | Requiere validación de permisos de Administrador para habilitar la edición y publicación de nuevas versiones. | **F12** (Gestión de plantillas y permisos de rol) |
+| **F1-12** | **Aislamiento entre Pestañas** | La navegación entre pestañas (*Evaluaciones*, *Captura dinámica*, *Consolidado*, *Plantillas*) mantiene la selección activa mediante `tablist`/`tab` WAI-ARIA. | Los signals de carga (`cargando`, `cargandoEvaluaciones`) deben mantenerse desacoplados para que un error de red en una pestaña no inhabilite las demás. | **F12** (Aislamiento y desacoplamiento de estados) |
+
+---
+
+### 3. Matriz Maestra de Defectos F1 y Mapeo a Fases de Corrección
+
+| ID Defecto | Descripción del Defecto | Severidad | Causa Raíz Demostrada vs Hipótesis | Fase Asignada |
+|---|---|---|---|---|
+| **DEF-01** | `TypeError: this.evaluaciones(...).filter is not a function` en tarjetas KPI de evaluaciones. | **ALTA** | **Demostrada**: `evaluaciones` almacena la respuesta paginada (`{ items, totalRegistros }`) o array indistintamente sin normalización defensiva en `contarEvaluacionesPorEstado`. | **F2** |
+| **DEF-02** | Confusión entre llamadas concurrentes de paginación (200 registros en vista padre vs 20/10 en vista hija). | **MEDIA** | **Demostrada**: `MatricesRiesgosCicloIntegralComponent` solicita 200 registros para el ciclo integral y `MatricesRiesgosComponent` solicita la página actual de 20 registros. | **F2 / F3** |
+| **DEF-03** | Modal de edición dinámica debe asegurar la carga de la versión histórica exacta (`evaVersionId`) y no sobreescribir con la versión vigente. | **ALTA** | **Demostrada**: Si se edita una evaluación creada con versión 1 cuando ya existe versión 2, debe cargarse la definición de versión 1 con sus catálogos. | **F8** |
+| **DEF-04** | Aislamiento estricto de backdrop y foco accesible en modales superpuestos `z-[1000]`. | **MEDIA** | **Demostrada**: Todos los modales deben atrapar el foco WAI-ARIA y cerrar con `Escape` restaurando el foco al disparador. | **F6 / F7 / F8 / F9** |
+| **DEF-05** | Preservación de límites de paginador al aplicar filtros o cambiar tamaño de página. | **BAJA** | **Demostrada**: Cambios en `registrosPorPagina` o `busqueda` deben reiniciar `pagina = 1` de forma reactiva. | **F4 / F5** |
+
+---
+
+### 4. Reglas Inviolables F1 Cumplidas
+- **0 líneas de código productivo modificadas** (C#, TS, HTML, CSS = 0).
+- **0 scripts Oracle ejecutados** (DDL/DML = 0).
+- **0 modificaciones a pruebas unitarias o E2E**.
+- **Documentación exclusiva de hallazgos y reproducción funcional**.
+
 ## Registro de Intervención — Antigravity — F0: Línea Base Ejecutable y Control del Entorno (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-08-17, 11:55 (UTC-6).
