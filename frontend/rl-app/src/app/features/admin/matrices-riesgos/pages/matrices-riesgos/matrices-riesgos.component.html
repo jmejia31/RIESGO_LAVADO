@@ -175,7 +175,6 @@
                 <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.fechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="px-6 py-4 text-center">
                   <div class="inline-flex items-center justify-center gap-1.5">
-                    <!-- VER -->
                     <button type="button"
                             class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
                             title="Ver evaluación"
@@ -184,7 +183,6 @@
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     </button>
 
-                    <!-- EDITAR (Solo BORRADOR) -->
                     @if (evaluacion.estado === 'BORRADOR') {
                       <button type="button"
                               class="inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200"
@@ -195,7 +193,6 @@
                       </button>
                     }
 
-                    <!-- SEGUIMIENTO -->
                     <button type="button"
                             class="inline-flex items-center justify-center p-1.5 text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors border border-purple-200"
                             title="Seguimiento de evaluación"
@@ -211,7 +208,6 @@
         </table>
       </div>
 
-      <!-- PAGINADOR SERVER-SIDE INSTITUCIONAL -->
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 border-t border-gray-100 text-xs text-gray-600">
         <div class="flex items-center gap-2">
           <span>Mostrando</span>
@@ -311,50 +307,12 @@
                    [class.col-span-3]="(campo.anchoColumnas || 1) === 3"
                    [class.col-span-4]="(campo.anchoColumnas || 1) === 4"
                    [class.col-span-6]="(campo.anchoColumnas || 1) === 6">
-                <label [for]="'campo-' + campo.clave" class="block text-xs font-bold text-gray-700 mb-1">
-                  {{ campo.etiqueta }} @if (campo.obligatorio) { <span class="text-red-600 font-bold">*</span> }
-                </label>
-
-                @if (opcionesCatalogo(campo).length) {
-                  <select [attr.id]="'campo-' + campo.clave"
-                          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                          [disabled]="campo.soloLectura"
-                          [ngModel]="valorRespuesta(campo)"
-                          (ngModelChange)="actualizarRespuesta(campo, $event)">
-                    <option [ngValue]="null">Seleccione una opción</option>
-                    @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
-                      <option [value]="opcion.codigo">{{ opcion.valor }}</option>
-                    }
-                  </select>
-                } @else if (campo.tipo === 'booleano' || campo.tipo === 'checkbox') {
-                  <div class="mt-2 flex items-center gap-2">
-                    <input [attr.id]="'campo-' + campo.clave"
-                           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                           type="checkbox"
-                           [disabled]="campo.soloLectura"
-                           [ngModel]="valorRespuesta(campo)"
-                           (ngModelChange)="actualizarRespuesta(campo, $event)">
-                    <span class="text-xs text-gray-600 font-medium">Marcar confirmación</span>
-                  </div>
-                } @else if (campo.tipo === 'textarea' || campo.tipo === 'texto-largo') {
-                  <textarea [attr.id]="'campo-' + campo.clave"
-                            class="min-h-24 w-full rounded-xl border border-gray-200 p-2.5 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                            [readOnly]="campo.soloLectura"
-                            [ngModel]="valorRespuesta(campo)"
-                            (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
-                } @else if (campo.tipo === 'formula') {
-                  <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-mono font-bold text-ihss-900 shadow-inner">
-                    <span>{{ valorRespuesta(campo) ?? 'Calculado automáticamente' }}</span>
-                    <span class="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700 border border-blue-100 font-sans">Fórmula: {{ campo.formula || 'VRI/VRR' }}</span>
-                  </div>
-                } @else {
-                  <input [attr.id]="'campo-' + campo.clave"
-                         class="w-full rounded-xl border border-gray-200 px-3 py-2 text-xs text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                         [type]="campo.tipo === 'numero' ? 'number' : campo.tipo === 'fecha' ? 'date' : 'text'"
-                         [readOnly]="campo.soloLectura"
-                         [ngModel]="valorRespuesta(campo)"
-                         (ngModelChange)="actualizarRespuesta(campo, $event)">
-                }
+                <app-dynamic-field-renderer
+                  [campo]="campo"
+                  [valor]="valorRespuesta(campo)"
+                  [opcionesCatalogo]="opcionesCatalogo(campo)"
+                  idPrefix="campo"
+                  (valorChange)="actualizarRespuesta(campo, $event)" />
               </div>
             }
           </div>
@@ -554,9 +512,7 @@
     </section>
   }
 
-  <!-- MODAL ESTETICO SUPERPUESTO DEL FORM BUILDER -->
   @if (versionEditando(); as versionActual) {
-     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
      <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-builder">
       <div class="modal-container-card h-[calc(100dvh-1.5rem)] max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-none sm:h-[calc(100dvh-3rem)] sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100vw-3rem)]">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
@@ -572,9 +528,7 @@
      </dialog>
   }
 
-  <!-- MODAL NUEVA/EDITAR FAMILIA -->
   @if (modalFamiliaAbierto()) {
-     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
      <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-familia">
       <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
         <div class="modal-header-institutional">
@@ -630,9 +584,7 @@
      </dialog>
   }
 
-  <!-- MODAL NUEVO FORMULARIO -->
   @if (modalFormularioAbierto()) {
-     <!-- NOSONAR: el contenedor overlay requiere role dialog para mantener el aislamiento inert y el control de foco global. -->
      <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-formulario">
       <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
         <div class="modal-header-institutional">
@@ -676,7 +628,6 @@
      </dialog>
   }
 
-  <!-- MODAL VER EVALUACIÓN (Solo Lectura) -->
   @if (modalVerAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
       <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
@@ -695,7 +646,6 @@
         </div>
 
         <div class="modal-body-scrollable space-y-5">
-          <!-- Tarjeta de Resumen -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 p-3.5 rounded-xl border border-gray-100 text-xs">
             <div>
               <span class="text-gray-400 font-bold block uppercase tracking-wider text-[10px]">Estado</span>
@@ -715,7 +665,6 @@
             </div>
           </div>
 
-          <!-- Formulario Dinámico en Modo Solo Lectura -->
           @for (seccion of seccionesModal(); track seccion.clave) {
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2 flex items-center justify-between">
@@ -729,26 +678,12 @@
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
                 @for (campo of seccion.campos; track campo.clave) {
-                  <div class="space-y-1">
-                    <span class="block text-xs font-bold text-gray-600">{{ campo.etiqueta }}</span>
-                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
-                        {{ obtenerEtiquetaCatalogo(campo, valorRespuesta(campo)) }}
-                      </div>
-                    } @else if (campo.tipo === 'checkbox') {
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
-                        {{ valorRespuesta(campo) ? 'Sí' : 'No' }}
-                      </div>
-                    } @else if (campo.tipo === 'texto-largo') {
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800 min-h-[50px] whitespace-pre-wrap">
-                        {{ valorRespuesta(campo) || '-' }}
-                      </div>
-                    } @else {
-                      <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800">
-                        {{ valorRespuesta(campo) || '-' }}
-                      </div>
-                    }
-                  </div>
+                  <app-dynamic-field-renderer
+                    [campo]="campo"
+                    [valor]="valorRespuesta(campo)"
+                    [opcionesCatalogo]="opcionesCatalogo(campo)"
+                    [modoLectura]="true"
+                    idPrefix="campo-view" />
                 }
               </div>
             </section>
@@ -764,7 +699,6 @@
     </dialog>
   }
 
-  <!-- MODAL EDITAR EVALUACIÓN (Solo BORRADOR) -->
   @if (modalEditarAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-editar">
       <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
@@ -783,7 +717,6 @@
         </div>
 
         <div class="modal-body-scrollable space-y-5">
-          <!-- Riesgo no editable en histórico -->
           <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 flex items-center justify-between text-xs">
             <div>
               <span class="text-gray-500 font-semibold">Riesgo Institucional:</span>
@@ -792,7 +725,6 @@
             <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">BORRADOR</span>
           </div>
 
-          <!-- Campos Dinámicos con Tipos Fieles -->
           @for (seccion of seccionesModal(); track seccion.clave) {
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
@@ -803,69 +735,12 @@
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
                 @for (campo of seccion.campos; track campo.clave) {
-                  <div class="space-y-1">
-                    <label [for]="'campo-edit-' + campo.clave" class="block text-xs font-bold text-gray-700">
-                      {{ campo.etiqueta }}
-                      @if (campo.obligatorio) { <span class="text-red-500">*</span> }
-                    </label>
-
-                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
-                      <select [id]="'campo-edit-' + campo.clave"
-                              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                              [disabled]="campo.soloLectura"
-                              [ngModel]="valorRespuesta(campo)"
-                              (ngModelChange)="actualizarRespuesta(campo, $event)">
-                        <option [ngValue]="null">Seleccione una opción</option>
-                        @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
-                          <option [value]="opcion.codigo">{{ opcion.valor }} ({{ opcion.codigo }})</option>
-                        }
-                      </select>
-                    } @else if (campo.tipo === 'numero') {
-                      <input [id]="'campo-edit-' + campo.clave"
-                             type="number"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event !== '' ? +$event : null)" />
-                    } @else if (campo.tipo === 'fecha') {
-                      <input [id]="'campo-edit-' + campo.clave"
-                             type="date"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
-                    } @else if (campo.tipo === 'checkbox') {
-                      <div class="flex items-center gap-2 pt-1">
-                        <input [id]="'campo-edit-' + campo.clave"
-                               type="checkbox"
-                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                               [disabled]="campo.soloLectura"
-                               [ngModel]="valorRespuesta(campo)"
-                               (ngModelChange)="actualizarRespuesta(campo, !!$event)" />
-                        <span class="text-xs text-gray-600 font-medium">Marcar como afirmativo</span>
-                      </div>
-                    } @else if (campo.tipo === 'texto-largo') {
-                      <textarea [id]="'campo-edit-' + campo.clave"
-                                rows="3"
-                                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                                [disabled]="campo.soloLectura"
-                                [ngModel]="valorRespuesta(campo)"
-                                (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
-                    } @else if (campo.tipo === 'formula') {
-                      <input [id]="'campo-edit-' + campo.clave"
-                             type="text"
-                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-800 shadow-sm cursor-not-allowed"
-                             disabled
-                             [ngModel]="valorRespuesta(campo)" />
-                    } @else {
-                      <input [id]="'campo-edit-' + campo.clave"
-                             type="text"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
-                    }
-                  </div>
+                  <app-dynamic-field-renderer
+                    [campo]="campo"
+                    [valor]="valorRespuesta(campo)"
+                    [opcionesCatalogo]="opcionesCatalogo(campo)"
+                    idPrefix="campo-edit"
+                    (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
               </div>
             </section>
@@ -887,7 +762,6 @@
     </dialog>
   }
 
-  <!-- MODAL SEGUIMIENTO Y TRANSICIONES -->
   @if (modalSeguimientoAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-seguimiento">
       <div class="modal-container-card w-full max-w-3xl max-h-[90dvh]">
@@ -906,7 +780,6 @@
         </div>
 
         <div class="modal-body-scrollable space-y-6">
-          <!-- Transición de Estado Controlada -->
           @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
             <section class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
               <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Gestionar Transición de Estado</h4>
@@ -945,7 +818,6 @@
             </div>
           }
 
-          <!-- Timeline de Historial de Flujos -->
           <section class="space-y-3">
             <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Línea de Tiempo de Auditoría</h4>
             <div class="relative border-l-2 border-gray-200 ml-4 space-y-4 py-1">
@@ -977,7 +849,6 @@
     </dialog>
   }
 
-  <!-- MODAL NUEVA EVALUACIÓN -->
   @if (modalNuevaEvaluacionAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-nueva-eval">
       <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
@@ -996,7 +867,6 @@
         </div>
 
         <div class="modal-body-scrollable space-y-5">
-          <!-- Selector de Riesgo -->
           <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-1">
             <label for="modal-selector-riesgo" class="block text-xs font-bold text-gray-700">
               Riesgo Institucional a Evaluar <span class="text-red-500">*</span>
@@ -1012,7 +882,6 @@
             </select>
           </div>
 
-          <!-- Campos Dinámicos con Tipos Fieles -->
           @for (seccion of secciones(); track seccion.clave) {
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
@@ -1023,69 +892,12 @@
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
                    [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
                 @for (campo of seccion.campos; track campo.clave) {
-                  <div class="space-y-1">
-                    <label [for]="'campo-new-' + campo.clave" class="block text-xs font-bold text-gray-700">
-                      {{ campo.etiqueta }}
-                      @if (campo.obligatorio) { <span class="text-red-500">*</span> }
-                    </label>
-
-                    @if (campo.tipo === 'selector-catalogo' || campo.tipo === 'catalogo' || campo.tipo === 'select') {
-                      <select [id]="'campo-new-' + campo.clave"
-                              class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                              [disabled]="campo.soloLectura"
-                              [ngModel]="valorRespuesta(campo)"
-                              (ngModelChange)="actualizarRespuesta(campo, $event)">
-                        <option [ngValue]="null">Seleccione una opción</option>
-                        @for (opcion of opcionesCatalogo(campo); track opcion.codigo) {
-                          <option [value]="opcion.codigo">{{ opcion.valor }} ({{ opcion.codigo }})</option>
-                        }
-                      </select>
-                    } @else if (campo.tipo === 'numero') {
-                      <input [id]="'campo-new-' + campo.clave"
-                             type="number"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event !== '' ? +$event : null)" />
-                    } @else if (campo.tipo === 'fecha') {
-                      <input [id]="'campo-new-' + campo.clave"
-                             type="date"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
-                    } @else if (campo.tipo === 'checkbox') {
-                      <div class="flex items-center gap-2 pt-1">
-                        <input [id]="'campo-new-' + campo.clave"
-                               type="checkbox"
-                               class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                               [disabled]="campo.soloLectura"
-                               [ngModel]="valorRespuesta(campo)"
-                               (ngModelChange)="actualizarRespuesta(campo, !!$event)" />
-                        <span class="text-xs text-gray-600 font-medium">Marcar como afirmativo</span>
-                      </div>
-                    } @else if (campo.tipo === 'texto-largo') {
-                      <textarea [id]="'campo-new-' + campo.clave"
-                                rows="3"
-                                class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                                [disabled]="campo.soloLectura"
-                                [ngModel]="valorRespuesta(campo)"
-                                (ngModelChange)="actualizarRespuesta(campo, $event)"></textarea>
-                    } @else if (campo.tipo === 'formula') {
-                      <input [id]="'campo-new-' + campo.clave"
-                             type="text"
-                             class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-bold text-ihss-800 shadow-sm cursor-not-allowed"
-                             disabled
-                             [ngModel]="valorRespuesta(campo)" />
-                    } @else {
-                      <input [id]="'campo-new-' + campo.clave"
-                             type="text"
-                             class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100"
-                             [disabled]="campo.soloLectura"
-                             [ngModel]="valorRespuesta(campo)"
-                             (ngModelChange)="actualizarRespuesta(campo, $event)" />
-                    }
-                  </div>
+                  <app-dynamic-field-renderer
+                    [campo]="campo"
+                    [valor]="valorRespuesta(campo)"
+                    [opcionesCatalogo]="opcionesCatalogo(campo)"
+                    idPrefix="campo-new"
+                    (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
               </div>
             </section>
