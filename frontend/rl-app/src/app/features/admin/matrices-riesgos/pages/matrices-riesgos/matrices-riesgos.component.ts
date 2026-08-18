@@ -14,21 +14,29 @@ import {
   MetodologiaFormulario,
   RespuestasFormulario,
   RiesgoReporteFila,
+  ValorRespuestaFormulario,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
 import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
+import { DynamicFieldRendererComponent } from '../../components/dynamic-field-renderer/dynamic-field-renderer.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { recalcularFormulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
+import {
+  normalizarDefinicionFormulario,
+  normalizarMetodologiaFormulario,
+  normalizarRespuestasFormulario,
+  tieneValorRespuesta
+} from '../../utils/dynamic-form-renderer.util';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormBuilderComponent],
+  imports: [CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
   templateUrl: './matrices-riesgos.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -136,43 +144,23 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   definicionTecnica = '';
 
   readonly seccionesModal = computed(() => {
-    // 1. Si tenemos metodologiaHistorica con secciones, usar esas
     const metHist = this.metodologiaHistorica();
-    if (metHist && metHist.secciones && metHist.secciones.length > 0) {
-      return metHist.secciones.map(sec => ({
-        clave: sec.clave,
-        titulo: sec.titulo || sec.clave,
-        orden: sec.orden,
-        columnasPorFila: 2,
-        campos: sec.campos.map(c => ({
-          clave: c.clave,
-          etiqueta: c.etiqueta,
-          tipo: c.tipo as 'texto' | 'numero' | 'selector-catalogo' | 'calculado' | 'archivo',
-          obligatorio: c.obligatorio,
-          soloLectura: c.soloLectura,
-          formula: c.formula,
-          codigoCatalogo: c.codigoCatalogo
-        }))
-      })).sort((a, b) => a.orden - b.orden);
+    if (metHist?.secciones?.length) {
+      return normalizarMetodologiaFormulario(metHist).secciones;
     }
 
-    // 2. Si estamos en modal de ver/editar histórico, usar la versión histórica
     const vHist = this.versionHistorica();
     if (vHist?.verJson) {
       const def = this.extraerDefinicionVersion(vHist);
-      if (def.secciones.length > 0) {
-        return def.secciones.sort((a, b) => a.orden - b.orden);
-      }
+      if (def.secciones.length > 0) return def.secciones;
     }
 
-    // 3. Fallback a la versión vigente
     const vVig = this.versionVigente();
     if (vVig?.verJson) {
       const def = this.extraerDefinicionVersion(vVig);
-      if (def.secciones.length > 0) {
-        return def.secciones.sort((a, b) => a.orden - b.orden);
-      }
+      if (def.secciones.length > 0) return def.secciones;
     }
+
     return [];
   });
 
@@ -180,9 +168,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const versionVigente = this.versionVigente();
     if (versionVigente?.verJson) {
       const def = this.extraerDefinicionVersion(versionVigente);
-      if (def.secciones.length > 0) {
-        return def.secciones.sort((a, b) => a.orden - b.orden);
-      }
+      if (def.secciones.length > 0) return def.secciones;
     }
 
     return [];
@@ -664,7 +650,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  actualizarRespuesta(campo: CampoFormulario, valor: string | number | boolean | null): void {
+  actualizarRespuesta(campo: CampoFormulario, valor: ValorRespuestaFormulario): void {
     this.respuestas.update(actuales => {
       const nuevas = { ...actuales, [campo.clave]: valor };
       const seccionesActuales = this.modalEditarAbierto() || this.modalNuevaEvaluacionAbierto()
@@ -676,7 +662,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  valorRespuesta(campo: CampoFormulario): string | number | boolean | null {
+  valorRespuesta(campo: CampoFormulario): ValorRespuestaFormulario {
     return this.respuestas()[campo.clave] ?? null;
   }
 
@@ -724,20 +710,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.evaluacionResumenSeleccionada.set(resumen);
 
-    // 1. GET /evaluaciones/{id} para detalle fresco
     this.service.obtenerEvaluacion(resumen.evaId).subscribe({
       next: detalle => {
         this.evaluacionSeleccionada.set(detalle);
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
 
-        // 2. Cargar metodología y versión exacta de evaVersionId
         this.service.metodologiaPorVersion(detalle.evaVersionId).subscribe({
           next: met => {
             this.metodologiaHistorica.set(met);
             this.service.obtenerFamiliaFormularioPorId(1).subscribe({
               next: () => {
-                // Obtenemos historial o versión si es necesario
                 this.cargando.set(false);
                 this.modalVerAbierto.set(true);
               },
@@ -748,7 +731,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             });
           },
           error: () => {
-            // Fallback a metodología vigente si fallara
             this.metodologiaHistorica.set(this.metodologia());
             this.cargando.set(false);
             this.modalVerAbierto.set(true);
@@ -778,14 +760,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cargando.set(true);
     this.evaluacionResumenSeleccionada.set(evaluacion);
 
-    // 1. GET /evaluaciones/{id} para detalle fresco
     this.service.obtenerEvaluacion(evaluacion.evaId).subscribe({
       next: detalle => {
         this.evaluacionSeleccionada.set(detalle);
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
 
-        // 2. Cargar metodología histórica exacta
         this.service.metodologiaPorVersion(detalle.evaVersionId).subscribe({
           next: met => {
             this.metodologiaHistorica.set(met);
@@ -927,7 +907,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.motivoTransicion = '';
         this.cargarEvaluaciones();
         this.cargarFlujos(resumen.evaId);
-        // Actualizamos estado en el resumen seleccionado localmente
         this.evaluacionResumenSeleccionada.set({
           ...resumen,
           estado: this.nuevoEstado
@@ -1245,42 +1224,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private extraerDefinicionVersion(version: VersionFormularioDto | null): DefinicionFormularioEditable {
-    if (!version?.verJson) {
+    if (!version) {
       return { codigoFormulario: '', nombreFormulario: '', secciones: [] };
     }
 
-    try {
-      const definicion = JSON.parse(version.verJson) as Partial<DefinicionFormularioEditable>;
-      return {
-        codigoFormulario: definicion.codigoFormulario ?? version.verCodigo,
-        nombreFormulario: definicion.nombreFormulario ?? version.verCodigo,
-        secciones: Array.isArray(definicion.secciones)
-          ? definicion.secciones.map((seccion, indice) => ({
-              clave: seccion.clave || `seccion_${indice + 1}`,
-              titulo: seccion.titulo || `Sección ${indice + 1}`,
-              orden: Number(seccion.orden ?? indice + 1),
-              columnasPorFila: Number(seccion.columnasPorFila ?? 2),
-              campos: Array.isArray(seccion.campos) ? seccion.campos.map(c => ({
-                ...c,
-                anchoColumnas: Number(c.anchoColumnas ?? 1),
-                formula: c.formula || undefined
-              })) : []
-            }))
-          : [],
-        reglas: Array.isArray(definicion.reglas) ? definicion.reglas : []
-      };
-    } catch {
-      return { codigoFormulario: version.verCodigo, nombreFormulario: version.verCodigo, secciones: [] };
-    }
+    return normalizarDefinicionFormulario(version.verJson, version.verCodigo, version.verCodigo);
   }
 
   private parsearRespuestas(contenido: string): RespuestasFormulario {
-    try {
-      const valor = JSON.parse(contenido);
-      return valor && typeof valor === 'object' && !Array.isArray(valor) ? valor : {};
-    } catch {
-      return {};
-    }
+    return normalizarRespuestasFormulario(contenido);
   }
 
   private formatearDefinicion(contenido: string): string {
@@ -1292,11 +1244,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   private tieneValor(valor: unknown): boolean {
-    if (valor === null || valor === undefined) return false;
-    if (typeof valor === 'object') return Object.keys(valor).length > 0;
-    if (typeof valor === 'string') return valor.trim() !== '';
-    if (typeof valor === 'number') return !Number.isNaN(valor);
-    return typeof valor === 'boolean';
+    return tieneValorRespuesta(valor);
   }
 
   private finalizarConError(error: unknown, mensaje: string): void {
