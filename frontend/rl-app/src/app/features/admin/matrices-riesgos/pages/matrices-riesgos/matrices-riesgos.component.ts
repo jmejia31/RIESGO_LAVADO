@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import {
   CampoFormulario,
@@ -36,6 +37,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly globalState = inject(GlobalHttpStateService);
   private readonly authService = inject(AuthService);
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
+  private suscripcionEvaluaciones: Subscription | null = null;
+  private secuenciaCargaEvaluaciones = 0;
 
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
 
@@ -80,6 +85,28 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
   readonly totalRegistros = signal(0);
   readonly totalPaginas = signal(0);
+
+  readonly paginasVisibles = computed<number[]>(() => {
+    const total = this.totalPaginas();
+    const actual = this.pagina();
+
+    if (total <= 0) return [];
+
+    const candidatos = [
+      1,
+      actual - 2,
+      actual - 1,
+      actual,
+      actual + 1,
+      actual + 2,
+      total
+    ];
+
+    const validos = candidatos.filter(p => Number.isInteger(p) && p >= 1 && p <= total);
+    const unicos = Array.from(new Set(validos));
+    return unicos.sort((a, b) => a - b);
+  });
+
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
@@ -233,6 +260,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.secuenciaCargaEvaluaciones++;
+    this.suscripcionEvaluaciones?.unsubscribe();
+    this.suscripcionEvaluaciones = null;
     this.limpiarAutoDismiss();
     this.cancelarDebounceBuscarPendiente();
   }
@@ -503,16 +533,28 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cambiarRegistrosPorPagina(cantidad: number): void {
-    this.registrosPorPagina.set(Number(cantidad));
+    const num = Number(cantidad);
+    if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) {
+      return;
+    }
+    if (num === this.registrosPorPagina()) {
+      return;
+    }
+    this.registrosPorPagina.set(num);
     this.pagina.set(1);
     this.cargarEvaluaciones();
   }
 
   cambiarPagina(nuevaPagina: number): void {
-    if (nuevaPagina < 1 || (this.totalPaginas() > 0 && nuevaPagina > this.totalPaginas())) {
+    const p = Number(nuevaPagina);
+    if (!Number.isFinite(p) || !Number.isInteger(p)) {
       return;
     }
-    this.pagina.set(nuevaPagina);
+    const total = this.totalPaginas();
+    if (total <= 0 || p < 1 || p > total || p === this.pagina()) {
+      return;
+    }
+    this.pagina.set(p);
     this.cargarEvaluaciones();
   }
 
@@ -525,22 +567,58 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarEvaluaciones(): void {
-    this.cargandoEvaluaciones.set(true);
-    this.errorEvaluaciones.set(null);
-    this.service.listarEvaluaciones({
+    const filtrosSnapshot = {
       buscar: this.filtroBuscar().trim() || undefined,
       estado: this.filtroEstado().trim() || undefined,
       pagina: this.pagina(),
       registrosPorPagina: this.registrosPorPagina()
-    }).subscribe({
+    };
+
+    const solicitudId = ++this.secuenciaCargaEvaluaciones;
+
+    this.suscripcionEvaluaciones?.unsubscribe();
+    this.suscripcionEvaluaciones = null;
+
+    this.cargandoEvaluaciones.set(true);
+    this.errorEvaluaciones.set(null);
+
+    this.suscripcionEvaluaciones = this.service.listarEvaluaciones(filtrosSnapshot).subscribe({
       next: paginado => {
+        if (solicitudId !== this.secuenciaCargaEvaluaciones) {
+          return;
+        }
+
         const items = Array.isArray(paginado?.items) ? paginado.items : [];
         this.evaluaciones.set(items);
-        this.totalRegistros.set(Number.isFinite(paginado?.totalRegistros) ? Math.max(0, paginado.totalRegistros) : 0);
-        this.totalPaginas.set(Number.isFinite(paginado?.totalPaginas) ? Math.max(0, paginado.totalPaginas) : 0);
+
+        const totalReg = Number.isFinite(paginado?.totalRegistros) && Math.floor(paginado.totalRegistros) >= 0
+          ? Math.floor(paginado.totalRegistros)
+          : 0;
+        this.totalRegistros.set(totalReg);
+
+        let totalPag = Number.isFinite(paginado?.totalPaginas) && Math.floor(paginado.totalPaginas) >= 0
+          ? Math.floor(paginado.totalPaginas)
+          : (filtrosSnapshot.registrosPorPagina > 0 ? Math.ceil(totalReg / filtrosSnapshot.registrosPorPagina) : 0);
+        this.totalPaginas.set(totalPag);
+
+        let pagEfectiva = Number.isFinite(paginado?.pagina) && Math.floor(paginado.pagina) >= 1
+          ? Math.floor(paginado.pagina)
+          : filtrosSnapshot.pagina;
+
+        if (totalPag === 0) {
+          pagEfectiva = 1;
+        } else if (pagEfectiva > totalPag) {
+          pagEfectiva = totalPag;
+        }
+
+        this.pagina.set(pagEfectiva);
         this.cargandoEvaluaciones.set(false);
       },
       error: error => {
+        if (solicitudId !== this.secuenciaCargaEvaluaciones) {
+          return;
+        }
+
         const msg = this.obtenerMensajeError(error, 'No se pudieron consultar las evaluaciones.');
         this.errorEvaluaciones.set(msg);
         this.evaluaciones.set([]);

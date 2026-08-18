@@ -1,12 +1,44 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F4.2 Paginación Server-Side + Page Size + Concurrencia + Edge Cases
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `93fb72d3b6ddcfcb171e0247bdfcdc5defdb4bdf`.
+- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar paginacion y concurrencia F4.2`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F4.2
+
+1. **Ajustes Backend C# (`paginaEfectiva`)**:
+   - En `MatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync`, se calcula `paginaEfectiva = totalPaginas == 0 ? 1 : Math.Min(filtro.Pagina, totalPaginas)` **antes** del offset y se retorna en `EvaluacionesPaginadasDto.Pagina`. Si se solicita una página mayor al total disponible, el backend entrega la última página válida en una sola consulta.
+2. **Protección de Concurrencia y Stale Guard Frontend**:
+   - Incorporación de `suscripcionEvaluaciones: Subscription | null` y `secuenciaCargaEvaluaciones: number` en `MatricesRiesgosComponent`.
+   - Cancelación de peticiones anteriores al iniciar nueva consulta y descarte de respuestas desfasadas (callbacks ignorados si `solicitudId !== secuenciaCargaEvaluaciones`).
+3. **Paginador Compacto, Page Size Whitelist y Normalización Defensiva**:
+   - Whitelist estricta `[10, 20, 50]` en `cambiarRegistrosPorPagina()`.
+   - Navegación numerada compacta con `paginasVisibles` computed signal, gap indicators `…` e indicadores de accesibilidad `aria-current="page"` y `aria-label`.
+   - Deshabilitado de botones durante `cargandoEvaluaciones() === true`.
+   - Coherencia en resumen (`Mostrando X – Y de Z registros`, 0-0 de 0 en caso de 0 registros).
+4. **Pruebas Automatizadas**:
+   - **Backend C# (.NET)**: **409 / 409 PASS (100%)** (incluye `MatricesRiesgosF42PaginaEfectivaTests.cs`).
+   - **Frontend Angular**: **318 / 318 PASS (100%)** en 33 archivos spec (incluye `matrices-riesgos.component.f4.2.spec.ts` con 28/28 PASS).
+   - **Build Frontend (`npm run build`)**: **PASS** (`dist/rl-app`).
+5. **Garantías y Control Git**:
+   - `git diff --check`: PASS. 0 modificaciones DDL/DML u Oracle. `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`), PR #20 en Draft.
+   - **Sonar**: Diferido al cierre global.
+   - **F4.3**: NO iniciada.
+
+---
+
 ## Registro de Intervención — Antigravity — F4.1 Búsqueda, Debounce y Filtro por Estado
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `2ce3198c31f119793f0349a41d3396e7f5a34204`.
-- **Commit final publicado**: `b9f3011a6ef1394f9e160e1d09ec95fcfeadfc6c` (`fix(matrices): cerrar busqueda y filtros F4.1`).
+- **Commit final publicado**: `b9f3011d917b89a6b6e71df25c1b3824eca96508` (`fix(matrices): cerrar busqueda y filtros F4.1`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F4.1

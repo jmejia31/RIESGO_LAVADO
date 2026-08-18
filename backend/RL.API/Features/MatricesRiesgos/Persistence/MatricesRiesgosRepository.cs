@@ -765,7 +765,15 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
         int totalRegistros = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
 
-        int offset = (filtro.Pagina - 1) * filtro.RegistrosPorPagina;
+        int totalPaginas = filtro.RegistrosPorPagina > 0
+            ? (int)Math.Ceiling((double)totalRegistros / filtro.RegistrosPorPagina)
+            : 0;
+
+        int paginaEfectiva = totalPaginas == 0
+            ? 1
+            : Math.Min(filtro.Pagina, totalPaginas);
+
+        int offset = (paginaEfectiva - 1) * filtro.RegistrosPorPagina;
         string selectDataSql = $@"
             SELECT e.EVA_ID,
                    e.EVA_RIESGO_ID,
@@ -826,7 +834,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return new EvaluacionesPaginadasDto
         {
             Items = lista,
-            Pagina = filtro.Pagina,
+            Pagina = paginaEfectiva,
             RegistrosPorPagina = filtro.RegistrosPorPagina,
             TotalRegistros = totalRegistros
         };
