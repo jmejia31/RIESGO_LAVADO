@@ -49,6 +49,8 @@ export interface CampoFormulario {
   clave: string;
   etiqueta: string;
   tipo: string;
+  /** Conserva el tipo recibido cuando el renderer debe degradarlo a `desconocido`. */
+  tipoOriginal?: string | null;
   codigoCatalogo?: string | null;
   opciones?: string[] | null;
   formula?: string | null;
@@ -222,7 +224,8 @@ export interface EvidenciaPoliticaDto {
   tiposPermitidosTexto: string;
 }
 
-export type RespuestasFormulario = Record<string, string | number | boolean | null>;
+export type ValorRespuestaFormulario = string | number | boolean | string[] | null;
+export type RespuestasFormulario = Record<string, ValorRespuestaFormulario>;
 
 export interface DefinicionFormularioEditable {
   codigoFormulario: string;
