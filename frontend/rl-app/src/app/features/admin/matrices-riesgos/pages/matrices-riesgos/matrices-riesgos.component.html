@@ -114,6 +114,18 @@
             Limpiar filtros
           </button>
         </div>
+        <div>
+          <label for="filtro-registros-por-pagina" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Registros por página</label>
+          <select id="filtro-registros-por-pagina"
+                  class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="cargandoEvaluaciones()"
+                  [ngModel]="registrosPorPagina()"
+                  (ngModelChange)="cambiarRegistrosPorPagina($event)">
+            @for (opc of opcionesRegistrosPorPagina; track opc) {
+              <option [value]="opc">{{ opc }}</option>
+            }
+          </select>
+        </div>
       </div>
       <div class="overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
