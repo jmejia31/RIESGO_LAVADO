@@ -123,12 +123,7 @@ export function normalizarTipoCampoRenderer(tipo: unknown): TipoCampoNormalizado
     : { tipo: 'desconocido', tipoOriginal };
 }
 
-function normalizarCampo(
-  valor: unknown,
-  indiceSeccion: number,
-  indiceCampo: number,
-  clavesUsadas: Set<string>
-): CampoFormulario | null {
+function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormulario | null {
   const raw = comoRegistro(valor);
   if (!raw) return null;
 
@@ -188,7 +183,7 @@ function normalizarSecciones(valor: unknown): DefinicionFormularioEditable['secc
       const camposRaw = primerValor(raw, ['campos', 'fields']);
       const campos = Array.isArray(camposRaw)
         ? camposRaw
-          .map((campo, indiceCampo) => normalizarCampo(campo, indiceSeccion, indiceCampo, clavesUsadas))
+          .map(campo => normalizarCampo(campo, clavesUsadas))
           .filter((campo): campo is CampoFormulario => campo !== null)
         : [];
 
