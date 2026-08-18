@@ -234,9 +234,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.limpiarAutoDismiss();
-    if (this.timerDebounceBuscar) {
-      clearTimeout(this.timerDebounceBuscar);
-    }
+    this.cancelarDebounceBuscarPendiente();
   }
 
   seleccionarTab(tab: TabMatrices): void {
@@ -480,18 +478,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   private timerDebounceBuscar: ReturnType<typeof setTimeout> | null = null;
 
+  private cancelarDebounceBuscarPendiente(): void {
+    if (this.timerDebounceBuscar) {
+      clearTimeout(this.timerDebounceBuscar);
+      this.timerDebounceBuscar = null;
+    }
+  }
+
   alCambiarFiltroBuscar(valor: string): void {
     this.filtroBuscar.set(valor);
     this.pagina.set(1);
-    if (this.timerDebounceBuscar) {
-      clearTimeout(this.timerDebounceBuscar);
-    }
+    this.cancelarDebounceBuscarPendiente();
     this.timerDebounceBuscar = setTimeout(() => {
+      this.timerDebounceBuscar = null;
       this.cargarEvaluaciones();
     }, 300);
   }
 
   alCambiarFiltroEstado(valor: string): void {
+    this.cancelarDebounceBuscarPendiente();
     this.filtroEstado.set(valor);
     this.pagina.set(1);
     this.cargarEvaluaciones();
@@ -512,9 +517,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   limpiarFiltrosEvaluaciones(): void {
-    if (this.timerDebounceBuscar) {
-      clearTimeout(this.timerDebounceBuscar);
-    }
+    this.cancelarDebounceBuscarPendiente();
     this.filtroBuscar.set('');
     this.filtroEstado.set('');
     this.pagina.set(1);

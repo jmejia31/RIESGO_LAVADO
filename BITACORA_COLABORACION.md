@@ -1,5 +1,31 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F4.1 Búsqueda, Debounce y Filtro por Estado
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `2ce3198c31f119793f0349a41d3396e7f5a34204`.
+- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): cerrar busqueda y filtros F4.1`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F4.1
+
+1. **Defecto Corregido**:
+   - Se resolvió el defecto donde la selección de estado mientras existía un timer de debounce de búsqueda activo provocaba 2 peticiones HTTP equivalentes.
+   - Implementación de `cancelarDebounceBuscarPendiente()` reutilizable en `ngOnDestroy()`, `alCambiarFiltroBuscar()`, `alCambiarFiltroEstado()`, y `limpiarFiltrosEvaluaciones()`.
+2. **Pruebas Automatizadas F4.1**:
+   - Creación de `matrices-riesgos.component.f4.1.spec.ts` cubriendo 11 casos de prueba específicos: debounce exacto a 300 ms, escritura rápida, combinación de búsqueda + estado sin duplicados, borrado de búsqueda conservando estado, limpieza de filtros con timer pendiente, reset de página 1, estados exactos de UI, `trim()`, manejo de whitespace y cancelación en `ngOnDestroy()`.
+   - **Suite Frontend Angular**: **290 / 290 PASS (100%)** en 32 archivos de prueba.
+   - **Build Frontend Angular (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Suite Backend .NET Core**: **406 / 406 PASS (100%)**.
+3. **Garantías Git y Entorno**:
+   - `git diff --check`: PASS. Árbol de trabajo limpio. 0 cambios en DB Oracle/SQL o C# Backend. `main` intacta y PR #20 en Draft.
+   - **Sonar**: Diferido al cierre global.
+   - **F4.2**: NO iniciada.
+
+---
+
 ## Registro de Intervención — Antigravity — Certificación Estricta 100% de F3 (Tabla de Evaluaciones)
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).
