@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `93fb72d3b6ddcfcb171e0247bdfcdc5defdb4bdf`.
-- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar paginacion y concurrencia F4.2`).
+- **Commit final publicado**: `25a79dfc82119eb4227ee06ca5d8fc3aa2794ebf` (`fix(matrices): completar paginacion y concurrencia F4.2`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F4.2
