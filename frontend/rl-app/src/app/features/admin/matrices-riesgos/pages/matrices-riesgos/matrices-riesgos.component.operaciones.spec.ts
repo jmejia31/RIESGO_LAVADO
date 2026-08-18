@@ -4,7 +4,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
-describe('MatricesRiesgosComponent cobertura operativa', () => {
+describe('MatricesRiesgosComponent — operaciones del componente', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let service: Record<string, ReturnType<typeof vi.fn>>;

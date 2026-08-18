@@ -9,7 +9,7 @@ import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoResumenDto, EvaluacionesPaginadasDto } from '../../models/matrices-riesgos.models';
 
-describe('MatricesRiesgosComponent — F4.3 Certificación Integral de F4', () => {
+describe('MatricesRiesgosComponent — evaluaciones: integración funcional', () => {
   let component: MatricesRiesgosComponent;
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let serviceMock: any;

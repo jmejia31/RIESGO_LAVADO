@@ -10,7 +10,7 @@ import {
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
 
-describe('MatricesRiesgosComponent F2.1 Residual Coverage Spec', () => {
+describe('MatricesRiesgosComponent — pestañas y cargas independientes', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let serviceMock: any;

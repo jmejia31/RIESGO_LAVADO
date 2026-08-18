@@ -1,12 +1,40 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Saneamiento Técnico Post-F4 — Cierre Final
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `f6bc72c9b8bd86231de1e0877deda48c5676d712`.
+- **Commit final publicado**: *(a generar tras commit)*.
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen del Saneamiento Técnico Post-F4
+
+1. **Nomenclatura Semántica en Specs**:
+   - Limpieza de prefijos de fase (`F2.1`, `F3`, `F3.2`, `F4.1`, `F4.2`, `F4.3`) en los títulos de `describe` e `it` en los 8 archivos spec renombrados previamente por ChatGPT (`spec.ts`, `tabs-independientes.spec.ts`, `evaluaciones-tabla.spec.ts`, `evaluaciones-filtros.spec.ts`, `evaluaciones-paginacion.spec.ts`, `evaluaciones-integracion.spec.ts`, `operaciones.spec.ts`, `workflow.spec.ts`).
+   - Sin alteraciones de lógica, mocks, assertions o comportamiento.
+2. **Corrección de SHA F4.3**:
+   - Corregido SHA del commit F4.3 en bitácora a `a0392bbd8cc31d562973e2dece053a0f6b94378d`.
+3. **Clarificación Documental de Oracle/SQL**:
+   - Ajustada redacción sobre la base de datos: "0 ejecuciones DDL/DML, 0 scripts Oracle ejecutados, 0 cambios de esquema o datos en Oracle. Sí se realizó un ajuste de SQL embebido en C# para mantener la semántica BORRADOR del filtro."
+4. **Regla de Nomenclatura para F5+**:
+   - Registrada regla permanente: las nuevas pruebas automatizadas deben nombrarse exclusivamente por su responsabilidad funcional (`*.evaluaciones-*.spec.ts`), evitando sufijos de fase (`*.f5.spec.ts`).
+5. **Pruebas y Quality Gates**:
+   - **Frontend Vitest**: **335 / 335 PASS (100%)** en 34 archivos spec.
+   - **Build Frontend (`npm run build`)**: **PASS**.
+   - **Backend .NET C#**: **409 / 409 PASS (100%)**.
+   - **Formato Git (`git diff --check`)**: **PASS** (0 errores).
+
+---
+
 ## Registro de Intervención — Antigravity — F4.3 Certificación Funcional Integral de F4
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `d08093684f244334dc5461d76dfbf183d0a80ec7`.
-- **Commit final publicado**: `a0392bb9448f760773bdf7084534a6ee16091219` (`fix(matrices): cerrar certificacion integral F4`).
+- **Commit final publicado**: `a0392bbd8cc31d562973e2dece053a0f6b94378d` (`fix(matrices): cerrar certificacion integral F4`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F4.3

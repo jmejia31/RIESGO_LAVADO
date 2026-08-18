@@ -7,7 +7,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EvaluacionRiesgoResumenDto, EvaluacionesPaginadasDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
-describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Concurrencia y Edge Cases', () => {
+describe('MatricesRiesgosComponent — evaluaciones: paginación y concurrencia', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let serviceMock: any;
@@ -478,28 +478,27 @@ describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Conc
     expect(subjectA.observed).toBe(false);
   });
 
-  it('27. F4.1 regresión: búsqueda debounce + cambio Estado continúa generando UNA sola consulta', () => {
+  it('27. Búsqueda debounce + cambio Estado continúa generando UNA sola consulta', () => {
     serviceMock.listarEvaluaciones.mockClear();
 
-    component.alCambiarFiltroBuscar('fraude');
+    component.alCambiarFiltroBuscar('prueba');
     vi.advanceTimersByTime(100);
 
     component.alCambiarFiltroEstado('APROBADA');
 
     expect(serviceMock.listarEvaluaciones).toHaveBeenCalledTimes(1);
     expect(serviceMock.listarEvaluaciones).toHaveBeenCalledWith({
-      buscar: 'fraude',
+      buscar: 'prueba',
       estado: 'APROBADA',
       pagina: 1,
       registrosPorPagina: 10
     });
 
     vi.advanceTimersByTime(500);
-
     expect(serviceMock.listarEvaluaciones).toHaveBeenCalledTimes(1);
   });
 
-  it('28. trim/whitespace F4.1 sigue funcionando', () => {
+  it('28. Limpieza trim/whitespace en búsqueda sigue funcionando', () => {
     serviceMock.listarEvaluaciones.mockClear();
 
     component.alCambiarFiltroBuscar('   búsqueda con espacios   ');

@@ -10,7 +10,7 @@ import {
 } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
-describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
+describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let serviceMock: any;
@@ -139,7 +139,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     fixture.detectChanges();
   });
 
-  it('F3 consulta solo la pagina visible y no dispara la carga operativa de 200 registros', () => {
+  it('consulta solo la pagina visible y no dispara la carga operativa de 200 registros', () => {
     expect(serviceMock.listarEvaluaciones).toHaveBeenCalledTimes(1);
     expect(serviceMock.listarEvaluaciones).toHaveBeenCalledWith({
       buscar: undefined,
@@ -149,7 +149,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     });
   });
 
-  it('F3 renderiza las nueve columnas institucionales de Evaluaciones', () => {
+  it('renderiza las nueve columnas institucionales de Evaluaciones', () => {
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
     const encabezados = Array.from(panel.querySelectorAll('thead th'))
       .map(th => (th.textContent || '').trim().replace(/\s+/g, ' '));
@@ -167,7 +167,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     ]);
   });
 
-  it('F3 conserva codigo, nombre, version, fecha y acciones de la fila real', () => {
+  it('conserva codigo, nombre, version, fecha y acciones de la fila real', () => {
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
     const filas = Array.from(panel.querySelectorAll('tbody tr')) as HTMLTableRowElement[];
 
@@ -186,7 +186,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(filas[1].querySelectorAll('td:nth-child(9) button')).toHaveLength(2);
   });
 
-  it('F3 cubre los seis estados institucionales y restringe Editar a BORRADOR', () => {
+  it('cubre los seis estados institucionales y restringe Editar a BORRADOR', () => {
     const estados = ['BORRADOR', 'EN_REVISION', 'OBSERVADA', 'APROBADA', 'RECHAZADA', 'CERRADA'];
     component.evaluaciones.set(estados.map((estado, indice) =>
       crearEvaluacion(201 + indice, estado, indice === 5 ? null : 'BAJO')
@@ -216,7 +216,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     });
   });
 
-  it('F3 preserva cero como valor valido de VRI/VRR y usa guion solo para ausencia', () => {
+  it('preserva cero como valor valido de VRI/VRR y usa guion solo para ausencia', () => {
     component.evaluaciones.set([
       crearEvaluacion(301, 'BORRADOR', 'BAJO', 0, 0),
       crearEvaluacion(302, 'EN_REVISION', null, null, null)
@@ -234,7 +234,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(filas[1].querySelector('td:nth-child(7)')?.textContent?.trim()).toBe('-');
   });
 
-  it('F3 renderiza BAJO, MEDIO, ALTO, CRITICO y ausencia con semantica visual estable', () => {
+  it('renderiza BAJO, MEDIO, ALTO, CRITICO y ausencia con semantica visual estable', () => {
     const niveles: Array<string | null> = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO', null];
     component.evaluaciones.set(niveles.map((nivel, indice) =>
       crearEvaluacion(401 + indice, 'APROBADA', nivel)
@@ -252,7 +252,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(celdas[3].classList.contains('text-red-600')).toBe(true);
   });
 
-  it('F3 usa metadatos server-side independientes del numero de filas visibles', () => {
+  it('usa metadatos server-side independientes del numero de filas visibles', () => {
     expect(component.evaluaciones()).toHaveLength(2);
     expect(component.totalRegistros()).toBe(37);
     expect(component.totalPaginas()).toBe(4);
@@ -263,7 +263,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(textoSinEspacios).toContain('Pág.1de4');
   });
 
-  it('F3 presenta estado vacio institucional sin romper las nueve columnas', () => {
+  it('presenta estado vacio institucional sin romper las nueve columnas', () => {
     component.evaluaciones.set([]);
     component.totalRegistros.set(0);
     component.totalPaginas.set(0);
@@ -276,7 +276,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(celda.textContent).toContain('Sin evaluaciones registradas con los filtros seleccionados.');
   });
 
-  it('F3 mantiene loading independiente mientras la consulta de Evaluaciones esta pendiente', () => {
+  it('mantiene loading independiente mientras la consulta de Evaluaciones esta pendiente', () => {
     const pendiente = new Subject<EvaluacionesPaginadasDto>();
     serviceMock.listarEvaluaciones.mockReturnValue(pendiente.asObservable());
 
@@ -293,7 +293,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.cargandoEvaluaciones()).toBe(false);
   });
 
-  it('F3 ante error limpia filas, conserva el mensaje real y ofrece reintento', () => {
+  it('ante error limpia filas, conserva el mensaje real y ofrece reintento', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(throwError(() => ({
       error: { detail: 'Fallo controlado F3.2' }
     })));
@@ -308,7 +308,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(fixture.nativeElement.textContent).toContain('Reintentar');
   });
 
-  it('F3 normaliza items nulos sin romper el contrato Array de la tabla', () => {
+  it('normaliza items nulos sin romper el contrato Array de la tabla', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(of({ ...paginado, items: null }));
     component.cargarEvaluaciones();
     fixture.detectChanges();
@@ -318,7 +318,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.errorEvaluaciones()).toBeNull();
   });
 
-  it('F3.2 debe rechazar cualquier items truthy que no sea Array y resetear metadatos paginados ante error', () => {
+  it('debe rechazar cualquier items truthy que no sea Array y resetear metadatos paginados ante error', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(of({ ...paginado, items: { invalid: true } }));
     component.cargarEvaluaciones();
     fixture.detectChanges();
@@ -335,7 +335,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.totalPaginas()).toBe(0);
   });
 
-  it('F3.2 debe mostrar totalRegistros como Total Evaluaciones y declarar los conteos por estado como pagina visible', () => {
+  it('debe mostrar totalRegistros como Total Evaluaciones y declarar los conteos por estado como pagina visible', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(of(paginado));
     component.cargarEvaluaciones();
     fixture.detectChanges();
@@ -351,7 +351,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(textContent).toContain('Oficiales en la página actual');
   });
 
-  it('F3 accion Ver abre la evaluacion seleccionada con el evaId exacto', () => {
+  it('accion Ver abre la evaluacion seleccionada con el evaId exacto', () => {
     const botonVerFila1 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(1) td:nth-child(9) button:nth-child(1)') as HTMLButtonElement;
     botonVerFila1.click();
     fixture.detectChanges();
@@ -369,7 +369,7 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.evaluacionResumenSeleccionada()?.riesgoCodigo).toBe('RIE-006');
   });
 
-  it('F3 accion Seguimiento recibe EXACTAMENTE el evaId de la fila seleccionada', () => {
+  it('accion Seguimiento recibe EXACTAMENTE el evaId de la fila seleccionada', () => {
     const botonSeguimientoFila1 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(1) td:nth-child(9) button:last-child') as HTMLButtonElement;
     botonSeguimientoFila1.click();
     fixture.detectChanges();

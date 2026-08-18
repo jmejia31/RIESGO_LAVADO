@@ -44,7 +44,7 @@ describe('MatricesRiesgosCicloIntegralComponent', () => {
     fixture.detectChanges();
   });
 
-  it('F3 inicia en matriz sin precargar 200 evaluaciones operativas', () => {
+  it('inicia en matriz sin precargar 200 evaluaciones operativas', () => {
     expect(component.vista()).toBe('matriz');
     expect(component.evaluaciones()).toEqual([]);
     expect(service.listarEvaluaciones).not.toHaveBeenCalled();

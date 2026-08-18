@@ -7,7 +7,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EvaluacionesPaginadasDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 
-describe('MatricesRiesgosComponent F4.1 Búsqueda, Debounce y Filtro por Estado', () => {
+describe('MatricesRiesgosComponent — evaluaciones: búsqueda y filtros', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
   let serviceMock: any;
