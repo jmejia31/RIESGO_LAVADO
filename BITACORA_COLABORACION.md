@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `d08093684f244334dc5461d76dfbf183d0a80ec7`.
-- **Commit final publicado**: *(a generar tras commit)*.
+- **Commit final publicado**: `a0392bb9448f760773bdf7084534a6ee16091219` (`fix(matrices): cerrar certificacion integral F4`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F4.3
