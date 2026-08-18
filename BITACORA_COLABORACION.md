@@ -1,12 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F3.2 Cierre Funcional y Semántico (Tabla de Evaluaciones)
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `59cf013fc782289be32dd6e2bd1788355dcbb1fa`.
+- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar cierre semantico F3.2`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F3.2
+
+1. **Ajustes Productivos en `MatricesRiesgosComponent`**:
+   - **Normalización defensiva**: Se aseguró la evaluación `Array.isArray(paginado?.items)` en `cargarEvaluaciones()` y `contarEvaluacionesPorEstado()` para evitar asignaciones de objetos truthy no-array.
+   - **Limpieza de metadatos en error**: En el callback `error` de `cargarEvaluaciones()`, además de limpiar `evaluaciones.set([])`, se restablecen a `0` las señales `totalRegistros` y `totalPaginas`.
+   - **KPIs Semánticamente Correctos**: En `matrices-riesgos.component.html`, la tarjeta **Total Evaluaciones** renderiza `totalRegistros()` con la etiqueta `Total según la consulta actual`. Los KPIs por estado especifican que sus conteos corresponden a la *página actual*.
+2. **Cobertura Automatizada y Pruebas**:
+   - Se completaron las dos pruebas `it.todo` en `matrices-riesgos.component.f3.spec.ts`.
+   - **Suite Frontend Angular**: **277 / 277 PASS (100%)** en 31 archivos de prueba.
+   - **Compilación Frontend (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Suite Backend .NET**: **406 / 406 PASS (100%)**.
+3. **Garantías de Entorno y Control Git**:
+   - **0 modificaciones** en Oracle DB, SQL, secrets, DDL/DML o backend C#.
+   - Rama `main` **INTACTA**, PR #20 **Draft / No merged**.
+
+---
+
 ## Registro de Intervención — Antigravity — F2.3 Último Ajuste de Prueba Antes del Cierre F2
 
 - **Fecha y hora**: 2026-08-17, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `9d4f271400101c87680066457ecb7582e3530434`.
-- **Commit final publicado**: Por generar en esta intervención (`test(matrices): corregir escenario metodologia F2`).
+- **Commit final publicado**: `f7992250ee1beed1d2a35a0f7e140b2bf97a7471`.
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F2.3

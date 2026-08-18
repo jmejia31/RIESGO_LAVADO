@@ -297,6 +297,36 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(component.errorEvaluaciones()).toBeNull();
   });
 
-  it.todo('F3.2 debe rechazar cualquier items truthy que no sea Array y resetear metadatos paginados ante error');
-  it.todo('F3.2 debe mostrar totalRegistros como Total Evaluaciones y declarar los conteos por estado como pagina visible');
+  it('F3.2 debe rechazar cualquier items truthy que no sea Array y resetear metadatos paginados ante error', () => {
+    serviceMock.listarEvaluaciones.mockReturnValue(of({ ...paginado, items: { invalid: true } }));
+    component.cargarEvaluaciones();
+    fixture.detectChanges();
+
+    expect(Array.isArray(component.evaluaciones())).toBe(true);
+    expect(component.evaluaciones()).toEqual([]);
+
+    serviceMock.listarEvaluaciones.mockReturnValue(throwError(() => new Error('Error backend')));
+    component.cargarEvaluaciones();
+    fixture.detectChanges();
+
+    expect(component.evaluaciones()).toEqual([]);
+    expect(component.totalRegistros()).toBe(0);
+    expect(component.totalPaginas()).toBe(0);
+  });
+
+  it('F3.2 debe mostrar totalRegistros como Total Evaluaciones y declarar los conteos por estado como pagina visible', () => {
+    serviceMock.listarEvaluaciones.mockReturnValue(of(paginado));
+    component.cargarEvaluaciones();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    const textContent = el.textContent || '';
+
+    expect(component.totalRegistros()).toBe(37);
+    expect(textContent).toContain('37');
+    expect(textContent).toContain('Total según la consulta actual');
+    expect(textContent).toContain('Pendientes en la página actual');
+    expect(textContent).toContain('En análisis en la página actual');
+    expect(textContent).toContain('Oficiales en la página actual');
+  });
 });

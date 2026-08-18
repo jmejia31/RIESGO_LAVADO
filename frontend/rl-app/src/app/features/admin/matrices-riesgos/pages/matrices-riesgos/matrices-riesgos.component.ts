@@ -166,7 +166,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   );
 
   contarEvaluacionesPorEstado(estado: string): number {
-    return this.evaluaciones().filter(e => (e.estado || '').toUpperCase() === estado.toUpperCase()).length;
+    const list = this.evaluaciones();
+    if (!Array.isArray(list)) return 0;
+    return list.filter(e => (e?.estado || '').toUpperCase() === estado.toUpperCase()).length;
   }
 
   readonly totalCompletados = computed(() => {
@@ -529,15 +531,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       registrosPorPagina: this.registrosPorPagina()
     }).subscribe({
       next: paginado => {
-        this.evaluaciones.set(paginado.items || []);
-        this.totalRegistros.set(paginado.totalRegistros);
-        this.totalPaginas.set(paginado.totalPaginas);
+        const items = Array.isArray(paginado?.items) ? paginado.items : [];
+        this.evaluaciones.set(items);
+        this.totalRegistros.set(Number.isFinite(paginado?.totalRegistros) ? Math.max(0, paginado.totalRegistros) : 0);
+        this.totalPaginas.set(Number.isFinite(paginado?.totalPaginas) ? Math.max(0, paginado.totalPaginas) : 0);
         this.cargandoEvaluaciones.set(false);
       },
       error: error => {
         const msg = this.obtenerMensajeError(error, 'No se pudieron consultar las evaluaciones.');
         this.errorEvaluaciones.set(msg);
         this.evaluaciones.set([]);
+        this.totalRegistros.set(0);
+        this.totalPaginas.set(0);
         this.cargandoEvaluaciones.set(false);
       }
     });
