@@ -1,12 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — Certificación Estricta 100% de F3 (Tabla de Evaluaciones)
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `0d28205a21cfd46f86a43c04ac72477fd0e70775`.
+- **Commit final publicado**: Por generar en esta intervención (`test(matrices): certificar cierre estricto F3`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Certificación F3
+
+1. **Pruebas Automatizadas y Cobertura de Acciones**:
+   - Se ampliaron las pruebas unitarias en `matrices-riesgos.component.f3.spec.ts` para certificar la invocación exacta de `Ver` (`obtenerEvaluacion(101)` vs `obtenerEvaluacion(102)`) y `Seguimiento` (`obtenerFlujos(101)` vs `obtenerFlujos(102)`) pasando el `evaId` exacto de la fila.
+   - **Suite Frontend Angular**: **279 / 279 PASS (100%)** en 31 archivos de prueba.
+   - **Build Frontend Angular (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Suite Backend .NET Core**: **406 / 406 PASS (100%)**.
+2. **Auditoría de Sonar / CI**:
+   - Identificada la causa exacta del fallo del workflow `Sonar Analysis` run `32147507846`: `ERROR: Not authorized or project not found` durante el chequeo de Quality Gate en SonarCloud API (falla de autenticación/infraestructura del `SONAR_TOKEN` en GitHub Actions, no atribuible a F3).
+3. **Control Git y Garantías**:
+   - `git diff --check`: PASS. Árbol limpio. 0 cambios Oracle/SQL/C#. `main` intacta y PR #20 en Draft.
+
+---
+
 ## Registro de Intervención — Antigravity — F3.2 Cierre Funcional y Semántico (Tabla de Evaluaciones)
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `59cf013fc782289be32dd6e2bd1788355dcbb1fa`.
-- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): completar cierre semantico F3.2`).
+- **Commit final publicado**: `0d28205a21cfd46f86a43c04ac72477fd0e70775`.
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F3.2

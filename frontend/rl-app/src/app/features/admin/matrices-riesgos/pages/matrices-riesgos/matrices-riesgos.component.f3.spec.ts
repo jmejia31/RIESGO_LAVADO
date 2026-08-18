@@ -100,6 +100,27 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
         catalogos: [],
         reglas: []
       })),
+      obtenerEvaluacion: vi.fn().mockImplementation((id: number) => of({
+        evaId: id,
+        evaRiesgoId: id === 101 ? 5 : 6,
+        evaVersionId: 10,
+        evaEstado: id === 101 ? 'BORRADOR' : 'EN_REVISION',
+        evaDataJson: '{}',
+        evaFechaEval: '2026-08-17T10:30:00Z',
+        evaUsrEval: 1,
+        evaVersionRow: 1,
+        evaActivo: true
+      })),
+      metodologiaPorVersion: vi.fn().mockReturnValue(of({
+        versionFormularioId: 10,
+        codigo: 'MATRIZ_RIESGOS_LAFT',
+        version: 1,
+        secciones: [],
+        catalogos: [],
+        reglas: []
+      })),
+      obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({})),
+      obtenerFlujos: vi.fn().mockReturnValue(of([])),
       obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([]))
     };
@@ -328,5 +349,39 @@ describe('MatricesRiesgosComponent F3 Tabla Evaluaciones', () => {
     expect(textContent).toContain('Pendientes en la página actual');
     expect(textContent).toContain('En análisis en la página actual');
     expect(textContent).toContain('Oficiales en la página actual');
+  });
+
+  it('F3 accion Ver abre la evaluacion seleccionada con el evaId exacto', () => {
+    const botonVerFila1 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(1) td:nth-child(9) button:nth-child(1)') as HTMLButtonElement;
+    botonVerFila1.click();
+    fixture.detectChanges();
+
+    expect(serviceMock.obtenerEvaluacion).toHaveBeenCalledWith(101);
+    expect(component.evaluacionResumenSeleccionada()?.evaId).toBe(101);
+    expect(component.evaluacionResumenSeleccionada()?.riesgoCodigo).toBe('RIE-005');
+
+    const botonVerFila2 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(2) td:nth-child(9) button:nth-child(1)') as HTMLButtonElement;
+    botonVerFila2.click();
+    fixture.detectChanges();
+
+    expect(serviceMock.obtenerEvaluacion).toHaveBeenCalledWith(102);
+    expect(component.evaluacionResumenSeleccionada()?.evaId).toBe(102);
+    expect(component.evaluacionResumenSeleccionada()?.riesgoCodigo).toBe('RIE-006');
+  });
+
+  it('F3 accion Seguimiento recibe EXACTAMENTE el evaId de la fila seleccionada', () => {
+    const botonSeguimientoFila1 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(1) td:nth-child(9) button:last-child') as HTMLButtonElement;
+    botonSeguimientoFila1.click();
+    fixture.detectChanges();
+
+    expect(serviceMock.obtenerFlujos).toHaveBeenCalledWith(101);
+    expect(component.evaluacionResumenSeleccionada()?.evaId).toBe(101);
+
+    const botonSeguimientoFila2 = fixture.nativeElement.querySelector('#panel-evaluaciones tbody tr:nth-child(2) td:nth-child(9) button:last-child') as HTMLButtonElement;
+    botonSeguimientoFila2.click();
+    fixture.detectChanges();
+
+    expect(serviceMock.obtenerFlujos).toHaveBeenCalledWith(102);
+    expect(component.evaluacionResumenSeleccionada()?.evaId).toBe(102);
   });
 });
