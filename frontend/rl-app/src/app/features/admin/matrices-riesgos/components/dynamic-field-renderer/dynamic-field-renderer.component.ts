@@ -26,9 +26,7 @@ export interface OpcionCampoRenderer {
           {{ campo.etiqueta }}
           @if (campo.obligatorio) { <span class="text-red-500" aria-hidden="true">*</span> }
         </span>
-        <div class="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800"
-             [class.min-h-[50px]]="tipo === 'texto-largo'"
-             [class.whitespace-pre-wrap]="tipo === 'texto-largo'"
+        <div class="min-h-[38px] whitespace-pre-wrap px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-800"
              [attr.data-field-key]="campo.clave">
           {{ textoLectura }}
         </div>
