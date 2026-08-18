@@ -1,5 +1,33 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F4.3 Certificación Funcional Integral de F4
+
+- **Fecha y hora**: 2026-08-18, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `d08093684f244334dc5461d76dfbf183d0a80ec7`.
+- **Commit final publicado**: *(a generar tras commit)*.
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F4.3
+
+1. **Semántica BORRADOR en Backend**:
+   - Ajuste en `MatricesRiesgosRepository.cs` (`whereSql`): `AND NVL(f.FLU_ESTADO, 'BORRADOR') = :estado` para paridad del 100% con la proyección del SELECT.
+2. **Suite de Certificación Integral F4.3 (`matrices-riesgos.component.f4.3.spec.ts`)**:
+   - 16 escenarios integrales cubriendo carga inicial, DOM superior, flujo combinado, resets, debounce + estado, paginador DOM/accesibilidad, 0 registros, última página parcial, descarte de respuestas tardías (concurrencia), retry y acciones F4.
+3. **Pruebas Automatizadas y Quality Gates**:
+   - **Backend C# (.NET)**: **409 / 409 PASS (100%)**.
+   - **Frontend Angular (Vitest)**: **335 / 335 PASS (100%)** en 34 archivos spec.
+   - **Frontend Build (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Frontend E2E (Playwright)**: **14 / 14 PASS (100%)**.
+   - **Quality Gates Script (`run_quality_gates.ps1`)**: **SUCCESS**.
+4. **Garantías Git y Entorno**:
+   - 0 DDL/DML u Oracle. `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`), PR #20 OPEN/DRAFT.
+   - Sonar: Diferido al cierre global.
+   - **Fase 5 (F5)**: NO INICIADA.
+
+---
+
 ## Registro de Intervención — Antigravity — F4.2 Paginación Server-Side + Page Size + Concurrencia + Edge Cases
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).

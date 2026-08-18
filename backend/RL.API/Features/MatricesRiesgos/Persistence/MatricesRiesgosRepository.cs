@@ -706,7 +706,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
         if (!string.IsNullOrWhiteSpace(filtro.Estado))
         {
-            whereSql.Append(" AND f.FLU_ESTADO = :estado");
+            whereSql.Append(" AND NVL(f.FLU_ESTADO, 'BORRADOR') = :estado");
             parameters.Add(new OracleParameter("estado", filtro.Estado.Trim().ToUpperInvariant()));
         }
         if (!string.IsNullOrWhiteSpace(filtro.Area))
