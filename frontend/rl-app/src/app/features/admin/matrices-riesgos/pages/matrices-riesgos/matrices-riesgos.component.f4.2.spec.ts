@@ -383,12 +383,14 @@ describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Conc
   });
 
   it('22. totalPaginas null/NaN/negativo -> derivación segura', () => {
-    const res: any = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 25, totalPaginas: null };
-    serviceMock.listarEvaluaciones.mockReturnValue(of(res));
+    [null, NaN, -5].forEach(badVal => {
+      const res: any = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 25, totalPaginas: badVal };
+      serviceMock.listarEvaluaciones.mockReturnValue(of(res));
 
-    component.cargarEvaluaciones();
+      component.cargarEvaluaciones();
 
-    expect(component.totalPaginas()).toBe(3); // Math.ceil(25 / 10)
+      expect(component.totalPaginas()).toBe(3); // Math.ceil(25 / 10)
+    });
   });
 
   it('23. Backend devuelve pagina=2 cuando frontend solicitó 8 -> Frontend adopta pagina=2', () => {
@@ -448,6 +450,13 @@ describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Conc
   });
 
   it('26. ngOnDestroy: cancelación e invalida request pendiente', () => {
+    const itemsIniciales = crearPaginado(1, 10, 10, 1).items;
+    component.evaluaciones.set(itemsIniciales);
+    component.pagina.set(1);
+    component.totalRegistros.set(10);
+    component.totalPaginas.set(1);
+    component.errorEvaluaciones.set(null);
+
     const subjectA = new Subject<EvaluacionesPaginadasDto>();
     serviceMock.listarEvaluaciones.mockReturnValue(subjectA);
 
@@ -456,11 +465,17 @@ describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Conc
 
     component.ngOnDestroy();
 
-    // Responder al subject tras destroy
-    subjectA.next(crearPaginado(1, 10, 10, 1));
+    const respuestaTardia = crearPaginado(2, 10, 50, 5, 5);
+    respuestaTardia.items[0].riesgoCodigo = 'TARDIO';
+    subjectA.next(respuestaTardia);
     subjectA.complete();
 
-    // 0 efectos secundarios tras destroy
+    expect(component.evaluaciones()).toBe(itemsIniciales);
+    expect(component.pagina()).toBe(1);
+    expect(component.totalRegistros()).toBe(10);
+    expect(component.totalPaginas()).toBe(1);
+    expect(component.errorEvaluaciones()).toBeNull();
+    expect(subjectA.observed).toBe(false);
   });
 
   it('27. F4.1 regresión: búsqueda debounce + cambio Estado continúa generando UNA sola consulta', () => {
@@ -496,5 +511,18 @@ describe('MatricesRiesgosComponent F4.2 Paginación Server-Side, Page Size, Conc
       pagina: 1,
       registrosPorPagina: 10
     });
+  });
+
+  it('29. Botón Anterior: deshabilitado cuando totalPaginas === 0', () => {
+    component.evaluaciones.set([]);
+    component.totalRegistros.set(0);
+    component.totalPaginas.set(0);
+    component.pagina.set(1);
+    fixture.detectChanges();
+
+    const btnAnterior = Array.from(fixture.nativeElement.querySelectorAll('button'))
+      .find((b: any) => b.textContent.includes('Anterior'));
+
+    expect((btnAnterior as HTMLButtonElement).disabled).toBe(true);
   });
 });

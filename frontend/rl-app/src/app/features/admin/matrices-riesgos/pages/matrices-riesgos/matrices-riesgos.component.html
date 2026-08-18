@@ -229,7 +229,7 @@
           <span class="sr-only">Pág. {{ totalPaginas() === 0 ? 0 : pagina() }} de {{ totalPaginas() }}</span>
           <button type="button"
                   class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  [disabled]="cargandoEvaluaciones() || pagina() <= 1"
+                  [disabled]="cargandoEvaluaciones() || totalPaginas() === 0 || pagina() <= 1"
                   (click)="cambiarPagina(pagina() - 1)">
             Anterior
           </button>

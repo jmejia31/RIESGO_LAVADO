@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
@@ -765,13 +766,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
         int totalRegistros = Convert.ToInt32(await cmdCount.ExecuteScalarAsync());
 
-        int totalPaginas = filtro.RegistrosPorPagina > 0
-            ? (int)Math.Ceiling((double)totalRegistros / filtro.RegistrosPorPagina)
-            : 0;
-
-        int paginaEfectiva = totalPaginas == 0
-            ? 1
-            : Math.Min(filtro.Pagina, totalPaginas);
+        int paginaEfectiva = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(
+            totalRegistros,
+            filtro.RegistrosPorPagina,
+            filtro.Pagina);
 
         int offset = (paginaEfectiva - 1) * filtro.RegistrosPorPagina;
         string selectDataSql = $@"

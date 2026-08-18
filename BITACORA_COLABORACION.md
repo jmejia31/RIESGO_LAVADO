@@ -9,21 +9,19 @@
 - **Commit final publicado**: `25a79dfc82119eb4227ee06ca5d8fc3aa2794ebf` (`fix(matrices): completar paginacion y concurrencia F4.2`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
-### Resumen de la Intervención F4.2
+### Resumen de la Intervención F4.2 — Corrección Residual Final
 
-1. **Ajustes Backend C# (`paginaEfectiva`)**:
-   - En `MatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync`, se calcula `paginaEfectiva = totalPaginas == 0 ? 1 : Math.Min(filtro.Pagina, totalPaginas)` **antes** del offset y se retorna en `EvaluacionesPaginadasDto.Pagina`. Si se solicita una página mayor al total disponible, el backend entrega la última página válida en una sola consulta.
-2. **Protección de Concurrencia y Stale Guard Frontend**:
-   - Incorporación de `suscripcionEvaluaciones: Subscription | null` y `secuenciaCargaEvaluaciones: number` en `MatricesRiesgosComponent`.
-   - Cancelación de peticiones anteriores al iniciar nueva consulta y descarte de respuestas desfasadas (callbacks ignorados si `solicitudId !== secuenciaCargaEvaluaciones`).
-3. **Paginador Compacto, Page Size Whitelist y Normalización Defensiva**:
-   - Whitelist estricta `[10, 20, 50]` en `cambiarRegistrosPorPagina()`.
-   - Navegación numerada compacta con `paginasVisibles` computed signal, gap indicators `…` e indicadores de accesibilidad `aria-current="page"` y `aria-label`.
-   - Deshabilitado de botones durante `cargandoEvaluaciones() === true`.
-   - Coherencia en resumen (`Mostrando X – Y de Z registros`, 0-0 de 0 en caso de 0 registros).
-4. **Pruebas Automatizadas**:
-   - **Backend C# (.NET)**: **409 / 409 PASS (100%)** (incluye `MatricesRiesgosF42PaginaEfectivaTests.cs`).
-   - **Frontend Angular**: **318 / 318 PASS (100%)** en 33 archivos spec (incluye `matrices-riesgos.component.f4.2.spec.ts` con 28/28 PASS).
+1. **Test Backend Real (`PaginacionEvaluacionesHelper`)**:
+   - Creación de `PaginacionEvaluacionesHelper.cs` en la capa Domain productiva (`RL.API.Features.MatricesRiesgos.Domain`). `MatricesRiesgosRepository` consume este helper directamente en `ListarEvaluacionesPaginadasAsync()`.
+   - `MatricesRiesgosF42PaginaEfectivaTests.cs` prueba el helper productivo real sin redefiniciones locales (15/10/8 => 2, 0/10/8 => 1, 25/10/2 => 2).
+2. **Botón Anterior (`totalPaginas() === 0`)**:
+   - `matrices-riesgos.component.html` actualiza la directiva `[disabled]="cargandoEvaluaciones() || totalPaginas() === 0 || pagina() <= 1"`, garantizando que tras un error o metadata en 0 el botón permanezca deshabilitado.
+3. **Prueba `ngOnDestroy` con Assertions Reales**:
+   - El caso 26 en `matrices-riesgos.component.f4.2.spec.ts` verifica explícitamente que tras `ngOnDestroy()`, respuestas tardías `next`/`complete` son ignoradas sin mutar `evaluaciones`, `pagina`, `totalRegistros`, `totalPaginas` ni `errorEvaluaciones`, y que la suscripción deja de observar (`subjectA.observed === false`).
+4. **Prueba `totalPaginas` Inválido Exhaustiva**:
+   - El caso 22 evalúa `null`, `NaN` y valores negativos (`-5`) con `totalRegistros = 25` y `pageSize = 10`, derivando `totalPaginas() === 3` en los 3 escenarios.
+5. **Pruebas Automatizadas**:
+   - **Frontend Angular**: **319 / 319 PASS (100%)** en 33 archivos spec.
    - **Build Frontend (`npm run build`)**: **PASS** (`dist/rl-app`).
 5. **Garantías y Control Git**:
    - `git diff --check`: PASS. 0 modificaciones DDL/DML u Oracle. `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`), PR #20 en Draft.
