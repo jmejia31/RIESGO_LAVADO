@@ -106,16 +106,16 @@
           <span>Nueva evaluación</span>
         </button>
       </div>
-      <div class="grid gap-3 md:grid-cols-4">
-        <div><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código, nombre o evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
-        <div><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
-        <div class="flex items-end">
-          <button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
+      <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div class="flex-1 min-w-[200px]"><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código, nombre o evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
+        <div class="w-full sm:w-48"><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
+        <div class="w-full sm:w-auto">
+          <button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm disabled:opacity-50 whitespace-nowrap" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
             Limpiar filtros
           </button>
         </div>
-        <div>
-          <label for="filtro-registros-por-pagina" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Registros por página</label>
+        <div class="w-full sm:w-28">
+          <label for="filtro-registros-por-pagina" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 whitespace-nowrap">Por página</label>
           <select id="filtro-registros-por-pagina"
                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   [disabled]="cargandoEvaluaciones()"
@@ -225,28 +225,14 @@
           <span>registros</span>
         </div>
 
-        <div class="flex items-center gap-4 flex-wrap">
-          <div class="flex items-center gap-1.5">
-            <label for="pag-registros-por-pagina" class="font-semibold text-gray-500">Registros por página:</label>
-            <select id="pag-registros-por-pagina"
-                    class="border border-gray-200 rounded-lg px-2 py-1 bg-white font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    [disabled]="cargandoEvaluaciones()"
-                    [ngModel]="registrosPorPagina()"
-                    (ngModelChange)="cambiarRegistrosPorPagina($event)">
-              @for (opc of opcionesRegistrosPorPagina; track opc) {
-                <option [value]="opc">{{ opc }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="flex items-center gap-1 flex-wrap">
-            <span class="sr-only">Pág. {{ totalPaginas() === 0 ? 0 : pagina() }} de {{ totalPaginas() }}</span>
-            <button type="button"
-                    class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    [disabled]="cargandoEvaluaciones() || pagina() <= 1"
-                    (click)="cambiarPagina(pagina() - 1)">
-              Anterior
-            </button>
+        <div class="flex items-center gap-1 flex-wrap">
+          <span class="sr-only">Pág. {{ totalPaginas() === 0 ? 0 : pagina() }} de {{ totalPaginas() }}</span>
+          <button type="button"
+                  class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  [disabled]="cargandoEvaluaciones() || pagina() <= 1"
+                  (click)="cambiarPagina(pagina() - 1)">
+            Anterior
+          </button>
 
             @for (numPag of paginasVisibles(); track numPag; let idx = $index) {
               @if (idx > 0 && numPag > paginasVisibles()[idx - 1] + 1) {
@@ -277,8 +263,7 @@
             </button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   }
 
   @if (tab() === 'captura') {
