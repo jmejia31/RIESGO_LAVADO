@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `f6bc72c9b8bd86231de1e0877deda48c5676d712`.
-- **Commit final publicado**: *(a generar tras commit)*.
+- **Commit final publicado**: `6f7c6078730b65f3775f0a05bcadbc669c5e3d7a` (`test(matrices): completar saneamiento semantico post-F4`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen del Saneamiento Técnico Post-F4
