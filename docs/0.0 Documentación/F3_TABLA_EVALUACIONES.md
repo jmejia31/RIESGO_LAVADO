@@ -8,7 +8,7 @@
 - Rama autorizada: `desarrollo`.
 - Baseline inicial F3: `f7992250ee1beed1d2a35a0f7e140b2bf97a7471`.
 - Commit de implementación F3.2: `0d28205a21cfd46f86a43c04ac72477fd0e70775`.
-- Commit de certificación final F3: Por generar (`test(matrices): certificar cierre estricto F3`).
+- Commit de certificación final F3: `7f1fbac8e05a6af300625662fedcf57616751440` (`test(matrices): certificar cierre estricto F3`).
 - PR: #20, permanece **Draft / No merged**.
 - `main`: fuera de alcance.
 - Backend: 0 modificaciones C# (406/406 PASS).

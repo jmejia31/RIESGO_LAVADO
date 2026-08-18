@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `0d28205a21cfd46f86a43c04ac72477fd0e70775`.
-- **Commit final publicado**: Por generar en esta intervención (`test(matrices): certificar cierre estricto F3`).
+- **Commit final publicado**: `7f1fbac8e05a6af300625662fedcf57616751440` (`test(matrices): certificar cierre estricto F3`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Certificación F3
