@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `2ce3198c31f119793f0349a41d3396e7f5a34204`.
-- **Commit final publicado**: Por generar en esta intervención (`fix(matrices): cerrar busqueda y filtros F4.1`).
+- **Commit final publicado**: `b9f3011a6ef1394f9e160e1d09ec95fcfeadfc6c` (`fix(matrices): cerrar busqueda y filtros F4.1`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F4.1
