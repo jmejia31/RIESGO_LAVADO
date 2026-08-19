@@ -1,12 +1,12 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-19 — ChatGPT  
+**Actualización:** 2026-08-19 — Antigravity  
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
-**`main`:** protegida; no modificar sin autorización expresa  
-**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`  
-**Oracle:** sin DDL/DML/scripts manuales durante F6.0
+**`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
+**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn`  
+**Oracle:** 0 DDL/DML, 0 scripts manuales ejecutados
 
 ---
 
@@ -18,9 +18,9 @@
 | F5.2 — Certificación integral renderer | ✅ COMPLETA | Certificada |
 | F5 — Cierre global | ✅ CERRADA | Quality Gates #1103 SUCCESS |
 | **F6.0 — Auditoría del contrato** | **✅ COMPLETA** | Documento principal + anexo de brechas ejecutables + fixture v3 |
-| **F6.1 — Normalización/validación contractual** | **🟢 HABILITADA / NO INICIADA** | Siguiente subfase exclusiva |
-| F6.2 — CRUD visual de catálogos | ⛔ BLOQUEADA | Requiere cierre F6.1 |
-| F6.3+ | ⛔ NO INICIADAS | Dependientes de las subfases anteriores |
+| **F6.1 — Normalización/validación contractual** | **✅ COMPLETA** | Quality Gates #1121 SUCCESS |
+| **F6.2 — CRUD visual de catálogos** | **✅ COMPLETA** | Suite `form-builder-catalog-management.spec.ts` (13/13 PASS) + Navegador real |
+| **F6.3 — Administración avanzada/integración** | **⛔ NO INICIADA** | A la espera de auditoría formal de ChatGPT sobre F6.2 |
 
 ---
 

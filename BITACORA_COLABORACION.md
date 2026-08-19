@@ -1,5 +1,42 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F6.2 Administración Visual de Catálogos del Form Builder
+
+- **Fecha y hora**: 2026-08-19, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `4d6c905e067ca9733de56e5d5de099d8fe65178f`.
+- **Commit técnico publicado**: `b95d2be4259ba87ca86b163a322bb1e8ce4e9411` (`feat(matrices): implementar administracion visual de catalogos en form builder`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F6.2
+
+1. **Administración Visual de Catálogos en `FormBuilderComponent`**:
+   - Se construyó el panel interactivo de gestión de catálogos (`vistaActiva === 'catalogos'`) con listado, buscador, creación, edición y eliminación de catálogos.
+   - Se implementó la gestión de opciones/elementos por catálogo: agregar, editar, eliminar y reordenar (`▲`/`▼`) preservando códigos alfanuméricos (`001`, `G-IVM`) y tipos `string`.
+   - Se implementó la protección de integridad referencial: bloqueo de eliminación si el catálogo está en uso por campos de la plantilla y actualización reactiva de referencias cuando se modifica el código del catálogo.
+   - Se conectó el inspector de propiedades de campos dinámicos (`selector-catalogo` y `catalogo-multiple`) para consumir directamente los catálogos configurados en la plantilla.
+   - Se preservó estrictamente el mecanismo lossless de F6.1 (cero pérdida silenciosa en round-trip).
+2. **Pruebas Automatizadas y Quality Gates**:
+   - **Frontend Unit Tests (Vitest)**: **397 / 397 PASS (100%)** en **40** archivos spec.
+   - **Nuevas pruebas F6.2 (`form-builder-catalog-management.spec.ts`)**: **13 / 13 PASS**.
+   - **Pruebas F6.1 (`form-builder.roundtrip.spec.ts`)**: **5 / 5 PASS** (0 regresiones).
+   - **Frontend Build (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Backend Tests (.NET Release)**: **409 / 409 PASS (100%)**.
+   - **Backend Build (.NET Release)**: **PASS**.
+   - **Playwright E2E**: **14 / 14 PASS (100%)**.
+   - **Cobertura Frontend**: Sentencias 54.25%, Ramas 50.33%, Funciones 50.26%, Líneas 54.31%.
+   - **Cobertura Backend**: Líneas 26.84%, Ramas 27.94%.
+   - **Quality Gates Script (`run_quality_gates.ps1`)**: **SUCCESS** (Puertas de calidad correctas).
+3. **Garantías Rectoras**:
+   - 0 ejecuciones DDL/DML, 0 scripts Oracle ejecutados.
+   - `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`).
+   - PR #20 OPEN / DRAFT / NOT MERGED.
+   - `F6.2 = COMPLETA Y CERTIFICADA`.
+   - `F6.3 = NO INICIADA`.
+
+---
+
 ## Registro de Intervención — Antigravity — F5.2 Certificación Integral del Renderer Dinámico
 
 - **Fecha y hora**: 2026-08-19, hora local (UTC-6).
