@@ -1,5 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F5.1 Núcleo del Renderer Dinámico (Cierre y Certificación)
+
+- **Fecha y hora**: 2026-08-19, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `68880a52c2cc97bf31acc06fb7205bcbb8934547`.
+- **Commit final publicado**: *(a generar tras commit)*.
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F5.1
+
+1. **Estabilización de Eventos y Bindings en `DynamicFieldRendererComponent`**:
+   - Se reemplazaron bindings con `ngModel` por propiedades de enlace directo DOM (`[value]`, `(input)`, `(change)`, `[checked]`, `[selected]`), eliminando dependencias asíncronas de ciclo de `SelectControlValueAccessor` en el renderizado y asegurando lectura síncrona exacta del valor en `<select>` e `<input>`.
+   - Se agregó `[id]="idControl"` a los `<fieldset>` de `radio` y `catalogo-multiple` para asociación inequívoca de selectores en tests y accesibilidad.
+   - Se ajustó el helper de pruebas `render()` en `dynamic-field-renderer.component.spec.ts` para usar `fixture.componentRef.setInput(...)`, garantizando propagación reactiva en componentes `OnPush`.
+2. **Pruebas Automatizadas y Quality Gates**:
+   - **Frontend Unit Tests (Vitest)**: **379 / 379 PASS (100%)** en 38 archivos spec.
+   - **Frontend Build (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Backend Tests (.NET Release)**: **409 / 409 PASS (100%)**.
+   - **Backend Build (.NET Release)**: **PASS**.
+   - **Playwright E2E**: **14 / 14 PASS (100%)**.
+   - **Cobertura Frontend**: Sentencias 52.00%, Ramas 47.34%, Funciones 48.60%, Líneas 51.84% (Supera umbrales).
+   - **Cobertura Backend**: Líneas 26.84%, Ramas 27.94%.
+   - **Quality Gates Script (`run_quality_gates.ps1`)**: **SUCCESS**.
+3. **Garantías de Entorno y Control Rector**:
+   - 0 ejecuciones DDL/DML, 0 scripts Oracle ejecutados.
+   - `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`).
+   - PR #20 OPEN / DRAFT / NOT MERGED.
+   - `F5.1 = COMPLETA`.
+   - `F5.2 = NO INICIADA`.
+
+---
+
 ## Registro de Intervención — Antigravity — Saneamiento Técnico Post-F4 — Cierre Final
 
 - **Fecha y hora**: 2026-08-18, hora local (UTC-6).
