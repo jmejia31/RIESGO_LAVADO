@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { CampoFormulario } from '../../models/matrices-riesgos.models';
 import { DynamicFieldRendererComponent } from './dynamic-field-renderer.component';
 
@@ -63,7 +64,7 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
   });
 
   it('renderiza radio con opciones inline y emite una selección exclusiva', () => {
-    const emitSpy = spyOn(component.valorChange, 'emit');
+    const emitSpy = vi.spyOn(component.valorChange, 'emit');
     const host = render(campo('radio', { opciones: ['Sí', 'No'] }));
     const radios = host.querySelectorAll('input[type="radio"]');
 
@@ -75,7 +76,7 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
   });
 
   it('renderiza catálogo múltiple y emite string[] al marcar y desmarcar', () => {
-    const emitSpy = spyOn(component.valorChange, 'emit');
+    const emitSpy = vi.spyOn(component.valorChange, 'emit');
     component.opcionesCatalogo = [
       { codigo: 'A', valor: 'A' },
       { codigo: 'B', valor: 'B' }
