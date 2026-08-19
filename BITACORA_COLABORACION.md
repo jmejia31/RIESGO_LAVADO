@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `8b847837d36bd042c04bf0a02a86bdb18dba26c3`.
-- **Commit final publicado**: *(a generar tras commit)*.
+- **Commit final publicado**: `eb83633cdd82d4a6ce323b69a2c285d5becb8e94` (`docs(matrices): cerrar certificacion integral F5.2`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Certificación Integral F5.2
