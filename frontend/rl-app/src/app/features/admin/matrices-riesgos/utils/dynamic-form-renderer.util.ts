@@ -101,6 +101,10 @@ function booleanoSeguro(valor: unknown): boolean {
   return false;
 }
 
+function noEsNulo<T>(valor: T | null): valor is T {
+  return valor !== null;
+}
+
 function opcionesSeguras(valor: unknown): string[] | null {
   if (!Array.isArray(valor)) return null;
 
@@ -184,7 +188,7 @@ function normalizarSecciones(valor: unknown): DefinicionFormularioEditable['secc
       const campos = Array.isArray(camposRaw)
         ? camposRaw
           .map(campo => normalizarCampo(campo, clavesUsadas))
-          .filter((campo): campo is CampoFormulario => campo !== null)
+          .filter(noEsNulo)
         : [];
 
       return {
@@ -200,7 +204,7 @@ function normalizarSecciones(valor: unknown): DefinicionFormularioEditable['secc
         campos
       };
     })
-    .filter((seccion): seccion is DefinicionFormularioEditable['secciones'][number] => seccion !== null)
+    .filter(noEsNulo)
     .sort((a, b) => a.orden - b.orden);
 }
 
