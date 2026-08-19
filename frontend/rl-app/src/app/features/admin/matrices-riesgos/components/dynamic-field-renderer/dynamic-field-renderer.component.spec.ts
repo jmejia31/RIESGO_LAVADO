@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CampoFormulario } from '../../models/matrices-riesgos.models';
 import { DynamicFieldRendererComponent } from './dynamic-field-renderer.component';
 
@@ -26,8 +26,10 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
   });
 
   function render(campoActual: CampoFormulario, valor: any = null): HTMLElement {
-    component.campo = campoActual;
-    component.valor = valor;
+    fixture.componentRef.setInput('campo', campoActual);
+    fixture.componentRef.setInput('valor', valor);
+    fixture.componentRef.setInput('opcionesCatalogo', component.opcionesCatalogo);
+    fixture.componentRef.setInput('modoLectura', component.modoLectura);
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;
   }

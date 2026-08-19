@@ -36,7 +36,8 @@ export interface OpcionCampoRenderer {
           </p>
         }
       } @else if (tipo === 'radio') {
-        <fieldset class="space-y-2"
+        <fieldset [id]="idControl"
+                  class="space-y-2"
                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
                   [attr.data-field-key]="campo.clave">
           <legend class="block text-xs font-bold text-gray-700">
@@ -68,7 +69,8 @@ export interface OpcionCampoRenderer {
           }
         </fieldset>
       } @else if (tipo === 'catalogo-multiple') {
-        <fieldset class="space-y-2"
+        <fieldset [id]="idControl"
+                  class="space-y-2"
                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
                   [attr.data-field-key]="campo.clave">
           <legend class="block text-xs font-bold text-gray-700">
@@ -110,8 +112,8 @@ export interface OpcionCampoRenderer {
                    [required]="campo.obligatorio"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
                    [readOnly]="campo.soloLectura"
-                   [ngModel]="valorEscalar"
-                   (ngModelChange)="emitirTexto($event)" />
+                   [value]="valorEscalar ?? ''"
+                   (input)="emitirTexto($any($event.target).value)" />
           }
           @case ('numero') {
             <input [id]="idControl"
@@ -120,8 +122,8 @@ export interface OpcionCampoRenderer {
                    [required]="campo.obligatorio"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
                    [readOnly]="campo.soloLectura"
-                   [ngModel]="valorEscalar"
-                   (ngModelChange)="emitirNumero($event)" />
+                   [value]="valorEscalar ?? ''"
+                   (input)="emitirNumero($any($event.target).value)" />
           }
           @case ('fecha') {
             <input [id]="idControl"
@@ -130,8 +132,8 @@ export interface OpcionCampoRenderer {
                    [required]="campo.obligatorio"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
                    [readOnly]="campo.soloLectura"
-                   [ngModel]="valorEscalar"
-                   (ngModelChange)="emitirTexto($event)" />
+                   [value]="valorEscalar ?? ''"
+                   (input)="emitirTexto($any($event.target).value)" />
           }
           @case ('texto-largo') {
             <textarea [id]="idControl"
@@ -140,8 +142,8 @@ export interface OpcionCampoRenderer {
                       [required]="campo.obligatorio"
                       [attr.aria-required]="campo.obligatorio ? 'true' : null"
                       [readOnly]="campo.soloLectura"
-                      [ngModel]="valorEscalar"
-                      (ngModelChange)="emitirTexto($event)"></textarea>
+                      [value]="valorEscalar ?? ''"
+                      (input)="emitirTexto($any($event.target).value)"></textarea>
           }
           @case ('selector-catalogo') {
             <select [id]="idControl"
@@ -149,11 +151,11 @@ export interface OpcionCampoRenderer {
                     [required]="campo.obligatorio"
                     [attr.aria-required]="campo.obligatorio ? 'true' : null"
                     [disabled]="campo.soloLectura || opcionesDisponibles.length === 0"
-                    [ngModel]="valorEscalar"
-                    (ngModelChange)="emitirSeleccion($event)">
-              <option [ngValue]="null">Seleccione una opción</option>
+                    [value]="valorEscalar ?? ''"
+                    (change)="emitirSeleccion($any($event.target).value)">
+              <option value="" [selected]="!valorEscalar">Seleccione una opción</option>
               @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                <option [value]="opcion.codigo">{{ opcion.valor }}</option>
+                <option [value]="opcion.codigo" [selected]="opcion.codigo === valorEscalar">{{ opcion.valor }}</option>
               }
             </select>
             @if (opcionesDisponibles.length === 0) {
@@ -168,8 +170,8 @@ export interface OpcionCampoRenderer {
                      [required]="campo.obligatorio"
                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
                      [disabled]="campo.soloLectura"
-                     [ngModel]="valorBooleano"
-                     (ngModelChange)="emitirBooleano($event)" />
+                     [checked]="valorBooleano"
+                     (change)="emitirBooleano($any($event.target).checked)" />
               <span class="text-xs font-medium text-gray-600">Marcar como afirmativo</span>
             </div>
           }
