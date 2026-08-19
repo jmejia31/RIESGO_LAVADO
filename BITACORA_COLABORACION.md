@@ -1,5 +1,39 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F5.2 Certificación Integral del Renderer Dinámico
+
+- **Fecha y hora**: 2026-08-19, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial**: `8b847837d36bd042c04bf0a02a86bdb18dba26c3`.
+- **Commit final publicado**: *(a generar tras commit)*.
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Certificación Integral F5.2
+
+1. **Certificación Empírica en Navegador**:
+   - Se validaron todos los tipos canónicos (`texto`, `numero`, `fecha`, `texto-largo`, `selector-catalogo`, `radio`, `catalogo-multiple`, `checkbox`, `formula`, fallback `desconocido`).
+   - Se verificó la preservación de valores de borde `0`, `false` y `null` en modo edición y sólo lectura.
+   - Se certificó el comportamiento responsive en Desktop (1920x1080), Laptop (1366x768), Tablet (768px) y Móvil (375px) sin desbordamientos.
+   - Se validó la accesibilidad por teclado (`Tab`, `Shift+Tab`, `Space`, `Enter`, `Escape`), foco visible y estructura semántica.
+   - DevTools Console: 0 `TypeError`, 0 `ExpressionChanged`, 0 excepciones no controladas.
+   - DevTools Network: Peticiones HTTP 200 consistentes sin bucles.
+2. **Pruebas Automatizadas y Quality Gates**:
+   - **Frontend Unit Tests (Vitest)**: **379 / 379 PASS (100%)** en 38 archivos spec.
+   - **Frontend Build (`npm run build`)**: **PASS** (`dist/rl-app`).
+   - **Backend Tests (.NET Release)**: **409 / 409 PASS (100%)**.
+   - **Backend Build (.NET Release)**: **PASS**.
+   - **Playwright E2E**: **14 / 14 PASS (100%)**.
+   - **Quality Gates Script (`run_quality_gates.ps1`)**: **SUCCESS** (Puertas de calidad correctas).
+3. **Garantías Rectoras**:
+   - 0 ejecuciones DDL/DML, 0 scripts Oracle ejecutados.
+   - `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`).
+   - PR #20 OPEN / DRAFT / NOT MERGED.
+   - `F5.2 = COMPLETA`.
+   - `F6 = NO INICIADA`.
+
+---
+
 ## Registro de Intervención — Antigravity — F5.1 Núcleo del Renderer Dinámico (Cierre y Certificación)
 
 - **Fecha y hora**: 2026-08-19, hora local (UTC-6).
