@@ -6,7 +6,7 @@
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `68880a52c2cc97bf31acc06fb7205bcbb8934547`.
-- **Commit final publicado**: *(a generar tras commit)*.
+- **Commit final publicado**: `9559ca0983804868cb85b0d00f60714ee6b68516` (`docs(matrices): registrar cierre y certificacion de F5.1`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F5.1
