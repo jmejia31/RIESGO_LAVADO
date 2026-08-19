@@ -100,9 +100,9 @@ jobs:
       - name: Build solution in Release
         run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
 
-      - name: Install Playwright Chromium
-        working-directory: frontend/rl-app
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Google Chrome
+        shell: bash
+        run: google-chrome --version
 
       - name: Run repository quality gates
         shell: pwsh
