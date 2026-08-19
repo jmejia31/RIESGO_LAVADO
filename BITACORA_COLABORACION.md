@@ -7,6 +7,7 @@
 - **Rama**: `desarrollo`.
 - **Commit inicial**: `4d6c905e067ca9733de56e5d5de099d8fe65178f`.
 - **Commit técnico publicado**: `b95d2be4259ba87ca86b163a322bb1e8ce4e9411` (`feat(matrices): implementar administracion visual de catalogos en form builder`).
+- **Commit final publicado**: `8d8b89a19c991e4fcb2b9f36f6d538622c15eaee` (`docs(matrices): registrar cierre y certificacion de F6.2`).
 - **Usuario QA Oficial**: `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn` (Contraseña introducida personalmente por Javier Mejía).
 
 ### Resumen de la Intervención F6.2
