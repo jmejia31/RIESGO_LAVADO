@@ -1,0 +1,154 @@
+{
+  "tipoDocumento": "CONTRATO_FORMULARIO_DINAMICO",
+  "versionContrato": "1.0.0",
+  "estado": "LISTO_PARA_IMPLEMENTACION",
+  "idioma": "es-HN",
+  "fechaGeneracion": "2026-08-19T13:57:00-06:00",
+  "origen": {
+    "archivo": "fixture-f6.0",
+    "hoja": "AUDITORIA_CONTRACTUAL",
+    "cantidadColumnas": 4,
+    "primeraColumna": "A",
+    "ultimaColumna": "D",
+    "cantidadFilasDatosDetectadas": 1
+  },
+  "convenciones": {
+    "rutasDatos": "Notación de punto para objetos y [] para elementos repetibles.",
+    "valorCatalogoAlmacenado": "codigo",
+    "valorCatalogoPresentado": "etiqueta",
+    "representacionAusencia": null,
+    "fechas": "ISO 8601, formato AAAA-MM-DD",
+    "tiposCampoAdmitidos": ["BOOLEANO", "ENTERO", "SELECCION", "SELECCION_MULTIPLE", "TEXTO"]
+  },
+  "arquitecturaLogica": {
+    "definicionVersionada": true,
+    "respuestaAsociadaAVersion": true,
+    "versionPublicadaInmutable": true,
+    "calculosAutoritativos": "SERVIDOR",
+    "catalogosAutoritativos": "SERVICIO_O_BASE_DE_DATOS_CON_RESPALDO_EMBEBIDO",
+    "camposUsados": "Se desactivan; no se eliminan físicamente."
+  },
+  "definicionFormulario": {
+    "identificador": "MATRIZ_RIESGOS_IHSS",
+    "nombre": "Fixture contractual de catálogos F6.0",
+    "version": 1,
+    "estado": "BORRADOR",
+    "configuracionRegional": "es-HN",
+    "configuracion": {
+      "guardadoAutomatico": true,
+      "segundosGuardadoAutomatico": 30,
+      "conservarValoresCamposInactivos": true,
+      "permitirAgregarCampos": true,
+      "permitirDesactivarCampos": true,
+      "permitirReordenarCampos": true
+    },
+    "secciones": [
+      {
+        "identificador": "F6_CATALOGOS",
+        "titulo": "Catálogos y valores de borde",
+        "orden": 1,
+        "activo": true,
+        "visible": true,
+        "metadatoFuturoSeccion": { "preservarSinEditar": true },
+        "campos": [
+          {
+            "identificador": "CAMPO_NIVEL",
+            "rutaDatos": "datos.nivel",
+            "etiqueta": "Nivel",
+            "tipo": "SELECCION",
+            "orden": 1,
+            "activo": true,
+            "visible": true,
+            "obligatorio": true,
+            "soloLectura": false,
+            "calculado": false,
+            "catalogo": "NIVELES_F6",
+            "valorAlmacenado": "codigo",
+            "etiquetaPresentada": "etiqueta",
+            "columnaExcel": "A"
+          },
+          {
+            "identificador": "CAMPO_FACTORES",
+            "rutaDatos": "datos.factores",
+            "etiqueta": "Factores",
+            "tipo": "SELECCION_MULTIPLE",
+            "orden": 2,
+            "activo": true,
+            "visible": true,
+            "obligatorio": false,
+            "soloLectura": false,
+            "calculado": false,
+            "catalogo": "FACTORES_F6",
+            "valorAlmacenado": "codigo",
+            "etiquetaPresentada": "etiqueta",
+            "columnaExcel": "B"
+          },
+          {
+            "identificador": "CAMPO_CERO",
+            "rutaDatos": "datos.puntaje",
+            "etiqueta": "Puntaje",
+            "tipo": "ENTERO",
+            "orden": 3,
+            "activo": true,
+            "visible": true,
+            "obligatorio": false,
+            "soloLectura": false,
+            "calculado": false,
+            "columnaExcel": "C",
+            "restricciones": { "minimo": 0, "maximo": 5 }
+          },
+          {
+            "identificador": "CAMPO_FALSE",
+            "rutaDatos": "datos.controlVigente",
+            "etiqueta": "Control vigente",
+            "tipo": "BOOLEANO",
+            "orden": 4,
+            "activo": true,
+            "visible": true,
+            "obligatorio": false,
+            "soloLectura": false,
+            "calculado": false,
+            "columnaExcel": "D",
+            "metadatosAdicionales": { "propiedadFutura": "DEBE_SOBREVIVIR_ROUNDTRIP" }
+          }
+        ]
+      }
+    ]
+  },
+  "catalogos": {
+    "NIVELES_F6": {
+      "identificador": "NIVELES_F6",
+      "tipoOrigen": "EMBEBIDO",
+      "version": 1,
+      "activo": true,
+      "descripcion": "Fixture embebido",
+      "elementos": [
+        { "codigo": "BAJO", "valor": "Bajo", "etiqueta": "Bajo", "activo": true },
+        { "codigo": "ALTO", "valor": "Alto", "etiqueta": "Alto", "activo": true }
+      ]
+    },
+    "FACTORES_F6": {
+      "identificador": "FACTORES_F6",
+      "tipoOrigen": "HIBRIDO",
+      "version": 1,
+      "activo": true,
+      "descripcion": "Fixture híbrido con respaldo",
+      "origenPrincipal": {
+        "tipo": "SERVICIO_O_BASE_DE_DATOS",
+        "rutaSugerida": "/api/catalogos/factores-f6",
+        "campoCodigo": "identificador",
+        "campoEtiqueta": "nombre"
+      },
+      "origenAlternativoExcel": "Listas!A1:B3",
+      "elementosRespaldo": [
+        { "codigo": "PEP", "valor": "PEP", "etiqueta": "Persona Expuesta Políticamente", "activo": true },
+        { "codigo": "GEO-HN-01", "valor": "GEO-HN-01", "etiqueta": "Factor geográfico", "activo": true },
+        { "codigo": "PROD_001", "valor": "PROD_001", "etiqueta": "Producto o servicio", "activo": true }
+      ]
+    }
+  },
+  "extensionFuturaF6": {
+    "preservar": true,
+    "nota": "No necesita ser editable, pero no puede desaparecer al round-trip."
+  }
+}
