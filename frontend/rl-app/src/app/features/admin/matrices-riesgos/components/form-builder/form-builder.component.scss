@@ -60,6 +60,13 @@ aside[aria-label='Paleta de controles'] {
   overflow-x: hidden;
 }
 
+aside[aria-label='Lista de catálogos'] {
+  width: clamp(14rem, 24vw, 20rem) !important;
+  min-width: 14rem;
+  max-width: 20rem;
+  overflow-x: hidden;
+}
+
 aside[aria-label='Inspector de propiedades del campo'] {
   width: clamp(15rem, 25vw, 20rem) !important;
   min-width: 15rem;
@@ -68,6 +75,7 @@ aside[aria-label='Inspector de propiedades del campo'] {
 }
 
 aside[aria-label='Paleta de controles'] *,
+aside[aria-label='Lista de catálogos'] *,
 aside[aria-label='Inspector de propiedades del campo'] * {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -148,6 +156,7 @@ main div.font-mono {
   }
 
   aside[aria-label='Paleta de controles'],
+  aside[aria-label='Lista de catálogos'],
   aside[aria-label='Inspector de propiedades del campo'] {
     width: 100% !important;
     min-width: 0;
@@ -155,8 +164,9 @@ main div.font-mono {
     flex-shrink: 0;
   }
 
-  aside[aria-label='Paleta de controles'] {
-    max-height: 12rem;
+  aside[aria-label='Paleta de controles'],
+  aside[aria-label='Lista de catálogos'] {
+    max-height: 14rem;
     border-right: 0;
     border-bottom: 1px solid #e2e8f0;
   }
