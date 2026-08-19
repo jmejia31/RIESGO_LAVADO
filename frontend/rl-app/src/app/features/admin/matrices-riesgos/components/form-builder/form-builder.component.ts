@@ -47,13 +47,6 @@ export class FormBuilderComponent implements OnInit {
   @Input() esAdministrador: boolean = false;
   @Input() versionCodigo: string = 'V1.0';
   @Input() versionNumero: number = 1;
-  @Input() catalogosDisponibles: Array<{ codigo: string; nombre: string }> = [
-    { codigo: 'CAT_COINCIDENCIA_NIVEL', nombre: 'Nivel de Coincidencia' },
-    { codigo: 'CAT_ESTADO_EVALUACION', nombre: 'Estado de Evaluación' },
-    { codigo: 'CAT_TIPO_LISTA', nombre: 'Tipo de Lista de Riesgo' },
-    { codigo: 'MR_PROBABILIDAD_1_5', nombre: 'Probabilidad (1 a 5)' },
-    { codigo: 'MR_IMPACTO_1_5', nombre: 'Impacto (1 a 5)' }
-  ];
 
   @Output() guardarJson = new EventEmitter<string>();
   @Output() cerrar = new EventEmitter<void>();
@@ -101,18 +94,11 @@ export class FormBuilderComponent implements OnInit {
   });
 
   readonly catalogosDisponiblesParaCampos = computed<Array<{ codigo: string; nombre: string; cantidadElementos: number }>>(() => {
-    const locales = this.catalogosList().map(c => ({
+    return this.catalogosList().map(c => ({
       codigo: c.codigo,
       nombre: c.nombre,
       cantidadElementos: c.elementos?.length ?? 0
     }));
-
-    const codigosVistos = new Set(locales.map(l => l.codigo.toLowerCase()));
-    const globales = (this.catalogosDisponibles || [])
-      .filter(g => !codigosVistos.has(g.codigo.toLowerCase()))
-      .map(g => ({ codigo: g.codigo, nombre: g.nombre, cantidadElementos: 0 }));
-
-    return [...locales, ...globales];
   });
 
   ngOnInit(): void {
@@ -190,7 +176,7 @@ export class FormBuilderComponent implements OnInit {
     const totalCampos = current.secciones.reduce((acc: number, s: SeccionBuilderModel) => acc + s.campos.length, 0) + 1;
     const claveNueva = `campo_${totalCampos}`;
 
-    const catalogoPredeterminado = this.catalogosDisponiblesParaCampos()[0]?.codigo || 'MR_IMPACTO_1_5';
+    const catalogoPredeterminado = this.catalogosDisponiblesParaCampos()[0]?.codigo;
 
     const nuevoCampo: CampoBuilderModel = {
       id: `cmp_${Date.now()}_${totalCampos}`,
