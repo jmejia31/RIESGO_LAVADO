@@ -12,7 +12,7 @@ vi.mock('sweetalert2', () => ({
   }
 }));
 
-describe('MatricesRiesgosComponent — F6.4 Ciclo de Vida de Versiones', () => {
+describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
   let component: MatricesRiesgosComponent;
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let serviceMock: any;
@@ -59,6 +59,8 @@ describe('MatricesRiesgosComponent — F6.4 Ciclo de Vida de Versiones', () => {
   };
 
   beforeEach(async () => {
+    vi.clearAllMocks();
+
     serviceMock = {
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(versionPublishedVigente)),
       obtenerVersionVigentePorFamilia: vi.fn().mockReturnValue(of(versionPublishedVigente)),
@@ -100,35 +102,148 @@ describe('MatricesRiesgosComponent — F6.4 Ciclo de Vida de Versiones', () => {
     fixture.detectChanges();
   });
 
-  it('1. C01 Guard defensivo TS impide llamar API DELETE si la versión es PUBLISHED vigente', () => {
+  it('impide DELETE de una versión PUBLISHED vigente', () => {
     component.eliminarVersionFormulario(versionPublishedVigente);
+
     expect(serviceMock.eliminarVersionFormulario).not.toHaveBeenCalled();
     expect(component.error()).toContain('historial');
   });
 
-  it('2. C01 Guard defensivo TS impide llamar API DELETE si la versión es PUBLISHED histórica', () => {
+  it('impide DELETE de una versión PUBLISHED histórica', () => {
     component.eliminarVersionFormulario(versionPublishedHistorica);
+
     expect(serviceMock.eliminarVersionFormulario).not.toHaveBeenCalled();
     expect(component.error()).toContain('historial');
   });
 
-  it('3. DRAFT no vigente permite llamar API DELETE si se confirma', () => {
+  it('permite que un DRAFT no vigente alcance la confirmación de eliminación', () => {
     component.eliminarVersionFormulario(versionDraftNoVigente);
-    // El SweetAlert2 requiere confirmación de usuario, la función por sí sola valida que pasó el guard defensivo sin mostrar error
+
     expect(component.error()).toBeFalsy();
   });
 
-  it('4. abrirDefinicion establece soloLectura=true cuando la versión es PUBLISHED', () => {
+  it('fuerza solo lectura al abrir una versión PUBLISHED', () => {
     component.abrirDefinicion(versionPublishedVigente, false);
     fixture.detectChanges();
+
     expect(component.soloLecturaDefinicion()).toBe(true);
     expect(component.versionEditando()?.verId).toBe(102);
   });
 
-  it('5. abrirDefinicion permite soloLectura=false solo cuando la versión es DRAFT no vigente', () => {
+  it('permite edición solo para DRAFT no vigente', () => {
     component.abrirDefinicion(versionDraftNoVigente, false);
     fixture.detectChanges();
+
     expect(component.soloLecturaDefinicion()).toBe(false);
     expect(component.versionEditando()?.verId).toBe(101);
+  });
+
+  it('renderiza la matriz exacta de acciones según estado y vigencia', () => {
+    component.tab.set('plantillas');
+    component.versiones.set([versionDraftNoVigente, versionPublishedVigente, versionPublishedHistorica]);
+    fixture.detectChanges();
+
+    const panel = fixture.nativeElement.querySelector('#panel-plantillas') as HTMLElement;
+    expect(panel).toBeTruthy();
+
+    const botonesDeVersion = (versionId: number): string[] => {
+      const tarjetas = Array.from(panel.querySelectorAll('article')) as HTMLElement[];
+      const tarjeta = tarjetas.find(item => item.textContent?.includes(`ID #${versionId}`));
+      expect(tarjeta).toBeTruthy();
+      return Array.from(tarjeta!.querySelectorAll('button'))
+        .map(boton => (boton.textContent ?? '').replace(/\s+/g, ' ').trim());
+    };
+
+    const draft = botonesDeVersion(101);
+    expect(draft).toEqual(expect.arrayContaining(['Ver definición', 'Editar definición', 'Clonar', 'Publicar', 'Eliminar']));
+    expect(draft).not.toContain('Activar');
+    expect(draft).not.toContain('Desactivar');
+
+    const vigente = botonesDeVersion(102);
+    expect(vigente).toEqual(expect.arrayContaining(['Ver definición', 'Clonar', 'Desactivar']));
+    expect(vigente).not.toContain('Editar definición');
+    expect(vigente).not.toContain('Publicar');
+    expect(vigente).not.toContain('Eliminar');
+    expect(vigente).not.toContain('Activar');
+
+    const historica = botonesDeVersion(100);
+    expect(historica).toEqual(expect.arrayContaining(['Ver definición', 'Clonar', 'Activar']));
+    expect(historica).not.toContain('Editar definición');
+    expect(historica).not.toContain('Publicar');
+    expect(historica).not.toContain('Eliminar');
+    expect(historica).not.toContain('Desactivar');
+  });
+
+  it('clona una PUBLISHED como nuevo borrador y refresca el historial', () => {
+    const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
+
+    component.clonarVersion(versionPublishedVigente);
+
+    expect(serviceMock.clonarVersionFormulario).toHaveBeenCalledWith(102);
+    expect(component.mensaje()).toBe('Versión clonada como borrador exitosamente.');
+    expect(refrescarHistorial).toHaveBeenCalledTimes(1);
+  });
+
+  it('conserva el estado de pantalla y reporta error si falla la clonación', () => {
+    serviceMock.clonarVersionFormulario.mockReturnValueOnce(
+      throwError(() => ({ error: { detail: 'No fue posible clonar la versión.' } }))
+    );
+    const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
+
+    component.clonarVersion(versionPublishedVigente);
+
+    expect(component.guardando()).toBe(false);
+    expect(component.error()).toBe('No fue posible clonar la versión.');
+    expect(refrescarHistorial).not.toHaveBeenCalled();
+  });
+
+  it('advierte sustitución, historial e inmutabilidad antes de publicar y refresca ambas fuentes', async () => {
+    const Swal = await import('sweetalert2');
+    const fireMock = vi.mocked(Swal.default.fire);
+    fireMock.mockClear();
+    const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
+    const refrescarVigente = vi.spyOn(component, 'cargarVersionVigentePorFamilia');
+
+    component.publicarVersion(versionDraftNoVigente);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(fireMock).toHaveBeenCalledTimes(1);
+    const opciones = fireMock.mock.calls[0][0];
+    const html = String(opciones.html ?? '');
+    expect(html).toContain('versión <strong>vigente</strong>');
+    expect(html).toContain('vigente anterior quedará como <strong>histórica</strong>');
+    expect(html).toContain('bloqueada en <strong>solo lectura</strong>');
+    expect(html).toContain('clonarla a un nuevo borrador');
+
+    expect(serviceMock.publicarVersionFormulario).toHaveBeenCalledWith(101);
+    expect(component.mensaje()).toBe('Versión publicada y establecida como vigente correctamente.');
+    expect(refrescarHistorial).toHaveBeenCalledTimes(1);
+    expect(refrescarVigente).toHaveBeenCalledWith(component.familiaSeleccionada());
+  });
+
+  it('reactiva una PUBLISHED histórica y refresca historial y vigente de la familia', async () => {
+    const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
+    const refrescarVigente = vi.spyOn(component, 'cargarVersionVigentePorFamilia');
+
+    component.cambiarVigenciaVersion(versionPublishedHistorica, true);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(serviceMock.cambiarVigenciaFormulario).toHaveBeenCalledWith(100, true);
+    expect(component.mensaje()).toBe('Versión establecida como activa exitosamente.');
+    expect(refrescarHistorial).toHaveBeenCalledTimes(1);
+    expect(refrescarVigente).toHaveBeenCalledWith(component.familiaSeleccionada());
+  });
+
+  it('desactiva la PUBLISHED vigente y refresca historial y vigente de la familia', async () => {
+    const refrescarHistorial = vi.spyOn(component, 'cargarVersiones');
+    const refrescarVigente = vi.spyOn(component, 'cargarVersionVigentePorFamilia');
+
+    component.cambiarVigenciaVersion(versionPublishedVigente, false);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    expect(serviceMock.cambiarVigenciaFormulario).toHaveBeenCalledWith(102, false);
+    expect(component.mensaje()).toBe('Versión desactivada.');
+    expect(refrescarHistorial).toHaveBeenCalledTimes(1);
+    expect(refrescarVigente).toHaveBeenCalledWith(component.familiaSeleccionada());
   });
 });
