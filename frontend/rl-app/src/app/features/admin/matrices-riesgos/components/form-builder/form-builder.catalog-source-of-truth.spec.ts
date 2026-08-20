@@ -62,7 +62,7 @@ describe('FormBuilderComponent — fuente de verdad de catálogos', () => {
     const selector = component.tiposControles.find(tipo => tipo.tipo === 'selector-catalogo');
     expect(selector).toBeTruthy();
 
-    component.agregarCampoASeccion('sec_1', selector!);
+    component.agregarCampoASeccion(component.model().secciones[0].id, selector!);
 
     const campoCreado = component.model().secciones[0].campos[0];
     expect(campoCreado.codigoCatalogo).toBeUndefined();

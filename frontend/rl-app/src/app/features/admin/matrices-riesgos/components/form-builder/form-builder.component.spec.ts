@@ -19,6 +19,9 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
           { clave: 'area', etiqueta: 'Área principal', tipo: 'texto', obligatorio: true, soloLectura: false }
         ]
       }
+    ],
+    catalogos: [
+      { codigo: 'CAT_AREA', nombre: 'Áreas', elementos: [{ codigo: '01', valor: 'Área 1', orden: 1 }] }
     ]
   });
 
@@ -211,7 +214,7 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     component.agregarCampoASeccion(seccionId, catalogo);
     component.agregarCampoASeccion(seccionId, formula);
     const campos = component.model().secciones[0].campos;
-    expect(campos[1].codigoCatalogo).toBe(component.catalogosDisponibles[0].codigo);
+    expect(campos[1].codigoCatalogo).toBe(component.catalogosList()[0].codigo);
     expect(campos[2].soloLectura).toBe(true);
     expect(component.campoActivo()?.id).toBe(campos[2].id);
   });
