@@ -5,7 +5,7 @@
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
 **`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
-**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com` / `adminpruebas@ihss.hn`  
+**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`
 **Oracle:** 0 DDL/DML, 0 scripts manuales ejecutados
 
 ---
@@ -20,7 +20,8 @@
 | **F6.0 — Auditoría del contrato** | **✅ COMPLETA** | Documento principal + anexo de brechas ejecutables + fixture v3 |
 | **F6.1 — Normalización/validación contractual** | **✅ COMPLETA** | Quality Gates #1121 SUCCESS |
 | **F6.2 — CRUD visual de catálogos** | **✅ COMPLETA** | Suite `form-builder-catalog-management.spec.ts` (13/13 PASS) + Navegador real |
-| **F6.3 — Administración avanzada/integración** | **⛔ NO INICIADA** | A la espera de auditoría formal de ChatGPT sobre F6.2 |
+| **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA** | Endpoint GET por ID + apertura autoritativa + verificación semántica post-save (414/414 PASS) |
+| **F6.4 — Ciclo de vida y cierre de plantilla** | **⛔ NO INICIADA** | A la espera de planificación formal |
 
 ---
 

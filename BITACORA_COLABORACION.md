@@ -1,6 +1,41 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — F6.2 Cierre y Certificación Definitiva de Administración Visual de Catálogos
+## Registro de Intervención — Antigravity — F6.3 Persistencia Bidireccional de Plantilla
+
+- **Fecha y hora**: 2026-08-20, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit inicial recibido (ChatGPT)**: `93d8a10ab26467dd76a9dff36ea0988214702e87`.
+- **Commits ChatGPT preservados**:
+  - `07629509a25670f0f7289baafea8b36080eb5fb3` (`feat(matrices): exponer version de formulario por id para reapertura`)
+  - `5bd040177ffaf35ffa40697fd99eaf95ecb37714` (`test(matrices): certificar contrato bidireccional de versiones de formulario`)
+  - `93d8a10ab26467dd76a9dff36ea0988214702e87` (`docs(matrices): registrar handoff tecnico de backend F6.3 a antigravity`)
+- **Commit técnico publicado**: `a13e1a179fa2ff9ca94eb5bece214532b21c43f7` (`feat(matrices): implementar persistencia bidireccional y verificacion semantica de plantilla`).
+- **Usuario QA Oficial**: `cuentajavier419@gmail.com` (Contraseña introducida personalmente por Javier Mejía).
+
+### Resumen de la Intervención F6.3
+
+1. **Apertura Autoritativa y Persistencia Bidireccional**:
+   - Se implementó `obtenerVersionFormulario(id: number)` en `MatricesRiesgosService` consumiendo `GET /api/matrices-riesgos/formularios/{id}`.
+   - `MatricesRiesgosComponent.abrirDefinicion()` consulta autoritativamente por ID antes de abrir el modal con el `verJson` fresco de BD.
+   - `MatricesRiesgosComponent.guardarDefinicion()` ejecuta `PUT` y, tras respuesta 200, ejecuta `GET` inmediato del mismo `verId` realizando comparación semántica (`sonJsonSemanticamenteEquivalentes`).
+   - Se implementó comportamiento *fail-closed*: si existe discrepancia semántica o error en la relectura, no se cierra el modal, se conserva el contexto de edición y se notifica al usuario.
+2. **Utilidad Semántica**:
+   - Creado `form-builder-semantic-comparator.util.ts` con canonicalización recursiva de claves en objetos, preservación estricta de orden en arrays y comparación estricta de tipos (`0 !== null !== false !== "0"`, `"001"`, `"G-IVM"`).
+3. **Pruebas Automatizadas y Quality Gates**:
+   - **Frontend Unit Tests (Vitest)**: **414 / 414 PASS (100%)** en 44 archivos spec.
+   - **Nuevas pruebas F6.3**: `matrices-riesgos.service.formulario-version.spec.ts` (2 tests), `matrices-riesgos.component.formulario-persistencia.spec.ts` (7 tests), `form-builder-semantic-comparator.util.spec.ts` (6 tests).
+   - **Backend Tests (.NET Release)**: **414 / 414 PASS (100%)** (incluyendo las 5 pruebas de ChatGPT en `MatricesRiesgosFormularioRoundTripTests.cs`).
+   - **Playwright E2E**: **14 / 14 PASS (100%)** en Chromium.
+   - **Quality Gates Script (`tools/run_quality_gates.ps1`)**: **SUCCESS**.
+4. **Garantías Rectoras**:
+   - `main` intacta (`727082c6fcf90f95ce6db5eadf5c4b152397d080`).
+   - PR #20 OPEN / DRAFT / NOT MERGED.
+   - Oracle: 0 DDL/DML, 0 scripts manuales ejecutados, `B10_*` intactos.
+   - `F6.3 = COMPLETA Y CERTIFICADA`.
+   - `F6.4 = NO INICIADA`.
+
+---
 
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
 - **Agente**: Antigravity.
