@@ -1,118 +1,105 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-20 — Antigravity  
+**Actualización:** 2026-08-20 — Auditoría ChatGPT  
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
-- **HEAD real actual**: `c9113b6e28d1ed723d425d4d0e4910c817e6d58c`
-- **Quality Gates Run ID oficial**: `32395987728` (SUCCESS)
-- **PR rector**: `#20` (OPEN / DRAFT / NOT MERGED)
-- **`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
-- **Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`
-- **Oracle:** 0 DDL/DML, 0 scripts manuales ejecutados
+**PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
+**`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
+**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`  
+**Oracle:** 0 DDL/DML manuales; 0 scripts manuales ejecutados; `B10_*` intactos  
 
 ---
 
-## Estado ejecutivo
+## Estado ejecutivo correcto
 
-| Fase | Estado | Evidencia |
+| Fase | Estado | Evidencia principal |
 |---|---|---|
-| F5.1 — Núcleo del renderer | ✅ COMPLETA | Certificación anterior |
-| F5.2 — Integración de catálogos | ✅ COMPLETA | Certificación anterior |
-| F5.3 — Matriz de evaluación reactiva | ✅ COMPLETA | Certificación anterior |
-| F5.4 — Monitoreo operativo | ✅ COMPLETA | Certificación anterior |
-| F6.1 — Administración visual de catálogos | ✅ COMPLETA | Certificación anterior |
-| F6.2 — Cierre y certificación definitiva | ✅ COMPLETA | Run `31128384102` (SUCCESS) / PR #20 DRAFT |
-| F6.3 — Persistencia bidireccional de plantilla | ✅ COMPLETA | Run `32395987728` (SUCCESS) / UAT Navegador Real PASS |
-| F6.4 — Publicación y ciclo de vida de versión | ⏳ HABILITADA | Pendiente por iniciar |
+| F5.1 — Núcleo del renderer | ✅ COMPLETA | Certificación previa |
+| F5.2 — Certificación integral renderer | ✅ COMPLETA | Certificación previa |
+| F5 — Cierre global | ✅ CERRADA | Baseline final `7692c5fd14c3058b17b6245ca596b931ac844009` |
+| **F6.0 — Auditoría del contrato JSON/catálogos** | **✅ COMPLETA** | `F6.0_AUDITORIA_CONTRATO_JSON_CATALOGOS.md` + anexos/fixture |
+| **F6.1 — Normalización/validación contractual lossless** | **✅ COMPLETA Y CERTIFICADA** | HEAD `4d6c905e067ca9733de56e5d5de099d8fe65178f`; Quality Gates #1121 SUCCESS |
+| **F6.2 — Administración visual de catálogos** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f3b3057a78f0444960f40b975584ab344345d2dd`; Quality Gates #1138 / Run `32381878501` SUCCESS |
+| **F6.3 — Persistencia bidireccional de plantilla** | **✅ IMPLEMENTADA + UAT REAL PASS; cierre auditado en curso sobre documentación final** | Código AntiG `a13e1a1aadc188d018fe4e5f50cd430295aba248`; UAT residual documentado; Quality Gate de `61e7b89fb433ad0c5670acd208410d1a312e98ff` = #1154 / Run `32396816868` SUCCESS |
+| **F6.4** | **⛔ NO INICIADA** | No iniciar hasta cierre formal de auditoría ChatGPT de F6.3 |
 
 ---
 
-## Baseline y concurrencia controlada de F6.0
+## F6.3 — evidencia consolidada
 
-- Baseline de cierre F5 auditado: `7692c5fd14c3058b17b6245ca596b931ac844009`.
-- Durante F6.0 `desarrollo` avanzó al commit `c2b8b44c2da27aaa24e3d5ec54ff55228ebdd43f`, que agregó exclusivamente el documento principal de auditoría F6.0.
-- ChatGPT verificó ese commit y preservó el trabajo existente; no hubo sobrescritura destructiva.
-- `main` de referencia continúa en `727082c6fcf90f95ce6db5eadf5c4b152397d080`.
+### Backend/API
 
----
+ChatGPT dejó preparada la lectura autoritativa de una versión por ID y su suite contractual:
 
-## Fuentes contractuales verificadas
+- `07629509a25670f0f7289baafea8b36080eb5fb3` — GET de versión de formulario por ID.
+- `5bd040177ffaf35ffa40697fd99eaf95ecb37714` — pruebas backend de round-trip/JSON rico.
+- `93d8a10ab26467dd76a9dff36ea0988214702e87` — handoff técnico a AntiG.
 
-1. `contrato_formulario_matrices_riesgos_IHSS_v3.json` — contrato funcional 1.0.0, estado `LISTO_PARA_IMPLEMENTACION`.
-2. Reporte de validación del contrato — 8/8 validaciones correctas.
-3. `esquema_respuesta_matrices_riesgos_IHSS_v1.schema.json` — respuesta JSON Schema Draft 2020-12.
-4. Modelos/normalizadores/Builder frontend vigentes.
-5. `FormularioValidador.cs`, DTO de metodología, AppService y repositorio backend vigentes.
-6. Fixture SQL legacy vigente de formularios.
+### Frontend/runtime
 
-El archivo adjunto de esta conversación llamado `Formularios dinámicos JSON.txt` no contiene una definición JSON; no se usa como fuente contractual. El contrato v3 real fue recuperado de la File Library del usuario.
+AntiG implementó:
 
----
+- `MatricesRiesgosService.obtenerVersionFormulario(id)`;
+- apertura autoritativa por `verId`;
+- flujo `PUT -> GET` del mismo `verId`;
+- comparación semántica recursiva de JSON;
+- arrays con orden contractual;
+- preservación estricta de `0`, `false`, `null`, `"001"` y `"G-IVM"`;
+- fail-closed ante discrepancia semántica o error de GET post-save.
 
-## Resultado F6.0
+Commit real de implementación AntiG:
 
-Documento principal preservado:
+`a13e1a1aadc188d018fe4e5f50cd430295aba248`
 
-- `docs/0.0 Documentación/F6.0_AUDITORIA_CONTRATO_JSON_CATALOGOS.md`
+### UAT residual en navegador real
 
-Anexo vinculante agregado:
+Certificación ejecutada sobre Desarrollo con el usuario QA oficial único. Evidencia documentada:
 
-- `docs/0.0 Documentación/F6.0_ANEXO_BRECHAS_EJECUTABLES_CONTRATO_V3.md`
+- DRAFT `PRUEBA_FORMULARIO · v5`;
+- GET autoritativo por `verId`;
+- modificación controlada con códigos `001` y `G-IVM`;
+- PUT al mismo `verId`;
+- GET post-save al mismo `verId`;
+- cerrar y reabrir la misma versión;
+- persistencia visual y contractual confirmada;
+- 0 TypeErrors y 0 excepciones Angular no controladas;
+- sin exposición de JWT, cookies, Authorization, contraseñas ni tokens.
 
-Fixture v3 mínimo agregado:
+Documento rector:
 
-- `docs/0.0 Documentación/fixtures/f6.0_contrato_v3_catalogos_slice.json`
+`docs/0.0 Documentación/F6.3_PERSISTENCIA_BIDIRECCIONAL_PLANTILLA.md`
 
-Registro de intervención:
+### Pruebas y gates reportados/verificados
 
-- `docs/0.0 Documentación/F6.0_REGISTRO_INTERVENCION_CHATGPT.md`
-
-### Brechas críticas confirmadas en código
-
-1. **F6-X01 — `clave` vs `id`:** Builder serializa `clave`; `FormularioValidador` actual extrae `id`.
-2. **F6-X02 — catálogo múltiple:** frontend persiste `string[]`; backend exige elementos convertibles a `Int32`.
-3. **F6-X03 — metodología truncada:** `/metodologia/version/{id}` no proyecta `columnasPorFila`, `opciones`, `formula`, `anchoColumnas` ni `tipoOriginal`.
-4. **F6-X04 — forma de catálogos:** contrato v3 usa objeto indexado con metadatos/origen/respaldo; runtime reducido espera `CatalogoMatrices[]` y solo acepta array.
-5. **F6-X05 — Builder hardcodeado:** `catalogosDisponibles` no proviene de la versión/modelo real.
-
-### Brechas altas
-
-- integridad referencial insuficiente de catálogos;
-- normalización superficial de `catalogos`/`reglas`;
-- propiedades Builder editables no serializadas (`descripcion`, `placeholder`, `textoAyuda`);
-- vocabulario de tipos frontend/backend no unificado;
-- respuesta v3 estructurada/envelope no equivale al mapa reducido `Record<string, ValorRespuestaFormulario>`.
+- Frontend: 414 / 414 PASS.
+- Backend: 414 / 414 PASS.
+- Playwright: 14 / 14 PASS.
+- Quality Gates sobre `d31e25e0a7ad272212a06c5931fd265b27a89f4f`: Run `32387555389` SUCCESS.
+- Quality Gates residual documental sobre `c9113b6e28d1ed723d425d4d0e4910c817e6d58c`: Run `32395987728` SUCCESS.
+- Commit posterior `61e7b89fb433ad0c5670acd208410d1a312e98ff` registró ese Run ID.
+- Quality Gates sobre `61e7b89fb433ad0c5670acd208410d1a312e98ff`: #1154 / Run `32396816868` SUCCESS, 21 controles funcionales/CI completos.
 
 ---
 
-## Decisiones vinculantes de F6.0
+## Corrección documental vinculante
 
-1. **Cero pérdida silenciosa.**
-2. El contrato v3 validado define la semántica objetivo.
-3. El código ejecutable vigente define compatibilidad que debe preservarse durante migración.
-4. Escritura futura canónica; lectura mantiene aliases/formatos legacy explícitos.
-5. Catálogo: identidad persistida = `codigo`; presentación = `etiqueta`/valor visible.
-6. `0`, `false` y `null` son estados diferentes.
-7. Códigos de catálogo pueden ser alfanuméricos; multiselección no depende de enteros.
-8. Tipos v3 todavía no soportados por renderer se preservan sin pérdida; F6 no implementará todos los tipos complejos.
-9. No se requiere crear nuevas tablas Oracle para completar la capa contractual de F6.
-10. F6.2 no puede comenzar hasta que F6.1 deje estos gates automatizados y verdes.
+La edición anterior de `ESTADO_COLABORACION.md` introdujo una tabla incorrecta que:
+
+- omitía F6.0;
+- renombraba F6.1 y F6.2 de forma incompatible con el plan rector;
+- asociaba evidencia errónea a F6.2;
+- marcaba F6.4 como habilitada antes de la auditoría final de ChatGPT;
+- mantenía secciones históricas diciendo que F6.2 y posteriores no habían iniciado.
+
+Esta versión reemplaza esas inconsistencias y prevalece como punto de continuidad operativo.
 
 ---
 
 ## Próximo punto exacto
 
-### F6.1 — Normalización, validación y alineación contractual
-
-1. convertir F6-X01..F6-X10 en pruebas automatizadas de contrato;
-2. implementar adaptador v3 ↔ modelo editable sin pérdida;
-3. alinear `clave`/`id`;
-4. alinear catálogos simples/múltiples y códigos string;
-5. ampliar proyección de metodología requerida por renderer;
-6. preservar envelope/metadatos/tipos no editables;
-7. validar integridad de catálogos y referencias;
-8. ejecutar frontend/backend/build/E2E/Quality Gates;
-9. cerrar F6.1 antes de habilitar F6.2.
+1. Certificar el commit que contiene esta corrección documental mediante Quality Gates.
+2. Si ese HEAD queda SUCCESS y PR/main/Oracle siguen intactos, declarar F6.3 **COMPLETA Y CERTIFICADA DEFINITIVAMENTE**.
+3. Solo después habilitar F6.4.
 
 ---
 
@@ -121,9 +108,9 @@ Registro de intervención:
 - No tocar `main`.
 - No fusionar/cerrar PR #20.
 - No crear ramas.
-- No ejecutar DDL/DML/scripts Oracle sin autorización expresa de Javier Mejía.
+- No ejecutar DDL/DML/scripts Oracle manuales sin autorización expresa.
+- No modificar/eliminar `B10_*`.
 - No bajar cobertura ni Quality Gates.
-- No eliminar ni omitir pruebas para obtener verde.
-- Nuevas pruebas se nombran por responsabilidad funcional, no por número de fase.
-- No exponer credenciales/JWT/cookies/tokens.
-- F6.2 y fases posteriores permanecen NO INICIADAS.
+- No eliminar/omitir pruebas para obtener verde.
+- No exponer credenciales, JWT, cookies, tokens o secretos.
+- F6.4 permanece NO INICIADA hasta la certificación final de esta corrección documental.
