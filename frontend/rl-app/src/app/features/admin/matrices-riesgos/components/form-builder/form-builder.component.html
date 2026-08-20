@@ -607,6 +607,7 @@
                 </span>
                  <input [id]="'seccion-titulo-' + sec.id" type="text"
                        [(ngModel)]="sec.titulo"
+                       (keydown.space)="$event.stopPropagation()"
                        [disabled]="soloLectura"
                        class="text-sm font-bold text-slate-900 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-600 focus:bg-white px-1 py-0.5 rounded focus:outline-none transition-colors w-full"
                        placeholder="Nombre de la sección">
