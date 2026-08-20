@@ -5,7 +5,28 @@
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
 - **Agente**: Antigravity.
 - **Rama**: `desarrollo`.
-- **Commit inicial recibido (ChatGPT)**: `93d8a10ab26467dd76a9dff36ea0988214702e87`.
+- **Commit real de implementación AntiG**: `a13e1a1aadc188d018fe4e5f50cd430295aba248`.
+- **Commit / HEAD documental final**: `d31e25e0a7ad272212a06c5931fd265b27a89f4f`.
+- **Objetivo**: Implementación, pruebas, verificación de salvaguarda y certificación residual en navegador real de la Fase F6.3 (Persistencia Bidireccional de Plantilla y Verificación Semántica).
+- **Archivos creados o modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/utils/form-builder-semantic-comparator.util.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/data-access/matrices-riesgos.service.formulario-version.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.formulario-persistencia.spec.ts`
+  - `frontend/rl-app/e2e/modal-shell-lock.spec.ts`
+  - `frontend/rl-app/e2e/login-and-routing.spec.ts`
+  - `frontend/rl-app/e2e/matrices-authorization.spec.ts`
+  - `docs/0.0 Documentación/F6.3_PERSISTENCIA_BIDIRECCIONAL_PLANTILLA.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+  - `BITACORA_COLABORACION.md`
+- **Verificación UAT en Navegador Real**:
+  - Usuario QA Oficial: `cuentajavier419@gmail.com`
+  - Apertura DRAFT (`v5 / Borrador`): GET `/api/matrices-riesgos/formularios/{verId}` -> HTTP 200.
+  - Modificación alfanumérica controlada con códigos `"001"` y `"G-IVM"`.
+  - Persistencia: PUT `/api/matrices-riesgos/formularios/{verId}` -> HTTP 200/204 seguido de GET en la misma versión con la estructura retenida.
+  - Cierre y re-apertura del Builder: Verificación de presencia visual íntegra de la plantilla cargada.
+  - Consola/Seguridad: 0 TypeErrors, 0 excepciones Angular, 0 fuga/exposición de tokens/JWT/credenciales.
 - **Commits ChatGPT preservados**:
   - `07629509a25670f0f7289baafea8b36080eb5fb3` (`feat(matrices): exponer version de formulario por id para reapertura`)
   - `5bd040177ffaf35ffa40697fd99eaf95ecb37714` (`test(matrices): certificar contrato bidireccional de versiones de formulario`)
