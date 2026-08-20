@@ -86,7 +86,8 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         var service = new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
 
         // Crear un archivo temporal real en el directorio de pruebas para que File.Exists sea true
-        string relativeDir = Path.Combine("App_Data", "Evidencias");
+        // Use an isolated test directory: other evidence tests clean App_Data/Evidencias concurrently.
+        string relativeDir = Path.Combine("App_Data", "EvidenciasP3P4");
         string fullDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relativeDir);
         Directory.CreateDirectory(fullDir);
         string filename = $"test_p3p4_{Guid.NewGuid():N}.pdf";

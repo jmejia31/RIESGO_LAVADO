@@ -5435,3 +5435,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Verificacion no superada / motivo**: `dotnet build RIESGO_LAVADO.sln --no-restore` fue bloqueado por el proceso local `.NET Host (PID 25688)` que retenia `backend/RL.API/bin/Debug/net10.0/RL.API.dll`; no se finalizo el proceso por seguridad. `validate_repository_structure.ps1` reporta el archivo y carpeta heredados `frontend/rl-app/src/app/core/services/global-http-state.service.ts`; no pertenecen a este alcance.
 - **Restricciones verificadas**: cero cambios y cero ejecuciones Oracle; sin cambios SQL, DDL/DML, reglas o exclusiones SonarCloud ni `main`.
 - **Pendiente externo**: revisar visualmente los modales representativos en el navegador y esperar analisis de SonarCloud del commit publicado. No se declara aprobado el Quality Gate remoto ni cerradas las Fases 9/10 sin esa evidencia y UAT de Javier Mejia.
+
+## Registro de intervención — Codex — corrección de compilación F6.4
+
+- **Fecha y hora:** 2026-08-20 (UTC-6). **Rama:** `desarrollo`. **Commit inicial:** `b598f042500d824f90e553abfa83a26885bd6de4`.
+- **Objetivo:** reproducir y corregir el fallo del paso `Run repository quality gates` del workflow Quality Gates #1170, sin alterar contratos, Oracle, SQL ni la configuración de calidad.
+- **Causa reproducida:** la prueba `matrices-riesgos.component.ciclo-vida.spec.ts` asumía erróneamente que el primer argumento de `SweetAlert.fire` tenía la propiedad `html`; su tipo expuesto por el mock era texto. El compilador Angular detenía la cobertura con TS18048/TS2339.
+- **Cambio:** tipado seguro y explícito del argumento de la prueba como opciones de alerta opcionales; además, una prueba backend de eliminación de evidencias usa un directorio temporal aislado para no competir con la limpieza paralela de `App_Data/Evidencias`. El comportamiento productivo no cambió.
+- **Evidencia ejecutada:** backend Release 425/425 correcto; frontend con cobertura 46 archivos/426 pruebas correctas; `npm run build` correcto (advertencia conocida no bloqueante de `exceljs` CommonJS); `tools/run_quality_gates.ps1` correcto: backend 425/425, frontend 426/426, Playwright 14/14, backend líneas 27.07%/ramas 28.17% y frontend líneas 54.62%, por encima de los mínimos locales del script. Los validadores de base de datos y de enlaces documentales también finalizaron correctamente.
+- **Restricciones:** cero cambios y cero ejecuciones Oracle; no se modificaron SQL, DDL/DML, umbrales/exclusiones SonarCloud ni `main`.
+- **Pendiente externo:** publicar el commit y esperar una ejecución remota de Quality Gates/SonarCloud sobre el HEAD final. La certificación remota de F6.4 continúa pendiente de UAT real y de un workflow remoto exitoso.

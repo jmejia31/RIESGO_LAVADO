@@ -111,6 +111,21 @@ Si la UAT descubre un defecto, debe corregirse y recertificarse. Si pasa sin cam
 
 ---
 
+## Actualización 2026-08-20 — bloqueo local del Quality Gate F6.4 corregido
+
+El Quality Gates #1170 fue reproducido localmente sobre `b598f042500d824f90e553abfa83a26885bd6de4`. El fallo no provenía de Oracle, de una regla SonarCloud ni de la lógica de publicación: una prueba F6.4 no compilaba al acceder a `html` sobre un argumento tipado como texto por el mock de SweetAlert.
+
+La corrección se limita a la prueba de ciclo de vida y a una prueba backend de evidencias que debía aislar su directorio temporal de la limpieza paralela de otros tests. En la verificación posterior, `tools/run_quality_gates.ps1` terminó correctamente con backend **425/425**, frontend **426/426** y Playwright **14/14**; la cobertura local del frontend fue **54.62% de líneas**. También se corrigió un enlace relativo roto en el archivo histórico de estado y los validadores de base de datos/documentación finalizaron correctamente. Esto demuestra que el defecto del workflow es reproducible y corregible localmente, pero **no certifica** el Quality Gate remoto ni sustituye la UAT residual F6.4.
+
+Punto de continuidad actualizado:
+
+1. Publicar el arreglo documental/técnico en `desarrollo`.
+2. Confirmar Quality Gates/SonarCloud remoto exitoso sobre ese HEAD.
+3. Ejecutar y registrar la UAT residual F6.4 en navegador real.
+4. Solo después cerrar F6.4; F6.5 sigue no iniciada.
+
+---
+
 ## Restricciones vigentes
 
 - No tocar `main`.

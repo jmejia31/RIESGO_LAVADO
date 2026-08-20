@@ -208,8 +208,8 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
     await new Promise(resolve => setTimeout(resolve, 50));
 
     expect(fireMock).toHaveBeenCalledTimes(1);
-    const opciones = fireMock.mock.calls[0][0];
-    const html = String(opciones.html ?? '');
+    const opciones = fireMock.mock.calls[0]?.[0] as unknown as { html?: string } | undefined;
+    const html = String(opciones?.html ?? '');
     expect(html).toContain('versión <strong>vigente</strong>');
     expect(html).toContain('vigente anterior quedará como <strong>histórica</strong>');
     expect(html).toContain('bloqueada en <strong>solo lectura</strong>');
