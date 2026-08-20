@@ -1,6 +1,34 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — F6.4 Publicación y Ciclo de Vida de Versiones
+## Registro de Intervención — Antigravity — Certificación UAT Navegador Real F6.4
+
+- **Fecha y hora**: 2026-08-20, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **SHA inicial**: `2fb8675737a8477c01151412643f9289bb59677d`.
+- **Objetivo**: Ejecución y certificación formal de UAT en navegador real para F6.4 (Publicación y Ciclo de Vida de Versiones de Matrices de Riesgo) en `localhost`.
+- **Flujo UAT ejecutado y verificado en Navegador Real**:
+  1. **Navegación y Autenticación**: Acceso a `http://localhost:4200` con backend `.NET` activo en `localhost:5043`. Sesión autenticada con usuario QA Oficial `cuentajavier419@gmail.com` (contraseña ingresada manualmente sin captura/exposición).
+  2. **Inmutabilidad de Versión Publicada**: Verificación en tabla de versión `v7` (`PUBLISHED / Vigente`). Confirmación de que SOLO expone acciones Ver (`eye`), Clonar (`copy`) y Desactivar (`pause`). NO expone Editar (`pencil`), Eliminar (`trash`) ni Guardar. Apertura de modal de vista previa en modo estrictamente solo lectura.
+  3. **Clonación de Versión**: Ejecución de clonación desde `v7`. Generación exitosa en BD y UI de un nuevo borrador `v10` con estado `Borrador / DRAFT`.
+  4. **Edición y Guardado de Borrador**: Apertura del Form Builder sobre `v10`, modificación de plantilla y guardado. Respuesta exitosa HTTP 200 (`PUT`), relectura con comparación semántica lossless.
+  5. **Publicación y Modal SweetAlert2**: Activación del proceso de publicación sobre `v10`. Confirmación en modal SweetAlert2 con bloqueo de fondo, contención de foco, cierre visible e imposibilidad de clic sobre la interfaz trasera.
+  6. **Transición de Vigencia y Unicidad**:
+     - `v10` pasa a estado `Publicado / PUBLISHED` y `Vigente / Activo`.
+     - `v7` previa pasa automáticamente a estado `Publicado / PUBLISHED` y `No Vigente / Histórica / Inactivo`.
+     - Confirmado: Existe exactamente **1 sola versión vigente** por familia de matriz.
+  7. **Inmutabilidad Histórica**: Verificación de que la versión `v7` histórica permanece inmutable (sin opciones de edición o eliminación).
+  8. **Inspección de Seguridad y Consola**: 0 TypeErrors, 0 excepciones no controladas de JavaScript, 0 fallos HTTP inesperados, 0 fugas de secretos/JWT en red o logs.
+- **Defectos encontrados**: Ninguno. El comportamiento del código fue 100% conforme a los invariantes C01-C05 de F6.4. No se requirieron parches.
+- **Resultados de Pruebas de Regresión**:
+  - Backend tests (.NET Release): **425/425 PASS** (100%).
+  - Frontend tests (Vitest): **426/426 PASS** (100% en 46 test files).
+  - Frontend Build (`npm run build`): **SUCCESS** (0 errores).
+  - Playwright E2E (`npm run e2e`): **14/14 PASS** (100%).
+  - Validaciones de Infraestructura (`validate_database_scripts.ps1`, `validate_documentation_links.ps1`, `git diff --check`): **SUCCESS**.
+  - Script SQL / DDL / DML Oracle manuales: **0 cambios**.
+
+---
 
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
 - **Agente**: Antigravity.

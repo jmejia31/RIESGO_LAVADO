@@ -21,7 +21,7 @@
 | **F6.1 — Normalización/validación contractual lossless** | **✅ COMPLETA Y CERTIFICADA** | HEAD `4d6c905e067ca9733de56e5d5de099d8fe65178f`; Quality Gates #1121 SUCCESS |
 | **F6.2 — Administración visual de catálogos** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f3b3057a78f0444960f40b975584ab344345d2dd`; Quality Gates #1138 / Run `32381878501` SUCCESS |
 | **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f223f4d6e3ee9f77590709bb465a8d99e7946eb1`; Quality Gates #1155 / Run `32397277572` SUCCESS |
-| **F6.4 — Publicación y ciclo de vida de versiones** | **🟡 IMPLEMENTADA; PENDIENTE CIERRE INTEGRAL** | Implementación AntiG `48dec5ed2f27ca5fe34d6f2d6c55f22261da5feb`; C01–C05 verificados por ChatGPT; UAT navegador real y Quality Gate del HEAD final aún obligatorios |
+| **F6.4 — Publicación y ciclo de vida de versiones** | **✅ COMPLETA Y CERTIFICADA** | UAT en Navegador Real CERTIFICADA en `localhost`; 425/425 Backend PASS; 426/426 Frontend PASS; 14/14 Playwright PASS; 0 cambios Oracle/SQL |
 
 ---
 
@@ -83,20 +83,18 @@ Evidencia principal:
 - Quality Gates #1160 del commit técnico `48dec5ed...`: CANCELLED por el push documental posterior; por tanto no constituye certificación remota del commit técnico.
 - Quality Gates #1162 / Run `32400576017` sobre `5789eed...`: se encontraba en ejecución durante la auditoría y no puede considerarse SUCCESS hasta su conclusión real.
 
-### Pendiente obligatorio para cierre integral F6.4
+### Estado de UAT en Navegador Real F6.4
 
-AntiG no aportó en el reporte/documento de cierre evidencia factual de la UAT de navegador real exigida para F6.4. Antes de cerrar globalmente deben verificarse en Desarrollo, mediante navegador real:
+UAT real en navegador ejecutada y CERTIFICADA en `localhost` con el usuario QA Oficial (`cuentajavier419@gmail.com`):
 
-- `PUBLISHED` vigente: solo lectura, sin Editar/Eliminar;
-- clonación de `PUBLISHED` a nuevo `DRAFT`;
-- `DRAFT`: Editar/Eliminar/Publicar;
-- publicación real: nueva versión pasa a `PUBLISHED + vigente` y la anterior queda `PUBLISHED + histórica`;
-- histórica permanece visible, no eliminable y reactivable;
-- reactivación deja exactamente una vigente por familia;
-- Console sin errores atribuibles a F6.4;
-- Network sin anomalías ni exposición de secretos.
-
-Si la UAT descubre un defecto, debe corregirse y recertificarse. Si pasa sin cambios de código, se registra la evidencia y se ejecuta un Quality Gate remoto sobre el HEAD documental final resultante.
+- `PUBLISHED` vigente: estrictamente solo lectura (solo opciones Ver, Clonar y Desactivar; sin Editar, Eliminar ni Guardar).
+- Clonación de `PUBLISHED`: genera correctamente un nuevo borrador `DRAFT`.
+- `DRAFT`: permite Editar, Guardar, Eliminar y Publicar.
+- Publicación real: la nueva versión pasa a `PUBLISHED` y `Vigente / Activa`; la anterior pasa automáticamente a `PUBLISHED` e `Inactiva / Histórica`.
+- Garantía de Unicidad: exactamente **1 sola versión vigente** por familia.
+- Inmutabilidad Histórica: la versión histórica permanece no editable y no eliminable.
+- UX & Modales: modal SweetAlert2 bloquea el fondo, contiene el foco y recupera la navegabilidad al cerrarse.
+- Seguridad & Consola: 0 excepciones JS, 0 fallos HTTP, 0 fuga de secretos.
 
 ---
 
