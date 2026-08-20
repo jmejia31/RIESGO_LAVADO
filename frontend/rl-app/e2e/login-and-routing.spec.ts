@@ -215,6 +215,8 @@ async function stubAuthenticatedMatrices(page: Page) {
       datos = metodologiaFormulario;
     } else if (path.endsWith('/formularios/historial')) {
       datos = [versionFormulario];
+    } else if (/\/formularios\/\d+$/.test(path) && method === 'GET') {
+      datos = versionFormulario;
     } else if (path.endsWith('/consolidado')) {
       datos = consolidadoTipado;
     } else if (path.endsWith('/riesgos') && method === 'GET') {

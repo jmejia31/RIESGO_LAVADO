@@ -84,6 +84,7 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
       reglas: []
     };
     else if (path.endsWith('/formularios/historial')) datos = [versionPublicada];
+    else if (/\/formularios\/\d+$/.test(path) && request.method() === 'GET') datos = versionPublicada;
     else if (path.endsWith('/riesgos')) datos = [];
     else if (path.endsWith('/evaluaciones')) datos = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 0, totalPaginas: 0 };
     else if (path.endsWith('/consolidado')) datos = [];

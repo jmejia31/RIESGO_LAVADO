@@ -64,6 +64,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
+      obtenerVersionFormulario: vi.fn().mockImplementation((id: number) => of({ ...version, verId: id })),
       metodologiaVigente: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',

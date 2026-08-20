@@ -32,6 +32,7 @@ async function preparar(page: Page): Promise<void> {
     else if (ruta.endsWith('/formulario/version-vigente')) datos = publicada;
     else if (ruta.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: publicada.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (ruta.endsWith('/formularios/historial')) datos = [publicada, borrador];
+    else if (/\/formularios\/\d+$/.test(ruta)) datos = borrador;
     else if (ruta.endsWith('/evaluaciones')) datos = { items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 0, totalPaginas: 0 };
     else if (ruta.endsWith('/riesgos')) datos = [];
     else if (ruta.endsWith('/consolidado')) datos = [];

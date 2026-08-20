@@ -110,6 +110,12 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.datos));
   }
 
+  obtenerVersionFormulario(id: number): Observable<VersionFormularioDto> {
+    return this.http
+      .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formularios/${id}`)
+      .pipe(map(response => response.datos));
+  }
+
   listarHistorialVersionesFormulario(
     familiaCodigo = 'MATRIZ_RIESGOS_LAFT'
   ): Observable<VersionFormularioDto[]> {

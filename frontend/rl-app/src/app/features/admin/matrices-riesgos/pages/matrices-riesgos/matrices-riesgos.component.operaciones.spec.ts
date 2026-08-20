@@ -71,6 +71,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
       actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       desactivarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
+      obtenerVersionFormulario: vi.fn().mockImplementation((id: number) => of({ ...version, verId: id })),
       obtenerEvaluacion: vi.fn().mockReturnValue(of(evaluacion)),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,

@@ -30,6 +30,7 @@ import {
   normalizarRespuestasFormulario,
   tieneValorRespuesta
 } from '../../utils/dynamic-form-renderer.util';
+import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 
 type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
 
@@ -984,17 +985,29 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   abrirDefinicion(version: VersionFormularioDto, soloLectura = false): void {
-    this.versionEditando.set(version);
-    this.soloLecturaDefinicion.set(soloLectura || version.verVigente);
-    this.definicionTecnica = this.formatearDefinicion(version.verJson);
+    this.cargando.set(true);
+    this.service.obtenerVersionFormulario(version.verId).subscribe({
+      next: versionAutoritativa => {
+        this.cargando.set(false);
+        this.versionEditando.set(versionAutoritativa);
+        this.soloLecturaDefinicion.set(soloLectura || versionAutoritativa.verVigente || versionAutoritativa.verEstado !== 'DRAFT');
+        this.definicionTecnica = this.formatearDefinicion(versionAutoritativa.verJson);
+      },
+      error: error => {
+        this.cargando.set(false);
+        this.versionEditando.set(null);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo cargar la versión autoritativa del formulario.'));
+      }
+    });
   }
 
   guardarDefinicion(): void {
     const version = this.versionEditando();
     if (!version) return;
 
+    const jsonEnviado = this.definicionTecnica;
     try {
-      JSON.parse(this.definicionTecnica);
+      JSON.parse(jsonEnviado);
     } catch (error) {
       const detalle = error instanceof SyntaxError ? error.message : '';
       const sufijo = detalle ? `: ${detalle}` : '.';
@@ -1003,13 +1016,36 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     this.guardando.set(true);
-    this.service.actualizarBorradorFormulario(version.verId, this.definicionTecnica).subscribe({
+    this.service.actualizarBorradorFormulario(version.verId, jsonEnviado).subscribe({
       next: () => {
-        this.guardando.set(false);
-        this.versionEditando.set(null);
-        this.globalState.limpiarError();
-        this.mostrarMensaje('Definición del formulario actualizada correctamente.');
-        this.cargarVersiones();
+        this.service.obtenerVersionFormulario(version.verId).subscribe({
+          next: versionPersistida => {
+            this.guardando.set(false);
+            const sonEquivalentes = sonJsonSemanticamenteEquivalentes(
+              jsonEnviado,
+              versionPersistida.verJson
+            );
+
+            if (!sonEquivalentes) {
+              this.mostrarError('La persistencia recuperada del servidor no coincide semánticamente con la definición enviada.');
+              return;
+            }
+
+            this.versionEditando.set(null);
+            this.globalState.limpiarError();
+            this.mostrarMensaje('Definición del formulario actualizada y verificada correctamente.');
+            this.cargarVersiones();
+          },
+          error: getError => {
+            this.guardando.set(false);
+            this.mostrarError(
+              this.obtenerMensajeError(
+                getError,
+                'No se pudo verificar la persistencia de la versión del formulario tras guardar.'
+              )
+            );
+          }
+        });
       },
       error: error => {
         this.guardando.set(false);

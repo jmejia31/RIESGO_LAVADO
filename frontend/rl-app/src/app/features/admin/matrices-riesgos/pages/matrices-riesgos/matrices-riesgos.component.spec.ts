@@ -9,6 +9,7 @@ describe('MatricesRiesgosComponent', () => {
   let component: MatricesRiesgosComponent;
   let service: {
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
+    obtenerVersionFormulario: ReturnType<typeof vi.fn>;
     metodologiaVigente: ReturnType<typeof vi.fn>;
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
@@ -66,6 +67,33 @@ describe('MatricesRiesgosComponent', () => {
         verHash: 'hash',
         verEstado: 'PUBLISHED',
         verVigente: true,
+        verFechaCreacion: '2026-08-03T10:00:00',
+        verUsrCreacion: 1
+      })),
+      obtenerVersionFormulario: vi.fn().mockImplementation((id: number) => of({
+        verId: id,
+        verFamiliaId: 1,
+        verCodigo: 'FORM_A',
+        verVersion: 2,
+        verJson: JSON.stringify({
+          codigoFormulario: 'FORM_A',
+          nombreFormulario: 'Formulario A',
+          secciones: [{
+            clave: 'identificacion',
+            titulo: 'Identificación',
+            orden: 1,
+            campos: [{
+              clave: 'area_principal',
+              etiqueta: 'Área principal',
+              tipo: 'texto',
+              obligatorio: true,
+              soloLectura: false
+            }]
+          }]
+        }),
+        verHash: 'hash',
+        verEstado: 'DRAFT',
+        verVigente: false,
         verFechaCreacion: '2026-08-03T10:00:00',
         verUsrCreacion: 1
       })),
@@ -280,6 +308,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.error()).toContain('JSON');
 
     component.definicionTecnica = '{"codigoFormulario":"FORM_A","secciones":[]}';
+    service.obtenerVersionFormulario.mockReturnValue(of({ ...version, verJson: component.definicionTecnica }));
     component.guardarDefinicion();
     expect(service.actualizarBorradorFormulario).toHaveBeenCalledWith(10, component.definicionTecnica);
     expect(component.versionEditando()).toBeNull();
@@ -429,6 +458,7 @@ describe('MatricesRiesgosComponent', () => {
 
   it('extrae definición con fallback seguro cuando verJson está corrupto o es nulo', () => {
     const versionCorrupta = { ...component.versionVigente()!, verJson: 'invalido{' };
+    service.obtenerVersionFormulario.mockReturnValueOnce(of(versionCorrupta));
     component.abrirDefinicion(versionCorrupta);
     expect(component.definicionTecnica).toBe('invalido{');
   });
