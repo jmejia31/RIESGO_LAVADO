@@ -85,16 +85,20 @@ Evidencia principal:
 
 ### Estado de UAT en Navegador Real F6.4
 
-UAT real en navegador ejecutada y CERTIFICADA en `localhost` con el usuario QA Oficial (`cuentajavier419@gmail.com`):
+UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario QA Oficial (`cuentajavier419@gmail.com`):
 
 - `PUBLISHED` vigente: estrictamente solo lectura (solo opciones Ver, Clonar y Desactivar; sin Editar, Eliminar ni Guardar).
 - Clonación de `PUBLISHED`: genera correctamente un nuevo borrador `DRAFT`.
 - `DRAFT`: permite Editar, Guardar, Eliminar y Publicar.
 - Publicación real: la nueva versión pasa a `PUBLISHED` y `Vigente / Activa`; la anterior pasa automáticamente a `PUBLISHED` e `Inactiva / Histórica`.
-- Garantía de Unicidad: exactamente **1 sola versión vigente** por familia.
-- Inmutabilidad Histórica: la versión histórica permanece no editable y no eliminable.
+- **Reactivación de versión histórica**: Al activar la versión histórica `v7` (`PUBLISHED + Inactivo`), esta pasa a `PUBLISHED + Vigente`, y la versión vigente previa `v10` pasa a `PUBLISHED + Histórica / Inactiva`. Confirmado en respuesta HTTP (200 OK) e interfaz visual.
+- **Garantía de Unicidad**: En todo momento existe exactamente **1 sola versión vigente** por familia.
+- **Inmutabilidad Histórica**: Ninguna versión publicada (`v7` ni `v10`) ofrece o permite opciones de Editar o Eliminar.
+- **Restauración de Datos QA**: Se ejecutó la reactivación inversa sobre `v10`, restaurando los datos del ambiente QA local exactamente a su estado inicial.
+- **Cero Cambios de Esquema SQL / DDL / DML Manuales**: 0 scripts SQL manuales, 0 modificaciones DDL/DML a tablas Oracle. Las escrituras correspondieron únicamente a llamadas REST API de prueba en la UAT.
+- **SonarCloud Remoto**: Queda **PENDIENTE Y DIFERIDO** para el Cierre Global del proyecto por decisión y directriz explícita del propietario.
 - UX & Modales: modal SweetAlert2 bloquea el fondo, contiene el foco y recupera la navegabilidad al cerrarse.
-- Seguridad & Consola: 0 excepciones JS, 0 fallos HTTP, 0 fuga de secretos.
+- Seguridad & Consola: 0 excepciones JS, 0 fallos HTTP inesperados, 0 fuga de secretos.
 
 ---
 

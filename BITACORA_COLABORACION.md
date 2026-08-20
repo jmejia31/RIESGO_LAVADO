@@ -1,6 +1,33 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — Certificación UAT Navegador Real F6.4
+## Registro de Intervención — Antigravity — Certificación UAT Reactivación y Restauración F6.4
+
+- **Fecha y hora**: 2026-08-20, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **SHA inicial**: `d511c4a6dd70bafc6b8204935859e3c42bc3cef8`.
+- **Objetivo**: Certificación UAT en navegador real para el flujo de reactivación de versión histórica publicada a vigente, verificación de unicidad, inmutabilidad y restauración de datos QA.
+- **Flujo UAT ejecutado y verificado en Navegador Real**:
+  1. **Selección de Familia y Versión Histórica**: Selección en `localhost:4200` de la familia con versión histórica `v7` (`PUBLISHED / Inactivo`) y vigente `v10` (`PUBLISHED / Activo`).
+  2. **Acción de Reactivación**: Ejecución de la acción de activación (`Activar / Volver Vigente`) sobre la versión histórica `v7`.
+  3. **Verificación de Transición y Red**:
+     - `v7` pasó inmediatamente a estado `PUBLISHED + Vigente`.
+     - `v10` pasó automáticamente a estado `PUBLISHED + Histórica / No Vigente`.
+     - Confirmado en UI y respuestas HTTP (200 OK): Existe **EXACTAMENTE UNA SOLA versión vigente** por familia.
+     - Confirmado: Ninguna versión publicada (`v7` ni `v10`) ofrece o permite opciones de Editar o Eliminar.
+  4. **Restauración del Estado QA Original**: Para no alterar innecesariamente el estado QA original, se ejecutó la acción de reactivación sobre `v10`, dejándola nuevamente como `PUBLISHED + Vigente` y a `v7` como `PUBLISHED + Histórica`.
+  5. **Inspección de Seguridad y Consola**: 0 TypeErrors, 0 excepciones JavaScript, 0 fallos HTTP inesperados y 0 secretos/credenciales expuestos.
+- **Estado de Datos QA**: Las escrituras realizadas correspondieron exclusivamente a mutaciones de estado de prueba por API durante la UAT (`PATCH /api/matrices-riesgos/formularios/{id}/vigencia`). Los datos del ambiente QA local fueron completamente restaurados a su estado inicial.
+- **Cero Cambios de Esquema SQL / DDL / DML Manuales**: 0 scripts SQL manuales, 0 modificaciones DDL/DML a tablas Oracle.
+- **Estado de SonarCloud Remoto**: Queda formalmente **PENDIENTE Y DIFERIDO** para la fase de Cierre Global del proyecto, por decisión y directriz explícita del propietario.
+- **Resultados de Pruebas**:
+  - Backend (.NET Release): **425/425 PASS**.
+  - Frontend (Vitest): **426/426 PASS**.
+  - Frontend Build (`npm run build`): **SUCCESS**.
+  - Playwright E2E (`npm run e2e`): **14/14 PASS**.
+  - Scripts BD y Enlaces Documentales: **SUCCESS**.
+
+---
 
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
 - **Agente**: Antigravity.
