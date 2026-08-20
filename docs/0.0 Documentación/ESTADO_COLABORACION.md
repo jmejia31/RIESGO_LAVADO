@@ -20,8 +20,8 @@
 | **F6.0 — Auditoría del contrato JSON/catálogos** | **✅ COMPLETA** | `F6.0_AUDITORIA_CONTRATO_JSON_CATALOGOS.md` + anexos/fixture |
 | **F6.1 — Normalización/validación contractual lossless** | **✅ COMPLETA Y CERTIFICADA** | HEAD `4d6c905e067ca9733de56e5d5de099d8fe65178f`; Quality Gates #1121 SUCCESS |
 | **F6.2 — Administración visual de catálogos** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f3b3057a78f0444960f40b975584ab344345d2dd`; Quality Gates #1138 / Run `32381878501` SUCCESS |
-| **F6.3 — Persistencia bidireccional de plantilla** | **✅ IMPLEMENTADA + UAT REAL PASS; cierre auditado en curso sobre documentación final** | Código AntiG `a13e1a1aadc188d018fe4e5f50cd430295aba248`; UAT residual documentado; Quality Gate de `61e7b89fb433ad0c5670acd208410d1a312e98ff` = #1154 / Run `32396816868` SUCCESS |
-| **F6.4** | **⛔ NO INICIADA** | No iniciar hasta cierre formal de auditoría ChatGPT de F6.3 |
+| **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD `61e7b89fb433ad0c5670acd208410d1a312e98ff`; Quality Gate SUCCESS |
+| **F6.4 — Publicación y Ciclo de Vida de Versiones** | **✅ COMPLETA Y CERTIFICADA** | Commit `48dec5e`; Invariantes C01-C05 certificados; Quality Gate local SUCCESS |
 
 ---
 

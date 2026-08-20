@@ -1,5 +1,41 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Antigravity — F6.4 Publicación y Ciclo de Vida de Versiones
+
+- **Fecha y hora**: 2026-08-20, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **Commit técnico de implementación**: `48dec5e`.
+- **Objetivo**: Implementación de invariantes de ciclo de vida (C01, C02, C03, C04, C05), pruebas unitarias/integración, validación E2E y certificación de Quality Gates para F6.4.
+- **Invariantes Certificados**:
+  - **C01 (Inmutabilidad de Versiones Publicadas)**: Prohibición de eliminar versiones `PUBLISHED` (vigentes e históricas). Eliminación restringida a `DRAFT` no vigentes.
+  - **C02 (Unicidad de Versión Vigente por Concurrencia)**: Implementación de bloqueo pesimista `SELECT ... FOR UPDATE` en Oracle durante la transacción de activación/publicación.
+  - **C03 (Estado de Familia Activa)**: Validación HTTP 400 si se intenta publicar en una familia inactiva.
+  - **C04 (Estado Previo a Activación)**: Validación HTTP 400 si se intenta alternar vigencia en versión no `PUBLISHED`.
+  - **C05 (Modal Informativo SweetAlert2)**: Confirmación detallada en HTML al publicar.
+- **Archivos creados o modificados**:
+  - `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`
+  - `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosCicloVidaVersionTests.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosApplicationCoverageTests.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosBackendCoverageExpansionTests.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosPhase07BackendCoverageTests.cs`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ciclo-vida.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.operaciones.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts`
+  - `docs/0.0 Documentación/F6.4_PUBLICACION_CICLO_VIDA_VERSIONES.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+  - `BITACORA_COLABORACION.md`
+- **Resultados de Pruebas**:
+  - Backend tests: **425/425 PASS** (11/11 en la nueva suite de ciclo de vida).
+  - Frontend tests: **419/419 PASS** (5/5 en la nueva suite de ciclo de vida).
+  - Playwright E2E: **14/14 PASS**.
+  - Quality Gates local: **SUCCESS** (Backend + Frontend Cobertura + Playwright E2E).
+
+---
+
 ## Registro de Intervención — Antigravity — F6.3 Persistencia Bidireccional de Plantilla
 
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
