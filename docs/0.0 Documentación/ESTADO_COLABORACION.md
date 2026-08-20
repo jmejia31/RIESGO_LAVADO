@@ -3,10 +3,12 @@
 **Actualización:** 2026-08-20 — Antigravity  
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
-**PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
-**`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
-**Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`
-**Oracle:** 0 DDL/DML, 0 scripts manuales ejecutados
+- **HEAD real actual**: `c9113b6e28d1ed723d425d4d0e4910c817e6d58c`
+- **Quality Gates Run ID oficial**: `32395987728` (SUCCESS)
+- **PR rector**: `#20` (OPEN / DRAFT / NOT MERGED)
+- **`main`:** protegida en `727082c6fcf90f95ce6db5eadf5c4b152397d080`; no modificar sin autorización expresa  
+- **Usuario QA oficial único vigente:** `cuentajavier419@gmail.com`
+- **Oracle:** 0 DDL/DML, 0 scripts manuales ejecutados
 
 ---
 
@@ -14,14 +16,14 @@
 
 | Fase | Estado | Evidencia |
 |---|---|---|
-| F5.1 — Núcleo del renderer | ✅ COMPLETA | Certificada |
-| F5.2 — Certificación integral renderer | ✅ COMPLETA | Certificada |
-| F5 — Cierre global | ✅ CERRADA | Quality Gates #1103 SUCCESS |
-| **F6.0 — Auditoría del contrato** | **✅ COMPLETA** | Documento principal + anexo de brechas ejecutables + fixture v3 |
-| **F6.1 — Normalización/validación contractual** | **✅ COMPLETA** | Quality Gates #1121 SUCCESS |
-| **F6.2 — CRUD visual de catálogos** | **✅ COMPLETA** | Suite `form-builder-catalog-management.spec.ts` (13/13 PASS) + Navegador real |
-| **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA** | Endpoint GET por ID + apertura autoritativa + verificación semántica post-save (414/414 PASS) |
-| **F6.4 — Ciclo de vida y cierre de plantilla** | **⛔ NO INICIADA** | A la espera de planificación formal |
+| F5.1 — Núcleo del renderer | ✅ COMPLETA | Certificación anterior |
+| F5.2 — Integración de catálogos | ✅ COMPLETA | Certificación anterior |
+| F5.3 — Matriz de evaluación reactiva | ✅ COMPLETA | Certificación anterior |
+| F5.4 — Monitoreo operativo | ✅ COMPLETA | Certificación anterior |
+| F6.1 — Administración visual de catálogos | ✅ COMPLETA | Certificación anterior |
+| F6.2 — Cierre y certificación definitiva | ✅ COMPLETA | Run `31128384102` (SUCCESS) / PR #20 DRAFT |
+| F6.3 — Persistencia bidireccional de plantilla | ✅ COMPLETA | Run `32395987728` (SUCCESS) / UAT Navegador Real PASS |
+| F6.4 — Publicación y ciclo de vida de versión | ⏳ HABILITADA | Pendiente por iniciar |
 
 ---
 
