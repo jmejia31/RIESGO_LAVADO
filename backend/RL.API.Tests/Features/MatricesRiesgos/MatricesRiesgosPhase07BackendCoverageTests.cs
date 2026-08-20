@@ -61,13 +61,13 @@ public sealed class MatricesRiesgosPhase07BackendCoverageTests
     public async Task CambiarEstadoVigencia_ValidaVigenciaInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
-        repo.On(nameof(IMatricesRiesgosRepository.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(false));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
 
         ServiceResult result = await service.CambiarEstadoVigenciaFormularioAsync(888, true, 1);
 
         Assert.False(result.Success);
         Assert.Equal(404, result.StatusCode);
-        Assert.Contains("No se encontró una versión publicada", result.Message);
+        Assert.Contains("No se encontró la versión", result.Message);
     }
 
     [Fact]

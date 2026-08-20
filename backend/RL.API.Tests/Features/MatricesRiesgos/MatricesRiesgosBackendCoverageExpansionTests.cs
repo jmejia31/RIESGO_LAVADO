@@ -98,8 +98,8 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         Assert.True((await service.ClonarVersionFormularioAsync(7, 1)).Success);
         Assert.True((await service.ActualizarBorradorFormularioAsync(7, "{}", 1)).Success);
         Assert.True((await service.PublicarVersionFormularioAsync(7, 1)).Success);
-        Assert.True((await service.CambiarEstadoVigenciaFormularioAsync(7, true, 1)).Success);
-        Assert.True((await service.EliminarVersionFormularioAsync(7)).Success);
+        Assert.True((await service.CambiarEstadoVigenciaFormularioAsync(9, true, 1)).Success);
+        Assert.True((await service.EliminarVersionFormularioAsync(8)).Success);
         Assert.True((await service.CrearFamiliaFormularioAsync(new CrearFamiliaFormularioDto
         {
             FamCodigo = "NUEVA_FAMILIA",
@@ -171,13 +171,17 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.ClonarVersionFormularioAsync), _ => Task.FromResult(12L));
         repo.On(nameof(IMatricesRiesgosRepository.ActualizarBorradorFormularioAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), args =>
-            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+        {
+            long id = (long)args[0]!;
+            return Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
-                VerId = (long)args[0]!,
-                VerEstado = "DRAFT",
+                VerId = id,
+                VerFamiliaId = 2,
+                VerEstado = id == 9 ? "PUBLISHED" : "DRAFT",
                 VerJson = "{}",
                 VerVigente = false
-            }));
+            });
+        });
         repo.On(nameof(IMatricesRiesgosRepository.PublicarVersionFormularioAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(true));
         repo.On(nameof(IMatricesRiesgosRepository.EliminarVersionFormularioAsync), _ => Task.FromResult(true));
@@ -475,7 +479,7 @@ public sealed class MatricesRiesgosAppServiceBoundaryCoverageTests
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
-            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto { VerId = 4, VerVigente = false }));
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto { VerId = 4, VerVigente = false, VerEstado = "DRAFT" }));
         repo.On(nameof(IMatricesRiesgosRepository.EliminarVersionFormularioAsync), _ => Task.FromResult(eliminado));
 
         ServiceResult result = await service.EliminarVersionFormularioAsync(4);

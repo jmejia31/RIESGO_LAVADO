@@ -135,6 +135,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Solo una versión DRAFT o APPROVED puede publicarse.");
         }
 
+        // C03: Validar que la familia asociada exista y esté activa
+        FamiliaFormularioDto? familia = await _repo.ObtenerFamiliaFormularioPorIdAsync(version.VerFamiliaId);
+        if (familia is null)
+        {
+            return ServiceResult.BadRequest($"La familia de formulario asociada ID {version.VerFamiliaId} no existe.");
+        }
+
+        if (!familia.FamActivo)
+        {
+            return ServiceResult.BadRequest($"No se puede publicar una versión en la familia '{familia.FamCodigo}' porque se encuentra inactiva.");
+        }
+
         bool publicado = await _repo.PublicarVersionFormularioAsync(
             versionId,
             CalcularHashSha256(version.VerJson),
@@ -150,10 +162,22 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         bool vigente,
         long usuarioId)
     {
+        // C04: Validar existencia y estado PUBLISHED antes de delegar al repositorio
+        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(versionId);
+        if (version is null)
+        {
+            return ServiceResult.NotFound($"No se encontró la versión de formulario con ID {versionId}.");
+        }
+
+        if (!version.VerEstado.Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase))
+        {
+            return ServiceResult.BadRequest("Solo las versiones en estado PUBLISHED pueden cambiar su estado de vigencia.");
+        }
+
         bool actualizado = await _repo.CambiarEstadoVigenciaFormularioAsync(versionId, vigente, usuarioId);
         return actualizado
             ? ServiceResult.Ok("Vigencia actualizada correctamente.")
-            : ServiceResult.NotFound($"No se encontró una versión publicada con ID {versionId}.");
+            : ServiceResult.BadRequest("No se pudo actualizar la vigencia de la versión especificada.");
     }
 
     public async Task<ServiceResult> EliminarVersionFormularioAsync(long versionId)
@@ -164,15 +188,16 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.NotFound($"No se encontró el formulario con ID {versionId}.");
         }
 
-        if (v.VerVigente)
+        // C01: Solo DRAFT no vigente puede eliminarse
+        if (!v.VerEstado.Equals("DRAFT", StringComparison.OrdinalIgnoreCase) || v.VerVigente)
         {
-            return ServiceResult.BadRequest("No se puede eliminar el formulario activo (vigente) de la familia.");
+            return ServiceResult.BadRequest("Las versiones publicadas forman parte del historial y no pueden eliminarse. Solo los borradores (DRAFT) no vigentes pueden eliminarse.");
         }
 
         bool eliminado = await _repo.EliminarVersionFormularioAsync(versionId);
         return eliminado
             ? ServiceResult.Ok("Formulario eliminado correctamente.")
-            : ServiceResult.BadRequest("No se pudo eliminar el formulario. Verifique que no esté activo.");
+            : ServiceResult.BadRequest("No se pudo eliminar el formulario. Verifique que sea un borrador (DRAFT) no vigente.");
     }
 
     public async Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo)

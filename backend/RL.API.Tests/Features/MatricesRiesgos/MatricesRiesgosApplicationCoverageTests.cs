@@ -146,9 +146,12 @@ public sealed class MatricesRiesgosApplicationCoverageTests
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
                 VerId = 5,
+                VerFamiliaId = 1,
                 VerEstado = estado,
                 VerJson = "{\"secciones\":[]}"
             }));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaFormularioPorIdAsync), _ =>
+            Task.FromResult<FamiliaFormularioDto?>(new FamiliaFormularioDto { FamId = 1, FamCodigo = "FAM_A", FamActivo = true }));
         repo.On(nameof(IMatricesRiesgosRepository.PublicarVersionFormularioAsync), _ => Task.FromResult(publicado));
 
         ServiceResult result = await service.PublicarVersionFormularioAsync(5, 9);
@@ -158,10 +161,12 @@ public sealed class MatricesRiesgosApplicationCoverageTests
 
     [Theory]
     [InlineData(true, 200)]
-    [InlineData(false, 404)]
+    [InlineData(false, 400)]
     public async Task CambiarVigencia_PropagaResultado(bool actualizado, int statusEsperado)
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
+            Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto { VerId = 5, VerEstado = "PUBLISHED" }));
         repo.On(nameof(IMatricesRiesgosRepository.CambiarEstadoVigenciaFormularioAsync), _ => Task.FromResult(actualizado));
 
         ServiceResult result = await service.CambiarEstadoVigenciaFormularioAsync(5, true, 9);

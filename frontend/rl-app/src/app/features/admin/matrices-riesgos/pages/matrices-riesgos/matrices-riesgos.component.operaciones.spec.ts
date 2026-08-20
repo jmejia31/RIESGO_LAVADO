@@ -211,7 +211,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     component.abrirDefinicion(version);
     expect(component.soloLecturaDefinicion()).toBe(true);
     component.eliminarVersionFormulario(version);
-    expect(component.error()).toContain('activo');
+    expect(component.error()).toContain('eliminarse');
     expect(service['eliminarVersionFormulario']).not.toHaveBeenCalled();
   });
 

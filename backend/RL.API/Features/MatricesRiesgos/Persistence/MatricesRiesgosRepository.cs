@@ -228,6 +228,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             long familiaId = Convert.ToInt64(familiaIdObj);
 
+            // C02: Serialización estricta por familia bloqueando la fila de la familia
+            const string sqlLockFam = @"
+                SELECT FAM_ID
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_ID = :familiaId
+                 FOR UPDATE";
+
+            await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
+            {
+                cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                await cmdLockFam.ExecuteScalarAsync();
+            }
+
             const string sqlApagar = @"
                 UPDATE RL_MR_VERSIONES_FORMULARIO
                    SET VER_VIGENTE = 0,
@@ -296,6 +309,19 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
                 long familiaId = Convert.ToInt64(famIdObj);
 
+                // C02: Serialización estricta por familia bloqueando la fila de la familia
+                const string sqlLockFam = @"
+                    SELECT FAM_ID
+                      FROM RL_MR_FAMILIAS_FORMULARIO
+                     WHERE FAM_ID = :familiaId
+                     FOR UPDATE";
+
+                await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
+                {
+                    cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                    await cmdLockFam.ExecuteScalarAsync();
+                }
+
                 const string sqlApagar = @"
                     UPDATE RL_MR_VERSIONES_FORMULARIO
                        SET VER_VIGENTE = 0,
@@ -350,25 +376,33 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        // Verificar que no sea la versión activa
+        // C01: Verificar que sea un borrador DRAFT y no sea la versión activa
         const string sqlCheck = @"
-            SELECT VER_VIGENTE
+            SELECT VER_VIGENTE, VER_ESTADO
               FROM RL_MR_VERSIONES_FORMULARIO
              WHERE VER_ID = :versionId";
 
         await using var cmdCheck = CrearComando(sqlCheck, conn);
         cmdCheck.Parameters.Add(new OracleParameter("versionId", versionId));
-        object? vigenteObj = await cmdCheck.ExecuteScalarAsync();
-        if (vigenteObj is null || Convert.ToInt32(vigenteObj) == 1)
+        await using var reader = await cmdCheck.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
         {
             return false;
         }
 
-        // Eliminar versión inactiva
+        int vigente = reader.GetInt32(0);
+        string estado = reader.GetString(1);
+        if (vigente == 1 || !estado.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // C01: Eliminar únicamente versión DRAFT e inactiva (defensa en profundidad)
         const string sqlDelete = @"
             DELETE FROM RL_MR_VERSIONES_FORMULARIO
              WHERE VER_ID = :versionId
-               AND VER_VIGENTE = 0";
+               AND VER_VIGENTE = 0
+               AND VER_ESTADO = 'DRAFT'";
 
         await using var cmdDelete = CrearComando(sqlDelete, conn);
         cmdDelete.Parameters.Add(new OracleParameter("versionId", versionId));

@@ -1057,13 +1057,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   publicarVersion(version: VersionFormularioDto): void {
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
-        title: '¿Publicar versión?',
-        text: `¿Desea publicar la versión ID #${version.verId} (${version.verCodigo} v${version.verVersion})? Esta acción creará la versión oficial de la plantilla.`,
+        title: '¿Publicar versión oficial?',
+        html: `<p class="text-sm text-gray-700 mb-2">Al publicar la versión <strong>ID #${version.verId}</strong> (${version.verCodigo} v${version.verVersion}) de la familia <strong>${this.familiaSeleccionada()}</strong>:</p>
+               <ul class="text-xs text-gray-600 text-left list-disc pl-5 space-y-1 mb-2">
+                 <li>Se convertirá en la versión <strong>vigente</strong> de la familia.</li>
+                 <li>La versión vigente anterior quedará como <strong>histórica</strong>.</li>
+                 <li>Esta versión quedará bloqueada en <strong>solo lectura</strong>.</li>
+                 <li>Para cambios futuros deberá clonarla a un nuevo borrador.</li>
+               </ul>`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#2563eb',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Sí, publicar',
+        confirmButtonText: 'Sí, publicar versión',
         cancelButtonText: 'Cancelar'
       }).then((result) => {
         if (result.isConfirmed) {
@@ -1072,7 +1078,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             next: () => {
               this.guardando.set(false);
               this.globalState.limpiarError();
-              this.mostrarMensaje('Versión publicada correctamente.');
+              this.mostrarMensaje('Versión publicada y establecida como vigente correctamente.');
               this.cargarVersiones();
               this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
             },
@@ -1120,8 +1126,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   eliminarVersionFormulario(version: VersionFormularioDto): void {
-    if (version.verVigente) {
-      this.mostrarError('No se puede eliminar el formulario activo de la familia.');
+    // C01 Guard defensivo en TS: solo DRAFT no vigente puede eliminarse
+    if (version.verEstado !== 'DRAFT' || version.verVigente) {
+      this.mostrarError('Las versiones publicadas forman parte del historial y no pueden eliminarse. Para modificar, clone la versión a un nuevo borrador.');
       return;
     }
 

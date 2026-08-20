@@ -198,7 +198,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     // Esperar promesa dinámica de SweetAlert2
     await new Promise(resolve => setTimeout(resolve, 50));
     expect(service['publicarVersionFormulario']).toHaveBeenCalledWith(10);
-    expect(component.mensaje()).toBe('Versión publicada correctamente.');
+    expect(component.mensaje()).toBe('Versión publicada y establecida como vigente correctamente.');
   });
 
   it('cambia la vigencia de una versión (activar / desactivar) mediante SweetAlert2', async () => {
@@ -216,7 +216,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
   });
 
   it('elimina permanentemente una versión inactiva mediante SweetAlert2', async () => {
-    const inactivaVersion = { ...version, verVigente: false };
+    const inactivaVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
     component.eliminarVersionFormulario(inactivaVersion);
 
     await new Promise(resolve => setTimeout(resolve, 50));
@@ -228,7 +228,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
     const vigenteVersion = { ...version, verVigente: true };
     component.eliminarVersionFormulario(vigenteVersion);
 
-    expect(component.error()).toBe('No se puede eliminar el formulario activo de la familia.');
+    expect(component.error()).toContain('historial');
     expect(service['eliminarVersionFormulario']).not.toHaveBeenCalled();
   });
 });
