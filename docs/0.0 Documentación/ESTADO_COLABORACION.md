@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-20 — Auditoría ChatGPT  
+**Actualización:** 2026-08-20 — Auditoría ChatGPT posterior a implementación AntiG F6.4  
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -20,86 +20,94 @@
 | **F6.0 — Auditoría del contrato JSON/catálogos** | **✅ COMPLETA** | `F6.0_AUDITORIA_CONTRATO_JSON_CATALOGOS.md` + anexos/fixture |
 | **F6.1 — Normalización/validación contractual lossless** | **✅ COMPLETA Y CERTIFICADA** | HEAD `4d6c905e067ca9733de56e5d5de099d8fe65178f`; Quality Gates #1121 SUCCESS |
 | **F6.2 — Administración visual de catálogos** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f3b3057a78f0444960f40b975584ab344345d2dd`; Quality Gates #1138 / Run `32381878501` SUCCESS |
-| **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD `61e7b89fb433ad0c5670acd208410d1a312e98ff`; Quality Gate SUCCESS |
-| **F6.4 — Publicación y Ciclo de Vida de Versiones** | **✅ COMPLETA Y CERTIFICADA** | Commit `48dec5e`; Invariantes C01-C05 certificados; Quality Gate local SUCCESS |
+| **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f223f4d6e3ee9f77590709bb465a8d99e7946eb1`; Quality Gates #1155 / Run `32397277572` SUCCESS |
+| **F6.4 — Publicación y ciclo de vida de versiones** | **🟡 IMPLEMENTADA; PENDIENTE CIERRE INTEGRAL** | Implementación AntiG `48dec5ed2f27ca5fe34d6f2d6c55f22261da5feb`; C01–C05 verificados por ChatGPT; UAT navegador real y Quality Gate del HEAD final aún obligatorios |
 
 ---
 
-## F6.3 — evidencia consolidada
+## F6.3 — cierre consolidado
 
-### Backend/API
+F6.3 quedó cerrada y certificada definitivamente antes de habilitar F6.4.
 
-ChatGPT dejó preparada la lectura autoritativa de una versión por ID y su suite contractual:
+Evidencia principal:
 
-- `07629509a25670f0f7289baafea8b36080eb5fb3` — GET de versión de formulario por ID.
-- `5bd040177ffaf35ffa40697fd99eaf95ecb37714` — pruebas backend de round-trip/JSON rico.
-- `93d8a10ab26467dd76a9dff36ea0988214702e87` — handoff técnico a AntiG.
-
-### Frontend/runtime
-
-AntiG implementó:
-
-- `MatricesRiesgosService.obtenerVersionFormulario(id)`;
-- apertura autoritativa por `verId`;
+- GET autoritativo de versión por ID;
 - flujo `PUT -> GET` del mismo `verId`;
-- comparación semántica recursiva de JSON;
-- arrays con orden contractual;
-- preservación estricta de `0`, `false`, `null`, `"001"` y `"G-IVM"`;
-- fail-closed ante discrepancia semántica o error de GET post-save.
-
-Commit real de implementación AntiG:
-
-`a13e1a1aadc188d018fe4e5f50cd430295aba248`
-
-### UAT residual en navegador real
-
-Certificación ejecutada sobre Desarrollo con el usuario QA oficial único. Evidencia documentada:
-
-- DRAFT `PRUEBA_FORMULARIO · v5`;
-- GET autoritativo por `verId`;
-- modificación controlada con códigos `001` y `G-IVM`;
-- PUT al mismo `verId`;
-- GET post-save al mismo `verId`;
-- cerrar y reabrir la misma versión;
-- persistencia visual y contractual confirmada;
-- 0 TypeErrors y 0 excepciones Angular no controladas;
-- sin exposición de JWT, cookies, Authorization, contraseñas ni tokens.
-
-Documento rector:
-
-`docs/0.0 Documentación/F6.3_PERSISTENCIA_BIDIRECCIONAL_PLANTILLA.md`
-
-### Pruebas y gates reportados/verificados
-
-- Frontend: 414 / 414 PASS.
-- Backend: 414 / 414 PASS.
-- Playwright: 14 / 14 PASS.
-- Quality Gates sobre `d31e25e0a7ad272212a06c5931fd265b27a89f4f`: Run `32387555389` SUCCESS.
-- Quality Gates residual documental sobre `c9113b6e28d1ed723d425d4d0e4910c817e6d58c`: Run `32395987728` SUCCESS.
-- Commit posterior `61e7b89fb433ad0c5670acd208410d1a312e98ff` registró ese Run ID.
-- Quality Gates sobre `61e7b89fb433ad0c5670acd208410d1a312e98ff`: #1154 / Run `32396816868` SUCCESS, 21 controles funcionales/CI completos.
+- comparación semántica y fail-closed;
+- preservación de `0`, `false`, `null`, `"001"` y `"G-IVM"`;
+- UAT residual en navegador real completada;
+- Quality Gates #1155 / Run `32397277572` SUCCESS sobre el HEAD auditado `f223f4d6e3ee9f77590709bb465a8d99e7946eb1`.
 
 ---
 
-## Corrección documental vinculante
+## F6.4 — implementación AntiG auditada por ChatGPT
 
-La edición anterior de `ESTADO_COLABORACION.md` introdujo una tabla incorrecta que:
+### Commit técnico
 
-- omitía F6.0;
-- renombraba F6.1 y F6.2 de forma incompatible con el plan rector;
-- asociaba evidencia errónea a F6.2;
-- marcaba F6.4 como habilitada antes de la auditoría final de ChatGPT;
-- mantenía secciones históricas diciendo que F6.2 y posteriores no habían iniciado.
+`48dec5ed2f27ca5fe34d6f2d6c55f22261da5feb`
 
-Esta versión reemplaza esas inconsistencias y prevalece como punto de continuidad operativo.
+### Commit documental AntiG recibido
+
+`5789eedc555d4bba45b742e3f7aac7c6291b8d8c`
+
+### Invariantes C01–C05 verificados en código
+
+1. **C01 — Inmutabilidad histórica:**
+   - solo `DRAFT` no vigente es eliminable;
+   - `PUBLISHED` vigente e histórica quedan protegidas;
+   - guard defensivo frontend + AppService + filtro SQL `VER_ESTADO = 'DRAFT' AND VER_VIGENTE = 0`.
+
+2. **C02 — Unicidad de vigente por familia:**
+   - publicación y activación bloquean la fila de `RL_MR_FAMILIAS_FORMULARIO` mediante `SELECT ... FOR UPDATE` dentro de la transacción;
+   - la vigente anterior se desactiva antes de activar/publicar la nueva.
+
+3. **C03 — Familia activa:**
+   - una versión no puede publicarse cuando su familia está inactiva.
+
+4. **C04 — Cambio de vigencia:**
+   - solo versiones `PUBLISHED` pueden activarse/desactivarse.
+
+5. **C05 — UX de publicación:**
+   - el diálogo informa sustitución de vigente, preservación histórica, inmutabilidad y necesidad de clonar para cambios futuros.
+
+### Pruebas reportadas por AntiG y coherentes con los cambios
+
+- Backend: 425/425 PASS.
+- Frontend: 419/419 PASS.
+- Playwright: 14/14 PASS.
+- `tools/run_quality_gates.ps1`: SUCCESS local.
+
+### Auditoría remota ChatGPT
+
+- Quality Gates #1158 / Run `32398821782` sobre el handoff ChatGPT `d63d14b83ab59e0a198cb8a4f4550a3d59cec5ff`: SUCCESS.
+- Quality Gates #1160 del commit técnico `48dec5ed...`: CANCELLED por el push documental posterior; por tanto no constituye certificación remota del commit técnico.
+- Quality Gates #1162 / Run `32400576017` sobre `5789eed...`: se encontraba en ejecución durante la auditoría y no puede considerarse SUCCESS hasta su conclusión real.
+
+### Pendiente obligatorio para cierre integral F6.4
+
+AntiG no aportó en el reporte/documento de cierre evidencia factual de la UAT de navegador real exigida para F6.4. Antes de cerrar globalmente deben verificarse en Desarrollo, mediante navegador real:
+
+- `PUBLISHED` vigente: solo lectura, sin Editar/Eliminar;
+- clonación de `PUBLISHED` a nuevo `DRAFT`;
+- `DRAFT`: Editar/Eliminar/Publicar;
+- publicación real: nueva versión pasa a `PUBLISHED + vigente` y la anterior queda `PUBLISHED + histórica`;
+- histórica permanece visible, no eliminable y reactivable;
+- reactivación deja exactamente una vigente por familia;
+- Console sin errores atribuibles a F6.4;
+- Network sin anomalías ni exposición de secretos.
+
+Si la UAT descubre un defecto, debe corregirse y recertificarse. Si pasa sin cambios de código, se registra la evidencia y se ejecuta un Quality Gate remoto sobre el HEAD documental final resultante.
 
 ---
 
 ## Próximo punto exacto
 
-1. Certificar el commit que contiene esta corrección documental mediante Quality Gates.
-2. Si ese HEAD queda SUCCESS y PR/main/Oracle siguen intactos, declarar F6.3 **COMPLETA Y CERTIFICADA DEFINITIVAMENTE**.
-3. Solo después habilitar F6.4.
+1. Ejecutar **solo la UAT residual F6.4 en navegador real** sobre Desarrollo; no reimplementar ni reescanear el módulo.
+2. Registrar evidencia factual sin secretos en `F6.4_PUBLICACION_CICLO_VIDA_VERSIONES.md` y bitácora.
+3. Publicar el commit documental residual en `desarrollo`.
+4. Exigir **Quality Gates remoto SUCCESS sobre ese HEAD final**.
+5. Solo después declarar F6.4 **✅ COMPLETA Y CERTIFICADA DEFINITIVAMENTE**.
+6. F6.5 permanece **NO INICIADA** hasta ese cierre.
 
 ---
 
@@ -113,4 +121,4 @@ Esta versión reemplaza esas inconsistencias y prevalece como punto de continuid
 - No bajar cobertura ni Quality Gates.
 - No eliminar/omitir pruebas para obtener verde.
 - No exponer credenciales, JWT, cookies, tokens o secretos.
-- F6.4 permanece NO INICIADA hasta la certificación final de esta corrección documental.
+- **F6.5 NO INICIADA.**
