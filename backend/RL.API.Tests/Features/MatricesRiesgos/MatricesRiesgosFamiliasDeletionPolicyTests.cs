@@ -10,7 +10,11 @@ public sealed class MatricesRiesgosFamiliasDeletionPolicyTests
     {
         string source = LeerLifecycle();
         int deleteStart = source.IndexOf("EliminarFamiliaFormularioSeguraAsync", StringComparison.Ordinal);
-        int helperStart = source.IndexOf("ObtenerFamiliaBloqueadaAsync", deleteStart + 1, StringComparison.Ordinal);
+        int helperStart = source.IndexOf(
+            "private async Task<FamiliaBloqueada?> ObtenerFamiliaBloqueadaAsync",
+            deleteStart + 1,
+            StringComparison.Ordinal);
+        Assert.True(helperStart > deleteStart, "No se encontró el límite del método de eliminación.");
         string method = source[deleteStart..helperStart];
 
         Assert.Contains("SELECT COUNT(*)", method, StringComparison.Ordinal);

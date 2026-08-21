@@ -335,7 +335,31 @@ public sealed class MatricesRiesgosFamiliasF65Fam1Tests
     {
         int start = source.IndexOf(inicio, StringComparison.Ordinal);
         Assert.True(start >= 0, $"No se encontró el método {inicio}.");
-        int end = source.IndexOf(siguiente, start + inicio.Length, StringComparison.Ordinal);
+
+        int searchFrom = start + inicio.Length;
+        int end = -1;
+        while (searchFrom < source.Length)
+        {
+            int candidate = source.IndexOf(siguiente, searchFrom, StringComparison.Ordinal);
+            if (candidate < 0)
+            {
+                break;
+            }
+
+            int lineStart = source.LastIndexOf('\n', candidate) + 1;
+            string declarationPrefix = source[lineStart..candidate].TrimStart();
+            if (declarationPrefix.StartsWith("public ", StringComparison.Ordinal)
+                || declarationPrefix.StartsWith("private ", StringComparison.Ordinal)
+                || declarationPrefix.StartsWith("protected ", StringComparison.Ordinal)
+                || declarationPrefix.StartsWith("internal ", StringComparison.Ordinal))
+            {
+                end = candidate;
+                break;
+            }
+
+            searchFrom = candidate + siguiente.Length;
+        }
+
         Assert.True(end > start, $"No se encontró el límite posterior {siguiente}.");
         return source[start..end];
     }

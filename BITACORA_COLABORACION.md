@@ -1,5 +1,30 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección de regresiones de pruebas F6.5.FAM.1
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `2a5f154155265444ce1b3265721020f03184938a`.
+- **Objetivo**: Auditar el backend publicado del gestor de familias y corregir falsos negativos que impedían certificar sus garantías de eliminación segura.
+- **Cambios implementados**:
+  1. Se hizo robusto el extractor de métodos de `MatricesRiesgosFamiliasF65Fam1Tests`: ahora ignora invocaciones internas y toma la siguiente declaración real de método.
+  2. Se corrigió `MatricesRiesgosFamiliasDeletionPolicyTests` para delimitar por la declaración privada de `ObtenerFamiliaBloqueadaAsync`, no por la primera llamada a ese helper.
+- **Evidencia funcional auditada**: la eliminación consulta cualquier versión asociada, no hace `CASCADE`, usa `DELETE ... NOT EXISTS` y traduce la violación FK `ORA-02292` a un bloqueo funcional. La implementación no fue alterada; únicamente se corrigieron pruebas que la recortaban antes de esas garantías.
+- **Cero cambios Oracle / SQL / DDL / DML**: no se modificó ni ejecutó ningún script o estructura Oracle.
+- **Pruebas ejecutadas en esta intervención**:
+  - Familias F6.5.FAM.1: **29/29 PASS**.
+  - Backend Release completo: **494/494 PASS**.
+  - Frontend Vitest: **431/431 PASS**.
+  - Build Angular: **SUCCESS** con la advertencia preexistente de `exceljs` CommonJS.
+  - Playwright: comando ejecutado y finalizado sin error de proceso; su salida del runner no publicó el resumen numérico en este entorno.
+  - Validación BD: **SUCCESS**. Validación de enlaces: **SUCCESS** (92 documentos, 163 enlaces).
+- **Validaciones pendientes / limitaciones**:
+  - `validate_repository_structure.ps1` falla por el artefacto heredado `frontend/rl-app/src/app/core/services/global-http-state.service.ts`; no pertenece a esta intervención.
+  - `run_quality_gates.ps1` inició correctamente (backend 494/494 y cobertura frontend en curso), pero este entorno truncó la ejecución antes de devolver su resultado final. SonarCloud remoto sigue diferido por decisión institucional.
+- **Punto de continuación**: implementar el gestor visual de familias únicamente sobre el contrato backend ya publicado y con pruebas de integración; no reintroducir la pestaña incompleta que dejaba Plantillas sin contenido.
+
+---
+
 ## Registro de Intervención — Antigravity — Corrección de Hallazgos F6.5 en FormularioValidador
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).

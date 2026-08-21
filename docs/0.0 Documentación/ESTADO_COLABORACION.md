@@ -23,6 +23,7 @@
 | **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f223f4d6e3ee9f77590709bb465a8d99e7946eb1`; Quality Gates #1155 / Run `32397277572` SUCCESS |
 | **F6.4 — Publicación y ciclo de vida de versiones** | **✅ COMPLETA Y CERTIFICADA** | UAT en Navegador Real CERTIFICADA en `localhost`; 425/425 Backend PASS; 426/426 Frontend PASS; 14/14 Playwright PASS; 0 cambios Oracle/SQL |
 | **F6.5 — Integridad de evaluaciones versionadas y respuestas de catálogo** | **✅ IMPLEMENTADA Y PROBADA LOCALMENTE** | 436/436 Backend PASS; 428/428 Frontend PASS; 14/14 Playwright PASS; Quality Gates Locales SUCCESS; SonarCloud Remoto pendiente/diferido al cierre global |
+| **F6.5.FAM.1 — Garantías backend del gestor de familias** | **🟡 BACKEND AUDITADO; UI PENDIENTE** | La implementación publicada en `2a5f154` expone activación y eliminación segura. Codex corrigió dos extractores de pruebas defectuosos: 29/29 FAM y 494/494 backend Release PASS. No se aprobó aún la UI FAM.2 ni SonarCloud remoto. |
 
 ---
 
