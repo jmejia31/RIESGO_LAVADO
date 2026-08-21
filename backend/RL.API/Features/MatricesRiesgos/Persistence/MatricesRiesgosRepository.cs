@@ -228,7 +228,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             long familiaId = Convert.ToInt64(familiaIdObj);
 
-            // C02: Serialización estricta por familia bloqueando la fila de la familia
             const string sqlLockFam = @"
                 SELECT FAM_ID
                   FROM RL_MR_FAMILIAS_FORMULARIO
@@ -309,7 +308,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
                 long familiaId = Convert.ToInt64(famIdObj);
 
-                // C02: Serialización estricta por familia bloqueando la fila de la familia
                 const string sqlLockFam = @"
                     SELECT FAM_ID
                       FROM RL_MR_FAMILIAS_FORMULARIO
@@ -376,7 +374,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
 
-        // C01: Verificar que sea un borrador DRAFT y no sea la versión activa
         const string sqlCheck = @"
             SELECT VER_VIGENTE, VER_ESTADO
               FROM RL_MR_VERSIONES_FORMULARIO
@@ -397,7 +394,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             return false;
         }
 
-        // C01: Eliminar únicamente versión DRAFT e inactiva (defensa en profundidad)
         const string sqlDelete = @"
             DELETE FROM RL_MR_VERSIONES_FORMULARIO
              WHERE VER_ID = :versionId
@@ -713,7 +709,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.Parameters.Add(new OracleParameter("evaId", evaId));
         await using var reader = await cmd.ExecuteReaderAsync();
         return await reader.ReadAsync() ? MapearEvaluacion(reader) : null;
-    }    public async Task<EvaluacionesPaginadasDto> ListarEvaluacionesPaginadasAsync(
+    }
+
+    public async Task<EvaluacionesPaginadasDto> ListarEvaluacionesPaginadasAsync(
         ConsultaEvaluacionPaginadaDto filtro)
     {
         if (filtro.Pagina < 1)
@@ -931,23 +929,23 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await InsertarProyeccionAsync(conn, trans, evaluacionId, codigoRiesgo, proyeccion, "BORRADOR");
             await InsertarFlujoAsync(conn, trans, evaluacionId, "BORRADOR", "Creación inicial", usuarioId);
             await _auditoriaRepository.RegistrarAsync(
-        conn,
-        trans,
-        "RL_MR_EVALUACIONES_RIESGO",
-        evaluacionId.ToString(),
-        "INSERT",
-        null,
-        JsonSerializer.Serialize(new
-        {
-            dto.EvaRiesgoId,
-            dto.EvaVersionId,
-            Datos = dto.EvaDataJson,
-            Calculos = calculosJson
-        }),
-        usuarioId,
-        null,
-        ip,
-        ModuloAuditoria);
+                conn,
+                trans,
+                "RL_MR_EVALUACIONES_RIESGO",
+                evaluacionId.ToString(),
+                "INSERT",
+                null,
+                JsonSerializer.Serialize(new
+                {
+                    dto.EvaRiesgoId,
+                    dto.EvaVersionId,
+                    Datos = dto.EvaDataJson,
+                    Calculos = calculosJson
+                }),
+                usuarioId,
+                null,
+                ip,
+                ModuloAuditoria);
 
             await trans.CommitAsync();
             return evaluacionId;
@@ -972,22 +970,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             const string sqlSelect = @"
                 SELECT e.EVA_DATOS_JSON,
                        e.EVA_VERSION_ROW,
-                       e.EVA_VERSION_ID,
-                       NVL(f.FLU_ESTADO, 'BORRADOR') AS ESTADO
+                       e.EVA_VERSION_ID
                   FROM RL_MR_EVALUACIONES_RIESGO e
-                  LEFT JOIN (
-                        SELECT FLU_EVALUACION_ID, FLU_ESTADO
-                          FROM (
-                                SELECT FLU_EVALUACION_ID,
-                                       FLU_ESTADO,
-                                       ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_ID DESC) rn
-                                  FROM RL_MR_FLUJO_EVALUACION
-                               )
-                         WHERE rn = 1
-                      ) f ON f.FLU_EVALUACION_ID = e.EVA_ID
                  WHERE e.EVA_ID = :evaId
                    AND e.EVA_ACTIVO = 1
-                 FOR UPDATE OF e.EVA_ID";
+                 FOR UPDATE";
 
             await using var cmdSelect = CrearComando(sqlSelect, conn, trans);
             cmdSelect.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
@@ -995,7 +982,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             string jsonAnterior;
             int versionRowActual;
             long versionFormularioId;
-            string estadoPersistido;
             await using (var reader = await cmdSelect.ExecuteReaderAsync())
             {
                 if (!await reader.ReadAsync())
@@ -1006,9 +992,9 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 jsonAnterior = reader.GetString(0);
                 versionRowActual = reader.GetInt32(1);
                 versionFormularioId = reader.GetInt64(2);
-                estadoPersistido = reader.GetString(3);
             }
 
+            string estadoPersistido = await ObtenerEstadoActualAsync(conn, trans, dto.EvaId);
             if (!string.Equals(estadoPersistido, "BORRADOR", StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException($"No se permite modificar una evaluación en estado '{estadoPersistido}'. Solo se permite editar evaluaciones en estado BORRADOR.");
@@ -1058,26 +1044,26 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
 
             await _auditoriaRepository.RegistrarAsync(
-        conn,
-        trans,
-        "RL_MR_EVALUACIONES_RIESGO",
-        dto.EvaId.ToString(),
-        "UPDATE",
-        JsonSerializer.Serialize(new
-        {
-            Datos = jsonAnterior,
-            VersionRow = versionRowActual
-        }),
-        JsonSerializer.Serialize(new
-        {
-            Datos = dto.EvaDataJson,
-            Calculos = calculosJson,
-            VersionRow = versionRowActual + 1
-        }),
-        usuarioId,
-        null,
-        ip,
-        ModuloAuditoria);
+                conn,
+                trans,
+                "RL_MR_EVALUACIONES_RIESGO",
+                dto.EvaId.ToString(),
+                "UPDATE",
+                JsonSerializer.Serialize(new
+                {
+                    Datos = jsonAnterior,
+                    VersionRow = versionRowActual
+                }),
+                JsonSerializer.Serialize(new
+                {
+                    Datos = dto.EvaDataJson,
+                    Calculos = calculosJson,
+                    VersionRow = versionRowActual + 1
+                }),
+                usuarioId,
+                null,
+                ip,
+                ModuloAuditoria);
 
             await trans.CommitAsync();
             return true;
@@ -1140,17 +1126,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
             await InsertarFlujoAsync(conn, trans, evaId, estado, motivo, usuarioId);
             await _auditoriaRepository.RegistrarAsync(
-        conn,
-        trans,
-        "RL_MR_EVALUACIONES_RIESGO",
-        evaId.ToString(),
-        "UPDATE",
-        JsonSerializer.Serialize(new { Estado = anterior }),
-        JsonSerializer.Serialize(new { Estado = estado, Motivo = motivo }),
-        usuarioId,
-        null,
-        ip,
-        ModuloAuditoria);
+                conn, trans, "RL_MR_EVALUACIONES_RIESGO", evaId.ToString(), "UPDATE",
+                JsonSerializer.Serialize(new { Estado = anterior }),
+                JsonSerializer.Serialize(new { Estado = estado, Motivo = motivo }),
+                usuarioId, null, ip, ModuloAuditoria);
             await trans.CommitAsync();
             return true;
         }
@@ -1728,8 +1707,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             throw new ArgumentException("Los resultados calculados deben ser un objeto JSON.", nameof(calculosJson));
         }
 
-        // Estos metadatos proceden de la versión publicada y del catálogo de reglas.
-        // Se sobrescribe cualquier valor remitido por el cliente para impedir suplantación.
         calculos["reglaCodigo"] = reglaCodigo;
         calculos["reglaVersion"] = reglaVersion;
         calculos["algoritmoId"] = algoritmoId;
