@@ -166,6 +166,146 @@ public class MatricesRiesgosIntegridadEvaluacionesVersionadasTests
     }
 
     [Fact]
+    public async Task Validador_TipoCatalogo_AceptaCodigosAlfanumericosYNumericos()
+    {
+        var validador = new FormularioValidador();
+        string configJson = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        {
+                            ""clave"": ""cat_alfa1"",
+                            ""tipo"": ""catalogo"",
+                            ""obligatorio"": true,
+                            ""opciones"": [
+                                { ""codigo"": ""001"", ""nombre"": ""Primer Código"" },
+                                { ""codigo"": ""G-IVM"", ""nombre"": ""Gerencia IVM"" }
+                            ]
+                        },
+                        {
+                            ""clave"": ""cat_num1"",
+                            ""tipo"": ""catalogo"",
+                            ""obligatorio"": true,
+                            ""opciones"": [
+                                { ""codigo"": ""10"", ""nombre"": ""Diez"" }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        string respuestasValidasAlfa = @"{ ""cat_alfa1"": ""001"", ""cat_num1"": 10 }";
+        string respuestasValidasGivm = @"{ ""cat_alfa1"": ""G-IVM"", ""cat_num1"": ""10"" }";
+
+        FormularioValidationResult resAlfa = await validador.ValidarRespuestasAsync(respuestasValidasAlfa, configJson);
+        FormularioValidationResult resGivm = await validador.ValidarRespuestasAsync(respuestasValidasGivm, configJson);
+
+        Assert.True(resAlfa.Valido);
+        Assert.Empty(resAlfa.Errores);
+
+        Assert.True(resGivm.Valido);
+        Assert.Empty(resGivm.Errores);
+    }
+
+    [Fact]
+    public async Task Validador_TipoCatalogo_RechazaEtiquetaVisibleYCodigoInexistente()
+    {
+        var validador = new FormularioValidador();
+        string configJson = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        {
+                            ""clave"": ""cat_campo"",
+                            ""tipo"": ""catalogo"",
+                            ""obligatorio"": true,
+                            ""opciones"": [
+                                { ""codigo"": ""001"", ""nombre"": ""Gerencia General"" },
+                                { ""codigo"": ""G-IVM"", ""nombre"": ""Gerencia IVM"" }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }";
+
+        string respEtiqueta = @"{ ""cat_campo"": ""Gerencia General"" }";
+        string respInexistente = @"{ ""cat_campo"": ""INVALIDO_999"" }";
+
+        FormularioValidationResult resEtiqueta = await validador.ValidarRespuestasAsync(respEtiqueta, configJson);
+        FormularioValidationResult resInexistente = await validador.ValidarRespuestasAsync(respInexistente, configJson);
+
+        Assert.False(resEtiqueta.Valido);
+        Assert.Single(resEtiqueta.Errores);
+        Assert.Contains("no corresponde a un código válido", resEtiqueta.Errores[0].Mensaje);
+
+        Assert.False(resInexistente.Valido);
+        Assert.Single(resInexistente.Errores);
+        Assert.Contains("no corresponde a un código válido", resInexistente.Errores[0].Mensaje);
+    }
+
+    [Fact]
+    public async Task Validador_CodigoCatalogoHistoricoReferenciado_ResuelveOpcionesDesdeCatalogosRaiz()
+    {
+        var validador = new FormularioValidador();
+        string configJson = @"{
+            ""secciones"": [
+                {
+                    ""campos"": [
+                        {
+                            ""clave"": ""nivel_riesgo"",
+                            ""tipo"": ""catalogo"",
+                            ""codigoCatalogo"": ""CAT_NIVEL_RIESGO"",
+                            ""obligatorio"": true
+                        },
+                        {
+                            ""clave"": ""gerencia_resp"",
+                            ""tipo"": ""selector-catalogo"",
+                            ""codigoCatalogo"": ""CAT_GERENCIAS"",
+                            ""obligatorio"": true
+                        }
+                    ]
+                }
+            ],
+            ""catalogos"": [
+                {
+                    ""codigo"": ""CAT_NIVEL_RIESGO"",
+                    ""elementos"": [
+                        { ""codigo"": ""001"", ""valor"": ""Bajo"" },
+                        { ""codigo"": ""002"", ""valor"": ""Medio"" }
+                    ]
+                },
+                {
+                    ""codigo"": ""CAT_GERENCIAS"",
+                    ""elementos"": [
+                        { ""codigo"": ""G-IVM"", ""valor"": ""Gerencia IVM"" }
+                    ]
+                }
+            ]
+        }";
+
+        string respValida = @"{ ""nivel_riesgo"": ""001"", ""gerencia_resp"": ""G-IVM"" }";
+        string respInvalidaEtiqueta = @"{ ""nivel_riesgo"": ""Bajo"", ""gerencia_resp"": ""G-IVM"" }";
+        string respInvalidaInexistente = @"{ ""nivel_riesgo"": ""001"", ""gerencia_resp"": ""G-TIC"" }";
+
+        FormularioValidationResult resValida = await validador.ValidarRespuestasAsync(respValida, configJson);
+        FormularioValidationResult resEtiqueta = await validador.ValidarRespuestasAsync(respInvalidaEtiqueta, configJson);
+        FormularioValidationResult resInexistente = await validador.ValidarRespuestasAsync(respInvalidaInexistente, configJson);
+
+        Assert.True(resValida.Valido);
+        Assert.Empty(resValida.Errores);
+
+        Assert.False(resEtiqueta.Valido);
+        Assert.Single(resEtiqueta.Errores);
+        Assert.Contains("no corresponde a un código válido", resEtiqueta.Errores[0].Mensaje);
+
+        Assert.False(resInexistente.Valido);
+        Assert.Single(resInexistente.Errores);
+        Assert.Contains("no corresponde a un código válido", resInexistente.Errores[0].Mensaje);
+    }
+
+    [Fact]
     public async Task Validador_CodigoInexistente_O_EtiquetaEnviadaComoCodigo_ReportaError()
     {
         var validador = new FormularioValidador();

@@ -308,10 +308,10 @@ public sealed class FormularioValidadorTests
                 }
             ]
         }";
-        // Catalogo con valor no entero (un string que no es número)
-        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": ""no-un-numero"" }", config);
+        // Catalogo con tipo no primitivo ni string/numero (un booleano o lista)
+        var result = await _validador.ValidarRespuestasAsync(@"{ ""c1"": true }", config);
         Assert.False(result.Valido);
-        Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("entero"));
+        Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("texto o número"));
     }
 
     [Fact]

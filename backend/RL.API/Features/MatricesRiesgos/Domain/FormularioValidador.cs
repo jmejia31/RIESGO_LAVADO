@@ -83,25 +83,10 @@ public sealed class FormularioValidador : IFormularioValidador
                         break;
 
                     case "selector-catalogo":
-                        if (valorElemento.ValueKind != JsonValueKind.String)
-                        {
-                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser de tipo texto."));
-                        }
-                        else
-                        {
-                            string codigo = valorElemento.GetString() ?? string.Empty;
-                            if (metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
-                            {
-                                result.Errores.Add(new FormularioValidationError(campoId, $"El valor '{codigo}' no corresponde a un código válido del catálogo para el campo '{metadatos.Etiqueta}'."));
-                            }
-                        }
-                        break;
-
                     case "catalogo":
-                        if (valorElemento.ValueKind != JsonValueKind.Number &&
-                            !(valorElemento.ValueKind == JsonValueKind.String && long.TryParse(valorElemento.GetString(), out _)))
+                        if (valorElemento.ValueKind != JsonValueKind.String && valorElemento.ValueKind != JsonValueKind.Number)
                         {
-                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser un valor de catálogo (entero)."));
+                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser de tipo texto o número."));
                         }
                         else
                         {
@@ -194,6 +179,8 @@ public sealed class FormularioValidador : IFormularioValidador
             return campos;
         }
 
+        var catalogosRaiz = ExtraerCatalogosRaiz(rootElement);
+
         foreach (var seccion in seccionesElement.EnumerateArray())
         {
             if (seccion.ValueKind == JsonValueKind.Object && seccion.TryGetProperty("campos", out JsonElement camposElement) && camposElement.ValueKind == JsonValueKind.Array)
@@ -220,7 +207,7 @@ public sealed class FormularioValidador : IFormularioValidador
                     bool obligatorio = campo.TryGetProperty("obligatorio", out JsonElement oblProp) && oblProp.ValueKind == JsonValueKind.True;
                     string regex = ObtenerPropiedadString(campo, "regexValidacion") ?? ObtenerPropiedadString(campo, "expresionValidacion") ?? string.Empty;
 
-                    var opciones = ExtraerCodicesOpciones(campo);
+                    var opciones = ExtraerCodicesOpciones(campo, catalogosRaiz);
 
                     var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, regex, aliases, opciones);
                     campos[id] = metadatos;
@@ -233,6 +220,73 @@ public sealed class FormularioValidador : IFormularioValidador
         }
 
         return campos;
+    }
+
+    private static Dictionary<string, HashSet<string>> ExtraerCatalogosRaiz(JsonElement rootElement)
+    {
+        var catalogosMap = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+        if (rootElement.TryGetProperty("catalogos", out JsonElement catalogosProp) && catalogosProp.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var cat in catalogosProp.EnumerateArray())
+            {
+                if (cat.ValueKind != JsonValueKind.Object) continue;
+
+                string? codigoCat = ObtenerPropiedadString(cat, "codigo") ?? ObtenerPropiedadString(cat, "id");
+                if (string.IsNullOrWhiteSpace(codigoCat)) continue;
+
+                var codigos = new HashSet<string>(StringComparer.Ordinal);
+
+                if (cat.TryGetProperty("elementos", out JsonElement elemProp) && elemProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var elem in elemProp.EnumerateArray())
+                    {
+                        if (elem.ValueKind == JsonValueKind.Object)
+                        {
+                            string? codigo = ObtenerPropiedadString(elem, "codigo") ?? ObtenerPropiedadString(elem, "value") ?? ObtenerPropiedadString(elem, "id");
+                            if (codigo is not null)
+                            {
+                                codigos.Add(codigo);
+                            }
+                        }
+                        else if (elem.ValueKind == JsonValueKind.String)
+                        {
+                            codigos.Add(elem.GetString()!);
+                        }
+                        else if (elem.ValueKind == JsonValueKind.Number)
+                        {
+                            codigos.Add(elem.GetRawText());
+                        }
+                    }
+                }
+                else if (cat.TryGetProperty("opciones", out JsonElement opProp) && opProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var op in opProp.EnumerateArray())
+                    {
+                        if (op.ValueKind == JsonValueKind.Object)
+                        {
+                            string? codigo = ObtenerPropiedadString(op, "codigo") ?? ObtenerPropiedadString(op, "value") ?? ObtenerPropiedadString(op, "id");
+                            if (codigo is not null)
+                            {
+                                codigos.Add(codigo);
+                            }
+                        }
+                        else if (op.ValueKind == JsonValueKind.String)
+                        {
+                            codigos.Add(op.GetString()!);
+                        }
+                        else if (op.ValueKind == JsonValueKind.Number)
+                        {
+                            codigos.Add(op.GetRawText());
+                        }
+                    }
+                }
+
+                catalogosMap[codigoCat] = codigos;
+            }
+        }
+
+        return catalogosMap;
     }
 
     private static string? ObtenerPropiedadString(JsonElement element, string propName)
@@ -254,7 +308,7 @@ public sealed class FormularioValidador : IFormularioValidador
         }
     }
 
-    private static HashSet<string> ExtraerCodicesOpciones(JsonElement campo)
+    private static HashSet<string> ExtraerCodicesOpciones(JsonElement campo, Dictionary<string, HashSet<string>> catalogosRaiz)
     {
         var codigos = new HashSet<string>(StringComparer.Ordinal);
         if (campo.TryGetProperty("opciones", out JsonElement opcionesProp) && opcionesProp.ValueKind == JsonValueKind.Array)
@@ -273,8 +327,22 @@ public sealed class FormularioValidador : IFormularioValidador
                 {
                     codigos.Add(op.GetString()!);
                 }
+                else if (op.ValueKind == JsonValueKind.Number)
+                {
+                    codigos.Add(op.GetRawText());
+                }
             }
         }
+
+        string? codigoCatalogoRef = ObtenerPropiedadString(campo, "codigoCatalogo") ?? ObtenerPropiedadString(campo, "catalogoId");
+        if (!string.IsNullOrWhiteSpace(codigoCatalogoRef) && catalogosRaiz.TryGetValue(codigoCatalogoRef, out var opcionesReferenciadas))
+        {
+            foreach (var cod in opcionesReferenciadas)
+            {
+                codigos.Add(cod);
+            }
+        }
+
         return codigos;
     }
 

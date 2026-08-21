@@ -1,6 +1,29 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — Implementación Integral F6.5
+## Registro de Intervención — Antigravity — Corrección de Hallazgos F6.5 en FormularioValidador
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **SHA inicial**: `ee584550edecf944b6512786dd64173d4c9fc26f`.
+- **Objetivo**: Corrección de dos hallazgos de control de calidad en `FormularioValidador.cs` para la fase F6.5.
+- **Cambios implementados**:
+  1. **Hallazgo 1 (Tipo `catalogo`)**:
+     - Se ajustó `case "catalogo"` en `FormularioValidador.cs` para aceptar códigos canónicos de texto alfanumérico (ej. `"001"`, `"G-IVM"`), en adición a los números enteros históricos.
+     - Rechaza etiquetas visibles (ej. `"Gerencia General"`) y códigos inexistentes cuando se valida contra catálogo.
+  2. **Hallazgo 2 (Catálogo Histórico Referenciado por `codigoCatalogo`)**:
+     - Se actualizó `ObtenerCamposDefinidos` y `ExtraerCodicesOpciones` para resolver las opciones desde la propiedad `catalogos` del JSON histórico de la versión cuando un campo especifica `codigoCatalogo` o `catalogoId`.
+     - La resolución se realiza estrictamente en memoria sobre el JSON histórico recibido, sin consultar catálogos vigentes externos ni usar fallbacks.
+- **Cero Cambios de Esquema SQL / DDL / DML Manuales**: 0 scripts SQL manuales, 0 modificaciones DDL/DML a tablas Oracle.
+- **Estado de SonarCloud / Quality Gate Remoto**: Pendiente y diferido hasta el cierre global del proyecto por decisión institucional.
+- **Pruebas y Verificación Local Real**:
+  - Suite Backend (.NET Release): **436/436 PASS** (incluyendo nuevas coberturas de `catalogo` alfanumérico y `codigoCatalogo` histórico).
+  - Suite Frontend (Vitest): **428/428 PASS**.
+  - Frontend Build (`npm run build`): **SUCCESS**.
+  - Playwright E2E (`npm run e2e`): **14/14 PASS**.
+  - Script BD (`validate_database_scripts.ps1`), Enlaces (`validate_documentation_links.ps1`) y Quality Gates Locales (`run_quality_gates.ps1`): **SUCCESS**.
+
+---
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).
 - **Agente**: Antigravity.
