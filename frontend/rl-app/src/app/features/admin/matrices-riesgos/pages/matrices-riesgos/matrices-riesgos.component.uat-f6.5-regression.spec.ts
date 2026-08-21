@@ -119,7 +119,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     fixture.detectChanges();
   });
 
-  it('guarda un BORRADOR, relee la evaluación y conserva el modal abierto con datos verificados', () => {
+  it('guarda un BORRADOR, relee la evaluación y muestra confirmación dentro del modal con datos verificados', () => {
     const valorActualizado = 'Gerencia Riesgos UAT-F6.5-02 — Edición BORRADOR';
     const detallePersistido: EvaluacionRiesgoDto = {
       ...detalleOriginal,
@@ -134,6 +134,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     component.editarEvaluacion(resumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], valorActualizado);
     component.guardarEvaluacion();
+    fixture.detectChanges();
 
     expect(service['actualizarEvaluacion']).toHaveBeenCalledWith(
       12,
@@ -148,9 +149,13 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     expect(component.mensaje()).toContain('guardados y verificados correctamente');
     expect(component.evaluacionSeleccionada()?.evaVersionRow).toBe(2);
     expect(component.respuestas()['area_principal']).toBe(valorActualizado);
+
+    const feedback = fixture.nativeElement.querySelector('[data-uat="feedback-edicion-exito"]') as HTMLElement | null;
+    expect(feedback).not.toBeNull();
+    expect(feedback?.textContent).toContain('guardados y verificados correctamente');
   });
 
-  it('mantiene el modal abierto y falla cerrado si el GET posterior no coincide con el PUT', () => {
+  it('mantiene el modal abierto y muestra error dentro del diálogo si el GET posterior no coincide con el PUT', () => {
     service['obtenerEvaluacion']
       .mockReturnValueOnce(of(detalleOriginal))
       .mockReturnValueOnce(of(detalleOriginal));
@@ -158,9 +163,14 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     component.editarEvaluacion(resumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cambio que el servidor no devolvió');
     component.guardarEvaluacion();
+    fixture.detectChanges();
 
     expect(component.modalEditarAbierto()).toBe(true);
     expect(component.error()).toContain('no coincide con los cambios enviados');
+
+    const feedback = fixture.nativeElement.querySelector('[data-uat="feedback-edicion-error"]') as HTMLElement | null;
+    expect(feedback).not.toBeNull();
+    expect(feedback?.textContent).toContain('no coincide con los cambios enviados');
   });
 
   it('Escape no cierra el modal de edición para evitar pérdida accidental de cambios', () => {
