@@ -503,6 +503,14 @@ public sealed class MatricesRiesgosApplicationCoverageTests
 
     private static void PrepararVersionPublicada(InterfaceStub repo)
     {
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 5,
+                EvaRiesgoId = 1,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {

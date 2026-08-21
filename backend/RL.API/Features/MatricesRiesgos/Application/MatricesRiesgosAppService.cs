@@ -381,10 +381,26 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         long usuarioId,
         string? ip)
     {
-        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(dto.EvaVersionId);
+        EvaluacionRiesgoDto? evaluacionPersistida = await _repo.ObtenerEvaluacionAsync(dto.EvaId);
+        if (evaluacionPersistida is null)
+        {
+            return ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId}.");
+        }
+
+        if (dto.EvaVersionId != evaluacionPersistida.EvaVersionId)
+        {
+            return ServiceResult.BadRequest($"El EvaVersionId recibido ({dto.EvaVersionId}) no coincide con el persistido en la evaluación ({evaluacionPersistida.EvaVersionId}).");
+        }
+
+        if (!string.Equals(evaluacionPersistida.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase))
+        {
+            return ServiceResult.BadRequest($"No se permite modificar una evaluación en estado '{evaluacionPersistida.EvaEstado}'. Solo se permite editar evaluaciones en estado BORRADOR.");
+        }
+
+        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(evaluacionPersistida.EvaVersionId);
         if (version is null)
         {
-            return ServiceResult.BadRequest($"La versión de formulario ID {dto.EvaVersionId} no existe.");
+            return ServiceResult.BadRequest($"La versión de formulario ID {evaluacionPersistida.EvaVersionId} asociada a la evaluación no existe.");
         }
 
         ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson);

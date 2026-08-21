@@ -112,6 +112,13 @@ public sealed class MatricesRiesgosApplicationTests
     public async Task ActualizarEvaluacion_ConflictoOptimista_Retorna409()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 5,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
@@ -128,7 +135,7 @@ public sealed class MatricesRiesgosApplicationTests
             throw new DBConcurrencyException("Conflicto"));
 
         ServiceResult result = await service.ActualizarEvaluacionAsync(
-            new EvaluacionRiesgoDto { EvaVersionId = 10, EvaDataJson = "{}" },
+            new EvaluacionRiesgoDto { EvaId = 5, EvaVersionId = 10, EvaDataJson = "{}" },
             99,
             "127.0.0.1");
 

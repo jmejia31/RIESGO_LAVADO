@@ -190,6 +190,13 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         Assert.Equal(999L, rCrearEval.Data);
 
         // 2. ActualizarEvaluacionAsync (Línea 155)
+        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 5,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repoStub.On(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync), _ => Task.FromResult(true));
         var dtoActEval = new EvaluacionRiesgoDto { EvaId = 5, EvaVersionId = 10, EvaDataJson = "{}" };
         ServiceResult rActEval = await cached.ActualizarEvaluacionAsync(dtoActEval, 99, "10.0.0.1");

@@ -731,10 +731,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               }
             });
           },
-          error: () => {
-            this.metodologiaHistorica.set(this.metodologia());
+          error: error => {
             this.cargando.set(false);
-            this.modalVerAbierto.set(true);
+            this.mostrarError(this.obtenerMensajeError(error, `No se pudo recuperar la metodología histórica para la versión ID ${detalle.evaVersionId}.`));
           }
         });
       },
@@ -773,10 +772,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             this.cargando.set(false);
             this.modalEditarAbierto.set(true);
           },
-          error: () => {
-            this.metodologiaHistorica.set(this.metodologia());
+          error: error => {
             this.cargando.set(false);
-            this.modalEditarAbierto.set(true);
+            this.mostrarError(this.obtenerMensajeError(error, `No se pudo recuperar la metodología histórica para la versión ID ${detalle.evaVersionId}.`));
           }
         });
       },

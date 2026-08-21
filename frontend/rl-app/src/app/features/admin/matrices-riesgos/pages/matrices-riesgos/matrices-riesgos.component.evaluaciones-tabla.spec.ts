@@ -384,4 +384,28 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
     expect(serviceMock.obtenerFlujos).toHaveBeenCalledWith(102);
     expect(component.evaluacionResumenSeleccionada()?.evaId).toBe(102);
   });
+
+  it('falla de metodologiaPorVersion en verEvaluacion actua fail-closed (no abre modal y reporta error)', () => {
+    serviceMock.obtenerEvaluacion.mockReturnValue(of({ evaId: 101, evaRiesgoId: 5, evaVersionId: 99, evaDataJson: '{}' }));
+    serviceMock.metodologiaPorVersion.mockReturnValue(throwError(() => new Error('Error al cargar versión histórica 99')));
+
+    const resumen = paginado.items[0];
+    component.abrirModalVer(resumen);
+
+    expect(component.cargando()).toBe(false);
+    expect(component.modalVerAbierto()).toBe(false);
+    expect(component.error()).toContain('No se pudo recuperar la metodología histórica para la versión ID 99.');
+  });
+
+  it('falla de metodologiaPorVersion en editarEvaluacion actua fail-closed (no abre modal de edicion y reporta error)', () => {
+    serviceMock.obtenerEvaluacion.mockReturnValue(of({ evaId: 101, evaRiesgoId: 5, evaVersionId: 99, evaDataJson: '{}' }));
+    serviceMock.metodologiaPorVersion.mockReturnValue(throwError(() => new Error('Error al cargar versión histórica 99')));
+
+    const resumen = paginado.items[0]; // BORRADOR
+    component.editarEvaluacion(resumen);
+
+    expect(component.cargando()).toBe(false);
+    expect(component.modalEditarAbierto()).toBe(false);
+    expect(component.error()).toContain('No se pudo recuperar la metodología histórica para la versión ID 99.');
+  });
 });

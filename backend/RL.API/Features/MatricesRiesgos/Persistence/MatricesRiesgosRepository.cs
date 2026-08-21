@@ -970,13 +970,24 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         try
         {
             const string sqlSelect = @"
-                SELECT EVA_DATOS_JSON,
-                       EVA_VERSION_ROW,
-                       EVA_VERSION_ID
-                  FROM RL_MR_EVALUACIONES_RIESGO
-                 WHERE EVA_ID = :evaId
-                   AND EVA_ACTIVO = 1
-                 FOR UPDATE";
+                SELECT e.EVA_DATOS_JSON,
+                       e.EVA_VERSION_ROW,
+                       e.EVA_VERSION_ID,
+                       NVL(f.FLU_ESTADO, 'BORRADOR') AS ESTADO
+                  FROM RL_MR_EVALUACIONES_RIESGO e
+                  LEFT JOIN (
+                        SELECT FLU_EVALUACION_ID, FLU_ESTADO
+                          FROM (
+                                SELECT FLU_EVALUACION_ID,
+                                       FLU_ESTADO,
+                                       ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_ID DESC) rn
+                                  FROM RL_MR_FLUJO_EVALUACION
+                               )
+                         WHERE rn = 1
+                      ) f ON f.FLU_EVALUACION_ID = e.EVA_ID
+                 WHERE e.EVA_ID = :evaId
+                   AND e.EVA_ACTIVO = 1
+                 FOR UPDATE OF e.EVA_ID";
 
             await using var cmdSelect = CrearComando(sqlSelect, conn, trans);
             cmdSelect.Parameters.Add(new OracleParameter("evaId", dto.EvaId));
@@ -984,6 +995,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             string jsonAnterior;
             int versionRowActual;
             long versionFormularioId;
+            string estadoPersistido;
             await using (var reader = await cmdSelect.ExecuteReaderAsync())
             {
                 if (!await reader.ReadAsync())
@@ -994,6 +1006,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 jsonAnterior = reader.GetString(0);
                 versionRowActual = reader.GetInt32(1);
                 versionFormularioId = reader.GetInt64(2);
+                estadoPersistido = reader.GetString(3);
+            }
+
+            if (!string.Equals(estadoPersistido, "BORRADOR", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"No se permite modificar una evaluación en estado '{estadoPersistido}'. Solo se permite editar evaluaciones en estado BORRADOR.");
             }
 
             if (versionRowActual != dto.EvaVersionRow)

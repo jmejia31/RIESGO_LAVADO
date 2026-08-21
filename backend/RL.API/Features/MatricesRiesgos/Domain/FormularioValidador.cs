@@ -18,7 +18,6 @@ public sealed class FormularioValidador : IFormularioValidador
             return Task.FromResult(result);
         }
 
-        // Si no hay respuestas y la configuración tiene campos obligatorios, validar nulidad total
         if (string.IsNullOrWhiteSpace(jsonRespuestas))
         {
             jsonRespuestas = "{}";
@@ -32,7 +31,7 @@ public sealed class FormularioValidador : IFormularioValidador
             var camposDefinidos = ObtenerCamposDefinidos(configDoc.RootElement);
             var respuestasDict = ObtenerRespuestas(respuestasDoc.RootElement);
 
-            // 1. Validar campos sucios (propiedades del payload de entrada no declaradas en la plantilla)
+            // 1. Validar campos sucios (propiedades del payload de entrada no declaradas en la plantilla ni por su clave canónica ni aliases)
             foreach (var key in respuestasDict.Keys)
             {
                 if (!camposDefinidos.ContainsKey(key))
@@ -47,7 +46,7 @@ public sealed class FormularioValidador : IFormularioValidador
                 string campoId = kvp.Key;
                 var metadatos = kvp.Value;
 
-                bool existe = respuestasDict.TryGetValue(campoId, out JsonElement valorElemento);
+                bool existe = BuscarValorEnRespuestas(respuestasDict, metadatos, out JsonElement valorElemento);
                 bool esNuloOVacio = !existe || valorElemento.ValueKind == JsonValueKind.Null || 
                                     (valorElemento.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(valorElemento.GetString()));
 
@@ -58,14 +57,13 @@ public sealed class FormularioValidador : IFormularioValidador
                     continue;
                 }
 
-                // Si no existe o es vacío y no es obligatorio, no se aplican validaciones adicionales de tipo/regex
                 if (esNuloOVacio)
                 {
                     continue;
                 }
 
                 // B. Validar tipo de datos y formato
-                switch (metadatos.Tipo.ToLower())
+                switch (metadatos.Tipo.ToLowerInvariant())
                 {
                     case "numero":
                     case "numérico":
@@ -76,7 +74,6 @@ public sealed class FormularioValidador : IFormularioValidador
                         }
                         break;
 
-                    case "selector-catalogo":
                     case "texto":
                     case "texto-largo":
                         if (valorElemento.ValueKind != JsonValueKind.String)
@@ -85,11 +82,37 @@ public sealed class FormularioValidador : IFormularioValidador
                         }
                         break;
 
+                    case "selector-catalogo":
+                        if (valorElemento.ValueKind != JsonValueKind.String)
+                        {
+                            result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser de tipo texto."));
+                        }
+                        else
+                        {
+                            string codigo = valorElemento.GetString() ?? string.Empty;
+                            if (metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
+                            {
+                                result.Errores.Add(new FormularioValidationError(campoId, $"El valor '{codigo}' no corresponde a un código válido del catálogo para el campo '{metadatos.Etiqueta}'."));
+                            }
+                        }
+                        break;
+
                     case "catalogo":
                         if (valorElemento.ValueKind != JsonValueKind.Number &&
                             !(valorElemento.ValueKind == JsonValueKind.String && long.TryParse(valorElemento.GetString(), out _)))
                         {
                             result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' debe ser un valor de catálogo (entero)."));
+                        }
+                        else
+                        {
+                            string codigo = valorElemento.ValueKind == JsonValueKind.Number
+                                ? valorElemento.GetRawText()
+                                : valorElemento.GetString() ?? string.Empty;
+
+                            if (metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
+                            {
+                                result.Errores.Add(new FormularioValidationError(campoId, $"El valor '{codigo}' no corresponde a un código válido del catálogo para el campo '{metadatos.Etiqueta}'."));
+                            }
                         }
                         break;
 
@@ -102,10 +125,19 @@ public sealed class FormularioValidador : IFormularioValidador
                         {
                             foreach (var element in valorElemento.EnumerateArray())
                             {
-                                if (element.ValueKind != JsonValueKind.Number &&
-                                    !(element.ValueKind == JsonValueKind.String && long.TryParse(element.GetString(), out _)))
+                                bool esEntero = element.ValueKind == JsonValueKind.Number ||
+                                                (element.ValueKind == JsonValueKind.String && long.TryParse(element.GetString(), out _));
+
+                                if (metadatos.OpcionesCatalogo.Count == 0 && !esEntero)
                                 {
                                     result.Errores.Add(new FormularioValidationError(campoId, $"Todos los elementos del campo '{metadatos.Etiqueta}' deben ser números enteros."));
+                                    break;
+                                }
+
+                                string codigo = element.ValueKind == JsonValueKind.Number ? element.GetRawText() : element.GetString() ?? string.Empty;
+                                if (metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
+                                {
+                                    result.Errores.Add(new FormularioValidationError(campoId, $"El valor '{codigo}' en el campo '{metadatos.Etiqueta}' no corresponde a un código válido del catálogo."));
                                     break;
                                 }
                             }
@@ -126,7 +158,6 @@ public sealed class FormularioValidador : IFormularioValidador
                     }
                     catch (ArgumentException)
                     {
-                        // Expresión regular inválida definida en plantilla, se registra error de sistema
                         result.Errores.Add(new FormularioValidationError(campoId, $"Expresión regular de validación inválida configurada para el campo '{metadatos.Etiqueta}'."));
                     }
                 }
@@ -138,6 +169,20 @@ public sealed class FormularioValidador : IFormularioValidador
         }
 
         return Task.FromResult(result);
+    }
+
+    private static bool BuscarValorEnRespuestas(
+        Dictionary<string, JsonElement> respuestas,
+        CampoMetadatos metadatos,
+        out JsonElement valorElemento)
+    {
+        if (respuestas.TryGetValue(metadatos.Id, out valorElemento)) return true;
+        foreach (string alias in metadatos.Aliases)
+        {
+            if (respuestas.TryGetValue(alias, out valorElemento)) return true;
+        }
+        valorElemento = default;
+        return false;
     }
 
     private static Dictionary<string, CampoMetadatos> ObtenerCamposDefinidos(JsonElement rootElement)
@@ -155,27 +200,82 @@ public sealed class FormularioValidador : IFormularioValidador
             {
                 foreach (var campo in camposElement.EnumerateArray())
                 {
-                    if (campo.ValueKind == JsonValueKind.Object && campo.TryGetProperty("id", out JsonElement idProp) && idProp.ValueKind == JsonValueKind.String)
+                    if (campo.ValueKind != JsonValueKind.Object) continue;
+
+                    string id = ObtenerPropiedadString(campo, "clave") ??
+                               ObtenerPropiedadString(campo, "rutaDatos") ??
+                               ObtenerPropiedadString(campo, "identificador") ??
+                               ObtenerPropiedadString(campo, "id") ?? string.Empty;
+
+                    if (string.IsNullOrWhiteSpace(id)) continue;
+
+                    var aliases = new List<string>();
+                    AgregarAliasSiDifiere(aliases, id, ObtenerPropiedadString(campo, "clave"));
+                    AgregarAliasSiDifiere(aliases, id, ObtenerPropiedadString(campo, "rutaDatos"));
+                    AgregarAliasSiDifiere(aliases, id, ObtenerPropiedadString(campo, "identificador"));
+                    AgregarAliasSiDifiere(aliases, id, ObtenerPropiedadString(campo, "id"));
+
+                    string etiqueta = ObtenerPropiedadString(campo, "etiqueta") ?? id;
+                    string tipo = ObtenerPropiedadString(campo, "tipo") ?? "texto";
+                    bool obligatorio = campo.TryGetProperty("obligatorio", out JsonElement oblProp) && oblProp.ValueKind == JsonValueKind.True;
+                    string regex = ObtenerPropiedadString(campo, "regexValidacion") ?? ObtenerPropiedadString(campo, "expresionValidacion") ?? string.Empty;
+
+                    var opciones = ExtraerCodicesOpciones(campo);
+
+                    var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, regex, aliases, opciones);
+                    campos[id] = metadatos;
+                    foreach (string alias in aliases)
                     {
-                        string id = idProp.GetString() ?? string.Empty;
-                        if (string.IsNullOrWhiteSpace(id)) continue;
-
-                        string etiqueta = campo.TryGetProperty("etiqueta", out JsonElement etProp) && etProp.ValueKind == JsonValueKind.String ? etProp.GetString() ?? id : id;
-                        string tipo = campo.TryGetProperty("tipo", out JsonElement tipoProp) && tipoProp.ValueKind == JsonValueKind.String ? tipoProp.GetString() ?? "texto" : "texto";
-                        
-                        bool obligatorio = campo.TryGetProperty("obligatorio", out JsonElement oblProp) && oblProp.ValueKind == JsonValueKind.True;
-                        
-                        string regex = campo.TryGetProperty("regexValidacion", out JsonElement regProp) && regProp.ValueKind == JsonValueKind.String 
-                            ? regProp.GetString() ?? string.Empty 
-                            : (campo.TryGetProperty("expresionValidacion", out JsonElement expProp) && expProp.ValueKind == JsonValueKind.String ? expProp.GetString() ?? string.Empty : string.Empty);
-
-                        campos[id] = new CampoMetadatos(id, etiqueta, tipo, obligatorio, regex);
+                        campos[alias] = metadatos;
                     }
                 }
             }
         }
 
         return campos;
+    }
+
+    private static string? ObtenerPropiedadString(JsonElement element, string propName)
+    {
+        if (element.TryGetProperty(propName, out JsonElement prop) && prop.ValueKind == JsonValueKind.String)
+        {
+            return prop.GetString();
+        }
+        return null;
+    }
+
+    private static void AgregarAliasSiDifiere(List<string> aliases, string idPrincipal, string? aliasCandidato)
+    {
+        if (!string.IsNullOrWhiteSpace(aliasCandidato) &&
+            !string.Equals(idPrincipal, aliasCandidato, StringComparison.OrdinalIgnoreCase) &&
+            !aliases.Contains(aliasCandidato, StringComparer.OrdinalIgnoreCase))
+        {
+            aliases.Add(aliasCandidato);
+        }
+    }
+
+    private static HashSet<string> ExtraerCodicesOpciones(JsonElement campo)
+    {
+        var codigos = new HashSet<string>(StringComparer.Ordinal);
+        if (campo.TryGetProperty("opciones", out JsonElement opcionesProp) && opcionesProp.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var op in opcionesProp.EnumerateArray())
+            {
+                if (op.ValueKind == JsonValueKind.Object)
+                {
+                    string? codigo = ObtenerPropiedadString(op, "codigo") ?? ObtenerPropiedadString(op, "value") ?? ObtenerPropiedadString(op, "id");
+                    if (codigo is not null)
+                    {
+                        codigos.Add(codigo);
+                    }
+                }
+                else if (op.ValueKind == JsonValueKind.String)
+                {
+                    codigos.Add(op.GetString()!);
+                }
+            }
+        }
+        return codigos;
     }
 
     private static Dictionary<string, JsonElement> ObtenerRespuestas(JsonElement rootElement)
@@ -202,14 +302,25 @@ public sealed class FormularioValidador : IFormularioValidador
         public string Tipo { get; }
         public bool Obligatorio { get; }
         public string RegexValidacion { get; }
+        public List<string> Aliases { get; }
+        public HashSet<string> OpcionesCatalogo { get; }
 
-        public CampoMetadatos(string id, string etiqueta, string tipo, bool obligatorio, string regexValidacion)
+        public CampoMetadatos(
+            string id,
+            string etiqueta,
+            string tipo,
+            bool obligatorio,
+            string regexValidacion,
+            List<string> aliases,
+            HashSet<string> opcionesCatalogo)
         {
             Id = id;
             Etiqueta = etiqueta;
             Tipo = tipo;
             Obligatorio = obligatorio;
             RegexValidacion = regexValidacion;
+            Aliases = aliases;
+            OpcionesCatalogo = opcionesCatalogo;
         }
     }
 }

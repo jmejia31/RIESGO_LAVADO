@@ -1,6 +1,36 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Antigravity — Certificación UAT Reactivación y Restauración F6.4
+## Registro de Intervención — Antigravity — Implementación Integral F6.5
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: Antigravity.
+- **Rama**: `desarrollo`.
+- **SHA inicial**: `fbb674cc907ad14bde6f91787c68f8b680f2527a`.
+- **Objetivo**: Implementar F6.5 — Integridad de Evaluaciones Versionadas y Respuestas de Catálogo de principio a fin.
+- **Alcance implementado y verificado**:
+  1. **Carga y Modificación Versionada por EvaVersionId**:
+     - Las evaluaciones se cargan, editan y validan usando exclusivamente su `EVA_VERSION_ID` persistido (`evaluacionPersistida.EvaVersionId`).
+     - En `ActualizarEvaluacionAsync`, si `dto.EvaVersionId` recibido difiere de `evaluacionPersistida.EvaVersionId`, el backend rechaza la petición con HTTP 400 Bad Request y mensaje explícito de mismatch.
+  2. **Control Autoritativo de Estado BORRADOR y Concurrencia Pesimista**:
+     - Solo las evaluaciones en estado `BORRADOR` pueden ser actualizadas. El backend valida el estado a nivel de aplicación (HTTP 400) y lo re-valida bajo bloqueo pesimista en base de datos `FOR UPDATE OF e.EVA_ID` (lanzando `InvalidOperationException` -> HTTP 400).
+  3. **Fail-Closed Frontend ante Falla de Versión Histórica**:
+     - En `matrices-riesgos.component.ts`, si falla la recuperación de la metodología histórica exacta por versión en `abrirModalVer` o `editarEvaluacion`, el frontend actúa de manera fail-closed: cancela el spinner, NO usa fallback a la versión vigente activa, NO abre el modal y muestra un mensaje de error accesible al usuario.
+  4. **FormularioValidador Lossless y Aliases Canonical/Legacy**:
+     - Soporta la clave canónica `clave` y aliases legacy (`rutaDatos`, `identificador`, `id`).
+     - Soporta códigos string alfanuméricos en `selector-catalogo`, `catalogo` y `catalogo-multiple` (incluyendo `"001"`, `"G-IVM"`, y arrays `["GTIC", "G-IVM"]`).
+     - Preserva valores `0`, `false`, `null`, `"001"`, strings alfanuméricos y arreglos sin coerciones ni pérdidas.
+     - Rechaza códigos inexistentes o etiquetas enviadas como códigos consultando el catálogo embebido en la versión histórica del formulario.
+- **Cero Cambios de Esquema SQL / DDL / DML Manuales**: 0 scripts SQL manuales, 0 modificaciones DDL/DML a tablas Oracle.
+- **Pruebas de Regresión y Validación**:
+  - Suite de pruebas backend F6.5 (`MatricesRiesgosIntegridadEvaluacionesVersionadasTests.cs`): **8/8 PASS**.
+  - Suite completa Backend (.NET Release): **433/433 PASS**.
+  - Suite de pruebas unitarias Frontend (Vitest): **428/428 PASS** (46 test files).
+  - Frontend Build (`npm run build`): **SUCCESS**.
+  - Playwright E2E (`npm run e2e`): **14/14 PASS**.
+  - Scripts de BD (`validate_database_scripts.ps1`) y Enlaces (`validate_documentation_links.ps1`): **SUCCESS**.
+  - Puertas de calidad locales (`run_quality_gates.ps1`): **SUCCESS**.
+
+---
 
 - **Fecha y hora**: 2026-08-20, hora local (UTC-6).
 - **Agente**: Antigravity.

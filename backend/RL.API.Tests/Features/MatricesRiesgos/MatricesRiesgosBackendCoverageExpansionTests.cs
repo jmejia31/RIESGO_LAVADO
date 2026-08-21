@@ -517,6 +517,13 @@ public sealed class MatricesRiesgosAppServiceBoundaryCoverageTests
     public async Task ActualizarEvaluacion_VersionInexistente_Retorna400AntesDeValidar()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 20,
+                EvaVersionId = 999,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(null));
 
         ServiceResult result = await service.ActualizarEvaluacionAsync(new EvaluacionRiesgoDto

@@ -125,6 +125,13 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
     public async Task ActualizarEvaluacion_ConErrorValidacion_Retorna400()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 1,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
@@ -162,6 +169,13 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
     public async Task ActualizarEvaluacion_ConCalculoFallido_Retorna400()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 1,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
@@ -196,6 +210,13 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
     public async Task ActualizarEvaluacion_ConflictoConcurrencia_Retorna409()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 1,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
@@ -231,6 +252,13 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
     public async Task ActualizarEvaluacion_OperacionInvalida_Retorna400()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ =>
+            Task.FromResult<EvaluacionRiesgoDto?>(new EvaluacionRiesgoDto
+            {
+                EvaId = 1,
+                EvaVersionId = 10,
+                EvaEstado = "BORRADOR"
+            }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ =>
             Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
             {
