@@ -1,6 +1,39 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Codex — Corrección de regresiones de pruebas F6.5.FAM.1
+## Registro de Intervención — AntiG — Implementación y Verificación de F6.5.FAM.2 (Gestor Visual de Familias)
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `2995baa866321a40ef0f7733e3adec674cb438d1`.
+- **SHA final**: `f0ee7d04cd88c4b7a92e3dac6bff7a7a8ce3bc5b`.
+- **Objetivo**: Implementar de forma segura el Gestor Visual de Familias de Formularios en el frontend (`Matrices de Riesgos -> Plantillas`), consumiendo estrictamente el backend F6.5.FAM.1 publicado sin modificar controllers, servicios ni BD backend.
+- **Cambios implementados**:
+  1. **Navegación Secundaria y Prevención de Pantalla en Blanco**:
+     - Agregada navegación secundaria `[ Versiones de Formularios ] [ Familias de Formularios ]` dentro de la pestaña `Plantillas`.
+     - Integración del botón "Administrar Familias" en el subpanel Versiones para conmutar sin estados intermedios.
+  2. **Subpanel Gestor de Familias**:
+     - Tabla responsiva empresarial con Código, Nombre, Descripción, Estado (ACTIVA/INACTIVA), Total versiones, Versión vigente (Sí/No), Fecha de creación y menú de Acciones.
+     - Barra de filtros reactiva con búsqueda textual (código/nombre) y filtro por Estado (`Todas`, `Activas`, `Inactivas`).
+     - Botón "+ Nueva Familia" restringido a rol administrativo (`esAdministrador()`).
+  3. **Modales con Estándar Visual Institucional**:
+     - *Modal Ver Familia*: Consulta de solo lectura. Tecla `Escape` habilitada para cierre. Incluye botón "Ver versiones de esta familia".
+     - *Modal Crear Familia*: Código obligatorio (sin espacios, solo alfanumérico y guion bajo), Nombre obligatorio y Descripción opcional. `Escape` no cierra accidentalmente.
+     - *Modal Editar Familia*: Código en solo lectura. Nombre y Descripción editables.
+     - *Acciones Activar, Desactivar y Eliminar*: Integración con SweetAlert2 para confirmación institucional. Acción `Eliminar` únicamente visible cuando `totalVersiones === 0`.
+  4. **Servicio y Modelo Angular**:
+     - Métodos creados en `matrices-riesgos.service.ts`: `activarFamiliaFormulario(id)` (`PUT /api/matrices-riesgos/familias/{id}/activar`) y `eliminarFamiliaFormulario(id)` (`DELETE /api/matrices-riesgos/familias/{id}`).
+  5. **Pruebas Unitarias de Regresión**:
+     - Creación del archivo `matrices-riesgos.component.familias.spec.ts` con 13 pruebas unitarias específicas para F6.5.FAM.2.
+- **Cero Cambios Backend / BD**: 0 archivos modificados en `backend/**`, `database/**`, scripts Oracle, DDL/DML, `main` o SonarCloud.
+- **Pruebas y Verificación Local Real**:
+  - Suite Frontend (Vitest): **444/444 PASS** (48/48 archivos).
+  - Frontend Build (`npm run build`): **SUCCESS**.
+  - Playwright E2E (`npm run e2e`): **14/14 PASS**.
+  - Script BD (`validate_database_scripts.ps1`): **SUCCESS**.
+  - Script Enlaces Documentales (`validate_documentation_links.ps1`): **SUCCESS** (92 documentos, 163 enlaces).
+- **Punto de continuidad**: F6.5.FAM.2 queda completamente implementada, verificada y publicada en `origin/desarrollo`. Fase F6.5 lista para revisión funcional final.
+
+---
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).
 - **Agente**: Codex.
