@@ -414,8 +414,9 @@
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>Nuevo Formulario</span>
           </button>
-          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalCrearFamilia()">
-            <span>Nueva Familia</span>
+          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalGestorFamilias()">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            <span>Administrar Familias</span>
           </button>
         </div>
       </div>
@@ -526,6 +527,200 @@
         </app-form-builder>
        </div>
      </dialog>
+  }
+
+  @if (modalGestorFamiliasAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="cerrarModalGestorFamilias()">
+      <div class="modal-container-card w-full max-w-5xl max-h-[90vh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-gestor-familias" class="text-base sm:text-lg font-bold text-gray-900">Gestor de Familias de Formularios</h3>
+            <p class="text-xs text-gray-500">Administración integral de agrupadores institucionales de matrices y plantillas</p>
+          </div>
+          <div class="flex items-center gap-3">
+            @if (esAdministrador()) {
+              <button type="button" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center gap-1" (click)="abrirModalCrearFamilia()">
+                <span>+ Nueva Familia</span>
+              </button>
+            }
+            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar gestor" (click)="cerrarModalGestorFamilias()">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-body-scrollable space-y-4">
+          <!-- Filtros y Búsqueda -->
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+            <div class="w-full sm:w-72">
+              <input type="text"
+                     class="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                     placeholder="Buscar por código o nombre..."
+                     [ngModel]="filtroBuscarFamilia()"
+                     (ngModelChange)="filtroBuscarFamilia.set($event)" />
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <label for="filtro-estado-fam" class="text-xs font-bold text-gray-700">Estado:</label>
+              <select id="filtro-estado-fam"
+                      class="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                      [ngModel]="filtroEstadoFamilia()"
+                      (ngModelChange)="filtroEstadoFamilia.set($event)">
+                <option value="TODAS">Todas</option>
+                <option value="ACTIVAS">Activas</option>
+                <option value="INACTIVAS">Inactivas</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tabla de Familias -->
+          <div class="overflow-x-auto rounded-xl border border-gray-200">
+            <table class="w-full text-left text-xs text-gray-600">
+              <thead class="bg-gray-100 font-bold uppercase tracking-wider text-gray-700 border-b border-gray-200">
+                <tr>
+                  <th scope="col" class="px-4 py-3">Código</th>
+                  <th scope="col" class="px-4 py-3">Nombre</th>
+                  <th scope="col" class="px-4 py-3">Descripción</th>
+                  <th scope="col" class="px-4 py-3 text-center">Estado</th>
+                  <th scope="col" class="px-4 py-3 text-center">Versiones</th>
+                  <th scope="col" class="px-4 py-3 text-center">Vigente</th>
+                  <th scope="col" class="px-4 py-3 text-center">Fecha Creación</th>
+                  <th scope="col" class="px-4 py-3 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200 bg-white">
+                @for (fam of familiasFiltradas(); track fam.famId) {
+                  <tr class="hover:bg-gray-50/80 transition-colors">
+                    <td class="px-4 py-3 font-mono font-bold text-ihss-900 whitespace-nowrap">{{ fam.famCodigo }}</td>
+                    <td class="px-4 py-3 font-bold text-gray-900 whitespace-nowrap">{{ fam.famNombre }}</td>
+                    <td class="px-4 py-3 max-w-xs truncate text-gray-500" [title]="fam.famDescripcion">{{ fam.famDescripcion || '-' }}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                      <span class="rounded-md px-2 py-0.5 font-semibold text-[11px]"
+                            [class.bg-emerald-50]="fam.famActivo"
+                            [class.text-emerald-700]="fam.famActivo"
+                            [class.bg-gray-100]="!fam.famActivo"
+                            [class.text-gray-600]="!fam.famActivo">
+                        {{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-center font-bold text-gray-800 whitespace-nowrap">{{ fam.totalVersiones }}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                      <span class="font-semibold text-[11px]" [class.text-emerald-600]="fam.tieneVersionVigente" [class.text-gray-400]="!fam.tieneVersionVigente">
+                        {{ fam.tieneVersionVigente ? 'Sí' : 'No' }}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 text-center text-gray-500 whitespace-nowrap">{{ fam.famFechaCreacion | date:'mediumDate' }}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <button type="button" class="px-2.5 py-1 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-[11px] transition-colors" (click)="abrirModalVerFamilia(fam)">
+                          Ver
+                        </button>
+                        @if (esAdministrador()) {
+                          <button type="button" class="px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px] transition-colors rounded-lg" (click)="abrirModalEditarFamilia(fam)">
+                            Editar
+                          </button>
+                          @if (fam.famActivo) {
+                            <button type="button" class="px-2.5 py-1 border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarDesactivarFamilia(fam)">
+                              Desactivar
+                            </button>
+                          } @else {
+                            <button type="button" class="px-2.5 py-1 border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarActivarFamilia(fam)">
+                              Activar
+                            </button>
+                          }
+                          @if (fam.totalVersiones === 0) {
+                            <button type="button" class="px-2.5 py-1 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarEliminarFamilia(fam)">
+                              Eliminar
+                            </button>
+                          }
+                        }
+                        <button type="button" class="px-2.5 py-1 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-[11px] rounded-lg transition-all" (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">
+                          Ver versiones
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400 text-xs">
+                      No se encontraron familias de formularios registradas.
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalGestorFamilias()">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
+  }
+
+  @if (modalVerFamiliaAbierto(); as famVer) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="cerrarModalVerFamilia()">
+      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
+        <div class="modal-header-institutional">
+          <div>
+            <h3 id="titulo-modal-ver-familia" class="text-base sm:text-lg font-bold text-gray-900">Familia: {{ famVer.famNombre }}</h3>
+            <p class="text-xs text-gray-500">Detalle y trazabilidad de la familia de formularios</p>
+          </div>
+          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar consulta" (click)="cerrarModalVerFamilia()">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body-scrollable space-y-4 text-sm">
+          <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div>
+              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Código institucional</dt>
+              <dd class="mt-1 font-mono font-bold text-ihss-900 text-sm">{{ famVer.famCodigo }}</dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Estado</dt>
+              <dd class="mt-1 font-bold">
+                <span class="rounded-md px-2.5 py-0.5 text-xs"
+                      [class.bg-emerald-50]="famVer.famActivo"
+                      [class.text-emerald-700]="famVer.famActivo"
+                      [class.bg-gray-100]="!famVer.famActivo"
+                      [class.text-gray-600]="!famVer.famActivo">
+                  {{ famVer.famActivo ? 'ACTIVA' : 'INACTIVA' }}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total de versiones</dt>
+              <dd class="mt-1 font-bold text-gray-900">{{ famVer.totalVersiones }}</dd>
+            </div>
+            <div>
+              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Versión vigente</dt>
+              <dd class="mt-1 font-bold text-gray-900">{{ famVer.tieneVersionVigente ? 'Sí' : 'No' }}</dd>
+            </div>
+          </div>
+
+          <div>
+            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Nombre</dt>
+            <dd class="font-bold text-gray-900">{{ famVer.famNombre }}</dd>
+          </div>
+
+          <div>
+            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Descripción</dt>
+            <dd class="text-gray-600 leading-relaxed">{{ famVer.famDescripcion || 'Sin descripción registrada.' }}</dd>
+          </div>
+
+          <div>
+            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Fecha de creación</dt>
+            <dd class="text-gray-700 text-xs">{{ famVer.famFechaCreacion | date:'medium' }}</dd>
+          </div>
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm" (click)="seleccionarFamiliaDesdeGestor(famVer.famCodigo); cerrarModalVerFamilia()">Ver versiones de esta familia</button>
+          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalVerFamilia()">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
   }
 
   @if (modalFamiliaAbierto()) {

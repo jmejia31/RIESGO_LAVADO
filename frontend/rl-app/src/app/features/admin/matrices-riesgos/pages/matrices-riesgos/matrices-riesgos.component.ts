@@ -72,6 +72,23 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly cargandoPlantillas = signal(false);
   readonly errorPlantillas = signal<string | null>(null);
 
+  readonly modalGestorFamiliasAbierto = signal<boolean>(false);
+  readonly modalVerFamiliaAbierto = signal<FamiliaFormularioDto | null>(null);
+  readonly filtroBuscarFamilia = signal('');
+  readonly filtroEstadoFamilia = signal('TODAS');
+
+  readonly familiasFiltradas = computed<FamiliaFormularioDto[]>(() => {
+    const lista = this.familias();
+    const buscar = this.filtroBuscarFamilia().trim().toLowerCase();
+    const estado = this.filtroEstadoFamilia();
+
+    return lista.filter(f => {
+      const cumpleBuscar = !buscar || f.famCodigo.toLowerCase().includes(buscar) || f.famNombre.toLowerCase().includes(buscar);
+      const cumpleEstado = estado === 'TODAS' || (estado === 'ACTIVAS' && f.famActivo) || (estado === 'INACTIVAS' && !f.famActivo);
+      return cumpleBuscar && cumpleEstado;
+    });
+  });
+
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
@@ -334,6 +351,28 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cargarVersionVigentePorFamilia(codigo);
   }
 
+  abrirModalGestorFamilias(): void {
+    this.cargarFamilias();
+    this.modalGestorFamiliasAbierto.set(true);
+  }
+
+  cerrarModalGestorFamilias(): void {
+    this.modalGestorFamiliasAbierto.set(false);
+  }
+
+  seleccionarFamiliaDesdeGestor(famCodigo: string): void {
+    this.seleccionarFamilia(famCodigo);
+    this.cerrarModalGestorFamilias();
+  }
+
+  abrirModalVerFamilia(fam: FamiliaFormularioDto): void {
+    this.modalVerFamiliaAbierto.set(fam);
+  }
+
+  cerrarModalVerFamilia(): void {
+    this.modalVerFamiliaAbierto.set(null);
+  }
+
   abrirModalCrearFamilia(): void {
     this.modoEdicionFamilia.set(false);
     this.familiaIdEditando = 0;
@@ -380,7 +419,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           this.modalFamiliaAbierto.set(false);
           this.errorModal.set(null);
           this.globalState.limpiarError();
-          this.mostrarMensaje(`Familia «${this.nuevaFamiliaNombre}» actualizada correctamente.`);
+          this.mostrarMensaje('Familia actualizada y verificada correctamente.');
           this.cargarFamilias();
         },
         error: error => {
@@ -413,6 +452,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
   }
 
+  confirmarDesactivarFamilia(fam: FamiliaFormularioDto): void {
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: `¿Desactivar la familia ${fam.famNombre}?`,
+        html: `<p class="text-sm text-gray-700 mb-2">La familia dejará de estar disponible para nuevas operaciones.</p>
+               <p class="text-xs text-gray-500">No se eliminarán sus versiones ni información histórica.</p>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d97706',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Desactivar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          this.desactivarFamilia(fam);
+        }
+      });
+    });
+  }
+
   desactivarFamilia(fam: FamiliaFormularioDto): void {
     this.guardando.set(true);
     this.limpiarAlertas();
@@ -420,12 +479,87 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: () => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.mostrarMensaje(`Familia «${fam.famCodigo}» desactivada correctamente.`);
+        this.mostrarMensaje('Familia desactivada correctamente.');
         this.cargarFamilias();
       },
       error: error => {
         this.guardando.set(false);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo desactivar la familia. Verifique que no tenga versiones vigentes.'));
+        this.cargarFamilias();
+      }
+    });
+  }
+
+  confirmarActivarFamilia(fam: FamiliaFormularioDto): void {
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: `¿Activar nuevamente la familia ${fam.famNombre}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, activar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          this.activarFamilia(fam);
+        }
+      });
+    });
+  }
+
+  activarFamilia(fam: FamiliaFormularioDto): void {
+    this.guardando.set(true);
+    this.limpiarAlertas();
+    this.service.activarFamiliaFormulario(fam.famId).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Familia activada correctamente.');
+        this.cargarFamilias();
+      },
+      error: (error: unknown) => {
+        this.guardando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo activar la familia.'));
+        this.cargarFamilias();
+      }
+    });
+  }
+
+  confirmarEliminarFamilia(fam: FamiliaFormularioDto): void {
+    import('sweetalert2').then(Swal => {
+      Swal.default.fire({
+        title: `Eliminar familia ${fam.famCodigo}`,
+        html: `<p class="text-sm text-gray-700 mb-2">Esta operación eliminará permanentemente esta familia.</p>
+               <p class="text-xs text-gray-500">Solo es posible porque actualmente no posee versiones asociadas.</p>`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          this.eliminarFamilia(fam);
+        }
+      });
+    });
+  }
+
+  eliminarFamilia(fam: FamiliaFormularioDto): void {
+    this.guardando.set(true);
+    this.limpiarAlertas();
+    this.service.eliminarFamiliaFormulario(fam.famId).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Familia eliminada correctamente.');
+        this.cargarFamilias();
+      },
+      error: (error: unknown) => {
+        this.guardando.set(false);
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo eliminar la familia.'));
+        this.cargarFamilias();
       }
     });
   }

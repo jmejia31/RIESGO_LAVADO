@@ -101,6 +101,18 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.success));
   }
 
+  activarFamiliaFormulario(id: number): Observable<boolean> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/activar`, {}, this.confirmado)
+      .pipe(map(response => response.success));
+  }
+
+  eliminarFamiliaFormulario(id: number): Observable<boolean> {
+    return this.http
+      .delete<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}`, this.confirmado)
+      .pipe(map(response => response.success));
+  }
+
   obtenerVersionVigenteFormulario(
     familiaCodigo = 'MATRIZ_RIESGOS_LAFT'
   ): Observable<VersionFormularioDto> {
