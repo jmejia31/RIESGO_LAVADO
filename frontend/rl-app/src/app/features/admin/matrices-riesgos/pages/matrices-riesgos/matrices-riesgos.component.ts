@@ -60,7 +60,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly mensaje = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
 
-  // Estados de Carga y Error Independientes por Sección (F2)
   readonly cargandoEvaluaciones = signal(false);
   readonly errorEvaluaciones = signal<string | null>(null);
 
@@ -121,7 +120,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
 
-  // Modales de Evaluaciones
   readonly modalVerAbierto = signal<boolean>(false);
   readonly modalEditarAbierto = signal<boolean>(false);
   readonly modalSeguimientoAbierto = signal<boolean>(false);
@@ -220,7 +218,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.cerrarModalVer();
     } else if (this.modalEditarAbierto()) {
       event.preventDefault();
-      this.cerrarModalEditar();
+      // F6.5 UAT: Esc no debe cerrar una edición y arriesgar pérdida accidental de cambios.
+      return;
     } else if (this.modalSeguimientoAbierto()) {
       event.preventDefault();
       this.cerrarModalSeguimiento();
@@ -583,7 +582,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           : 0;
         this.totalRegistros.set(totalReg);
 
-        let totalPag = Number.isFinite(paginado?.totalPaginas) && Math.floor(paginado.totalPaginas) >= 0
+        const totalPag = Number.isFinite(paginado?.totalPaginas) && Math.floor(paginado.totalPaginas) >= 0
           ? Math.floor(paginado.totalPaginas)
           : (filtrosSnapshot.registrosPorPagina > 0 ? Math.ceil(totalReg / filtrosSnapshot.registrosPorPagina) : 0);
         this.totalPaginas.set(totalPag);
@@ -688,7 +687,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     return item ? `${item.valor} (${item.codigo})` : String(valor);
   }
 
-  // --- MODAL: NUEVA EVALUACIÓN ---
   nuevaEvaluacion(): void {
     this.limpiarAlertas();
     this.evaluacionSeleccionada.set(null);
@@ -705,7 +703,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.globalState.limpiarError();
   }
 
-  // --- MODAL: VER DETALLE FRESCO ---
   abrirModalVer(resumen: EvaluacionRiesgoResumenDto): void {
     this.limpiarAlertas();
     this.cargando.set(true);
@@ -749,7 +746,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.globalState.limpiarError();
   }
 
-  // --- MODAL: EDITAR (SOLO BORRADOR) ---
   editarEvaluacion(evaluacion: EvaluacionRiesgoResumenDto): void {
     if ((evaluacion.estado || '').toUpperCase() !== 'BORRADOR') {
       this.mostrarError('Solo se permite editar evaluaciones en estado BORRADOR.');
@@ -790,7 +786,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.globalState.limpiarError();
   }
 
-  // --- MODAL: SEGUIMIENTO ---
   abrirModalSeguimiento(evaluacion: EvaluacionRiesgoResumenDto): void {
     this.limpiarAlertas();
     this.evaluacionResumenSeleccionada.set(evaluacion);
@@ -869,10 +864,36 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     solicitud.subscribe({
       next: () => {
+        if (esEdicion && actual) {
+          this.service.obtenerEvaluacion(actual.evaId).subscribe({
+            next: detallePersistido => {
+              this.guardando.set(false);
+
+              if (!sonJsonSemanticamenteEquivalentes(dto.evaDataJson, detallePersistido.evaDataJson)) {
+                this.mostrarError('El servidor respondió al guardado, pero la evaluación recuperada no coincide con los cambios enviados. No se cerró el modal para evitar ocultar la inconsistencia.');
+                return;
+              }
+
+              this.evaluacionSeleccionada.set(detallePersistido);
+              this.respuestas.set(this.parsearRespuestas(detallePersistido.evaDataJson));
+              this.globalState.limpiarError();
+              this.mostrarMensaje(`Cambios de la evaluación #${actual.evaId} guardados y verificados correctamente.`);
+              this.cargarEvaluaciones();
+            },
+            error: errorVerificacion => {
+              this.guardando.set(false);
+              this.mostrarError(this.obtenerMensajeError(
+                errorVerificacion,
+                'Los cambios fueron enviados, pero no se pudo verificar la persistencia recuperando nuevamente la evaluación.'
+              ));
+            }
+          });
+          return;
+        }
+
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.mostrarMensaje(esEdicion ? 'Evaluación actualizada correctamente.' : 'Evaluación creada correctamente.');
-        this.modalEditarAbierto.set(false);
+        this.mostrarMensaje('Evaluación creada correctamente.');
         this.modalNuevaEvaluacionAbierto.set(false);
         this.cargarEvaluaciones();
       },
@@ -1124,7 +1145,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   eliminarVersionFormulario(version: VersionFormularioDto): void {
-    // C01 Guard defensivo en TS: solo DRAFT no vigente puede eliminarse
     if (version.verEstado !== 'DRAFT' || version.verVigente) {
       this.mostrarError('Las versiones publicadas forman parte del historial y no pueden eliminarse. Para modificar, clone la versión a un nuevo borrador.');
       return;
