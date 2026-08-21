@@ -360,6 +360,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.modalGestorFamiliasAbierto.set(false);
   }
 
+  limpiarFiltrosFamilias(): void {
+    this.filtroBuscarFamilia.set('');
+    this.filtroEstadoFamilia.set('TODAS');
+  }
+
   seleccionarFamiliaDesdeGestor(famCodigo: string): void {
     this.seleccionarFamilia(famCodigo);
     this.cerrarModalGestorFamilias();

@@ -410,12 +410,12 @@
               }
             </select>
           </div>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalCrearFormulario()">
+          <button type="button" class="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" (click)="abrirModalCrearFormulario()">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span>Nuevo Formulario</span>
+            <span>+ Nuevo Formulario</span>
           </button>
-          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="abrirModalGestorFamilias()">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          <button type="button" class="h-9 px-4 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" (click)="abrirModalGestorFamilias()">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
             <span>Administrar Familias</span>
           </button>
         </div>
@@ -531,19 +531,25 @@
 
   @if (modalGestorFamiliasAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="cerrarModalGestorFamilias()">
-      <div class="modal-container-card w-full max-w-5xl max-h-[90vh]">
+      <div class="modal-container-card w-full max-w-6xl max-h-[90vh]">
         <div class="modal-header-institutional">
-          <div>
-            <h3 id="titulo-modal-gestor-familias" class="text-base sm:text-lg font-bold text-gray-900">Gestor de Familias de Formularios</h3>
-            <p class="text-xs text-gray-500">Administración integral de agrupadores institucionales de matrices y plantillas</p>
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-ihss-900/10 text-ihss-900">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+            </div>
+            <div>
+              <h3 id="titulo-modal-gestor-familias" class="text-base sm:text-lg font-bold text-gray-900">Administrar Familias de Formularios</h3>
+              <p class="text-xs text-gray-500">Gestione los agrupadores institucionales de matrices y plantillas.</p>
+            </div>
           </div>
           <div class="flex items-center gap-3">
             @if (esAdministrador()) {
-              <button type="button" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center gap-1" (click)="abrirModalCrearFamilia()">
+              <button type="button" class="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center gap-1.5" (click)="abrirModalCrearFamilia()">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>+ Nueva Familia</span>
               </button>
             }
-            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar gestor" (click)="cerrarModalGestorFamilias()">
+            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
@@ -552,38 +558,47 @@
         <div class="modal-body-scrollable space-y-4">
           <!-- Filtros y Búsqueda -->
           <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <div class="w-full sm:w-72">
+            <div class="relative w-full sm:w-80">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
               <input type="text"
-                     class="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                     class="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 py-1.5 text-xs text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
                      placeholder="Buscar por código o nombre..."
                      [ngModel]="filtroBuscarFamilia()"
                      (ngModelChange)="filtroBuscarFamilia.set($event)" />
             </div>
-            <div class="flex items-center gap-2 w-full sm:w-auto">
-              <label for="filtro-estado-fam" class="text-xs font-bold text-gray-700">Estado:</label>
-              <select id="filtro-estado-fam"
-                      class="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
-                      [ngModel]="filtroEstadoFamilia()"
-                      (ngModelChange)="filtroEstadoFamilia.set($event)">
-                <option value="TODAS">Todas</option>
-                <option value="ACTIVAS">Activas</option>
-                <option value="INACTIVAS">Inactivas</option>
-              </select>
+            <div class="flex items-center gap-3 w-full sm:w-auto">
+              <div class="flex items-center gap-2">
+                <label for="filtro-estado-fam" class="text-xs font-bold text-gray-700">Estado:</label>
+                <select id="filtro-estado-fam"
+                        class="rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                        [ngModel]="filtroEstadoFamilia()"
+                        (ngModelChange)="filtroEstadoFamilia.set($event)">
+                  <option value="TODAS">Todas</option>
+                  <option value="ACTIVAS">Activas</option>
+                  <option value="INACTIVAS">Inactivas</option>
+                </select>
+              </div>
+              @if (filtroBuscarFamilia().trim() || filtroEstadoFamilia() !== 'TODAS') {
+                <button type="button" class="px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-ihss-900 bg-gray-200/70 hover:bg-gray-200 rounded-xl transition-colors" (click)="limpiarFiltrosFamilias()">
+                  Limpiar
+                </button>
+              }
             </div>
           </div>
 
           <!-- Tabla de Familias -->
-          <div class="overflow-x-auto rounded-xl border border-gray-200">
+          <div class="overflow-x-auto rounded-xl border border-gray-200 max-h-[55vh]">
             <table class="w-full text-left text-xs text-gray-600">
-              <thead class="bg-gray-100 font-bold uppercase tracking-wider text-gray-700 border-b border-gray-200">
+              <thead class="sticky top-0 bg-gray-100 font-bold uppercase tracking-wider text-gray-700 border-b border-gray-200 shadow-xs z-10">
                 <tr>
                   <th scope="col" class="px-4 py-3">Código</th>
                   <th scope="col" class="px-4 py-3">Nombre</th>
-                  <th scope="col" class="px-4 py-3">Descripción</th>
                   <th scope="col" class="px-4 py-3 text-center">Estado</th>
                   <th scope="col" class="px-4 py-3 text-center">Versiones</th>
                   <th scope="col" class="px-4 py-3 text-center">Vigente</th>
-                  <th scope="col" class="px-4 py-3 text-center">Fecha Creación</th>
+                  <th scope="col" class="px-4 py-3 text-center">Fecha de Creación</th>
                   <th scope="col" class="px-4 py-3 text-right">Acciones</th>
                 </tr>
               </thead>
@@ -592,11 +607,12 @@
                   <tr class="hover:bg-gray-50/80 transition-colors">
                     <td class="px-4 py-3 font-mono font-bold text-ihss-900 whitespace-nowrap">{{ fam.famCodigo }}</td>
                     <td class="px-4 py-3 font-bold text-gray-900 whitespace-nowrap">{{ fam.famNombre }}</td>
-                    <td class="px-4 py-3 max-w-xs truncate text-gray-500" [title]="fam.famDescripcion">{{ fam.famDescripcion || '-' }}</td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                      <span class="rounded-md px-2 py-0.5 font-semibold text-[11px]"
+                      <span class="rounded-md px-2.5 py-0.5 font-semibold text-[11px]"
                             [class.bg-emerald-50]="fam.famActivo"
                             [class.text-emerald-700]="fam.famActivo"
+                            [class.ring-1]="fam.famActivo"
+                            [class.ring-emerald-600\/20]="fam.famActivo"
                             [class.bg-gray-100]="!fam.famActivo"
                             [class.text-gray-600]="!fam.famActivo">
                         {{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}
@@ -608,40 +624,64 @@
                         {{ fam.tieneVersionVigente ? 'Sí' : 'No' }}
                       </span>
                     </td>
-                    <td class="px-4 py-3 text-center text-gray-500 whitespace-nowrap">{{ fam.famFechaCreacion | date:'mediumDate' }}</td>
+                    <td class="px-4 py-3 text-center text-gray-500 whitespace-nowrap">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</td>
                     <td class="px-4 py-3 text-right whitespace-nowrap">
                       <div class="flex items-center justify-end gap-1.5">
-                        <button type="button" class="px-2.5 py-1 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-[11px] transition-colors" (click)="abrirModalVerFamilia(fam)">
-                          Ver
+                        <button type="button"
+                                class="p-1.5 text-gray-600 hover:text-ihss-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 bg-white shadow-2xs"
+                                aria-label="Ver detalle"
+                                title="Ver detalle"
+                                (click)="abrirModalVerFamilia(fam)">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         </button>
                         @if (esAdministrador()) {
-                          <button type="button" class="px-2.5 py-1 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[11px] transition-colors rounded-lg" (click)="abrirModalEditarFamilia(fam)">
-                            Editar
+                          <button type="button"
+                                  class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200 bg-blue-50/50 shadow-2xs"
+                                  aria-label="Editar"
+                                  title="Editar"
+                                  (click)="abrirModalEditarFamilia(fam)">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                           </button>
                           @if (fam.famActivo) {
-                            <button type="button" class="px-2.5 py-1 border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarDesactivarFamilia(fam)">
-                              Desactivar
+                            <button type="button"
+                                    class="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200 bg-amber-50 shadow-2xs"
+                                    aria-label="Desactivar"
+                                    title="Desactivar"
+                                    (click)="confirmarDesactivarFamilia(fam)">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </button>
                           } @else {
-                            <button type="button" class="px-2.5 py-1 border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarActivarFamilia(fam)">
-                              Activar
+                            <button type="button"
+                                    class="p-1.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100 rounded-lg transition-colors border border-emerald-200 bg-emerald-50 shadow-2xs"
+                                    aria-label="Activar"
+                                    title="Activar"
+                                    (click)="confirmarActivarFamilia(fam)">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </button>
                           }
                           @if (fam.totalVersiones === 0) {
-                            <button type="button" class="px-2.5 py-1 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-[11px] transition-colors rounded-lg" (click)="confirmarEliminarFamilia(fam)">
-                              Eliminar
+                            <button type="button"
+                                    class="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors border border-red-200 bg-red-50/50 shadow-2xs"
+                                    aria-label="Eliminar"
+                                    title="Eliminar"
+                                    (click)="confirmarEliminarFamilia(fam)">
+                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                             </button>
                           }
                         }
-                        <button type="button" class="px-2.5 py-1 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-[11px] rounded-lg transition-all" (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">
-                          Ver versiones
+                        <button type="button"
+                                class="p-1.5 text-ihss-900 hover:text-white hover:bg-ihss-900 rounded-lg transition-colors border border-gray-300 bg-white shadow-2xs"
+                                aria-label="Ver versiones"
+                                title="Ver versiones"
+                                (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                         </button>
                       </div>
                     </td>
                   </tr>
                 } @empty {
                   <tr>
-                    <td colspan="8" class="px-4 py-8 text-center text-gray-400 text-xs">
+                    <td colspan="7" class="px-4 py-8 text-center text-gray-400 text-xs">
                       No se encontraron familias de formularios registradas.
                     </td>
                   </tr>
