@@ -1,5 +1,22 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Cierre formal local de F6.5.FAM.1
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `0c4d29bed9a44588cfba5b161fb38afe81c992f5`.
+- **Objetivo**: Formalizar el cierre local de F6.5.FAM.1 después de confirmar nuevamente sus garantías backend publicadas, sin iniciar una fase nueva ni modificar comportamiento funcional.
+- **Evidencia reejecutada en esta intervención**:
+  - Pruebas específicas de ciclo de vida y política de eliminación de familias: **29/29 PASS**.
+  - Suite backend completa en Release: **494/494 PASS**.
+  - `git diff --check`: **PASS**.
+- **Cierre certificado**: activación idempotente, desactivación protegida frente a versión publicada vigente, eliminación exclusiva de familias sin versiones, bloqueo defensivo por concurrencia, inmutabilidad de código de familia, autorización administrativa y auditoría transaccional.
+- **Restricciones respetadas**: 0 cambios de Oracle, SQL, DDL, DML, workflows, SonarCloud, frontend o `main`.
+- **Quality Gate remoto**: **diferido al cierre global por decisión institucional**. No se declara aprobado ni se usa como evidencia de este cierre local.
+- **Punto de continuidad**: F6.5.FAM.1 queda **CERRADA LOCALMENTE**. F6.5.FAM.2 ya está publicada y requiere revisión funcional/UAT independiente antes de declarar integrado el gestor completo.
+
+---
+
 ## Registro de Intervención — AntiG — Implementación y Verificación de F6.5.FAM.2 (Gestor Visual de Familias)
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).

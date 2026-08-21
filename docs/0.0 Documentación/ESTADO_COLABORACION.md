@@ -23,7 +23,7 @@
 | **F6.3 — Persistencia bidireccional de plantilla** | **✅ COMPLETA Y CERTIFICADA** | HEAD auditado `f223f4d6e3ee9f77590709bb465a8d99e7946eb1`; Quality Gates #1155 / Run `32397277572` SUCCESS |
 | **F6.4 — Publicación y ciclo de vida de versiones** | **✅ COMPLETA Y CERTIFICADA** | UAT en Navegador Real CERTIFICADA en `localhost`; 425/425 Backend PASS; 426/426 Frontend PASS; 14/14 Playwright PASS; 0 cambios Oracle/SQL |
 | **F6.5 — Integridad de evaluaciones versionadas y respuestas de catálogo** | **✅ IMPLEMENTADA Y PROBADA LOCALMENTE** | 436/436 Backend PASS; 444/444 Frontend PASS; 14/14 Playwright PASS; Quality Gates Locales SUCCESS; SonarCloud Remoto pendiente/diferido al cierre global |
-| **F6.5.FAM.1 — Garantías backend del gestor de familias** | **✅ COMPLETA Y AUDITADA** | Backend 29/29 FAM PASS y 494/494 Release PASS. Activación y eliminación segura de familias verificada. |
+| **F6.5.FAM.1 — Garantías backend del gestor de familias** | **✅ CERRADA LOCALMENTE** | Cierre formal Codex en `0c4d29b`: 29/29 FAM PASS y 494/494 Release PASS. Activación idempotente, desactivación protegida, eliminación segura, auditoría y autorización verificadas. SonarCloud remoto queda diferido al cierre global; no se declara aprobado. |
 | **F6.5.FAM.2 — Gestor visual de Familias de Formularios** | **✅ COMPLETA Y PUBLICADA** | Subpanel familias integrado en Plantillas, filtros, modales institucionales Ver/Crear/Editar, acciones Activar/Desactivar/Eliminar y navegación a versiones. 444/444 Frontend PASS; 14/14 Playwright PASS. HEAD `f0ee7d04cd88c4b7a92e3dac6bff7a7a8ce3bc5b`. |
 
 ---
