@@ -141,6 +141,9 @@ builder.Services.AddScoped<IConfiguracionRepository, ConfiguracionRepository>();
 builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
 builder.Services.AddScoped<IListasRepository, ListasRepository>();
 builder.Services.AddScoped<MatricesRiesgosRepository>();
+// Conserva el registro canónico exigido por el contrato institucional y, a continuación,
+// aplica el decorador de hardening como resolución final de IMatricesRiesgosRepository.
+builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
 builder.Services.AddScoped<IFamiliasFormularioLifecycleRepository, FamiliasFormularioLifecycleRepository>();
 builder.Services.AddScoped<IMatricesRiesgosRepository, SafeMatricesRiesgosRepository>();
 builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
