@@ -129,7 +129,7 @@ test.beforeEach(async ({ page }) => {
   await stubLecturasBase(page);
 });
 
-test('UI-FAM.2 carga el detalle por ID y muestra versiones reales dentro de un único modal XL', async ({ page }) => {
+test('UI-FAM.2 carga el detalle por ID dentro de un único modal XL y conserva el puente de versiones', async ({ page }) => {
   let lecturasPorId = 0;
   await page.route('**/api/matrices-riesgos/familias/7', route => {
     lecturasPorId++;
@@ -149,8 +149,9 @@ test('UI-FAM.2 carga el detalle por ID y muestra versiones reales dentro de un �
   await expect(modal).toBeVisible();
   await expect.poll(() => lecturasPorId).toBe(1);
   await expect(modal.getByText('Detalle autoritativo UI-FAM.2 recuperado por ID.')).toBeVisible();
-  await expect(modal.getByText('v2')).toBeVisible();
-  await expect(modal.getByText('PUBLISHED')).toBeVisible();
+  await expect(modal.getByRole('button', { name: 'Ver versiones' })).toBeVisible();
+  await expect(modal).not.toContainText('Versiones del formulario');
+  await expect(modal).not.toContainText('Historial de versiones');
   await expect(page.locator('dialog[open]')).toHaveCount(1);
   await expect(modal).not.toContainText('Actividad reciente');
   await expect(modal).not.toContainText('Última actividad');
