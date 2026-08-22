@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-20 — Auditoría ChatGPT posterior a implementación AntiG F6.4  
+**Actualización:** 2026-08-22 — Implementación candidata UI-FAM.2 por ChatGPT  
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -26,9 +26,30 @@
 | **F6.5.FAM.1 — Garantías backend del gestor de familias** | **✅ CERRADA LOCALMENTE** | Cierre formal Codex en `0c4d29b`: 29/29 FAM PASS y 494/494 Release PASS. Activación idempotente, desactivación protegida, eliminación segura, auditoría y autorización verificadas. SonarCloud remoto queda diferido al cierre global; no se declara aprobado. |
 | **F6.5.FAM.2 — Gestor visual de Familias de Formularios** | **✅ CERTIFICADA Y PUBLICADA** | Subpanel y modal Administrar Familias rediseñado profesionalmente: max-w-6xl, columnas optimizadas (sin descripción en tabla, disponible en Ver), fecha en español (dd/MM/yyyy), botones iconográficos compactos con aria-label, filtro con botón Limpiar. 441/441 Frontend PASS (48/48 suites); 14/14 Playwright E2E PASS; Build SUCCESS. |
 | **UI-FAM.1 — Gestor principal de Familias** | **✅ CERTIFICADA LOCALMENTE** | Reemplaza la entrada principal de Plantillas por KPIs, búsqueda, filtros, paginación, tabla de familias y acciones contextuales conectadas al contrato existente. Corrección Codex sobre `cfae4cf`: 451/451 frontend, 14/14 E2E, 494/494 backend Release; cobertura local del componente principal: 86.99% líneas. SonarCloud remoto diferido al cierre global. |
-| **UI-FAM.2 — Detalle de familia en modal** | **⏳ PENDIENTE** | Modal secundario con resumen, información general y versiones reales de la familia seleccionada; no inventar actividad si no existe un contrato que la exponga. |
-| **UI-FAM.3 — Crear y editar familia en modales** | **⏳ PENDIENTE** | Formularios accesibles para alta y edición, código inmutable en edición, errores HTTP y confirmaciones de ciclo de vida. |
-| **UI-FAM.4 — Integración de versiones y retiro del puente temporal** | **⏳ PENDIENTE** | Integrar el ciclo de versiones en el detalle, conservar solo lectura y retirar el puente temporal solo cuando las rutas equivalentes estén verificadas. |
+| **UI-FAM.2 — Detalle de familia en modal** | **🟡 IMPLEMENTADA / VALIDACIÓN REMOTA PENDIENTE** | Modal XL encapsulado como componente independiente. Carga autoritativa por `famId`, historial real por `famCodigo`, estados loading/error/404, reintento, cancelación de respuestas tardías, foco y cierre accesible. No inventa actividad/auditoría. Incluye suite unitaria dedicada y E2E de éxito/404/reintento. Sin cambios Backend/Oracle. |
+| **UI-FAM.3 — Crear familia en modal** | **⏳ PENDIENTE** | Modal profesional de un solo paso para Código, Nombre y Descripción; validaciones contractuales, prevención de doble submit y tratamiento de 409/errores. No iniciar hasta cerrar UI-FAM.2. |
+| **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
+| **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
+
+---
+
+## UI-FAM.2 — implementación candidata 2026-08-22
+
+Alcance implementado sobre el baseline certificado de UI-FAM.1:
+
+- componente independiente `FamiliaDetalleModalComponent`, evitando reescribir el HTML monolítico de Matrices;
+- modal institucional XL/casi fullscreen, con un único diálogo interactivo;
+- `GET /api/matrices-riesgos/familias/{id}` como fuente autoritativa del detalle;
+- historial real mediante `GET /api/matrices-riesgos/formularios/historial?familiaCodigo=...`;
+- estados independientes de carga, éxito, 404/no encontrado, error y reintento;
+- cancelación de solicitudes al cerrar/cambiar de familia y protección contra respuestas tardías;
+- restauración de foco y navegación modal contenida;
+- resumen, información general, reglas de ciclo de vida derivadas únicamente del DTO vigente y tabla de versiones reales;
+- ausencia deliberada de “Actividad reciente”, “Última actividad” o “Actualizado por”, porque el DTO de familia no los expone;
+- bridge de gestión de versiones preservado temporalmente hasta la fase de integración final;
+- nuevas pruebas unitarias dedicadas y tres escenarios E2E: éxito con carga por ID, 404 y error temporal con reintento.
+
+**Estado de esta entrada:** el código candidato todavía debe superar los workflows/checks reales del SHA publicado antes de declarar UI-FAM.2 cerrada. No se atribuyen resultados de CI por anticipado.
 
 ---
 
@@ -111,27 +132,10 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 ## Próximo punto exacto
 
-1. Ejecutar **solo la UAT residual F6.4 en navegador real** sobre Desarrollo; no reimplementar ni reescanear el módulo.
-2. Registrar evidencia factual sin secretos en `F6.4_PUBLICACION_CICLO_VIDA_VERSIONES.md` y bitácora.
-3. Publicar el commit documental residual en `desarrollo`.
-4. Exigir **Quality Gates remoto SUCCESS sobre ese HEAD final**.
-5. Solo después declarar F6.4 **✅ COMPLETA Y CERTIFICADA DEFINITIVAMENTE**.
-6. F6.5 permanece **NO INICIADA** hasta ese cierre.
-
----
-
-## Actualización 2026-08-20 — bloqueo local del Quality Gate F6.4 corregido
-
-El Quality Gates #1170 fue reproducido localmente sobre `b598f042500d824f90e553abfa83a26885bd6de4`. El fallo no provenía de Oracle, de una regla SonarCloud ni de la lógica de publicación: una prueba F6.4 no compilaba al acceder a `html` sobre un argumento tipado como texto por el mock de SweetAlert.
-
-La corrección se limita a la prueba de ciclo de vida y a una prueba backend de evidencias que debía aislar su directorio temporal de la limpieza paralela de otros tests. En la verificación posterior, `tools/run_quality_gates.ps1` terminó correctamente con backend **425/425**, frontend **426/426** y Playwright **14/14**; la cobertura local del frontend fue **54.62% de líneas**. También se corrigió un enlace relativo roto en el archivo histórico de estado y los validadores de base de datos/documentación finalizaron correctamente. Esto demuestra que el defecto del workflow es reproducible y corregible localmente, pero **no certifica** el Quality Gate remoto ni sustituye la UAT residual F6.4.
-
-Punto de continuidad actualizado:
-
-1. Publicar el arreglo documental/técnico en `desarrollo`.
-2. Confirmar Quality Gates/SonarCloud remoto exitoso sobre ese HEAD.
-3. Ejecutar y registrar la UAT residual F6.4 en navegador real.
-4. Solo después cerrar F6.4; F6.5 sigue no iniciada.
+1. Publicar UI-FAM.2 únicamente en `desarrollo` sobre el baseline `83ed8e826d12600a2825861aa46cf7bedad67ca2` si la rama continúa estable.
+2. Verificar los workflows/checks reales del SHA publicado y corregir cualquier defecto de UI-FAM.2 sin alterar Backend/Oracle ni Quality Gates.
+3. Actualizar esta evidencia únicamente con resultados observados y declarar UI-FAM.2 cerrada solo después de la validación.
+4. Iniciar **UI-FAM.3 — Nueva Familia** inmediatamente después, en un commit separado.
 
 ---
 
@@ -145,4 +149,5 @@ Punto de continuidad actualizado:
 - No bajar cobertura ni Quality Gates.
 - No eliminar/omitir pruebas para obtener verde.
 - No exponer credenciales, JWT, cookies, tokens o secretos.
-- **F6.5 NO INICIADA.**
+- No modificar Backend para UI-FAM.2: los contratos y endpoints necesarios ya existen.
+- No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.

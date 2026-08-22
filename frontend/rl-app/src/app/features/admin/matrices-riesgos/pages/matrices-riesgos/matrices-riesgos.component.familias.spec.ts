@@ -84,6 +84,10 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familia
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    component.cerrarModalVerFamilia();
+  });
+
   it('1. Renderiza el botón Administrar Familias y abre el modal gestor', () => {
     expect(component.modalGestorFamiliasAbierto()).toBe(true);
     const compiled = fixture.nativeElement as HTMLElement;
@@ -136,17 +140,20 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familia
     expect(component.familiasFiltradas().length).toBe(3);
   });
 
-  it('7. Abrir modal Ver detalle contiene la descripción que no está en la tabla', () => {
-    component.abrirModalVerFamilia(mockFamilias[0]);
-    fixture.detectChanges();
+  it('7. Ver detalle usa el nuevo modal UI-FAM.2 y consulta la familia por su famId', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(mockFamilias[0]));
 
-    expect(component.modalVerFamiliaAbierto()).toEqual(mockFamilias[0]);
-    const compiled = fixture.nativeElement as HTMLElement;
-    const verModalDesc = compiled.querySelector('#titulo-modal-ver-familia');
-    expect(verModalDesc?.textContent).toContain('Familia: Familia Empleados');
+    component.abrirModalVerFamilia(mockFamilias[0]);
+
+    expect(component.detalleFamiliaDinamicoAbierto()).toBe(true);
+    expect(component.modalVerFamiliaAbierto()).toBeNull();
+    expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(1);
+    expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).not.toBeNull();
+    expect(document.body.textContent).toContain('Descripción de prueba para detalle');
 
     component.cerrarModalVerFamilia();
-    expect(component.modalVerFamiliaAbierto()).toBeNull();
+    expect(component.detalleFamiliaDinamicoAbierto()).toBe(false);
+    expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).toBeNull();
   });
 
   it('8. Selección de Ver versiones selecciona la familia y cierra el gestor', () => {

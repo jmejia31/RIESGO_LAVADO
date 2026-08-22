@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, OnInit, OnDestroy, computed, inject, signal } from '@angular/core';
+import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, EnvironmentInjector, HostListener, OnInit, OnDestroy, computed, createComponent, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -22,6 +22,7 @@ import { GlobalHttpStateService } from '../../../../../core/services/global-http
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
 import { DynamicFieldRendererComponent } from '../../components/dynamic-field-renderer/dynamic-field-renderer.component';
+import { FamiliaDetalleModalComponent } from '../../components/familia-detalle-modal/familia-detalle-modal.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { recalcularFormulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
 import {
@@ -45,6 +46,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly globalState = inject(GlobalHttpStateService);
   private readonly authService = inject(AuthService);
+  private readonly applicationRef = inject(ApplicationRef);
+  private readonly environmentInjector = inject(EnvironmentInjector);
+  private detalleFamiliaRef: ComponentRef<FamiliaDetalleModalComponent> | null = null;
+  private readonly suscripcionesDetalleFamilia: Subscription[] = [];
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
@@ -76,6 +81,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly modalGestorFamiliasAbierto = signal<boolean>(false);
   readonly modalVerFamiliaAbierto = signal<FamiliaFormularioDto | null>(null);
+  readonly detalleFamiliaDinamicoAbierto = signal(false);
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
   readonly filtroVigenciaFamilia = signal('TODAS');
@@ -263,7 +269,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape', ['$event'])
   manejarTeclaEscape(event: Event): void {
-    if (this.modalVerAbierto()) {
+    if (this.detalleFamiliaDinamicoAbierto()) {
+      event.preventDefault();
+      this.cerrarModalVerFamilia();
+    } else if (this.modalVerAbierto()) {
       event.preventDefault();
       this.cerrarModalVer();
     } else if (this.modalEditarAbierto()) {
@@ -299,6 +308,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.secuenciaCargaEvaluaciones++;
     this.suscripcionEvaluaciones?.unsubscribe();
     this.suscripcionEvaluaciones = null;
+    this.cerrarModalVerFamilia();
     this.limpiarAutoDismiss();
     this.cancelarDebounceBuscarPendiente();
   }
@@ -442,10 +452,61 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   abrirModalVerFamilia(fam: FamiliaFormularioDto): void {
-    this.modalVerFamiliaAbierto.set(fam);
+    if (!fam || fam.famId <= 0) return;
+
+    this.cerrarModalVerFamilia();
+    this.cerrarModalGestorFamilias();
+    this.modalVerFamiliaAbierto.set(null);
+
+    const componentRef = createComponent(FamiliaDetalleModalComponent, {
+      environmentInjector: this.environmentInjector
+    });
+    componentRef.setInput('familiaId', fam.famId);
+    componentRef.setInput('familiaReferencia', fam);
+
+    this.suscripcionesDetalleFamilia.push(
+      componentRef.instance.cerrar.subscribe(() => this.cerrarModalVerFamilia()),
+      componentRef.instance.gestionarVersiones.subscribe(familia => {
+        this.cerrarModalVerFamilia();
+        this.seleccionarFamiliaDesdeGestor(familia.famCodigo);
+      }),
+      componentRef.instance.editarFamilia.subscribe(familia => {
+        this.cerrarModalVerFamilia();
+        this.abrirModalEditarFamilia(familia);
+      }),
+      componentRef.instance.nuevaVersion.subscribe(familia => {
+        this.cerrarModalVerFamilia();
+        this.seleccionarFamilia(familia.famCodigo);
+        this.mostrandoVersionesFamilia.set(true);
+        this.abrirModalCrearFormulario();
+      }),
+      componentRef.instance.verDefinicion.subscribe(({ familia, version }) => {
+        this.cerrarModalVerFamilia();
+        this.familiaSeleccionada.set(familia.famCodigo);
+        this.abrirDefinicion(version, true);
+      })
+    );
+
+    this.detalleFamiliaRef = componentRef;
+    this.applicationRef.attachView(componentRef.hostView);
+    document.body.appendChild(componentRef.location.nativeElement);
+    this.detalleFamiliaDinamicoAbierto.set(true);
+    componentRef.changeDetectorRef.detectChanges();
   }
 
   cerrarModalVerFamilia(): void {
+    while (this.suscripcionesDetalleFamilia.length > 0) {
+      this.suscripcionesDetalleFamilia.pop()?.unsubscribe();
+    }
+
+    const componentRef = this.detalleFamiliaRef;
+    if (componentRef) {
+      this.applicationRef.detachView(componentRef.hostView);
+      componentRef.destroy();
+      this.detalleFamiliaRef = null;
+    }
+
+    this.detalleFamiliaDinamicoAbierto.set(false);
     this.modalVerFamiliaAbierto.set(null);
   }
 
