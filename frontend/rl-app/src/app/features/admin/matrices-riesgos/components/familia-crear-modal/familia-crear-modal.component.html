@@ -1,0 +1,180 @@
+<dialog open
+        class="modal-backdrop-overlay"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-crear-familia"
+        data-ui-fam-create="modal"
+        (keydown)="manejarTecladoDialogo($event)">
+  <form #familiaForm="ngForm"
+        class="modal-container-card w-[calc(100vw-1.5rem)] sm:w-[80vw] sm:max-w-[1180px] max-h-[90dvh]"
+        novalidate
+        (ngSubmit)="guardar()">
+    <div class="modal-header-institutional px-5 py-5 sm:px-8 sm:py-6">
+      <div class="flex min-w-0 items-center gap-4">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700 sm:h-14 sm:w-14" aria-hidden="true">
+          <svg class="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V7z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14 2v5h5M9 13h6M9 17h6"/>
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h3 id="titulo-modal-crear-familia" class="text-xl font-bold tracking-tight text-gray-950 sm:text-2xl">Nueva Familia de Formularios</h3>
+          <p class="mt-1 max-w-2xl text-xs leading-5 text-gray-500 sm:text-sm">
+            Cree una nueva familia institucional que posteriormente contendrá versiones de un formulario dinámico.
+          </p>
+        </div>
+      </div>
+      <button type="button"
+              class="ml-4 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Cerrar Nueva Familia de Formularios"
+              [disabled]="guardando()"
+              (click)="solicitarCierre()">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body-scrollable space-y-5 px-5 py-5 sm:px-8 sm:py-6">
+      @if (error(); as errorTexto) {
+        <div class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-ui-fam-create-state="error">
+          <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="flex-1 font-medium">{{ errorTexto }}</span>
+          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+      }
+
+      <section class="grid grid-cols-1 gap-3 md:grid-cols-3" aria-label="Resumen de creación de familia" data-ui-fam-create="summary">
+        <article class="flex min-h-[84px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 104 0M9 5a2 2 0 014 0m-4 7h6m-6 4h6"/></svg>
+          </span>
+          <div><p class="text-xs font-medium text-gray-500">Paso actual:</p><p class="mt-0.5 text-sm font-bold text-gray-900">Identificación</p></div>
+        </article>
+        <article class="flex min-h-[84px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l-3 3 3 3m8-6l3 3-3 3M14 5l-4 14"/></svg>
+          </span>
+          <div><p class="text-xs font-medium text-gray-500">Requiere:</p><p class="mt-0.5 text-sm font-bold text-gray-900">Código y nombre</p></div>
+        </article>
+        <article class="flex min-h-[84px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3l7 4v5c0 5-3.5 8-7 9-3.5-1-7-4-7-9V7l7-4zm-3 9l2 2 4-4"/></svg>
+          </span>
+          <div><p class="text-xs font-medium text-gray-500">Auditoría:</p><p class="mt-0.5 text-sm font-bold text-gray-900">Activa</p></div>
+        </article>
+      </section>
+
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.9fr)]">
+        <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-identificacion-familia" data-ui-fam-create="identificacion">
+          <h4 id="titulo-identificacion-familia" class="text-base font-bold text-gray-900">Identificación de la familia</h4>
+
+          <div class="mt-5 space-y-5">
+            <div>
+              <div class="mb-1.5 flex items-center justify-between gap-3">
+                <label for="crear-fam-codigo" class="text-sm font-bold text-gray-700">Código <span class="text-red-500">*</span></label>
+                <span class="text-[11px] font-medium text-gray-400">{{ codigo.length }}/50</span>
+              </div>
+              <input #codigoInput
+                     #codigoModel="ngModel"
+                     id="crear-fam-codigo"
+                     name="codigo"
+                     type="text"
+                     required
+                     maxlength="50"
+                     autocomplete="off"
+                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                     [class.border-red-300]="codigoModel.invalid && codigoModel.touched"
+                     [class.border-gray-200]="!(codigoModel.invalid && codigoModel.touched)"
+                     [(ngModel)]="codigo"
+                     (blur)="codigo = codigo.trim()"
+                     placeholder="Ej. PRUEBA_FORMULARIO"
+                     aria-describedby="ayuda-codigo-familia" />
+              <p id="ayuda-codigo-familia" class="mt-1.5 text-xs text-gray-500">El código es único y no podrá modificarse posteriormente.</p>
+              @if (codigoModel.touched && codigoModel.errors?.['required']) {
+                <p class="mt-1 text-xs font-semibold text-red-600">Ingrese el código institucional de la familia.</p>
+              }
+            </div>
+
+            <div>
+              <div class="mb-1.5 flex items-center justify-between gap-3">
+                <label for="crear-fam-nombre" class="text-sm font-bold text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                <span class="text-[11px] font-medium text-gray-400">{{ nombre.length }}/150</span>
+              </div>
+              <input #nombreModel="ngModel"
+                     id="crear-fam-nombre"
+                     name="nombre"
+                     type="text"
+                     required
+                     maxlength="150"
+                     autocomplete="off"
+                     class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                     [class.border-red-300]="nombreModel.invalid && nombreModel.touched"
+                     [class.border-gray-200]="!(nombreModel.invalid && nombreModel.touched)"
+                     [(ngModel)]="nombre"
+                     (blur)="nombre = nombre.trim()"
+                     placeholder="Ej. Prueba de Formulario" />
+              @if (nombreModel.touched && nombreModel.errors?.['required']) {
+                <p class="mt-1 text-xs font-semibold text-red-600">Ingrese el nombre descriptivo de la familia.</p>
+              }
+            </div>
+
+            <div>
+              <div class="mb-1.5 flex items-center justify-between gap-3">
+                <label for="crear-fam-descripcion" class="text-sm font-bold text-gray-700">Descripción</label>
+                <span class="text-[11px] font-medium text-gray-400">{{ descripcion.length }}/500</span>
+              </div>
+              <textarea id="crear-fam-descripcion"
+                        name="descripcion"
+                        rows="4"
+                        maxlength="500"
+                        class="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                        [(ngModel)]="descripcion"
+                        (blur)="descripcion = descripcion.trim()"
+                        placeholder="Describa el propósito y alcance de esta familia de formularios."
+                        aria-describedby="ayuda-descripcion-familia"></textarea>
+              <p id="ayuda-descripcion-familia" class="mt-1.5 text-xs text-gray-500">Describa el propósito y alcance de esta familia de formularios.</p>
+            </div>
+          </div>
+        </section>
+
+        <aside class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-reglas-familia" data-ui-fam-create="reglas">
+          <h4 id="titulo-reglas-familia" class="text-base font-bold text-gray-900">Reglas y consideraciones</h4>
+          <ul class="mt-5 space-y-5 text-sm text-gray-600">
+            @for (regla of [
+              'Código único institucional',
+              'El código no podrá editarse después de crear la familia',
+              'Una familia puede contener múltiples versiones',
+              'La activación y vigencia se gestionan posteriormente',
+              'Los cambios quedarán auditados'
+            ]; track regla) {
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-600" aria-hidden="true">
+                  <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                </span>
+                <span class="leading-6">{{ regla }}</span>
+              </li>
+            }
+          </ul>
+        </aside>
+      </div>
+    </div>
+
+    <div class="modal-footer-institutional px-5 py-4 sm:px-8">
+      <button type="button"
+              class="min-w-28 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="guardando()"
+              (click)="solicitarCierre()">
+        Cancelar
+      </button>
+      <button type="submit"
+              class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
+              [disabled]="guardando() || familiaForm.invalid"
+              data-ui-fam-create-action="submit">
+        @if (guardando()) {
+          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          <span>Creando familia...</span>
+        } @else {
+          <span>Crear familia</span>
+        }
+      </button>
+    </div>
+  </form>
+</dialog>

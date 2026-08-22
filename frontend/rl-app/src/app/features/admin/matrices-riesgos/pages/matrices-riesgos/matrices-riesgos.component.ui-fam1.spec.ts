@@ -197,11 +197,15 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     ]);
   });
 
-  it('10. la acción Nueva familia abre el flujo existente sin crear datos hardcodeados', () => {
+  it('10. la acción Nueva familia abre el modal standalone UI-FAM.3 sin alterar el flujo de edición', () => {
     component.abrirModalCrearFamilia();
-    expect(component.modalFamiliaAbierto()).toBe(true);
+    fixture.detectChanges();
+
+    expect(document.body.querySelector('[data-ui-fam-create="modal"]')).not.toBeNull();
+    expect(component.modalFamiliaAbierto()).toBe(false);
     expect(component.modoEdicionFamilia()).toBe(false);
-    expect(component.nuevaFamiliaCodigo).toBe('');
-    expect(component.nuevaFamiliaNombre).toBe('');
+
+    component.cerrarModalCrearFamilia();
+    expect(document.body.querySelector('[data-ui-fam-create="modal"]')).toBeNull();
   });
 });
