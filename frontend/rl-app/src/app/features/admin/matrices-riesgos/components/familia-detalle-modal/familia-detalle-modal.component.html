@@ -7,20 +7,17 @@
         [attr.aria-busy]="cargando()"
         (keydown)="manejarKeydown($event)"
         (keydown.escape)="$event.preventDefault(); cerrar.emit()">
-  <div class="modal-container-card h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px]">
-    <div class="modal-header-institutional">
-      <div class="flex min-w-0 items-center gap-3">
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-ihss-900/10 text-ihss-900">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+  <div class="modal-container-card flex h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <header class="flex shrink-0 items-center justify-between gap-4 border-b border-gray-100 bg-white px-6 py-5 sm:px-7">
+      <div class="flex min-w-0 items-center gap-4">
+        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z"/>
           </svg>
         </div>
         <div class="min-w-0">
-          <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-ihss-600">Plantillas · Familias de Formularios</p>
-          <h3 id="titulo-detalle-familia" class="truncate text-base font-bold text-gray-900 sm:text-xl">Detalle de Familia</h3>
-          <p class="truncate text-xs text-gray-500">
-            {{ detalle()?.famNombre || familiaReferencia?.famNombre || 'Consultando información institucional...' }}
-          </p>
+          <h3 id="titulo-detalle-familia" class="text-xl font-bold text-gray-950 sm:text-2xl">Detalle de Familia</h3>
+          <p class="mt-1 text-xs text-gray-500 sm:text-sm">Gestione la familia de formularios y sus versiones institucionales.</p>
         </div>
       </div>
 
@@ -28,170 +25,193 @@
         @if (detalle(); as fam) {
           @if (esAdministrador()) {
             <button type="button"
-                    class="hidden rounded-xl border border-gray-200 bg-white px-3.5 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:inline-flex"
+                    class="hidden items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-50 sm:inline-flex"
                     (click)="solicitarEdicion()">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 13H9v-2.828l6.586-6.586z"/></svg>
               Editar familia
+            </button>
+            <button type="button"
+                    class="hidden items-center gap-2 rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50 sm:inline-flex"
+                    [disabled]="operando()"
+                    (click)="cambiarEstadoFamilia()">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M12 3a9 9 0 110 18 9 9 0 010-18z"/></svg>
+              {{ fam.famActivo ? 'Desactivar' : 'Activar' }}
             </button>
           }
         }
         <button #botonCerrar
                 type="button"
-                class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600/30"
+                class="rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
                 aria-label="Cerrar detalle de familia"
                 (click)="cerrar.emit()">
-          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-    </div>
+    </header>
 
-    <div class="modal-body-scrollable bg-slate-50/50">
+    <div class="min-h-0 flex-1 overflow-y-auto bg-white px-5 py-5 sm:px-7">
       @if (cargando()) {
         <div class="flex min-h-[58vh] flex-col items-center justify-center gap-4 text-center" data-ui-fam-detail-state="loading" aria-live="polite">
           <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-            <svg class="h-6 w-6 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-            </svg>
+            <svg class="h-6 w-6 animate-spin text-blue-700" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
           </div>
-          <div>
-            <p class="text-sm font-bold text-gray-800">Consultando detalle de la familia</p>
-            <p class="mt-1 text-xs text-gray-500">La información se obtiene desde el registro autoritativo por identificador.</p>
-          </div>
+          <div><p class="text-sm font-bold text-gray-800">Consultando detalle de la familia</p><p class="mt-1 text-xs text-gray-500">Cargando información institucional y versiones asociadas.</p></div>
         </div>
       } @else if (noEncontrada()) {
         <div class="flex min-h-[58vh] flex-col items-center justify-center gap-4 px-6 text-center" data-ui-fam-detail-state="not-found">
-          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3l-6.93-12a2 2 0 00-3.48 0l-6.93 12a2 2 0 001.74 3z"/>
-            </svg>
-          </div>
-          <div>
-            <p class="text-base font-bold text-gray-900">Familia no encontrada</p>
-            <p class="mt-1 max-w-md text-sm text-gray-500">El registro pudo haber sido eliminado o ya no está disponible. Cierre esta ventana y actualice el gestor.</p>
-          </div>
+          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3l-6.93-12a2 2 0 00-3.48 0l-6.93 12a2 2 0 001.74 3z"/></svg></div>
+          <div><p class="text-base font-bold text-gray-900">Familia no encontrada</p><p class="mt-1 max-w-md text-sm text-gray-500">El registro pudo haber sido eliminado o ya no está disponible.</p></div>
           <button type="button" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50" (click)="cerrar.emit()">Cerrar</button>
         </div>
       } @else if (error(); as errorDetalle) {
         <div class="flex min-h-[58vh] flex-col items-center justify-center gap-4 px-6 text-center" data-ui-fam-detail-state="error">
-          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-700">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </div>
-          <div>
-            <p class="text-base font-bold text-gray-900">No se pudo cargar el detalle</p>
-            <p class="mt-1 max-w-xl text-sm font-medium text-red-700">{{ errorDetalle }}</p>
-          </div>
+          <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+          <div><p class="text-base font-bold text-gray-900">No se pudo cargar el detalle</p><p class="mt-1 max-w-xl text-sm font-medium text-red-700">{{ errorDetalle }}</p></div>
           <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700" (click)="reintentarDetalle()">Reintentar</button>
         </div>
       } @else if (detalle(); as fam) {
         <div class="space-y-5" data-ui-fam-detail-state="success">
-          <section class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" aria-label="Resumen de la familia">
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Código</dt>
-              <dd class="mt-1.5 break-all font-mono text-sm font-bold text-ihss-900">{{ fam.famCodigo }}</dd>
-            </dl>
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Nombre</dt>
-              <dd class="mt-1.5 text-sm font-bold text-gray-900">{{ fam.famNombre }}</dd>
-            </dl>
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Estado</dt>
-              <dd class="mt-1.5">
-                <span class="inline-flex rounded-md px-2.5 py-1 text-[11px] font-bold"
-                      [class.bg-emerald-50]="fam.famActivo"
-                      [class.text-emerald-700]="fam.famActivo"
-                      [class.bg-gray-100]="!fam.famActivo"
-                      [class.text-gray-600]="!fam.famActivo">
-                  {{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}
-                </span>
-              </dd>
-            </dl>
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Versiones</dt>
-              <dd class="mt-1.5 text-xl font-bold text-gray-900">{{ fam.totalVersiones }}</dd>
-            </dl>
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Vigencia</dt>
-              <dd class="mt-1.5 text-sm font-bold" [class.text-emerald-700]="fam.tieneVersionVigente" [class.text-gray-500]="!fam.tieneVersionVigente">
-                {{ fam.tieneVersionVigente ? 'Con versión vigente' : 'Sin versión vigente' }}
-              </dd>
-            </dl>
-            <dl class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-              <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Creación</dt>
-              <dd class="mt-1.5 text-sm font-bold text-gray-800">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</dd>
-            </dl>
+          <section class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" aria-label="Resumen de la familia">
+            <div class="flex items-center gap-3 border-b border-gray-100 p-4 sm:border-r lg:border-b-0">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white"><span class="font-mono text-sm font-bold">&lt;/&gt;</span></div>
+              <dl class="min-w-0"><dt class="text-[10px] text-gray-500">Código</dt><dd class="mt-1 truncate font-mono text-xs font-bold text-gray-950" [title]="fam.famCodigo">{{ fam.famCodigo }}</dd></dl>
+            </div>
+            <div class="flex items-center gap-3 border-b border-gray-100 p-4 lg:border-b-0 lg:border-r">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+              <dl class="min-w-0"><dt class="text-[10px] text-gray-500">Nombre</dt><dd class="mt-1 truncate text-xs font-bold text-gray-950" [title]="fam.famNombre">{{ fam.famNombre }}</dd></dl>
+            </div>
+            <div class="flex items-center gap-3 border-b border-gray-100 p-4 sm:border-r lg:border-b-0">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+              <dl><dt class="text-[10px] text-gray-500">Estado</dt><dd class="mt-1"><span class="inline-flex rounded-md px-2 py-1 text-[10px] font-bold" [class.bg-emerald-100]="fam.famActivo" [class.text-emerald-700]="fam.famActivo" [class.bg-gray-100]="!fam.famActivo" [class.text-gray-600]="!fam.famActivo">{{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}</span></dd></dl>
+            </div>
+            <div class="flex items-center gap-3 border-b border-gray-100 p-4 lg:border-b-0 lg:border-r">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z"/></svg></div>
+              <dl><dt class="text-[10px] text-gray-500">Versiones</dt><dd class="mt-1 text-lg font-bold text-gray-950">{{ fam.totalVersiones }}</dd></dl>
+            </div>
+            <div class="flex items-center gap-3 border-b border-gray-100 p-4 sm:border-r lg:border-b-0">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+              <dl><dt class="text-[10px] text-gray-500">Vigencia</dt><dd class="mt-1 text-sm font-bold" [class.text-emerald-700]="fam.tieneVersionVigente" [class.text-gray-500]="!fam.tieneVersionVigente">{{ fam.tieneVersionVigente ? 'Sí' : 'No' }}</dd></dl>
+            </div>
+            <div class="flex items-center gap-3 p-4">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+              <dl><dt class="text-[10px] text-gray-500">Fecha de creación</dt><dd class="mt-1 text-xs font-bold text-gray-950">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</dd></dl>
+            </div>
           </section>
 
-          <div class="grid gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,0.75fr)]">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm" aria-labelledby="titulo-info-familia">
-              <div class="border-b border-gray-100 pb-3">
-                <h4 id="titulo-info-familia" class="text-sm font-bold text-gray-900">Información general</h4>
-                <p class="mt-0.5 text-xs text-gray-500">Datos registrados actualmente para esta familia de formularios.</p>
-              </div>
-              <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Código institucional</dt>
-                  <dd class="mt-1 font-mono text-sm font-bold text-ihss-900">{{ fam.famCodigo }}</dd>
-                </div>
-                <div>
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Nombre</dt>
-                  <dd class="mt-1 text-sm font-bold text-gray-900">{{ fam.famNombre }}</dd>
-                </div>
-                <div class="sm:col-span-2">
-                  <dt class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Descripción</dt>
-                  <dd class="mt-1 whitespace-pre-wrap text-sm leading-6 text-gray-600">{{ fam.famDescripcion || 'Sin descripción registrada.' }}</dd>
-                </div>
+          <div class="grid gap-5 xl:grid-cols-2">
+            <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-info-familia">
+              <h4 id="titulo-info-familia" class="text-base font-bold text-gray-950">Información general</h4>
+              <dl class="mt-4 divide-y divide-gray-100 text-sm">
+                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Código</dt><dd class="font-mono text-gray-700">{{ fam.famCodigo }}</dd></div>
+                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Nombre</dt><dd class="text-gray-700">{{ fam.famNombre }}</dd></div>
+                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Descripción</dt><dd class="whitespace-pre-wrap text-gray-600">{{ fam.famDescripcion || 'Sin descripción registrada.' }}</dd></div>
+                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Estado</dt><dd><span class="inline-flex rounded-md px-2 py-1 text-[10px] font-bold" [class.bg-emerald-100]="fam.famActivo" [class.text-emerald-700]="fam.famActivo" [class.bg-gray-100]="!fam.famActivo" [class.text-gray-600]="!fam.famActivo">{{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}</span></dd></div>
+                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Fecha de creación</dt><dd class="text-gray-600">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</dd></div>
               </dl>
             </section>
 
-            <aside class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm" aria-labelledby="titulo-resumen-familia">
-              <h4 id="titulo-resumen-familia" class="text-sm font-bold text-gray-900">Resumen operativo</h4>
-              <div class="mt-4 space-y-3 text-xs">
-                <div class="flex items-start justify-between gap-4 rounded-xl bg-slate-50 p-3">
-                  <span class="font-semibold text-gray-500">Disponibilidad</span>
-                  <strong [class.text-emerald-700]="fam.famActivo" [class.text-gray-600]="!fam.famActivo">{{ fam.famActivo ? 'Operativa' : 'Inactiva' }}</strong>
+            <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm" aria-labelledby="titulo-actividad-familia">
+              <h4 id="titulo-actividad-familia" class="text-base font-bold text-gray-950">Actividad reciente</h4>
+              @if (cargandoActividad()) {
+                <div class="mt-5 flex items-center gap-3 text-sm text-gray-500"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span>Cargando actividad...</div>
+              } @else if (actividadReciente().length > 0) {
+                <ol class="relative mt-4 space-y-4">
+                  @for (actividad of actividadReciente(); track actividad.id; let ultimo = $last) {
+                    <li class="relative flex gap-4">
+                      @if (!ultimo) { <span class="absolute left-[17px] top-8 h-[calc(100%+8px)] w-px bg-gray-200" aria-hidden="true"></span> }
+                      <span class="relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
+                            [class.bg-emerald-500]="actividad.tono === 'green'"
+                            [class.bg-blue-600]="actividad.tono === 'blue'"
+                            [class.bg-violet-600]="actividad.tono === 'purple'"
+                            [class.bg-amber-500]="actividad.tono === 'amber'">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                      </span>
+                      <div class="min-w-0 pb-1"><p class="text-sm font-bold text-gray-950">{{ actividad.titulo }}</p><p class="mt-0.5 text-xs text-gray-500">{{ actividad.descripcion }}</p><p class="mt-1 text-[11px] text-gray-500">{{ actividad.fecha | date:'dd/MM/yyyy, hh:mm a' }} &nbsp;•&nbsp; {{ actividad.usuario }}</p></div>
+                    </li>
+                  }
+                </ol>
+              } @else {
+                <div class="mt-5 rounded-xl bg-slate-50 px-4 py-5 text-center text-xs text-gray-500">
+                  {{ errorActividad() || (esAdministrador() ? 'No hay actividad reciente disponible para esta familia.' : 'La actividad de auditoría requiere autorización administrativa.') }}
                 </div>
-                <div class="flex items-start justify-between gap-4 rounded-xl bg-slate-50 p-3">
-                  <span class="font-semibold text-gray-500">Versiones registradas</span>
-                  <strong class="text-gray-800">{{ fam.totalVersiones }}</strong>
-                </div>
-                <div class="flex items-start justify-between gap-4 rounded-xl bg-slate-50 p-3">
-                  <span class="font-semibold text-gray-500">Versión vigente</span>
-                  <strong [class.text-emerald-700]="fam.tieneVersionVigente" [class.text-gray-600]="!fam.tieneVersionVigente">{{ fam.tieneVersionVigente ? 'Sí' : 'No' }}</strong>
-                </div>
-              </div>
-              <p class="mt-4 text-[11px] leading-5 text-gray-500">El historial y las operaciones de versiones continúan disponibles desde el flujo de versiones existente.</p>
-            </aside>
+              }
+            </section>
           </div>
+
+          <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" aria-labelledby="titulo-versiones-familia">
+            <div class="flex flex-col gap-3 border-b border-gray-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <h4 id="titulo-versiones-familia" class="text-base font-bold text-gray-950">Versiones del formulario</h4>
+              @if (esAdministrador()) {
+                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-blue-800" (click)="solicitarNuevaVersion()">
+                  <span class="text-lg font-normal leading-none">+</span> Nueva versión
+                </button>
+              }
+            </div>
+
+            @if (errorVersiones(); as errorVersion) {
+              <div class="m-4 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+                <span>{{ errorVersion }}</span><button type="button" class="font-bold underline" (click)="reintentarVersiones()">Reintentar</button>
+              </div>
+            } @else if (cargandoVersiones()) {
+              <div class="flex items-center justify-center gap-3 px-5 py-10 text-sm text-gray-500"><span class="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span>Cargando versiones...</div>
+            } @else if (versionesOrdenadas().length === 0) {
+              <div class="px-5 py-10 text-center text-sm text-gray-500">Esta familia todavía no tiene versiones registradas.</div>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="min-w-[980px] w-full text-left text-xs">
+                  <thead class="border-b border-gray-200 bg-white text-[10px] font-bold text-gray-600">
+                    <tr><th class="px-5 py-3">Versión</th><th class="px-4 py-3">Código</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Vigencia</th><th class="px-4 py-3">Inicio</th><th class="px-4 py-3">Fin</th><th class="px-4 py-3">Creación</th><th class="px-4 py-3 text-center">Acciones</th></tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
+                    @for (version of versionesOrdenadas(); track version.verId) {
+                      <tr class="transition-colors hover:bg-slate-50/70">
+                        <td class="px-5 py-3 font-bold text-gray-900">v{{ version.verVersion }}</td>
+                        <td class="px-4 py-3 font-mono text-[11px] text-gray-600">{{ version.verCodigo }}</td>
+                        <td class="px-4 py-3"><span class="inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold"
+                          [class.bg-slate-100]="version.verEstado === 'DRAFT' || version.verEstado === 'ARCHIVED'"
+                          [class.text-slate-600]="version.verEstado === 'DRAFT' || version.verEstado === 'ARCHIVED'"
+                          [class.bg-violet-100]="version.verEstado === 'PUBLISHED'"
+                          [class.text-violet-700]="version.verEstado === 'PUBLISHED'"
+                          [class.bg-blue-100]="version.verEstado === 'IN_REVIEW' || version.verEstado === 'APPROVED'"
+                          [class.text-blue-700]="version.verEstado === 'IN_REVIEW' || version.verEstado === 'APPROVED'"
+                          [class.bg-orange-100]="version.verEstado === 'RETIRED'"
+                          [class.text-orange-700]="version.verEstado === 'RETIRED'">{{ etiquetaEstado(version.verEstado) }}</span></td>
+                        <td class="px-4 py-3"><span class="inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold" [class.bg-emerald-100]="version.verVigente" [class.text-emerald-700]="version.verVigente" [class.bg-red-50]="!version.verVigente" [class.text-red-600]="!version.verVigente">{{ version.verVigente ? 'VIGENTE' : 'NO VIGENTE' }}</span></td>
+                        <td class="px-4 py-3 text-gray-600">{{ version.verFechaInicio ? (version.verFechaInicio | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ version.verFechaFin ? (version.verFechaFin | date:'dd/MM/yyyy') : '—' }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ version.verFechaCreacion | date:'dd/MM/yyyy' }}</td>
+                        <td class="px-4 py-3">
+                          <div class="flex items-center justify-center gap-2">
+                            <button type="button" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 font-bold text-blue-700 hover:bg-blue-50" (click)="solicitarVerVersion(version)">{{ version.verEstado === 'PUBLISHED' ? 'Ver detalle' : 'Ver' }}</button>
+                            @if (version.verEstado === 'DRAFT' && esAdministrador()) {
+                              <button type="button" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 font-bold text-blue-700 hover:bg-blue-50" (click)="solicitarEditarVersion()">Editar</button>
+                            }
+                            @if (version.verEstado === 'PUBLISHED' && esAdministrador()) {
+                              <button type="button" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-50" [disabled]="operando()" (click)="clonarVersion(version)">Clonar</button>
+                            }
+                            <button type="button" class="rounded-lg p-2 text-gray-500 hover:bg-gray-100" aria-label="Más acciones de la versión" (click)="solicitarGestionVersiones()"><span class="text-lg leading-none">⋮</span></button>
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </section>
+
+          @if (esAdministrador()) {
+            <div class="flex gap-2 sm:hidden">
+              <button type="button" class="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold text-blue-700" (click)="solicitarEdicion()">Editar familia</button>
+              <button type="button" class="flex-1 rounded-xl border border-blue-300 bg-white px-4 py-2.5 text-xs font-bold text-blue-700" [disabled]="operando()" (click)="cambiarEstadoFamilia()">{{ fam.famActivo ? 'Desactivar' : 'Activar' }}</button>
+            </div>
+          }
         </div>
       }
     </div>
 
-    @if (detalle(); as fam) {
-      <div class="flex flex-col-reverse gap-2 border-t border-gray-100 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <button type="button"
-                class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50"
-                (click)="solicitarGestionVersiones()">
-          Ver versiones
-        </button>
-        <div class="flex items-center justify-end gap-2">
-          @if (esAdministrador()) {
-            <button type="button"
-                    class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:hidden"
-                    (click)="solicitarEdicion()">
-              Editar familia
-            </button>
-          }
-          <button type="button"
-                  class="rounded-xl bg-ihss-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-ihss-800"
-                  (click)="cerrar.emit()">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    }
+    <footer class="flex shrink-0 justify-end border-t border-gray-100 bg-white px-6 py-4 sm:px-7">
+      <button type="button" class="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50" (click)="cerrar.emit()">Cerrar</button>
+    </footer>
   </div>
 </dialog>
