@@ -135,6 +135,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
   });
 
   afterEach(() => {
+    component.cerrarModalCrearFamilia();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
@@ -154,7 +155,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     expect(service['obtenerVersionVigenteFormulario']).toHaveBeenLastCalledWith('FORM_B');
   });
 
-  it('responde a Escape cerrando solo el dialogo activo y evitando la accion del documento', () => {
+  it('responde a Escape solo para diálogos administrados por el componente padre', () => {
     const event = new Event('keydown', { cancelable: true });
     const preventDefault = vi.spyOn(event, 'preventDefault');
 
@@ -163,13 +164,14 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     expect(component.versionEditando()).toBeNull();
 
     component.abrirModalCrearFamilia();
-    component.manejarTeclaEscape(event);
-    expect(component.modalFamiliaAbierto()).toBe(false);
+    expect(document.body.querySelector('app-familia-crear-modal')).not.toBeNull();
+    component.cerrarModalCrearFamilia();
+    expect(document.body.querySelector('app-familia-crear-modal')).toBeNull();
 
     component.abrirModalCrearFormulario();
     component.manejarTeclaEscape(event);
     expect(component.modalFormularioAbierto()).toBe(false);
-    expect(preventDefault).toHaveBeenCalledTimes(3);
+    expect(preventDefault).toHaveBeenCalledTimes(2);
   });
 
   it('aplica filtros con debounce, normaliza espacios y permite restablecerlos', () => {
