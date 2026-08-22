@@ -208,19 +208,12 @@ describe('MatricesRiesgosComponent', () => {
     expect('nivelResidualLocal' in instancia).toBe(false);
   });
 
-  it('permite crear, editar y desactivar familias desde la interfaz', () => {
+  it('abre el modal standalone de creación y permite editar y desactivar familias desde la interfaz', () => {
     component.abrirModalCrearFamilia();
-    component.nuevaFamiliaCodigo = 'FORM_B';
-    component.nuevaFamiliaNombre = 'Formulario B';
-    component.nuevaFamiliaDescripcion = 'Definicion institucional';
-    component.guardarFamilia();
-
-    expect(service.crearFamiliaFormulario).toHaveBeenCalledWith({
-      famCodigo: 'FORM_B',
-      famNombre: 'Formulario B',
-      famDescripcion: 'Definicion institucional'
-    });
+    expect(document.body.querySelector('app-familia-crear-modal')).not.toBeNull();
     expect(component.modalFamiliaAbierto()).toBe(false);
+    component.cerrarModalCrearFamilia();
+    expect(document.body.querySelector('app-familia-crear-modal')).toBeNull();
 
     const familia = component.familias()[0];
     component.abrirModalEditarFamilia(familia);
@@ -384,8 +377,9 @@ describe('MatricesRiesgosComponent', () => {
     expect(spy).toHaveBeenCalled();
     expect(component.versionEditando()).toBeNull();
 
-    // 2. Modal familia abierto
-    component.abrirModalCrearFamilia();
+    // 2. El modal de edición sigue bajo el manejador Escape del componente padre.
+    const familia = component.familias()[0];
+    component.abrirModalEditarFamilia(familia);
     expect(component.modalFamiliaAbierto()).toBe(true);
     component.manejarTeclaEscape(ev);
     expect(component.modalFamiliaAbierto()).toBe(false);
