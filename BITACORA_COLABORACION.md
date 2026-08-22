@@ -5,7 +5,7 @@
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).
 - **Agente**: AntiG (Antigravity).
 - **Rama / SHA inicial**: `desarrollo` / `7a4f1cf54c5019c17b9021792da2b88c14de25d0`.
-- **SHA final**: `[Se actualizará al commit final]`.
+- **SHA final**: `6c1aec050b1a0e0d5a374aa3bf8bd3dc53fd58d1`.
 - **Objetivo**: Certificar técnicamente el refinamiento visual del Gestor de Familias de Formularios (F6.5.FAM.2), agregando suite de pruebas unitarias dedicada, verificando ejecución reproducible de Playwright E2E mediante servidor Angular en segundo plano y actualizando la documentación de colaboración.
 - **Cambios implementados**:
   1. **Pruebas Unitarias Frontend Dedicadas (`matrices-riesgos.component.familias.spec.ts`)**:
