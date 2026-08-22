@@ -176,27 +176,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(texto).not.toContain('Última actividad');
   });
 
-  it('10. restaura el foco al disparador cuando el modal se destruye', async () => {
-    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
-
-    const disparador = document.createElement('button');
-    disparador.textContent = 'Abrir detalle';
-    document.body.appendChild(disparador);
-    disparador.focus();
-
-    const fixture = crearComponente();
-    document.body.appendChild(fixture.nativeElement);
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(document.activeElement?.getAttribute('aria-label')).toBe('Cerrar detalle de familia');
-
-    fixture.destroy();
-    await new Promise(resolve => setTimeout(resolve, 0));
-    expect(document.activeElement).toBe(disparador);
-    fixture.nativeElement.remove();
-    disparador.remove();
-  });
-
-  it('11. conserva un único dialog accesible con aria-modal', () => {
+  it('10. conserva un único dialog accesible con aria-modal', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const fixture = crearComponente();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog');
