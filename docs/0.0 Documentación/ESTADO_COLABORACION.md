@@ -25,6 +25,10 @@
 | **F6.5 — Integridad de evaluaciones versionadas y respuestas de catálogo** | **✅ IMPLEMENTADA Y PROBADA LOCALMENTE** | 436/436 Backend PASS; 444/444 Frontend PASS; 14/14 Playwright PASS; Quality Gates Locales SUCCESS; SonarCloud Remoto pendiente/diferido al cierre global |
 | **F6.5.FAM.1 — Garantías backend del gestor de familias** | **✅ CERRADA LOCALMENTE** | Cierre formal Codex en `0c4d29b`: 29/29 FAM PASS y 494/494 Release PASS. Activación idempotente, desactivación protegida, eliminación segura, auditoría y autorización verificadas. SonarCloud remoto queda diferido al cierre global; no se declara aprobado. |
 | **F6.5.FAM.2 — Gestor visual de Familias de Formularios** | **✅ CERTIFICADA Y PUBLICADA** | Subpanel y modal Administrar Familias rediseñado profesionalmente: max-w-6xl, columnas optimizadas (sin descripción en tabla, disponible en Ver), fecha en español (dd/MM/yyyy), botones iconográficos compactos con aria-label, filtro con botón Limpiar. 441/441 Frontend PASS (48/48 suites); 14/14 Playwright E2E PASS; Build SUCCESS. |
+| **UI-FAM.1 — Gestor principal de Familias** | **✅ CERTIFICADA LOCALMENTE** | Reemplaza la entrada principal de Plantillas por KPIs, búsqueda, filtros, paginación, tabla de familias y acciones contextuales conectadas al contrato existente. Corrección Codex sobre `cfae4cf`: 451/451 frontend, 14/14 E2E, 494/494 backend Release; cobertura local del componente principal: 86.99% líneas. SonarCloud remoto diferido al cierre global. |
+| **UI-FAM.2 — Detalle de familia en modal** | **⏳ PENDIENTE** | Modal secundario con resumen, información general y versiones reales de la familia seleccionada; no inventar actividad si no existe un contrato que la exponga. |
+| **UI-FAM.3 — Crear y editar familia en modales** | **⏳ PENDIENTE** | Formularios accesibles para alta y edición, código inmutable en edición, errores HTTP y confirmaciones de ciclo de vida. |
+| **UI-FAM.4 — Integración de versiones y retiro del puente temporal** | **⏳ PENDIENTE** | Integrar el ciclo de versiones en el detalle, conservar solo lectura y retirar el puente temporal solo cuando las rutas equivalentes estén verificadas. |
 
 ---
 

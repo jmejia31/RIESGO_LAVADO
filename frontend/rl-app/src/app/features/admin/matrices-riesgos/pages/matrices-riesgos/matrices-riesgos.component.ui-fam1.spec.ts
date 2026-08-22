@@ -5,7 +5,7 @@ import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
-import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
+import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 
 describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', () => {
   let component: MatricesRiesgosComponent;
@@ -55,6 +55,19 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     }
   ];
 
+  const versionVigente: VersionFormularioDto = {
+    verId: 1,
+    verFamiliaId: 1,
+    verCodigo: 'EMPLEADOS',
+    verVersion: 1,
+    verJson: '{"secciones":[]}',
+    verHash: 'hash-de-prueba',
+    verEstado: 'PUBLISHED',
+    verVigente: true,
+    verFechaCreacion: '2026-08-19T00:00:00',
+    verUsrCreacion: 1
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent, HttpClientTestingModule],
@@ -74,7 +87,7 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
 
     vi.spyOn(service, 'listarFamiliasFormulario').mockReturnValue(of(familias));
     vi.spyOn(service, 'listarHistorialVersionesFormulario').mockReturnValue(of([]));
-    vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(null as never));
+    vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(versionVigente));
 
     component.familias.set(familias);
     component.tab.set('plantillas');

@@ -140,6 +140,7 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
 
   it('renderiza la matriz exacta de acciones según estado y vigencia', () => {
     component.tab.set('plantillas');
+    component.mostrandoVersionesFamilia.set(true);
     component.versiones.set([versionDraftNoVigente, versionPublishedVigente, versionPublishedHistorica]);
     fixture.detectChanges();
 

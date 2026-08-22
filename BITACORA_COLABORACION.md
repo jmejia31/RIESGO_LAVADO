@@ -1,5 +1,21 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección y certificación local de UI-FAM.1
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `cfae4cf030a7cbe4c5c9648d31baee7fd5683afc`.
+- **Objetivo**: cerrar correctamente el primer bloque del nuevo Gestor Principal de Familias de Formularios, alineando las pruebas unitarias y E2E con el flujo real de seleccionar una familia antes de consultar sus versiones.
+- **Archivos modificados**: `matrices-riesgos.component.ui-fam1.spec.ts`, `matrices-riesgos.component.ciclo-vida.spec.ts`, `matrices-riesgos.component.tabs-independientes.spec.ts`, `e2e/matrices-authorization.spec.ts` y `e2e/modal-shell-lock.spec.ts`.
+- **Corrección aplicada**: se sustituyó un mock de versión inválido por un DTO completo; las pruebas que ejercen el panel histórico ahora entran explícitamente por la familia seleccionada; Playwright abre el menú contextual de la familia y usa **Ver versiones** antes de editar, clonar o validar el aislamiento modal. No se modificó comportamiento productivo ni contrato REST.
+- **Evidencia ejecutada en esta intervención**: Vitest **49/49 archivos y 451/451 pruebas** correctas; `npm test -- --watch=false --coverage` correcto; `npm run build` correcto con la advertencia conocida no bloqueante de `exceljs` CommonJS; Playwright **14/14** correcto; backend Release **494/494** correcto; validadores de base de datos y enlaces documentales correctos; `git diff --check` correcto.
+- **Cobertura local informativa**: `matrices-riesgos.component.ts` alcanzó **86.99%** de líneas, **86.71%** de sentencias, **82.75%** de funciones y **78.34%** de ramas. La cobertura global frontend quedó en **55.08%** de líneas; no se equipara a la métrica remota de código nuevo.
+- **Validación con limitación**: `validate_repository_structure.ps1` sigue fallando por `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y la carpeta heredada asociada, fuera del alcance. `run_quality_gates.ps1` fue iniciado; su proceso no había entregado resultado final al momento de registrar esta evidencia.
+- **Restricciones respetadas**: cero cambios Oracle/SQL/DDL/DML, backend productivo, workflows, umbrales o exclusiones SonarCloud y `main`.
+- **Punto de continuidad**: UI-FAM.1 queda certificada localmente y publicada con este cierre; UI-FAM.2 debe construir el detalle de familia como modal usando datos reales. SonarCloud remoto continúa diferido por decisión institucional.
+
+---
+
 ## Registro de Intervención — AntiG — Certificación Técnica del Refinamiento Visual de F6.5.FAM.2
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).

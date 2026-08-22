@@ -46,6 +46,8 @@ test.beforeEach(async ({ page }) => preparar(page));
 test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {
   await page.goto('/matrices-riesgos');
   await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByLabel('Más acciones para Matriz UAT').click();
+  await page.getByRole('button', { name: 'Ver versiones' }).click();
   const editar = page.getByRole('button', { name: 'Editar definición' }).first();
   await editar.focus();
   await editar.click();

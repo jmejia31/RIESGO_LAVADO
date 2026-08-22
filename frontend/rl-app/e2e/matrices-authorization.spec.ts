@@ -103,6 +103,13 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
   }));
 }
 
+async function abrirVersionesDeLaFamilia(page: Page): Promise<void> {
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByLabel('Más acciones para Matriz de Riesgos LAFT').click();
+  await page.getByRole('button', { name: 'Ver versiones' }).click();
+  await expect(page.getByText('MATRIZ_RIESGOS_LAFT_V1 · v1')).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
   await prepararSesion(page);
   await stubLecturasMatrices(page);
@@ -120,8 +127,7 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
   });
 
   await page.goto('/matrices-riesgos');
-  await page.getByRole('tab', { name: 'Plantillas' }).click();
-  await expect(page.getByText('MATRIZ_RIESGOS_LAFT_V1 · v1')).toBeVisible();
+  await abrirVersionesDeLaFamilia(page);
 
   await page.getByRole('button', { name: 'Clonar' }).click();
 
@@ -138,7 +144,7 @@ test('un 403 real del Backend conserva la protección y redirige a Acceso Denega
   }));
 
   await page.goto('/matrices-riesgos');
-  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await abrirVersionesDeLaFamilia(page);
   await page.getByRole('button', { name: 'Clonar' }).click();
 
   await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);

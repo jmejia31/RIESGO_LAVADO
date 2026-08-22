@@ -218,15 +218,15 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(tabList).not.toBeNull();
   });
 
-  // 10. entrada a Plantillas provoca UNA SOLA carga del historial.
-  it('10. entrada a Plantillas provoca UNA SOLA carga del historial', () => {
+  // 10. entrada a Plantillas carga solamente el gestor de familias; el historial se solicita al abrir versiones.
+  it('10. entrada a Plantillas carga el gestor sin solicitar historial anticipadamente', () => {
     serviceMock.listarHistorialVersionesFormulario.mockClear();
     serviceMock.listarFamiliasFormulario.mockClear();
 
     component.seleccionarTab('plantillas');
 
     expect(serviceMock.listarFamiliasFormulario).toHaveBeenCalledTimes(1);
-    expect(serviceMock.listarHistorialVersionesFormulario).toHaveBeenCalledTimes(1);
+    expect(serviceMock.listarHistorialVersionesFormulario).not.toHaveBeenCalled();
   });
 
   // 11. cambio rápido de pestañas no mezcla loading/error.
