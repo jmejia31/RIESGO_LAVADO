@@ -185,16 +185,18 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     disparador.focus();
 
     const fixture = crearComponente();
+    document.body.appendChild(fixture.nativeElement);
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(document.activeElement?.getAttribute('aria-label')).toBe('Cerrar detalle de familia');
 
     fixture.destroy();
     await new Promise(resolve => setTimeout(resolve, 0));
     expect(document.activeElement).toBe(disparador);
+    fixture.nativeElement.remove();
     disparador.remove();
   });
 
-  it('11. conserva un único dialog accesible con aria-modal y permite Escape a través del evento cerrar', () => {
+  it('11. conserva un único dialog accesible con aria-modal', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const fixture = crearComponente();
     const dialog = (fixture.nativeElement as HTMLElement).querySelector('dialog');
