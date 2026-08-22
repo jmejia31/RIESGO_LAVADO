@@ -33,7 +33,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 
-type TabMatrices = 'evaluaciones' | 'captura' | 'consolidado' | 'plantillas';
+type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
 @Component({
   selector: 'app-matrices-riesgos',
@@ -327,7 +327,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   onKeydownTab(event: KeyboardEvent, tabActual: TabMatrices): void {
-    const tabs: TabMatrices[] = ['evaluaciones', 'captura', 'consolidado', 'plantillas'];
+    const tabs: TabMatrices[] = ['evaluaciones', 'consolidado', 'plantillas'];
     const indexActual = tabs.indexOf(tabActual);
 
     if (indexActual === -1) return;

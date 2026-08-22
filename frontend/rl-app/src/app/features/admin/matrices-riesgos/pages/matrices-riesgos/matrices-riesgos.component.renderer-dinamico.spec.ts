@@ -110,14 +110,14 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     expect(component.secciones()[0].campos.at(-1)?.soloLectura).toBe(true);
   });
 
-  it('usa el componente reusable para todos los campos de Captura dinámica', () => {
-    component.seleccionarTab('captura');
+  it('usa el componente reusable para todos los campos del modal Nueva evaluación', () => {
+    component.modalNuevaEvaluacionAbierto.set(true);
     fixture.detectChanges();
 
-    const renderers = fixture.nativeElement.querySelectorAll('#panel-captura app-dynamic-field-renderer');
+    const renderers = fixture.nativeElement.querySelectorAll('dialog app-dynamic-field-renderer');
     expect(renderers.length).toBe(9);
-    expect(fixture.nativeElement.querySelector('#campo-radio input[type="radio"]')).not.toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('#campo-multi input[type="checkbox"]').length).toBe(2);
+    expect(fixture.nativeElement.querySelector('#campo-new-radio input[type="radio"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('#campo-new-multi input[type="checkbox"]').length).toBe(2);
   });
 
   it('considera 0, false y una selección múltiple no vacía como respuestas presentes', () => {
@@ -170,7 +170,7 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
         campos: [{ clave: 'nuevo', etiqueta: 'Nuevo', tipo: 'control-v9', obligatorio: false, soloLectura: false }]
       }]
     })));
-    component.seleccionarTab('captura');
+    component.modalNuevaEvaluacionAbierto.set(true);
     fixture.detectChanges();
 
     const campo = component.secciones()[0].campos[0];
@@ -203,7 +203,7 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
 
   it('normaliza una definición JSON malformada a formulario vacío sin romper el componente', () => {
     component.versionVigente.set(versionDinamica('{json-invalido'));
-    component.seleccionarTab('captura');
+    component.modalNuevaEvaluacionAbierto.set(true);
     fixture.detectChanges();
 
     expect(component.secciones()).toEqual([]);

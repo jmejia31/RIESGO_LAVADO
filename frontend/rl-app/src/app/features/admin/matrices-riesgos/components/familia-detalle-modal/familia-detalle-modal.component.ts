@@ -99,12 +99,15 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   manejarKeydown(event: KeyboardEvent): void {
     if (event.key !== 'Tab') return;
 
-    const dialogo = this.host.nativeElement.querySelector('dialog');
+    const dialogo = this.host.nativeElement.querySelector('dialog') as HTMLDialogElement | null;
     if (!dialogo) return;
 
-    const elementos = Array.from(dialogo.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-    )).filter(elemento => !elemento.hasAttribute('hidden') && elemento.offsetParent !== null);
+    const selectorFoco = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const elementos = Array.from(dialogo.querySelectorAll(selectorFoco)).filter(
+      (elemento): elemento is HTMLElement => elemento instanceof HTMLElement
+        && !elemento.hasAttribute('hidden')
+        && elemento.offsetParent !== null
+    );
 
     if (elementos.length === 0) return;
 

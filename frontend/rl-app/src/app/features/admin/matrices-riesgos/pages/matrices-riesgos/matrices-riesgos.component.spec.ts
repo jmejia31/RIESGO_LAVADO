@@ -342,21 +342,21 @@ describe('MatricesRiesgosComponent', () => {
     const evRight = new KeyboardEvent('keydown', { key: 'ArrowRight' });
     vi.spyOn(evRight, 'preventDefault');
     component.onKeydownTab(evRight, 'evaluaciones');
-    expect(component.tab()).toBe('captura');
+    expect(component.tab()).toBe('consolidado');
 
     const evDown = new KeyboardEvent('keydown', { key: 'ArrowDown' });
     vi.spyOn(evDown, 'preventDefault');
-    component.onKeydownTab(evDown, 'captura');
-    expect(component.tab()).toBe('consolidado');
+    component.onKeydownTab(evDown, 'consolidado');
+    expect(component.tab()).toBe('plantillas');
 
     const evLeft = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
     vi.spyOn(evLeft, 'preventDefault');
-    component.onKeydownTab(evLeft, 'consolidado');
-    expect(component.tab()).toBe('captura');
+    component.onKeydownTab(evLeft, 'plantillas');
+    expect(component.tab()).toBe('consolidado');
 
     const evUp = new KeyboardEvent('keydown', { key: 'ArrowUp' });
     vi.spyOn(evUp, 'preventDefault');
-    component.onKeydownTab(evUp, 'captura');
+    component.onKeydownTab(evUp, 'consolidado');
     expect(component.tab()).toBe('evaluaciones');
 
     const evHome = new KeyboardEvent('keydown', { key: 'Home' });

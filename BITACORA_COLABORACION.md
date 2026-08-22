@@ -1,5 +1,20 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Cierre local UI-FAM.2 y retiro de Captura dinámica redundante
+
+- **Fecha y hora**: 2026-08-22, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `be4fc3dd4bd963d5324e3a6ec5a8ada51b505243`.
+- **Objetivo**: cerrar localmente UI-FAM.2 y simplificar Matrices eliminando la página redundante Captura dinámica, ya cubierta por el modal **Nueva evaluación**.
+- **Archivos funcionales modificados**: `matrices-riesgos.component.ts`, `matrices-riesgos.component.html`, `familia-detalle-modal.component.ts` y las suites de regresión de Matrices/E2E asociadas.
+- **Cambios aplicados**: el modal UI-FAM.2 corrige su trampa de foco con tipado DOM estricto; la pantalla/tab Captura dinámica y su formulario duplicado se retiraron; se conserva el renderer dinámico dentro de **Evaluaciones → Nueva evaluación** y se agregó estado vacío para una plantilla sin secciones. Las pestañas expuestas son Evaluaciones, Consolidado y Plantillas.
+- **Evidencia ejecutada**: `npm run test:coverage` **50/50 suites, 461/461 PASS**; `npm run build` PASS (advertencia preexistente de `exceljs` CommonJS); `npm run lint` PASS; Playwright **17/17 PASS**; Backend Release **494/494 PASS**; `validate_database_scripts.ps1`, `validate_documentation_links.ps1` y `run_quality_gates.ps1` PASS.
+- **Limitaciones declaradas**: `validate_repository_structure.ps1` continúa fallando por el servicio heredado `frontend/rl-app/src/app/core/services/global-http-state.service.ts`, fuera de este cambio. SonarCloud remoto permanece diferido por decisión del propietario y no se declara aprobado.
+- **Restricciones respetadas**: cero cambios Oracle/SQL/DDL/DML, backend productivo, workflows, SonarCloud, umbrales, exclusiones y `main`.
+- **Punto de continuidad**: publicar este cierre en `origin/desarrollo`; después, UI-FAM.3 puede iniciar únicamente tras su revisión técnica previa.
+
+---
+
 ## Registro de Intervención — Codex — Corrección y certificación local de UI-FAM.1
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).

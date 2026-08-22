@@ -357,18 +357,18 @@ test('abre Matrices de Riesgos con una sesión autenticada y contratos dinámico
   await expect(page.getByRole('button', { name: 'Nueva evaluación' })).toBeVisible();
 });
 
-test('captura una evaluación dinámica y muestra el consolidado tipado', async ({ page }) => {
+test('crea una evaluación desde el modal y muestra el consolidado tipado', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
-  await page.getByRole('tab', { name: 'Captura dinámica' }).click();
-  await expect(page.getByRole('heading', { name: 'Nueva evaluación' })).toBeVisible();
-  await expect(page.getByRole('group', { name: 'Identificación del riesgo' })).toBeVisible();
+  await page.getByRole('button', { name: 'Nueva evaluación' }).click();
+  await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+  await expect(page.getByText('Identificación del riesgo', { exact: true })).toBeVisible();
 
-  const guardar = page.getByRole('button', { name: 'Guardar evaluación' });
+  const guardar = page.getByRole('button', { name: 'Crear Evaluación' });
   await expect(guardar).toBeDisabled();
 
-  await page.locator('#selector-riesgo').selectOption('502');
+  await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
   await expect(guardar).toBeEnabled();
@@ -393,7 +393,7 @@ test('captura una evaluación dinámica y muestra el consolidado tipado', async 
   await expect(page.getByText('Cumplimiento', { exact: true })).toBeVisible();
   await expect(page.getByText('MODERADO', { exact: true })).toBeVisible();
 
-  await page.screenshot({ path: 'test-results/fase13-captura-dinamica-consolidado.png', fullPage: true });
+  await page.screenshot({ path: 'test-results/evaluacion-modal-consolidado.png', fullPage: true });
 });
 
 test('consulta una evaluación existente y permite abrir su edición', async ({ page }) => {

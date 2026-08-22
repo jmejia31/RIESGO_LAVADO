@@ -204,8 +204,8 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(component.familias().length).toBe(0);
     expect(component.tab()).toBe('plantillas');
 
-    component.seleccionarTab('captura');
-    expect(component.tab()).toBe('captura');
+    component.seleccionarTab('evaluaciones');
+    expect(component.tab()).toBe('evaluaciones');
   });
 
   // 9. loading Evaluaciones no bloquea tablist.

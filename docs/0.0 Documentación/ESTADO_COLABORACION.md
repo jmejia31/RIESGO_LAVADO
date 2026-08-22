@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-22 — Implementación candidata UI-FAM.2 por ChatGPT  
+**Actualización:** 2026-08-22 — Cierre local UI-FAM.2 y retiro de Captura dinámica redundante por Codex
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -26,14 +26,14 @@
 | **F6.5.FAM.1 — Garantías backend del gestor de familias** | **✅ CERRADA LOCALMENTE** | Cierre formal Codex en `0c4d29b`: 29/29 FAM PASS y 494/494 Release PASS. Activación idempotente, desactivación protegida, eliminación segura, auditoría y autorización verificadas. SonarCloud remoto queda diferido al cierre global; no se declara aprobado. |
 | **F6.5.FAM.2 — Gestor visual de Familias de Formularios** | **✅ CERTIFICADA Y PUBLICADA** | Subpanel y modal Administrar Familias rediseñado profesionalmente: max-w-6xl, columnas optimizadas (sin descripción en tabla, disponible en Ver), fecha en español (dd/MM/yyyy), botones iconográficos compactos con aria-label, filtro con botón Limpiar. 441/441 Frontend PASS (48/48 suites); 14/14 Playwright E2E PASS; Build SUCCESS. |
 | **UI-FAM.1 — Gestor principal de Familias** | **✅ CERTIFICADA LOCALMENTE** | Reemplaza la entrada principal de Plantillas por KPIs, búsqueda, filtros, paginación, tabla de familias y acciones contextuales conectadas al contrato existente. Corrección Codex sobre `cfae4cf`: 451/451 frontend, 14/14 E2E, 494/494 backend Release; cobertura local del componente principal: 86.99% líneas. SonarCloud remoto diferido al cierre global. |
-| **UI-FAM.2 — Detalle de familia en modal** | **🟡 IMPLEMENTADA / VALIDACIÓN REMOTA PENDIENTE** | Modal XL encapsulado como componente independiente. Carga autoritativa por `famId`, historial real por `famCodigo`, estados loading/error/404, reintento, cancelación de respuestas tardías, foco y cierre accesible. No inventa actividad/auditoría. Incluye suite unitaria dedicada y E2E de éxito/404/reintento. Sin cambios Backend/Oracle. |
+| **UI-FAM.2 — Detalle de familia en modal** | **✅ CERTIFICADA LOCALMENTE** | Modal XL encapsulado, carga autoritativa por `famId`, historial real por `famCodigo`, estados loading/error/404/reintento, cancelación de respuestas tardías, foco y cierre accesible. `npm run test:coverage`: 50/50 suites y 461/461 pruebas; Playwright 17/17; Backend Release 494/494; Quality Gates locales SUCCESS. SonarCloud remoto queda diferido al cierre global. |
 | **UI-FAM.3 — Crear familia en modal** | **⏳ PENDIENTE** | Modal profesional de un solo paso para Código, Nombre y Descripción; validaciones contractuales, prevención de doble submit y tratamiento de 409/errores. No iniciar hasta cerrar UI-FAM.2. |
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
 
 ---
 
-## UI-FAM.2 — implementación candidata 2026-08-22
+## UI-FAM.2 — cierre local y retiro de Captura dinámica redundante — 2026-08-22
 
 Alcance implementado sobre el baseline certificado de UI-FAM.1:
 
@@ -49,7 +49,21 @@ Alcance implementado sobre el baseline certificado de UI-FAM.1:
 - bridge de gestión de versiones preservado temporalmente hasta la fase de integración final;
 - nuevas pruebas unitarias dedicadas y tres escenarios E2E: éxito con carga por ID, 404 y error temporal con reintento.
 
-**Estado de esta entrada:** el código candidato todavía debe superar los workflows/checks reales del SHA publicado antes de declarar UI-FAM.2 cerrada. No se atribuyen resultados de CI por anticipado.
+### Corrección de certificación local
+
+- se corrigió el tipado estricto del foco atrapado en `FamiliaDetalleModalComponent`; el selector ahora se filtra a `HTMLElement` antes de enfocar, sin cast inseguro;
+- `npm run test:coverage`: **50/50 suites y 461/461 pruebas PASS**; cobertura global informativa: 55.34% sentencias, 50.88% ramas, 51.37% funciones y 55.41% líneas;
+- `npm run build`: **PASS**, con advertencia preexistente no bloqueante de `exceljs` CommonJS;
+- `npm run lint`: **PASS**;
+- Playwright: **17/17 PASS**, incluido detalle UI-FAM.2, reintento, 404 y devolución de foco;
+- Backend Release: **494/494 PASS**;
+- `validate_database_scripts.ps1`, `validate_documentation_links.ps1` y `run_quality_gates.ps1`: **PASS**. El validador estructural continúa señalando el servicio heredado `core/services/global-http-state.service.ts`, fuera de este alcance.
+
+### Simplificación de Matrices
+
+La pestaña y pantalla redundante **Captura dinámica** fueron retiradas del módulo. La única entrada para crear una evaluación es ahora **Evaluaciones → Nueva evaluación**, que abre el modal con el mismo renderer dinámico y conserva los datos reales de plantilla. Las pestañas visibles quedan en **Evaluaciones**, **Consolidado** y **Plantillas**. No se eliminó el motor dinámico ni se modificaron contratos REST.
+
+**Estado de esta entrada:** UI-FAM.2 queda certificada localmente. SonarCloud/Quality Gate remoto se mantiene explícitamente diferido al cierre global por decisión del propietario; no se declara aprobado en esta intervención.
 
 ---
 
@@ -132,10 +146,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 ## Próximo punto exacto
 
-1. Publicar UI-FAM.2 únicamente en `desarrollo` sobre el baseline `83ed8e826d12600a2825861aa46cf7bedad67ca2` si la rama continúa estable.
-2. Verificar los workflows/checks reales del SHA publicado y corregir cualquier defecto de UI-FAM.2 sin alterar Backend/Oracle ni Quality Gates.
-3. Actualizar esta evidencia únicamente con resultados observados y declarar UI-FAM.2 cerrada solo después de la validación.
-4. Iniciar **UI-FAM.3 — Nueva Familia** inmediatamente después, en un commit separado.
+1. Mantener UI-FAM.2 como baseline local certificado y no abrir UI-FAM.3 hasta que este cierre quede publicado en `origin/desarrollo`.
+2. Iniciar **UI-FAM.3 — Nueva Familia** en un commit separado, sujeto a su revisión técnica previa.
+3. Mantener SonarCloud remoto diferido hasta el cierre global, sin alterar workflows, umbrales o exclusiones.
 
 ---
 
