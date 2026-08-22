@@ -71,22 +71,55 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly cargandoPlantillas = signal(false);
   readonly errorPlantillas = signal<string | null>(null);
+  readonly cargandoFamilias = signal(false);
+  readonly errorFamilias = signal<string | null>(null);
 
   readonly modalGestorFamiliasAbierto = signal<boolean>(false);
   readonly modalVerFamiliaAbierto = signal<FamiliaFormularioDto | null>(null);
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
+  readonly filtroVigenciaFamilia = signal('TODAS');
+  readonly paginaFamilias = signal(1);
+  readonly registrosPorPaginaFamilias = signal(10);
+  readonly mostrandoVersionesFamilia = signal(false);
+
+  readonly totalFamilias = computed(() => this.familias().length);
+  readonly totalFamiliasActivas = computed(() => this.familias().filter(f => f.famActivo).length);
+  readonly totalFamiliasInactivas = computed(() => this.familias().filter(f => !f.famActivo).length);
+  readonly totalVersionesFamilias = computed(() => this.familias().reduce((total, f) => total + Math.max(0, Number(f.totalVersiones) || 0), 0));
 
   readonly familiasFiltradas = computed<FamiliaFormularioDto[]>(() => {
     const lista = this.familias();
     const buscar = this.filtroBuscarFamilia().trim().toLowerCase();
     const estado = this.filtroEstadoFamilia();
+    const vigencia = this.filtroVigenciaFamilia();
 
     return lista.filter(f => {
-      const cumpleBuscar = !buscar || f.famCodigo.toLowerCase().includes(buscar) || f.famNombre.toLowerCase().includes(buscar);
-      const cumpleEstado = estado === 'TODAS' || (estado === 'ACTIVAS' && f.famActivo) || (estado === 'INACTIVAS' && !f.famActivo);
-      return cumpleBuscar && cumpleEstado;
+      const cumpleBuscar = !buscar
+        || f.famCodigo.toLowerCase().includes(buscar)
+        || f.famNombre.toLowerCase().includes(buscar);
+      const cumpleEstado = estado === 'TODAS'
+        || (estado === 'ACTIVAS' && f.famActivo)
+        || (estado === 'INACTIVAS' && !f.famActivo);
+      const cumpleVigencia = vigencia === 'TODAS'
+        || (vigencia === 'VIGENTES' && f.tieneVersionVigente)
+        || (vigencia === 'SIN_VIGENTE' && !f.tieneVersionVigente);
+      return cumpleBuscar && cumpleEstado && cumpleVigencia;
     });
+  });
+
+  readonly totalPaginasFamilias = computed(() => {
+    const porPagina = this.registrosPorPaginaFamilias();
+    return porPagina > 0 ? Math.ceil(this.familiasFiltradas().length / porPagina) : 0;
+  });
+
+  readonly familiasPaginadas = computed<FamiliaFormularioDto[]>(() => {
+    const lista = this.familiasFiltradas();
+    const porPagina = this.registrosPorPaginaFamilias();
+    const totalPaginas = this.totalPaginasFamilias();
+    const paginaEfectiva = totalPaginas === 0 ? 1 : Math.min(Math.max(this.paginaFamilias(), 1), totalPaginas);
+    const inicio = (paginaEfectiva - 1) * porPagina;
+    return lista.slice(inicio, inicio + porPagina);
   });
 
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
@@ -277,6 +310,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     if (tab === 'consolidado') this.cargarConsolidado();
     if (tab === 'plantillas') {
+      this.mostrandoVersionesFamilia.set(false);
+      this.paginaFamilias.set(1);
       this.cargarFamilias();
     }
   }
@@ -321,9 +356,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarFamilias(): void {
     if (typeof this.service.listarFamiliasFormulario !== 'function') {
       this.familias.set([]);
+      this.cargandoFamilias.set(false);
       return;
     }
 
+    this.cargandoFamilias.set(true);
+    this.errorFamilias.set(null);
     this.service.listarFamiliasFormulario().subscribe({
       next: familias => {
         this.familias.set(familias);
@@ -334,11 +372,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             this.familiaSeleccionada.set(activa.famCodigo);
           }
         }
-        if (this.tab() === 'plantillas') {
-          this.cargarVersiones();
+        const totalPaginas = this.totalPaginasFamilias();
+        if (totalPaginas > 0 && this.paginaFamilias() > totalPaginas) {
+          this.paginaFamilias.set(totalPaginas);
         }
+        this.cargandoFamilias.set(false);
       },
-      error: () => this.familias.set([])
+      error: error => {
+        this.familias.set([]);
+        this.errorFamilias.set(this.obtenerMensajeError(error, 'No se pudieron cargar las familias de formularios.'));
+        this.cargandoFamilias.set(false);
+      }
     });
   }
 
@@ -363,11 +407,38 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   limpiarFiltrosFamilias(): void {
     this.filtroBuscarFamilia.set('');
     this.filtroEstadoFamilia.set('TODAS');
+    this.filtroVigenciaFamilia.set('TODAS');
+    this.paginaFamilias.set(1);
+  }
+
+  cambiarPaginaFamilias(nuevaPagina: number): void {
+    const total = this.totalPaginasFamilias();
+    if (!Number.isInteger(nuevaPagina) || total <= 0 || nuevaPagina < 1 || nuevaPagina > total) {
+      return;
+    }
+    this.paginaFamilias.set(nuevaPagina);
+  }
+
+  cambiarRegistrosPorPaginaFamilias(cantidad: number): void {
+    const num = Number(cantidad);
+    if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) {
+      return;
+    }
+    this.registrosPorPaginaFamilias.set(num);
+    this.paginaFamilias.set(1);
   }
 
   seleccionarFamiliaDesdeGestor(famCodigo: string): void {
     this.seleccionarFamilia(famCodigo);
+    this.mostrandoVersionesFamilia.set(true);
     this.cerrarModalGestorFamilias();
+  }
+
+  volverAGestorFamilias(): void {
+    this.mostrandoVersionesFamilia.set(false);
+    this.versionEditando.set(null);
+    this.errorPlantillas.set(null);
+    this.cargarFamilias();
   }
 
   abrirModalVerFamilia(fam: FamiliaFormularioDto): void {

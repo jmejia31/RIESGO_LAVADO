@@ -379,138 +379,179 @@
   }
 
   @if (tab() === 'plantillas') {
-    <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-      @if (cargandoPlantillas()) {
-        <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2">
-          <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span class="font-semibold text-gray-700">Cargando plantillas...</span>
-        </div>
-      } @else if (errorPlantillas(); as errorPlant) {
-        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
-          <span>{{ errorPlant }}</span>
-          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarVersiones()">Reintentar</button>
-        </div>
-      }
-      <div class="flex flex-col gap-4 border-b border-gray-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 class="text-lg font-bold text-gray-900">Versiones de Formulario</h2>
-          <p class="text-xs text-gray-500">Gestión de familias, versiones, vigencia y definición gráfica.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="flex items-center gap-2">
-            <label for="selector-familia" class="text-xs font-bold text-gray-700">Familia:</label>
-            <select id="selector-familia"
-                    class="max-w-[320px] min-w-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
-                    [ngModel]="familiaSeleccionada()"
-                    (ngModelChange)="seleccionarFamilia($event)">
-              @for (fam of familias(); track fam.famId) {
-                <option [value]="fam.famCodigo" class="text-xs">
-                  {{ fam.famNombre }}{{ fam.famActivo ? '' : ' [Inactiva]' }}
-                </option>
-              }
-            </select>
-          </div>
-          <button type="button" class="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" (click)="abrirModalCrearFormulario()">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span>+ Nuevo Formulario</span>
-          </button>
-          <button type="button" class="h-9 px-4 bg-ihss-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" (click)="abrirModalGestorFamilias()">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-            <span>Administrar Familias</span>
-          </button>
-        </div>
-      </div>
-
-      <div class="grid gap-3">
-        @for (version of versiones(); track version.verId) {
-          <article class="flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between transition-all"
-                   [class.border-emerald-300]="version.verVigente"
-                   [class.bg-emerald-50\/30]="version.verVigente"
-                   [class.border-gray-200]="!version.verVigente">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="rounded-md bg-ihss-900 px-2.5 py-0.5 font-mono text-xs font-bold text-white shadow-xs">ID #{{ version.verId }}</span>
-                <h3 class="font-bold text-gray-900 text-base">{{ version.verCodigo }} · v{{ version.verVersion }}</h3>
-              </div>
-              <div class="flex items-center gap-2 text-xs pt-0.5">
-                <span class="rounded-md px-2.5 py-0.5 font-semibold"
-                      [class.bg-blue-50]="version.verEstado === 'DRAFT'"
-                      [class.text-blue-700]="version.verEstado === 'DRAFT'"
-                      [class.ring-1]="version.verEstado === 'DRAFT'"
-                      [class.ring-blue-600\/20]="version.verEstado === 'DRAFT'"
-                      [class.bg-purple-50]="version.verEstado === 'PUBLISHED'"
-                      [class.text-purple-700]="version.verEstado === 'PUBLISHED'">
-                  {{ version.verEstado === 'DRAFT' ? 'Borrador' : 'Publicado' }}
-                </span>
-                <span class="rounded-md px-2.5 py-0.5 font-semibold"
-                      [class.bg-emerald-50]="version.verVigente"
-                      [class.text-emerald-700]="version.verVigente"
-                      [class.ring-1]="version.verVigente"
-                      [class.ring-emerald-600\/20]="version.verVigente"
-                      [class.bg-gray-100]="!version.verVigente"
-                      [class.text-gray-500]="!version.verVigente">
-                  {{ version.verVigente ? 'Activo (Vigente)' : 'Inactivo' }}
-                </span>
-                @if (version.verVigente) {
-                  <span class="text-gray-400 italic text-[11px]">(Modo solo lectura por estar activo en producción)</span>
-                } @else if (version.verEstado === 'PUBLISHED') {
-                  <span class="text-purple-600 italic text-[11px]">(Modo solo lectura por estar publicada. Para modificar, clone la versión a borrador)</span>
-                }
-              </div>
+    @if (!mostrandoVersionesFamilia()) {
+      <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-6" data-ui-fam="gestor-principal">
+        <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.16em] text-ihss-600">Plantillas · Administración dinámica</p>
+              <h2 class="mt-1 text-2xl font-bold text-gray-900">Familias de Formularios</h2>
+              <p class="mt-1 text-sm text-gray-500">Gestione las familias institucionales de formularios, su estado y acceso a versiones.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-              <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="abrirDefinicion(version, true)">
-                Ver definición
+            @if (esAdministrador()) {
+              <button type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" (click)="abrirModalCrearFamilia()" data-ui-fam-action="nueva-familia">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Nueva familia
               </button>
-              @if (version.verEstado === 'DRAFT' && !version.verVigente) {
-                <button type="button" class="px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="abrirDefinicion(version, false)">
-                  Editar definición
-                </button>
-              }
-              <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="clonarVersion(version)">
-                Clonar
-              </button>
-              @if (version.verEstado === 'DRAFT') {
-                <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all shadow-xs" (click)="publicarVersion(version)">
-                  Publicar
-                </button>
-              } @else if (version.verEstado === 'PUBLISHED') {
-                <button type="button"
-                        class="px-3 py-1.5 font-bold text-xs rounded-lg transition-all shadow-xs"
-                        [class.bg-emerald-600]="!version.verVigente"
-                        [class.text-white]="!version.verVigente"
-                        [class.hover:bg-emerald-700]="!version.verVigente"
-                        [class.border]="version.verVigente"
-                        [class.border-amber-200]="version.verVigente"
-                        [class.bg-amber-50]="version.verVigente"
-                        [class.text-amber-800]="version.verVigente"
-                        (click)="cambiarVigenciaVersion(version, !version.verVigente)">
-                  {{ version.verVigente ? 'Desactivar' : 'Activar' }}
-                </button>
-              }
-              @if (version.verEstado === 'DRAFT' && !version.verVigente) {
-                <button type="button" class="px-3 py-1.5 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="eliminarVersionFormulario(version)">
-                  Eliminar
-                </button>
-              }
+            }
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores de familias de formularios">
+          <article class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-4">
+              <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg></span>
+              <div><p class="text-xs font-semibold text-gray-500">Total familias</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="total">{{ totalFamilias() }}</p></div>
             </div>
           </article>
-        } @empty {
-          <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-10 text-center">
-            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200/80 text-gray-500 mb-3">
-              <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          <article class="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-4"><span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span><div><p class="text-xs font-semibold text-gray-500">Activas</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="activas">{{ totalFamiliasActivas() }}</p></div></div>
+          </article>
+          <article class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-4"><span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></span><div><p class="text-xs font-semibold text-gray-500">Inactivas</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p></div></div>
+          </article>
+          <article class="rounded-2xl border border-violet-100 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-4"><span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span><div><p class="text-xs font-semibold text-gray-500">Total versiones</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p></div></div>
+          </article>
+        </div>
+
+        <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+          <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_220px_220px_auto] lg:items-end">
+            <div>
+              <label for="gestor-buscar-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Buscar</label>
+              <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></span>
+                <input id="gestor-buscar-familia" type="search" class="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código o nombre" [ngModel]="filtroBuscarFamilia()" (ngModelChange)="filtroBuscarFamilia.set($event); paginaFamilias.set(1)" />
+              </div>
             </div>
-            <h4 class="font-bold text-gray-800 text-sm">Sin versiones en esta familia</h4>
-            <p class="mt-1 max-w-sm text-xs text-gray-500">Esta familia de formulario aún no cuenta con versiones registradas o borradores creados.</p>
-            <button type="button" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm" (click)="abrirModalCrearFormulario()">
-              + Crear primer formulario
-            </button>
+            <div>
+              <label for="gestor-estado-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
+              <select id="gestor-estado-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoFamilia()" (ngModelChange)="filtroEstadoFamilia.set($event); paginaFamilias.set(1)">
+                <option value="TODAS">Todas</option><option value="ACTIVAS">Activas</option><option value="INACTIVAS">Inactivas</option>
+              </select>
+            </div>
+            <div>
+              <label for="gestor-vigencia-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Vigencia</label>
+              <select id="gestor-vigencia-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroVigenciaFamilia()" (ngModelChange)="filtroVigenciaFamilia.set($event); paginaFamilias.set(1)">
+                <option value="TODAS">Todas</option><option value="VIGENTES">Con vigente</option><option value="SIN_VIGENTE">Sin vigente</option>
+              </select>
+            </div>
+            <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+          @if (cargandoFamilias()) {
+            <div class="flex min-h-56 items-center justify-center gap-3 p-10 text-sm font-semibold text-gray-600" aria-live="polite">
+              <svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+              Cargando familias de formularios...
+            </div>
+          } @else if (errorFamilias(); as errorFam) {
+            <div class="flex min-h-56 flex-col items-center justify-center gap-4 p-10 text-center">
+              <p class="max-w-xl text-sm font-semibold text-red-700">{{ errorFam }}</p>
+              <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700" (click)="cargarFamilias()">Reintentar</button>
+            </div>
+          } @else {
+            <div class="overflow-x-auto">
+              <table class="min-w-[1180px] w-full text-left text-sm" data-ui-fam-table="principal">
+                <thead class="border-b border-gray-200 bg-gray-50/90 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  <tr><th class="px-5 py-3.5">Código</th><th class="px-5 py-3.5">Nombre</th><th class="px-5 py-3.5">Descripción</th><th class="px-5 py-3.5 text-center">Estado</th><th class="px-5 py-3.5 text-center">Versiones</th><th class="px-5 py-3.5 text-center">Vigencia</th><th class="px-5 py-3.5 text-center">Fecha de creación</th><th class="px-5 py-3.5 text-right">Acciones</th></tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 bg-white">
+                  @for (fam of familiasPaginadas(); track fam.famId) {
+                    <tr class="transition-colors hover:bg-slate-50/70">
+                      <td class="px-5 py-4 font-mono text-xs font-bold text-ihss-900">{{ fam.famCodigo }}</td>
+                      <td class="px-5 py-4 font-bold text-gray-900">{{ fam.famNombre }}</td>
+                      <td class="max-w-[320px] px-5 py-4 text-xs leading-5 text-gray-500"><span class="line-clamp-2" [title]="fam.famDescripcion || 'Sin descripción registrada'">{{ fam.famDescripcion || 'Sin descripción registrada' }}</span></td>
+                      <td class="px-5 py-4 text-center"><span class="inline-flex rounded-md px-2.5 py-1 text-[11px] font-bold" [class.bg-emerald-50]="fam.famActivo" [class.text-emerald-700]="fam.famActivo" [class.ring-1]="fam.famActivo" [class.ring-emerald-600\/20]="fam.famActivo" [class.bg-gray-100]="!fam.famActivo" [class.text-gray-600]="!fam.famActivo">{{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}</span></td>
+                      <td class="px-5 py-4 text-center font-bold text-gray-800">{{ fam.totalVersiones }}</td>
+                      <td class="px-5 py-4 text-center"><span class="inline-flex rounded-md px-2.5 py-1 text-[11px] font-bold" [class.bg-emerald-50]="fam.tieneVersionVigente" [class.text-emerald-700]="fam.tieneVersionVigente" [class.bg-gray-100]="!fam.tieneVersionVigente" [class.text-gray-600]="!fam.tieneVersionVigente">{{ fam.tieneVersionVigente ? 'VIGENTE' : 'SIN VIGENTE' }}</span></td>
+                      <td class="px-5 py-4 text-center text-xs text-gray-500">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</td>
+                      <td class="px-5 py-4 text-right">
+                        <div class="inline-flex items-center gap-2">
+                          <button type="button" class="rounded-lg border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-50" (click)="abrirModalVerFamilia(fam)">Ver detalle</button>
+                          <details class="relative text-left">
+                            <summary class="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900" [attr.aria-label]="'Más acciones para ' + fam.famNombre"><svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><circle cx="4" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="16" cy="10" r="1.5"/></svg></summary>
+                            <div class="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-gray-200 bg-white py-1.5 shadow-xl">
+                              <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-gray-50" (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">Ver versiones</button>
+                              @if (esAdministrador()) {
+                                <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-blue-700 hover:bg-blue-50" (click)="abrirModalEditarFamilia(fam)">Editar familia</button>
+                                @if (fam.famActivo) {
+                                  <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-amber-700 hover:bg-amber-50" (click)="confirmarDesactivarFamilia(fam)">Desactivar</button>
+                                } @else {
+                                  <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-emerald-700 hover:bg-emerald-50" (click)="confirmarActivarFamilia(fam)">Activar</button>
+                                }
+                                @if (fam.totalVersiones === 0) {
+                                  <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-red-700 hover:bg-red-50" (click)="confirmarEliminarFamilia(fam)">Eliminar</button>
+                                } @else {
+                                  <span class="block px-3 py-2 text-[11px] text-gray-400">Eliminar bloqueado: contiene versiones</span>
+                                }
+                              }
+                            </div>
+                          </details>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="8" class="px-6 py-14 text-center"><div class="mx-auto max-w-md"><p class="text-sm font-bold text-gray-700">No hay familias que coincidan con los filtros.</p><p class="mt-1 text-xs text-gray-500">Ajuste la búsqueda, estado o vigencia para ampliar los resultados.</p></div></td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+              <p>Mostrando <strong class="text-gray-900">{{ familiasFiltradas().length === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ familiasFiltradas().length === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > familiasFiltradas().length ? familiasFiltradas().length : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ familiasFiltradas().length }}</strong> familias</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <label for="familias-por-pagina" class="font-semibold text-gray-500">Por página</label>
+                <select id="familias-por-pagina" class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 font-bold text-gray-700" [ngModel]="registrosPorPaginaFamilias()" (ngModelChange)="cambiarRegistrosPorPaginaFamilias($event)">@for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }</select>
+                <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
+                <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasFamilias() === 0 ? 0 : paginaFamilias() }} / {{ totalPaginasFamilias() }}</span>
+                <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" [disabled]="totalPaginasFamilias() === 0 || paginaFamilias() >= totalPaginasFamilias()" (click)="cambiarPaginaFamilias(paginaFamilias() + 1)">Siguiente</button>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    } @else {
+      <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm" data-ui-fam="versiones-transicion">
+        <div class="flex flex-col gap-4 border-b border-gray-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex items-start gap-3">
+            <button type="button" class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50" aria-label="Volver a Familias de Formularios" (click)="volverAGestorFamilias()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+            <div><p class="text-xs font-bold uppercase tracking-wider text-ihss-600">Familias de Formularios · {{ familiaSeleccionada() }}</p><h2 class="text-lg font-bold text-gray-900">Versiones del Formulario</h2><p class="text-xs text-gray-500">Vista transitoria de versiones; se integrará al modal Detalle en UI-FAM.2.</p></div>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2"><label for="selector-familia" class="text-xs font-bold text-gray-700">Familia:</label><select id="selector-familia" class="max-w-[320px] min-w-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none" [ngModel]="familiaSeleccionada()" (ngModelChange)="seleccionarFamilia($event)">@for (fam of familias(); track fam.famId) { <option [value]="fam.famCodigo" class="text-xs">{{ fam.famNombre }}{{ fam.famActivo ? '' : ' [Inactiva]' }}</option> }</select></div>
+            <button type="button" class="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" (click)="abrirModalCrearFormulario()">+ Nueva versión</button>
+          </div>
+        </div>
+
+        @if (cargandoPlantillas()) {
+          <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2"><svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="font-semibold text-gray-700">Cargando versiones...</span></div>
+        } @else if (errorPlantillas(); as errorPlant) {
+          <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3"><span>{{ errorPlant }}</span><button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700" (click)="cargarVersiones()">Reintentar</button></div>
+        } @else {
+          <div class="grid gap-3">
+            @for (version of versiones(); track version.verId) {
+              <article class="flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between transition-all" [class.border-emerald-300]="version.verVigente" [class.bg-emerald-50\/30]="version.verVigente" [class.border-gray-200]="!version.verVigente">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2"><span class="rounded-md bg-ihss-900 px-2.5 py-0.5 font-mono text-xs font-bold text-white shadow-xs">ID #{{ version.verId }}</span><h3 class="font-bold text-gray-900 text-base">{{ version.verCodigo }} · v{{ version.verVersion }}</h3></div>
+                  <div class="flex items-center gap-2 text-xs pt-0.5"><span class="rounded-md px-2.5 py-0.5 font-semibold" [class.bg-blue-50]="version.verEstado === 'DRAFT'" [class.text-blue-700]="version.verEstado === 'DRAFT'" [class.bg-purple-50]="version.verEstado === 'PUBLISHED'" [class.text-purple-700]="version.verEstado === 'PUBLISHED'">{{ version.verEstado }}</span><span class="rounded-md px-2.5 py-0.5 font-semibold" [class.bg-emerald-50]="version.verVigente" [class.text-emerald-700]="version.verVigente" [class.bg-gray-100]="!version.verVigente" [class.text-gray-500]="!version.verVigente">{{ version.verVigente ? 'Vigente' : 'No vigente' }}</span></div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="abrirDefinicion(version, true)">Ver definición</button>
+                  @if (version.verEstado === 'DRAFT' && !version.verVigente) { <button type="button" class="px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="abrirDefinicion(version, false)">Editar definición</button> }
+                  <button type="button" class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs transition-colors shadow-xs" (click)="clonarVersion(version)">Clonar</button>
+                  @if (version.verEstado === 'DRAFT') { <button type="button" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg transition-all shadow-xs" (click)="publicarVersion(version)">Publicar</button> }
+                  @else if (version.verEstado === 'PUBLISHED') { <button type="button" class="px-3 py-1.5 font-bold text-xs rounded-lg transition-all shadow-xs" [class.bg-emerald-600]="!version.verVigente" [class.text-white]="!version.verVigente" [class.hover:bg-emerald-700]="!version.verVigente" [class.border]="version.verVigente" [class.border-amber-200]="version.verVigente" [class.bg-amber-50]="version.verVigente" [class.text-amber-800]="version.verVigente" (click)="cambiarVigenciaVersion(version, !version.verVigente)">{{ version.verVigente ? 'Desactivar' : 'Activar' }}</button> }
+                  @if (version.verEstado === 'DRAFT' && !version.verVigente) { <button type="button" class="px-3 py-1.5 border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs transition-colors rounded-lg shadow-xs" (click)="eliminarVersionFormulario(version)">Eliminar</button> }
+                </div>
+              </article>
+            } @empty {
+              <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-10 text-center"><h4 class="font-bold text-gray-800 text-sm">Sin versiones en esta familia</h4><p class="mt-1 max-w-sm text-xs text-gray-500">Esta familia aún no cuenta con versiones registradas.</p><button type="button" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm" (click)="abrirModalCrearFormulario()">+ Crear primera versión</button></div>
+            }
           </div>
         }
-      </div>
-    </section>
+      </section>
+    }
   }
 
   @if (versionEditando(); as versionActual) {
