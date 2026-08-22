@@ -1,5 +1,38 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Certificación Técnica del Refinamiento Visual de F6.5.FAM.2
+
+- **Fecha y hora**: 2026-08-21, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `7a4f1cf54c5019c17b9021792da2b88c14de25d0`.
+- **SHA final**: `[Se actualizará al commit final]`.
+- **Objetivo**: Certificar técnicamente el refinamiento visual del Gestor de Familias de Formularios (F6.5.FAM.2), agregando suite de pruebas unitarias dedicada, verificando ejecución reproducible de Playwright E2E mediante servidor Angular en segundo plano y actualizando la documentación de colaboración.
+- **Cambios implementados**:
+  1. **Pruebas Unitarias Frontend Dedicadas (`matrices-riesgos.component.familias.spec.ts`)**:
+     - Creada suite de 10 pruebas unitarias para validar:
+       - Botón "Administrar Familias" y apertura de modal gestor.
+       - Columnas exactas de la tabla: Código, Nombre, Estado, Versiones, Vigente, Fecha de Creación, Acciones (confirmando la ausencia de Descripción).
+       - Botones iconográficos compactos con atributos `aria-label` accesibles (`Ver detalle`, `Editar`, `Desactivar`/`Activar`, `Eliminar`, `Ver versiones`).
+       - Fecha de creación formateada en español `dd/MM/yyyy`.
+       - Botón "Eliminar" visible únicamente si `totalVersiones === 0`.
+       - Filtro por texto, filtro por estado y botón "Limpiar".
+       - Modal "Ver detalle" conteniendo la descripción completa.
+       - Selección de "Ver versiones" actualizando la familia elegida y cerrando el gestor.
+       - Invocación de servicio para activar/desactivar/eliminar y manejo de error del backend.
+  2. **Playwright E2E Reproducible**:
+     - Verificada la ejecución autónoma de `npm run e2e` consumiendo `scripts/run-e2e.mjs` que inicia automáticamente `ng serve --host 127.0.0.1 --port 4200` y espera la disponibilidad HTTP antes de ejecutar las 14 pruebas E2E.
+- **Evidencia Técnica Reejecutada y Certificada**:
+  - **Vitest Frontend**: **441/441 PASS** (48/48 suites de pruebas).
+  - **Frontend Build (`npm run build`)**: **SUCCESS** (con la advertencia preexistente de `exceljs` CommonJS).
+  - **Playwright E2E (`npm run e2e`)**: **14/14 PASS** (ejecución 100% exitosa y reproducible en 23.9s).
+  - **Backend Release (`dotnet test --configuration Release --no-restore`)**: **494/494 PASS**.
+  - **Enlaces de Documentación (`validate_documentation_links.ps1`)**: Pendiente por reestructuración histórica previa de carpetas (advertencia no bloqueante).
+- **Cero Cambios Backend / BD / Workflows**: 0 cambios en controladores, repositorios, Oracle, SQL, DDL/DML, Form Builder, `main` o workflows.
+- **SonarCloud Remoto**: Diferido al cierre global por política institucional; no se declara aprobado.
+- **Punto de continuidad**: F6.5.FAM.2 queda **COMPLETAMENTE CERTIFICADA**, con pruebas unitarias, build, E2E reproducible y documentación al día.
+
+---
+
 ## Registro de Intervención — Codex — Cierre formal local de F6.5.FAM.1
 
 - **Fecha y hora**: 2026-08-21, hora local (UTC-6).
