@@ -6,6 +6,12 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
 import { FamiliaEditarModalComponent } from './familia-editar-modal.component';
 
+vi.mock('sweetalert2', () => ({
+  default: {
+    fire: vi.fn(() => Promise.resolve({ isConfirmed: true }))
+  }
+}));
+
 const familiaBase: FamiliaFormularioDto = {
   famId: 7,
   famCodigo: 'PRUEBA_FORMULARIO',
@@ -85,14 +91,16 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Última actividad');
   });
 
-  it('guarda solo datos descriptivos y conserva el estado actual en el DTO', async () => {
-    component.nombre = 'Nombre actualizado';
-    component.descripcion = 'Descripción actualizada';
-    service.obtenerFamiliaFormularioPorId.mockReturnValue(of({
+  it('guarda solo datos descriptivos, conserva el estado actual y emite la familia persistida', async () => {
+    const persistida = {
       ...familiaBase,
       famNombre: 'Nombre actualizado',
       famDescripcion: 'Descripción actualizada'
-    }));
+    };
+    const emitSpy = vi.spyOn(component.guardada, 'emit');
+    component.nombre = 'Nombre actualizado';
+    component.descripcion = 'Descripción actualizada';
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(persistida));
 
     component.guardarCambios();
     await estabilizarVista();
@@ -104,6 +112,7 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     });
     expect(service.activarFamiliaFormulario).not.toHaveBeenCalled();
     expect(service.desactivarFamiliaFormulario).not.toHaveBeenCalled();
+    expect(emitSpy).toHaveBeenCalledWith(persistida);
   });
 
   it('bloquea la desactivación en UI cuando existe versión vigente', async () => {
@@ -137,6 +146,25 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     expect(component.puedeEliminar()).toBe(true);
   });
 
+  it('elimina una familia sin versiones mediante confirmación y emite el evento de cierre de ciclo', async () => {
+    const eliminable: FamiliaFormularioDto = {
+      ...familiaBase,
+      famId: 9,
+      totalVersiones: 0
+    };
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(eliminable));
+    await cambiarFamilia(9);
+    const emitSpy = vi.spyOn(component.eliminada, 'emit');
+
+    component.confirmarEliminar();
+
+    await vi.waitFor(() => {
+      expect(service.eliminarFamiliaFormulario).toHaveBeenCalledWith(9);
+    });
+    expect(component.operando()).toBe(false);
+    expect(emitSpy).toHaveBeenCalledWith(eliminable);
+  });
+
   it('habilita activar solo para una familia inactiva', async () => {
     service.obtenerFamiliaFormularioPorId.mockReturnValue(of({ ...familiaBase, famActivo: false }));
     await cambiarFamilia(10);
@@ -145,10 +173,37 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     expect(component.puedeDesactivar()).toBe(false);
   });
 
-  it('ejecuta la desactivación mediante su endpoint dedicado y conserva el borrador descriptivo', async () => {
+  it('activa mediante su endpoint dedicado y emite el estado ACTIVADA', async () => {
+    const inactiva: FamiliaFormularioDto = {
+      ...familiaBase,
+      famId: 10,
+      famActivo: false
+    };
+    const activada: FamiliaFormularioDto = {
+      ...inactiva,
+      famActivo: true
+    };
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(inactiva));
+    await cambiarFamilia(10);
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(activada));
+    const emitSpy = vi.spyOn(component.estadoCambiado, 'emit');
+
+    component['cambiarEstado']('ACTIVADA');
+    await estabilizarVista();
+
+    expect(service.activarFamiliaFormulario).toHaveBeenCalledWith(10);
+    expect(service.desactivarFamiliaFormulario).not.toHaveBeenCalled();
+    expect(component.detalle()?.famActivo).toBe(true);
+    expect(component.mensaje()).toBe('Familia activada correctamente.');
+    expect(emitSpy).toHaveBeenCalledWith({ familia: activada, accion: 'ACTIVADA' });
+  });
+
+  it('ejecuta la desactivación mediante su endpoint dedicado, conserva el borrador y emite DESACTIVADA', async () => {
+    const desactivada = { ...familiaBase, famActivo: false };
+    const emitSpy = vi.spyOn(component.estadoCambiado, 'emit');
     component.nombre = 'Nombre aún no guardado';
     component.descripcion = 'Borrador local';
-    service.obtenerFamiliaFormularioPorId.mockReturnValue(of({ ...familiaBase, famActivo: false }));
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(desactivada));
 
     component['cambiarEstado']('DESACTIVADA');
     await estabilizarVista();
@@ -158,6 +213,17 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     expect(component.detalle()?.famActivo).toBe(false);
     expect(component.nombre).toBe('Nombre aún no guardado');
     expect(component.descripcion).toBe('Borrador local');
+    expect(emitSpy).toHaveBeenCalledWith({ familia: desactivada, accion: 'DESACTIVADA' });
+  });
+
+  it('cierra con Escape cuando no existe una operación en curso', () => {
+    const emitSpy = vi.spyOn(component.cerrar, 'emit');
+    const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+
+    component.manejarTecladoDialogo(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(emitSpy).toHaveBeenCalledTimes(1);
   });
 
   it('impide mutaciones cuando el usuario no es Administrador', async () => {
