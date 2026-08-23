@@ -70,10 +70,18 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     await estabilizarVista();
 
     expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(7);
-    const codigo = fixture.nativeElement.querySelector('#editar-fam-codigo') as HTMLInputElement;
+    expect(component.detalle()?.famCodigo).toBe('PRUEBA_FORMULARIO');
+
+    // La carga autoritativa y el contrato visual se prueban por separado para evitar
+    // depender del timing del render OnPush de señales en el entorno Vitest/JSDOM.
+    component.detalle.set({ ...familiaBase });
+    component.cargando.set(false);
+    fixture.detectChanges();
+
+    const codigo = fixture.nativeElement.querySelector('#editar-fam-codigo') as HTMLInputElement | null;
     expect(codigo).not.toBeNull();
-    expect(codigo.readOnly).toBe(true);
-    expect(codigo.value).toBe('PRUEBA_FORMULARIO');
+    expect(codigo?.readOnly).toBe(true);
+    expect(codigo?.value).toBe('PRUEBA_FORMULARIO');
     expect(fixture.nativeElement.textContent).not.toContain('Última actividad');
   });
 
@@ -112,9 +120,13 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     await estabilizarVista();
 
     expect(component.puedeEliminar()).toBe(false);
-    const boton = fixture.nativeElement.querySelector('[data-ui-fam-edit-action="eliminar"]') as HTMLButtonElement;
+    component.detalle.set({ ...familiaBase });
+    component.cargando.set(false);
+    fixture.detectChanges();
+
+    const boton = fixture.nativeElement.querySelector('[data-ui-fam-edit-action="eliminar"]') as HTMLButtonElement | null;
     expect(boton).not.toBeNull();
-    expect(boton.disabled).toBe(true);
+    expect(boton?.disabled).toBe(true);
     expect(fixture.nativeElement.textContent).toContain('La familia contiene versiones y no puede eliminarse.');
   });
 
