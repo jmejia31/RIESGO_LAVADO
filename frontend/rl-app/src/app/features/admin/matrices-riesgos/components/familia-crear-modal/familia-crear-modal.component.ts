@@ -17,7 +17,7 @@ export interface FamiliaCreadaEvent {
 })
 export class FamiliaCrearModalComponent implements AfterViewInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
-  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private focoAnterior: HTMLElement | null = null;
 
   @Output() readonly cerrar = new EventEmitter<void>();

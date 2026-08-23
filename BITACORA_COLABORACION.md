@@ -1,5 +1,20 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Corrección mínima y cierre técnico local UI-FAM.3
+
+- **Fecha y hora**: 2026-08-23 00:17, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `967c98e2ab5ee707b3b3a7f258940aba7edbaa48`.
+- **Objetivo**: identificar y corregir exclusivamente los fallos que impedían certificar el modal **Nueva Familia**, sin modificar su interfaz, contratos ni alcance funcional.
+- **Archivos funcionales modificados**: `familia-crear-modal.component.ts` y `e2e/matrices-familias-detalle.spec.ts`; además de esta bitácora y el estado colaborativo.
+- **Causa raíz y corrección**: `test:coverage` no compilaba por el uso de un argumento genérico sobre una llamada `inject` inferida sin tipo. Se tipó explícitamente `inject<ElementRef<HTMLElement>>(ElementRef)`, sin alterar HTML, CSS ni comportamiento visible. Playwright conservaba una expectativa obsoleta del antiguo puente de versiones de UI-FAM.2; se alineó la prueba con la tabla de versiones integrada ya vigente, sin tocar la interfaz productiva.
+- **Evidencia ejecutada**: `npm run test:coverage` **51/51 suites y 473/473 PASS**; cobertura frontend global informativa: 55.88% sentencias, 50.96% ramas, 52.09% funciones y 55.98% líneas; `npm run lint` PASS; `npm run build` PASS (advertencia conocida de `exceljs` CommonJS); Playwright **17/17 PASS**; backend Release **494/494 PASS**; validadores de base de datos y documentación PASS; `run_quality_gates.ps1` PASS; `git diff --check` PASS.
+- **Limitación heredada**: `validate_repository_structure.ps1` continúa señalando `frontend/rl-app/src/app/core/services/global-http-state.service.ts`, deuda estructural preexistente y ajena a UI-FAM.3. SonarCloud remoto permanece diferido al cierre global por decisión del propietario y no se declara aprobado.
+- **Restricciones respetadas**: cero cambios visuales, backend productivo, Oracle/SQL/DDL/DML, workflows, configuración SonarCloud, umbrales, `main` o PR #20.
+- **Punto de continuidad**: UI-FAM.3 queda **CERRADA Y CERTIFICADA LOCALMENTE**. La siguiente fase autorizable es la revisión técnica previa de UI-FAM.4, sin iniciarla en esta intervención.
+
+---
+
 ## Registro de Intervención — Codex — Cierre local UI-FAM.2 y retiro de Captura dinámica redundante
 
 - **Fecha y hora**: 2026-08-22, hora local (UTC-6).
