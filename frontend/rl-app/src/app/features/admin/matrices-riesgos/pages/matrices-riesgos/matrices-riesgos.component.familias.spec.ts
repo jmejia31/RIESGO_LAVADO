@@ -7,10 +7,14 @@ import { GlobalHttpStateService } from '../../../../../core/services/global-http
 import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
 import { of, throwError } from 'rxjs';
 
-describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familias', () => {
+describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias', () => {
   let component: MatricesRiesgosComponent;
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let service: MatricesRiesgosService;
+
+  const authMock = {
+    tieneRol: vi.fn(() => true)
+  };
 
   const mockFamilias: FamiliaFormularioDto[] = [
     {
@@ -46,6 +50,8 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familia
   ];
 
   beforeEach(async () => {
+    authMock.tieneRol.mockReturnValue(true);
+
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent, HttpClientTestingModule],
       providers: [
@@ -53,9 +59,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familia
         GlobalHttpStateService,
         {
           provide: AuthService,
-          useValue: {
-            tieneRol: () => true
-          }
+          useValue: authMock
         }
       ]
     }).compileComponents();
@@ -180,5 +184,88 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 Refinamiento Gestor de Familia
 
     component.desactivarFamilia(mockFamilias[0]);
     expect(component.error()).toBe('La familia posee versiones vigentes.');
+  });
+
+  it('11. UI-FAM.QA carga familias desde backend y finaliza el estado loading', () => {
+    component.cargarFamilias();
+
+    expect(service.listarFamiliasFormulario).toHaveBeenCalled();
+    expect(component.familias()).toEqual(mockFamilias);
+    expect(component.cargandoFamilias()).toBe(false);
+    expect(component.errorFamilias()).toBeNull();
+  });
+
+  it('12. UI-FAM.QA calcula correctamente los cuatro KPI del gestor', () => {
+    expect(component.totalFamilias()).toBe(3);
+    expect(component.totalFamiliasActivas()).toBe(2);
+    expect(component.totalFamiliasInactivas()).toBe(1);
+    expect(component.totalVersionesFamilias()).toBe(2);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('[data-ui-fam-kpi="total"]')?.textContent?.trim()).toBe('3');
+    expect(compiled.querySelector('[data-ui-fam-kpi="activas"]')?.textContent?.trim()).toBe('2');
+    expect(compiled.querySelector('[data-ui-fam-kpi="inactivas"]')?.textContent?.trim()).toBe('1');
+    expect(compiled.querySelector('[data-ui-fam-kpi="versiones"]')?.textContent?.trim()).toBe('2');
+  });
+
+  it('13. UI-FAM.QA filtra familias activas', () => {
+    component.filtroEstadoFamilia.set('ACTIVAS');
+    expect(component.familiasFiltradas().map(f => f.famId)).toEqual([1, 2]);
+  });
+
+  it('14. UI-FAM.QA filtra familias inactivas', () => {
+    component.filtroEstadoFamilia.set('INACTIVAS');
+    expect(component.familiasFiltradas().map(f => f.famId)).toEqual([3]);
+  });
+
+  it('15. UI-FAM.QA filtra familias con versión vigente', () => {
+    component.filtroVigenciaFamilia.set('VIGENTES');
+    expect(component.familiasFiltradas().map(f => f.famId)).toEqual([1]);
+  });
+
+  it('16. UI-FAM.QA filtra familias sin versión vigente', () => {
+    component.filtroVigenciaFamilia.set('SIN_VIGENTE');
+    expect(component.familiasFiltradas().map(f => f.famId)).toEqual([2, 3]);
+  });
+
+  it('17. UI-FAM.QA muestra estado vacío cuando búsqueda y filtros no tienen coincidencias', () => {
+    component.filtroBuscarFamilia.set('NO_EXISTE_999');
+    fixture.detectChanges();
+
+    expect(component.familiasFiltradas()).toEqual([]);
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('No hay familias que coincidan con los filtros.');
+  });
+
+  it('18. UI-FAM.QA oculta acciones administrativas cuando el usuario no está autorizado', () => {
+    authMock.tieneRol.mockReturnValue(false);
+    fixture.destroy();
+
+    fixture = TestBed.createComponent(MatricesRiesgosComponent);
+    component = fixture.componentInstance;
+    component.familias.set(mockFamilias);
+    component.abrirModalGestorFamilias();
+    fixture.detectChanges();
+
+    expect(component.esAdministrador()).toBe(false);
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('button[aria-label="Editar"]')).toBeNull();
+    expect(compiled.querySelector('button[aria-label="Eliminar"]')).toBeNull();
+    expect(compiled.textContent).not.toContain('Nueva familia');
+  });
+
+  it('19. UI-FAM.QA conserva contrato responsive para desktop y resolución reducida', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = compiled.querySelector('dialog[aria-labelledby="titulo-modal-gestor-familias"]');
+    const container = dialog?.querySelector('.modal-container-card');
+    const tablaResponsive = dialog?.querySelector('.overflow-x-auto');
+    const indicadores = dialog?.querySelector('[aria-label="Indicadores de familias de formularios"]');
+
+    expect(container?.className).toContain('w-full');
+    expect(container?.className).toContain('max-w-6xl');
+    expect(container?.className).toContain('max-h-[90vh]');
+    expect(tablaResponsive).not.toBeNull();
+    expect(indicadores?.className).toContain('grid-cols-1');
+    expect(indicadores?.className).toContain('sm:grid-cols-2');
+    expect(indicadores?.className).toContain('xl:grid-cols-4');
   });
 });
