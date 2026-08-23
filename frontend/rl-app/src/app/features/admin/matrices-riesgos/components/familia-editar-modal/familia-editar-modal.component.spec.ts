@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -23,7 +23,7 @@ const familiaBase: FamiliaFormularioDto = {
   tieneVersionVigente: false
 };
 
-describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
+describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
   let fixture: ComponentFixture<FamiliaEditarModalComponent>;
   let component: FamiliaEditarModalComponent;
 
@@ -78,8 +78,6 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(7);
     expect(component.detalle()?.famCodigo).toBe('PRUEBA_FORMULARIO');
 
-    // La carga autoritativa y el contrato visual se prueban por separado para evitar
-    // depender del timing del render OnPush de señales en el entorno Vitest/JSDOM.
     component.detalle.set({ ...familiaBase });
     component.cargando.set(false);
     fixture.detectChanges();
@@ -252,5 +250,64 @@ describe('FamiliaEditarModalComponent — UI-FAM.4', () => {
     await estabilizarVista();
 
     expect(component.error()).toBe('Conflicto de actualización.');
+  });
+
+  it('UI-FAM.QA trata una familia ya activa como no activable y no duplica la operación', () => {
+    expect(component.detalle()?.famActivo).toBe(true);
+    expect(component.puedeActivar()).toBe(false);
+
+    component.confirmarActivar();
+
+    expect(service.activarFamiliaFormulario).not.toHaveBeenCalled();
+  });
+
+  it('UI-FAM.QA detecta por separado cambios de nombre y descripción', async () => {
+    expect(component.hayCambios()).toBe(false);
+
+    component.nombre = 'Solo nombre actualizado';
+    expect(component.hayCambios()).toBe(true);
+
+    await cambiarFamilia(7);
+    component.descripcion = 'Solo descripción actualizada';
+    expect(component.hayCambios()).toBe(true);
+  });
+
+  it('UI-FAM.QA protege doble clic durante una operación de ciclo de vida', async () => {
+    const inactiva = { ...familiaBase, famActivo: false };
+    const pendiente = new Subject<boolean>();
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(inactiva));
+    await cambiarFamilia(10);
+    service.activarFamiliaFormulario.mockReturnValue(pendiente);
+
+    component['cambiarEstado']('ACTIVADA');
+    component['cambiarEstado']('ACTIVADA');
+
+    expect(component.operando()).toBe(true);
+    expect(service.activarFamiliaFormulario).toHaveBeenCalledTimes(1);
+
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of({ ...inactiva, famActivo: true }));
+    pendiente.next(true);
+    pendiente.complete();
+    await estabilizarVista();
+
+    expect(component.operando()).toBe(false);
+  });
+
+  it('UI-FAM.QA conserva contrato responsive desktop y resolución reducida', async () => {
+    component.detalle.set({ ...familiaBase });
+    component.cargando.set(false);
+    fixture.detectChanges();
+    await estabilizarVista();
+
+    const dialog = fixture.nativeElement.querySelector('[data-ui-fam-edit="modal"]') as HTMLElement | null;
+    const card = dialog?.querySelector('.modal-container-card') as HTMLElement | null;
+    const grid = dialog?.querySelector('[data-ui-fam-edit="formulario"]')?.parentElement as HTMLElement | null;
+
+    expect(card?.className).toContain('w-[calc(100vw-1.5rem)]');
+    expect(card?.className).toContain('sm:w-[82vw]');
+    expect(card?.className).toContain('sm:max-w-[1180px]');
+    expect(card?.className).toContain('max-h-[92dvh]');
+    expect(grid?.className).toContain('grid-cols-1');
+    expect(grid?.className).toContain('lg:grid-cols-');
   });
 });
