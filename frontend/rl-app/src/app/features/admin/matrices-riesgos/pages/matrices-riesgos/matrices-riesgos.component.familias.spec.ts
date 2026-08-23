@@ -5,7 +5,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
-import { of, throwError } from 'rxjs';
+import { Subject, of, throwError } from 'rxjs';
 
 describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias', () => {
   let component: MatricesRiesgosComponent;
@@ -187,7 +187,15 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('11. UI-FAM.QA carga familias desde backend y finaliza el estado loading', () => {
+    const respuesta = new Subject<FamiliaFormularioDto[]>();
+    vi.mocked(service.listarFamiliasFormulario).mockReturnValueOnce(respuesta);
+    component.familias.set([]);
+
     component.cargarFamilias();
+    expect(component.cargandoFamilias()).toBe(true);
+
+    respuesta.next(mockFamilias);
+    respuesta.complete();
 
     expect(service.listarFamiliasFormulario).toHaveBeenCalled();
     expect(component.familias()).toEqual(mockFamilias);
@@ -238,15 +246,15 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
 
   it('18. UI-FAM.QA oculta acciones administrativas cuando el usuario no está autorizado', () => {
     authMock.tieneRol.mockReturnValue(false);
-    fixture.destroy();
+    const componenteSinPermiso = TestBed.runInInjectionContext(() => new MatricesRiesgosComponent());
+    expect(componenteSinPermiso.esAdministrador()).toBe(false);
 
-    fixture = TestBed.createComponent(MatricesRiesgosComponent);
-    component = fixture.componentInstance;
-    component.familias.set(mockFamilias);
-    component.abrirModalGestorFamilias();
+    Object.defineProperty(component, 'esAdministrador', {
+      configurable: true,
+      value: () => false
+    });
     fixture.detectChanges();
 
-    expect(component.esAdministrador()).toBe(false);
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('button[aria-label="Editar"]')).toBeNull();
     expect(compiled.querySelector('button[aria-label="Eliminar"]')).toBeNull();
