@@ -301,12 +301,13 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
 
     const dialog = fixture.nativeElement.querySelector('[data-ui-fam-edit="modal"]') as HTMLElement | null;
     const card = dialog?.querySelector('.modal-container-card') as HTMLElement | null;
-    const grid = dialog?.querySelector('[data-ui-fam-edit="formulario"]')?.parentElement as HTMLElement | null;
+    const grid = dialog?.querySelector('div.grid.grid-cols-1') as HTMLElement | null;
 
     expect(card?.className).toContain('w-[calc(100vw-1.5rem)]');
     expect(card?.className).toContain('sm:w-[82vw]');
     expect(card?.className).toContain('sm:max-w-[1180px]');
     expect(card?.className).toContain('max-h-[92dvh]');
+    expect(grid).not.toBeNull();
     expect(grid?.className).toContain('grid-cols-1');
     expect(grid?.className).toContain('lg:grid-cols-');
   });
