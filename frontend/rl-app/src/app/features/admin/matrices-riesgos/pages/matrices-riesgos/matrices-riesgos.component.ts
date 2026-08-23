@@ -24,6 +24,7 @@ import { FormBuilderComponent } from '../../components/form-builder/form-builder
 import { DynamicFieldRendererComponent } from '../../components/dynamic-field-renderer/dynamic-field-renderer.component';
 import { FamiliaDetalleModalComponent } from '../../components/familia-detalle-modal/familia-detalle-modal.component';
 import { FamiliaCrearModalComponent } from '../../components/familia-crear-modal/familia-crear-modal.component';
+import { FamiliaEditarModalComponent } from '../../components/familia-editar-modal/familia-editar-modal.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { recalcularFormulasEvaluacion } from '../../utils/dynamic-formula-evaluator.util';
 import {
@@ -51,8 +52,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly environmentInjector = inject(EnvironmentInjector);
   private detalleFamiliaRef: ComponentRef<FamiliaDetalleModalComponent> | null = null;
   private crearFamiliaRef: ComponentRef<FamiliaCrearModalComponent> | null = null;
+  private editarFamiliaRef: ComponentRef<FamiliaEditarModalComponent> | null = null;
   private readonly suscripcionesDetalleFamilia: Subscription[] = [];
   private readonly suscripcionesCrearFamilia: Subscription[] = [];
+  private readonly suscripcionesEditarFamilia: Subscription[] = [];
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
@@ -311,6 +314,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.suscripcionEvaluaciones?.unsubscribe();
     this.suscripcionEvaluaciones = null;
     this.cerrarModalCrearFamilia();
+    this.cerrarModalEditarFamilia();
     this.cerrarModalVerFamilia();
     this.limpiarAutoDismiss();
     this.cancelarDebounceBuscarPendiente();
@@ -553,15 +557,57 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   abrirModalEditarFamilia(fam: FamiliaFormularioDto): void {
-    this.modoEdicionFamilia.set(true);
-    this.familiaIdEditando = fam.famId;
-    this.nuevaFamiliaCodigo = fam.famCodigo;
-    this.nuevaFamiliaNombre = fam.famNombre;
-    this.nuevaFamiliaDescripcion = fam.famDescripcion ?? '';
-    this.nuevaFamiliaActivo = fam.famActivo;
+    if (!fam || fam.famId <= 0 || !this.esAdministrador()) return;
+
+    this.cerrarModalEditarFamilia();
+    this.cerrarModalFamilia();
+    this.cerrarModalGestorFamilias();
     this.errorModal.set(null);
     this.globalState.limpiarError();
-    this.modalFamiliaAbierto.set(true);
+
+    const componentRef = createComponent(FamiliaEditarModalComponent, {
+      environmentInjector: this.environmentInjector
+    });
+    componentRef.setInput('familiaId', fam.famId);
+    componentRef.setInput('familiaReferencia', fam);
+
+    this.suscripcionesEditarFamilia.push(
+      componentRef.instance.cerrar.subscribe(() => this.cerrarModalEditarFamilia()),
+      componentRef.instance.guardada.subscribe(familia => {
+        this.cerrarModalEditarFamilia();
+        this.globalState.limpiarError();
+        this.mostrarMensaje(`Familia «${familia.famNombre}» actualizada correctamente.`);
+        this.cargarFamilias();
+      }),
+      componentRef.instance.estadoCambiado.subscribe(() => {
+        this.globalState.limpiarError();
+        this.cargarFamilias();
+      }),
+      componentRef.instance.eliminada.subscribe(familia => {
+        this.cerrarModalEditarFamilia();
+        this.globalState.limpiarError();
+        this.mostrarMensaje(`Familia «${familia.famCodigo}» eliminada correctamente.`);
+        this.cargarFamilias();
+      })
+    );
+
+    this.editarFamiliaRef = componentRef;
+    this.applicationRef.attachView(componentRef.hostView);
+    document.body.appendChild(componentRef.location.nativeElement);
+    componentRef.changeDetectorRef.detectChanges();
+  }
+
+  cerrarModalEditarFamilia(): void {
+    while (this.suscripcionesEditarFamilia.length > 0) {
+      this.suscripcionesEditarFamilia.pop()?.unsubscribe();
+    }
+
+    const componentRef = this.editarFamiliaRef;
+    if (componentRef) {
+      this.applicationRef.detachView(componentRef.hostView);
+      componentRef.destroy();
+      this.editarFamiliaRef = null;
+    }
   }
 
   cerrarModalFamilia(): void {

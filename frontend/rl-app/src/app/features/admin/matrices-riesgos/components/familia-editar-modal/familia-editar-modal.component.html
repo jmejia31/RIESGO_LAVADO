@@ -1,0 +1,250 @@
+<dialog open
+        class="modal-backdrop-overlay"
+        aria-modal="true"
+        aria-labelledby="titulo-modal-editar-familia"
+        data-ui-fam-edit="modal"
+        (keydown)="manejarTecladoDialogo($event)">
+  <form #familiaForm="ngForm"
+        class="modal-container-card w-[calc(100vw-1.5rem)] sm:w-[82vw] sm:max-w-[1180px] max-h-[92dvh]"
+        novalidate
+        (ngSubmit)="guardarCambios()">
+    <div class="modal-header-institutional px-5 py-5 sm:px-8 sm:py-6">
+      <div class="flex min-w-0 items-center gap-4">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700 sm:h-14 sm:w-14" aria-hidden="true">
+          <svg class="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V7z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14 2v5h5M8.5 15.5l5.8-5.8 2 2-5.8 5.8-2.5.5.5-2.5z"/>
+          </svg>
+        </span>
+        <div class="min-w-0">
+          <h3 id="titulo-modal-editar-familia" class="text-xl font-bold tracking-tight text-gray-950 sm:text-2xl">Editar Familia de Formularios</h3>
+          <p class="mt-1 max-w-3xl text-xs leading-5 text-gray-500 sm:text-sm">
+            Solo puede editarse la información descriptiva de la familia. Las acciones de ciclo de vida se gestionan por separado.
+          </p>
+        </div>
+      </div>
+      <button type="button"
+              class="ml-4 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Cerrar Editar Familia de Formularios"
+              [disabled]="guardando() || operando()"
+              (click)="solicitarCierre()">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="modal-body-scrollable px-5 py-5 sm:px-8 sm:py-6">
+      @if (error(); as errorTexto) {
+        <div class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-ui-fam-edit-state="error">
+          <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="flex-1 font-medium">{{ errorTexto }}</span>
+          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+      }
+      @if (mensaje(); as mensajeTexto) {
+        <div class="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status" aria-live="polite" data-ui-fam-edit-state="success">
+          <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
+          <button type="button" class="rounded-md p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700" aria-label="Cerrar mensaje" (click)="mensaje.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        </div>
+      }
+
+      @if (cargando() && !detalle()) {
+        <div class="flex min-h-[420px] items-center justify-center rounded-2xl border border-gray-200 bg-white" data-ui-fam-edit-state="loading">
+          <div class="text-center">
+            <svg class="mx-auto h-7 w-7 animate-spin text-ihss-700" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <p class="mt-3 text-sm font-semibold text-gray-700">Cargando información autoritativa de la familia...</p>
+          </div>
+        </div>
+      } @else if (noEncontrada()) {
+        <div class="flex min-h-[360px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 text-center" data-ui-fam-edit-state="not-found">
+          <span class="flex h-14 w-14 items-center justify-center rounded-full bg-amber-50 text-amber-600" aria-hidden="true">
+            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z"/></svg>
+          </span>
+          <h4 class="mt-4 text-lg font-bold text-gray-900">Familia no disponible</h4>
+          <p class="mt-1 max-w-md text-sm text-gray-500">No fue posible recuperar la familia solicitada. Puede haber sido eliminada o ya no estar disponible.</p>
+          <button type="button" class="mt-5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50" (click)="reintentar()">Reintentar</button>
+        </div>
+      } @else if (detalle(); as familia) {
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(330px,0.9fr)]">
+          <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-info-editable" data-ui-fam-edit="formulario">
+            <h4 id="titulo-info-editable" class="text-base font-bold text-gray-900">Información editable</h4>
+
+            <div class="mt-5 space-y-5">
+              <div>
+                <label for="editar-fam-codigo" class="mb-1.5 block text-sm font-bold text-gray-700">Código</label>
+                <div class="relative">
+                  <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400" aria-hidden="true">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V8a4 4 0 10-8 0v3m-1 0h18v10H3V11z"/></svg>
+                  </span>
+                  <input id="editar-fam-codigo"
+                         type="text"
+                         readonly
+                         [value]="familia.famCodigo"
+                         class="w-full cursor-not-allowed rounded-xl border border-gray-200 bg-gray-50 py-2.5 pl-11 pr-4 text-sm font-medium text-gray-500 shadow-sm focus:outline-none"
+                         aria-describedby="ayuda-codigo-editar-familia" />
+                </div>
+                <p id="ayuda-codigo-editar-familia" class="mt-1.5 text-xs text-gray-500">El código es permanente y no puede modificarse.</p>
+              </div>
+
+              <div>
+                <div class="mb-1.5 flex items-center justify-between gap-3">
+                  <label for="editar-fam-nombre" class="text-sm font-bold text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                  <span class="text-[11px] font-medium text-gray-400">{{ nombre.length }}/150</span>
+                </div>
+                <input #nombreInput
+                       #nombreModel="ngModel"
+                       id="editar-fam-nombre"
+                       name="nombre"
+                       type="text"
+                       required
+                       maxlength="150"
+                       autocomplete="off"
+                       class="w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                       [class.border-red-300]="nombreModel.invalid && nombreModel.touched"
+                       [class.border-gray-200]="!(nombreModel.invalid && nombreModel.touched)"
+                       [disabled]="guardando() || operando() || !esAdministrador()"
+                       [(ngModel)]="nombre"
+                       placeholder="Nombre de la familia" />
+                @if (nombreModel.touched && nombreModel.errors?.['required']) {
+                  <p class="mt-1 text-xs font-semibold text-red-600">Ingrese el nombre descriptivo de la familia.</p>
+                }
+              </div>
+
+              <div>
+                <div class="mb-1.5 flex items-center justify-between gap-3">
+                  <label for="editar-fam-descripcion" class="text-sm font-bold text-gray-700">Descripción</label>
+                  <span class="text-[11px] font-medium text-gray-400">{{ descripcion.length }}/500</span>
+                </div>
+                <textarea id="editar-fam-descripcion"
+                          name="descripcion"
+                          rows="5"
+                          maxlength="500"
+                          class="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm leading-6 text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:bg-gray-50 disabled:text-gray-500"
+                          [disabled]="guardando() || operando() || !esAdministrador()"
+                          [(ngModel)]="descripcion"
+                          placeholder="Describa el propósito y alcance de esta familia."></textarea>
+              </div>
+
+              <div class="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs leading-5 text-blue-800">
+                <span class="mt-0.5 shrink-0 text-blue-600" aria-hidden="true">
+                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </span>
+                <p>La activación, desactivación y eliminación se gestionan como acciones de ciclo de vida independientes para conservar control y auditoría.</p>
+              </div>
+            </div>
+          </section>
+
+          <div class="space-y-5">
+            <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-resumen-actual" data-ui-fam-edit="resumen">
+              <h4 id="titulo-resumen-actual" class="text-base font-bold text-gray-900">Resumen actual</h4>
+              <dl class="mt-4 divide-y divide-gray-100 text-sm">
+                <div class="flex items-center justify-between gap-4 py-3 first:pt-1">
+                  <dt class="font-medium text-gray-600">Estado</dt>
+                  <dd>
+                    <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-bold"
+                          [class.bg-emerald-50]="familia.famActivo"
+                          [class.text-emerald-700]="familia.famActivo"
+                          [class.ring-1]="familia.famActivo"
+                          [class.ring-emerald-200]="familia.famActivo"
+                          [class.bg-gray-100]="!familia.famActivo"
+                          [class.text-gray-600]="!familia.famActivo">
+                      {{ familia.famActivo ? 'ACTIVA' : 'INACTIVA' }}
+                    </span>
+                  </dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 py-3">
+                  <dt class="font-medium text-gray-600">Versiones</dt>
+                  <dd class="font-bold text-gray-900">{{ familia.totalVersiones }}</dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 py-3">
+                  <dt class="font-medium text-gray-600">Vigencia</dt>
+                  <dd>
+                    <span class="inline-flex rounded-lg px-2.5 py-1 text-xs font-bold"
+                          [class.bg-emerald-50]="familia.tieneVersionVigente"
+                          [class.text-emerald-700]="familia.tieneVersionVigente"
+                          [class.bg-gray-100]="!familia.tieneVersionVigente"
+                          [class.text-gray-600]="!familia.tieneVersionVigente">
+                      {{ familia.tieneVersionVigente ? 'SÍ' : 'NO' }}
+                    </span>
+                  </dd>
+                </div>
+                <div class="flex items-center justify-between gap-4 py-3 last:pb-1">
+                  <dt class="font-medium text-gray-600">Fecha de creación</dt>
+                  <dd class="font-semibold text-gray-700">{{ familia.famFechaCreacion | date:'dd/MM/yyyy' }}</dd>
+                </div>
+              </dl>
+            </section>
+
+            <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-ciclo-vida" data-ui-fam-edit="ciclo-vida">
+              <h4 id="titulo-ciclo-vida" class="text-base font-bold text-gray-900">Acciones de ciclo de vida</h4>
+              @if (!esAdministrador()) {
+                <p class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">Solo un Administrador puede ejecutar acciones de ciclo de vida.</p>
+              }
+
+              <div class="mt-4 space-y-3">
+                <button type="button"
+                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                        [disabled]="!puedeActivar()"
+                        data-ui-fam-edit-action="activar"
+                        (click)="confirmarActivar()">
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-600" aria-hidden="true"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></span>
+                  <span>Activar</span>
+                </button>
+
+                <button type="button"
+                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-800 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                        [disabled]="!puedeDesactivar()"
+                        data-ui-fam-edit-action="desactivar"
+                        (click)="confirmarDesactivar()">
+                  <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-amber-500 text-amber-600" aria-hidden="true"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg></span>
+                  <span>Desactivar</span>
+                </button>
+                @if (familia.famActivo && familia.tieneVersionVigente) {
+                  <p class="-mt-1 flex items-start gap-2 px-1 text-[11px] leading-4 text-amber-700">
+                    <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z"/></svg>
+                    <span>No disponible mientras exista una versión publicada vigente.</span>
+                  </p>
+                }
+
+                <button type="button"
+                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+                        [disabled]="!puedeEliminar()"
+                        data-ui-fam-edit-action="eliminar"
+                        (click)="confirmarEliminar()">
+                  <span class="flex h-7 w-7 items-center justify-center text-red-500" aria-hidden="true"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M4 7h16"/></svg></span>
+                  <span>{{ familia.totalVersiones > 0 ? 'Eliminar no disponible' : 'Eliminar' }}</span>
+                </button>
+                @if (familia.totalVersiones > 0) {
+                  <p class="-mt-1 flex items-start gap-2 px-1 text-[11px] leading-4 text-gray-500" data-ui-fam-edit="delete-lock-reason">
+                    <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V8a4 4 0 10-8 0v3m-1 0h18v10H3V11z"/></svg>
+                    <span>La familia contiene versiones y no puede eliminarse.</span>
+                  </p>
+                }
+              </div>
+            </section>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer-institutional px-5 py-4 sm:px-8">
+      <button type="button"
+              class="min-w-28 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              [disabled]="guardando() || operando()"
+              (click)="solicitarCierre()">
+        Cancelar
+      </button>
+      <button type="submit"
+              class="inline-flex min-w-40 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
+              [disabled]="!detalle() || guardando() || operando() || familiaForm.invalid || !hayCambios() || !esAdministrador()"
+              data-ui-fam-edit-action="guardar">
+        @if (guardando()) {
+          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          <span>Guardando...</span>
+        } @else {
+          <span>Guardar cambios</span>
+        }
+      </button>
+    </div>
+  </form>
+</dialog>
