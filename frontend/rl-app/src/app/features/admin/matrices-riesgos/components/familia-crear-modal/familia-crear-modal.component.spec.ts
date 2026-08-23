@@ -4,7 +4,7 @@ import { Subject, of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { FamiliaCrearModalComponent } from './familia-crear-modal.component';
 
-describe('FamiliaCrearModalComponent — UI-FAM.3', () => {
+describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
   let fixture: ComponentFixture<FamiliaCrearModalComponent>;
   let component: FamiliaCrearModalComponent;
   let service: MatricesRiesgosService;
@@ -121,5 +121,27 @@ describe('FamiliaCrearModalComponent — UI-FAM.3', () => {
     component.guardando.set(true);
     component.manejarTecladoDialogo(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(spyCerrar).toHaveBeenCalledTimes(1);
+  });
+
+  it('9. UI-FAM.QA valida nombre requerido de forma independiente al código', () => {
+    const spyCrear = vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(of(1));
+    component.codigo = 'CODIGO_VALIDO';
+    component.nombre = '   ';
+
+    component.guardar();
+
+    expect(spyCrear).not.toHaveBeenCalled();
+    expect(component.error()).toBe('El nombre de la familia es obligatorio.');
+  });
+
+  it('10. UI-FAM.QA mantiene contrato responsive y scroll seguro en resolución reducida', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = compiled.querySelector('[data-ui-fam-create="modal"]');
+    const card = dialog?.querySelector('.modal-container-card');
+
+    expect(dialog).not.toBeNull();
+    expect(card?.className).toContain('w-full');
+    expect(card?.className).toContain('max-h-[90vh]');
+    expect(card?.className).toMatch(/max-w-/);
   });
 });
