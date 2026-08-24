@@ -1,6 +1,43 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Codex — Corrección mínima y cierre técnico local UI-FAM.3
+## Registro de Intervención — AntiG — Implementación y Cierre de UI-FORM.1 (Integración Workspace V2)
+
+- **Fecha y hora**: 2026-08-24 12:52, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `bb87d84`.
+- **Objetivo**: Completar e integrar de forma real `FormBuilderWorkspaceV2Component` con el `FormBuilderComponent` productivo, sustituyendo el layout legacy por la arquitectura aprobada de 5 regiones V2 (`Toolbar`, `Palette`, `Canvas`, `Inspector`, `Statusbar`) dentro de un modal 96vw × 94vh.
+- **Archivos funcionales modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-workspace.component.html` (agregados atributos de accesibilidad `role="dialog"`, `aria-modal="true"`, `aria-labelledby`).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-toolbar.component.ts` y `.html` (conservada Toolbar V2 ya aprobada).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-palette.component.ts` y `.html` (convertido a componente presentacional conectado via `@Input` / `@Output`, markup real de biblioteca extraído).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-canvas.component.ts` y `.html` (convertido a componente presentacional con renderizado de secciones y campos, eventos tipados emitidos al padre).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-inspector.component.ts` y `.html` (convertido a componente presentacional con empty-state informativo y edición de propiedades tipada).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-statusbar.component.ts`, `.html` y `.scss` (statusbar institucional mínima que muestra versión, modo borrador/solo lectura y conteos existentes sin duplicar acciones).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts` (import de componentes V2, orquestación y método `actualizarTituloSeccion`).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html` (reemplazado layout monolítico legacy por `<app-form-builder-workspace-v2>` proyectando las 5 regiones V2).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.scss` (limpieza de estilos legacy de paneles, preservación de catálogo VISTA 2 y banner de validación).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html` (modal dimensionado a `width: 96vw; max-width: 96vw; height: 94vh; max-height: 94vh;`).
+  - `frontend/rl-app/src/styles.css` (regla CSS para permitir que el modal del form builder alcance 94vh).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/workspace/form-builder-workspace.spec.ts` (suite con 9 pruebas de integración para todos los componentes V2).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.spec.ts` (pruebas de integración FormBuilder -> WorkspaceV2).
+- **Evidencia técnica ejecutada**:
+  - `npm run build`: **SUCCESS** (0 errores, bundle generation complete).
+  - `npm run lint`: **SUCCESS** (0 errores, 0 warnings).
+  - Vitest Workspace V2 Specs (`form-builder-workspace.spec.ts`): **9/9 PASS**.
+  - Vitest FormBuilder Specs (`form-builder.component.spec.ts`): **PASS** (incluyendo nueva suite de integración UI-FORM.1).
+  - Backend Release Tests (`dotnet test`): **494/494 PASS**.
+  - Validación de BD (`validate_database_scripts.ps1`): **PASS**.
+  - `git diff --check`: **PASS** (0 whitespace/formatting errors).
+- **Garantías y Restricciones respetadas**:
+  - Backend modificado: **NO** (0 cambios en backend).
+  - Oracle / BD modificada: **NO** (0 DDL/DML, 0 cambios de esquema).
+  - Contratos JSON modificados: **NO** (preservación lossless del contrato oficial).
+  - Workflows / Sonar modificados: **NO**.
+  - UI-FORM.2 iniciada: **NO** (detenido exactamente en UI-FORM.1).
+  - Sin duplicación de lógica ni segundo motor de formularios.
+- **Punto de continuidad**: Fase UI-FORM.1 queda **LISTA PARA REVISIÓN DE CHATGPT**. Siguiente fase: UI-FORM.2 (biblioteca/estructura y taxonomía).
+
+---
 
 - **Fecha y hora**: 2026-08-23 00:17, hora local (UTC-6).
 - **Agente**: Codex.

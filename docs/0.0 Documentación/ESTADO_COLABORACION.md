@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-23 — Cierre técnico local UI-FAM.3 por Codex
+**Actualización:** 2026-08-24 — Implementación y cierre de UI-FORM.1 por AntiG
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -30,6 +30,8 @@
 | **UI-FAM.3 — Crear familia en modal** | **✅ CERRADA Y CERTIFICADA LOCALMENTE** | Implementación publicada previamente; corrección mínima de tipado DI sin cambios visuales y regresión E2E alineada con UI-FAM.2 integrada. 51/51 suites y 473/473 frontend PASS; 17/17 Playwright PASS; 494/494 backend Release PASS; lint, build y Quality Gates locales PASS. SonarCloud remoto diferido al cierre global. |
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
+| **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ IMPLEMENTADA Y LISTA PARA REVISIÓN** | FormBuilderComponent integrado con FormBuilderWorkspaceV2Component, 5 regiones V2 conectadas via @Input/@Output, modal 96vw × 94vh, statusbar mínima, accesibilidad dialog/modal. 494/494 Backend PASS, Frontend Build SUCCESS, Lint PASS, 9/9 Workspace Tests PASS. |
+| **UI-FORM.2 — Biblioteca y estructura del formulario** | **⏳ PENDIENTE** | Biblioteca/estructura y búsqueda local (no iniciada en esta fase). |
 
 ---
 

@@ -279,4 +279,35 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(mensajes).toContain('asociar un');
     expect(mensajes).toContain('campo calculado');
   });
+
+  describe('Integración UI-FORM.1 — Workspace V2', () => {
+    it('integra FormBuilderWorkspaceV2Component y renderiza las 5 regiones V2 en vista lienzo', () => {
+      component.cambiarVista('secciones');
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const workspace = el.querySelector('app-form-builder-workspace-v2');
+      expect(workspace).toBeTruthy();
+      expect(workspace?.getAttribute('data-ui-contract')).toBe('UI-FORM-V2');
+
+      // Las 5 regiones V2 existen dentro del DOM del constructor
+      const toolbar = el.querySelector('app-form-builder-toolbar-v2');
+      const palette = el.querySelector('app-form-builder-palette-v2');
+      const canvas = el.querySelector('app-form-builder-canvas-v2');
+      const inspector = el.querySelector('app-form-builder-inspector-v2');
+      const statusbar = el.querySelector('app-form-builder-statusbar-v2');
+
+      expect(toolbar).toBeTruthy();
+      expect(palette).toBeTruthy();
+      expect(canvas).toBeTruthy();
+      expect(inspector).toBeTruthy();
+      expect(statusbar).toBeTruthy();
+    });
+
+    it('actualiza el título de una sección via actualizarTituloSeccion', () => {
+      const seccionId = component.model().secciones[0].id;
+      component.actualizarTituloSeccion(seccionId, 'Nuevo Título Sección');
+      expect(component.model().secciones[0].titulo).toBe('Nuevo Título Sección');
+    });
+  });
 });

@@ -11,55 +11,15 @@
   max-width: 100%;
 }
 
-/*
- * El encabezado debe poder contraerse y envolver sus acciones sin forzar
- * un ancho mayor al disponible dentro del modal.
- */
-header.modal-header-institutional {
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: hidden;
-}
+/* ============================================================
+ * V2 Workspace Integration — UI-FORM.1
+ * El layout de 3 paneles ahora es gestionado por los componentes
+ * V2 (Workspace → Toolbar/Palette/Canvas/Inspector/Statusbar).
+ * Las reglas legacy de aside/main se conservan para VISTA 2 (catálogos)
+ * que aún utiliza el layout inline.
+ * ============================================================ */
 
-header.modal-header-institutional > div {
-  min-width: 0;
-  max-width: 100%;
-}
-
-header.modal-header-institutional > div:first-child {
-  flex: 1 1 22rem;
-}
-
-header.modal-header-institutional > div:last-child {
-  flex: 0 1 auto;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-#titulo-modal-builder {
-  min-width: 0;
-  max-width: 100%;
-  flex-wrap: wrap;
-  overflow-wrap: anywhere;
-}
-
-#titulo-modal-builder > span {
-  max-width: 100%;
-  white-space: normal;
-}
-
-/*
- * Los laterales dejan de imponer 256/320 px rígidos. Mantienen una medida
- * cómoda en escritorio, pero ceden espacio al lienzo central cuando el
- * viewport o el zoom reducen el ancho efectivo.
- */
-aside[aria-label='Paleta de controles'] {
-  width: clamp(10.5rem, 18vw, 16rem) !important;
-  min-width: 10.5rem;
-  max-width: 16rem;
-  overflow-x: hidden;
-}
-
+/* Catálogos: VISTA 2 lateral sizing */
 aside[aria-label='Lista de catálogos'] {
   width: clamp(14rem, 24vw, 20rem) !important;
   min-width: 14rem;
@@ -67,24 +27,14 @@ aside[aria-label='Lista de catálogos'] {
   overflow-x: hidden;
 }
 
-aside[aria-label='Inspector de propiedades del campo'] {
-  width: clamp(15rem, 25vw, 20rem) !important;
-  min-width: 15rem;
-  max-width: 20rem;
-  overflow-x: hidden;
-}
-
-aside[aria-label='Paleta de controles'] *,
-aside[aria-label='Lista de catálogos'] *,
-aside[aria-label='Inspector de propiedades del campo'] * {
+aside[aria-label='Lista de catálogos'] * {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
 /*
- * flex items tienen min-width:auto por defecto. En un editor de tres paneles
- * eso permite que el contenido técnico ensanche el canvas. Forzamos el lienzo
- * a encogerse dentro del espacio real y evitamos cualquier overflow horizontal.
+ * Catálogos VISTA 2: el panel principal (main) necesita encogerse
+ * para evitar overflow horizontal.
  */
 main {
   width: 0;
@@ -134,8 +84,7 @@ main div.font-mono {
 
 /*
  * La cantidad de columnas sigue intacta en el modelo. Solo la PREVISUALIZACIÓN
- * del editor se adapta cuando el canvas es estrecho, evitando tarjetas de pocos
- * píxeles y texto recortado. Al recuperar ancho vuelve la grilla configurada.
+ * del editor se adapta cuando el canvas es estrecho.
  */
 @container (max-width: 44rem) {
   main .grid.gap-4 {
@@ -144,9 +93,7 @@ main div.font-mono {
 }
 
 /*
- * En viewports pequeños no existe espacio útil para tres columnas laterales.
- * Se apilan los paneles dentro del mismo modal, conservando toda la funcionalidad
- * y eliminando por completo el scroll horizontal.
+ * En viewports pequeños se apilan los paneles de catálogos (VISTA 2).
  */
 @media (max-width: 720px) {
   :host > div > .flex-1.flex {
@@ -155,26 +102,14 @@ main div.font-mono {
     overflow-y: auto;
   }
 
-  aside[aria-label='Paleta de controles'],
-  aside[aria-label='Lista de catálogos'],
-  aside[aria-label='Inspector de propiedades del campo'] {
+  aside[aria-label='Lista de catálogos'] {
     width: 100% !important;
     min-width: 0;
     max-width: none;
     flex-shrink: 0;
-  }
-
-  aside[aria-label='Paleta de controles'],
-  aside[aria-label='Lista de catálogos'] {
     max-height: 14rem;
     border-right: 0;
     border-bottom: 1px solid #e2e8f0;
-  }
-
-  aside[aria-label='Inspector de propiedades del campo'] {
-    max-height: 18rem;
-    border-left: 0;
-    border-top: 1px solid #e2e8f0;
   }
 
   main {
@@ -182,6 +117,13 @@ main div.font-mono {
     min-height: 28rem;
     flex: 0 0 auto;
   }
+}
+
+/* Validation banner */
+.fbv2-validation-banner {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .custom-scrollbar {

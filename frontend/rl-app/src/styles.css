@@ -184,6 +184,12 @@ dialog.modal-backdrop-overlay > .modal-container-card {
   max-height: 90dvh !important;
 }
 
+/* El Constructor de Formularios V2 requiere un workspace casi full-screen (96vw × 94vh)
+   según la especificación UI-FORM.1. Se permite exceder el límite estándar de 90dvh. */
+dialog.modal-backdrop-overlay > .modal-container-card[style*="94vh"] {
+  max-height: 94vh !important;
+}
+
 /*
  * Presentación institucional de Versiones de Formulario.
  * Se limita estrictamente al panel Plantillas: conserva los handlers y el texto accesible original,

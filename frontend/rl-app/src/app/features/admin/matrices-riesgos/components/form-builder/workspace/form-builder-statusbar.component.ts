@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-form-builder-statusbar-v2',
@@ -7,4 +7,9 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./form-builder-statusbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FormBuilderStatusbarV2Component {}
+export class FormBuilderStatusbarV2Component {
+  @Input() versionCodigo: string = '';
+  @Input() soloLectura: boolean = false;
+  @Input() seccionesCount: number = 0;
+  @Input() catalogosCount: number = 0;
+}

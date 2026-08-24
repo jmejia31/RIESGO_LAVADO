@@ -13,6 +13,12 @@ import {
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
+import { FormBuilderWorkspaceV2Component } from './workspace/form-builder-workspace.component';
+import { FormBuilderToolbarV2Component } from './workspace/form-builder-toolbar.component';
+import { FormBuilderPaletteV2Component } from './workspace/form-builder-palette.component';
+import { FormBuilderCanvasV2Component } from './workspace/form-builder-canvas.component';
+import { FormBuilderInspectorV2Component } from './workspace/form-builder-inspector.component';
+import { FormBuilderStatusbarV2Component } from './workspace/form-builder-statusbar.component';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -37,7 +43,16 @@ export interface FeedbackCatalogo {
 @Component({
   selector: 'app-form-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FormBuilderWorkspaceV2Component,
+    FormBuilderToolbarV2Component,
+    FormBuilderPaletteV2Component,
+    FormBuilderCanvasV2Component,
+    FormBuilderInspectorV2Component,
+    FormBuilderStatusbarV2Component
+  ],
   templateUrl: './form-builder.component.html',
   styleUrls: ['./form-builder.component.scss']
 })
@@ -284,6 +299,24 @@ export class FormBuilderComponent implements OnInit {
     seccionesActualizadas[seccionIndex] = {
       ...seccionesActualizadas[seccionIndex],
       columnasPorFila: Number(columnas)
+    };
+
+    this.model.set({
+      ...current,
+      secciones: seccionesActualizadas
+    });
+  }
+
+  actualizarTituloSeccion(seccionId: string, titulo: string): void {
+    if (this.soloLectura) return;
+    const current = this.model();
+    const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
+    if (seccionIndex === -1) return;
+
+    const seccionesActualizadas = [...current.secciones];
+    seccionesActualizadas[seccionIndex] = {
+      ...seccionesActualizadas[seccionIndex],
+      titulo
     };
 
     this.model.set({
