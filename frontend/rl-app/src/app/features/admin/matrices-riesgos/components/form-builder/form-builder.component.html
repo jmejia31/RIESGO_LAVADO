@@ -17,138 +17,138 @@
   </div>
 }
 
-@if (mostrarJsonAvanzado()) {
-  <div class="flex-1 p-6 bg-slate-900 text-slate-100 flex flex-col gap-4 animate-fade-in overflow-hidden">
-    <div class="flex items-center justify-between">
-      <h3 class="text-sm font-semibold text-slate-300">Contrato JSON Generado Internamente</h3>
-      @if (!soloLectura) {
-        <button type="button" (click)="aplicarJsonAvanzado()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white">Sincronizar hacia el Lienzo Visual</button>
-      }
-    </div>
-    <textarea id="json-avanzado" aria-label="Configuracion JSON avanzada" [(ngModel)]="jsonAvanzadoStr" [readOnly]="soloLectura" class="flex-1 w-full p-4 bg-slate-950 font-mono text-xs text-emerald-400 rounded-xl border border-slate-800 focus:outline-none resize-none overflow-y-auto custom-scrollbar"></textarea>
-  </div>
-}
-@else if (vistaActiva() === 'catalogos') {
-  <div class="flex-1 flex overflow-hidden bg-slate-100">
-    <aside aria-label="Lista de catálogos" class="w-80 bg-white border-r border-slate-200 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-shrink-0">
-      <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div>
-          <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Catálogos de la Plantilla</h3>
-          <p class="text-[11px] text-slate-500">Gestión de listas y opciones dinámicas</p>
-        </div>
+<section class="form-builder-shell" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
+  <app-form-builder-toolbar
+    [title]="'Constructor de Formularios Dinámicos'"
+    [versionCodigo]="versionCodigo"
+    [versionNumero]="versionNumero"
+    [seccionesCount]="model().secciones.length"
+    [catalogosCount]="catalogosList().length"
+    [soloLectura]="soloLectura"
+    [esAdministrador]="esAdministrador"
+    [vistaActiva]="vistaActiva()"
+    [mostrarJsonAvanzado]="mostrarJsonAvanzado()"
+    (cambiarVista)="cambiarVista($event)"
+    (toggleJson)="toggleModoJson()"
+    (agregarSeccion)="agregarSeccion()"
+    (agregarCatalogo)="iniciarNuevoCatalogo(); cambiarVista('catalogos')"
+    (guardar)="emitirGuardado()"
+    (cerrar)="cerrar.emit()">
+  </app-form-builder-toolbar>
+
+  @if (mostrarJsonAvanzado()) {
+    <div class="form-builder-shell__content flex-1 p-6 bg-slate-900 text-slate-100 flex flex-col gap-4 animate-fade-in overflow-hidden">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-300">Contrato JSON Generado Internamente</h3>
         @if (!soloLectura) {
-          <button type="button" id="btn-nuevo-catalogo-lateral" (click)="iniciarNuevoCatalogo()" class="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold transition-colors" title="Crear nuevo catálogo">+ Nuevo</button>
+          <button type="button" (click)="aplicarJsonAvanzado()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-semibold text-white">Sincronizar hacia el Lienzo Visual</button>
         }
       </div>
-
-      <div>
-        <input type="text" id="buscador-catalogos" [ngModel]="busquedaCatalogos()" (ngModelChange)="busquedaCatalogos.set($event)" placeholder="Buscar catálogo por código o nombre..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
-      </div>
-
-      <div class="space-y-2 flex-1 overflow-y-auto">
-        @if (catalogosFiltrados().length === 0) {
-          <div class="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
-            <p class="text-xs text-slate-500 font-medium">No se encontraron catálogos.</p>
-            @if (!soloLectura) { <button type="button" (click)="iniciarNuevoCatalogo()" class="mt-2 text-xs text-blue-600 hover:underline font-semibold">+ Crear primer catálogo</button> }
-          </div>
-        }
-
-        @for (cat of catalogosFiltrados(); track cat.codigo) {
-          <div (click)="seleccionarCatalogo(cat.codigo)" (keydown.enter)="seleccionarCatalogo(cat.codigo)" (keydown.space)="$event.preventDefault(); seleccionarCatalogo(cat.codigo)" tabindex="0" [id]="'item-catalogo-' + cat.codigo" [class.border-blue-500]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.ring-2]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.ring-blue-500/20]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.bg-blue-50/40]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.border-slate-200]="catalogoActivoCodigo()?.toLowerCase() !== cat.codigo.toLowerCase()" class="p-3 bg-white rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-sm">
-            <div class="flex items-start justify-between gap-2 mb-1">
-              <span class="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded truncate max-w-[180px]">{{ cat.codigo }}</span>
-              <span class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">{{ cat.elementos.length }} opc.</span>
-            </div>
-            <p class="text-xs font-semibold text-slate-900 truncate">{{ cat.nombre }}</p>
-            @if (catalogoEstaEnUso(cat.codigo)) { <div class="mt-2 flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md"><span>🔗 En uso por {{ camposQueUsanCatalogo(cat.codigo).length }} campo(s)</span></div> }
-          </div>
-        }
-      </div>
-    </aside>
-
-    <main class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-6">
-      @if (feedbackCatalogo(); as fb) {
-        <div [class.bg-red-50]="fb.tipo === 'error'" [class.border-red-200]="fb.tipo === 'error'" [class.text-red-800]="fb.tipo === 'error'" [class.bg-emerald-50]="fb.tipo === 'exito'" [class.border-emerald-200]="fb.tipo === 'exito'" [class.text-emerald-800]="fb.tipo === 'exito'" [class.bg-blue-50]="fb.tipo === 'info'" [class.border-blue-200]="fb.tipo === 'info'" [class.text-blue-800]="fb.tipo === 'info'" class="p-4 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 animate-fade-in shadow-xs">
-          <div class="flex items-center gap-2"><span class="text-base">{{ fb.tipo === 'error' ? '⚠️' : fb.tipo === 'exito' ? '✅' : 'ℹ️' }}</span><span>{{ fb.mensaje }}</span></div>
-          <button type="button" (click)="feedbackCatalogo.set(null)" class="text-slate-400 hover:text-slate-700 font-bold" aria-label="Cerrar mensaje de catálogo">✕</button>
-        </div>
-      }
-
-      @if (catalogoEnEdicion(); as catEd) {
-        <div class="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm space-y-4 animate-fade-in">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3"><h3 class="text-sm font-bold text-slate-900">{{ catEd.esNuevo ? 'Crear Nuevo Catálogo' : 'Editar Catálogo: ' + catEd.codigoOriginal }}</h3><button type="button" (click)="cancelarEdicionCatalogo()" class="text-xs text-slate-400 hover:text-slate-600">✕ Cancelar</button></div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div><label for="input-catalogo-codigo" class="block font-semibold text-slate-700 mb-1">Código Técnico del Catálogo <span class="text-red-500">*</span></label><input type="text" id="input-catalogo-codigo" [(ngModel)]="catEd.codigo" placeholder="Ej. MR_FRECUENCIA_1_5" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Identificador único (case-insensitive).</p></div>
-            <div><label for="input-catalogo-nombre" class="block font-semibold text-slate-700 mb-1">Nombre Visible del Catálogo <span class="text-red-500">*</span></label><input type="text" id="input-catalogo-nombre" [(ngModel)]="catEd.nombre" placeholder="Ej. Escala de Frecuencia (1 a 5)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Etiqueta mostrada en el constructor de formularios.</p></div>
-          </div>
-          <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionCatalogo()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="button" id="btn-guardar-catalogo" (click)="guardarEdicionCatalogo()" class="px-4 py-1.5 rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 shadow-xs">Guardar Catálogo</button></div>
-        </div>
-      }
-
-      @if (catalogoActivo(); as cat) {
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <textarea id="json-avanzado" aria-label="Configuracion JSON avanzada" [(ngModel)]="jsonAvanzadoStr" [readOnly]="soloLectura" class="flex-1 w-full p-4 bg-slate-950 font-mono text-xs text-emerald-400 rounded-xl border border-slate-800 focus:outline-none resize-none overflow-y-auto custom-scrollbar"></textarea>
+    </div>
+  }
+  @else if (vistaActiva() === 'catalogos') {
+    <div class="form-builder-shell__content flex-1 flex overflow-hidden bg-slate-100">
+      <aside aria-label="Lista de catálogos" class="w-80 bg-white border-r border-slate-200 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-shrink-0">
+        <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
-            <div class="flex items-center gap-2 flex-wrap"><span class="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">{{ cat.codigo }}</span><span class="text-xs font-bold text-slate-900">{{ cat.nombre }}</span><span class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{{ cat.elementos.length }} elemento(s)</span></div>
-            @if (camposQueUsanCatalogo(cat.codigo); as campos) {
-              @if (campos.length > 0) { <p class="text-[11px] text-blue-700 mt-2 bg-blue-50/70 p-2 rounded-lg border border-blue-100">🔗 <strong>Asociado a {{ campos.length }} campo(s):</strong> {{ campos.map(c => c.campoEtiqueta).join(', ') }}</p> }
-              @else { <p class="text-[11px] text-slate-400 mt-1">Este catálogo no está referenciado por ningún campo actualmente.</p> }
-            }
+            <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Catálogos de la Plantilla</h3>
+            <p class="text-[11px] text-slate-500">Gestión de listas y opciones dinámicas</p>
           </div>
           @if (!soloLectura) {
-            <div class="flex items-center gap-2"><button type="button" id="btn-editar-catalogo-activo" (click)="iniciarEdicionCatalogo(cat)" class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs">Editar Catálogo</button><button type="button" id="btn-eliminar-catalogo-activo" (click)="eliminarCatalogo(cat.codigo)" class="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors" [title]="catalogoEstaEnUso(cat.codigo) ? 'No se puede eliminar porque está en uso' : 'Eliminar catálogo'">Eliminar Catálogo</button></div>
+            <button type="button" id="btn-nuevo-catalogo-lateral" (click)="iniciarNuevoCatalogo()" class="p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold transition-colors" title="Crear nuevo catálogo">+ Nuevo</button>
           }
         </div>
 
-        @if (elementoEnEdicion(); as elemEd) {
-          <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-4 animate-fade-in">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><h4 class="text-xs font-bold text-slate-900">{{ elemEd.indice === null ? 'Agregar Nuevo Elemento al Catálogo' : 'Editar Elemento #' + elemEd.orden }}</h4><button type="button" (click)="cancelarEdicionElemento()" class="text-xs text-slate-400 hover:text-slate-600">✕ Cancelar</button></div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-              <div><label for="input-elem-codigo" class="block font-semibold text-slate-700 mb-1">Código del Elemento <span class="text-red-500">*</span></label><input type="text" id="input-elem-codigo" [(ngModel)]="elemEd.codigo" placeholder="Ej. 001, G-IVM, ALTO" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Alfanumérico persistido como texto.</p></div>
-              <div><label for="input-elem-valor" class="block font-semibold text-slate-700 mb-1">Etiqueta / Valor Visible <span class="text-red-500">*</span></label><input type="text" id="input-elem-valor" [(ngModel)]="elemEd.valor" placeholder="Ej. Muy Frecuente (5)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Texto presentado al usuario.</p></div>
-              <div><label for="input-elem-orden" class="block font-semibold text-slate-700 mb-1">Orden de Visualización <span class="text-red-500">*</span></label><input type="number" id="input-elem-orden" [(ngModel)]="elemEd.orden" min="1" step="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Posición secuencial (>= 1).</p></div>
+        <div>
+          <input type="text" id="buscador-catalogos" [ngModel]="busquedaCatalogos()" (ngModelChange)="busquedaCatalogos.set($event)" placeholder="Buscar catálogo por código o nombre..." class="w-full text-xs px-3 py-2 border border-slate-300 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div class="space-y-2 flex-1 overflow-y-auto">
+          @if (catalogosFiltrados().length === 0) {
+            <div class="p-6 text-center border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+              <p class="text-xs text-slate-500 font-medium">No se encontraron catálogos.</p>
+              @if (!soloLectura) { <button type="button" (click)="iniciarNuevoCatalogo()" class="mt-2 text-xs text-blue-600 hover:underline font-semibold">+ Crear primer catálogo</button> }
             </div>
-            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionElemento()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="button" id="btn-guardar-elemento" (click)="guardarElementoCatalogo()" class="px-4 py-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs">Guardar Elemento</button></div>
+          }
+
+          @for (cat of catalogosFiltrados(); track cat.codigo) {
+            <div (click)="seleccionarCatalogo(cat.codigo)" (keydown.enter)="seleccionarCatalogo(cat.codigo)" (keydown.space)="$event.preventDefault(); seleccionarCatalogo(cat.codigo)" tabindex="0" [id]="'item-catalogo-' + cat.codigo" [class.border-blue-500]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.ring-2]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.ring-blue-500/20]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.bg-blue-50/40]="catalogoActivoCodigo()?.toLowerCase() === cat.codigo.toLowerCase()" [class.border-slate-200]="catalogoActivoCodigo()?.toLowerCase() !== cat.codigo.toLowerCase()" class="p-3 bg-white rounded-xl border transition-all cursor-pointer shadow-xs hover:shadow-sm">
+              <div class="flex items-start justify-between gap-2 mb-1">
+                <span class="font-mono text-[11px] font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded truncate max-w-[180px]">{{ cat.codigo }}</span>
+                <span class="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-full">{{ cat.elementos.length }} opc.</span>
+              </div>
+              <p class="text-xs font-semibold text-slate-900 truncate">{{ cat.nombre }}</p>
+              @if (catalogoEstaEnUso(cat.codigo)) { <div class="mt-2 flex items-center gap-1 text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md"><span>🔗 En uso por {{ camposQueUsanCatalogo(cat.codigo).length }} campo(s)</span></div> }
+            </div>
+          }
+        </div>
+      </aside>
+
+      <main class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-6">
+        @if (feedbackCatalogo(); as fb) {
+          <div [class.bg-red-50]="fb.tipo === 'error'" [class.border-red-200]="fb.tipo === 'error'" [class.text-red-800]="fb.tipo === 'error'" [class.bg-emerald-50]="fb.tipo === 'exito'" [class.border-emerald-200]="fb.tipo === 'exito'" [class.text-emerald-800]="fb.tipo === 'exito'" [class.bg-blue-50]="fb.tipo === 'info'" [class.border-blue-200]="fb.tipo === 'info'" [class.text-blue-800]="fb.tipo === 'info'" class="p-4 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 animate-fade-in shadow-xs">
+            <div class="flex items-center gap-2"><span class="text-base">{{ fb.tipo === 'error' ? '⚠️' : fb.tipo === 'exito' ? '✅' : 'ℹ️' }}</span><span>{{ fb.mensaje }}</span></div>
+            <button type="button" (click)="feedbackCatalogo.set(null)" class="text-slate-400 hover:text-slate-700 font-bold" aria-label="Cerrar mensaje de catálogo">✕</button>
           </div>
         }
 
-        <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
-          <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between gap-3"><div><h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Elementos y Opciones</h4><p class="text-[11px] text-slate-500">Valores disponibles para los campos que consuman este catálogo</p></div>@if (!soloLectura) { <button type="button" id="btn-agregar-elemento" (click)="iniciarNuevoElemento()" class="rounded-xl bg-ihss-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition-colors flex items-center gap-1.5">+ Agregar Elemento</button> }</div>
-          @if (cat.elementos.length === 0) {
-            <div class="p-10 text-center"><p class="text-xs text-slate-500 font-medium">Este catálogo aún no tiene elementos configurados.</p>@if (!soloLectura) { <button type="button" (click)="iniciarNuevoElemento()" class="mt-2 text-xs text-blue-600 hover:underline font-semibold">+ Añadir primera opción</button> }</div>
-          } @else {
-            <div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-100"><tr><th class="py-2.5 px-4 w-16 text-center">Orden</th><th class="py-2.5 px-4 w-40">Código</th><th class="py-2.5 px-4">Etiqueta / Valor</th>@if (!soloLectura) { <th class="py-2.5 px-4 w-32 text-right">Acciones</th> }</tr></thead><tbody class="divide-y divide-slate-100 text-slate-700">
-              @for (elem of cat.elementos; track elem.codigo; let idx = $index) {
-                <tr class="hover:bg-slate-50/50 transition-colors"><td class="py-2.5 px-4 text-center font-semibold text-slate-500"><div class="flex items-center justify-center gap-1">@if (!soloLectura) { <button type="button" [disabled]="idx === 0" (click)="reordenarElementoCatalogo(idx, 'subir')" class="p-0.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20" title="Subir orden">▲</button><button type="button" [disabled]="idx === cat.elementos.length - 1" (click)="reordenarElementoCatalogo(idx, 'bajar')" class="p-0.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20" title="Bajar orden">▼</button> }<span>{{ elem.orden }}</span></div></td><td class="py-2.5 px-4 font-mono font-bold text-slate-900">{{ elem.codigo }}</td><td class="py-2.5 px-4 font-medium text-slate-800">{{ elem.valor }}</td>@if (!soloLectura) { <td class="py-2.5 px-4 text-right"><div class="flex items-center justify-end gap-1.5"><button type="button" [id]="'btn-editar-elem-' + idx" (click)="iniciarEdicionElemento(elem, idx)" class="p-1 rounded-md text-blue-600 hover:bg-blue-50 font-semibold" title="Editar elemento">Editar</button><button type="button" [id]="'btn-eliminar-elem-' + idx" (click)="eliminarElementoCatalogo(idx)" class="p-1 rounded-md text-red-600 hover:bg-red-50 font-semibold" title="Eliminar elemento">Eliminar</button></div></td> }</tr>
-              }
-            </tbody></table></div>
-          }
-        </div>
-      } @else {
-        <div class="p-12 text-center border-2 border-dashed border-slate-300 rounded-2xl bg-white/50"><p class="text-sm font-semibold text-slate-600">No hay ningún catálogo seleccionado.</p><p class="text-xs text-slate-400 mt-1">Selecciona un catálogo del panel lateral o crea uno nuevo.</p>@if (!soloLectura) { <button type="button" (click)="iniciarNuevoCatalogo()" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm hover:bg-blue-800">+ Crear Nuevo Catálogo</button> }</div>
-      }
-    </main>
-  </div>
-}
-@else {
-  <section class="form-builder-shell" data-form-builder-shell="true" aria-label="Espacio de trabajo del constructor de formularios">
-    <app-form-builder-toolbar
-      [title]="'Constructor de Formularios Dinámicos'"
-      [versionCodigo]="versionCodigo"
-      [versionNumero]="versionNumero"
-      [seccionesCount]="model().secciones.length"
-      [catalogosCount]="catalogosList().length"
-      [soloLectura]="soloLectura"
-      [esAdministrador]="esAdministrador"
-      [vistaActiva]="vistaActiva()"
-      [mostrarJsonAvanzado]="mostrarJsonAvanzado()"
-      (cambiarVista)="cambiarVista($event)"
-      (toggleJson)="toggleModoJson()"
-      (agregarSeccion)="agregarSeccion()"
-      (agregarCatalogo)="iniciarNuevoCatalogo(); cambiarVista('catalogos')"
-      (guardar)="emitirGuardado()"
-      (cerrar)="cerrar.emit()">
-    </app-form-builder-toolbar>
+        @if (catalogoEnEdicion(); as catEd) {
+          <div class="bg-white p-5 rounded-2xl border border-blue-200 shadow-sm space-y-4 animate-fade-in">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3"><h3 class="text-sm font-bold text-slate-900">{{ catEd.esNuevo ? 'Crear Nuevo Catálogo' : 'Editar Catálogo: ' + catEd.codigoOriginal }}</h3><button type="button" (click)="cancelarEdicionCatalogo()" class="text-xs text-slate-400 hover:text-slate-600">✕ Cancelar</button></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div><label for="input-catalogo-codigo" class="block font-semibold text-slate-700 mb-1">Código Técnico del Catálogo <span class="text-red-500">*</span></label><input type="text" id="input-catalogo-codigo" [(ngModel)]="catEd.codigo" placeholder="Ej. MR_FRECUENCIA_1_5" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Identificador único (case-insensitive).</p></div>
+              <div><label for="input-catalogo-nombre" class="block font-semibold text-slate-700 mb-1">Nombre Visible del Catálogo <span class="text-red-500">*</span></label><input type="text" id="input-catalogo-nombre" [(ngModel)]="catEd.nombre" placeholder="Ej. Escala de Frecuencia (1 a 5)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Etiqueta mostrada en el constructor de formularios.</p></div>
+            </div>
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionCatalogo()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="button" id="btn-guardar-catalogo" (click)="guardarEdicionCatalogo()" class="px-4 py-1.5 rounded-lg bg-blue-600 text-xs font-bold text-white hover:bg-blue-700 shadow-xs">Guardar Catálogo</button></div>
+          </div>
+        }
 
+        @if (catalogoActivo(); as cat) {
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap"><span class="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-lg">{{ cat.codigo }}</span><span class="text-xs font-bold text-slate-900">{{ cat.nombre }}</span><span class="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full font-medium">{{ cat.elementos.length }} elemento(s)</span></div>
+              @if (camposQueUsanCatalogo(cat.codigo); as campos) {
+                @if (campos.length > 0) { <p class="text-[11px] text-blue-700 mt-2 bg-blue-50/70 p-2 rounded-lg border border-blue-100">🔗 <strong>Asociado a {{ campos.length }} campo(s):</strong> {{ campos.map(c => c.campoEtiqueta).join(', ') }}</p> }
+                @else { <p class="text-[11px] text-slate-400 mt-1">Este catálogo no está referenciado por ningún campo actualmente.</p> }
+              }
+            </div>
+            @if (!soloLectura) {
+              <div class="flex items-center gap-2"><button type="button" id="btn-editar-catalogo-activo" (click)="iniciarEdicionCatalogo(cat)" class="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-xs">Editar Catálogo</button><button type="button" id="btn-eliminar-catalogo-activo" (click)="eliminarCatalogo(cat.codigo)" class="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-700 hover:bg-red-100 transition-colors" [title]="catalogoEstaEnUso(cat.codigo) ? 'No se puede eliminar porque está en uso' : 'Eliminar catálogo'">Eliminar Catálogo</button></div>
+            }
+          </div>
+
+          @if (elementoEnEdicion(); as elemEd) {
+            <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between border-b border-slate-100 pb-3"><h4 class="text-xs font-bold text-slate-900">{{ elemEd.indice === null ? 'Agregar Nuevo Elemento al Catálogo' : 'Editar Elemento #' + elemEd.orden }}</h4><button type="button" (click)="cancelarEdicionElemento()" class="text-xs text-slate-400 hover:text-slate-600">✕ Cancelar</button></div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div><label for="input-elem-codigo" class="block font-semibold text-slate-700 mb-1">Código del Elemento <span class="text-red-500">*</span></label><input type="text" id="input-elem-codigo" [(ngModel)]="elemEd.codigo" placeholder="Ej. 001, G-IVM, ALTO" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Alfanumérico persistido como texto.</p></div>
+                <div><label for="input-elem-valor" class="block font-semibold text-slate-700 mb-1">Etiqueta / Valor Visible <span class="text-red-500">*</span></label><input type="text" id="input-elem-valor" [(ngModel)]="elemEd.valor" placeholder="Ej. Muy Frecuente (5)" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Texto presentado al usuario.</p></div>
+                <div><label for="input-elem-orden" class="block font-semibold text-slate-700 mb-1">Orden de Visualización <span class="text-red-500">*</span></label><input type="number" id="input-elem-orden" [(ngModel)]="elemEd.orden" min="1" step="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"><p class="text-[10px] text-slate-400 mt-0.5">Posición secuencial (>= 1).</p></div>
+              </div>
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100"><button type="button" (click)="cancelarEdicionElemento()" class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button><button type="button" id="btn-guardar-elemento" (click)="guardarElementoCatalogo()" class="px-4 py-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs">Guardar Elemento</button></div>
+            </div>
+          }
+
+          <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+            <div class="bg-slate-50 border-b border-slate-200 px-5 py-3 flex items-center justify-between gap-3"><div><h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Elementos y Opciones</h4><p class="text-[11px] text-slate-500">Valores disponibles para los campos que consuman este catálogo</p></div>@if (!soloLectura) { <button type="button" id="btn-agregar-elemento" (click)="iniciarNuevoElemento()" class="rounded-xl bg-ihss-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition-colors flex items-center gap-1.5">+ Agregar Elemento</button> }</div>
+            @if (cat.elementos.length === 0) {
+              <div class="p-10 text-center"><p class="text-xs text-slate-500 font-medium">Este catálogo aún no tiene elementos configurados.</p>@if (!soloLectura) { <button type="button" (click)="iniciarNuevoElemento()" class="mt-2 text-xs text-blue-600 hover:underline font-semibold">+ Añadir primera opción</button> }</div>
+            } @else {
+              <div class="overflow-x-auto"><table class="w-full text-left text-xs"><thead class="bg-slate-50/75 text-slate-500 font-semibold border-b border-slate-100"><tr><th class="py-2.5 px-4 w-16 text-center">Orden</th><th class="py-2.5 px-4 w-40">Código</th><th class="py-2.5 px-4">Etiqueta / Valor</th>@if (!soloLectura) { <th class="py-2.5 px-4 w-32 text-right">Acciones</th> }</tr></thead><tbody class="divide-y divide-slate-100 text-slate-700">
+                @for (elem of cat.elementos; track elem.codigo; let idx = $index) {
+                  <tr class="hover:bg-slate-50/50 transition-colors"><td class="py-2.5 px-4 text-center font-semibold text-slate-500"><div class="flex items-center justify-center gap-1">@if (!soloLectura) { <button type="button" [disabled]="idx === 0" (click)="reordenarElementoCatalogo(idx, 'subir')" class="p-0.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20" title="Subir orden">▲</button><button type="button" [disabled]="idx === cat.elementos.length - 1" (click)="reordenarElementoCatalogo(idx, 'bajar')" class="p-0.5 rounded text-slate-400 hover:text-slate-700 disabled:opacity-20" title="Bajar orden">▼</button> }<span>{{ elem.orden }}</span></div></td><td class="py-2.5 px-4 font-mono font-bold text-slate-900">{{ elem.codigo }}</td><td class="py-2.5 px-4 font-medium text-slate-800">{{ elem.valor }}</td>@if (!soloLectura) { <td class="py-2.5 px-4 text-right"><div class="flex items-center justify-end gap-1.5"><button type="button" [id]="'btn-editar-elem-' + idx" (click)="iniciarEdicionElemento(elem, idx)" class="p-1 rounded-md text-blue-600 hover:bg-blue-50 font-semibold" title="Editar elemento">Editar</button><button type="button" [id]="'btn-eliminar-elem-' + idx" (click)="eliminarElementoCatalogo(idx)" class="p-1 rounded-md text-red-600 hover:bg-red-50 font-semibold" title="Eliminar elemento">Eliminar</button></div></td> }</tr>
+                }
+              </tbody></table></div>
+            }
+          </div>
+        } @else {
+          <div class="p-12 text-center border-2 border-dashed border-slate-300 rounded-2xl bg-white/50"><p class="text-sm font-semibold text-slate-600">No hay ningún catálogo seleccionado.</p><p class="text-xs text-slate-400 mt-1">Selecciona un catálogo del panel lateral o crea uno nuevo.</p>@if (!soloLectura) { <button type="button" (click)="iniciarNuevoCatalogo()" class="mt-4 px-4 py-2 bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm hover:bg-blue-800">+ Crear Nuevo Catálogo</button> }</div>
+        }
+      </main>
+    </div>
+  }
+  @else {
     <div class="form-builder-shell__body">
       <app-form-builder-palette
         [tiposControles]="tiposControles"
@@ -185,12 +185,12 @@
         (navegarCatalogos)="cambiarVista('catalogos')">
       </app-form-builder-inspector>
     </div>
+  }
 
-    <app-form-builder-statusbar
-      [versionCodigo]="versionCodigo"
-      [soloLectura]="soloLectura"
-      [seccionesCount]="model().secciones.length"
-      [catalogosCount]="catalogosList().length">
-    </app-form-builder-statusbar>
-  </section>
-}
+  <app-form-builder-statusbar
+    [versionCodigo]="versionCodigo"
+    [soloLectura]="soloLectura"
+    [seccionesCount]="model().secciones.length"
+    [catalogosCount]="catalogosList().length">
+  </app-form-builder-statusbar>
+</section>
