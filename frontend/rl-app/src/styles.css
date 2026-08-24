@@ -186,15 +186,18 @@ dialog.modal-backdrop-overlay > .modal-container-card {
 
 /*
  * UI-FORM.1 — contrato visual del constructor.
- * La referencia autoritativa es el modal Detalle de Familia: la tarjeta debe percibirse como una
- * capa flotante, no como una página que reemplaza el viewport. En escritorio se conserva alrededor
- * de un 8% de aire lateral por lado y un 6% vertical, manteniendo espacio suficiente para el lienzo.
+ * El Form Builder usa un único shell productivo y ocupa 96% del ancho por 94% del alto en escritorio,
+ * conservando un margen visible y centrado sin duplicar ningún workspace paralelo.
  */
+dialog.modal-backdrop-overlay:has(> .modal-container-card.form-builder-modal-card) {
+  padding: 2vh 2vw;
+}
+
 dialog.modal-backdrop-overlay > .modal-container-card.form-builder-modal-card {
-  width: 84vw;
-  max-width: 1500px;
-  height: 88dvh;
-  max-height: 88dvh !important;
+  width: 96vw;
+  max-width: 96vw;
+  height: 94dvh;
+  max-height: 94dvh !important;
   border-radius: 1.25rem;
   box-shadow: 0 30px 80px rgb(15 23 42 / 0.32);
 }
