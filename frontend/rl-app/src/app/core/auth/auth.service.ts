@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
-import { HttpClient }  from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router }      from '@angular/router';
 import { Observable, tap, catchError, EMPTY, throwError, finalize, shareReplay } from 'rxjs';
 import { LoginRequest, LoginResponse, UsuarioInfo } from './auth.models';
@@ -15,6 +15,7 @@ export class AuthService {
   private readonly DEFAULT_INACTIVITY_MINUTES = 30;
   private readonly REFRESH_MARGIN_MS = 5 * 60 * 1000;
   private readonly MAX_REFRESH_TIMER_MS = 60 * 60 * 1000;
+  private readonly REFRESH_RETRY_MS = 30 * 1000;
 
   // Inactividad y renovación son relojes independientes: renovar un JWT nunca cuenta como actividad humana.
   private inactivityTimer: ReturnType<typeof setTimeout> | null = null;
@@ -22,6 +23,7 @@ export class AuthService {
   private eventListeners: (() => void)[] = [];
   private monitoringActive = false;
   private lastActivityAt = 0;
+  private nextRefreshAttemptAt = 0;
   private refreshRequest$: Observable<RefreshResponse> | null = null;
 
   // Proceso de sesión local: conserva token y usuario decodificado para guards, menú y pantallas.
@@ -100,15 +102,18 @@ export class AuthService {
       tap(res => {
         // Evita que una respuesta tardía restaure una sesión que el usuario ya cerró o reemplazó.
         if (res.success && localStorage.getItem('refresh_token') === refreshToken) {
+          this.nextRefreshAttemptAt = 0;
           this.guardarSesion(res.datos);
         }
       }),
-      catchError(() => {
-        if (localStorage.getItem('refresh_token') === refreshToken) {
+      catchError((error: unknown) => {
+        // Solo un rechazo explícito del refresh invalida la sesión. Un corte de red o un 5xx
+        // no debe expulsar a un usuario que continúa activo; se conserva la sesión y se reintenta.
+        if (this.esFalloDefinitivoRefresh(error) && localStorage.getItem('refresh_token') === refreshToken) {
           this.limpiarSesion();
           this.router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
         }
-        return throwError(() => new Error('Refresh token inválido o expirado.'));
+        return throwError(() => error);
       }),
       finalize(() => {
         this.refreshRequest$ = null;
@@ -268,6 +273,7 @@ export class AuthService {
     const delay = Math.max(0, Math.min(hastaVentanaRenovacion, this.MAX_REFRESH_TIMER_MS));
 
     this.tokenRefreshTimer = setTimeout(() => {
+      this.tokenRefreshTimer = null;
       this.verificarRenovacionProactiva();
     }, delay);
   }
@@ -281,6 +287,10 @@ export class AuthService {
       return;
     }
 
+    if (Date.now() < this.nextRefreshAttemptAt) {
+      return;
+    }
+
     const expiraAt = this.obtenerExpiracionAccessTokenMs();
     if (!expiraAt) return;
 
@@ -290,10 +300,33 @@ export class AuthService {
     }
 
     this.refreshToken().subscribe({
-      error: () => {
-        // refreshToken ya limpia la sesión y redirige cuando la rotación deja de ser válida.
+      error: (error: unknown) => {
+        // Los rechazos definitivos ya cerraron sesión dentro de refreshToken.
+        // Los fallos transitorios conservan la sesión y se reintentan sin convertirlos en inactividad.
+        if (!this.esFalloDefinitivoRefresh(error) && this.monitoringActive && this.estaLogueado()) {
+          this.programarReintentoRenovacion();
+        }
       }
     });
+  }
+
+  private programarReintentoRenovacion() {
+    this.nextRefreshAttemptAt = Date.now() + this.REFRESH_RETRY_MS;
+
+    if (this.tokenRefreshTimer) {
+      clearTimeout(this.tokenRefreshTimer);
+    }
+
+    this.tokenRefreshTimer = setTimeout(() => {
+      this.tokenRefreshTimer = null;
+      this.nextRefreshAttemptAt = 0;
+      this.verificarRenovacionProactiva();
+    }, this.REFRESH_RETRY_MS);
+  }
+
+  private esFalloDefinitivoRefresh(error: unknown): boolean {
+    if (!(error instanceof HttpErrorResponse)) return false;
+    return error.status === 400 || error.status === 401 || error.status === 403;
   }
 
   private obtenerExpiracionAccessTokenMs(): number | null {
@@ -328,6 +361,7 @@ export class AuthService {
     this.eventListeners = [];
     this.monitoringActive = false;
     this.lastActivityAt = 0;
+    this.nextRefreshAttemptAt = 0;
   }
 
   private logoutPorInactividad() {
