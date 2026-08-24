@@ -1,4 +1,4 @@
-import { Type } from '@angular/core';
+import type { Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { FormBuilderCanvasV2Component } from './form-builder-canvas.component';
 import { FormBuilderInspectorV2Component } from './form-builder-inspector.component';
