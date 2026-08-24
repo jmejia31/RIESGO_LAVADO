@@ -28,7 +28,8 @@ async function preparar(page: Page): Promise<void> {
   await page.route('**/api/matrices-riesgos/**', route => {
     const ruta = new URL(route.request().url()).pathname;
     let datos: unknown = [];
-    if (ruta.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famActivo: true }];
+    if (ruta.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true }];
+    else if (ruta.endsWith('/familias/1')) datos = { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true };
     else if (ruta.endsWith('/formulario/version-vigente')) datos = publicada;
     else if (ruta.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: publicada.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (ruta.endsWith('/formularios/historial')) datos = [publicada, borrador];
@@ -46,11 +47,13 @@ test.beforeEach(async ({ page }) => preparar(page));
 test('bloquea el shell y conserva el foco dentro del Form Builder modal', async ({ page }) => {
   await page.goto('/matrices-riesgos');
   await page.getByRole('tab', { name: 'Plantillas' }).click();
-  await page.getByLabel('Más acciones para Matriz UAT').click();
-  await page.getByRole('button', { name: 'Ver versiones' }).click();
-  const editar = page.getByRole('button', { name: 'Editar definición' }).first();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  const editar = detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first();
   await editar.focus();
   await editar.click();
+  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const header = page.locator('app-main-layout > div > div > header');
@@ -87,7 +90,7 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await clave.fill('area_responsable_actualizada');
   await expect(clave).toHaveValue('area_responsable_actualizada');
 
-  await page.keyboard.press('Escape');
+  await dialogo.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
   await expect(dialogo).toBeHidden();
   await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
   await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(false);

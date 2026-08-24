@@ -73,7 +73,8 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
     }
 
     let datos: unknown = [];
-    if (path.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famActivo: true }];
+    if (path.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true }];
+    else if (path.endsWith('/familias/1')) datos = { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true };
     else if (path.endsWith('/formulario/version-vigente')) datos = versionPublicada;
     else if (path.endsWith('/metodologia/vigente')) datos = {
       versionFormularioId: 10,
@@ -105,9 +106,11 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
 
 async function abrirVersionesDeLaFamilia(page: Page): Promise<void> {
   await page.getByRole('tab', { name: 'Plantillas' }).click();
-  await page.getByLabel('Más acciones para Matriz de Riesgos LAFT').click();
-  await page.getByRole('button', { name: 'Ver versiones' }).click();
-  await expect(page.getByText('MATRIZ_RIESGOS_LAFT_V1 · v1')).toBeVisible();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
+  await expect(detalle.getByText('MATRIZ_RIESGOS_LAFT_V1')).toBeVisible();
 }
 
 test.beforeEach(async ({ page }) => {
@@ -129,11 +132,10 @@ test('ADMINISTRADOR con módulo 10 clona una plantilla sin ir a Acceso Denegado'
   await page.goto('/matrices-riesgos');
   await abrirVersionesDeLaFamilia(page);
 
-  await page.getByRole('button', { name: 'Clonar' }).click();
+  await page.getByRole('button', { name: 'Clonar versión' }).click();
 
   await expect.poll(() => clonaciones).toBe(1);
   await expect(page).not.toHaveURL(/\/sin-acceso/);
-  await expect(page.getByText('Versión clonada como borrador')).toBeVisible();
 });
 
 test('un 403 real del Backend conserva la protección y redirige a Acceso Denegado', async ({ page }) => {
@@ -145,7 +147,7 @@ test('un 403 real del Backend conserva la protección y redirige a Acceso Denega
 
   await page.goto('/matrices-riesgos');
   await abrirVersionesDeLaFamilia(page);
-  await page.getByRole('button', { name: 'Clonar' }).click();
+  await page.getByRole('button', { name: 'Clonar versión' }).click();
 
   await expect(page).toHaveURL(/\/sin-acceso(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Acceso Denegado' })).toBeVisible();

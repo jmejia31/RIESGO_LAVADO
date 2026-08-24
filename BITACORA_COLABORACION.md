@@ -1,5 +1,28 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Auditoría y corrección UI-FORM.1
+
+- **Fecha y hora**: 2026-08-24 13:24, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `082d633b973eb97cc7f6604eae3374b866e148d9`.
+- **Objetivo**: auditar y corregir exclusivamente la integración productiva del Workspace V2 del Form Builder implementada por AntiG, sin iniciar UI-FORM.2 ni alterar contratos, backend, Oracle o la interfaz funcional aprobada.
+- **Correcciones funcionales**:
+  - Se eliminó la semántica de diálogo anidado del workspace interno; el único `aria-modal` continúa siendo el modal propietario de Matrices.
+  - Se sustituyó el selector CSS frágil basado en estilos inline por la clase estructural `form-builder-modal-card`, preservando el tamaño 96vw × 94dvh sin cambiar la apariencia.
+  - Se reforzaron las pruebas de integración de Workspace V2, paleta y contrato visual, y se alinearon dos recorridos E2E con el flujo vigente UI-FAM → Detalle → Versiones → Form Builder.
+- **Archivos modificados**: `e2e/matrices-authorization.spec.ts`, `e2e/modal-shell-lock.spec.ts`, `form-builder.component.spec.ts`, `workspace/form-builder-workspace.component.html`, `workspace/form-builder-workspace.spec.ts`, `matrices-riesgos.component.html`, `src/styles.css` y los dos documentos colaborativos.
+- **Evidencia ejecutada en esta intervención**:
+  - Suite focalizada oficial Angular/Vitest de Form Builder, Workspace V2, round-trip, catálogos, espaciado y comparador semántico: **7/7 archivos y 57/57 pruebas PASS**.
+  - `npm run lint`: **PASS**.
+  - `npm run build`: **PASS**, con la advertencia preexistente de `exceljs` CommonJS.
+  - `npm run e2e`: **17/17 PASS**.
+  - Suite frontend completa: **519/525 PASS**; las 6 expectativas restantes pertenecen a specs heredados de UI-FAM que aún esperan botones/textos/clases anteriores y no son defectos introducidos por UI-FORM.1. No se alteraron fuera de alcance.
+  - `git diff --check`: **PASS**; únicamente avisos informativos de conversión LF/CRLF del checkout Windows.
+- **Restricciones respetadas**: cero cambios en backend, Oracle/SQL/DDL/DML, contratos JSON, Form Builder UI-FORM.2, workflows, SonarCloud, `main` o PR #20.
+- **Punto de continuidad**: `UI-FORM.1 = ✅ CORREGIDA Y LISTA PARA REVISIÓN DE CHATGPT`. No constituye aprobación funcional final ni inicia UI-FORM.2.
+
+---
+
 ## Registro de Intervención — AntiG — Implementación y Cierre de UI-FORM.1 (Integración Workspace V2)
 
 - **Fecha y hora**: 2026-08-24 12:52, hora local (UTC-6).

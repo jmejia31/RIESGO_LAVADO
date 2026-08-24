@@ -288,7 +288,7 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       const el = fixture.nativeElement as HTMLElement;
       const workspace = el.querySelector('app-form-builder-workspace-v2');
       expect(workspace).toBeTruthy();
-      expect(workspace?.getAttribute('data-ui-contract')).toBe('UI-FORM-V2');
+      expect(workspace?.querySelector('[data-ui-contract="UI-FORM-V2"]')).toBeTruthy();
 
       // Las 5 regiones V2 existen dentro del DOM del constructor
       const toolbar = el.querySelector('app-form-builder-toolbar-v2');

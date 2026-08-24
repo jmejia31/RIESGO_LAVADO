@@ -66,10 +66,14 @@ describe('Form Builder UI v2 - scaffold de migración', () => {
       component.tiposControles = controles;
       component.seccionActivaId = 'sec_1';
       component.soloLectura = false;
+      let controlEmitido: unknown = null;
+      component.agregarCampo.subscribe(control => controlEmitido = control);
       fixture.detectChanges();
 
-      expect(component.tiposControles.length).toBe(1);
-      expect(component.seccionActivaId).toBe('sec_1');
+      const boton = (fixture.nativeElement as HTMLElement).querySelector('button');
+      boton?.click();
+
+      expect(controlEmitido).toEqual(controles[0]);
     });
   });
 
@@ -204,14 +208,16 @@ describe('Form Builder UI v2 - scaffold de migración', () => {
       expect(section).toBeTruthy();
     });
 
-    it('tiene role=dialog y aria-modal=true para accesibilidad', () => {
+    it('delega la semántica modal al dialog contenedor para evitar diálogos anidados', () => {
       const fixture = TestBed.createComponent(FormBuilderWorkspaceV2Component);
       fixture.detectChanges();
 
       const el = fixture.nativeElement as HTMLElement;
-      const section = el.querySelector('[role="dialog"]');
+      const section = el.querySelector('[data-ui-contract="UI-FORM-V2"]');
       expect(section).toBeTruthy();
-      expect(section?.getAttribute('aria-modal')).toBe('true');
+      expect(section?.hasAttribute('aria-modal')).toBe(false);
+      expect(section?.getAttribute('role')).not.toBe('dialog');
+      expect(section?.getAttribute('aria-label')).toContain('Espacio de trabajo');
     });
   });
 });
