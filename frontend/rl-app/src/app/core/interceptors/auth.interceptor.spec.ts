@@ -1,8 +1,8 @@
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { authInterceptor } from './auth.interceptor';
 
@@ -65,6 +65,21 @@ describe('authInterceptor', () => {
     expect(auth.refreshToken).toHaveBeenCalledOnce();
     expect(retry.request.headers.get('Authorization')).toBe('Bearer token-renovado');
     retry.flush({ success: true });
+  });
+
+  it('no fuerza logout ni redirección cuando el refresh falla transitoriamente', () => {
+    auth.refreshToken.mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 503, statusText: 'Service Unavailable' }))
+    );
+    const error = vi.fn();
+
+    http.get('/api/protegido').subscribe({ error });
+    const original = testing.expectOne('/api/protegido');
+    original.flush({ mensaje: 'Expirado' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(auth.refreshToken).toHaveBeenCalledOnce();
+    expect(error).toHaveBeenCalledOnce();
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
   });
 
   it('mantiene la sesión y redirige a sin acceso ante 403', () => {
