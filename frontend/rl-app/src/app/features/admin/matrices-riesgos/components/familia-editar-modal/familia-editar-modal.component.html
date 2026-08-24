@@ -9,7 +9,19 @@
         novalidate
         (ngSubmit)="guardarCambios()">
     <div class="modal-header-institutional px-5 py-5 sm:px-8 sm:py-6">
-      <div class="flex min-w-0 items-center gap-4">
+      <div class="flex min-w-0 items-center gap-3 sm:gap-4">
+        <div class="group relative shrink-0">
+          <button type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Regresar a Familias de Formularios"
+                  title="Regresar a Familias de Formularios"
+                  [disabled]="guardando() || operando()"
+                  data-ui-fam-edit-action="regresar"
+                  (click)="solicitarCierre()">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span class="pointer-events-none absolute left-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Familias de Formularios</span>
+        </div>
         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-700 sm:h-14 sm:w-14" aria-hidden="true">
           <svg class="h-6 w-6 sm:h-7 sm:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M14 2H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V7z"/>
@@ -23,13 +35,17 @@
           </p>
         </div>
       </div>
-      <button type="button"
-              class="ml-4 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Cerrar Editar Familia de Formularios"
-              [disabled]="guardando() || operando()"
-              (click)="solicitarCierre()">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+      <div class="group relative ml-4 shrink-0">
+        <button type="button"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400/30 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Cerrar Editar Familia de Formularios"
+                title="Cerrar ventana"
+                [disabled]="guardando() || operando()"
+                (click)="solicitarCierre()">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+        <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Cerrar ventana</span>
+      </div>
     </div>
 
     <div class="modal-body-scrollable px-5 py-5 sm:px-8 sm:py-6">
@@ -37,14 +53,14 @@
         <div class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-ui-fam-edit-state="error">
           <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="flex-1 font-medium">{{ errorTexto }}</span>
-          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" title="Cerrar mensaje de error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
       }
       @if (mensaje(); as mensajeTexto) {
         <div class="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status" aria-live="polite" data-ui-fam-edit-state="success">
           <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
-          <button type="button" class="rounded-md p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700" aria-label="Cerrar mensaje" (click)="mensaje.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" class="rounded-md p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-700" aria-label="Cerrar mensaje" title="Cerrar mensaje" (click)="mensaje.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
       }
 
@@ -62,7 +78,7 @@
           </span>
           <h4 class="mt-4 text-lg font-bold text-gray-900">Familia no disponible</h4>
           <p class="mt-1 max-w-md text-sm text-gray-500">No fue posible recuperar la familia solicitada. Puede haber sido eliminada o ya no estar disponible.</p>
-          <button type="button" class="mt-5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50" (click)="reintentar()">Reintentar</button>
+          <button type="button" class="mt-5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50" title="Reintentar carga de la familia" (click)="reintentar()">Reintentar</button>
         </div>
       } @else if (detalle(); as familia) {
         <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(330px,0.9fr)]">
@@ -176,51 +192,66 @@
             </section>
 
             <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="titulo-ciclo-vida" data-ui-fam-edit="ciclo-vida">
-              <h4 id="titulo-ciclo-vida" class="text-base font-bold text-gray-900">Acciones de ciclo de vida</h4>
-              @if (!esAdministrador()) {
-                <p class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">Solo un Administrador puede ejecutar acciones de ciclo de vida.</p>
-              }
-
-              <div class="mt-4 space-y-3">
-                <button type="button"
-                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-                        [disabled]="!puedeActivar()"
-                        data-ui-fam-edit-action="activar"
-                        (click)="confirmarActivar()">
-                  <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-emerald-500 text-emerald-600" aria-hidden="true"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></span>
-                  <span>Activar</span>
-                </button>
-
-                <button type="button"
-                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-amber-50 hover:text-amber-800 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-                        [disabled]="!puedeDesactivar()"
-                        data-ui-fam-edit-action="desactivar"
-                        (click)="confirmarDesactivar()">
-                  <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-amber-500 text-amber-600" aria-hidden="true"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6M12 21a9 9 0 100-18 9 9 0 000 18z"/></svg></span>
-                  <span>Desactivar</span>
-                </button>
-                @if (familia.famActivo && familia.tieneVersionVigente) {
-                  <p class="-mt-1 flex items-start gap-2 px-1 text-[11px] leading-4 text-amber-700">
-                    <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z"/></svg>
-                    <span>No disponible mientras exista una versión publicada vigente.</span>
-                  </p>
-                }
-
-                <button type="button"
-                        class="flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-bold text-gray-700 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
-                        [disabled]="!puedeEliminar()"
-                        data-ui-fam-edit-action="eliminar"
-                        (click)="confirmarEliminar()">
-                  <span class="flex h-7 w-7 items-center justify-center text-red-500" aria-hidden="true"><svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M4 7h16"/></svg></span>
-                  <span>{{ familia.totalVersiones > 0 ? 'Eliminar no disponible' : 'Eliminar' }}</span>
-                </button>
-                @if (familia.totalVersiones > 0) {
-                  <p class="-mt-1 flex items-start gap-2 px-1 text-[11px] leading-4 text-gray-500" data-ui-fam-edit="delete-lock-reason">
-                    <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V8a4 4 0 10-8 0v3m-1 0h18v10H3V11z"/></svg>
-                    <span>La familia contiene versiones y no puede eliminarse.</span>
-                  </p>
-                }
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <h4 id="titulo-ciclo-vida" class="text-base font-bold text-gray-900">Acciones de ciclo de vida</h4>
+                  <p class="mt-1 text-xs text-gray-500">Acciones rápidas con la misma convención visual del gestor anterior.</p>
+                </div>
+                <div class="flex items-center gap-2" aria-label="Acciones de ciclo de vida">
+                  <div class="group relative">
+                    <button type="button"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition-colors hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200"
+                            [disabled]="!puedeActivar()"
+                            aria-label="Activar familia"
+                            title="Activar familia"
+                            data-ui-fam-edit-action="activar"
+                            (click)="confirmarActivar()">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                    <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Activar familia</span>
+                  </div>
+                  <div class="group relative">
+                    <button type="button"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200 bg-amber-50 text-amber-700 shadow-sm transition-colors hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-500/30 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200"
+                            [disabled]="!puedeDesactivar()"
+                            aria-label="Desactivar familia"
+                            title="Desactivar familia"
+                            data-ui-fam-edit-action="desactivar"
+                            (click)="confirmarDesactivar()">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </button>
+                    <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Desactivar familia</span>
+                  </div>
+                  <div class="group relative">
+                    <button type="button"
+                            class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-600 shadow-sm transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/30 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200"
+                            [disabled]="!puedeEliminar()"
+                            [attr.aria-label]="familia.totalVersiones > 0 ? 'Eliminar bloqueado: contiene versiones' : 'Eliminar familia'"
+                            [attr.title]="familia.totalVersiones > 0 ? 'Eliminar bloqueado: contiene versiones' : 'Eliminar familia'"
+                            data-ui-fam-edit-action="eliminar"
+                            (click)="confirmarEliminar()">
+                      <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3M4 7h16"/></svg>
+                    </button>
+                    <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">{{ familia.totalVersiones > 0 ? 'Eliminar bloqueado: contiene versiones' : 'Eliminar familia' }}</span>
+                  </div>
+                </div>
               </div>
+
+              @if (!esAdministrador()) {
+                <p class="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">Solo un Administrador puede ejecutar acciones de ciclo de vida.</p>
+              }
+              @if (familia.famActivo && familia.tieneVersionVigente) {
+                <p class="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-4 text-amber-700">
+                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z"/></svg>
+                  <span>No se puede desactivar mientras exista una versión publicada vigente.</span>
+                </p>
+              }
+              @if (familia.totalVersiones > 0) {
+                <p class="mt-3 flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-4 text-gray-500" data-ui-fam-edit="delete-lock-reason">
+                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V8a4 4 0 10-8 0v3m-1 0h18v10H3V11z"/></svg>
+                  <span>La familia contiene versiones y no puede eliminarse.</span>
+                </p>
+              }
             </section>
           </div>
         </div>
@@ -229,14 +260,17 @@
 
     <div class="modal-footer-institutional px-5 py-4 sm:px-8">
       <button type="button"
-              class="min-w-28 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Regresar a Familias de Formularios"
               [disabled]="guardando() || operando()"
               (click)="solicitarCierre()">
-        Cancelar
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Regresar
       </button>
       <button type="submit"
               class="inline-flex min-w-40 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="!detalle() || guardando() || operando() || familiaForm.invalid || !hayCambios() || !esAdministrador()"
+              title="Guardar cambios de la familia"
               data-ui-fam-edit-action="guardar">
         @if (guardando()) {
           <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
