@@ -20,11 +20,16 @@
   background: #ffffff;
 }
 
+.form-builder-shell__content,
+.form-builder-shell__body {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .form-builder-shell__body {
   display: grid;
   grid-template-columns: clamp(14rem, 18vw, 17rem) minmax(0, 1fr) clamp(17rem, 22vw, 21rem);
-  min-height: 0;
-  overflow: hidden;
   background: #f8fafc;
 }
 
@@ -123,7 +128,7 @@ main div.font-mono {
     border-bottom: 1px solid #e2e8f0;
   }
 
-  :host > div > .flex-1.flex {
+  .form-builder-shell__content.flex {
     flex-direction: column;
     overflow-x: hidden;
     overflow-y: auto;
