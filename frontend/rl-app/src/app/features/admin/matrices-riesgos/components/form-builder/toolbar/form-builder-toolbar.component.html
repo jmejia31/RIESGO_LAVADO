@@ -1,22 +1,13 @@
 <header class="form-builder-toolbar bg-white border-b border-gray-100 select-none" data-form-builder-region="toolbar">
-  <div class="px-6 py-4 sm:px-7 flex items-center justify-between gap-4 flex-wrap">
+  <div class="px-6 py-5 sm:px-7 flex items-center justify-between gap-4 flex-wrap">
     <div class="flex min-w-0 items-center gap-3 sm:gap-4">
-      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800 font-bold text-sm">FB</div>
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800">
+        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5l5 5v11a2 2 0 01-2 2z" />
+        </svg>
+      </div>
       <div class="min-w-0">
-        <div class="flex flex-wrap items-center gap-2">
-          <h2 id="titulo-modal-builder" class="text-lg sm:text-xl font-bold text-gray-950">{{ title }}</h2>
-          <span class="rounded-full px-2.5 py-1 text-[10px] font-bold"
-                [class.bg-amber-50]="soloLectura"
-                [class.text-amber-800]="soloLectura"
-                [class.ring-1]="soloLectura"
-                [class.ring-amber-600\/20]="soloLectura"
-                [class.bg-emerald-50]="!soloLectura"
-                [class.text-emerald-700]="!soloLectura"
-                [class.ring-1]="!soloLectura"
-                [class.ring-emerald-600\/20]="!soloLectura">
-            {{ soloLectura ? 'Modo Solo Lectura' : 'Modo Borrador' }}
-          </span>
-        </div>
+        <h2 id="titulo-modal-builder" class="text-xl font-bold text-gray-950 sm:text-2xl">{{ title }}</h2>
         <p class="mt-1 text-xs text-gray-500 sm:text-sm">
           Versión {{ versionCodigo }} (v{{ versionNumero }}) · {{ seccionesCount }} sección(es) · {{ catalogosCount }} catálogo(s)
         </p>
@@ -24,6 +15,18 @@
     </div>
 
     <div class="flex shrink-0 items-center gap-2">
+      <span class="rounded-full px-2.5 py-1 text-[10px] font-bold"
+            [class.bg-amber-50]="soloLectura"
+            [class.text-amber-800]="soloLectura"
+            [class.ring-1]="soloLectura"
+            [class.ring-amber-600\/20]="soloLectura"
+            [class.bg-emerald-50]="!soloLectura"
+            [class.text-emerald-700]="!soloLectura"
+            [class.ring-1]="!soloLectura"
+            [class.ring-emerald-600\/20]="!soloLectura">
+        {{ soloLectura ? 'Modo Solo Lectura' : 'Modo Borrador' }}
+      </span>
+
       <button type="button"
               *ngIf="esAdministrador"
               (click)="toggleJson.emit()"
@@ -46,14 +49,13 @@
     </div>
   </div>
 
-  <div class="px-6 py-3 sm:px-7 flex items-center justify-between gap-3 border-t border-gray-100 bg-white flex-wrap">
-    <div class="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-semibold ring-1 ring-slate-200">
+  <div class="px-6 py-3.5 sm:px-7 flex items-center justify-between gap-3 border-t border-gray-100 bg-slate-50/50 flex-wrap">
+    <div class="inline-flex rounded-xl bg-white p-1 text-xs font-semibold ring-1 ring-slate-200 shadow-sm">
       <button type="button"
               id="tab-vista-secciones"
               (click)="cambiarVista.emit('secciones')"
-              [class.bg-white]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
+              [class.bg-slate-100]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
               [class.text-slate-950]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
-              [class.shadow-sm]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
               [class.text-slate-600]="vistaActiva !== 'secciones' || mostrarJsonAvanzado"
               class="rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
@@ -63,9 +65,8 @@
       <button type="button"
               id="tab-vista-catalogos"
               (click)="cambiarVista.emit('catalogos')"
-              [class.bg-white]="vistaActiva === 'catalogos' && !mostrarJsonAvanzado"
+              [class.bg-slate-100]="vistaActiva === 'catalogos' && !mostrarJsonAvanzado"
               [class.text-slate-950]="vistaActiva === 'catalogos' && !mostrarJsonAvanzado"
-              [class.shadow-sm]="vistaActiva === 'catalogos' && !mostrarJsonAvanzado"
               [class.text-slate-600]="vistaActiva !== 'catalogos' || mostrarJsonAvanzado"
               class="rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
