@@ -23,13 +23,31 @@
           </p>
         </div>
       </div>
-      <button type="button"
-              class="ml-4 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
-              aria-label="Cerrar Nueva Familia de Formularios"
-              [disabled]="guardando()"
-              (click)="solicitarCierre()">
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </button>
+      <div class="ml-4 flex shrink-0 items-center gap-2">
+        <div class="group relative">
+          <button type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Regresar a Familias de Formularios"
+                  title="Regresar a Familias de Formularios"
+                  [disabled]="guardando()"
+                  (click)="solicitarCierre()"
+                  data-ui-fam-create-action="regresar">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Familias de Formularios</span>
+        </div>
+        <div class="group relative">
+          <button type="button"
+                  class="inline-flex h-10 w-10 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  aria-label="Cerrar Nueva Familia de Formularios"
+                  title="Cerrar ventana"
+                  [disabled]="guardando()"
+                  (click)="solicitarCierre()">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Cerrar ventana</span>
+        </div>
+      </div>
     </div>
 
     <div class="modal-body-scrollable space-y-5 px-5 py-5 sm:px-8 sm:py-6">
@@ -37,7 +55,7 @@
         <div class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-ui-fam-create-state="error">
           <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="flex-1 font-medium">{{ errorTexto }}</span>
-          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" title="Cerrar mensaje de error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
       }
 
@@ -159,14 +177,17 @@
 
     <div class="modal-footer-institutional px-5 py-4 sm:px-8">
       <button type="button"
-              class="min-w-28 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Regresar sin crear la familia"
               [disabled]="guardando()"
               (click)="solicitarCierre()">
-        Cancelar
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Regresar
       </button>
       <button type="submit"
               class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="guardando() || familiaForm.invalid"
+              title="Crear la familia de formularios"
               data-ui-fam-create-action="submit">
         @if (guardando()) {
           <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
