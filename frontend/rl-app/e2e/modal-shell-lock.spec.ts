@@ -68,9 +68,10 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   expect(viewport).not.toBeNull();
   expect(cajaBuilder).not.toBeNull();
   if (!viewport || !cajaBuilder) throw new Error('No se pudo medir el contrato visual del Form Builder.');
-  expect(cajaBuilder.width / viewport.width).toBeGreaterThanOrEqual(0.78);
-  expect(cajaBuilder.width / viewport.width).toBeLessThanOrEqual(0.88);
-  expect(cajaBuilder.height / viewport.height).toBeLessThanOrEqual(0.9);
+  expect(cajaBuilder.width / viewport.width).toBeGreaterThanOrEqual(0.95);
+  expect(cajaBuilder.width / viewport.width).toBeLessThanOrEqual(0.97);
+  expect(cajaBuilder.height / viewport.height).toBeGreaterThanOrEqual(0.93);
+  expect(cajaBuilder.height / viewport.height).toBeLessThanOrEqual(0.95);
   const estilosBuilder = await tarjetaBuilder.evaluate(el => {
     const css = getComputedStyle(el);
     return { backgroundColor: css.backgroundColor, borderRadius: css.borderRadius, boxShadow: css.boxShadow };
