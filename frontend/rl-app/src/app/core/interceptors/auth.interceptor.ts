@@ -37,7 +37,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retryReq);
           }),
           catchError(refreshError => {
-            router.navigate(['/login'], { queryParams: { razon: 'expirada' } });
+            // AuthService decide si el refresh fue rechazado de forma definitiva. Un fallo
+            // transitorio de red/servidor se propaga sin convertirlo artificialmente en logout.
             return throwError(() => refreshError);
           })
         );
