@@ -133,6 +133,42 @@ describe('AuthService', () => {
     expect(localStorage.getItem('refresh_token')).toBe('refresh-token-2');
   });
 
+  it('conserva la sesión activa cuando el refresh falla por red o servidor', () => {
+    iniciarSesionActiva();
+    const error = vi.fn();
+
+    service.refreshToken().subscribe({ error });
+    const refresh = http.expectOne('http://localhost:5043/api/auth/refresh');
+    refresh.flush(
+      { success: false, mensaje: 'Servicio temporalmente no disponible' },
+      { status: 503, statusText: 'Service Unavailable' }
+    );
+
+    expect(error).toHaveBeenCalledOnce();
+    expect(service.estaLogueado()).toBe(true);
+    expect(service.getAccessToken()).not.toBeNull();
+    expect(localStorage.getItem('refresh_token')).toBe('refresh-token-activo');
+    expect(router.navigate).not.toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
+  it('cierra la sesión cuando backend rechaza definitivamente el refresh token', () => {
+    iniciarSesionActiva();
+    const error = vi.fn();
+
+    service.refreshToken().subscribe({ error });
+    const refresh = http.expectOne('http://localhost:5043/api/auth/refresh');
+    refresh.flush(
+      { success: false, mensaje: 'Refresh token inválido o expirado' },
+      { status: 401, statusText: 'Unauthorized' }
+    );
+
+    expect(error).toHaveBeenCalledOnce();
+    expect(service.estaLogueado()).toBe(false);
+    expect(service.getAccessToken()).toBeNull();
+    expect(localStorage.getItem('refresh_token')).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { razon: 'expirada' } });
+  });
+
   it('rechaza la renovación cuando no existe refresh token', () => {
     const error = vi.fn();
     service.refreshToken().subscribe({ error });
