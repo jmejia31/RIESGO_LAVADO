@@ -3,15 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { CampoBuilderModel, SeccionBuilderModel } from '../../../models/form-builder.models';
 
 @Component({
-  selector: 'app-form-builder-canvas-v2',
+  selector: 'app-form-builder-canvas',
   standalone: true,
   imports: [FormsModule],
   templateUrl: './form-builder-canvas.component.html',
   styleUrls: ['./form-builder-canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FormBuilderCanvasV2Component {
-  /** Secciones del modelo del formulario */
+export class FormBuilderCanvasComponent {
   @Input() secciones: SeccionBuilderModel[] = [];
   @Input() soloLectura: boolean = false;
   @Input() seccionActivaId: string | null = null;

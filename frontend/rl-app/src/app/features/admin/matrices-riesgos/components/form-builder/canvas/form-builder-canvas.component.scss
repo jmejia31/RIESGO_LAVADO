@@ -5,8 +5,9 @@
   overflow: hidden;
 }
 
-.fbv2-canvas {
+.form-builder-canvas {
   height: 100%;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  background: #f8fafc;
 }

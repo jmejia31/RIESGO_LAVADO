@@ -184,13 +184,13 @@ dialog.modal-backdrop-overlay > .modal-container-card {
   max-height: 90dvh !important;
 }
 
-/* Variante explícita para el Constructor de Formularios V2. Evita depender de estilos
-   inline o selectores por contenido y conserva el shell modal institucional. */
+/* El Constructor adopta el mismo patrón espacial del modal Detalle de Familia:
+   ancho fluido con límite empresarial y altura que conserva aire alrededor de la tarjeta. */
 dialog.modal-backdrop-overlay > .modal-container-card.form-builder-modal-card {
   width: 96vw;
-  max-width: 96vw;
-  height: 94dvh;
-  max-height: 94dvh !important;
+  max-width: 1500px;
+  height: 92dvh;
+  max-height: 92dvh !important;
 }
 
 /*

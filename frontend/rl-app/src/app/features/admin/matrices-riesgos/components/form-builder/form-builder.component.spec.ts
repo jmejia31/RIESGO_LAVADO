@@ -144,7 +144,6 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     const campo = component.model().secciones[0].campos[0];
     component.seleccionarCampo(campo);
 
-    // Modificaciones en Inspector con alCambiarPropiedadCampo
     const activo = component.campoActivo()!;
     activo.etiqueta = 'Nuevo Nombre Evaluacion';
     activo.tipo = 'formula';
@@ -280,28 +279,28 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(mensajes).toContain('campo calculado');
   });
 
-  describe('Integración UI-FORM.1 — Workspace V2', () => {
-    it('integra FormBuilderWorkspaceV2Component y renderiza las 5 regiones V2 en vista lienzo', () => {
+  describe('Integración UI-FORM.1 — shell productivo consolidado', () => {
+    it('renderiza directamente las cinco regiones del Form Builder sin wrapper Workspace V2', () => {
       component.cambiarVista('secciones');
       fixture.detectChanges();
 
       const el = fixture.nativeElement as HTMLElement;
-      const workspace = el.querySelector('app-form-builder-workspace-v2');
-      expect(workspace).toBeTruthy();
-      expect(workspace?.querySelector('[data-ui-contract="UI-FORM-V2"]')).toBeTruthy();
+      expect(el.querySelector('[data-form-builder-shell="true"]')).toBeTruthy();
+      expect(el.querySelector('app-form-builder-workspace-v2')).toBeNull();
+      expect(el.querySelector('app-form-builder-toolbar')).toBeTruthy();
+      expect(el.querySelector('app-form-builder-palette')).toBeTruthy();
+      expect(el.querySelector('app-form-builder-canvas')).toBeTruthy();
+      expect(el.querySelector('app-form-builder-inspector')).toBeTruthy();
+      expect(el.querySelector('app-form-builder-statusbar')).toBeTruthy();
+    });
 
-      // Las 5 regiones V2 existen dentro del DOM del constructor
-      const toolbar = el.querySelector('app-form-builder-toolbar-v2');
-      const palette = el.querySelector('app-form-builder-palette-v2');
-      const canvas = el.querySelector('app-form-builder-canvas-v2');
-      const inspector = el.querySelector('app-form-builder-inspector-v2');
-      const statusbar = el.querySelector('app-form-builder-statusbar-v2');
+    it('muestra estructura navegable en la región izquierda cuando el formulario está en solo lectura', () => {
+      component.soloLectura = true;
+      fixture.detectChanges();
 
-      expect(toolbar).toBeTruthy();
-      expect(palette).toBeTruthy();
-      expect(canvas).toBeTruthy();
-      expect(inspector).toBeTruthy();
-      expect(statusbar).toBeTruthy();
+      const palette = (fixture.nativeElement as HTMLElement).querySelector('app-form-builder-palette');
+      expect(palette?.textContent).toContain('Estructura del formulario');
+      expect(palette?.textContent).not.toContain('Biblioteca de campos');
     });
 
     it('actualiza el título de una sección via actualizarTituloSeccion', () => {

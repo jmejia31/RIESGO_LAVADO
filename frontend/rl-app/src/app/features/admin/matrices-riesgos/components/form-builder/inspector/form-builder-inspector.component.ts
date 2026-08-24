@@ -9,14 +9,14 @@ export interface InspectorCatalogoOption {
 }
 
 @Component({
-  selector: 'app-form-builder-inspector-v2',
+  selector: 'app-form-builder-inspector',
   standalone: true,
   imports: [FormsModule],
   templateUrl: './form-builder-inspector.component.html',
   styleUrls: ['./form-builder-inspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FormBuilderInspectorV2Component {
+export class FormBuilderInspectorComponent {
   @Input() campoActivo: CampoBuilderModel | null = null;
   @Input() soloLectura: boolean = false;
   @Input() tiposControles: TipoControlDefinicion[] = [];

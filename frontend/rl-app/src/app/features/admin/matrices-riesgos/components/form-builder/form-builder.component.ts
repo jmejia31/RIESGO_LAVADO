@@ -13,12 +13,11 @@ import {
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
-import { FormBuilderWorkspaceV2Component } from './workspace/form-builder-workspace.component';
-import { FormBuilderToolbarV2Component } from './workspace/form-builder-toolbar.component';
-import { FormBuilderPaletteV2Component } from './workspace/form-builder-palette.component';
-import { FormBuilderCanvasV2Component } from './workspace/form-builder-canvas.component';
-import { FormBuilderInspectorV2Component } from './workspace/form-builder-inspector.component';
-import { FormBuilderStatusbarV2Component } from './workspace/form-builder-statusbar.component';
+import { FormBuilderToolbarComponent } from './toolbar/form-builder-toolbar.component';
+import { FormBuilderPaletteComponent } from './palette/form-builder-palette.component';
+import { FormBuilderCanvasComponent } from './canvas/form-builder-canvas.component';
+import { FormBuilderInspectorComponent } from './inspector/form-builder-inspector.component';
+import { FormBuilderStatusbarComponent } from './statusbar/form-builder-statusbar.component';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -46,12 +45,11 @@ export interface FeedbackCatalogo {
   imports: [
     CommonModule,
     FormsModule,
-    FormBuilderWorkspaceV2Component,
-    FormBuilderToolbarV2Component,
-    FormBuilderPaletteV2Component,
-    FormBuilderCanvasV2Component,
-    FormBuilderInspectorV2Component,
-    FormBuilderStatusbarV2Component
+    FormBuilderToolbarComponent,
+    FormBuilderPaletteComponent,
+    FormBuilderCanvasComponent,
+    FormBuilderInspectorComponent,
+    FormBuilderStatusbarComponent
   ],
   templateUrl: './form-builder.component.html',
   styleUrls: ['./form-builder.component.scss']
@@ -80,20 +78,15 @@ export class FormBuilderComponent implements OnInit {
   readonly jsonAvanzadoStr = signal<string>('');
   readonly erroresValidacion = signal<FormBuilderValidationError[]>([]);
 
-  // Estado de Navegación y Vistas
   readonly vistaActiva = signal<'secciones' | 'catalogos'>('secciones');
 
-  // Estado de Administración Visual de Catálogos
   readonly catalogoActivoCodigo = signal<string | null>(null);
   readonly busquedaCatalogos = signal<string>('');
   readonly catalogoEnEdicion = signal<CatalogoEdicionForm | null>(null);
   readonly elementoEnEdicion = signal<ElementoEdicionForm | null>(null);
   readonly feedbackCatalogo = signal<FeedbackCatalogo | null>(null);
 
-  // Computados para Catálogos
-  readonly catalogosList = computed<CatalogoBuilderModel[]>(() => {
-    return this.model().catalogos ?? [];
-  });
+  readonly catalogosList = computed<CatalogoBuilderModel[]>(() => this.model().catalogos ?? []);
 
   readonly catalogosFiltrados = computed<CatalogoBuilderModel[]>(() => {
     const q = this.busquedaCatalogos().trim().toLowerCase();
@@ -118,16 +111,10 @@ export class FormBuilderComponent implements OnInit {
 
   ngOnInit(): void {
     const parsed = normalizarJsonABuilderModel(this.jsonDefinicion, this.versionCodigo, 'Formulario Dinámico');
-    if (!parsed.catalogos) {
-      parsed.catalogos = [];
-    }
+    if (!parsed.catalogos) parsed.catalogos = [];
     this.model.set(parsed);
-    if (parsed.secciones.length > 0) {
-      this.seccionActivaId.set(parsed.secciones[0].id);
-    }
-    if (parsed.catalogos && parsed.catalogos.length > 0) {
-      this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
-    }
+    if (parsed.secciones.length > 0) this.seccionActivaId.set(parsed.secciones[0].id);
+    if (parsed.catalogos.length > 0) this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
   }
 
   cambiarVista(vista: 'secciones' | 'catalogos'): void {
@@ -138,15 +125,9 @@ export class FormBuilderComponent implements OnInit {
 
     if (vista === 'catalogos') {
       const cats = this.catalogosList();
-      if (!this.catalogoActivoCodigo() && cats.length > 0) {
-        this.catalogoActivoCodigo.set(cats[0].codigo);
-      }
+      if (!this.catalogoActivoCodigo() && cats.length > 0) this.catalogoActivoCodigo.set(cats[0].codigo);
     }
   }
-
-  // ==========================================
-  // ADMINISTRACIÓN DE SECCIONES Y CAMPOS
-  // ==========================================
 
   agregarSeccion(): void {
     if (this.soloLectura) return;
@@ -160,10 +141,7 @@ export class FormBuilderComponent implements OnInit {
       columnasPorFila: 2,
       campos: []
     };
-    this.model.set({
-      ...current,
-      secciones: [...current.secciones, nuevaSeccion]
-    });
+    this.model.set({ ...current, secciones: [...current.secciones, nuevaSeccion] });
     this.seccionActivaId.set(nuevaSeccion.id);
   }
 
@@ -172,13 +150,8 @@ export class FormBuilderComponent implements OnInit {
     const current = this.model();
     if (current.secciones.length <= 1) return;
     const filtradas = current.secciones.filter((s: SeccionBuilderModel) => s.id !== seccionId);
-    this.model.set({
-      ...current,
-      secciones: filtradas
-    });
-    if (this.seccionActivaId() === seccionId && filtradas.length > 0) {
-      this.seccionActivaId.set(filtradas[0].id);
-    }
+    this.model.set({ ...current, secciones: filtradas });
+    if (this.seccionActivaId() === seccionId && filtradas.length > 0) this.seccionActivaId.set(filtradas[0].id);
   }
 
   agregarCampoASeccion(seccionId: string, ctrlDef: TipoControlDefinicion): void {
@@ -189,13 +162,10 @@ export class FormBuilderComponent implements OnInit {
 
     const seccion = current.secciones[seccionIndex];
     const totalCampos = current.secciones.reduce((acc: number, s: SeccionBuilderModel) => acc + s.campos.length, 0) + 1;
-    const claveNueva = `campo_${totalCampos}`;
-
     const catalogoPredeterminado = this.catalogosDisponiblesParaCampos()[0]?.codigo;
-
     const nuevoCampo: CampoBuilderModel = {
       id: `cmp_${Date.now()}_${totalCampos}`,
-      clave: claveNueva,
+      clave: `campo_${totalCampos}`,
       etiqueta: `${ctrlDef.etiqueta} ${totalCampos}`,
       tipo: ctrlDef.tipo,
       codigoCatalogo: ctrlDef.requiereCatalogo ? catalogoPredeterminado : undefined,
@@ -205,16 +175,8 @@ export class FormBuilderComponent implements OnInit {
     };
 
     const seccionesActualizadas = [...current.secciones];
-    seccionesActualizadas[seccionIndex] = {
-      ...seccion,
-      campos: [...seccion.campos, nuevoCampo]
-    };
-
-    this.model.set({
-      ...current,
-      secciones: seccionesActualizadas
-    });
-
+    seccionesActualizadas[seccionIndex] = { ...seccion, campos: [...seccion.campos, nuevoCampo] };
+    this.model.set({ ...current, secciones: seccionesActualizadas });
     this.campoActivo.set(nuevoCampo);
   }
 
@@ -230,10 +192,7 @@ export class FormBuilderComponent implements OnInit {
       ...sec,
       campos: sec.campos.map(c => c.id === activo.id ? { ...activo } : c)
     }));
-    this.model.set({
-      ...current,
-      secciones
-    });
+    this.model.set({ ...current, secciones });
   }
 
   eliminarCampo(seccionId: string, campoId: string): void {
@@ -243,22 +202,10 @@ export class FormBuilderComponent implements OnInit {
     if (seccionIndex === -1) return;
 
     const seccion = current.secciones[seccionIndex];
-    const camposFiltrados = seccion.campos.filter((c: CampoBuilderModel) => c.id !== campoId);
-
     const seccionesActualizadas = [...current.secciones];
-    seccionesActualizadas[seccionIndex] = {
-      ...seccion,
-      campos: camposFiltrados
-    };
-
-    this.model.set({
-      ...current,
-      secciones: seccionesActualizadas
-    });
-
-    if (this.campoActivo()?.id === campoId) {
-      this.campoActivo.set(null);
-    }
+    seccionesActualizadas[seccionIndex] = { ...seccion, campos: seccion.campos.filter((c: CampoBuilderModel) => c.id !== campoId) };
+    this.model.set({ ...current, secciones: seccionesActualizadas });
+    if (this.campoActivo()?.id === campoId) this.campoActivo.set(null);
   }
 
   reordenarCampo(seccionId: string, campoIndex: number, direccion: 'subir' | 'bajar'): void {
@@ -266,27 +213,14 @@ export class FormBuilderComponent implements OnInit {
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
-
     const seccion = current.secciones[seccionIndex];
     const campos = [...seccion.campos];
-
     const targetIndex = direccion === 'subir' ? campoIndex - 1 : campoIndex + 1;
     if (targetIndex < 0 || targetIndex >= campos.length) return;
-
-    const temp = campos[campoIndex];
-    campos[campoIndex] = campos[targetIndex];
-    campos[targetIndex] = temp;
-
+    [campos[campoIndex], campos[targetIndex]] = [campos[targetIndex], campos[campoIndex]];
     const seccionesActualizadas = [...current.secciones];
-    seccionesActualizadas[seccionIndex] = {
-      ...seccion,
-      campos
-    };
-
-    this.model.set({
-      ...current,
-      secciones: seccionesActualizadas
-    });
+    seccionesActualizadas[seccionIndex] = { ...seccion, campos };
+    this.model.set({ ...current, secciones: seccionesActualizadas });
   }
 
   actualizarColumnasSeccion(seccionId: string, columnas: number): void {
@@ -294,17 +228,9 @@ export class FormBuilderComponent implements OnInit {
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
-
     const seccionesActualizadas = [...current.secciones];
-    seccionesActualizadas[seccionIndex] = {
-      ...seccionesActualizadas[seccionIndex],
-      columnasPorFila: Number(columnas)
-    };
-
-    this.model.set({
-      ...current,
-      secciones: seccionesActualizadas
-    });
+    seccionesActualizadas[seccionIndex] = { ...seccionesActualizadas[seccionIndex], columnasPorFila: Number(columnas) };
+    this.model.set({ ...current, secciones: seccionesActualizadas });
   }
 
   actualizarTituloSeccion(seccionId: string, titulo: string): void {
@@ -312,22 +238,10 @@ export class FormBuilderComponent implements OnInit {
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
-
     const seccionesActualizadas = [...current.secciones];
-    seccionesActualizadas[seccionIndex] = {
-      ...seccionesActualizadas[seccionIndex],
-      titulo
-    };
-
-    this.model.set({
-      ...current,
-      secciones: seccionesActualizadas
-    });
+    seccionesActualizadas[seccionIndex] = { ...seccionesActualizadas[seccionIndex], titulo };
+    this.model.set({ ...current, secciones: seccionesActualizadas });
   }
-
-  // ==========================================
-  // ADMINISTRACIÓN VISUAL DE CATÁLOGOS
-  // ==========================================
 
   seleccionarCatalogo(codigo: string): void {
     this.catalogoActivoCodigo.set(codigo);
@@ -340,16 +254,10 @@ export class FormBuilderComponent implements OnInit {
     if (!codigoCatalogo) return [];
     const codLower = codigoCatalogo.trim().toLowerCase();
     const resultados: Array<{ seccionTitulo: string; campoEtiqueta: string; campoClave: string }> = [];
-
-    const secciones = this.model().secciones ?? [];
-    for (const sec of secciones) {
+    for (const sec of this.model().secciones ?? []) {
       for (const cmp of sec.campos ?? []) {
         if (cmp.codigoCatalogo && cmp.codigoCatalogo.trim().toLowerCase() === codLower) {
-          resultados.push({
-            seccionTitulo: sec.titulo || sec.clave,
-            campoEtiqueta: cmp.etiqueta || cmp.clave,
-            campoClave: cmp.clave
-          });
+          resultados.push({ seccionTitulo: sec.titulo || sec.clave, campoEtiqueta: cmp.etiqueta || cmp.clave, campoClave: cmp.clave });
         }
       }
     }
@@ -364,24 +272,14 @@ export class FormBuilderComponent implements OnInit {
     if (this.soloLectura) return;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set(null);
-    this.catalogoEnEdicion.set({
-      codigoOriginal: null,
-      codigo: '',
-      nombre: '',
-      esNuevo: true
-    });
+    this.catalogoEnEdicion.set({ codigoOriginal: null, codigo: '', nombre: '', esNuevo: true });
   }
 
   iniciarEdicionCatalogo(cat: CatalogoBuilderModel): void {
     if (this.soloLectura) return;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set(null);
-    this.catalogoEnEdicion.set({
-      codigoOriginal: cat.codigo,
-      codigo: cat.codigo,
-      nombre: cat.nombre,
-      esNuevo: false
-    });
+    this.catalogoEnEdicion.set({ codigoOriginal: cat.codigo, codigo: cat.codigo, nombre: cat.nombre, esNuevo: false });
   }
 
   cancelarEdicionCatalogo(): void {
@@ -395,12 +293,10 @@ export class FormBuilderComponent implements OnInit {
 
     const codigoLimpio = edicion.codigo.trim();
     const nombreLimpio = edicion.nombre.trim();
-
     if (!codigoLimpio) {
       this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El código del catálogo es obligatorio.' });
       return;
     }
-
     if (!nombreLimpio) {
       this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El nombre del catálogo es obligatorio.' });
       return;
@@ -411,84 +307,45 @@ export class FormBuilderComponent implements OnInit {
     const codigoLower = codigoLimpio.toLowerCase();
 
     if (edicion.esNuevo) {
-      const existe = catalogosActuales.some(c => c.codigo.trim().toLowerCase() === codigoLower);
-      if (existe) {
-        this.feedbackCatalogo.set({
-          tipo: 'error',
-          mensaje: `Ya existe un catálogo con el código "${codigoLimpio}". Los códigos deben ser únicos sin distinguir mayúsculas/minúsculas.`
-        });
+      if (catalogosActuales.some(c => c.codigo.trim().toLowerCase() === codigoLower)) {
+        this.feedbackCatalogo.set({ tipo: 'error', mensaje: `Ya existe un catálogo con el código "${codigoLimpio}". Los códigos deben ser únicos sin distinguir mayúsculas/minúsculas.` });
         return;
       }
-
-      const nuevoCatalogo: CatalogoBuilderModel = {
-        codigo: codigoLimpio,
-        nombre: nombreLimpio,
-        elementos: []
-      };
-
-      this.model.set({
-        ...current,
-        catalogos: [...catalogosActuales, nuevoCatalogo]
-      });
-
+      const nuevoCatalogo: CatalogoBuilderModel = { codigo: codigoLimpio, nombre: nombreLimpio, elementos: [] };
+      this.model.set({ ...current, catalogos: [...catalogosActuales, nuevoCatalogo] });
       this.catalogoActivoCodigo.set(codigoLimpio);
       this.catalogoEnEdicion.set(null);
       this.feedbackCatalogo.set({ tipo: 'exito', mensaje: `Catálogo "${nombreLimpio}" (${codigoLimpio}) creado exitosamente.` });
-    } else {
-      const codOriginal = edicion.codigoOriginal || edicion.codigo;
-      const codOriginalLower = codOriginal.trim().toLowerCase();
-
-      // Si cambió de código, validar unicidad
-      if (codOriginalLower !== codigoLower) {
-        const existeOtro = catalogosActuales.some(
-          c => c.codigo.trim().toLowerCase() === codigoLower && c.codigo.trim().toLowerCase() !== codOriginalLower
-        );
-        if (existeOtro) {
-          this.feedbackCatalogo.set({
-            tipo: 'error',
-            mensaje: `Ya existe otro catálogo con el código "${codigoLimpio}".`
-          });
-          return;
-        }
-      }
-
-      // Actualizar catálogo preservando metadatos originales
-      const idx = catalogosActuales.findIndex(c => c.codigo.trim().toLowerCase() === codOriginalLower);
-      if (idx === -1) return;
-
-      const catActual = catalogosActuales[idx];
-      const catActualizado: CatalogoBuilderModel = {
-        ...catActual,
-        codigo: codigoLimpio,
-        nombre: nombreLimpio
-      };
-
-      catalogosActuales[idx] = catActualizado;
-
-      // Si el código cambió, actualizar referencias en los campos para preservar integridad referencial
-      let seccionesActualizadas = current.secciones;
-      if (codOriginalLower !== codigoLower) {
-        seccionesActualizadas = current.secciones.map(sec => ({
-          ...sec,
-          campos: sec.campos.map(cmp => {
-            if (cmp.codigoCatalogo && cmp.codigoCatalogo.trim().toLowerCase() === codOriginalLower) {
-              return { ...cmp, codigoCatalogo: codigoLimpio };
-            }
-            return cmp;
-          })
-        }));
-      }
-
-      this.model.set({
-        ...current,
-        catalogos: catalogosActuales,
-        secciones: seccionesActualizadas
-      });
-
-      this.catalogoActivoCodigo.set(codigoLimpio);
-      this.catalogoEnEdicion.set(null);
-      this.feedbackCatalogo.set({ tipo: 'exito', mensaje: `Catálogo "${nombreLimpio}" (${codigoLimpio}) actualizado exitosamente.` });
+      return;
     }
+
+    const codOriginal = edicion.codigoOriginal || edicion.codigo;
+    const codOriginalLower = codOriginal.trim().toLowerCase();
+    if (codOriginalLower !== codigoLower) {
+      const existeOtro = catalogosActuales.some(c => c.codigo.trim().toLowerCase() === codigoLower && c.codigo.trim().toLowerCase() !== codOriginalLower);
+      if (existeOtro) {
+        this.feedbackCatalogo.set({ tipo: 'error', mensaje: `Ya existe otro catálogo con el código "${codigoLimpio}".` });
+        return;
+      }
+    }
+
+    const idx = catalogosActuales.findIndex(c => c.codigo.trim().toLowerCase() === codOriginalLower);
+    if (idx === -1) return;
+    const catActual = catalogosActuales[idx];
+    catalogosActuales[idx] = { ...catActual, codigo: codigoLimpio, nombre: nombreLimpio };
+
+    let seccionesActualizadas = current.secciones;
+    if (codOriginalLower !== codigoLower) {
+      seccionesActualizadas = current.secciones.map(sec => ({
+        ...sec,
+        campos: sec.campos.map(cmp => cmp.codigoCatalogo?.trim().toLowerCase() === codOriginalLower ? { ...cmp, codigoCatalogo: codigoLimpio } : cmp)
+      }));
+    }
+
+    this.model.set({ ...current, catalogos: catalogosActuales, secciones: seccionesActualizadas });
+    this.catalogoActivoCodigo.set(codigoLimpio);
+    this.catalogoEnEdicion.set(null);
+    this.feedbackCatalogo.set({ tipo: 'exito', mensaje: `Catálogo "${nombreLimpio}" (${codigoLimpio}) actualizado exitosamente.` });
   }
 
   eliminarCatalogo(codigo: string): void {
@@ -496,60 +353,31 @@ export class FormBuilderComponent implements OnInit {
     const camposEnUso = this.camposQueUsanCatalogo(codigo);
     if (camposEnUso.length > 0) {
       const listaCampos = camposEnUso.map(c => `"${c.campoEtiqueta}" (en sección ${c.seccionTitulo})`).join(', ');
-      this.feedbackCatalogo.set({
-        tipo: 'error',
-        mensaje: `No se puede eliminar el catálogo "${codigo}" porque está en uso por ${camposEnUso.length} campo(s): ${listaCampos}. Reasigna o elimina los campos antes de eliminar el catálogo.`
-      });
+      this.feedbackCatalogo.set({ tipo: 'error', mensaje: `No se puede eliminar el catálogo "${codigo}" porque está en uso por ${camposEnUso.length} campo(s): ${listaCampos}. Reasigna o elimina los campos antes de eliminar el catálogo.` });
       return;
     }
-
     const current = this.model();
-    const catalogosFiltrados = (current.catalogos ?? []).filter(
-      c => c.codigo.trim().toLowerCase() !== codigo.trim().toLowerCase()
-    );
-
-    this.model.set({
-      ...current,
-      catalogos: catalogosFiltrados
-    });
-
+    const catalogosFiltrados = (current.catalogos ?? []).filter(c => c.codigo.trim().toLowerCase() !== codigo.trim().toLowerCase());
+    this.model.set({ ...current, catalogos: catalogosFiltrados });
     if (this.catalogoActivoCodigo()?.trim().toLowerCase() === codigo.trim().toLowerCase()) {
       this.catalogoActivoCodigo.set(catalogosFiltrados.length > 0 ? catalogosFiltrados[0].codigo : null);
     }
-
     this.catalogoEnEdicion.set(null);
     this.elementoEnEdicion.set(null);
     this.feedbackCatalogo.set({ tipo: 'exito', mensaje: `Catálogo "${codigo}" eliminado correctamente.` });
   }
 
-  // ==========================================
-  // ADMINISTRACIÓN DE ELEMENTOS DE CATÁLOGO
-  // ==========================================
-
   iniciarNuevoElemento(): void {
     if (this.soloLectura || !this.catalogoActivo()) return;
     const cat = this.catalogoActivo()!;
-    const ordenSiguiente = (cat.elementos?.length ?? 0) + 1;
     this.feedbackCatalogo.set(null);
-    this.elementoEnEdicion.set({
-      codigoOriginal: null,
-      codigo: '',
-      valor: '',
-      orden: ordenSiguiente,
-      indice: null
-    });
+    this.elementoEnEdicion.set({ codigoOriginal: null, codigo: '', valor: '', orden: (cat.elementos?.length ?? 0) + 1, indice: null });
   }
 
   iniciarEdicionElemento(elem: ElementoCatalogoBuilderModel, indice: number): void {
     if (this.soloLectura) return;
     this.feedbackCatalogo.set(null);
-    this.elementoEnEdicion.set({
-      codigoOriginal: elem.codigo,
-      codigo: elem.codigo,
-      valor: elem.valor,
-      orden: elem.orden,
-      indice
-    });
+    this.elementoEnEdicion.set({ codigoOriginal: elem.codigo, codigo: elem.codigo, valor: elem.valor, orden: elem.orden, indice });
   }
 
   cancelarEdicionElemento(): void {
@@ -565,60 +393,24 @@ export class FormBuilderComponent implements OnInit {
     const codigoLimpio = String(elemEdicion.codigo).trim();
     const valorLimpio = String(elemEdicion.valor).trim();
     const ordenNum = Number(elemEdicion.orden);
-
-    if (!codigoLimpio) {
-      this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El código del elemento es obligatorio.' });
-      return;
-    }
-
-    if (!valorLimpio) {
-      this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'La etiqueta/valor del elemento es obligatorio.' });
-      return;
-    }
-
-    if (!Number.isInteger(ordenNum) || ordenNum < 1) {
-      this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El orden debe ser un número entero mayor o igual a 1.' });
-      return;
-    }
+    if (!codigoLimpio) { this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El código del elemento es obligatorio.' }); return; }
+    if (!valorLimpio) { this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'La etiqueta/valor del elemento es obligatorio.' }); return; }
+    if (!Number.isInteger(ordenNum) || ordenNum < 1) { this.feedbackCatalogo.set({ tipo: 'error', mensaje: 'El orden debe ser un número entero mayor o igual a 1.' }); return; }
 
     const elementosActuales = cat.elementos ? [...cat.elementos] : [];
     const codigoLower = codigoLimpio.toLowerCase();
-
-    // Validar unicidad de código de elemento en este catálogo
-    const duplicado = elementosActuales.some((el, idx) => {
-      if (elemEdicion.indice !== null && idx === elemEdicion.indice) return false;
-      return el.codigo.trim().toLowerCase() === codigoLower;
-    });
-
+    const duplicado = elementosActuales.some((el, idx) => elemEdicion.indice === idx ? false : el.codigo.trim().toLowerCase() === codigoLower);
     if (duplicado) {
-      this.feedbackCatalogo.set({
-        tipo: 'error',
-        mensaje: `El código "${codigoLimpio}" ya existe dentro de este catálogo. Los códigos de elementos deben ser únicos.`
-      });
+      this.feedbackCatalogo.set({ tipo: 'error', mensaje: `El código "${codigoLimpio}" ya existe dentro de este catálogo. Los códigos de elementos deben ser únicos.` });
       return;
     }
 
     if (elemEdicion.indice === null) {
-      // Nuevo elemento
-      const nuevoElemento: ElementoCatalogoBuilderModel = {
-        codigo: codigoLimpio,
-        valor: valorLimpio,
-        orden: ordenNum
-      };
-      elementosActuales.push(nuevoElemento);
+      elementosActuales.push({ codigo: codigoLimpio, valor: valorLimpio, orden: ordenNum });
     } else {
-      // Edición de elemento existente
-      const idx = elemEdicion.indice;
-      const elemExistente = elementosActuales[idx];
-      elementosActuales[idx] = {
-        ...elemExistente,
-        codigo: codigoLimpio,
-        valor: valorLimpio,
-        orden: ordenNum
-      };
+      elementosActuales[elemEdicion.indice] = { ...elementosActuales[elemEdicion.indice], codigo: codigoLimpio, valor: valorLimpio, orden: ordenNum };
     }
 
-    // Actualizar catálogo en el modelo
     this.actualizarElementosDeCatalogoActivo(elementosActuales);
     this.elementoEnEdicion.set(null);
     this.feedbackCatalogo.set({ tipo: 'exito', mensaje: `Elemento "${valorLimpio}" (${codigoLimpio}) guardado correctamente.` });
@@ -628,14 +420,7 @@ export class FormBuilderComponent implements OnInit {
     if (this.soloLectura) return;
     const cat = this.catalogoActivo();
     if (!cat || !cat.elementos) return;
-
-    const elementos = cat.elementos.filter((_, idx) => idx !== indice);
-    // Reindexar orden secuencialmente
-    const elementosReordenados = elementos.map((el, idx) => ({
-      ...el,
-      orden: idx + 1
-    }));
-
+    const elementosReordenados = cat.elementos.filter((_, idx) => idx !== indice).map((el, idx) => ({ ...el, orden: idx + 1 }));
     this.actualizarElementosDeCatalogoActivo(elementosReordenados);
     this.elementoEnEdicion.set(null);
     this.feedbackCatalogo.set({ tipo: 'exito', mensaje: 'Elemento eliminado correctamente.' });
@@ -645,51 +430,24 @@ export class FormBuilderComponent implements OnInit {
     if (this.soloLectura) return;
     const cat = this.catalogoActivo();
     if (!cat || !cat.elementos) return;
-
     const targetIdx = direccion === 'subir' ? indice - 1 : indice + 1;
     if (targetIdx < 0 || targetIdx >= cat.elementos.length) return;
-
     const elementos = [...cat.elementos];
-    const temp = elementos[indice];
-    elementos[indice] = elementos[targetIdx];
-    elementos[targetIdx] = temp;
-
-    // Actualizar orden (1-based)
-    const elementosActualizados = elementos.map((el, idx) => ({
-      ...el,
-      orden: idx + 1
-    }));
-
-    this.actualizarElementosDeCatalogoActivo(elementosActualizados);
+    [elementos[indice], elementos[targetIdx]] = [elementos[targetIdx], elementos[indice]];
+    this.actualizarElementosDeCatalogoActivo(elementos.map((el, idx) => ({ ...el, orden: idx + 1 })));
   }
 
   private actualizarElementosDeCatalogoActivo(elementos: ElementoCatalogoBuilderModel[]): void {
     const codActivo = this.catalogoActivoCodigo();
     if (!codActivo) return;
-
     const current = this.model();
-    const catalogos = (current.catalogos ?? []).map(c => {
-      if (c.codigo.trim().toLowerCase() === codActivo.trim().toLowerCase()) {
-        return { ...c, elementos };
-      }
-      return c;
-    });
-
-    this.model.set({
-      ...current,
-      catalogos
-    });
+    const catalogos = (current.catalogos ?? []).map(c => c.codigo.trim().toLowerCase() === codActivo.trim().toLowerCase() ? { ...c, elementos } : c);
+    this.model.set({ ...current, catalogos });
   }
-
-  // ==========================================
-  // VISTA JSON AVANZADA Y GUARDADO
-  // ==========================================
 
   toggleModoJson(): void {
     if (!this.esAdministrador) return;
-    if (!this.mostrarJsonAvanzado()) {
-      this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
-    }
+    if (!this.mostrarJsonAvanzado()) this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
     this.mostrarJsonAvanzado.set(!this.mostrarJsonAvanzado());
   }
 
@@ -701,9 +459,7 @@ export class FormBuilderComponent implements OnInit {
       this.model.set(parsed);
       this.mostrarJsonAvanzado.set(false);
       this.erroresValidacion.set([]);
-      if (parsed.catalogos.length > 0 && !this.catalogoActivoCodigo()) {
-        this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
-      }
+      if (parsed.catalogos.length > 0 && !this.catalogoActivoCodigo()) this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
     } catch {
       this.erroresValidacion.set([{ campo: 'JSON', mensaje: 'El formato JSON ingresado no es válido.' }]);
     }
@@ -717,10 +473,7 @@ export class FormBuilderComponent implements OnInit {
 
   emitirGuardado(): void {
     if (this.soloLectura) return;
-    if (!this.validarYObtenerErrores()) {
-      return;
-    }
-    const jsonOutput = serializarBuilderModelAJson(this.model());
-    this.guardarJson.emit(jsonOutput);
+    if (!this.validarYObtenerErrores()) return;
+    this.guardarJson.emit(serializarBuilderModelAJson(this.model()));
   }
 }

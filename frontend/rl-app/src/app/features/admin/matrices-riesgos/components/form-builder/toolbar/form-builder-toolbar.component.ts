@@ -2,14 +2,14 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-form-builder-toolbar-v2',
+  selector: 'app-form-builder-toolbar',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './form-builder-toolbar.component.html',
   styleUrls: ['./form-builder-toolbar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FormBuilderToolbarV2Component {
+export class FormBuilderToolbarComponent {
   @Input() title: string = 'Constructor de Formularios Dinámicos';
   @Input() versionCodigo: string = '';
   @Input() versionNumero: number = 1;
@@ -19,7 +19,6 @@ export class FormBuilderToolbarV2Component {
   @Input() esAdministrador: boolean = false;
   @Input() vistaActiva: 'secciones' | 'catalogos' = 'secciones';
   @Input() mostrarJsonAvanzado: boolean = false;
-  @Input() activeTab: string = 'editor';
 
   @Output() cambiarVista = new EventEmitter<'secciones' | 'catalogos'>();
   @Output() toggleJson = new EventEmitter<void>();
@@ -27,5 +26,4 @@ export class FormBuilderToolbarV2Component {
   @Output() agregarCatalogo = new EventEmitter<void>();
   @Output() guardar = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
-  @Output() tabChange = new EventEmitter<string>();
 }
