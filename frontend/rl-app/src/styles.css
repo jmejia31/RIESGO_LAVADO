@@ -3,6 +3,13 @@
 :root {
   --ihss-primary-rgb: 30 58 138;   /* #1e3a8a */
   --ihss-accent-rgb:  29 78 216;   /* #1d4ed8 */
+  --modal-viewport-gap: 1.5rem;   /* Separación institucional uniforme respecto al viewport */
+}
+
+@media (max-width: 640px) {
+  :root {
+    --modal-viewport-gap: 0.75rem;
+  }
 }
 
 @tailwind base;
@@ -53,12 +60,13 @@
   .card {
     @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
   }
-  /* Contenedores y estructura de modales unificados */
-  .modal-backdrop-overlay {
-    @apply fixed inset-0 z-[1000] flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-900/60 backdrop-blur-sm animate-fade-in;
-  }
-  /* Los elementos <dialog> conservan dimensiones y márgenes propios del navegador.
-     Al usarlos como overlay se neutralizan para que el backdrop cubra realmente toda la aplicación. */
+  /* ==========================================================================
+     SISTEMA INSTITUCIONAL DE MODALES Y OVERLAYS (SGRLA-IHSS)
+     Única fuente de verdad canónica para geometría, backdrop, tarjeta y variantes
+     ========================================================================== */
+
+  /* 1. OVERLAY CANÓNICO (Para <div> y <dialog>) */
+  .modal-backdrop-overlay,
   dialog.modal-backdrop-overlay {
     position: fixed !important;
     top: 0 !important;
@@ -71,7 +79,7 @@
     height: 100dvh !important;
     max-height: 100dvh !important;
     margin: 0 !important;
-    padding: 1.5rem !important;
+    padding: var(--modal-viewport-gap) !important;
     border: 0 !important;
     border-radius: 0 !important;
     display: flex !important;
@@ -81,18 +89,54 @@
     z-index: 1000 !important;
     background-color: rgb(15 23 42 / 0.6) !important;
     backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    overflow-y: auto !important;
   }
+
+  /* 2. TARJETA GLOBAL */
   .modal-container-card {
-    @apply relative min-h-0 bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-slate-200 flex flex-col;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
+    background-color: #ffffff;
+    border: 1px solid rgb(226 232 240);
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgb(15 23 42 / 0.25);
+    overflow: hidden;
+    box-sizing: border-box;
+    margin: auto !important;
+    text-align: left;
+    transform: none;
+    transition: all 0.2s ease-in-out;
   }
+
+  /* 3. HEADER, BODY Y FOOTER INSTITUCIONAL */
   .modal-header-institutional {
-    @apply bg-white px-6 py-4 flex items-center justify-between border-b border-slate-200 shrink-0;
+    background-color: #ffffff;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgb(226 232 240);
+    flex-shrink: 0;
   }
   .modal-body-scrollable {
-    @apply min-h-0 flex-1 overflow-y-auto p-6;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 1.5rem;
   }
   .modal-footer-institutional {
-    @apply bg-white px-6 py-3 flex items-center justify-end gap-2.5 border-t border-slate-200 shrink-0;
+    background-color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    border-top: 1px solid rgb(226 232 240);
+    flex-shrink: 0;
   }
 }
 
@@ -166,36 +210,73 @@
 }
 
 /*
- * Defensa visual adicional al bloqueo robusto con `inert` administrado por MainLayoutComponent.
- * Los selectores apuntan únicamente al aside y al header del shell principal. El header interno
- * del Form Builder permanece dentro del diálogo y no se ve afectado.
+ * Neutralización de stacking context de aside y header cuando cualquier modal está activo.
+ * Garantiza que el overlay cubra el 100% de la ventana sin que el header superior o aside queden sobre el backdrop.
  */
 body:has([role="dialog"][aria-modal="true"]),
+body:has(dialog[open]),
+body:has(.modal-backdrop-overlay),
 body.modal-abierto {
   overflow: hidden !important;
 }
 
 body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > aside,
-body.modal-abierto app-main-layout > div > aside,
-body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > div > header,
-body.modal-abierto app-main-layout > div > div > header {
+body:has(dialog[open]) app-main-layout > div > aside,
+body:has(.modal-backdrop-overlay) app-main-layout > div > aside,
+body.modal-abierto app-main-layout > div > aside {
+  z-index: 0 !important;
   pointer-events: none !important;
   user-select: none !important;
 }
 
-[role="dialog"][aria-modal="true"] {
+body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > div > header,
+body:has(dialog[open]) app-main-layout > div > div > header,
+body:has(.modal-backdrop-overlay) app-main-layout > div > div > header,
+body.modal-abierto app-main-layout > div > div > header {
+  z-index: 0 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+body:has([role="dialog"][aria-modal="true"]) app-main-layout > div > div,
+body:has(dialog[open]) app-main-layout > div > div,
+body:has(.modal-backdrop-overlay) app-main-layout > div > div,
+body.modal-abierto app-main-layout > div > div {
+  z-index: 1000 !important;
+}
+
+[role="dialog"][aria-modal="true"],
+dialog.modal-backdrop-overlay {
   pointer-events: auto !important;
 }
 
 /*
- * Envolvente visual canónica de todos los modales institucionales.
- * El backdrop ocupa el 100% del viewport, mientras la tarjeta activa conserva aproximadamente
- * un 5% de separación vertical por lado, replicando el patrón visual de Detalles de Coincidencias.
- * Cada modal mantiene su ancho funcional; solo se normaliza el límite vertical para evitar
- * ventanas pegadas a los bordes y preservar la percepción de capa flotante.
+ * Variantes de tamaño institucional de la tarjeta del modal.
  */
-dialog.modal-backdrop-overlay > .modal-container-card {
-  max-height: 92dvh !important;
+.modal-size-sm {
+  width: 100% !important;
+  max-width: 28rem !important; /* max-w-md */
+}
+
+.modal-size-md {
+  width: 100% !important;
+  max-width: 32rem !important; /* max-w-lg */
+}
+
+.modal-size-lg {
+  width: 100% !important;
+  max-width: 48rem !important; /* max-w-3xl */
+}
+
+.modal-size-xl {
+  width: 100% !important;
+  max-width: 72rem !important; /* max-w-6xl */
+}
+
+.modal-size-workspace {
+  width: 96vw !important;
+  max-width: 1500px !important;
+  height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
 }
 
 /*

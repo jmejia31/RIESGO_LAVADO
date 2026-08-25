@@ -1,5 +1,32 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Estandarización Visual Global de Modales
+
+- **Fecha y hora**: 2026-08-25 11:57, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `1c0a1db035e4d25fdfcbb2cb558b990f1d5334d7`.
+- **Objetivo y alcance**:
+  - Estandarización visual y arquitectónica global de todos los modales del sistema (eliminación definitiva de la franja superior en todos los módulos: Bitácora, Listas de Cautela, Monitoreo, Matrices, Usuarios, Configuración y Form Builder).
+  - Creación de una única fuente de verdad en `src/styles.css` con tokens institucionales `--modal-viewport-gap` (1.5rem desktop / 0.75rem mobile).
+  - Overlay global canónico `.modal-backdrop-overlay` / `dialog.modal-backdrop-overlay`: `position: fixed !important`, `inset: 0 !important`, `top: 0 !important`, `left: 0 !important`, `width: 100vw !important`, `height: 100dvh !important`, `z-index: 1000 !important`, `padding: var(--modal-viewport-gap) !important`.
+  - Neutralización de stacking context en `app-main-layout` para `<aside>` y `<header>` (`z-index: 0 !important`) cuando cualquier modal está activo, asegurando que el backdrop cubra el 100% del viewport sin dejar el header superior sin oscurecer.
+  - Estandarización de variantes de tarjeta: `.modal-container-card` con `max-height: calc(100dvh - (2 * var(--modal-viewport-gap)))`, `.modal-size-sm`, `.modal-size-md`, `.modal-size-lg`, `.modal-size-xl`, `.modal-size-workspace`.
+  - Contrato unificado `.modal-header-institutional`, `.modal-body-scrollable`, `.modal-footer-institutional`.
+  - Cero modificaciones a lógica de negocio, backend, DTOs, servicios, APIs, eventos o contratos funcionales.
+- **Archivos creados y modificados**:
+  - `frontend/rl-app/src/styles.css` (sistema canónico de modales y variantes).
+  - `frontend/rl-app/src/app/shared/layout/main-layout/modal-geometry.spec.ts` (suite de regresión de geometría y contrato).
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 59/59 suites de prueba frontend PASS (576/576 pruebas unitarias, 0 fallos).
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores).
+  - `git diff --check` PASS (0 whitespace errors).
+- **Punto de continuación**: Continuar con Fase UI-FORM.3.
+
+---
+
 ## Registro de Intervención — AntiG — Corrección Geometría Full-Screen del Modal del Constructor
 
 - **Fecha y hora**: 2026-08-25 11:34, hora local (UTC-6).
