@@ -163,3 +163,20 @@ Cuando un colaborador recibe el turno debe ejecutar `git pull --ff-only origin d
 - **Repositorio**: `https://github.com/jmejia31/RIESGO_LAVADO.git`
 - No dejar cambios locales sin commit ni commits validados sin publicar en la rama autorizada.
 - No declarar una rama «sincronizada» únicamente porque sus archivos coinciden: también debe revisarse la divergencia de commits.
+
+<!-- codex-graph:agents:start -->
+## codex-graph
+
+For architecture, dependency, symbol, route, test, or impact questions, query the
+local graph before reading raw files:
+
+```bash
+codex-graph query "<question>"
+codex-graph explain <symbol-or-file>
+codex-graph deps <file-or-symbol>
+codex-graph path <from> <to>
+codex-graph impact <file-or-symbol>
+```
+
+Use graph output as a map, then inspect the suggested files directly.
+<!-- codex-graph:agents:end -->

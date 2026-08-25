@@ -54,6 +54,8 @@ backend/RL.API/App_Data/
 # Codex/local generated artifacts
 .codex/
 .codex-remote-attachments/
+.codex-graph/
+.codex-tools/
 docs/_render_*/
 docs/Herramientas/*.msi
 docs/**/*.log
