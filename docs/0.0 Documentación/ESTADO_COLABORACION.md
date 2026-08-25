@@ -31,6 +31,7 @@
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
 | **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ COMPLETA Y CERTIFICADA** | Shell de 5 regiones V2 integrado en FormBuilderComponent productivo. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS. |
+| **UI-FORM.2 — Biblioteca y estructura del formulario** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Búsqueda insensible a mayúsculas/acentos, 3 categorías canónicas (Básicos, Selección, Avanzados), tarjetas pro con icono SVG/handle, drag & drop con payload seguro (`tipo`), drop-zones visuales por sección, validación segura en motor `FormBuilderComponent`, auto-selección en inspector, bloqueo ESC. 577/577 frontend PASS (59 suites), lint PASS, build PASS. |
 | **UI-FORM.3 — Lienzo y secciones** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Field Cards pro, selección visual inequívoca sincronizada con inspector, header de sección con badge y selector numérico de columnas por fila (1, 2, 3, 4, 6), acciones agrupadas con boundaries, drop-zones compactas, HARD GATE JSON lossless (0 propiedades UI persistidas, 9 tipos exactos). 596/596 frontend PASS (60 suites), lint PASS, build PASS. |
 
 ---
