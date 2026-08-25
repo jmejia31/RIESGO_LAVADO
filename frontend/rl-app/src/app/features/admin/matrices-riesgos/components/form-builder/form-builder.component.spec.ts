@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormBuilderComponent } from './form-builder.component';
 import { normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from '../../models/form-builder.models';
 import { validarFormBuilderModel } from '../../utils/form-builder-validator.util';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   let component: FormBuilderComponent;
@@ -462,6 +463,102 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     it('Arquitectura limpia: FormBuilderComponent no depende de servicios HTTP o MatricesRiesgosService', () => {
       // El componente se instancia únicamente con Inputs/Outputs presentacionales
       expect(component).toBeDefined();
+    });
+
+    describe('Bloqueo Transitorio Real durante Procesamiento / Operación Activa', () => {
+      beforeEach(() => {
+        component.soloLectura = false;
+        component.esAdministrador = true;
+        component.estadoVersion = 'DRAFT';
+        component.operacion = 'guardar';
+      });
+
+      it('D. bloquea agregarSeccion durante operacion activa', () => {
+        const totalAntes = component.model().secciones.length;
+        component.agregarSeccion();
+        expect(component.model().secciones.length).toBe(totalAntes);
+      });
+
+      it('E. bloquea eliminarCampo durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const campoId = component.model().secciones[0].campos[0].id;
+        component.eliminarCampo(seccionId, campoId);
+        expect(component.model().secciones[0].campos.length).toBe(1);
+      });
+
+      it('F. bloquea reordenarCampo durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const texto = component.tiposControles.find(t => t.tipo === 'texto')!;
+        component.operacion = null; // desbloqueo temporal para setup
+        component.agregarCampoASeccion(seccionId, texto);
+        component.operacion = 'guardar'; // re-bloqueo
+
+        const antes = component.model().secciones[0].campos.map(c => c.id);
+        component.reordenarCampo(seccionId, 1, 'subir');
+        expect(component.model().secciones[0].campos.map(c => c.id)).toEqual(antes);
+      });
+
+      it('G. bloquea procesarSoltarControl (drop) durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const totalAntes = component.model().secciones[0].campos.length;
+        component.procesarSoltarControl({ seccionId, tipo: 'texto' });
+        expect(component.model().secciones[0].campos.length).toBe(totalAntes);
+      });
+
+      it('H. bloquea alCambiarPropiedadCampo (inspector) durante operacion activa', () => {
+        const campoOriginal = component.model().secciones[0].campos[0];
+        component.seleccionarCampo({ ...campoOriginal });
+        component.campoActivo()!.etiqueta = 'Etiqueta Mutada Indebidamente';
+        component.alCambiarPropiedadCampo();
+        expect(component.model().secciones[0].campos[0].etiqueta).toBe(campoOriginal.etiqueta);
+      });
+
+      it('I. bloquea crear, editar y eliminar catalogos durante operacion activa', () => {
+        const totalAntes = (component.model().catalogos ?? []).length;
+        component.catalogoEnEdicion.set({ codigoOriginal: null, codigo: 'CAT_NUEVO', nombre: 'Nuevo', esNuevo: true });
+        component.guardarEdicionCatalogo();
+        expect((component.model().catalogos ?? []).length).toBe(totalAntes);
+
+        component.eliminarCatalogo('CAT_AREA');
+        expect((component.model().catalogos ?? []).length).toBe(totalAntes);
+      });
+
+      it('J. bloquea agregar, editar, eliminar y reordenar elementos de catalogo durante operacion activa', () => {
+        const cat = (component.model().catalogos ?? [])[0];
+        component.catalogoActivoCodigo.set(cat.codigo);
+        const elementosAntes = (cat.elementos ?? []).length;
+
+        component.elementoEnEdicion.set({ codigoOriginal: null, codigo: '003', valor: 'Opcion 3', orden: 3, indice: null });
+        component.guardarElementoCatalogo();
+        expect(((component.model().catalogos ?? [])[0].elementos ?? []).length).toBe(elementosAntes);
+
+        component.eliminarElementoCatalogo(0);
+        expect(((component.model().catalogos ?? [])[0].elementos ?? []).length).toBe(elementosAntes);
+
+        component.reordenarElementoCatalogo(1, 'subir');
+        expect((component.model().catalogos ?? [])[0].elementos[0].codigo).toBe('01');
+      });
+
+      it('K. bloquea aplicarJsonAvanzado durante operacion activa', () => {
+        const jsonNuevo = JSON.stringify({ codigoFormulario: 'FORM_MUTADO', nombreFormulario: 'Mutado', secciones: [] });
+        component.jsonAvanzadoStr.set(jsonNuevo);
+        component.aplicarJsonAvanzado();
+        expect(component.model().codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+      });
+
+      it('L. cuando operacion termina, DRAFT admin no vigente vuelve a ser editable', () => {
+        component.operacion = 'publicar';
+        expect(component.bloqueadoParaMutacion).toBe(true);
+
+        // Termina la operacion
+        component.operacion = null;
+        component.procesando = false;
+        expect(component.bloqueadoParaMutacion).toBe(false);
+
+        const totalAntes = component.model().secciones.length;
+        component.agregarSeccion();
+        expect(component.model().secciones.length).toBe(totalAntes + 1);
+      });
     });
   });
 });

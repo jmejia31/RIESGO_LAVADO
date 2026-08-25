@@ -1,5 +1,36 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Microcierre Definitivo Fase UI-FORM.5 (Bloqueo Real durante Procesamiento)
+
+- **Fecha y hora**: 2026-08-25 14:23, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `3182050b1d31d4e4ecb7473708eb19888ba30302`.
+- **Objetivo y alcance**:
+  - Microcierre definitivo de la Fase UI-FORM.5:
+    1. **Bloqueo Transitorio Real del Builder**: Creación de la derivación UI pura `get bloqueadoParaMutacion(): boolean { return this.soloLectura || this.procesando || this.operacion !== null; }` en `FormBuilderComponent` para proteger todas las regiones interactivas durante operaciones de guardado y publicación (incluso en ventana HTTP POST -> GET).
+    2. **Desacoplamiento Contractual vs Transitorio**: `soloLectura` se mantiene intacto como estado contractual del Builder (preservando el badge oficial y statusbar sin alteraciones falsas), mientras `bloqueadoParaMutacion` actúa como barrera de interacción local.
+    3. **Palette, Canvas, Inspector**: Vinculación de `[soloLectura]="bloqueadoParaMutacion"` impidiendo agregar campos, drag & drop, agregar/eliminar secciones, eliminar campos, reordenar, cambiar columnas/títulos o mutar propiedades en inspector durante operaciones.
+    4. **Catálogos y JSON Técnico**: Bloqueo de acciones mutables de catálogos (crear, editar, guardar, eliminar catálogo o elementos) y bloqueo de textarea JSON técnico (`[readOnly]="bloqueadoParaMutacion"`) y botón "Sincronizar hacia el Lienzo Visual" (`[disabled]="bloqueadoParaMutacion"`).
+    5. **Defensa en Profundidad en Handlers**: Unificación estricta mediante `if (this.bloqueadoParaMutacion) return;` en todos los métodos mutables de `FormBuilderComponent`.
+    6. **Labels de Operación Exactos**: En `FormBuilderToolbarComponent`, eliminación del fallback ambiguo basado en `procesando === true`. `labelGuardar` muestra `"Guardando..."` exclusivamente si `operacion === 'guardar'`, y `labelPublicar` muestra `"Publicando..."` exclusivamente si `operacion === 'publicar'`. Cuando `procesando = true` y `operacion = null`, ambos muestran sus etiquetas nominales deshabilitadas.
+- **Archivos modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.spec.ts`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 63/63 archivos de prueba frontend PASS (683/683 pruebas unitarias, 0 fallos).
+  - Cobertura frontend real (`npm run test:coverage`): **Statements = 61.77% (4,191/6,784), Branches = 56.68% (2,320/4,093), Functions = 57.77% (907/1,570), Lines = 61.95% (3,725/6,012)**.
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores, bundle compilado exitosamente en 12.3s).
+  - `git diff --check` PASS (0 advertencias).
+- **Punto de continuación**: Continuar con las siguientes fases del Form Builder / Matrices de Riesgos según el roadmap rector.
+
+---
+
 ## Registro de Intervención — AntiG — Microcierre Final Fase UI-FORM.5 (Permisos, Reconciliación y Estado de Proceso)
 
 - **Fecha y hora**: 2026-08-25 14:07, hora local (UTC-6).

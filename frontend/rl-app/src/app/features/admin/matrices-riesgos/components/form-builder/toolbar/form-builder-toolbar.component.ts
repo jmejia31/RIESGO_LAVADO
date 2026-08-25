@@ -40,13 +40,13 @@ export class FormBuilderToolbarComponent {
   get labelGuardar(): string {
     return this.operacion === 'guardar'
       ? 'Guardando...'
-      : (this.procesando && this.operacion === null ? 'Guardando...' : 'Guardar Borrador');
+      : 'Guardar Borrador';
   }
 
   get labelPublicar(): string {
     return this.operacion === 'publicar'
       ? 'Publicando...'
-      : (this.procesando && this.operacion === null ? 'Publicando...' : 'Publicar Versión');
+      : 'Publicar Versión';
   }
 
   get estadoEtiqueta(): string {

@@ -168,6 +168,27 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
   });
 
   describe('4. Estado de Operación Preciso y Prevención de Doble Envío', () => {
+    it('cuando procesando=true y operacion=null, mantiene "Guardar Borrador" y "Publicar Versión" deshabilitados sin inventar operaciones', () => {
+      component.soloLectura = false;
+      component.estadoVersion = 'DRAFT';
+      component.puedePublicar = true;
+      component.procesando = true;
+      component.operacion = null;
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const btnGuardar = el.querySelector('#btn-guardar-builder') as HTMLButtonElement;
+      const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
+
+      expect(btnGuardar.disabled).toBe(true);
+      expect(btnGuardar.textContent).toContain('Guardar Borrador');
+      expect(btnGuardar.textContent).not.toContain('Guardando...');
+
+      expect(btnPublicar.disabled).toBe(true);
+      expect(btnPublicar.textContent).toContain('Publicar Versión');
+      expect(btnPublicar.textContent).not.toContain('Publicando...');
+    });
+
     it('cuando operacion es "guardar", muestra "Guardando..." y NO "Publicando..."', () => {
       component.soloLectura = false;
       component.estadoVersion = 'DRAFT';
