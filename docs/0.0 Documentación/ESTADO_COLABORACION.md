@@ -1,5 +1,15 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - UI-FORM.6
+
+- Fecha: 2026-08-25. Rama de trabajo: `desarrollo`.
+- HEAD inicial de esta intervención: `dbe31e285fc0549a4a80434a6e6072b60c080162`.
+- Quality Gate Run `32895118559` quedó corregido localmente: el fallo era el selector E2E obsoleto `.form-builder-modal-card`; el selector vigente es `.modal-container-card.modal-size-workspace`.
+- UI-FORM.6 integrada en el FormBuilder existente: Preview read-only con `DynamicFieldRendererComponent`; JSON Técnico con fuente serializada contractual, copiar exacto, búsqueda literal, navegación de coincidencias y validación sin aplicar ni guardar.
+- Evidencia local: suite frontend 63/63 archivos y 686/686 pruebas PASS; coverage Statements 61.99%, Branches 56.88%, Functions 57.93%, Lines 62.13%; lint, build, E2E 17/17, backend 494/494 y `tools/run_quality_gates.ps1` PASS.
+- Restricciones confirmadas: no se modificó `main`, backend, Oracle, SQL, secretos, gates, exclusiones, dependencias ni contratos persistentes. UI-FORM.2-.5 quedan congeladas sin regresión.
+- Próximo paso: commit exclusivo de UI-FORM.6/fix E2E y publicación normal en `origin/desarrollo`; no promover a `main` en esta ejecución.
+
 **Actualización:** 2026-08-25 12:09 — Centralización de variantes de tamaño de modales por AntiG
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  

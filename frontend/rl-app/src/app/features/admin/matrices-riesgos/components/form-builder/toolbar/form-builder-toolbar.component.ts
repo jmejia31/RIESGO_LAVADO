@@ -19,13 +19,13 @@ export class FormBuilderToolbarComponent {
   @Input() catalogosCount: number = 0;
   @Input() soloLectura: boolean = false;
   @Input() esAdministrador: boolean = false;
-  @Input() vistaActiva: 'secciones' | 'catalogos' = 'secciones';
+  @Input() vistaActiva: 'secciones' | 'catalogos' | 'preview' = 'secciones';
   @Input() mostrarJsonAvanzado: boolean = false;
   @Input() puedePublicar: boolean = false;
   @Input() procesando: boolean = false;
   @Input() operacion: 'guardar' | 'publicar' | null = null;
 
-  @Output() cambiarVista = new EventEmitter<'secciones' | 'catalogos'>();
+  @Output() cambiarVista = new EventEmitter<'secciones' | 'catalogos' | 'preview'>();
   @Output() toggleJson = new EventEmitter<void>();
   @Output() agregarSeccion = new EventEmitter<void>();
   @Output() agregarCatalogo = new EventEmitter<void>();

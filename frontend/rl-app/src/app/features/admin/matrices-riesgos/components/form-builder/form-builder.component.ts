@@ -12,13 +12,14 @@ import {
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
-import { EstadoFormulario } from '../../models/matrices-riesgos.models';
+import { CampoFormulario, EstadoFormulario } from '../../models/matrices-riesgos.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
 import { FormBuilderToolbarComponent } from './toolbar/form-builder-toolbar.component';
 import { FormBuilderPaletteComponent } from './palette/form-builder-palette.component';
 import { FormBuilderCanvasComponent } from './canvas/form-builder-canvas.component';
 import { FormBuilderInspectorComponent } from './inspector/form-builder-inspector.component';
 import { FormBuilderStatusbarComponent } from './statusbar/form-builder-statusbar.component';
+import { DynamicFieldRendererComponent, OpcionCampoRenderer } from '../dynamic-field-renderer/dynamic-field-renderer.component';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -50,7 +51,8 @@ export interface FeedbackCatalogo {
     FormBuilderPaletteComponent,
     FormBuilderCanvasComponent,
     FormBuilderInspectorComponent,
-    FormBuilderStatusbarComponent
+    FormBuilderStatusbarComponent,
+    DynamicFieldRendererComponent
   ],
   templateUrl: './form-builder.component.html',
   styleUrls: ['./form-builder.component.scss']
@@ -84,7 +86,11 @@ export class FormBuilderComponent implements OnInit {
   readonly jsonAvanzadoStr = signal<string>('');
   readonly erroresValidacion = signal<FormBuilderValidationError[]>([]);
 
-  readonly vistaActiva = signal<'secciones' | 'catalogos'>('secciones');
+  readonly vistaActiva = signal<'secciones' | 'catalogos' | 'preview'>('secciones');
+  readonly busquedaJson = signal('');
+  readonly indiceBusquedaJson = signal(0);
+  readonly resultadoValidacionJson = signal<'sin-validar' | 'valido' | 'invalido'>('sin-validar');
+  readonly mensajeJson = signal('');
 
   readonly catalogoActivoCodigo = signal<string | null>(null);
   readonly busquedaCatalogos = signal<string>('');
@@ -129,7 +135,7 @@ export class FormBuilderComponent implements OnInit {
     if (parsed.catalogos.length > 0) this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
   }
 
-  cambiarVista(vista: 'secciones' | 'catalogos'): void {
+  cambiarVista(vista: 'secciones' | 'catalogos' | 'preview'): void {
     this.vistaActiva.set(vista);
     this.feedbackCatalogo.set(null);
     this.catalogoEnEdicion.set(null);
@@ -471,6 +477,77 @@ export class FormBuilderComponent implements OnInit {
     if (!this.esAdministrador) return;
     if (!this.mostrarJsonAvanzado()) this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
     this.mostrarJsonAvanzado.set(!this.mostrarJsonAvanzado());
+  }
+
+  copiarJsonTecnico(): void {
+    const texto = this.jsonAvanzadoStr();
+    if (!navigator.clipboard?.writeText) {
+      this.mensajeJson.set('El navegador no permite copiar al portapapeles.');
+      return;
+    }
+    void navigator.clipboard.writeText(texto).then(
+      () => this.mensajeJson.set('JSON copiado.'),
+      () => this.mensajeJson.set('No se pudo copiar el JSON.')
+    );
+  }
+
+  validarJsonTecnico(): void {
+    try {
+      JSON.parse(this.jsonAvanzadoStr());
+      const temporal = normalizarJsonABuilderModel(this.jsonAvanzadoStr(), this.versionCodigo, 'Formulario Dinámico');
+      const errores = validarFormBuilderModel(temporal);
+      this.resultadoValidacionJson.set(errores.length === 0 ? 'valido' : 'invalido');
+      this.mensajeJson.set(errores.length === 0 ? 'JSON válido y estructura compatible.' : `JSON estructuralmente inválido (${errores.length} error(es)).`);
+    } catch {
+      this.resultadoValidacionJson.set('invalido');
+      this.mensajeJson.set('JSON sintácticamente inválido.');
+    }
+  }
+
+  buscarJsonTecnico(): void {
+    this.indiceBusquedaJson.set(0);
+  }
+
+  coincidenciasJson(): number[] {
+    const texto = this.jsonAvanzadoStr();
+    const consulta = this.busquedaJson().trim().toLowerCase();
+    if (!consulta) return [];
+    const posiciones: number[] = [];
+    let desde = 0;
+    while (desde < texto.length) {
+      const posicion = texto.toLowerCase().indexOf(consulta, desde);
+      if (posicion < 0) break;
+      posiciones.push(posicion);
+      desde = posicion + Math.max(consulta.length, 1);
+    }
+    return posiciones;
+  }
+
+  moverBusquedaJson(delta: number): void {
+    const total = this.coincidenciasJson().length;
+    if (total === 0) return;
+    this.indiceBusquedaJson.set((this.indiceBusquedaJson() + delta + total) % total);
+  }
+
+  campoPreview(campo: CampoBuilderModel): CampoFormulario {
+    return {
+      clave: campo.clave,
+      etiqueta: campo.etiqueta,
+      tipo: campo.tipo,
+      tipoOriginal: campo.tipoOriginal ?? null,
+      codigoCatalogo: campo.codigoCatalogo ?? null,
+      opciones: campo.opciones ?? null,
+      formula: campo.formula ?? null,
+      obligatorio: campo.obligatorio,
+      soloLectura: true
+    };
+  }
+
+  opcionesPreview(campo: CampoBuilderModel): OpcionCampoRenderer[] {
+    const catalogo = campo.codigoCatalogo
+      ? this.catalogosList().find(item => item.codigo.toLowerCase() === campo.codigoCatalogo!.toLowerCase())
+      : undefined;
+    return (catalogo?.elementos ?? []).map(elemento => ({ codigo: elemento.codigo, valor: elemento.valor }));
   }
 
   aplicarJsonAvanzado(): void {

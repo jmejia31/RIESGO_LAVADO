@@ -56,7 +56,7 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
-  const tarjetaBuilder = dialogo.locator('.form-builder-modal-card');
+  const tarjetaBuilder = dialogo.locator('.modal-container-card.modal-size-workspace');
   const header = page.locator('app-main-layout > div > div > header');
   const aside = page.locator('app-main-layout > div > aside');
   const salir = header.locator('button[aria-label="Cerrar sesión"]');

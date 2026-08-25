@@ -51,6 +51,17 @@
           Catálogos
           <span class="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">{{ catalogosCount }}</span>
         </button>
+
+        <button type="button"
+                id="tab-vista-preview"
+                (click)="cambiarVista.emit('preview')"
+                [class.bg-white]="vistaActiva === 'preview' && !mostrarJsonAvanzado"
+                [class.text-slate-950]="vistaActiva === 'preview' && !mostrarJsonAvanzado"
+                [class.shadow-sm]="vistaActiva === 'preview' && !mostrarJsonAvanzado"
+                [class.text-slate-600]="vistaActiva !== 'preview' || mostrarJsonAvanzado"
+                class="rounded-lg px-3 py-1.5 transition-all flex items-center gap-1.5">
+          Vista Previa
+        </button>
       </div>
 
       <button type="button"

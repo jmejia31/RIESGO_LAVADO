@@ -48,6 +48,64 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.mostrarJsonAvanzado()).toBe(false);
   });
 
+  it('muestra una vista previa de solo lectura con el renderer Ãºnico y las opciones reales', () => {
+    component.model.set({
+      codigoFormulario: 'PREVIEW',
+      nombreFormulario: 'Formulario de prueba',
+      descripcion: 'Consulta segura',
+      secciones: [{
+        id: 'sec-preview', clave: 'identificacion', titulo: 'IdentificaciÃ³n', orden: 1, columnasPorFila: 2,
+        campos: [
+          { id: 'c1', clave: 'texto', etiqueta: 'Texto', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
+          { id: 'c2', clave: 'area', etiqueta: 'Ãrea', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_REAL', obligatorio: false, soloLectura: false, anchoColumnas: 1 },
+          { id: 'c3', clave: 'formula', etiqueta: 'Resultado', tipo: 'formula', formula: 'a + b', obligatorio: false, soloLectura: false, anchoColumnas: 2 }
+        ]
+      }],
+      catalogos: [{ codigo: 'CAT_REAL', nombre: 'CatÃ¡logo real', elementos: [{ codigo: 'A', valor: 'OpciÃ³n A', orden: 1 }, { codigo: 'B', valor: 'OpciÃ³n B', orden: 2 }] }]
+    });
+    const serializadoAntes = serializarBuilderModelAJson(component.model());
+    component.cambiarVista('preview');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[aria-label="Vista previa del formulario"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('app-dynamic-field-renderer')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('app-form-builder-palette')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-preview-options="area"]')?.textContent).toContain('OpciÃ³n A');
+    expect(fixture.nativeElement.textContent).toContain('Resultado');
+    expect(fixture.nativeElement.textContent).not.toContain('a + b');
+    expect(serializarBuilderModelAJson(component.model())).toBe(serializadoAntes);
+  });
+
+  it('busca de forma literal, copia el JSON exacto y valida sin aplicar ni guardar', async () => {
+    const json = serializarBuilderModelAJson(component.model());
+    component.jsonAvanzadoStr.set(json);
+    component.busquedaJson.set('MATRIZ_LAFT_TEST');
+    expect(component.coincidenciasJson().length).toBeGreaterThan(0);
+    component.moverBusquedaJson(1);
+    const modeloAntes = serializarBuilderModelAJson(component.model());
+    const emitir = vi.spyOn(component.guardarJson, 'emit');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+
+    component.copiarJsonTecnico();
+    component.validarJsonTecnico();
+    await Promise.resolve();
+
+    expect(writeText).toHaveBeenCalledWith(json);
+    expect(component.resultadoValidacionJson()).toBe('valido');
+    expect(serializarBuilderModelAJson(component.model())).toBe(modeloAntes);
+    expect(emitir).not.toHaveBeenCalled();
+  });
+
+  it('rechaza JSON invÃ¡lido sin tocar el modelo ni activar sincronizaciÃ³n', () => {
+    const modeloAntes = serializarBuilderModelAJson(component.model());
+    component.jsonAvanzadoStr.set('{"secciones":');
+    component.validarJsonTecnico();
+    expect(component.resultadoValidacionJson()).toBe('invalido');
+    expect(component.mensajeJson()).toContain('JSON sint');
+    expect(serializarBuilderModelAJson(component.model())).toBe(modeloAntes);
+  });
+
   it('normalizarJsonABuilderModel convierte correctamente la estructura JSON en BuilderModel', () => {
     const model = normalizarJsonABuilderModel(jsonPruebaValido, 'CODIGO_DEFAULT', 'Nombre Default');
     expect(model.codigoFormulario).toBe('MATRIZ_LAFT_TEST');

@@ -1,5 +1,14 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UI-FORM.6 Preview y JSON técnico
+
+- Fecha y hora: 2026-08-25 15:05 (UTC-6). Rama: `desarrollo`. Commit inicial: `dbe31e285fc0549a4a80434a6e6072b60c080162`.
+- Quality Gate Run `32895118559`: fallo E2E en `e2e/modal-shell-lock.spec.ts:47` por selector obsoleto `.form-builder-modal-card`; el shell vigente usa `.modal-container-card.modal-size-workspace`. El resto del job pasó.
+- Corrección: selector E2E alineado con la clase vigente. UI-FORM.6 integró Preview en el FormBuilder usando `DynamicFieldRendererComponent`, preservando model y contrato JSON.
+- JSON técnico: copia exacta, búsqueda literal case-insensitive, anterior/siguiente y validación sintáctica/estructural sin aplicar, guardar ni backend. Preview no ejecuta fórmulas ni reglas.
+- Evidencia: frontend 63 archivos/686 pruebas PASS; coverage Statements 61.99%, Branches 56.88%, Functions 57.93%, Lines 62.13%; lint PASS; build PASS; E2E 17/17 PASS; backend 494/494 PASS; `tools/run_quality_gates.ps1` PASS; `git diff --check` PASS.
+- Restricciones: cero cambios backend, Oracle, SQL, secretos, gates, exclusiones o main. Punto de continuidad: publicar en `origin/desarrollo`; no promover UI-FORM.6 a main en esta intervención.
+
 ## Registro de Intervención — AntiG — Microcierre Definitivo Fase UI-FORM.5 (Bloqueo Real durante Procesamiento)
 
 - **Fecha y hora**: 2026-08-25 14:23, hora local (UTC-6).
