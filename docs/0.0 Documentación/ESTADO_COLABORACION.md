@@ -33,7 +33,7 @@
 | **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ COMPLETA Y CERTIFICADA** | Shell de 5 regiones V2 integrado en FormBuilderComponent productivo. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS. |
 | **UI-FORM.2 — Biblioteca y estructura del formulario** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Búsqueda insensible a mayúsculas/acentos, 3 categorías canónicas (Básicos, Selección, Avanzados), tarjetas pro con icono SVG/handle, drag & drop con payload seguro (`tipo`), drop-zones visuales por sección, validación segura en motor `FormBuilderComponent`, auto-selección en inspector, bloqueo ESC. 577/577 frontend PASS (59 suites), lint PASS, build PASS. |
 | **UI-FORM.3 — Lienzo y secciones** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Field Cards pro, selección visual inequívoca sincronizada con inspector, header de sección con badge y selector numérico de columnas por fila (1, 2, 3, 4, 6), acciones agrupadas con boundaries, drop-zones compactas, HARD GATE JSON lossless (0 propiedades UI persistidas, 9 tipos exactos). 596/596 frontend PASS (60 suites), lint PASS, build PASS. |
-| **UI-FORM.4 — Inspector profesional y edición avanzada** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Inspector estructurado en 4 grupos (`General`, `Reglas`, `Datos`, `Presentación`), empty-state alineado al prototipo, visibilidad adaptada por tipo (`requiereCatalogo`, `requiereOpciones`, `requiereFormula`, `soportaPlaceholder`), fórmula con `soloLectura=true` bloqueado, regla `Hidden != Delete`, opciones `string[]`, HARD GATE JSON (0 propiedades inventadas, 0 propiedades UI serializadas). 626/626 frontend PASS (61 suites), lint PASS, build PASS. |
+| **UI-FORM.4 — Inspector profesional y edición avanzada** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Inspector estructurado en 4 grupos (`General`, `Reglas`, `Datos`, `Presentación`), empty-state alineado al prototipo, única fuente de verdad para capacidades en `TipoControlDefinicion` (0 fallbacks hardcodeados), preview en Canvas para `placeholder` y `opciones` reales de radio, fórmula con `soloLectura=true` bloqueado, regla `Hidden != Delete`, opciones `string[]`, HARD GATE JSON (0 propiedades inventadas, 0 propiedades UI serializadas). 630/630 frontend PASS (61 suites), coverage real (Sentencias: 61.34%, Ramas: 56.04%, Funciones: 57.49%, Líneas: 61.64%), lint PASS, build PASS. |
 
 ---
 
@@ -46,11 +46,15 @@
   - **Presentación**: `placeholder` (para tipos aplicables: `texto`, `numero`, `texto-largo`), `textoAyuda`, `anchoColumnas` (1 a 6 columnas).
   - **Empty State**: Icono de selección y mensaje orientativo ("Seleccione un campo en el lienzo para editar sus propiedades").
   - **Footer de Inspector**: Identificador (`ID del campo`) y tipo técnico en solo lectura.
+- **Única Fuente de Verdad y Previews**:
+  - `requiereCatalogo`, `requiereOpciones`, `requiereFormula` derivan exclusivamente de `definicionTipoActual` (`TipoControlDefinicion`).
+  - Integración en Canvas de `cmp.placeholder` para `texto`, `numero`, `texto-largo` y renderizado de opciones reales de `radio` a partir de `cmp.opciones`.
 - **Reglas de Integridad Contractual**:
   - `Hidden != Delete`: Cambiar de tipo no borra silenciosamente propiedades contractuales previas (`codigoCatalogo`, `opciones`, `formula`, etc.).
   - HARD GATE: 0 propiedades inventadas, 0 propiedades UI serializadas a JSON (`seccionesAbiertas` reside exclusivamente en estado UI del componente).
 - **Evidencia propia**:
-  - 61/61 suites y 626/626 pruebas frontend PASS (0 errores).
+  - 61/61 suites y 630/630 pruebas frontend PASS (0 errores).
+  - Cobertura frontend real (`npm run test:coverage`): **Sentencias = 61.34%, Ramas = 56.04%, Funciones = 57.49%, Líneas = 61.64%**.
   - `npm run lint` y `npm run build` PASS.
 - **Punto de continuación**: Siguientes fases del Form Builder según hoja de ruta.
 

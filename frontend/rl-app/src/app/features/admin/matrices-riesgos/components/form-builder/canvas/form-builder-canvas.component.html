@@ -128,18 +128,18 @@
                     @switch (cmp.tipo) {
                       @case ('texto') {
                         <div class="relative">
-                          <input [id]="'preview-' + cmp.id" type="text" disabled [placeholder]="'Ingrese ' + (cmp.etiqueta || 'el texto')" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                          <input [id]="'preview-' + cmp.id" type="text" disabled [placeholder]="cmp.placeholder || ('Ingrese ' + (cmp.etiqueta || 'el texto'))" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
                           <span class="pointer-events-none absolute right-2.5 top-2.5 text-[10px] text-slate-400 font-mono">0/255</span>
                         </div>
                       }
                       @case ('numero') {
-                        <input [id]="'preview-' + cmp.id" type="number" disabled placeholder="0.00" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                        <input [id]="'preview-' + cmp.id" type="number" disabled [placeholder]="cmp.placeholder || '0.00'" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
                       }
                       @case ('fecha') {
                         <input [id]="'preview-' + cmp.id" type="date" disabled class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
                       }
                       @case ('texto-largo') {
-                        <textarea [id]="'preview-' + cmp.id" disabled rows="2" placeholder="Área de texto..." class="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700"></textarea>
+                        <textarea [id]="'preview-' + cmp.id" disabled rows="2" [placeholder]="cmp.placeholder || 'Área de texto...'" class="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700"></textarea>
                       }
                       @case ('selector-catalogo') {
                         <div class="relative">
@@ -153,8 +153,17 @@
                       }
                       @case ('radio') {
                         <div class="space-y-1.5 pt-0.5">
-                          <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-1'" type="radio" disabled checked [attr.aria-label]="cmp.etiqueta + ' opcion 1'" class="text-blue-600"> Opción 1</label>
-                          <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-2'" type="radio" disabled [attr.aria-label]="cmp.etiqueta + ' opcion 2'" class="text-blue-600"> Opción 2</label>
+                          @if (cmp.opciones && cmp.opciones.length > 0) {
+                            @for (opc of cmp.opciones; track $index; let optIdx = $index) {
+                              <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
+                                <input [id]="'preview-' + cmp.id + '-radio-' + optIdx" type="radio" disabled [checked]="optIdx === 0" [attr.aria-label]="cmp.etiqueta + ' ' + opc" class="text-blue-600">
+                                {{ opc }}
+                              </label>
+                            }
+                          } @else {
+                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-1'" type="radio" disabled checked [attr.aria-label]="cmp.etiqueta + ' opcion 1'" class="text-blue-600"> Opción 1</label>
+                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-2'" type="radio" disabled [attr.aria-label]="cmp.etiqueta + ' opcion 2'" class="text-blue-600"> Opción 2</label>
+                          }
                         </div>
                       }
                       @case ('catalogo-multiple') {

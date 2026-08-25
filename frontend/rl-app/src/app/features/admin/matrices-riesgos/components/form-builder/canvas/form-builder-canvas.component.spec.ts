@@ -282,4 +282,85 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       expect(emitido).toBe(false);
     });
   });
+
+  describe('6. Previews de Presentación y Opciones (UI-FORM.4)', () => {
+    it('texto, numero y texto-largo usan cmp.placeholder cuando está definido', () => {
+      component.secciones = [
+        {
+          id: 'sec_preview',
+          clave: 'sec_preview',
+          titulo: 'Sección Previews',
+          orden: 1,
+          columnasPorFila: 3,
+          campos: [
+            { id: 'c_txt', clave: 'txt', etiqueta: 'Texto', tipo: 'texto', orden: 1, anchoColumnas: 1, obligatorio: false, soloLectura: false, placeholder: 'Mi placeholder personalizado' },
+            { id: 'c_num', clave: 'num', etiqueta: 'Número', tipo: 'numero', orden: 2, anchoColumnas: 1, obligatorio: false, soloLectura: false, placeholder: 'Ej. 99.99' },
+            { id: 'c_lng', clave: 'lng', etiqueta: 'Largo', tipo: 'texto-largo', orden: 3, anchoColumnas: 1, obligatorio: false, soloLectura: false, placeholder: 'Detalle extenso...' }
+          ]
+        }
+      ];
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const inputTexto = el.querySelector('#preview-c_txt') as HTMLInputElement;
+      const inputNumero = el.querySelector('#preview-c_num') as HTMLInputElement;
+      const textareaLargo = el.querySelector('#preview-c_lng') as HTMLTextAreaElement;
+
+      expect(inputTexto.placeholder).toBe('Mi placeholder personalizado');
+      expect(inputNumero.placeholder).toBe('Ej. 99.99');
+      expect(textareaLargo.placeholder).toBe('Detalle extenso...');
+    });
+
+    it('radio muestra opciones reales cuando cmp.opciones está definido sin mutar el modelo', () => {
+      component.secciones = [
+        {
+          id: 'sec_radio',
+          clave: 'sec_radio',
+          titulo: 'Sección Radio',
+          orden: 1,
+          columnasPorFila: 1,
+          campos: [
+            { id: 'c_rad', clave: 'rad', etiqueta: 'Nivel', tipo: 'radio', orden: 1, anchoColumnas: 1, obligatorio: false, soloLectura: false, opciones: ['Alto', 'Medio', 'Bajo'] }
+          ]
+        }
+      ];
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).toContain('Alto');
+      expect(el.textContent).toContain('Medio');
+      expect(el.textContent).toContain('Bajo');
+    });
+
+    it('radio sin opciones muestra fallback visual sin inventar opciones en el modelo', () => {
+      const campoSinOpciones: CampoBuilderModel = {
+        id: 'c_rad_vacio',
+        clave: 'rad_vacio',
+        etiqueta: 'Sin Opciones',
+        tipo: 'radio',
+        orden: 1,
+        anchoColumnas: 1,
+        obligatorio: false,
+        soloLectura: false
+      };
+      component.secciones = [
+        {
+          id: 'sec_radio_vacio',
+          clave: 'sec_radio_vacio',
+          titulo: 'Sección Radio Vacío',
+          orden: 1,
+          columnasPorFila: 1,
+          campos: [campoSinOpciones]
+        }
+      ];
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.textContent).toContain('Opción 1');
+      expect(el.textContent).toContain('Opción 2');
+
+      // No se inyectan opciones al modelo
+      expect(campoSinOpciones.opciones).toBeUndefined();
+    });
+  });
 });

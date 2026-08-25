@@ -59,19 +59,17 @@ export class FormBuilderInspectorComponent {
 
   get requiereCatalogo(): boolean {
     if (!this.campoActivo) return false;
-    return this.definicionTipoActual?.requiereCatalogo ?? (
-      this.campoActivo.tipo === 'selector-catalogo' || this.campoActivo.tipo === 'catalogo-multiple'
-    );
+    return this.definicionTipoActual?.requiereCatalogo ?? false;
   }
 
   get requiereOpciones(): boolean {
     if (!this.campoActivo) return false;
-    return this.definicionTipoActual?.requiereOpciones ?? (this.campoActivo.tipo === 'radio');
+    return this.definicionTipoActual?.requiereOpciones ?? false;
   }
 
   get requiereFormula(): boolean {
     if (!this.campoActivo) return false;
-    return this.definicionTipoActual?.requiereFormula ?? (this.campoActivo.tipo === 'formula');
+    return this.definicionTipoActual?.requiereFormula ?? false;
   }
 
   get esFormula(): boolean {

@@ -326,6 +326,16 @@ describe('FormBuilderInspectorComponent — UI-FORM.4 Inspector Profesional', ()
         expect(component.soportaPlaceholder).toBe(t.placeholder);
       });
     });
+
+    it('deriva capacidades exclusivamente de TipoControlDefinicion y retorna false si no hay definicion', () => {
+      component.campoActivo = crearCampoMock('selector-catalogo');
+      component.tiposControles = []; // Sin definiciones
+      fixture.detectChanges();
+
+      expect(component.requiereCatalogo).toBe(false);
+      expect(component.requiereOpciones).toBe(false);
+      expect(component.requiereFormula).toBe(false);
+    });
   });
 
   describe('8. Acordeones (Estado UI no persistido)', () => {
