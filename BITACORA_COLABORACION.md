@@ -1,5 +1,23 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Codex — Cierre local y preparación de certificación remota UI-FORM.1
+
+- **Fecha y hora**: 2026-08-25 08:52, hora local (UTC-6).
+- **Agente**: Codex.
+- **Rama / SHA inicial**: `desarrollo` / `2b08aaa95dbe08045ed59e4f8ed7b019899c63cf`.
+- **Infraestructura reconciliada**: el commit local aislado de CodexGraph se rebasó sin conflictos sobre `b392e42b33b342188ae069cd7a66eada5801382b` y se publicó como `e26c2ce149b1e834f0a51d357c799e7ac845fcae`; conserva exclusivamente `.agents/AGENTS.md`, `.codexgraphignore`, `.gitignore` y `AGENTS.md`.
+- **Objetivo y alcance**: cerrar los CI rojos de UI-FORM.1 sin iniciar UI-FORM.2, sin modificar código productivo, contratos, backend, Oracle, workflows, umbrales ni exclusiones.
+- **Causa raíz demostrada**: `npm run test:coverage` fallaba primero en `matrices-riesgos.component.ciclo-vida.spec.ts:159` porque la prueba extraía `textContent` de botones iconográficos y recibía cadenas vacías, aunque el contrato accesible vigente estaba en `aria-label`. Cinco expectativas adicionales buscaban la vista principal de Familias dentro del modal heredado o trataban la edición standalone como lógica del componente padre. El E2E de shell usaba `.grid > div` y el encabezado antiguo del inspector, selectores que ya no correspondían al DOM del Workspace V2. El diff 96vw × 94dvh solo modificó `styles.css` y su expectativa visual; no causó los seis fallos unitarios.
+- **Corrección**: se alinearon únicamente cuatro archivos de prueba con los contratos semánticos vigentes: acciones por `aria-label`, gestor principal por `data-ui-fam`, delegación en modales standalone y selectores Playwright por roles accesibles de lienzo e inspector.
+- **Archivos funcionales/de prueba modificados**: `frontend/rl-app/e2e/modal-shell-lock.spec.ts`, `matrices-riesgos.component.ciclo-vida.spec.ts`, `matrices-riesgos.component.familias.spec.ts` y `matrices-riesgos.component.spec.ts`. Documentación actualizada: esta bitácora y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- **Commit técnico**: `dfa85b3` (`fix(ui-form-1): estabilizar pruebas y cobertura del modal`).
+- **Evidencia ejecutada en esta intervención**: pruebas focalizadas Vitest **47/47 PASS**; suite frontend **55/55 archivos y 527/527 PASS**; coverage frontend **527/527 PASS**, 57.32% sentencias, 52.54% ramas, 53.80% funciones y 57.46% líneas; E2E focalizado **1/1 PASS**; E2E completo **17/17 PASS**; backend del Quality Gate **494/494 PASS**; coverage backend 26.85% líneas y 28.66% ramas; `npm run build` PASS; `npm run lint` PASS; build Roslyn/analizadores Release exit code 0, **0 errores**; `tools/run_quality_gates.ps1` PASS; `git diff --check` PASS.
+- **Pruebas no ejecutadas**: no se ejecutaron pruebas Oracle institucionales, AD ni SMTP porque el cambio se limita a pruebas frontend y no modifica esas integraciones. La certificación Sonar y Quality Gates remota queda pendiente del SHA final publicado.
+- **Restricciones**: cero cambios en `main`, producción, secretos, C#, Oracle/SQL/DDL/DML, código productivo frontend, dependencias, coverage thresholds, workflows o UI-FORM.2.
+- **Punto exacto de continuación**: publicar el cierre documental en `origin/desarrollo`, obtener el SHA final y no habilitar Fase 1 Punto 3 hasta observar **Quality Gates = SUCCESS** y **Sonar Analysis = SUCCESS** sobre ese mismo SHA.
+
+---
+
 ## Registro de Intervención — Codex — Auditoría y corrección UI-FORM.1
 
 - **Fecha y hora**: 2026-08-24 13:24, hora local (UTC-6).

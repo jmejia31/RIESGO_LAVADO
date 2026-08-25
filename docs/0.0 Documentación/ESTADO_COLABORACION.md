@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-24 — Auditoría y corrección UI-FORM.1 por Codex
+**Actualización:** 2026-08-25 — Cierre local y preparación de certificación remota UI-FORM.1 por Codex
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -30,8 +30,21 @@
 | **UI-FAM.3 — Crear familia en modal** | **✅ CERRADA Y CERTIFICADA LOCALMENTE** | Implementación publicada previamente; corrección mínima de tipado DI sin cambios visuales y regresión E2E alineada con UI-FAM.2 integrada. 51/51 suites y 473/473 frontend PASS; 17/17 Playwright PASS; 494/494 backend Release PASS; lint, build y Quality Gates locales PASS. SonarCloud remoto diferido al cierre global. |
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
-| **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ CORREGIDA Y LISTA PARA REVISIÓN DE CHATGPT** | Auditoría Codex sobre `082d633`: un solo diálogo modal propietario (sin `aria-modal` anidado), modal 96vw × 94dvh con clase estructural mantenible, integración Workspace V2 y recorridos E2E vigentes. 57/57 pruebas focalizadas, lint/build PASS y 17/17 Playwright PASS. Suite completa: 519/525; 6 expectativas UI-FAM heredadas documentadas fuera del alcance. |
+| **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **⏳ CIERRE LOCAL COMPLETO; CERTIFICACIÓN REMOTA EN CURSO** | Infraestructura publicada en `e26c2ce`; fix técnico `dfa85b3`. Primer error causal y seis expectativas obsoletas corregidos sin tocar producción. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS; falta confirmar Quality Gates y Sonar Analysis SUCCESS sobre el SHA final publicado. |
 | **UI-FORM.2 — Biblioteca y estructura del formulario** | **⏳ PENDIENTE** | Biblioteca/estructura y búsqueda local (no iniciada en esta fase). |
+
+---
+
+## UI-FORM.1 — cierre local y preparación de certificación remota — 2026-08-25
+
+- El commit de infraestructura CodexGraph se conservó aislado, se rebasó sin conflictos y se publicó como `e26c2ce149b1e834f0a51d357c799e7ac845fcae`.
+- El primer fallo reproducible fue `matrices-riesgos.component.ciclo-vida.spec.ts:159`: la prueba esperaba texto visible en botones SVG y recibió cadenas vacías; el contrato productivo vigente usa `aria-label`.
+- Las cinco expectativas unitarias restantes y el timeout E2E provenían de selectores/flujo heredados anteriores al gestor principal y a los modales standalone. El cambio 96vw × 94dvh no fue la causa.
+- El fix `dfa85b3` modifica únicamente cuatro specs y valida acciones accesibles, vista principal real, delegación standalone y roles del Workspace V2.
+- Evidencia local propia: 47/47 focalizadas, 527/527 frontend, 494/494 backend, 17/17 E2E, coverage frontend 57.32%/52.54%/53.80%/57.46%, coverage backend 26.85%/28.66%, build frontend PASS, ESLint PASS, Roslyn 0 errores y `run_quality_gates.ps1` PASS.
+- Cero cambios en código productivo, backend, Oracle, contratos, workflows, umbrales, exclusiones, `main` o UI-FORM.2.
+
+**Estado:** cierre local completo; no declarar UI-FORM.1 certificada ni habilitar Fase 1 Punto 3 hasta que Quality Gates y Sonar Analysis sean SUCCESS sobre el SHA final publicado.
 
 ---
 
