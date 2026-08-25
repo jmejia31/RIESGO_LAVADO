@@ -59,15 +59,14 @@ describe('FormBuilderComponent - shell permanente UI-FORM.1', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('#json-avanzado')).not.toBeNull();
   });
 
-  it('convierte la biblioteca en estructura navegable cuando la versión es solo lectura', () => {
+  it('mantiene la biblioteca visual cuando la versión es solo lectura', () => {
     component.soloLectura = true;
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
-    const estructura = host.querySelector('aside[aria-label="Estructura del formulario"]');
-    expect(estructura).not.toBeNull();
-    expect(estructura?.textContent).toContain('Estructura');
-    expect(estructura?.textContent).toContain('Solo lectura');
-    expect(estructura?.textContent).not.toContain('Biblioteca de campos');
+    const biblioteca = host.querySelector('aside[aria-label="Biblioteca de campos en solo lectura"]');
+    expect(biblioteca).not.toBeNull();
+    expect(biblioteca?.textContent).toContain('Agregar campos');
+    expect(biblioteca?.querySelector('#buscador-palette')).not.toBeNull();
   });
 });

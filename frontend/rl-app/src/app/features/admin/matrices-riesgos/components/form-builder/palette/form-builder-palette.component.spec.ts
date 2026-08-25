@@ -202,32 +202,30 @@ describe('FormBuilderPaletteComponent — UI-FORM.2 Biblioteca de Campos', () =>
     expect(preventDefaultSpy).toHaveBeenCalled();
   });
 
-  it('16. modo soloLectura muestra estructura del formulario y bloquea la biblioteca editable', () => {
+  it('16. modo soloLectura conserva la biblioteca visual y bloquea la interacción', () => {
     component.soloLectura = true;
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Estructura');
-    expect(el.textContent).toContain('Solo lectura');
-    expect(el.textContent).toContain('Datos Generales');
-    expect(el.textContent).toContain('Evaluación Técnica');
-    expect(el.querySelector('#buscador-palette')).toBeNull();
-    expect(el.querySelectorAll('.palette-card').length).toBe(0);
+    expect(el.textContent).toContain('Agregar campos');
+    expect(el.querySelector('#buscador-palette')).not.toBeNull();
+    expect(el.querySelectorAll('.palette-card').length).toBe(9);
+    expect(el.querySelectorAll('.palette-card[draggable="true"]').length).toBe(0);
+    expect(el.querySelectorAll('.palette-card[aria-disabled="true"]').length).toBe(9);
   });
 
-  it('17. modo soloLectura permite seleccionar sección y campo para inspección', () => {
+  it('17. modo soloLectura no emite agregarCampo por click ni teclado', () => {
     component.soloLectura = true;
     fixture.detectChanges();
 
-    let seccionSeleccionada = '';
-    let campoSeleccionado: unknown = null;
-    component.seleccionarSeccion.subscribe(id => seccionSeleccionada = id);
-    component.seleccionarCampo.subscribe(cmp => campoSeleccionado = cmp);
+    let emitidos = 0;
+    component.agregarCampo.subscribe(() => emitidos++);
 
     const el = fixture.nativeElement as HTMLElement;
-    const btnSec = el.querySelector('button') as HTMLButtonElement;
-    btnSec.click();
+    const card = el.querySelector('.palette-card') as HTMLElement;
+    card.click();
+    card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 
-    expect(seccionSeleccionada).toBe('sec_1');
+    expect(emitidos).toBe(0);
   });
 });

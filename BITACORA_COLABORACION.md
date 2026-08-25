@@ -1,5 +1,16 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UI-FORM.2-R Reapertura visual oficial
+
+- Fecha y hora: 2026-08-25 15:28 (UTC-6). Rama: `desarrollo`. HEAD inicial local: `d7eb6aa10d61e4e33ccd4e8937d2f3f1b8de5bb3`; sincronización remota no reproducible porque Git no pudo crear `.git/index.lock` por permisos y `git fetch` no pudo abrir `.git/FETCH_HEAD`.
+- Objetivo: reabrir UI-FORM.2 exclusivamente para reconciliar la Biblioteca de Campos contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, sin reconstruir UI-FORM.3-.6 ni tocar backend, DB, contratos o dependencias.
+- Corrección: `FormBuilderPaletteComponent` conserva siempre la identidad visual de “Agregar campos” en editable y solo lectura; incorpora buscador, grupos BÁSICOS/SELECCIÓN/AVANZADOS, 9 cards con iconografía, descripciones y handles; solo lectura bloquea click-to-add y drag/drop sin sustituir el panel por “Estructura del formulario”. Se reutiliza el payload existente de drag/drop (`tipo`).
+- Archivos modificados: `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/palette/form-builder-palette.component.ts`, `.html`, `.scss`, `.spec.ts`, y regresiones en `form-builder.component.spec.ts`, `form-builder.presentation.spec.ts`, `form-builder.shell-persistence.spec.ts`.
+- Evidencia ejecutada: PNG cargado y observado; suite frontend completa **63 archivos / 686 pruebas PASS**; `npm.cmd run lint` PASS; `npm.cmd run build` PASS con advertencia de presupuesto SCSS de 117 bytes y advertencia CommonJS preexistente de `exceljs`; `git diff --check` PASS; CodexGraph post-cambio sin dependencia circular ni biblioteca paralela detectada.
+- Validación visual: Chrome headless instalado renderizó `/login`; la ruta autenticada del Constructor no pudo obtener evidencia visual final porque el runner Playwright no tiene el navegador administrado instalado y el flujo requiere mocks autenticados del E2E. Gate visual **PENDIENTE**, por lo tanto UI-FORM.2-R no se declara cerrada.
+- No ejecutado: backend Release, E2E completo, coverage y quality gates globales; pendientes por alcance/regresión final y por la dependencia del navegador/mocks autenticados. No se modificaron backend, DB, SQL, endpoints ni dependencias.
+- Punto de continuación: completar captura real autenticada del Constructor en viewport 1536x1024 contra el PNG, corregir cualquier desviación restante, ejecutar gates completos y solo entonces cerrar UI-FORM.2-R.
+
 ## Registro de intervención - Codex - UI-FORM.6 Preview y JSON técnico
 
 - Fecha y hora: 2026-08-25 15:05 (UTC-6). Rama: `desarrollo`. Commit inicial: `dbe31e285fc0549a4a80434a6e6072b60c080162`.
@@ -6059,6 +6070,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Verificaciones con limitacion**: `tools/run_quality_gates.ps1` fue iniciado tras los validadores; el host de automatizacion corto la captura antes de recibir su codigo final, por lo que no se declara exitoso en esta intervencion. `validate_repository_structure.ps1` fallo por el archivo/carpeta heredados `frontend/rl-app/src/app/core/services/global-http-state.service.ts`; no fueron modificados por estar fuera del alcance.
 - **Estado remoto**: `gh pr checks 20` confirma que los validadores, build, pruebas, cobertura, E2E y contenedores estan en verde; las dos ejecuciones de SonarCloud siguen fallando. No se certifica el Quality Gate remoto ni las Fases 9/10 sin evidencia posterior de SonarCloud.
 - **Punto de continuidad**: publicar este bloque, ejecutar SonarCloud contra el PR #20 y comparar la cobertura de codigo nuevo con el minimo remoto de 80%; continuar con pruebas reales solo si sigue por debajo.
+
+## Actualizacion de cierre visual UI-FORM.2-R - 2026-08-25 15:35 (UTC-6)
+
+- Gate visual PASS para la Biblioteca: captura autenticada real en `frontend/rl-app/test-results/ui-form2r-builder-1536x1024.png`, viewport 1536x1024, comparada contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`.
+- Se verificaron composicion, titulo AGREGAR CAMPOS, buscador, BÁSICOS/SELECCIÓN/AVANZADOS, 9 cards, iconografia, descripciones, handles, densidad y alineacion. El test de shell en ese viewport reporto 95.31% de alto global del modal frente al limite 95%, fuera de UI-FORM.2-R.
+- Regresion ejecutada: frontend 63/63 archivos y 686/686 pruebas PASS; backend Release 494/494 PASS; E2E 17/17 PASS; coverage frontend Statements 61.98%, Branches 56.94%, Functions 57.98%, Lines 62.12%; lint PASS; build PASS; `tools/run_quality_gates.ps1` PASS; `git diff --check` PASS.
 
 ## Registro de intervencion - Codex - normalizacion visual y funcional de modales
 

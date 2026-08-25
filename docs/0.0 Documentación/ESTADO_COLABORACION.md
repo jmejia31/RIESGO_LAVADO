@@ -1,5 +1,15 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - UI-FORM.2-R Reapertura visual oficial
+
+- Fecha: 2026-08-25. Rama: `desarrollo`. HEAD inicial conocido: `d7eb6aa10d61e4e33ccd4e8937d2f3f1b8de5bb3`. El pre-flight remoto quedó limitado por permisos sobre `.git/index.lock` / `.git/FETCH_HEAD`; no se ejecutó reset, limpieza ni reescritura.
+- Alcance: únicamente Biblioteca de Campos del FormBuilder contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`. UI-FORM.3-R, UI-FORM.4-R, UI-FORM.5-R y UI-FORM.6-R permanecen fuera de alcance.
+- Cambio vigente: el panel izquierdo mantiene “Agregar campos” y la biblioteca de 9 tipos en editable y solo lectura. Búsqueda, agrupación, cards, iconos, descripciones y handle se presentan con la composición del prototipo; solo lectura conserva la identidad y bloquea mutaciones.
+- Evidencia local: frontend **63/63 archivos y 686/686 pruebas PASS**, lint PASS, build PASS, `git diff --check` PASS. Build mantiene advertencia no bloqueante de presupuesto SCSS (117 bytes) y CommonJS `exceljs`.
+- Estado de certificación: **NO CERRADA**. Gate funcional PASS; gate de regresión global pendiente; gate visual pendiente de captura autenticada del Constructor. Chrome headless sí renderizó `/login`, pero no se logró montar el flujo autenticado con mocks del E2E porque el navegador administrado de Playwright no está instalado en el entorno.
+- Restricciones: 0 backend, 0 DB/SQL, 0 endpoints, 0 dependencias nuevas, 0 tipos nuevos, 0 cambios de contrato JSON, 0 biblioteca paralela, `main` sin modificaciones.
+- Próximo paso exacto: ejecutar visual E2E autenticado en viewport 1536x1024 con evidencia lado a lado contra el PNG; luego completar backend/E2E/coverage/quality gates, documentar resultado real, commit y push a `origin/desarrollo`.
+
 ## Estado vigente - UI-FORM.6
 
 - Fecha: 2026-08-25. Rama de trabajo: `desarrollo`.
@@ -19,6 +29,11 @@
 **Oracle:** 0 DDL/DML manuales; 0 scripts manuales ejecutados; `B10_*` intactos  
 
 ---
+
+## Actualizacion de cierre visual UI-FORM.2-R - 2026-08-25 15:35
+
+- Gate visual de la Biblioteca PASS con captura autenticada real en viewport 1536x1024 contra el PNG aprobado. La desviacion 95.31% de alto del modal pertenece al contrato global del shell y queda fuera de esta reapertura.
+- Gate funcional PASS: 686/686 frontend. Regresion PASS: 494/494 backend y 17/17 E2E. Coverage frontend: Statements 61.98%, Branches 56.94%, Functions 57.98%, Lines 62.12%. `tools/run_quality_gates.ps1` PASS; pendiente únicamente commit/push y verificación remota de sincronización.
 
 ## Estado ejecutivo correcto
 

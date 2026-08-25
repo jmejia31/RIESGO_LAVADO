@@ -353,13 +353,14 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(el.querySelector('app-form-builder-statusbar')).toBeTruthy();
     });
 
-    it('muestra estructura navegable en la región izquierda cuando el formulario está en solo lectura', () => {
+    it('mantiene la biblioteca visual en la región izquierda cuando el formulario está en solo lectura', () => {
       component.soloLectura = true;
       fixture.detectChanges();
 
       const palette = (fixture.nativeElement as HTMLElement).querySelector('app-form-builder-palette');
-      expect(palette?.textContent).toContain('Estructura del formulario');
-      expect(palette?.textContent).not.toContain('Biblioteca de campos');
+      expect(palette?.textContent).toContain('Agregar campos');
+      expect(palette?.textContent).not.toContain('Estructura del formulario');
+      expect(palette?.querySelector('#buscador-palette')).not.toBeNull();
     });
 
     it('actualiza el título de una sección via actualizarTituloSeccion', () => {

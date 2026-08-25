@@ -61,6 +61,12 @@ export class FormBuilderPaletteComponent {
 
   readonly totalFiltrados = computed(() => this.controlesFiltrados().length);
 
+  readonly grupos = computed(() => [
+    { clave: 'basico', etiqueta: 'Básicos', controles: this.controlesBasicos() },
+    { clave: 'seleccion', etiqueta: 'Selección', controles: this.controlesSeleccion() },
+    { clave: 'avanzado', etiqueta: 'Avanzados', controles: this.controlesAvanzados() }
+  ].filter(grupo => grupo.controles.length > 0));
+
   limpiarBusqueda(): void {
     this.terminoBusqueda.set('');
   }
@@ -75,5 +81,15 @@ export class FormBuilderPaletteComponent {
       event.dataTransfer.setData('application/x-form-builder-control', ctrl.tipo);
       event.dataTransfer.effectAllowed = 'copy';
     }
+  }
+
+  onCardClick(ctrl: TipoControlDefinicion): void {
+    if (!this.soloLectura && this.seccionActivaId) this.agregarCampo.emit(ctrl);
+  }
+
+  onCardKeydown(event: KeyboardEvent, ctrl: TipoControlDefinicion): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.onCardClick(ctrl);
   }
 }
