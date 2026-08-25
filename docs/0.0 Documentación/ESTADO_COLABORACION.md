@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-25 — Implementación y cierre UI-FORM.2 y corrección modal full-screen por AntiG
+**Actualización:** 2026-08-25 11:34 — Corrección geometría full-screen modal constructor por AntiG
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  

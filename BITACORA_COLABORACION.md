@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Corrección Geometría Full-Screen del Modal del Constructor
+
+- **Fecha y hora**: 2026-08-25 11:34, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `0396f5a`.
+- **Objetivo y alcance**:
+  - Corregir de forma definitiva la regla de overlay en `dialog.modal-backdrop-overlay` en `src/styles.css` aplicando `position: fixed !important`, `top: 0 !important`, `left: 0 !important`, `right: 0 !important`, `bottom: 0 !important`, `inset: 0 !important`, `display: flex !important`, `align-items: center !important`, `justify-content: center !important`, `padding: 1.5rem !important`, `margin: 0 !important` y `box-sizing: border-box !important`.
+  - Neutralizar cualquier posicionamiento absoluto o márgenes heredados por renderizarse el `<dialog>` dentro de contenedores con scroll/espaciado vertical (`space-y-6`).
+  - Lograr que el centrado vertical, padding y separación superior/inferior del modal del Constructor sea exactamente idéntico al de `Detalle de Familia`.
+- **Archivos modificados**:
+  - `frontend/rl-app/src/styles.css`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 58/58 archivos de prueba y 574/574 pruebas unitarias frontend PASS.
+  - `git diff --check` PASS (0 whitespace errors).
+- **Punto de continuación**: Continuar con Fase UI-FORM.3.
+
+---
+
 ## Registro de Intervención — AntiG — Implementación y Cierre UI-FORM.2 y Corrección Modal Full-Screen
 
 - **Fecha y hora**: 2026-08-25 11:18, hora local (UTC-6).

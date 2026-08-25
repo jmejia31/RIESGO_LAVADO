@@ -60,13 +60,27 @@
   /* Los elementos <dialog> conservan dimensiones y márgenes propios del navegador.
      Al usarlos como overlay se neutralizan para que el backdrop cubra realmente toda la aplicación. */
   dialog.modal-backdrop-overlay {
-    width: 100vw;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    margin: 0;
-    border: 0;
-    border-radius: 0;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    z-index: 1000 !important;
+    background-color: rgb(15 23 42 / 0.6) !important;
+    backdrop-filter: blur(4px) !important;
   }
   .modal-container-card {
     @apply relative min-h-0 bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-slate-200 flex flex-col;
