@@ -1,5 +1,16 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - UI-FORM.3-R Reconciliación visual oficial
+
+- Fecha: 2026-08-25. Rama: `desarrollo`. HEAD de entrada: `279e9ae75e84e58256866fee963c9b86aaa621f6`.
+- Alcance: solo Lienzo, Secciones, Field Cards, columnas, selección visual y drop zones. UI-FORM.2-R permanece congelada; UI-FORM.4-R, UI-FORM.5-R y UI-FORM.6-R no fueron abiertas.
+- Cambio vigente: Canvas sin marco duplicado, composición más densa y alineada al PNG, headers con badge/título/selector, Field Cards con previews existentes y aplicación visual de `anchoColumnas`; drop zone compacta integrada al final de cada sección poblada e inerte en solo lectura.
+- Acciones: no se inventaron duplicar/menu porque no existen funcionalmente. Se preservaron eliminar/reordenar existentes y sus guardas de mutabilidad.
+- Contrato: 0 cambios JSON, 0 propiedades nuevas, 0 tipos nuevos, serializer/normalizador intactos; backend, DB, migraciones, endpoints y dependencias sin cambios.
+- Evidencia visual: PNG observado y usado como referencia; captura autenticada real en 1536x1024 con dos secciones/dos columnas comparada lado a lado. La captura temporal fue eliminada. El alto global 95.31% permanece como hallazgo UI-FORM.1 fuera de alcance.
+- Gates: focalizadas 33/33 PASS; frontend 688/688 PASS; backend 494/494 PASS; E2E 17/17 PASS; lint/build PASS; coverage 62.03%/56.94%/58.04%/62.16%; quality gates y validaciones BD/documentación PASS. Estructura conserva el hallazgo heredado `core/services/global-http-state.service.ts` fuera de alcance.
+- Próximo paso: commit/push fail-closed, luego `HEAD == origin/desarrollo`, ahead/behind `0/0` y worktree limpio.
+
 ## Estado vigente - UI-FORM.2-R Reapertura visual oficial
 
 - Fecha: 2026-08-25. Rama: `desarrollo`. HEAD inicial conocido: `d7eb6aa10d61e4e33ccd4e8937d2f3f1b8de5bb3`. El pre-flight remoto quedó limitado por permisos sobre `.git/index.lock` / `.git/FETCH_HEAD`; no se ejecutó reset, limpieza ni reescritura.

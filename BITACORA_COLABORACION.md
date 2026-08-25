@@ -1,5 +1,18 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UI-FORM.3-R Reconciliación visual oficial
+
+- Fecha y hora: 2026-08-25 17:07 (UTC-6). Rama: `desarrollo`. HEAD inicial: `279e9ae75e84e58256866fee963c9b86aaa621f6`.
+- Objetivo: reabrir exclusivamente UI-FORM.3 (Lienzo y Secciones) contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R, el modelo y los contratos.
+- Correcciones: Canvas sin marco duplicado; densidad, padding, radios, bordes, header y badge de sección ajustados; el grid representa `anchoColumnas` existente; Field Cards conservan previews/selección/acciones existentes; drop zone compacta integrada y visible, con estado de reposo y estado durante drag.
+- Acciones no inventadas: CodexGraph confirmó que duplicar/menu de sección no existen como outputs funcionales; no se agregó lógica, endpoint ni persistencia nueva.
+- Archivos modificados: Canvas HTML/SCSS/spec y esta bitácora junto con `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- Contrato: 0 propiedades nuevas, 0 tipos nuevos, serializer y normalizador sin cambios, backend/DB/migraciones/endpoints/dependencias sin cambios. Las pruebas verifican drop zone y `anchoColumnas` sin mutar el modelo.
+- Evidencia visual: PNG observado; Builder real autenticado con mocks en viewport 1536x1024, con dos secciones y dos columnas, capturado y comparado lado a lado. La captura temporal fue eliminada. La desviación de alto global 95.31% pertenece a UI-FORM.1 y queda fuera de alcance.
+- Evidencia: focalizadas 33/33 PASS; frontend 63/63 archivos y 688/688 PASS; coverage 62.03%/56.94%/58.04%/62.16%; lint/build PASS; E2E 17/17 PASS; backend Release 494/494 PASS; validación BD/documentación/quality gates PASS; `git diff --check` PASS.
+- Validación estructural: hallazgo heredado fuera de alcance en `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta; no fue modificado.
+- Punto de continuación: commit exclusivo, push a `origin/desarrollo` y verificación de sincronización. UI-FORM.4-R, UI-FORM.5-R y UI-FORM.6-R no se abren.
+
 ## Registro de intervención - Codex - UI-FORM.2-R Reapertura visual oficial
 
 - Fecha y hora: 2026-08-25 15:28 (UTC-6). Rama: `desarrollo`. HEAD inicial local: `d7eb6aa10d61e4e33ccd4e8937d2f3f1b8de5bb3`; sincronización remota no reproducible porque Git no pudo crear `.git/index.lock` por permisos y `git fetch` no pudo abrir `.git/FETCH_HEAD`.

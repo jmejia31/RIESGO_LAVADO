@@ -362,5 +362,29 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       // No se inyectan opciones al modelo
       expect(campoSinOpciones.opciones).toBeUndefined();
     });
+
+    it('la drop-zone poblada es compacta, visible y no muta el modelo', () => {
+      const antes = JSON.stringify(component.secciones);
+      const el = fixture.nativeElement as HTMLElement;
+      const zone = el.querySelector('.drop-zone') as HTMLElement;
+
+      expect(zone).toBeTruthy();
+      expect(zone.classList.contains('min-h-[66px]')).toBe(true);
+      expect(zone.textContent).toContain('Arrastra un campo desde el panel izquierdo');
+      expect(JSON.stringify(component.secciones)).toBe(antes);
+    });
+
+    it('aplica anchoColumnas al layout visual sin agregar propiedades al modelo', () => {
+      component.secciones = [{
+        ...mockSecciones[0],
+        campos: [{ ...mockSecciones[0].campos[0], anchoColumnas: 2 }, mockSecciones[0].campos[1]]
+      }];
+      const antes = JSON.stringify(component.secciones);
+      fixture.detectChanges();
+
+      const card = (fixture.nativeElement as HTMLElement).querySelector('article') as HTMLElement;
+      expect(card.style.gridColumn).toBe('span 2 / span 2');
+      expect(JSON.stringify(component.secciones)).toBe(antes);
+    });
   });
 });
