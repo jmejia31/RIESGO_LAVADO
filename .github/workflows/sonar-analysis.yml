@@ -2,14 +2,14 @@ name: Sonar Analysis
 
 on:
   push:
-    branches: [desarrollo]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
       pull_request_number:
         description: 'Numero del pull request que se analizara manualmente'
-        required: true
+        required: false
         type: string
 
 permissions:
@@ -101,9 +101,9 @@ jobs:
             /d:sonar.cs.opencover.reportsPaths=".sonar/coverage/**/coverage.opencover.xml"
           )
 
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && -n "$DISPATCH_PULL_REQUEST_NUMBER" ]]; then
             if [[ ! "$DISPATCH_PULL_REQUEST_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
-              echo "::error::Ingrese un numero de pull request valido al ejecutar manualmente este workflow."
+              echo "::error::El numero de pull request manual debe ser un entero positivo."
               exit 1
             fi
 
