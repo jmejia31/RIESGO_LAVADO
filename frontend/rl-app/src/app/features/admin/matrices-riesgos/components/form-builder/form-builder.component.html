@@ -22,17 +22,21 @@
     [title]="'Constructor de Formularios Dinámicos'"
     [versionCodigo]="versionCodigo"
     [versionNumero]="versionNumero"
+    [estadoVersion]="estadoVersion"
     [seccionesCount]="model().secciones.length"
     [catalogosCount]="catalogosList().length"
     [soloLectura]="soloLectura"
     [esAdministrador]="esAdministrador"
     [vistaActiva]="vistaActiva()"
     [mostrarJsonAvanzado]="mostrarJsonAvanzado()"
+    [puedePublicar]="puedePublicar"
+    [procesando]="procesando"
     (cambiarVista)="cambiarVista($event)"
     (toggleJson)="toggleModoJson()"
     (agregarSeccion)="agregarSeccion()"
     (agregarCatalogo)="iniciarNuevoCatalogo(); cambiarVista('catalogos')"
     (guardar)="emitirGuardado()"
+    (publicar)="emitirPublicar()"
     (cerrar)="cerrar.emit()">
   </app-form-builder-toolbar>
 

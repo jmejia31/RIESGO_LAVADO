@@ -110,4 +110,29 @@ describe('Form Builder — HARD GATE de Integridad JSON (UI-FORM.3)', () => {
 
     expect(JSON.parse(json1)).toEqual(JSON.parse(json2));
   });
+
+  it('6. la serialización nunca incluye propiedades de workflow o ciclo de vida (UI-FORM.5)', () => {
+    const PROPIEDADES_WORKFLOW_PROHIBIDAS = [
+      'estadoVersion',
+      'estado',
+      'workflow',
+      'puedePublicar',
+      'soloLecturaUI',
+      'isDraft',
+      'isPublished',
+      'procesando',
+      'guardando',
+      'publicando',
+      'permission',
+      'permissions'
+    ];
+
+    const model = normalizarJsonABuilderModel(jsonOriginalValido);
+    const jsonResultante = serializarBuilderModelAJson(model);
+    const parsed = JSON.parse(jsonResultante);
+
+    for (const prop of PROPIEDADES_WORKFLOW_PROHIBIDAS) {
+      expect(parsed[prop]).toBeUndefined();
+    }
+  });
 });

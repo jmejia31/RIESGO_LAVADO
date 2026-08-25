@@ -12,6 +12,7 @@ import {
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
+import { EstadoFormulario } from '../../models/matrices-riesgos.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
 import { FormBuilderToolbarComponent } from './toolbar/form-builder-toolbar.component';
 import { FormBuilderPaletteComponent } from './palette/form-builder-palette.component';
@@ -60,8 +61,12 @@ export class FormBuilderComponent implements OnInit {
   @Input() esAdministrador: boolean = false;
   @Input() versionCodigo: string = 'V1.0';
   @Input() versionNumero: number = 1;
+  @Input() estadoVersion?: EstadoFormulario;
+  @Input() puedePublicar: boolean = false;
+  @Input() procesando: boolean = false;
 
   @Output() guardarJson = new EventEmitter<string>();
+  @Output() publicar = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
 
   readonly model = signal<FormBuilderModel>({
@@ -482,8 +487,13 @@ export class FormBuilderComponent implements OnInit {
   }
 
   emitirGuardado(): void {
-    if (this.soloLectura) return;
+    if (this.soloLectura || this.procesando) return;
     if (!this.validarYObtenerErrores()) return;
     this.guardarJson.emit(serializarBuilderModelAJson(this.model()));
+  }
+
+  emitirPublicar(): void {
+    if (this.soloLectura || this.procesando || !this.puedePublicar) return;
+    this.publicar.emit();
   }
 }

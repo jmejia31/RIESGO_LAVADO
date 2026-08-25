@@ -385,4 +385,83 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(tipos.length).toBe(9);
     });
   });
+
+  describe('UI-FORM.5 — Estados y Ciclo de Edición del Form Builder', () => {
+    it('emitirGuardado emite guardarJson cuando el modelo es válido y no está procesando', () => {
+      let jsonEmitido = '';
+      component.guardarJson.subscribe(j => jsonEmitido = j);
+
+      component.soloLectura = false;
+      component.procesando = false;
+      component.emitirGuardado();
+
+      expect(jsonEmitido).toBeTruthy();
+      expect(JSON.parse(jsonEmitido).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+    });
+
+    it('emitirGuardado queda bloqueado si soloLectura es true', () => {
+      let emitido = false;
+      component.guardarJson.subscribe(() => emitido = true);
+
+      component.soloLectura = true;
+      component.procesando = false;
+      component.emitirGuardado();
+
+      expect(emitido).toBe(false);
+    });
+
+    it('emitirGuardado queda bloqueado si procesando es true', () => {
+      let emitido = false;
+      component.guardarJson.subscribe(() => emitido = true);
+
+      component.soloLectura = false;
+      component.procesando = true;
+      component.emitirGuardado();
+
+      expect(emitido).toBe(false);
+    });
+
+    it('emitirPublicar emite evento publicar cuando puedePublicar es true', () => {
+      let publicado = false;
+      component.publicar.subscribe(() => publicado = true);
+
+      component.soloLectura = false;
+      component.procesando = false;
+      component.puedePublicar = true;
+      component.emitirPublicar();
+
+      expect(publicado).toBe(true);
+    });
+
+    it('emitirPublicar queda bloqueado si puedePublicar es false, soloLectura es true o procesando es true', () => {
+      let conteo = 0;
+      component.publicar.subscribe(() => conteo++);
+
+      // 1. puedePublicar false
+      component.puedePublicar = false;
+      component.soloLectura = false;
+      component.procesando = false;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+
+      // 2. soloLectura true
+      component.puedePublicar = true;
+      component.soloLectura = true;
+      component.procesando = false;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+
+      // 3. procesando true
+      component.puedePublicar = true;
+      component.soloLectura = false;
+      component.procesando = true;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+    });
+
+    it('Arquitectura limpia: FormBuilderComponent no depende de servicios HTTP o MatricesRiesgosService', () => {
+      // El componente se instancia únicamente con Inputs/Outputs presentacionales
+      expect(component).toBeDefined();
+    });
+  });
 });

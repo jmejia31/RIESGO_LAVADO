@@ -1,5 +1,41 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Cierre Quirúrgico Fase UI-FORM.5 (Estados y Ciclo de Edición del Builder)
+
+- **Fecha y hora**: 2026-08-25 13:46, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `984c547e7e4ebc45d84cc31bdb9b7e9f78a4964f`.
+- **Objetivo y alcance**:
+  - Implementación y cierre de la Fase UI-FORM.5:
+    1. **Borrador editable real**: DRAFT no vigente permite mutaciones completas (Palette, Canvas, Inspector, Catálogos).
+    2. **Solo lectura real y autoritativo**: Estados no DRAFT (`IN_REVIEW`, `APPROVED`, `PUBLISHED`, `RETIRED`, `ARCHIVED`) o DRAFT vigente bloquean estrictamente toda mutación (Palette, drop, Canvas, Inspector, Catálogos, sincronización JSON).
+    3. **Toolbar profesional**: Reflejo del estado real de versión mediante badge con traducción humana (`BORRADOR`, `EN REVISIÓN`, `APROBADA`, `PUBLICADA`, `RETIRADA`, `ARCHIVADA`), sufijo `· SOLO LECTURA` cuando aplica, y alineación al prototipo visual maestro.
+    4. **Guardar borrador**: Renombrado de acción a "Guardar Borrador", uso estricto del flujo orquestado existente `actualizarBorradorFormulario`, validación previa de modelo y verificación semántica post-guardado con recuperación fresca del servidor.
+    5. **Publicación y reconciliación autoritativa**: Emisión de intención de publicar desde el Builder hacia el orquestador `MatricesRiesgosComponent`, ejecución de `publicarVersionFormulario`, y tras éxito, re-fetch autoritativo vía `obtenerVersionFormulario` para transición inmediata a modo solo lectura si la versión estaba abierta en el modal.
+    6. **HARD GATE de backend**: 0 reglas de backend duplicadas, 0 state machines en Angular, 0 endpoints nuevos, 0 estados nuevos, 0 permisos inventados, 0 propiedades de workflow serializadas a JSON.
+- **Archivos creados y modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.ts` (inputs `estadoVersion`, `puedePublicar`, `procesando`, output `publicar`, getter `estadoEtiqueta` con mapeo de los 6 estados contractuales).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.html` (badge de estado profesional, botón "Guardar Borrador", botón "Publicar Versión", disabled en loading y layout alineado al prototipo maestro).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.spec.ts` (nueva suite con 17 pruebas unitarias para badges de los 6 estados, solo lectura, borrador, permisos, carga y aislamiento de servicios).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts` (propagación de inputs/outputs de lifecycle, protección de `emitirGuardado` y `emitirPublicar` ante soloLectura y procesando).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html` (bindings hacia toolbar).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.spec.ts` (cobertura de ciclo de vida, emisión de publicación, bloqueos de soloLectura y arquitectura limpia).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder-json-gate.spec.ts` (hard gate de propiedades de workflow no serializadas).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts` (reconciliación autoritativa post-publicación mediante re-fetch con `obtenerVersionFormulario`).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html` (bindings de `estadoVersion`, `puedePublicar`, `procesando` y evento `publicar`).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ui-form5-lifecycle.spec.ts` (nueva suite con 12 pruebas unitarias para matriz de estados, persistencia de borrador y reconciliación de publicación).
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 63/63 archivos de prueba frontend PASS (666/666 pruebas unitarias, 0 fallos).
+  - Cobertura frontend real (`npm run test:coverage`): **Statements = 61.46% (4,149/6,750), Branches = 56.25% (2,289/4,069), Functions = 57.59% (902/1,566), Lines = 61.77% (3,697/5,985)**.
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores, bundle generado con éxito en 12.3s).
+  - `git diff --check` PASS (0 errores de formato/whitespace).
+- **Punto de continuación**: Continuar con las siguientes fases del Form Builder / Matrices de Riesgos según el roadmap rector.
+
+---
+
 ## Registro de Intervención — AntiG — Cierre Quirúrgico y Microcierre Fase UI-FORM.4 (Inspector Profesional por Propiedades Existentes)
 
 - **Fecha y hora**: 2026-08-25 13:25, hora local (UTC-6).

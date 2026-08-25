@@ -575,7 +575,11 @@
                           [esAdministrador]="esAdministrador()"
                           [versionCodigo]="versionActual.verCodigo"
                           [versionNumero]="versionActual.verVersion"
+                          [estadoVersion]="versionActual.verEstado"
+                          [puedePublicar]="!soloLecturaDefinicion() && versionActual.verEstado === 'DRAFT' && !versionActual.verVigente && esAdministrador()"
+                          [procesando]="guardando()"
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
+                          (publicar)="publicarVersion(versionActual)"
                           (cerrar)="versionEditando.set(null)">
         </app-form-builder>
        </div>

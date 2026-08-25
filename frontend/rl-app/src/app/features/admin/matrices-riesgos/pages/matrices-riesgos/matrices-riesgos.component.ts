@@ -1447,6 +1447,20 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               this.mostrarMensaje('Versión publicada y establecida como vigente correctamente.');
               this.cargarVersiones();
               this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+
+              if (this.versionEditando()?.verId === version.verId) {
+                this.service.obtenerVersionFormulario(version.verId).subscribe({
+                  next: versionFresca => {
+                    this.versionEditando.set(versionFresca);
+                    this.soloLecturaDefinicion.set(versionFresca.verVigente || versionFresca.verEstado !== 'DRAFT');
+                    this.definicionTecnica = this.formatearDefinicion(versionFresca.verJson);
+                  },
+                  error: err => {
+                    this.mostrarError(this.obtenerMensajeError(err, 'No se pudo refrescar el estado de la versión tras la publicación.'));
+                    this.versionEditando.set(null);
+                  }
+                });
+              }
             },
             error: error => {
               this.guardando.set(false);
