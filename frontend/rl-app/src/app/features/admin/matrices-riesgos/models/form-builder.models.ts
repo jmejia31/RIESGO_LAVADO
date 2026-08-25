@@ -364,7 +364,7 @@ function serializarSeccion(seccion: SeccionBuilderModel, index: number): JsonObj
   raw['titulo'] = seccion.titulo;
   raw['orden'] = seccion.orden || index + 1;
   if (esNueva || 'columnasPorFila' in raw || seccion.columnasPorFila !== 2) raw['columnasPorFila'] = seccion.columnasPorFila;
-  raw['campos'] = seccion.campos.map(serializarCampo);
+  raw['campos'] = seccion.campos.map((campo, index) => serializarCampo(campo, index));
   return raw;
 }
 
@@ -377,7 +377,7 @@ export function serializarBuilderModelAJson(model: FormBuilderModel): string {
   definicion[model.codigoFuente ?? 'codigoFormulario'] = model.codigoFormulario;
   definicion[model.nombreFuente ?? 'nombreFormulario'] = model.nombreFormulario;
   if (model.descripcion !== undefined || 'descripcion' in definicion) definicion['descripcion'] = model.descripcion ?? definicion['descripcion'];
-  definicion['secciones'] = model.secciones.map(serializarSeccion);
+  definicion['secciones'] = model.secciones.map((seccion, index) => serializarSeccion(seccion, index));
 
   if (model.catalogos) {
     const forma = model.catalogosFormaOriginal ?? 'array';

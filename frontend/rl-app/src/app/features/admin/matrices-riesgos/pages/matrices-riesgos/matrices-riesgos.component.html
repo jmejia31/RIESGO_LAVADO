@@ -611,7 +611,8 @@
               <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               </div>
-              <input type="text"
+              <label for="filtro-buscar-familia" class="sr-only">Buscar familia</label>
+              <input type="text" id="filtro-buscar-familia"
                      class="w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 py-1.5 text-xs text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none"
                      placeholder="Buscar por código o nombre..."
                      [ngModel]="filtroBuscarFamilia()"
@@ -761,7 +762,8 @@
         </div>
 
         <div class="modal-body-scrollable space-y-4 text-sm">
-          <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+           <dl class="space-y-4">
+            <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div>
               <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Código institucional</dt>
               <dd class="mt-1 font-mono font-bold text-ihss-900 text-sm">{{ famVer.famCodigo }}</dd>
@@ -786,9 +788,9 @@
               <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Versión vigente</dt>
               <dd class="mt-1 font-bold text-gray-900">{{ famVer.tieneVersionVigente ? 'Sí' : 'No' }}</dd>
             </div>
-          </div>
+            </div>
 
-          <div>
+           <div>
             <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Nombre</dt>
             <dd class="font-bold text-gray-900">{{ famVer.famNombre }}</dd>
           </div>
@@ -801,8 +803,9 @@
           <div>
             <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Fecha de creación</dt>
             <dd class="text-gray-700 text-xs">{{ famVer.famFechaCreacion | date:'medium' }}</dd>
-          </div>
-        </div>
+           </div>
+           </dl>
+         </div>
 
         <div class="modal-footer-institutional">
           <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm" (click)="seleccionarFamiliaDesdeGestor(famVer.famCodigo); cerrarModalVerFamilia()">Ver versiones de esta familia</button>

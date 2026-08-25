@@ -23,7 +23,7 @@ export function canonicalizarValor(valor: unknown): unknown {
   }
 
   const obj = valor as Record<string, unknown>;
-  const clavesOrdenadas = Object.keys(obj).sort();
+  const clavesOrdenadas = Object.keys(obj).sort((a, b) => a.localeCompare(b));
   const resultado: Record<string, unknown> = {};
 
   for (const clave of clavesOrdenadas) {
