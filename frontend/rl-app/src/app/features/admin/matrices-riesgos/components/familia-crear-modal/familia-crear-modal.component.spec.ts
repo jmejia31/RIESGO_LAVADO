@@ -140,9 +140,7 @@ describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
     const card = dialog?.querySelector('.modal-container-card');
 
     expect(dialog).not.toBeNull();
-    expect(card?.className).toContain('w-[calc(100vw-1.5rem)]');
-    expect(card?.className).toContain('sm:w-[80vw]');
-    expect(card?.className).toContain('sm:max-w-[1180px]');
-    expect(card?.className).toContain('max-h-[90dvh]');
+    expect(card?.classList.contains('modal-container-card')).toBe(true);
+    expect(card?.classList.contains('modal-size-xl')).toBe(true);
   });
 });

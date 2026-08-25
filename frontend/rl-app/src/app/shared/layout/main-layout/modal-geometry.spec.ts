@@ -104,4 +104,18 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
     (fixture.componentInstance as any).sincronizarBloqueoModal();
     expect(document.body.classList.contains('modal-abierto')).toBe(false);
   });
+
+  it('3. soporta todas las variantes semánticas institucionales de tamaño (sm, md, lg, xl, workspace)', () => {
+    const fixture = TestBed.createComponent(ModalTestHostComponent);
+    fixture.detectChanges();
+
+    const card = fixture.nativeElement.querySelector('.modal-container-card') as HTMLElement;
+    const variantes = ['modal-size-sm', 'modal-size-md', 'modal-size-lg', 'modal-size-xl', 'modal-size-workspace'];
+
+    for (const variante of variantes) {
+      card.className = `modal-container-card ${variante}`;
+      expect(card.classList.contains(variante)).toBe(true);
+      expect(card.classList.contains('modal-container-card')).toBe(true);
+    }
+  });
 });

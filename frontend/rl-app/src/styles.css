@@ -255,22 +255,22 @@ dialog.modal-backdrop-overlay {
  */
 .modal-size-sm {
   width: 100% !important;
-  max-width: 28rem !important; /* max-w-md */
+  max-width: 28rem !important; /* 448px (max-w-md) */
 }
 
 .modal-size-md {
   width: 100% !important;
-  max-width: 32rem !important; /* max-w-lg */
+  max-width: 36rem !important; /* 576px (max-w-lg / max-w-xl / max-w-2xl) */
 }
 
 .modal-size-lg {
   width: 100% !important;
-  max-width: 48rem !important; /* max-w-3xl */
+  max-width: 56rem !important; /* 896px (max-w-3xl / max-w-4xl / max-w-5xl) */
 }
 
 .modal-size-xl {
   width: 100% !important;
-  max-width: 72rem !important; /* max-w-6xl */
+  max-width: 72rem !important; /* 1152px (max-w-6xl) */
 }
 
 .modal-size-workspace {

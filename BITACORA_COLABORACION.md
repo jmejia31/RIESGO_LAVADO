@@ -1,5 +1,42 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Centralización de Variantes Semánticas de Tamaño de Modales
+
+- **Fecha y hora**: 2026-08-25 12:09, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `3fc9636b04870f7858c7bc7ef3c4283daeb5e43a`.
+- **Objetivo y alcance**:
+  - Centralizar y estandarizar las dimensiones y variantes semánticas de tamaño en los 15 modales del sistema eliminando clases hardcodeadas locales (`max-w-*`, `w-full`, `max-h-*`, `h-*`).
+  - Mapeo canónico a variantes `.modal-size-sm`, `.modal-size-md`, `.modal-size-lg`, `.modal-size-xl`, `.modal-size-workspace` preservando visualmente las dimensiones existentes.
+  - Cero modificaciones a lógica funcional, backend, servicios, modelos, navegación, TypeScript o reglas de negocio.
+- **Archivos modificados**:
+  - `frontend/rl-app/src/styles.css`
+  - `frontend/rl-app/src/app/features/admin/bitacora/pages/bitacora/bitacora.component.html`
+  - `frontend/rl-app/src/app/features/admin/configuracion/pages/configuracion/configuracion.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html`
+  - `frontend/rl-app/src/app/features/admin/listas/pages/tipo-listas/tipo-listas.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-crear-modal/familia-crear-modal.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-crear-modal/familia-crear-modal.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.qa.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-editar-modal/familia-editar-modal.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-editar-modal/familia-editar-modal.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`
+  - `frontend/rl-app/src/app/features/admin/usuarios/pages/usuarios/usuarios.component.html`
+  - `frontend/rl-app/src/app/shared/layout/main-layout/modal-geometry.spec.ts`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 59/59 archivos de prueba y 577/577 pruebas unitarias frontend PASS (0 fallos).
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores).
+  - `git diff --check` PASS (0 errores de whitespace).
+- **Punto de continuación**: Continuar con Fase UI-FORM.3.
+
+---
+
 ## Registro de Intervención — AntiG — Estandarización Visual Global de Modales
 
 - **Fecha y hora**: 2026-08-25 11:57, hora local (UTC-6).

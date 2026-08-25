@@ -7,7 +7,7 @@
         [attr.aria-busy]="cargando()"
         (keydown)="manejarKeydown($event)"
         (keydown.escape)="$event.preventDefault(); cerrar.emit()">
-  <div class="modal-container-card flex h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+  <div class="modal-container-card modal-size-workspace">
     <header class="flex shrink-0 items-center justify-between gap-4 border-b border-gray-100 bg-white px-6 py-5 sm:px-7">
       <div class="flex min-w-0 items-center gap-3 sm:gap-4">
         <div class="group relative shrink-0">

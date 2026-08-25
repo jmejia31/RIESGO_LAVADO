@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-25 11:57 — Estandarización visual global de modales por AntiG
+**Actualización:** 2026-08-25 12:09 — Centralización de variantes de tamaño de modales por AntiG
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
