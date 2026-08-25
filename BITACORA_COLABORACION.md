@@ -1,5 +1,29 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Cierre Quirúrgico Fase UI-FORM.3 (Lienzo, Secciones y Field Cards)
+
+- **Fecha y hora**: 2026-08-25 12:51, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `54c356e34cc28313eb5bcaba1cc553e219223cbe`.
+- **Objetivo y alcance**:
+  - Implementación y cierre de la Fase UI-FORM.3: Field Cards profesionales, selección visual inequívoca, secciones profesionales, selector de columnas por fila, acciones agrupadas, drop-zones compactas.
+  - HARD GATE de Integridad JSON: preservación estricta de la estructura JSON actual sin introducción de propiedades visuales persistidas (`selected`, `expanded`, `dragging`, `uiState`, etc.), 0 cambios a modelos contractuales, 0 modificaciones backend (`.cs`), 9 tipos de control exactos (0 inventados), round-trip 100% lossless.
+- **Archivos creados y modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.html` (refinamiento visual de Field Cards, badges, previews, header de sección, selector de columnas numérico y drop-zones compactas).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.spec.ts` (suite completa de pruebas para renderizado de Field Cards, selección visual, títulos, columnas, boundaries de reordenamiento, soloLectura y drop-zones).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder-json-gate.spec.ts` (nueva suite de verificación de hard gate para integridad JSON, prohibición de propiedades UI y round-trip).
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 60/60 archivos de prueba frontend PASS (596/596 pruebas unitarias, 0 fallos).
+  - Cobertura frontend: 61.08% sentencias, 55.77% ramas, 57.01% funciones, 61.34% líneas.
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores).
+  - `git diff --check` PASS (0 errores de formato/whitespace).
+- **Punto de continuación**: Fase UI-FORM.4 (Inspector de Propiedades y Edición Avanzada).
+
+---
+
 ## Registro de Intervención — AntiG — Centralización de Variantes Semánticas de Tamaño de Modales
 
 - **Fecha y hora**: 2026-08-25 12:09, hora local (UTC-6).

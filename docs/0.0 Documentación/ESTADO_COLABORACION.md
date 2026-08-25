@@ -31,7 +31,31 @@
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
 | **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ COMPLETA Y CERTIFICADA** | Shell de 5 regiones V2 integrado en FormBuilderComponent productivo. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS. |
-| **UI-FORM.2 — Biblioteca y estructura del formulario** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Búsqueda insensible a mayúsculas/acentos, 3 categorías canónicas (Básicos, Selección, Avanzados), tarjetas pro con icono SVG/handle, drag & drop con payload seguro (`tipo`), drop-zones visuales por sección, validación segura en motor `FormBuilderComponent`, auto-selección en inspector, bloqueo ESC. 577/577 frontend PASS (59 suites), lint PASS, build PASS. |
+| **UI-FORM.3 — Lienzo y secciones** | **✅ IMPLEMENTACIÓN COMPLETA Y VALIDADA LOCALMENTE** | Field Cards pro, selección visual inequívoca sincronizada con inspector, header de sección con badge y selector numérico de columnas por fila (1, 2, 3, 4, 6), acciones agrupadas con boundaries, drop-zones compactas, HARD GATE JSON lossless (0 propiedades UI persistidas, 9 tipos exactos). 596/596 frontend PASS (60 suites), lint PASS, build PASS. |
+
+---
+
+## UI-FORM.3 — Implementación, Lienzo y Hard Gate JSON — 2026-08-25
+
+- **Field Cards Profesionales**:
+  - Renderizado limpio con badge `CLAVE · TIPO`, etiqueta con indicador de obligatorio (`*`) y preview visual adaptado para los 9 tipos soportados.
+  - Selección visual activa inequívoca (`border-blue-500`, `ring-2`, `ring-blue-500/20`) y sincronización inmediata con `campoActivo` e Inspector.
+- **Secciones y Columnas**:
+  - Encabezado con badge numérico de orden, título editable (`sec.titulo`), selector de columnas por fila (`sec.columnasPorFila`) con opciones 1, 2, 3, 4, 6 con emisión numérica y botón de eliminación condicional.
+- **Acciones Agrupadas**:
+  - Botones de mover arriba `▲`, mover abajo `▼` y eliminar `✕` compactos y agrupados, con boundaries estrictos (deshabilitados en límites) y ocultos en modo `soloLectura`.
+- **Drop-Zones Compactas**:
+  - Zona vacía orientativa limpia ("Arrastra un campo desde el panel izquierdo...") y drop-zone reactiva durante dragover ("Suelta el campo en «...»").
+- **HARD GATE de Integridad JSON**:
+  - 0 propiedades UI serializadas (`selected`, `expanded`, `dragging`, `uiState`, etc.).
+  - Preservación estricta de `tipoOriginal`, `metadatosOriginales`, `anchoColumnas`, `columnasPorFila`.
+  - 9 tipos exactos soportados (0 tipos nuevos inventados).
+  - Round-trip 100% lossless.
+- **Evidencia propia**:
+  - 60/60 suites y 596/596 pruebas frontend PASS (0 errores).
+  - Cobertura frontend: 61.08% sentencias, 55.77% ramas, 57.01% funciones, 61.34% líneas.
+  - `npm run lint` y `npm run build` PASS.
+- **Punto de continuación**: Fase UI-FORM.4 (Inspector de Propiedades y Edición Avanzada).
 
 ---
 
