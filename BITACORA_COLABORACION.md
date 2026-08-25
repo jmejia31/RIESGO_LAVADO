@@ -1,5 +1,33 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Cierre Quirúrgico Fase UI-FORM.4 (Inspector Profesional por Propiedades Existentes)
+
+- **Fecha y hora**: 2026-08-25 13:17, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `21898f20e4961513570f5b4980fbccbb2e04b45f`.
+- **Objetivo y alcance**:
+  - Implementación y cierre de la Fase UI-FORM.4: Inspector Profesional estructurado en 4 grupos (`General`, `Reglas`, `Datos`, `Presentación`), empty-state con alineación al prototipo visual maestro.
+  - Visibilidad de propiedades adaptada estrictamente según las capacidades oficiales de los 9 tipos soportados (`requiereCatalogo`, `requiereOpciones`, `requiereFormula`, `soportaPlaceholder`).
+  - Invariante de tipo fórmula: `soloLectura = true` forzado y bloqueado. Al cambiar desde fórmula no se fuerza a `false`.
+  - Regla `Hidden != Delete`: al cambiar de tipo no se eliminan silenciosamente `codigoCatalogo`, `opciones`, `formula`, `tipoOriginal`, `metadatosOriginales`.
+  - Opciones de catálogo y lista de opciones manejadas directamente sobre el contrato existente `opciones?: string[]` sin objetos intermedios.
+  - HARD GATE de Integridad JSON: 0 propiedades nuevas, 0 propiedades UI serializadas, 0 tipos nuevos inventados (exactamente 9 tipos oficiales).
+  - Cero modificaciones a backend (`.cs`), base de datos Oracle o contratos JSON.
+- **Archivos creados y modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/inspector/form-builder-inspector.component.html` (reorganización profesional en 4 grupos colapsables con accesibilidad WAI-ARIA, bindings seguros y footer con metadatos read-only del campo).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/inspector/form-builder-inspector.component.ts` (getters de capacidades derivadas del tipo, sincronización con `ChangeDetectorRef`, manejo de opciones `string[]` y respeto de invariantes).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/inspector/form-builder-inspector.component.spec.ts` (nueva suite de 30 pruebas unitarias con cobertura de empty state, 4 grupos, matriz de 9 tipos, solo lectura, estado UI de acordeones no persistido y hard gate de 0 propiedades inventadas).
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 61/61 archivos de prueba frontend PASS (626/626 pruebas unitarias, 0 fallos).
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores).
+  - `git diff --check` PASS (0 errores de formato/whitespace).
+- **Punto de continuación**: Continuar con las siguientes fases del Form Builder / Matrices de Riesgos según el roadmap rector.
+
+---
+
 ## Registro de Intervención — AntiG — Cierre Quirúrgico Fase UI-FORM.3 (Lienzo, Secciones y Field Cards)
 
 - **Fecha y hora**: 2026-08-25 12:51, hora local (UTC-6).

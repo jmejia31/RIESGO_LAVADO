@@ -1,59 +1,230 @@
 <aside class="form-builder-region form-builder-inspector" data-form-builder-region="inspector" aria-label="Inspector de propiedades">
-  <div class="p-5 flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar">
+  <div class="p-4 sm:p-5 flex flex-col gap-4 h-full overflow-y-auto custom-scrollbar">
+    <!-- Encabezado del Inspector -->
     <div class="border-b border-slate-100 pb-3">
       <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Propiedades del campo</h3>
-      <p class="mt-1 text-[11px] text-slate-500">Configuración de la selección actual.</p>
+      <p class="mt-0.5 text-[11px] text-slate-500">Configuración del campo seleccionado</p>
     </div>
 
     @if (!campoActivo) {
+      <!-- Empty State -->
       <div class="m-auto max-w-[15rem] p-6 text-center text-slate-400">
-        <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-        <p class="text-xs font-medium leading-relaxed">Seleccione un campo del lienzo central para consultar sus propiedades.</p>
+        <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </div>
+        <p class="text-xs font-medium leading-relaxed text-slate-500">Seleccione un campo en el lienzo para editar sus propiedades.</p>
       </div>
     } @else {
-      <div class="space-y-4 text-xs">
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-clave-' + campoActivo.id">Clave Técnica (JSON Key)</label>
-          <input [id]="'prop-clave-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.clave" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
-          <p class="text-[10px] text-slate-400 mt-0.5">Identificador único en el payload de respuestas.</p>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-etiqueta-' + campoActivo.id">Etiqueta Visible</label>
-          <input [id]="'prop-etiqueta-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.etiqueta" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-tipo-' + campoActivo.id">Tipo de Control</label>
-          <select [id]="'prop-tipo-' + campoActivo.id" [(ngModel)]="campoActivo.tipo" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-600">
-            @for (t of tiposControles; track t.tipo) { <option [value]="t.tipo">{{ t.etiqueta }}</option> }
-          </select>
-        </div>
+      <div class="space-y-3 text-xs flex-1">
 
-        @if (campoActivo.tipo === 'selector-catalogo' || campoActivo.tipo === 'catalogo-multiple') {
-          <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
-            <div class="flex items-center justify-between gap-1">
-              <label class="block font-semibold text-blue-900" [for]="'prop-catalogo-' + campoActivo.id">Catálogo Asociado</label>
-              @if (!soloLectura) { <button type="button" (click)="navegarCatalogos.emit()" class="text-[10px] text-blue-700 font-bold hover:underline">Administrar Catálogos →</button> }
+        <!-- 1. Grupo: GENERAL -->
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button type="button"
+                  (click)="toggleSeccion('general')"
+                  class="flex w-full items-center justify-between bg-slate-50/80 px-3.5 py-2.5 text-left font-bold text-slate-800 hover:bg-slate-100/80 transition-colors"
+                  [attr.aria-expanded]="seccionesAbiertas.general">
+            <span class="flex items-center gap-2">
+              <span class="text-blue-600">⚙</span>
+              <span>General</span>
+            </span>
+            <svg class="h-4 w-4 text-slate-400 transition-transform duration-200" [class.rotate-180]="seccionesAbiertas.general" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (seccionesAbiertas.general) {
+            <div class="p-3.5 space-y-3 border-t border-slate-100">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-etiqueta-' + campoActivo.id">Etiqueta Visible</label>
+                <input [id]="'prop-etiqueta-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.etiqueta" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-clave-' + campoActivo.id">Clave Técnica (JSON Key)</label>
+                <input [id]="'prop-clave-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.clave" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
+                <p class="text-[10px] text-slate-400 mt-0.5">Identificador único en el payload de respuestas.</p>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-tipo-' + campoActivo.id">Tipo de Control</label>
+                <select [id]="'prop-tipo-' + campoActivo.id" [ngModel]="campoActivo.tipo" (ngModelChange)="alCambiarTipo($event)" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-600">
+                  @for (t of tiposControles; track t.tipo) {
+                    <option [value]="t.tipo">{{ t.etiqueta }}</option>
+                  }
+                </select>
+                @if (definicionTipoActual) {
+                  <span class="inline-block mt-1 text-[10px] font-medium text-slate-500">Categoría: <strong class="text-slate-700 capitalize">{{ definicionTipoActual.categoria }}</strong></span>
+                }
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-desc-' + campoActivo.id">Descripción</label>
+                <textarea [id]="'prop-desc-' + campoActivo.id" rows="2" [(ngModel)]="campoActivo.descripcion" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" placeholder="Descripción funcional o técnica..." class="w-full resize-none px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600"></textarea>
+              </div>
             </div>
-            <select [id]="'prop-catalogo-' + campoActivo.id" [(ngModel)]="campoActivo.codigoCatalogo" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-2.5 py-1.5 border border-blue-300 rounded-lg text-xs bg-white text-slate-800">
-              @for (cat of catalogosDisponibles; track cat.codigo) { <option [value]="cat.codigo">{{ cat.nombre }} ({{ cat.codigo }}){{ cat.cantidadElementos > 0 ? ' · ' + cat.cantidadElementos + ' opc.' : '' }}</option> }
-            </select>
-            @if (catalogosDisponibles.length === 0) { <p class="text-[10px] text-amber-700 font-medium">No hay catálogos configurados en esta plantilla.</p> }
-          </div>
-        }
+          }
+        </div>
 
-        @if (campoActivo.tipo === 'formula') {
-          <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-2">
-            <label class="block font-semibold text-amber-900" [for]="'prop-formula-' + campoActivo.id">Fórmula de Cálculo</label>
-            <input [id]="'prop-formula-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formula" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" placeholder="Ej. R_INH * I_INH" class="w-full px-2.5 py-1.5 border border-amber-300 rounded-lg text-xs font-mono bg-white">
-            <p class="text-[10px] text-amber-700">Expresión matemática evaluada automáticamente.</p>
-          </div>
-        }
+        <!-- 2. Grupo: REGLAS -->
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button type="button"
+                  (click)="toggleSeccion('reglas')"
+                  class="flex w-full items-center justify-between bg-slate-50/80 px-3.5 py-2.5 text-left font-bold text-slate-800 hover:bg-slate-100/80 transition-colors"
+                  [attr.aria-expanded]="seccionesAbiertas.reglas">
+            <span class="flex items-center gap-2">
+              <span class="text-emerald-600">✓</span>
+              <span>Reglas</span>
+            </span>
+            <svg class="h-4 w-4 text-slate-400 transition-transform duration-200" [class.rotate-180]="seccionesAbiertas.reglas" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-        <div class="pt-2 border-t border-slate-100 space-y-3">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" [(ngModel)]="campoActivo.obligatorio" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="font-medium text-slate-800">Campo Obligatorio</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" [(ngModel)]="campoActivo.soloLectura" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura || campoActivo.tipo === 'formula'" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="font-medium text-slate-800">Solo Lectura</span></label>
+          @if (seccionesAbiertas.reglas) {
+            <div class="p-3.5 space-y-3 border-t border-slate-100">
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input [id]="'prop-obligatorio-' + campoActivo.id" type="checkbox" [checked]="campoActivo.obligatorio" (change)="campoActivo.obligatorio = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="font-medium text-slate-800">Campo Obligatorio</span>
+              </label>
+
+              <label class="flex items-center gap-2.5 cursor-pointer">
+                <input [id]="'prop-sololectura-' + campoActivo.id" type="checkbox" [checked]="campoActivo.soloLectura" (change)="campoActivo.soloLectura = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura || esFormula" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                <span class="font-medium text-slate-800">Solo Lectura</span>
+                @if (esFormula) {
+                  <span class="text-[10px] text-amber-700 font-semibold">(Obligatorio en fórmulas)</span>
+                }
+              </label>
+
+              @if (requiereFormula) {
+                <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-2">
+                  <label class="block font-semibold text-amber-900" [for]="'prop-formula-' + campoActivo.id">Fórmula de Cálculo</label>
+                  <input [id]="'prop-formula-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formula" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" placeholder="Ej. R_INH * I_INH" class="w-full px-2.5 py-1.5 border border-amber-300 rounded-lg text-xs font-mono bg-white">
+                  <p class="text-[10px] text-amber-700">Expresión matemática evaluada automáticamente.</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- 3. Grupo: DATOS -->
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button type="button"
+                  (click)="toggleSeccion('datos')"
+                  class="flex w-full items-center justify-between bg-slate-50/80 px-3.5 py-2.5 text-left font-bold text-slate-800 hover:bg-slate-100/80 transition-colors"
+                  [attr.aria-expanded]="seccionesAbiertas.datos">
+            <span class="flex items-center gap-2">
+              <span class="text-blue-600">🗃</span>
+              <span>Datos</span>
+            </span>
+            <svg class="h-4 w-4 text-slate-400 transition-transform duration-200" [class.rotate-180]="seccionesAbiertas.datos" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (seccionesAbiertas.datos) {
+            <div class="p-3.5 space-y-3 border-t border-slate-100">
+              @if (requiereCatalogo) {
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between gap-1">
+                    <label class="block font-semibold text-slate-700" [for]="'prop-catalogo-' + campoActivo.id">Catálogo Asociado</label>
+                    @if (!soloLectura) {
+                      <button type="button" (click)="navegarCatalogos.emit()" class="text-[10px] text-blue-700 font-bold hover:underline">Administrar Catálogos →</button>
+                    }
+                  </div>
+                  <select [id]="'prop-catalogo-' + campoActivo.id" [(ngModel)]="campoActivo.codigoCatalogo" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 focus:ring-2 focus:ring-blue-500">
+                    @for (cat of catalogosDisponibles; track cat.codigo) {
+                      <option [value]="cat.codigo">{{ cat.nombre }} ({{ cat.codigo }}){{ cat.cantidadElementos > 0 ? ' · ' + cat.cantidadElementos + ' opc.' : '' }}</option>
+                    }
+                  </select>
+                  @if (catalogosDisponibles.length === 0) {
+                    <p class="text-[10px] text-amber-700 font-medium">No hay catálogos configurados en esta plantilla.</p>
+                  }
+                </div>
+              } @else if (requiereOpciones) {
+                <div class="space-y-2">
+                  <label class="block font-semibold text-slate-700">Opciones Configuradas</label>
+                  <div class="space-y-1.5 max-h-36 overflow-y-auto custom-scrollbar">
+                    @for (opc of (campoActivo.opciones || []); track $index; let i = $index) {
+                      <div class="flex items-center justify-between gap-2 p-1.5 bg-slate-50 rounded-lg border border-slate-200">
+                        <span class="text-xs text-slate-800 truncate font-medium">{{ opc }}</span>
+                        @if (!soloLectura) {
+                          <button type="button" (click)="eliminarOpcion(i)" class="text-slate-400 hover:text-red-600 text-xs px-1" title="Eliminar opción">✕</button>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  @if (!soloLectura) {
+                    <div class="flex items-center gap-1.5 pt-1">
+                      <input type="text" [(ngModel)]="nuevaOpcionTexto" (keydown.enter)="agregarOpcion()" placeholder="Nueva opción..." class="flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs">
+                      <button type="button" (click)="agregarOpcion()" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700">+ Agregar</button>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <p class="text-[11px] text-slate-500 italic">Este tipo de campo no requiere una fuente de datos adicional.</p>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- 4. Grupo: PRESENTACIÓN -->
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          <button type="button"
+                  (click)="toggleSeccion('presentacion')"
+                  class="flex w-full items-center justify-between bg-slate-50/80 px-3.5 py-2.5 text-left font-bold text-slate-800 hover:bg-slate-100/80 transition-colors"
+                  [attr.aria-expanded]="seccionesAbiertas.presentacion">
+            <span class="flex items-center gap-2">
+              <span class="text-purple-600">👁</span>
+              <span>Presentación</span>
+            </span>
+            <svg class="h-4 w-4 text-slate-400 transition-transform duration-200" [class.rotate-180]="seccionesAbiertas.presentacion" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (seccionesAbiertas.presentacion) {
+            <div class="p-3.5 space-y-3 border-t border-slate-100">
+              @if (soportaPlaceholder) {
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-placeholder-' + campoActivo.id">Placeholder (Texto sugerido)</label>
+                  <input [id]="'prop-placeholder-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.placeholder" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" placeholder="Ej. Ingrese el valor..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
+                </div>
+              }
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-textoayuda-' + campoActivo.id">Texto de Ayuda</label>
+                <input [id]="'prop-textoayuda-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.textoAyuda" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" placeholder="Instrucción de apoyo para el evaluador..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-ancho-' + campoActivo.id">Ancho en Columnas</label>
+                <select [id]="'prop-ancho-' + campoActivo.id" [(ngModel)]="campoActivo.anchoColumnas" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-600">
+                  <option [ngValue]="1">1 columna</option>
+                  <option [ngValue]="2">2 columnas</option>
+                  <option [ngValue]="3">3 columnas</option>
+                  <option [ngValue]="4">4 columnas</option>
+                  <option [ngValue]="5">5 columnas</option>
+                  <option [ngValue]="6">6 columnas</option>
+                </select>
+              </div>
+            </div>
+          }
+        </div>
+
+      </div>
+
+      <!-- Pie de Inspector con Metadatos Read-Only del Campo -->
+      <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 space-y-0.5">
+        <div class="flex justify-between">
+          <span>ID del campo:</span>
+          <span class="font-mono text-slate-600">{{ campoActivo.id }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Tipo:</span>
+          <span class="font-mono text-slate-600 uppercase">{{ campoActivo.tipo }}</span>
         </div>
       </div>
     }
