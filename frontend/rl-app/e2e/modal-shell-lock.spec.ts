@@ -105,7 +105,7 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   const primerCampoCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').first();
   await primerCampoCard.click();
   const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
-  const clave = inspector.getByRole('textbox', { name: 'Clave Técnica (JSON Key)' });
+  const clave = inspector.getByRole('textbox', { name: 'Clave Técnica' });
   await expect(clave).toBeEnabled();
   await clave.fill('area_responsable_actualizada');
   await expect(clave).toHaveValue('area_responsable_actualizada');

@@ -38,16 +38,17 @@ export class FormBuilderInspectorComponent {
   @Output() navegarCatalogos = new EventEmitter<void>();
 
   // Estado UI de acordeones colapsables (exclusivo de UI, nunca persistido)
-  seccionesAbiertas: Record<'general' | 'reglas' | 'datos' | 'presentacion', boolean> = {
+  seccionesAbiertas: Record<'general' | 'reglas' | 'datos' | 'presentacion' | 'ayuda', boolean> = {
     general: true,
     reglas: true,
     datos: true,
-    presentacion: true
+    presentacion: true,
+    ayuda: true
   };
 
   nuevaOpcionTexto = '';
 
-  toggleSeccion(seccion: 'general' | 'reglas' | 'datos' | 'presentacion'): void {
+  toggleSeccion(seccion: 'general' | 'reglas' | 'datos' | 'presentacion' | 'ayuda'): void {
     this.seccionesAbiertas[seccion] = !this.seccionesAbiertas[seccion];
     this.cdr.markForCheck();
   }

@@ -1,5 +1,18 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UI-FORM.4-R Inspector profesional
+
+- Fecha y hora: 2026-08-25 17:37 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial: `32e393c316a20fd8bc1fb6ba9f6241492ec19a21`.
+- Objetivo: reabrir exclusivamente UI-FORM.4-R para reconciliar el panel derecho del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R/UI-FORM.3-R y el contrato vigente.
+- Implementación: evolución del único `FormBuilderInspectorComponent`; empty state y navegación profesional visibles sin selección; contexto del campo, grupos General, Validaciones, Catálogo / Datos, Apariencia, Condiciones sin soporte contractual y Ayuda / Tooltip; acordeones locales no persistidos; controles contextuales según los 9 tipos existentes; solo lectura/editable preservados.
+- Propiedades reales: `id`, `clave`, `etiqueta`, `descripcion`, `tipo`, `obligatorio`, `soloLectura`, `codigoCatalogo`, `opciones`, `formula`, `placeholder`, `textoAyuda`, `anchoColumnas`. Condiciones no existen en el modelo y quedaron inertes; no se inventaron propiedades.
+- Archivos modificados: Inspector HTML/SCSS/TS, selector accesible en `frontend/rl-app/e2e/modal-shell-lock.spec.ts`, bitácora y estado colaborativo.
+- Contrato: 0 propiedades JSON nuevas, 0 tipos nuevos, 0 serializer/normalizador nuevos o modificados, 0 backend/DB/migraciones/endpoints/dependencias; fórmula no ejecutada; `eval` y `new Function` ausentes; no Inspector paralelo.
+- Evidencia visual: PNG cargado y usado como referencia; flujo autenticado con mocks E2E en viewport 1536x1024, campo texto seleccionado en modo editable, captura revisada lado a lado; captura temporal eliminada. Solo lectura conserva identidad y bloquea controles. La desviación de alto global 95.31% pertenece a UI-FORM.1 y queda fuera de alcance.
+- Evidencia ejecutada: Inspector focalizado 31/31 PASS; frontend 63 archivos / 688 pruebas PASS; E2E 17/17 PASS; backend Release 494/494 PASS; cobertura Statements 62.03%, Branches 56.94%, Functions 58.04%, Lines 62.16%; lint PASS; build PASS con advertencias de presupuesto SCSS del componente y CommonJS `exceljs`; BD/documentación/quality gates PASS; `git diff --check` PASS.
+- Validación estructural: conserva hallazgo heredado fuera de alcance en `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta. No se modificó.
+- Estado: UI-FORM.4-R cerrada localmente; pendiente commit/push y verificación final `HEAD == origin/desarrollo`, ahead/behind `0/0`, worktree limpio. UI-FORM.5-R y UI-FORM.6-R no se abren.
+
 ## Registro de intervención - Codex - UI-FORM.3-R Reconciliación visual oficial
 
 - Fecha y hora: 2026-08-25 17:07 (UTC-6). Rama: `desarrollo`. HEAD inicial: `279e9ae75e84e58256866fee963c9b86aaa621f6`.
