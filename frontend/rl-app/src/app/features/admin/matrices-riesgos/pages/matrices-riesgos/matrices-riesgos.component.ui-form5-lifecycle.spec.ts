@@ -3,17 +3,21 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EstadoFormulario, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+let mockSwalResult = { isConfirmed: true };
 
 vi.mock('sweetalert2', () => ({
   default: {
-    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+    fire: vi.fn().mockImplementation(() => Promise.resolve(mockSwalResult))
   }
 }));
 
 describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
   let component: MatricesRiesgosComponent;
+  let authServiceMock: { tieneRol: ReturnType<typeof vi.fn> };
   let service: {
     obtenerVersionFormulario: ReturnType<typeof vi.fn>;
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
@@ -22,6 +26,9 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
     publicarVersionFormulario: ReturnType<typeof vi.fn>;
     cambiarVigenciaFormulario: ReturnType<typeof vi.fn>;
+    clonarVersionFormulario: ReturnType<typeof vi.fn>;
+    eliminarVersionFormulario: ReturnType<typeof vi.fn>;
+    crearBorradorFormulario: ReturnType<typeof vi.fn>;
     metodologiaVigente: ReturnType<typeof vi.fn>;
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
@@ -56,6 +63,11 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
   };
 
   beforeEach(async () => {
+    mockSwalResult = { isConfirmed: true };
+    authServiceMock = {
+      tieneRol: vi.fn().mockReturnValue(true)
+    };
+
     service = {
       obtenerVersionFormulario: vi.fn().mockReturnValue(of(baseVersion)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(baseVersion)),
@@ -64,6 +76,9 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
       publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
       cambiarVigenciaFormulario: vi.fn().mockReturnValue(of({ success: true })),
+      clonarVersionFormulario: vi.fn().mockReturnValue(of({ verId: 201 })),
+      eliminarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
+      crearBorradorFormulario: vi.fn().mockReturnValue(of(202)),
       metodologiaVigente: vi.fn().mockReturnValue(of(null)),
       metodologiaPorVersion: vi.fn().mockReturnValue(of(null)),
       obtenerEvaluacion: vi.fn().mockReturnValue(of(null)),
@@ -75,6 +90,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
       providers: [
+        { provide: AuthService, useValue: authServiceMock },
         { provide: MatricesRiesgosService, useValue: service }
       ]
     }).compileComponents();
@@ -84,7 +100,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     fixture.detectChanges();
   });
 
-  describe('1. Matriz de Estados y Solo Lectura Autoritativo', () => {
+  describe('1. Matriz de Estados y Solo Lectura Autoritativo (Admin)', () => {
     const matrizCasos: Array<{ estado: EstadoFormulario; vigente: boolean; soloLecturaEsperado: boolean; descripcion: string }> = [
       { estado: 'DRAFT', vigente: false, soloLecturaEsperado: false, descripcion: 'DRAFT no vigente -> editable' },
       { estado: 'DRAFT', vigente: true, soloLecturaEsperado: true, descripcion: 'DRAFT vigente -> solo lectura' },
@@ -115,8 +131,63 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     });
   });
 
-  describe('2. Guardar Borrador (Persistencia y Verificación Semántica)', () => {
-    it('guarda definición llamando a actualizarBorradorFormulario y verifica semánticamente', () => {
+  describe('2. Permisos y No-Admin (Defensa en Profundidad)', () => {
+    it('usuario no-admin abre DRAFT en modo solo lectura obligatoria', () => {
+      authServiceMock.tieneRol.mockReturnValue(false);
+      service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
+
+      component.abrirDefinicion(baseVersion, false);
+
+      expect(component.esAdministrador()).toBe(false);
+      expect(component.soloLecturaDefinicion()).toBe(true);
+    });
+
+    it('usuario no-admin no puede ejecutar mutaciones administrativas (guardas defensivas)', () => {
+      authServiceMock.tieneRol.mockReturnValue(false);
+      component.versionEditando.set(baseVersion);
+      component.soloLecturaDefinicion.set(false);
+
+      component.guardarDefinicion();
+      expect(service.actualizarBorradorFormulario).not.toHaveBeenCalled();
+
+      component.publicarVersion(baseVersion);
+      expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
+
+      component.clonarVersion(baseVersion);
+      expect(service.clonarVersionFormulario).not.toHaveBeenCalled();
+
+      component.cambiarVigenciaVersion(baseVersion, true);
+      expect(service.cambiarVigenciaFormulario).not.toHaveBeenCalled();
+
+      component.eliminarVersionFormulario(baseVersion);
+      expect(service.eliminarVersionFormulario).not.toHaveBeenCalled();
+
+      component.abrirModalCrearFormulario();
+      expect(component.modalFormularioAbierto()).toBe(false);
+
+      component.guardarNuevoFormulario();
+      expect(service.crearBorradorFormulario).not.toHaveBeenCalled();
+    });
+
+    it('en vista de plantillas, no-admin ve solo Ver Definición y no ve botones administrativos', () => {
+      authServiceMock.tieneRol.mockReturnValue(false);
+      component.tab.set('plantillas');
+      component.mostrandoVersionesFamilia.set(true);
+      component.versiones.set([baseVersion]);
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.querySelector('button[aria-label="Ver definición"]')).toBeTruthy();
+      expect(el.querySelector('button[aria-label="Editar definición"]')).toBeNull();
+      expect(el.querySelector('button[aria-label="Clonar versión"]')).toBeNull();
+      expect(el.querySelector('button[aria-label="Publicar versión"]')).toBeNull();
+      expect(el.querySelector('button[aria-label="Eliminar versión"]')).toBeNull();
+      expect(el.querySelector('button[title="Crear una nueva versión"]')).toBeNull();
+    });
+  });
+
+  describe('3. Guardar Borrador (Persistencia y Verificación Semántica)', () => {
+    it('guarda definición llamando a actualizarBorradorFormulario, verifica semánticamente y limpia operacionBuilderEnCurso', () => {
       service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
       component.abrirDefinicion(baseVersion);
 
@@ -128,7 +199,6 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       });
       component.definicionTecnica = jsonModificado;
 
-      // El servidor retorna la versión actualizada con el mismo JSON
       service.actualizarBorradorFormulario.mockReturnValue(of({ success: true }));
       service.obtenerVersionFormulario.mockReturnValue(of({
         ...baseVersion,
@@ -141,9 +211,11 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
       expect(component.mensaje()).toContain('verificada correctamente');
       expect(component.versionEditando()).toBeNull();
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
     });
 
-    it('bloquea cierre del builder si falla la verificación semántica post-save', () => {
+    it('bloquea cierre del builder si falla la verificación semántica post-save y resetea operacionBuilderEnCurso', () => {
       service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
       component.abrirDefinicion(baseVersion);
 
@@ -153,7 +225,6 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       });
       component.definicionTecnica = jsonModificado;
 
-      // Servidor responde con JSON diferente
       service.actualizarBorradorFormulario.mockReturnValue(of({ success: true }));
       service.obtenerVersionFormulario.mockReturnValue(of({
         ...baseVersion,
@@ -164,10 +235,12 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
 
       expect(component.versionEditando()).not.toBeNull();
       expect(component.error()).toContain('no coincide semánticamente');
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
     });
   });
 
-  describe('3. Publicación y Reconciliación Autoritativa', () => {
+  describe('4. Publicación y Reconciliación Autoritativa', () => {
     it('publica versión y refresca el builder a modo solo lectura si la versión estaba abierta', async () => {
       service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
       component.abrirDefinicion(baseVersion);
@@ -184,7 +257,6 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
 
       component.publicarVersion(baseVersion);
 
-      // Esperar resolución de SweetAlert2
       await new Promise(resolve => setTimeout(resolve, 50));
 
       expect(service.publicarVersionFormulario).toHaveBeenCalledWith(200);
@@ -192,9 +264,22 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       expect(component.versionEditando()?.verEstado).toBe('PUBLISHED');
       expect(component.versionEditando()?.verVigente).toBe(true);
       expect(component.soloLecturaDefinicion()).toBe(true);
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
     });
 
-    it('maneja error de publicación mostrando el mensaje del backend', async () => {
+    it('si el usuario cancela el diálogo de publicación, operacionBuilderEnCurso sigue en null y no hay requests', async () => {
+      mockSwalResult = { isConfirmed: false };
+
+      component.publicarVersion(baseVersion);
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(service.publicarVersionFormulario).not.toHaveBeenCalled();
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
+    });
+
+    it('maneja error de publicación mostrando el mensaje del backend y limpiando operacion', async () => {
       service.publicarVersionFormulario.mockReturnValue(throwError(() => ({
         status: 400,
         error: { mensaje: 'La versión no cumple con los requisitos para publicación.' }
@@ -205,6 +290,26 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
 
       expect(component.error()).toContain('La versión no cumple con los requisitos');
       expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
+    });
+
+    it('aplica fail-safe y cierra versión abierta si el re-fetch post-publicación falla', async () => {
+      service.obtenerVersionFormulario.mockReturnValue(of(baseVersion));
+      component.abrirDefinicion(baseVersion);
+
+      service.publicarVersionFormulario.mockReturnValue(of({ success: true }));
+      service.obtenerVersionFormulario.mockReturnValue(throwError(() => ({
+        status: 500,
+        error: { mensaje: 'Error al recuperar versión fresca' }
+      })));
+
+      component.publicarVersion(baseVersion);
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      expect(component.versionEditando()).toBeNull();
+      expect(component.error()).toContain('Error al recuperar versión fresca');
+      expect(component.guardando()).toBe(false);
+      expect(component.operacionBuilderEnCurso()).toBeNull();
     });
   });
 });

@@ -167,12 +167,12 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
     });
   });
 
-  describe('4. Estado Procesando (Doble Envío)', () => {
-    it('deshabilita botones Guardar Borrador y Publicar Versión cuando procesando es true', () => {
+  describe('4. Estado de Operación Preciso y Prevención de Doble Envío', () => {
+    it('cuando operacion es "guardar", muestra "Guardando..." y NO "Publicando..."', () => {
       component.soloLectura = false;
       component.estadoVersion = 'DRAFT';
       component.puedePublicar = true;
-      component.procesando = true;
+      component.operacion = 'guardar';
       fixture.detectChanges();
 
       const el = fixture.nativeElement as HTMLElement;
@@ -181,9 +181,32 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
 
       expect(btnGuardar.disabled).toBe(true);
       expect(btnGuardar.textContent).toContain('Guardando...');
+      expect(btnPublicar.disabled).toBe(true);
+      expect(btnPublicar.textContent).toContain('Publicar Versión');
+      expect(btnPublicar.textContent).not.toContain('Publicando...');
+    });
+
+    it('cuando operacion es "publicar", muestra "Publicando..." y NO "Guardando..."', () => {
+      component.soloLectura = false;
+      component.estadoVersion = 'DRAFT';
+      component.puedePublicar = true;
+      component.operacion = 'publicar';
+      fixture.detectChanges();
+
+      const el = fixture.nativeElement as HTMLElement;
+      const btnGuardar = el.querySelector('#btn-guardar-builder') as HTMLButtonElement;
+      const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
 
       expect(btnPublicar.disabled).toBe(true);
       expect(btnPublicar.textContent).toContain('Publicando...');
+      expect(btnGuardar.disabled).toBe(true);
+      expect(btnGuardar.textContent).toContain('Guardar Borrador');
+      expect(btnGuardar.textContent).not.toContain('Guardando...');
+    });
+
+    it('no contiene la clase no estándar py-0.2 en el template', () => {
+      const el = fixture.nativeElement as HTMLElement;
+      expect(el.innerHTML).not.toContain('py-0.2');
     });
   });
 });

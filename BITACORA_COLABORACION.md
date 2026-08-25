@@ -1,5 +1,45 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — AntiG — Microcierre Final Fase UI-FORM.5 (Permisos, Reconciliación y Estado de Proceso)
+
+- **Fecha y hora**: 2026-08-25 14:07, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `b57f07de1eb0269816982b8045becd96fe6073bd`.
+- **Objetivo y alcance**:
+  - Microcierre final y ajustes quirúrgicos de la Fase UI-FORM.5:
+    1. **Alineación estricta de permisos**: Reutilización exclusiva de `esAdministrador()` (sin inventar roles ni permisos paralelos) en la visibilidad del listado de versiones (ocultar Nueva Versión, Editar, Clonar, Publicar, Vigencia, Eliminar a no-admin, manteniendo "Ver definición" accesible).
+    2. **Apertura de definición autoritativa**: `soloLecturaDefinicion = soloLectura || !esAdministrador() || verVigente || verEstado !== 'DRAFT'` tras `obtenerVersionFormulario(verId)`.
+    3. **Guardas defensivas UX**: Protección en handlers administrativos (`guardarDefinicion`, `publicarVersion`, `clonarVersion`, `cambiarVigenciaVersion`, `eliminarVersionFormulario`, `abrirModalCrearFormulario`, `guardarNuevoFormulario`) con `if (!this.esAdministrador()) return;`.
+    4. **Bloqueo durante reconciliación**: En `publicarVersion()`, la operación de procesamiento (`operacionBuilderEnCurso = 'publicar'`, `guardando = true`) se mantiene activa durante todo el re-fetch autoritativo y solo se libera al culminar `obtenerVersionFormulario` (o aplicar fail-safe en error).
+    5. **Estado transitorio de operación y labels precisos**: `operacionBuilderEnCurso = signal<'guardar' | 'publicar' | null>(null)` transmitido a Toolbar. El botón Guardar muestra "Guardando..." únicamente durante `guardar`, y el botón Publicar muestra "Publicando..." únicamente durante `publicar`.
+    6. **Cancelación limpia**: Si el usuario cancela la confirmación SweetAlert2, `operacionBuilderEnCurso` se restablece a `null` y `guardando` a `false` sin emitir peticiones HTTP.
+    7. **Tailwind 3.4 standard**: Sustitución de `py-0.2` no estándar por `py-0.5` en badge de catálogos en toolbar.
+    8. **Restauración de OnPush**: `FormBuilderToolbarComponent` restaurado a `ChangeDetectionStrategy.OnPush`.
+- **Archivos modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ui-form5-lifecycle.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.workflow.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.formulario-persistencia.spec.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.operaciones.spec.ts`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Evidencia ejecutada**:
+  - 63/63 archivos de prueba frontend PASS (673/673 pruebas unitarias, 0 fallos).
+  - Cobertura frontend real (`npm run test:coverage`): **Statements = 61.66% (4,183/6,783), Branches = 56.51% (2,319/4,103), Functions = 57.74% (906/1,569), Lines = 61.95% (3,724/6,011)**.
+  - `npm run lint` PASS (0 errores).
+  - `npm run build` PASS (0 errores, bundle generado con éxito en 17.6s).
+  - `git diff --check` PASS (0 advertencias).
+- **Punto de continuación**: Continuar con las siguientes fases del Form Builder / Matrices de Riesgos según el roadmap rector.
+
+---
+
 ## Registro de Intervención — AntiG — Cierre Quirúrgico Fase UI-FORM.5 (Estados y Ciclo de Edición del Builder)
 
 - **Fecha y hora**: 2026-08-25 13:46, hora local (UTC-6).

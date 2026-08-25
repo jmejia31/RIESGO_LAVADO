@@ -64,6 +64,7 @@ export class FormBuilderComponent implements OnInit {
   @Input() estadoVersion?: EstadoFormulario;
   @Input() puedePublicar: boolean = false;
   @Input() procesando: boolean = false;
+  @Input() operacion: 'guardar' | 'publicar' | null = null;
 
   @Output() guardarJson = new EventEmitter<string>();
   @Output() publicar = new EventEmitter<void>();
@@ -487,13 +488,13 @@ export class FormBuilderComponent implements OnInit {
   }
 
   emitirGuardado(): void {
-    if (this.soloLectura || this.procesando) return;
+    if (this.soloLectura || this.procesando || this.operacion !== null) return;
     if (!this.validarYObtenerErrores()) return;
     this.guardarJson.emit(serializarBuilderModelAJson(this.model()));
   }
 
   emitirPublicar(): void {
-    if (this.soloLectura || this.procesando || !this.puedePublicar) return;
+    if (this.soloLectura || this.procesando || this.operacion !== null || !this.puedePublicar) return;
     this.publicar.emit();
   }
 }

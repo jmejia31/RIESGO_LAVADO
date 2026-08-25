@@ -8,7 +8,7 @@ import { EstadoFormulario } from '../../../models/matrices-riesgos.models';
   imports: [CommonModule],
   templateUrl: './form-builder-toolbar.component.html',
   styleUrls: ['./form-builder-toolbar.component.scss'],
-  changeDetection: ChangeDetectionStrategy.Default
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FormBuilderToolbarComponent {
   @Input() title: string = 'Constructor de Formularios Dinámicos';
@@ -23,6 +23,7 @@ export class FormBuilderToolbarComponent {
   @Input() mostrarJsonAvanzado: boolean = false;
   @Input() puedePublicar: boolean = false;
   @Input() procesando: boolean = false;
+  @Input() operacion: 'guardar' | 'publicar' | null = null;
 
   @Output() cambiarVista = new EventEmitter<'secciones' | 'catalogos'>();
   @Output() toggleJson = new EventEmitter<void>();
@@ -31,6 +32,22 @@ export class FormBuilderToolbarComponent {
   @Output() guardar = new EventEmitter<void>();
   @Output() publicar = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
+
+  get estaProcesando(): boolean {
+    return this.procesando || this.operacion !== null;
+  }
+
+  get labelGuardar(): string {
+    return this.operacion === 'guardar'
+      ? 'Guardando...'
+      : (this.procesando && this.operacion === null ? 'Guardando...' : 'Guardar Borrador');
+  }
+
+  get labelPublicar(): string {
+    return this.operacion === 'publicar'
+      ? 'Publicando...'
+      : (this.procesando && this.operacion === null ? 'Publicando...' : 'Publicar Versión');
+  }
 
   get estadoEtiqueta(): string {
     const mapaEstados: Record<EstadoFormulario, string> = {

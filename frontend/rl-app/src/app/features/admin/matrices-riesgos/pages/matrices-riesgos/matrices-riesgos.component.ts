@@ -67,6 +67,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
   readonly guardando = signal(false);
+  readonly operacionBuilderEnCurso = signal<'guardar' | 'publicar' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
@@ -1335,6 +1336,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   clonarVersion(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     this.guardando.set(true);
     this.service.clonarVersionFormulario(version.verId).subscribe({
       next: () => {
@@ -1356,7 +1358,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: versionAutoritativa => {
         this.cargando.set(false);
         this.versionEditando.set(versionAutoritativa);
-        this.soloLecturaDefinicion.set(soloLectura || versionAutoritativa.verVigente || versionAutoritativa.verEstado !== 'DRAFT');
+        this.soloLecturaDefinicion.set(
+          soloLectura ||
+          !this.esAdministrador() ||
+          versionAutoritativa.verVigente ||
+          versionAutoritativa.verEstado !== 'DRAFT'
+        );
         this.definicionTecnica = this.formatearDefinicion(versionAutoritativa.verJson);
       },
       error: error => {
@@ -1368,6 +1375,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   guardarDefinicion(): void {
+    if (!this.esAdministrador() || this.soloLecturaDefinicion()) return;
     const version = this.versionEditando();
     if (!version) return;
 
@@ -1382,11 +1390,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     this.guardando.set(true);
+    this.operacionBuilderEnCurso.set('guardar');
     this.service.actualizarBorradorFormulario(version.verId, jsonEnviado).subscribe({
       next: () => {
         this.service.obtenerVersionFormulario(version.verId).subscribe({
           next: versionPersistida => {
             this.guardando.set(false);
+            this.operacionBuilderEnCurso.set(null);
             const sonEquivalentes = sonJsonSemanticamenteEquivalentes(
               jsonEnviado,
               versionPersistida.verJson
@@ -1404,6 +1414,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           },
           error: getError => {
             this.guardando.set(false);
+            this.operacionBuilderEnCurso.set(null);
             this.mostrarError(
               this.obtenerMensajeError(
                 getError,
@@ -1415,12 +1426,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.guardando.set(false);
+        this.operacionBuilderEnCurso.set(null);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la definición del formulario.'));
       }
     });
   }
 
   publicarVersion(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
         title: '¿Publicar versión oficial?',
@@ -1440,9 +1453,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       }).then((result) => {
         if (result.isConfirmed) {
           this.guardando.set(true);
+          this.operacionBuilderEnCurso.set('publicar');
           this.service.publicarVersionFormulario(version.verId).subscribe({
             next: () => {
-              this.guardando.set(false);
               this.globalState.limpiarError();
               this.mostrarMensaje('Versión publicada y establecida como vigente correctamente.');
               this.cargarVersiones();
@@ -1451,28 +1464,42 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               if (this.versionEditando()?.verId === version.verId) {
                 this.service.obtenerVersionFormulario(version.verId).subscribe({
                   next: versionFresca => {
+                    this.guardando.set(false);
+                    this.operacionBuilderEnCurso.set(null);
                     this.versionEditando.set(versionFresca);
-                    this.soloLecturaDefinicion.set(versionFresca.verVigente || versionFresca.verEstado !== 'DRAFT');
+                    this.soloLecturaDefinicion.set(
+                      !this.esAdministrador() || versionFresca.verVigente || versionFresca.verEstado !== 'DRAFT'
+                    );
                     this.definicionTecnica = this.formatearDefinicion(versionFresca.verJson);
                   },
                   error: err => {
+                    this.guardando.set(false);
+                    this.operacionBuilderEnCurso.set(null);
                     this.mostrarError(this.obtenerMensajeError(err, 'No se pudo refrescar el estado de la versión tras la publicación.'));
                     this.versionEditando.set(null);
                   }
                 });
+              } else {
+                this.guardando.set(false);
+                this.operacionBuilderEnCurso.set(null);
               }
             },
             error: error => {
               this.guardando.set(false);
+              this.operacionBuilderEnCurso.set(null);
               this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
             }
           });
+        } else {
+          this.guardando.set(false);
+          this.operacionBuilderEnCurso.set(null);
         }
       });
     });
   }
 
   cambiarVigenciaVersion(version: VersionFormularioDto, vigente: boolean): void {
+    if (!this.esAdministrador()) return;
     const accion = vigente ? 'activar' : 'desactivar';
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
@@ -1506,6 +1533,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   eliminarVersionFormulario(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     if (version.verEstado !== 'DRAFT' || version.verVigente) {
       this.mostrarError('Las versiones publicadas forman parte del historial y no pueden eliminarse. Para modificar, clone la versión a un nuevo borrador.');
       return;
@@ -1543,6 +1571,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   abrirModalCrearFormulario(): void {
+    if (!this.esAdministrador()) return;
     const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
     this.nuevoFormularioCodigo = famObj?.famCodigo || 'MATRIZ_NUEVA';
     this.nuevoFormularioNombre = famObj?.famNombre || 'Nueva Matriz de Riesgos';
@@ -1558,6 +1587,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   guardarNuevoFormulario(): void {
+    if (!this.esAdministrador()) return;
     const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
     if (!famObj) {
       this.errorModal.set('Seleccione una familia válida para crear el formulario.');

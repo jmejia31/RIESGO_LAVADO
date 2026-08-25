@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 describe('MatricesRiesgosComponent — operaciones del componente', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -126,7 +127,10 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
+        { provide: MatricesRiesgosService, useValue: service }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MatricesRiesgosComponent);
