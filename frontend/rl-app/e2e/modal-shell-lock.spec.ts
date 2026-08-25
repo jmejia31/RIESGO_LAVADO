@@ -102,10 +102,10 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
     expect(await page.evaluate(() => document.querySelector('dialog[open][aria-modal="true"]')?.contains(document.activeElement))).toBe(true);
   }
 
-  const primerCampoCard = dialogo.locator('.grid > div').first();
+  const primerCampoCard = dialogo.getByRole('main', { name: 'Lienzo del formulario' }).locator('article').first();
   await primerCampoCard.click();
-  const inspector = page.getByText('Propiedades del Campo', { exact: true }).locator('..');
-  const clave = inspector.locator('input[type="text"]').first();
+  const inspector = dialogo.getByRole('complementary', { name: 'Inspector de propiedades' });
+  const clave = inspector.getByRole('textbox', { name: 'Clave Técnica (JSON Key)' });
   await expect(clave).toBeEnabled();
   await clave.fill('area_responsable_actualizada');
   await expect(clave).toHaveValue('area_responsable_actualizada');

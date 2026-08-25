@@ -39,7 +39,16 @@ describe('MatricesRiesgosComponent', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
-      obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
+      obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({
+        famId: 1,
+        famCodigo: 'MATRIZ_RIESGOS_LAFT',
+        famNombre: 'Matriz de Riesgos LAFT',
+        famDescripcion: '',
+        famActivo: true,
+        famFechaCreacion: '2026-08-01T00:00:00',
+        totalVersiones: 0,
+        tieneVersionVigente: false
+      })),
       crearFamiliaFormulario: vi.fn().mockReturnValue(of(2)),
       actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
       desactivarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
@@ -208,7 +217,7 @@ describe('MatricesRiesgosComponent', () => {
     expect('nivelResidualLocal' in instancia).toBe(false);
   });
 
-  it('abre el modal standalone de creación y permite editar y desactivar familias desde la interfaz', () => {
+  it('delega creación y edición en modales standalone y permite desactivar familias', () => {
     component.abrirModalCrearFamilia();
     expect(document.body.querySelector('app-familia-crear-modal')).not.toBeNull();
     expect(component.modalFamiliaAbierto()).toBe(false);
@@ -216,12 +225,12 @@ describe('MatricesRiesgosComponent', () => {
     expect(document.body.querySelector('app-familia-crear-modal')).toBeNull();
 
     const familia = component.familias()[0];
+    vi.spyOn(component, 'esAdministrador').mockReturnValue(true);
     component.abrirModalEditarFamilia(familia);
-    component.nuevaFamiliaNombre = 'Formulario LAFT actualizado';
-    component.guardarFamilia();
-    expect(service.actualizarFamiliaFormulario).toHaveBeenCalledWith(1, expect.objectContaining({
-      famNombre: 'Formulario LAFT actualizado'
-    }));
+    expect(document.body.querySelector('app-familia-editar-modal')).not.toBeNull();
+    expect(component.modalFamiliaAbierto()).toBe(false);
+    component.cerrarModalEditarFamilia();
+    expect(document.body.querySelector('app-familia-editar-modal')).toBeNull();
 
     component.desactivarFamilia(familia);
     expect(service.desactivarFamiliaFormulario).toHaveBeenCalledWith(1);
@@ -377,14 +386,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(spy).toHaveBeenCalled();
     expect(component.versionEditando()).toBeNull();
 
-    // 2. El modal de edición sigue bajo el manejador Escape del componente padre.
-    const familia = component.familias()[0];
-    component.abrirModalEditarFamilia(familia);
-    expect(component.modalFamiliaAbierto()).toBe(true);
-    component.manejarTeclaEscape(ev);
-    expect(component.modalFamiliaAbierto()).toBe(false);
-
-    // 3. Modal formulario abierto
+    // 2. Modal formulario abierto. Los modales standalone gestionan Escape internamente.
     component.abrirModalCrearFormulario();
     expect(component.modalFormularioAbierto()).toBe(true);
     component.manejarTeclaEscape(ev);

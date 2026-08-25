@@ -147,32 +147,32 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
     const panel = fixture.nativeElement.querySelector('#panel-plantillas') as HTMLElement;
     expect(panel).toBeTruthy();
 
-    const botonesDeVersion = (versionId: number): string[] => {
+    const accionesDeVersion = (versionId: number): string[] => {
       const tarjetas = Array.from(panel.querySelectorAll('article')) as HTMLElement[];
       const tarjeta = tarjetas.find(item => item.textContent?.includes(`ID #${versionId}`));
       expect(tarjeta).toBeTruthy();
       return Array.from(tarjeta!.querySelectorAll('button'))
-        .map(boton => (boton.textContent ?? '').replace(/\s+/g, ' ').trim());
+        .map(boton => boton.getAttribute('aria-label') ?? '');
     };
 
-    const draft = botonesDeVersion(101);
-    expect(draft).toEqual(expect.arrayContaining(['Ver definición', 'Editar definición', 'Clonar', 'Publicar', 'Eliminar']));
-    expect(draft).not.toContain('Activar');
-    expect(draft).not.toContain('Desactivar');
+    const draft = accionesDeVersion(101);
+    expect(draft).toEqual(expect.arrayContaining(['Ver definición', 'Editar definición', 'Clonar versión', 'Publicar versión', 'Eliminar versión']));
+    expect(draft).not.toContain('Activar versión');
+    expect(draft).not.toContain('Desactivar versión');
 
-    const vigente = botonesDeVersion(102);
-    expect(vigente).toEqual(expect.arrayContaining(['Ver definición', 'Clonar', 'Desactivar']));
+    const vigente = accionesDeVersion(102);
+    expect(vigente).toEqual(expect.arrayContaining(['Ver definición', 'Clonar versión', 'Desactivar versión']));
     expect(vigente).not.toContain('Editar definición');
-    expect(vigente).not.toContain('Publicar');
-    expect(vigente).not.toContain('Eliminar');
-    expect(vigente).not.toContain('Activar');
+    expect(vigente).not.toContain('Publicar versión');
+    expect(vigente).not.toContain('Eliminar versión');
+    expect(vigente).not.toContain('Activar versión');
 
-    const historica = botonesDeVersion(100);
-    expect(historica).toEqual(expect.arrayContaining(['Ver definición', 'Clonar', 'Activar']));
+    const historica = accionesDeVersion(100);
+    expect(historica).toEqual(expect.arrayContaining(['Ver definición', 'Clonar versión', 'Activar versión']));
     expect(historica).not.toContain('Editar definición');
-    expect(historica).not.toContain('Publicar');
-    expect(historica).not.toContain('Eliminar');
-    expect(historica).not.toContain('Desactivar');
+    expect(historica).not.toContain('Publicar versión');
+    expect(historica).not.toContain('Eliminar versión');
+    expect(historica).not.toContain('Desactivar versión');
   });
 
   it('clona una PUBLISHED como nuevo borrador y refresca el historial', () => {

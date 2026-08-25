@@ -92,6 +92,13 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component.cerrarModalVerFamilia();
   });
 
+  const mostrarGestorPrincipal = (): void => {
+    component.cerrarModalGestorFamilias();
+    component.tab.set('plantillas');
+    component.mostrandoVersionesFamilia.set(false);
+    fixture.detectChanges();
+  };
+
   it('1. Renderiza el botón Administrar Familias y abre el modal gestor', () => {
     expect(component.modalGestorFamiliasAbierto()).toBe(true);
     const compiled = fixture.nativeElement as HTMLElement;
@@ -204,6 +211,8 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('12. UI-FAM.QA calcula correctamente los cuatro KPI del gestor', () => {
+    mostrarGestorPrincipal();
+
     expect(component.totalFamilias()).toBe(3);
     expect(component.totalFamiliasActivas()).toBe(2);
     expect(component.totalFamiliasInactivas()).toBe(1);
@@ -237,6 +246,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('17. UI-FAM.QA muestra estado vacío cuando búsqueda y filtros no tienen coincidencias', () => {
+    mostrarGestorPrincipal();
     component.filtroBuscarFamilia.set('NO_EXISTE_999');
     fixture.detectChanges();
 
@@ -262,15 +272,13 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('19. UI-FAM.QA conserva contrato responsive para desktop y resolución reducida', () => {
+    mostrarGestorPrincipal();
     const compiled = fixture.nativeElement as HTMLElement;
-    const dialog = compiled.querySelector('dialog[aria-labelledby="titulo-modal-gestor-familias"]');
-    const container = dialog?.querySelector('.modal-container-card');
-    const tablaResponsive = dialog?.querySelector('.overflow-x-auto');
-    const indicadores = dialog?.querySelector('[aria-label="Indicadores de familias de formularios"]');
+    const container = compiled.querySelector('[data-ui-fam="gestor-principal"]');
+    const tablaResponsive = container?.querySelector('.overflow-x-auto');
+    const indicadores = container?.querySelector('[aria-label="Indicadores de familias de formularios"]');
 
-    expect(container?.className).toContain('w-full');
-    expect(container?.className).toContain('max-w-6xl');
-    expect(container?.className).toContain('max-h-[90vh]');
+    expect(container).not.toBeNull();
     expect(tablaResponsive).not.toBeNull();
     expect(indicadores?.className).toContain('grid-cols-1');
     expect(indicadores?.className).toContain('sm:grid-cols-2');
