@@ -47,7 +47,7 @@ describe('Form Builder — componentes presentacionales productivos', () => {
     component.agregarCampo.subscribe(control => controlEmitido = control);
     fixture.detectChanges();
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector('.palette-card')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(controlEmitido).toEqual(controles[0]);
   });
 
@@ -62,7 +62,8 @@ describe('Form Builder — componentes presentacionales productivos', () => {
     fixture.detectChanges();
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(texto).toContain('Estructura del formulario');
+    expect(texto).toContain('Estructura');
+    expect(texto).toContain('Solo lectura');
     expect(texto).toContain('Información general');
     expect(texto).toContain('Nombre');
     expect(texto).not.toContain('Biblioteca de campos');

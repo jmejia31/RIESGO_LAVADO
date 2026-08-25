@@ -174,7 +174,8 @@
         (eliminarCampo)="eliminarCampo($event.seccionId, $event.campoId)"
         (reordenarCampo)="reordenarCampo($event.seccionId, $event.index, $event.direccion)"
         (tituloSeccionChange)="actualizarTituloSeccion($event.seccionId, $event.titulo)"
-        (columnasSeccionChange)="actualizarColumnasSeccion($event.seccionId, $event.columnas)">
+        (columnasSeccionChange)="actualizarColumnasSeccion($event.seccionId, $event.columnas)"
+        (soltarControl)="procesarSoltarControl($event)">
       </app-form-builder-canvas>
 
       <app-form-builder-inspector

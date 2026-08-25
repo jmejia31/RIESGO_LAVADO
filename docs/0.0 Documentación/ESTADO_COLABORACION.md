@@ -1,6 +1,6 @@
 # Estado de colaboración y punto de continuidad
 
-**Actualización:** 2026-08-25 — Cierre local y preparación de certificación remota UI-FORM.1 por Codex
+**Actualización:** 2026-08-25 — Implementación y cierre UI-FORM.2 y corrección modal full-screen por AntiG
 **Proyecto:** RIESGO_LAVADO / SGRLA-IHSS  
 **Rama autorizada:** `desarrollo`  
 **PR rector:** #20 `desarrollo -> main` — OPEN / DRAFT / NOT MERGED  
@@ -30,8 +30,27 @@
 | **UI-FAM.3 — Crear familia en modal** | **✅ CERRADA Y CERTIFICADA LOCALMENTE** | Implementación publicada previamente; corrección mínima de tipado DI sin cambios visuales y regresión E2E alineada con UI-FAM.2 integrada. 51/51 suites y 473/473 frontend PASS; 17/17 Playwright PASS; 494/494 backend Release PASS; lint, build y Quality Gates locales PASS. SonarCloud remoto diferido al cierre global. |
 | **UI-FAM.4 — Editar familia y ciclo de vida** | **⏳ PENDIENTE** | Código inmutable, edición de Nombre/Descripción y acciones explícitas de activar/desactivar/eliminar con confirmaciones y reglas del backend. |
 | **UI-FAM.QA — Integración/certificación final** | **⏳ PENDIENTE** | Certificación conjunta de las cuatro interfaces, accesibilidad, responsive, errores, permisos y regresión. |
-| **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **⏳ CIERRE LOCAL COMPLETO; CERTIFICACIÓN REMOTA EN CURSO** | Infraestructura publicada en `e26c2ce`; fix técnico `dfa85b3`. Primer error causal y seis expectativas obsoletas corregidos sin tocar producción. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS; falta confirmar Quality Gates y Sonar Analysis SUCCESS sobre el SHA final publicado. |
-| **UI-FORM.2 — Biblioteca y estructura del formulario** | **⏳ PENDIENTE** | Biblioteca/estructura y búsqueda local (no iniciada en esta fase). |
+| **UI-FORM.1 — Integración Workspace V2 Shell y Layout** | **✅ COMPLETA Y CERTIFICADA** | Shell de 5 regiones V2 integrado en FormBuilderComponent productivo. 527/527 frontend, 494/494 backend, 17/17 Playwright, coverage y Quality Gates locales PASS. |
+| **UI-FORM.2 — Biblioteca y estructura del formulario** | **✅ COMPLETA Y CERTIFICADA** | Búsqueda insensible a mayúsculas/acentos, 3 categorías canónicas (Básicos, Selección, Avanzados), tarjetas pro con icono SVG/handle, drag & drop con payload seguro (`tipo`), drop-zones visuales por sección, validación segura en motor `FormBuilderComponent`, auto-selección en inspector, bloqueo ESC. 574/574 frontend PASS (58 suites), 716/716 backend Release PASS, lint PASS, build PASS. |
+
+---
+
+## UI-FORM.2 — Implementación, Corrección Modal y Cierre — 2026-08-25
+
+- **Modal Geometry Fix**: Eliminadas las reglas desalineadas `form-builder-modal-card` en `src/styles.css` para utilizar estrictamente el contrato canónico de `Detalle de Familia` (`modal-backdrop-overlay` + `.modal-container-card flex h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl`). Tecla Escape bloqueada institucionalmente con `(keydown.escape)="$event.preventDefault(); $event.stopPropagation()"`.
+- **Biblioteca de Controles**:
+  - Buscador reactivo por etiqueta, descripción, tipo y categoría normalizada, con botón de limpieza `✕`, contador de coincidencias y empty state ("No se encontraron campos compatibles").
+  - 3 categorías oficiales: **BÁSICOS** (`texto`, `numero`, `fecha`, `texto-largo`), **SELECCIÓN** (`selector-catalogo`, `radio`, `catalogo-multiple`, `checkbox`), **AVANZADOS** (`formula`). Exactamente 9 tipos oficiales soportados, 0 tipos nuevos inventados.
+  - Tarjetas compactas con SVG icon/handle, clave técnica, hover y cursor grab.
+  - Estados editable vs solo lectura: en solo lectura muestra árbol de "Estructura del formulario" sin acciones de modificación; en editable sin sección activa muestra advertencia ("Selecciona una sección en el lienzo para agregar campos").
+  - Drag & Drop: Palette transfiere únicamente el string `tipo`; Canvas detecta dragover/dragleave/drop y muestra drop-zones visuales por sección; `FormBuilderComponent` valida contra `TIPOS_CONTROLES_DISPONIBLES` y selecciona automáticamente el nuevo campo en el Inspector.
+- **Evidencia propia**:
+  - 58/58 suites y 574/574 pruebas frontend PASS (0 errores).
+  - Cobertura frontend: 61.11% sentencias, 55.69% ramas, 57.07% funciones, 61.39% líneas.
+  - 716/716 pruebas backend Release PASS.
+  - `npm run lint` y `npm run build` PASS.
+- **Punto de continuación**: Fase UI-FORM.3 (Lienzo, Reordenamiento y Operaciones de Sección).
+
 
 ---
 

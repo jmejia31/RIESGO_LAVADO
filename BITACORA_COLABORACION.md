@@ -1,6 +1,48 @@
 # Bitácora de Colaboración Transversal
 
-## Registro de Intervención — Codex — Cierre local y preparación de certificación remota UI-FORM.1
+## Registro de Intervención — AntiG — Implementación y Cierre UI-FORM.2 y Corrección Modal Full-Screen
+
+- **Fecha y hora**: 2026-08-25 11:18, hora local (UTC-6).
+- **Agente**: AntiG (Antigravity).
+- **Rama / SHA inicial**: `desarrollo` / `c76271dc6433ab780f14d0b1cf3ce123335c63d3`.
+- **Objetivo y alcance**:
+  1. Corregir la geometría del modal del Constructor de Formularios Dinámicos para eliminar la franja superior anómala, alineándolo estrictamente con el patrón institucional canónico de `Detalle de Familia` (`modal-backdrop-overlay` + `.modal-container-card flex h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl`), eliminando las reglas especiales desalineadas en `src/styles.css` y bloqueando la tecla Escape (`(keydown.escape)="$event.preventDefault(); $event.stopPropagation()"`).
+  2. Implementar Fase UI-FORM.2 (Biblioteca de Campos):
+     - Búsqueda en tiempo real case-insensitive y accent-insensitive por etiqueta, descripción, tipo y categoría.
+     - Botón para limpiar búsqueda, contador dinámico de coincidencias y empty state ("No se encontraron campos compatibles").
+     - Agrupación en 3 categorías canónicas: BÁSICOS (texto, numero, fecha, texto-largo), SELECCIÓN (selector-catalogo, radio, catalogo-multiple, checkbox), AVANZADOS (formula). Exactamente 9 tipos oficiales, 0 tipos inventados.
+     - Tarjetas profesionales compactas con handle/icono SVG, clave técnica, hover y cursor grab.
+     - Modo editable (`soloLectura === false`): click y drag & drop habilitados cuando hay sección activa; si no hay sección activa muestra aviso ("Selecciona una sección en el lienzo para agregar campos").
+     - Modo solo lectura (`soloLectura === true`): visualiza "Estructura del formulario" con badge de solo lectura, permitiendo navegación e inspección sin añadir/editar/reordenar/eliminar.
+     - Drag & Drop seguro: Palette transporta exclusivamente el string `tipo`; Canvas detecta dragover/dragleave/drop y emite `{ seccionId, tipo }`; `FormBuilderComponent` valida el tipo contra `TIPOS_CONTROLES_DISPONIBLES` como frontera de seguridad y selecciona automáticamente el nuevo campo creado en el Inspector.
+- **Archivos funcionales y de prueba creados / modificados**:
+  - `frontend/rl-app/src/styles.css` (eliminada excepción `form-builder-modal-card` para usar el patrón modal unificado institucional).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html` (alineado contenedor modal y bloqueo de Escape).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/palette/form-builder-palette.component.ts` (búsqueda, normalización acentos, categorías computadas, dragstart seguro).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/palette/form-builder-palette.component.html` (buscador, badges, empty state, 3 categorías, tarjetas profesionales).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/palette/form-builder-palette.component.scss` (estilos compactos y drag).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/palette/form-builder-palette.component.spec.ts` (17 pruebas unitarias completas).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.ts` (handlers dragover, dragleave, drop emitiendo payload seguro).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.html` (zonas visuales drop-zone con título de sección).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/canvas/form-builder-canvas.component.spec.ts` (5 pruebas unitarias de drag & drop).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.ts` (método `procesarSoltarControl` con validación y auto-selección de campo).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.html` (enlace del evento `soltarControl`).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.component.spec.ts` (suite UI-FORM.2 de seguridad, tipos y drop).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.presentation.spec.ts` y `.shell-persistence.spec.ts` (actualizadas aserciones).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.spec.ts` (alineado mock de auditoría).
+- **Evidencia ejecutada en esta intervención**:
+  - Suite frontend completa: **58/58 archivos y 574/574 pruebas PASS** (0 fallos).
+  - Cobertura frontend: **61.11% sentencias, 55.69% ramas, 57.07% funciones, 61.39% líneas** (módulos Form Builder y Matrices ~95-100%).
+  - Linter frontend (`npm run lint`): **PASS** (0 errores).
+  - Build frontend (`npm run build`): **PASS** (0 errores).
+  - Backend tests (`dotnet test --configuration Release --no-restore`): **716/716 PASS** (`RL.Domain.Tests`: 31, `RL.Infrastructure.Tests`: 48, `RL.Application.Tests`: 143, `RL.API.Tests`: 494).
+  - `git diff --check`: **PASS**.
+- **Pruebas no ejecutadas**: Pruebas Oracle institucionales directas, AD y SMTP (sin cambios en backend/Oracle).
+- **Punto de continuación**: Fase UI-FORM.3 (Lienzo, Reordenamiento y Operaciones de Sección).
+
+---
+
+
 
 - **Fecha y hora**: 2026-08-25 08:52, hora local (UTC-6).
 - **Agente**: Codex.

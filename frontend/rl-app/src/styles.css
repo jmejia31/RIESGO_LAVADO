@@ -181,43 +181,11 @@ body.modal-abierto app-main-layout > div > div > header {
  * ventanas pegadas a los bordes y preservar la percepción de capa flotante.
  */
 dialog.modal-backdrop-overlay > .modal-container-card {
-  max-height: 90dvh !important;
+  max-height: 92dvh !important;
 }
 
 /*
- * UI-FORM.1 — contrato visual del constructor.
- * El Form Builder usa un único shell productivo y ocupa 96% del ancho por 94% del alto en escritorio,
- * conservando un margen visible y centrado sin duplicar ningún workspace paralelo.
- */
-dialog.modal-backdrop-overlay:has(> .modal-container-card.form-builder-modal-card) {
-  padding: 2vh 2vw;
-}
 
-dialog.modal-backdrop-overlay > .modal-container-card.form-builder-modal-card {
-  width: 96vw;
-  max-width: 96vw;
-  height: 94dvh;
-  max-height: 94dvh !important;
-  border-radius: 1.25rem;
-  box-shadow: 0 30px 80px rgb(15 23 42 / 0.32);
-}
-
-@media (max-width: 1180px) {
-  dialog.modal-backdrop-overlay > .modal-container-card.form-builder-modal-card {
-    width: 92vw;
-  }
-}
-
-@media (max-width: 720px) {
-  dialog.modal-backdrop-overlay > .modal-container-card.form-builder-modal-card {
-    width: calc(100vw - 1.5rem);
-    height: 92dvh;
-    max-height: 92dvh !important;
-    border-radius: 1rem;
-  }
-}
-
-/*
  * Presentación institucional de Versiones de Formulario.
  * Se limita estrictamente al panel Plantillas: conserva los handlers y el texto accesible original,
  * pero presenta las versiones como filas compactas y las acciones como iconos con tooltip.

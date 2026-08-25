@@ -66,7 +66,8 @@ describe('FormBuilderComponent - shell permanente UI-FORM.1', () => {
     const host = fixture.nativeElement as HTMLElement;
     const estructura = host.querySelector('aside[aria-label="Estructura del formulario"]');
     expect(estructura).not.toBeNull();
-    expect(estructura?.textContent).toContain('Estructura del formulario');
+    expect(estructura?.textContent).toContain('Estructura');
+    expect(estructura?.textContent).toContain('Solo lectura');
     expect(estructura?.textContent).not.toContain('Biblioteca de campos');
   });
 });

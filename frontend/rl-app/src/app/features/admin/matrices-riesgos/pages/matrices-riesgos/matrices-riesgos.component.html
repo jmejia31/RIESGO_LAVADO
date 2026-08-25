@@ -563,8 +563,12 @@
   }
 
   @if (versionEditando(); as versionActual) {
-     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-builder">
-      <div class="modal-container-card form-builder-modal-card">
+     <dialog open
+             class="modal-backdrop-overlay"
+             aria-modal="true"
+             aria-labelledby="titulo-modal-builder"
+             (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card flex h-[92dvh] max-h-[92dvh] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"

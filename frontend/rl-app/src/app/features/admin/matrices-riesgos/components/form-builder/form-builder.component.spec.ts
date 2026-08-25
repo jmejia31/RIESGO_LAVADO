@@ -309,4 +309,80 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(component.model().secciones[0].titulo).toBe('Nuevo Título Sección');
     });
   });
+
+  describe('UI-FORM.2 — Drag & Drop seguro, Gate de Tipos y Selección Automática', () => {
+    it('1. valida el tipo soltado contra TIPOS_CONTROLES_DISPONIBLES y agrega el campo', () => {
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'numero' });
+
+      const camposDespues = component.model().secciones[0].campos;
+      expect(camposDespues).toHaveLength(totalAntes + 1);
+      const nuevoCampo = camposDespues[camposDespues.length - 1];
+      expect(nuevoCampo.tipo).toBe('numero');
+      expect(component.seccionActivaId()).toBe(seccionId);
+      expect(component.campoActivo()?.id).toBe(nuevoCampo.id);
+    });
+
+    it('2. rechaza e ignora payloads de tipos no soportados o inventados (firma-digital, archivo, etc.)', () => {
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'firma-digital' });
+      component.procesarSoltarControl({ seccionId, tipo: 'archivo' });
+      component.procesarSoltarControl({ seccionId, tipo: 'geolocalizacion' });
+      component.procesarSoltarControl({ seccionId, tipo: 'tipo-arbitrario-xyz' });
+
+      expect(component.model().secciones[0].campos).toHaveLength(totalAntes);
+    });
+
+    it('3. drop de campo formula crea el campo con soloLectura: true de forma inmutable', () => {
+      const seccionId = component.model().secciones[0].id;
+      component.procesarSoltarControl({ seccionId, tipo: 'formula' });
+
+      const campo = component.campoActivo();
+      expect(campo).toBeTruthy();
+      expect(campo?.tipo).toBe('formula');
+      expect(campo?.soloLectura).toBe(true);
+    });
+
+    it('4. drop de selector-catalogo asigna catalogo de la plantilla sin inventar catalogos falsos', () => {
+      const seccionId = component.model().secciones[0].id;
+      component.procesarSoltarControl({ seccionId, tipo: 'selector-catalogo' });
+
+      const campo = component.campoActivo();
+      expect(campo).toBeTruthy();
+      expect(campo?.tipo).toBe('selector-catalogo');
+      expect(campo?.codigoCatalogo).toBe('CAT_AREA');
+    });
+
+    it('5. rechaza operaciones de drop cuando soloLectura es true', () => {
+      component.soloLectura = true;
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'texto' });
+
+      expect(component.model().secciones[0].campos).toHaveLength(totalAntes);
+    });
+
+    it('6. gate obligatorio de tipos: TIPOS_CONTROLES_DISPONIBLES contiene exactamente los 9 tipos oficiales (0 inventados)', () => {
+      const tipos = component.tiposControles.map(t => t.tipo).sort();
+      const tiposOficiales = [
+        'catalogo-multiple',
+        'checkbox',
+        'fecha',
+        'formula',
+        'numero',
+        'radio',
+        'selector-catalogo',
+        'texto',
+        'texto-largo'
+      ].sort();
+
+      expect(tipos).toEqual(tiposOficiales);
+      expect(tipos.length).toBe(9);
+    });
+  });
 });

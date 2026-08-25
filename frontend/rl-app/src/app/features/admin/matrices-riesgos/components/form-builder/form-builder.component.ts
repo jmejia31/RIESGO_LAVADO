@@ -177,7 +177,17 @@ export class FormBuilderComponent implements OnInit {
     const seccionesActualizadas = [...current.secciones];
     seccionesActualizadas[seccionIndex] = { ...seccion, campos: [...seccion.campos, nuevoCampo] };
     this.model.set({ ...current, secciones: seccionesActualizadas });
+    this.seccionActivaId.set(seccionId);
     this.campoActivo.set(nuevoCampo);
+  }
+
+  procesarSoltarControl(evento: { seccionId: string; tipo: string }): void {
+    if (this.soloLectura) return;
+    const definicion = this.tiposControles.find(x => x.tipo === evento.tipo);
+    if (!definicion) {
+      return;
+    }
+    this.agregarCampoASeccion(evento.seccionId, definicion);
   }
 
   seleccionarCampo(campo: CampoBuilderModel): void {

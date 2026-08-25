@@ -14,3 +14,12 @@
   background: #ffffff;
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
 }
+
+.palette-card {
+  user-select: none;
+  -webkit-user-drag: element;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
