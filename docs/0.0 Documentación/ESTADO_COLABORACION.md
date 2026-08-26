@@ -415,3 +415,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia: PNG observado y comparación lado a lado inicial/intermedia/final a 1536x1024; frontend 690/690, backend 494/494, E2E 21/21, lint/build/coverage/BD/documentación/Quality Gates PASS. Coverage 61.99/56.98/58.07/62.20. Estructura conserva fallo heredado de `core/services/global-http-state.service.ts`.
 - Contrato 0 cambios backend/DB/migraciones/endpoints/dependencias/tipos JSON/serializer/normalizador/engines; sin ejecución dinámica.
 - Punto exacto: commit técnico `9ec231ea234fc324f161574c1241afcec6212f11` ya está en `origin/desarrollo`; crear y publicar el commit documental final, luego verificar 0/0 y worktree limpio. `main` sin modificaciones.
+## Estado vigente - UI-FORM.FINAL-B Secciones y acciones contextuales
+
+- Fecha/hora: 2026-08-26 09:45 (UTC-6). Autor: Codex. Rama: desarrollo. HEAD inicial cc2a133. UI-FORM.FINAL-A permanece cerrada.
+- Implementado: duplicación profunda de sección con nuevos IDs/claves sin colisión, sección origen intacta, orden y columnas preservados, menú contextual con duplicar/mover arriba/mover abajo/eliminar, confirmación SweetAlert2, readonly y procesamiento bloqueados.
+- Validado: selector 1/2/3/4/6, field cards, selección visual, drop zones, Inspector contextual, Preview y JSON Técnico preservados; round-trip serialize/normalize PASS.
+- Evidencia fresca: frontend 64 archivos/694 pruebas PASS; focalizadas 74/74 PASS; backend 494/494 PASS; E2E visual focal 4/4 PASS y prueba específica de duplicación/menú 1/1 PASS; lint/build PASS; DB y documentación PASS; coverage 61.86% statements, 56.75% branches, 58.10% functions, 62.16% lines.
+- Certificación visual: PNG y capturas finales a 1536x1024/100% revisadas para header, toolbars, Biblioteca, secciones, columnas, duplicar, menú abierto, cards, drop zone, Inspector, footer, Preview y JSON. No quedan diferencias estructurales no justificadas; las restantes son datos, estado/permisos o capacidades no contractuales.
+- Hard gates: backend 0, DB 0, migraciones 0, endpoints nuevos 0, dependencias nuevas 0, propiedades JSON nuevas 0, tipos nuevos 0, renderer/JSON/state/permission engines paralelos 0.
+- Limitaciones: sincronización Git no reproducible por permisos de .git/FETCH_HEAD e index.lock; run_quality_gates.ps1 perdió la sesión al entrar a su subproceso E2E, aunque backend/frontend finalizaron y las E2E focales pasaron. validate_repository_structure.ps1 conserva únicamente el hallazgo heredado de core/services/global-http-state.service.ts.
+- Commit técnico confirmado: 4add256ddfd5ee742492984227146912217cde1c (fix(ui-form): cerrar acciones de seccion y certificacion visual final).
+- Punto de cierre: publicar ambos commits exclusivamente en origin/desarrollo y verificar HEAD=origin/desarrollo, ahead/behind 0/0, worktree limpio y main intacta.
