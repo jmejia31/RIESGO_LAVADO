@@ -519,3 +519,18 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia UAT acumulada: CDP/auth PASS, v17 draft isolation/publicacion/Create/Edit/View/Hydration PASS, historico v16 PASS, catalogos/endpoints PASS, titulo DOM count 1 PASS. No se cerraron Chromium, CDP, context ni page.
 - No se crearon nuevas fases ni subfases. No hubo cambios productivos de backend, DB o contratos; no se leyeron passwords, tokens ni cookies.
 - Punto de continuacion: no crear UI-FORM.8, UI-FORM.7.1 ni FINAL-E. El plan UI-FORM queda cerrado al 100%.
+## Estado vigente - correccion visual final UI-FORM.7
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit inicial: 7ed2284.
+- Hallazgo corregido: estado activo ambiguo entre Editor Visual y Vista Previa.
+- Implementacion: toolbar existente con estado activo inequívoco, accent institucional, icono heredando el estado, underline persistente y movimiento real del indicador al cambiar de vista. La semantica existente `aria-current` y `focus-visible` se conserva; no hay backend, API, permisos, Oracle ni contrato JSON modificados.
+- Evidencia: Editor Visual activo PASS; Vista Previa activa PASS; switch visual PASS; estado opuesto neutral PASS; focus-visible conservado PASS; modo editable y Vista Previa automatizados PASS. Regresion frontend 696/696, E2E 24/24, build, lint y git diff --check PASS. Backend conserva 494/494 PASS.
+- UI-FORM.1 = CERRADA; UI-FORM.2 = CERRADA; UI-FORM.3 = CERRADA; UI-FORM.4 = CERRADA; UI-FORM.5 = CERRADA; UI-FORM.6 = CERRADA; UI-FORM.FINAL-D.1 = CERRADA; UI-FORM.7 = CERRADA.
+- P0 UI-FORM = 0; P1 UI-FORM = 0. No crear UI-FORM.8, UI-FORM.7.1 ni FINAL-E.
+## Estado vigente - estados activos completos del constructor
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit base: 7ed2284.
+- UI-FORM.7: correccion final aplicada al toolbar existente para que Editor Visual/Vista Previa y Lienzo de Formulario/Catalogos usen el mismo lenguaje visual de seleccion.
+- Evidencia: EDITOR_VISUAL_ACTIVE, VISTA_PREVIA_ACTIVE, LIENZO_FORMULARIO_ACTIVE y CATALOGOS_ACTIVE PASS; estados inactivos, indicador movil, consistencia de navegacion y focus-visible PASS. La semantica existente `aria-current` continua identificando la vista activa.
+- Regresion: frontend 696/696 PASS; E2E 24/24 PASS; build, lint y git diff --check PASS. Backend no fue modificado y conserva 494/494 PASS.
+- UI-FORM.1 = CERRADA; UI-FORM.2 = CERRADA; UI-FORM.3 = CERRADA; UI-FORM.4 = CERRADA; UI-FORM.5 = CERRADA; UI-FORM.6 = CERRADA; UI-FORM.FINAL-D.1 = CERRADA; UI-FORM.7 = CERRADA. P0 UI-FORM = 0; P1 UI-FORM = 0.

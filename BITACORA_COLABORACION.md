@@ -6314,3 +6314,20 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Arquitectura: no se agregaron motores paralelos, serializers alternos, hardcodes por version/email ni cambios backend/DB; el fixture no se persiste ni entra en runtime productivo.
 - Estado de cierre solicitado: UI-FORM.1, UI-FORM.2, UI-FORM.3, UI-FORM.4, UI-FORM.5, UI-FORM.6, UI-FORM.FINAL-D.1 y UI-FORM.7 se consideran cerradas con la evidencia acumulada de esta campana y las certificaciones UAT previas. P0 UI-FORM = 0; P1 UI-FORM = 0.
 - Archivos modificados: frontend/rl-app/e2e/login-and-routing.spec.ts. Documentacion final y Git quedan para el cierre de esta intervencion.
+## Registro de intervencion - Codex - correccion visual final UI-FORM.7
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit inicial: 7ed2284.
+- Hallazgo: Editor Visual y Vista Previa no ofrecian una diferenciacion visual suficientemente inequívoca.
+- Correccion frontend: el toolbar existente refuerza el estado activo mediante color institucional, peso tipografico, borde inferior persistente e indicador inferior simetrico basado en el estado existente `aria-current`. Hover y focus-visible permanecen diferenciados; no se creo un componente paralelo ni se alteraron contratos.
+- Prueba dirigida: Editor Visual activo -> Vista Previa activa -> Editor Visual activo, verificando indicador, clase activa y ausencia de estado activo en la vista opuesta: 2/2 escenarios PASS.
+- Regresion: frontend 64 archivos / 696 pruebas PASS; E2E 24/24 PASS; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Backend no fue modificado y conserva el ultimo gate certificado 494/494 PASS.
+- UAT visual: la correccion fue validada en el flujo automatizado del constructor editable y en Vista Previa; Chromium/CDP no se cerraron.
+- Estado: correccion final de UI-FORM.7 PASS. No se crea fase ni subfase nueva. El plan UI-FORM mantiene su cierre al 100%.
+## Registro de intervencion - Codex - estados activos completos del constructor
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit base: 7ed2284.
+- Hallazgo visual final de UI-FORM.7: el lenguaje de seleccion debia ser inequivoco y comun para Editor Visual/Vista Previa y Lienzo de Formulario/Catalogos.
+- Correccion: se reutiliza `vistaActiva` y el toolbar existente; los dos grupos conservan su navegacion real y comparten accent institucional, texto/icono resaltado, underline persistente, hover neutral diferenciado y focus-visible.
+- Evidencia dirigida: Editor Visual -> Vista Previa -> Editor Visual y Lienzo -> Catalogos -> Lienzo; active/inactive, indicador que cambia, consistencia con el contenido y ausencia de doble activo: PASS.
+- Regresion: frontend 64 archivos / 696 pruebas PASS; E2E 24/24 PASS; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Backend sin cambios, ultimo gate certificado 494/494 PASS.
+- No se creo fase ni subfase nueva, ni se modificaron backend, DB, API, permisos o contratos JSON. Chromium/CDP permanecen abiertos.
