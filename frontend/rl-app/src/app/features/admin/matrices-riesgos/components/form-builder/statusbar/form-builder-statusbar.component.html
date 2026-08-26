@@ -2,7 +2,7 @@
   <div class="form-builder-statusbar__content">
     <span class="form-builder-statusbar__version">{{ versionCodigo }}</span>
     <span class="form-builder-statusbar__separator">·</span>
-    <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura" [class.form-builder-statusbar__mode--draft]="!soloLectura">{{ soloLectura ? 'Solo lectura' : 'Modo borrador' }}</span>
+    <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura" [class.form-builder-statusbar__mode--draft]="!soloLectura">{{ estadoEtiqueta }}</span>
     <span class="form-builder-statusbar__separator">·</span>
     <span>{{ seccionesCount }} sección(es)</span>
     <span class="form-builder-statusbar__separator">·</span>

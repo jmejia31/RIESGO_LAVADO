@@ -115,3 +115,40 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await expect.poll(() => header.evaluate(el => (el as HTMLElement).inert)).toBe(false);
   await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(false);
 });
+
+test('captura el estado editable del constructor a 1536x1024', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  await expect(dialogo).toBeVisible();
+  await expect(dialogo).toContainText('BORRADOR');
+  await expect(dialogo.locator('#btn-guardar-builder')).toBeVisible();
+  await expect(dialogo.locator('#btn-publicar-builder')).toBeVisible();
+  await page.screenshot({ path: 'test-results/ui-form5-editable-1536x1024.png', fullPage: true });
+});
+
+test('renderiza la misma identidad visual en solo lectura y oculta acciones mutantes', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: 'Ver detalle de la versión' }).last().click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  await expect(dialogo).toBeVisible();
+  await expect(dialogo).toContainText('BORRADOR');
+  await expect(dialogo).toContainText('SOLO LECTURA');
+  await expect(dialogo.locator('#btn-guardar-builder')).toHaveCount(0);
+  await expect(dialogo.locator('#btn-publicar-builder')).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/ui-form5-readonly-1536x1024.png', fullPage: true });
+});

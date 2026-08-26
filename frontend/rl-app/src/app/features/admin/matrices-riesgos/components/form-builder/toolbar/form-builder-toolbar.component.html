@@ -87,6 +87,17 @@
   </div>
 
   <div class="px-6 py-2.5 sm:px-7 flex items-center justify-between gap-3 border-t border-gray-100 bg-slate-50/60 flex-wrap">
+    <nav class="flex items-center gap-1" aria-label="Secciones del constructor">
+      <button type="button"
+              id="tab-editor-visual"
+              (click)="cambiarVista.emit('secciones')"
+              [class.text-blue-700]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
+              [class.border-blue-600]="vistaActiva === 'secciones' && !mostrarJsonAvanzado"
+              class="inline-flex h-9 items-center gap-1.5 border-b-2 border-transparent px-3 text-xs font-bold text-slate-600 transition-colors hover:border-blue-300 hover:text-blue-700">
+        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M4 20h4l10.768-10.768a2.5 2.5 0 00-3.536-3.536L4 16.464V20z" /></svg>
+        Editor Visual
+      </button>
+    </nav>
     <div class="flex items-center gap-2">
       <span class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full" [class.bg-emerald-500]="!soloLectura" [class.bg-amber-500]="soloLectura"></span>
