@@ -368,6 +368,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.
 # Estado vigente - RECONCILIACIÓN VISUAL FINAL DEL CONSTRUCTOR
 
+## Estado vigente - UAT P0-MATRICES-BLANK-SCREENS / UI-FORM.FINAL-D.1 (2026-08-26 14:29 UTC-6)
+
+- La ejecución intentó usar exactamente `%TEMP%\\RIESGO_LAVADO_UAT\\playwright-profile-final-d1-2`; el runner llegó a frontend/backend, pero la navegación terminó en `/login` (`LOGIN MANUAL REQUERIDO`). No se creó perfil adicional ni se solicitaron credenciales.
+- Regresión local fresca: frontend 695/695, backend 494/494, E2E 23/23, build, lint, BD (19/16) y enlaces (95/163) PASS. Esto no sustituye UAT autenticada real.
+- P0 blank/RBAC: E2E cubre smoke anti-blank autenticado, 403 y 404; UAT real de 401/409/500/200+blank queda pendiente por sesión no disponible. No se encontraron bugs reproducibles ni se modificó producto.
+- UI-FORM.FINAL-D.1: permanece `NO CERRADA` fail-closed. N/N+1, borrador/publicación, Create/Edit/View histórico, change-without-code, long-form, catálogos/paridad, último campo/sección y título duplicado requieren repetir UAT con sesión válida.
+- Estado Git pendiente de cierre documental: conservar el cambio preexistente en `tools/uat/matrices-uat-session.mjs`, registrar esta intervención, publicar solo `origin/desarrollo`, sin tocar `main`. Punto de continuación: renovar/adjuntar la sesión UAT autorizada y repetir el gate versionado.
+
 ## P0 vigente - UI-FORM.FINAL-A reabierta
 
 - El cierre anterior queda reabierto por el incidente P0 reportado inicialmente. Actualización posterior del usuario: en su sesión real `/matrices-riesgos` carga, el módulo ya no queda en blanco y el Constructor renderiza completo con Biblioteca, Lienzo e Inspector. UI-FORM.FINAL-B permanece bloqueada.

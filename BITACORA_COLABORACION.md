@@ -1,5 +1,17 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UAT P0-MATRICES-BLANK-SCREENS / UI-FORM.FINAL-D.1
+
+- Fecha/hora: 2026-08-26 14:29 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial/final técnico `21c98fc`; `origin/desarrollo` local coincide. La sincronización `git pull --ff-only origin desarrollo` no fue reproducible por permisos sobre `.git/FETCH_HEAD`.
+- Objetivo: ejecutar inmediatamente UAT con el perfil autorizado indicado, clasificar 401/403/404/409/500/200+blank, validar permisos/RBAC/módulo 10 y ejecutar UI-FORM.FINAL-D.1; luego regresión, documentación y handoff.
+- UAT: frontend `http://localhost:4200/` PASS y backend Swagger `http://localhost:5043/swagger/index.html` PASS. Se abrió exactamente `%TEMP%\\RIESGO_LAVADO_UAT\\playwright-profile-final-d1-2`, pero el proceso fue redirigido a `/login` y reportó `LOGIN MANUAL REQUERIDO`; la sesión no quedó disponible para esta ejecución. No se solicitó contraseña, no se creó otro perfil y no se imprimieron secretos.
+- Clasificación ejecutada: la suite E2E local cubrió 403 real, 404 de familia, smoke anti-blank autenticado y rutas sin sesión; no se declaró como UAT real. No hubo evidencia interactiva real para 401/409/500 ni para N/N+1 por expiración/no disponibilidad de sesión.
+- Resultado funcional: no se encontraron bugs reproducibles en esta ejecución; no se aplicaron correcciones de producto. Se conserva el cambio local preexistente de `tools/uat/matrices-uat-session.mjs` (viewport y visita inicial a login).
+- Regresión ejecutada: frontend 64 archivos/695 pruebas PASS; backend 494/494 PASS; E2E 23/23 PASS; build PASS con advertencias preexistentes de SCSS Inspector y CommonJS `exceljs`; lint PASS; validación BD PASS (19 scripts raíz/16 alcanzables); enlaces documentales PASS (95 documentos/163 enlaces); `git diff --check` PASS.
+- Pruebas no ejecutadas: UAT real N/N+1, borrador/publicación, Create/Edit/View histórico, change-without-code, long-form, último campo/sección, catálogos/paridad visual y reproducción del título duplicado; motivo exacto: el perfil indicado redirige a `/login` y el navegador conectado no está disponible. Oracle institucional y validación estructural quedan pendientes; no se ejecutó DDL/DML.
+- Estado: `P0-MATRICES-BLANK-SCREENS` no puede certificarse como `0` en UAT real desde esta ejecución; `UI-FORM.FINAL-D.1` permanece `NO CERRADA` fail-closed. No se atribuye aprobación funcional a Javier Mejía.
+- Handoff Git: se documentan archivos modificados `BITACORA_COLABORACION.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md` y el cambio preexistente de `tools/uat/matrices-uat-session.mjs`; se publicará únicamente en `origin/desarrollo`. Punto de continuación: renovar/adjuntar la sesión UAT autorizada sin pedir credenciales y repetir el gate versionado.
+
 ## Registro de intervención - Codex - UI-FORM.6-R Recertificación visual Preview + JSON Técnico
 
 - Fecha y hora: 2026-08-25 21:53 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial/fresco `cefb7de55d73bf5808175aa0dcb9a0612520d582`; commit técnico final `78167611657428c3eefeb079933ae636a63a5844` publicado.

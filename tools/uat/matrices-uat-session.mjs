@@ -46,6 +46,7 @@ const context = await chromium.launchPersistentContext(profileDir, {
 });
 
 const page = context.pages()[0] ?? await context.newPage();
+await page.setViewportSize({ width: 1440, height: 900 });
 const httpFailures = [];
 const consoleErrors = [];
 const pageErrors = [];
@@ -60,7 +61,9 @@ page.on('console', message => {
   if (message.type() === 'error') consoleErrors.push(message.text());
 });
 page.on('pageerror', error => pageErrors.push(error.message));
-await page.goto(MATRICES_URL, { waitUntil: 'domcontentloaded' });
+await page.goto(`${FRONTEND_URL}${LOGIN_PATH}`, { waitUntil: 'domcontentloaded' });
+await page.bringToFront();
+await page.waitForTimeout(1_000);
 
 if (!isAuthenticatedUrl(page.url())) {
   console.log('LOGIN MANUAL REQUERIDO');
@@ -69,6 +72,8 @@ if (!isAuthenticatedUrl(page.url())) {
 }
 
 await page.goto(MATRICES_URL, { waitUntil: 'domcontentloaded' });
+await page.bringToFront();
+await page.waitForTimeout(1_000);
 if (!isAuthenticatedUrl(page.url())) {
   throw new Error('La sesión no quedó autenticada.');
 }
