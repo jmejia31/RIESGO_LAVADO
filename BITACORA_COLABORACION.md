@@ -2,14 +2,14 @@
 
 ## Registro de intervención - Codex - UI-FORM.5-R Estados y ciclo de edición
 
-- Fecha y hora: 2026-08-25 18:16 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial/final pendiente de commit; preflight sincronizado en `e1e4baf47227fbe943ee5e40e59505b57a5fa69f`.
+- Fecha y hora: 2026-08-25 18:16 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial `e1e4baf47227fbe943ee5e40e59505b57a5fa69f`; HEAD final `eedad89d68cd8167545d11b24ae41587e97d3ff9`.
 - Objetivo y alcance: reapertura visual oficial UI-FORM.5-R contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`; se preservaron UI-FORM.2-R, UI-FORM.3-R, UI-FORM.4-R, el único FormBuilder y el ciclo existente.
 - Matriz real: `DRAFT` editable para administrador cuando no es vigente; consulta readonly para apertura explícita, usuario sin permiso o cualquier estado distinto de `DRAFT`; estados contractuales adicionales `IN_REVIEW`, `APPROVED`, `PUBLISHED`, `RETIRED`, `ARCHIVED`; procesamiento transitorio `guardando`/`operacionBuilderEnCurso` bloquea mutaciones. La fuente final de transición/publicación continúa en backend mediante servicios y endpoints existentes.
 - Cambios: toolbar con affordance `Editor Visual` en segunda franja; statusbar recibe `estadoVersion` y muestra el estado contractual real; pruebas visuales E2E capturan editable y readonly a 1536x1024 y verifican ausencia de Guardar/Publicar en readonly. No se agregaron Configuración General, menú de acciones, permisos, estados ni endpoints sin soporte real.
 - Contrato: backend 0, DB 0, migraciones 0, endpoints nuevos 0, dependencias nuevas 0, tipos/propiedades JSON/serializer/normalizador nuevos 0; no se duplicaron reglas críticas del backend.
 - Evidencia ejecutada: focalizada 3 archivos/39 pruebas PASS; frontend completo 64 archivos/690 pruebas PASS; backend Release 494/494 PASS; E2E completo 18/18 PASS; cobertura 62.05% sentencias, 57.02% ramas, 58.07% funciones, 62.18% líneas; lint PASS; build PASS con advertencias preexistentes de presupuesto SCSS del Inspector y CommonJS `exceljs`; BD PASS (19 scripts raíz, 16 alcanzables); documentación PASS (94 documentos, 163 enlaces). Capturas temporales revisadas lado a lado contra el PNG: `test-results/ui-form5-editable-1536x1024.png` y `test-results/ui-form5-readonly-1536x1024.png`, fuera del commit.
 - Pendientes/limitaciones: `validate_repository_structure.ps1` mantiene fallo heredado fuera de alcance en `core/services/global-http-state.service.ts` y su carpeta; no existe fixture oficial reproducible de versión `PUBLISHED` abierta en el Builder para captura, por lo que no se inventó evidencia. Quality Gates local PASS; SonarCloud remoto continúa diferido por directriz previa.
-- Punto de continuación: revisar diff, agregar únicamente archivos explícitos, commit `fix(ui-form-5): reconciliar estados y ciclo con prototipo aprobado`, publicar en `origin/desarrollo` y verificar sincronización 0/0 y worktree limpio.
+- Cierre Git ejecutado: stage explícito, `git diff --cached --check`, commit `fix(ui-form-5): reconciliar estados y ciclo con prototipo aprobado`, push aceptado a `origin/desarrollo`; verificación final HEAD=origin/desarrollo, ahead/behind 0/0 y worktree limpio.
 
 ## Registro de intervención - Codex - UI-FORM.4-R Inspector profesional
 

@@ -2,13 +2,13 @@
 
 ## Estado vigente - UI-FORM.5-R Estados y ciclo de edición
 
-- Fecha: 2026-08-25 18:16 (UTC-6). Autor: Codex. Rama `desarrollo`. Baseline sincronizado: `e1e4baf47227fbe943ee5e40e59505b57a5fa69f`; commit final pendiente.
+- Fecha: 2026-08-25 18:16 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial `e1e4baf47227fbe943ee5e40e59505b57a5fa69f`; commit final `eedad89d68cd8167545d11b24ae41587e97d3ff9` publicado.
 - Estado: reconciliación visual y funcional local completada; toolbar conserva la navegación existente, incorpora `Editor Visual` en el nivel secundario y el statusbar refleja `EstadoFormulario` real sin alterar el ciclo de edición.
 - Matriz: `DRAFT` no vigente + administrador = editable; apertura explícita, no administrador o estado distinto de `DRAFT` = solo lectura; `IN_REVIEW`, `APPROVED`, `PUBLISHED`, `RETIRED`, `ARCHIVED` permanecen contractuales y consultivos; `guardando`/`operacionBuilderEnCurso` bloquean mutaciones durante procesamiento. Backend sigue siendo autoridad de publicación, transición y autorización.
 - Evidencia: focalizada 39/39; frontend 690/690; backend 494/494; E2E 18/18; coverage 62.05%/57.02%/58.07%/62.18%; lint/build/quality gates/BD/documentación PASS. Capturas editable y readonly a 1536x1024 revisadas contra el PNG aprobado.
 - Contrato y regresión: UI-FORM.2-R, UI-FORM.3-R y UI-FORM.4-R sin cambios funcionales; backend/DB/migraciones/endpoints/dependencias/tipos/JSON/serialización/normalización sin cambios; sin motor de estados ni permisos paralelo.
 - Restricción heredada: validador estructural sigue reportando `core/services/global-http-state.service.ts` y carpeta heredada, fuera de UI-FORM.5-R. No se corrigió en esta fase.
-- Punto exacto: commit/push documental y técnico fail-closed a `origin/desarrollo`; no iniciar UI-FORM.6-R.
+- Punto exacto: UI-FORM.5-R cerrada en `eedad89d68cd8167545d11b24ae41587e97d3ff9`, HEAD=origin/desarrollo, ahead/behind 0/0 y worktree limpio; no iniciar UI-FORM.6-R.
 
 ## Estado vigente - UI-FORM.4-R Inspector profesional
 
