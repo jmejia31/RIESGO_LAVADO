@@ -1,6 +1,22 @@
 # UAT local de Matrices de Riesgos
 
-El bootstrap `matrices-uat-session.mjs` abre un contexto persistente de Playwright con Chromium visible y navega a `/matrices-riesgos`.
+## UAT CDP en el escritorio interactivo
+
+Para conservar la sesión del Chromium visible de Javier, ejecutar desde una PowerShell interactiva:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/uat/start-matrices-uat-browser.ps1
+```
+
+El script usa únicamente `%TEMP%\RIESGO_LAVADO_UAT\playwright-profile-final-d1-2`, solicita un puerto efímero (`--remote-debugging-port=0`), enlaza CDP a `127.0.0.1` y escribe solo el endpoint en `%TEMP%\RIESGO_LAVADO_UAT\cdp-endpoint.txt`. Después, el runner Codex se conecta al navegador ya abierto:
+
+```powershell
+node tools/uat/matrices-uat-cdp.mjs
+```
+
+El runner usa exclusivamente `chromium.connectOverCDP`; no lanza Chromium, no crea contextos persistentes y no lee contraseñas, tokens, cookies ni almacenamiento sensible. La ventana debe permanecer abierta durante toda la UAT.
+
+El bootstrap histórico `matrices-uat-session.mjs` queda reservado para diagnóstico local; la UAT autorizada debe usar el flujo CDP descrito arriba para conservar la sesión del Chromium visible de Javier.
 
 ```powershell
 node tools/uat/matrices-uat-session.mjs

@@ -43,7 +43,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           })
         );
       }
-      if (error.status === 403) {
+      if (error.status === 403 && !req.url.includes('/api/auditoria')) {
         const mensaje = obtenerMensaje403(error);
         const rutaActual = router.url.split('?')[0];
 

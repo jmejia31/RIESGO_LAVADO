@@ -1,5 +1,17 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - UAT real CDP / FINAL-D.1 pendiente por contrato de datos
+
+- Fecha/hora: 2026-08-26. Autor: Codex. Rama `desarrollo`. Commit técnico pendiente; no se modificó `main`.
+- CDP: PASS en el Chromium UAT interactivo existente mediante `connectOverCDP` al endpoint loopback dinámico; mismo browser/context/page, ruta autenticada `/matrices-riesgos` y contenido visible. Chromium no fue relanzado ni cerrado por el runner de UAT.
+- P0: el 403 de la auditoría opcional quedó controlado sin redirección a `/sin-acceso`; el modal de versiones permanece visible y no aparece pantalla blanca. Las lecturas principales de Matrices observadas respondieron 200 y no produjeron `pageerror`.
+- Hallazgo bloqueante reproducido: la versión publicada v14 permite renderizar el formulario, pero su creación real responde 400 por falta de `dueno_riesgo`; la versión v15 existente responde 400 por falta de `frecuencia/impacto_inherente`. No se aplicaron bypass, DDL/DML ni cambios C#/SQL para ocultar el contrato.
+- Correcciones locales reales: el interceptor ya no redirige el 403 opcional de `/api/auditoria` y tiene regresión; el renderer único ofrece entrada segura para radio sin opciones, con regresión actualizada.
+- Regresión fresca: frontend 696/696, E2E 23/23, build y lint PASS; backend 494/494 heredado de esta intervención. `git diff --check` PASS con advertencias CRLF informativas.
+- Estado: `P0-AUTH-UAT` PASS y corrección P0 verificada; `P0-MATRICES-BLANK-SCREENS` no se declara 0 para todos los casos hasta resolver las definiciones incompatibles; `UI-FORM.FINAL-D.1` permanece NO CERRADA fail-closed. Pendiente definición válida mediante Builder y repetición completa de Create/Edit/View, N/N+1, histórico, catálogos y paridad.
+- Seguridad: password, tokens, cookies y almacenamiento sensible no fueron leídos; no se tocó Chrome personal, Edge, firewall ni `main`.
+- Punto de continuación: corregir desde Builder la definición de formulario de prueba para satisfacer el contrato canónico, sin cambios manuales en HTML/TS/C#/SQL, y repetir únicamente los gates afectados sobre el mismo Chromium UAT.
+
 ## Estado vigente - UI-FORM.6-R Vista Previa + JSON Técnico
 
 - Fecha: 2026-08-25 21:53 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial `cefb7de55d73bf5808175aa0dcb9a0612520d582`; commit técnico `78167611657428c3eefeb079933ae636a63a5844` publicado; commit documental de cierre se publica inmediatamente después.
@@ -367,6 +379,22 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No modificar Backend para UI-FAM.2: los contratos y endpoints necesarios ya existen.
 - No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.
 # Estado vigente - RECONCILIACIÓN VISUAL FINAL DEL CONSTRUCTOR
+
+## Estado vigente - P0-UAT-CDP corregido (2026-08-26)
+
+- Causa confirmada del fallo 9222: el perfil UAT estaba ocupado por un árbol Chromium iniciado con `--remote-debugging-pipe`; no existía listener TCP 9222 ni `DevToolsActivePort`.
+- Launcher corregido: puerto efímero `--remote-debugging-port=0`, bind exclusivo `127.0.0.1`, perfil final-d1-2, detección fail-closed de lock, lectura de `DevToolsActivePort`, validación `/json/version` y endpoint temporal fuera del repositorio.
+- Runner corregido: endpoint por `UAT_CDP_ENDPOINT` o `%TEMP%\\RIESGO_LAVADO_UAT\\cdp-endpoint.txt`; única conexión `chromium.connectOverCDP`; sin `launch` ni `launchPersistentContext`.
+- Gates locales del tooling: PowerShell, Node, executable Chromium, perfil externo, loopback y connectOverCDP-only PASS. Los gates runtime `DevToolsActivePort`, `/json/version` y connectOverCDP real quedan pendientes de ejecución desde la PowerShell interactiva.
+- No se ejecuta FINAL-D.1 ni UAT todavía. Sin commit/push por instrucción del propietario.
+
+## Estado vigente - Infraestructura UAT CDP loopback (2026-08-26 14:35 UTC-6)
+
+- `CDP_UAT_READY=YES`: creados `tools/uat/start-matrices-uat-browser.ps1` y `tools/uat/matrices-uat-cdp.mjs`, con documentación en `tools/uat/README.md`.
+- El start script debe ejecutarse desde la PowerShell interactiva de Javier; usa exclusivamente `%TEMP%\\RIESGO_LAVADO_UAT\\playwright-profile-final-d1-2`, `--remote-debugging-address=127.0.0.1`, puerto preferido 9222 y fallback loopback libre sin matar procesos ajenos.
+- El runner Codex usa únicamente `chromium.connectOverCDP`; no contiene `chromium.launch`, `launchPersistentContext`, otro perfil ni acceso a password/tokens/cookies.
+- Validaciones frescas: parse PowerShell PASS, parse Node PASS, resolución de Chromium Playwright PASS y controles estáticos de seguridad PASS. La conexión CDP y la UAT FINAL-D.1 quedan pendientes de la estación interactiva.
+- Siguiente acción única: Javier ejecuta `powershell -NoProfile -ExecutionPolicy Bypass -File tools/uat/start-matrices-uat-browser.ps1` y deja abierta la ventana; luego se conecta Codex sin cerrar ni relanzar browser/context/page.
 
 ## Estado vigente - UAT P0-MATRICES-BLANK-SCREENS / UI-FORM.FINAL-D.1 (2026-08-26 14:29 UTC-6)
 

@@ -1,5 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - UAT CDP real / corrección P0 auditoría
+
+- Fecha/hora: 2026-08-26. Autor: Codex. Rama `desarrollo`. Commit pendiente de cierre técnico.
+- CDP real: `connectOverCDP` PASS al mismo browser/context/page en endpoint loopback dinámico; password/tokens/cookies no leídos; Chromium UAT no cerrado.
+- P0 reproducido: al abrir detalle de familia, `GET /api/auditoria` respondió 403 para el usuario UAT y el interceptor global redirigió indebidamente a `/sin-acceso`, ocultando un modal válido de Matrices. Corrección: el 403 opcional de `/api/auditoria` se propaga al componente, que conserva el modal y muestra actividad no disponible.
+- UAT posterior: ruta `/matrices-riesgos` y modal de versiones visibles con `GET /api/auditoria` 403 controlado, sin redirección; no hay pantalla blanca. El resto de lecturas de Matrices observadas respondió 200 y no hubo `pageerror`.
+- Hallazgos de datos: N inicial v13; v14 se publicó desde Builder tras corregir título duplicado, pero creación real devolvió 400 por falta de `dueno_riesgo`; v15 simple devolvió 400 por falta de `frecuencia/impacto_inherente`. No se aplicó bypass, DDL/DML ni cambio C#/SQL para ocultar el contrato.
+- Se añadió fallback editable seguro para RADIO sin opciones en el renderer único. Las pruebas frontend alcanzaron 696/696; build, lint, backend 494/494 y E2E 23/23 PASS.
+- Estado: P0 de redirección por auditoría corregido y verificado; FINAL-D.1 continúa NO CERRADA por definiciones UAT incompatibles y falta de Create/Edit/View versionado completo. Pendiente resolver mediante definición válida en Builder y repetir creación.
+
+## Registro de intervención - Codex - Corrección P0-UAT-CDP
+
+- Fecha/hora: 2026-08-26. Autor: Codex. Rama `desarrollo`. Sin commit ni push por instrucción explícita.
+- Diagnóstico: el árbol Chromium del perfil `playwright-profile-final-d1-2` seguía vivo; el proceso raíz Playwright tenía `--remote-debugging-pipe`, no puerto TCP. `MainWindowHandle=0`, 9222 sin listener y `DevToolsActivePort` ausente. La causa del fallo 9222 fue reutilización/bloqueo del perfil por una instancia previa con pipe CDP.
+- Cambios: `start-matrices-uat-browser.ps1` ahora detecta perfil ocupado, elimina solo un `DevToolsActivePort` stale cuando no existen procesos UAT del perfil, inicia con `--remote-debugging-port=0` y `--remote-debugging-address=127.0.0.1`, lee puerto/path de `DevToolsActivePort`, valida `/json/version` HTTP 200, escribe únicamente el endpoint en `%TEMP%\\RIESGO_LAVADO_UAT\\cdp-endpoint.txt` y reporta causa específica al fallar. `matrices-uat-cdp.mjs` lee `UAT_CDP_ENDPOINT` o el archivo temporal y usa solo `connectOverCDP`.
+- Validación: PowerShell syntax PASS; Node syntax PASS; executable Chromium Playwright PASS; user-data-dir externo PASS; flags loopback/DevToolsActivePort PASS; runner connectOverCDP-only PASS; `git diff --check` PASS. No se inició Chromium desde Codex y no se ejecutó UAT.
+- Archivos modificados: `tools/uat/start-matrices-uat-browser.ps1`, `tools/uat/matrices-uat-cdp.mjs`, `tools/uat/README.md`, `BITACORA_COLABORACION.md`, `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- Pendiente externo: ejecutar el launcher corregido desde PowerShell interactiva para demostrar `DevToolsActivePort`, `/json/version=HTTP 200` y luego `connectOverCDP`. No se leyeron passwords, tokens, cookies ni localStorage; no se tocó Chrome personal, firewall ni `main`.
+
+## Registro de intervención - Codex - Infraestructura UAT CDP loopback
+
+- Fecha/hora: 2026-08-26 14:35 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial `a79f4a7`.
+- Objetivo: reemplazar el intento no interactivo de abrir perfiles Playwright por conexión CDP al Chromium UAT visible iniciado desde la estación interactiva de Javier.
+- Archivos creados/modificados: `tools/uat/start-matrices-uat-browser.ps1`, `tools/uat/matrices-uat-cdp.mjs`, `tools/uat/README.md`.
+- Implementación: el script interactivo resuelve `chromium.executablePath()` desde Playwright, usa exclusivamente `%TEMP%\\RIESGO_LAVADO_UAT\\playwright-profile-final-d1-2`, enlaza `--remote-debugging-address=127.0.0.1`, prefiere 9222 y selecciona un puerto loopback libre si está ocupado sin detener procesos ajenos. El runner Codex usa exclusivamente `chromium.connectOverCDP`, reutiliza browser/context/page existentes y no lanza Chromium ni contexto persistente.
+- Login seguro: el runner puede completar email vacío y pulsar una sola vez el botón de login sin leer password, tokens, cookies ni almacenamiento sensible; si no hay autofill deja `AUTOFILL_UNAVAILABLE=YES` y código de salida 2. No contiene credenciales secretas.
+- Validación ejecutada: PowerShell parse PASS; Node `--check` PASS; resolución de ejecutable Chromium Playwright PASS; comprobaciones estáticas de ausencia de `launch*`, ausencia de `0.0.0.0`/`--headless`, perfil requerido y loopback PASS; `git diff --check` PASS. No se inició browser desde Codex.
+- Pruebas no ejecutadas: conexión CDP y UAT funcional completa quedan pendientes de que Javier ejecute el start script en una PowerShell interactiva y deje visible el Chromium UAT; no se modifica la aplicación productiva.
+- Estado: `CDP_UAT_READY=YES`. El siguiente paso es una sola instrucción operativa: ejecutar `powershell -NoProfile -ExecutionPolicy Bypass -File tools/uat/start-matrices-uat-browser.ps1` desde la PowerShell interactiva de Javier; después Codex ejecutará `node tools/uat/matrices-uat-cdp.mjs` contra el navegador ya abierto.
+
 ## Registro de intervención - Codex - UAT P0-MATRICES-BLANK-SCREENS / UI-FORM.FINAL-D.1
 
 - Fecha/hora: 2026-08-26 14:29 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial/final técnico `21c98fc`; `origin/desarrollo` local coincide. La sincronización `git pull --ff-only origin desarrollo` no fue reproducible por permisos sobre `.git/FETCH_HEAD`.

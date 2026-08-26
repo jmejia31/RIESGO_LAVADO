@@ -64,8 +64,16 @@ export interface OpcionCampoRenderer {
             </div>
           } @else {
             <p class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="status">
-              No hay opciones configuradas para este campo.
+              No hay opciones configuradas; ingrese un valor de forma segura.
             </p>
+            <input [id]="idControl + '-fallback'"
+                   type="text"
+                   class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
+                   [required]="campo.obligatorio"
+                   [attr.aria-label]="campo.etiqueta + ' valor'"
+                   [readOnly]="campo.soloLectura"
+                   [value]="valorEscalar ?? ''"
+                   (input)="emitirTexto($any($event.target).value)" />
           }
         </fieldset>
       } @else if (tipo === 'catalogo-multiple') {
