@@ -2,7 +2,7 @@
 
 ## Registro de intervención - Codex - UI-FORM.6-R Recertificación visual Preview + JSON Técnico
 
-- Fecha y hora: 2026-08-25 21:53 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial/fresco `cefb7de55d73bf5808175aa0dcb9a0612520d582`; commit final pendiente al cierre de esta documentación.
+- Fecha y hora: 2026-08-25 21:53 (UTC-6). Autor: Codex. Rama: `desarrollo`. HEAD inicial/fresco `cefb7de55d73bf5808175aa0dcb9a0612520d582`; commit técnico final `78167611657428c3eefeb079933ae636a63a5844` publicado.
 - Objetivo y alcance: reabrir exclusivamente UI-FORM.6-R, recertificar Vista Previa y JSON Técnico contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R, UI-FORM.3-R, UI-FORM.4-R y UI-FORM.5-R.
 - Cambios funcionales: JSON Técnico queda consultable también en solo lectura para copiar, buscar y validar; la sincronización continúa explícita, separada y limitada al flujo editable/autorizado. Preview usa el único `DynamicFieldRendererComponent`, muestra controles reales, catálogos reales y fórmula únicamente como presentación segura, sin mutar el modelo ni persistir respuestas. Se eliminaron chips duplicados de opciones.
 - Cambios de pruebas: `form-builder.component.spec.ts` actualiza el contrato readonly y agrega aserciones de controles Preview; `modal-shell-lock.spec.ts` agrega capturas autenticadas E2E de Preview y JSON Técnico a 1536x1024 con fixture de texto, selector-catalogo y formula segura.
@@ -10,7 +10,7 @@
 - Evidencia ejecutada: focalizada 1 archivo/43 pruebas PASS; frontend 64 archivos/690 pruebas PASS; backend Release 494/494 PASS; E2E completo 21/21 PASS; E2E Preview+JSON 2/2 PASS; lint PASS; build PASS con advertencias preexistentes de presupuesto SCSS del Inspector y CommonJS `exceljs`; coverage 61.98% sentencias, 56.98% ramas, 58.07% funciones, 62.18% líneas; BD PASS (19 scripts raíz, 16 alcanzables); documentación PASS (94 documentos, 163 enlaces); Quality Gates PASS; `git diff --check` PASS.
 - Evidencia visual: PNG cargado y usado como fuente permanente; capturas temporales revisadas lado a lado: `frontend/rl-app/test-results/ui-form6-preview-1536x1024.png` y `frontend/rl-app/test-results/ui-form6-json-1536x1024.png`, fuera del commit. Preview demuestra texto, selector con catálogo real, fórmula segura, secciones/columnas y ausencia de palette/Inspector; JSON demuestra editor, copiar, búsqueda, contador, anterior/siguiente, validar y sincronización separada.
 - Pendiente heredado: `validate_repository_structure.ps1` falla únicamente por `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta heredada, fuera de UI-FORM.6-R; SonarCloud remoto continúa diferido por directriz previa. El runtime de Browser in-app no estuvo disponible (`[]`), pero Playwright E2E local autenticado con mocks sí ejecutó y produjo la evidencia requerida.
-- Punto exacto: stage explícito de los cinco archivos modificados, `git diff --cached --check`, commit `fix(ui-form-6): recertificar preview y json tecnico contra prototipo`, push normal a `origin/desarrollo`, verificación HEAD/origin, ahead/behind y worktree limpio. No modificar `main`.
+- Cierre Git: stage explícito y `git diff --cached --check` PASS; commit técnico `78167611657428c3eefeb079933ae636a63a5844` y commit documental de cierre publicados en `origin/desarrollo`; verificación final HEAD=origin/desarrollo, ahead/behind 0/0 y worktree limpio. No se modificó `main`.
 
 ## Registro de intervención - Codex - UI-FORM.5-R Estados y ciclo de edición
 
