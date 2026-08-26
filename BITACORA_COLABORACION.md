@@ -6149,6 +6149,25 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Pendiente externo:** publicar el commit y esperar una ejecución remota de Quality Gates/SonarCloud sobre el HEAD final. La certificación remota de F6.4 continúa pendiente de UAT real y de un workflow remoto exitoso.
 # Registro de cierre visual final - Codex - 2026-08-25 22:33:23 (UTC-6)
 
+## Registro de intervenciÃ³n - Codex - UI-FORM.FINAL-A navegaciÃ³n, acciones y ciclo visual
+
+- **Fecha y hora:** 2026-08-26 08:13 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`. **Commit inicial:** `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.
+- **Objetivo y alcance:** cerrar la arquitectura superior del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R a UI-FORM.6-R, backend, DB y contratos existentes.
+- **CodexGraph y fuentes revisadas:** FormBuilder, toolbar, statusbar, ciclo de vida de `MatricesRiesgosComponent`, `AuthService`, `MatricesRiesgosService`, modelo `VersionFormularioDto` y specs focalizados.
+- **Decisiones contractuales:** las acciones reales del Builder son `Nueva SecciÃ³n` y `Nuevo CatÃ¡logo`, agrupadas contextualmente bajo `Acciones`; publicaciÃ³n conserva solo la acciÃ³n real `POST /formularios/{id}/publicar` con confirmaciÃ³n, por lo que no se inventÃ³ split-dropdown; no existe superficie navegable de ConfiguraciÃ³n General en el modelo/flujo del Builder, por lo que se retirÃ³ el tab muerto; no se inventaron dirty tracking ni timestamp de Ãºltimo guardado.
+- **Archivos modificados:** `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/toolbar/form-builder-toolbar.component.html`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/form-builder/form-builder.ui-form5-visual.spec.ts`, `frontend/rl-app/e2e/modal-shell-lock.spec.ts`.
+- **Cambios:** active state Ãºnico e inequÃ­voco mediante `aria-current`; eliminaciÃ³n del tab de configuraciÃ³n sin capacidad; identificador estable del summary de Acciones; cobertura estructural de acciones reales, readonly, Preview y ausencia de control muerto; captura E2E del menÃº Acciones en 1536x1024.
+- **Evidencia visual:** PNG observado antes y despuÃ©s; capturas reales editable, Acciones abierto, readonly y Preview a viewport 1536x1024/zoom 100%, revisadas lado a lado. Arquitectura superior, jerarquÃ­a, footer y bloqueos coherentes; diferencias restantes justificadas por contrato (sin ConfiguraciÃ³n General navegable, sin split secundario real de publicaciÃ³n, sin dirty/timestamp, datos reales del fixture).
+- **Pruebas ejecutadas:** focalizadas 24/24; frontend completo con cobertura 64 archivos/692 pruebas PASS; cobertura Statements 61.99%, Branches 56.98%, Functions 58.07%, Lines 62.20%; E2E focal 3/3 PASS; lint PASS; build PASS con advertencias heredadas de presupuesto SCSS/CommonJS; backend Release 494/494 PASS; `git diff --check` PASS.
+- **Pendiente de cierre en este registro:** ejecutar E2E completo, validadores de estructura/BD/documentaciÃ³n/quality gates, verificar CodexGraph post-cambio, crear commit tÃ©cnico explÃ­cito y commit documental, publicar ambos en `origin/desarrollo`, y confirmar HEAD=origin/desarrollo, ahead/behind 0/0, worktree limpio y `main` intacta.
+
+### Cierre de verificaciÃ³n UI-FORM.FINAL-A
+
+- E2E completo: 21/21 PASS. `run_quality_gates.ps1`: PASS, backend 494/494, frontend 692/692, E2E 21/21; cobertura backend 26.85% lÃ­neas / 28.66% ramas y frontend 61.99% statements / 56.98% branches / 58.07% functions / 62.20% lines.
+- Validadores: base de datos PASS; enlaces documentales PASS (94 documentos/163 enlaces); estructura conserva Ãºnicamente el hallazgo heredado `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y carpeta, fuera de alcance.
+- CodexGraph post-cambio ejecutado; no se agregaron backend, DB, endpoints, dependencias, motores paralelos, serializer, normalizador ni renderer paralelo.
+- QA visual final: PNG y captura real final observados nuevamente lado a lado a 1536x1024/100%; resultado arquitectÃ³nico PASS con diferencias contractuales individualmente justificadas.
+
 - Rama `desarrollo`; HEAD inicial `1beb7752f18a7d07afe59fd1bd66f05813c55dfa`; commit técnico final `9ec231ea234fc324f161574c1241afcec6212f11` publicado en `origin/desarrollo`. Objetivo: reconciliación visual final 1:1 del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, viewport 1536x1024, zoom 100%, preservando UI-FORM.2-R a UI-FORM.6-R.
 - PNG observado antes, durante y después; capturas inicial/intermedia/final editable, readonly, Preview y JSON revisadas lado a lado. Overlay/diff automático no disponible.
 - Correcciones: Preview en toolbar secundaria; Configuración General visible y deshabilitada sin contrato; Acciones agrupa solo acciones reales; se eliminó indicador central extra; footer con Cancelar/Guardar Cambios reales y Guardar deshabilitado readonly; ajustes de workspace/lienzo.

@@ -368,6 +368,24 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.
 # Estado vigente - RECONCILIACIÓN VISUAL FINAL DEL CONSTRUCTOR
 
+## Estado vigente - UI-FORM.FINAL-A navegación, acciones y ciclo visual
+
+- Fecha/hora: 2026-08-26 08:13 (UTC-6). Autor Codex. Rama `desarrollo`. HEAD inicial `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.
+- Decisión de acciones: `Acciones` conserva las capacidades reales contextuales `Nueva Sección`/`Nuevo Catálogo`; publicación conserva botón simple porque solo existe `POST /formularios/{id}/publicar`, sin acciones secundarias contractuales.
+- Decisión de configuración: `Configuración General` fue retirada del Builder porque no existe una superficie navegable en el contrato/modelo actual; no queda control muerto ni estado paralelo.
+- Navegación: Editor Visual y Vista Previa son los únicos tabs reales y marcan un único activo mediante `aria-current`; Preview mantiene el renderer único ya certificado.
+- Footer/estados: se mantienen Cancelar, Guardar Cambios y bloqueo readonly; dirty tracking y último guardado no se muestran porque no existen contractualmente y no se fabricaron timestamps.
+- Evidencia visual: PNG consultado y capturas reales editable, Acciones, readonly y Preview a 1536x1024/100%, comparadas lado a lado. Diferencias restantes justificadas individualmente por capacidades contractuales o datos reales del fixture.
+- Pruebas frescas: focalizadas 24/24; frontend 692/692; backend 494/494; E2E focal 3/3; lint/build PASS; coverage Statements 61.99%, Branches 56.98%, Functions 58.07%, Lines 62.20%. E2E completo y quality gates pendientes de cierre de esta intervención.
+- Archivos actuales modificados: toolbar HTML, spec visual del Builder y `frontend/rl-app/e2e/modal-shell-lock.spec.ts`. Backend, DB, migraciones, endpoints, dependencias y contratos JSON sin cambios.
+
+### Cierre de verificaciÃ³n
+
+- E2E completo 21/21; `run_quality_gates.ps1` PASS con backend 494/494, frontend 692/692 y coverage frontend 61.99%/56.98%/58.07%/62.20%.
+- ValidaciÃ³n de BD y enlaces documentales PASS; validaciÃ³n estructural mantiene solo el hallazgo heredado de `core/services/global-http-state.service.ts` y su carpeta, fuera del alcance.
+- QA visual final ejecutado como PNG vs captura real lado a lado a 1536x1024/100%; resultado PASS para arquitectura superior y diferencias contractuales documentadas.
+- Siguiente paso exacto: stage explÃ­cito, commit tÃ©cnico `fix(ui-form): cerrar navegacion acciones y ciclo visual`, commit documental, push a `origin/desarrollo` y verificaciÃ³n final 0/0 con worktree limpio.
+
 - Fecha/hora: 2026-08-25 22:33:23 (UTC-6). Autor Codex. Rama `desarrollo`. HEAD inicial `1beb7752f18a7d07afe59fd1bd66f05813c55dfa`; commit técnico final `9ec231ea234fc324f161574c1241afcec6212f11` publicado; commit documental final pendiente.
 - Resultado: Preview en toolbar secundaria; Editor Visual, Vista Previa y Configuración General deshabilitada en la navegación aprobada; Acciones solo con capacidades reales; footer Cancelar/Guardar Cambios con bloqueo readonly.
 - Diferencias contractuales: control auxiliar superior, dirty tracking y timestamp de último guardado no existen; no se falsificaron. Los datos E2E difieren en cantidad de secciones/campos por fixture real.
