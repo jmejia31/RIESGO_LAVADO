@@ -9,6 +9,7 @@ import {
   SeccionBuilderModel,
   TIPOS_CONTROLES_DISPONIBLES,
   TipoControlDefinicion,
+  duplicarSeccionBuilderModel,
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
@@ -20,6 +21,7 @@ import { FormBuilderCanvasComponent } from './canvas/form-builder-canvas.compone
 import { FormBuilderInspectorComponent } from './inspector/form-builder-inspector.component';
 import { FormBuilderStatusbarComponent } from './statusbar/form-builder-statusbar.component';
 import { DynamicFieldRendererComponent, OpcionCampoRenderer } from '../dynamic-field-renderer/dynamic-field-renderer.component';
+import Swal from 'sweetalert2';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -97,6 +99,7 @@ export class FormBuilderComponent implements OnInit {
   readonly catalogoEnEdicion = signal<CatalogoEdicionForm | null>(null);
   readonly elementoEnEdicion = signal<ElementoEdicionForm | null>(null);
   readonly feedbackCatalogo = signal<FeedbackCatalogo | null>(null);
+  readonly seccionEnConfirmacion = signal<string | null>(null);
 
   readonly catalogosList = computed<CatalogoBuilderModel[]>(() => this.model().catalogos ?? []);
 
@@ -163,13 +166,50 @@ export class FormBuilderComponent implements OnInit {
     this.seccionActivaId.set(nuevaSeccion.id);
   }
 
-  eliminarSeccion(seccionId: string): void {
+  async eliminarSeccion(seccionId: string): Promise<void> {
     if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     if (current.secciones.length <= 1) return;
+    if (this.seccionEnConfirmacion() !== null) return;
+    const seccion = current.secciones.find(item => item.id === seccionId);
+    if (!seccion) return;
+    this.seccionEnConfirmacion.set(seccionId);
+    const resultado = await Swal.fire({
+      title: '¿Eliminar sección?',
+      text: `Se eliminará «${seccion.titulo}» del borrador actual. Esta acción no se enviará al backend hasta guardar.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar sección',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true
+    });
+    this.seccionEnConfirmacion.set(null);
+    if (!resultado.isConfirmed || this.bloqueadoParaMutacion) return;
     const filtradas = current.secciones.filter((s: SeccionBuilderModel) => s.id !== seccionId);
-    this.model.set({ ...current, secciones: filtradas });
+    this.model.set({ ...current, secciones: filtradas.map((s, index) => ({ ...s, orden: index + 1 })) });
     if (this.seccionActivaId() === seccionId && filtradas.length > 0) this.seccionActivaId.set(filtradas[0].id);
+    if (this.campoActivo() && !filtradas.some(s => s.campos.some(c => c.id === this.campoActivo()?.id))) this.campoActivo.set(null);
+  }
+
+  duplicarSeccion(seccionId: string): void {
+    if (this.bloqueadoParaMutacion) return;
+    const resultado = duplicarSeccionBuilderModel(this.model(), seccionId);
+    if (!resultado) return;
+    this.model.set(resultado.model);
+    this.seccionActivaId.set(resultado.seccion.id);
+    this.campoActivo.set(null);
+  }
+
+  reordenarSeccion(seccionId: string, direccion: 'subir' | 'bajar'): void {
+    if (this.bloqueadoParaMutacion) return;
+    const current = this.model();
+    const indice = current.secciones.findIndex(seccion => seccion.id === seccionId);
+    const destino = direccion === 'subir' ? indice - 1 : indice + 1;
+    if (indice < 0 || destino < 0 || destino >= current.secciones.length) return;
+    const secciones = [...current.secciones];
+    [secciones[indice], secciones[destino]] = [secciones[destino], secciones[indice]];
+    this.model.set({ ...current, secciones: secciones.map((seccion, index) => ({ ...seccion, orden: index + 1 })) });
   }
 
   agregarCampoASeccion(seccionId: string, ctrlDef: TipoControlDefinicion): void {

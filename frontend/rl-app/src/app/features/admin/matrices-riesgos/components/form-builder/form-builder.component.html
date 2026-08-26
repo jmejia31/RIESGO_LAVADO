@@ -220,6 +220,8 @@
         (seleccionarCampo)="seleccionarCampo($event)"
         (agregarSeccion)="agregarSeccion()"
         (eliminarSeccion)="eliminarSeccion($event)"
+        (duplicarSeccion)="duplicarSeccion($event)"
+        (reordenarSeccion)="reordenarSeccion($event.seccionId, $event.direccion)"
         (eliminarCampo)="eliminarCampo($event.seccionId, $event.campoId)"
         (reordenarCampo)="reordenarCampo($event.seccionId, $event.index, $event.direccion)"
         (tituloSeccionChange)="actualizarTituloSeccion($event.seccionId, $event.titulo)"

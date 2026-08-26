@@ -3,6 +3,7 @@ import { FormBuilderComponent } from './form-builder.component';
 import { normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from '../../models/form-builder.models';
 import { validarFormBuilderModel } from '../../utils/form-builder-validator.util';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Swal from 'sweetalert2';
 
 describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   let component: FormBuilderComponent;
@@ -255,16 +256,17 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.cerrar.emit).toHaveBeenCalled();
   });
 
-  it('administra secciones y conserva una seccion activa valida', () => {
+  it('administra secciones y conserva una seccion activa valida', async () => {
     const originalId = component.model().secciones[0].id;
     component.agregarSeccion();
     expect(component.model().secciones).toHaveLength(2);
     const nueva = component.model().secciones[1];
     expect(component.seccionActivaId()).toBe(nueva.id);
-    component.eliminarSeccion(nueva.id);
+    vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true } as Awaited<ReturnType<typeof Swal.fire>>);
+    await component.eliminarSeccion(nueva.id);
     expect(component.model().secciones).toHaveLength(1);
     expect(component.seccionActivaId()).toBe(originalId);
-    component.eliminarSeccion(originalId);
+    await component.eliminarSeccion(originalId);
     expect(component.model().secciones).toHaveLength(1);
   });
 

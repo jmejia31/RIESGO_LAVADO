@@ -1,7 +1,46 @@
-import { normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from './form-builder.models';
+import { duplicarSeccionBuilderModel, normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from './form-builder.models';
 import { validarFormBuilderModel } from '../utils/form-builder-validator.util';
 
 describe('Contrato bidireccional del Form Builder', () => {
+  it('duplica una secciÃ³n dos veces con copias profundas, IDs y claves Ãºnicos', () => {
+    const original: FormBuilderModel = {
+      codigoFormulario: 'FORM_DUP', nombreFormulario: 'DuplicaciÃ³n', catalogos: [{ codigo: 'CAT', nombre: 'CatÃ¡logo', elementos: [{ codigo: 'A', valor: 'Alto', orden: 1 }] }],
+      secciones: [{ id: 'sec_1', clave: 'riesgo', titulo: 'Riesgo', orden: 1, columnasPorFila: 3, campos: [
+        { id: 'field_1', clave: 'nivel', etiqueta: 'Nivel', tipo: 'selector-catalogo', codigoCatalogo: 'CAT', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
+        { id: 'field_2', clave: 'factor', etiqueta: 'Factor', tipo: 'formula', formula: 'nivel * 2', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
+      ] }]
+    };
+
+    const primera = duplicarSeccionBuilderModel(original, 'sec_1');
+    expect(primera).not.toBeNull();
+    const segunda = duplicarSeccionBuilderModel(primera!.model, primera!.seccion.id);
+    expect(segunda).not.toBeNull();
+    expect(segunda!.model.secciones).toHaveLength(3);
+    expect(segunda!.model.secciones.map(sec => sec.orden)).toEqual([1, 2, 3]);
+    expect(new Set(segunda!.model.secciones.map(sec => sec.id)).size).toBe(3);
+    expect(new Set(segunda!.model.secciones.map(sec => sec.clave)).size).toBe(3);
+    expect(new Set(segunda!.model.secciones.flatMap(sec => sec.campos.map(campo => campo.id))).size).toBe(6);
+    expect(new Set(segunda!.model.secciones.flatMap(sec => sec.campos.map(campo => campo.clave))).size).toBe(6);
+    expect(segunda!.model.secciones[0].campos[0].etiqueta).toBe('Nivel');
+    expect(segunda!.model.secciones[1].campos[0].tipo).toBe('selector-catalogo');
+    expect(segunda!.model.secciones[1].campos[1].formula).toBe('nivel * 2');
+    expect(segunda!.model.secciones[0].campos).not.toBe(segunda!.model.secciones[1].campos);
+
+    const roundTrip = normalizarJsonABuilderModel(serializarBuilderModelAJson(segunda!.model));
+    expect(roundTrip.secciones).toHaveLength(3);
+    expect(roundTrip.secciones[1].columnasPorFila).toBe(3);
+    expect(validarFormBuilderModel(roundTrip)).toEqual([]);
+  });
+
+  it('duplica secciÃ³n vacÃ­a conservando columnas y no muta el origen', () => {
+    const model: FormBuilderModel = { codigoFormulario: 'F', nombreFormulario: 'F', secciones: [{ id: 's', clave: 's', titulo: 'S', orden: 1, columnasPorFila: 6, campos: [] }] };
+    const result = duplicarSeccionBuilderModel(model, 's');
+    expect(result!.seccion.campos).toEqual([]);
+    expect(result!.seccion.columnasPorFila).toBe(6);
+    expect(model.secciones).toHaveLength(1);
+    expect(result!.model.secciones).toHaveLength(2);
+  });
+
   it('preserva metadatos conocidos y futuros al editar una propiedad soportada', () => {
     const original = {
       codigoFormulario: 'FORM_LOSSLESS',

@@ -176,6 +176,39 @@ test('renderiza la misma identidad visual en solo lectura y oculta acciones muta
   await page.screenshot({ path: 'test-results/ui-form5-readonly-1536x1024.png', fullPage: true });
 });
 
+test('duplica secciones sin colisiones, conserva cards y expone menu contextual', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalleFamilia).toBeVisible();
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  const lienzo = dialogo.getByRole('main', { name: 'Lienzo del formulario' });
+  const secciones = lienzo.locator('section.form-builder-section');
+  await expect(secciones).toHaveCount(1);
+  await expect(secciones.first()).toContainText('Área responsable');
+  await secciones.first().getByRole('button', { name: 'Duplicar sección' }).click();
+  await expect(secciones).toHaveCount(2);
+  await expect(secciones.nth(0)).toContainText('Área responsable');
+  await expect(secciones.nth(1)).toContainText('Área responsable');
+  await expect(secciones.nth(1).locator('input[placeholder^="Nombre de la sección"]')).toHaveValue(/\(copia\)/);
+  await expect(secciones.nth(1).locator('article')).toHaveCount(3);
+
+  const claves = await lienzo.locator('.form-builder-field-card span.font-mono').filter({ hasText: ' · ' }).allTextContents();
+  expect(claves).toHaveLength(6);
+  expect(new Set(claves.map(texto => texto.split(' · ')[0].trim())).size).toBe(6);
+  await secciones.nth(1).getByRole('button', { name: 'Acciones de sección' }).click();
+  await expect(dialogo.getByRole('button', { name: 'Mover arriba' })).toBeVisible();
+  await page.screenshot({ path: 'test-results/ui-form-final-b-menu-open-1536x1024.png', fullPage: true });
+  await lienzo.locator('.form-builder-canvas__scroll').click({ position: { x: 8, y: 8 } });
+  await expect(dialogo.getByRole('button', { name: 'Mover arriba' })).toBeHidden();
+  await page.screenshot({ path: 'test-results/ui-form-final-b-menu-1536x1024.png', fullPage: true });
+});
+
 test('captura Vista Previa integrada sin herramientas de edición', async ({ page }) => {
   await page.setViewportSize({ width: 1536, height: 1024 });
   await page.goto('/matrices-riesgos');
