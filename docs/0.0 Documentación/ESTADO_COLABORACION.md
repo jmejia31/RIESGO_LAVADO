@@ -368,9 +368,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.
 # Estado vigente - RECONCILIACIÓN VISUAL FINAL DEL CONSTRUCTOR
 
-- Fecha/hora: 2026-08-25 22:33:23 (UTC-6). Autor Codex. Rama `desarrollo`. HEAD inicial `1beb7752f18a7d07afe59fd1bd66f05813c55dfa`; commit/push pendientes de cierre.
+- Fecha/hora: 2026-08-25 22:33:23 (UTC-6). Autor Codex. Rama `desarrollo`. HEAD inicial `1beb7752f18a7d07afe59fd1bd66f05813c55dfa`; commit técnico final `9ec231ea234fc324f161574c1241afcec6212f11` publicado; commit documental final pendiente.
 - Resultado: Preview en toolbar secundaria; Editor Visual, Vista Previa y Configuración General deshabilitada en la navegación aprobada; Acciones solo con capacidades reales; footer Cancelar/Guardar Cambios con bloqueo readonly.
 - Diferencias contractuales: control auxiliar superior, dirty tracking y timestamp de último guardado no existen; no se falsificaron. Los datos E2E difieren en cantidad de secciones/campos por fixture real.
 - Evidencia: PNG observado y comparación lado a lado inicial/intermedia/final a 1536x1024; frontend 690/690, backend 494/494, E2E 21/21, lint/build/coverage/BD/documentación/Quality Gates PASS. Coverage 61.99/56.98/58.07/62.20. Estructura conserva fallo heredado de `core/services/global-http-state.service.ts`.
 - Contrato 0 cambios backend/DB/migraciones/endpoints/dependencias/tipos JSON/serializer/normalizador/engines; sin ejecución dinámica.
-- Punto exacto: stage explícito, commit/push a `origin/desarrollo`, verificar 0/0 y worktree limpio. `main` sin modificaciones.
+- Punto exacto: commit técnico `9ec231ea234fc324f161574c1241afcec6212f11` ya está en `origin/desarrollo`; crear y publicar el commit documental final, luego verificar 0/0 y worktree limpio. `main` sin modificaciones.
