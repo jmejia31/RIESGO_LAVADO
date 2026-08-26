@@ -464,3 +464,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - UAT disponible: E2E controlada. No se certifican aun borrador/publicacion N/N+1, historical Edit/View despues de publicar, change-without-code, long form de 90 campos ni titulo duplicado real. FINAL-D.1 permanece NO CERRADA bajo fail-closed.
 - Backend 0, DB 0, migraciones 0, endpoints 0, dependencias 0; propiedades JSON nuevas 0; tipos contractuales nuevos 0; serializer/normalizador sin cambios; renderer paralelo 0.
 - Archivo tecnico: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`. Siguiente punto: UAT autenticada y capturas dedicadas por version antes de cualquier cierre.
+
+## Estado vigente - P0-AUTH-UAT / P0-BLANK-SCREENS / FINAL-D.1
+
+- Fecha/hora: 2026-08-26 13:13 (UTC-6). Rama `desarrollo`. HEAD inicial `fa2e30cced291b0ab3919093e229c5e13e258503`.
+- P0-AUTH-UAT: bootstrap persistente creado en `tools/uat/matrices-uat-session.mjs`; perfil fuera del repositorio en `%TEMP%\\RIESGO_LAVADO_UAT\\playwright-profile` por restricción de escritura en `%LOCALAPPDATA%`. Chromium y Playwright disponibles. La sesión UAT se reutilizó; login manual queda requerido únicamente ante expiración definitiva. Password persistida/versionada: NO. Tokens versionados: NO.
+- P0-BLANK-SCREENS: mapa CodexGraph y contrato revisados. Frontend usa `moduloGuard(10)` y salida `/sin-acceso`; backend usa `[Authorize]` + `[ModuloAuthorize(10)]`; interceptor maneja 401/403. No se introdujo bypass ni email special-case. No se reprodujo una pantalla blanca autorizada en las pruebas existentes.
+- Autorización: las acciones administrativas de formularios/familias conservan `SystemRoles.Administrador`; el módulo general conserva autorización por claim de módulo. Permisos efectivos de la cuenta UAT no se imprimieron ni pudieron certificarse desde Browser conectado en esta sesión.
+- Pruebas frescas: backend 494/494 PASS; frontend 695/695 PASS; E2E del quality gate 23/23 PASS; build PASS; lint PASS; quality gates PASS; cobertura frontend 61.87/56.81/58.10/62.17. Una ejecución concurrente anterior reportó 19/23 por interferencia de runners y fue superada por el rerun aislado 23/23.
+- FINAL-D.1: NO CERRADA bajo fail-closed. Pendientes: UAT real N/N+1 publicada/borrador/histórica, change-without-code, long-form, título duplicado y catálogos/paridad real.
+- Restricciones: `git fetch/pull` iniciales fueron bloqueados por permisos de `.git/FETCH_HEAD`/`.git/index.lock`; no se modificó `main`. La verificación posterior de Git quedó pendiente de commit/push documental.
+- Continuación obligatoria: ejecutar UAT runtime versionada con el perfil persistente, documentar resultados reales, crear el commit documental y solicitar autorización separada para publicar en `origin/desarrollo`.
