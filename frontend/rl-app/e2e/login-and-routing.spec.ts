@@ -404,3 +404,31 @@ test('consulta una evaluación existente y permite abrir su edición', async ({ 
   await expect(page.getByRole('heading', { name: 'Editar Evaluación' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
 });
+test('smoke anti-regresion: Matrices no queda en blanco ni registra errores de runtime', async ({ page }) => {
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  const failedRequests: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('requestfailed', request => failedRequests.push(`${request.url()} :: ${request.failure()?.errorText || 'unknown'}`));
+
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] }),
+  }));
+  await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route('https://fonts.gstatic.com/**', route => route.fulfill({ status: 200, body: '' }));
+  await stubAuthenticatedMatrices(page);
+  await page.goto('/matrices-riesgos');
+
+  await expect(page.locator('app-matrices-riesgos')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await expect(page.locator('app-matrices-riesgos')).not.toBeEmpty();
+  await page.screenshot({ path: 'test-results/p0-matrices-smoke-1536x1024.png', fullPage: true });
+  expect(pageErrors).toEqual([]);
+  expect(consoleErrors, failedRequests.join('\n')).toEqual([]);
+});
