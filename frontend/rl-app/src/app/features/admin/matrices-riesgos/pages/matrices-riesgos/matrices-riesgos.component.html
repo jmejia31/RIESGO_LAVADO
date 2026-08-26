@@ -1204,28 +1204,27 @@
             </select>
           </div>
 
-          @for (seccion of secciones(); track seccion.clave) {
-            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+          @for (seccion of seccionesModal(); track seccion.clave) {
+            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4" [attr.data-evaluation-section]="seccion.clave">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
               <div class="grid gap-4"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+                   [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 1) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     idPrefix="campo-new"
+                    [style.grid-column]="'span ' + (campo.anchoColumnas || 1) + ' / span ' + (campo.anchoColumnas || 1)"
+                    [attr.data-evaluation-field]="campo.clave"
                     (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
               </div>
             </section>
           }
 
-          @if (secciones().length === 0) {
+          @if (seccionesModal().length === 0) {
             <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800" role="status">
               La plantilla vigente no contiene secciones configuradas para esta evaluación.
             </p>

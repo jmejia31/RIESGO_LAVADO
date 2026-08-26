@@ -1017,12 +1017,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
     if (!campo.codigoCatalogo) return [];
 
-    const met = this.modalVerAbierto() || this.modalEditarAbierto()
-      ? this.metodologiaHistorica() ?? this.metodologia()
-      : this.metodologia();
+    const version = this.modalVerAbierto() || this.modalEditarAbierto()
+      ? this.versionHistorica()
+      : this.versionVigente();
+    const catalogosVersion = version?.verJson
+      ? this.extraerDefinicionVersion(version).catalogos
+      : undefined;
+    const catalogos = catalogosVersion
+      ?? (this.modalVerAbierto() || this.modalEditarAbierto()
+        ? this.metodologiaHistorica()?.catalogos
+        : this.metodologia()?.catalogos);
 
-    return met?.catalogos
-      .find(catalogo => catalogo.codigo === campo.codigoCatalogo)
+    return catalogos
+      ?.find(catalogo => catalogo.codigo.toLowerCase() === campo.codigoCatalogo!.toLowerCase())
       ?.elementos
       .slice()
       .sort((a, b) => a.orden - b.orden) ?? [];
