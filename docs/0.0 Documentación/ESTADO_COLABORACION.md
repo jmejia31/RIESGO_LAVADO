@@ -426,3 +426,17 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Limitaciones: sincronización Git no reproducible por permisos de .git/FETCH_HEAD e index.lock; run_quality_gates.ps1 perdió la sesión al entrar a su subproceso E2E, aunque backend/frontend finalizaron y las E2E focales pasaron. validate_repository_structure.ps1 conserva únicamente el hallazgo heredado de core/services/global-http-state.service.ts.
 - Commit técnico confirmado: 4add256ddfd5ee742492984227146912217cde1c (fix(ui-form): cerrar acciones de seccion y certificacion visual final).
 - Punto de cierre: publicar ambos commits exclusivamente en origin/desarrollo y verificar HEAD=origin/desarrollo, ahead/behind 0/0, worktree limpio y main intacta.
+
+## Estado vigente - UI-FORM.FINAL-C Runtime Dynamic Form Parity
+
+- Fecha/hora: 2026-08-26 10:19-10:22 (UTC-6). Rama: desarrollo. HEAD inicial `9b7f4a7094eaad76a58aac9c899003c7cf8f47fa`.
+- Resultado fail-closed: `UI-FORM.FINAL-C = NO CERRADA`. El ajuste tecnico queda implementado y probado, pero la certificacion visual lado a lado Preview vs Nueva Evaluacion y la reproduccion del titulo duplicado no estan demostradas en este checkout.
+- Runtime: Nueva Evaluacion usa `seccionesModal()` y el `verJson` de la version vigente; aplica columnas y anchos de campo; usa `DynamicFieldRendererComponent`, igual que Preview. Las evaluaciones historicas conservan `evaVersionId` y resuelven su metodologia por version.
+- Catalogos: se corrigio la divergencia entre metodologia separada y JSON de version; `opcionesCatalogo` prioriza catalogos de la version vigente/historica asociada y conserva fallback historico. No se hardcodearon opciones.
+- Scroll: Preview conserva shell con headers/footer fuera del area y contenido central con `min-height: 0`, `overflow-y: auto`, `overscroll-behavior: contain` y `scrollbar-gutter: stable`.
+- Titulo duplicado: `IdentificaIdentificacion` no se encontro en codigo, fixtures ni documentacion local; no se aplico replace visual. Requiere reproduccion con datos reales.
+- Pruebas ejecutadas: focalizada 9/9; frontend 695/695; E2E 23/23; backend 494/494; lint/build PASS; coverage frontend 61.87%/56.81%/58.10%/62.17%; DB y enlaces documentales PASS; quality gates PASS; `git diff --check` PASS.
+- Limitaciones: validacion estructural NO PASS por el hallazgo heredado fuera de alcance `core/services/global-http-state.service.ts` y su carpeta. No hubo UAT real reproducible v10/v11 ni captura dedicada de paridad visual runtime.
+- Contrato y gates: backend/DB/migraciones/endpoints/dependencias/propiedades JSON nuevas/tipos contractuales nuevos/serializer paralelo/normalizador paralelo/renderer paralelo = 0.
+- Archivos tecnicos: FormBuilder SCSS; plantilla y componente `MatricesRiesgosComponent`; prueba renderer dinamico. Se generaran commits tecnico y documental separados y se publicaran solo en `origin/desarrollo`.
+- Continuacion obligatoria: ejecutar UAT/capturas reales de Preview y Nueva Evaluacion para una misma version publicada; verificar draft no afecta nuevas evaluaciones, publish si afecta, historica conserva version; reproducir y corregir causa real del titulo si aparece.

@@ -6209,3 +6209,18 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Limitaciones: git fetch/pull no reproducible por permisos sobre .git/FETCH_HEAD/.git/index.lock; run_quality_gates.ps1 ejecutó backend/frontend y entró a E2E, pero el host perdió la sesión antes del código final del wrapper; E2E focal y runner oficial completo sí ejecutaron escenarios relevantes. validate_repository_structure.ps1 mantiene el hallazgo heredado fuera de alcance en core/services/global-http-state.service.ts.
 - Commit técnico confirmado: 4add256ddfd5ee742492984227146912217cde1c (fix(ui-form): cerrar acciones de seccion y certificacion visual final).
 - Punto de cierre: publicar ambos commits en origin/desarrollo y verificar ahead/behind 0/0, worktree limpio y main intacta.
+
+## Registro de intervencion - Codex - UI-FORM.FINAL-C Runtime Dynamic Form Parity
+
+- Fecha/hora: 2026-08-26 10:19-10:22 (UTC-6). Autor: Codex. Rama: desarrollo. HEAD inicial: `9b7f4a7094eaad76a58aac9c899003c7cf8f47fa`.
+- Resultado fail-closed: FINAL-C NO CERRADA. El ajuste runtime queda implementado y probado, pero la certificacion visual lado a lado Preview vs Nueva Evaluacion y la reproduccion del titulo duplicado no estan demostradas en este checkout.
+- Cambios: Nueva Evaluacion usa `seccionesModal()` y la definicion JSON de la version vigente; `opcionesCatalogo` prioriza catalogos del `verJson` vigente o historico asociado y conserva fallback historico; se respetan `columnasPorFila` y `anchoColumnas`; Preview mantiene contenido central scrollable con `min-height: 0` y `overflow-y: auto`.
+- Arquitectura: CodexGraph post confirma un unico `DynamicFieldRendererComponent` consumido por `MatricesRiesgosComponent` y `FormBuilderComponent`; no se agregaron renderer, serializer o normalizador paralelos.
+- Versionado: nuevas evaluaciones continuan usando `versionVigente.verId`; historicos continuan resolviendo `metodologiaPorVersion(detalle.evaVersionId)` y guardando ese ID.
+- Causa catalogos: Preview usaba catalogos del JSON del Builder y Nueva Evaluacion metodologia separada; ahora la version es la fuente prioritaria runtime. No mocks ni opciones hardcodeadas.
+- Titulo duplicado: `IdentificaIdentificacion` no aparece en codigo, fixtures ni documentacion local; no se aplico replace visual. Requiere reproduccion con datos reales.
+- Archivos: FormBuilder SCSS; plantilla y componente `MatricesRiesgosComponent`; prueba `matrices-riesgos.component.renderer-dinamico.spec.ts`.
+- Contrato: propiedades JSON nuevas 0; tipos contractuales nuevos 0; serializer/normalizador incompatibles 0; backend/DB/migraciones/endpoints/dependencias 0.
+- Pruebas frescas: focalizada 9/9; frontend 64 archivos/695 pruebas; coverage frontend 61.87% statements, 56.81% branches, 58.10% functions, 62.17% lines; backend 494/494; E2E 23/23; lint/build PASS; DB PASS (19 raiz/16 alcanzables); enlaces documentales PASS (94/163); quality gates PASS; `git diff --check` PASS.
+- Limitacion: validacion estructural NO PASS por hallazgo heredado fuera de alcance en `frontend/rl-app/src/app/core/services/global-http-state.service.ts` y su carpeta. No hubo UAT real reproducible v10/v11 ni captura dedicada lado a lado runtime.
+- Punto de continuacion: obtener UAT/capturas reales para Preview vs Nueva Evaluacion de la misma version publicada y reproducir el titulo duplicado antes de declarar cierre.
