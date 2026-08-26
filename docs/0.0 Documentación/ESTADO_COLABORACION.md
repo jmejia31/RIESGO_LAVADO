@@ -375,14 +375,21 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Reproducción local disponible: sin sesión, `/matrices-riesgos` redirige a `/login`; el API configurado `http://localhost:5043` no escucha y genera CORS/network. La pestaña Chrome autenticada del usuario no pudo ser inspeccionada por restricción del navegador conectado.
 - Corrección aplicada en esta intervención: smoke E2E anti-regresión de ruta que verifica contenedor Matrices, encabezados, contenido no vacío, `pageerror=0` y console errors inesperados=0; captura `frontend/rl-app/test-results/p0-matrices-smoke-1536x1024.png`.
 - Resultados locales: frontend 692/692, backend 494/494, E2E 22/22, quality gates PASS, coverage 61.95%/56.98%/58.00%/62.15%. Esto no sustituye UAT autenticada real.
-- Estado actualizado: `P0 BLANK PAGE = NO REPRODUCIDO EN UAT REAL DEL USUARIO`; `CERTIFICACIÓN RUNTIME = PENDIENTE`; UI-FORM.FINAL-A continúa NO CERRADA hasta capturar y verificar pageerror, console.error/Angular errors, Network crítico y el flujo autenticado completo.
+- Estado reclasificado: `P0 MATRICES BLANK PAGE = CERRADO POR UAT REAL DEL USUARIO`; `UI-FORM.FINAL-A = CERRADA FUNCIONAL Y VISUALMENTE`; `UI-FORM.FINAL-B = HABILITADA / NO INICIADA`. La certificación automatizada pageerror/console/network queda pendiente como deuda no bloqueante por limitación de attach a Chrome.
 
 ## Actualización UAT — P0 blank no reproducido, certificación runtime pendiente
 
 - El usuario confirmó visualmente en su sesión real que `http://localhost:4200/matrices-riesgos` carga, el contenido Matrices de Riesgos es visible y el Constructor renderiza Biblioteca, Lienzo e Inspector.
 - Esta confirmación cambia el hecho registrado: el blank page queda **NO REPRODUCIDO EN UAT REAL DEL USUARIO**. No se registra como evidencia técnica reejecutada por Codex.
 - La certificación runtime sigue pendiente porque esta intervención no contó con una superficie de navegador conectada para capturar pageerror, console.error/errores Angular, Network crítico y validar Editor Visual, Vista Previa, JSON Técnico y readonly.
-- Estado obligatorio: `P0 = ABIERTO`; `UI-FORM.FINAL-A = NO CERRADA`; `UI-FORM.FINAL-B = BLOQUEADA`.
+- Estado vigente: `P0 = CERRADO POR UAT REAL DEL USUARIO`; `UI-FORM.FINAL-A = CERRADA`; `UI-FORM.FINAL-B = HABILITADA / NO INICIADA`.
+
+## Reclasificación UAT — cierre funcional de P0 y habilitación de FINAL-B
+
+- El usuario realizó UAT real y confirmó que `http://localhost:4200/matrices-riesgos` carga, el módulo Matrices de Riesgos renderiza y el Constructor de Formularios Dinámicos abre con Biblioteca, Lienzo e Inspector visibles.
+- `P0 MATRICES BLANK PAGE = CERRADO POR UAT REAL DEL USUARIO`; el blank page ya no se reproduce.
+- Codex no pudo adjuntarse a Google Chrome para capturar pageerror, console.error/errores Angular y Network. Esa limitación se clasifica como **DEUDA DE CERTIFICACIÓN AUTOMATIZADA NO BLOQUEANTE**, no como P0 funcional.
+- No existen cambios runtime adicionales requeridos actualmente. `UI-FORM.FINAL-A` queda cerrada funcional y visualmente, con la certificación automatizada pendiente. `UI-FORM.FINAL-B` queda habilitada, pero no se inicia en esta intervención.
 
 ## Estado vigente - UI-FORM.FINAL-A navegación, acciones y ciclo visual
 

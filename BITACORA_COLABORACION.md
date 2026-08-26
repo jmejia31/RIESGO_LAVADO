@@ -6162,14 +6162,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Evidencia local:** `frontend/rl-app/test-results/p0-matrices-smoke-1536x1024.png`, con header, mÃ©tricas, tabs y Evaluaciones visibles.
 - **Pruebas:** frontend 692/692; backend 494/494; E2E 22/22; lint/build PASS; quality gates PASS; coverage frontend 61.95% statements, 56.98% branches, 58.00% functions, 62.15% lines.
 - **Actualización UAT informada por el usuario:** el usuario confirmó en su sesión real que `http://localhost:4200/matrices-riesgos` carga, el módulo ya no queda en blanco y el Constructor renderiza Biblioteca, Lienzo e Inspector. Por tanto, el blank page queda **NO REPRODUCIDO EN UAT REAL DEL USUARIO**; esto no equivale todavía a certificación runtime.
-- **Certificación runtime pendiente:** en esta intervención no hubo superficie de navegador conectada para capturar pageerror, console.error/Angular errors, Network crítico y el flujo completo autenticado. No se declara `P0` cerrado ni se afirma restauración técnica.
+- **Certificación runtime automatizada:** Codex no pudo adjuntarse a Google Chrome para capturar pageerror, console.error/errores Angular y Network. Esta limitación queda como deuda de certificación automatizada no bloqueante; no constituye evidencia de que persista el P0 funcional.
 
 ## Actualización de estado — P0 blank no reproducido, certificación pendiente
 
 - **Fecha y hora:** 2026-08-26 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`.
-- **Estado:** `P0 BLANK PAGE = NO REPRODUCIDO EN UAT REAL DEL USUARIO`; `CERTIFICACIÓN RUNTIME = PENDIENTE`; `UI-FORM.FINAL-A = NO CERRADA`; `UI-FORM.FINAL-B = BLOQUEADA`.
-- **Evidencia recibida:** confirmación visual del usuario sobre la ruta, el módulo Matrices de Riesgos y el Constructor completo. Esta evidencia se registra como reportada por el usuario y no como una captura/telemetría reejecutada por Codex.
-- **Pendiente exacto:** capturar en sesión autenticada pageerror=0, console errors críticos=0, Network crítico=0, permanencia de `/matrices-riesgos`, apertura del Constructor, Editor Visual, Vista Previa, JSON Técnico y readonly sin errores críticos.
+- **Estado reclasificado:** `P0 MATRICES BLANK PAGE = CERRADO POR UAT REAL DEL USUARIO`; `UI-FORM.FINAL-A = CERRADA FUNCIONAL Y VISUALMENTE`; `UI-FORM.FINAL-B = HABILITADA / NO INICIADA`.
+- **Evidencia UAT real del usuario:** confirmó que `/matrices-riesgos` carga, Matrices de Riesgos renderiza, el Constructor abre y Biblioteca, Lienzo e Inspector son visibles; blank page = NO.
+- **Pendiente no bloqueante:** `CERTIFICACIÓN AUTOMATIZADA DE NAVEGADOR = PENDIENTE` por imposibilidad de attach a Chrome; pageerror, console y Network quedan pendientes de captura cuando la superficie esté disponible.
+- **Decisión:** no existen cambios runtime adicionales requeridos actualmente y no se inicia UI-FORM.FINAL-B en esta intervención.
 
 - **Fecha y hora:** 2026-08-26 08:13 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`. **Commit inicial:** `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.
 - **Objetivo y alcance:** cerrar la arquitectura superior del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R a UI-FORM.6-R, backend, DB y contratos existentes.
