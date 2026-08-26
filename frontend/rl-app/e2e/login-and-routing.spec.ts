@@ -195,7 +195,7 @@ function createUnsignedAccessToken() {
   })}.`;
 }
 
-async function stubAuthenticatedMatrices(page: Page) {
+async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknown; metodologia?: unknown } = {}) {
   const accessToken = createUnsignedAccessToken();
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
@@ -210,9 +210,9 @@ async function stubAuthenticatedMatrices(page: Page) {
     let datos: unknown = [];
 
     if (path.endsWith('/formulario/version-vigente')) {
-      datos = versionFormulario;
+      datos = fixture.version ?? versionFormulario;
     } else if (path.endsWith('/metodologia/vigente')) {
-      datos = metodologiaFormulario;
+      datos = fixture.metodologia ?? metodologiaFormulario;
     } else if (path.endsWith('/formularios/historial')) {
       datos = [versionFormulario];
     } else if (/\/formularios\/\d+$/.test(path) && method === 'GET') {
@@ -435,4 +435,25 @@ test('smoke anti-regresion: Matrices no queda en blanco ni registra errores de r
   await page.screenshot({ path: 'test-results/p0-matrices-smoke-1536x1024.png', fullPage: true });
   expect(pageErrors).toEqual([]);
   expect(consoleErrors, failedRequests.join('\n')).toEqual([]);
+});
+
+test('long form test-only valida robustez con un escenario representativo', async ({ page }) => {
+  const secciones = Array.from({ length: 9 }, (_, s) => ({ clave: `long_${s}`, titulo: `Long ${s}`, orden: s + 1, columnasPorFila: 3, campos: Array.from({ length: 10 }, (_, f) => ({ clave: `long_field_${s * 10 + f + 1}`, etiqueta: `Long field ${s * 10 + f + 1}`, tipo: 'texto', obligatorio: false, soloLectura: false })) }));
+  const definicion = { codigoFormulario: 'FORM_LONG_UAT', nombreFormulario: 'Long UAT', secciones };
+  const version = { ...versionFormulario, verId: 910, verCodigo: 'FORM_LONG_UAT', verVersion: 90, verJson: JSON.stringify(definicion) };
+  const metodologia = { ...metodologiaFormulario, versionFormularioId: 910, codigo: 'FORM_LONG_UAT', version: 90, secciones, catalogos: [] };
+  await stubAuthenticatedMatrices(page, { version, metodologia });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: /Nueva evalu/ }).click();
+  const modal = page.locator('[data-modal="nueva-evaluacion"]');
+  const scroll = modal.locator('.modal-body-scrollable');
+  await expect(modal.locator('[data-evaluation-field="long_field_1"]')).toBeVisible();
+  const middleField = modal.locator('[data-evaluation-field="long_field_45"]');
+  await middleField.scrollIntoViewIfNeeded();
+  await expect(middleField).toBeVisible();
+  await scroll.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect(modal.locator('[data-evaluation-field="long_field_90"]')).toBeVisible();
+  const metrics = await scroll.evaluate(element => ({ vertical: element.scrollHeight > element.clientHeight, horizontal: element.scrollWidth > element.clientWidth, top: element.scrollTop }));
+  expect(metrics.vertical).toBe(true); expect(metrics.horizontal).toBe(false); expect(metrics.top).toBeGreaterThan(0);
+  await expect(modal.getByRole('button', { name: /Crear Evalu/ })).toBeVisible();
 });

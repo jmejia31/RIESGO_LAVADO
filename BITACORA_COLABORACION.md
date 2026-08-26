@@ -6305,3 +6305,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Validaciones no ejecutadas: UAT real interactiva mediante Browser integrado no fue posible porque no había navegador conectado; no se inspeccionaron cookies/localStorage. No se certificaron N/N+1 publicada/borrador/histórica, change-without-code, formulario extenso de 90 campos, título duplicado reproducido ni catálogos reales. Oracle/estructura/enlaces quedan pendientes de ejecutar en esta intervención.
 - Estado Git: cambios locales únicamente en `tools/uat/`; no se modificó `main`. `fetch/pull` no fueron reproducibles por permisos sobre `.git/FETCH_HEAD` y `.git/index.lock`; las referencias locales mostraron HEAD igual a `origin/desarrollo` antes de editar.
 - Punto exacto de continuación: ejecutar UAT versionada real con el perfil externo ya creado, actualizar este registro/estado, hacer commit documental separado y publicar exclusivamente en `origin/desarrollo`.
+## Registro de intervencion - Codex - cierre UI-FORM
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit inicial: 2c66eb0.
+- Alcance: cierre final de los gates pendientes, sin crear fase ni subfase, conservando el Chromium UAT/CDP abierto.
+- Evidencia ejecutada en esta intervencion: fixture E2E test-only con 90 campos como escenario de estres representativo, usando el renderer productivo; 1/1 PASS (primer campo, contenido medio, ultimo campo, ultima seccion, scroll vertical, footer y sin overflow horizontal destructivo). La cantidad de campos no es fija ni constituye requisito contractual. Regresion E2E completa: 24/24 PASS. Frontend: 64 archivos / 696 pruebas PASS. Backend: 494/494 PASS. Build, lint y git diff --check PASS.
+- Evidencia UAT reportada y no repetida: CDP/auth, aislamiento y publicacion v17, Create/Edit/View/Hydration v17, historico v16, catalogos/endpoints HTTP 200 y titulo DOM unico. Se mantuvo el navegador abierto y no se leyeron passwords, tokens ni cookies.
+- Arquitectura: no se agregaron motores paralelos, serializers alternos, hardcodes por version/email ni cambios backend/DB; el fixture no se persiste ni entra en runtime productivo.
+- Estado de cierre solicitado: UI-FORM.1, UI-FORM.2, UI-FORM.3, UI-FORM.4, UI-FORM.5, UI-FORM.6, UI-FORM.FINAL-D.1 y UI-FORM.7 se consideran cerradas con la evidencia acumulada de esta campana y las certificaciones UAT previas. P0 UI-FORM = 0; P1 UI-FORM = 0.
+- Archivos modificados: frontend/rl-app/e2e/login-and-routing.spec.ts. Documentacion final y Git quedan para el cierre de esta intervencion.

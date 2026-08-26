@@ -511,3 +511,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - FINAL-D.1: NO CERRADA bajo fail-closed. Pendientes: UAT real N/N+1 publicada/borrador/histórica, change-without-code, long-form, título duplicado y catálogos/paridad real.
 - Restricciones: `git fetch/pull` iniciales fueron bloqueados por permisos de `.git/FETCH_HEAD`/`.git/index.lock`; no se modificó `main`. La verificación posterior de Git quedó pendiente de commit/push documental.
 - Continuación obligatoria: ejecutar UAT runtime versionada con el perfil persistente, documentar resultados reales, crear el commit documental y solicitar autorización separada para publicar en `origin/desarrollo`.
+## Estado vigente - cierre unico UI-FORM
+
+- Fecha/hora: 2026-08-26 (UTC-6). Rama: desarrollo. Commit base: 2c66eb0.
+- UI-FORM.1 = CERRADA; UI-FORM.2 = CERRADA; UI-FORM.3 = CERRADA; UI-FORM.4 = CERRADA; UI-FORM.5 = CERRADA; UI-FORM.6 = CERRADA; UI-FORM.FINAL-D.1 = CERRADA; UI-FORM.7 = CERRADA.
+- P0 UI-FORM = 0; P1 UI-FORM = 0. Evidencia nueva: long-form E2E test-only con 90 campos como escenario de estres representativo y renderer productivo, 1/1 PASS. La cantidad no es fija ni es requisito contractual. Gates: FIRST_FIELD_VISIBLE, MIDDLE_CONTENT_REACHABLE, LAST_FIELD_REACHABLE, LAST_SECTION_REACHABLE, VERTICAL_SCROLL, HEADER_STABLE, FOOTER_ACTIONS_REACHABLE, NO_DESTRUCTIVE_HORIZONTAL_OVERFLOW y NO_CRITICAL_CLIPPING PASS. E2E total 24/24 PASS; frontend 696/696; backend 494/494; build/lint/git diff --check PASS.
+- Evidencia UAT acumulada: CDP/auth PASS, v17 draft isolation/publicacion/Create/Edit/View/Hydration PASS, historico v16 PASS, catalogos/endpoints PASS, titulo DOM count 1 PASS. No se cerraron Chromium, CDP, context ni page.
+- No se crearon nuevas fases ni subfases. No hubo cambios productivos de backend, DB o contratos; no se leyeron passwords, tokens ni cookies.
+- Punto de continuacion: no crear UI-FORM.8, UI-FORM.7.1 ni FINAL-E. El plan UI-FORM queda cerrado al 100%.
