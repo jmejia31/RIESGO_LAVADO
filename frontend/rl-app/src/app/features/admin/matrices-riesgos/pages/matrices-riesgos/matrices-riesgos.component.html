@@ -937,7 +937,7 @@
 
   @if (modalVerAbierto()) {
   <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
-    <div class="modal-container-card modal-size-lg">
+    <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-ver" class="text-base sm:text-lg font-bold text-gray-900">
@@ -979,18 +979,15 @@
                 <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Sección {{ seccion.orden }}</span>
               </h4>
 
-              <div class="grid gap-3"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+              <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 2) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     [modoLectura]="true"
-                    idPrefix="campo-view" />
+                    idPrefix="campo-view"
+                    [style.grid-column]="'span ' + (campo.anchoColumnas || 1)" />
                 }
               </div>
             </section>
@@ -1008,7 +1005,7 @@
 
   @if (modalEditarAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-editar">
-      <div class="modal-container-card modal-size-lg">
+      <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-editar" class="text-base sm:text-lg font-bold text-gray-900">
@@ -1051,11 +1048,7 @@
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
-              <div class="grid gap-4"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+              <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 2) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
