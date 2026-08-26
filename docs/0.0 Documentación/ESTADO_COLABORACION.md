@@ -439,4 +439,18 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Limitaciones: validacion estructural NO PASS por el hallazgo heredado fuera de alcance `core/services/global-http-state.service.ts` y su carpeta. No hubo UAT real reproducible v10/v11 ni captura dedicada de paridad visual runtime.
 - Contrato y gates: backend/DB/migraciones/endpoints/dependencias/propiedades JSON nuevas/tipos contractuales nuevos/serializer paralelo/normalizador paralelo/renderer paralelo = 0.
 - Archivos tecnicos: FormBuilder SCSS; plantilla y componente `MatricesRiesgosComponent`; prueba renderer dinamico. Se generaran commits tecnico y documental separados y se publicaran solo en `origin/desarrollo`.
+- Commit tecnico: `e6dd0a94c745e1db47ad35553862cfbcc1ff797f` (`fix(ui-form): ampliar modal y unificar nueva evaluacion con version vigente`).
 - Continuacion obligatoria: ejecutar UAT/capturas reales de Preview y Nueva Evaluacion para una misma version publicada; verificar draft no afecta nuevas evaluaciones, publish si afecta, historica conserva version; reproducir y corregir causa real del titulo si aparece.
+
+## Estado vigente - UI-FORM.FINAL-D Modal grande y UAT runtime final
+
+- Fecha/hora: 2026-08-26 10:35-10:47 (UTC-6). Rama: desarrollo. HEAD inicial `2857c7d1be64034109b8bdc766c451d058cddbf0`.
+- Estado fail-closed: `UI-FORM.FINAL-D = NO CERRADA`. Se implemento el modal grande y se verifico el flujo controlado, pero no existe UAT autenticada reproducible de v10/v11 ni certificacion visual dedicada Preview vs Nueva Evaluacion con formulario extenso.
+- Modal: Nueva Evaluacion reutiliza `modal-size-workspace`, el mayor patron institucional existente, con 98.3vw, maximo 1510px y altura `100dvh - 28px`; mantiene header/body scrollable/footer y responsive.
+- Runtime: usa `DynamicFieldRendererComponent`, `seccionesModal()` y la definicion versionada vigente; catalogos priorizan `verJson`; historicos conservan `evaVersionId`; Preview conserva scroll interno y renderer unico.
+- Evidencia UAT controlada: E2E oficial 23/23 PASS; captura `frontend/rl-app/test-results/ui-form-final-d-nueva-evaluacion-1536x1024.png` revisada a 1536x1024. La fixture tiene dos campos y no prueba 90 campos.
+- Pruebas: focalizada 9/9; frontend 695/695; backend 494/494; coverage frontend 61.87%/56.81%/58.10%/62.17%; lint/build PASS; DB/enlaces PASS; quality gates PASS; `git diff --check` PASS.
+- Limitacion: validacion estructural NO PASS por hallazgo heredado fuera de alcance en `core/services/global-http-state.service.ts` y su carpeta. El titulo `IdentificaIdentificacion` no se reproduce localmente; no se aplico replace.
+- Contrato: propiedades JSON nuevas 0, tipos nuevos 0, serializer/normalizador sin cambios, renderer paralelo 0, backend/DB/migraciones/endpoints/dependencias 0.
+- Archivos tecnicos: template de MatricesRiesgos, prueba renderer dinamico y E2E login/routing. La documentacion de FINAL-D se mantiene separada del commit tecnico.
+- Continuacion obligatoria: UAT autenticada extensa de Preview/Nueva Evaluacion, draft vs publish, historico y comparacion lado a lado; no declarar cierre definitivo sin esa evidencia.
