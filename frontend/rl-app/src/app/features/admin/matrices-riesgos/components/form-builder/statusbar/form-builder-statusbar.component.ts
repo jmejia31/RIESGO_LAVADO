@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { EstadoFormulario } from '../../../models/matrices-riesgos.models';
 
 @Component({
@@ -14,17 +14,16 @@ export class FormBuilderStatusbarComponent {
   @Input() soloLectura: boolean = false;
   @Input() seccionesCount: number = 0;
   @Input() catalogosCount: number = 0;
+  @Input() puedeGuardar: boolean = false;
+  @Output() cancelar = new EventEmitter<void>();
+  @Output() guardar = new EventEmitter<void>();
 
   get estadoEtiqueta(): string {
     const mapa: Record<EstadoFormulario, string> = {
-      DRAFT: 'Borrador',
-      IN_REVIEW: 'En revisión',
-      APPROVED: 'Aprobada',
-      PUBLISHED: 'Publicada',
-      RETIRED: 'Retirada',
-      ARCHIVED: 'Archivada'
+      DRAFT: 'Borrador', IN_REVIEW: 'En revision', APPROVED: 'Aprobada',
+      PUBLISHED: 'Publicada', RETIRED: 'Retirada', ARCHIVED: 'Archivada'
     };
     const estado = this.estadoVersion ? mapa[this.estadoVersion] : 'Modo borrador';
-    return this.soloLectura && this.estadoVersion ? `${estado} · Solo lectura` : (this.soloLectura ? 'Solo lectura' : estado);
+    return this.soloLectura && this.estadoVersion ? `${estado} \u00b7 Solo lectura` : (this.soloLectura ? 'Solo lectura' : estado);
   }
 }

@@ -242,7 +242,10 @@
     [versionCodigo]="versionCodigo"
     [estadoVersion]="estadoVersion"
     [soloLectura]="soloLectura"
+    [puedeGuardar]="!bloqueadoParaMutacion"
     [seccionesCount]="model().secciones.length"
-    [catalogosCount]="catalogosList().length">
+    [catalogosCount]="catalogosList().length"
+    (cancelar)="cerrar.emit()"
+    (guardar)="emitirGuardado()">
   </app-form-builder-statusbar>
 </section>

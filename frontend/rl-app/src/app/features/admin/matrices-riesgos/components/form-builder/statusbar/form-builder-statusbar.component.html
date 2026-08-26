@@ -1,11 +1,16 @@
 <footer class="form-builder-statusbar" data-form-builder-region="statusbar">
   <div class="form-builder-statusbar__content">
-    <span class="form-builder-statusbar__version">{{ versionCodigo }}</span>
-    <span class="form-builder-statusbar__separator">·</span>
-    <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura" [class.form-builder-statusbar__mode--draft]="!soloLectura">{{ estadoEtiqueta }}</span>
-    <span class="form-builder-statusbar__separator">·</span>
-    <span>{{ seccionesCount }} sección(es)</span>
-    <span class="form-builder-statusbar__separator">·</span>
-    <span>{{ catalogosCount }} catálogo(s)</span>
+    <div class="form-builder-statusbar__state">
+      <span class="form-builder-statusbar__indicator" [class.form-builder-statusbar__indicator--readonly]="soloLectura"></span>
+      <span class="form-builder-statusbar__mode" [class.form-builder-statusbar__mode--readonly]="soloLectura" [class.form-builder-statusbar__mode--draft]="!soloLectura">{{ soloLectura ? 'Solo lectura' : 'Listo para editar' }}</span>
+      <span class="form-builder-statusbar__separator">&middot;</span><span>{{ estadoEtiqueta }}</span>
+      <span class="form-builder-statusbar__separator">&middot;</span><span>Versi&oacute;n {{ versionCodigo }}</span>
+      <span class="form-builder-statusbar__separator">&middot;</span><span>{{ seccionesCount }} secci&oacute;n(es)</span>
+      <span class="form-builder-statusbar__separator">&middot;</span><span>{{ catalogosCount }} cat&aacute;logo(s)</span>
+    </div>
+    <div class="form-builder-statusbar__actions">
+      <button type="button" class="form-builder-statusbar__cancel" (click)="cancelar.emit()">Cancelar</button>
+      <button type="button" class="form-builder-statusbar__save" [disabled]="!puedeGuardar" (click)="guardar.emit()">Guardar Cambios</button>
+    </div>
   </div>
 </footer>

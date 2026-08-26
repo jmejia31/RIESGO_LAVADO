@@ -136,6 +136,13 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   await expect(dialogo).toContainText('BORRADOR');
   await expect(dialogo.locator('#btn-guardar-builder')).toBeVisible();
   await expect(dialogo.locator('#btn-publicar-builder')).toBeVisible();
+  await expect(dialogo.locator('#tab-editor-visual')).toBeVisible();
+  await expect(dialogo.locator('#tab-vista-preview')).toBeVisible();
+  await expect(dialogo.locator('#tab-configuracion-general')).toBeDisabled();
+  await expect(dialogo.getByText('Acciones', { exact: false })).toBeVisible();
+  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__cancel')).toBeVisible();
+  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__save')).toBeEnabled();
+  await expect(dialogo.getByText('Modo de visualizaciÃ³n y consulta tÃ©cnica', { exact: false })).toHaveCount(0);
   await page.screenshot({ path: 'test-results/ui-form5-editable-1536x1024.png', fullPage: true });
 });
 
@@ -155,6 +162,10 @@ test('renderiza la misma identidad visual en solo lectura y oculta acciones muta
   await expect(dialogo).toContainText('SOLO LECTURA');
   await expect(dialogo.locator('#btn-guardar-builder')).toHaveCount(0);
   await expect(dialogo.locator('#btn-publicar-builder')).toHaveCount(0);
+  await expect(dialogo.locator('#tab-vista-preview')).toBeVisible();
+  await expect(dialogo.locator('#tab-configuracion-general')).toBeDisabled();
+  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__cancel')).toBeVisible();
+  await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__save')).toBeDisabled();
   await page.screenshot({ path: 'test-results/ui-form5-readonly-1536x1024.png', fullPage: true });
 });
 

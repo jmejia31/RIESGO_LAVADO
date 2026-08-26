@@ -274,9 +274,14 @@ dialog.modal-backdrop-overlay {
 }
 
 .modal-size-workspace {
-  width: 96vw !important;
-  max-width: 1500px !important;
-  height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
+  width: 98.3vw !important;
+  max-width: 1510px !important;
+  height: calc(100dvh - 28px) !important;
+}
+
+/* El workspace aprobado ocupa el lienzo de 1536x1024 con 14px perimetrales. */
+.form-builder-modal-overlay {
+  padding: 14px !important;
 }
 
 /*
@@ -507,6 +512,7 @@ dialog.modal-backdrop-overlay {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.45rem;
   }
+
 }
 
 @media (max-width: 720px) {
