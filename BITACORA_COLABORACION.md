@@ -6240,3 +6240,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - UAT visual controlada: captura `frontend/rl-app/test-results/ui-form-final-d-nueva-evaluacion-1536x1024.png` revisada a 1536x1024; modal amplio, contenido legible, footer fijo y scroll CSS verificables. La fixture controlada contiene dos campos, por lo que no se certifica recorrido de 90 campos ni una UAT institucional v10/v11.
 - Estado real: FINAL-D queda `NO CERRADA` bajo fail-closed por falta de UAT real autenticada de borrador/publicacion/historico y certificacion visual dedicada Preview vs Nueva Evaluacion; el cambio soportado y probado queda listo.
 - Punto de continuacion: ejecutar UAT autenticada con una plantilla publicada extensa, un borrador posterior, publicacion y evaluacion historica; capturar Preview y Nueva Evaluacion lado a lado antes del cierre definitivo.
+
+## Registro de intervencion - Codex - UI-FORM.FINAL-D.1
+
+- Fecha/hora: 2026-08-26 11:20-11:26 (UTC-6). Rama `desarrollo`. HEAD inicial `6f57fc9a24873a2a24d9e1367a8b6f4f5ac0fde3`.
+- CodexGraph acotado: `DynamicFieldRendererComponent` unico para Builder/Preview/Create/Edit/View; View/Edit resuelven `metodologiaPorVersion(evaVersionId)` y Create `versionVigente`.
+- Correccion minima: View y Edit reutilizan `modal-size-workspace` y el grid dinamico por `columnasPorFila`/`anchoColumnas`, sin cambiar modelos, serializer, normalizador ni backend.
+- Evidencia: focalizada 9/9; frontend 64 archivos/695 pruebas; backend 494/494; E2E 23/23; lint PASS; build PASS; `run_quality_gates.ps1` PASS; `git diff --check` PASS.
+- Contrato: propiedades JSON nuevas 0, tipos contractuales nuevos 0, serializer/normalizador sin cambios, backend/DB/migraciones/endpoints/dependencias 0, renderers paralelos 0.
+- Limitaciones fail-closed: E2E usa fixtures controladas; no se demostro UAT autenticada real N/N+1, change-without-code completo, formulario de 90 campos ni reproduccion del titulo duplicado. FINAL-D.1 queda NO CERRADA.
+- Archivo tecnico: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`. P0 propio: ninguno. P1 propio: falta UAT runtime version-aware completa.

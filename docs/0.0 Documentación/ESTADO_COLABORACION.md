@@ -454,3 +454,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Contrato: propiedades JSON nuevas 0, tipos nuevos 0, serializer/normalizador sin cambios, renderer paralelo 0, backend/DB/migraciones/endpoints/dependencias 0.
 - Archivos tecnicos: template de MatricesRiesgos, prueba renderer dinamico y E2E login/routing. La documentacion de FINAL-D se mantiene separada del commit tecnico.
 - Continuacion obligatoria: UAT autenticada extensa de Preview/Nueva Evaluacion, draft vs publish, historico y comparacion lado a lado; no declarar cierre definitivo sin esa evidencia.
+
+## Estado vigente - UI-FORM.FINAL-D.1 Runtime dinamico universal
+
+- Fecha/hora: 2026-08-26 11:20-11:26 (UTC-6). Rama `desarrollo`. HEAD inicial `6f57fc9a24873a2a24d9e1367a8b6f4f5ac0fde3`.
+- CodexGraph confirma un `DynamicFieldRendererComponent` unico. Create usa la version publicada vigente; Edit/View cargan la definicion por `evaVersionId`; Preview conserva el renderer del Builder.
+- View/Edit pasan al patron institucional `modal-size-workspace` y respetan columnas y spans dinamicos como Create. No se modifico el contrato JSON ni la persistencia.
+- Pruebas frescas: focalizada 9/9, frontend 695/695, backend 494/494, E2E 23/23, lint PASS, build PASS y quality gates PASS.
+- UAT disponible: E2E controlada. No se certifican aun borrador/publicacion N/N+1, historical Edit/View despues de publicar, change-without-code, long form de 90 campos ni titulo duplicado real. FINAL-D.1 permanece NO CERRADA bajo fail-closed.
+- Backend 0, DB 0, migraciones 0, endpoints 0, dependencias 0; propiedades JSON nuevas 0; tipos contractuales nuevos 0; serializer/normalizador sin cambios; renderer paralelo 0.
+- Archivo tecnico: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`. Siguiente punto: UAT autenticada y capturas dedicadas por version antes de cualquier cierre.
