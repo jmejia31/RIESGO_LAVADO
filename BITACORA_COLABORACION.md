@@ -6161,7 +6161,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **CorrecciÃ³n segura aplicada:** se agregÃ³ smoke E2E anti-regresiÃ³n para ruta Matrices, contenido no vacÃ­o, `pageerror=0` y console errors inesperados=0, con stubs solo de bootstrap/API necesarios. No se introdujo parche runtime especulativo, fallback silencioso ni ocultamiento.
 - **Evidencia local:** `frontend/rl-app/test-results/p0-matrices-smoke-1536x1024.png`, con header, mÃ©tricas, tabs y Evaluaciones visibles.
 - **Pruebas:** frontend 692/692; backend 494/494; E2E 22/22; lint/build PASS; quality gates PASS; coverage frontend 61.95% statements, 56.98% branches, 58.00% functions, 62.15% lines.
-- **Bloqueo real pendiente:** repetir UAT autenticada en el navegador del usuario con API local disponible y capturar primer console/pageerror/network; hasta entonces P0 no se certifica cerrado.
+- **Actualización UAT informada por el usuario:** el usuario confirmó en su sesión real que `http://localhost:4200/matrices-riesgos` carga, el módulo ya no queda en blanco y el Constructor renderiza Biblioteca, Lienzo e Inspector. Por tanto, el blank page queda **NO REPRODUCIDO EN UAT REAL DEL USUARIO**; esto no equivale todavía a certificación runtime.
+- **Certificación runtime pendiente:** en esta intervención no hubo superficie de navegador conectada para capturar pageerror, console.error/Angular errors, Network crítico y el flujo completo autenticado. No se declara `P0` cerrado ni se afirma restauración técnica.
+
+## Actualización de estado — P0 blank no reproducido, certificación pendiente
+
+- **Fecha y hora:** 2026-08-26 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`.
+- **Estado:** `P0 BLANK PAGE = NO REPRODUCIDO EN UAT REAL DEL USUARIO`; `CERTIFICACIÓN RUNTIME = PENDIENTE`; `UI-FORM.FINAL-A = NO CERRADA`; `UI-FORM.FINAL-B = BLOQUEADA`.
+- **Evidencia recibida:** confirmación visual del usuario sobre la ruta, el módulo Matrices de Riesgos y el Constructor completo. Esta evidencia se registra como reportada por el usuario y no como una captura/telemetría reejecutada por Codex.
+- **Pendiente exacto:** capturar en sesión autenticada pageerror=0, console errors críticos=0, Network crítico=0, permanencia de `/matrices-riesgos`, apertura del Constructor, Editor Visual, Vista Previa, JSON Técnico y readonly sin errores críticos.
 
 - **Fecha y hora:** 2026-08-26 08:13 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`. **Commit inicial:** `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.
 - **Objetivo y alcance:** cerrar la arquitectura superior del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R a UI-FORM.6-R, backend, DB y contratos existentes.
