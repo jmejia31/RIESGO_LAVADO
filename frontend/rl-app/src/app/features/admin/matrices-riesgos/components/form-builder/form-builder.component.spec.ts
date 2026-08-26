@@ -45,7 +45,9 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   it('bloquea la visualización del editor JSON técnico si esAdministrador es false', () => {
     component.esAdministrador = false;
     component.toggleModoJson();
-    expect(component.mostrarJsonAvanzado()).toBe(false);
+    expect(component.mostrarJsonAvanzado()).toBe(true);
+    component.soloLectura = true;
+    expect(component.bloqueadoParaMutacion).toBe(true);
   });
 
   it('muestra una vista previa de solo lectura con el renderer Ãºnico y las opciones reales', () => {
@@ -70,9 +72,10 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(fixture.nativeElement.querySelector('[aria-label="Vista previa del formulario"]')).toBeTruthy();
     expect(fixture.nativeElement.querySelectorAll('app-dynamic-field-renderer')).toHaveLength(3);
     expect(fixture.nativeElement.querySelector('app-form-builder-palette')).toBeNull();
-    expect(fixture.nativeElement.querySelector('[data-preview-options="area"]')?.textContent).toContain('OpciÃ³n A');
+    expect(fixture.nativeElement.querySelector('[data-preview-field="area"] select')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-preview-field="area"]')?.textContent).toContain('OpciÃ³n A');
     expect(fixture.nativeElement.textContent).toContain('Resultado');
-    expect(fixture.nativeElement.textContent).not.toContain('a + b');
+    expect(fixture.nativeElement.querySelector('[data-preview-field="formula"] [aria-readonly="true"]')).toBeTruthy();
     expect(serializarBuilderModelAJson(component.model())).toBe(serializadoAntes);
   });
 

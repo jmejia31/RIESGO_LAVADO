@@ -1,5 +1,17 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - UI-FORM.6-R Vista Previa + JSON Técnico
+
+- Fecha: 2026-08-25 21:53 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial `cefb7de55d73bf5808175aa0dcb9a0612520d582`; commit final/push pendiente al cierre de esta actualización.
+- Estado funcional: implementación existente recertificada y reconciliada. Preview permanece dentro del mismo Builder y reutiliza exclusivamente `DynamicFieldRendererComponent`; JSON Técnico conserva `serializarBuilderModelAJson`, `normalizarJsonABuilderModel` y `validarFormBuilderModel`.
+- Preview: muestra el modelo actual, secciones, columnas, controles reales, catálogos reales y fórmula como presentación segura; no ejecuta fórmulas/reglas, no muta `model()` y no persiste respuestas. No existe renderer paralelo.
+- JSON Técnico: visible en editable y solo lectura; copiar usa el texto actual exacto; búsqueda literal case-insensitive con contador/anterior/siguiente; validar separa sintaxis y estructura de aplicar; sincronizar permanece explícito y bloqueado en solo lectura.
+- Contrato: backend/DB/migraciones/endpoints/dependencias/tipos/propiedades JSON/serializer/normalizador nuevos = 0. `eval`, `new Function`, `innerHTML` inseguro y regex dinámica del usuario = 0 en el alcance revisado.
+- Evidencia fresca: frontend 64/64 archivos y 690/690 pruebas; backend 494/494; E2E 21/21; focalizada 43/43 y Preview+JSON 2/2; lint/build/Quality Gates/BD/documentación PASS; coverage 61.98% / 56.98% / 58.07% / 62.18%. Capturas temporales a 1536x1024: `frontend/rl-app/test-results/ui-form6-preview-1536x1024.png` y `frontend/rl-app/test-results/ui-form6-json-1536x1024.png`.
+- Visual: PNG aprobado cargado, observado y comparado lado a lado; Preview demuestra texto, selector-catalogo y formula segura; JSON demuestra toolbar y feedback. UI-FORM.2-R a UI-FORM.5-R no presentan regresión funcional ni visual en E2E.
+- Restricciones: estructura mantiene el hallazgo heredado de `core/services/global-http-state.service.ts` fuera de alcance; SonarCloud remoto diferido. Browser in-app no disponible, Playwright autenticado local PASS.
+- Punto exacto: ejecutar stage explícito, commit/push en `origin/desarrollo` y verificación final `HEAD == origin/desarrollo`, ahead/behind `0/0`, worktree limpio. `main` sin modificaciones.
+
 ## Estado vigente - UI-FORM.5-R Estados y ciclo de edición
 
 - Fecha: 2026-08-25 18:16 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD inicial `e1e4baf47227fbe943ee5e40e59505b57a5fa69f`; commit final `eedad89d68cd8167545d11b24ae41587e97d3ff9` publicado.

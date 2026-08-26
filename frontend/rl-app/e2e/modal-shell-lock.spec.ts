@@ -3,8 +3,13 @@ import { Buffer } from 'node:buffer';
 
 const definicion = JSON.stringify({
   codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V2', nombreFormulario: 'Matriz UAT',
-  secciones: [{ clave: 'identificacion', titulo: 'Identificación', orden: 1, columnasPorFila: 1,
-    campos: [{ clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false }] }]
+  secciones: [{ clave: 'identificacion', titulo: 'Identificación', orden: 1, columnasPorFila: 2,
+    campos: [
+      { clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
+      { clave: 'dueno_riesgo', etiqueta: 'Dueño del riesgo', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_DUENO', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
+      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: 'NO_EJECUTAR(a + b)', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
+    ] }],
+  catalogos: [{ codigo: 'CAT_DUENO', nombre: 'Dueños de riesgo', elementos: [{ codigo: '01', valor: 'Dirección General', orden: 1 }, { codigo: '02', valor: 'Cumplimiento', orden: 2 }] }]
 });
 const publicada = { verId: 10, verFamiliaId: 1, verCodigo: 'MATRIZ_RIESGOS_LAFT_V1', verVersion: 1,
   verJson: '{"secciones":[]}', verHash: 'vigente', verEstado: 'PUBLISHED', verVigente: true,
@@ -151,4 +156,54 @@ test('renderiza la misma identidad visual en solo lectura y oculta acciones muta
   await expect(dialogo.locator('#btn-guardar-builder')).toHaveCount(0);
   await expect(dialogo.locator('#btn-publicar-builder')).toHaveCount(0);
   await page.screenshot({ path: 'test-results/ui-form5-readonly-1536x1024.png', fullPage: true });
+});
+
+test('captura Vista Previa integrada sin herramientas de edición', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByRole('button', { name: 'Vista Previa' }).click();
+  const preview = dialogo.locator('[aria-label="Vista previa del formulario"]');
+  await expect(preview).toBeVisible();
+  await expect(preview.locator('app-dynamic-field-renderer')).toHaveCount(3);
+  await expect(preview.locator('app-form-builder-palette')).toHaveCount(0);
+  await expect(preview.locator('[data-preview-field="area_responsable"] input')).toBeVisible();
+  await expect(preview.locator('[data-preview-field="dueno_riesgo"] select')).toBeVisible();
+  await expect(preview.locator('[data-preview-field="resultado_formula"] [aria-readonly="true"]')).toBeVisible();
+  await expect(preview).toContainText('Dirección General');
+  await expect(preview).toContainText('NO_EJECUTAR(a + b)');
+  await expect(dialogo.getByRole('main', { name: 'Lienzo del formulario' })).toHaveCount(0);
+  await page.screenshot({ path: 'test-results/ui-form6-preview-1536x1024.png', fullPage: true });
+});
+
+test('captura JSON Técnico con búsqueda, validación y sincronización separadas', async ({ page }) => {
+  await page.setViewportSize({ width: 1536, height: 1024 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+  const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
+  await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
+
+  const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByRole('button', { name: 'Ver JSON Técnico' }).click();
+  const json = dialogo.locator('#json-avanzado');
+  await expect(json).toBeVisible();
+  await expect(dialogo.getByRole('button', { name: 'Copiar JSON' })).toBeVisible();
+  await expect(dialogo.getByRole('searchbox', { name: 'Buscar en JSON técnico' })).toBeVisible();
+  await expect(dialogo.getByRole('button', { name: 'Validar' })).toBeVisible();
+  await expect(dialogo.getByRole('button', { name: 'Sincronizar hacia el Lienzo Visual' })).toBeVisible();
+  await dialogo.getByRole('searchbox', { name: 'Buscar en JSON técnico' }).fill('area_responsable');
+  await expect(dialogo).toContainText('1 coincidencia(s)');
+  await dialogo.getByRole('button', { name: 'Validar' }).click();
+  await expect(dialogo).toContainText('JSON válido y estructura compatible.');
+  await page.screenshot({ path: 'test-results/ui-form6-json-1536x1024.png', fullPage: true });
 });

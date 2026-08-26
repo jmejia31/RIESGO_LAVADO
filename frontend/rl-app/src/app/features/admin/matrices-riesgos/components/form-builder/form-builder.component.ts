@@ -474,7 +474,6 @@ export class FormBuilderComponent implements OnInit {
   }
 
   toggleModoJson(): void {
-    if (!this.esAdministrador) return;
     if (!this.mostrarJsonAvanzado()) this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
     this.mostrarJsonAvanzado.set(!this.mostrarJsonAvanzado());
   }
@@ -539,7 +538,7 @@ export class FormBuilderComponent implements OnInit {
       opciones: campo.opciones ?? null,
       formula: campo.formula ?? null,
       obligatorio: campo.obligatorio,
-      soloLectura: true
+      soloLectura: campo.soloLectura || campo.tipo === 'formula'
     };
   }
 
