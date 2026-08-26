@@ -122,6 +122,7 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     component.modalNuevaEvaluacionAbierto.set(true);
     fixture.detectChanges();
 
+    expect(fixture.nativeElement.querySelector('[data-modal="nueva-evaluacion"].modal-size-workspace')).not.toBeNull();
     const renderers = fixture.nativeElement.querySelectorAll('dialog app-dynamic-field-renderer');
     expect(renderers.length).toBe(9);
     expect(fixture.nativeElement.querySelector('#campo-new-radio input[type="radio"]')).not.toBeNull();

@@ -366,6 +366,10 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
   await expect(page.getByText('Identificación del riesgo', { exact: true })).toBeVisible();
 
   const guardar = page.getByRole('button', { name: 'Crear Evaluación' });
+  const modalNuevaEvaluacion = page.locator('[data-modal="nueva-evaluacion"]');
+  await expect(modalNuevaEvaluacion).toHaveClass(/modal-size-workspace/);
+  await expect(modalNuevaEvaluacion.locator('.modal-body-scrollable')).toHaveCSS('overflow-y', 'auto');
+  await page.screenshot({ path: 'test-results/ui-form-final-d-nueva-evaluacion-1536x1024.png', fullPage: true });
   await expect(guardar).toBeDisabled();
 
   await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
