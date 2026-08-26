@@ -368,6 +368,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No iniciar UI-FAM.3 hasta cerrar factual y técnicamente UI-FAM.2.
 # Estado vigente - RECONCILIACIÓN VISUAL FINAL DEL CONSTRUCTOR
 
+## P0 vigente - UI-FORM.FINAL-A reabierta
+
+- El cierre anterior queda reabierto por UAT real reportada: `/matrices-riesgos` se observa en blanco con shell general visible. UI-FORM.FINAL-B permanece bloqueada.
+- Investigación focalizada: `MatricesRiesgosComponent`, `FormBuilderComponent`, `FormBuilderToolbarComponent` y consumidores; diff exacto `01c9cd51..7bc2173` revisado. No se encontró error Angular reproducible en el template del toolbar.
+- Reproducción local disponible: sin sesión, `/matrices-riesgos` redirige a `/login`; el API configurado `http://localhost:5043` no escucha y genera CORS/network. La pestaña Chrome autenticada del usuario no pudo ser inspeccionada por restricción del navegador conectado.
+- Corrección aplicada en esta intervención: smoke E2E anti-regresión de ruta que verifica contenedor Matrices, encabezados, contenido no vacío, `pageerror=0` y console errors inesperados=0; captura `frontend/rl-app/test-results/p0-matrices-smoke-1536x1024.png`.
+- Resultados locales: frontend 692/692, backend 494/494, E2E 22/22, quality gates PASS, coverage 61.95%/56.98%/58.00%/62.15%. Esto no sustituye UAT autenticada real.
+- Estado: P0 NO CERRADO hasta disponer de API/sesión real, reproducir la pantalla reportada, capturar primer error y verificar nuevamente Constructor editable/readonly.
+
 ## Estado vigente - UI-FORM.FINAL-A navegación, acciones y ciclo visual
 
 - Fecha/hora: 2026-08-26 08:13 (UTC-6). Autor Codex. Rama `desarrollo`. HEAD inicial `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.

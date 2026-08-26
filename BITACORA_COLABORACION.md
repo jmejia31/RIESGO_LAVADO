@@ -6151,6 +6151,18 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervenciÃ³n - Codex - UI-FORM.FINAL-A navegaciÃ³n, acciones y ciclo visual
 
+## Registro P0 - UI-FORM.FINAL-A reabierta por blank runtime en Matrices
+
+- **Fecha/hora:** 2026-08-26 (UTC-6). **Estado:** UI-FORM.FINAL-A reabierta; UI-FORM.FINAL-B bloqueada.
+- **SÃ­ntoma UAT reportado:** `/matrices-riesgos` queda en blanco para una sesiÃ³n real mientras el shell general permanece visible.
+- **Rango acotado:** entre `01c9cd51` y `7bc2173`, Ãºnico archivo runtime modificado: `form-builder-toolbar.component.html`; specs restantes no son runtime.
+- **InvestigaciÃ³n:** diff quirÃºrgico y CodexGraph focalizado ejecutados. El template conserva estructura Angular vÃ¡lida, bindings y outputs; build y E2E del Builder no reproducen pageerror.
+- **ReproducciÃ³n local sin mocks:** Playwright sin sesiÃ³n redirige correctamente a `/login`; el API `http://localhost:5043` no estÃ¡ escuchando y el navegador registra CORS/network hacia configuraciÃ³n. Esto no permite atribuir causalidad al toolbar ni certificar la sesiÃ³n UAT autenticada del usuario; el navegador de escritorio no pudo exponer la pestaÃ±a por restricciÃ³n de URL.
+- **CorrecciÃ³n segura aplicada:** se agregÃ³ smoke E2E anti-regresiÃ³n para ruta Matrices, contenido no vacÃ­o, `pageerror=0` y console errors inesperados=0, con stubs solo de bootstrap/API necesarios. No se introdujo parche runtime especulativo, fallback silencioso ni ocultamiento.
+- **Evidencia local:** `frontend/rl-app/test-results/p0-matrices-smoke-1536x1024.png`, con header, mÃ©tricas, tabs y Evaluaciones visibles.
+- **Pruebas:** frontend 692/692; backend 494/494; E2E 22/22; lint/build PASS; quality gates PASS; coverage frontend 61.95% statements, 56.98% branches, 58.00% functions, 62.15% lines.
+- **Bloqueo real pendiente:** repetir UAT autenticada en el navegador del usuario con API local disponible y capturar primer console/pageerror/network; hasta entonces P0 no se certifica cerrado.
+
 - **Fecha y hora:** 2026-08-26 08:13 (UTC-6). **Autor:** Codex. **Rama:** `desarrollo`. **Commit inicial:** `01c9cd51e8b305bb81ac1381ff9ec48fecc722fd`.
 - **Objetivo y alcance:** cerrar la arquitectura superior del Constructor contra `docs/11. Prototipos/CONSTRUCTOR DE FORMULARIO DINAMICOS.PNG`, preservando UI-FORM.2-R a UI-FORM.6-R, backend, DB y contratos existentes.
 - **CodexGraph y fuentes revisadas:** FormBuilder, toolbar, statusbar, ciclo de vida de `MatricesRiesgosComponent`, `AuthService`, `MatricesRiesgosService`, modelo `VersionFormularioDto` y specs focalizados.
