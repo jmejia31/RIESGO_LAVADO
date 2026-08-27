@@ -6420,6 +6420,16 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Regresion MCV.1-MCV.7: `PASS`; MCV.1 Escape, MCV.2 navegacion contextual, MCV.3 gestor de versiones, MCV.4 entrypoints, MCV.5 legacy retirado, MCV.6 confirmaciones y MCV.7 foco permanecen preservados.
 - Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 no se inicia en esta intervencion.
 
+## Registro de intervencion - Codex - cierre Quality Gates y preflight de integracion
+
+- Fecha/hora local: 2026-08-26 22:19 (UTC-6). Autor: Codex. Rama `desarrollo`. HEAD `76a6aae182f41e1651b821289fa2a0eeac85eb08`.
+- Diagnostico MCV.2 dirigido: prueba aislada `1/1 PASS` y suite E2E secuencial `29/29 PASS`; el fallo fresco no fue reproducible y se clasifica como carrera/timing post-render, no regresion de producto. No se aumento timeout ni se debilito el test.
+- Quality Gate oficial: `EXIT CODE 0`; backend `494/494`, frontend `699/699`, E2E `29/29`, cobertura y puertas correctas.
+- Preflight: `BRANCH=desarrollo`, worktree limpio, `INDEX_LOCK_EXISTS=False`, `HEAD==origin/desarrollo`, `AHEAD=0`, `BEHIND=0`, `origin/main=c76271dc6433ab780f14d0b1cf3ce123335c63d3`. `git fetch origin` requirio repeticion elevada puntual por ACL conocida y termino sin cambios.
+- Sonar/CI/PR no se declaran verdes: `.github/workflows/sonar-analysis.yml` usa el secreto y variables normales; `gh auth status` reporta token invalido y la API GitHub falla por restriccion de red.
+- Archivos documentales modificados: esta bitacora y `docs/0.0 DocumentaciÃ³n/ESTADO_COLABORACION.md`. No hubo cambios funcionales ni nuevo commit tecnico.
+- Pendiente externo unico: reautenticar GitHub CLI y disponer de acceso a `api.github.com` para PR, checks, Sonar remoto, merge protegido y CI post-merge de `main`.
+
 ## Registro de intervencion - Codex - MCV.9 certificacion integral y cierre
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Commit inicial: `55358eab7d7ad8a4af2e82f6cf3c03b3a328ce2c`.

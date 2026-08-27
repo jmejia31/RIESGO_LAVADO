@@ -616,6 +616,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - MCV.1-MCV.7: sin regresion. `DB_CHANGED=NO`, `ORACLE_CHANGED=NO`, `AUTHORIZATION_CHANGED=NO`, `API_CONTRACT_BROKEN=NO`, `BACKEND_UNCHANGED=YES`.
 - Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 permanece no iniciada.
 
+## Estado vigente - cierre Quality Gates y bloqueo de integracion externa
+
+- Fecha/hora local: 2026-08-26 22:19 (UTC-6). Rama `desarrollo`. HEAD `76a6aae182f41e1651b821289fa2a0eeac85eb08`, igual a `origin/desarrollo`; worktree limpio; `AHEAD=0`, `BEHIND=0`; `origin/main=c76271dc6433ab780f14d0b1cf3ce123335c63d3`.
+- MCV.2: prueba dirigida `1/1 PASS` y suite E2E `29/29 PASS`; el fallo de foco no se reprodujo. Se conserva la restauracion inmediata y post-render de MCV.7.
+- Quality Gate local exacto: `PASS / EXIT CODE 0`; backend `494/494`, frontend `699/699`, E2E `29/29`, cobertura dentro de umbrales.
+- SonarCloud, CI, PR y merge permanecen `PENDIENTES`: GitHub CLI tiene token invalido y la API esta bloqueada por red. No se declara verde remoto sin evidencia.
+- Continuacion: reautenticar GitHub CLI y habilitar acceso API; consultar runs del SHA, gestionar PR `desarrollo -> main`, esperar checks/Sonar verdes, hacer merge por PR y certificar CI post-merge.
+
 ## Estado vigente - MCV.9 certificacion integral y cierre
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Inicio: `55358ea`.
