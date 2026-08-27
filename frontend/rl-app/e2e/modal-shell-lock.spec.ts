@@ -58,7 +58,6 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   const editar = detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first();
   await editar.focus();
   await editar.click();
-  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const tarjetaBuilder = dialogo.locator('.modal-container-card.modal-size-workspace');
@@ -129,7 +128,6 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
   await expect(detalleFamilia).toBeVisible();
   await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
-  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   await expect(dialogo).toBeVisible();
@@ -203,7 +201,6 @@ test('duplica secciones sin colisiones, conserva cards y expone menu contextual'
   const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
   await expect(detalleFamilia).toBeVisible();
   await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
-  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   const lienzo = dialogo.getByRole('main', { name: 'Lienzo del formulario' });
@@ -235,7 +232,6 @@ test('captura Vista Previa integrada sin herramientas de edición', async ({ pag
   await page.getByRole('button', { name: 'Ver detalle' }).first().click();
   const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
   await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
-  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   await expect(dialogo).toBeVisible();
@@ -262,7 +258,6 @@ test('captura JSON Técnico con búsqueda, validación y sincronización separad
   await page.getByRole('button', { name: 'Ver detalle' }).first().click();
   const detalleFamilia = page.locator('[data-ui-fam-detail="modal"]');
   await detalleFamilia.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
-  await page.getByRole('button', { name: 'Editar definición', exact: true }).click();
 
   const dialogo = page.locator('dialog[open][aria-modal="true"]:has(app-form-builder)');
   await expect(dialogo).toBeVisible();

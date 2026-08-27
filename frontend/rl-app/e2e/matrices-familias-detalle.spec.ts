@@ -32,6 +32,15 @@ const versionVigente = {
   verUsrCreacion: 1
 };
 
+const versionBorrador = {
+  ...versionVigente,
+  verId: 72,
+  verVersion: 3,
+  verEstado: 'DRAFT',
+  verVigente: false,
+  verJson: '{"secciones":[]}'
+};
+
 function tokenAdministradorModulo10(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
@@ -215,6 +224,35 @@ test('MCV.2 Constructor regresa al mismo Detalle y conserva Versiones', async ({
   await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
   await expect(detalle).toContainText('v2');
   await expect(detalle.locator(':focus')).toHaveCount(1);
+});
+
+test('MCV.3 Editar definición de borrador abre el Constructor desde el Detalle', async ({ page }) => {
+  await page.route('**/api/matrices-riesgos/formularios/historial**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [versionBorrador, versionVigente] })
+  }));
+  await page.route('**/api/matrices-riesgos/formularios/72', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: versionBorrador })
+  }));
+
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle.getByText('v3')).toBeVisible();
+  await detalle.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+
+  const builder = page.locator('[data-form-builder-shell="true"]');
+  await expect(builder).toBeVisible();
+  await expect(builder.locator('#btn-guardar-builder')).toBeVisible();
+  await expect(builder.locator('#btn-publicar-builder')).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
+  await expect(builder).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText('v3');
 });
 
 test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido', async ({ page }) => {

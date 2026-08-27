@@ -555,3 +555,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Continuacion exacta: stage documental explicito, commit documental, push `origin/desarrollo`, verificar branch/ahead/behind/worktree/main; luego marcar MCV.2 cerrada y comenzar MCV.3.
 
 - Cierre verificado: commits `16d18fb` y `4f84cec` publicados en `origin/desarrollo`; branch `desarrollo`, HEAD igual al remoto, ahead=0, behind=0, worktree limpio y main intacta. MCV.2 = CERRADA. MCV.3 queda como siguiente fase y no fue iniciada.
+## Estado vigente - MCV.3 gestor unico de versiones
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Punto de partida: `2298b5d789dcc2c9c332de47b4ce212565077d39`.
+- MCV.1 y MCV.2 permanecen cerradas. MCV.3 integra en el bloque Versiones de Detalle las acciones contractuales existentes: ver, editar borrador, nueva version, clonar, publicar, vigencia y eliminar borrador. El acceso legacy se conserva deliberadamente para MCV.4/MCV.5.
+- Arquitectura: una sola ruta de servicio/DTO/estados/handlers; sin backend, API, BD, contrato JSON, permisos ni gestor paralelo nuevos.
+- Evidencia automatizada: frontend 698/698 PASS; E2E 28/28 PASS; build PASS; lint PASS; `git diff --check` PASS. Backend sin cambios, ultimo gate 494/494 PASS.
+- Evidencia UAT CDP: mismo browser/context/page, autenticacion, ruta y contenido PASS. Familia real: 5 versiones, orden, badges, vigencia y acciones coherentes por estado PASS. La carga de una definicion quedo pendiente por timeout del servidor de desarrollo en la ventana UAT; no se certifica como PASS hasta repetirla con respuesta.
+- Archivos tecnicos modificados: `frontend/rl-app/e2e/matrices-familias-detalle.spec.ts`, `frontend/rl-app/e2e/modal-shell-lock.spec.ts`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.html`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.spec.ts`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.ts`, `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`.
+- Seguridad: no se leyeron passwords, tokens, cookies ni localStorage; Chromium UAT permanece abierto. MCV.4-MCV.9 no iniciadas.
+- Estado: MCV.3 implementacion automatizada PASS, cierre final pendiente de UAT real de apertura de definicion por bloqueo externo del servidor.

@@ -57,7 +57,10 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   @Output() readonly gestionarVersiones = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly editarFamilia = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly nuevaVersion = new EventEmitter<FamiliaFormularioDto>();
-  @Output() readonly verDefinicion = new EventEmitter<{ familia: FamiliaFormularioDto; version: VersionFormularioDto }>();
+  @Output() readonly verDefinicion = new EventEmitter<{ familia: FamiliaFormularioDto; version: VersionFormularioDto; modoEdicion: boolean }>();
+  @Output() readonly publicarVersionSolicitada = new EventEmitter<VersionFormularioDto>();
+  @Output() readonly cambiarVigenciaSolicitada = new EventEmitter<{ version: VersionFormularioDto; vigente: boolean }>();
+  @Output() readonly eliminarVersionSolicitada = new EventEmitter<VersionFormularioDto>();
 
   @ViewChild('botonCerrar') botonCerrar?: ElementRef<HTMLButtonElement>;
 
@@ -192,11 +195,30 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   solicitarVerVersion(version: VersionFormularioDto): void {
     const familia = this.detalle();
-    if (familia) this.verDefinicion.emit({ familia, version });
+    if (familia) this.verDefinicion.emit({ familia, version, modoEdicion: false });
   }
 
-  solicitarEditarVersion(): void {
-    this.solicitarGestionVersiones();
+  solicitarEditarVersion(version: VersionFormularioDto): void {
+    const familia = this.detalle();
+    if (familia) this.verDefinicion.emit({ familia, version, modoEdicion: true });
+  }
+
+  solicitarPublicacion(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+      this.publicarVersionSolicitada.emit(version);
+    }
+  }
+
+  solicitarCambioVigencia(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'PUBLISHED') {
+      this.cambiarVigenciaSolicitada.emit({ version, vigente: !version.verVigente });
+    }
+  }
+
+  solicitarEliminacion(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+      this.eliminarVersionSolicitada.emit(version);
+    }
   }
 
   clonarVersion(version: VersionFormularioDto): void {

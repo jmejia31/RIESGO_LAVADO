@@ -230,7 +230,17 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     fixture.componentInstance.solicitarVerVersion(versiones[1]);
     expect(editar).toHaveBeenCalledWith(familia);
     expect(nuevaVersion).toHaveBeenCalledWith(familia);
-    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[1] });
+    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[1], modoEdicion: false });
+  });
+
+  it('10b. solicita ediciÃ³n de una versiÃ³n desde el detalle sin derivar al gestor', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    const ver = vi.spyOn(fixture.componentInstance.verDefinicion, 'emit');
+
+    fixture.componentInstance.solicitarEditarVersion(versiones[0]);
+
+    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[0], modoEdicion: true });
   });
 
   it('11. clona una versión publicada y recarga el historial', () => {

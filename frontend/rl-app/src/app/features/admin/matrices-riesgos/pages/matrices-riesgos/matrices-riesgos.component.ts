@@ -491,11 +491,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.mostrandoVersionesFamilia.set(true);
         this.abrirModalCrearFormulario();
       }),
-      componentRef.instance.verDefinicion.subscribe(({ familia, version }) => {
+      componentRef.instance.verDefinicion.subscribe(({ familia, version, modoEdicion }) => {
         this.ocultarDetalleComoContexto();
         this.familiaSeleccionada.set(familia.famCodigo);
-        this.abrirDefinicion(version, true);
-      })
+        this.abrirDefinicion(version, !modoEdicion);
+      }),
+      componentRef.instance.publicarVersionSolicitada.subscribe(version => this.publicarVersion(version)),
+      componentRef.instance.cambiarVigenciaSolicitada.subscribe(({ version, vigente }) => this.cambiarVigenciaVersion(version, vigente)),
+      componentRef.instance.eliminarVersionSolicitada.subscribe(version => this.eliminarVersionFormulario(version))
     );
 
     this.detalleFamiliaRef = componentRef;
@@ -816,6 +819,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: versiones => {
         this.versiones.set(versiones);
         this.cargandoPlantillas.set(false);
+        this.detalleFamiliaRef?.instance.refrescar();
       },
       error: error => {
         const msg = this.obtenerMensajeError(error, 'No se pudo cargar el historial de formularios.');
@@ -1629,7 +1633,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.mostrarDetalleComoContexto();
     setTimeout(() => {
       this.detalleFamiliaRef?.instance.enfocarContexto();
-    }, 0);
+    }, 50);
   }
 
   guardarNuevoFormulario(): void {
