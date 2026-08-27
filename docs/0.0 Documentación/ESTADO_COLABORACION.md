@@ -649,3 +649,10 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - UAT final: Chromium/CDP existente, endpoint dinamico, mismo browser/context/page, `/matrices-riesgos` funcional y sin blank screen, loading infinito ni error fatal: `CHROMIUM_CDP_UAT=PASS`. Chromium permanece abierto; no se leyeron secretos.
 - Integridad final: arquitectura dinamica y modelo unico de renderizado preservados; definiciones versionadas e historico vinculados; API, DI, persistencia, autorizacion, DB y Oracle sin cambios.
 - `MCV.9 = CERRADA`; `P0=0`; `P1=0`; `PLAN_MCV_STATUS=CERRADO`; no se crean nuevas fases. Esta intervencion solo agrega certificacion documental; commit y push pendientes de verificacion.
+
+## Estado vigente - MCV.2 coordinacion de modales externos
+
+- Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `33c37ad`; commit inicial `8be892a`.
+- MainLayout ahora observa `document.body`, reconoce modales propios externos con `data-app-modal="true"`, filtra estados no visibles y protege el foco ya entregado. Se agrego regresion unitaria general; FormBuilder no fue modificado.
+- Verificacion: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0). No se afirma Quality Gate verde.
+- Estado: avance tecnico coherente pendiente de push y commit documental. No crear PR ni hacer merge a `main` mientras MCV.2 continue rojo.

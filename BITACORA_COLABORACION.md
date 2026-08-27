@@ -6455,4 +6455,11 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - UAT Chromium/CDP: endpoint resuelto dinamicamente desde `DevToolsActivePort`; mismo browser/context/page; `/matrices-riesgos` visible, sin pantalla blanca, loading infinito ni errores fatales: PASS. No se leyeron passwords, tokens, cookies ni localStorage sensible. Chromium permanece abierto.
 - Certificacion acumulada: MCV.1-MCV.8 permanecen cerradas sin regresion; arquitectura dinamica, versionado historico, permisos, contratos, DB y Oracle preservados. MCV.7 no retiro codigo adicional seguro; MCV.8 no identifico eliminacion backend segura.
 - Estados finales: `MCV.1` a `MCV.9 = CERRADA`; `P0=0`; `P1=0`; `PLAN_MCV_STATUS=CERRADO`; `DB_CHANGED=NO`; `ORACLE_CHANGED=NO`; `MAIN_UNTOUCHED=YES`. No se crea fase posterior.
+
+## Registro de intervencion - Codex - coordinacion de modales externos
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit tecnico: `33c37ad` (`wip(mcv): corregir ownership global de modales externos`).
+- Cambio: MainLayout observa `document.body`, combina modales internos con modales propios externos marcados `data-app-modal="true"`, filtra candidatos ocultos/inertes/desconectados y evita restaurar foco previo si existe un modal visible. Se agrego una regresion unitaria general y el marcador al Detalle dinamico.
+- Pruebas: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0), reproducido en las ejecuciones dirigidas. La assertion E2E no fue modificada.
+- Estado: avance tecnico publicado, pero MCV.2 repo-side continua sin resolverse. No se ejecutan suite completa, Quality Gate remoto, Sonar, PR ni merge mientras el E2E siga rojo.
 - Archivos modificados en esta intervencion: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Commit documental final pendiente de publicacion fail-closed.
