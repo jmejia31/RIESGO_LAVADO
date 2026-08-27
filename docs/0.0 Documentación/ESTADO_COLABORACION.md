@@ -604,3 +604,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - UAT: Chromium/CDP existente, attach dinamico desde `DevToolsActivePort`, mismo browser/context/page, `/matrices-riesgos`, contenido visible y ausencia de UI legacy: PASS. Chromium permanecio abierto; no se leyeron passwords, tokens, cookies ni localStorage sensible.
 - Gates preservados: `OLD_VERSION_MANAGER_ENTRYPOINTS=0`, `LEGACY_FUNCTIONAL_REFERENCES=0`, `WINDOW_CONFIRM=0`, MCV.1-MCV.6 sin regresion, backend sin cambios.
 - Archivos modificados: tres archivos frontend del ajuste de foco y estos dos documentos. `MCV.7 = CERRADA`; `P0 MCV.7 = 0`; `P1 MCV.7 = 0`. MCV.8 permanece no iniciada.
+## Estado vigente - MCV.8 depuracion backend controlada
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Inicio: `d6595ba`.
+- MCV.8 se limito al backend de Matrices/Familias/Versiones y definiciones dinamicas. No hubo cambios en backend, API, DTO, contratos, DB, Oracle, autorizacion ni frontend funcional.
+- CodexGraph fue consultado primero. El grafo disponible no contiene nodos C#; el mapa backend se completo con inspeccion dirigida y compilable de controllers, services, repositories, DI, DTOs, mappings, tests y consumidores frontend. `CODEXGRAPH_SCOPE=PASS`, `CODEXGRAPH_BACKEND_IMPACT=PASS`, `BACKEND_DEPENDENCY_MAP=PASS`.
+- Los candidatos revisados tienen consumidores activos o son frontera publica/persistente: `MatricesRiesgosAppService`, `FamiliasFormularioLifecycleService`, `SafeMatricesRiesgosRepository`, `FormularioValidador`, `PaginacionEvaluacionesHelper`, endpoints y DTOs del scope. No se borraron elementos inciertos ni se hizo limpieza ficticia.
+- Conteos: `REMOVED_ORPHAN_ENDPOINTS=0`, `REMOVED_ORPHAN_SERVICE_METHODS=0`, `REMOVED_ORPHAN_DTOS=0`, `REMOVED_ORPHAN_MAPPINGS=0`, `REMOVED_PRIVATE_HELPERS=0`, `REMOVED_UNUSED_USINGS=0`, `REMOVED_DUPLICATE_LEGACY_PATHS=0`, `MIGRATED_CONSUMERS=0`, `CONSERVE_UNCERTAIN=0`, `NO_SAFE_BACKEND_DELETION_IDENTIFIED=YES`.
+- Pruebas frescas: backend `494/494 PASS`; build backend PASS; frontend `699/699 PASS`; E2E `29/29 PASS`; build frontend PASS; lint PASS; `git diff --check` PASS.
+- UAT Chromium/CDP: attach dinamico desde `DevToolsActivePort`, mismo browser/context/page, carga de Matrices, integracion backend, sin 404/500 nuevos, sin blank ni loading infinito: PASS. Chromium permanece abierto; no se leyeron passwords, tokens, cookies ni localStorage sensible.
+- MCV.1-MCV.7: sin regresion. `DB_CHANGED=NO`, `ORACLE_CHANGED=NO`, `AUTHORIZATION_CHANGED=NO`, `API_CONTRACT_BROKEN=NO`, `BACKEND_UNCHANGED=YES`.
+- Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 permanece no iniciada.
