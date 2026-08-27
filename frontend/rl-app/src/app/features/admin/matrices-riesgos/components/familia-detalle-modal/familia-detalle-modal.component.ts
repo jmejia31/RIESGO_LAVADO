@@ -233,17 +233,29 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     });
   }
 
-  cambiarEstadoFamilia(): void {
+  async cambiarEstadoFamilia(): Promise<void> {
     const familia = this.detalle();
     if (!familia || !this.esAdministrador() || this.operando()) return;
 
     const accion = familia.famActivo ? 'desactivar' : 'activar';
-    const confirmacion = window.confirm(
-      familia.famActivo
-        ? `¿Desactivar la familia ${familia.famNombre}? Sus versiones e historial se conservarán.`
-        : `¿Activar la familia ${familia.famNombre}?`
-    );
-    if (!confirmacion) return;
+    const Swal = await import('sweetalert2');
+    const resultado = await Swal.default.fire({
+      title: familia.famActivo ? `¿Desactivar la familia ${familia.famNombre}?` : `¿Activar la familia ${familia.famNombre}?`,
+      html: familia.famActivo
+        ? '<p class="text-sm text-gray-700">Sus versiones e historial se conservarán.</p>'
+        : '<p class="text-sm text-gray-700">La familia volverá a estar disponible para nuevas operaciones.</p>',
+      icon: familia.famActivo ? 'warning' : 'question',
+      showCancelButton: true,
+      confirmButtonColor: familia.famActivo ? '#d97706' : '#059669',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: familia.famActivo ? 'Desactivar' : 'Sí, activar',
+      cancelButtonText: 'Cancelar',
+      focusCancel: true,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      returnFocus: true
+    });
+    if (!resultado.isConfirmed) return;
 
     this.operando.set(true);
     this.error.set(null);

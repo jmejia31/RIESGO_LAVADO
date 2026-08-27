@@ -7,6 +7,12 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { FamiliaDetalleModalComponent } from './familia-detalle-modal.component';
 
+vi.mock('sweetalert2', () => ({
+  default: {
+    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+  }
+}));
+
 describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   let service: MatricesRiesgosService;
   let auditoriaService: AuditoriaService;
@@ -256,10 +262,31 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   it('12. activa o desactiva mediante la operación explícita de ciclo de vida', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fixture = crearComponente();
-    fixture.componentInstance.cambiarEstadoFamilia();
-    expect(spyDesactivar).toHaveBeenCalledWith(7);
+    return fixture.componentInstance.cambiarEstadoFamilia().then(() => {
+      expect(spyDesactivar).toHaveBeenCalledWith(7);
+    });
+  });
+
+  it('12b. cancelar la confirmacion institucional no ejecuta la operacion ni cambia el estado', async () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
+    const Swal = await import('sweetalert2');
+    vi.mocked(Swal.default.fire).mockResolvedValueOnce({ isConfirmed: false } as Awaited<ReturnType<typeof Swal.default.fire>>);
+    const fixture = crearComponente();
+
+    await fixture.componentInstance.cambiarEstadoFamilia();
+
+    expect(spyDesactivar).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.detalle()?.famActivo).toBe(true);
+    expect(Swal.default.fire).toHaveBeenCalledWith(expect.objectContaining({
+      showCancelButton: true,
+      focusCancel: true,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      returnFocus: true,
+      cancelButtonText: 'Cancelar'
+    }));
   });
 
   it('13. muestra los estados contractuales sin inventar estados nuevos', () => {
@@ -301,9 +328,10 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(fixture.componentInstance.errorVersiones()).toBe('No se puede clonar.');
 
     vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se puede desactivar.' } })));
-    fixture.componentInstance.cambiarEstadoFamilia();
-    expect(fixture.componentInstance.error()).toBe('No se puede desactivar.');
-    expect(fixture.componentInstance.operando()).toBe(false);
+    return fixture.componentInstance.cambiarEstadoFamilia().then(() => {
+      expect(fixture.componentInstance.error()).toBe('No se puede desactivar.');
+      expect(fixture.componentInstance.operando()).toBe(false);
+    });
   });
 
   it('17. maneja errores de historial y auditoría y permite reintentar historial', () => {
