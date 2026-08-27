@@ -1591,9 +1591,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cerrarDefinicion(): void {
     this.versionEditando.set(null);
     this.mostrarDetalleComoContexto();
-    setTimeout(() => {
-      this.detalleFamiliaRef?.instance.enfocarContexto();
-    }, 50);
+    // Restore focus immediately and after the builder DOM is removed. The
+    // second pass avoids losing focus to body during the conditional render.
+    this.detalleFamiliaRef?.instance.enfocarContexto();
+    setTimeout(() => this.detalleFamiliaRef?.instance.enfocarContexto(), 0);
   }
 
   crearNuevaVersionDesdeDetalle(familia: FamiliaFormularioDto): void {

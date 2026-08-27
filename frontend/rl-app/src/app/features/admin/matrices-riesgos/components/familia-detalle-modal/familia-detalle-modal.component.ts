@@ -169,7 +169,9 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   }
 
   enfocarContexto(): void {
-    this.botonCerrar?.nativeElement.focus();
+    const control = this.botonCerrar?.nativeElement
+      ?? this.host.nativeElement.querySelector('dialog');
+    control?.focus();
   }
 
   reintentarVersiones(): void {
