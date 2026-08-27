@@ -106,4 +106,29 @@ describe('MainLayoutComponent', () => {
     component.ngOnDestroy();
     host.remove();
   });
+
+  it('no pisa el foco de otro modal visible al restaurar el foco previo', async () => {
+    const { component, host } = crearComponente('<button id="fuera">Fuera</button><dialog open aria-modal="true"><button id="primero">Primero</button></dialog>');
+    const fuera = host.querySelector('button') as HTMLElement;
+    const modalA = host.querySelector('dialog') as HTMLElement;
+    fuera.focus();
+    component.ngAfterViewInit();
+    modalA.remove();
+
+    const modalB = document.createElement('div');
+    modalB.setAttribute('role', 'dialog');
+    modalB.setAttribute('aria-modal', 'true');
+    const botonB = document.createElement('button');
+    modalB.appendChild(botonB);
+    document.body.appendChild(modalB);
+    botonB.focus();
+
+    component['sincronizarBloqueoModal']();
+    await Promise.resolve();
+
+    expect(document.activeElement).toBe(botonB);
+    modalB.remove();
+    component.ngOnDestroy();
+    host.remove();
+  });
 });

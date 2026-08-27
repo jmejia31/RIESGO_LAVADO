@@ -108,6 +108,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       const focoARestaurar = this.focoPrevio;
       this.focoPrevio = null;
       queueMicrotask(() => {
+        if (this.estaEnModalVisible(document.activeElement)) return;
         if (focoARestaurar?.isConnected && !focoARestaurar.inert) {
           focoARestaurar.focus({ preventScroll: true });
         }
@@ -116,7 +117,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     const focoActual = document.activeElement;
-    if (!this.focoPrevio && focoActual instanceof HTMLElement && !dialogo.contains(focoActual)) {
+    if (!this.focoPrevio && this.esFocoRetornable(focoActual) && !dialogo.contains(focoActual)) {
       this.focoPrevio = focoActual;
     }
 
@@ -124,6 +125,20 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     document.body.classList.add('modal-abierto');
     this.enfocarDialogo(dialogo);
     this.aplicarInertFueraDelDialogo(dialogo);
+  }
+
+  private estaEnModalVisible(elemento: Element | null): boolean {
+    if (!(elemento instanceof HTMLElement) || !elemento.isConnected) return false;
+    const modal = elemento.closest('dialog[open][aria-modal="true"], [role="dialog"][aria-modal="true"]');
+    if (!(modal instanceof HTMLElement)) return false;
+    if (modal.closest('[aria-hidden="true"], [inert]')) return false;
+    const estilo = window.getComputedStyle(modal);
+    return estilo.display !== 'none' && estilo.visibility !== 'hidden';
+  }
+
+  private esFocoRetornable(elemento: Element | null): elemento is HTMLElement {
+    return elemento instanceof HTMLElement && elemento.isConnected &&
+      elemento !== document.body && elemento !== document.documentElement;
   }
 
   private aplicarInertFueraDelDialogo(dialogo: HTMLElement): void {
