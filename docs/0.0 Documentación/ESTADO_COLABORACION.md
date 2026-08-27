@@ -585,3 +585,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Regresion ejecutada: frontend `698/698 PASS`; E2E `29/29 PASS`; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Backend sin cambios; `494/494` permanece como certificacion previa.
 - Archivos tecnicos: nueve archivos frontend listados en la bitacora de esta intervencion. Documentacion actualizada: `BITACORA_COLABORACION.md` y este archivo.
 - Resultado: `MCV.1`, `MCV.2`, `MCV.3` y `MCV.4` sin regresion; `MCV.5 = CERRADA`; `P0 MCV.5 = 0`; `P1 MCV.5 = 0`. MCV.6 no se inicia en esta intervencion.
+
+## Estado vigente - MCV.6 confirmaciones institucionales
+
+- Fecha/hora local: 2026-08-27. Autor: Codex. Rama: `desarrollo`. Inicio: `a4f9081`.
+- MCV.6: se elimino la unica llamada `window.confirm` funcional del scope Matrices/Familias. La accion activar/desactivar familia ahora reutiliza SweetAlert2, unico patron vigente del modulo, con contexto real, foco en Cancelar, Escape/backdrop bloqueados y retorno de foco.
+- Gates: `WINDOW_CONFIRM=0`; `NATIVE_CONFIRM_ENTRYPOINTS=0`; confirmacion solo donde corresponde; cancelacion segura; request unica; busy/error y permisos conservados; lifecycle y contratos sin cambios. No se agregaron confirmaciones artificiales a acciones no destructivas.
+- Pruebas y UAT: frontend `699/699 PASS`; E2E `29/29 PASS`; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Chromium/CDP real, mismo browser/context/page: confirmacion visible, contexto correcto, foco seguro, Escape sin cierre, Cancelar sin cambio/request y foco restaurado: PASS. Mutacion real no ejecutada para preservar dato UAT; pruebas existentes cubren transiciones institucionales.
+- Backend: sin cambios; `494/494` permanece certificado previamente. MCV.1, MCV.2, MCV.3, MCV.4 y MCV.5 sin regresion. MCV.7 no se inicia en esta intervencion.
+- Resultado: `MCV.6 = CERRADA`; `P0 MCV.6 = 0`; `P1 MCV.6 = 0`.
