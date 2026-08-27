@@ -26,7 +26,7 @@
     </nav>
     <div class="form-builder-toolbar__secondary-actions">
       <details class="form-builder-toolbar__actions-menu">
-        <summary id="summary-acciones-builder" class="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 shadow-sm">⋮ Acciones⌄</summary>
+        <summary id="summary-acciones-builder" class="form-builder-toolbar__control inline-flex h-10 cursor-pointer list-none items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-700 shadow-sm">⋮ Acciones⌄</summary>
         <div class="form-builder-toolbar__actions-popover">
           @if (!soloLectura && vistaActiva === 'secciones' && !mostrarJsonAvanzado) { <button type="button" id="btn-agregar-seccion" (click)="agregarSeccion.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">+ Nueva Sección</button> }
           @if (!soloLectura && vistaActiva === 'catalogos' && !mostrarJsonAvanzado) { <button type="button" id="btn-nuevo-catalogo-header" (click)="agregarCatalogo.emit()" [disabled]="estaProcesando" class="form-builder-toolbar__menu-item">+ Nuevo Catálogo</button> }

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 
@@ -193,6 +193,7 @@ describe('MatricesRiesgosComponent', () => {
 
   it('bloquea el guardado hasta seleccionar un riesgo real y completar campos obligatorios', () => {
     component.nuevaEvaluacion();
+    component.seleccionarFamilia('MATRIZ_RIESGOS_LAFT');
     expect(component.puedeGuardar()).toBe(false);
 
     component.riesgoId.set(5);
@@ -203,6 +204,7 @@ describe('MatricesRiesgosComponent', () => {
 
   it('crea una evaluación enviando respuestas dinámicas', () => {
     component.nuevaEvaluacion();
+    component.seleccionarFamilia('MATRIZ_RIESGOS_LAFT');
     component.riesgoId.set(5);
     component.actualizarRespuesta(component.secciones()[0].campos[0], 'Cumplimiento');
     component.guardarEvaluacion();
@@ -404,6 +406,7 @@ describe('MatricesRiesgosComponent', () => {
 
   it('valida total de campos completados y estado de puedeGuardar ante diversos tipos de valores', () => {
     component.nuevaEvaluacion();
+    component.seleccionarFamilia('MATRIZ_RIESGOS_LAFT');
     component.riesgoId.set(5);
 
     // Valores nulos, indefinidos, cadenas vacías
@@ -426,6 +429,39 @@ describe('MatricesRiesgosComponent', () => {
     component.respuestas.set({ area_principal: true });
     expect(component.totalCompletados()).toBe(1);
     expect(component.puedeGuardar()).toBe(true);
+  });
+
+  it('limpia completamente el contexto dinámico al volver a seleccionar una familia vacía', () => {
+    component.nuevaEvaluacion();
+    component.seleccionarFamilia('MATRIZ_RIESGOS_LAFT');
+    expect(component.versionVigente()).not.toBeNull();
+    expect(component.seccionesModal().length).toBeGreaterThan(0);
+
+    component.seleccionarFamilia('');
+
+    expect(component.familiaSeleccionada()).toBe('');
+    expect(component.versionVigente()).toBeNull();
+    expect(component.metodologia()).toBeNull();
+    expect(component.seccionesModal()).toEqual([]);
+    expect(component.respuestas()).toEqual({});
+    expect(component.riesgoId()).toBe(0);
+    expect(component.cargandoFormulario()).toBe(false);
+  });
+
+  it('ignora una respuesta tardía de una familia anterior', () => {
+    const versionA = component.versionVigente()!;
+    const respuestaA = new Subject<VersionFormularioDto>();
+    service.obtenerVersionVigenteFormulario
+      .mockReturnValueOnce(respuestaA)
+      .mockReturnValueOnce(of({ ...versionA, verCodigo: 'FORM_B', verFamiliaId: 2 }));
+
+    component.nuevaEvaluacion();
+    component.seleccionarFamilia('FAMILIA_A');
+    component.seleccionarFamilia('FAMILIA_B');
+    respuestaA.next({ ...versionA, verCodigo: 'FORM_A', verFamiliaId: 1 });
+
+    expect(component.familiaSeleccionada()).toBe('FAMILIA_B');
+    expect(component.versionVigente()?.verCodigo).toBe('FORM_B');
   });
 
   it('bloquea transición de estado cuando nuevoEstado está vacío', () => {

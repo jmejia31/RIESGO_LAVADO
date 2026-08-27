@@ -59,6 +59,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
   private focoRetornoEditarFamilia: HTMLElement | null = null;
   private detalleEnContexto = false;
+  private secuenciaVersionNuevaEvaluacion = 0;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
@@ -94,8 +95,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
   readonly filtroVigenciaFamilia = signal('TODAS');
+  readonly filtroBuscarConsolidado = signal('');
+  readonly filtroEstadoConsolidado = signal('TODOS');
+  readonly paginaConsolidado = signal(1);
+  readonly registrosPorPaginaConsolidado = signal(10);
   readonly paginaFamilias = signal(1);
   readonly registrosPorPaginaFamilias = signal(10);
+  readonly familiaNuevaSeleccionada = computed(() =>
+    this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada()) ?? null
+  );
 
   readonly totalFamilias = computed(() => this.familias().length);
   readonly totalFamiliasActivas = computed(() => this.familias().filter(f => f.famActivo).length);
@@ -140,7 +148,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
   readonly familias = signal<FamiliaFormularioDto[]>([]);
-  readonly familiaSeleccionada = signal<string>('MATRIZ_RIESGOS_LAFT');
+  readonly familiaSeleccionada = signal<string>('');
   readonly modalFamiliaAbierto = signal<boolean>(false);
   readonly modoEdicionFamilia = signal<boolean>(false);
   familiaIdEditando = 0;
@@ -180,6 +188,40 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
+
+  readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => {
+    const buscar = this.filtroBuscarConsolidado().trim().toLowerCase();
+    const estado = this.filtroEstadoConsolidado();
+    return this.consolidado().filter(fila => {
+      const coincideBusqueda = !buscar
+        || fila.codigoRiesgo.toLowerCase().includes(buscar)
+        || fila.areaPrincipal.toLowerCase().includes(buscar)
+        || fila.duenoRiesgo.toLowerCase().includes(buscar);
+      const coincideEstado = estado === 'TODOS' || fila.estadoEvaluacion === estado;
+      return coincideBusqueda && coincideEstado;
+    });
+  });
+
+  readonly estadosConsolidado = computed(() => Array.from(new Set(
+    this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
+  )).sort());
+
+  readonly consolidadoNivelAltoCritico = computed(() => this.consolidadoFiltrado()
+    .filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length);
+
+  readonly totalPaginasConsolidado = computed(() => {
+    const porPagina = this.registrosPorPaginaConsolidado();
+    return porPagina > 0 ? Math.ceil(this.consolidadoFiltrado().length / porPagina) : 0;
+  });
+
+  readonly consolidadoPaginado = computed<RiesgoReporteFila[]>(() => {
+    const lista = this.consolidadoFiltrado();
+    const porPagina = this.registrosPorPaginaConsolidado();
+    const total = this.totalPaginasConsolidado();
+    const pagina = total === 0 ? 1 : Math.min(Math.max(this.paginaConsolidado(), 1), total);
+    const inicio = (pagina - 1) * porPagina;
+    return lista.slice(inicio, inicio + porPagina);
+  });
 
   readonly modalVerAbierto = signal<boolean>(false);
   readonly modalEditarAbierto = signal<boolean>(false);
@@ -377,12 +419,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarFamiliasFormulario().subscribe({
       next: familias => {
         this.familias.set(familias);
-        if (familias.length > 0) {
-          const actualValida = familias.some(f => f.famCodigo === this.familiaSeleccionada());
-          if (!actualValida) {
-            const activa = familias.find(f => f.famActivo) ?? familias[0];
-            this.familiaSeleccionada.set(activa.famCodigo);
-          }
+        if (this.familiaSeleccionada() && !familias.some(f => f.famCodigo === this.familiaSeleccionada())) {
+          this.familiaSeleccionada.set('');
         }
         const totalPaginas = this.totalPaginasFamilias();
         if (totalPaginas > 0 && this.paginaFamilias() > totalPaginas) {
@@ -399,12 +437,45 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   seleccionarFamilia(codigo: string): void {
+    if (!codigo) {
+      ++this.secuenciaVersionNuevaEvaluacion;
+      this.familiaSeleccionada.set('');
+      this.versionVigente.set(null);
+      this.metodologia.set(null);
+      this.errorFormulario.set(null);
+      this.cargandoFormulario.set(false);
+      this.respuestas.set({});
+      this.riesgoId.set(0);
+      this.cerrarModalVerFamilia();
+      return;
+    }
+
+    const secuencia = ++this.secuenciaVersionNuevaEvaluacion;
     this.familiaSeleccionada.set(codigo);
     this.versionEditando.set(null);
     this.soloLecturaDefinicion.set(false);
     this.definicionTecnica = '';
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.errorFormulario.set(null);
+    this.respuestas.set({});
+    this.cargandoFormulario.set(true);
     this.cargarVersiones();
-    this.cargarVersionVigentePorFamilia(codigo);
+    this.service.obtenerVersionVigenteFormulario(codigo).subscribe({
+      next: version => {
+        if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+        this.versionVigente.set(version);
+        this.inicializarRespuestas();
+        this.cargandoFormulario.set(false);
+      },
+      error: () => {
+        if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+        this.versionVigente.set(null);
+        this.cargandoFormulario.set(false);
+        this.errorFormulario.set('La familia seleccionada no dispone de una versión activa.');
+        this.respuestas.set({});
+      }
+    });
   }
 
   abrirModalGestorFamilias(): void {
@@ -421,6 +492,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.filtroEstadoFamilia.set('TODAS');
     this.filtroVigenciaFamilia.set('TODAS');
     this.paginaFamilias.set(1);
+  }
+
+  cambiarPaginaConsolidado(nuevaPagina: number): void {
+    const total = this.totalPaginasConsolidado();
+    if (!Number.isInteger(nuevaPagina) || total <= 0 || nuevaPagina < 1 || nuevaPagina > total) return;
+    this.paginaConsolidado.set(nuevaPagina);
+  }
+
+  cambiarRegistrosPorPaginaConsolidado(cantidad: number): void {
+    const num = Number(cantidad);
+    if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) return;
+    this.registrosPorPaginaConsolidado.set(num);
+    this.paginaConsolidado.set(1);
   }
 
   cambiarPaginaFamilias(nuevaPagina: number): void {
@@ -440,7 +524,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.paginaFamilias.set(1);
   }
 
-  abrirModalVerFamilia(fam: FamiliaFormularioDto): void {
+  abrirModalVerFamilia(fam: FamiliaFormularioDto, desdeNuevaEvaluacion = false): void {
     if (!fam || fam.famId <= 0) return;
 
     this.cerrarModalVerFamilia();
@@ -452,19 +536,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
     componentRef.setInput('familiaId', fam.famId);
     componentRef.setInput('familiaReferencia', fam);
+    componentRef.setInput('origen', desdeNuevaEvaluacion ? 'nueva-evaluacion' : 'gestor-familias');
 
     this.suscripcionesDetalleFamilia.push(
       componentRef.instance.cerrar.subscribe(() => this.cerrarModalVerFamilia()),
       componentRef.instance.editarFamilia.subscribe(familia => {
         this.focoRetornoEditarFamilia = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-        this.ocultarDetalleComoContexto();
         this.abrirModalEditarFamilia(familia);
       }),
       componentRef.instance.nuevaVersion.subscribe(familia => {
         this.crearNuevaVersionDesdeDetalle(familia);
       }),
       componentRef.instance.verDefinicion.subscribe(({ familia, version, modoEdicion }) => {
-        this.ocultarDetalleComoContexto();
         this.familiaSeleccionada.set(familia.famCodigo);
         this.abrirDefinicion(version, !modoEdicion);
       }),
@@ -525,6 +608,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.applicationRef.attachView(componentRef.hostView);
     document.body.appendChild(componentRef.location.nativeElement);
     componentRef.changeDetectorRef.detectChanges();
+    this.ocultarDetalleComoContexto();
   }
 
   cerrarModalCrearFamilia(): void {
@@ -1058,14 +1142,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.evaluacionSeleccionada.set(null);
     this.evaluacionResumenSeleccionada.set(null);
     this.riesgoId.set(0);
+    ++this.secuenciaVersionNuevaEvaluacion;
+    this.familiaSeleccionada.set('');
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.errorFormulario.set(null);
+    this.cargandoFormulario.set(false);
     this.versionHistorica.set(null);
     this.metodologiaHistorica.set(null);
-    this.inicializarRespuestas();
+    this.respuestas.set({});
     this.modalNuevaEvaluacionAbierto.set(true);
   }
 
   cerrarModalNuevaEvaluacion(): void {
+    ++this.secuenciaVersionNuevaEvaluacion;
     this.modalNuevaEvaluacionAbierto.set(false);
+    this.familiaSeleccionada.set('');
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.respuestas.set({});
     this.globalState.limpiarError();
   }
 
@@ -1376,6 +1471,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: versionAutoritativa => {
         this.cargando.set(false);
         this.versionEditando.set(versionAutoritativa);
+        this.ocultarDetalleComoContexto();
         this.soloLecturaDefinicion.set(
           soloLectura ||
           !this.esAdministrador() ||

@@ -15,8 +15,8 @@
         <div class="group relative shrink-0">
           <button type="button"
                   class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                  aria-label="Regresar a Familias de Formularios"
-                  title="Regresar a Familias de Formularios"
+                  [attr.aria-label]="etiquetaRegresar()"
+                  [attr.title]="etiquetaRegresar()"
                   data-ui-fam-detail-action="regresar"
                   (click)="cerrar.emit()">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>

@@ -52,6 +52,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   @Input({ required: true }) familiaId = 0;
   @Input() familiaReferencia: FamiliaFormularioDto | null = null;
+  @Input() origen: 'gestor-familias' | 'nueva-evaluacion' = 'gestor-familias';
 
   @Output() readonly cerrar = new EventEmitter<void>();
   @Output() readonly editarFamilia = new EventEmitter<FamiliaFormularioDto>();
@@ -75,6 +76,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly errorActividad = signal<string | null>(null);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
+  readonly etiquetaRegresar = computed(() => this.origen === 'nueva-evaluacion' ? 'Regresar a Nueva Evaluación' : 'Regresar a Familias de Formularios');
 
   readonly versionesOrdenadas = computed(() =>
     [...this.versiones()].sort((a, b) => b.verVersion - a.verVersion)

@@ -269,7 +269,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     const compiled = fixture.nativeElement as HTMLElement;
     const container = compiled.querySelector('[data-ui-fam="gestor-principal"]');
     const tablaResponsive = container?.querySelector('.overflow-x-auto');
-    const indicadores = container?.querySelector('[aria-label="Indicadores de familias de formularios"]');
+    const indicadores = (fixture.nativeElement as HTMLElement).querySelector('[data-ui-kpis-context]');
 
     expect(container).not.toBeNull();
     expect(tablaResponsive).not.toBeNull();

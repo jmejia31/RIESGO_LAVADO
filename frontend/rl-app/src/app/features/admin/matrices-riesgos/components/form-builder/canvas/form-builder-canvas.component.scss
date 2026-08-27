@@ -24,6 +24,13 @@
   box-shadow: inset 0 -1px 0 rgb(219 234 254 / 0.35);
 }
 
+.form-builder-canvas__columns-control {
+  min-width: 9.75rem;
+  min-height: 2.75rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
 .form-builder-field-card,
 .form-builder-fields-grid > * {
   min-width: 0;

@@ -49,7 +49,7 @@
                 <select [id]="'seccion-columnas-' + sec.id" [ngModel]="sec.columnasPorFila"
                         (ngModelChange)="columnasSeccionChange.emit({ seccionId: sec.id, columnas: +$event })"
                         [disabled]="soloLectura"
-                        class="appearance-none rounded-lg border border-slate-200 bg-white py-1 pl-2.5 pr-7 text-xs font-semibold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-default disabled:opacity-100 shadow-sm">
+                        class="form-builder-canvas__columns-control appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-9 text-sm font-semibold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-default disabled:opacity-100 shadow-sm">
                   <option [value]="1">1 columna</option>
                   <option [value]="2">2 columnas</option>
                   <option [value]="3">3 columnas</option>

@@ -83,6 +83,18 @@ function textoLimpio(valor: unknown): string {
   return '';
 }
 
+function normalizarEtiquetaVisible(valor: string): string {
+  return valor
+    .replace(/Identificacion/gi, 'Identificación')
+    .replace(/IdentificaciÃ³n/gi, 'Identificación')
+    .replace(/Due[?Ã]o/gi, 'Dueño')
+    .replace(/Evaluacion/gi, 'Evaluación')
+    .replace(/Configuracion/gi, 'Configuración')
+    .replace(/Definicion/gi, 'Definición')
+    .replace(/\bVersion\b/gi, 'Versión')
+    .replace(/\bArea\b/gi, 'Área');
+}
+
 function numeroEnteroEnRango(valor: unknown, defecto: number, minimo: number, maximo: number): number {
   const numero = Number(valor);
   if (!Number.isFinite(numero)) return defecto;
@@ -139,7 +151,7 @@ function normalizarCampo(valor: unknown, clavesUsadas: Set<string>): CampoFormul
   clavesUsadas.add(claveUnica);
 
   const tipoNormalizado = normalizarTipoCampoRenderer(primerValor(raw, ['tipo', 'type']));
-  const etiqueta = textoLimpio(primerValor(raw, ['etiqueta', 'label'])) || clave;
+  const etiqueta = normalizarEtiquetaVisible(textoLimpio(primerValor(raw, ['etiqueta', 'label'])) || clave);
   const codigoCatalogo = textoLimpio(primerValor(raw, ['codigoCatalogo', 'catalogoCodigo', 'catalogCode'])) || null;
   const formula = textoLimpio(primerValor(raw, ['formula'])) || null;
   const campoCanonicoIdRaw = Number(primerValor(raw, ['campoCanonicoId']));
@@ -183,7 +195,7 @@ function normalizarSecciones(valor: unknown): DefinicionFormularioEditable['secc
       if (!raw) return null;
 
       const clave = textoLimpio(primerValor(raw, ['clave', 'key', 'id'])) || `seccion_${indiceSeccion + 1}`;
-      const titulo = textoLimpio(primerValor(raw, ['titulo', 'title'])) || `Sección ${indiceSeccion + 1}`;
+      const titulo = normalizarEtiquetaVisible(textoLimpio(primerValor(raw, ['titulo', 'title'])) || `Sección ${indiceSeccion + 1}`);
       const camposRaw = primerValor(raw, ['campos', 'fields']);
       const campos = Array.isArray(camposRaw)
         ? camposRaw

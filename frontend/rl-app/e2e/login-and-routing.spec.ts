@@ -211,6 +211,8 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
 
     if (path.endsWith('/formulario/version-vigente')) {
       datos = fixture.version ?? versionFormulario;
+    } else if (path.endsWith('/familias')) {
+      datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E', famActivo: true, famFechaCreacion: '2026-08-01T00:00:00Z', totalVersiones: 1, tieneVersionVigente: true }];
     } else if (path.endsWith('/metodologia/vigente')) {
       datos = fixture.metodologia ?? metodologiaFormulario;
     } else if (path.endsWith('/formularios/historial')) {
@@ -363,6 +365,7 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
 
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+  await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
   await expect(page.getByText('Identificación del riesgo', { exact: true })).toBeVisible();
 
   const guardar = page.getByRole('button', { name: 'Crear Evaluación' });
@@ -447,6 +450,7 @@ test('long form test-only valida robustez con un escenario representativo', asyn
   await page.getByRole('button', { name: /Nueva evalu/ }).click();
   const modal = page.locator('[data-modal="nueva-evaluacion"]');
   const scroll = modal.locator('.modal-body-scrollable');
+  await modal.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
   await expect(modal.locator('[data-evaluation-field="long_field_1"]')).toBeVisible();
   const middleField = modal.locator('[data-evaluation-field="long_field_45"]');
   await middleField.scrollIntoViewIfNeeded();

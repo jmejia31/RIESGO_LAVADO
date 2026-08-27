@@ -230,6 +230,6 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     fixture.detectChanges();
 
     expect(component.secciones()).toEqual([]);
-    expect(fixture.nativeElement.textContent).toContain('no contiene secciones configuradas');
+    expect(fixture.nativeElement.textContent).toContain('Seleccione una familia para cargar su formulario activo.');
   });
 });

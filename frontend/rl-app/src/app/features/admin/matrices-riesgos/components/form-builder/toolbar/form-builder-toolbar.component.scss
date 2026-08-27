@@ -32,6 +32,26 @@
   position: relative;
 }
 
+.form-builder-toolbar__control {
+  min-width: 10rem;
+  min-height: 2.75rem;
+  justify-content: space-between;
+  white-space: nowrap;
+  word-spacing: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
+.form-builder-toolbar__control::after {
+  margin-left: 0.5rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.form-builder-toolbar__control:focus-visible {
+  outline: 2px solid rgb(37 99 235 / 0.35);
+  outline-offset: 2px;
+}
+
 .form-builder-toolbar__actions-menu[data-disabled='true'] summary {
   cursor: default;
   color: #64748b;
@@ -51,6 +71,11 @@
   border-radius: 0.65rem;
   background: #fff;
   box-shadow: 0 12px 28px rgb(15 23 42 / 0.14);
+}
+
+.form-builder-toolbar__actions-menu[open] .form-builder-toolbar__control {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
 }
 
 .form-builder-toolbar__menu-item {
