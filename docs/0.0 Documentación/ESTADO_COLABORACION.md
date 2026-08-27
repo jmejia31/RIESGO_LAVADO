@@ -594,3 +594,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Pruebas y UAT: frontend `699/699 PASS`; E2E `29/29 PASS`; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Chromium/CDP real, mismo browser/context/page: confirmacion visible, contexto correcto, foco seguro, Escape sin cierre, Cancelar sin cambio/request y foco restaurado: PASS. Mutacion real no ejecutada para preservar dato UAT; pruebas existentes cubren transiciones institucionales.
 - Backend: sin cambios; `494/494` permanece certificado previamente. MCV.1, MCV.2, MCV.3, MCV.4 y MCV.5 sin regresion. MCV.7 no se inicia en esta intervencion.
 - Resultado: `MCV.6 = CERRADA`; `P0 MCV.6 = 0`; `P1 MCV.6 = 0`.
+## Estado vigente - MCV.7 limpieza frontend controlada
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Inicio: `f8e1e15`.
+- `CODEXGRAPH_SCOPE=PASS` y `CODEXGRAPH_IMPACT_ANALYSIS=PASS`. El analisis dirigido confirmo que los estados, componentes dinamicos, handlers y templates restantes del feature tienen consumidores vigentes; los simbolos legacy retirados por MCV.5 y `window.confirm` no tienen referencias funcionales activas.
+- No se eliminaron candidatos inciertos. Conteos: `REMOVED_CONFIRMED_ORPHANS=0`, `REMOVED_ORPHAN_STATES=0`, `REMOVED_ORPHAN_METHODS=0`, `REMOVED_DEAD_TEMPLATE_BLOCKS=0`, `REMOVED_DEAD_STYLES=0`, `REMOVED_UNUSED_IMPORTS=0`, `RENAMED_STALE_LEGACY_SYMBOLS=0`, `UNCERTAIN_CANDIDATES=0`. `FRONTEND_CONFIRMED_DEAD_CODE_MCV_SCOPE=0` se refiere al inventario confirmado, no a una auditoria global.
+- Regresion corregida: restauracion de foco al volver del Builder al Detalle. El destino focusable del Detalle y la restauracion post-render evitan que el foco termine en `body`; MCV.2 queda preservada.
+- Pruebas frescas: frontend `699/699 PASS`, E2E `29/29 PASS`, prueba dirigida MCV.2 `1/1 PASS`, build PASS, lint PASS y `git diff --check` PASS. Backend no cambio; `494/494` permanece certificado.
+- UAT: Chromium/CDP existente, attach dinamico desde `DevToolsActivePort`, mismo browser/context/page, `/matrices-riesgos`, contenido visible y ausencia de UI legacy: PASS. Chromium permanecio abierto; no se leyeron passwords, tokens, cookies ni localStorage sensible.
+- Gates preservados: `OLD_VERSION_MANAGER_ENTRYPOINTS=0`, `LEGACY_FUNCTIONAL_REFERENCES=0`, `WINDOW_CONFIRM=0`, MCV.1-MCV.6 sin regresion, backend sin cambios.
+- Archivos modificados: tres archivos frontend del ajuste de foco y estos dos documentos. `MCV.7 = CERRADA`; `P0 MCV.7 = 0`; `P1 MCV.7 = 0`. MCV.8 permanece no iniciada.

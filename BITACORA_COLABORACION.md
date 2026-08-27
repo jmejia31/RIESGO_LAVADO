@@ -6396,3 +6396,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Busqueda post-implementacion: `WINDOW_CONFIRM=0` y `NATIVE_CONFIRM_ENTRYPOINTS=0` en `frontend/rl-app/src/app/features/admin/matrices-riesgos`; coincidencias restantes son llamadas SweetAlert2, pruebas o nombres no nativos. MCV.1-MCV.5 preservadas; no se hizo limpieza general frontend/backend.
 - Archivos tecnicos modificados: `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.ts`; `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.spec.ts`.
 - Documentacion modificada: `BITACORA_COLABORACION.md`; `docs/0.0 Documentación/ESTADO_COLABORACION.md`. MCV.6 queda lista para publicacion; MCV.7 no se inicia en esta intervencion.
+## Registro de intervencion - Codex - MCV.7 limpieza frontend controlada
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Commit inicial: `f8e1e15`.
+- CodexGraph e inventario dirigido: `CODEXGRAPH_SCOPE=PASS`, `CODEXGRAPH_IMPACT_ANALYSIS=PASS`, `CANDIDATE_INVENTORY=PASS`, `CONSUMERS_MAPPED=PASS`. Los estados, componentes dinamicos, handlers y templates restantes tienen consumidores vigentes; los simbolos legacy retirados por MCV.5 y `window.confirm` no tienen referencias funcionales activas.
+- No se encontro ningun huerfano confirmado eliminable sin riesgo. Conteos: `REMOVED_CONFIRMED_ORPHANS=0`, `REMOVED_ORPHAN_STATES=0`, `REMOVED_ORPHAN_METHODS=0`, `REMOVED_DEAD_TEMPLATE_BLOCKS=0`, `REMOVED_DEAD_STYLES=0`, `REMOVED_UNUSED_IMPORTS=0`, `RENAMED_STALE_LEGACY_SYMBOLS=0`, `UNCERTAIN_CANDIDATES=0`.
+- Regresion reproducible corregida: restauracion de foco al volver del Builder al Detalle. El Detalle conserva un destino focusable y restaura foco inmediatamente y despues del render. No se modificaron contratos, backend ni la arquitectura dinamica.
+- Evidencia: prueba dirigida MCV.2 `1/1 PASS`; frontend `64 archivos / 699 pruebas PASS`; E2E `29/29 PASS`; build, lint y `git diff --check` PASS; backend sin cambios y `494/494` certificado.
+- UAT Chromium/CDP: endpoint dinamico desde `DevToolsActivePort`; attach, mismo browser/context/page, carga `/matrices-riesgos`, contenido visible y ausencia de UI legacy: PASS. Chromium permanecio abierto. No se leyeron passwords, tokens, cookies ni localStorage sensible.
+- Gates: `FRONTEND_CONFIRMED_DEAD_CODE_MCV_SCOPE=0`, `OLD_VERSION_MANAGER_ENTRYPOINTS=0`, `LEGACY_FUNCTIONAL_REFERENCES=0`, `WINDOW_CONFIRM=0`; MCV.1-MCV.6 sin regresion; `BACKEND_UNCHANGED=YES`.
+- Archivos modificados: tres archivos frontend del ajuste de foco y los dos documentos de colaboracion.
+- Estado: `MCV.7 = CERRADA`, `P0 MCV.7 = 0`, `P1 MCV.7 = 0`. MCV.8 no se inicia en esta intervencion.
