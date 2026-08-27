@@ -476,10 +476,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.suscripcionesDetalleFamilia.push(
       componentRef.instance.cerrar.subscribe(() => this.cerrarModalVerFamilia()),
-      componentRef.instance.gestionarVersiones.subscribe(familia => {
-        this.cerrarModalVerFamilia();
-        this.seleccionarFamiliaDesdeGestor(familia.famCodigo);
-      }),
       componentRef.instance.editarFamilia.subscribe(familia => {
         this.focoRetornoEditarFamilia = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         this.ocultarDetalleComoContexto();
@@ -522,6 +518,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.detalleFamiliaDinamicoAbierto.set(false);
     this.modalVerFamiliaAbierto.set(null);
+  }
+
+  abrirDetalleVersionesDesdeFamilia(familia: FamiliaFormularioDto): void {
+    this.cerrarModalVerFamilia();
+    this.abrirModalVerFamilia(familia);
   }
 
   abrirModalCrearFamilia(): void {

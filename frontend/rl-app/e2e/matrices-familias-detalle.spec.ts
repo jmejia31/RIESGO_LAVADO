@@ -184,6 +184,21 @@ test('MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito'
   await expect(detalle).toHaveCount(0);
 });
 
+test('MCV.4 Ver versiones abre el Detalle correcto sin gestor transitorio', async ({ page }) => {
+  await abrirGestor(page);
+
+  const fila = page.locator('[data-ui-fam-table="principal"] tbody tr').first();
+  await fila.getByRole('button', { name: 'Ver versiones' }).click();
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Detalle de Familia' })).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
+  await expect(detalle.locator('button[aria-label^="Gestionar"]')).toHaveCount(0);
+  await expect(page.getByText(/Vista transitoria de versiones/)).toHaveCount(0);
+  await expect(page.locator('[data-ui-fam-detail="modal"]')).toHaveCount(1);
+});
+
 test('MCV.2 Editar Familia regresa al mismo Detalle sin volver al listado', async ({ page }) => {
   await abrirGestor(page);
   await abrirDetalle(page);
