@@ -47,13 +47,11 @@ describe('FamiliaDetalleModalComponent — UI-FAM.QA transversal', () => {
     const card = dialog?.querySelector('.modal-container-card') as HTMLElement | null;
     const cerrarSpy = vi.spyOn(fixture.componentInstance.cerrar, 'emit');
 
-    expect(card?.className).toContain('w-[96vw]');
-    expect(card?.className).toContain('max-w-[1500px]');
-    expect(card?.className).toContain('h-[92dvh]');
-    expect(card?.className).toContain('overflow-hidden');
+    expect(card?.classList.contains('modal-container-card')).toBe(true);
+    expect(card?.classList.contains('modal-size-workspace')).toBe(true);
     expect(dialog?.querySelector('.overflow-y-auto')).not.toBeNull();
 
     dialog?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
-    expect(cerrarSpy).toHaveBeenCalled();
+    expect(cerrarSpy).not.toHaveBeenCalled();
   });
 });

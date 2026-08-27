@@ -31,6 +31,14 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
   const definicionTodosLosTipos = JSON.stringify({
     codigoFormulario: 'MATRIZ_RENDERER',
     nombreFormulario: 'Renderer integral',
+    catalogos: [{
+      codigo: 'NIVELES',
+      nombre: 'Niveles publicados',
+      elementos: [
+        { codigo: 'A', valor: 'Alto publicado', orden: 1 },
+        { codigo: 'B', valor: 'Bajo publicado', orden: 2 }
+      ]
+    }],
     secciones: [{
       clave: 'general',
       titulo: 'General',
@@ -114,10 +122,25 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     component.modalNuevaEvaluacionAbierto.set(true);
     fixture.detectChanges();
 
+    expect(fixture.nativeElement.querySelector('[data-modal="nueva-evaluacion"].modal-size-workspace')).not.toBeNull();
     const renderers = fixture.nativeElement.querySelectorAll('dialog app-dynamic-field-renderer');
     expect(renderers.length).toBe(9);
     expect(fixture.nativeElement.querySelector('#campo-new-radio input[type="radio"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelectorAll('#campo-new-multi input[type="checkbox"]').length).toBe(2);
+  });
+
+  it('usa la definición y los catálogos de la versión publicada para Nueva Evaluación', () => {
+    component.metodologia.set({ ...metodologia, catalogos: [] });
+    component.modalNuevaEvaluacionAbierto.set(true);
+    fixture.detectChanges();
+
+    expect(component.seccionesModal()[0].columnasPorFila).toBe(3);
+    expect(component.opcionesCatalogo(component.seccionesModal()[0].campos[4])).toEqual([
+      { codigo: 'A', valor: 'Alto publicado', orden: 1 },
+      { codigo: 'B', valor: 'Bajo publicado', orden: 2 }
+    ]);
+    expect(fixture.nativeElement.querySelector('[data-evaluation-section="general"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-evaluation-field="selector"]')).not.toBeNull();
   });
 
   it('considera 0, false y una selección múltiple no vacía como respuestas presentes', () => {
@@ -207,6 +230,6 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     fixture.detectChanges();
 
     expect(component.secciones()).toEqual([]);
-    expect(fixture.nativeElement.textContent).toContain('no contiene secciones configuradas');
+    expect(fixture.nativeElement.textContent).toContain('Seleccione una familia para cargar su formulario activo.');
   });
 });

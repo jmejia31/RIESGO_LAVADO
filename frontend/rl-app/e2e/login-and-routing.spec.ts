@@ -195,7 +195,7 @@ function createUnsignedAccessToken() {
   })}.`;
 }
 
-async function stubAuthenticatedMatrices(page: Page) {
+async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknown; metodologia?: unknown } = {}) {
   const accessToken = createUnsignedAccessToken();
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
@@ -210,9 +210,11 @@ async function stubAuthenticatedMatrices(page: Page) {
     let datos: unknown = [];
 
     if (path.endsWith('/formulario/version-vigente')) {
-      datos = versionFormulario;
+      datos = fixture.version ?? versionFormulario;
+    } else if (path.endsWith('/familias')) {
+      datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E', famActivo: true, famFechaCreacion: '2026-08-01T00:00:00Z', totalVersiones: 1, tieneVersionVigente: true }];
     } else if (path.endsWith('/metodologia/vigente')) {
-      datos = metodologiaFormulario;
+      datos = fixture.metodologia ?? metodologiaFormulario;
     } else if (path.endsWith('/formularios/historial')) {
       datos = [versionFormulario];
     } else if (/\/formularios\/\d+$/.test(path) && method === 'GET') {
@@ -363,9 +365,14 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
 
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+  await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
   await expect(page.getByText('Identificación del riesgo', { exact: true })).toBeVisible();
 
   const guardar = page.getByRole('button', { name: 'Crear Evaluación' });
+  const modalNuevaEvaluacion = page.locator('[data-modal="nueva-evaluacion"]');
+  await expect(modalNuevaEvaluacion).toHaveClass(/modal-size-workspace/);
+  await expect(modalNuevaEvaluacion.locator('.modal-body-scrollable')).toHaveCSS('overflow-y', 'auto');
+  await page.screenshot({ path: 'test-results/ui-form-final-d-nueva-evaluacion-1536x1024.png', fullPage: true });
   await expect(guardar).toBeDisabled();
 
   await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
@@ -403,4 +410,54 @@ test('consulta una evaluación existente y permite abrir su edición', async ({ 
   await page.getByTitle('Editar evaluación').first().click();
   await expect(page.getByRole('heading', { name: 'Editar Evaluación' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
+});
+test('smoke anti-regresion: Matrices no queda en blanco ni registra errores de runtime', async ({ page }) => {
+  const pageErrors: string[] = [];
+  const consoleErrors: string[] = [];
+  const failedRequests: string[] = [];
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
+  page.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  page.on('requestfailed', request => failedRequests.push(`${request.url()} :: ${request.failure()?.errorText || 'unknown'}`));
+
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] }),
+  }));
+  await page.route('https://fonts.googleapis.com/**', route => route.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route('https://fonts.gstatic.com/**', route => route.fulfill({ status: 200, body: '' }));
+  await stubAuthenticatedMatrices(page);
+  await page.goto('/matrices-riesgos');
+
+  await expect(page.locator('app-matrices-riesgos')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await expect(page.locator('app-matrices-riesgos')).not.toBeEmpty();
+  await page.screenshot({ path: 'test-results/p0-matrices-smoke-1536x1024.png', fullPage: true });
+  expect(pageErrors).toEqual([]);
+  expect(consoleErrors, failedRequests.join('\n')).toEqual([]);
+});
+
+test('long form test-only valida robustez con un escenario representativo', async ({ page }) => {
+  const secciones = Array.from({ length: 9 }, (_, s) => ({ clave: `long_${s}`, titulo: `Long ${s}`, orden: s + 1, columnasPorFila: 3, campos: Array.from({ length: 10 }, (_, f) => ({ clave: `long_field_${s * 10 + f + 1}`, etiqueta: `Long field ${s * 10 + f + 1}`, tipo: 'texto', obligatorio: false, soloLectura: false })) }));
+  const definicion = { codigoFormulario: 'FORM_LONG_UAT', nombreFormulario: 'Long UAT', secciones };
+  const version = { ...versionFormulario, verId: 910, verCodigo: 'FORM_LONG_UAT', verVersion: 90, verJson: JSON.stringify(definicion) };
+  const metodologia = { ...metodologiaFormulario, versionFormularioId: 910, codigo: 'FORM_LONG_UAT', version: 90, secciones, catalogos: [] };
+  await stubAuthenticatedMatrices(page, { version, metodologia });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: /Nueva evalu/ }).click();
+  const modal = page.locator('[data-modal="nueva-evaluacion"]');
+  const scroll = modal.locator('.modal-body-scrollable');
+  await modal.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
+  await expect(modal.locator('[data-evaluation-field="long_field_1"]')).toBeVisible();
+  const middleField = modal.locator('[data-evaluation-field="long_field_45"]');
+  await middleField.scrollIntoViewIfNeeded();
+  await expect(middleField).toBeVisible();
+  await scroll.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect(modal.locator('[data-evaluation-field="long_field_90"]')).toBeVisible();
+  const metrics = await scroll.evaluate(element => ({ vertical: element.scrollHeight > element.clientHeight, horizontal: element.scrollWidth > element.clientWidth, top: element.scrollTop }));
+  expect(metrics.vertical).toBe(true); expect(metrics.horizontal).toBe(false); expect(metrics.top).toBeGreaterThan(0);
+  await expect(modal.getByRole('button', { name: /Crear Evalu/ })).toBeVisible();
 });

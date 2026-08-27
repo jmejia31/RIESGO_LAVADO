@@ -137,42 +137,13 @@ describe('MatricesRiesgosComponent — ciclo de vida de versiones', () => {
     expect(component.soloLecturaDefinicion()).toBe(false);
     expect(component.versionEditando()?.verId).toBe(101);
   });
-
-  it('renderiza la matriz exacta de acciones según estado y vigencia', () => {
+  it('retira la vista transitoria de versiones del formulario', () => {
     component.tab.set('plantillas');
-    component.mostrandoVersionesFamilia.set(true);
-    component.versiones.set([versionDraftNoVigente, versionPublishedVigente, versionPublishedHistorica]);
     fixture.detectChanges();
-
     const panel = fixture.nativeElement.querySelector('#panel-plantillas') as HTMLElement;
     expect(panel).toBeTruthy();
-
-    const accionesDeVersion = (versionId: number): string[] => {
-      const tarjetas = Array.from(panel.querySelectorAll('article')) as HTMLElement[];
-      const tarjeta = tarjetas.find(item => item.textContent?.includes(`ID #${versionId}`));
-      expect(tarjeta).toBeTruthy();
-      return Array.from(tarjeta!.querySelectorAll('button'))
-        .map(boton => boton.getAttribute('aria-label') ?? '');
-    };
-
-    const draft = accionesDeVersion(101);
-    expect(draft).toEqual(expect.arrayContaining(['Ver definición', 'Editar definición', 'Clonar versión', 'Publicar versión', 'Eliminar versión']));
-    expect(draft).not.toContain('Activar versión');
-    expect(draft).not.toContain('Desactivar versión');
-
-    const vigente = accionesDeVersion(102);
-    expect(vigente).toEqual(expect.arrayContaining(['Ver definición', 'Clonar versión', 'Desactivar versión']));
-    expect(vigente).not.toContain('Editar definición');
-    expect(vigente).not.toContain('Publicar versión');
-    expect(vigente).not.toContain('Eliminar versión');
-    expect(vigente).not.toContain('Activar versión');
-
-    const historica = accionesDeVersion(100);
-    expect(historica).toEqual(expect.arrayContaining(['Ver definición', 'Clonar versión', 'Activar versión']));
-    expect(historica).not.toContain('Editar definición');
-    expect(historica).not.toContain('Publicar versión');
-    expect(historica).not.toContain('Eliminar versión');
-    expect(historica).not.toContain('Desactivar versión');
+    expect(fixture.nativeElement.querySelector('[data-ui-fam="versiones-transicion"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Nuevo Formulario de Matriz');
   });
 
   it('clona una PUBLISHED como nuevo borrador y refresca el historial', () => {

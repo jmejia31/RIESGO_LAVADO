@@ -1,61 +1,48 @@
-<aside class="form-builder-region form-builder-palette" data-form-builder-region="palette" [attr.aria-label]="soloLectura ? 'Estructura del formulario' : 'Biblioteca de controles'">
-  <div class="h-full overflow-y-auto custom-scrollbar p-4 sm:p-5">
-    @if (soloLectura) {
-      <div class="mb-4">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Estructura del formulario</h3>
-        <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Navega por las secciones y campos de esta versión publicada.</p>
-      </div>
-
-      <div class="space-y-3">
-        @for (sec of secciones; track sec.id) {
-          <div class="overflow-hidden rounded-xl border border-slate-200 bg-white"
-               [class.border-blue-300]="seccionActivaId === sec.id"
-               [class.bg-blue-50\/30]="seccionActivaId === sec.id">
-            <button type="button"
-                    (click)="seleccionarSeccion.emit(sec.id)"
-                    class="flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors hover:bg-slate-50">
-              <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[10px] font-bold text-slate-600">{{ sec.orden }}</span>
-              <span class="min-w-0 flex-1 truncate text-xs font-bold text-slate-800">{{ sec.titulo }}</span>
-              <span class="text-[10px] font-semibold text-slate-400">{{ sec.campos.length }}</span>
-            </button>
-
-            @if (sec.campos.length > 0) {
-              <div class="border-t border-slate-100 px-2 py-2 space-y-1">
-                @for (campo of sec.campos; track campo.id) {
-                  <button type="button"
-                          (click)="seleccionarSeccion.emit(sec.id); seleccionarCampo.emit(campo)"
-                          class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors hover:bg-blue-50"
-                          [class.bg-blue-50]="campoActivoId === campo.id"
-                          [class.text-blue-800]="campoActivoId === campo.id">
-                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-slate-300" [class.bg-blue-600]="campoActivoId === campo.id"></span>
-                    <span class="min-w-0 flex-1 truncate text-[11px] font-medium">{{ campo.etiqueta }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
-    } @else {
-      <div class="mb-4">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Biblioteca de campos</h3>
-        <p class="mt-1 text-[11px] leading-relaxed text-slate-500">Selecciona un control para agregarlo a la sección activa.</p>
-      </div>
-
-      <div class="space-y-2.5">
-        @for (ctrl of tiposControles; track ctrl.tipo) {
-          <button type="button"
-                  [disabled]="!seccionActivaId"
-                  (click)="seccionActivaId && agregarCampo.emit(ctrl)"
-                  class="group flex w-full items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50">
-            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-700 transition-colors group-hover:bg-blue-600 group-hover:text-white">+</div>
-            <div class="min-w-0">
-              <p class="truncate text-xs font-semibold text-slate-800 group-hover:text-blue-900">{{ ctrl.etiqueta }}</p>
-              <p class="mt-0.5 line-clamp-2 text-[10px] leading-snug text-slate-500">{{ ctrl.descripcion }}</p>
-            </div>
-          </button>
-        }
-      </div>
+<aside class="form-builder-region form-builder-palette" data-form-builder-region="palette" [attr.aria-label]="soloLectura ? 'Biblioteca de campos en solo lectura' : 'Biblioteca de controles'">
+  <div class="palette-scroll custom-scrollbar">
+    <div class="palette-heading">
+      <h3>Agregar campos</h3>
+      <p>Arrastra un campo al lienzo o haz clic<br>para agregarlo.</p>
+    </div>
+    <div class="palette-search">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/></svg>
+      <input type="text" id="buscador-palette" [ngModel]="terminoBusqueda()" (ngModelChange)="terminoBusqueda.set($event)" placeholder="Buscar campo..." aria-label="Buscar campo o tipo de control">
+      @if (terminoBusqueda()) { <button type="button" (click)="limpiarBusqueda()" aria-label="Limpiar búsqueda de campos">×</button> }
+    </div>
+    @if (terminoBusqueda()) {
+      <div class="palette-search-meta"><span>{{ totalFiltrados() }} control(es) encontrado(s)</span><button type="button" (click)="limpiarBusqueda()">Ver todos</button></div>
     }
+    @if (!seccionActivaId && !soloLectura) {
+      <div class="palette-notice"><span aria-hidden="true">!</span><span>Selecciona una sección en el lienzo para agregar campos.</span></div>
+    }
+    @if (totalFiltrados() === 0) {
+      <div class="palette-empty"><p>No se encontraron campos compatibles</p><span>Intenta con otro término de búsqueda.</span></div>
+    }
+    <div class="palette-groups">
+      @for (grupo of grupos(); track grupo.clave) {
+        <section class="palette-group" [attr.aria-label]="grupo.etiqueta">
+          <h4>{{ grupo.etiqueta }}</h4>
+          @for (ctrl of grupo.controles; track ctrl.tipo) {
+            <div class="palette-card group" [attr.draggable]="!soloLectura && !!seccionActivaId" (dragstart)="onDragStart($event, ctrl)" (click)="onCardClick(ctrl)" (keydown)="onCardKeydown($event, ctrl)" tabindex="0" role="button" [attr.aria-disabled]="soloLectura || !seccionActivaId" [attr.aria-label]="soloLectura ? ctrl.etiqueta + ' (solo lectura)' : 'Agregar campo ' + ctrl.etiqueta" [class.palette-card--readonly]="soloLectura" [class.palette-card--inactive]="!seccionActivaId && !soloLectura">
+              <span class="palette-icon" [attr.data-icon]="ctrl.tipo" aria-hidden="true">
+                @switch (ctrl.tipo) {
+                  @case ('texto') { <span>T</span> }
+                  @case ('numero') { <span>123</span> }
+                  @case ('fecha') { <svg viewBox="0 0 24 24"><path d="M8 3v4m8-4v4M4 10h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg> }
+                  @case ('texto-largo') { <span>Tᴬ</span> }
+                  @case ('selector-catalogo') { <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg> }
+                  @case ('radio') { <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/></svg> }
+                  @case ('catalogo-multiple') { <svg viewBox="0 0 24 24"><rect x="5" y="5" width="5" height="5" rx="1"/><rect x="14" y="5" width="5" height="5" rx="1"/><rect x="5" y="14" width="5" height="5" rx="1"/><rect x="14" y="14" width="5" height="5" rx="1"/></svg> }
+                  @case ('checkbox') { <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="m8 12 2.5 2.5L16 9"/></svg> }
+                  @default { <span>Σ</span> }
+                }
+              </span>
+              <span class="palette-card__copy"><strong>{{ ctrl.etiqueta }}</strong><small>{{ ctrl.descripcion }}</small></span>
+              <span class="palette-handle" aria-hidden="true">⁙</span>
+            </div>
+          }
+        </section>
+      }
+    </div>
   </div>
 </aside>

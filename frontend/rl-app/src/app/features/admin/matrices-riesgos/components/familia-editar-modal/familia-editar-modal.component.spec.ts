@@ -214,14 +214,14 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     expect(emitSpy).toHaveBeenCalledWith({ familia: desactivada, accion: 'DESACTIVADA' });
   });
 
-  it('cierra con Escape cuando no existe una operación en curso', () => {
+  it('conserva el modal abierto al pulsar Escape', () => {
     const emitSpy = vi.spyOn(component.cerrar, 'emit');
     const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
 
     component.manejarTecladoDialogo(event);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).not.toHaveBeenCalled();
   });
 
   it('impide mutaciones cuando el usuario no es Administrador', async () => {
@@ -303,12 +303,83 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     const card = dialog?.querySelector('.modal-container-card') as HTMLElement | null;
     const grid = dialog?.querySelector('div.grid.grid-cols-1') as HTMLElement | null;
 
-    expect(card?.className).toContain('w-[calc(100vw-1.5rem)]');
-    expect(card?.className).toContain('sm:w-[82vw]');
-    expect(card?.className).toContain('sm:max-w-[1180px]');
-    expect(card?.className).toContain('max-h-[92dvh]');
+    expect(card?.classList.contains('modal-container-card')).toBe(true);
+    expect(card?.classList.contains('modal-size-xl')).toBe(true);
     expect(grid).not.toBeNull();
     expect(grid?.className).toContain('grid-cols-1');
     expect(grid?.className).toContain('lg:grid-cols-');
+  });
+
+  it('limpia el estado cuando se recibe un identificador inválido', async () => {
+    fixture.componentRef.setInput('familiaId', 0);
+    fixture.detectChanges();
+    await estabilizarVista();
+
+    expect(component.detalle()).toBeNull();
+    expect(component.cargando()).toBe(false);
+    expect(component.noEncontrada()).toBe(false);
+    expect(component.error()).toBeNull();
+  });
+
+  it('valida nombre y descripción antes de enviar cambios', () => {
+    component.nombre = '   ';
+    component.guardarCambios();
+    expect(component.error()).toBe('El nombre de la familia es obligatorio.');
+
+    component.nombre = 'x'.repeat(151);
+    component.guardarCambios();
+    expect(component.error()).toBe('El nombre no puede superar los 150 caracteres.');
+
+    component.nombre = 'Nombre válido';
+    component.descripcion = 'x'.repeat(501);
+    component.guardarCambios();
+    expect(component.error()).toBe('La descripción no puede superar los 500 caracteres.');
+    expect(service.actualizarFamiliaFormulario).not.toHaveBeenCalled();
+  });
+
+  it('rechaza una respuesta persistida que no coincide con el cambio enviado', async () => {
+    component.nombre = 'Nombre nuevo';
+    service.actualizarFamiliaFormulario.mockReturnValue(of(true));
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of({ ...familiaBase, famNombre: 'Nombre antiguo' }));
+
+    component.guardarCambios();
+    await estabilizarVista();
+
+    expect(component.error()).toContain('no coincide con los cambios enviados');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('expone el error cuando falla la verificación posterior al guardado', async () => {
+    component.nombre = 'Nombre nuevo';
+    service.actualizarFamiliaFormulario.mockReturnValue(of(true));
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(throwError(() => ({ error: { detail: 'No se pudo leer.' } })));
+
+    component.guardarCambios();
+    await estabilizarVista();
+
+    expect(component.error()).toBe('No se pudo leer.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('maneja familia inexistente y error 404 al recargar por ID', async () => {
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(of(null));
+    await cambiarFamilia(20);
+    expect(component.noEncontrada()).toBe(true);
+    expect(component.detalle()).toBeNull();
+
+    service.obtenerFamiliaFormularioPorId.mockReturnValue(throwError(() => ({ status: 404 })));
+    await cambiarFamilia(21);
+    expect(component.noEncontrada()).toBe(true);
+    expect(component.detalle()).toBeNull();
+  });
+
+  it('recarga y reporta el error cuando falla una operación de ciclo de vida', async () => {
+    service.activarFamiliaFormulario.mockReturnValue(throwError(() => ({ error: { detail: 'No autorizado.' } })));
+    component['cambiarEstado']('ACTIVADA');
+    await estabilizarVista();
+
+    expect(component.operando()).toBe(false);
+    expect(component.error()).toBe('No autorizado.');
+    expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(7);
   });
 });

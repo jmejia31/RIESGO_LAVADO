@@ -95,7 +95,6 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   const mostrarGestorPrincipal = (): void => {
     component.cerrarModalGestorFamilias();
     component.tab.set('plantillas');
-    component.mostrandoVersionesFamilia.set(false);
     fixture.detectChanges();
   };
 
@@ -165,12 +164,6 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component.cerrarModalVerFamilia();
     expect(component.detalleFamiliaDinamicoAbierto()).toBe(false);
     expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).toBeNull();
-  });
-
-  it('8. Selección de Ver versiones selecciona la familia y cierra el gestor', () => {
-    component.seleccionarFamiliaDesdeGestor('QA_TEST');
-    expect(component.familiaSeleccionada()).toBe('QA_TEST');
-    expect(component.modalGestorFamiliasAbierto()).toBe(false);
   });
 
   it('9. Confirmar activación y desactivación llaman al servicio Angular', () => {
@@ -276,12 +269,78 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     const compiled = fixture.nativeElement as HTMLElement;
     const container = compiled.querySelector('[data-ui-fam="gestor-principal"]');
     const tablaResponsive = container?.querySelector('.overflow-x-auto');
-    const indicadores = container?.querySelector('[aria-label="Indicadores de familias de formularios"]');
+    const indicadores = (fixture.nativeElement as HTMLElement).querySelector('[data-ui-kpis-context]');
 
     expect(container).not.toBeNull();
     expect(tablaResponsive).not.toBeNull();
     expect(indicadores?.className).toContain('grid-cols-1');
     expect(indicadores?.className).toContain('sm:grid-cols-2');
     expect(indicadores?.className).toContain('xl:grid-cols-4');
+  });
+
+  it('20. valida paginación y tamaño de página del gestor', () => {
+    expect(component.paginaFamilias()).toBe(1);
+    component.cambiarPaginaFamilias(0);
+    component.cambiarPaginaFamilias(99);
+    expect(component.paginaFamilias()).toBe(1);
+
+    component.cambiarRegistrosPorPaginaFamilias(20);
+    expect(component.registrosPorPaginaFamilias()).toBe(20);
+    expect(component.paginaFamilias()).toBe(1);
+    component.cambiarRegistrosPorPaginaFamilias(15);
+    expect(component.registrosPorPaginaFamilias()).toBe(20);
+  });
+
+  it('21. conserva la selección válida y corrige una página fuera de rango al cargar familias', () => {
+    component.familiaSeleccionada.set('QA_TEST');
+    component.paginaFamilias.set(99);
+    component.cargarFamilias();
+
+    expect(component.familiaSeleccionada()).toBe('QA_TEST');
+    expect(component.paginaFamilias()).toBe(1);
+    expect(component.cargandoFamilias()).toBe(false);
+  });
+
+  it('22. cubre guardar familia nueva y edición con éxito y error del backend', () => {
+    const crear = vi.spyOn(service, 'crearFamiliaFormulario').mockReturnValue(of(99));
+    component.nuevaFamiliaCodigo = 'NUEVA';
+    component.nuevaFamiliaNombre = 'Nueva familia';
+    component.nuevaFamiliaDescripcion = 'Descripción';
+    component.modoEdicionFamilia.set(false);
+    component.guardarFamilia();
+    expect(crear).toHaveBeenCalledWith({ famCodigo: 'NUEVA', famNombre: 'Nueva familia', famDescripcion: 'Descripción' });
+    expect(component.guardando()).toBe(false);
+
+    const actualizar = vi.spyOn(service, 'actualizarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se pudo actualizar.' } })));
+    component.modoEdicionFamilia.set(true);
+    component.familiaIdEditando = 1;
+    component.guardarFamilia();
+    expect(actualizar).toHaveBeenCalledWith(1, expect.objectContaining({ famNombre: 'Nueva familia' }));
+    expect(component.errorModal()).toBe('No se pudo actualizar.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('23. cubre activar y eliminar familia en éxito y error', () => {
+    const activar = vi.spyOn(service, 'activarFamiliaFormulario').mockReturnValue(of(true));
+    component.activarFamilia(mockFamilias[2]);
+    expect(activar).toHaveBeenCalledWith(3);
+    expect(component.guardando()).toBe(false);
+
+    const eliminar = vi.spyOn(service, 'eliminarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se puede eliminar.' } })));
+    component.eliminarFamilia(mockFamilias[1]);
+    expect(eliminar).toHaveBeenCalledWith(2);
+    expect(component.error()).toBe('No se puede eliminar.');
+    expect(component.guardando()).toBe(false);
+  });
+
+  it('24. calcula secciones y guardabilidad desde la versión activa', () => {
+    component.riesgoId.set(4);
+    component.versionVigente.set({ verJson: JSON.stringify({ secciones: [{ clave: 's', campos: [{ clave: 'c', obligatorio: true }] }] }) } as never);
+    expect(component.secciones()).toHaveLength(1);
+    expect(component.totalCampos()).toBe(1);
+    expect(component.puedeGuardar()).toBe(false);
+    component.respuestas.set({ c: 'valor' });
+    expect(component.puedeGuardar()).toBe(true);
+    expect(component.totalCompletados()).toBe(1);
   });
 });

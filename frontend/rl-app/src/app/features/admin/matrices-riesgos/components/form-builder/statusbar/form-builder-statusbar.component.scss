@@ -1,23 +1,16 @@
-:host {
-  display: block;
-  min-width: 0;
-}
-
-.form-builder-statusbar__content {
-  display: flex;
-  min-height: 2.75rem;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #64748b;
-  font-size: 0.6875rem;
-  font-weight: 500;
-}
-
-.form-builder-statusbar__version { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; color: #475569; }
+:host { display: block; min-width: 0; }
+.form-builder-statusbar__content { display: flex; min-height: 4rem; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1.5rem; border-top: 1px solid #e5e7eb; background: #fff; color: #64748b; font-size: 0.6875rem; font-weight: 500; }
+.form-builder-statusbar__state, .form-builder-statusbar__actions { display: flex; align-items: center; gap: 0.5rem; }
+.form-builder-statusbar__state { min-width: 0; flex-wrap: wrap; }
+.form-builder-statusbar__actions { flex-shrink: 0; gap: 1rem; }
+.form-builder-statusbar__indicator { width: 0.55rem; height: 0.55rem; border-radius: 9999px; background: #d97706; }
+.form-builder-statusbar__indicator--readonly { background: #94a3b8; }
 .form-builder-statusbar__separator { color: #cbd5e1; }
 .form-builder-statusbar__mode { font-weight: 700; }
 .form-builder-statusbar__mode--draft { color: #047857; }
 .form-builder-statusbar__mode--readonly { color: #b45309; }
+.form-builder-statusbar__cancel, .form-builder-statusbar__save { min-height: 2.25rem; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 0.75rem; font-weight: 700; }
+.form-builder-statusbar__cancel { border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+.form-builder-statusbar__save { border: 1px solid #1d4ed8; background: #2563eb; color: #fff; }
+.form-builder-statusbar__save:disabled { cursor: not-allowed; border-color: #cbd5e1; background: #e2e8f0; color: #94a3b8; }
+@media (max-width: 900px) { .form-builder-statusbar__content { align-items: flex-start; flex-direction: column; } .form-builder-statusbar__actions { align-self: flex-end; } }

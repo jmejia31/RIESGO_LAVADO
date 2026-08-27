@@ -5,4 +5,153 @@
 
 .form-builder-toolbar {
   min-width: 0;
+  color: #17233b;
+}
+
+.form-builder-toolbar__top-actions,
+.form-builder-toolbar__secondary-actions,
+.form-builder-toolbar__workspace-tabs {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.form-builder-toolbar__top-actions {
+  gap: 0.5rem;
+}
+
+.form-builder-toolbar__workspace-tabs {
+  gap: 0.5rem;
+}
+
+.form-builder-toolbar__secondary-actions {
+  gap: 0.75rem;
+}
+
+.form-builder-toolbar__actions-menu {
+  position: relative;
+}
+
+.form-builder-toolbar__control {
+  min-width: 10rem;
+  min-height: 2.75rem;
+  justify-content: space-between;
+  white-space: nowrap;
+  word-spacing: 0.35rem;
+  letter-spacing: 0.01em;
+}
+
+.form-builder-toolbar__control::after {
+  margin-left: 0.5rem;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.form-builder-toolbar__control:focus-visible {
+  outline: 2px solid rgb(37 99 235 / 0.35);
+  outline-offset: 2px;
+}
+
+.form-builder-toolbar__actions-menu[data-disabled='true'] summary {
+  cursor: default;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.form-builder-toolbar__actions-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 20;
+  display: grid;
+  min-width: 12rem;
+  gap: 0.25rem;
+  padding: 0.35rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.65rem;
+  background: #fff;
+  box-shadow: 0 12px 28px rgb(15 23 42 / 0.14);
+}
+
+.form-builder-toolbar__actions-menu[open] .form-builder-toolbar__control {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.12);
+}
+
+.form-builder-toolbar__menu-item {
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.form-builder-toolbar__menu-item:hover {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.form-builder-toolbar__menu-empty {
+  padding: 0.55rem 0.7rem;
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.form-builder-toolbar nav > button[aria-current='page'] {
+  position: relative;
+  border-bottom-color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.form-builder-toolbar nav > button[aria-current='page']::after {
+  position: absolute;
+  right: 0.5rem;
+  bottom: -2px;
+  left: 0.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #2563eb;
+  content: '';
+}
+
+.form-builder-toolbar nav > button:not([aria-current='page']):hover {
+  color: #2563eb;
+}
+
+.form-builder-toolbar__workspace-tabs > button {
+  position: relative;
+  border-bottom: 2px solid transparent;
+  color: #475569;
+}
+
+.form-builder-toolbar__workspace-tabs > button.bg-white {
+  border-bottom-color: #2563eb;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.form-builder-toolbar__workspace-tabs > button.bg-white::after {
+  position: absolute;
+  right: 0.5rem;
+  bottom: -2px;
+  left: 0.5rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #2563eb;
+  content: '';
+}
+
+.form-builder-toolbar__workspace-tabs > button:not(.bg-white):hover {
+  color: #2563eb;
+}
+
+@media (max-width: 1100px) {
+  .form-builder-toolbar__top-actions,
+  .form-builder-toolbar__secondary-actions {
+    flex-wrap: wrap;
+  }
 }

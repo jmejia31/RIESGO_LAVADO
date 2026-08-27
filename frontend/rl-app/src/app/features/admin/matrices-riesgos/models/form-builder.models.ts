@@ -89,6 +89,50 @@ export interface FormBuilderModel {
   reglasFuente?: 'reglas' | 'reglasCalculo';
 }
 
+function siguienteIdentificador(base: string, usados: Set<string>, separador = '_copia'): string {
+  const limpio = base.trim() || 'elemento';
+  let candidato = `${limpio}${separador}`;
+  let indice = 2;
+  while (usados.has(candidato.toLowerCase())) {
+    candidato = `${limpio}${separador}_${indice}`;
+    indice += 1;
+  }
+  usados.add(candidato.toLowerCase());
+  return candidato;
+}
+
+/** Duplica una sección dentro del modelo sin compartir referencias ni identificadores técnicos. */
+export function duplicarSeccionBuilderModel(model: FormBuilderModel, seccionId: string): { model: FormBuilderModel; seccion: SeccionBuilderModel } | null {
+  const indiceOrigen = model.secciones.findIndex(seccion => seccion.id === seccionId);
+  if (indiceOrigen < 0) return null;
+
+  const clavesSeccion = new Set(model.secciones.map(seccion => seccion.clave.toLowerCase()));
+  const idsSeccion = new Set(model.secciones.map(seccion => seccion.id.toLowerCase()));
+  const origen = model.secciones[indiceOrigen];
+  const clave = siguienteIdentificador(origen.clave, clavesSeccion);
+  const id = siguienteIdentificador(origen.id, idsSeccion, '_copy');
+  const clavesCampo = new Set(model.secciones.flatMap(seccion => seccion.campos.map(campo => campo.clave.toLowerCase())));
+  const idsCampo = new Set(model.secciones.flatMap(seccion => seccion.campos.map(campo => campo.id.toLowerCase())));
+  const campos = origen.campos.map((campo, indice) => ({
+    ...clonarJson(campo),
+    id: siguienteIdentificador(campo.id || `field_${indice + 1}`, idsCampo, '_copy'),
+    clave: siguienteIdentificador(campo.clave || `campo_${indice + 1}`, clavesCampo),
+    orden: campo.orden ?? indice + 1
+  }));
+  const seccion: SeccionBuilderModel = {
+    ...clonarJson(origen),
+    id,
+    clave,
+    titulo: `${origen.titulo} (copia)`,
+    orden: indiceOrigen + 2,
+    campos
+  };
+  const secciones = [...model.secciones];
+  secciones.splice(indiceOrigen + 1, 0, seccion);
+  const seccionesOrdenadas = secciones.map((item, indice) => ({ ...item, orden: indice + 1 }));
+  return { model: { ...model, secciones: seccionesOrdenadas }, seccion: seccionesOrdenadas[indiceOrigen + 1] };
+}
+
 export const TIPOS_CONTROLES_DISPONIBLES: TipoControlDefinicion[] = [
   { tipo: 'texto', etiqueta: 'Texto', descripcion: 'Entrada de texto corto', icono: 'font-size', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
   { tipo: 'numero', etiqueta: 'Número', descripcion: 'Valores numéricos enteros o decimales', icono: 'hashtag', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },

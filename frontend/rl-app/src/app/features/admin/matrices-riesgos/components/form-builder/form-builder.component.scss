@@ -27,11 +27,18 @@
   overflow: hidden;
 }
 
+.form-builder-shell__content[aria-label='Vista previa del formulario'] {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
 .form-builder-shell__body {
   display: grid;
   grid-template-columns: clamp(13.5rem, 18%, 15.5rem) minmax(0, 1fr) clamp(16.5rem, 22%, 19rem);
   gap: 0.875rem;
-  padding: 1rem;
+  padding: 0 1rem 1rem;
   background: #ffffff;
 }
 

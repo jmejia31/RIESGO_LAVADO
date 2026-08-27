@@ -57,6 +57,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly suscripcionesCrearFamilia: Subscription[] = [];
   private readonly suscripcionesEditarFamilia: Subscription[] = [];
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private focoRetornoEditarFamilia: HTMLElement | null = null;
+  private detalleEnContexto = false;
+  private secuenciaVersionNuevaEvaluacion = 0;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
@@ -67,6 +70,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly tab = signal<TabMatrices>('evaluaciones');
   readonly cargando = signal(false);
   readonly guardando = signal(false);
+  readonly operacionBuilderEnCurso = signal<'guardar' | 'publicar' | null>(null);
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly errorModal = signal<string | null>(null);
@@ -91,9 +95,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
   readonly filtroVigenciaFamilia = signal('TODAS');
+  readonly filtroBuscarConsolidado = signal('');
+  readonly filtroEstadoConsolidado = signal('TODOS');
+  readonly paginaConsolidado = signal(1);
+  readonly registrosPorPaginaConsolidado = signal(10);
   readonly paginaFamilias = signal(1);
   readonly registrosPorPaginaFamilias = signal(10);
-  readonly mostrandoVersionesFamilia = signal(false);
+  readonly familiaNuevaSeleccionada = computed(() =>
+    this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada()) ?? null
+  );
 
   readonly totalFamilias = computed(() => this.familias().length);
   readonly totalFamiliasActivas = computed(() => this.familias().filter(f => f.famActivo).length);
@@ -138,7 +148,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly versionVigente = signal<VersionFormularioDto | null>(null);
   readonly versiones = signal<VersionFormularioDto[]>([]);
   readonly familias = signal<FamiliaFormularioDto[]>([]);
-  readonly familiaSeleccionada = signal<string>('MATRIZ_RIESGOS_LAFT');
+  readonly familiaSeleccionada = signal<string>('');
   readonly modalFamiliaAbierto = signal<boolean>(false);
   readonly modoEdicionFamilia = signal<boolean>(false);
   familiaIdEditando = 0;
@@ -147,9 +157,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   nuevaFamiliaDescripcion = '';
   nuevaFamiliaActivo = true;
 
-  readonly modalFormularioAbierto = signal<boolean>(false);
-  nuevoFormularioCodigo = '';
-  nuevoFormularioNombre = '';
 
   readonly riesgos = signal<RiesgoDto[]>([]);
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
@@ -181,6 +188,40 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
+
+  readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => {
+    const buscar = this.filtroBuscarConsolidado().trim().toLowerCase();
+    const estado = this.filtroEstadoConsolidado();
+    return this.consolidado().filter(fila => {
+      const coincideBusqueda = !buscar
+        || fila.codigoRiesgo.toLowerCase().includes(buscar)
+        || fila.areaPrincipal.toLowerCase().includes(buscar)
+        || fila.duenoRiesgo.toLowerCase().includes(buscar);
+      const coincideEstado = estado === 'TODOS' || fila.estadoEvaluacion === estado;
+      return coincideBusqueda && coincideEstado;
+    });
+  });
+
+  readonly estadosConsolidado = computed(() => Array.from(new Set(
+    this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
+  )).sort());
+
+  readonly consolidadoNivelAltoCritico = computed(() => this.consolidadoFiltrado()
+    .filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length);
+
+  readonly totalPaginasConsolidado = computed(() => {
+    const porPagina = this.registrosPorPaginaConsolidado();
+    return porPagina > 0 ? Math.ceil(this.consolidadoFiltrado().length / porPagina) : 0;
+  });
+
+  readonly consolidadoPaginado = computed<RiesgoReporteFila[]>(() => {
+    const lista = this.consolidadoFiltrado();
+    const porPagina = this.registrosPorPaginaConsolidado();
+    const total = this.totalPaginasConsolidado();
+    const pagina = total === 0 ? 1 : Math.min(Math.max(this.paginaConsolidado(), 1), total);
+    const inicio = (pagina - 1) * porPagina;
+    return lista.slice(inicio, inicio + porPagina);
+  });
 
   readonly modalVerAbierto = signal<boolean>(false);
   readonly modalEditarAbierto = signal<boolean>(false);
@@ -296,9 +337,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     } else if (this.modalFamiliaAbierto()) {
       event.preventDefault();
       this.cerrarModalFamilia();
-    } else if (this.modalFormularioAbierto()) {
-      event.preventDefault();
-      this.cerrarModalFormulario();
     }
   }
 
@@ -327,7 +365,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     if (tab === 'consolidado') this.cargarConsolidado();
     if (tab === 'plantillas') {
-      this.mostrandoVersionesFamilia.set(false);
       this.paginaFamilias.set(1);
       this.cargarFamilias();
     }
@@ -382,12 +419,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.listarFamiliasFormulario().subscribe({
       next: familias => {
         this.familias.set(familias);
-        if (familias.length > 0) {
-          const actualValida = familias.some(f => f.famCodigo === this.familiaSeleccionada());
-          if (!actualValida) {
-            const activa = familias.find(f => f.famActivo) ?? familias[0];
-            this.familiaSeleccionada.set(activa.famCodigo);
-          }
+        if (this.familiaSeleccionada() && !familias.some(f => f.famCodigo === this.familiaSeleccionada())) {
+          this.familiaSeleccionada.set('');
         }
         const totalPaginas = this.totalPaginasFamilias();
         if (totalPaginas > 0 && this.paginaFamilias() > totalPaginas) {
@@ -404,12 +437,45 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   seleccionarFamilia(codigo: string): void {
+    if (!codigo) {
+      ++this.secuenciaVersionNuevaEvaluacion;
+      this.familiaSeleccionada.set('');
+      this.versionVigente.set(null);
+      this.metodologia.set(null);
+      this.errorFormulario.set(null);
+      this.cargandoFormulario.set(false);
+      this.respuestas.set({});
+      this.riesgoId.set(0);
+      this.cerrarModalVerFamilia();
+      return;
+    }
+
+    const secuencia = ++this.secuenciaVersionNuevaEvaluacion;
     this.familiaSeleccionada.set(codigo);
     this.versionEditando.set(null);
     this.soloLecturaDefinicion.set(false);
     this.definicionTecnica = '';
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.errorFormulario.set(null);
+    this.respuestas.set({});
+    this.cargandoFormulario.set(true);
     this.cargarVersiones();
-    this.cargarVersionVigentePorFamilia(codigo);
+    this.service.obtenerVersionVigenteFormulario(codigo).subscribe({
+      next: version => {
+        if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+        this.versionVigente.set(version);
+        this.inicializarRespuestas();
+        this.cargandoFormulario.set(false);
+      },
+      error: () => {
+        if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+        this.versionVigente.set(null);
+        this.cargandoFormulario.set(false);
+        this.errorFormulario.set('La familia seleccionada no dispone de una versión activa.');
+        this.respuestas.set({});
+      }
+    });
   }
 
   abrirModalGestorFamilias(): void {
@@ -426,6 +492,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.filtroEstadoFamilia.set('TODAS');
     this.filtroVigenciaFamilia.set('TODAS');
     this.paginaFamilias.set(1);
+  }
+
+  cambiarPaginaConsolidado(nuevaPagina: number): void {
+    const total = this.totalPaginasConsolidado();
+    if (!Number.isInteger(nuevaPagina) || total <= 0 || nuevaPagina < 1 || nuevaPagina > total) return;
+    this.paginaConsolidado.set(nuevaPagina);
+  }
+
+  cambiarRegistrosPorPaginaConsolidado(cantidad: number): void {
+    const num = Number(cantidad);
+    if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) return;
+    this.registrosPorPaginaConsolidado.set(num);
+    this.paginaConsolidado.set(1);
   }
 
   cambiarPaginaFamilias(nuevaPagina: number): void {
@@ -445,20 +524,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.paginaFamilias.set(1);
   }
 
-  seleccionarFamiliaDesdeGestor(famCodigo: string): void {
-    this.seleccionarFamilia(famCodigo);
-    this.mostrandoVersionesFamilia.set(true);
-    this.cerrarModalGestorFamilias();
-  }
-
-  volverAGestorFamilias(): void {
-    this.mostrandoVersionesFamilia.set(false);
-    this.versionEditando.set(null);
-    this.errorPlantillas.set(null);
-    this.cargarFamilias();
-  }
-
-  abrirModalVerFamilia(fam: FamiliaFormularioDto): void {
+  abrirModalVerFamilia(fam: FamiliaFormularioDto, desdeNuevaEvaluacion = false): void {
     if (!fam || fam.famId <= 0) return;
 
     this.cerrarModalVerFamilia();
@@ -470,28 +536,24 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
     componentRef.setInput('familiaId', fam.famId);
     componentRef.setInput('familiaReferencia', fam);
+    componentRef.setInput('origen', desdeNuevaEvaluacion ? 'nueva-evaluacion' : 'gestor-familias');
 
     this.suscripcionesDetalleFamilia.push(
       componentRef.instance.cerrar.subscribe(() => this.cerrarModalVerFamilia()),
-      componentRef.instance.gestionarVersiones.subscribe(familia => {
-        this.cerrarModalVerFamilia();
-        this.seleccionarFamiliaDesdeGestor(familia.famCodigo);
-      }),
       componentRef.instance.editarFamilia.subscribe(familia => {
-        this.cerrarModalVerFamilia();
+        this.focoRetornoEditarFamilia = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         this.abrirModalEditarFamilia(familia);
       }),
       componentRef.instance.nuevaVersion.subscribe(familia => {
-        this.cerrarModalVerFamilia();
-        this.seleccionarFamilia(familia.famCodigo);
-        this.mostrandoVersionesFamilia.set(true);
-        this.abrirModalCrearFormulario();
+        this.crearNuevaVersionDesdeDetalle(familia);
       }),
-      componentRef.instance.verDefinicion.subscribe(({ familia, version }) => {
-        this.cerrarModalVerFamilia();
+      componentRef.instance.verDefinicion.subscribe(({ familia, version, modoEdicion }) => {
         this.familiaSeleccionada.set(familia.famCodigo);
-        this.abrirDefinicion(version, true);
-      })
+        this.abrirDefinicion(version, !modoEdicion);
+      }),
+      componentRef.instance.publicarVersionSolicitada.subscribe(version => this.publicarVersion(version)),
+      componentRef.instance.cambiarVigenciaSolicitada.subscribe(({ version, vigente }) => this.cambiarVigenciaVersion(version, vigente)),
+      componentRef.instance.eliminarVersionSolicitada.subscribe(version => this.eliminarVersionFormulario(version))
     );
 
     this.detalleFamiliaRef = componentRef;
@@ -515,6 +577,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.detalleFamiliaDinamicoAbierto.set(false);
     this.modalVerFamiliaAbierto.set(null);
+  }
+
+  abrirDetalleVersionesDesdeFamilia(familia: FamiliaFormularioDto): void {
+    this.cerrarModalVerFamilia();
+    this.abrirModalVerFamilia(familia);
   }
 
   abrirModalCrearFamilia(): void {
@@ -541,6 +608,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.applicationRef.attachView(componentRef.hostView);
     document.body.appendChild(componentRef.location.nativeElement);
     componentRef.changeDetectorRef.detectChanges();
+    this.ocultarDetalleComoContexto();
   }
 
   cerrarModalCrearFamilia(): void {
@@ -575,11 +643,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       componentRef.instance.cerrar.subscribe(() => this.cerrarModalEditarFamilia()),
       componentRef.instance.guardada.subscribe(familia => {
         this.cerrarModalEditarFamilia();
+        this.detalleFamiliaRef?.instance.refrescar();
         this.globalState.limpiarError();
         this.mostrarMensaje(`Familia «${familia.famNombre}» actualizada correctamente.`);
         this.cargarFamilias();
       }),
       componentRef.instance.estadoCambiado.subscribe(() => {
+        this.detalleFamiliaRef?.instance.refrescar();
         this.globalState.limpiarError();
         this.cargarFamilias();
       }),
@@ -608,6 +678,31 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       componentRef.destroy();
       this.editarFamiliaRef = null;
     }
+
+    this.mostrarDetalleComoContexto();
+    const foco = this.focoRetornoEditarFamilia;
+    this.focoRetornoEditarFamilia = null;
+    if (foco?.isConnected) setTimeout(() => foco.focus(), 0);
+  }
+
+  private ocultarDetalleComoContexto(): void {
+    const host = this.detalleFamiliaRef?.location.nativeElement as HTMLElement | undefined;
+    if (!host) return;
+    host.style.visibility = 'hidden';
+    host.style.pointerEvents = 'none';
+    host.setAttribute('aria-hidden', 'true');
+    this.detalleEnContexto = true;
+  }
+
+  private mostrarDetalleComoContexto(): void {
+    if (!this.detalleEnContexto) return;
+    const host = this.detalleFamiliaRef?.location.nativeElement as HTMLElement | undefined;
+    if (host) {
+      host.style.visibility = '';
+      host.style.pointerEvents = '';
+      host.removeAttribute('aria-hidden');
+    }
+    this.detalleEnContexto = false;
   }
 
   cerrarModalFamilia(): void {
@@ -785,6 +880,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: versiones => {
         this.versiones.set(versiones);
         this.cargandoPlantillas.set(false);
+        this.detalleFamiliaRef?.instance.refrescar();
       },
       error: error => {
         const msg = this.obtenerMensajeError(error, 'No se pudo cargar el historial de formularios.');
@@ -1016,12 +1112,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
     if (!campo.codigoCatalogo) return [];
 
-    const met = this.modalVerAbierto() || this.modalEditarAbierto()
-      ? this.metodologiaHistorica() ?? this.metodologia()
-      : this.metodologia();
+    const version = this.modalVerAbierto() || this.modalEditarAbierto()
+      ? this.versionHistorica()
+      : this.versionVigente();
+    const catalogosVersion = version?.verJson
+      ? this.extraerDefinicionVersion(version).catalogos
+      : undefined;
+    const catalogos = catalogosVersion
+      ?? (this.modalVerAbierto() || this.modalEditarAbierto()
+        ? this.metodologiaHistorica()?.catalogos
+        : this.metodologia()?.catalogos);
 
-    return met?.catalogos
-      .find(catalogo => catalogo.codigo === campo.codigoCatalogo)
+    return catalogos
+      ?.find(catalogo => catalogo.codigo.toLowerCase() === campo.codigoCatalogo!.toLowerCase())
       ?.elementos
       .slice()
       .sort((a, b) => a.orden - b.orden) ?? [];
@@ -1039,14 +1142,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.evaluacionSeleccionada.set(null);
     this.evaluacionResumenSeleccionada.set(null);
     this.riesgoId.set(0);
+    ++this.secuenciaVersionNuevaEvaluacion;
+    this.familiaSeleccionada.set('');
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.errorFormulario.set(null);
+    this.cargandoFormulario.set(false);
     this.versionHistorica.set(null);
     this.metodologiaHistorica.set(null);
-    this.inicializarRespuestas();
+    this.respuestas.set({});
     this.modalNuevaEvaluacionAbierto.set(true);
   }
 
   cerrarModalNuevaEvaluacion(): void {
+    ++this.secuenciaVersionNuevaEvaluacion;
     this.modalNuevaEvaluacionAbierto.set(false);
+    this.familiaSeleccionada.set('');
+    this.versionVigente.set(null);
+    this.metodologia.set(null);
+    this.respuestas.set({});
     this.globalState.limpiarError();
   }
 
@@ -1335,6 +1449,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   clonarVersion(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     this.guardando.set(true);
     this.service.clonarVersionFormulario(version.verId).subscribe({
       next: () => {
@@ -1356,7 +1471,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: versionAutoritativa => {
         this.cargando.set(false);
         this.versionEditando.set(versionAutoritativa);
-        this.soloLecturaDefinicion.set(soloLectura || versionAutoritativa.verVigente || versionAutoritativa.verEstado !== 'DRAFT');
+        this.ocultarDetalleComoContexto();
+        this.soloLecturaDefinicion.set(
+          soloLectura ||
+          !this.esAdministrador() ||
+          versionAutoritativa.verVigente ||
+          versionAutoritativa.verEstado !== 'DRAFT'
+        );
         this.definicionTecnica = this.formatearDefinicion(versionAutoritativa.verJson);
       },
       error: error => {
@@ -1368,6 +1489,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   guardarDefinicion(): void {
+    if (!this.esAdministrador() || this.soloLecturaDefinicion()) return;
     const version = this.versionEditando();
     if (!version) return;
 
@@ -1382,11 +1504,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     this.guardando.set(true);
+    this.operacionBuilderEnCurso.set('guardar');
     this.service.actualizarBorradorFormulario(version.verId, jsonEnviado).subscribe({
       next: () => {
         this.service.obtenerVersionFormulario(version.verId).subscribe({
           next: versionPersistida => {
             this.guardando.set(false);
+            this.operacionBuilderEnCurso.set(null);
             const sonEquivalentes = sonJsonSemanticamenteEquivalentes(
               jsonEnviado,
               versionPersistida.verJson
@@ -1404,6 +1528,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           },
           error: getError => {
             this.guardando.set(false);
+            this.operacionBuilderEnCurso.set(null);
             this.mostrarError(
               this.obtenerMensajeError(
                 getError,
@@ -1415,12 +1540,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.guardando.set(false);
+        this.operacionBuilderEnCurso.set(null);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la definición del formulario.'));
       }
     });
   }
 
   publicarVersion(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
         title: '¿Publicar versión oficial?',
@@ -1440,25 +1567,53 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       }).then((result) => {
         if (result.isConfirmed) {
           this.guardando.set(true);
+          this.operacionBuilderEnCurso.set('publicar');
           this.service.publicarVersionFormulario(version.verId).subscribe({
             next: () => {
-              this.guardando.set(false);
               this.globalState.limpiarError();
               this.mostrarMensaje('Versión publicada y establecida como vigente correctamente.');
               this.cargarVersiones();
               this.cargarVersionVigentePorFamilia(this.familiaSeleccionada());
+
+              if (this.versionEditando()?.verId === version.verId) {
+                this.service.obtenerVersionFormulario(version.verId).subscribe({
+                  next: versionFresca => {
+                    this.guardando.set(false);
+                    this.operacionBuilderEnCurso.set(null);
+                    this.versionEditando.set(versionFresca);
+                    this.soloLecturaDefinicion.set(
+                      !this.esAdministrador() || versionFresca.verVigente || versionFresca.verEstado !== 'DRAFT'
+                    );
+                    this.definicionTecnica = this.formatearDefinicion(versionFresca.verJson);
+                  },
+                  error: err => {
+                    this.guardando.set(false);
+                    this.operacionBuilderEnCurso.set(null);
+                    this.mostrarError(this.obtenerMensajeError(err, 'No se pudo refrescar el estado de la versión tras la publicación.'));
+                    this.versionEditando.set(null);
+                  }
+                });
+              } else {
+                this.guardando.set(false);
+                this.operacionBuilderEnCurso.set(null);
+              }
             },
             error: error => {
               this.guardando.set(false);
+              this.operacionBuilderEnCurso.set(null);
               this.mostrarError(this.obtenerMensajeError(error, 'No se pudo publicar la versión del formulario.'));
             }
           });
+        } else {
+          this.guardando.set(false);
+          this.operacionBuilderEnCurso.set(null);
         }
       });
     });
   }
 
   cambiarVigenciaVersion(version: VersionFormularioDto, vigente: boolean): void {
+    if (!this.esAdministrador()) return;
     const accion = vigente ? 'activar' : 'desactivar';
     import('sweetalert2').then(Swal => {
       Swal.default.fire({
@@ -1492,6 +1647,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   eliminarVersionFormulario(version: VersionFormularioDto): void {
+    if (!this.esAdministrador()) return;
     if (version.verEstado !== 'DRAFT' || version.verVigente) {
       this.mostrarError('Las versiones publicadas forman parte del historial y no pueden eliminarse. Para modificar, clone la versión a un nuevo borrador.');
       return;
@@ -1528,31 +1684,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  abrirModalCrearFormulario(): void {
-    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
-    this.nuevoFormularioCodigo = famObj?.famCodigo || 'MATRIZ_NUEVA';
-    this.nuevoFormularioNombre = famObj?.famNombre || 'Nueva Matriz de Riesgos';
-    this.errorModal.set(null);
-    this.globalState.limpiarError();
-    this.modalFormularioAbierto.set(true);
+  cerrarDefinicion(): void {
+    this.versionEditando.set(null);
+    this.mostrarDetalleComoContexto();
+    // Restore focus immediately and after the builder DOM is removed. The
+    // second pass avoids losing focus to body during the conditional render.
+    this.detalleFamiliaRef?.instance.enfocarContexto();
+    setTimeout(() => this.detalleFamiliaRef?.instance.enfocarContexto(), 0);
   }
 
-  cerrarModalFormulario(): void {
-    this.modalFormularioAbierto.set(false);
-    this.errorModal.set(null);
-    this.globalState.limpiarError();
-  }
-
-  guardarNuevoFormulario(): void {
-    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
-    if (!famObj) {
-      this.errorModal.set('Seleccione una familia válida para crear el formulario.');
+  crearNuevaVersionDesdeDetalle(familia: FamiliaFormularioDto): void {
+    if (!this.esAdministrador()) return;
+    if (!familia || familia.famId <= 0) {
+      this.mostrarError('No se encontró la familia para crear la nueva versión.');
       return;
     }
 
     const plantillaBase = {
-      codigoFormulario: this.nuevoFormularioCodigo.trim().toUpperCase(),
-      nombreFormulario: this.nuevoFormularioNombre.trim(),
+      codigoFormulario: familia.famCodigo.trim().toUpperCase(),
+      nombreFormulario: familia.famNombre.trim(),
       version: "1.0",
       secciones: [
         {
@@ -1585,18 +1735,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     };
 
     this.guardando.set(true);
-    this.errorModal.set(null);
     this.globalState.limpiarError();
 
     this.service.crearBorradorFormulario(
-      famObj.famId,
-      this.nuevoFormularioCodigo.trim().toUpperCase(),
+      familia.famId,
+      familia.famCodigo.trim().toUpperCase(),
       JSON.stringify(plantillaBase)
     ).subscribe({
       next: verId => {
         this.guardando.set(false);
-        this.modalFormularioAbierto.set(false);
-        this.errorModal.set(null);
         this.globalState.limpiarError();
         this.mostrarMensaje(`Formulario borrador creado exitosamente con ID #${verId}.`);
         this.cargarVersiones();
@@ -1604,7 +1751,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       error: error => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.errorModal.set(this.obtenerMensajeError(error, 'No se pudo crear el borrador del formulario.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo crear el borrador del formulario.'));
       }
     });
   }

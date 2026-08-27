@@ -1,5 +1,5 @@
 <main class="form-builder-region form-builder-canvas" data-form-builder-region="canvas" aria-label="Lienzo del formulario">
-  <div class="h-full overflow-y-auto custom-scrollbar bg-slate-50 p-5 sm:p-6 space-y-5">
+  <div class="form-builder-canvas__scroll h-full overflow-y-auto custom-scrollbar space-y-4 p-4 sm:p-[18px]">
     @if (secciones.length === 0) {
       <div class="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-12 text-center shadow-sm">
         <p class="text-sm font-semibold text-slate-600">No hay secciones en este formulario.</p>
@@ -12,10 +12,18 @@
     }
 
     @for (sec of secciones; track sec.id) {
-      <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all"
-               [class.ring-2]="seccionActivaId === sec.id"
-               [class.ring-blue-500\/40]="seccionActivaId === sec.id">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4"
+      <section class="form-builder-section overflow-hidden rounded-xl border bg-white shadow-sm transition-all"
+               [class.border-blue-500]="seccionActivaId === sec.id || seccionArrastreSobreId() === sec.id"
+               [class.ring-4]="seccionArrastreSobreId() === sec.id"
+               [class.ring-blue-500\/20]="seccionArrastreSobreId() === sec.id"
+               [class.border-slate-200]="seccionActivaId !== sec.id && seccionArrastreSobreId() !== sec.id"
+               [class.ring-2]="seccionActivaId === sec.id && seccionArrastreSobreId() !== sec.id"
+               [class.ring-blue-500\/40]="seccionActivaId === sec.id && seccionArrastreSobreId() !== sec.id"
+               (dragover)="onDragOver($event, sec.id)"
+               (dragleave)="onDragLeave($event, sec.id)"
+               (drop)="onDrop($event, sec.id)">
+        <!-- Header de Sección -->
+        <div class="form-builder-section__header flex min-h-[62px] flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-blue-50/55 via-white to-white px-5 py-3.5"
              (click)="seleccionarSeccion.emit(sec.id)"
              (keydown.enter)="seleccionarSeccion.emit(sec.id)"
              (keydown.space)="$event.preventDefault(); seleccionarSeccion.emit(sec.id)">
@@ -23,52 +31,91 @@
             <button type="button" class="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:rounded focus:bg-white focus:px-2 focus:py-1 focus:text-xs focus:shadow"
                     [attr.aria-label]="'Seleccionar seccion ' + sec.titulo"
                     (click)="$event.stopPropagation(); seleccionarSeccion.emit(sec.id)">Seleccionar sección</button>
-            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-xs font-bold text-blue-700">{{ sec.orden }}</span>
+            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-100/80 text-xs font-bold text-blue-700 shadow-[inset_0_0_0_1px_rgba(191,219,254,0.7)]">{{ sec.orden }}</span>
             <input [id]="'seccion-titulo-' + sec.id" type="text"
                    [ngModel]="sec.titulo"
                    (ngModelChange)="tituloSeccionChange.emit({ seccionId: sec.id, titulo: $event })"
                    (keydown.space)="$event.stopPropagation()"
                    [disabled]="soloLectura"
-                   class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-bold text-slate-950 transition-colors hover:border-slate-200 focus:border-blue-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-default disabled:opacity-100"
+                   class="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-[15px] font-bold leading-5 text-slate-950 transition-colors hover:border-slate-200 focus:border-blue-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-default disabled:opacity-100"
                    placeholder="Nombre de la sección">
           </div>
 
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <label class="text-[11px] font-medium text-slate-500" [for]="'seccion-columnas-' + sec.id">Columnas:</label>
-              <select [id]="'seccion-columnas-' + sec.id" [ngModel]="sec.columnasPorFila"
-                      (ngModelChange)="columnasSeccionChange.emit({ seccionId: sec.id, columnas: $event })"
-                      [disabled]="soloLectura"
-                      class="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 disabled:cursor-default disabled:opacity-100">
-                <option [value]="1">1 columna</option>
-                <option [value]="2">2 columnas</option>
-                <option [value]="3">3 columnas</option>
-                <option [value]="4">4 columnas</option>
-                <option [value]="6">6 columnas</option>
-              </select>
+          <div class="flex items-center gap-2">
+            <!-- Selector de columnas -->
+            <div class="flex items-center">
+              <label class="sr-only" [for]="'seccion-columnas-' + sec.id">Columnas por fila</label>
+              <div class="relative">
+                <select [id]="'seccion-columnas-' + sec.id" [ngModel]="sec.columnasPorFila"
+                        (ngModelChange)="columnasSeccionChange.emit({ seccionId: sec.id, columnas: +$event })"
+                        [disabled]="soloLectura"
+                        class="form-builder-canvas__columns-control appearance-none rounded-xl border border-slate-200 bg-white py-2 pl-3 pr-9 text-sm font-semibold text-slate-700 hover:border-slate-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-default disabled:opacity-100 shadow-sm">
+                  <option [value]="1">1 columna</option>
+                  <option [value]="2">2 columnas</option>
+                  <option [value]="3">3 columnas</option>
+                  <option [value]="4">4 columnas</option>
+                  <option [value]="6">6 columnas</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400">
+                  <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
             </div>
 
-            @if (!soloLectura && secciones.length > 1) {
-              <button type="button" (click)="$event.stopPropagation(); eliminarSeccion.emit(sec.id)"
-                      class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600" title="Eliminar sección">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-              </button>
+            <!-- Acciones de sección -->
+             @if (!soloLectura) {
+               <button type="button" (click)="$event.stopPropagation(); duplicarSeccion.emit(sec.id)" class="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-blue-50 hover:text-blue-700" title="Duplicar sección" aria-label="Duplicar sección">
+                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+               </button>
+               <div class="relative" (click)="$event.stopPropagation()">
+                 <button type="button" (click)="toggleMenuSeccion($event, sec.id)" (keydown.escape)="menuSeccionAbiertaId.set(null)" class="rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800" title="Acciones de sección" aria-label="Acciones de sección" [attr.aria-expanded]="menuSeccionAbiertaId() === sec.id" [attr.aria-controls]="'menu-seccion-' + sec.id">⋮</button>
+                 @if (menuSeccionAbiertaId() === sec.id) {
+                   <div [id]="'menu-seccion-' + sec.id" class="absolute right-0 top-9 z-30 min-w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl" (click)="$event.stopPropagation()">
+                     <button type="button" (click)="ejecutarAccionSeccion($event, 'duplicar', sec.id)" class="form-builder-section__menu-item">Duplicar sección</button>
+                     <button type="button" [disabled]="$index === 0" (click)="ejecutarAccionSeccion($event, 'subir', sec.id)" class="form-builder-section__menu-item">Mover arriba</button>
+                     <button type="button" [disabled]="$index === secciones.length - 1" (click)="ejecutarAccionSeccion($event, 'bajar', sec.id)" class="form-builder-section__menu-item">Mover abajo</button>
+                     @if (secciones.length > 1) { <button type="button" (click)="ejecutarAccionSeccion($event, 'eliminar', sec.id)" class="form-builder-section__menu-item form-builder-section__menu-item--danger">Eliminar sección</button> }
+                   </div>
+                 }
+               </div>
+             }
+             @if (!soloLectura && secciones.length > 1) {
+              <div class="hidden flex items-center pl-1 border-l border-slate-200">
+                <button type="button" (click)="$event.stopPropagation(); eliminarSeccion.emit(sec.id)"
+                        class="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        title="Eliminar sección"
+                        aria-label="Eliminar sección">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
             }
           </div>
         </div>
 
-        <div class="p-5">
+        <!-- Body de Sección: Grid de Field Cards -->
+        <div class="form-builder-section__body p-[18px]">
           @if (sec.campos.length === 0) {
-            <div class="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/60 py-9 text-center">
-              <p class="text-xs font-medium text-slate-500">Sección vacía. Selecciona un control de la biblioteca para agregar campos.</p>
-            </div>
+            @if (seccionArrastreSobreId() === sec.id) {
+              <div class="drop-zone flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blue-500 bg-blue-50/90 py-6 text-center text-xs font-bold text-blue-700 animate-pulse">
+                <svg class="h-5 w-5 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                <span>Suelta el campo en «{{ sec.titulo }}»</span>
+              </div>
+            } @else {
+              <div class="rounded-xl border-2 border-dashed border-blue-200/70 bg-blue-50/20 py-6 px-4 text-center">
+                <div class="mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 mb-1.5">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                </div>
+                <p class="text-xs font-medium text-slate-600">Arrastra un campo desde el panel izquierdo o haz clic para seleccionar</p>
+              </div>
+            }
           } @else {
-            <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + sec.columnasPorFila + ', minmax(0, 1fr))'">
+            <div class="form-builder-fields-grid grid gap-3.5" [style.grid-template-columns]="'repeat(' + sec.columnasPorFila + ', minmax(0, 1fr))'">
               @for (cmp of sec.campos; track cmp.id; let idx = $index) {
                 <article (click)="seleccionarCampo.emit(cmp)"
                          (keydown.enter)="seleccionarCampo.emit(cmp)"
                          (keydown.space)="$event.preventDefault(); seleccionarCampo.emit(cmp)"
-                         class="group relative cursor-pointer rounded-xl border bg-white p-4 shadow-sm transition-all duration-200 hover:border-blue-300 hover:shadow-md"
+                         class="form-builder-field-card group relative cursor-pointer rounded-xl border bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-150 hover:border-slate-300 hover:shadow-md"
+                         [style.grid-column]="'span ' + (cmp.anchoColumnas || 1) + ' / span ' + (cmp.anchoColumnas || 1)"
                          [class.border-blue-500]="campoActivoId === cmp.id"
                          [class.ring-2]="campoActivoId === cmp.id"
                          [class.ring-blue-500\/20]="campoActivoId === cmp.id"
@@ -77,38 +124,98 @@
                           [attr.aria-label]="'Seleccionar campo ' + cmp.etiqueta"
                           (click)="$event.stopPropagation(); seleccionarCampo.emit(cmp)">Seleccionar campo</button>
 
+                  <!-- Encabezado de Field Card: Clave/Tipo y Acciones Agrupadas -->
                   <div class="mb-3 flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-                    <span class="min-w-0 truncate rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-slate-500">{{ cmp.clave }} · {{ cmp.tipo }}</span>
+                    <span class="min-w-0 truncate rounded-md bg-slate-50 border border-slate-100 px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-slate-500">{{ cmp.clave }} · {{ cmp.tipo }}</span>
                     @if (!soloLectura) {
-                      <div class="flex shrink-0 items-center gap-1 opacity-80 transition-opacity group-hover:opacity-100">
-                        <button type="button" [disabled]="idx === 0" (click)="$event.stopPropagation(); reordenarCampo.emit({ seccionId: sec.id, index: idx, direccion: 'subir' })" class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30" title="Mover arriba">▲</button>
-                        <button type="button" [disabled]="idx === sec.campos.length - 1" (click)="$event.stopPropagation(); reordenarCampo.emit({ seccionId: sec.id, index: idx, direccion: 'bajar' })" class="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30" title="Mover abajo">▼</button>
-                        <button type="button" (click)="$event.stopPropagation(); eliminarCampo.emit({ seccionId: sec.id, campoId: cmp.id })" class="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600" title="Eliminar campo">✕</button>
+                      <div class="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-200 bg-slate-50/50 p-0.5 opacity-70 transition-opacity group-hover:opacity-100 shadow-sm">
+                        <button type="button" [disabled]="idx === 0" (click)="$event.stopPropagation(); reordenarCampo.emit({ seccionId: sec.id, index: idx, direccion: 'subir' })" class="rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-white hover:text-slate-800 disabled:opacity-25 disabled:hover:bg-transparent" title="Mover arriba" aria-label="Mover campo arriba">▲</button>
+                        <button type="button" [disabled]="idx === sec.campos.length - 1" (click)="$event.stopPropagation(); reordenarCampo.emit({ seccionId: sec.id, index: idx, direccion: 'bajar' })" class="rounded px-1.5 py-0.5 text-xs text-slate-500 hover:bg-white hover:text-slate-800 disabled:opacity-25 disabled:hover:bg-transparent" title="Mover abajo" aria-label="Mover campo abajo">▼</button>
+                        <button type="button" (click)="$event.stopPropagation(); eliminarCampo.emit({ seccionId: sec.id, campoId: cmp.id })" class="rounded px-1.5 py-0.5 text-xs text-slate-400 hover:bg-red-50 hover:text-red-600" title="Eliminar campo" aria-label="Eliminar campo">✕</button>
                       </div>
                     }
                   </div>
 
+                  <!-- Contenido de Field Card: Etiqueta y Preview -->
                   <div>
-                    <label class="mb-1 block text-xs font-semibold text-slate-800" [for]="'preview-' + cmp.id">{{ cmp.etiqueta }} @if (cmp.obligatorio) {<span class="text-red-500">*</span>}</label>
+                    <label class="mb-1.5 block text-xs font-bold text-slate-900" [for]="'preview-' + cmp.id">
+                      {{ cmp.etiqueta }}
+                      @if (cmp.obligatorio) {<span class="text-red-500 font-bold ml-0.5">*</span>}
+                    </label>
                     @switch (cmp.tipo) {
-                      @case ('texto') { <input [id]="'preview-' + cmp.id" type="text" disabled placeholder="Texto libre..." class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"> }
-                      @case ('numero') { <input [id]="'preview-' + cmp.id" type="number" disabled placeholder="0.00" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"> }
-                      @case ('fecha') { <input [id]="'preview-' + cmp.id" type="date" disabled class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"> }
-                      @case ('texto-largo') { <textarea [id]="'preview-' + cmp.id" disabled rows="2" placeholder="Observaciones..." class="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"></textarea> }
-                      @case ('selector-catalogo') { <select [id]="'preview-' + cmp.id" disabled aria-label="Catalogo asociado" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"><option>-- Seleccione del catálogo ({{ cmp.codigoCatalogo || 'No configurado' }}) --</option></select> }
+                      @case ('texto') {
+                        <div class="relative">
+                          <input [id]="'preview-' + cmp.id" type="text" disabled [placeholder]="cmp.placeholder || ('Ingrese ' + (cmp.etiqueta || 'el texto'))" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                          <span class="pointer-events-none absolute right-2.5 top-2.5 text-[10px] text-slate-400 font-mono">0/255</span>
+                        </div>
+                      }
+                      @case ('numero') {
+                        <input [id]="'preview-' + cmp.id" type="number" disabled [placeholder]="cmp.placeholder || '0.00'" class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                      }
+                      @case ('fecha') {
+                        <input [id]="'preview-' + cmp.id" type="date" disabled class="w-full rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                      }
+                      @case ('texto-largo') {
+                        <textarea [id]="'preview-' + cmp.id" disabled rows="2" [placeholder]="cmp.placeholder || 'Área de texto...'" class="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700"></textarea>
+                      }
+                      @case ('selector-catalogo') {
+                        <div class="relative">
+                          <select [id]="'preview-' + cmp.id" disabled aria-label="Catalogo asociado" class="w-full appearance-none rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2 text-xs text-slate-700">
+                            <option>Seleccione del catálogo{{ cmp.codigoCatalogo ? ' (' + cmp.codigoCatalogo + ')' : '' }}</option>
+                          </select>
+                          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                          </div>
+                        </div>
+                      }
                       @case ('radio') {
-                        <div class="space-y-1"><label class="flex items-center gap-2 text-xs text-slate-600"><input [id]="'preview-' + cmp.id + '-radio-1'" type="radio" disabled checked [attr.aria-label]="cmp.etiqueta + ' opcion 1'"> Opción 1</label><label class="flex items-center gap-2 text-xs text-slate-600"><input [id]="'preview-' + cmp.id + '-radio-2'" type="radio" disabled [attr.aria-label]="cmp.etiqueta + ' opcion 2'"> Opción 2</label></div>
+                        <div class="space-y-1.5 pt-0.5">
+                          @if (cmp.opciones && cmp.opciones.length > 0) {
+                            @for (opc of cmp.opciones; track $index; let optIdx = $index) {
+                              <label class="flex items-center gap-2 text-xs font-medium text-slate-700">
+                                <input [id]="'preview-' + cmp.id + '-radio-' + optIdx" type="radio" disabled [checked]="optIdx === 0" [attr.aria-label]="cmp.etiqueta + ' ' + opc" class="text-blue-600">
+                                {{ opc }}
+                              </label>
+                            }
+                          } @else {
+                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-1'" type="radio" disabled checked [attr.aria-label]="cmp.etiqueta + ' opcion 1'" class="text-blue-600"> Opción 1</label>
+                            <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-radio-2'" type="radio" disabled [attr.aria-label]="cmp.etiqueta + ' opcion 2'" class="text-blue-600"> Opción 2</label>
+                          }
+                        </div>
                       }
                       @case ('catalogo-multiple') {
-                        <div class="space-y-1"><label class="flex items-center gap-2 text-xs text-slate-600"><input [id]="'preview-' + cmp.id + '-check-1'" type="checkbox" disabled checked [attr.aria-label]="cmp.etiqueta + ' elemento 1'"> Elemento 1 (Catálogo)</label><label class="flex items-center gap-2 text-xs text-slate-600"><input [id]="'preview-' + cmp.id + '-check-2'" type="checkbox" disabled [attr.aria-label]="cmp.etiqueta + ' elemento 2'"> Elemento 2 (Catálogo)</label></div>
+                        <div class="space-y-1.5 pt-0.5">
+                          <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-check-1'" type="checkbox" disabled checked [attr.aria-label]="cmp.etiqueta + ' elemento 1'" class="rounded text-blue-600"> Elemento 1 (Catálogo)</label>
+                          <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-check-2'" type="checkbox" disabled [attr.aria-label]="cmp.etiqueta + ' elemento 2'" class="rounded text-blue-600"> Elemento 2 (Catálogo)</label>
+                        </div>
                       }
-                      @case ('checkbox') { <label class="flex items-center gap-2 text-xs text-slate-700"><input [id]="'preview-' + cmp.id + '-check'" type="checkbox" disabled [attr.aria-label]="cmp.etiqueta"> Confirmar selección (Sí/No)</label> }
-                      @case ('formula') { <div class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 p-2 font-mono text-xs text-slate-700"><span>f(x) =</span><span class="font-semibold text-blue-700">{{ cmp.formula || 'Sin fórmula asignada' }}</span></div> }
+                      @case ('checkbox') {
+                        <div class="pt-0.5">
+                          <label class="flex items-center gap-2 text-xs font-medium text-slate-700"><input [id]="'preview-' + cmp.id + '-check'" type="checkbox" disabled [attr.aria-label]="cmp.etiqueta" class="rounded text-blue-600"> Confirmar selección (Sí/No)</label>
+                        </div>
+                      }
+                      @case ('formula') {
+                        <div class="flex items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 p-2.5 font-mono text-xs text-amber-900">
+                          <span class="font-bold text-amber-700">f(x) =</span>
+                          <span class="font-semibold text-slate-800">{{ cmp.formula || 'Sin fórmula asignada' }}</span>
+                        </div>
+                      }
                     }
                   </div>
                 </article>
               }
             </div>
+
+            <!-- Drop-zone compacta al final de sección poblada -->
+            <div class="drop-zone mt-4 flex min-h-[66px] items-center justify-center gap-2 rounded-xl border border-dashed border-blue-200 bg-blue-50/25 px-4 py-3 text-center text-xs font-medium text-slate-500 transition-colors"
+                 [class.border-blue-500]="seccionArrastreSobreId() === sec.id"
+                 [class.bg-blue-50]="seccionArrastreSobreId() === sec.id"
+                 [class.text-blue-700]="seccionArrastreSobreId() === sec.id"
+                 [class.font-bold]="seccionArrastreSobreId() === sec.id"
+                 [attr.aria-disabled]="soloLectura ? 'true' : null">
+                <svg class="h-4 w-4 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                <span>{{ seccionArrastreSobreId() === sec.id ? 'Suelta el campo en «' + sec.titulo + '»' : 'Arrastra un campo desde el panel izquierdo o haz clic para seleccionar' }}</span>
+              </div>
           }
         </div>
       </section>

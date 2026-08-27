@@ -14,28 +14,24 @@
       <dl class="px-2 border-l border-gray-200"><dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Campos</dt><dd class="mt-1 font-bold text-ihss-700">{{ totalCampos() }}</dd></dl>
     </div>
   </header>
-  <!-- Tarjetas de Métricas Coloreadas Estilo Monitoreo de Listas -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-    <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total Evaluaciones</p>
-      <p class="mt-2 text-3xl font-bold text-gray-900">{{ totalRegistros() }}</p>
-      <p class="text-xs text-gray-500">Total según la consulta actual</p>
-    </article>
-    <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">En Borrador</p>
-      <p class="mt-2 text-3xl font-bold text-amber-700">{{ contarEvaluacionesPorEstado('BORRADOR') }}</p>
-      <p class="text-xs text-amber-700/80">Pendientes en la página actual</p>
-    </article>
-    <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">En Revisión</p>
-      <p class="mt-2 text-3xl font-bold text-blue-700">{{ contarEvaluacionesPorEstado('EN_REVISION') }}</p>
-      <p class="text-xs text-blue-700/80">En análisis en la página actual</p>
-    </article>
-    <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
-      <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Aprobadas</p>
-      <p class="mt-2 text-3xl font-bold text-emerald-700">{{ contarEvaluacionesPorEstado('APROBADA') }}</p>
-      <p class="text-xs text-emerald-700/80">Oficiales en la página actual</p>
-    </article>
+  <!-- KPIs contextuales de la pestaña activa -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" data-ui-kpis-context>
+    @if (tab() === 'evaluaciones') {
+      <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total evaluaciones</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalRegistros() }}</p><p class="text-xs text-gray-500">Total según la consulta actual</p></article>
+      <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">En borrador</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ contarEvaluacionesPorEstado('BORRADOR') }}</p><p class="text-xs text-amber-700/80">Pendientes en la página actual</p></article>
+      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">En revisión</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ contarEvaluacionesPorEstado('EN_REVISION') }}</p><p class="text-xs text-blue-700/80">En análisis en la página actual</p></article>
+      <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Aprobadas</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ contarEvaluacionesPorEstado('APROBADA') }}</p><p class="text-xs text-emerald-700/80">Oficiales en la página actual</p></article>
+    } @else if (tab() === 'plantillas') {
+      <article class="rounded-xl border border-blue-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Total familias</p><p class="mt-2 text-3xl font-bold text-gray-900" data-ui-fam-kpi="total">{{ totalFamilias() }}</p><p class="text-xs text-gray-500">Familias registradas</p></article>
+      <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Activas</p><p class="mt-2 text-3xl font-bold text-emerald-700" data-ui-fam-kpi="activas">{{ totalFamiliasActivas() }}</p><p class="text-xs text-emerald-700/80">Disponibles para uso</p></article>
+      <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
+      <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
+    } @else {
+      <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total registros</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ consolidadoFiltrado().length }}</p><p class="text-xs text-gray-500">Filas consolidadas visibles</p></article>
+      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ consolidadoFiltrado().length }}</p><p class="text-xs text-blue-700/80">Registros con estado</p></article>
+      <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ consolidadoNivelAltoCritico() }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
+      <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
+    }
   </div>
 
   @if (error(); as errorTexto) {
@@ -288,13 +284,33 @@
           </button>
         </div>
       </div>
+      <div class="grid grid-cols-1 gap-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4 lg:grid-cols-[minmax(260px,1fr)_200px_120px_auto] lg:items-end" data-ui-filter-block="consolidado">
+        <div>
+          <label for="consolidado-buscar" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Buscar</label>
+          <input id="consolidado-buscar" type="search" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código, área o dueño" [ngModel]="filtroBuscarConsolidado()" (ngModelChange)="filtroBuscarConsolidado.set($event); paginaConsolidado.set(1)" />
+        </div>
+        <div>
+          <label for="consolidado-estado" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
+          <select id="consolidado-estado" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoConsolidado()" (ngModelChange)="filtroEstadoConsolidado.set($event); paginaConsolidado.set(1)">
+            <option value="TODOS">Todos los estados</option>
+            @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ estado }}</option> }
+          </select>
+        </div>
+        <div>
+          <label for="consolidado-por-pagina" class="mb-1.5 block whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-500">Por página</label>
+          <select id="consolidado-por-pagina" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="registrosPorPaginaConsolidado()" (ngModelChange)="cambiarRegistrosPorPaginaConsolidado($event)">
+            @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
+          </select>
+        </div>
+        <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="filtroBuscarConsolidado.set(''); filtroEstadoConsolidado.set('TODOS')">Limpiar filtros</button>
+      </div>
       <div class="overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
             <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Área</th><th class="px-6 py-3">Dueño</th><th class="px-6 py-3">VRI</th><th class="px-6 py-3">Inherente</th><th class="px-6 py-3">VRR</th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3">Estado</th></tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
-            @for (fila of consolidado(); track fila.evaluacionId) {
+            @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
               <tr class="hover:bg-gray-50/50 transition-colors">
                 <td class="px-6 py-4 font-bold text-gray-900">{{ fila.codigoRiesgo }}</td>
                 <td class="px-6 py-4">{{ fila.areaPrincipal }}</td>
@@ -310,28 +326,23 @@
           </tbody>
         </table>
       </div>
+      <div class="flex flex-col gap-3 border-t border-gray-100 pt-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+        <p>Mostrando <strong class="text-gray-900">{{ consolidadoFiltrado().length === 0 ? 0 : ((paginaConsolidado() - 1) * registrosPorPaginaConsolidado()) + 1 }}–{{ consolidadoFiltrado().length === 0 ? 0 : (paginaConsolidado() * registrosPorPaginaConsolidado() > consolidadoFiltrado().length ? consolidadoFiltrado().length : paginaConsolidado() * registrosPorPaginaConsolidado()) }}</strong> de <strong class="text-gray-900">{{ consolidadoFiltrado().length }}</strong> registros</p>
+        <div class="flex items-center gap-2">
+          <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" [disabled]="paginaConsolidado() <= 1 || totalPaginasConsolidado() === 0" (click)="cambiarPaginaConsolidado(paginaConsolidado() - 1)">Anterior</button>
+          <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasConsolidado() === 0 ? 0 : paginaConsolidado() }} / {{ totalPaginasConsolidado() }}</span>
+          <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" [disabled]="totalPaginasConsolidado() === 0 || paginaConsolidado() >= totalPaginasConsolidado()" (click)="cambiarPaginaConsolidado(paginaConsolidado() + 1)">Siguiente</button>
+        </div>
+      </div>
     </section>
   }
 
   @if (tab() === 'plantillas') {
-    @if (!mostrandoVersionesFamilia()) {
       <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-6" data-ui-fam="gestor-principal">
         <div class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div class="flex min-w-0 items-start gap-3">
-              <div class="group relative shrink-0">
-                <button type="button"
-                        class="mt-0.5 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-                        aria-label="Regresar a Evaluaciones"
-                        title="Regresar a Evaluaciones"
-                        data-ui-fam-action="regresar"
-                        (click)="seleccionarTab('evaluaciones')">
-                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-                </button>
-                <span class="pointer-events-none absolute left-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Evaluaciones</span>
-              </div>
+            <div class="flex min-w-0 items-start">
               <div>
-                <p class="text-xs font-bold uppercase tracking-[0.16em] text-ihss-600">Plantillas · Administración dinámica</p>
                 <h2 class="mt-1 text-2xl font-bold text-gray-900">Familias de Formularios</h2>
                 <p class="mt-1 text-sm text-gray-500">Gestione las familias institucionales de formularios, su estado y acceso a versiones.</p>
               </div>
@@ -345,6 +356,7 @@
           </div>
         </div>
 
+        @if (false) {
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores de familias de formularios">
           <article class="rounded-2xl border border-blue-100 bg-white p-5 shadow-sm">
             <div class="flex items-center gap-4">
@@ -362,9 +374,10 @@
             <div class="flex items-center gap-4"><span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span><div><p class="text-xs font-semibold text-gray-500">Total versiones</p><p class="mt-1 text-3xl font-bold text-gray-900" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p></div></div>
           </article>
         </div>
+        }
 
         <div class="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-          <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_220px_220px_auto] lg:items-end">
+          <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(260px,1fr)_180px_180px_120px_auto] lg:items-end">
             <div>
               <label for="gestor-buscar-familia" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Buscar</label>
               <div class="relative">
@@ -384,7 +397,13 @@
                 <option value="TODAS">Todas</option><option value="VIGENTES">Con vigente</option><option value="SIN_VIGENTE">Sin vigente</option>
               </select>
             </div>
-            <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de familias" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()">Limpiar</button>
+            <div>
+              <label for="familias-por-pagina-superior" class="mb-1.5 block whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-500">Por página</label>
+              <select id="familias-por-pagina-superior" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="registrosPorPaginaFamilias()" (ngModelChange)="cambiarRegistrosPorPaginaFamilias($event)">
+                @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
+              </select>
+            </div>
+            <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de familias" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()">Limpiar filtros</button>
           </div>
         </div>
 
@@ -462,7 +481,7 @@
                             }
                           }
                           <div class="group relative">
-                            <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-ihss-900 shadow-sm transition-colors hover:bg-ihss-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Ver versiones" title="Ver versiones" (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">
+                              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-300 bg-white text-ihss-900 shadow-sm transition-colors hover:bg-ihss-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Ver versiones" title="Ver versiones" (click)="abrirModalVerFamilia(fam)">
                               <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </button>
                             <span class="pointer-events-none absolute bottom-full right-0 z-40 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Ver versiones</span>
@@ -479,8 +498,6 @@
             <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
               <p>Mostrando <strong class="text-gray-900">{{ familiasFiltradas().length === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ familiasFiltradas().length === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > familiasFiltradas().length ? familiasFiltradas().length : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ familiasFiltradas().length }}</strong> familias</p>
               <div class="flex flex-wrap items-center gap-2">
-                <label for="familias-por-pagina" class="font-semibold text-gray-500">Por página</label>
-                <select id="familias-por-pagina" class="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 font-bold text-gray-700" [ngModel]="registrosPorPaginaFamilias()" (ngModelChange)="cambiarRegistrosPorPaginaFamilias($event)">@for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }</select>
                 <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
                 <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasFamilias() === 0 ? 0 : paginaFamilias() }} / {{ totalPaginasFamilias() }}</span>
                 <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" [disabled]="totalPaginasFamilias() === 0 || paginaFamilias() >= totalPaginasFamilias()" (click)="cambiarPaginaFamilias(paginaFamilias() + 1)">Siguiente</button>
@@ -489,98 +506,36 @@
           }
         </div>
       </section>
-    } @else {
-      <section id="panel-plantillas" role="tabpanel" aria-labelledby="tab-plantillas" class="space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm" data-ui-fam="versiones-transicion">
-        <div class="flex flex-col gap-4 border-b border-gray-100 pb-5 lg:flex-row lg:items-center lg:justify-between">
-          <div class="flex items-start gap-3">
-            <div class="group relative shrink-0">
-              <button type="button" class="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Regresar a Familias de Formularios" title="Regresar a Familias de Formularios" data-ui-fam-version-action="regresar" (click)="volverAGestorFamilias()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-              <span class="pointer-events-none absolute left-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Familias de Formularios</span>
-            </div>
-            <div><p class="text-xs font-bold uppercase tracking-wider text-ihss-600">Familias de Formularios · {{ familiaSeleccionada() }}</p><h2 class="text-lg font-bold text-gray-900">Versiones del Formulario</h2><p class="text-xs text-gray-500">Vista transitoria de versiones; se integrará al modal Detalle en UI-FAM.2.</p></div>
-          </div>
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center gap-2"><label for="selector-familia" class="text-xs font-bold text-gray-700">Familia:</label><select id="selector-familia" class="max-w-[320px] min-w-[220px] rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none" [ngModel]="familiaSeleccionada()" (ngModelChange)="seleccionarFamilia($event)">@for (fam of familias(); track fam.famId) { <option [value]="fam.famCodigo" class="text-xs">{{ fam.famNombre }}{{ fam.famActivo ? '' : ' [Inactiva]' }}</option> }</select></div>
-            <button type="button" class="h-9 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm text-xs" title="Crear una nueva versión" (click)="abrirModalCrearFormulario()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Nueva versión</button>
-          </div>
-        </div>
-
-        @if (cargandoPlantillas()) {
-          <div class="rounded-xl border border-gray-100 bg-slate-50/50 p-8 text-center text-xs text-gray-500 flex items-center justify-center gap-2"><svg class="h-5 w-5 animate-spin text-ihss-900" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg><span class="font-semibold text-gray-700">Cargando versiones...</span></div>
-        } @else if (errorPlantillas(); as errorPlant) {
-          <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3"><span>{{ errorPlant }}</span><button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700" title="Reintentar carga de versiones" (click)="cargarVersiones()">Reintentar</button></div>
-        } @else {
-          <div class="grid gap-3">
-            @for (version of versiones(); track version.verId) {
-              <article class="flex flex-col gap-3 rounded-xl border p-4 lg:flex-row lg:items-center lg:justify-between transition-all" [class.border-emerald-300]="version.verVigente" [class.bg-emerald-50\/30]="version.verVigente" [class.border-gray-200]="!version.verVigente">
-                <div class="space-y-1">
-                  <div class="flex items-center gap-2"><span class="rounded-md bg-ihss-900 px-2.5 py-0.5 font-mono text-xs font-bold text-white shadow-xs">ID #{{ version.verId }}</span><h3 class="font-bold text-gray-900 text-base">{{ version.verCodigo }} · v{{ version.verVersion }}</h3></div>
-                  <div class="flex items-center gap-2 text-xs pt-0.5"><span class="rounded-md px-2.5 py-0.5 font-semibold" [class.bg-blue-50]="version.verEstado === 'DRAFT'" [class.text-blue-700]="version.verEstado === 'DRAFT'" [class.bg-purple-50]="version.verEstado === 'PUBLISHED'" [class.text-purple-700]="version.verEstado === 'PUBLISHED'">{{ version.verEstado }}</span><span class="rounded-md px-2.5 py-0.5 font-semibold" [class.bg-emerald-50]="version.verVigente" [class.text-emerald-700]="version.verVigente" [class.bg-gray-100]="!version.verVigente" [class.text-gray-500]="!version.verVigente">{{ version.verVigente ? 'Vigente' : 'No vigente' }}</span></div>
-                </div>
-                <div class="flex flex-wrap items-center gap-1.5" aria-label="Acciones de la versión">
-                  <div class="group relative">
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-100 hover:text-ihss-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Ver definición" title="Ver definición" (click)="abrirDefinicion(version, true)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
-                    <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Ver definición</span>
-                  </div>
-                  @if (version.verEstado === 'DRAFT' && !version.verVigente) {
-                    <div class="group relative">
-                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-200 bg-blue-50/50 text-blue-700 shadow-sm transition-colors hover:bg-blue-100 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Editar definición" title="Editar definición" (click)="abrirDefinicion(version, false)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-                      <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Editar definición</span>
-                    </div>
-                  }
-                  <div class="group relative">
-                    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-violet-200 bg-violet-50/50 text-violet-700 shadow-sm transition-colors hover:bg-violet-100 hover:text-violet-900 focus:outline-none focus:ring-2 focus:ring-violet-500/30" aria-label="Clonar versión" title="Clonar versión" (click)="clonarVersion(version)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg></button>
-                    <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Clonar versión</span>
-                  </div>
-                  @if (version.verEstado === 'DRAFT') {
-                    <div class="group relative">
-                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-blue-600 bg-blue-600 text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Publicar versión" title="Publicar versión" (click)="publicarVersion(version)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14"/></svg></button>
-                      <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Publicar versión</span>
-                    </div>
-                  } @else if (version.verEstado === 'PUBLISHED') {
-                    <div class="group relative">
-                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border shadow-sm transition-colors focus:outline-none focus:ring-2" [class.border-amber-200]="version.verVigente" [class.bg-amber-50]="version.verVigente" [class.text-amber-700]="version.verVigente" [class.hover:bg-amber-100]="version.verVigente" [class.focus:ring-amber-500/30]="version.verVigente" [class.border-emerald-200]="!version.verVigente" [class.bg-emerald-50]="!version.verVigente" [class.text-emerald-700]="!version.verVigente" [class.hover:bg-emerald-100]="!version.verVigente" [class.focus:ring-emerald-500/30]="!version.verVigente" [attr.aria-label]="version.verVigente ? 'Desactivar versión' : 'Activar versión'" [attr.title]="version.verVigente ? 'Desactivar versión' : 'Activar versión'" (click)="cambiarVigenciaVersion(version, !version.verVigente)">
-                        @if (version.verVigente) { <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> } @else { <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> }
-                      </button>
-                      <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">{{ version.verVigente ? 'Desactivar versión' : 'Activar versión' }}</span>
-                    </div>
-                  }
-                  @if (version.verEstado === 'DRAFT' && !version.verVigente) {
-                    <div class="group relative">
-                      <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50/50 text-red-600 shadow-sm transition-colors hover:bg-red-100 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500/30" aria-label="Eliminar versión" title="Eliminar versión" (click)="eliminarVersionFormulario(version)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
-                      <span class="pointer-events-none absolute bottom-full right-0 z-50 mb-2 whitespace-nowrap rounded-lg bg-gray-950 px-2.5 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Eliminar versión</span>
-                    </div>
-                  }
-                </div>
-              </article>
-            } @empty {
-              <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50/70 p-10 text-center"><h4 class="font-bold text-gray-800 text-sm">Sin versiones en esta familia</h4><p class="mt-1 max-w-sm text-xs text-gray-500">Esta familia aún no cuenta con versiones registradas.</p><button type="button" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm" title="Crear la primera versión" (click)="abrirModalCrearFormulario()">+ Crear primera versión</button></div>
-            }
-          </div>
-        }
-      </section>
-    }
   }
 
   @if (versionEditando(); as versionActual) {
-     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-builder">
-      <div class="modal-container-card form-builder-modal-card">
+     <dialog open
+           class="modal-backdrop-overlay form-builder-modal-overlay"
+             aria-modal="true"
+             aria-labelledby="titulo-modal-builder"
+             (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card modal-size-workspace">
         <app-form-builder class="w-full h-full flex flex-col min-h-0"
                           [jsonDefinicion]="definicionTecnica"
                           [soloLectura]="soloLecturaDefinicion()"
                           [esAdministrador]="esAdministrador()"
                           [versionCodigo]="versionActual.verCodigo"
                           [versionNumero]="versionActual.verVersion"
+                          [estadoVersion]="versionActual.verEstado"
+                          [puedePublicar]="!soloLecturaDefinicion() && versionActual.verEstado === 'DRAFT' && !versionActual.verVigente && esAdministrador()"
+                          [procesando]="guardando()"
+                          [operacion]="operacionBuilderEnCurso()"
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
-                          (cerrar)="versionEditando.set(null)">
+                          (publicar)="publicarVersion(versionActual)"
+                          (cerrar)="cerrarDefinicion()">
         </app-form-builder>
        </div>
      </dialog>
   }
 
   @if (modalGestorFamiliasAbierto()) {
-    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="cerrarModalGestorFamilias()">
-      <div class="modal-container-card w-full max-w-6xl max-h-[90vh]">
+<dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card modal-size-xl">
         <div class="modal-header-institutional">
           <div class="flex items-center gap-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-ihss-900/10 text-ihss-900">
@@ -723,7 +678,7 @@
                                 class="p-1.5 text-ihss-900 hover:text-white hover:bg-ihss-900 rounded-lg transition-colors border border-gray-300 bg-white shadow-2xs"
                                 aria-label="Ver versiones"
                                 title="Ver versiones"
-                                (click)="seleccionarFamiliaDesdeGestor(fam.famCodigo)">
+                              (click)="abrirModalVerFamilia(fam)">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                         </button>
                       </div>
@@ -749,8 +704,8 @@
   }
 
   @if (modalVerFamiliaAbierto(); as famVer) {
-    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="cerrarModalVerFamilia()">
-      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
+<dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
+      <div class="modal-container-card modal-size-md">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-ver-familia" class="text-base sm:text-lg font-bold text-gray-900">Familia: {{ famVer.famNombre }}</h3>
@@ -808,7 +763,7 @@
          </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm" (click)="seleccionarFamiliaDesdeGestor(famVer.famCodigo); cerrarModalVerFamilia()">Ver versiones de esta familia</button>
+        <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm" (click)="abrirDetalleVersionesDesdeFamilia(famVer)">Ver versiones de esta familia</button>
           <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalVerFamilia()">Cerrar</button>
         </div>
       </div>
@@ -817,7 +772,7 @@
 
   @if (modalFamiliaAbierto()) {
      <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-familia">
-      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
+      <div class="modal-container-card modal-size-md">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-familia" class="text-base sm:text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
@@ -871,62 +826,9 @@
      </dialog>
   }
 
-  @if (modalFormularioAbierto()) {
-     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-formulario">
-      <div class="modal-container-card w-full max-w-lg max-h-[90vh]">
-        <div class="modal-header-institutional">
-          <div class="flex min-w-0 items-center gap-3">
-            <div class="group relative shrink-0">
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" aria-label="Regresar a Versiones del Formulario" title="Regresar a Versiones del Formulario" (click)="cerrarModalFormulario()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
-              <span class="pointer-events-none absolute left-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Versiones del Formulario</span>
-            </div>
-            <div>
-              <h3 id="titulo-modal-formulario" class="text-base sm:text-lg font-bold text-gray-900">Nuevo Formulario de Matriz</h3>
-              <p class="text-xs text-gray-500">Se asociará a la familia seleccionada: <strong class="text-gray-900">{{ familiaSeleccionada() }}</strong></p>
-            </div>
-          </div>
-          <div class="group relative">
-            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" title="Cerrar ventana" (click)="cerrarModalFormulario()">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-            <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Cerrar ventana</span>
-          </div>
-        </div>
-
-        <div class="modal-body-scrollable space-y-4">
-          @if (errorModal(); as errorModalTexto) {
-            <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
-              <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
-              <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" title="Cerrar mensaje de error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-            </div>
-          }
-
-          <div class="space-y-4 text-sm">
-            <div>
-              <label for="form-codigo" class="block font-bold text-gray-700 mb-1">Código del Formulario</label>
-              <input id="form-codigo" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioCodigo" placeholder="Ej. MATRIZ_RIESGOS_LAFT" />
-              <p class="mt-1 text-xs text-gray-500">Identificador técnico del formulario dentro de la familia.</p>
-            </div>
-
-            <div>
-              <label for="form-nombre" class="block font-bold text-gray-700 mb-1">Nombre Descriptivo</label>
-              <input id="form-nombre" type="text" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-ihss-600 focus:outline-none" [(ngModel)]="nuevoFormularioNombre" placeholder="Ej. Matriz de Riesgos LA/FT v1" />
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer-institutional">
-          <button type="button" class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" title="Regresar a Versiones del Formulario" (click)="cerrarModalFormulario()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>Regresar</button>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" title="Crear el borrador de la nueva versión" [disabled]="guardando() || !nuevoFormularioCodigo.trim() || !nuevoFormularioNombre.trim()" (click)="guardarNuevoFormulario()">{{ guardando() ? 'Creando...' : 'Crear Borrador' }}</button>
-        </div>
-      </div>
-     </dialog>
-  }
-
   @if (modalVerAbierto()) {
-    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
-      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+  <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver">
+    <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-ver" class="text-base sm:text-lg font-bold text-gray-900">
@@ -968,18 +870,15 @@
                 <span class="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Sección {{ seccion.orden }}</span>
               </h4>
 
-              <div class="grid gap-3"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+              <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 2) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     [modoLectura]="true"
-                    idPrefix="campo-view" />
+                    idPrefix="campo-view"
+                    [style.grid-column]="'span ' + (campo.anchoColumnas || 1)" />
                 }
               </div>
             </section>
@@ -997,7 +896,7 @@
 
   @if (modalEditarAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-editar">
-      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+      <div class="modal-container-card modal-size-workspace">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-editar" class="text-base sm:text-lg font-bold text-gray-900">
@@ -1040,11 +939,7 @@
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
-              <div class="grid gap-4"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+              <div class="grid gap-4" [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 2) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
@@ -1075,7 +970,7 @@
 
   @if (modalSeguimientoAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-seguimiento">
-      <div class="modal-container-card w-full max-w-3xl max-h-[90dvh]">
+      <div class="modal-container-card modal-size-lg">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-seguimiento" class="text-base sm:text-lg font-bold text-gray-900">
@@ -1162,14 +1057,19 @@
 
   @if (modalNuevaEvaluacionAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-nueva-eval">
-      <div class="modal-container-card w-full max-w-4xl max-h-[90dvh]">
+      <div class="modal-container-card modal-size-workspace" data-modal="nueva-evaluacion">
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-nueva-eval" class="text-base sm:text-lg font-bold text-gray-900">
               Nueva Evaluación de Riesgo
             </h3>
             <p class="text-xs text-gray-500">
-              Plantilla Vigente: <strong>{{ versionVigente()?.verCodigo }} · v{{ versionVigente()?.verVersion }}</strong>
+            @if (familiaNuevaSeleccionada(); as familiaNueva) {
+              Familia: <strong>{{ familiaNueva.famNombre }}</strong>
+              @if (versionVigente(); as versionNueva) { <span> · Versión activa: <strong>v{{ versionNueva.verVersion }}</strong></span> }
+            } @else {
+              Seleccione una familia para cargar su formulario activo.
+            }
             </p>
           </div>
           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar creación" (click)="cerrarModalNuevaEvaluacion()">
@@ -1177,7 +1077,32 @@
           </button>
         </div>
 
-        <div class="modal-body-scrollable space-y-5">
+        <div class="modal-body-scrollable space-y-6">
+          <section class="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5" aria-labelledby="titulo-configuracion-nueva-eval">
+            <div>
+              <h4 id="titulo-configuracion-nueva-eval" class="text-base font-bold text-gray-900">Configuración de la evaluación</h4>
+              <p class="mt-1 text-sm text-gray-500">Seleccione la familia de formulario y el riesgo institucional que serán utilizados para generar la evaluación.</p>
+            </div>
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-5 space-y-4">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3">
+              <div>
+                <label for="modal-selector-familia" class="mb-1.5 block text-xs font-bold text-gray-700">Familia de formulario <span class="text-red-500">*</span></label>
+                <select id="modal-selector-familia" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none" [ngModel]="familiaSeleccionada()" (ngModelChange)="seleccionarFamilia($event)">
+                  <option value="">Seleccione una familia</option>
+                  @for (familia of familias(); track familia.famId) {
+                    <option [value]="familia.famCodigo">{{ familia.famNombre }} ({{ familia.famCodigo }})</option>
+                  }
+                </select>
+              </div>
+              <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ver detalle de familia" title="Ver detalle de familia" [disabled]="!familiaNuevaSeleccionada()" (click)="familiaNuevaSeleccionada() && abrirModalVerFamilia(familiaNuevaSeleccionada()!, true)">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/><circle cx="12" cy="12" r="2.75" stroke-width="2"/></svg>
+              </button>
+            </div>
+            @if (cargandoFormulario()) { <p class="text-xs font-semibold text-blue-700" role="status">Cargando la versión activa de la familia...</p> }
+            @if (errorFormulario(); as errorNueva) { <p class="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="status">{{ errorNueva }}</p> }
+          </div>
+
           <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-1">
             <label for="modal-selector-riesgo" class="block text-xs font-bold text-gray-700">
               Riesgo Institucional a Evaluar <span class="text-red-500">*</span>
@@ -1192,33 +1117,46 @@
               }
             </select>
           </div>
+            </div>
+          </section>
 
-          @for (seccion of secciones(); track seccion.clave) {
-            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
+          <section class="space-y-4 rounded-2xl border border-gray-100 bg-white p-5" aria-labelledby="titulo-formulario-nueva-eval">
+          @if (familiaNuevaSeleccionada() && versionVigente()) {
+            <div class="border-b border-gray-200 pb-3">
+              <h4 id="titulo-formulario-nueva-eval" class="text-base font-bold text-gray-900">Formulario de evaluación</h4>
+              <p class="mt-1 text-sm text-gray-500">Complete los campos obligatorios de la versión activa seleccionada.</p>
+            </div>
+          }
+
+          @for (seccion of seccionesModal(); track seccion.clave) {
+            <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4" [attr.data-evaluation-section]="seccion.clave">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
               <div class="grid gap-4"
-                   [class.grid-cols-1]="(seccion.columnasPorFila || 2) === 1"
-                   [class.grid-cols-1_sm:grid-cols-2]="(seccion.columnasPorFila || 2) === 2"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-3]="(seccion.columnasPorFila || 2) === 3"
-                   [class.grid-cols-1_sm:grid-cols-2_lg:grid-cols-4]="(seccion.columnasPorFila || 2) >= 4">
+                   [style.grid-template-columns]="'repeat(' + (seccion.columnasPorFila || 1) + ', minmax(0, 1fr))'">
                 @for (campo of seccion.campos; track campo.clave) {
                   <app-dynamic-field-renderer
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
                     idPrefix="campo-new"
+                    [style.grid-column]="'span ' + (campo.anchoColumnas || 1) + ' / span ' + (campo.anchoColumnas || 1)"
+                    [attr.data-evaluation-field]="campo.clave"
                     (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
               </div>
             </section>
           }
 
-          @if (secciones().length === 0) {
+          @if (familiaNuevaSeleccionada() && versionVigente() && seccionesModal().length === 0) {
             <p class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800" role="status">
-              La plantilla vigente no contiene secciones configuradas para esta evaluación.
+              La versión activa de la familia seleccionada no contiene secciones configuradas para esta evaluación.
             </p>
           }
+          @if (!familiaNuevaSeleccionada() && !cargandoFormulario()) {
+            <p class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-600" role="status">Seleccione una familia para cargar su formulario activo.</p>
+          }
+          </section>
         </div>
 
         <div class="modal-footer-institutional">

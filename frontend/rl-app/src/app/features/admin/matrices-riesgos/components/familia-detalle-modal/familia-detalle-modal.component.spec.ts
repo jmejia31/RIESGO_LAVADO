@@ -7,6 +7,12 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { FamiliaDetalleModalComponent } from './familia-detalle-modal.component';
 
+vi.mock('sweetalert2', () => ({
+  default: {
+    fire: vi.fn().mockResolvedValue({ isConfirmed: true })
+  }
+}));
+
 describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   let service: MatricesRiesgosService;
   let auditoriaService: AuditoriaService;
@@ -110,6 +116,16 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     const fixture = crearComponente(7);
     expect(spyDetalle).toHaveBeenCalledWith(7);
     expect(fixture.componentInstance.detalle()).toEqual(familia);
+  });
+
+  it('bloquea Escape sin cerrar el detalle', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    fixture.componentInstance.manejarKeydown(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-ui-fam-detail="modal"]')).not.toBeNull();
   });
 
   it('2. mantiene estado loading mientras la respuesta está pendiente', () => {
@@ -220,7 +236,17 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     fixture.componentInstance.solicitarVerVersion(versiones[1]);
     expect(editar).toHaveBeenCalledWith(familia);
     expect(nuevaVersion).toHaveBeenCalledWith(familia);
-    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[1] });
+    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[1], modoEdicion: false });
+  });
+
+  it('10b. solicita ediciÃ³n de una versiÃ³n desde el detalle sin derivar al gestor', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    const ver = vi.spyOn(fixture.componentInstance.verDefinicion, 'emit');
+
+    fixture.componentInstance.solicitarEditarVersion(versiones[0]);
+
+    expect(ver).toHaveBeenCalledWith({ familia, version: versiones[0], modoEdicion: true });
   });
 
   it('11. clona una versión publicada y recarga el historial', () => {
@@ -236,10 +262,31 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
   it('12. activa o desactiva mediante la operación explícita de ciclo de vida', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const fixture = crearComponente();
-    fixture.componentInstance.cambiarEstadoFamilia();
-    expect(spyDesactivar).toHaveBeenCalledWith(7);
+    return fixture.componentInstance.cambiarEstadoFamilia().then(() => {
+      expect(spyDesactivar).toHaveBeenCalledWith(7);
+    });
+  });
+
+  it('12b. cancelar la confirmacion institucional no ejecuta la operacion ni cambia el estado', async () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const spyDesactivar = vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
+    const Swal = await import('sweetalert2');
+    vi.mocked(Swal.default.fire).mockResolvedValueOnce({ isConfirmed: false } as Awaited<ReturnType<typeof Swal.default.fire>>);
+    const fixture = crearComponente();
+
+    await fixture.componentInstance.cambiarEstadoFamilia();
+
+    expect(spyDesactivar).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.detalle()?.famActivo).toBe(true);
+    expect(Swal.default.fire).toHaveBeenCalledWith(expect.objectContaining({
+      showCancelButton: true,
+      focusCancel: true,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      returnFocus: true,
+      cancelButtonText: 'Cancelar'
+    }));
   });
 
   it('13. muestra los estados contractuales sin inventar estados nuevos', () => {
@@ -260,5 +307,60 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(dialog?.getAttribute('role')).toBe('dialog');
     expect(dialog?.getAttribute('aria-modal')).toBe('true');
     expect((fixture.nativeElement as HTMLElement).querySelectorAll('dialog[open]').length).toBe(1);
+  });
+
+  it('15. limpia el detalle y las suscripciones para un ID inválido', () => {
+    const fixture = crearComponente();
+    fixture.componentRef.setInput('familiaId', 0);
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.detalle()).toBeNull();
+    expect(fixture.componentInstance.versiones()).toEqual([]);
+    expect(fixture.componentInstance.auditoria()).toEqual([]);
+    expect(fixture.componentInstance.error()).toBeNull();
+  });
+
+  it('16. muestra error al clonar y al cambiar el estado de la familia', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    vi.spyOn(service, 'clonarVersionFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se puede clonar.' } })));
+    fixture.componentInstance.clonarVersion(versiones[1]);
+    expect(fixture.componentInstance.errorVersiones()).toBe('No se puede clonar.');
+
+    vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(throwError(() => ({ error: { detail: 'No se puede desactivar.' } })));
+    return fixture.componentInstance.cambiarEstadoFamilia().then(() => {
+      expect(fixture.componentInstance.error()).toBe('No se puede desactivar.');
+      expect(fixture.componentInstance.operando()).toBe(false);
+    });
+  });
+
+  it('17. maneja errores de historial y auditoría y permite reintentar historial', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const versionesSpy = vi.spyOn(service, 'listarHistorialVersionesFormulario')
+      .mockReturnValueOnce(throwError(() => ({ error: { detail: 'Historial no disponible.' } })))
+      .mockReturnValueOnce(of(versiones));
+    vi.mocked(auditoriaService.getBitacora).mockReturnValue(throwError(() => new Error('auditoría')));
+    const fixture = crearComponente();
+
+    expect(fixture.componentInstance.errorVersiones()).toBe('Historial no disponible.');
+    fixture.componentInstance.reintentarVersiones();
+    expect(versionesSpy).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.versiones()).toEqual(versiones);
+    expect(fixture.componentInstance.errorActividad()).toBe('La actividad de auditoría no está disponible para esta consulta.');
+  });
+
+  it('18. mapea creación, actualización y acciones no mapeadas de auditoría', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    vi.mocked(auditoriaService.getBitacora).mockReturnValue(of({ datos: [
+      { audId: 1, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'CREATE', usrId: 8, fecha: '2026-08-22T10:00:00' },
+      { audId: 2, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'UPDATE', usrEmail: 'admin@ihss.hn', fecha: '2026-08-21T10:00:00' },
+      { audId: 3, tabla: 'RL_MR_FAMILIAS_FORMULARIO', registroId: String(familia.famId), accion: 'OTHER', fecha: '2026-08-20T10:00:00' }
+    ], totalRegistros: 3 }));
+    const fixture = crearComponente();
+
+    const titulos = fixture.componentInstance.actividadReciente().map(item => item.titulo);
+    expect(titulos).toContain('Familia creada');
+    expect(titulos).toContain('Familia actualizada');
+    expect(fixture.componentInstance.actividadReciente()[0].usuario).toBe('Usuario #8');
   });
 });

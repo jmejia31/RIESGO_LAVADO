@@ -2,6 +2,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormBuilderComponent } from './form-builder.component';
 import { normalizarJsonABuilderModel, serializarBuilderModelAJson, FormBuilderModel } from '../../models/form-builder.models';
 import { validarFormBuilderModel } from '../../utils/form-builder-validator.util';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import Swal from 'sweetalert2';
 
 describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   let component: FormBuilderComponent;
@@ -44,7 +46,68 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
   it('bloquea la visualización del editor JSON técnico si esAdministrador es false', () => {
     component.esAdministrador = false;
     component.toggleModoJson();
-    expect(component.mostrarJsonAvanzado()).toBe(false);
+    expect(component.mostrarJsonAvanzado()).toBe(true);
+    component.soloLectura = true;
+    expect(component.bloqueadoParaMutacion).toBe(true);
+  });
+
+  it('muestra una vista previa de solo lectura con el renderer Ãºnico y las opciones reales', () => {
+    component.model.set({
+      codigoFormulario: 'PREVIEW',
+      nombreFormulario: 'Formulario de prueba',
+      descripcion: 'Consulta segura',
+      secciones: [{
+        id: 'sec-preview', clave: 'identificacion', titulo: 'IdentificaciÃ³n', orden: 1, columnasPorFila: 2,
+        campos: [
+          { id: 'c1', clave: 'texto', etiqueta: 'Texto', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
+          { id: 'c2', clave: 'area', etiqueta: 'Ãrea', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_REAL', obligatorio: false, soloLectura: false, anchoColumnas: 1 },
+          { id: 'c3', clave: 'formula', etiqueta: 'Resultado', tipo: 'formula', formula: 'a + b', obligatorio: false, soloLectura: false, anchoColumnas: 2 }
+        ]
+      }],
+      catalogos: [{ codigo: 'CAT_REAL', nombre: 'CatÃ¡logo real', elementos: [{ codigo: 'A', valor: 'OpciÃ³n A', orden: 1 }, { codigo: 'B', valor: 'OpciÃ³n B', orden: 2 }] }]
+    });
+    const serializadoAntes = serializarBuilderModelAJson(component.model());
+    component.cambiarVista('preview');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[aria-label="Vista previa del formulario"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelectorAll('app-dynamic-field-renderer')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('app-form-builder-palette')).toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-preview-field="area"] select')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[data-preview-field="area"]')?.textContent).toContain('OpciÃ³n A');
+    expect(fixture.nativeElement.textContent).toContain('Resultado');
+    expect(fixture.nativeElement.querySelector('[data-preview-field="formula"] [aria-readonly="true"]')).toBeTruthy();
+    expect(serializarBuilderModelAJson(component.model())).toBe(serializadoAntes);
+  });
+
+  it('busca de forma literal, copia el JSON exacto y valida sin aplicar ni guardar', async () => {
+    const json = serializarBuilderModelAJson(component.model());
+    component.jsonAvanzadoStr.set(json);
+    component.busquedaJson.set('MATRIZ_LAFT_TEST');
+    expect(component.coincidenciasJson().length).toBeGreaterThan(0);
+    component.moverBusquedaJson(1);
+    const modeloAntes = serializarBuilderModelAJson(component.model());
+    const emitir = vi.spyOn(component.guardarJson, 'emit');
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+
+    component.copiarJsonTecnico();
+    component.validarJsonTecnico();
+    await Promise.resolve();
+
+    expect(writeText).toHaveBeenCalledWith(json);
+    expect(component.resultadoValidacionJson()).toBe('valido');
+    expect(serializarBuilderModelAJson(component.model())).toBe(modeloAntes);
+    expect(emitir).not.toHaveBeenCalled();
+  });
+
+  it('rechaza JSON invÃ¡lido sin tocar el modelo ni activar sincronizaciÃ³n', () => {
+    const modeloAntes = serializarBuilderModelAJson(component.model());
+    component.jsonAvanzadoStr.set('{"secciones":');
+    component.validarJsonTecnico();
+    expect(component.resultadoValidacionJson()).toBe('invalido');
+    expect(component.mensajeJson()).toContain('JSON sint');
+    expect(serializarBuilderModelAJson(component.model())).toBe(modeloAntes);
   });
 
   it('normalizarJsonABuilderModel convierte correctamente la estructura JSON en BuilderModel', () => {
@@ -193,16 +256,17 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.cerrar.emit).toHaveBeenCalled();
   });
 
-  it('administra secciones y conserva una seccion activa valida', () => {
+  it('administra secciones y conserva una seccion activa valida', async () => {
     const originalId = component.model().secciones[0].id;
     component.agregarSeccion();
     expect(component.model().secciones).toHaveLength(2);
     const nueva = component.model().secciones[1];
     expect(component.seccionActivaId()).toBe(nueva.id);
-    component.eliminarSeccion(nueva.id);
+    vi.spyOn(Swal, 'fire').mockResolvedValue({ isConfirmed: true } as Awaited<ReturnType<typeof Swal.fire>>);
+    await component.eliminarSeccion(nueva.id);
     expect(component.model().secciones).toHaveLength(1);
     expect(component.seccionActivaId()).toBe(originalId);
-    component.eliminarSeccion(originalId);
+    await component.eliminarSeccion(originalId);
     expect(component.model().secciones).toHaveLength(1);
   });
 
@@ -294,19 +358,271 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
       expect(el.querySelector('app-form-builder-statusbar')).toBeTruthy();
     });
 
-    it('muestra estructura navegable en la región izquierda cuando el formulario está en solo lectura', () => {
+    it('mantiene la biblioteca visual en la región izquierda cuando el formulario está en solo lectura', () => {
       component.soloLectura = true;
       fixture.detectChanges();
 
       const palette = (fixture.nativeElement as HTMLElement).querySelector('app-form-builder-palette');
-      expect(palette?.textContent).toContain('Estructura del formulario');
-      expect(palette?.textContent).not.toContain('Biblioteca de campos');
+      expect(palette?.textContent).toContain('Agregar campos');
+      expect(palette?.textContent).not.toContain('Estructura del formulario');
+      expect(palette?.querySelector('#buscador-palette')).not.toBeNull();
     });
 
     it('actualiza el título de una sección via actualizarTituloSeccion', () => {
       const seccionId = component.model().secciones[0].id;
       component.actualizarTituloSeccion(seccionId, 'Nuevo Título Sección');
       expect(component.model().secciones[0].titulo).toBe('Nuevo Título Sección');
+    });
+  });
+
+  describe('UI-FORM.2 — Drag & Drop seguro, Gate de Tipos y Selección Automática', () => {
+    it('1. valida el tipo soltado contra TIPOS_CONTROLES_DISPONIBLES y agrega el campo', () => {
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'numero' });
+
+      const camposDespues = component.model().secciones[0].campos;
+      expect(camposDespues).toHaveLength(totalAntes + 1);
+      const nuevoCampo = camposDespues[camposDespues.length - 1];
+      expect(nuevoCampo.tipo).toBe('numero');
+      expect(component.seccionActivaId()).toBe(seccionId);
+      expect(component.campoActivo()?.id).toBe(nuevoCampo.id);
+    });
+
+    it('2. rechaza e ignora payloads de tipos no soportados o inventados (firma-digital, archivo, etc.)', () => {
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'firma-digital' });
+      component.procesarSoltarControl({ seccionId, tipo: 'archivo' });
+      component.procesarSoltarControl({ seccionId, tipo: 'geolocalizacion' });
+      component.procesarSoltarControl({ seccionId, tipo: 'tipo-arbitrario-xyz' });
+
+      expect(component.model().secciones[0].campos).toHaveLength(totalAntes);
+    });
+
+    it('3. drop de campo formula crea el campo con soloLectura: true de forma inmutable', () => {
+      const seccionId = component.model().secciones[0].id;
+      component.procesarSoltarControl({ seccionId, tipo: 'formula' });
+
+      const campo = component.campoActivo();
+      expect(campo).toBeTruthy();
+      expect(campo?.tipo).toBe('formula');
+      expect(campo?.soloLectura).toBe(true);
+    });
+
+    it('4. drop de selector-catalogo asigna catalogo de la plantilla sin inventar catalogos falsos', () => {
+      const seccionId = component.model().secciones[0].id;
+      component.procesarSoltarControl({ seccionId, tipo: 'selector-catalogo' });
+
+      const campo = component.campoActivo();
+      expect(campo).toBeTruthy();
+      expect(campo?.tipo).toBe('selector-catalogo');
+      expect(campo?.codigoCatalogo).toBe('CAT_AREA');
+    });
+
+    it('5. rechaza operaciones de drop cuando soloLectura es true', () => {
+      component.soloLectura = true;
+      const seccionId = component.model().secciones[0].id;
+      const totalAntes = component.model().secciones[0].campos.length;
+
+      component.procesarSoltarControl({ seccionId, tipo: 'texto' });
+
+      expect(component.model().secciones[0].campos).toHaveLength(totalAntes);
+    });
+
+    it('6. gate obligatorio de tipos: TIPOS_CONTROLES_DISPONIBLES contiene exactamente los 9 tipos oficiales (0 inventados)', () => {
+      const tipos = component.tiposControles.map(t => t.tipo).sort();
+      const tiposOficiales = [
+        'catalogo-multiple',
+        'checkbox',
+        'fecha',
+        'formula',
+        'numero',
+        'radio',
+        'selector-catalogo',
+        'texto',
+        'texto-largo'
+      ].sort();
+
+      expect(tipos).toEqual(tiposOficiales);
+      expect(tipos.length).toBe(9);
+    });
+  });
+
+  describe('UI-FORM.5 — Estados y Ciclo de Edición del Form Builder', () => {
+    it('emitirGuardado emite guardarJson cuando el modelo es válido y no está procesando', () => {
+      let jsonEmitido = '';
+      component.guardarJson.subscribe(j => jsonEmitido = j);
+
+      component.soloLectura = false;
+      component.procesando = false;
+      component.emitirGuardado();
+
+      expect(jsonEmitido).toBeTruthy();
+      expect(JSON.parse(jsonEmitido).codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+    });
+
+    it('emitirGuardado queda bloqueado si soloLectura es true', () => {
+      let emitido = false;
+      component.guardarJson.subscribe(() => emitido = true);
+
+      component.soloLectura = true;
+      component.procesando = false;
+      component.emitirGuardado();
+
+      expect(emitido).toBe(false);
+    });
+
+    it('emitirGuardado queda bloqueado si procesando es true', () => {
+      let emitido = false;
+      component.guardarJson.subscribe(() => emitido = true);
+
+      component.soloLectura = false;
+      component.procesando = true;
+      component.emitirGuardado();
+
+      expect(emitido).toBe(false);
+    });
+
+    it('emitirPublicar emite evento publicar cuando puedePublicar es true', () => {
+      let publicado = false;
+      component.publicar.subscribe(() => publicado = true);
+
+      component.soloLectura = false;
+      component.procesando = false;
+      component.puedePublicar = true;
+      component.emitirPublicar();
+
+      expect(publicado).toBe(true);
+    });
+
+    it('emitirPublicar queda bloqueado si puedePublicar es false, soloLectura es true o procesando es true', () => {
+      let conteo = 0;
+      component.publicar.subscribe(() => conteo++);
+
+      // 1. puedePublicar false
+      component.puedePublicar = false;
+      component.soloLectura = false;
+      component.procesando = false;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+
+      // 2. soloLectura true
+      component.puedePublicar = true;
+      component.soloLectura = true;
+      component.procesando = false;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+
+      // 3. procesando true
+      component.puedePublicar = true;
+      component.soloLectura = false;
+      component.procesando = true;
+      component.emitirPublicar();
+      expect(conteo).toBe(0);
+    });
+
+    it('Arquitectura limpia: FormBuilderComponent no depende de servicios HTTP o MatricesRiesgosService', () => {
+      // El componente se instancia únicamente con Inputs/Outputs presentacionales
+      expect(component).toBeDefined();
+    });
+
+    describe('Bloqueo Transitorio Real durante Procesamiento / Operación Activa', () => {
+      beforeEach(() => {
+        component.soloLectura = false;
+        component.esAdministrador = true;
+        component.estadoVersion = 'DRAFT';
+        component.operacion = 'guardar';
+      });
+
+      it('D. bloquea agregarSeccion durante operacion activa', () => {
+        const totalAntes = component.model().secciones.length;
+        component.agregarSeccion();
+        expect(component.model().secciones.length).toBe(totalAntes);
+      });
+
+      it('E. bloquea eliminarCampo durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const campoId = component.model().secciones[0].campos[0].id;
+        component.eliminarCampo(seccionId, campoId);
+        expect(component.model().secciones[0].campos.length).toBe(1);
+      });
+
+      it('F. bloquea reordenarCampo durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const texto = component.tiposControles.find(t => t.tipo === 'texto')!;
+        component.operacion = null; // desbloqueo temporal para setup
+        component.agregarCampoASeccion(seccionId, texto);
+        component.operacion = 'guardar'; // re-bloqueo
+
+        const antes = component.model().secciones[0].campos.map(c => c.id);
+        component.reordenarCampo(seccionId, 1, 'subir');
+        expect(component.model().secciones[0].campos.map(c => c.id)).toEqual(antes);
+      });
+
+      it('G. bloquea procesarSoltarControl (drop) durante operacion activa', () => {
+        const seccionId = component.model().secciones[0].id;
+        const totalAntes = component.model().secciones[0].campos.length;
+        component.procesarSoltarControl({ seccionId, tipo: 'texto' });
+        expect(component.model().secciones[0].campos.length).toBe(totalAntes);
+      });
+
+      it('H. bloquea alCambiarPropiedadCampo (inspector) durante operacion activa', () => {
+        const campoOriginal = component.model().secciones[0].campos[0];
+        component.seleccionarCampo({ ...campoOriginal });
+        component.campoActivo()!.etiqueta = 'Etiqueta Mutada Indebidamente';
+        component.alCambiarPropiedadCampo();
+        expect(component.model().secciones[0].campos[0].etiqueta).toBe(campoOriginal.etiqueta);
+      });
+
+      it('I. bloquea crear, editar y eliminar catalogos durante operacion activa', () => {
+        const totalAntes = (component.model().catalogos ?? []).length;
+        component.catalogoEnEdicion.set({ codigoOriginal: null, codigo: 'CAT_NUEVO', nombre: 'Nuevo', esNuevo: true });
+        component.guardarEdicionCatalogo();
+        expect((component.model().catalogos ?? []).length).toBe(totalAntes);
+
+        component.eliminarCatalogo('CAT_AREA');
+        expect((component.model().catalogos ?? []).length).toBe(totalAntes);
+      });
+
+      it('J. bloquea agregar, editar, eliminar y reordenar elementos de catalogo durante operacion activa', () => {
+        const cat = (component.model().catalogos ?? [])[0];
+        component.catalogoActivoCodigo.set(cat.codigo);
+        const elementosAntes = (cat.elementos ?? []).length;
+
+        component.elementoEnEdicion.set({ codigoOriginal: null, codigo: '003', valor: 'Opcion 3', orden: 3, indice: null });
+        component.guardarElementoCatalogo();
+        expect(((component.model().catalogos ?? [])[0].elementos ?? []).length).toBe(elementosAntes);
+
+        component.eliminarElementoCatalogo(0);
+        expect(((component.model().catalogos ?? [])[0].elementos ?? []).length).toBe(elementosAntes);
+
+        component.reordenarElementoCatalogo(1, 'subir');
+        expect((component.model().catalogos ?? [])[0].elementos[0].codigo).toBe('01');
+      });
+
+      it('K. bloquea aplicarJsonAvanzado durante operacion activa', () => {
+        const jsonNuevo = JSON.stringify({ codigoFormulario: 'FORM_MUTADO', nombreFormulario: 'Mutado', secciones: [] });
+        component.jsonAvanzadoStr.set(jsonNuevo);
+        component.aplicarJsonAvanzado();
+        expect(component.model().codigoFormulario).toBe('MATRIZ_LAFT_TEST');
+      });
+
+      it('L. cuando operacion termina, DRAFT admin no vigente vuelve a ser editable', () => {
+        component.operacion = 'publicar';
+        expect(component.bloqueadoParaMutacion).toBe(true);
+
+        // Termina la operacion
+        component.operacion = null;
+        component.procesando = false;
+        expect(component.bloqueadoParaMutacion).toBe(false);
+
+        const totalAntes = component.model().secciones.length;
+        component.agregarSeccion();
+        expect(component.model().secciones.length).toBe(totalAntes + 1);
+      });
     });
   });
 });

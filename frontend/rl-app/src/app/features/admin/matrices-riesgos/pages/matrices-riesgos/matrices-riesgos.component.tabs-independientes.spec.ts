@@ -241,4 +241,39 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(component.cargandoConsolidado()).toBe(false);
     expect(component.errorConsolidado()).toBeNull();
   });
+
+  it('12. cada pestana expone exactamente sus filtros y no cruza controles de otro dominio', () => {
+    const assertOnly = (tab: 'evaluaciones' | 'consolidado' | 'plantillas', present: string[], absent: string[]) => {
+      component.tab.set(tab);
+      fixture.detectChanges();
+      const root = fixture.nativeElement as HTMLElement;
+      for (const selector of present) expect(root.querySelector(selector)).not.toBeNull();
+      for (const selector of absent) expect(root.querySelector(selector)).toBeNull();
+    };
+
+    assertOnly('evaluaciones', ['#filtro-buscar', '#filtro-estado', '#filtro-registros-por-pagina'], ['#consolidado-buscar', '#gestor-buscar-familia']);
+    assertOnly('consolidado', ['#consolidado-buscar', '#consolidado-estado'], ['#filtro-buscar', '#gestor-buscar-familia']);
+    assertOnly('plantillas', ['#gestor-buscar-familia', '#gestor-estado-familia', '#gestor-vigencia-familia'], ['#filtro-buscar', '#consolidado-buscar']);
+  });
+
+  it('13. renderiza un solo bloque superior de KPIs contextual a la pestana activa', () => {
+    const kpis = () => (fixture.nativeElement as HTMLElement).querySelectorAll('[data-ui-kpis-context]');
+
+    component.tab.set('evaluaciones');
+    fixture.detectChanges();
+    expect(kpis()).toHaveLength(1);
+    expect(kpis()[0].textContent).toContain('Total evaluaciones');
+
+    component.tab.set('consolidado');
+    fixture.detectChanges();
+    expect(kpis()).toHaveLength(1);
+    expect(kpis()[0].textContent).toContain('Total registros');
+    expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
+
+    component.tab.set('plantillas');
+    fixture.detectChanges();
+    expect(kpis()).toHaveLength(1);
+    expect(kpis()[0].textContent).toContain('Total familias');
+    expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
+  });
 });

@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (F6.3)', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -83,7 +84,10 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
+        { provide: MatricesRiesgosService, useValue: service }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MatricesRiesgosComponent);

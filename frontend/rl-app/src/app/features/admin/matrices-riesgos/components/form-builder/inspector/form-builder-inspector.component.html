@@ -1,61 +1,70 @@
 <aside class="form-builder-region form-builder-inspector" data-form-builder-region="inspector" aria-label="Inspector de propiedades">
-  <div class="p-5 flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar">
-    <div class="border-b border-slate-100 pb-3">
-      <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Propiedades del campo</h3>
-      <p class="mt-1 text-[11px] text-slate-500">Configuración de la selección actual.</p>
-    </div>
+  <div class="inspector-scroll custom-scrollbar">
+    <header class="inspector-heading">
+      <h3>Propiedades del campo</h3>
+      <p>Configuración del campo seleccionado</p>
+    </header>
 
     @if (!campoActivo) {
-      <div class="m-auto max-w-[15rem] p-6 text-center text-slate-400">
-        <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-        <p class="text-xs font-medium leading-relaxed">Seleccione un campo del lienzo central para consultar sus propiedades.</p>
+      <div class="inspector-empty-state">
+        <div class="inspector-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="5" y="5" width="14" height="14" rx="1.5" stroke-width="1.5" stroke-dasharray="3 2" /></svg></div>
+        <p>Seleccione un campo en el lienzo para editar sus propiedades.</p>
+      </div>
+      <div class="inspector-section-list" aria-label="Secciones del inspector">
+        <div class="inspector-section-row" aria-disabled="true"><span class="inspector-section-icon general">◉</span><span>General</span><span class="inspector-chevron">›</span></div>
+        <div class="inspector-section-row" aria-disabled="true"><span class="inspector-section-icon validations">✓</span><span>Validaciones</span><span class="inspector-chevron">›</span></div>
+        <div class="inspector-section-row" aria-disabled="true"><span class="inspector-section-icon data">▣</span><span>Catálogo / Datos</span><span class="inspector-chevron">›</span></div>
+        <div class="inspector-section-row" aria-disabled="true"><span class="inspector-section-icon appearance">◌</span><span>Apariencia</span><span class="inspector-chevron">›</span></div>
+        <div class="inspector-section-row is-disabled" aria-disabled="true"><span class="inspector-section-icon conditions">≡</span><span>Condiciones</span><span class="inspector-chevron">›</span></div>
+        <div class="inspector-section-row" aria-disabled="true"><span class="inspector-section-icon help">?</span><span>Ayuda / Tooltip</span><span class="inspector-chevron">›</span></div>
       </div>
     } @else {
-      <div class="space-y-4 text-xs">
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-clave-' + campoActivo.id">Clave Técnica (JSON Key)</label>
-          <input [id]="'prop-clave-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.clave" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
-          <p class="text-[10px] text-slate-400 mt-0.5">Identificador único en el payload de respuestas.</p>
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-etiqueta-' + campoActivo.id">Etiqueta Visible</label>
-          <input [id]="'prop-etiqueta-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.etiqueta" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-600">
-        </div>
-        <div>
-          <label class="block font-semibold text-slate-700 mb-1" [for]="'prop-tipo-' + campoActivo.id">Tipo de Control</label>
-          <select [id]="'prop-tipo-' + campoActivo.id" [(ngModel)]="campoActivo.tipo" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-600">
-            @for (t of tiposControles; track t.tipo) { <option [value]="t.tipo">{{ t.etiqueta }}</option> }
-          </select>
-        </div>
-
-        @if (campoActivo.tipo === 'selector-catalogo' || campoActivo.tipo === 'catalogo-multiple') {
-          <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
-            <div class="flex items-center justify-between gap-1">
-              <label class="block font-semibold text-blue-900" [for]="'prop-catalogo-' + campoActivo.id">Catálogo Asociado</label>
-              @if (!soloLectura) { <button type="button" (click)="navegarCatalogos.emit()" class="text-[10px] text-blue-700 font-bold hover:underline">Administrar Catálogos →</button> }
+      <div class="inspector-context"><span class="inspector-context-type">{{ campoActivo.tipo }}</span><span class="inspector-context-label">{{ campoActivo.etiqueta }}</span></div>
+      <div class="inspector-groups">
+        <section class="inspector-group">
+          <button type="button" class="inspector-group-toggle" (click)="toggleSeccion('general')" [attr.aria-expanded]="seccionesAbiertas.general"><span class="inspector-group-title"><span class="inspector-section-icon general">◉</span>General</span><span class="inspector-chevron" [class.is-open]="seccionesAbiertas.general">›</span></button>
+          @if (seccionesAbiertas.general) {
+            <div class="inspector-group-content">
+              <div class="inspector-field"><label [for]="'prop-etiqueta-' + campoActivo.id">Etiqueta Visible</label><input [id]="'prop-etiqueta-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.etiqueta" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></div>
+              <div class="inspector-field"><label [for]="'prop-clave-' + campoActivo.id">Clave Técnica</label><input [id]="'prop-clave-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.clave" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="is-mono"><span class="inspector-hint">Identificador en el payload de respuestas.</span></div>
+              <div class="inspector-field"><label [for]="'prop-tipo-' + campoActivo.id">Tipo de control</label><select [id]="'prop-tipo-' + campoActivo.id" [ngModel]="campoActivo.tipo" (ngModelChange)="alCambiarTipo($event)" [disabled]="soloLectura">@for (t of tiposControles; track t.tipo) {<option [value]="t.tipo">{{ t.etiqueta }}</option>}</select>@if (definicionTipoActual) {<span class="inspector-hint">Categoría: <strong>{{ definicionTipoActual.categoria }}</strong></span>}</div>
+              <div class="inspector-field"><label [for]="'prop-desc-' + campoActivo.id">Descripción</label><textarea [id]="'prop-desc-' + campoActivo.id" rows="2" [(ngModel)]="campoActivo.descripcion" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></textarea></div>
             </div>
-            <select [id]="'prop-catalogo-' + campoActivo.id" [(ngModel)]="campoActivo.codigoCatalogo" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="w-full px-2.5 py-1.5 border border-blue-300 rounded-lg text-xs bg-white text-slate-800">
-              @for (cat of catalogosDisponibles; track cat.codigo) { <option [value]="cat.codigo">{{ cat.nombre }} ({{ cat.codigo }}){{ cat.cantidadElementos > 0 ? ' · ' + cat.cantidadElementos + ' opc.' : '' }}</option> }
-            </select>
-            @if (catalogosDisponibles.length === 0) { <p class="text-[10px] text-amber-700 font-medium">No hay catálogos configurados en esta plantilla.</p> }
-          </div>
-        }
-
-        @if (campoActivo.tipo === 'formula') {
-          <div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-2">
-            <label class="block font-semibold text-amber-900" [for]="'prop-formula-' + campoActivo.id">Fórmula de Cálculo</label>
-            <input [id]="'prop-formula-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formula" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" placeholder="Ej. R_INH * I_INH" class="w-full px-2.5 py-1.5 border border-amber-300 rounded-lg text-xs font-mono bg-white">
-            <p class="text-[10px] text-amber-700">Expresión matemática evaluada automáticamente.</p>
-          </div>
-        }
-
-        <div class="pt-2 border-t border-slate-100 space-y-3">
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" [(ngModel)]="campoActivo.obligatorio" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="font-medium text-slate-800">Campo Obligatorio</span></label>
-          <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" [(ngModel)]="campoActivo.soloLectura" (ngModelChange)="propiedadCambiada.emit()" [disabled]="soloLectura || campoActivo.tipo === 'formula'" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"><span class="font-medium text-slate-800">Solo Lectura</span></label>
-        </div>
+          }
+        </section>
+        <section class="inspector-group">
+          <button type="button" class="inspector-group-toggle" (click)="toggleSeccion('reglas')" [attr.aria-expanded]="seccionesAbiertas.reglas"><span class="inspector-group-title"><span class="inspector-section-icon validations">✓</span>Validaciones</span><span class="inspector-chevron" [class.is-open]="seccionesAbiertas.reglas">›</span></button>
+          @if (seccionesAbiertas.reglas) {
+            <div class="inspector-group-content">
+              <label class="inspector-check"><input [id]="'prop-obligatorio-' + campoActivo.id" type="checkbox" [checked]="campoActivo.obligatorio" (change)="campoActivo.obligatorio = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura"><span>Campo obligatorio</span></label>
+              <label class="inspector-check"><input [id]="'prop-sololectura-' + campoActivo.id" type="checkbox" [checked]="campoActivo.soloLectura" (change)="campoActivo.soloLectura = $any($event.target).checked; alCambiarPropiedad()" [disabled]="soloLectura || esFormula"><span>Solo lectura</span></label>
+              @if (requiereFormula) {<div class="inspector-formula"><label [for]="'prop-formula-' + campoActivo.id">Fórmula de cálculo</label><input [id]="'prop-formula-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.formula" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura" class="is-mono"><span class="inspector-hint">Se conserva como texto; no se ejecuta en el Inspector.</span></div>}
+            </div>
+          }
+        </section>
+        <section class="inspector-group">
+          <button type="button" class="inspector-group-toggle" (click)="toggleSeccion('datos')" [attr.aria-expanded]="seccionesAbiertas.datos"><span class="inspector-group-title"><span class="inspector-section-icon data">▣</span>Catálogo / Datos</span><span class="inspector-chevron" [class.is-open]="seccionesAbiertas.datos">›</span></button>
+          @if (seccionesAbiertas.datos) {
+            <div class="inspector-group-content">
+              @if (requiereCatalogo) {
+                <div class="inspector-field"><div class="inspector-label-line"><label [for]="'prop-catalogo-' + campoActivo.id">Catálogo asociado</label>@if (!soloLectura) {<button type="button" (click)="navegarCatalogos.emit()">Administrar Catálogos</button>}</div><select [id]="'prop-catalogo-' + campoActivo.id" [(ngModel)]="campoActivo.codigoCatalogo" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura">@for (cat of catalogosDisponibles; track cat.codigo) {<option [value]="cat.codigo">{{ cat.nombre }} ({{ cat.codigo }}){{ cat.cantidadElementos > 0 ? ' · ' + cat.cantidadElementos + ' opc.' : '' }}</option>}</select>@if (catalogosDisponibles.length === 0) {<span class="inspector-warning">No hay catálogos configurados en esta plantilla.</span>}</div>
+              } @else if (requiereOpciones) {
+                <div class="inspector-field"><label>Opciones Configuradas</label><div class="inspector-options">@for (opc of (campoActivo.opciones || []); track $index; let i = $index) {<div class="inspector-option"><span>{{ opc }}</span>@if (!soloLectura) {<button type="button" (click)="eliminarOpcion(i)" title="Eliminar opción">×</button>}</div>}</div>@if (!soloLectura) {<div class="inspector-option-add"><input type="text" [(ngModel)]="nuevaOpcionTexto" (keydown.enter)="agregarOpcion()" placeholder="Nueva opción..."><button type="button" (click)="agregarOpcion()">Agregar</button></div>}</div>
+              } @else {<p class="inspector-empty-note">Este tipo de campo no requiere una fuente de datos adicional.</p>}
+            </div>
+          }
+        </section>
+        <section class="inspector-group">
+          <button type="button" class="inspector-group-toggle" (click)="toggleSeccion('presentacion')" [attr.aria-expanded]="seccionesAbiertas.presentacion"><span class="inspector-group-title"><span class="inspector-section-icon appearance">◌</span>Apariencia</span><span class="inspector-chevron" [class.is-open]="seccionesAbiertas.presentacion">›</span></button>
+          @if (seccionesAbiertas.presentacion) {<div class="inspector-group-content">@if (soportaPlaceholder) {<div class="inspector-field"><label [for]="'prop-placeholder-' + campoActivo.id">Placeholder</label><input [id]="'prop-placeholder-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.placeholder" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></div>}<div class="inspector-field"><label [for]="'prop-ancho-' + campoActivo.id">Ancho en columnas</label><select [id]="'prop-ancho-' + campoActivo.id" [(ngModel)]="campoActivo.anchoColumnas" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura">@for (ancho of [1,2,3,4,5,6]; track ancho) {<option [ngValue]="ancho">{{ ancho }} columna{{ ancho === 1 ? '' : 's' }}</option>}</select></div></div>}
+        </section>
+        <section class="inspector-group is-disabled"><div class="inspector-group-toggle" aria-disabled="true"><span class="inspector-group-title"><span class="inspector-section-icon conditions">≡</span>Condiciones</span><span class="inspector-chevron">›</span></div></section>
+        <section class="inspector-group">
+          <button type="button" class="inspector-group-toggle" (click)="toggleSeccion('ayuda')" [attr.aria-expanded]="seccionesAbiertas.ayuda"><span class="inspector-group-title"><span class="inspector-section-icon help">?</span>Ayuda / Tooltip</span><span class="inspector-chevron" [class.is-open]="seccionesAbiertas.ayuda">›</span></button>
+          @if (seccionesAbiertas.ayuda) {<div class="inspector-group-content"><div class="inspector-field"><label [for]="'prop-textoayuda-' + campoActivo.id">Texto de ayuda</label><input [id]="'prop-textoayuda-' + campoActivo.id" type="text" [(ngModel)]="campoActivo.textoAyuda" (ngModelChange)="alCambiarPropiedad()" [disabled]="soloLectura"></div></div>}
+        </section>
       </div>
+      <footer class="inspector-meta"><div><span>ID del campo</span><strong>{{ campoActivo.id }}</strong></div><div><span>Tipo</span><strong>{{ campoActivo.tipo }}</strong></div></footer>
     }
   </div>
 </aside>

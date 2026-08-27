@@ -9,15 +9,19 @@ import {
   SeccionBuilderModel,
   TIPOS_CONTROLES_DISPONIBLES,
   TipoControlDefinicion,
+  duplicarSeccionBuilderModel,
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
+import { CampoFormulario, EstadoFormulario } from '../../models/matrices-riesgos.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
 import { FormBuilderToolbarComponent } from './toolbar/form-builder-toolbar.component';
 import { FormBuilderPaletteComponent } from './palette/form-builder-palette.component';
 import { FormBuilderCanvasComponent } from './canvas/form-builder-canvas.component';
 import { FormBuilderInspectorComponent } from './inspector/form-builder-inspector.component';
 import { FormBuilderStatusbarComponent } from './statusbar/form-builder-statusbar.component';
+import { DynamicFieldRendererComponent, OpcionCampoRenderer } from '../dynamic-field-renderer/dynamic-field-renderer.component';
+import Swal from 'sweetalert2';
 
 export interface CatalogoEdicionForm {
   codigoOriginal: string | null;
@@ -49,7 +53,8 @@ export interface FeedbackCatalogo {
     FormBuilderPaletteComponent,
     FormBuilderCanvasComponent,
     FormBuilderInspectorComponent,
-    FormBuilderStatusbarComponent
+    FormBuilderStatusbarComponent,
+    DynamicFieldRendererComponent
   ],
   templateUrl: './form-builder.component.html',
   styleUrls: ['./form-builder.component.scss']
@@ -60,8 +65,13 @@ export class FormBuilderComponent implements OnInit {
   @Input() esAdministrador: boolean = false;
   @Input() versionCodigo: string = 'V1.0';
   @Input() versionNumero: number = 1;
+  @Input() estadoVersion?: EstadoFormulario;
+  @Input() puedePublicar: boolean = false;
+  @Input() procesando: boolean = false;
+  @Input() operacion: 'guardar' | 'publicar' | null = null;
 
   @Output() guardarJson = new EventEmitter<string>();
+  @Output() publicar = new EventEmitter<void>();
   @Output() cerrar = new EventEmitter<void>();
 
   readonly model = signal<FormBuilderModel>({
@@ -78,13 +88,18 @@ export class FormBuilderComponent implements OnInit {
   readonly jsonAvanzadoStr = signal<string>('');
   readonly erroresValidacion = signal<FormBuilderValidationError[]>([]);
 
-  readonly vistaActiva = signal<'secciones' | 'catalogos'>('secciones');
+  readonly vistaActiva = signal<'secciones' | 'catalogos' | 'preview'>('secciones');
+  readonly busquedaJson = signal('');
+  readonly indiceBusquedaJson = signal(0);
+  readonly resultadoValidacionJson = signal<'sin-validar' | 'valido' | 'invalido'>('sin-validar');
+  readonly mensajeJson = signal('');
 
   readonly catalogoActivoCodigo = signal<string | null>(null);
   readonly busquedaCatalogos = signal<string>('');
   readonly catalogoEnEdicion = signal<CatalogoEdicionForm | null>(null);
   readonly elementoEnEdicion = signal<ElementoEdicionForm | null>(null);
   readonly feedbackCatalogo = signal<FeedbackCatalogo | null>(null);
+  readonly seccionEnConfirmacion = signal<string | null>(null);
 
   readonly catalogosList = computed<CatalogoBuilderModel[]>(() => this.model().catalogos ?? []);
 
@@ -109,6 +124,12 @@ export class FormBuilderComponent implements OnInit {
     }));
   });
 
+  get bloqueadoParaMutacion(): boolean {
+    return this.soloLectura
+      || this.procesando
+      || this.operacion !== null;
+  }
+
   ngOnInit(): void {
     const parsed = normalizarJsonABuilderModel(this.jsonDefinicion, this.versionCodigo, 'Formulario Dinámico');
     if (!parsed.catalogos) parsed.catalogos = [];
@@ -117,7 +138,7 @@ export class FormBuilderComponent implements OnInit {
     if (parsed.catalogos.length > 0) this.catalogoActivoCodigo.set(parsed.catalogos[0].codigo);
   }
 
-  cambiarVista(vista: 'secciones' | 'catalogos'): void {
+  cambiarVista(vista: 'secciones' | 'catalogos' | 'preview'): void {
     this.vistaActiva.set(vista);
     this.feedbackCatalogo.set(null);
     this.catalogoEnEdicion.set(null);
@@ -130,7 +151,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   agregarSeccion(): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const count = current.secciones.length + 1;
     const nuevaSeccion: SeccionBuilderModel = {
@@ -145,17 +166,54 @@ export class FormBuilderComponent implements OnInit {
     this.seccionActivaId.set(nuevaSeccion.id);
   }
 
-  eliminarSeccion(seccionId: string): void {
-    if (this.soloLectura) return;
+  async eliminarSeccion(seccionId: string): Promise<void> {
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     if (current.secciones.length <= 1) return;
+    if (this.seccionEnConfirmacion() !== null) return;
+    const seccion = current.secciones.find(item => item.id === seccionId);
+    if (!seccion) return;
+    this.seccionEnConfirmacion.set(seccionId);
+    const resultado = await Swal.fire({
+      title: '¿Eliminar sección?',
+      text: `Se eliminará «${seccion.titulo}» del borrador actual. Esta acción no se enviará al backend hasta guardar.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar sección',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+      focusCancel: true
+    });
+    this.seccionEnConfirmacion.set(null);
+    if (!resultado.isConfirmed || this.bloqueadoParaMutacion) return;
     const filtradas = current.secciones.filter((s: SeccionBuilderModel) => s.id !== seccionId);
-    this.model.set({ ...current, secciones: filtradas });
+    this.model.set({ ...current, secciones: filtradas.map((s, index) => ({ ...s, orden: index + 1 })) });
     if (this.seccionActivaId() === seccionId && filtradas.length > 0) this.seccionActivaId.set(filtradas[0].id);
+    if (this.campoActivo() && !filtradas.some(s => s.campos.some(c => c.id === this.campoActivo()?.id))) this.campoActivo.set(null);
+  }
+
+  duplicarSeccion(seccionId: string): void {
+    if (this.bloqueadoParaMutacion) return;
+    const resultado = duplicarSeccionBuilderModel(this.model(), seccionId);
+    if (!resultado) return;
+    this.model.set(resultado.model);
+    this.seccionActivaId.set(resultado.seccion.id);
+    this.campoActivo.set(null);
+  }
+
+  reordenarSeccion(seccionId: string, direccion: 'subir' | 'bajar'): void {
+    if (this.bloqueadoParaMutacion) return;
+    const current = this.model();
+    const indice = current.secciones.findIndex(seccion => seccion.id === seccionId);
+    const destino = direccion === 'subir' ? indice - 1 : indice + 1;
+    if (indice < 0 || destino < 0 || destino >= current.secciones.length) return;
+    const secciones = [...current.secciones];
+    [secciones[indice], secciones[destino]] = [secciones[destino], secciones[indice]];
+    this.model.set({ ...current, secciones: secciones.map((seccion, index) => ({ ...seccion, orden: index + 1 })) });
   }
 
   agregarCampoASeccion(seccionId: string, ctrlDef: TipoControlDefinicion): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
@@ -177,7 +235,17 @@ export class FormBuilderComponent implements OnInit {
     const seccionesActualizadas = [...current.secciones];
     seccionesActualizadas[seccionIndex] = { ...seccion, campos: [...seccion.campos, nuevoCampo] };
     this.model.set({ ...current, secciones: seccionesActualizadas });
+    this.seccionActivaId.set(seccionId);
     this.campoActivo.set(nuevoCampo);
+  }
+
+  procesarSoltarControl(evento: { seccionId: string; tipo: string }): void {
+    if (this.bloqueadoParaMutacion) return;
+    const definicion = this.tiposControles.find(x => x.tipo === evento.tipo);
+    if (!definicion) {
+      return;
+    }
+    this.agregarCampoASeccion(evento.seccionId, definicion);
   }
 
   seleccionarCampo(campo: CampoBuilderModel): void {
@@ -186,7 +254,7 @@ export class FormBuilderComponent implements OnInit {
 
   alCambiarPropiedadCampo(): void {
     const activo = this.campoActivo();
-    if (!activo || this.soloLectura) return;
+    if (!activo || this.bloqueadoParaMutacion) return;
     const current = this.model();
     const secciones = current.secciones.map(sec => ({
       ...sec,
@@ -196,7 +264,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   eliminarCampo(seccionId: string, campoId: string): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
@@ -209,7 +277,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   reordenarCampo(seccionId: string, campoIndex: number, direccion: 'subir' | 'bajar'): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
@@ -224,7 +292,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   actualizarColumnasSeccion(seccionId: string, columnas: number): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
@@ -234,7 +302,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   actualizarTituloSeccion(seccionId: string, titulo: string): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const current = this.model();
     const seccionIndex = current.secciones.findIndex((s: SeccionBuilderModel) => s.id === seccionId);
     if (seccionIndex === -1) return;
@@ -269,14 +337,14 @@ export class FormBuilderComponent implements OnInit {
   }
 
   iniciarNuevoCatalogo(): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set(null);
     this.catalogoEnEdicion.set({ codigoOriginal: null, codigo: '', nombre: '', esNuevo: true });
   }
 
   iniciarEdicionCatalogo(cat: CatalogoBuilderModel): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set(null);
     this.catalogoEnEdicion.set({ codigoOriginal: cat.codigo, codigo: cat.codigo, nombre: cat.nombre, esNuevo: false });
@@ -287,7 +355,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   guardarEdicionCatalogo(): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const edicion = this.catalogoEnEdicion();
     if (!edicion) return;
 
@@ -349,7 +417,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   eliminarCatalogo(codigo: string): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const camposEnUso = this.camposQueUsanCatalogo(codigo);
     if (camposEnUso.length > 0) {
       const listaCampos = camposEnUso.map(c => `"${c.campoEtiqueta}" (en sección ${c.seccionTitulo})`).join(', ');
@@ -368,14 +436,14 @@ export class FormBuilderComponent implements OnInit {
   }
 
   iniciarNuevoElemento(): void {
-    if (this.soloLectura || !this.catalogoActivo()) return;
+    if (this.bloqueadoParaMutacion || !this.catalogoActivo()) return;
     const cat = this.catalogoActivo()!;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set({ codigoOriginal: null, codigo: '', valor: '', orden: (cat.elementos?.length ?? 0) + 1, indice: null });
   }
 
   iniciarEdicionElemento(elem: ElementoCatalogoBuilderModel, indice: number): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     this.feedbackCatalogo.set(null);
     this.elementoEnEdicion.set({ codigoOriginal: elem.codigo, codigo: elem.codigo, valor: elem.valor, orden: elem.orden, indice });
   }
@@ -385,7 +453,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   guardarElementoCatalogo(): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const cat = this.catalogoActivo();
     const elemEdicion = this.elementoEnEdicion();
     if (!cat || !elemEdicion) return;
@@ -417,7 +485,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   eliminarElementoCatalogo(indice: number): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const cat = this.catalogoActivo();
     if (!cat || !cat.elementos) return;
     const elementosReordenados = cat.elementos.filter((_, idx) => idx !== indice).map((el, idx) => ({ ...el, orden: idx + 1 }));
@@ -427,7 +495,7 @@ export class FormBuilderComponent implements OnInit {
   }
 
   reordenarElementoCatalogo(indice: number, direccion: 'subir' | 'bajar'): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     const cat = this.catalogoActivo();
     if (!cat || !cat.elementos) return;
     const targetIdx = direccion === 'subir' ? indice - 1 : indice + 1;
@@ -446,13 +514,83 @@ export class FormBuilderComponent implements OnInit {
   }
 
   toggleModoJson(): void {
-    if (!this.esAdministrador) return;
     if (!this.mostrarJsonAvanzado()) this.jsonAvanzadoStr.set(serializarBuilderModelAJson(this.model()));
     this.mostrarJsonAvanzado.set(!this.mostrarJsonAvanzado());
   }
 
+  copiarJsonTecnico(): void {
+    const texto = this.jsonAvanzadoStr();
+    if (!navigator.clipboard?.writeText) {
+      this.mensajeJson.set('El navegador no permite copiar al portapapeles.');
+      return;
+    }
+    void navigator.clipboard.writeText(texto).then(
+      () => this.mensajeJson.set('JSON copiado.'),
+      () => this.mensajeJson.set('No se pudo copiar el JSON.')
+    );
+  }
+
+  validarJsonTecnico(): void {
+    try {
+      JSON.parse(this.jsonAvanzadoStr());
+      const temporal = normalizarJsonABuilderModel(this.jsonAvanzadoStr(), this.versionCodigo, 'Formulario Dinámico');
+      const errores = validarFormBuilderModel(temporal);
+      this.resultadoValidacionJson.set(errores.length === 0 ? 'valido' : 'invalido');
+      this.mensajeJson.set(errores.length === 0 ? 'JSON válido y estructura compatible.' : `JSON estructuralmente inválido (${errores.length} error(es)).`);
+    } catch {
+      this.resultadoValidacionJson.set('invalido');
+      this.mensajeJson.set('JSON sintácticamente inválido.');
+    }
+  }
+
+  buscarJsonTecnico(): void {
+    this.indiceBusquedaJson.set(0);
+  }
+
+  coincidenciasJson(): number[] {
+    const texto = this.jsonAvanzadoStr();
+    const consulta = this.busquedaJson().trim().toLowerCase();
+    if (!consulta) return [];
+    const posiciones: number[] = [];
+    let desde = 0;
+    while (desde < texto.length) {
+      const posicion = texto.toLowerCase().indexOf(consulta, desde);
+      if (posicion < 0) break;
+      posiciones.push(posicion);
+      desde = posicion + Math.max(consulta.length, 1);
+    }
+    return posiciones;
+  }
+
+  moverBusquedaJson(delta: number): void {
+    const total = this.coincidenciasJson().length;
+    if (total === 0) return;
+    this.indiceBusquedaJson.set((this.indiceBusquedaJson() + delta + total) % total);
+  }
+
+  campoPreview(campo: CampoBuilderModel): CampoFormulario {
+    return {
+      clave: campo.clave,
+      etiqueta: campo.etiqueta,
+      tipo: campo.tipo,
+      tipoOriginal: campo.tipoOriginal ?? null,
+      codigoCatalogo: campo.codigoCatalogo ?? null,
+      opciones: campo.opciones ?? null,
+      formula: campo.formula ?? null,
+      obligatorio: campo.obligatorio,
+      soloLectura: campo.soloLectura || campo.tipo === 'formula'
+    };
+  }
+
+  opcionesPreview(campo: CampoBuilderModel): OpcionCampoRenderer[] {
+    const catalogo = campo.codigoCatalogo
+      ? this.catalogosList().find(item => item.codigo.toLowerCase() === campo.codigoCatalogo!.toLowerCase())
+      : undefined;
+    return (catalogo?.elementos ?? []).map(elemento => ({ codigo: elemento.codigo, valor: elemento.valor }));
+  }
+
   aplicarJsonAvanzado(): void {
-    if (this.soloLectura || !this.esAdministrador) return;
+    if (this.bloqueadoParaMutacion || !this.esAdministrador) return;
     try {
       const parsed = normalizarJsonABuilderModel(this.jsonAvanzadoStr(), this.versionCodigo, 'Formulario Dinámico');
       if (!parsed.catalogos) parsed.catalogos = [];
@@ -472,8 +610,13 @@ export class FormBuilderComponent implements OnInit {
   }
 
   emitirGuardado(): void {
-    if (this.soloLectura) return;
+    if (this.bloqueadoParaMutacion) return;
     if (!this.validarYObtenerErrores()) return;
     this.guardarJson.emit(serializarBuilderModelAJson(this.model()));
+  }
+
+  emitirPublicar(): void {
+    if (this.bloqueadoParaMutacion || !this.puedePublicar) return;
+    this.publicar.emit();
   }
 }

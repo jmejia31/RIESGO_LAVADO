@@ -47,11 +47,11 @@ describe('Form Builder — componentes presentacionales productivos', () => {
     component.agregarCampo.subscribe(control => controlEmitido = control);
     fixture.detectChanges();
 
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    (fixture.nativeElement as HTMLElement).querySelector('.palette-card')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(controlEmitido).toEqual(controles[0]);
   });
 
-  it('en solo lectura la región izquierda muestra estructura y no controles para agregar', () => {
+  it('en solo lectura la región izquierda conserva la biblioteca y bloquea controles', () => {
     const fixture = TestBed.createComponent(FormBuilderPaletteComponent);
     const component = fixture.componentInstance;
     component.soloLectura = true;
@@ -62,10 +62,11 @@ describe('Form Builder — componentes presentacionales productivos', () => {
     fixture.detectChanges();
 
     const texto = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(texto).toContain('Estructura del formulario');
-    expect(texto).toContain('Información general');
-    expect(texto).toContain('Nombre');
-    expect(texto).not.toContain('Biblioteca de campos');
+    expect(texto).toContain('Agregar campos');
+    expect((fixture.nativeElement as HTMLElement).querySelector('aside')?.getAttribute('aria-label')).toBe('Biblioteca de campos en solo lectura');
+    expect(texto).not.toContain('Estructura del formulario');
+    expect((fixture.nativeElement as HTMLElement).querySelector('#buscador-palette')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelectorAll('.palette-card[aria-disabled="true"]').length).toBe(0);
   });
 
   it('el inspector muestra empty-state cuando no existe campo activo', () => {

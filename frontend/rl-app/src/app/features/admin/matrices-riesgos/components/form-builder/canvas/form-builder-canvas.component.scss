@@ -9,8 +9,55 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.875rem;
-  background: #f8fafc;
-  box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
+  background: #ffffff;
+}
+
+.form-builder-canvas__scroll {
+  background: #ffffff;
+}
+
+.form-builder-section {
+  border-color: #dbeafe;
+}
+
+.form-builder-section__header {
+  box-shadow: inset 0 -1px 0 rgb(219 234 254 / 0.35);
+}
+
+.form-builder-canvas__columns-control {
+  min-width: 9.75rem;
+  min-height: 2.75rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+}
+
+.form-builder-field-card,
+.form-builder-fields-grid > * {
+  min-width: 0;
+}
+
+.form-builder-section__menu-item {
+  display: block;
+  width: 100%;
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.form-builder-section__menu-item:hover:not(:disabled) {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.form-builder-section__menu-item:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.form-builder-section__menu-item--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #dc2626;
 }

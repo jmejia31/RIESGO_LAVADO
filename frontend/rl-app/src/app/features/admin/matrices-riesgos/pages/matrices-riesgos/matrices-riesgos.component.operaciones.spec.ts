@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 describe('MatricesRiesgosComponent — operaciones del componente', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -126,7 +127,10 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
+        { provide: MatricesRiesgosService, useValue: service }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MatricesRiesgosComponent);
@@ -168,10 +172,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     component.cerrarModalCrearFamilia();
     expect(document.body.querySelector('app-familia-crear-modal')).toBeNull();
 
-    component.abrirModalCrearFormulario();
-    component.manejarTeclaEscape(event);
-    expect(component.modalFormularioAbierto()).toBe(false);
-    expect(preventDefault).toHaveBeenCalledTimes(2);
+    expect(preventDefault).toHaveBeenCalledTimes(1);
   });
 
   it('aplica filtros con debounce, normaliza espacios y permite restablecerlos', () => {
@@ -271,15 +272,9 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     expect(component.error()).toBe('PDF no disponible');
   });
 
-  it('mantiene el modal abierto si la familia no existe y limpia sus errores al cerrarlo', () => {
-    component.familias.set([]);
-    component.abrirModalCrearFormulario();
-    component.guardarNuevoFormulario();
-    expect(component.errorModal()).toContain('familia v');
+  it('rechaza crear una versiÃ³n si el contexto de familia es invÃ¡lido', () => {
+    component.crearNuevaVersionDesdeDetalle({ famId: 0 } as never);
+    expect(component.error()).toContain('familia');
     expect(service['crearBorradorFormulario']).not.toHaveBeenCalled();
-
-    component.cerrarModalFormulario();
-    expect(component.modalFormularioAbierto()).toBe(false);
-    expect(component.errorModal()).toBeNull();
   });
 });

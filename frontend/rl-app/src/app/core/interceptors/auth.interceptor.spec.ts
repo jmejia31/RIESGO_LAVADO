@@ -94,4 +94,14 @@ describe('authInterceptor', () => {
     });
     expect(error).toHaveBeenCalledOnce();
   });
+
+  it('mantiene la pantalla cuando la auditoría opcional responde 403', () => {
+    const error = vi.fn();
+    http.get('/api/auditoria?tabla=RL_MR_FAMILIAS_FORMULARIO').subscribe({ error });
+    const request = testing.expectOne('/api/auditoria?tabla=RL_MR_FAMILIAS_FORMULARIO');
+    request.flush({ mensaje: 'Auditoría no autorizada' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledOnce();
+  });
 });

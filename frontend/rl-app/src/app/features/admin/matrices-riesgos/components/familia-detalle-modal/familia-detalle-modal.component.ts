@@ -52,12 +52,15 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   @Input({ required: true }) familiaId = 0;
   @Input() familiaReferencia: FamiliaFormularioDto | null = null;
+  @Input() origen: 'gestor-familias' | 'nueva-evaluacion' = 'gestor-familias';
 
   @Output() readonly cerrar = new EventEmitter<void>();
-  @Output() readonly gestionarVersiones = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly editarFamilia = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly nuevaVersion = new EventEmitter<FamiliaFormularioDto>();
-  @Output() readonly verDefinicion = new EventEmitter<{ familia: FamiliaFormularioDto; version: VersionFormularioDto }>();
+  @Output() readonly verDefinicion = new EventEmitter<{ familia: FamiliaFormularioDto; version: VersionFormularioDto; modoEdicion: boolean }>();
+  @Output() readonly publicarVersionSolicitada = new EventEmitter<VersionFormularioDto>();
+  @Output() readonly cambiarVigenciaSolicitada = new EventEmitter<{ version: VersionFormularioDto; vigente: boolean }>();
+  @Output() readonly eliminarVersionSolicitada = new EventEmitter<VersionFormularioDto>();
 
   @ViewChild('botonCerrar') botonCerrar?: ElementRef<HTMLButtonElement>;
 
@@ -73,6 +76,7 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   readonly errorActividad = signal<string | null>(null);
   readonly noEncontrada = signal(false);
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
+  readonly etiquetaRegresar = computed(() => this.origen === 'nueva-evaluacion' ? 'Regresar a Nueva Evaluación' : 'Regresar a Familias de Formularios');
 
   readonly versionesOrdenadas = computed(() =>
     [...this.versiones()].sort((a, b) => b.verVersion - a.verVersion)
@@ -162,14 +166,19 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     this.cargarDetalle();
   }
 
+  refrescar(): void {
+    this.cargarDetalle();
+  }
+
+  enfocarContexto(): void {
+    const control = this.botonCerrar?.nativeElement
+      ?? this.host.nativeElement.querySelector('dialog');
+    control?.focus();
+  }
+
   reintentarVersiones(): void {
     const familia = this.detalle();
     if (familia) this.cargarVersiones(familia);
-  }
-
-  solicitarGestionVersiones(): void {
-    const familia = this.detalle();
-    if (familia) this.gestionarVersiones.emit(familia);
   }
 
   solicitarEdicion(): void {
@@ -184,11 +193,30 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
 
   solicitarVerVersion(version: VersionFormularioDto): void {
     const familia = this.detalle();
-    if (familia) this.verDefinicion.emit({ familia, version });
+    if (familia) this.verDefinicion.emit({ familia, version, modoEdicion: false });
   }
 
-  solicitarEditarVersion(): void {
-    this.solicitarGestionVersiones();
+  solicitarEditarVersion(version: VersionFormularioDto): void {
+    const familia = this.detalle();
+    if (familia) this.verDefinicion.emit({ familia, version, modoEdicion: true });
+  }
+
+  solicitarPublicacion(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+      this.publicarVersionSolicitada.emit(version);
+    }
+  }
+
+  solicitarCambioVigencia(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'PUBLISHED') {
+      this.cambiarVigenciaSolicitada.emit({ version, vigente: !version.verVigente });
+    }
+  }
+
+  solicitarEliminacion(version: VersionFormularioDto): void {
+    if (!this.operando() && version.verEstado === 'DRAFT' && !version.verVigente) {
+      this.eliminarVersionSolicitada.emit(version);
+    }
   }
 
   clonarVersion(version: VersionFormularioDto): void {
@@ -209,17 +237,29 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     });
   }
 
-  cambiarEstadoFamilia(): void {
+  async cambiarEstadoFamilia(): Promise<void> {
     const familia = this.detalle();
     if (!familia || !this.esAdministrador() || this.operando()) return;
 
     const accion = familia.famActivo ? 'desactivar' : 'activar';
-    const confirmacion = window.confirm(
-      familia.famActivo
-        ? `¿Desactivar la familia ${familia.famNombre}? Sus versiones e historial se conservarán.`
-        : `¿Activar la familia ${familia.famNombre}?`
-    );
-    if (!confirmacion) return;
+    const Swal = await import('sweetalert2');
+    const resultado = await Swal.default.fire({
+      title: familia.famActivo ? `¿Desactivar la familia ${familia.famNombre}?` : `¿Activar la familia ${familia.famNombre}?`,
+      html: familia.famActivo
+        ? '<p class="text-sm text-gray-700">Sus versiones e historial se conservarán.</p>'
+        : '<p class="text-sm text-gray-700">La familia volverá a estar disponible para nuevas operaciones.</p>',
+      icon: familia.famActivo ? 'warning' : 'question',
+      showCancelButton: true,
+      confirmButtonColor: familia.famActivo ? '#d97706' : '#059669',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: familia.famActivo ? 'Desactivar' : 'Sí, activar',
+      cancelButtonText: 'Cancelar',
+      focusCancel: true,
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      returnFocus: true
+    });
+    if (!resultado.isConfirmed) return;
 
     this.operando.set(true);
     this.error.set(null);
@@ -252,6 +292,12 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   }
 
   manejarKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (event.key !== 'Tab') return;
 
     const dialogo = this.host.nativeElement.querySelector('dialog') as HTMLDialogElement | null;

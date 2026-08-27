@@ -123,6 +123,7 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
 
     host = render(campo('radio'));
     expect(host.textContent).toContain('No hay opciones configuradas');
+    expect(host.querySelector('input[type="text"]')).not.toBeNull();
 
     host = render(campo('catalogo-multiple'));
     expect(host.textContent).toContain('No hay opciones configuradas');

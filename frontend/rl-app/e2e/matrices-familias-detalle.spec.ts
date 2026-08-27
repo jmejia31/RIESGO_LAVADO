@@ -32,6 +32,15 @@ const versionVigente = {
   verUsrCreacion: 1
 };
 
+const versionBorrador = {
+  ...versionVigente,
+  verId: 72,
+  verVersion: 3,
+  verEstado: 'DRAFT',
+  verVigente: false,
+  verJson: '{"secciones":[]}'
+};
+
 function tokenAdministradorModulo10(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'none', typ: 'JWT' })}.${encode({
@@ -159,6 +168,106 @@ test('UI-FAM.2 carga el detalle por ID dentro de un único modal XL con sus vers
   await page.getByRole('button', { name: 'Cerrar detalle de familia' }).click();
   await expect(modal).toHaveCount(0);
   await expect(disparador).toBeFocused();
+});
+
+test('MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito', async ({ page }) => {
+  await abrirGestor(page);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Familias de Formularios' })).toBeVisible();
+
+  await abrirDetalle(page);
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(detalle).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar detalle de familia' }).click();
+  await expect(detalle).toHaveCount(0);
+});
+
+test('MCV.4 Ver versiones abre el Detalle correcto sin gestor transitorio', async ({ page }) => {
+  await abrirGestor(page);
+
+  const fila = page.locator('[data-ui-fam-table="principal"] tbody tr').first();
+  await fila.getByRole('button', { name: 'Ver versiones' }).click();
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Detalle de Familia' })).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
+  await expect(detalle.locator('button[aria-label^="Gestionar"]')).toHaveCount(0);
+  await expect(page.getByText(/Vista transitoria de versiones/)).toHaveCount(0);
+  await expect(page.locator('[data-ui-fam-detail="modal"]')).toHaveCount(1);
+});
+
+test('MCV.2 Editar Familia regresa al mismo Detalle sin volver al listado', async ({ page }) => {
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText(familiaDetalle.famCodigo);
+
+  const accionEditar = detalle.locator('[data-ui-fam-detail-action="editar"]');
+  await accionEditar.click();
+
+  const editor = page.locator('[data-ui-fam-edit="modal"]');
+  await expect(editor).toBeVisible();
+  await editor.locator('[data-ui-fam-edit-action="regresar"]').click();
+
+  await expect(editor).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText(familiaDetalle.famCodigo);
+  await expect(accionEditar).toBeFocused();
+});
+
+test('MCV.2 Constructor regresa al mismo Detalle y conserva Versiones', async ({ page }) => {
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  const version = detalle.getByRole('button', { name: 'Ver detalle de la versión' }).first();
+  await version.click();
+
+  const builder = page.locator('[data-form-builder-shell="true"]');
+  await expect(builder).toBeVisible();
+  await expect(builder.getByText(/Versión MATRIZ_RIESGOS_LAFT \(v2\)/)).toBeVisible();
+  await builder.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
+
+  await expect(builder).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
+  await expect(detalle).toContainText('v2');
+  await expect(detalle.locator(':focus')).toHaveCount(1);
+});
+
+test('MCV.3 Editar definición de borrador abre el Constructor desde el Detalle', async ({ page }) => {
+  await page.route('**/api/matrices-riesgos/formularios/historial**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [versionBorrador, versionVigente] })
+  }));
+  await page.route('**/api/matrices-riesgos/formularios/72', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: versionBorrador })
+  }));
+
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle.getByText('v3')).toBeVisible();
+  await detalle.getByRole('button', { name: 'Editar definición de la versión' }).first().click();
+
+  const builder = page.locator('[data-form-builder-shell="true"]');
+  await expect(builder).toBeVisible();
+  await expect(builder.locator('#btn-guardar-builder')).toBeVisible();
+  await expect(builder.locator('#btn-publicar-builder')).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
+  await expect(builder).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText('v3');
 });
 
 test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido', async ({ page }) => {

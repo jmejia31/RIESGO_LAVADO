@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
+import { AuthService } from '../../../../../core/auth/auth.service';
 
 vi.mock('sweetalert2', () => ({
   default: {
@@ -109,7 +110,10 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
 
     await TestBed.configureTestingModule({
       imports: [MatricesRiesgosComponent],
-      providers: [{ provide: MatricesRiesgosService, useValue: service }]
+      providers: [
+        { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
+        { provide: MatricesRiesgosService, useValue: service }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(MatricesRiesgosComponent);
@@ -183,7 +187,9 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
   });
 
   it('rechaza una definición técnica con JSON inválido sin llamar al backend', () => {
-    component.abrirDefinicion(version);
+    const draftVersion = { ...version, verVigente: false, verEstado: 'DRAFT' as const };
+    service['obtenerVersionFormulario'].mockReturnValue(of(draftVersion));
+    component.abrirDefinicion(draftVersion);
     component.definicionTecnica = '{ invalid json }';
     component.guardarDefinicion();
 
