@@ -96,7 +96,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly filtroVigenciaFamilia = signal('TODAS');
   readonly paginaFamilias = signal(1);
   readonly registrosPorPaginaFamilias = signal(10);
-  readonly mostrandoVersionesFamilia = signal(false);
 
   readonly totalFamilias = computed(() => this.familias().length);
   readonly totalFamiliasActivas = computed(() => this.familias().filter(f => f.famActivo).length);
@@ -150,9 +149,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   nuevaFamiliaDescripcion = '';
   nuevaFamiliaActivo = true;
 
-  readonly modalFormularioAbierto = signal<boolean>(false);
-  nuevoFormularioCodigo = '';
-  nuevoFormularioNombre = '';
 
   readonly riesgos = signal<RiesgoDto[]>([]);
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
@@ -299,9 +295,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     } else if (this.modalFamiliaAbierto()) {
       event.preventDefault();
       this.cerrarModalFamilia();
-    } else if (this.modalFormularioAbierto()) {
-      event.preventDefault();
-      this.cerrarModalFormulario();
     }
   }
 
@@ -330,7 +323,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     if (tab === 'consolidado') this.cargarConsolidado();
     if (tab === 'plantillas') {
-      this.mostrandoVersionesFamilia.set(false);
       this.paginaFamilias.set(1);
       this.cargarFamilias();
     }
@@ -448,19 +440,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.paginaFamilias.set(1);
   }
 
-  seleccionarFamiliaDesdeGestor(famCodigo: string): void {
-    this.seleccionarFamilia(famCodigo);
-    this.mostrandoVersionesFamilia.set(true);
-    this.cerrarModalGestorFamilias();
-  }
-
-  volverAGestorFamilias(): void {
-    this.mostrandoVersionesFamilia.set(false);
-    this.versionEditando.set(null);
-    this.errorPlantillas.set(null);
-    this.cargarFamilias();
-  }
-
   abrirModalVerFamilia(fam: FamiliaFormularioDto): void {
     if (!fam || fam.famId <= 0) return;
 
@@ -482,10 +461,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.abrirModalEditarFamilia(familia);
       }),
       componentRef.instance.nuevaVersion.subscribe(familia => {
-        this.ocultarDetalleComoContexto();
-        this.seleccionarFamilia(familia.famCodigo);
-        this.mostrandoVersionesFamilia.set(true);
-        this.abrirModalCrearFormulario();
+        this.crearNuevaVersionDesdeDetalle(familia);
       }),
       componentRef.instance.verDefinicion.subscribe(({ familia, version, modoEdicion }) => {
         this.ocultarDetalleComoContexto();
@@ -1612,23 +1588,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
-  abrirModalCrearFormulario(): void {
-    if (!this.esAdministrador()) return;
-    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
-    this.nuevoFormularioCodigo = famObj?.famCodigo || 'MATRIZ_NUEVA';
-    this.nuevoFormularioNombre = famObj?.famNombre || 'Nueva Matriz de Riesgos';
-    this.errorModal.set(null);
-    this.globalState.limpiarError();
-    this.modalFormularioAbierto.set(true);
-  }
-
-  cerrarModalFormulario(): void {
-    this.modalFormularioAbierto.set(false);
-    this.errorModal.set(null);
-    this.globalState.limpiarError();
-    this.mostrarDetalleComoContexto();
-  }
-
   cerrarDefinicion(): void {
     this.versionEditando.set(null);
     this.mostrarDetalleComoContexto();
@@ -1637,17 +1596,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }, 50);
   }
 
-  guardarNuevoFormulario(): void {
+  crearNuevaVersionDesdeDetalle(familia: FamiliaFormularioDto): void {
     if (!this.esAdministrador()) return;
-    const famObj = this.familias().find(f => f.famCodigo === this.familiaSeleccionada());
-    if (!famObj) {
-      this.errorModal.set('Seleccione una familia válida para crear el formulario.');
+    if (!familia || familia.famId <= 0) {
+      this.mostrarError('No se encontró la familia para crear la nueva versión.');
       return;
     }
 
     const plantillaBase = {
-      codigoFormulario: this.nuevoFormularioCodigo.trim().toUpperCase(),
-      nombreFormulario: this.nuevoFormularioNombre.trim(),
+      codigoFormulario: familia.famCodigo.trim().toUpperCase(),
+      nombreFormulario: familia.famNombre.trim(),
       version: "1.0",
       secciones: [
         {
@@ -1680,18 +1638,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     };
 
     this.guardando.set(true);
-    this.errorModal.set(null);
     this.globalState.limpiarError();
 
     this.service.crearBorradorFormulario(
-      famObj.famId,
-      this.nuevoFormularioCodigo.trim().toUpperCase(),
+      familia.famId,
+      familia.famCodigo.trim().toUpperCase(),
       JSON.stringify(plantillaBase)
     ).subscribe({
       next: verId => {
         this.guardando.set(false);
-        this.modalFormularioAbierto.set(false);
-        this.errorModal.set(null);
         this.globalState.limpiarError();
         this.mostrarMensaje(`Formulario borrador creado exitosamente con ID #${verId}.`);
         this.cargarVersiones();
@@ -1699,7 +1654,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       error: error => {
         this.guardando.set(false);
         this.globalState.limpiarError();
-        this.errorModal.set(this.obtenerMensajeError(error, 'No se pudo crear el borrador del formulario.'));
+        this.mostrarError(this.obtenerMensajeError(error, 'No se pudo crear el borrador del formulario.'));
       }
     });
   }

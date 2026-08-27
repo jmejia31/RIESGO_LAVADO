@@ -320,11 +320,8 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.versionEditando()).toBeNull();
   });
 
-  it('crea el borrador base de una familia seleccionada y vincula evidencia', () => {
-    component.abrirModalCrearFormulario();
-    component.nuevoFormularioCodigo = 'FORM_NUEVO';
-    component.nuevoFormularioNombre = 'Formulario nuevo';
-    component.guardarNuevoFormulario();
+  it('crea una nueva versiÃ³n directamente desde el Detalle de Familia y vincula evidencia', () => {
+    component.crearNuevaVersionDesdeDetalle({ famId: 1, famCodigo: 'FORM_NUEVO', famNombre: 'Formulario nuevo' } as never);
     expect(service.crearBorradorFormulario).toHaveBeenCalledWith(
       1,
       'FORM_NUEVO',
@@ -391,10 +388,6 @@ describe('MatricesRiesgosComponent', () => {
     expect(component.versionEditando()).toBeNull();
 
     // 2. Modal formulario abierto. Los modales standalone gestionan Escape internamente.
-    component.abrirModalCrearFormulario();
-    expect(component.modalFormularioAbierto()).toBe(true);
-    component.manejarTeclaEscape(ev);
-    expect(component.modalFormularioAbierto()).toBe(false);
   });
 
   it('cuenta evaluaciones por estado sin distinción de mayúsculas/minúsculas', () => {

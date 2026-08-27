@@ -154,24 +154,31 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     expect(component.familias()).toHaveLength(12);
   });
 
-  it('6. entrar a Plantillas restablece el gestor como vista principal', () => {
-    component.mostrandoVersionesFamilia.set(true);
-    component.seleccionarTab('plantillas');
-    expect(component.mostrandoVersionesFamilia()).toBe(false);
+  it('6.1 renderiza Ãºnicamente el gestor principal de familias', () => {
+    component.tab.set('plantillas');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-ui-fam="gestor-principal"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-ui-fam="versiones-transicion"]')).toBeNull();
   });
 
-  it('7. Ver versiones conserva la familia seleccionada y usa el puente transitorio', () => {
-    component.seleccionarFamiliaDesdeGestor('GTIC');
+  it('6.2 no renderiza la interfaz transitoria de versiones', () => {
+    component.tab.set('plantillas');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Vista transitoria de versiones');
+  });
+
+  it('6.3 no renderiza el modal legacy de nuevo formulario', () => {
+    component.tab.set('plantillas');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).not.toContain('Nuevo Formulario de Matriz');
+  });
+
+  it('6.4 conserva el contexto de familia al seleccionarla en el flujo vigente', () => {
+    component.seleccionarFamilia('GTIC');
     expect(component.familiaSeleccionada()).toBe('GTIC');
-    expect(component.mostrandoVersionesFamilia()).toBe(true);
     expect(service.listarHistorialVersionesFormulario).toHaveBeenCalledWith('GTIC');
   });
 
-  it('8. volver desde versiones retorna al gestor de familias', () => {
-    component.mostrandoVersionesFamilia.set(true);
-    component.volverAGestorFamilias();
-    expect(component.mostrandoVersionesFamilia()).toBe(false);
-  });
 
   it('9. renderiza la pantalla principal con KPI y las ocho columnas aprobadas', () => {
     fixture.detectChanges();

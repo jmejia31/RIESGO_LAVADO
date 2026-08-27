@@ -95,7 +95,6 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   const mostrarGestorPrincipal = (): void => {
     component.cerrarModalGestorFamilias();
     component.tab.set('plantillas');
-    component.mostrandoVersionesFamilia.set(false);
     fixture.detectChanges();
   };
 
@@ -165,12 +164,6 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component.cerrarModalVerFamilia();
     expect(component.detalleFamiliaDinamicoAbierto()).toBe(false);
     expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).toBeNull();
-  });
-
-  it('8. Selección de Ver versiones selecciona la familia y cierra el gestor', () => {
-    component.seleccionarFamiliaDesdeGestor('QA_TEST');
-    expect(component.familiaSeleccionada()).toBe('QA_TEST');
-    expect(component.modalGestorFamiliasAbierto()).toBe(false);
   });
 
   it('9. Confirmar activación y desactivación llaman al servicio Angular', () => {

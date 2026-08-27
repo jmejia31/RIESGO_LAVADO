@@ -161,28 +161,14 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
 
       component.eliminarVersionFormulario(baseVersion);
       expect(service.eliminarVersionFormulario).not.toHaveBeenCalled();
-
-      component.abrirModalCrearFormulario();
-      expect(component.modalFormularioAbierto()).toBe(false);
-
-      component.guardarNuevoFormulario();
-      expect(service.crearBorradorFormulario).not.toHaveBeenCalled();
     });
 
-    it('en vista de plantillas, no-admin ve solo Ver Definición y no ve botones administrativos', () => {
-      authServiceMock.tieneRol.mockReturnValue(false);
+    it('retira el panel legacy y conserva el panel principal de familias', () => {
       component.tab.set('plantillas');
-      component.mostrandoVersionesFamilia.set(true);
-      component.versiones.set([baseVersion]);
       fixture.detectChanges();
-
-      const el = fixture.nativeElement as HTMLElement;
-      expect(el.querySelector('button[aria-label="Ver definición"]')).toBeTruthy();
-      expect(el.querySelector('button[aria-label="Editar definición"]')).toBeNull();
-      expect(el.querySelector('button[aria-label="Clonar versión"]')).toBeNull();
-      expect(el.querySelector('button[aria-label="Publicar versión"]')).toBeNull();
-      expect(el.querySelector('button[aria-label="Eliminar versión"]')).toBeNull();
-      expect(el.querySelector('button[title="Crear una nueva versión"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('[data-ui-fam="gestor-principal"]')).toBeTruthy();
+      expect(fixture.nativeElement.querySelector('[data-ui-fam="versiones-transicion"]')).toBeNull();
+      expect(fixture.nativeElement.textContent).not.toContain('Nuevo Formulario de Matriz');
     });
   });
 

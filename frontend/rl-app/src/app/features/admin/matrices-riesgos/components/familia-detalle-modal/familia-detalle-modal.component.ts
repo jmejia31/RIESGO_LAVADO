@@ -54,7 +54,6 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   @Input() familiaReferencia: FamiliaFormularioDto | null = null;
 
   @Output() readonly cerrar = new EventEmitter<void>();
-  @Output() readonly gestionarVersiones = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly editarFamilia = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly nuevaVersion = new EventEmitter<FamiliaFormularioDto>();
   @Output() readonly verDefinicion = new EventEmitter<{ familia: FamiliaFormularioDto; version: VersionFormularioDto; modoEdicion: boolean }>();
@@ -176,11 +175,6 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   reintentarVersiones(): void {
     const familia = this.detalle();
     if (familia) this.cargarVersiones(familia);
-  }
-
-  solicitarGestionVersiones(): void {
-    const familia = this.detalle();
-    if (familia) this.gestionarVersiones.emit(familia);
   }
 
   solicitarEdicion(): void {
