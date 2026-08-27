@@ -1,5 +1,13 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención - Codex - corrección coordinador global de foco
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit técnico: `18d9574` (`wip(mcv): avanzar coordinación global de foco en modales`).
+- Se retiraron las variantes locales no comprometidas de FormBuilder y se conservó únicamente la corrección general de `MainLayoutComponent`: no guardar `BODY/HTML` como foco previo y no pisar el foco si ya pertenece a otro modal visible.
+- Se agregó una prueba de regresión global para no sobrescribir el foco de un segundo modal visible.
+- Pruebas: MainLayout `5/5 PASS`; build frontend `PASS` con advertencias existentes; E2E MCV.2 `FAIL` en la assertion contractual de foco (`expected 1`, `received 0`).
+- Estado real: Quality Gates y Sonar no se certifican verdes; no hay PR ni merge.
+
 ## Registro de intervención - Codex - UAT CDP real / corrección P0 auditoría
 
 - Fecha/hora: 2026-08-26. Autor: Codex. Rama `desarrollo`. Commit pendiente de cierre técnico.
@@ -6429,6 +6437,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Sonar/CI/PR no se declaran verdes: `.github/workflows/sonar-analysis.yml` usa el secreto y variables normales; `gh auth status` reporta token invalido y la API GitHub falla por restriccion de red.
 - Archivos documentales modificados: esta bitacora y `docs/0.0 DocumentaciÃ³n/ESTADO_COLABORACION.md`. No hubo cambios funcionales ni nuevo commit tecnico.
 - Pendiente externo unico: reautenticar GitHub CLI y disponer de acceso a `api.github.com` para PR, checks, Sonar remoto, merge protegido y CI post-merge de `main`.
+
+## Registro de intervencion - Codex - resultado remoto y bloqueo repo-side
+
+- Fecha/hora local: 2026-08-26 23:05 (UTC-6). Autor: Codex. Rama `desarrollo`. SHA publicado `2642423c0e73d7508440fcacaa1c8dad2b53bd59`.
+- El run GitHub Actions `33039392842`, del mismo SHA, termino `failure`: job `98409308965`, step `Run repository quality gates`; `28 passed`, MCV.2 fallo en los dos intentos por `locator('[data-ui-fam-detail="modal"]').locator(':focus')`, esperado `1`, recibido `0`, timeout 5000 ms.
+- La correccion inicial MCV.7 pasa localmente de forma aislada y secuencial, pero no es robusta bajo CI concurrente. Se probaron cambios dirigidos no satisfactorios y fueron retirados; no se dejaron cambios funcionales sin validar.
+- Estado final de esta intervencion: local verde, remoto rojo en el mismo SHA; no se creo PR ni se intento merge. El siguiente trabajo debe corregir la sincronizacion del modal global/dinamico y repetir E2E, Quality Gate y CI antes de integrar.
 
 ## Registro de intervencion - Codex - MCV.9 certificacion integral y cierre
 

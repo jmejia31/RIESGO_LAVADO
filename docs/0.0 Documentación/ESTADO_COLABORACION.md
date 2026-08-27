@@ -1,5 +1,12 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - corrección coordinador global de foco
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit técnico: `18d9574` (`wip(mcv): avanzar coordinación global de foco en modales`).
+- Corrección aplicada: `MainLayoutComponent` no conserva `BODY/HTML` como foco previo y no sobrescribe el foco ya entregado a un modal visible. Se agregó regresión unitaria global.
+- Evidencia: MainLayout `5/5 PASS`; build frontend `PASS` con advertencias existentes. E2E MCV.2 sigue `FAIL` en `[data-ui-fam-detail="modal"] :focus`, esperado `1`, recibido `0`.
+- No se declara Quality Gate local/remoto ni Sonar verdes. No existe PR ni merge.
+
 ## Estado vigente - UAT real CDP / FINAL-D.1 pendiente por contrato de datos
 
 - Fecha/hora: 2026-08-26. Autor: Codex. Rama `desarrollo`. Commit técnico pendiente; no se modificó `main`.
@@ -623,6 +630,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Quality Gate local exacto: `PASS / EXIT CODE 0`; backend `494/494`, frontend `699/699`, E2E `29/29`, cobertura dentro de umbrales.
 - SonarCloud, CI, PR y merge permanecen `PENDIENTES`: GitHub CLI tiene token invalido y la API esta bloqueada por red. No se declara verde remoto sin evidencia.
 - Continuacion: reautenticar GitHub CLI y habilitar acceso API; consultar runs del SHA, gestionar PR `desarrollo -> main`, esperar checks/Sonar verdes, hacer merge por PR y certificar CI post-merge.
+
+## Estado vigente - bloqueo por Quality Gates remoto del SHA publicado
+
+- SHA `2642423c0e73d7508440fcacaa1c8dad2b53bd59` esta publicado y sincronizado previamente, pero GitHub Actions run `33039392842` termino `failure` en `Run repository quality gates`.
+- Causal exacto remoto: E2E `28 passed`, MCV.2 fallo en primer intento y retry por foco ausente en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0). No se declara CI/Quality Gate/Sonar verde ni se crea/mergea PR.
+- Los cambios experimentales de correccion no satisfactoria fueron retirados; worktree vuelve al codigo publicado. Quality Gate local anterior permanece `PASS`: backend `494/494`, frontend `699/699`, E2E `29/29`.
+- Punto de continuacion: corregir la coordinacion real entre MainLayout y las vistas dinamicas Detalle/Builder, ejecutar prueba dirigida, suite 29, Quality Gate y nuevo CI; solo entonces crear/reutilizar PR y evaluar Sonar/merge.
 
 ## Estado vigente - MCV.9 certificacion integral y cierre
 
