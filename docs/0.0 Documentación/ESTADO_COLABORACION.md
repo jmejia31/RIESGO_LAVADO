@@ -1,5 +1,23 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - Commit tecnico publicado localmente; documental pendiente
+
+- Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico: `a3a71b9` (`fix(matrices): cerrar flujo dinamico y consistencia visual`).
+- Implementacion y UAT certificadas: Nueva Evaluacion por Familia/version activa, limpieza completa al quitar Familia, proteccion async stale, Detalle de Familia contextual, layouts de Consolidado/Plantillas/Builder y labels visibles corregidos.
+- Evaluaciones permanece congelada en su bloque aprobado de filtros; regresion `0`. UAT CDP real PASS en `127.0.0.1:54257`; browser UAT permanece abierto.
+- Pruebas: 705 frontend PASS, E2E 29/29 PASS, build PASS, lint PASS, Quality Gate local PASS, backend 494/494 PASS.
+- Commit tecnico contiene solo codigo, estilos, pruebas, E2E y herramienta UAT reutilizable. Bitacora, estado y PNG permanecen sin commit para el commit documental separado.
+- Punto de continuacion: stage explicito de ambas bitacoras y `docs/11. Prototipos/REFERENCIAS_UAT_2026-08-27/`; crear commit documental y publicar unicamente en `origin/desarrollo`. Sonar diferido; no PR, merge ni `main`.
+
+## Estado vigente - Nueva Evaluacion dinamica y UAT real completada sin Git
+
+- Fecha/hora local: 2026-08-27. Rama `desarrollo`. HEAD inicial de la intervencion `b04987d`; no se ejecuto staging, commit ni push.
+- Implementado: selector real de familia para Nueva Evaluacion, version activa por familia, renderer dinamico condicionado a contexto valido, limpieza atomica al deseleccionar, proteccion de respuestas async tardias, boton ojo y retorno contextual al mismo modal. Familias sin leyenda ni boton redundante. Consolidado/Plantillas con filtros superiores y paginacion inferior; Builder con controles dimensionados; etiquetas visibles corregidas.
+- Evidencia CDP real en `127.0.0.1:54257`: mismo browser/context/page PASS, pestañas 5 ciclos PASS, un bloque de filtros por pestaña y sin overflow, Nueva Evaluacion empty/selected/cleared PASS, Detalle/Regresar PASS, Builder 5/5 y Editar Familia 5/5. Chromium UAT permanece abierto.
+- Pruebas ejecutadas: frontend 705/705, backend 494/494, E2E 29/29, build PASS, lint PASS, Quality Gate local Release PASS. Cobertura frontend: 61.65% sentencias, 56.41% ramas, 57.62% funciones, 61.98% lineas. `git diff --check` PASS con avisos CRLF informativos.
+- Restricciones: Evaluaciones permanece congelada en su bloque aprobado de filtros. No se leyeron passwords, tokens, cookies, localStorage/sessionStorage sensible. Sonar diferido por el usuario; sin PR, merge ni cambios en `main`.
+- Pendiente: revision final del diff y cierre Git autorizado; commit tecnico y documental separados, seguido de push a `desarrollo` unicamente tras autorizacion explicita.
+
 ## Estado vigente - corrección coordinador global de foco
 
 - Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit técnico: `18d9574` (`wip(mcv): avanzar coordinación global de foco en modales`).
@@ -656,6 +674,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - MainLayout ahora observa `document.body`, reconoce modales propios externos con `data-app-modal="true"`, filtra estados no visibles y protege el foco ya entregado. Se agrego regresion unitaria general; FormBuilder no fue modificado.
 - Verificacion: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0). No se afirma Quality Gate verde.
 - Estado: avance tecnico coherente pendiente de push y commit documental. No crear PR ni hacer merge a `main` mientras MCV.2 continue rojo.
+## Estado vigente - alcance visual Matrices de Riesgos
+
+- Fecha/hora local: 2026-08-27 12:16 (UTC-6). Autor: Codex. Rama `desarrollo`. Inicio `b04987d`; commit final pendiente.
+- Evaluaciones conserva su bloque de filtros aprobado; pruebas de pestañas bloquean filtros cruzados. Consolidado y Plantillas usan filtros propios con lenguaje visual adaptado. Builder ajustado en `Acciones` y `2 columnas`. KPIs son un unico bloque superior contextual.
+- Evidencia fresca: frontend `703/703`, backend `494/494`, E2E `29/29`, build/lint/Quality Gate local PASS; cobertura frontend `61.53%` sentencias y `56.46%` ramas.
+- Pendiente externo: UAT Chromium visible + CDP no ejecutada por ausencia de endpoint/sesion (`cdp-endpoint.txt`). Sonar `DEFERRED_BY_USER`; no PR, merge ni `main`.
+- Continuacion: ejecutar launcher UAT interactivo, correr `node tools/uat/matrices-uat-cdp.mjs`, certificar las tres pestañas y luego comprobar `HEAD == origin/desarrollo`, `AHEAD=0`, `BEHIND=0`, worktree limpio.
+
 ## Estado vigente - correccion final de ownership de foco
 
 - Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.

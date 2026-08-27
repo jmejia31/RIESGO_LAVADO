@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Cierre documental - Codex - Nueva Evaluacion dinamica y consistencia visual
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit tecnico: `a3a71b9` (`fix(matrices): cerrar flujo dinamico y consistencia visual`).
+- Se certifica Nueva Evaluacion con Familia real, version activa, renderer dinamico, limpieza al deseleccionar, proteccion async stale, cambio Familia A/B, boton ojo a Detalle de Familia y Regresar conservando contexto.
+- Se certifican Configuracion/Formulario separados, labels corregidos, Consolidado y Plantillas reorganizados, y controles Builder Acciones/Columnas dimensionados. Evaluaciones conserva intacto su bloque aprobado: `EVALUACIONES_REGRESSION=0`.
+- UAT real: Chromium/CDP `http://127.0.0.1:54257`, mismo browser/context/page, 5 ciclos de pestanas, Nueva Evaluacion vacia/seleccionada/des-seleccionada, cambio de familia, Detalle/Regresar, Builder 5/5 y Editar Familia 5/5. Chromium quedo abierto.
+- Validaciones: 705 pruebas frontend PASS; E2E 29/29 PASS; build, lint, Quality Gate local Release y backend 494/494 PASS; `git diff --check` PASS.
+- El commit tecnico excluye bitacoras, estado y PNG. `tools/uat/visual-scope-cdp.mjs` queda versionado como herramienta UAT reutilizable y no cierra browser/context/page.
+- Pendiente inmediato: commit documental separado y push exclusivo a `origin/desarrollo`. Sonar diferido; sin PR, merge ni cambios en `main`.
+
+## Registro de intervencion - Codex - Nueva Evaluacion dinamica y correcciones UAT
+
+- Fecha/hora local: 2026-08-27. Rama: `desarrollo`. HEAD inicial de esta intervencion: `b04987d`. No se ejecuto staging, commit ni push.
+- Alcance: Nueva Evaluacion inicia sin formulario, selecciona familias reales, resuelve version vigente por familia, protege respuestas async tardias, permite ojo -> Detalle de Familia -> Regresar preservando contexto y limpia completamente al volver a opcion vacia. Se retiraron leyenda y retorno redundantes de Familias; Consolidado y Plantillas reorganizaron filtros/paginacion; Builder ajusto controles; se normalizaron etiquetas visibles sin cambiar claves tecnicas.
+- Archivos de codigo/pruebas modificados: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`, `.html`, pruebas del componente, `dynamic-form-renderer.util.ts`, `familia-detalle-modal.component.ts/.html`, controles FormBuilder y `frontend/rl-app/e2e/login-and-routing.spec.ts`. Evidencia UAT agrupada en `tools/uat/visual-scope-cdp.mjs`.
+- UAT CDP real ejecutada contra `http://127.0.0.1:54257`: conexion y reutilizacion de browser/context/page PASS; 5 ciclos de pestañas; filtros unicos sin overflow; Nueva Evaluacion vacia/seleccionada/vacia PASS; ojo/Detalle/Regresar PASS; Builder 5 ciclos con Acciones abierto y Columnas medidas; Editar Familia 5 ciclos. Chromium permanecio abierto y no se leyeron credenciales ni almacenamiento sensible.
+- Pruebas: frontend 64 archivos / 705 pruebas PASS; E2E 29/29 PASS; build PASS; lint PASS; Quality Gate local Release PASS; backend 494/494 PASS; cobertura frontend sentencias 61.65%, ramas 56.41%, funciones 57.62%, lineas 61.98%. `git diff --check` PASS con avisos informativos CRLF.
+- Estado: implementacion y validacion local/UAT completadas en esta intervencion. Git queda pendiente por instruccion del propietario: no stagear, no commit, no push. Sonar diferido; sin PR, merge ni cambios en `main`.
+- Punto de continuacion: revision manual del diff, staging tecnico explicito y documentacion separada solo cuando Javier Mejia autorice el cierre Git.
+
 ## Registro de intervención - Codex - corrección coordinador global de foco
 
 - Fecha/hora local: 2026-08-27. Rama: `desarrollo`. Commit técnico: `18d9574` (`wip(mcv): avanzar coordinación global de foco en modales`).
@@ -6463,6 +6483,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Pruebas: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0), reproducido en las ejecuciones dirigidas. La assertion E2E no fue modificada.
 - Estado: avance tecnico publicado, pero MCV.2 repo-side continua sin resolverse. No se ejecutan suite completa, Quality Gate remoto, Sonar, PR ni merge mientras el E2E siga rojo.
 - Archivos modificados en esta intervencion: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Commit documental final pendiente de publicacion fail-closed.
+## Registro de intervencion - Codex - alcance visual Matrices de Riesgos
+
+- Fecha/hora local: 2026-08-27 12:16 (UTC-6). Autor: Codex. Rama `desarrollo`. Commit inicial `b04987d`; commit final pendiente.
+- Objetivo: corregir Builder, filtros propios de Consolidado/Plantillas y KPIs por pestana, preservando el bloque aprobado de filtros de Evaluaciones.
+- Cambios: Builder `Acciones` y `2 columnas` dimensionados; Consolidado recibe busqueda/estado/limpiar filtros; Plantillas conserva busqueda/estado/vigencia; un unico bloque superior de KPIs contextual. El bloque de filtros de Evaluaciones no fue modificado.
+- Pruebas verificadas: frontend focalizada `24/24 PASS`; frontend completa `703/703 PASS`; backend `494/494 PASS`; E2E `29/29 PASS`; build, lint y Quality Gate local PASS; cobertura frontend sentencias `61.53%`, ramas `56.46%`, funciones `57.57%`, lineas `61.84%`; `git diff --check PASS`.
+- Pendiente: UAT sobre Chromium visible conectado por CDP por ausencia de endpoint/sesion (`cdp-endpoint.txt`). No PR, merge ni `main`. Continuacion: iniciar Chromium UAT visible/CDP y verificar `/matrices-riesgos` en las tres pestanas.
+
 ## Registro de intervencion - Codex - correccion final de ownership de foco
 
 - Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.
