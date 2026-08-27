@@ -590,7 +590,7 @@
   }
 
   @if (modalGestorFamiliasAbierto()) {
-    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="cerrarModalGestorFamilias()">
+<dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-gestor-familias" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
       <div class="modal-container-card modal-size-xl">
         <div class="modal-header-institutional">
           <div class="flex items-center gap-3">
@@ -760,7 +760,7 @@
   }
 
   @if (modalVerFamiliaAbierto(); as famVer) {
-    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="cerrarModalVerFamilia()">
+<dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
       <div class="modal-container-card modal-size-md">
         <div class="modal-header-institutional">
           <div>

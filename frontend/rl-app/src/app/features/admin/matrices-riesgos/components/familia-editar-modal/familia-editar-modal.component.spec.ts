@@ -214,14 +214,14 @@ describe('FamiliaEditarModalComponent — UI-FAM.4 + UI-FAM.QA', () => {
     expect(emitSpy).toHaveBeenCalledWith({ familia: desactivada, accion: 'DESACTIVADA' });
   });
 
-  it('cierra con Escape cuando no existe una operación en curso', () => {
+  it('conserva el modal abierto al pulsar Escape', () => {
     const emitSpy = vi.spyOn(component.cerrar, 'emit');
     const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
 
     component.manejarTecladoDialogo(event);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(emitSpy).toHaveBeenCalledTimes(1);
+    expect(emitSpy).not.toHaveBeenCalled();
   });
 
   it('impide mutaciones cuando el usuario no es Administrador', async () => {

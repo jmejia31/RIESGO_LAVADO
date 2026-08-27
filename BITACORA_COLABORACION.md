@@ -6331,3 +6331,11 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Evidencia dirigida: Editor Visual -> Vista Previa -> Editor Visual y Lienzo -> Catalogos -> Lienzo; active/inactive, indicador que cambia, consistencia con el contenido y ausencia de doble activo: PASS.
 - Regresion: frontend 64 archivos / 696 pruebas PASS; E2E 24/24 PASS; build PASS con advertencias preexistentes; lint PASS; `git diff --check` PASS. Backend sin cambios, ultimo gate certificado 494/494 PASS.
 - No se creo fase ni subfase nueva, ni se modificaron backend, DB, API, permisos o contratos JSON. Chromium/CDP permanecen abiertos.
+## Registro de intervencion - Codex - MCV.1 sesion y Escape
+
+- Fecha/hora: 2026-08-27 (UTC-6). Rama: desarrollo. Commit inicial: e7306d3.
+- Alcance: separar actividad humana de refresh JWT y evitar que Escape cierre modales de Matrices/Formularios. No se reabrio UI-FORM ni se creo subfase.
+- Causa corregida: Crear Familia, Editar Familia, Detalle Familia, Gestor y Ver Familia aun tenian cierres locales por Escape que contradecian la politica global. Ahora Escape se previene y conserva contexto/foco; el cierre queda en botones explicitos. El menu contextual de seccion puede cerrarse sin cerrar su modal.
+- Evidencia: AuthService 697/697 frontend PASS, E2E aislada 25/25 PASS, incluyendo `MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito`; build PASS con advertencias preexistentes, lint PASS y `git diff --check` PASS. Backend sin cambios; ultimo gate certificado 494/494 PASS.
+- Gates MCV.1: actividad reinicia inactividad, refresh no reinicia actividad, logout a 30 minutos, fallo transitorio conserva sesion, fallo definitivo se maneja y Escape no cierra modal: PASS.
+- Archivos modificados: componentes y pruebas de familia/detalle, plantilla de Matrices, E2E MCV.1, bitacora y estado colaborativo. Passwords, tokens y cookies no fueron leidos; main no fue tocada.

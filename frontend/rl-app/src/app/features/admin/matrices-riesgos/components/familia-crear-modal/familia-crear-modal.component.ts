@@ -59,7 +59,6 @@ export class FamiliaCrearModalComponent implements AfterViewInit, OnDestroy {
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
-      this.solicitarCierre();
       return;
     }
 

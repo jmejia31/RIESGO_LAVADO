@@ -147,7 +147,6 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
-      this.solicitarCierre();
       return;
     }
 

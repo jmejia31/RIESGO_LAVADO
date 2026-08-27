@@ -52,6 +52,6 @@ describe('FamiliaDetalleModalComponent — UI-FAM.QA transversal', () => {
     expect(dialog?.querySelector('.overflow-y-auto')).not.toBeNull();
 
     dialog?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
-    expect(cerrarSpy).toHaveBeenCalled();
+    expect(cerrarSpy).not.toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@
         data-ui-fam-detail="modal"
         [attr.aria-busy]="cargando()"
         (keydown)="manejarKeydown($event)"
-        (keydown.escape)="$event.preventDefault(); cerrar.emit()">
+        (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
   <div class="modal-container-card modal-size-workspace">
     <header class="flex shrink-0 items-center justify-between gap-4 border-b border-gray-100 bg-white px-6 py-5 sm:px-7">
       <div class="flex min-w-0 items-center gap-3 sm:gap-4">

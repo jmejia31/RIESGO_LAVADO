@@ -161,6 +161,20 @@ test('UI-FAM.2 carga el detalle por ID dentro de un único modal XL con sus vers
   await expect(disparador).toBeFocused();
 });
 
+test('MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito', async ({ page }) => {
+  await abrirGestor(page);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('heading', { name: 'Familias de Formularios' })).toBeVisible();
+
+  await abrirDetalle(page);
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(detalle).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar detalle de familia' }).click();
+  await expect(detalle).toHaveCount(0);
+});
+
 test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido', async ({ page }) => {
   await page.route('**/api/matrices-riesgos/familias/7', route => route.fulfill({
     status: 404,

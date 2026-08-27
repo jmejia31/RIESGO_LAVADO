@@ -252,6 +252,12 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   }
 
   manejarKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
     if (event.key !== 'Tab') return;
 
     const dialogo = this.host.nativeElement.querySelector('dialog') as HTMLDialogElement | null;

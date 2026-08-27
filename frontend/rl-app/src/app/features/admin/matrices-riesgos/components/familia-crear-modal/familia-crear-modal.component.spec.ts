@@ -111,16 +111,17 @@ describe('FamiliaCrearModalComponent — UI-FAM.3 + UI-FAM.QA', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-ui-fam-create-state="error"]')).not.toBeNull();
   });
 
-  it('8. Escape cierra cuando es seguro y no cierra durante el submit', () => {
+  it('8. Escape conserva el modal abierto incluso cuando no hay submit', () => {
     const spyCerrar = vi.spyOn(component.cerrar, 'emit');
-    const evento = new KeyboardEvent('keydown', { key: 'Escape' });
+    const evento = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
 
     component.manejarTecladoDialogo(evento);
-    expect(spyCerrar).toHaveBeenCalledTimes(1);
+    expect(evento.defaultPrevented).toBe(true);
+    expect(spyCerrar).not.toHaveBeenCalled();
 
     component.guardando.set(true);
     component.manejarTecladoDialogo(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(spyCerrar).toHaveBeenCalledTimes(1);
+    expect(spyCerrar).not.toHaveBeenCalled();
   });
 
   it('9. UI-FAM.QA valida nombre requerido de forma independiente al código', () => {

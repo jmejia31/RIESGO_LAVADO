@@ -112,6 +112,16 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(fixture.componentInstance.detalle()).toEqual(familia);
   });
 
+  it('bloquea Escape sin cerrar el detalle', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+    fixture.componentInstance.manejarKeydown(event);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-ui-fam-detail="modal"]')).not.toBeNull();
+  });
+
   it('2. mantiene estado loading mientras la respuesta está pendiente', () => {
     const detallePendiente = new Subject<FamiliaFormularioDto>();
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(detallePendiente);

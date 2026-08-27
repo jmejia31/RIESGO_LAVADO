@@ -534,3 +534,10 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia: EDITOR_VISUAL_ACTIVE, VISTA_PREVIA_ACTIVE, LIENZO_FORMULARIO_ACTIVE y CATALOGOS_ACTIVE PASS; estados inactivos, indicador movil, consistencia de navegacion y focus-visible PASS. La semantica existente `aria-current` continua identificando la vista activa.
 - Regresion: frontend 696/696 PASS; E2E 24/24 PASS; build, lint y git diff --check PASS. Backend no fue modificado y conserva 494/494 PASS.
 - UI-FORM.1 = CERRADA; UI-FORM.2 = CERRADA; UI-FORM.3 = CERRADA; UI-FORM.4 = CERRADA; UI-FORM.5 = CERRADA; UI-FORM.6 = CERRADA; UI-FORM.FINAL-D.1 = CERRADA; UI-FORM.7 = CERRADA. P0 UI-FORM = 0; P1 UI-FORM = 0.
+## Estado vigente - MCV.1 sesion y Escape
+
+- Fecha/hora: 2026-08-27 (UTC-6). Rama: desarrollo. Commit inicial: e7306d3.
+- MCV.1 = CERRADA. La actividad humana y el refresh JWT conservan relojes independientes; la politica de inactividad y los fallos de refresh mantienen el comportamiento contractual.
+- Escape ya no cierra modales de Matrices/Formularios: Gestor, Detalle, Crear Familia, Editar Familia, Constructor, Versiones, Evaluaciones, View, Edit, Seguimiento y Nueva Evaluacion conservan el modal; el cierre explicito por boton permanece. El menu contextual interno de seccion puede cerrarse de forma local.
+- Evidencia: frontend 697/697 PASS; E2E 25/25 PASS en ejecucion aislada; build, lint y git diff --check PASS; backend no modificado, ultimo gate 494/494 PASS.
+- No se creo MCV.10, MCV.1.1 ni otra subfase. UI-FORM permanece baseline cerrado y main intacta. Siguiente punto: MCV.2, navegacion contextual.
