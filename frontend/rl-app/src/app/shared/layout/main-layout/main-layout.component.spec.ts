@@ -149,7 +149,7 @@ describe('MainLayoutComponent', () => {
 
     modalB.removeAttribute('aria-hidden');
     modalA.remove();
-    botonB.focus();
+    expect(modalB.contains(document.activeElement)).toBe(false);
     component['sincronizarBloqueoModal']();
 
     expect(component['dialogoActivo']).toBe(modalB);

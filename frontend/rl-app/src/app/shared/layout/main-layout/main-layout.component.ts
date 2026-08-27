@@ -50,7 +50,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
 
     this.observadorDialogos = new MutationObserver(() => this.sincronizarBloqueoModal());
-    this.observadorDialogos.observe(document.body, { childList: true, subtree: true });
+    this.observadorDialogos.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-hidden', 'inert', 'open', 'style']
+    });
     document.addEventListener('keydown', this.mantenerFocoEnDialogo, true);
     this.sincronizarBloqueoModal();
   }
@@ -94,7 +99,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     const dialogos = this.obtenerDialogosVisibles();
     const dialogo = dialogos.at(-1) ?? null;
 
-    if (dialogo === this.dialogoActivo) return;
+    if (dialogo === this.dialogoActivo) {
+      if (dialogo && !dialogo.contains(document.activeElement)) {
+        this.enfocarDialogo(dialogo);
+      }
+      return;
+    }
 
     this.restaurarElementosInert();
     this.limpiarTabindexTemporal();
@@ -107,6 +117,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       this.focoPrevio = null;
       queueMicrotask(() => {
         if (this.obtenerDialogosVisibles().length > 0) return;
+        if (this.hayModalExternoConectado()) return;
         if (this.estaEnModalVisible(document.activeElement)) return;
         if (focoARestaurar?.isConnected && !focoARestaurar.inert) {
           focoARestaurar.focus({ preventScroll: true });
@@ -122,11 +133,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.dialogoActivo = dialogo;
     document.body.classList.add('modal-abierto');
-    if (!dialogo.hasAttribute('data-app-modal') &&
-        (document.activeElement === dialogo || !dialogo.contains(document.activeElement))) {
+    this.aplicarInertFueraDelDialogo(dialogo);
+    if (document.activeElement === dialogo || !dialogo.contains(document.activeElement)) {
       this.enfocarDialogo(dialogo);
     }
-    this.aplicarInertFueraDelDialogo(dialogo);
   }
 
   private obtenerDialogosVisibles(): HTMLElement[] {
@@ -137,6 +147,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       document.querySelectorAll<HTMLElement>('[data-app-modal="true"][role="dialog"][aria-modal="true"]')
     );
     return [...dialogosInternos, ...dialogosExternos].filter(dialogo => this.esModalVisible(dialogo));
+  }
+
+  private hayModalExternoConectado(): boolean {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>('[data-app-modal="true"][role="dialog"][aria-modal="true"]')
+    ).some(dialogo => dialogo.isConnected);
   }
 
   private estaEnModalVisible(elemento: Element | null): boolean {
@@ -189,7 +205,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private enfocarDialogo(dialogo: HTMLElement): void {
     const elementosEnfocables = this.obtenerElementosEnfocables(dialogo);
-    const destino = elementosEnfocables[0] ?? dialogo;
+    const destino = elementosEnfocables[0]
+      ?? dialogo.querySelector<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])')
+      ?? dialogo;
 
     if (destino === dialogo && !dialogo.hasAttribute('tabindex')) {
       dialogo.setAttribute('tabindex', '-1');
