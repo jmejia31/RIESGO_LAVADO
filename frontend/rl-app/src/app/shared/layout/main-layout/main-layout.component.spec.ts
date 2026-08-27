@@ -131,4 +131,33 @@ describe('MainLayoutComponent', () => {
     component.ngOnDestroy();
     host.remove();
   });
+
+  it('reconoce un modal propio montado fuera del host como siguiente propietario del foco', () => {
+    const { component, host } = crearComponente('<button id="fuera">Fuera</button><dialog open aria-modal="true"><button id="primero">Primero</button></dialog>');
+    const modalA = host.querySelector('dialog') as HTMLElement;
+    const modalB = document.createElement('div');
+    modalB.setAttribute('role', 'dialog');
+    modalB.setAttribute('aria-modal', 'true');
+    modalB.setAttribute('data-app-modal', 'true');
+    modalB.setAttribute('aria-hidden', 'true');
+    const botonB = document.createElement('button');
+    modalB.appendChild(botonB);
+    document.body.appendChild(modalB);
+
+    component.ngAfterViewInit();
+    expect(component['dialogoActivo']).toBe(modalA);
+
+    modalB.removeAttribute('aria-hidden');
+    modalA.remove();
+    botonB.focus();
+    component['sincronizarBloqueoModal']();
+
+    expect(component['dialogoActivo']).toBe(modalB);
+    expect(document.body.classList.contains('modal-abierto')).toBe(true);
+    expect(document.activeElement).toBe(botonB);
+
+    modalB.remove();
+    component.ngOnDestroy();
+    host.remove();
+  });
 });

@@ -50,7 +50,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return;
 
     this.observadorDialogos = new MutationObserver(() => this.sincronizarBloqueoModal());
-    this.observadorDialogos.observe(this.host.nativeElement, { childList: true, subtree: true });
+    this.observadorDialogos.observe(document.body, { childList: true, subtree: true });
     document.addEventListener('keydown', this.mantenerFocoEnDialogo, true);
     this.sincronizarBloqueoModal();
   }
@@ -91,9 +91,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   private sincronizarBloqueoModal(): void {
     if (typeof document === 'undefined') return;
 
-    const dialogos = Array.from(
-      this.host.nativeElement.querySelectorAll<HTMLElement>('dialog[open][aria-modal="true"], [role="dialog"][aria-modal="true"]')
-    );
+    const dialogos = this.obtenerDialogosVisibles();
     const dialogo = dialogos.at(-1) ?? null;
 
     if (dialogo === this.dialogoActivo) return;
@@ -108,6 +106,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       const focoARestaurar = this.focoPrevio;
       this.focoPrevio = null;
       queueMicrotask(() => {
+        if (this.obtenerDialogosVisibles().length > 0) return;
         if (this.estaEnModalVisible(document.activeElement)) return;
         if (focoARestaurar?.isConnected && !focoARestaurar.inert) {
           focoARestaurar.focus({ preventScroll: true });
@@ -123,16 +122,33 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.dialogoActivo = dialogo;
     document.body.classList.add('modal-abierto');
-    this.enfocarDialogo(dialogo);
+    if (!dialogo.hasAttribute('data-app-modal') &&
+        (document.activeElement === dialogo || !dialogo.contains(document.activeElement))) {
+      this.enfocarDialogo(dialogo);
+    }
     this.aplicarInertFueraDelDialogo(dialogo);
+  }
+
+  private obtenerDialogosVisibles(): HTMLElement[] {
+    const dialogosInternos = Array.from(
+      this.host.nativeElement.querySelectorAll<HTMLElement>('dialog[open][aria-modal="true"], [role="dialog"][aria-modal="true"]')
+    );
+    const dialogosExternos = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-app-modal="true"][role="dialog"][aria-modal="true"]')
+    );
+    return [...dialogosInternos, ...dialogosExternos].filter(dialogo => this.esModalVisible(dialogo));
   }
 
   private estaEnModalVisible(elemento: Element | null): boolean {
     if (!(elemento instanceof HTMLElement) || !elemento.isConnected) return false;
     const modal = elemento.closest('dialog[open][aria-modal="true"], [role="dialog"][aria-modal="true"]');
     if (!(modal instanceof HTMLElement)) return false;
-    if (modal.closest('[aria-hidden="true"], [inert]')) return false;
-    const estilo = window.getComputedStyle(modal);
+    return this.esModalVisible(modal);
+  }
+
+  private esModalVisible(dialogo: HTMLElement): boolean {
+    if (!dialogo.isConnected || dialogo.closest('[aria-hidden="true"], [inert]')) return false;
+    const estilo = window.getComputedStyle(dialogo);
     return estilo.display !== 'none' && estilo.visibility !== 'hidden';
   }
 
