@@ -615,3 +615,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - UAT Chromium/CDP: attach dinamico desde `DevToolsActivePort`, mismo browser/context/page, carga de Matrices, integracion backend, sin 404/500 nuevos, sin blank ni loading infinito: PASS. Chromium permanece abierto; no se leyeron passwords, tokens, cookies ni localStorage sensible.
 - MCV.1-MCV.7: sin regresion. `DB_CHANGED=NO`, `ORACLE_CHANGED=NO`, `AUTHORIZATION_CHANGED=NO`, `API_CONTRACT_BROKEN=NO`, `BACKEND_UNCHANGED=YES`.
 - Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 permanece no iniciada.
+
+## Estado vigente - MCV.9 certificacion integral y cierre
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Inicio: `55358ea`.
+- Precheck Git: `BRANCH=desarrollo`, HEAD inicial esperado, `HEAD==origin/desarrollo`, worktree limpio y `MAIN_UNTOUCHED=YES`.
+- MCV.1 a MCV.8 conservan estado `CERRADA` y sus gates documentados. MCV.7 no justifico eliminaciones frontend adicionales; MCV.8 no identifico eliminaciones backend seguras.
+- Comprobaciones finales: `FINAL_CODEXGRAPH_FRONTEND_CHECK=PASS`; `FINAL_BACKEND_REFERENCE_CHECK=PASS` con mapa dirigido compilable. El grafo disponible no contiene nodos C# backend completos.
+- Búsqueda funcional: `WINDOW_CONFIRM=0`; `NATIVE_CONFIRM_ENTRYPOINTS=0`; `OLD_VERSION_MANAGER_ENTRYPOINTS=0`; `LEGACY_FUNCTIONAL_REFERENCES=0`.
+- Regresion final secuencial: backend `494/494 PASS`; frontend `699/699 PASS`; E2E `29/29 PASS`; build backend/frontend PASS; lint PASS; `git diff --check` PASS. El fallo inicial durante ejecución concurrente se descarto como interferencia de procesos; prueba aislada de foco `2/2 PASS` y E2E secuencial `29/29 PASS`.
+- UAT final: Chromium/CDP existente, endpoint dinamico, mismo browser/context/page, `/matrices-riesgos` funcional y sin blank screen, loading infinito ni error fatal: `CHROMIUM_CDP_UAT=PASS`. Chromium permanece abierto; no se leyeron secretos.
+- Integridad final: arquitectura dinamica y modelo unico de renderizado preservados; definiciones versionadas e historico vinculados; API, DI, persistencia, autorizacion, DB y Oracle sin cambios.
+- `MCV.9 = CERRADA`; `P0=0`; `P1=0`; `PLAN_MCV_STATUS=CERRADO`; no se crean nuevas fases. Esta intervencion solo agrega certificacion documental; commit y push pendientes de verificacion.

@@ -6419,3 +6419,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - UAT Chromium/CDP: endpoint resuelto dinamicamente desde `DevToolsActivePort`, attach al mismo browser/context/page, `/matrices-riesgos` y cuatro respuestas API del modulo: `CHROMIUM_CDP_UAT=PASS`, `UAT_BACKEND_INTEGRATION=PASS`, `UAT_NO_404_NEW=PASS`, `UAT_NO_500_NEW=PASS`, `UAT_NO_BLANK_SCREEN=PASS`, `UAT_NO_STUCK_LOADING=PASS`. Chromium permanecio abierto. No se leyeron passwords, tokens, cookies ni localStorage sensible.
 - Regresion MCV.1-MCV.7: `PASS`; MCV.1 Escape, MCV.2 navegacion contextual, MCV.3 gestor de versiones, MCV.4 entrypoints, MCV.5 legacy retirado, MCV.6 confirmaciones y MCV.7 foco permanecen preservados.
 - Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 no se inicia en esta intervencion.
+
+## Registro de intervencion - Codex - MCV.9 certificacion integral y cierre
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Autor: Codex. Rama: `desarrollo`. Commit inicial: `55358eab7d7ad8a4af2e82f6cf3c03b3a328ce2c`.
+- Precheck: HEAD esperado y `origin/desarrollo` coincidentes; worktree limpio; `main` intacta.
+- Comprobaciones dirigidas: `FINAL_CODEXGRAPH_FRONTEND_CHECK=PASS` para relaciones activas de familias, detalle, Builder y renderer. `FINAL_BACKEND_REFERENCE_CHECK=PASS` mediante referencias compilables dirigidas; el grafo no contiene nodos C# completos y no se presenta como cobertura CodexGraph.
+- Búsqueda funcional final: `WINDOW_CONFIRM=0`, `NATIVE_CONFIRM_ENTRYPOINTS=0`, `OLD_VERSION_MANAGER_ENTRYPOINTS=0`, `LEGACY_FUNCTIONAL_REFERENCES=0`. Las coincidencias textuales restantes son pruebas/documentacion o el encabezado vigente del bloque consolidado.
+- Regresion final secuencial: backend `494/494 PASS`; frontend `699/699 PASS`; E2E `29/29 PASS`; build backend/frontend PASS; lint PASS; `git diff --check` PASS. El primer E2E concurrente tuvo un fallo de foco por interferencia con builds paralelos; la prueba dirigida aislada paso `2/2` y la suite E2E secuencial final paso `29/29`.
+- UAT Chromium/CDP: endpoint resuelto dinamicamente desde `DevToolsActivePort`; mismo browser/context/page; `/matrices-riesgos` visible, sin pantalla blanca, loading infinito ni errores fatales: PASS. No se leyeron passwords, tokens, cookies ni localStorage sensible. Chromium permanece abierto.
+- Certificacion acumulada: MCV.1-MCV.8 permanecen cerradas sin regresion; arquitectura dinamica, versionado historico, permisos, contratos, DB y Oracle preservados. MCV.7 no retiro codigo adicional seguro; MCV.8 no identifico eliminacion backend segura.
+- Estados finales: `MCV.1` a `MCV.9 = CERRADA`; `P0=0`; `P1=0`; `PLAN_MCV_STATUS=CERRADO`; `DB_CHANGED=NO`; `ORACLE_CHANGED=NO`; `MAIN_UNTOUCHED=YES`. No se crea fase posterior.
+- Archivos modificados en esta intervencion: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Commit documental final pendiente de publicacion fail-closed.
