@@ -6339,3 +6339,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Evidencia: AuthService 697/697 frontend PASS, E2E aislada 25/25 PASS, incluyendo `MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito`; build PASS con advertencias preexistentes, lint PASS y `git diff --check` PASS. Backend sin cambios; ultimo gate certificado 494/494 PASS.
 - Gates MCV.1: actividad reinicia inactividad, refresh no reinicia actividad, logout a 30 minutos, fallo transitorio conserva sesion, fallo definitivo se maneja y Escape no cierra modal: PASS.
 - Archivos modificados: componentes y pruebas de familia/detalle, plantilla de Matrices, E2E MCV.1, bitacora y estado colaborativo. Passwords, tokens y cookies no fueron leidos; main no fue tocada.
+
+## Registro de intervencion - Codex - MCV.2 navegacion contextual
+
+- Fecha/hora local: 2026-08-26 18:37 (UTC-6). Autor: Codex. Rama: `desarrollo`. Commit inicial: `9c305e63cca055666ab7ec3ca86c552b3fb8d710`. Commit tecnico: `16d18fb` (`fix(mcv): preservar navegacion contextual de familias`).
+- Alcance: Detalle de Familia -> Editar Familia -> Regresar y Detalle de Familia -> Constructor -> Regresar, preservando la misma familia, el contexto de versiones y el foco. MCV.1 no se reabrio.
+- Causa corregida: el padre destruia explicitamente el Detalle antes de abrir Editar o Constructor. El Detalle ahora permanece montado como contexto; el hijo se apila encima, se oculta visualmente mientras corresponde y se restaura al regresar. No se creo un segundo motor de navegacion ni se persistio contexto en backend/BD.
+- Evidencia dirigida: E2E MCV.2 2/2 PASS; Editar retorna al mismo Detalle y Constructor retorna al mismo Detalle conservando Versiones; ESC continua bloqueado por MCV.1. E2E completa 27/27 PASS; frontend 697/697 PASS; lint PASS; build PASS con advertencias preexistentes de Inspector SCSS y CommonJS exceljs; `git diff --check` PASS.
+- UAT CDP: mismo browser/context/page PASS, autenticacion/ruta/contenido PASS. El endpoint se resolvio desde `DevToolsActivePort`; Chromium UAT permanecio abierto. Passwords, tokens y cookies no fueron leidos.
+- Backend: sin cambios; se conserva el ultimo gate certificado 494/494. No se modificaron API, contratos JSON, permisos, Oracle ni main.
+- Git: el primer add fallo por ACL con `INDEX_LOCK=ABSENT`; se autorizo un `git add` elevado explicito. Staging verificado: exactamente 5 archivos tecnicos. Commit creado y pendiente de publicar; documentacion de cierre sera el commit separado siguiente.
+- Punto exacto de continuacion: actualizar estado colaborativo, stage documental explicito, commit documental, push de ambos commits a `origin/desarrollo`, verificar HEAD remoto y worktree limpio; solo despues continuar MCV.3.

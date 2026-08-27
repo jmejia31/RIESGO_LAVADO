@@ -541,3 +541,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Escape ya no cierra modales de Matrices/Formularios: Gestor, Detalle, Crear Familia, Editar Familia, Constructor, Versiones, Evaluaciones, View, Edit, Seguimiento y Nueva Evaluacion conservan el modal; el cierre explicito por boton permanece. El menu contextual interno de seccion puede cerrarse de forma local.
 - Evidencia: frontend 697/697 PASS; E2E 25/25 PASS en ejecucion aislada; build, lint y git diff --check PASS; backend no modificado, ultimo gate 494/494 PASS.
 - No se creo MCV.10, MCV.1.1 ni otra subfase. UI-FORM permanece baseline cerrado y main intacta. Siguiente punto: MCV.2, navegacion contextual.
+
+## Estado vigente - MCV.2 navegacion contextual
+
+- Fecha/hora local: 2026-08-26 18:37 (UTC-6). Autor: Codex. Rama: `desarrollo`. Commit tecnico `16d18fb`; documentacion de esta intervencion pendiente de commit.
+- MCV.2 implementada: el Detalle de Familia permanece como contexto padre al abrir Editar Familia o Constructor; Regresar cierra solo el hijo y devuelve la misma familia. El contexto Versiones permanece visible al volver desde Constructor. El acceso directo conserva su flujo existente.
+- Foco y politica: retorno al control de origen cuando sigue conectado o al control principal del Detalle; ESC sigue sin cerrar modales conforme a MCV.1.
+- Pruebas frescas: MCV.2 dirigida 2/2 PASS; E2E completa 27/27 PASS; frontend 697/697 PASS; lint PASS; build PASS con advertencias preexistentes; `git diff --check` PASS. Backend sin cambios; ultimo gate certificado 494/494 PASS.
+- UAT Chromium/CDP: attach al mismo browser/context/page PASS; autenticacion, `/matrices-riesgos` y contenido visible PASS. No se leyeron passwords, tokens ni cookies. Chromium UAT sigue abierto.
+- Archivos tecnicos: `frontend/rl-app/e2e/matrices-familias-detalle.spec.ts`; `frontend/rl-app/src/app/features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.ts`; `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html`; `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`; `frontend/rl-app/src/styles.css`.
+- Git: staging tecnico fue verificado con exactamente esos 5 archivos; commit `16d18fb` creado. El primer add fue bloqueado por ACL con `.git/index.lock` ausente y luego se ejecuto de forma elevada. Push y sincronizacion final pendientes.
+- Estado: `DETAIL_EDIT_RETURN=PASS`, `DETAIL_BUILDER_RETURN=PASS`, `SAME_FAMILY_CONTEXT=PASS`, `VERSION_CONTEXT=PASS`, `FOCUS_RESTORED=PASS`, `ESC_POLICY_PRESERVED=PASS`, `CHROMIUM_CDP_UAT=PASS`, `TESTS=PASS`, `BUILD=PASS`, `LINT=PASS`, `DIFF_CHECK=PASS`. MCV.2 aun no se marca cerrada hasta publicar y verificar Git.
+- Continuacion exacta: stage documental explicito, commit documental, push `origin/desarrollo`, verificar branch/ahead/behind/worktree/main; luego marcar MCV.2 cerrada y comenzar MCV.3.
