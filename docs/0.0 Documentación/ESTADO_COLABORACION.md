@@ -656,3 +656,8 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - MainLayout ahora observa `document.body`, reconoce modales propios externos con `data-app-modal="true"`, filtra estados no visibles y protege el foco ya entregado. Se agrego regresion unitaria general; FormBuilder no fue modificado.
 - Verificacion: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0). No se afirma Quality Gate verde.
 - Estado: avance tecnico coherente pendiente de push y commit documental. No crear PR ni hacer merge a `main` mientras MCV.2 continue rojo.
+## Estado vigente - correccion final de ownership de foco
+
+- Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.
+- MCV.2 `5/5 PASS`; E2E `29/29 PASS`; Quality Gate local `PASS / EXIT CODE 0`; backend `494/494`; frontend `701/701`; MainLayout `6/6 PASS`.
+- FormBuilder no fue modificado. Sonar, Quality Gate remoto, PR, merge y CI post-merge quedan pendientes de verificacion sobre el SHA publicado.

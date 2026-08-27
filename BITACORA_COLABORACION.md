@@ -6463,3 +6463,8 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Pruebas: MainLayout `6/6 PASS`; build frontend `PASS` con advertencias preexistentes; MCV.2 `FAIL` en `[data-ui-fam-detail="modal"] :focus` (expected 1, received 0), reproducido en las ejecuciones dirigidas. La assertion E2E no fue modificada.
 - Estado: avance tecnico publicado, pero MCV.2 repo-side continua sin resolverse. No se ejecutan suite completa, Quality Gate remoto, Sonar, PR ni merge mientras el E2E siga rojo.
 - Archivos modificados en esta intervencion: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. Commit documental final pendiente de publicacion fail-closed.
+## Registro de intervencion - Codex - correccion final de ownership de foco
+
+- Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.
+- Verificacion: MainLayout `6/6 PASS`; MCV.2 dirigido `5/5 PASS`; E2E completo `29/29 PASS`; Quality Gate local `EXIT CODE 0`; backend `494/494 PASS`; frontend `701/701 PASS`; cobertura sobre umbral.
+- Estado remoto pendiente de publicacion y verificacion sobre este SHA; no se declara aun Sonar, PR, merge ni CI post-merge.
