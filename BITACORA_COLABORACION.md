@@ -6350,3 +6350,5 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Backend: sin cambios; se conserva el ultimo gate certificado 494/494. No se modificaron API, contratos JSON, permisos, Oracle ni main.
 - Git: el primer add fallo por ACL con `INDEX_LOCK=ABSENT`; se autorizo un `git add` elevado explicito. Staging verificado: exactamente 5 archivos tecnicos. Commit creado y pendiente de publicar; documentacion de cierre sera el commit separado siguiente.
 - Punto exacto de continuacion: actualizar estado colaborativo, stage documental explicito, commit documental, push de ambos commits a `origin/desarrollo`, verificar HEAD remoto y worktree limpio; solo despues continuar MCV.3.
+
+- Cierre Git posterior: commit tecnico `16d18fb` y commit documental `4f84cec` publicados en `origin/desarrollo`; `HEAD==origin/desarrollo`, ahead=0, behind=0, worktree limpio y main intacta. MCV.2 queda cerrada; MCV.3 no se inicia en esta intervencion.

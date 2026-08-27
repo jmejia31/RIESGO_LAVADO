@@ -553,3 +553,5 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Git: staging tecnico fue verificado con exactamente esos 5 archivos; commit `16d18fb` creado. El primer add fue bloqueado por ACL con `.git/index.lock` ausente y luego se ejecuto de forma elevada. Push y sincronizacion final pendientes.
 - Estado: `DETAIL_EDIT_RETURN=PASS`, `DETAIL_BUILDER_RETURN=PASS`, `SAME_FAMILY_CONTEXT=PASS`, `VERSION_CONTEXT=PASS`, `FOCUS_RESTORED=PASS`, `ESC_POLICY_PRESERVED=PASS`, `CHROMIUM_CDP_UAT=PASS`, `TESTS=PASS`, `BUILD=PASS`, `LINT=PASS`, `DIFF_CHECK=PASS`. MCV.2 aun no se marca cerrada hasta publicar y verificar Git.
 - Continuacion exacta: stage documental explicito, commit documental, push `origin/desarrollo`, verificar branch/ahead/behind/worktree/main; luego marcar MCV.2 cerrada y comenzar MCV.3.
+
+- Cierre verificado: commits `16d18fb` y `4f84cec` publicados en `origin/desarrollo`; branch `desarrollo`, HEAD igual al remoto, ahead=0, behind=0, worktree limpio y main intacta. MCV.2 = CERRADA. MCV.3 queda como siguiente fase y no fue iniciada.
