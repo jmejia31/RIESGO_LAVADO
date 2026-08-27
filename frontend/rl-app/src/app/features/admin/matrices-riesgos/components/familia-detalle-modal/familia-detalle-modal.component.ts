@@ -162,6 +162,14 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
     this.cargarDetalle();
   }
 
+  refrescar(): void {
+    this.cargarDetalle();
+  }
+
+  enfocarContexto(): void {
+    this.botonCerrar?.nativeElement.focus();
+  }
+
   reintentarVersiones(): void {
     const familia = this.detalle();
     if (familia) this.cargarVersiones(familia);

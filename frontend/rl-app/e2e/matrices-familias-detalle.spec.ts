@@ -175,6 +175,48 @@ test('MCV.1 Escape conserva gestor y detalle abiertos hasta el cierre explicito'
   await expect(detalle).toHaveCount(0);
 });
 
+test('MCV.2 Editar Familia regresa al mismo Detalle sin volver al listado', async ({ page }) => {
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText(familiaDetalle.famCodigo);
+
+  const accionEditar = detalle.locator('[data-ui-fam-detail-action="editar"]');
+  await accionEditar.click();
+
+  const editor = page.locator('[data-ui-fam-edit="modal"]');
+  await expect(editor).toBeVisible();
+  await editor.locator('[data-ui-fam-edit-action="regresar"]').click();
+
+  await expect(editor).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle).toContainText(familiaDetalle.famCodigo);
+  await expect(accionEditar).toBeFocused();
+});
+
+test('MCV.2 Constructor regresa al mismo Detalle y conserva Versiones', async ({ page }) => {
+  await abrirGestor(page);
+  await abrirDetalle(page);
+
+  const detalle = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(detalle).toBeVisible();
+  const version = detalle.getByRole('button', { name: 'Ver detalle de la versión' }).first();
+  await version.click();
+
+  const builder = page.locator('[data-form-builder-shell="true"]');
+  await expect(builder).toBeVisible();
+  await expect(builder.getByText(/Versión MATRIZ_RIESGOS_LAFT \(v2\)/)).toBeVisible();
+  await builder.getByRole('button', { name: 'Cerrar modal de constructor' }).click();
+
+  await expect(builder).toHaveCount(0);
+  await expect(detalle).toBeVisible();
+  await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
+  await expect(detalle).toContainText('v2');
+  await expect(detalle.locator(':focus')).toHaveCount(1);
+});
+
 test('UI-FAM.2 presenta un 404 como Familia no encontrada sin inventar contenido', async ({ page }) => {
   await page.route('**/api/matrices-riesgos/familias/7', route => route.fulfill({
     status: 404,

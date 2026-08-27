@@ -57,6 +57,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly suscripcionesCrearFamilia: Subscription[] = [];
   private readonly suscripcionesEditarFamilia: Subscription[] = [];
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+  private focoRetornoEditarFamilia: HTMLElement | null = null;
+  private detalleEnContexto = false;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
@@ -479,17 +481,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.seleccionarFamiliaDesdeGestor(familia.famCodigo);
       }),
       componentRef.instance.editarFamilia.subscribe(familia => {
-        this.cerrarModalVerFamilia();
+        this.focoRetornoEditarFamilia = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        this.ocultarDetalleComoContexto();
         this.abrirModalEditarFamilia(familia);
       }),
       componentRef.instance.nuevaVersion.subscribe(familia => {
-        this.cerrarModalVerFamilia();
+        this.ocultarDetalleComoContexto();
         this.seleccionarFamilia(familia.famCodigo);
         this.mostrandoVersionesFamilia.set(true);
         this.abrirModalCrearFormulario();
       }),
       componentRef.instance.verDefinicion.subscribe(({ familia, version }) => {
-        this.cerrarModalVerFamilia();
+        this.ocultarDetalleComoContexto();
         this.familiaSeleccionada.set(familia.famCodigo);
         this.abrirDefinicion(version, true);
       })
@@ -576,11 +579,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       componentRef.instance.cerrar.subscribe(() => this.cerrarModalEditarFamilia()),
       componentRef.instance.guardada.subscribe(familia => {
         this.cerrarModalEditarFamilia();
+        this.detalleFamiliaRef?.instance.refrescar();
         this.globalState.limpiarError();
         this.mostrarMensaje(`Familia «${familia.famNombre}» actualizada correctamente.`);
         this.cargarFamilias();
       }),
       componentRef.instance.estadoCambiado.subscribe(() => {
+        this.detalleFamiliaRef?.instance.refrescar();
         this.globalState.limpiarError();
         this.cargarFamilias();
       }),
@@ -609,6 +614,31 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       componentRef.destroy();
       this.editarFamiliaRef = null;
     }
+
+    this.mostrarDetalleComoContexto();
+    const foco = this.focoRetornoEditarFamilia;
+    this.focoRetornoEditarFamilia = null;
+    if (foco?.isConnected) setTimeout(() => foco.focus(), 0);
+  }
+
+  private ocultarDetalleComoContexto(): void {
+    const host = this.detalleFamiliaRef?.location.nativeElement as HTMLElement | undefined;
+    if (!host) return;
+    host.style.visibility = 'hidden';
+    host.style.pointerEvents = 'none';
+    host.setAttribute('aria-hidden', 'true');
+    this.detalleEnContexto = true;
+  }
+
+  private mostrarDetalleComoContexto(): void {
+    if (!this.detalleEnContexto) return;
+    const host = this.detalleFamiliaRef?.location.nativeElement as HTMLElement | undefined;
+    if (host) {
+      host.style.visibility = '';
+      host.style.pointerEvents = '';
+      host.removeAttribute('aria-hidden');
+    }
+    this.detalleEnContexto = false;
   }
 
   cerrarModalFamilia(): void {
@@ -1591,6 +1621,15 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.modalFormularioAbierto.set(false);
     this.errorModal.set(null);
     this.globalState.limpiarError();
+    this.mostrarDetalleComoContexto();
+  }
+
+  cerrarDefinicion(): void {
+    this.versionEditando.set(null);
+    this.mostrarDetalleComoContexto();
+    setTimeout(() => {
+      this.detalleFamiliaRef?.instance.enfocarContexto();
+    }, 0);
   }
 
   guardarNuevoFormulario(): void {

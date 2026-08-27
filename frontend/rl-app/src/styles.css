@@ -284,6 +284,11 @@ dialog.modal-backdrop-overlay {
   padding: 14px !important;
 }
 
+/* Cuando el constructor se abre desde el detalle, permanece como contexto padre. */
+dialog.modal-backdrop-overlay.form-builder-modal-overlay {
+  z-index: 1100 !important;
+}
+
 /*
 
  * Presentación institucional de Versiones de Formulario.

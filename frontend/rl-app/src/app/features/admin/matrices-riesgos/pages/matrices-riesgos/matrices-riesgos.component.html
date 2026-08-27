@@ -583,7 +583,7 @@
                           [operacion]="operacionBuilderEnCurso()"
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
                           (publicar)="publicarVersion(versionActual)"
-                          (cerrar)="versionEditando.set(null)">
+                          (cerrar)="cerrarDefinicion()">
         </app-form-builder>
        </div>
      </dialog>
