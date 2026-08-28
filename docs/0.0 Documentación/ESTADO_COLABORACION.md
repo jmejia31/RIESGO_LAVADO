@@ -711,6 +711,8 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 - Actualización: E2E integral posterior `29/29 PASS`. Commit técnico publicado: `a842880`. Oracle continúa externo bloqueado con `ERROR=50201`; no se declara postflight PASS.
 
+- Estado actualizado: Oracle disponible y validado en solo lectura. Auditoría `24/24` versiones, `HASH_INVALID=0`, referencias desconocidas/operadores/funciones no soportados `0`; VER_ID 24 y 53 `CLASS=VALID`. Postflight sin vigentes múltiples, solapamientos, filas de versión inválidas, objetos inválidos ni constraints deshabilitadas. Corrección publicada en `39e34df`.
+
 ## Estado vigente - Fase 1 integridad/publication gate Oracle
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial: `85227671715441bafc3b36782a7f5cb17ee26d8c`.

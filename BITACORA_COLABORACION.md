@@ -6521,6 +6521,8 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 - Actualización: E2E integral posterior `29/29 PASS`. Commit técnico creado como `a842880` y publicado en `origin/desarrollo`; el commit documental de este registro queda pendiente.
 
+- Cierre técnico posterior: auditoría Oracle final `VERSIONS_INSPECTED=24`, `HASH_INVALID=0`, `FORMULA_REFERENCE_UNKNOWN=0`, `FORMULA_OPERATOR_UNSUPPORTED=0`, `FORMULA_FUNCTION_UNSUPPORTED=0`; VER_ID 24 y 53 `CLASS=VALID`. Postflight: `MULTIPLE_VIGENTE=0`, `VIGENTE_NOT_PUBLISHED=0`, `TEMPORAL_OVERLAPS=0`, `BAD_VERSION_ROW=0`, `INVALID_OBJECTS=0`, `DISABLED_CONSTRAINTS=0`. Commit `39e34df` publicado en `origin/desarrollo`.
+
 ## Registro de intervencion - Codex - Fase 1 integridad/publication gate Oracle
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial de la intervencion: `85227671715441bafc3b36782a7f5cb17ee26d8c`.

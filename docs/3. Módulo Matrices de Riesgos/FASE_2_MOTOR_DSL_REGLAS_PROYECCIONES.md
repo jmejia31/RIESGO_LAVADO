@@ -24,6 +24,8 @@ Se corrigieron los avisos CA1707 del nuevo código mediante una supresión local
 
 Evidencia posterior: E2E integral `29/29 PASS`. El único fallo previo del escenario JSON técnico se corrigió ajustando su fixture a una fórmula válida del DSL (`1 + 2`); no se relajó la validación.
 
+Auditoría Oracle final ejecutada en solo lectura: `VERSIONS_INSPECTED=24`, `HASH_INVALID=0`, `FORMULA_REFERENCE_UNKNOWN=0`, `FORMULA_OPERATOR_UNSUPPORTED=0`, `FORMULA_FUNCTION_UNSUPPORTED=0`; VER_ID 24 y 53 quedaron `CLASS=VALID` sin modificar su JSON/hash. Postflight: todos los invariantes consultados en cero (`INVALID_OBJECTS=0`, `DISABLED_CONSTRAINTS=0`, `TEMPORAL_OVERLAPS=0`, `BAD_VERSION_ROW=0`). VER_ID 27/28 conservan deuda catalogal histórica no reconstruible determinísticamente.
+
 ## Alcance pendiente
 
 La parametrización completa de proyecciones y la auditoría semántica Oracle de las 24 versiones requieren completar la integración del contrato de mappings y la ejecución institucional de postflight. Las versiones históricas 24, 27, 28 y 53 no deben modificarse; cualquier deuda de catálogo no reconstruible determinísticamente se mantiene para la fase de administración de catálogos.
