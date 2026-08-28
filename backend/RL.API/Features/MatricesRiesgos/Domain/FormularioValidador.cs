@@ -8,6 +8,216 @@ namespace RL.API.Features.MatricesRiesgos.Domain;
 
 public sealed class FormularioValidador : IFormularioValidador
 {
+    private static readonly HashSet<string> TiposCanónicos = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "texto", "numero", "fecha", "texto-largo", "selector-catalogo",
+        "radio", "catalogo-multiple", "checkbox", "formula"
+    };
+
+    private static readonly Dictionary<string, string> AliasTipos = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["numerico"] = "numero", ["numérico"] = "numero", ["entero"] = "numero", ["decimal"] = "numero",
+        ["textarea"] = "texto-largo", ["area-texto"] = "texto-largo",
+        ["catalogo"] = "selector-catalogo", ["select"] = "selector-catalogo", ["seleccion"] = "selector-catalogo",
+        ["opciones"] = "radio", ["multiselect"] = "catalogo-multiple", ["seleccion-multiple"] = "catalogo-multiple",
+        ["sino"] = "checkbox", ["bool"] = "checkbox", ["booleano"] = "checkbox",
+        ["calculado"] = "formula", ["calculo-sistema"] = "formula", ["texto-calculado"] = "formula"
+    };
+
+    public Task<FormularioDefinitionValidationResult> ValidarDefinicionPublicableAsync(string jsonConfigFormulario)
+    {
+        var result = new FormularioDefinitionValidationResult();
+        if (string.IsNullOrWhiteSpace(jsonConfigFormulario))
+        {
+            result.Errores.Add(new FormularioValidationError("JSON", "La definición del formulario es requerida."));
+            return Task.FromResult(result);
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(jsonConfigFormulario);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                result.Errores.Add(new FormularioValidationError("JSON", "La definición debe ser un objeto JSON."));
+                return Task.FromResult(result);
+            }
+
+            JsonElement root = document.RootElement;
+            if (root.TryGetProperty("definicionFormulario", out JsonElement nested))
+            {
+                if (nested.ValueKind != JsonValueKind.Object)
+                {
+                    result.Errores.Add(new FormularioValidationError("definicionFormulario", "La definición anidada debe ser un objeto."));
+                    return Task.FromResult(result);
+                }
+                root = nested;
+            }
+
+            if (!root.TryGetProperty("secciones", out JsonElement sections) || sections.ValueKind != JsonValueKind.Array)
+            {
+                result.Errores.Add(new FormularioValidationError("secciones", "La definición debe contener un arreglo de secciones."));
+                return Task.FromResult(result);
+            }
+
+            var fieldKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var formulaFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var catalogKeys = LeerCatalogos(root, result);
+
+            foreach (JsonElement section in sections.EnumerateArray())
+            {
+                if (section.ValueKind != JsonValueKind.Object)
+                {
+                    result.Errores.Add(new FormularioValidationError("secciones", "Cada sección debe ser un objeto."));
+                    continue;
+                }
+                if (!TryGetText(section, "clave", out string? sectionKey) && !TryGetText(section, "identificador", out sectionKey))
+                    result.Errores.Add(new FormularioValidationError("secciones", "Cada sección requiere una clave."));
+                if (!TryGetText(section, "titulo", out _))
+                    result.Errores.Add(new FormularioValidationError("secciones", "Cada sección requiere un título."));
+                if (!section.TryGetProperty("campos", out JsonElement fields) || fields.ValueKind != JsonValueKind.Array)
+                {
+                    result.Errores.Add(new FormularioValidationError("campos", "Cada sección requiere un arreglo de campos."));
+                    continue;
+                }
+
+                foreach (JsonElement field in fields.EnumerateArray())
+                {
+                    if (field.ValueKind != JsonValueKind.Object)
+                    {
+                        result.Errores.Add(new FormularioValidationError("campos", "Cada campo debe ser un objeto."));
+                        continue;
+                    }
+                    if (!TryGetText(field, "clave", out string? key)
+                        && !TryGetText(field, "rutaDatos", out key)
+                        && !TryGetText(field, "identificador", out key))
+                    {
+                        result.Errores.Add(new FormularioValidationError("campo", "Cada campo requiere una clave técnica."));
+                        continue;
+                    }
+                    if (!fieldKeys.Add(key!))
+                        result.Errores.Add(new FormularioValidationError(key!, "La clave del campo está duplicada."));
+                    if (!TryGetText(field, "etiqueta", out _))
+                        result.Errores.Add(new FormularioValidationError(key!, "El campo requiere una etiqueta."));
+                    if (!TryGetText(field, "tipo", out string? rawType))
+                    {
+                        result.Errores.Add(new FormularioValidationError(key!, "El campo requiere un tipo."));
+                        continue;
+                    }
+                    string normalizedType = NormalizarTipo(rawType!);
+                    if (!TiposCanónicos.Contains(normalizedType))
+                        result.Errores.Add(new FormularioValidationError(key!, "El tipo de campo no está soportado por el runtime."));
+
+                    if (normalizedType is "selector-catalogo" or "catalogo-multiple")
+                    {
+                        if (TryGetText(field, "codigoCatalogo", out string? catalogRef)
+                            || TryGetText(field, "catalogoCodigo", out catalogRef)
+                            || TryGetText(field, "catalogo", out catalogRef))
+                        {
+                            if (!catalogKeys.Contains(catalogRef!))
+                                result.Errores.Add(new FormularioValidationError(key!, "La referencia de catálogo no existe en el snapshot de la definición."));
+                        }
+                    }
+
+                    if (normalizedType == "formula" || TryGetText(field, "formula", out _))
+                    {
+                        if (!TryGetText(field, "formula", out string? formula)
+                            && !TryGetText(field, "calculo", out formula)
+                            && !TryGetText(field, "referenciaCalculo", out formula))
+                        {
+                            result.Errores.Add(new FormularioValidationError(key!, "El campo fórmula requiere una expresión."));
+                        }
+                        else if (string.IsNullOrWhiteSpace(formula))
+                        {
+                            result.Errores.Add(new FormularioValidationError(key!, "La expresión fórmula no puede estar vacía."));
+                        }
+                        else
+                        {
+                            formulaFields[key!] = formula!;
+                            ValidarFormula(formula!, fieldKeys, key!, result);
+                        }
+                    }
+                }
+            }
+
+            foreach (string formulaKey in formulaFields.Keys)
+                if (TieneCiclo(formulaKey, formulaFields, new HashSet<string>(StringComparer.OrdinalIgnoreCase)))
+                    result.Errores.Add(new FormularioValidationError(formulaKey, "La fórmula contiene una dependencia circular."));
+        }
+        catch (JsonException ex)
+        {
+            result.Errores.Add(new FormularioValidationError("JSON", $"La definición no es JSON válido: {ex.Message}"));
+        }
+        return Task.FromResult(result);
+    }
+
+    private static HashSet<string> LeerCatalogos(JsonElement root, FormularioDefinitionValidationResult result)
+    {
+        var keys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (!root.TryGetProperty("catalogos", out JsonElement catalogs)) return keys;
+        if (catalogs.ValueKind != JsonValueKind.Array)
+        {
+            result.Errores.Add(new FormularioValidationError("catalogos", "El snapshot de catálogos debe ser un arreglo."));
+            return keys;
+        }
+        foreach (JsonElement catalog in catalogs.EnumerateArray())
+        {
+            if (catalog.ValueKind != JsonValueKind.Object || !TryGetText(catalog, "codigo", out string? code))
+            {
+                result.Errores.Add(new FormularioValidationError("catalogos", "Cada catálogo requiere un código."));
+                continue;
+            }
+            if (!keys.Add(code!)) result.Errores.Add(new FormularioValidationError(code!, "El código de catálogo está duplicado."));
+        }
+        return keys;
+    }
+
+    private static void ValidarFormula(string expression, HashSet<string> fieldKeys, string fieldKey, FormularioDefinitionValidationResult result)
+    {
+        if (expression.Any(ch => !char.IsWhiteSpace(ch) && !char.IsDigit(ch) && !"+-*/()._ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".Contains(ch)))
+            result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_OPERATOR_UNSUPPORTED"));
+        foreach (Match match in Regex.Matches(expression, @"\b[A-Za-z_]\w*\b"))
+        {
+            string token = match.Value;
+            if (token is "VRI" or "VRR") continue;
+            if (expression.IndexOf(token + "(", StringComparison.OrdinalIgnoreCase) >= 0)
+                result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_FUNCTION_UNSUPPORTED"));
+            else if (!fieldKeys.Contains(token))
+                result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_UNKNOWN_REFERENCE"));
+        }
+        int depth = 0;
+        foreach (char ch in expression)
+        {
+            if (ch == '(') depth++;
+            if (ch == ')' && --depth < 0) result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_SYNTAX_INVALID"));
+        }
+        if (depth != 0) result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_SYNTAX_INVALID"));
+    }
+
+    private static bool TieneCiclo(string key, Dictionary<string, string> formulas, HashSet<string> path)
+    {
+        if (!path.Add(key)) return true;
+        if (!formulas.TryGetValue(key, out string? expression)) return false;
+        foreach (Match match in Regex.Matches(expression, @"\b[A-Za-z_]\w*\b"))
+            if (formulas.ContainsKey(match.Value) && TieneCiclo(match.Value, formulas, new HashSet<string>(path, StringComparer.OrdinalIgnoreCase))) return true;
+        return false;
+    }
+
+    private static string NormalizarTipo(string raw) =>
+        AliasTipos.TryGetValue(raw.Trim().ToLowerInvariant().Replace('_', '-'), out string? normalized)
+            ? normalized
+            : raw.Trim().ToLowerInvariant().Replace('_', '-');
+
+    private static bool TryGetText(JsonElement element, string property, out string? value)
+    {
+        if (element.TryGetProperty(property, out JsonElement candidate) && candidate.ValueKind == JsonValueKind.String)
+        {
+            value = candidate.GetString();
+            return !string.IsNullOrWhiteSpace(value);
+        }
+        value = null;
+        return false;
+    }
+
     public Task<FormularioValidationResult> ValidarRespuestasAsync(string jsonRespuestas, string jsonConfigFormulario)
     {
         var result = new FormularioValidationResult();

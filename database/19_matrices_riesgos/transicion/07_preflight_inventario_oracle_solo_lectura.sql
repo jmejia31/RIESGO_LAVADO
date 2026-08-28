@@ -189,6 +189,237 @@ SELECT TABLE_NAME,
  ORDER BY TABLE_NAME, CONSTRAINT_NAME;
 
 PROMPT ============================================================
+PROMPT INTEGRIDAD DE VERSIONES - SOLO LECTURA
+PROMPT ============================================================
+PROMPT Estados contractuales: DRAFT, IN_REVIEW, APPROVED, PUBLISHED, RETIRED, ARCHIVED
+PROMPT PUBLISHED historica no vigente es una metrica informativa, no un error.
+
+COLUMN VER_ESTADO FORMAT A12
+COLUMN VER_VIGENTE FORMAT 9
+COLUMN CANTIDAD FORMAT 999999999999
+SELECT VER_ESTADO,
+       VER_VIGENTE,
+       COUNT(*) AS CANTIDAD
+  FROM RL_MR_VERSIONES_FORMULARIO
+ GROUP BY VER_ESTADO, VER_VIGENTE
+ ORDER BY VER_ESTADO, VER_VIGENTE;
+
+DECLARE
+  v_total                         NUMBER;
+  v_invalid_state                 NUMBER;
+  v_invalid_vigente               NUMBER;
+  v_vigente_non_published         NUMBER;
+  v_multiple_vigente              NUMBER;
+  v_pub_hist_nonvigente           NUMBER;
+  v_invalid_hash_format           NUMBER;
+  v_hash_uncheckable              NUMBER;
+BEGIN
+  SELECT COUNT(*)
+    INTO v_total
+    FROM RL_MR_VERSIONES_FORMULARIO;
+
+  SELECT COUNT(*)
+    INTO v_invalid_state
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_ESTADO NOT IN (
+           'DRAFT', 'IN_REVIEW', 'APPROVED', 'PUBLISHED', 'RETIRED', 'ARCHIVED'
+         )
+      OR VER_ESTADO IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_invalid_vigente
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_VIGENTE NOT IN (0, 1)
+      OR VER_VIGENTE IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_vigente_non_published
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_VIGENTE = 1
+     AND VER_ESTADO <> 'PUBLISHED';
+
+  SELECT COUNT(*)
+    INTO v_multiple_vigente
+    FROM (
+      SELECT VER_FAMILIA_ID
+        FROM RL_MR_VERSIONES_FORMULARIO
+       WHERE VER_VIGENTE = 1
+       GROUP BY VER_FAMILIA_ID
+      HAVING COUNT(*) > 1
+    );
+
+  SELECT COUNT(*)
+    INTO v_pub_hist_nonvigente
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_ESTADO = 'PUBLISHED'
+     AND VER_VIGENTE = 0;
+
+  -- Solo se valida formato. No se afirma SHA-256 del contenido con un
+  -- fragmento de CLOB: la equivalencia exacta con UTF-8/canonicalizacion
+  -- del Backend requiere leer el CLOB completo fuera de esta auditoria SQL.
+  SELECT COUNT(*)
+    INTO v_invalid_hash_format
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_HASH IS NULL
+      OR LENGTH(VER_HASH) <> 64
+      OR NOT REGEXP_LIKE(LOWER(VER_HASH), '^[0-9a-f]{64}$');
+
+  v_hash_uncheckable := v_total;
+
+  DBMS_OUTPUT.PUT_LINE('RESUMEN INTEGRIDAD VERSIONES');
+  DBMS_OUTPUT.PUT_LINE('  INVALID_STATE=' || TO_CHAR(v_invalid_state));
+  DBMS_OUTPUT.PUT_LINE('  INVALID_VIGENTE=' || TO_CHAR(v_invalid_vigente));
+  DBMS_OUTPUT.PUT_LINE('  VIGENTE_NO_PUBLISHED=' || TO_CHAR(v_vigente_non_published));
+  DBMS_OUTPUT.PUT_LINE('  MULTIPLES_VIGENTES_POR_FAMILIA=' || TO_CHAR(v_multiple_vigente));
+  DBMS_OUTPUT.PUT_LINE('  PUBLISHED_HISTORICAL_NON_VIGENTE=' || TO_CHAR(v_pub_hist_nonvigente));
+  DBMS_OUTPUT.PUT_LINE('  HASH_INVALID=' || TO_CHAR(v_invalid_hash_format));
+  DBMS_OUTPUT.PUT_LINE('  HASH_CHECKED_FULL=0');
+  DBMS_OUTPUT.PUT_LINE('  HASH_UNCHECKABLE=' || TO_CHAR(v_hash_uncheckable));
+END;
+/
+
+PROMPT ============================================================
+PROMPT FORMATO DE HASH Y LONGITUDES - SIN CONTENIDO JSON
+PROMPT ============================================================
+SELECT VER_ID,
+       LENGTH(VER_JSON) AS VER_JSON_LENGTH,
+       LENGTH(VER_HASH) AS VER_HASH_LENGTH,
+       VER_ESTADO,
+       VER_VIGENTE
+  FROM RL_MR_VERSIONES_FORMULARIO
+ ORDER BY VER_ID;
+
+PROMPT ============================================================
+PROMPT REGLA DE VIGENCIA - SOLO LA INVARIANTE CONTRACTUAL
+PROMPT ============================================================
+PROMPT Debe cumplirse: VER_VIGENTE=1 implica VER_ESTADO='PUBLISHED'.
+PROMPT PUBLISHED con VER_VIGENTE=0 se conserva como historico informativo.
+SELECT VER_FAMILIA_ID,
+       COUNT(*) AS VIGENTES
+  FROM RL_MR_VERSIONES_FORMULARIO
+ WHERE VER_VIGENTE = 1
+ GROUP BY VER_FAMILIA_ID
+HAVING COUNT(*) > 1
+ ORDER BY VER_FAMILIA_ID;
+
+PROMPT ============================================================
+PROMPT REFERENCIAS E INVARIANTES RELACIONALES - SOLO LECTURA
+PROMPT ============================================================
+
+DECLARE
+  v_orphan_family       NUMBER;
+  v_orphan_creator      NUMBER;
+  v_bad_dates           NUMBER;
+  v_duplicate_version   NUMBER;
+  v_total_evaluations   NUMBER;
+  v_orphan_risk         NUMBER;
+  v_orphan_version      NUMBER;
+  v_bad_version_row     NUMBER;
+  v_orphan_eval_creator NUMBER;
+  v_dup_catalog         NUMBER;
+  v_dup_element         NUMBER;
+BEGIN
+  SELECT COUNT(*)
+    INTO v_orphan_family
+    FROM RL_MR_VERSIONES_FORMULARIO v
+    LEFT JOIN RL_MR_FAMILIAS_FORMULARIO f ON f.FAM_ID = v.VER_FAMILIA_ID
+   WHERE f.FAM_ID IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_orphan_creator
+    FROM RL_MR_VERSIONES_FORMULARIO v
+    LEFT JOIN RL_USUARIOS u ON u.USR_ID = v.VER_USR_CREACION
+   WHERE u.USR_ID IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_bad_dates
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE VER_FECHA_FIN IS NOT NULL
+     AND VER_FECHA_INICIO IS NOT NULL
+     AND VER_FECHA_FIN < VER_FECHA_INICIO;
+
+  SELECT COUNT(*)
+    INTO v_duplicate_version
+    FROM (
+      SELECT VER_FAMILIA_ID, VER_VERSION
+        FROM RL_MR_VERSIONES_FORMULARIO
+       GROUP BY VER_FAMILIA_ID, VER_VERSION
+      HAVING COUNT(*) > 1
+    );
+
+  SELECT COUNT(*)
+    INTO v_total_evaluations
+    FROM RL_MR_EVALUACIONES_RIESGO;
+
+  SELECT COUNT(*)
+    INTO v_orphan_risk
+    FROM RL_MR_EVALUACIONES_RIESGO e
+    LEFT JOIN RL_MR_RIESGOS r ON r.RIE_ID = e.EVA_RIESGO_ID
+   WHERE r.RIE_ID IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_orphan_version
+    FROM RL_MR_EVALUACIONES_RIESGO e
+    LEFT JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = e.EVA_VERSION_ID
+   WHERE v.VER_ID IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_bad_version_row
+    FROM RL_MR_EVALUACIONES_RIESGO
+   WHERE EVA_VERSION_ROW IS NULL
+      OR EVA_VERSION_ROW < 1;
+
+  SELECT COUNT(*)
+    INTO v_orphan_eval_creator
+    FROM RL_MR_EVALUACIONES_RIESGO e
+    LEFT JOIN RL_USUARIOS u ON u.USR_ID = e.EVA_USR_REGISTRO
+   WHERE u.USR_ID IS NULL;
+
+  SELECT COUNT(*)
+    INTO v_dup_catalog
+    FROM (
+      SELECT CAT_CODIGO
+        FROM RL_MR_CATALOGOS
+       GROUP BY CAT_CODIGO
+      HAVING COUNT(*) > 1
+    );
+
+  SELECT COUNT(*)
+    INTO v_dup_element
+    FROM (
+      SELECT ELE_CATALOGO_ID, ELE_CODIGO
+        FROM RL_MR_ELEMENTOS_CATALOGO
+       GROUP BY ELE_CATALOGO_ID, ELE_CODIGO
+      HAVING COUNT(*) > 1
+    );
+
+  DBMS_OUTPUT.PUT_LINE('RELACIONES E INVARIANTES');
+  DBMS_OUTPUT.PUT_LINE('  ORPHAN_FAMILY=' || TO_CHAR(v_orphan_family));
+  DBMS_OUTPUT.PUT_LINE('  ORPHAN_CREATOR=' || TO_CHAR(v_orphan_creator));
+  DBMS_OUTPUT.PUT_LINE('  BAD_DATES=' || TO_CHAR(v_bad_dates));
+  DBMS_OUTPUT.PUT_LINE('  DUPLICATE_VERSION=' || TO_CHAR(v_duplicate_version));
+  DBMS_OUTPUT.PUT_LINE('  TOTAL_EVALUATIONS=' || TO_CHAR(v_total_evaluations));
+  DBMS_OUTPUT.PUT_LINE('  ORPHAN_RISK=' || TO_CHAR(v_orphan_risk));
+  DBMS_OUTPUT.PUT_LINE('  ORPHAN_VERSION=' || TO_CHAR(v_orphan_version));
+  DBMS_OUTPUT.PUT_LINE('  BAD_VERSION_ROW=' || TO_CHAR(v_bad_version_row));
+  DBMS_OUTPUT.PUT_LINE('  ORPHAN_EVAL_CREATOR=' || TO_CHAR(v_orphan_eval_creator));
+  DBMS_OUTPUT.PUT_LINE('  DUPLICATE_CATALOG=' || TO_CHAR(v_dup_catalog));
+  DBMS_OUTPUT.PUT_LINE('  DUPLICATE_ELEMENT=' || TO_CHAR(v_dup_element));
+  DBMS_OUTPUT.PUT_LINE('  JSON_VALIDATION=NOT_AVAILABLE_IN_ORACLE_11G_READ_ONLY_SCRIPT');
+  DBMS_OUTPUT.PUT_LINE('  FULL_HASH_VALIDATION=REQUIRES_BACKEND_READ_ONLY_CHECK');
+END;
+/
+
+PROMPT ============================================================
+PROMPT REFERENCIAS POR EVA_VERSION_ID - SIN CONTENIDO JSON
+PROMPT ============================================================
+SELECT EVA_VERSION_ID,
+       COUNT(*) AS EVALUATION_REFERENCES
+  FROM RL_MR_EVALUACIONES_RIESGO
+ GROUP BY EVA_VERSION_ID
+ ORDER BY EVA_VERSION_ID;
+
+PROMPT ============================================================
 PROMPT RESUMEN DEL PREFLIGHT
 PROMPT ============================================================
 PROMPT 1. Conservar la salida completa como evidencia sin secretos.

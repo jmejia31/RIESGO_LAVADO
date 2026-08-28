@@ -10,6 +10,18 @@ public interface IFormularioValidador
     /// Valida obligatoriedad, tipos de datos, regex y bloquea campos sucios no declarados.
     /// </summary>
     Task<FormularioValidationResult> ValidarRespuestasAsync(string jsonRespuestas, string jsonConfigFormulario);
+
+    /// <summary>
+    /// Valida la definición persistida antes de permitir su publicación.
+    /// Esta validación es independiente de las respuestas del usuario.
+    /// </summary>
+    Task<FormularioDefinitionValidationResult> ValidarDefinicionPublicableAsync(string jsonConfigFormulario);
+}
+
+public sealed class FormularioDefinitionValidationResult
+{
+    public bool Valido => Errores.Count == 0;
+    public List<FormularioValidationError> Errores { get; } = new();
 }
 
 public sealed class FormularioValidationResult

@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RL.API.Tests.Support;
 
@@ -33,6 +34,12 @@ public class InterfaceStub : DispatchProxy
 
         if (_handlers.TryGetValue(targetMethod.Name, out var handler))
             return handler(arguments);
+
+        // Los stubs existentes preceden al contrato de publicación semántica.
+        // Su valor por defecto conserva el foco de esas pruebas en la operación
+        // que estaban cubriendo; las pruebas del validador cubren el contrato.
+        if (targetMethod.Name == "ValidarDefinicionPublicableAsync")
+            return Task.FromResult(new RL.API.Features.MatricesRiesgos.Domain.FormularioDefinitionValidationResult());
 
         throw new InvalidOperationException($"No existe respuesta configurada para {targetMethod.Name}.");
     }

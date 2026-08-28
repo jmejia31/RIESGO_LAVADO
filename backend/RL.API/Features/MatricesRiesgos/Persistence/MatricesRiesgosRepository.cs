@@ -111,6 +111,25 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         try
         {
+            // Serializa la asignación de VER_VERSION dentro de la misma
+            // transacción que calcula MAX+1. La UQ familia/versión queda como
+            // última defensa frente a cualquier consumidor externo.
+            const string sqlLockFam = @"
+                SELECT FAM_ID
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_ID = :familiaId
+                 FOR UPDATE";
+
+            await using (var cmdLockFam = CrearComando(sqlLockFam, conn, trans))
+            {
+                cmdLockFam.Parameters.Add(new OracleParameter("familiaId", familiaId));
+                if (await cmdLockFam.ExecuteScalarAsync() is null)
+                {
+                    await trans.RollbackAsync();
+                    throw new KeyNotFoundException($"No se encontró la familia de formulario ID {familiaId}.");
+                }
+            }
+
             const string sqlMax = @"
                 SELECT NVL(MAX(VER_VERSION), 0) + 1
                   FROM RL_MR_VERSIONES_FORMULARIO

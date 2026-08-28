@@ -147,6 +147,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest($"No se puede publicar una versión en la familia '{familia.FamCodigo}' porque se encuentra inactiva.");
         }
 
+        FormularioDefinitionValidationResult definicion =
+            await _validador.ValidarDefinicionPublicableAsync(version.VerJson);
+        if (!definicion.Valido)
+        {
+            return ServiceResult.BadRequest(
+                $"La definición no puede publicarse porque no cumple el contrato del formulario: {string.Join("; ", definicion.Errores.ConvertAll(e => e.Mensaje))}");
+        }
+
         bool publicado = await _repo.PublicarVersionFormularioAsync(
             versionId,
             CalcularHashSha256(version.VerJson),
