@@ -1,5 +1,23 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - Fase 3 cerrada tecnicamente
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`.
+- Runtime local stale identificado y sustituido por backend RL.API actualizado; snapshots Oracle READ-ONLY sin crecimiento de legacy.
+- Migración .NET parametrizada completada: baseline dinámico `596`, `MIGRATED_ROWS=596`, `POST_HASHED=596`, `POST_REQUIRES_MIGRATION=0`, `IDEMPOTENCY_SECOND_PASS_ROWS=0`.
+- Oracle postflight: tokens `TOTAL=596`, `PLAINTEXT=0`, `HASHED=596`, `REQUIRES_MIGRATION=0`; invariantes de versiones, objetos y constraints sin errores.
+- Validaciones: backend `518/518 PASS`, frontend `707/707 PASS`, lint/build `PASS`, E2E `29/29 PASS`, quality gates `PASS`.
+- VER_ID 27/28 permanecen deuda funcional histórica documentada, sin modificar históricos. RBAC granular solo análisis; implementación `0`, cambios `0`.
+
+## Estado vigente - Fase 3 en ejecucion
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`. Base `2c70ee80a4c3088394d9195045920060f3140708`.
+- Preflight fail-closed PASS: CodexGraph, rama correcta, worktree limpio, fetch posterior y sincronización HEAD/origin sin divergencia.
+- Implementado localmente: administración backend de catálogos matrices, cliente Angular, workflow backend centralizado y hash SHA-256 de refresh tokens nuevos. RBAC granular documentado sin implementación.
+- Oracle read-only disponible; auditoría de 24 versiones PASS para hashes/fórmulas; VER_ID 27/28 continúan deuda histórica intacta.
+- Regresión completa, postflight final, commits y push pendientes.
+- PRECHECK refresh tokens READ-ONLY: `TOTAL=593`, `PLAINTEXT=593`, `HASHED=0`, `EXPIRED=492`, `REVOKED=319`, `ACTIVE=26`, `REQUIRES_MIGRATION=593`. Compatibilidad focalizada `11/11 PASS`; no se ejecutó DML.
+
 ## CIERRE PUNTO 19 - AUDITORIA GLOBAL FUERA DE MATRICES/FORMULARIOS
 
 - Fecha/hora local: 2026-08-27. Rama `desarrollo`. HEAD tecnico antes de documentar: `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.

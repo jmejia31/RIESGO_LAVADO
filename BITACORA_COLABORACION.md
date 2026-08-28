@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de cierre técnico Fase 3 - migración segura de refresh tokens
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`.
+- Runtime local RL.API stale `11504` identificado y detenido; backend actual recompilado e iniciado como `43164`. No se afectó producción.
+- Snapshots Oracle READ-ONLY: `596/596/0` sin crecimiento legacy; escritor actual persiste SHA-256.
+- Migrador .NET parametrizado: baseline dinámico `596`, `MIGRATED_ROWS=596`, `POST_HASHED=596`, `POST_REQUIRES_MIGRATION=0`, `IDEMPOTENCY_SECOND_PASS_ROWS=0`; solo `RL_REFRESH_TOKENS.RFT_TOKEN` fue actualizado en una transacción.
+- Script Oracle anterior fail-closed/deprecated por `ORA-00904` en `STANDARD_HASH`/`DBMS_CRYPTO`; no se reejecutó.
+- Validaciones: focalizadas post-migración `13/13 PASS`; backend `518/518 PASS`; frontend `707/707 PASS`; lint/build `PASS`; E2E `29/29 PASS`; quality gates `PASS`.
+- Postflight Oracle READ-ONLY: tokens `TOTAL=596`, `PLAINTEXT=0`, `HASHED=596`, `REQUIRES_MIGRATION=0`; objetos inválidos, constraints deshabilitadas, solapamientos y filas de versión inválidas `0`. VER_ID 27/28 permanecen deuda funcional histórica documentada.
+- RBAC granular: solo análisis; `RBAC_GRANULAR_IMPLEMENTATION=0`, `RBAC_CHANGES=0`.
+
+## Registro de intervencion - Codex - Fase 3 catalogos workflow y tokens
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`. Base `2c70ee80a4c3088394d9195045920060f3140708`.
+- Preflight fail-closed: CodexGraph, rama correcta, worktree limpio, fetch posterior y HEAD/origin sincronizados; AHEAD=0, BEHIND=0.
+- Cambios locales: contratos/endpoints de catálogos matrices, cliente frontend, workflow backend centralizado y hash SHA-256 para refresh tokens nuevos. RBAC solo análisis, sin cambios.
+- Verificación: build backend PASS; catálogos `4/4 PASS`; auditor Oracle read-only inspeccionó 24 versiones y mantuvo intactos VER_ID 27/28.
+- Pendiente: regresión integral, postflight final, revisión Git, commits y push.
+- Evidencia adicional sin DML: PRECHECK Oracle `TOTAL=593`, `PLAINTEXT=593`, `HASHED=0`, `EXPIRED=492`, `REVOKED=319`, `ACTIVE=26`, `REQUIRES_MIGRATION=593`. Tests de compatibilidad focalizados `11/11 PASS`; tokens legacy y hashes SHA-256 coinciden sin cambiar el token del cliente, y el backend conserva expiración/revocación/replay mediante predicados de persistencia.
+
 ## CIERRE PUNTO 19 - AUDITORIA GLOBAL FUERA DE MATRICES/FORMULARIOS
 
 - Fecha/hora local: 2026-08-27. Autor: Codex. Rama: `desarrollo`. HEAD tecnico antes de documentar: `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.
