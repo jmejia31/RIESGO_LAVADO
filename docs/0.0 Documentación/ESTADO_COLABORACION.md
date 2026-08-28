@@ -699,3 +699,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.
 - MCV.2 `5/5 PASS`; E2E `29/29 PASS`; Quality Gate local `PASS / EXIT CODE 0`; backend `494/494`; frontend `701/701`; MainLayout `6/6 PASS`.
 - FormBuilder no fue modificado. Sonar, Quality Gate remoto, PR, merge y CI post-merge quedan pendientes de verificacion sobre el SHA publicado.
+
+## Estado vigente - Fase 1 integridad/publication gate Oracle
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial: `85227671715441bafc3b36782a7f5cb17ee26d8c`.
+- H1 PASS: 24 CLOB completos certificados con SHA-256 UTF-8; 0 inválidos y 0 incalculables.
+- H2/H3 quedan como `FAIL_LEGACY_BASELINE`, sin bloquear Fase 1: VER_ID 24, 27, 28 y 53 permanecen intactos y se asignan a Fase 2. `LEGACY_SEMANTIC_DEBT=4`, `DEFERRED_TO_PHASE_2=TRUE`.
+- H4 PASS tras saneamiento exacto de VER_ID 1, 17 y 25: solapamientos 0 y demás invariantes temporales 0.
+- Hardening Oracle aplicado: constraints de vigencia/publicación, fechas, EVA_VERSION_ROW y formato hash; índice funcional único por familia vigente `VALID/UNIQUE`. Postflight sin objetos inválidos ni constraints deshabilitadas.
+- H8/H9 implementados localmente: lock de familia previo a MAX(VER_VERSION)+1 y Publication Gate server-side. Backend final `494/494 PASS` con TRX.
+- Histórico preservado: sin cambios de VER_JSON, VER_HASH o EVA_VERSION_ID. Recovery H4 disponible en `database/19_matrices_riesgos/transicion/13_rollback_temporal_h4.sql` y no fue ejecutado.
+- RBAC granular: pendiente de análisis con el jefe; cambios 0; RL_PERMISOS no creada; RL_ROL_PERMISOS no creada. Sonar excluido por instrucción del usuario.
+- Punto de continuación: ejecutar validaciones finales, revisar diff, staging explícito, commits separados y publicar únicamente en `origin/desarrollo`.

@@ -6509,3 +6509,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Fecha/hora local: 2026-08-27. Rama `desarrollo`. Commit tecnico `3992e6a`.
 - Verificacion: MainLayout `6/6 PASS`; MCV.2 dirigido `5/5 PASS`; E2E completo `29/29 PASS`; Quality Gate local `EXIT CODE 0`; backend `494/494 PASS`; frontend `701/701 PASS`; cobertura sobre umbral.
 - Estado remoto pendiente de publicacion y verificacion sobre este SHA; no se declara aun Sonar, PR, merge ni CI post-merge.
+
+## Registro de intervencion - Codex - Fase 1 integridad/publication gate Oracle
+
+- Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial de la intervencion: `85227671715441bafc3b36782a7f5cb17ee26d8c`.
+- H1: `HASH_CHECKED_FULL=24`, `HASH_INVALID=0`, `HASH_UNCHECKABLE=0`.
+- H2/H3: cuatro definiciones preservadas como `LEGACY_SEMANTIC_DEBT` (VER_ID 24, 27, 28 y 53); `H2_BLOCKS_F1=NO`, `H3_BLOCKS_F1=NO`, diferidas a Fase 2. No se modificaron VER_JSON, VER_HASH ni EVA_VERSION_ID.
+- H4: saneamiento transaccional exacto de VER_ID 1, 17 y 25; `TEMPORAL_OVERLAPS=0`, `BAD_INTERVAL=0`, `CURRENT_WITH_END_DATE=0`, `VERSION_ORDER_INCONSISTENCIES=0`.
+- Oracle: se aplicaron `CK_RL_MR_VER_VIG_PUB`, `CK_RL_MR_VER_FECHAS`, `CK_RL_MR_EVA_VERSION_ROW`, `CK_RL_MR_VER_HASH_FMT` y se verificó `UX_RL_MR_VER_FAM_VIG` como `VALID/UNIQUE`. Postflight: objetos inválidos 0, constraints deshabilitadas 0, múltiples vigentes 0, versiones huérfanas 0 y EVA_VERSION_ROW inválido 0.
+- Backend: Publication Gate server-side y lock de familia antes de calcular MAX(VER_VERSION)+1 quedaron implementados localmente. Regresión backend final: `494/494 PASS` mediante TRX.
+- No se ejecutó recovery 13. No hubo cambios RBAC; `RL_PERMISOS` y `RL_ROL_PERMISOS` no fueron creadas. Sonar queda fuera del alcance de esta fase.
+- Pendiente de cierre: validaciones finales, revisión/staging explícito, commits separados y push a `origin/desarrollo`.
