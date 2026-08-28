@@ -149,9 +149,13 @@ await using (var command = connection.CreateCommand())
             }
             ValidateEmbeddedCatalogs(definition["catalogos"], id, errors);
             ValidateRules(definition, id, errors, ruleKeys);
+            if (id is 24 or 53)
+                Console.WriteLine($"FORMULA_FIELDS_METADATA; VER_ID={id}; FIELDS={string.Join(',', fields.Keys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))}");
             foreach (var diagnostic in new FormulaEngine().ValidateDefinition(json))
             {
                 errors.Add(diagnostic.Code.ToString());
+                if (id is 24 or 53)
+                    Console.WriteLine($"FINDING=H3; VER_ID={id}; FIELD={diagnostic.Field}; CODE={diagnostic.Code}; DETAIL={diagnostic.Message}");
             }
         }
 
@@ -165,6 +169,8 @@ await using (var command = connection.CreateCommand())
         Console.WriteLine($"VER_ID={id}; FAMILIA_ID={familiaId}; VER_VERSION={versionNumber}; JSON_LENGTH={json.Length}; HASH_MATCH={hashMatch}; STATE={state}; VIGENTE={vigente}; CLASS={classification}; ERRORS={string.Join(',', errors.OrderBy(x => x))}");
     }
 }
+
+await RunPostflightAsync(connection);
 
 Console.WriteLine($"HASH_CHECKED_FULL={fullHash}");
 Console.WriteLine($"HASH_INVALID={hashInvalid}");
@@ -223,5 +229,28 @@ static void ValidateRules(JObject definition, long id, HashSet<string> errors, D
 }
 static async Task LoadCatalogsAsync(OracleConnection c, HashSet<string> codes, HashSet<string> ids) { await using var cmd=c.CreateCommand();cmd.CommandTimeout=60;cmd.CommandText="SELECT CAT_ID,CAT_CODIGO FROM RL_MR_CATALOGOS";await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync()){ids.Add(Convert.ToString(r.GetValue(0))!);codes.Add(Convert.ToString(r.GetValue(1))!);} }
 static async Task LoadRulesAsync(OracleConnection c, Dictionary<string,RuleInfo> rules) { await using var cmd=c.CreateCommand();cmd.CommandTimeout=60;cmd.CommandText="SELECT REG_CODIGO,REG_VERSION,REG_ALGORITMO_ID,REG_ACTIVA FROM RL_MR_REGLAS_CALCULO";await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync()){var code=Convert.ToString(r.GetValue(0))!;var version=Convert.ToString(r.GetValue(1))!;rules[$"{code}|{version}"]=new RuleInfo(Convert.ToString(r.GetValue(2))!,Convert.ToInt32(r.GetValue(3)));} }
+static async Task RunPostflightAsync(OracleConnection c)
+{
+    var checks = new Dictionary<string, string>
+    {
+        ["MULTIPLE_VIGENTE"] = "SELECT COUNT(*) FROM (SELECT VER_FAMILIA_ID FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_VIGENTE = 1 GROUP BY VER_FAMILIA_ID HAVING COUNT(*) > 1)",
+        ["VIGENTE_NOT_PUBLISHED"] = "SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_VIGENTE = 1 AND VER_ESTADO <> 'PUBLISHED'",
+        ["BAD_INTERVAL"] = "SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_FECHA_INICIO IS NOT NULL AND VER_FECHA_FIN IS NOT NULL AND VER_FECHA_FIN < VER_FECHA_INICIO",
+        ["CURRENT_WITH_END_DATE"] = "SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_VIGENTE = 1 AND VER_FECHA_FIN IS NOT NULL",
+        ["TEMPORAL_OVERLAPS"] = "SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO a JOIN RL_MR_VERSIONES_FORMULARIO b ON b.VER_FAMILIA_ID = a.VER_FAMILIA_ID AND b.VER_ID > a.VER_ID AND a.VER_ESTADO = 'PUBLISHED' AND b.VER_ESTADO = 'PUBLISHED' AND a.VER_FECHA_INICIO IS NOT NULL AND b.VER_FECHA_INICIO IS NOT NULL AND a.VER_FECHA_INICIO < NVL(b.VER_FECHA_FIN, TO_DATE('9999-12-31','YYYY-MM-DD')) AND b.VER_FECHA_INICIO < NVL(a.VER_FECHA_FIN, TO_DATE('9999-12-31','YYYY-MM-DD'))",
+        ["HASH_FORMAT_INVALID"] = "SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_HASH IS NULL OR LENGTH(VER_HASH) <> 64 OR NOT REGEXP_LIKE(UPPER(VER_HASH), '^[0-9A-F]{64}$')",
+        ["ORPHAN_VERSION"] = "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO e LEFT JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = e.EVA_VERSION_ID WHERE v.VER_ID IS NULL",
+        ["BAD_VERSION_ROW"] = "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_VERSION_ROW IS NULL OR EVA_VERSION_ROW < 1",
+        ["INVALID_OBJECTS"] = "SELECT COUNT(*) FROM USER_OBJECTS WHERE STATUS <> 'VALID'",
+        ["DISABLED_CONSTRAINTS"] = "SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE STATUS <> 'ENABLED'"
+    };
+    foreach (var check in checks)
+    {
+        await using var command = c.CreateCommand();
+        command.CommandTimeout = 60;
+        command.CommandText = check.Value;
+        Console.WriteLine($"POSTFLIGHT_{check.Key}={Convert.ToInt32(await command.ExecuteScalarAsync())}");
+    }
+}
 record FieldInfo(string Key,string Type);
 record RuleInfo(string Algorithm,int Active);

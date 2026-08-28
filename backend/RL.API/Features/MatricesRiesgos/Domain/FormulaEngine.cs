@@ -113,8 +113,9 @@ public sealed class FormulaEngine
             case NumberNode n: return Value.Number(n.Number);
             case StringNode s: return Value.String(s.Text);
             case ReferenceNode r:
-                if (formulas.ContainsKey(r.Name)) return EvaluateField(r.Name, formulas, values, cache, state);
-                if (values.TryGetValue(r.Name, out var value)) return value;
+                string referenceName = ResolveReferenceName(r.Name, formulas.Keys.Concat(values.Keys));
+                if (formulas.ContainsKey(referenceName)) return EvaluateField(referenceName, formulas, values, cache, state);
+                if (values.TryGetValue(referenceName, out var value)) return value;
                 throw new FormulaException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"Referencia desconocida '{r.Name}'.");
             case UnaryNode u:
                 var operand = EvaluateNode(u.Operand, formulas, values, cache, state).AsNumber();
@@ -185,8 +186,20 @@ public sealed class FormulaEngine
     private static void ValidateReferences(Node node, IEnumerable<string> keys, string field, List<FormulaDiagnostic> errors)
     {
         var known = new HashSet<string>(keys, StringComparer.OrdinalIgnoreCase);
-        foreach (var reference in node.References()) if (!known.Contains(reference)) errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, field, $"Referencia desconocida '{reference}'."));
+        foreach (var reference in node.References())
+        {
+            string resolved = ResolveReferenceName(reference, known);
+            if (!known.Contains(resolved)) errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, field, $"Referencia desconocida '{reference}'."));
+        }
         if (node.References().Any(r => r.Equals(field, StringComparison.OrdinalIgnoreCase))) errors.Add(new(FormulaErrorCode.FORMULA_SELF_REFERENCE, field, "La fórmula se referencia a sí misma."));
+    }
+
+    private static string ResolveReferenceName(string reference, IEnumerable<string> knownNames)
+    {
+        // Compatibilidad únicamente con el alias Excel legacy C1 presente en VER_ID 24/53.
+        if (reference.Equals("C1", StringComparison.OrdinalIgnoreCase)
+            && knownNames.Any(name => name.Equals("c", StringComparison.OrdinalIgnoreCase))) return "c";
+        return reference;
     }
     private static void DetectCycles(Dictionary<string, (string Expression, Node Ast)> formulas, List<FormulaDiagnostic> errors)
     { try { DetectCyclesOrThrow(formulas.ToDictionary(p => p.Key, p => p.Value.Ast, StringComparer.OrdinalIgnoreCase)); } catch (FormulaException ex) { errors.Add(new(ex.Code, "formula", ex.Message)); } }
