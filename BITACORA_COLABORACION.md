@@ -6510,6 +6510,17 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Verificacion: MainLayout `6/6 PASS`; MCV.2 dirigido `5/5 PASS`; E2E completo `29/29 PASS`; Quality Gate local `EXIT CODE 0`; backend `494/494 PASS`; frontend `701/701 PASS`; cobertura sobre umbral.
 - Estado remoto pendiente de publicacion y verificacion sobre este SHA; no se declara aun Sonar, PR, merge ni CI post-merge.
 
+## Registro de intervención - Codex - Fase 2 motor DSL y diagnóstico Oracle
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`. Base `2a6b65ed503150c5a305062be7de35a31974f906`; commit final pendiente.
+- Cambios: motor DSL seguro compartido por backend/Publication Gate y preview Angular; validación de dependencias/ciclos; cálculo backend autoritativo; mappings de proyección versionados con allowlist y compatibilidad histórica; auditor semántico ampliado a todas las versiones y fail-closed ante Oracle no disponible.
+- Evidencia ejecutada: backend `504/504 PASS`; frontend `705/705 PASS`; lint PASS; build PASS; validaciones database/documentation PASS. E2E integral: `26/29 PASS` y 3 fallos; no se declara E2E PASS. Auditor Oracle: `exit code 2`, `ERROR=50201`, `ORACLE_SEMANTIC_AUDIT=EXTERNAL_BLOCKER` por conexión no disponible.
+- CA1707: resuelto únicamente para los nuevos códigos contractuales mediante supresión local justificada; no se desactivaron reglas globales.
+- Oracle: no hubo DDL ni DML. Históricos VER_ID 24, 27, 28 y 53 permanecen sin modificación. VER_ID 27/28 conservan deuda catalogal que requiere definición funcional exacta.
+- Pendientes: postflight Oracle online, E2E relevante con servidor disponible, revisión/staging explícito, commits separados y push `origin/desarrollo`.
+
+- Actualización: E2E integral posterior `29/29 PASS`. Commit técnico creado como `a842880` y publicado en `origin/desarrollo`; el commit documental de este registro queda pendiente.
+
 ## Registro de intervencion - Codex - Fase 1 integridad/publication gate Oracle
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial de la intervencion: `85227671715441bafc3b36782a7f5cb17ee26d8c`.

@@ -700,6 +700,17 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - MCV.2 `5/5 PASS`; E2E `29/29 PASS`; Quality Gate local `PASS / EXIT CODE 0`; backend `494/494`; frontend `701/701`; MainLayout `6/6 PASS`.
 - FormBuilder no fue modificado. Sonar, Quality Gate remoto, PR, merge y CI post-merge quedan pendientes de verificacion sobre el SHA publicado.
 
+## Estado vigente - Fase 2 motor DSL y diagnóstico Oracle
+
+- Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`. Base `2a6b65ed503150c5a305062be7de35a31974f906`; commit final pendiente.
+- Implementado: DSL seguro compartido, cálculo backend autoritativo, version pinning, detección de ciclos, Publication Gate semántico, mappings de proyección allowlisted y auditor fail-closed.
+- Evidencia fresca: backend `504/504 PASS`; frontend `705/705 PASS`; lint/build PASS; database/documentation validators PASS. Auditor Oracle terminó exit code `2` con `ERROR=50201` y `ORACLE_SEMANTIC_AUDIT=EXTERNAL_BLOCKER`; no se declara postflight Oracle.
+- E2E: `26/29 PASS` en ejecución integral; 3 fallos reportados por timeout/estado del servidor de pruebas. Requiere nueva ejecución con infraestructura estable.
+- Históricos VER_ID 24, 27, 28 y 53 intactos; no DDL/DML; RBAC granular pendiente de análisis con el jefe; `CAMBIOS_RBAC=0`. VER_ID 27/28 mantienen deuda catalogal funcional exacta para Fase 3.
+- Continuación: completar Oracle postflight/E2E cuando estén disponibles, revisión y staging explícitos, commits técnico/documental y push únicamente a `origin/desarrollo`.
+
+- Actualización: E2E integral posterior `29/29 PASS`. Commit técnico publicado: `a842880`. Oracle continúa externo bloqueado con `ERROR=50201`; no se declara postflight PASS.
+
 ## Estado vigente - Fase 1 integridad/publication gate Oracle
 
 - Fecha/hora local: 2026-08-27 (UTC-6). Rama `desarrollo`. HEAD inicial: `85227671715441bafc3b36782a7f5cb17ee26d8c`.

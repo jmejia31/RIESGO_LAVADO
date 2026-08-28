@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "description": "Vectores canónicos sin datos sensibles para el DSL de fórmulas de Matrices.",
+  "cases": [
+    { "name": "precedence", "formula": "1 + 2 * 3", "expected": 7 },
+    { "name": "parentheses", "formula": "(1 + 2) * 3", "expected": 9 },
+    { "name": "power_right_associative", "formula": "2 ^ 3 ^ 2", "expected": 512 },
+    { "name": "comparison", "formula": "4 >= 4", "expected": true },
+    { "name": "if", "formula": "IF(2 > 1, 10, 20)", "expected": 10 },
+    { "name": "round_midpoint", "formula": "ROUND(2.5, 0)", "expected": 3 },
+    { "name": "rounddown_negative", "formula": "ROUNDDOWN(-2.9, 0)", "expected": -2 },
+    { "name": "mod_negative", "formula": "MOD(-5, 3)", "expected": 1 },
+    { "name": "max", "formula": "MAX(1, 5, 3)", "expected": 5 },
+    { "name": "or", "formula": "OR(0, 1)", "expected": true },
+    { "name": "iferror", "formula": "IFERROR(1 / 0, 9)", "expected": 9 },
+    { "name": "unknown_reference", "formula": "campo_inexistente + 1", "error": "FORMULA_REFERENCE_UNKNOWN" },
+    { "name": "unknown_function", "formula": "SUM(1, 2)", "error": "FORMULA_FUNCTION_UNSUPPORTED" },
+    { "name": "division_by_zero", "formula": "1 / 0", "error": "FORMULA_DIVISION_BY_ZERO" }
+  ]
+}
