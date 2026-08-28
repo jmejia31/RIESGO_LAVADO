@@ -365,6 +365,7 @@ public class AuthService : IAuthService
         return Convert.ToBase64String(randomNumber);
     }
 
+
     public async Task<bool> RecuperarPasswordAsync(string email)
     {
         var usuario = await _usuarioRepo.ObtenerPorEmailAsync(email);

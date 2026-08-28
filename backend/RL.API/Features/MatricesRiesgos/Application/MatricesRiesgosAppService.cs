@@ -449,11 +449,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
         string actual = evaluacion.EvaEstado.ToUpperInvariant();
         string nuevo = nuevoEstado.Trim().ToUpperInvariant();
-        bool permitida =
-            actual == "BORRADOR" && nuevo == "EN_REVISION"
-            || actual == "EN_REVISION" && nuevo is "OBSERVADA" or "APROBADA" or "RECHAZADA"
-            || actual == "OBSERVADA" && nuevo == "BORRADOR"
-            || actual == "APROBADA" && nuevo == "CERRADA";
+        bool permitida = EvaluacionWorkflow.EsTransicionPermitida(actual, nuevo);
 
         if (!permitida)
         {

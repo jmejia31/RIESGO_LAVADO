@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Catalogos.Application;
+using RL.API.Features.Catalogos.Contracts;
 using RL.API.Core.Security;
 
 namespace RL.API.Features.Catalogos;
@@ -50,4 +51,24 @@ public class CatalogosController : ControllerBase
             }) 
         });
     }
+
+    [HttpGet("matrices")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> Matrices([FromQuery] bool incluirInactivos = false) => Ok(await _service.ListarMatricesAsync(incluirInactivos));
+
+    [HttpPost("matrices")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> CrearMatriz([FromBody] CrearCatalogoMatricesDto dto) => Ok(await _service.CrearCatalogoMatricesAsync(dto));
+
+    [HttpPut("matrices/{id:long}")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> ActualizarMatriz(long id, [FromBody] ActualizarCatalogoMatricesDto dto) => Ok(await _service.ActualizarCatalogoMatricesAsync(id, dto));
+
+    [HttpPost("matrices/{id:long}/elementos")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> CrearElemento(long id, [FromBody] CrearElementoCatalogoMatricesDto dto) => Ok(await _service.CrearElementoCatalogoMatricesAsync(id, dto));
+
+    [HttpPut("matrices/elementos/{id:long}")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> ActualizarElemento(long id, [FromBody] ActualizarElementoCatalogoMatricesDto dto) => Ok(await _service.ActualizarElementoCatalogoMatricesAsync(id, dto));
 }

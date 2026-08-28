@@ -28,6 +28,7 @@ var catalogIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 var ruleKeys = new Dictionary<string, RuleInfo>(StringComparer.OrdinalIgnoreCase);
 await LoadCatalogsAsync(connection, catalogCodes, catalogIds);
 await LoadRulesAsync(connection, ruleKeys);
+await RunRefreshTokenPrecheckAsync(connection);
 
 var supportedTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
 {
@@ -242,7 +243,11 @@ static async Task RunPostflightAsync(OracleConnection c)
         ["ORPHAN_VERSION"] = "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO e LEFT JOIN RL_MR_VERSIONES_FORMULARIO v ON v.VER_ID = e.EVA_VERSION_ID WHERE v.VER_ID IS NULL",
         ["BAD_VERSION_ROW"] = "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_VERSION_ROW IS NULL OR EVA_VERSION_ROW < 1",
         ["INVALID_OBJECTS"] = "SELECT COUNT(*) FROM USER_OBJECTS WHERE STATUS <> 'VALID'",
-        ["DISABLED_CONSTRAINTS"] = "SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE STATUS <> 'ENABLED'"
+        ["DISABLED_CONSTRAINTS"] = "SELECT COUNT(*) FROM USER_CONSTRAINTS WHERE STATUS <> 'ENABLED'",
+        ["CATALOG_DUPLICATE_CODES"] = "SELECT COUNT(*) FROM (SELECT CAT_CODIGO FROM RL_MR_CATALOGOS GROUP BY CAT_CODIGO HAVING COUNT(*) > 1)",
+        ["CATALOG_ELEMENT_DUPLICATE_CODES"] = "SELECT COUNT(*) FROM (SELECT ELE_CATALOGO_ID, ELE_CODIGO FROM RL_MR_ELEMENTOS_CATALOGO GROUP BY ELE_CATALOGO_ID, ELE_CODIGO HAVING COUNT(*) > 1)",
+        ["CATALOG_ORPHAN_REFERENCES"] = "SELECT COUNT(*) FROM RL_MR_ELEMENTOS_CATALOGO e LEFT JOIN RL_MR_CATALOGOS c ON c.CAT_ID = e.ELE_CATALOGO_ID WHERE c.CAT_ID IS NULL",
+        ["CATALOG_INVALID_ELEMENTS"] = "SELECT COUNT(*) FROM RL_MR_ELEMENTOS_CATALOGO WHERE TRIM(ELE_CODIGO) IS NULL OR TRIM(ELE_VALOR) IS NULL OR ELE_ORDEN < 0"
     };
     foreach (var check in checks)
     {
@@ -250,6 +255,26 @@ static async Task RunPostflightAsync(OracleConnection c)
         command.CommandTimeout = 60;
         command.CommandText = check.Value;
         Console.WriteLine($"POSTFLIGHT_{check.Key}={Convert.ToInt32(await command.ExecuteScalarAsync())}");
+    }
+}
+static async Task RunRefreshTokenPrecheckAsync(OracleConnection c)
+{
+    var checks = new Dictionary<string, string>
+    {
+        ["TOTAL"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS",
+        ["PLAINTEXT"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE LENGTH(RFT_TOKEN) <> 64 OR NOT REGEXP_LIKE(RFT_TOKEN, '^[0-9A-Fa-f]{64}$')",
+        ["HASHED"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE LENGTH(RFT_TOKEN) = 64 AND REGEXP_LIKE(RFT_TOKEN, '^[0-9A-Fa-f]{64}$')",
+        ["EXPIRED"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_EXPIRA <= SYSDATE",
+        ["REVOKED"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_REVOCADO = 1",
+        ["ACTIVE"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE",
+        ["REQUIRES_MIGRATION"] = "SELECT COUNT(*) FROM RL_REFRESH_TOKENS WHERE RFT_TOKEN IS NOT NULL AND (LENGTH(RFT_TOKEN) <> 64 OR NOT REGEXP_LIKE(RFT_TOKEN, '^[0-9A-Fa-f]{64}$'))"
+    };
+    foreach (var check in checks)
+    {
+        await using var command = c.CreateCommand();
+        command.CommandTimeout = 60;
+        command.CommandText = check.Value;
+        Console.WriteLine($"REFRESH_TOKEN_PRECHECK_{check.Key}={Convert.ToInt32(await command.ExecuteScalarAsync())}");
     }
 }
 record FieldInfo(string Key,string Type);

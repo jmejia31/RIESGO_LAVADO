@@ -54,6 +54,19 @@ public sealed class CatalogosModuleTests
         Assert.DoesNotContain("modActivo", json, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task CatalogoServiceAdministraCatalogosMatricesSinCrearModeloParalelo()
+    {
+        var repository = new CatalogoRepositoryFake();
+        var service = new CatalogoService(repository);
+        var id = await service.CrearCatalogoMatricesAsync(new CrearCatalogoMatricesDto("CAT_TEST", "Prueba"));
+        var elemento = await service.CrearElementoCatalogoMatricesAsync(id, new CrearElementoCatalogoMatricesDto("A", "Activo", 1));
+
+        Assert.Equal(10, id);
+        Assert.Equal(20, elemento);
+        Assert.Single(await service.ListarMatricesAsync(false));
+    }
+
     private sealed class CatalogoRepositoryFake : ICatalogoRepository
     {
         public int RolesCalls { get; private set; }
@@ -77,6 +90,12 @@ public sealed class CatalogosModuleTests
             ModulosCalls++;
             return Task.FromResult(new List<Modulo> { CrearModulo() });
         }
+
+        public Task<List<CatalogoMatricesDto>> ListarMatricesAsync(bool incluirInactivos) => Task.FromResult(new List<CatalogoMatricesDto> { new(10, "CAT_TEST", "Prueba", true, Array.Empty<ElementoCatalogoMatricesDto>()) });
+        public Task<long> CrearCatalogoMatricesAsync(string codigo, string nombre) => Task.FromResult(10L);
+        public Task<bool> ActualizarCatalogoMatricesAsync(long id, string nombre, bool activo) => Task.FromResult(true);
+        public Task<long> CrearElementoCatalogoMatricesAsync(long catalogoId, string codigo, string valor, int orden) => Task.FromResult(20L);
+        public Task<bool> ActualizarElementoCatalogoMatricesAsync(long id, string valor, int orden, bool activo) => Task.FromResult(true);
     }
 
     private sealed class CatalogoServiceFake : ICatalogoService
@@ -89,6 +108,12 @@ public sealed class CatalogosModuleTests
 
         public Task<List<Modulo>> ObtenerModulosAsync() =>
             Task.FromResult(new List<Modulo> { CrearModulo() });
+
+        public Task<List<CatalogoMatricesDto>> ListarMatricesAsync(bool incluirInactivos) => Task.FromResult(new List<CatalogoMatricesDto>());
+        public Task<long> CrearCatalogoMatricesAsync(CrearCatalogoMatricesDto dto) => Task.FromResult(1L);
+        public Task<bool> ActualizarCatalogoMatricesAsync(long id, ActualizarCatalogoMatricesDto dto) => Task.FromResult(true);
+        public Task<long> CrearElementoCatalogoMatricesAsync(long catalogoId, CrearElementoCatalogoMatricesDto dto) => Task.FromResult(1L);
+        public Task<bool> ActualizarElementoCatalogoMatricesAsync(long id, ActualizarElementoCatalogoMatricesDto dto) => Task.FromResult(true);
     }
 
     private static Modulo CrearModulo() => new()

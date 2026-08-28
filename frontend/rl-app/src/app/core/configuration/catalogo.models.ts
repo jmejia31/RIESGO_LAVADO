@@ -18,3 +18,19 @@ export interface Modulo {
   modIcono: string;
   modSeccion: string;
 }
+
+export interface ElementoCatalogoMatrices {
+  id: number;
+  codigo: string;
+  valor: string;
+  orden: number;
+  activo: boolean;
+}
+
+export interface CatalogoMatrices {
+  id: number;
+  codigo: string;
+  nombre: string;
+  activo: boolean;
+  elementos: ElementoCatalogoMatrices[];
+}

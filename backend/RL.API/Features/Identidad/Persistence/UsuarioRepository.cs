@@ -287,11 +287,11 @@ public class UsuarioRepository : IUsuarioRepository
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT RFT_USR_ID FROM RL_REFRESH_TOKENS WHERE RFT_TOKEN = :token AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
-        cmd.Parameters.Add(new OracleParameter("token", token));
-
-        var result = await cmd.ExecuteScalarAsync();
-        return result == null || result == DBNull.Value ? null : Convert.ToInt64(result);
+        cmd.CommandText = "SELECT RFT_USR_ID, RFT_TOKEN FROM RL_REFRESH_TOKENS WHERE RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            if (RefreshTokenSecurity.Matches(token, reader.GetString(1))) return reader.GetInt64(0);
+        return null;
     }
 
     public async Task<string?> ObtenerRefreshTokenAsync(long usrId, string token)
@@ -300,16 +300,17 @@ public class UsuarioRepository : IUsuarioRepository
         await conn.OpenAsync();
 
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
-            SELECT RFT_TOKEN FROM RL_REFRESH_TOKENS
-            WHERE RFT_USR_ID = :usr_id AND RFT_TOKEN = :token
-              AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
+        cmd.CommandText = @"SELECT RFT_TOKEN FROM RL_REFRESH_TOKENS
+            WHERE RFT_USR_ID = :usr_id AND RFT_REVOCADO = 0 AND RFT_EXPIRA > SYSDATE";
 
         cmd.Parameters.Add(new OracleParameter("usr_id", usrId));
-        cmd.Parameters.Add(new OracleParameter("token",  token));
-
-        var result = await cmd.ExecuteScalarAsync();
-        return result as string;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var stored = reader.GetString(0);
+            if (RefreshTokenSecurity.Matches(token, stored)) return stored;
+        }
+        return null;
     }
 
     public async Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip)
@@ -325,7 +326,7 @@ public class UsuarioRepository : IUsuarioRepository
                 (SEQ_RL_REFRESH_TOKENS.NEXTVAL, :usr_id, :token, :expira, :ip)";
 
         cmd.Parameters.Add(new OracleParameter("usr_id", usrId));
-        cmd.Parameters.Add(new OracleParameter("token",  token));
+        cmd.Parameters.Add(new OracleParameter("token",  RefreshTokenSecurity.Hash(token)));
         cmd.Parameters.Add(new OracleParameter("expira", expira));
         cmd.Parameters.Add(new OracleParameter("ip",     (object?)ip ?? DBNull.Value));
 
@@ -338,8 +339,9 @@ public class UsuarioRepository : IUsuarioRepository
         await conn.OpenAsync();
 
         await using var cmd = conn.CreateCommand();
-        cmd.CommandText = "UPDATE RL_REFRESH_TOKENS SET RFT_REVOCADO = 1 WHERE RFT_TOKEN = :token";
+        cmd.CommandText = "UPDATE RL_REFRESH_TOKENS SET RFT_REVOCADO = 1 WHERE RFT_TOKEN = :token OR RFT_TOKEN = :hash";
         cmd.Parameters.Add(new OracleParameter("token", token));
+        cmd.Parameters.Add(new OracleParameter("hash", RefreshTokenSecurity.Hash(token)));
         await cmd.ExecuteNonQueryAsync();
     }
 
