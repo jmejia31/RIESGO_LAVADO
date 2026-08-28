@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../../backend/RL.API/RL.API.csproj" />
     <Reference Include="Oracle.ManagedDataAccess">
       <HintPath>../../../backend/RL.API/bin/Release/net10.0/Oracle.ManagedDataAccess.dll</HintPath>
     </Reference>

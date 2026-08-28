@@ -60,7 +60,6 @@ public sealed class FormularioValidador : IFormularioValidador
             }
 
             var fieldKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var formulaFields = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var catalogKeys = LeerCatalogos(root, result);
 
             foreach (JsonElement section in sections.EnumerateArray())
@@ -132,16 +131,16 @@ public sealed class FormularioValidador : IFormularioValidador
                         }
                         else
                         {
-                            formulaFields[key!] = formula!;
-                            ValidarFormula(formula!, fieldKeys, key!, result);
                         }
                     }
                 }
             }
 
-            foreach (string formulaKey in formulaFields.Keys)
-                if (TieneCiclo(formulaKey, formulaFields, new HashSet<string>(StringComparer.OrdinalIgnoreCase)))
-                    result.Errores.Add(new FormularioValidationError(formulaKey, "La fórmula contiene una dependencia circular."));
+            // El parser/AST semántico es la única fuente de verdad para fórmulas.
+            // Se ejecuta después de recolectar todos los campos para permitir
+            // referencias a campos declarados posteriormente en el JSON.
+            foreach (FormulaDiagnostic error in new FormulaEngine().ValidateDefinition(jsonConfigFormulario))
+                result.Errores.Add(new FormularioValidationError(error.Field, error.Code.ToString()));
         }
         catch (JsonException ex)
         {
@@ -169,37 +168,6 @@ public sealed class FormularioValidador : IFormularioValidador
             if (!keys.Add(code!)) result.Errores.Add(new FormularioValidationError(code!, "El código de catálogo está duplicado."));
         }
         return keys;
-    }
-
-    private static void ValidarFormula(string expression, HashSet<string> fieldKeys, string fieldKey, FormularioDefinitionValidationResult result)
-    {
-        if (expression.Any(ch => !char.IsWhiteSpace(ch) && !char.IsDigit(ch) && !"+-*/()._ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".Contains(ch)))
-            result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_OPERATOR_UNSUPPORTED"));
-        foreach (Match match in Regex.Matches(expression, @"\b[A-Za-z_]\w*\b"))
-        {
-            string token = match.Value;
-            if (token is "VRI" or "VRR") continue;
-            if (expression.IndexOf(token + "(", StringComparison.OrdinalIgnoreCase) >= 0)
-                result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_FUNCTION_UNSUPPORTED"));
-            else if (!fieldKeys.Contains(token))
-                result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_UNKNOWN_REFERENCE"));
-        }
-        int depth = 0;
-        foreach (char ch in expression)
-        {
-            if (ch == '(') depth++;
-            if (ch == ')' && --depth < 0) result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_SYNTAX_INVALID"));
-        }
-        if (depth != 0) result.Errores.Add(new FormularioValidationError(fieldKey, "FORMULA_SYNTAX_INVALID"));
-    }
-
-    private static bool TieneCiclo(string key, Dictionary<string, string> formulas, HashSet<string> path)
-    {
-        if (!path.Add(key)) return true;
-        if (!formulas.TryGetValue(key, out string? expression)) return false;
-        foreach (Match match in Regex.Matches(expression, @"\b[A-Za-z_]\w*\b"))
-            if (formulas.ContainsKey(match.Value) && TieneCiclo(match.Value, formulas, new HashSet<string>(path, StringComparer.OrdinalIgnoreCase))) return true;
-        return false;
     }
 
     private static string NormalizarTipo(string raw) =>

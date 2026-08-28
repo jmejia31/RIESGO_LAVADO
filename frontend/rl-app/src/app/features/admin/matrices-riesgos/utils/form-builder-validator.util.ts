@@ -1,4 +1,6 @@
 import { FormBuilderModel } from '../models/form-builder.models';
+import { CampoFormulario, RespuestasFormulario } from '../models/matrices-riesgos.models';
+import { evaluarFormulaCampo } from './dynamic-formula-evaluator.util';
 
 export interface FormBuilderValidationError {
   campo: string;
@@ -107,6 +109,21 @@ export function validarFormBuilderModel(model: FormBuilderModel): FormBuilderVal
           errores.push({ campo: cmp.clave || posicion, mensaje: `El campo calculado "${cmp.etiqueta || cmp.clave}" requiere una fórmula válida.` });
         }
       });
+    }
+  });
+
+  // El Builder comparte el mismo parser seguro que el preview/runtime.
+  const campos = model.secciones.flatMap(sec => sec.campos) as unknown as CampoFormulario[];
+  const camposMap = new Map(campos.map(campo => [campo.clave.toLowerCase(), campo]));
+  const valoresIniciales: RespuestasFormulario = Object.fromEntries(campos.map(campo => [campo.clave, 0]));
+  campos.filter(campo => campo.formula?.trim()).forEach(campo => {
+    const resultado = evaluarFormulaCampo(campo.formula, valoresIniciales, campo.clave, camposMap);
+    // La validación del contrato comprueba sintaxis, referencias y ciclos. Los
+    // errores dependientes de valores no deben invalidar un borrador con ceros
+    // de previsualización; se validan al evaluar una respuesta real.
+    if (!resultado.exito && resultado.codigo !== 'FORMULA_DIVISION_BY_ZERO'
+      && resultado.codigo !== 'FORMULA_TYPE_MISMATCH') {
+      errores.push({ campo: campo.clave, mensaje: resultado.codigo ?? 'FORMULA_SYNTAX_INVALID' });
     }
   });
 

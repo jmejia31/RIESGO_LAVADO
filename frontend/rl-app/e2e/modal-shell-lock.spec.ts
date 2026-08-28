@@ -7,7 +7,7 @@ const definicion = JSON.stringify({
     campos: [
       { clave: 'area_responsable', etiqueta: 'Área responsable', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
       { clave: 'dueno_riesgo', etiqueta: 'Dueño del riesgo', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_DUENO', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
-      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: 'NO_EJECUTAR(a + b)', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
+      { clave: 'resultado_formula', etiqueta: 'Resultado calculado', tipo: 'formula', formula: '1 + 2', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
     ] }],
   catalogos: [{ codigo: 'CAT_DUENO', nombre: 'Dueños de riesgo', elementos: [{ codigo: '01', valor: 'Dirección General', orden: 1 }, { codigo: '02', valor: 'Cumplimiento', orden: 2 }] }]
 });
@@ -246,7 +246,7 @@ test('captura Vista Previa integrada sin herramientas de edición', async ({ pag
   await expect(preview.locator('[data-preview-field="dueno_riesgo"] select')).toBeVisible();
   await expect(preview.locator('[data-preview-field="resultado_formula"] [aria-readonly="true"]')).toBeVisible();
   await expect(preview).toContainText('Dirección General');
-  await expect(preview).toContainText('NO_EJECUTAR(a + b)');
+  await expect(preview).toContainText('1 + 2');
   await expect(dialogo.getByRole('main', { name: 'Lienzo del formulario' })).toHaveCount(0);
   await page.screenshot({ path: 'test-results/ui-form6-preview-1536x1024.png', fullPage: true });
 });

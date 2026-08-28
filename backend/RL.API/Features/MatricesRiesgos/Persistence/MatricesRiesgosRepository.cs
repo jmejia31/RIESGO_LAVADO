@@ -904,13 +904,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 trans,
                 dto.EvaVersionId,
                 exigirVigente: true);
+            string definicionVersion = await ObtenerJsonVersionAsync(conn, trans, dto.EvaVersionId);
             string calculosJson = IncorporarMetadatosRegla(
                 dto.EvaDataCalcJson,
                 regla.Codigo,
                 regla.Version,
                 regla.AlgoritmoId);
             long evaluacionId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_EVALUACIONES");
-            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto);
+            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto, definicionVersion);
             string codigoRiesgo = await ObtenerCodigoRiesgoAsync(conn, trans, dto.EvaRiesgoId);
 
             const string sqlInsert = @"
@@ -1029,6 +1030,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 trans,
                 versionFormularioId,
                 exigirVigente: false);
+            string definicionVersion = await ObtenerJsonVersionAsync(conn, trans, versionFormularioId);
             string calculosJson = IncorporarMetadatosRegla(
                 dto.EvaDataCalcJson,
                 regla.Codigo,
@@ -1055,7 +1057,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new DBConcurrencyException($"No se pudo actualizar la evaluación {dto.EvaId} por un conflicto de concurrencia.");
             }
 
-            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto);
+            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto, definicionVersion);
             int actualizadas = await ActualizarProyeccionAsync(conn, trans, dto.EvaId, proyeccion);
             if (actualizadas != 1)
             {
@@ -1669,10 +1671,11 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         ValidarJson(dto.EvaDataCalcJson, nameof(dto.EvaDataCalcJson));
     }
 
-    private static ProyeccionEvaluacion ConstruirProyeccion(EvaluacionRiesgoDto dto)
+    private static ProyeccionEvaluacion ConstruirProyeccion(EvaluacionRiesgoDto dto, string definicionVersion)
     {
         Dictionary<string, JsonElement> respuestas = MapearDiccionario(dto.EvaDataJson);
         Dictionary<string, JsonElement> calculados = MapearDiccionario(dto.EvaDataCalcJson);
+        Dictionary<string, string> mappings = LeerMappingsProyeccion(definicionVersion);
         int vri = dto.EvaVri ?? ObtenerEntero(calculados, "vri")
             ?? throw new InvalidOperationException("No se encontró VRI en el resultado de cálculo.");
         int vrr = dto.EvaVrr ?? ObtenerEntero(calculados, "vrr")
@@ -1683,13 +1686,13 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         }
 
         return new ProyeccionEvaluacion(
-            ObtenerTextoRequerido(respuestas, calculados, "area_principal"),
+            ObtenerTextoMapeado(mappings, "area", "area_principal", respuestas, calculados),
             vri,
             vrr,
-            ObtenerTextoRequerido(respuestas, calculados, "nivel_inherente"),
-            ObtenerTextoRequerido(respuestas, calculados, "nivel_residual"),
-            ObtenerTextoRequerido(respuestas, calculados, "respuesta_riesgo"),
-            ObtenerTextoRequerido(respuestas, calculados, "dueno_riesgo"));
+            ObtenerTextoMapeado(mappings, "nivelInherente", "nivel_inherente", respuestas, calculados),
+            ObtenerTextoMapeado(mappings, "nivelResidual", "nivel_residual", respuestas, calculados),
+            ObtenerTextoMapeado(mappings, "respuesta", "respuesta_riesgo", respuestas, calculados),
+            ObtenerTextoMapeado(mappings, "dueno", "dueno_riesgo", respuestas, calculados));
     }
 
     private static Dictionary<string, JsonElement> MapearDiccionario(string json)
@@ -1731,6 +1734,103 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         calculos["algoritmoId"] = algoritmoId;
 
         return calculos.ToJsonString(new JsonSerializerOptions { WriteIndented = false });
+    }
+
+    private static async Task<string> ObtenerJsonVersionAsync(
+        OracleConnection conn,
+        OracleTransaction transaction,
+        long versionFormularioId)
+    {
+        const string sql = @"
+            SELECT VER_JSON
+              FROM RL_MR_VERSIONES_FORMULARIO
+             WHERE VER_ID = :versionId";
+        await using var command = CrearComando(sql, conn, transaction);
+        command.Parameters.Add(new OracleParameter("versionId", versionFormularioId));
+        object? value = await command.ExecuteScalarAsync();
+        return value?.ToString()
+            ?? throw new InvalidOperationException($"No se encontró la definición de la versión {versionFormularioId}.");
+    }
+
+    private static Dictionary<string, string> LeerMappingsProyeccion(string definicionVersion)
+    {
+        using JsonDocument document = JsonDocument.Parse(definicionVersion);
+        JsonElement root = document.RootElement;
+        JsonElement mappingsElement = default;
+        bool hasMappings = TryGetPropertyIgnoreCase(root, "proyecciones", out mappingsElement)
+            || TryGetPropertyIgnoreCase(root, "projectionMappings", out mappingsElement)
+            || TryGetPropertyIgnoreCase(root, "mappings", out mappingsElement);
+
+        // Compatibilidad explícita para contratos históricos anteriores al esquema de mappings.
+        if (!hasMappings)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["area"] = "area_principal",
+                ["nivelInherente"] = "nivel_inherente",
+                ["nivelResidual"] = "nivel_residual",
+                ["respuesta"] = "respuesta_riesgo",
+                ["dueno"] = "dueno_riesgo"
+            };
+        }
+
+        if (mappingsElement.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidOperationException("Las proyecciones versionadas deben ser un arreglo.");
+        }
+
+        HashSet<string> allowedTargets = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "area", "nivelInherente", "nivelResidual", "respuesta", "dueno"
+        };
+        Dictionary<string, string> mappings = new(StringComparer.OrdinalIgnoreCase);
+        foreach (JsonElement mapping in mappingsElement.EnumerateArray())
+        {
+            string? target = LeerTexto(mapping, "target", "destino", "targetField");
+            string? source = LeerTexto(mapping, "source", "campoOrigen", "sourceField");
+            if (string.IsNullOrWhiteSpace(target) || string.IsNullOrWhiteSpace(source)
+                || !allowedTargets.Contains(target) || !mappings.TryAdd(target, source))
+            {
+                throw new InvalidOperationException("El mapping de proyección es inválido, ambiguo o no permitido.");
+            }
+        }
+
+        foreach (string target in allowedTargets)
+        {
+            if (!mappings.ContainsKey(target))
+            {
+                throw new InvalidOperationException($"Falta el mapping versionado para la proyección '{target}'.");
+            }
+        }
+
+        return mappings;
+    }
+
+    private static string? LeerTexto(JsonElement element, params string[] names)
+    {
+        foreach (string name in names)
+        {
+            if (TryGetPropertyIgnoreCase(element, name, out JsonElement value)
+                && value.ValueKind == JsonValueKind.String)
+            {
+                return value.GetString();
+            }
+        }
+
+        return null;
+    }
+
+    private static string ObtenerTextoMapeado(
+        IReadOnlyDictionary<string, string> mappings,
+        string target,
+        string legacySource,
+        IReadOnlyDictionary<string, JsonElement> respuestas,
+        IReadOnlyDictionary<string, JsonElement> calculados)
+    {
+        string source = mappings.TryGetValue(target, out string? mappedSource)
+            ? mappedSource
+            : legacySource;
+        return ObtenerTextoRequerido(respuestas, calculados, source);
     }
 
     private static string ObtenerTextoRequerido(

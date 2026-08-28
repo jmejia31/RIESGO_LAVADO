@@ -660,6 +660,27 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Error de validación de respuestas:\n" + string.Join("\n", errores));
         }
 
+        // El motor DSL es autoritativo para definiciones que contienen fórmulas.
+        // El payload de cálculos recibido del cliente nunca participa en este flujo.
+        var motor = new FormulaEngine();
+        FormulaEvaluationResult evaluacionFormula = motor.Evaluate(definicionFormulario, dto.EvaDataJson);
+        if (!evaluacionFormula.Success)
+        {
+            return ServiceResult.BadRequest(
+                "Error de cálculo: " + string.Join("; ", evaluacionFormula.Errors.Select(e => e.Code.ToString())));
+        }
+
+        if (evaluacionFormula.Values.Count > 0)
+        {
+            dto.EvaDataCalcJson = JsonSerializer.Serialize(evaluacionFormula.Values);
+            dto.EvaVri = ObtenerEnteroCalculado(evaluacionFormula.Values, "vri", "vri_calculado");
+            dto.EvaEtp = ObtenerDecimalCalculado(evaluacionFormula.Values, "etp", "etp_calculado");
+            dto.EvaVrr = ObtenerEnteroCalculado(evaluacionFormula.Values, "vrr", "vrr_calculado");
+            return null;
+        }
+
+        // Compatibilidad temporal para contratos históricos que aún no declaran
+        // fórmulas; no se usa cuando el contrato versionado sí las contiene.
         var variables = ExtraerVariablesCalculo(dto.EvaDataJson);
         var calculo = _calculador.CalcularYValidarRiesgo(
             variables.Frecuencia,
@@ -679,6 +700,22 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         dto.EvaEtp = calculo.Data.Etp;
         dto.EvaVrr = calculo.Data.Vrr;
         dto.EvaDataCalcJson = JsonSerializer.Serialize(calculo.Data);
+        return null;
+    }
+
+    private static int? ObtenerEnteroCalculado(IReadOnlyDictionary<string, object?> valores, params string[] claves)
+    {
+        foreach (string clave in claves)
+            if (valores.TryGetValue(clave, out object? valor) && valor is not null && int.TryParse(Convert.ToString(valor, System.Globalization.CultureInfo.InvariantCulture), out int entero))
+                return entero;
+        return null;
+    }
+
+    private static decimal? ObtenerDecimalCalculado(IReadOnlyDictionary<string, object?> valores, params string[] claves)
+    {
+        foreach (string clave in claves)
+            if (valores.TryGetValue(clave, out object? valor) && valor is not null && decimal.TryParse(Convert.ToString(valor, System.Globalization.CultureInfo.InvariantCulture), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal numero))
+                return numero;
         return null;
     }
 

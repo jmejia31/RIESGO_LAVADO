@@ -3,6 +3,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oracle.ManagedDataAccess.Client;
+using RL.API.Features.MatricesRiesgos.Domain;
 
 const string settingsPath = "backend/RL.API/appsettings.json";
 var settings = JObject.Parse(File.ReadAllText(settingsPath));
@@ -11,7 +12,16 @@ var connectionString = (string?)settings["ConnectionStrings"]?["OracleDB"]
 
 connectionString += ";Connection Timeout=30";
 await using var connection = new OracleConnection(connectionString);
-await connection.OpenAsync();
+try
+{
+    await connection.OpenAsync();
+}
+catch (OracleException ex)
+{
+    Console.Error.WriteLine($"ORACLE_SEMANTIC_AUDIT=EXTERNAL_BLOCKER; ERROR={ex.Number}; MESSAGE={ex.Message}");
+    Environment.ExitCode = 2;
+    return;
+}
 
 var catalogCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 var catalogIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -49,7 +59,7 @@ await using (var command = connection.CreateCommand())
 {
     command.BindByName = true;
     command.CommandTimeout = 60;
-    command.CommandText = "SELECT VER_ID, VER_FAMILIA_ID, VER_VERSION, VER_JSON, VER_HASH, VER_ESTADO, VER_VIGENTE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID IN (24,27,28,53) ORDER BY VER_ID";
+    command.CommandText = "SELECT VER_ID, VER_FAMILIA_ID, VER_VERSION, VER_JSON, VER_HASH, VER_ESTADO, VER_VIGENTE FROM RL_MR_VERSIONES_FORMULARIO ORDER BY VER_ID";
     await using var reader = await command.ExecuteReaderAsync();
     while (await reader.ReadAsync())
     {
@@ -139,7 +149,10 @@ await using (var command = connection.CreateCommand())
             }
             ValidateEmbeddedCatalogs(definition["catalogos"], id, errors);
             ValidateRules(definition, id, errors, ruleKeys);
-            ValidateFormulas(formulas, fields, id, errors);
+            foreach (var diagnostic in new FormulaEngine().ValidateDefinition(json))
+            {
+                errors.Add(diagnostic.Code.ToString());
+            }
         }
 
         foreach (var issue in errors.Where(error => error.StartsWith("FORMULA_", StringComparison.Ordinal)))
@@ -157,7 +170,7 @@ Console.WriteLine($"HASH_CHECKED_FULL={fullHash}");
 Console.WriteLine($"HASH_INVALID={hashInvalid}");
 Console.WriteLine($"HASH_UNCHECKABLE={hashUncheckable}");
 Console.WriteLine($"VERSIONS_INSPECTED={versionCount}");
-foreach (var key in new[] { "CATALOG_BROKEN_REFERENCE", "FORMULA_SYNTAX_INVALID", "FORMULA_OPERATOR_UNSUPPORTED", "FORMULA_FUNCTION_UNSUPPORTED", "FORMULA_UNKNOWN_REFERENCE", "FORMULA_CYCLE", "RULE_BROKEN_REFERENCE" })
+foreach (var key in new[] { "CATALOG_BROKEN_REFERENCE", "FORMULA_SYNTAX_INVALID", "FORMULA_OPERATOR_UNSUPPORTED", "FORMULA_FUNCTION_UNSUPPORTED", "FORMULA_REFERENCE_UNKNOWN", "FORMULA_SELF_REFERENCE", "FORMULA_CYCLE", "RULE_BROKEN_REFERENCE" })
     Console.WriteLine($"{key}={Get(key)}; AFFECTED_VER_IDS={Affected(key)}");
 Console.WriteLine($"CLASS_VALID={classes["VALID"]}; CLASS_INVALID={classes["INVALID"]}; CLASS_LEGACY_COMPATIBLE={classes["LEGACY_COMPATIBLE"]}; CLASS_REQUIRES_REVIEW={classes["REQUIRES_REVIEW"]}");
 
@@ -207,39 +220,6 @@ static void ValidateRules(JObject definition, long id, HashSet<string> errors, D
         if (!ruleKeys.TryGetValue($"{code}|{version}", out var persisted)) { errors.Add("RULE_BROKEN_REFERENCE"); continue; }
         if (persisted.Active != 1 || !persisted.Algorithm.Equals(algorithm, StringComparison.OrdinalIgnoreCase)) errors.Add("RULE_BROKEN_REFERENCE");
     }
-}
-static void ValidateFormulas(Dictionary<string,string> formulas, Dictionary<string,FieldInfo> fields, long id, HashSet<string> errors)
-{
-    foreach (var pair in formulas)
-    {
-        var expression = pair.Value;
-        var functionMatches = System.Text.RegularExpressions.Regex.Matches(expression, @"\b[A-Za-z_]\w*\s*\(");
-        if (functionMatches.Count > 0)
-        {
-            errors.Add("FORMULA_FUNCTION_UNSUPPORTED");
-            Console.WriteLine($"FINDING=H3; VER_ID={id}; FIELD={pair.Key}; FORMULA={expression}; CLASSIFICATION=INCONSISTENCIA_DATOS; CAUSE=FUNCTION_NOT_SUPPORTED_BY_RUNTIME");
-        }
-        if (expression.Any(ch => "^%><=&|!".Contains(ch)))
-        {
-            errors.Add("FORMULA_OPERATOR_UNSUPPORTED");
-            Console.WriteLine($"FINDING=H3; VER_ID={id}; FIELD={pair.Key}; FORMULA={expression}; CLASSIFICATION=INCONSISTENCIA_DATOS; CAUSE=OPERATOR_NOT_SUPPORTED_BY_RUNTIME");
-        }
-        if (functionMatches.Count > 0 || expression.Any(ch => "^%><=&|!".Contains(ch))) continue;
-        var depth = 0; foreach (var ch in expression) { if (ch == '(') depth++; if (ch == ')' && --depth < 0) { errors.Add("FORMULA_SYNTAX_INVALID"); break; } } if (depth != 0) { errors.Add("FORMULA_SYNTAX_INVALID"); continue; }
-        foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(expression, @"\b[A-Za-z_]\w*\b"))
-        {
-            var name = match.Value; if (new[] { "VRI", "VRR" }.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
-            if (expression.IndexOf(name + "(", StringComparison.OrdinalIgnoreCase) >= 0) { errors.Add("FORMULA_FUNCTION_UNSUPPORTED"); continue; }
-            if (!fields.ContainsKey(name)) errors.Add("FORMULA_UNKNOWN_REFERENCE");
-        }
-    }
-    foreach (var key in formulas.Keys) if (HasCycle(key, formulas, new HashSet<string>(StringComparer.OrdinalIgnoreCase))) errors.Add("FORMULA_CYCLE");
-}
-static bool HasCycle(string key, Dictionary<string,string> formulas, HashSet<string> path)
-{
-    if (!path.Add(key)) return true; if (!formulas.TryGetValue(key, out var expression)) return false;
-    foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(expression, @"\b[A-Za-z_]\w*\b")) if (formulas.ContainsKey(match.Value) && HasCycle(match.Value, formulas, new HashSet<string>(path, StringComparer.OrdinalIgnoreCase))) return true;
-    return false;
 }
 static async Task LoadCatalogsAsync(OracleConnection c, HashSet<string> codes, HashSet<string> ids) { await using var cmd=c.CreateCommand();cmd.CommandTimeout=60;cmd.CommandText="SELECT CAT_ID,CAT_CODIGO FROM RL_MR_CATALOGOS";await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync()){ids.Add(Convert.ToString(r.GetValue(0))!);codes.Add(Convert.ToString(r.GetValue(1))!);} }
 static async Task LoadRulesAsync(OracleConnection c, Dictionary<string,RuleInfo> rules) { await using var cmd=c.CreateCommand();cmd.CommandTimeout=60;cmd.CommandText="SELECT REG_CODIGO,REG_VERSION,REG_ALGORITMO_ID,REG_ACTIVA FROM RL_MR_REGLAS_CALCULO";await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync()){var code=Convert.ToString(r.GetValue(0))!;var version=Convert.ToString(r.GetValue(1))!;rules[$"{code}|{version}"]=new RuleInfo(Convert.ToString(r.GetValue(2))!,Convert.ToInt32(r.GetValue(3)));} }

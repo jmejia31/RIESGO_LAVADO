@@ -66,6 +66,6 @@ describe('Motor de Evaluacion de Formulas Dinamicas Seguro (Fase 5)', () => {
     const resultado = evaluarFormulaCampo('probabilidad / impacto', respuestas, 'vri');
 
     expect(resultado.exito).toBe(false);
-    expect(resultado.error).toContain('Division por cero');
+    expect(resultado.codigo).toBe('FORMULA_DIVISION_BY_ZERO');
   });
 });
