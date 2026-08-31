@@ -386,4 +386,4 @@ No se editan componentes Angular ni endpoints en 3.1.1. 3.1.2 implementará cont
 | `P0` | 0 |
 | `P1_PROPIOS_3_1_1` | 0 |
 
-**Estado documental:** SUBFASE 3.1.1 cerrada para habilitar 3.1.2, pendiente únicamente del commit/push documental y certificación Git final de esta intervención. No se autoriza avanzar automáticamente a implementación dentro de este documento.
+**Estado documental:** `SUBFASE 3.1.1 = CERRADA`. Commit documental `851a3b59546a2d4e03b6295ab7c7cf9cf3694ae1` publicado en `origin/desarrollo`. `HEAD=origin/desarrollo`, ahead=0, behind=0, tracked worktree limpio y staged changes=0. Los cuatro untracked preexistentes están preservados fuera de scope y no son P0, P1, blocker, regression ni deuda de 3.1.1. `3.1.2` queda habilitada, sin implementarla en esta intervención.
