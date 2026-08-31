@@ -742,3 +742,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Histórico preservado: sin cambios de VER_JSON, VER_HASH o EVA_VERSION_ID. Recovery H4 disponible en `database/19_matrices_riesgos/transicion/13_rollback_temporal_h4.sql` y no fue ejecutado.
 - RBAC granular: pendiente de análisis con el jefe; cambios 0; RL_PERMISOS no creada; RL_ROL_PERMISOS no creada. Sonar excluido por instrucción del usuario.
 - Punto de continuación: ejecutar validaciones finales, revisar diff, staging explícito, commits separados y publicar únicamente en `origin/desarrollo`.
+- Punto de continuación: ejecutar validaciones finales, revisar diff, staging explícito, commits separados y publicar únicamente en `origin/desarrollo`.
+
+## Estado vigente - Subfase 3.1.1 arquitectura y modelo de persistencia
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. Rama `desarrollo`. BASE_SHA `1adca71caa4b4581df731d1c7a6d2d4cfdd2e183`; pre-flight con `HEAD=origin/desarrollo`, AHEAD=0, BEHIND=0. El worktree conserva cuatro untracked preexistentes ajenos a esta subfase y no se tocaron.
+- Estado: `SUBFASE_3_1_1=CERRADA` documentalmente; `FASE_3.1=EN PROGRESO`; 3.1.2 queda habilitada solo después del cierre Git, sin implementación en esta intervención.
+- Evidencia fresca: CodexGraph dirigido PASS; Oracle read-only SQL*Plus por ProcessStartInfo PASS (`SQLPLUS_EXIT_CODE=0`); 18 tablas, 24 versiones, 14 evaluaciones, 4 catálogos, 18 elementos, 1 regla, 1.290 auditorías; DDL=0, DML=0, cambios Oracle=0.
+- Arquitectura cerrada: una sola administración de Fórmulas, Funciones, Parámetros, Reglas y Catálogos; un solo Formula Engine, Publication Gate y sistema de auditoría. Se reutilizan familias/versiones, evaluaciones, reglas, catálogos, `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID`, `EVA_CALCULOS_JSON` y `RL_AUDITORIA`.
+- Persistencia propuesta: `RL_MR_FORMULAS`, `RL_MR_FORMULA_VERSIONES`, `RL_MR_FORMULA_USOS`, `RL_MR_FUNCIONES`, `RL_MR_FUNCION_VERSIONES`, `RL_MR_FUNCION_ARGUMENTOS`, `RL_MR_PARAMETROS_CALCULO` y `RL_MR_PARAMETRO_VERSIONES`. No se propone `RL_MR_DEPENDENCIAS_CALCULO`, `RL_MR_REGLAS_CALCULO_V2`, catálogos paralelos ni auditoría nueva.
+- Histórico y seguridad: JSON/hash/versiones/evaluaciones históricas no se reescriben; VER_ID 24/53 impacto ninguno; VER_ID 27/28 mutación histórica 0; código ejecutable en BD=0, C#/JavaScript/SQL dinámico=0, eval/new Function=0. `MODEL_SUPPORTS_34_FORMULAS=YES` arquitectónico; paridad Excel se difiere a 3.1.5.
+- Documento oficial: `docs/3. Módulo Matrices de Riesgos/FASE_3_1_1_ARQUITECTURA_MODELO_PERSISTENCIA.md`.
+- Pendiente de cierre operativo: `git diff --check`, consistencia Markdown, staging explícito de solo tres archivos, commit documental, push y comprobación final `HEAD==origin/desarrollo`, AHEAD=0, BEHIND=0, sin incluir los untracked preexistentes. No hacer DDL/DML ni crear endpoints/tablas en esta subfase.

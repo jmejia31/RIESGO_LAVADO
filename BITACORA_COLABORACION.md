@@ -6553,3 +6553,16 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Backend: Publication Gate server-side y lock de familia antes de calcular MAX(VER_VERSION)+1 quedaron implementados localmente. Regresión backend final: `494/494 PASS` mediante TRX.
 - No se ejecutó recovery 13. No hubo cambios RBAC; `RL_PERMISOS` y `RL_ROL_PERMISOS` no fueron creadas. Sonar queda fuera del alcance de esta fase.
 - Pendiente de cierre: validaciones finales, revisión/staging explícito, commits separados y push a `origin/desarrollo`.
+- Pendiente de cierre: validaciones finales, revisión/staging explícito, commits separados y push a `origin/desarrollo`.
+
+## Registro de intervención - Codex - Fase 3.1.1 arquitectura y modelo de persistencia
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. Rama `desarrollo`. Base SHA `1adca71caa4b4581df731d1c7a6d2d4cfdd2e183`; HEAD inicial y `origin/desarrollo` iguales; AHEAD=0, BEHIND=0.
+- Alcance: mapeo dirigido y diseño definitivo de persistencia. No se reabrieron fases cerradas ni se implementaron 3.1.2/3.1.3/3.1.4/3.1.5.
+- CodexGraph: consultas focalizadas para MatricesRiesgos, FormulaEngine, FormularioValidador, ReglasCalculo, Catalogos, Publication, FormBuilder y Auditoria; `CODEXGRAPH_MAP=PASS`. El grafo no contiene nodos C# completos; el backend se verificó mediante archivos compilables sugeridos.
+- Oracle READ-ONLY: SQL*Plus por `System.Diagnostics.ProcessStartInfo`, `-L /nolog`, streams redirigidos, UTF-8 sin BOM por `StandardInput.BaseStream.Write`; `SQLPLUS_EXIT_CODE=0`. Confirmados 18 tablas relevantes, 24 versiones, 14 evaluaciones, 4 catálogos, 18 elementos, 1 regla y 1.290 filas de `RL_AUDITORIA`; DDL=0, DML=0, datos modificados=0.
+- Decisiones: una sola fuente administrativa por dominio; reutilización de familias/versiones, evaluaciones, reglas, catálogos, Formula Engine, Publication Gate y auditoría. Persistencia nueva propuesta solo para fórmulas/versiones/usos, funciones/versiones/argumentos y parámetros/versiones. `DEPENDENCY_TABLE_REQUIRED=NO`; duplicados y drops=0.
+- Histórico: `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID` y `EVA_CALCULOS_JSON` permanecen inmutables; VER_ID 24/53 impacto ninguno; VER_ID 27/28 mutación histórica 0. `MODEL_SUPPORTS_34_FORMULAS=YES` arquitectónico, sin paridad Excel.
+- Cambios: solo documento oficial 3.1.1; no backend, frontend, database, DDL ni DML. Se preservaron cuatro untracked preexistentes fuera de alcance: `.vscode/`, `agosto_capturas/`, `agosto_rest.txt` y PDF de requisitos.
+- Verificación pendiente antes del commit: `git diff --check` y consistencia documental focalizada. No se ejecutaron regresión completa, seeds, migraciones, endpoints ni pruebas 34/34 por no existir cambios productivos.
+- Punto exacto de continuación: validar diff, stage explícito únicamente de documento 3.1.1, bitácora y estado; commit documental, push `origin/desarrollo` y certificación Git final. No avanzar automáticamente a implementación.
