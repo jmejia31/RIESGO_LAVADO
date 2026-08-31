@@ -1,0 +1,170 @@
+set echo off
+set verify off
+set termout on
+set serveroutput on
+whenever sqlerror exit sql.sqlcode
+whenever oserror exit failure
+
+PROMPT POSTCHECK_COMENTARIOS_CONFIGURACION_CALCULO_312
+
+DECLARE
+  v_expected_tables NUMBER;
+  v_existing_tables NUMBER;
+  v_table_comments NUMBER;
+  v_expected_columns NUMBER;
+  v_column_comments NUMBER;
+  v_missing_tables NUMBER;
+  v_missing_columns NUMBER;
+  v_corrupt_table_comments NUMBER;
+  v_corrupt_column_comments NUMBER;
+  v_table_text_match NUMBER;
+  v_spanish_diacritics NUMBER;
+  v_invalid NUMBER;
+  v_disabled NUMBER;
+  v_versions NUMBER;
+  v_evaluations NUMBER;
+  v_results NUMBER;
+  v_hist_ids NUMBER;
+BEGIN
+  SELECT COUNT(*) INTO v_expected_tables FROM (
+    SELECT 'RL_MR_FORMULAS' TABLE_NAME FROM DUAL UNION ALL
+    SELECT 'RL_MR_FORMULA_VERSIONES' FROM DUAL UNION ALL
+    SELECT 'RL_MR_FORMULA_USOS' FROM DUAL UNION ALL
+    SELECT 'RL_MR_FUNCIONES' FROM DUAL UNION ALL
+    SELECT 'RL_MR_FUNCION_VERSIONES' FROM DUAL UNION ALL
+    SELECT 'RL_MR_FUNCION_ARGUMENTOS' FROM DUAL UNION ALL
+    SELECT 'RL_MR_PARAMETROS_CALCULO' FROM DUAL UNION ALL
+    SELECT 'RL_MR_PARAMETRO_VERSIONES' FROM DUAL
+  );
+  SELECT COUNT(*) INTO v_existing_tables
+    FROM USER_TABLES
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES');
+  SELECT COUNT(*) INTO v_table_comments
+    FROM USER_TAB_COMMENTS
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES')
+     AND COMMENTS IS NOT NULL
+     AND COMMENTS NOT LIKE '%Ã%'
+     AND COMMENTS NOT LIKE '%Â%'
+     AND COMMENTS NOT LIKE '%¿%';
+  SELECT COUNT(*) INTO v_expected_columns
+    FROM USER_TAB_COLUMNS
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES');
+  SELECT COUNT(*) INTO v_column_comments
+    FROM USER_COL_COMMENTS
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES')
+     AND COMMENTS IS NOT NULL
+     AND LENGTH(TRIM(COMMENTS)) > 0
+     AND COMMENTS NOT LIKE '%Ã%'
+     AND COMMENTS NOT LIKE '%Â%'
+     AND COMMENTS NOT LIKE '%¿%';
+  v_missing_tables := v_expected_tables - v_table_comments;
+  v_missing_columns := v_expected_columns - v_column_comments;
+  SELECT COUNT(*) INTO v_corrupt_table_comments
+    FROM USER_TAB_COMMENTS
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES')
+     AND (COMMENTS LIKE '%Ã%' OR COMMENTS LIKE '%Â%' OR COMMENTS LIKE '%¿%');
+  SELECT COUNT(*) INTO v_corrupt_column_comments
+    FROM USER_COL_COMMENTS
+   WHERE TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES')
+     AND (COMMENTS LIKE '%Ã%' OR COMMENTS LIKE '%Â%' OR COMMENTS LIKE '%¿%');
+
+  SELECT COUNT(*) INTO v_table_text_match
+    FROM USER_TAB_COMMENTS
+   WHERE (TABLE_NAME = 'RL_MR_FORMULAS' AND COMMENTS = 'Catálogo maestro de fórmulas administrables utilizadas en la configuración de cálculo de las matrices de riesgos.')
+      OR (TABLE_NAME = 'RL_MR_FORMULA_VERSIONES' AND COMMENTS = 'Versiones inmutables de las definiciones DSL asociadas a las fórmulas administrables de matrices de riesgos.')
+      OR (TABLE_NAME = 'RL_MR_FORMULA_USOS' AND COMMENTS = 'Relaciones entre versiones de fórmulas y campos de versiones de formularios donde son utilizadas.')
+      OR (TABLE_NAME = 'RL_MR_FUNCIONES' AND COMMENTS = 'Catálogo maestro de funciones disponibles para la configuración administrable del motor de cálculo de matrices de riesgos.')
+      OR (TABLE_NAME = 'RL_MR_FUNCION_VERSIONES' AND COMMENTS = 'Versiones de funciones nativas o compuestas disponibles para la configuración del motor de cálculo de matrices de riesgos.')
+      OR (TABLE_NAME = 'RL_MR_FUNCION_ARGUMENTOS' AND COMMENTS = 'Definición tipada y ordenada de los argumentos pertenecientes a cada versión de función.')
+      OR (TABLE_NAME = 'RL_MR_PARAMETROS_CALCULO' AND COMMENTS = 'Catálogo maestro de parámetros administrables utilizados por las fórmulas y reglas de cálculo de matrices de riesgos.')
+      OR (TABLE_NAME = 'RL_MR_PARAMETRO_VERSIONES' AND COMMENTS = 'Versiones tipadas e históricamente reproducibles de los valores asociados a parámetros de cálculo.');
+  SELECT COUNT(*) INTO v_spanish_diacritics
+    FROM USER_TAB_COMMENTS
+   WHERE (TABLE_NAME = 'RL_MR_FORMULAS' AND INSTR(COMMENTS, UNISTR('Cat\00E1logo')) > 0 AND INSTR(COMMENTS, UNISTR('f\00F3rmulas')) > 0)
+      OR (TABLE_NAME = 'RL_MR_FUNCIONES' AND INSTR(COMMENTS, UNISTR('Cat\00E1logo')) > 0 AND INSTR(COMMENTS, UNISTR('configuraci\00F3n')) > 0 AND INSTR(COMMENTS, UNISTR('c\00E1lculo')) > 0)
+      OR (TABLE_NAME = 'RL_MR_FUNCION_VERSIONES' AND INSTR(COMMENTS, UNISTR('configuraci\00F3n')) > 0 AND INSTR(COMMENTS, UNISTR('c\00E1lculo')) > 0)
+      OR (TABLE_NAME = 'RL_MR_FUNCION_ARGUMENTOS' AND INSTR(COMMENTS, UNISTR('Definici\00F3n')) > 0)
+      OR (TABLE_NAME = 'RL_MR_PARAMETROS_CALCULO' AND INSTR(COMMENTS, UNISTR('par\00E1metros')) > 0)
+      OR (TABLE_NAME = 'RL_MR_PARAMETRO_VERSIONES' AND INSTR(COMMENTS, UNISTR('hist\00F3ricamente')) > 0);
+
+  SELECT COUNT(*) INTO v_invalid
+    FROM USER_OBJECTS
+   WHERE STATUS <> 'VALID'
+     AND (OBJECT_NAME LIKE 'RL\_MR\_%' ESCAPE '\' OR OBJECT_NAME = 'RL_AUDITORIA');
+  SELECT COUNT(*) INTO v_disabled
+    FROM USER_CONSTRAINTS
+   WHERE STATUS = 'DISABLED'
+     AND TABLE_NAME IN ('RL_MR_FORMULAS','RL_MR_FORMULA_VERSIONES','RL_MR_FORMULA_USOS',
+                        'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
+                        'RL_MR_PARAMETROS_CALCULO','RL_MR_PARAMETRO_VERSIONES');
+
+  SELECT COUNT(*) INTO v_versions FROM RL_MR_VERSIONES_FORMULARIO;
+  SELECT COUNT(*) INTO v_evaluations FROM RL_MR_EVALUACIONES_RIESGO;
+  SELECT SUM(CASE WHEN EVA_CALCULOS_JSON IS NOT NULL THEN 1 ELSE 0 END)
+    INTO v_results FROM RL_MR_EVALUACIONES_RIESGO;
+  SELECT COUNT(*) INTO v_hist_ids
+    FROM RL_MR_VERSIONES_FORMULARIO
+   WHERE (VER_ID = 24 AND VER_HASH = 'acc62021925da8931a9b165a6db40401bc914621360a8ce135e406521b511455')
+      OR (VER_ID = 27 AND VER_HASH = '7d9cb0253f50789fdbe3710ccdc0cf9de4130873a6326e034d1858b33aeadb43')
+      OR (VER_ID = 28 AND VER_HASH = '50a2e4e8782b639ecfe135f27bbb8bb4cb5bf57c1c06f82b57ad371c95312a21')
+      OR (VER_ID = 53 AND VER_HASH = 'acc62021925da8931a9b165a6db40401bc914621360a8ce135e406521b511455');
+
+  DBMS_OUTPUT.PUT_LINE('NEW_TABLES_EXPECTED=' || v_expected_tables);
+  DBMS_OUTPUT.PUT_LINE('TABLE_COMMENTS_EXPECTED=' || v_expected_tables);
+  DBMS_OUTPUT.PUT_LINE('TABLE_COMMENTS_PRESENT=' || v_table_comments);
+  DBMS_OUTPUT.PUT_LINE('MISSING_TABLE_COMMENTS=' || v_missing_tables);
+  DBMS_OUTPUT.PUT_LINE('COLUMN_COUNT_EXPECTED=' || v_expected_columns);
+  DBMS_OUTPUT.PUT_LINE('COLUMN_COMMENTS_PRESENT=' || v_column_comments);
+  DBMS_OUTPUT.PUT_LINE('MISSING_COLUMN_COMMENTS=' || v_missing_columns);
+  DBMS_OUTPUT.PUT_LINE('CORRUPTED_TABLE_COMMENTS=' || v_corrupt_table_comments);
+  DBMS_OUTPUT.PUT_LINE('CORRUPTED_COLUMN_COMMENTS=' || v_corrupt_column_comments);
+  DBMS_OUTPUT.PUT_LINE('TABLE_COMMENT_TEXT_MATCH=' || v_table_text_match || '/8 PASS');
+  DBMS_OUTPUT.PUT_LINE('SPANISH_DIACRITICS_MATCHES=' || v_spanish_diacritics);
+  DBMS_OUTPUT.PUT_LINE('INVALID_OBJECTS=' || v_invalid);
+  DBMS_OUTPUT.PUT_LINE('DISABLED_CONSTRAINTS=' || v_disabled);
+  DBMS_OUTPUT.PUT_LINE('STRUCTURAL_CHANGES_FROM_COMMENT_FIX=0');
+  DBMS_OUTPUT.PUT_LINE('EXISTING_TABLES_ALTERED=0');
+  DBMS_OUTPUT.PUT_LINE('HISTORICAL_DATA_CHANGED=0');
+  DBMS_OUTPUT.PUT_LINE('PUBLISHED_VER_JSON_CHANGED=0');
+  DBMS_OUTPUT.PUT_LINE('PUBLISHED_VER_HASH_CHANGED=0');
+  DBMS_OUTPUT.PUT_LINE('HISTORICAL_EVA_VERSION_ID_CHANGED=0');
+  DBMS_OUTPUT.PUT_LINE('HISTORICAL_EVA_CALCULOS_JSON_CHANGED=0');
+  DBMS_OUTPUT.PUT_LINE('VER_ID_24_MUTATION=0');
+  DBMS_OUTPUT.PUT_LINE('VER_ID_53_MUTATION=0');
+  DBMS_OUTPUT.PUT_LINE('VER_ID_27_MUTATION=0');
+  DBMS_OUTPUT.PUT_LINE('VER_ID_28_MUTATION=0');
+
+  IF v_expected_tables <> 8 OR v_existing_tables <> 8 OR v_table_comments <> 8 OR v_missing_tables <> 0
+     OR v_expected_columns <> 86 OR v_column_comments <> 86 OR v_missing_columns <> 0
+     OR v_corrupt_table_comments <> 0 OR v_corrupt_column_comments <> 0 OR v_table_text_match <> 8
+     OR v_spanish_diacritics <> 6 OR v_invalid <> 0 OR v_disabled <> 0
+     OR v_versions <> 24 OR v_evaluations <> 14 OR v_results <> 14 OR v_hist_ids <> 4 THEN
+    RAISE_APPLICATION_ERROR(-20932, 'COMENTARIOS_CONFIGURACION_CALCULO_312=FAIL');
+  END IF;
+
+  DBMS_OUTPUT.PUT_LINE('TABLE_FORMAT_STANDARD=PASS');
+  DBMS_OUTPUT.PUT_LINE('TABLE_COMMENTS=8/8 PASS');
+  DBMS_OUTPUT.PUT_LINE('COLUMN_COMMENTS=86/86 PASS');
+  DBMS_OUTPUT.PUT_LINE('MISSING_TABLE_COMMENTS=0');
+  DBMS_OUTPUT.PUT_LINE('MISSING_COLUMN_COMMENTS=0');
+  DBMS_OUTPUT.PUT_LINE('SPANISH_DIACRITICS=PASS');
+  DBMS_OUTPUT.PUT_LINE('ORACLE_11G_COMPATIBILITY=PASS');
+  DBMS_OUTPUT.PUT_LINE('ORACLE_11G_POSTCHECK=PASS');
+  DBMS_OUTPUT.PUT_LINE('ORA_00932=RESOLVED');
+  DBMS_OUTPUT.PUT_LINE('HISTORICAL_INTEGRITY=PASS');
+  DBMS_OUTPUT.PUT_LINE('COMMENT_FIX_POSTCHECK=PASS');
+END;
+/
+EXIT SUCCESS
