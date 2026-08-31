@@ -6566,3 +6566,24 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Cambios: solo documento oficial 3.1.1; no backend, frontend, database, DDL ni DML. Se preservaron cuatro untracked preexistentes fuera de alcance: `.vscode/`, `agosto_capturas/`, `agosto_rest.txt` y PDF de requisitos.
 - Verificación ejecutada: `git diff --check`, `git diff --cached --check`, staging explícito de tres documentos y consistencia documental focalizada PASS. No se ejecutaron regresión completa, seeds, migraciones, endpoints ni pruebas 34/34 por no existir cambios productivos.
 - Cierre: `SUBFASE_3_1_1=CERRADA`; commit `851a3b59546a2d4e03b6295ab7c7cf9cf3694ae1` publicado. `HEAD=origin/desarrollo`, ahead=0, behind=0, tracked worktree limpio, staged changes=0. Los cuatro untracked preexistentes se preservan fuera de scope (`PREEXISTING_ENVIRONMENT_STATE=4`) y no constituyen P0/P1, blocker ni deuda propia. `3.1.2` habilitada, no iniciada.
+
+## Registro de intervención - Codex - Subfase 3.1.2 Oracle y backend administrativo
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. Rama `desarrollo`. Base SHA `5cf62dc80fc22729a3ad3bb52317ff5a1f8fe60a`.
+- Alcance: persistencia Oracle 11g y backend administrativo de Fórmulas, Funciones y Parámetros. No se implementaron 3.1.3, 3.1.4 ni 3.1.5.
+- Oracle: precheck PASS; DDL `15_ddl_configuracion_calculo_312.sql` aplicado con ExitCode 0; seed `16_seed_funciones_nativas_312.sql` aplicado con ExitCode 0; postcheck `17_postcheck_configuracion_calculo_312_solo_lectura.sql` PASS con ExitCode 0. Se crearon ocho tablas y ocho secuencias autorizadas; tablas existentes no fueron alteradas. Recovery 18 no fue ejecutado.
+- Seed: exactamente siete funciones NATIVAS (`IF`, `IFERROR`, `ROUND`, `ROUNDDOWN`, `MAX`, `MOD`, `OR`), siete versiones y trece argumentos. No se cargaron `AND`, `MIN`, `LOOKUP`, parámetros de negocio ni las 34 fórmulas.
+- Histórico: postcheck mantuvo 24 versiones, 14 evaluaciones, hashes y resultados; `PUBLISHED_VER_JSON_CHANGED=0`, `PUBLISHED_VER_HASH_CHANGED=0`, `HISTORICAL_EVA_VERSION_ID_CHANGED=0`, `HISTORICAL_EVA_CALCULOS_JSON_CHANGED=0`, VER_ID 24/27/28/53 sin mutación.
+- Backend: se agregaron contratos tipados, validación estructural, repositorio Oracle parametrizado, servicio, controlador único de configuración de cálculo, DI y pruebas focalizadas. Se reutilizan la auditoría, reglas, catálogos, Formula Engine y Publication Gate existentes. No hay código ejecutable en BD, SQL dinámico desde DSL, FunctionEngine V2 ni auditoría paralela.
+- Pruebas: focalizadas 17/17; backend completo 535/535; frontend 707/707; E2E 29/29; build backend/frontend PASS; lint PASS; diff check PASS. Los warnings reportados son existentes/no bloqueantes y no se deshabilitaron gates.
+- Documentación oficial: `docs/3. Módulo Matrices de Riesgos/FASE_3_1_2_ORACLE_BACKEND_ADMINISTRATIVO.md`. Recovery preparado y documentado, sin ejecución.
+- Estado técnico: P0=0, P1 propios de 3.1.2=0. Commit técnico `cb63807` creado y publicado en `origin/desarrollo`; queda pendiente el commit documental y la certificación CI remota sobre el SHA final. 3.1.3 queda habilitada, no iniciada.
+
+## Registro de intervención - Codex - corrección de comentarios Oracle 3.1.2
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. Rama `desarrollo`. Base de trabajo `5cf62dc80fc22729a3ad3bb52317ff5a1f8fe60a`.
+- Incidencia: el primer postcheck 20 terminó fail-closed con ORA-00932 por `COUNT(EVA_CALCULOS_JSON)` sobre CLOB. El script 20 original no fue reescrito.
+- Corrección: se crearon `21_corregir_codificacion_comentarios_configuracion_calculo_312.sql` y `22_postcheck_comentarios_configuracion_calculo_312_solo_lectura.sql`. El wrapper SQL*Plus usó `NLS_LANG=.AL32UTF8` únicamente en el proceso, UTF-8 sin BOM, `ReadToEndAsync`, `BaseStream.Write` y credenciales en memoria.
+- Oracle: script 21 `ExitCode=0`; script 22 corregido `ExitCode=0`. Se confirmaron 8/8 comentarios de tablas, 86/86 de columnas, texto exacto 8/8, corrupción 0, diacríticos PASS, Oracle 11g PASS, ORA-00932 resuelto, cambios estructurales 0 e histórico PASS. Inspección visual de `USER_TAB_COMMENTS` correcta.
+- No se modificaron scripts 19/20, tablas estructurales, datos funcionales, VER_JSON, VER_HASH, EVA_VERSION_ID, EVA_CALCULOS_JSON ni se ejecutó recovery. No hubo staging, commit ni push durante la corrección.
+- Punto de continuación: actualizar y publicar la documentación final, stagear explícitamente archivos técnicos/documentales excluyendo los cuatro untracked preexistentes, ejecutar commits separados, push y CI de 3.1.2.

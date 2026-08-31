@@ -754,3 +754,23 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Histórico y seguridad: JSON/hash/versiones/evaluaciones históricas no se reescriben; VER_ID 24/53 impacto ninguno; VER_ID 27/28 mutación histórica 0; código ejecutable en BD=0, C#/JavaScript/SQL dinámico=0, eval/new Function=0. `MODEL_SUPPORTS_34_FORMULAS=YES` arquitectónico; paridad Excel se difiere a 3.1.5.
 - Documento oficial: `docs/3. Módulo Matrices de Riesgos/FASE_3_1_1_ARQUITECTURA_MODELO_PERSISTENCIA.md`.
 - Cierre Git verificado: `HEAD==origin/desarrollo`, AHEAD=0, BEHIND=0, tracked worktree limpio, staged changes=0 y diff tracked vacío. `WORKTREE_FULL_CLEAN=FALSE` únicamente por cuatro untracked preexistentes; `PREEXISTING_UNTRACKED_PRESERVED=4`, `SCOPE_WORKTREE_CLEAN=TRUE`. No fueron creados, modificados, stageados, committeados ni publicados por 3.1.1 y no son P0/P1, blocker, regression ni deuda propia. No hacer DDL/DML ni crear endpoints/tablas en esta subfase.
+
+## Estado vigente - Subfase 3.1.2 Oracle y backend administrativo
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. Rama `desarrollo`. Base SHA `5cf62dc80fc22729a3ad3bb52317ff5a1f8fe60a`.
+- `SUBFASE_3_1_1=CERRADA` y congelada. `SUBFASE_3_1_2` implementa únicamente persistencia Oracle 11g y backend administrativo de Fórmulas, Funciones y Parámetros; no inicia 3.1.3, 3.1.4 ni 3.1.5.
+- Oracle real: precheck PASS; DDL PASS; seed PASS; postcheck PASS, todos con transporte SQL*Plus seguro, credenciales solo en memoria y ExitCode real 0. Se crearon exactamente ocho tablas y ocho secuencias nuevas autorizadas; no se alteraron tablas existentes y recovery 18 no se ejecutó.
+- Seed exacto: siete funciones NATIVAS (`IF`, `IFERROR`, `ROUND`, `ROUNDDOWN`, `MAX`, `MOD`, `OR`), siete versiones y trece argumentos. `AND`, `MIN`, `LOOKUP`, funciones compuestas, parámetros de negocio y 34 fórmulas permanecen diferidos.
+- Histórico intacto: 24 versiones de formulario, 14 evaluaciones con versión/resultado y los valores verificados de VER_ID 24, 27, 28 y 53 permanecen sin cambios. `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID` y `EVA_CALCULOS_JSON` no fueron actualizados.
+- Backend: contratos tipados, validación, repositorio Oracle con binds, servicio, controller único y DI dentro de MatricesRiesgos. Se reutilizan reglas, catálogos, auditoría, Formula Engine y Publication Gate; `NEW_AUDIT_SYSTEMS=0`, RBAC changes=0 y código ejecutable en BD=0.
+- Pruebas frescas: focalizadas 17/17, backend 535/535, frontend 707/707, E2E 29/29, builds y lint PASS, Oracle postcheck PASS. No se debilitaron quality gates.
+- Documentación oficial: `docs/3. Módulo Matrices de Riesgos/FASE_3_1_2_ORACLE_BACKEND_ADMINISTRATIVO.md`. P0=0, P1 propios=0. Commit técnico `cb63807` creado y publicado en `origin/desarrollo`; queda pendiente el commit documental y la certificación CI remota final.
+- Punto de continuación: publicar únicamente en `origin/desarrollo`, verificar workflow por el SHA final y detenerse con 3.1.3 habilitada pero no iniciada.
+
+## Estado vigente - corrección de comentarios Oracle 3.1.2
+
+- Fecha/hora local: 2026-08-31 (UTC-6). Autor: Codex. La aplicación inicial de comentarios 19 fue correcta; el postcheck 20 se detuvo fail-closed por `ORA-00932` al contar directamente el CLOB `EVA_CALCULOS_JSON`.
+- Sin reescribir 19/20, se agregaron scripts 21/22. Con wrapper SQL*Plus seguro y `NLS_LANG=.AL32UTF8` aislado, 21 terminó `ExitCode=0` y 22 corregido terminó `ExitCode=0`.
+- Postcheck Oracle real: 8/8 tablas y 86/86 columnas comentadas; texto de tablas 8/8; comentarios corruptos 0; diacríticos españoles PASS; Oracle 11g PASS; `ORA_00932=RESOLVED`; cambios estructurales 0; datos históricos cambiados 0; `HISTORICAL_INTEGRITY=PASS`.
+- Inspección visual read-only de `USER_TAB_COMMENTS` confirmó `Catálogo`, `fórmulas`, `configuración`, `cálculo`, `Definición`, `versión`, `parámetros` e `históricamente` correctamente almacenados.
+- Recovery no ejecutado. No hubo staging, commit ni push en esta corrección. Continúa el cierre técnico/documental de 3.1.2, con 3.1.3 habilitada pero no iniciada.
