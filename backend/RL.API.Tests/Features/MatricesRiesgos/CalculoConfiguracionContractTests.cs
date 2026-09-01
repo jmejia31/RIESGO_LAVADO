@@ -107,7 +107,16 @@ public sealed class CalculoConfiguracionContractTests
         Assert.Contains("UNISTR('\\FFFD')", sql);
         Assert.Contains("UNISTR('\\00C3')", sql);
         Assert.Contains("UNISTR('\\00C2')", sql);
+        Assert.Contains("UNISTR('\\00BF')", sql);
         Assert.Contains("SPANISH_DIACRITICS=", sql);
+        Assert.Contains("TABLE_FORMAT_STANDARD=", sql);
+        Assert.Contains("U+FFFD=", sql);
+        Assert.Contains("U+00C3=", sql);
+        Assert.Contains("U+00C2=", sql);
+        Assert.Contains("U+00BF=", sql);
+        Assert.Contains("POSTCHECK_ASSERTION=PASS", sql);
+        Assert.Contains("ELSE TO_CHAR(1/0)", sql);
+        Assert.DoesNotContain("EXIT SUCCESS", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("COUNT(EVA_CALCULOS_JSON)", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("INSERT INTO", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("UPDATE ", sql, StringComparison.OrdinalIgnoreCase);
@@ -115,5 +124,36 @@ public sealed class CalculoConfiguracionContractTests
         Assert.DoesNotContain("MERGE ", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ALTER ", sql, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DROP ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("TRUNCATE ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("CREATE ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("GRANT ", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("REVOKE ", sql, StringComparison.OrdinalIgnoreCase);
+        foreach (string historicalGate in new[]
+        {
+            "HISTORICAL_DATA_CHANGED",
+            "PUBLISHED_VER_JSON_CHANGED",
+            "PUBLISHED_VER_HASH_CHANGED",
+            "HISTORICAL_EVA_VERSION_ID_CHANGED",
+            "HISTORICAL_EVA_CALCULOS_JSON_CHANGED",
+            "VER_ID_24_MUTATION",
+            "VER_ID_53_MUTATION",
+            "VER_ID_27_MUTATION",
+            "VER_ID_28_MUTATION"
+        })
+        {
+            Assert.DoesNotContain(historicalGate, sql, StringComparison.OrdinalIgnoreCase);
+        }
+
+        int tableCorruptionStart = sql.IndexOf("SELECT 'CORRUPTED_TABLE_COMMENTS='", StringComparison.Ordinal);
+        int columnCorruptionStart = sql.IndexOf("SELECT 'CORRUPTED_COLUMN_COMMENTS='", StringComparison.Ordinal);
+        Assert.True(tableCorruptionStart >= 0 && columnCorruptionStart > tableCorruptionStart);
+        string tableCorruptionQuery = sql[tableCorruptionStart..columnCorruptionStart];
+        Assert.Contains("FROM user_tab_comments", tableCorruptionQuery, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("FROM user_col_comments", tableCorruptionQuery, StringComparison.OrdinalIgnoreCase);
+        int columnCorruptionEnd = sql.IndexOf("WITH comment_text", columnCorruptionStart, StringComparison.Ordinal);
+        Assert.True(columnCorruptionEnd > columnCorruptionStart);
+        string columnCorruptionQuery = sql[columnCorruptionStart..columnCorruptionEnd];
+        Assert.Contains("FROM user_col_comments", columnCorruptionQuery, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("FROM user_tab_comments", columnCorruptionQuery, StringComparison.OrdinalIgnoreCase);
     }
 }

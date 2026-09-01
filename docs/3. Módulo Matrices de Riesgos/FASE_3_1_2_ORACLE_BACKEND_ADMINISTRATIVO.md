@@ -201,7 +201,7 @@ El recovery 18 no forma parte del camino feliz y no fue ejecutado. Si alguna vez
 
 ## 17. Git y publicación
 
-Los cuatro untracked preexistentes (`.vscode/`, `agosto_capturas/`, `agosto_rest.txt` y el PDF de requisitos) quedan fuera de scope, no se stagean y no se incluyen en commits. El cierre final certifica por separado worktree tracked limpio y preservación exacta de esos cuatro elementos. `main` no se modifica ni se publica.
+Los tres untracked visibles preexistentes (`.vscode/`, `agosto_rest.txt` y el PDF de requisitos) quedan fuera de scope, no se stagean y no se incluyen en commits. `agosto_capturas/` no está presente y se registra como `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`, sin blocker. El cierre final certifica por separado el worktree tracked limpio. `main` no se modifica ni se publica.
 
 ## 18. Punto exacto de continuación: 3.1.3
 
@@ -232,6 +232,7 @@ La consulta visual read-only de `USER_TAB_COMMENTS` devolvió las ocho descripci
 
 - Fecha de recertificación: 2026-09-01 (UTC-6). Rama: `desarrollo`.
 - La corrección técnica fue publicada en `99337b41f054ce83f7691d4c5441a456f9b60df8` (`fix(matrices): harden calculation admin lifecycle`). No se reabrió la arquitectura 3.1.1 ni se inició 3.1.3.
+- La evidencia remota de cierre se verifica externamente en GitHub Actions sobre el commit final publicado `2996a6342aebbe231256e612db4f941d681b54b0`: run `33526999211`, `status=completed`, `conclusion=success`, `head_sha` coincidente. No se persisten estados transitorios de CI que requieran un commit documental posterior.
 - `P1-312-01=RESOLVED`: el repositorio mantiene una allowlist estática completa de las ocho secuencias Oracle, incluida `SEQ_RL_MR_FORMULA_USOS`; `EXPECTED_SEQUENCES=8`, `RESOLVABLE_SEQUENCES=8`, `MISSING_SEQUENCE_MAPPINGS=0`, `FORMULA_USAGE_SEQUENCE=PASS`.
 - `P1-312-02=RESOLVED`: las transiciones se validan centralmente por estado actual y destino. La matriz permite `DRAFT -> IN_REVIEW`, `IN_REVIEW -> DRAFT/APPROVED`, `APPROVED -> DRAFT/PUBLISHED`, `PUBLISHED -> RETIRED` y `RETIRED -> ARCHIVED`; `ARCHIVED` no tiene transición. `PUBLISHED_TO_DRAFT=REJECTED`, `PUBLISHED_TO_IN_REVIEW=REJECTED`, `PUBLISHED_TO_APPROVED=REJECTED`, `PUBLISHED_CONTENT_MUTATION_PATHS=0`, `IN_REVIEW_NOT_STUCK=PASS`.
 - `P1-312-03=RESOLVED`: la creación de versiones bloquea con `SELECT ... FOR UPDATE` el master de fórmula, función o parámetro antes de calcular el siguiente número. `FORMULA_VERSION_MASTER_LOCK=FOR_UPDATE`, `FUNCTION_VERSION_MASTER_LOCK=FOR_UPDATE`, `PARAMETER_VERSION_MASTER_LOCK=FOR_UPDATE`. La restricción única continúa siendo defensa adicional.
