@@ -56,7 +56,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         await using var c = _db.CreateConnection(); await c.OpenAsync(); await using var tx = c.BeginTransaction();
         try
         {
-            await Lock(c, tx, "SELECT FOR_ID FROM RL_MR_FORMULAS WHERE FOR_ID=:id AND FOR_ESTADO='ACTIVE'", formulaId);
+            await Lock(c, tx, "SELECT FOR_ID FROM RL_MR_FORMULAS WHERE FOR_ID=:id AND FOR_ESTADO='ACTIVE' FOR UPDATE", formulaId);
             int next = await NextVersion(c, tx, "FOV_VERSION", "FOV_FORMULA_ID", "RL_MR_FORMULA_VERSIONES", formulaId);
             long id = await Next(c, tx, "SEQ_RL_MR_FORMULA_VERSIONES"); await InsertFormulaVersion(c, tx, formulaId, next, dto, usuarioId, id);
             await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULA_VERSIONES", id.ToString(), "INSERT", null, AuditJson(formulaId, next, "DRAFT"), usuarioId, null, ip, Modulo);
@@ -134,7 +134,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
 
     public async Task<long> CrearFuncionVersionAsync(long funcionId,CrearFuncionVersionDto dto,long usuarioId,string? ip)
     {
-        var validated=CalculoConfiguracionValidation.ValidateFunctionVersion(dto);await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();try{await Lock(c,tx,"SELECT FUN_ID FROM RL_MR_FUNCIONES WHERE FUN_ID=:id AND FUN_ESTADO='ACTIVE'",funcionId);int next=await NextVersion(c,tx,"FUV_VERSION","FUV_FUNCION_ID","RL_MR_FUNCION_VERSIONES",funcionId);long id=await Next(c,tx,"SEQ_RL_MR_FUNCION_VERSIONES");await InsertFunctionVersion(c,tx,funcionId,next,dto,validated,id,usuarioId);await _auditoria.RegistrarAsync(c,tx,"RL_MR_FUNCION_VERSIONES",id.ToString(),"INSERT",null,AuditJson(funcionId,next,"DRAFT"),usuarioId,null,ip,Modulo);await tx.CommitAsync();return id;}catch{await tx.RollbackAsync();throw;}
+        var validated=CalculoConfiguracionValidation.ValidateFunctionVersion(dto);await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();try{await Lock(c,tx,"SELECT FUN_ID FROM RL_MR_FUNCIONES WHERE FUN_ID=:id AND FUN_ESTADO='ACTIVE' FOR UPDATE",funcionId);int next=await NextVersion(c,tx,"FUV_VERSION","FUV_FUNCION_ID","RL_MR_FUNCION_VERSIONES",funcionId);long id=await Next(c,tx,"SEQ_RL_MR_FUNCION_VERSIONES");await InsertFunctionVersion(c,tx,funcionId,next,dto,validated,id,usuarioId);await _auditoria.RegistrarAsync(c,tx,"RL_MR_FUNCION_VERSIONES",id.ToString(),"INSERT",null,AuditJson(funcionId,next,"DRAFT"),usuarioId,null,ip,Modulo);await tx.CommitAsync();return id;}catch{await tx.RollbackAsync();throw;}
     }
 
     public async Task<bool> ActualizarFuncionBorradorAsync(long versionId, ActualizarFuncionBorradorDto dto, long usuarioId, string? ip)
@@ -160,7 +160,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         catch { await tx.RollbackAsync(); throw; }
     }
 
-    public async Task<bool> CambiarEstadoFuncionVersionAsync(long versionId,CambiarEstadoConfiguracionDto dto,long usuarioId,string? ip)=>await ChangeVersionState("RL_MR_FUNCION_VERSIONES","FUV_ID","FUV_ESTADO","FUV_VERSION_ROW",versionId,dto,usuarioId,ip,"RL_MR_FUNCION_VERSIONES");
+    public async Task<bool> CambiarEstadoFuncionVersionAsync(long versionId,CambiarEstadoConfiguracionDto dto,long usuarioId,string? ip)=>await ChangeVersionState(VersionResource.Function,versionId,dto,usuarioId,ip);
 
     public async Task<IReadOnlyList<FuncionVersionDto>> ListarFuncionVersionesAsync(long funcionId)
     {
@@ -189,7 +189,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
 
     public async Task<long> CrearParametroVersionAsync(long parametroId,CrearParametroVersionDto dto,long usuarioId,string? ip)
     {
-        string type=CalculoConfiguracionValidation.ValidateParameterVersion(dto);await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();try{await Lock(c,tx,"SELECT PAC_ID FROM RL_MR_PARAMETROS_CALCULO WHERE PAC_ID=:id AND PAC_ESTADO='ACTIVE'",parametroId);int next=await NextVersion(c,tx,"PAV_VERSION","PAV_PARAMETRO_ID","RL_MR_PARAMETRO_VERSIONES",parametroId);long id=await Next(c,tx,"SEQ_RL_MR_PARAMETRO_VERSIONES");await InsertParameterVersion(c,tx,parametroId,next,dto,type,id,usuarioId);await _auditoria.RegistrarAsync(c,tx,"RL_MR_PARAMETRO_VERSIONES",id.ToString(),"INSERT",null,AuditJson(parametroId,next,"DRAFT"),usuarioId,null,ip,Modulo);await tx.CommitAsync();return id;}catch{await tx.RollbackAsync();throw;}
+        string type=CalculoConfiguracionValidation.ValidateParameterVersion(dto);await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();try{await Lock(c,tx,"SELECT PAC_ID FROM RL_MR_PARAMETROS_CALCULO WHERE PAC_ID=:id AND PAC_ESTADO='ACTIVE' FOR UPDATE",parametroId);int next=await NextVersion(c,tx,"PAV_VERSION","PAV_PARAMETRO_ID","RL_MR_PARAMETRO_VERSIONES",parametroId);long id=await Next(c,tx,"SEQ_RL_MR_PARAMETRO_VERSIONES");await InsertParameterVersion(c,tx,parametroId,next,dto,type,id,usuarioId);await _auditoria.RegistrarAsync(c,tx,"RL_MR_PARAMETRO_VERSIONES",id.ToString(),"INSERT",null,AuditJson(parametroId,next,"DRAFT"),usuarioId,null,ip,Modulo);await tx.CommitAsync();return id;}catch{await tx.RollbackAsync();throw;}
     }
 
     public async Task<bool> ActualizarParametroBorradorAsync(long versionId, ActualizarParametroBorradorDto dto, long usuarioId, string? ip)
@@ -208,7 +208,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         catch { await tx.RollbackAsync(); throw; }
     }
 
-    public async Task<bool> CambiarEstadoParametroVersionAsync(long versionId,CambiarEstadoConfiguracionDto dto,long usuarioId,string? ip)=>await ChangeVersionState("RL_MR_PARAMETRO_VERSIONES","PAV_ID","PAV_ESTADO","PAV_VERSION_ROW",versionId,dto,usuarioId,ip,"RL_MR_PARAMETRO_VERSIONES");
+    public async Task<bool> CambiarEstadoParametroVersionAsync(long versionId,CambiarEstadoConfiguracionDto dto,long usuarioId,string? ip)=>await ChangeVersionState(VersionResource.Parameter,versionId,dto,usuarioId,ip);
 
     public async Task<IReadOnlyList<ParametroVersionDto>> ListarParametroVersionesAsync(long parametroId)
     {
@@ -224,8 +224,38 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
     private static async Task InsertParameterVersion(OracleConnection c,OracleTransaction tx,long parameterId,int version,CrearParametroVersionDto dto,string type,long id,long userId)
     {string value=JsonSerializer.Serialize(new{type, dto.ValorEntero,dto.ValorDecimal,dto.ValorBooleano,dto.ValorTexto,dto.ValorFecha});await Execute(c,tx,"INSERT INTO RL_MR_PARAMETRO_VERSIONES(PAV_ID,PAV_PARAMETRO_ID,PAV_VERSION,PAV_TIPO,PAV_VALOR_ENTERO,PAV_VALOR_DECIMAL,PAV_VALOR_BOOLEANO,PAV_VALOR_TEXTO,PAV_VALOR_FECHA,PAV_ESTADO,PAV_HASH,PAV_FECHA_CREACION,PAV_USR_CREACION,PAV_VERSION_ROW) VALUES(:id,:parameterId,:version,:type,:integerValue,:decimalValue,:booleanValue,:textValue,:dateValue,'DRAFT',:hash,SYSDATE,:userId,1)",P("id",id),P("parameterId",parameterId),P("version",version),P("type",type),P("integerValue",(object?)dto.ValorEntero??DBNull.Value),P("decimalValue",(object?)dto.ValorDecimal??DBNull.Value),P("booleanValue",dto.ValorBooleano.HasValue?(dto.ValorBooleano.Value?1:0):(object)DBNull.Value),P("textValue",(object?)dto.ValorTexto??DBNull.Value),P("dateValue",(object?)dto.ValorFecha??DBNull.Value),P("hash",CalculoConfiguracionValidation.Hash(value)),P("userId",userId));}
 
-    private async Task<bool> ChangeVersionState(string table,string idColumn,string stateColumn,string rowColumn,long id,CambiarEstadoConfiguracionDto dto,long userId,string? ip,string auditTable)
-    { await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();try{string sql=$"UPDATE {table} SET {stateColumn}=:state,{rowColumn}={rowColumn}+1 WHERE {idColumn}=:id AND {rowColumn}=:row AND {stateColumn} IN ('DRAFT','APPROVED','PUBLISHED')";int n=await Execute(c,tx,sql,P("state",dto.Estado.Trim().ToUpperInvariant()),P("id",id),P("row",dto.VersionRow));if(n!=1){await tx.RollbackAsync();return false;}await _auditoria.RegistrarAsync(c,tx,auditTable,id.ToString(),"UPDATE",null,AuditJson(id,dto.VersionRow+1,dto.Estado),userId,null,ip,Modulo);await tx.CommitAsync();return true;}catch{await tx.RollbackAsync();throw;}}
+    private enum VersionResource { Function, Parameter }
+
+    private async Task<bool> ChangeVersionState(VersionResource resource,long id,CambiarEstadoConfiguracionDto dto,long userId,string? ip)
+    {
+        (string table,string idColumn,string stateColumn,string rowColumn) = resource switch
+        {
+            VersionResource.Function => ("RL_MR_FUNCION_VERSIONES", "FUV_ID", "FUV_ESTADO", "FUV_VERSION_ROW"),
+            VersionResource.Parameter => ("RL_MR_PARAMETRO_VERSIONES", "PAV_ID", "PAV_ESTADO", "PAV_VERSION_ROW"),
+            _ => throw new ArgumentOutOfRangeException(nameof(resource))
+        };
+
+        await using var c=_db.CreateConnection();await c.OpenAsync();await using var tx=c.BeginTransaction();
+        try
+        {
+            string select = $"SELECT {stateColumn},{rowColumn} FROM {table} WHERE {idColumn}=:id FOR UPDATE";
+            await using var read=Command(select,c,tx);read.Parameters.Add(P("id",id));
+            await using var reader=await read.ExecuteReaderAsync();
+            if (!await reader.ReadAsync()) { await tx.RollbackAsync(); return false; }
+            string currentState=reader.GetString(0);
+            int currentRow=reader.GetInt32(1);
+            if (currentRow != dto.VersionRow) { await tx.RollbackAsync(); return false; }
+            CalculoConfiguracionValidation.ValidateVersionTransition(currentState,dto.Estado);
+
+            string targetState=dto.Estado.Trim().ToUpperInvariant();
+            string update=$"UPDATE {table} SET {stateColumn}=:state,{rowColumn}={rowColumn}+1 WHERE {idColumn}=:id AND {rowColumn}=:row AND {stateColumn}=:currentState";
+            int n=await Execute(c,tx,update,P("state",targetState),P("id",id),P("row",dto.VersionRow),P("currentState",currentState));
+            if(n!=1){await tx.RollbackAsync();return false;}
+            await _auditoria.RegistrarAsync(c,tx,table,id.ToString(),"UPDATE",null,AuditJson(id,dto.VersionRow+1,targetState),userId,null,ip,Modulo);
+            await tx.CommitAsync();return true;
+        }
+        catch { await tx.RollbackAsync(); throw; }
+    }
 
     private static async Task<IReadOnlyList<FormulaVersionDto>> ReadFormulaVersions(OracleCommand cmd){var x=new List<FormulaVersionDto>();await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync())x.Add(new FormulaVersionDto{Id=r.GetInt64(0),FormulaId=r.GetInt64(1),Version=r.GetInt32(2),Expresion=r.GetString(3),TipoResultado=r.GetString(4),Estado=r.GetString(5),Hash=r.GetString(6),FechaInicio=NullableDate(r,7),FechaFin=NullableDate(r,8),FechaCreacion=r.GetDateTime(9),VersionRow=r.GetInt32(10)});return x;}
     private static FormulaDto ReadFormula(OracleDataReader r)=>new(){Id=r.GetInt64(0),Codigo=r.GetString(1),Nombre=r.GetString(2),Descripcion=NullString(r,3),Estado=r.GetString(4),FechaCreacion=r.GetDateTime(5),VersionRow=r.GetInt32(6)};
@@ -235,7 +265,20 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
     private static OracleParameter PClob(string name,object value)=>new(name,OracleDbType.Clob){Value=value};
     private static async Task<int> Execute(OracleConnection c,OracleTransaction tx,string sql,params OracleParameter[] ps){await using var cmd=Command(sql,c,tx);cmd.Parameters.AddRange(ps);return await cmd.ExecuteNonQueryAsync();}
     private static async Task Lock(OracleConnection c,OracleTransaction tx,string sql,long id){await using var cmd=Command(sql,c,tx);cmd.Parameters.Add(P("id",id));await using var r=await cmd.ExecuteReaderAsync();if(!await r.ReadAsync())throw new KeyNotFoundException("Recurso no encontrado o inactivo.");}
-    private static async Task<long> Next(OracleConnection c,OracleTransaction tx,string sequence){string sql=sequence switch{"SEQ_RL_MR_FORMULAS"=>"SELECT SEQ_RL_MR_FORMULAS.NEXTVAL FROM DUAL","SEQ_RL_MR_FORMULA_VERSIONES"=>"SELECT SEQ_RL_MR_FORMULA_VERSIONES.NEXTVAL FROM DUAL","SEQ_RL_MR_FUNCIONES"=>"SELECT SEQ_RL_MR_FUNCIONES.NEXTVAL FROM DUAL","SEQ_RL_MR_FUNCION_VERSIONES"=>"SELECT SEQ_RL_MR_FUNCION_VERSIONES.NEXTVAL FROM DUAL","SEQ_RL_MR_FUNCION_ARGUMENTOS"=>"SELECT SEQ_RL_MR_FUNCION_ARGUMENTOS.NEXTVAL FROM DUAL","SEQ_RL_MR_PARAMETROS"=>"SELECT SEQ_RL_MR_PARAMETROS.NEXTVAL FROM DUAL","SEQ_RL_MR_PARAMETRO_VERSIONES"=>"SELECT SEQ_RL_MR_PARAMETRO_VERSIONES.NEXTVAL FROM DUAL",_=>throw new ArgumentOutOfRangeException(nameof(sequence))};await using var cmd=Command(sql,c,tx);return Convert.ToInt64(await cmd.ExecuteScalarAsync());}
+    internal static string ResolveSequenceSql(string sequence) => sequence switch
+    {
+        "SEQ_RL_MR_FORMULAS" => "SELECT SEQ_RL_MR_FORMULAS.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_FORMULA_VERSIONES" => "SELECT SEQ_RL_MR_FORMULA_VERSIONES.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_FORMULA_USOS" => "SELECT SEQ_RL_MR_FORMULA_USOS.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_FUNCIONES" => "SELECT SEQ_RL_MR_FUNCIONES.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_FUNCION_VERSIONES" => "SELECT SEQ_RL_MR_FUNCION_VERSIONES.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_FUNCION_ARGUMENTOS" => "SELECT SEQ_RL_MR_FUNCION_ARGUMENTOS.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_PARAMETROS" => "SELECT SEQ_RL_MR_PARAMETROS.NEXTVAL FROM DUAL",
+        "SEQ_RL_MR_PARAMETRO_VERSIONES" => "SELECT SEQ_RL_MR_PARAMETRO_VERSIONES.NEXTVAL FROM DUAL",
+        _ => throw new ArgumentOutOfRangeException(nameof(sequence))
+    };
+
+    private static async Task<long> Next(OracleConnection c,OracleTransaction tx,string sequence){await using var cmd=Command(ResolveSequenceSql(sequence),c,tx);return Convert.ToInt64(await cmd.ExecuteScalarAsync());}
     private static async Task<int> NextVersion(OracleConnection c,OracleTransaction tx,string versionColumn,string foreignColumn,string table,long id){await using var cmd=Command($"SELECT NVL(MAX({versionColumn}),0)+1 FROM {table} WHERE {foreignColumn}=:id",c,tx);cmd.Parameters.Add(P("id",id));return Convert.ToInt32(await cmd.ExecuteScalarAsync());}
     private static string FormulaHash(string expression,string resultType)=>CalculoConfiguracionValidation.Hash(expression.Trim()+"|"+resultType.Trim().ToUpperInvariant());
     private static string AuditJson(object code,int version,string state)=>JsonSerializer.Serialize(new{code,version,state});

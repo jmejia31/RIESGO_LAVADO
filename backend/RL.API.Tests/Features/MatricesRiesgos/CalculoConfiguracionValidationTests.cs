@@ -126,6 +126,33 @@ public sealed class CalculoConfiguracionValidationTests
         Assert.Matches("^[0-9a-f]{64}$", first);
     }
 
+    [Theory]
+    [InlineData("DRAFT", "IN_REVIEW")]
+    [InlineData("IN_REVIEW", "DRAFT")]
+    [InlineData("IN_REVIEW", "APPROVED")]
+    [InlineData("APPROVED", "DRAFT")]
+    [InlineData("APPROVED", "PUBLISHED")]
+    [InlineData("PUBLISHED", "RETIRED")]
+    [InlineData("RETIRED", "ARCHIVED")]
+    public void VersionLifecycle_AllowsOnlyApprovedTransitions(string current, string target)
+    {
+        Assert.True(CalculoConfiguracionValidation.IsAllowedVersionTransition(current, target));
+    }
+
+    [Theory]
+    [InlineData("PUBLISHED", "DRAFT")]
+    [InlineData("PUBLISHED", "IN_REVIEW")]
+    [InlineData("PUBLISHED", "APPROVED")]
+    [InlineData("RETIRED", "DRAFT")]
+    [InlineData("ARCHIVED", "DRAFT")]
+    [InlineData("DRAFT", "PUBLISHED")]
+    public void VersionLifecycle_RejectsUnsafeTransitions(string current, string target)
+    {
+        Assert.False(CalculoConfiguracionValidation.IsAllowedVersionTransition(current, target));
+        Assert.Throws<InvalidOperationException>(() =>
+            CalculoConfiguracionValidation.ValidateVersionTransition(current, target));
+    }
+
     [Fact]
     public void Controller_UsesSingleCalculationConfigurationRoute()
     {

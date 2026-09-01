@@ -11,6 +11,17 @@ public static partial class CalculoConfiguracionValidation
     private static readonly HashSet<string> Types = new(StringComparer.OrdinalIgnoreCase)
     { "INTEGER", "DECIMAL", "BOOLEAN", "TEXT", "DATE" };
 
+    private static readonly IReadOnlyDictionary<string, IReadOnlySet<string>> AllowedVersionTransitions =
+        new Dictionary<string, IReadOnlySet<string>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["DRAFT"] = new HashSet<string>(["IN_REVIEW"], StringComparer.OrdinalIgnoreCase),
+            ["IN_REVIEW"] = new HashSet<string>(["DRAFT", "APPROVED"], StringComparer.OrdinalIgnoreCase),
+            ["APPROVED"] = new HashSet<string>(["DRAFT", "PUBLISHED"], StringComparer.OrdinalIgnoreCase),
+            ["PUBLISHED"] = new HashSet<string>(["RETIRED"], StringComparer.OrdinalIgnoreCase),
+            ["RETIRED"] = new HashSet<string>(["ARCHIVED"], StringComparer.OrdinalIgnoreCase),
+            ["ARCHIVED"] = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        };
+
     [GeneratedRegex("^[A-Z][A-Z0-9_]{0,79}$", RegexOptions.CultureInvariant)]
     private static partial Regex CodeRegex();
 
@@ -38,7 +49,7 @@ public static partial class CalculoConfiguracionValidation
         if (type == "NATIVE" && (handler is null || dsl is not null)) throw new InvalidOperationException("Una función NATIVE requiere HandlerKey y no admite DSL.");
         if (type == "COMPOSITE" && (handler is not null || dsl is null)) throw new InvalidOperationException("Una función COMPOSITE requiere DSL y no admite HandlerKey.");
         if (dsl?.Length > FormulaEngine.MaxExpressionLength) throw new InvalidOperationException("El DSL excede el límite de 4096 caracteres.");
-        if (dto.MinArity < 0 || dto.MaxArity is < 0 || (dto.MaxArity.HasValue && dto.MaxArity.Value < dto.MinArity)) throw new InvalidOperationException("La aridad de la funcion es invalida.");
+        if (dto.MinArity < 0 || dto.MaxArity is < 0 || (dto.MaxArity.HasValue && dto.MaxArity.Value < dto.MinArity)) throw new InvalidOperationException("La aridad de la función es inválida.");
         if (dto.Argumentos.Count == 0 && dto.MinArity > 0) throw new InvalidOperationException("La firma debe declarar sus argumentos.");
         var args = dto.Argumentos.OrderBy(a => a.Posicion).ToList();
         if (args.Select(a => a.Posicion).Distinct().Count() != args.Count || args.Select(a => a.Codigo.Trim().ToUpperInvariant()).Distinct().Count() != args.Count)
@@ -71,6 +82,20 @@ public static partial class CalculoConfiguracionValidation
         };
         if (!valid) throw new InvalidOperationException("El valor no corresponde al tipo declarado.");
         return type;
+    }
+
+    public static bool IsAllowedVersionTransition(string? currentState, string? targetState)
+    {
+        string current = currentState?.Trim().ToUpperInvariant() ?? string.Empty;
+        string target = targetState?.Trim().ToUpperInvariant() ?? string.Empty;
+        return AllowedVersionTransitions.TryGetValue(current, out IReadOnlySet<string>? targets)
+            && targets.Contains(target);
+    }
+
+    public static void ValidateVersionTransition(string? currentState, string? targetState)
+    {
+        if (!IsAllowedVersionTransition(currentState, targetState))
+            throw new InvalidOperationException($"La transición de versión {currentState} a {targetState} no está permitida.");
     }
 
     public static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
