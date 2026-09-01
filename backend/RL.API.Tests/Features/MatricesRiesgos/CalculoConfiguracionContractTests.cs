@@ -1,4 +1,5 @@
 using Xunit;
+using System.Text.RegularExpressions;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 
@@ -97,6 +98,7 @@ public sealed class CalculoConfiguracionContractTests
         Assert.Contains("WHERE {idColumn}=:id FOR UPDATE", source);
         Assert.Contains("currentState", source);
         Assert.DoesNotContain("AND {stateColumn} IN ('DRAFT','APPROVED','PUBLISHED')", source);
+        Assert.Contains("La publicación requiere validación del Publication Gate único.", source);
     }
 
     [Fact]
@@ -155,5 +157,38 @@ public sealed class CalculoConfiguracionContractTests
         string columnCorruptionQuery = sql[columnCorruptionStart..columnCorruptionEnd];
         Assert.Contains("FROM user_col_comments", columnCorruptionQuery, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("FROM user_tab_comments", columnCorruptionQuery, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void CalculationRuntime_UsesExplicitRegistryAndNoDynamicCodeExecution()
+    {
+        string domain = Read("backend/RL.API/Features/MatricesRiesgos/Domain/FormulaEngine.cs");
+        string runtime = Read("backend/RL.API/Features/MatricesRiesgos/Domain/CalculationRuntime.cs");
+        string governance = Read("backend/RL.API/Features/MatricesRiesgos/Domain/CalculationRuntimeGovernance.cs");
+
+        Assert.Contains("DbDrivenFunctionRegistry", runtime);
+        Assert.Contains("NativeFunctionCatalog", runtime);
+        Assert.Contains("PublicationGate", governance);
+        string[] runtimeSources = [domain, runtime, governance];
+        foreach (string forbidden in new[] { "Activator.CreateInstance", "Type.GetType", "Assembly.Load", "Microsoft.CodeAnalysis", "DynamicMethod", "ExecuteImmediate" })
+        {
+            foreach (string source in runtimeSources)
+            {
+                Assert.DoesNotContain(forbidden, source, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        RegexOptions options = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
+        Assert.All(runtimeSources, source =>
+        {
+            Assert.False(Regex.IsMatch(source, @"\bnew\s+Function\s*\(", options));
+            Assert.False(Regex.IsMatch(source, @"\beval\s*\(", options));
+        });
+
+        string program = Read("backend/RL.API/Program.cs");
+        string service = Read("backend/RL.API/Features/MatricesRiesgos/Application/CalculoConfiguracionService.cs");
+        Assert.Contains("DbDrivenCalculationRuntimeFactory", program);
+        Assert.Contains("La publicación requiere validación del Publication Gate único.", service);
+        Assert.DoesNotContain("formula-versiones/{id:long}/estado", Read("backend/RL.API/Features/MatricesRiesgos/CalculoConfiguracionController.cs"), StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -228,6 +228,11 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
 
     private async Task<bool> ChangeVersionState(VersionResource resource,long id,CambiarEstadoConfiguracionDto dto,long userId,string? ip)
     {
+        if (dto is null)
+            throw new ArgumentNullException(nameof(dto));
+        string requestedState = dto.Estado ?? throw new ArgumentException("El estado de transición es obligatorio.", nameof(dto));
+        if (requestedState.Trim().Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("La publicación requiere validación del Publication Gate único.");
         (string table,string idColumn,string stateColumn,string rowColumn) = resource switch
         {
             VersionResource.Function => ("RL_MR_FUNCION_VERSIONES", "FUV_ID", "FUV_ESTADO", "FUV_VERSION_ROW"),
@@ -245,9 +250,9 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
             string currentState=reader.GetString(0);
             int currentRow=reader.GetInt32(1);
             if (currentRow != dto.VersionRow) { await tx.RollbackAsync(); return false; }
-            CalculoConfiguracionValidation.ValidateVersionTransition(currentState,dto.Estado);
+            CalculoConfiguracionValidation.ValidateVersionTransition(currentState,requestedState);
 
-            string targetState=dto.Estado.Trim().ToUpperInvariant();
+            string targetState=requestedState.Trim().ToUpperInvariant();
             string update=$"UPDATE {table} SET {stateColumn}=:state,{rowColumn}={rowColumn}+1 WHERE {idColumn}=:id AND {rowColumn}=:row AND {stateColumn}=:currentState";
             int n=await Execute(c,tx,update,P("state",targetState),P("id",id),P("row",dto.VersionRow),P("currentState",currentState));
             if(n!=1){await tx.RollbackAsync();return false;}

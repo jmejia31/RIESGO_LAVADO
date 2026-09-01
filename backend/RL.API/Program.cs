@@ -150,6 +150,7 @@ builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGes
 builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoRepository, MatricesRiesgosMonitoreoRepository>();
 builder.Services.AddScoped<ICalculoConfiguracionRepository, CalculoConfiguracionRepository>();
+builder.Services.AddScoped<DbDrivenCalculationRuntimeFactory>();
 
 // Proceso de negocio: registra servicios que concentran validaciones, auditoría y reglas funcionales.
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));

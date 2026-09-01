@@ -146,6 +146,8 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
     private static bool IsMasterState(string? state) => state?.Trim().ToUpperInvariant() is "ACTIVE" or "INACTIVE" or "RETIRED";
     private static async Task<ServiceResult> ChangeVersion(long id, CambiarEstadoConfiguracionDto dto, Func<long, string, int, Task<bool>> change)
     {
+        if (dto.Estado?.Trim().Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase) == true)
+            return ServiceResult.BadRequest("La publicación requiere validación del Publication Gate único.");
         if (id <= 0 || string.IsNullOrWhiteSpace(dto.Estado) || !VersionStates.Contains(dto.Estado)) return ServiceResult.BadRequest("Estado de versión inválido.");
         try { return await Changed(await change(id, dto.Estado.Trim().ToUpperInvariant(), dto.VersionRow)); }
         catch (Exception ex) { return Failure(ex); }
