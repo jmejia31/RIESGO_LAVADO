@@ -227,3 +227,18 @@ Postcheck complementario verificado en Oracle real:
 - `STRUCTURAL_CHANGES_FROM_COMMENT_FIX=0`, `HISTORICAL_DATA_CHANGED=0` e `HISTORICAL_INTEGRITY=PASS`.
 
 La consulta visual read-only de `USER_TAB_COMMENTS` devolvió las ocho descripciones con ortografía española correcta. No se ejecutó recovery ni se modificaron datos funcionales o históricos.
+
+## 21. Recertificación de cierre tras correcciones dirigidas
+
+- Fecha de recertificación: 2026-09-01 (UTC-6). Rama: `desarrollo`.
+- La corrección técnica fue publicada en `99337b41f054ce83f7691d4c5441a456f9b60df8` (`fix(matrices): harden calculation admin lifecycle`). No se reabrió la arquitectura 3.1.1 ni se inició 3.1.3.
+- `P1-312-01=RESOLVED`: el repositorio mantiene una allowlist estática completa de las ocho secuencias Oracle, incluida `SEQ_RL_MR_FORMULA_USOS`; `EXPECTED_SEQUENCES=8`, `RESOLVABLE_SEQUENCES=8`, `MISSING_SEQUENCE_MAPPINGS=0`, `FORMULA_USAGE_SEQUENCE=PASS`.
+- `P1-312-02=RESOLVED`: las transiciones se validan centralmente por estado actual y destino. La matriz permite `DRAFT -> IN_REVIEW`, `IN_REVIEW -> DRAFT/APPROVED`, `APPROVED -> DRAFT/PUBLISHED`, `PUBLISHED -> RETIRED` y `RETIRED -> ARCHIVED`; `ARCHIVED` no tiene transición. `PUBLISHED_TO_DRAFT=REJECTED`, `PUBLISHED_TO_IN_REVIEW=REJECTED`, `PUBLISHED_TO_APPROVED=REJECTED`, `PUBLISHED_CONTENT_MUTATION_PATHS=0`, `IN_REVIEW_NOT_STUCK=PASS`.
+- `P1-312-03=RESOLVED`: la creación de versiones bloquea con `SELECT ... FOR UPDATE` el master de fórmula, función o parámetro antes de calcular el siguiente número. `FORMULA_VERSION_MASTER_LOCK=FOR_UPDATE`, `FUNCTION_VERSION_MASTER_LOCK=FOR_UPDATE`, `PARAMETER_VERSION_MASTER_LOCK=FOR_UPDATE`. La restricción única continúa siendo defensa adicional.
+- Concurrencia: las transiciones verifican identificador, estado actual y `EXPECTED_VERSION_ROW` antes de incrementar la fila; un valor obsoleto produce `CONFLICT` y no se aplica last-write-wins.
+- Pruebas verificadas: focalizadas `33/33 PASS`; regresión backend `551/551 PASS`; frontend `707/707 PASS`; E2E `29/29 PASS`; lint, builds y puertas locales PASS. No se repitió Oracle en esta corrección.
+- Oracle: los postchecks 17 y 22 permanecen como evidencia válida y PASS (`ORACLE_POSTCHECK=PASS`, comentarios `8/8` y `86/86`, codificación y `HISTORICAL_INTEGRITY=PASS`). El postcheck complementario 23 quedó `POSTCHECK_23_STATUS=BLOCKED_EXTERNAL_ENVIRONMENT`, `POSTCHECK_23_EXECUTED=NO`, `POSTCHECK_23_CODE_DEFECT=NO`, `POSTCHECK_23_BLOCKER=NO`, por `ORA-12546`/restricción externa de red. No se intentó nuevamente. `DDL_ADDITIONAL=0`, `DML_ADDITIONAL=0`, `RECOVERY=0`.
+- Histórico: `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID` y `EVA_CALCULOS_JSON` no fueron modificados; VER_ID 24, 27, 28 y 53 no presentan mutación.
+- Estado del entorno: se observan tres untracked preexistentes (`.vscode/`, `agosto_rest.txt` y el PDF de requisitos). `agosto_capturas/` no está presente. Esta diferencia se clasifica como `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`; no es P0, P1, deuda, contaminación del worktree ni blocker de 3.1.2. `WORKTREE_TRACKED_CLEAN=TRUE`, `STAGED_CHANGES=0`, `UNEXPECTED_UNTRACKED=0`, `PENDING_312_FILES=0`, `SCOPE_WORKTREE_CLEAN=TRUE`.
+- `P0=0`, `P1_PROPIOS_3_1_2=0`, `RBAC_CHANGES=0`, `NEW_AUDIT_SYSTEMS=0`, `DB_EXECUTABLE_CODE=0`.
+- Cierre: `SUBFASE_3_1_2=CERRADA/RECERTIFICADA`; `FASE_3.1=EN PROGRESO`; `3.1.3=HABILITADA/NO INICIADA`. Function Registry runtime, MIN, AND, LOOKUP y composite runtime permanecen correctamente diferidos a 3.1.3.

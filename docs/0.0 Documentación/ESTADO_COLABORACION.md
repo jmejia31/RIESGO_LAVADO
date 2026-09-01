@@ -774,3 +774,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Postcheck Oracle real: 8/8 tablas y 86/86 columnas comentadas; texto de tablas 8/8; comentarios corruptos 0; diacríticos españoles PASS; Oracle 11g PASS; `ORA_00932=RESOLVED`; cambios estructurales 0; datos históricos cambiados 0; `HISTORICAL_INTEGRITY=PASS`.
 - Inspección visual read-only de `USER_TAB_COMMENTS` confirmó `Catálogo`, `fórmulas`, `configuración`, `cálculo`, `Definición`, `versión`, `parámetros` e `históricamente` correctamente almacenados.
 - Recovery no ejecutado. No hubo staging, commit ni push en esta corrección. Continúa el cierre técnico/documental de 3.1.2, con 3.1.3 habilitada pero no iniciada.
+
+## Estado vigente - recertificación de Subfase 3.1.2
+
+- Fecha/hora local: 2026-09-01 (UTC-6). Autor: Codex. Rama `desarrollo`. Commit técnico publicado: `99337b41f054ce83f7691d4c5441a456f9b60df8` (`fix(matrices): harden calculation admin lifecycle`). La documentación de cierre se publica en el commit documental de esta intervención.
+- Estado: `SUBFASE_3_1_2=CERRADA/RECERTIFICADA`; `FASE_3.1=EN PROGRESO`; `SUBFASE_3_1_3=HABILITADA/NO INICIADA`. `PENDING_COMMIT=0` y `PENDING_CI=0` al completar la publicación y verificación final.
+- P1 resueltos: `P1-312-01=RESOLVED` con allowlist de 8/8 secuencias; `P1-312-02=RESOLVED` con matriz central de lifecycle e inmutabilidad publicada; `P1-312-03=RESOLVED` con `FOR UPDATE` en los masters de fórmula, función y parámetro. `STALE_VERSION_ROW=CONFLICT`.
+- Evidencia de pruebas: focalizadas `33/33 PASS`; backend `551/551 PASS`; frontend `707/707 PASS`; E2E `29/29 PASS`; lint, builds y Quality Gates locales PASS.
+- Oracle: postchecks 17 y 22 permanecen válidos y PASS, con 8/8 tablas, 86/86 columnas, texto/codificación/integridad histórica PASS y `ORA_00932=RESOLVED`. El postcheck complementario 23 queda `POSTCHECK_23_STATUS=BLOCKED_EXTERNAL_ENVIRONMENT`, `POSTCHECK_23_EXECUTED=NO`, `POSTCHECK_23_CODE_DEFECT=NO`, `POSTCHECK_23_BLOCKER=NO`, por ORA-12546/restricción externa de red. No se reintentó Oracle; `DDL_ADDITIONAL=0`, `DML_ADDITIONAL=0`, `RECOVERY=0`.
+- Histórico: `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID` y `EVA_CALCULOS_JSON` intactos; VER_ID 24, 27, 28 y 53 sin mutación. `P0=0`, `P1_PROPIOS_3_1_2=0`, `NEW_AUDIT_SYSTEMS=0`, `RBAC_CHANGES=0`.
+- Entorno Git: se observan tres untracked preexistentes: `.vscode/`, `agosto_rest.txt` y el PDF de requisitos. `agosto_capturas/` no está presente. Se clasifica `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`; no es blocker ni deuda de 3.1.2. Tracked limpio, staged=0, unexpected untracked=0, archivos propios 3.1.2 pendientes=0 y `SCOPE_WORKTREE_CLEAN=TRUE`.
+- Pendiente externo no bloqueante: el workflow remoto del SHA final debe tener evidencia `completed/success` y `head_sha` exacto; no se reutilizará el run anterior. No se inicia 3.1.3.
