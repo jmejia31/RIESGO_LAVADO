@@ -671,6 +671,17 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - MCV.1-MCV.7: sin regresion. `DB_CHANGED=NO`, `ORACLE_CHANGED=NO`, `AUTHORIZATION_CHANGED=NO`, `API_CONTRACT_BROKEN=NO`, `BACKEND_UNCHANGED=YES`.
 - Estado: `MCV.8 = CERRADA`, `P0 MCV.8 = 0`, `P1 MCV.8 = 0`. MCV.9 permanece no iniciada.
 
+## Estado vigente - cierre formal Subfase 3.1.3
+
+- Fecha/hora local: 2026-09-01 13:31 (UTC-06). Rama: `desarrollo`. Baseline original: `8813f539ca280aeb6bf6c81c10331f38f39e4107`.
+- `SUBFASE_3_1_3=CERRADA/CERTIFICADA`. Commit técnico de la implementación: `0688a6696640bfdd618880186755fc4e8dd60092`. La documentación de cierre se consolida en el commit documental de esta intervención.
+- Alcance cerrado: Formula Engine único, registry DB-driven, diez funciones nativas/registrables (`IF`, `IFERROR`, `ROUND`, `ROUNDDOWN`, `MAX`, `MOD`, `OR`, `MIN`, `AND`, `LOOKUP`), funciones compuestas con DSL común, grafo/ciclos, límites, pinning y único Publication Gate.
+- Gates: `NEW_ENGINE=0`, `NEW_PUBLICATION_GATE=0`, `NEW_AUDIT_SYSTEM=0`, `NEW_CATALOG_SYSTEM=0`, `NEW_DEPENDENCY_TABLE=0`, `NEW_TABLES=0`, `PINNING_BY_LATEST_VERSION=0`, `DYNAMIC_CODE_EXECUTION=0`, histórico sin mutaciones por diff/arquitectura, `P0=0`, `P1=0`.
+- Evidencia: focal comportamiento `54/54 PASS`; contratos `7/7 PASS`; `CalculationRuntimeTests=25/25 PASS`; backend `577/577 PASS`; frontend `707/707 PASS`; E2E `29/29 PASS`; lint, builds y Quality Gates locales PASS.
+- Oracle: no ejecutado en 3.1.3 (`ORACLE_EXECUTED=NO`, `DDL=0`, `DML=0`, `RECOVERY=0`). No se presenta un postcheck Oracle nuevo.
+- Untracked ambientales: visibles `.vscode/`, `agosto_rest.txt` y el PDF de requisitos; `agosto_capturas/` no está presente. `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`, `BLOCKER=NO`.
+- Estado estable: `FASE 3.1=EN PROGRESO`; `3.1.1=CERRADA`; `3.1.2=CERRADA/RECERTIFICADA/FINAL`; `3.1.3=CERRADA/CERTIFICADA`; `3.1.4=HABILITADA/NO INICIADA`; `3.1.5=NO INICIADA`. La evidencia remota del commit final se verifica externamente sobre el SHA publicado; no se persisten estados transitorios de CI que requieran otro cambio documental.
+
 ## Estado vigente - cierre Quality Gates y bloqueo de integracion externa
 
 - Fecha/hora local: 2026-08-26 22:19 (UTC-6). Rama `desarrollo`. HEAD `76a6aae182f41e1651b821289fa2a0eeac85eb08`, igual a `origin/desarrollo`; worktree limpio; `AHEAD=0`, `BEHIND=0`; `origin/main=c76271dc6433ab780f14d0b1cf3ce123335c63d3`.
