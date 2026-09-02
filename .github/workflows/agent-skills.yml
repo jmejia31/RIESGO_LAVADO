@@ -1,0 +1,39 @@
+name: Agent Skills
+
+on:
+  push:
+    branches:
+      - desarrollo
+    paths:
+      - ".agents/skills/**"
+      - "AGENTS.md"
+      - ".agents/AGENTS.md"
+      - "tools/validate_agent_skills.py"
+      - ".github/workflows/agent-skills.yml"
+  pull_request:
+    paths:
+      - ".agents/skills/**"
+      - "AGENTS.md"
+      - ".agents/AGENTS.md"
+      - "tools/validate_agent_skills.py"
+      - ".github/workflows/agent-skills.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-agent-skills:
+    name: Validate Agent Skills
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate Agent Skills specification
+        run: python tools/validate_agent_skills.py
