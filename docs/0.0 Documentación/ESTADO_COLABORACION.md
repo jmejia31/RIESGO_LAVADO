@@ -797,6 +797,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Defecto corregido: `GET /api/matrices-riesgos/configuracion-calculo/formulas` usaba el bind Oracle reservado `:all`, causando `ORA-01745`. Se corrigieron también los listados de Funciones y Parámetros al bind seguro `:p_incluir_inactivas`.
 - Evidencia: contrato/validaciones `36/36 PASS`, build backend aislado PASS, regresión backend `579/579 PASS`, FAIL=0, `INVALID_ORACLE_BINDS=0`, sin DDL/DML ni mutaciones históricas. No se dispone de listener HTTP local para una nueva llamada autenticada; esa limitación queda explícita y no se maquilla como HTTP 200.
 - Estado: `FASE_3.1=EN PROGRESO`; 3.1.1 cerrada/congelada; 3.1.2 cerrada/recertificada/final; 3.1.3 cerrada/certificada; 3.1.4 pendiente de recertificación remota del hotfix; 3.1.5 habilitada/no iniciada; `P0=0`, `P1=0`.
+
+## Estado vigente - parche de seguridad qs posterior a 3.1.4
+
+- Fecha/hora local: 2026-09-02 (UTC-6). Rama `desarrollo`. Base `1dd720143ddf685a0c660dc0f1ee7d4e68346154`; commit técnico `f87568c692aad1eb95fd5290d109377795ed028b`.
+- Quality Gate causal: `33651107541` falló únicamente en la auditoría npm reproducible por `qs@6.15.3`, introducido por `karma@6.4.4 -> body-parser@1.20.6`, bajo los advisories `GHSA-x5fp-wj9c-mxmx` y `GHSA-4mjr-xmp4-gh2g`.
+- Corrección: override transitivo `qs=6.16.0` y lock regenerado exclusivamente con `npm install --package-lock-only --ignore-scripts`. Verificación aislada: `npm ci` PASS, `npm audit --audit-level=high` PASS con HIGH=0 y CRITICAL=0; frontend `716/716`, lint, build y E2E `29/29` PASS.
+- Alcance: `DDL=0`, `DML=0`, `RECOVERY=0`, Oracle no ejecutado; `ORA-01745` permanece corregido; arquitectura, `main` y datos históricos no fueron modificados. Se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos como untracked preexistentes.
+- Estado estable: `FASE_3.1=EN PROGRESO`; `SUBFASE_3_1_1=CERRADA/CONGELADA`; `SUBFASE_3_1_2=CERRADA/RECERTIFICADA/FINAL`; `SUBFASE_3_1_3=CERRADA/CERTIFICADA`; `SUBFASE_3_1_4=CERRADA/CERTIFICADA`; `SUBFASE_3_1_5=HABILITADA/NO_INICIADA`; `P0=0`; `P1=0`. La verificación remota del parche corresponde únicamente al Quality Gate exacto del SHA final publicado.
 - P1 resueltos: `P1-312-01=RESOLVED` con allowlist de 8/8 secuencias; `P1-312-02=RESOLVED` con matriz central de lifecycle e inmutabilidad publicada; `P1-312-03=RESOLVED` con `FOR UPDATE` en los masters de fórmula, función y parámetro. `STALE_VERSION_ROW=CONFLICT`.
 - Evidencia de pruebas: focalizadas `33/33 PASS`; backend `551/551 PASS`; frontend `707/707 PASS`; E2E `29/29 PASS`; lint, builds y Quality Gates locales PASS.
 -

@@ -126,3 +126,11 @@ Evidencia post-hotfix: contratos y validaciones `36/36 PASS`, build aislado de `
 `DDL=0`, `DML=0`, `NEW_TABLES=0`, `RBAC_CHANGES=0`, `HISTORICAL_MUTATIONS=0` por diff/arquitectura. La fase 3.1.5 continúa habilitada y no iniciada.
 
 La siguiente continuación habilitada es 3.1.5 para la carga institucional y paridad Excel de las 34 fórmulas. Esta intervención no inicia 3.1.5.
+
+## 14. Parche de seguridad npm posterior a la certificación
+
+El Quality Gate `33651107541` del commit `1dd720143ddf685a0c660dc0f1ee7d4e68346154` falló únicamente en `Verify npm security audit and reproducible installation` por `qs@6.15.3`, presente en la cadena `karma@6.4.4 -> body-parser@1.20.6 -> qs@6.15.3`. Los advisories exactos fueron `GHSA-x5fp-wj9c-mxmx` y `GHSA-4mjr-xmp4-gh2g`; ambos fijan `6.16.0` como versión corregida.
+
+El commit técnico `f87568c692aad1eb95fd5290d109377795ed028b` aplicó únicamente el override transitivo `"qs": "6.16.0"` y regeneró `package-lock.json` mediante `npm install --package-lock-only --ignore-scripts`. La instalación aislada resolvió `node_modules/qs=6.16.0`; `npm ci` y `npm audit --audit-level=high` terminaron correctamente con HIGH=0 y CRITICAL=0.
+
+La regresión frontend aislada posterior pasó con `716/716` pruebas, lint PASS, build PASS y E2E `29/29 PASS`. No se modificaron código funcional, Angular, Node, npm, Oracle, datos históricos ni `main`; `DDL=0`, `DML=0` y `RECOVERY=0`. El hotfix ORA-01745 permanece corregido. La certificación remota del parche se verifica exclusivamente sobre el Quality Gate exacto del SHA final publicado.

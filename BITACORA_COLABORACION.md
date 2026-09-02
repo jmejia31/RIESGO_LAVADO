@@ -6627,3 +6627,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Estado: `INVALID_ORACLE_BINDS=0`, `P0=0`, `P1=0`, `HISTORICAL_MUTATIONS=0` por diff/arquitectura. Se preservan los tres untracked ambientales preexistentes y `main` no fue tocada. 3.1.5 permanece habilitada/no iniciada.
 - Estado del entorno: se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos como tres untracked preexistentes. `agosto_capturas/` no está presente; `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`, `BLOCKER=NO`.
 - Cierre: `FASE 3.1=EN PROGRESO`; `3.1.1=CERRADA/CONGELADA`; `3.1.2=CERRADA/RECERTIFICADA/FINAL`; `3.1.3=CERRADA/CERTIFICADA`; `3.1.4=HABILITADA/NO INICIADA`; `3.1.5=NO INICIADA`; `P0=0`; `P1=0`. La evidencia remota del commit final se verifica externamente en GitHub Actions sobre el SHA publicado; no se persisten estados transitorios que requieran otro commit documental.
+
+## Registro de intervencion - Codex - parche de seguridad qs posterior a 3.1.4
+
+- Fecha/hora local: 2026-09-02 (UTC-6). Autor: Codex. Rama: `desarrollo`. Base: `1dd720143ddf685a0c660dc0f1ee7d4e68346154`. Commit técnico: `f87568c692aad1eb95fd5290d109377795ed028b` (`fix(frontend): patch qs security advisories`).
+- Defecto: Quality Gate `33651107541` falló únicamente en `Verify npm security audit and reproducible installation` porque la cadena `karma@6.4.4 -> body-parser@1.20.6 -> qs@6.15.3` era vulnerable bajo `GHSA-x5fp-wj9c-mxmx` y `GHSA-4mjr-xmp4-gh2g`.
+- Corrección mínima: se añadió únicamente el override transitivo `"qs": "6.16.0"` y se regeneró `package-lock.json` con `--package-lock-only --ignore-scripts`; no se actualizaron Angular, Node, npm ni dependencias no relacionadas.
+- Evidencia: lock efectivo `node_modules/qs=6.16.0`, `npm ci` aislado PASS, `npm audit --audit-level=high` PASS con 0 vulnerabilidades, frontend `716/716 PASS`, lint PASS, build PASS y E2E `29/29 PASS`. Los temporales fueron eliminados; no se modificó el `node_modules` del checkout.
+- Alcance preservado: `DDL=0`, `DML=0`, `RECOVERY=0`, Oracle no ejecutado, `ORA-01745` continúa corregido, arquitectura y datos históricos intactos, `main` no tocada. Se preservan los tres untracked ambientales preexistentes.
+- Estado: la evidencia de cierre remoto del parche se verificará exclusivamente sobre el SHA final publicado en `origin/desarrollo`; no se reutiliza el run fallido `33651107541` ni se persisten estados transitorios que requieran otro commit documental.
