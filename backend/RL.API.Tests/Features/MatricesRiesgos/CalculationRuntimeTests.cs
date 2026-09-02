@@ -96,6 +96,45 @@ public sealed class CalculationRuntimeTests
         Assert.Equal(FormulaErrorCode.FORMULA_CYCLE, error.Code);
     }
 
+    [Theory]
+    [InlineData("IF(TRUE,IF(FALSE,1,2),3)", 2d)]
+    [InlineData("MAX(MIN(3,2),1)", 2d)]
+    [InlineData("AND(OR(TRUE,FALSE),IF(TRUE,TRUE,FALSE))", true)]
+    public void NativeHandlers_MayBeNestedWithoutBeingReportedAsCycles(string expression, object expected)
+    {
+        var options = new FormulaRuntimeOptions(new InMemoryFunctionRegistry(NativeFunctionCatalog.CreateDefaultDefinitions()));
+
+        Assert.Equal(expected, new FormulaEngine().EvaluateExpression(expression, options: options).ToObject());
+    }
+
+    [Fact]
+    public void CompositeSelfRecursion_IsRejectedAsFormulaCycle()
+    {
+        var registry = Registry(Composite("RECURSE", 1, "RECURSE(x)", 1, 1, Arg(1, "X")));
+
+        var error = Assert.Throws<FormulaRuntimeException>(() =>
+            new FormulaEngine().EvaluateExpression("RECURSE(1)", options: new(registry)));
+
+        Assert.Equal(FormulaErrorCode.FORMULA_CYCLE, error.Code);
+    }
+
+    [Theory]
+    [InlineData("blank = empty", true)]
+    [InlineData("empty = \"\"", true)]
+    [InlineData("blank <> value", true)]
+    [InlineData("3 < 5", true)]
+    public void Comparisons_PreserveBlankEmptyAndNumericSemantics(string expression, bool expected)
+    {
+        var values = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["blank"] = FormulaValue.Blank(),
+            ["empty"] = FormulaValue.TextValue(string.Empty),
+            ["value"] = FormulaValue.NumberValue(1)
+        };
+
+        Assert.Equal(expected, new FormulaEngine().EvaluateExpression(expression, values).ToObject());
+    }
+
     [Fact]
     public void NativeHandler_IsAllowlistedAndUnknownHandlersFailClosed()
     {

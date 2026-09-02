@@ -385,7 +385,7 @@ public sealed class FormulaEngine
         {
             if (++_functionCalls > _options.EffectiveLimits.MaxFunctionCalls) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_LIMIT_EXCEEDED, "Cantidad máxima de llamadas de función excedida.");
             if (_functionPath.Count >= _options.EffectiveLimits.MaxFunctionDepth) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_LIMIT_EXCEEDED, "Profundidad máxima de funciones excedida.");
-            if (_functionPath.Contains(definition.Identity, StringComparer.OrdinalIgnoreCase)) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_CYCLE, "Recursión de función detectada.");
+            if (definition.IsComposite && _functionPath.Contains(definition.Identity, StringComparer.OrdinalIgnoreCase)) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_CYCLE, "Recursión de función detectada.");
             _functionPath.Push(definition.Identity); return new FunctionScope(_functionPath);
         }
 
@@ -415,7 +415,18 @@ public sealed class FormulaEngine
         private static FormulaValue RoundDown(IReadOnlyList<FormulaValue> args) { int digits = ToDigits(args[1]); double factor = Math.Pow(10, digits); return FormulaValue.NumberValue(Math.Truncate(args[0].AsNumber() * factor) / factor); }
         private static FormulaValue Mod(IReadOnlyList<FormulaValue> args) { double value = args[0].AsNumber(), divisor = args[1].AsNumber(); if (divisor == 0) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_DIVISION_BY_ZERO, "MOD no acepta divisor cero."); return FormulaValue.NumberValue(value - divisor * Math.Floor(value / divisor)); }
         private static int ToDigits(FormulaValue value) { double digits = value.AsNumber(); if (digits is < -15 or > 15 || digits != Math.Truncate(digits)) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "La precisión debe ser un entero entre -15 y 15."); return (int)digits; }
-        private static int Compare(FormulaValue left, FormulaValue right) { if (left.Type == FormulaValueType.Number || right.Type == FormulaValueType.Number) return left.AsNumber().CompareTo(right.AsNumber()); return string.Compare(left.Text ?? left.Boolean?.ToString(), right.Text ?? right.Boolean?.ToString(), StringComparison.OrdinalIgnoreCase); }
+        private static int Compare(FormulaValue left, FormulaValue right)
+        {
+            bool leftBlank = left.Type == FormulaValueType.Blank || left.Type == FormulaValueType.Text && string.IsNullOrEmpty(left.Text);
+            bool rightBlank = right.Type == FormulaValueType.Blank || right.Type == FormulaValueType.Text && string.IsNullOrEmpty(right.Text);
+            if (leftBlank || rightBlank)
+            {
+                if (leftBlank && rightBlank) return 0;
+                return leftBlank ? -1 : 1;
+            }
+            if (left.Type == FormulaValueType.Number || right.Type == FormulaValueType.Number) return left.AsNumber().CompareTo(right.AsNumber());
+            return string.Compare(left.Text ?? left.Boolean?.ToString(), right.Text ?? right.Boolean?.ToString(), StringComparison.OrdinalIgnoreCase);
+        }
         private sealed class FunctionScope : IDisposable { private readonly Stack<string> _path; public FunctionScope(Stack<string> path) => _path = path; public void Dispose() => _path.Pop(); }
     }
 

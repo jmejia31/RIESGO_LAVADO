@@ -102,6 +102,17 @@ public sealed record ParameterVersionDefinition(
     public string Identity => $"{Code.ToUpperInvariant()}@{Version}";
 }
 
+public sealed record FormulaVersionDefinition(
+    string Code,
+    int Version,
+    string Expression,
+    string ResultType,
+    string State,
+    string Hash)
+{
+    public string Identity => $"{Code.ToUpperInvariant()}@{Version}";
+}
+
 public sealed record CatalogSnapshot(string Code, bool Active, IReadOnlyList<CatalogElement> Elements);
 
 public interface ICalculationLookup
@@ -130,13 +141,17 @@ public sealed class CatalogCalculationLookup : ICalculationLookup
         if (matches.Count == 0) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"No existe coincidencia en el catálogo '{catalogCode}'.");
         if (matches.Count > 1) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, $"La búsqueda en el catálogo '{catalogCode}' es ambigua.");
 
-        string result = resultField?.Trim().ToUpperInvariant() switch
+        string normalizedResultField = resultField?.Trim().ToUpperInvariant() ?? "VALUE";
+        string result = normalizedResultField switch
         {
             null or "" or "VALUE" => matches[0].Valor,
             "CODE" => matches[0].Codigo,
+            "NUMBER" or "DECIMAL" when double.TryParse(matches[0].Valor, NumberStyles.Float, CultureInfo.InvariantCulture, out _) => matches[0].Valor,
             _ => throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "El campo de resultado del catálogo no está permitido.")
         };
-        return FormulaValue.TextValue(result);
+        return normalizedResultField is "NUMBER" or "DECIMAL"
+            ? FormulaValue.NumberValue(double.Parse(result, CultureInfo.InvariantCulture))
+            : FormulaValue.TextValue(result);
     }
 }
 
@@ -148,21 +163,25 @@ public sealed class CalculationPinning
         IReadOnlyDictionary<string, int> functionVersions,
         IReadOnlyDictionary<string, int> parameterVersions,
         IReadOnlyDictionary<string, string>? catalogSnapshots = null,
-        bool published = false)
+        bool published = false,
+        IReadOnlyDictionary<string, int>? formulaVersions = null)
     {
         FunctionVersions = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>(functionVersions, StringComparer.OrdinalIgnoreCase));
         ParameterVersions = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>(parameterVersions, StringComparer.OrdinalIgnoreCase));
         CatalogSnapshots = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>(catalogSnapshots ?? new Dictionary<string, string>(), StringComparer.OrdinalIgnoreCase));
+        FormulaVersions = new ReadOnlyDictionary<string, int>(new Dictionary<string, int>(formulaVersions ?? new Dictionary<string, int>(), StringComparer.OrdinalIgnoreCase));
         Published = published;
     }
 
     public IReadOnlyDictionary<string, int> FunctionVersions { get; }
     public IReadOnlyDictionary<string, int> ParameterVersions { get; }
     public IReadOnlyDictionary<string, string> CatalogSnapshots { get; }
+    public IReadOnlyDictionary<string, int> FormulaVersions { get; }
     public bool Published { get; }
 
     public int? FunctionVersion(string code) => FunctionVersions.TryGetValue(code, out int version) ? version : null;
     public int? ParameterVersion(string code) => ParameterVersions.TryGetValue(code, out int version) ? version : null;
+    public int? FormulaVersion(string code) => FormulaVersions.TryGetValue(code, out int version) ? version : null;
 }
 
 public sealed record FormulaRuntimeOptions(
@@ -276,6 +295,72 @@ public sealed class DbDrivenFunctionRegistry : IFunctionRegistry
                 throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "The function signature omits a required argument.");
         if (!definition.IsComposite && !NativeFunctionCatalog.MatchesContract(definition))
             throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, $"Invalid native contract for '{definition.Identity}'.");
+    }
+}
+
+public sealed class DbDrivenFormulaRegistry
+{
+    private readonly IReadOnlyDictionary<string, IReadOnlyDictionary<int, FormulaVersionDefinition>> _definitions;
+    private readonly IReadOnlyDictionary<string, string> _masterStates;
+
+    public DbDrivenFormulaRegistry(IEnumerable<FormulaDto> formulas, IEnumerable<FormulaVersionDto> versions)
+    {
+        var masterRows = formulas.Select(formula => new
+        {
+            formula.Id,
+            Code = (formula.Codigo ?? string.Empty).Trim().ToUpperInvariant(),
+            State = (formula.Estado ?? string.Empty).Trim().ToUpperInvariant()
+        }).ToList();
+        if (masterRows.Any(formula => string.IsNullOrWhiteSpace(formula.Code))
+            || masterRows.Select(formula => formula.Code).Distinct(StringComparer.OrdinalIgnoreCase).Count() != masterRows.Count)
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, "El catálogo de fórmulas contiene códigos inválidos o duplicados.");
+
+        var masters = masterRows.ToDictionary(formula => formula.Id, formula => formula.Code);
+        _masterStates = masterRows.ToDictionary(formula => formula.Code, formula => formula.State, StringComparer.OrdinalIgnoreCase);
+        _definitions = versions
+            .Where(version => masters.ContainsKey(version.FormulaId))
+            .GroupBy(version => masters[version.FormulaId], StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyDictionary<int, FormulaVersionDefinition>)group.ToDictionary(
+                    version => version.Version,
+                    version => new FormulaVersionDefinition(
+                        group.Key,
+                        version.Version,
+                        version.Expresion,
+                        version.TipoResultado.Trim().ToUpperInvariant(),
+                        version.Estado.Trim().ToUpperInvariant(),
+                        version.Hash),
+                    EqualityComparer<int>.Default),
+                StringComparer.OrdinalIgnoreCase);
+    }
+
+    public FormulaVersionDefinition Resolve(string code, int? pinnedVersion = null, bool requirePinned = false)
+    {
+        string normalized = code.Trim().ToUpperInvariant();
+        if (!_definitions.TryGetValue(normalized, out IReadOnlyDictionary<int, FormulaVersionDefinition>? versions))
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"Fórmula '{code}' no registrada.");
+        if (!_masterStates.TryGetValue(normalized, out string? masterState) || masterState != "ACTIVE")
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, "La fórmula maestra no está activa.");
+        if (requirePinned && !pinnedVersion.HasValue)
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, $"La fórmula '{normalized}' no está versionada/pinneada.");
+
+        FormulaVersionDefinition definition = pinnedVersion.HasValue
+            ? versions.TryGetValue(pinnedVersion.Value, out FormulaVersionDefinition? pinned)
+                ? pinned
+                : throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"Versión {normalized}@{pinnedVersion} inexistente.")
+            : versions.Values.Where(version => version.State == "PUBLISHED").OrderByDescending(version => version.Version).FirstOrDefault()
+              ?? throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"Fórmula '{normalized}' sin versión publicada.");
+
+        if (requirePinned && definition.State != "PUBLISHED")
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, "La versión de fórmula pinneada no está publicada.");
+        if (definition.State is "RETIRED" or "ARCHIVED")
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, $"La versión de fórmula '{definition.Identity}' no está activa.");
+        if (definition.Version < 1 || string.IsNullOrWhiteSpace(definition.Expression) || string.IsNullOrWhiteSpace(definition.ResultType))
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "Contrato de versión de fórmula inválido.");
+        if (!Regex.IsMatch(definition.Hash ?? string.Empty, "^[0-9A-Fa-f]{64}$", RegexOptions.CultureInvariant))
+            throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "Hash inválido de versión de fórmula.");
+        return definition;
     }
 }
 
