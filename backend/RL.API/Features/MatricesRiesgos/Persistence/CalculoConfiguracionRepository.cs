@@ -24,8 +24,8 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
     public async Task<IReadOnlyList<FormulaDto>> ListarFormulasAsync(bool incluirInactivas)
     {
         await using var c = _db.CreateConnection(); await c.OpenAsync();
-        const string sql = "SELECT FOR_ID,FOR_CODIGO,FOR_NOMBRE,FOR_DESCRIPCION,FOR_ESTADO,FOR_FECHA_CREACION,FOR_VERSION_ROW FROM RL_MR_FORMULAS WHERE (:all=1 OR FOR_ESTADO='ACTIVE') ORDER BY FOR_CODIGO";
-        await using var cmd = Command(sql, c); cmd.Parameters.Add(new OracleParameter("all", incluirInactivas ? 1 : 0));
+        const string sql = "SELECT FOR_ID,FOR_CODIGO,FOR_NOMBRE,FOR_DESCRIPCION,FOR_ESTADO,FOR_FECHA_CREACION,FOR_VERSION_ROW FROM RL_MR_FORMULAS WHERE (:p_incluir_inactivas=1 OR FOR_ESTADO='ACTIVE') ORDER BY FOR_CODIGO";
+        await using var cmd = Command(sql, c); cmd.Parameters.Add(new OracleParameter("p_incluir_inactivas", incluirInactivas ? 1 : 0));
         var result = new List<FormulaDto>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) result.Add(ReadFormula(r)); return result;
     }
 
@@ -169,7 +169,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
 
     public async Task<IReadOnlyList<FuncionDto>> ListarFuncionesAsync(bool incluirInactivas)
     {
-        await using var c=_db.CreateConnection();await c.OpenAsync();await using var cmd=Command("SELECT FUN_ID,FUN_CODIGO,FUN_NOMBRE,FUN_DESCRIPCION,FUN_CATEGORIA,FUN_ESTADO,FUN_VERSION_ROW FROM RL_MR_FUNCIONES WHERE (:all=1 OR FUN_ESTADO='ACTIVE') ORDER BY FUN_CODIGO",c);cmd.Parameters.Add(new OracleParameter("all",incluirInactivas?1:0));var x=new List<FuncionDto>();await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync())x.Add(new FuncionDto{Id=r.GetInt64(0),Codigo=r.GetString(1),Nombre=r.GetString(2),Descripcion=NullString(r,3),Categoria=r.GetString(4),Estado=r.GetString(5),VersionRow=r.GetInt32(6)});return x;
+        await using var c=_db.CreateConnection();await c.OpenAsync();await using var cmd=Command("SELECT FUN_ID,FUN_CODIGO,FUN_NOMBRE,FUN_DESCRIPCION,FUN_CATEGORIA,FUN_ESTADO,FUN_VERSION_ROW FROM RL_MR_FUNCIONES WHERE (:p_incluir_inactivas=1 OR FUN_ESTADO='ACTIVE') ORDER BY FUN_CODIGO",c);cmd.Parameters.Add(new OracleParameter("p_incluir_inactivas",incluirInactivas?1:0));var x=new List<FuncionDto>();await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync())x.Add(new FuncionDto{Id=r.GetInt64(0),Codigo=r.GetString(1),Nombre=r.GetString(2),Descripcion=NullString(r,3),Categoria=r.GetString(4),Estado=r.GetString(5),VersionRow=r.GetInt32(6)});return x;
     }
 
     public async Task<FuncionDto?> ObtenerFuncionAsync(long id)
@@ -224,7 +224,7 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
 
     public async Task<IReadOnlyList<ParametroDto>> ListarParametrosAsync(bool incluirInactivas)
     {
-        await using var c=_db.CreateConnection();await c.OpenAsync();await using var cmd=Command("SELECT PAC_ID,PAC_CODIGO,PAC_NOMBRE,PAC_DESCRIPCION,PAC_TIPO,PAC_ESTADO,PAC_VERSION_ROW FROM RL_MR_PARAMETROS_CALCULO WHERE (:all=1 OR PAC_ESTADO='ACTIVE') ORDER BY PAC_CODIGO",c);cmd.Parameters.Add(new OracleParameter("all",incluirInactivas?1:0));var x=new List<ParametroDto>();await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync())x.Add(new ParametroDto{Id=r.GetInt64(0),Codigo=r.GetString(1),Nombre=r.GetString(2),Descripcion=NullString(r,3),Tipo=r.GetString(4),Estado=r.GetString(5),VersionRow=r.GetInt32(6)});return x;
+        await using var c=_db.CreateConnection();await c.OpenAsync();await using var cmd=Command("SELECT PAC_ID,PAC_CODIGO,PAC_NOMBRE,PAC_DESCRIPCION,PAC_TIPO,PAC_ESTADO,PAC_VERSION_ROW FROM RL_MR_PARAMETROS_CALCULO WHERE (:p_incluir_inactivas=1 OR PAC_ESTADO='ACTIVE') ORDER BY PAC_CODIGO",c);cmd.Parameters.Add(new OracleParameter("p_incluir_inactivas",incluirInactivas?1:0));var x=new List<ParametroDto>();await using var r=await cmd.ExecuteReaderAsync();while(await r.ReadAsync())x.Add(new ParametroDto{Id=r.GetInt64(0),Codigo=r.GetString(1),Nombre=r.GetString(2),Descripcion=NullString(r,3),Tipo=r.GetString(4),Estado=r.GetString(5),VersionRow=r.GetInt32(6)});return x;
     }
 
     public async Task<ParametroDto?> ObtenerParametroAsync(long id)

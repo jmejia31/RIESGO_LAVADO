@@ -87,6 +87,17 @@ public sealed class CalculoConfiguracionContractTests
     }
 
     [Fact]
+    public void Repository_ListQueries_UseOracleSafeBindForInactiveFilter()
+    {
+        string source = Read("backend/RL.API/Features/MatricesRiesgos/Persistence/CalculoConfiguracionRepository.cs");
+
+        Assert.DoesNotContain(":all", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("OracleParameter(\"all\"", source, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(3, Regex.Matches(source, ":p_incluir_inactivas", RegexOptions.IgnoreCase).Count);
+        Assert.Equal(3, Regex.Matches(source, "OracleParameter\\(\\\"p_incluir_inactivas\\\"", RegexOptions.IgnoreCase).Count);
+    }
+
+    [Fact]
     public void Repository_UsesFormulaUsageSequenceAndLocksMastersForVersionCreation()
     {
         string source = Read("backend/RL.API/Features/MatricesRiesgos/Persistence/CalculoConfiguracionRepository.cs");
