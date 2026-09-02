@@ -790,6 +790,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 - Fecha/hora local: 2026-09-01 (UTC-6). Autor: Codex. Rama `desarrollo`. Commit técnico publicado: `99337b41f054ce83f7691d4c5441a456f9b60df8` (`fix(matrices): harden calculation admin lifecycle`). La documentación de cierre se publica en el commit documental de esta intervención.
 - Estado: `SUBFASE_3_1_2=CERRADA/RECERTIFICADA`; `FASE_3.1=EN PROGRESO`; `SUBFASE_3_1_3=HABILITADA/NO INICIADA`. `PENDING_COMMIT=0` y `PENDING_CI=0` al completar la publicación y verificación final.
+
+## Estado vigente - Hotfix ORA-01745 de Subfase 3.1.4
+
+- Fecha/hora local: 2026-09-02 (UTC-6). Rama `desarrollo`. Base `5a5c7b114cdb13917648e84c7f303690fe4b3aae`; commit técnico `a5fc64814b69cf2043e3e20ba177a0af35358f64`.
+- Defecto corregido: `GET /api/matrices-riesgos/configuracion-calculo/formulas` usaba el bind Oracle reservado `:all`, causando `ORA-01745`. Se corrigieron también los listados de Funciones y Parámetros al bind seguro `:p_incluir_inactivas`.
+- Evidencia: contrato/validaciones `36/36 PASS`, build backend aislado PASS, regresión backend `579/579 PASS`, FAIL=0, `INVALID_ORACLE_BINDS=0`, sin DDL/DML ni mutaciones históricas. No se dispone de listener HTTP local para una nueva llamada autenticada; esa limitación queda explícita y no se maquilla como HTTP 200.
+- Estado: `FASE_3.1=EN PROGRESO`; 3.1.1 cerrada/congelada; 3.1.2 cerrada/recertificada/final; 3.1.3 cerrada/certificada; 3.1.4 pendiente de recertificación remota del hotfix; 3.1.5 habilitada/no iniciada; `P0=0`, `P1=0`.
 - P1 resueltos: `P1-312-01=RESOLVED` con allowlist de 8/8 secuencias; `P1-312-02=RESOLVED` con matriz central de lifecycle e inmutabilidad publicada; `P1-312-03=RESOLVED` con `FOR UPDATE` en los masters de fórmula, función y parámetro. `STALE_VERSION_ROW=CONFLICT`.
 - Evidencia de pruebas: focalizadas `33/33 PASS`; backend `551/551 PASS`; frontend `707/707 PASS`; E2E `29/29 PASS`; lint, builds y Quality Gates locales PASS.
 -

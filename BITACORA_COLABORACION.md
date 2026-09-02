@@ -6617,5 +6617,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Entorno: permanecen tres untracked preexistentes (`.vscode/`, `agosto_rest.txt` y el PDF de requisitos). `agosto_capturas/` no está presente; `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`, `BLOCKER=NO`. No se tocaron esos elementos ni `main`.
 - Estado estable: `FASE_3.1=EN_PROGRESO`; 3.1.1 cerrada/congelada; 3.1.2 cerrada/recertificada/final; 3.1.3 cerrada/certificada; 3.1.4 cerrada/certificada; 3.1.5 habilitada/no iniciada; `P0=0`, `P1=0`. La evidencia remota de cierre se verifica sobre el commit final publicado; no se persisten estados transitorios que requieran otro commit documental.
 - Punto de continuación: 3.1.5 permanece sin iniciar.
+
+## Registro de intervencion - Codex - Hotfix ORA-01745 de 3.1.4
+
+- Fecha/hora local: 2026-09-02 (UTC-6). Rama: `desarrollo`. Base de trabajo: `5a5c7b114cdb13917648e84c7f303690fe4b3aae`. Commit técnico: `a5fc64814b69cf2043e3e20ba177a0af35358f64`.
+- Defecto: la carga de Fórmulas en `GET /api/matrices-riesgos/configuracion-calculo/formulas` fallaba con `ORA-01745` por el bind reservado `:all`/`OracleParameter("all", ...)`. El mismo antipatrón estaba en los listados de Funciones y Parámetros.
+- Corrección: binds renombrados a `:p_incluir_inactivas` en las tres consultas y parámetros Oracle consistentes; sin cambio de lógica, schema, datos, Oracle, frontend ni arquitectura.
+- Evidencia: contratos/validaciones `36/36 PASS`; build aislado backend PASS; regresión backend `579/579 PASS`, FAIL=0; `git diff --check PASS`. No hubo DDL, DML ni recovery. No hubo listener HTTP local para repetir una llamada autenticada; no se inventa ese resultado.
+- Estado: `INVALID_ORACLE_BINDS=0`, `P0=0`, `P1=0`, `HISTORICAL_MUTATIONS=0` por diff/arquitectura. Se preservan los tres untracked ambientales preexistentes y `main` no fue tocada. 3.1.5 permanece habilitada/no iniciada.
 - Estado del entorno: se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos como tres untracked preexistentes. `agosto_capturas/` no está presente; `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`, `BLOCKER=NO`.
 - Cierre: `FASE 3.1=EN PROGRESO`; `3.1.1=CERRADA/CONGELADA`; `3.1.2=CERRADA/RECERTIFICADA/FINAL`; `3.1.3=CERRADA/CERTIFICADA`; `3.1.4=HABILITADA/NO INICIADA`; `3.1.5=NO INICIADA`; `P0=0`; `P1=0`. La evidencia remota del commit final se verifica externamente en GitHub Actions sobre el SHA publicado; no se persisten estados transitorios que requieran otro commit documental.

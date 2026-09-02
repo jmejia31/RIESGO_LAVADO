@@ -113,4 +113,16 @@ Se preservan tres untracked ambientales preexistentes: `.vscode/`, `agosto_rest.
 - `P0=0`.
 - `P1=0`.
 
+## 13. Corrección post-certificación ORA-01745
+
+Durante una prueba funcional real de la pantalla Fórmulas se observó `ORA-01745: invalid host/bind variable name` al cargar `GET /api/matrices-riesgos/configuracion-calculo/formulas`. La cadena focal fue `CalculoConfiguracionController.ListarFormulas` → `CalculoConfiguracionService.ListarFormulasAsync` → `CalculoConfiguracionRepository.ListarFormulasAsync`.
+
+La causa raíz fue el bind `:all` acompañado por `OracleParameter("all", ...)`; `ALL` es una palabra reservada de Oracle y ese nombre produjo el error. El hotfix `a5fc64814b69cf2043e3e20ba177a0af35358f64` reemplazó únicamente ese bind por `:p_incluir_inactivas` y actualizó consistentemente el parámetro en las tres consultas de listado de Fórmulas, Funciones y Parámetros. No se alteró la lógica, el esquema ni los datos.
+
+La revisión focal de todo el SQL de Configuración de Cálculo confirmó `INVALID_ORACLE_BINDS=0` para este antipatrón. Se añadió el contrato `Repository_ListQueries_UseOracleSafeBindForInactiveFilter`, que exige tres binds seguros y rechaza `:all`/`OracleParameter("all"`.
+
+Evidencia post-hotfix: contratos y validaciones `36/36 PASS`, build aislado de `RL.API` PASS y regresión backend `579/579 PASS`, FAIL=0, con temporales eliminados. No se ejecutó Oracle DDL/DML; no hay listener HTTP local disponible para repetir la llamada autenticada en esta sesión, por lo que no se inventa una certificación HTTP independiente. El defecto de código quedó corregido y cubierto por prueba automatizada.
+
+`DDL=0`, `DML=0`, `NEW_TABLES=0`, `RBAC_CHANGES=0`, `HISTORICAL_MUTATIONS=0` por diff/arquitectura. La fase 3.1.5 continúa habilitada y no iniciada.
+
 La siguiente continuación habilitada es 3.1.5 para la carga institucional y paridad Excel de las 34 fórmulas. Esta intervención no inicia 3.1.5.
