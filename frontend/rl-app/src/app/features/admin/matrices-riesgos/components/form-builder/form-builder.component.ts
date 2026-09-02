@@ -13,6 +13,7 @@ import {
   normalizarJsonABuilderModel,
   serializarBuilderModelAJson
 } from '../../models/form-builder.models';
+import { FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
 import { CampoFormulario, EstadoFormulario } from '../../models/matrices-riesgos.models';
 import { validarFormBuilderModel, FormBuilderValidationError } from '../../utils/form-builder-validator.util';
 import { FormBuilderToolbarComponent } from './toolbar/form-builder-toolbar.component';
@@ -69,6 +70,7 @@ export class FormBuilderComponent implements OnInit {
   @Input() puedePublicar: boolean = false;
   @Input() procesando: boolean = false;
   @Input() operacion: 'guardar' | 'publicar' | null = null;
+  @Input() formulasDisponibles: FormulaVersionSelectorOption[] = [];
 
   @Output() guardarJson = new EventEmitter<string>();
   @Output() publicar = new EventEmitter<void>();

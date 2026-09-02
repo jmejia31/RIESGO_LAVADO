@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, In
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampoBuilderModel, TipoControlBuilder, TipoControlDefinicion } from '../../../models/form-builder.models';
+import { FormulaVersionSelectorOption } from '../../../models/calculo-configuracion.models';
 
 export interface InspectorCatalogoOption {
   codigo: string;
@@ -33,6 +34,7 @@ export class FormBuilderInspectorComponent {
   @Input() soloLectura: boolean = false;
   @Input() tiposControles: TipoControlDefinicion[] = [];
   @Input() catalogosDisponibles: InspectorCatalogoOption[] = [];
+  @Input() formulaVersionesDisponibles: FormulaVersionSelectorOption[] = [];
 
   @Output() propiedadCambiada = new EventEmitter<void>();
   @Output() navegarCatalogos = new EventEmitter<void>();
@@ -75,6 +77,31 @@ export class FormBuilderInspectorComponent {
 
   get esFormula(): boolean {
     return this.campoActivo?.tipo === 'formula';
+  }
+
+  seleccionarFormulaCentral(versionId: number | null): void {
+    if (this.soloLectura || !this.campoActivo) return;
+    if (versionId === null) {
+      this.campoActivo.formulaId = undefined;
+      this.campoActivo.formulaVersionId = undefined;
+      this.campoActivo.formulaCodigo = undefined;
+      this.campoActivo.formulaVersion = undefined;
+      this.campoActivo.formula = undefined;
+      this.campoActivo.formulaFuente = undefined;
+      this.cdr.markForCheck();
+      this.propiedadCambiada.emit();
+      return;
+    }
+    const option = this.formulaVersionesDisponibles.find(item => item.formulaVersionId === Number(versionId));
+    if (!option) return;
+    this.campoActivo.formulaId = option.formulaId;
+    this.campoActivo.formulaVersionId = option.formulaVersionId;
+    this.campoActivo.formulaCodigo = option.codigo;
+    this.campoActivo.formulaVersion = option.version;
+    this.campoActivo.formula = option.expresion;
+    this.campoActivo.formulaFuente = 'formula';
+    this.cdr.markForCheck();
+    this.propiedadCambiada.emit();
   }
 
   get soportaPlaceholder(): boolean {

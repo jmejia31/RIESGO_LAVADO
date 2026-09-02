@@ -10,6 +10,7 @@
         <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'riesgos'" [class.text-white]="vista() === 'riesgos'" (click)="seleccionarVista('riesgos')">Riesgos</button>
         <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'mitigacion'" [class.text-white]="vista() === 'mitigacion'" (click)="seleccionarVista('mitigacion')">Mitigación</button>
         <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'monitoreo'" [class.text-white]="vista() === 'monitoreo'" (click)="seleccionarVista('monitoreo')">Monitoreo</button>
+        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'configuracion'" [class.text-white]="vista() === 'configuracion'" (click)="seleccionarVista('configuracion')">Configuración de cálculo</button>
       </nav>
     </div>
   </div>
@@ -20,6 +21,7 @@
     @case ('riesgos') { <app-matrices-riesgos-gestion /> }
     @case ('mitigacion') { <app-matrices-riesgos-mitigacion [evaluaciones]="evaluaciones()" /> }
     @case ('monitoreo') { <app-matrices-riesgos-monitoreo-operativo [evaluaciones]="evaluaciones()" /> }
+    @case ('configuracion') { <app-configuracion-calculo /> }
     @default { <app-matrices-riesgos /> }
   }
 </section>

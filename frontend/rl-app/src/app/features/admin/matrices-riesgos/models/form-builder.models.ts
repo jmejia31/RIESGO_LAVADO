@@ -50,6 +50,10 @@ export interface CampoBuilderModel {
   claveFuente?: 'clave' | 'rutaDatos' | 'identificador';
   catalogoFuente?: 'codigoCatalogo' | 'catalogoCodigo' | 'catalogo';
   formulaFuente?: 'formula' | 'calculo' | 'referenciaCalculo';
+  formulaId?: number;
+  formulaVersionId?: number;
+  formulaCodigo?: string;
+  formulaVersion?: number;
   codigoCatalogo?: string;
   opciones?: string[];
   formula?: string;
@@ -318,6 +322,10 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           codigoCatalogo: catalogoFuente ? texto(cmp[catalogoFuente]) : undefined,
           opciones: Array.isArray(cmp['opciones']) ? (cmp['opciones'] as unknown[]).filter((opcion): opcion is string => typeof opcion === 'string') : undefined,
           formula: formulaFuente ? texto(cmp[formulaFuente]) : undefined,
+          formulaId: typeof cmp['formulaId'] === 'number' ? cmp['formulaId'] : undefined,
+          formulaVersionId: typeof cmp['formulaVersionId'] === 'number' ? cmp['formulaVersionId'] : undefined,
+          formulaCodigo: texto(cmp['formulaCodigo']),
+          formulaVersion: typeof cmp['formulaVersion'] === 'number' ? cmp['formulaVersion'] : undefined,
           obligatorio: !!cmp['obligatorio'],
           soloLectura: !!cmp['soloLectura'] || tipoResuelto.tipo === 'formula',
           placeholder: texto(cmp['placeholder']),
@@ -397,6 +405,16 @@ function serializarCampo(campo: CampoBuilderModel, index: number): JsonObject {
   const formulaFuente = campo.formulaFuente ?? ('formula' in raw ? 'formula' : 'calculo' in raw ? 'calculo' : 'formula');
   if (campo.formula) raw[formulaFuente] = campo.formula;
   else if (esNuevo || formulaFuente in raw) raw[formulaFuente] = null;
+  const centralFormulaKeys: Array<[string, unknown]> = [
+    ['formulaId', campo.formulaId],
+    ['formulaVersionId', campo.formulaVersionId],
+    ['formulaCodigo', campo.formulaCodigo],
+    ['formulaVersion', campo.formulaVersion]
+  ];
+  for (const [key, value] of centralFormulaKeys) {
+    if (value !== undefined) raw[key] = value;
+    else delete raw[key];
+  }
 
   return raw;
 }

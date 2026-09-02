@@ -66,6 +66,11 @@ public sealed class CrearFormulaUsoDto
     [Required] public long FormulaVersionId { get; set; }
 }
 
+public sealed class ReemplazarFormulaUsosDto
+{
+    public List<CrearFormulaUsoDto> Usos { get; set; } = new();
+}
+
 public sealed class CambiarEstadoConfiguracionDto
 {
     [Required, StringLength(20)] public string Estado { get; set; } = string.Empty;

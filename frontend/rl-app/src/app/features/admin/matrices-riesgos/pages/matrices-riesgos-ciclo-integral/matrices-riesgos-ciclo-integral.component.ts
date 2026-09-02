@@ -5,8 +5,9 @@ import { MatricesRiesgosGestionComponent } from '../../components/matrices-riesg
 import { MatricesRiesgosMitigacionComponent } from '../../components/matrices-riesgos-mitigacion/matrices-riesgos-mitigacion.component';
 import { MatricesRiesgosMonitoreoOperativoComponent } from '../../components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component';
 import { MatricesRiesgosComponent } from '../matrices-riesgos/matrices-riesgos.component';
+import { ConfiguracionCalculoComponent } from '../configuracion-calculo/configuracion-calculo.component';
 
-type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo';
+type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo' | 'configuracion';
 
 @Component({
   selector: 'app-matrices-riesgos-ciclo-integral',
@@ -15,7 +16,8 @@ type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo';
     MatricesRiesgosComponent,
     MatricesRiesgosGestionComponent,
     MatricesRiesgosMitigacionComponent,
-    MatricesRiesgosMonitoreoOperativoComponent
+    MatricesRiesgosMonitoreoOperativoComponent,
+    ConfiguracionCalculoComponent
   ],
   templateUrl: './matrices-riesgos-ciclo-integral.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush

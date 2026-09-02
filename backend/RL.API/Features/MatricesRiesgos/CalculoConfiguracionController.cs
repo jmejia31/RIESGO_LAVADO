@@ -47,6 +47,10 @@ public sealed class CalculoConfiguracionController : ControllerBase
     [AuditRequired("Vinculación de uso de fórmula")]
     public async Task<IActionResult> CrearFormulaUso([FromBody] CrearFormulaUsoDto dto) => Responder(await _service.CrearFormulaUsoAsync(dto, UsuarioId(), Ip()));
 
+    [HttpPut("formula-usos/versiones-formulario/{versionFormularioId:long}")]
+    [AuditRequired("Reemplazo de usos de fórmula en borrador")]
+    public async Task<IActionResult> ReemplazarFormulaUsos(long versionFormularioId, [FromBody] ReemplazarFormulaUsosDto dto) => Responder(await _service.ReemplazarFormulaUsosAsync(versionFormularioId, dto, UsuarioId(), Ip()));
+
     [HttpPatch("formulas/{id:long}/estado")]
     [AuditRequired("Cambio de estado de fórmula")]
     public async Task<IActionResult> CambiarEstadoFormula(long id, [FromBody] CambiarEstadoConfiguracionDto dto) => Responder(await _service.CambiarEstadoFormulaAsync(id, dto, UsuarioId(), Ip()));

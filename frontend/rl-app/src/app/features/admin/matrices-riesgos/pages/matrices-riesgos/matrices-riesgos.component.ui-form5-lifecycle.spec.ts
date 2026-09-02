@@ -4,6 +4,7 @@ import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EstadoFormulario, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 let mockSwalResult = { isConfirmed: true };
@@ -91,7 +92,8 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: AuthService, useValue: authServiceMock },
-        { provide: MatricesRiesgosService, useValue: service }
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
       ]
     }).compileComponents();
 

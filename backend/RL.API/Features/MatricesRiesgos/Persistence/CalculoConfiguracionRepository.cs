@@ -87,10 +87,60 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         await using var c = _db.CreateConnection(); await c.OpenAsync(); await using var tx = c.BeginTransaction();
         try
         {
+            const string formVersionSql = "SELECT VER_ESTADO FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id FOR UPDATE";
+            await using var formVersionCommand = Command(formVersionSql, c, tx);
+            formVersionCommand.Parameters.Add(P("id", dto.VersionFormularioId));
+            await using var formVersionReader = await formVersionCommand.ExecuteReaderAsync();
+            if (!await formVersionReader.ReadAsync()) throw new KeyNotFoundException("La versión de formulario no existe.");
+            string formVersionState = formVersionReader.GetString(0);
+            if (!formVersionState.Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Los usos de fórmula solo pueden modificarse en una versión de formulario en borrador.");
+
             long id = await Next(c, tx, "SEQ_RL_MR_FORMULA_USOS");
             await Execute(c, tx, "INSERT INTO RL_MR_FORMULA_USOS(FUS_ID,FUS_VERSION_FORMULARIO_ID,FUS_CAMPO_CLAVE,FUS_FORMULA_VERSION_ID,FUS_FECHA_CREACION,FUS_USR_CREACION) VALUES(:id,:formVersion,:fieldKey,:formulaVersion,SYSDATE,:userId)",
                 P("id", id), P("formVersion", dto.VersionFormularioId), P("fieldKey", fieldKey), P("formulaVersion", dto.FormulaVersionId), P("userId", usuarioId));
             await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULA_USOS", id.ToString(), "INSERT", null, AuditJson(fieldKey, 0, "ACTIVE"), usuarioId, null, ip, Modulo);
+            await tx.CommitAsync(); return true;
+        }
+        catch { await tx.RollbackAsync(); throw; }
+    }
+
+    public async Task<bool> ReemplazarFormulaUsosAsync(long versionFormularioId, IReadOnlyList<CrearFormulaUsoDto> usos, long usuarioId, string? ip)
+    {
+        await using var c = _db.CreateConnection(); await c.OpenAsync(); await using var tx = c.BeginTransaction();
+        try
+        {
+            const string lockSql = "SELECT VER_ESTADO FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id FOR UPDATE";
+            {
+                await using var lockCommand = Command(lockSql, c, tx);
+                lockCommand.Parameters.Add(P("id", versionFormularioId));
+                await using var lockReader = await lockCommand.ExecuteReaderAsync();
+                if (!await lockReader.ReadAsync()) throw new KeyNotFoundException("La versión de formulario no existe.");
+                if (!lockReader.GetString(0).Equals("DRAFT", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("Los usos de fórmula solo pueden modificarse en una versión de formulario en borrador.");
+            }
+
+            var existingIds = new List<long>();
+            await using (var existingCommand = Command("SELECT FUS_ID FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id FOR UPDATE", c, tx))
+            {
+                existingCommand.Parameters.Add(P("id", versionFormularioId));
+                await using var existingReader = await existingCommand.ExecuteReaderAsync();
+                while (await existingReader.ReadAsync()) existingIds.Add(existingReader.GetInt64(0));
+            }
+
+            await Execute(c, tx, "DELETE FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id", P("id", versionFormularioId));
+            foreach (var existingId in existingIds)
+                await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULA_USOS", existingId.ToString(), "DELETE", null, AuditJson(versionFormularioId, 0, "REMOVED"), usuarioId, null, ip, Modulo);
+
+            foreach (var uso in usos)
+            {
+                var fieldKey = uso.CampoClave.Trim();
+                var id = await Next(c, tx, "SEQ_RL_MR_FORMULA_USOS");
+                await Execute(c, tx, "INSERT INTO RL_MR_FORMULA_USOS(FUS_ID,FUS_VERSION_FORMULARIO_ID,FUS_CAMPO_CLAVE,FUS_FORMULA_VERSION_ID,FUS_FECHA_CREACION,FUS_USR_CREACION) VALUES(:id,:formVersion,:fieldKey,:formulaVersion,SYSDATE,:userId)",
+                    P("id", id), P("formVersion", versionFormularioId), P("fieldKey", fieldKey), P("formulaVersion", uso.FormulaVersionId), P("userId", usuarioId));
+                await _auditoria.RegistrarAsync(c, tx, "RL_MR_FORMULA_USOS", id.ToString(), "INSERT", null, AuditJson(fieldKey, 0, "ACTIVE"), usuarioId, null, ip, Modulo);
+            }
+
             await tx.CommitAsync(); return true;
         }
         catch { await tx.RollbackAsync(); throw; }

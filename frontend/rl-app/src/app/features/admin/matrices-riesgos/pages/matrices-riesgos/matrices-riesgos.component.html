@@ -525,6 +525,7 @@
                           [puedePublicar]="!soloLecturaDefinicion() && versionActual.verEstado === 'DRAFT' && !versionActual.verVigente && esAdministrador()"
                           [procesando]="guardando()"
                           [operacion]="operacionBuilderEnCurso()"
+                          [formulasDisponibles]="formulasCentralDisponibles()"
                           (guardarJson)="definicionTecnica = $event; guardarDefinicion()"
                           (publicar)="publicarVersion(versionActual)"
                           (cerrar)="cerrarDefinicion()">

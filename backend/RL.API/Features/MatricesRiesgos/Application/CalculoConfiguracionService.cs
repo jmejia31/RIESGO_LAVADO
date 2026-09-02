@@ -66,9 +66,27 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         catch (Exception ex) { return Failure(ex); }
     }
 
+    public async Task<ServiceResult> ReemplazarFormulaUsosAsync(long versionFormularioId, ReemplazarFormulaUsosDto dto, long usuarioId, string? ip)
+    {
+        if (versionFormularioId <= 0 || dto is null) return ServiceResult.BadRequest("La versión de formulario y los usos son obligatorios.");
+        var usos = dto.Usos ?? new List<CrearFormulaUsoDto>();
+        var campos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var uso in usos)
+        {
+            if (uso.VersionFormularioId != 0 && uso.VersionFormularioId != versionFormularioId)
+                return ServiceResult.BadRequest("Todos los usos deben pertenecer a la versión de formulario indicada.");
+            if (uso.FormulaVersionId <= 0 || string.IsNullOrWhiteSpace(uso.CampoClave) || uso.CampoClave.Trim().Length > 150)
+                return ServiceResult.BadRequest("Cada uso requiere una versión de fórmula y un campo contractual válidos.");
+            if (!campos.Add(uso.CampoClave.Trim()))
+                return ServiceResult.BadRequest("No se permiten dos fórmulas para el mismo campo contractual.");
+        }
+        try { return await Changed(await _repository.ReemplazarFormulaUsosAsync(versionFormularioId, usos, usuarioId, ip)); }
+        catch (Exception ex) { return Failure(ex); }
+    }
+
     public async Task<ServiceResult> CambiarEstadoFormulaAsync(long id, CambiarEstadoConfiguracionDto dto, long usuarioId, string? ip)
     {
-        if (id <= 0 || !IsMasterState(dto.Estado)) return ServiceResult.BadRequest("Estado de fórmula inválido.");
+        if (id <= 0 || dto is null || !IsMasterState(dto.Estado)) return ServiceResult.BadRequest("Estado de fórmula inválido.");
         try { return await Changed(await _repository.CambiarEstadoFormulaAsync(id, dto.Estado.Trim().ToUpperInvariant(), dto.VersionRow, usuarioId, ip)); }
         catch (Exception ex) { return Failure(ex); }
     }
@@ -146,6 +164,7 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
     private static bool IsMasterState(string? state) => state?.Trim().ToUpperInvariant() is "ACTIVE" or "INACTIVE" or "RETIRED";
     private static async Task<ServiceResult> ChangeVersion(long id, CambiarEstadoConfiguracionDto dto, Func<long, string, int, Task<bool>> change)
     {
+        if (dto is null) return ServiceResult.BadRequest("El estado de versión es obligatorio.");
         if (dto.Estado?.Trim().Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase) == true)
             return ServiceResult.BadRequest("La publicación requiere validación del Publication Gate único.");
         if (id <= 0 || string.IsNullOrWhiteSpace(dto.Estado) || !VersionStates.Contains(dto.Estado)) return ServiceResult.BadRequest("Estado de versión inválido.");

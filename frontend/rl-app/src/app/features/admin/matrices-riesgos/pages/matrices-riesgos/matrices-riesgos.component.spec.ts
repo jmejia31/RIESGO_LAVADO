@@ -4,6 +4,7 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
+import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 
 describe('MatricesRiesgosComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -167,7 +168,8 @@ describe('MatricesRiesgosComponent', () => {
       imports: [MatricesRiesgosComponent],
       providers: [
         { provide: AuthService, useValue: { tieneRol: vi.fn().mockReturnValue(true) } },
-        { provide: MatricesRiesgosService, useValue: service }
+        { provide: MatricesRiesgosService, useValue: service },
+        { provide: CalculoConfiguracionService, useValue: { listarFormulas: vi.fn().mockReturnValue(of([])), reemplazarFormulaUsos: vi.fn().mockReturnValue(of({ success: true })) } }
       ]
     }).compileComponents();
 

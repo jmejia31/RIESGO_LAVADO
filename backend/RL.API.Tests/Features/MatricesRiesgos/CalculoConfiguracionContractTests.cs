@@ -191,4 +191,18 @@ public sealed class CalculoConfiguracionContractTests
         Assert.Contains("La publicación requiere validación del Publication Gate único.", service);
         Assert.DoesNotContain("formula-versiones/{id:long}/estado", Read("backend/RL.API/Features/MatricesRiesgos/CalculoConfiguracionController.cs"), StringComparison.OrdinalIgnoreCase);
     }
+
+    [Fact]
+    public void FormulaUsageReplacement_IsDraftOnlyAndAtomicAtTheUsageBoundary()
+    {
+        string controller = Read("backend/RL.API/Features/MatricesRiesgos/CalculoConfiguracionController.cs");
+        string repository = Read("backend/RL.API/Features/MatricesRiesgos/Persistence/CalculoConfiguracionRepository.cs");
+
+        Assert.Contains("formula-usos/versiones-formulario/{versionFormularioId:long}", controller, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ReemplazarFormulaUsosAsync", controller, StringComparison.Ordinal);
+        Assert.Contains("SELECT VER_ESTADO FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id FOR UPDATE", repository, StringComparison.Ordinal);
+        Assert.Contains("DELETE FROM RL_MR_FORMULA_USOS WHERE FUS_VERSION_FORMULARIO_ID=:id", repository, StringComparison.Ordinal);
+        Assert.Contains("await tx.CommitAsync()", repository, StringComparison.Ordinal);
+        Assert.Contains("await tx.RollbackAsync()", repository, StringComparison.Ordinal);
+    }
 }

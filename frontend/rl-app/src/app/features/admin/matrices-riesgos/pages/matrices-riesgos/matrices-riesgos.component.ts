@@ -1,8 +1,9 @@
 import { ApplicationRef, ChangeDetectionStrategy, Component, ComponentRef, EnvironmentInjector, HostListener, OnInit, OnDestroy, computed, createComponent, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription, forkJoin, of } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
 import {
   CampoFormulario,
   DefinicionFormularioEditable,
@@ -17,6 +18,8 @@ import {
   ValorRespuestaFormulario,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
+import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
+import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
 import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
@@ -48,6 +51,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
   private readonly globalState = inject(GlobalHttpStateService);
   private readonly authService = inject(AuthService);
+  private readonly calculoConfig = inject(CalculoConfiguracionService, { optional: true });
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private detalleFamiliaRef: ComponentRef<FamiliaDetalleModalComponent> | null = null;
@@ -243,6 +247,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly versionEditando = signal<VersionFormularioDto | null>(null);
   readonly soloLecturaDefinicion = signal<boolean>(false);
+  readonly formulasCentralDisponibles = signal<FormulaVersionSelectorOption[]>([]);
   definicionTecnica = '';
 
   readonly seccionesModal = computed(() => {
@@ -1479,12 +1484,40 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           versionAutoritativa.verEstado !== 'DRAFT'
         );
         this.definicionTecnica = this.formatearDefinicion(versionAutoritativa.verJson);
+        this.cargarFormulasCentrales();
       },
       error: error => {
         this.cargando.set(false);
         this.versionEditando.set(null);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo cargar la versión autoritativa del formulario.'));
       }
+    });
+  }
+
+  private cargarFormulasCentrales(): void {
+    if (!this.calculoConfig) return;
+    this.calculoConfig.listarFormulas(false).subscribe({
+      next: formulas => {
+        if (formulas.length === 0) { this.formulasCentralDisponibles.set([]); return; }
+        forkJoin(formulas.map(formula => this.calculoConfig!.listarFormulaVersiones(formula.id))).subscribe({
+          next: versiones => this.formulasCentralDisponibles.set(versiones.flatMap((lista, index) => lista
+            .filter(versionItem => versionItem.estado !== 'ARCHIVED' && versionItem.estado !== 'RETIRED')
+            .map(versionItem => ({
+              formulaId: formulas[index].id,
+              formulaVersionId: versionItem.id,
+              codigo: formulas[index].codigo,
+              nombre: formulas[index].nombre,
+              version: versionItem.version,
+              estado: versionItem.estado,
+              tipoResultado: versionItem.tipoResultado,
+              hash: versionItem.hash,
+              expresion: versionItem.expresion,
+              descripcion: formulas[index].descripcion
+            })))),
+          error: () => this.formulasCentralDisponibles.set([])
+        });
+      },
+      error: () => this.formulasCentralDisponibles.set([])
     });
   }
 
@@ -1507,34 +1540,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.operacionBuilderEnCurso.set('guardar');
     this.service.actualizarBorradorFormulario(version.verId, jsonEnviado).subscribe({
       next: () => {
-        this.service.obtenerVersionFormulario(version.verId).subscribe({
-          next: versionPersistida => {
+        this.sincronizarUsosFormula(version.verId, jsonEnviado).subscribe({
+          next: () => this.verificarDefinicionPersistida(version, jsonEnviado),
+          error: error => {
             this.guardando.set(false);
             this.operacionBuilderEnCurso.set(null);
-            const sonEquivalentes = sonJsonSemanticamenteEquivalentes(
-              jsonEnviado,
-              versionPersistida.verJson
-            );
-
-            if (!sonEquivalentes) {
-              this.mostrarError('La persistencia recuperada del servidor no coincide semánticamente con la definición enviada.');
-              return;
-            }
-
-            this.versionEditando.set(null);
-            this.globalState.limpiarError();
-            this.mostrarMensaje('Definición del formulario actualizada y verificada correctamente.');
-            this.cargarVersiones();
-          },
-          error: getError => {
-            this.guardando.set(false);
-            this.operacionBuilderEnCurso.set(null);
-            this.mostrarError(
-              this.obtenerMensajeError(
-                getError,
-                'No se pudo verificar la persistencia de la versión del formulario tras guardar.'
-              )
-            );
+            this.mostrarError(this.obtenerMensajeError(error, 'No se pudieron actualizar los usos de fórmula del borrador.'));
           }
         });
       },
@@ -1544,6 +1555,47 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo actualizar la definición del formulario.'));
       }
     });
+  }
+
+  private verificarDefinicionPersistida(version: VersionFormularioDto, jsonEnviado: string): void {
+    this.service.obtenerVersionFormulario(version.verId).subscribe({
+      next: versionPersistida => {
+        this.guardando.set(false);
+        this.operacionBuilderEnCurso.set(null);
+        const sonEquivalentes = sonJsonSemanticamenteEquivalentes(jsonEnviado, versionPersistida.verJson);
+
+        if (!sonEquivalentes) {
+          this.mostrarError('La persistencia recuperada del servidor no coincide semánticamente con la definición enviada.');
+          return;
+        }
+
+        this.versionEditando.set(null);
+        this.globalState.limpiarError();
+        this.mostrarMensaje('Definición del formulario actualizada y verificada correctamente.');
+        this.cargarVersiones();
+      },
+      error: getError => {
+        this.guardando.set(false);
+        this.operacionBuilderEnCurso.set(null);
+        this.mostrarError(this.obtenerMensajeError(getError, 'No se pudo verificar la persistencia de la versión del formulario tras guardar.'));
+      }
+    });
+  }
+
+  private sincronizarUsosFormula(versionFormularioId: number, json: string): Observable<unknown> {
+    if (!this.calculoConfig || typeof this.calculoConfig.reemplazarFormulaUsos !== 'function') return of(null);
+    return this.calculoConfig.reemplazarFormulaUsos(versionFormularioId, this.extraerUsosFormula(versionFormularioId, json));
+  }
+
+  private extraerUsosFormula(versionFormularioId: number, json: string): CrearFormulaUsoDto[] {
+    const modelo = normalizarJsonABuilderModel(json);
+    return modelo.secciones.flatMap(seccion => seccion.campos)
+      .filter((campo): campo is typeof campo & { formulaVersionId: number } => campo.tipo === 'formula' && Number.isInteger(campo.formulaVersionId) && (campo.formulaVersionId ?? 0) > 0)
+      .map(campo => ({
+        versionFormularioId,
+        campoClave: campo.clave.trim(),
+        formulaVersionId: campo.formulaVersionId
+      }));
   }
 
   publicarVersion(version: VersionFormularioDto): void {
