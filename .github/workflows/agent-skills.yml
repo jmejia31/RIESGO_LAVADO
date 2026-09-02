@@ -15,16 +15,9 @@ on:
       - "docs/0.0 Documentación/ACTIVACION_AGENT_SKILLS.md"
       - ".github/workflows/agent-skills.yml"
   pull_request:
-    paths:
-      - ".agents/skills/**"
-      - "AGENTS.md"
-      - ".agents/AGENTS.md"
-      - ".githooks/**"
-      - "tools/validate_agent_skills.py"
-      - "tools/activate_agent_skills.ps1"
-      - "tools/activate_agent_skills.sh"
-      - "docs/0.0 Documentación/ACTIVACION_AGENT_SKILLS.md"
-      - ".github/workflows/agent-skills.yml"
+    branches:
+      - main
+      - desarrollo
   workflow_dispatch:
 
 permissions:
