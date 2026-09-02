@@ -8,14 +8,22 @@ on:
       - ".agents/skills/**"
       - "AGENTS.md"
       - ".agents/AGENTS.md"
+      - ".githooks/**"
       - "tools/validate_agent_skills.py"
+      - "tools/activate_agent_skills.ps1"
+      - "tools/activate_agent_skills.sh"
+      - "docs/0.0 Documentación/ACTIVACION_AGENT_SKILLS.md"
       - ".github/workflows/agent-skills.yml"
   pull_request:
     paths:
       - ".agents/skills/**"
       - "AGENTS.md"
       - ".agents/AGENTS.md"
+      - ".githooks/**"
       - "tools/validate_agent_skills.py"
+      - "tools/activate_agent_skills.ps1"
+      - "tools/activate_agent_skills.sh"
+      - "docs/0.0 Documentación/ACTIVACION_AGENT_SKILLS.md"
       - ".github/workflows/agent-skills.yml"
   workflow_dispatch:
 
@@ -37,3 +45,28 @@ jobs:
 
       - name: Validate Agent Skills specification
         run: python tools/validate_agent_skills.py
+
+      - name: Validate activation shell scripts and hooks
+        shell: bash
+        run: |
+          bash -n tools/activate_agent_skills.sh
+          sh -n .githooks/pre-commit
+          sh -n .githooks/pre-push
+          test -x tools/activate_agent_skills.sh
+          test -x .githooks/pre-commit
+          test -x .githooks/pre-push
+
+      - name: Validate PowerShell activation syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/activate_agent_skills.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
