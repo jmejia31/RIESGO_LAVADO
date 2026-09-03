@@ -802,6 +802,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 ## Estado vigente - Fase 3.1.5 fórmulas institucionales
 
+## Estado vigente - Cierre final FASE 3.1.5 y FASE 3.1
+
+- Fecha/hora local: 2026-09-03 08:41 (UTC-06). Rama `desarrollo`. Base de cierre `804bff16b81255d661a8f52279fea285e7218784`.
+- Oracle final: TCP PASS; SQL*Plus read-only PASS; POSTCHECK 26 ejecutado una sola vez, SHA `58823DFB93BED19EA0D347BC3668C3059E01534BA5A2635580A56C53C81F42A8`, ExitCode `0`, status `PASS`.
+- Conteos: fórmulas `34/34`, usos `0`; funciones `10`, versiones `10`, argumentos `18`; parámetros `3`, versiones `3`; hashes válidos `34/34`, `10/10`, `3/3`; inválidos/huérfanos/duplicados/referencias/objetos/constraints/histórico `0`.
+- DDL 28 y DML 25 permanecen sin reejecución; DML 25 conserva ExitCode 0; recovery 27 jamás ejecutado. `ORACLE_315_CERTIFIED=TRUE`.
+- Seguridad y regresión: `fast-uri=3.1.6`; npm audit `HIGH=0`, `CRITICAL=0`; frontend `716/716`; E2E `29/29`; lint/build PASS. Pendiente únicamente publicar el commit documental final y certificar su Quality Gate exacto.
+- Estado objetivo: `3.1.5=CERRADA/CERTIFICADA/FINAL`; `FASE_3.1=CERRADA/CERTIFICADA/FINAL`, solo después de verificar publicación y Quality Gate final.
+
 - Fecha/hora local: 2026-09-02 15:59 (UTC-06). Rama `desarrollo`. Baseline `9308b9a670c7444b3f3355c58c4dc51ef1bd1a97`; commit técnico `82787eb30b175f47b6244b8adf345c0c6baeafde`.
 - Estado: `3.1.5=IMPLEMENTADA/VALIDADA_LOCALMENTE/BLOQUEADA_EXTERNAMENTE_EN_CERTIFICACION_ORACLE`; `FASE_3.1=EN_PROGRESO`. No se declara cierre.
 - Paridad: `FORMULAS_INSTITUCIONALES=34/34`; `FORMULA_DATASET_DML_PARITY=34/34`; expectedByField exacto de 34 resultados; `MIN`, `AND`, `LOOKUP`; pesos `PESO_PREVENTIVO=0.70`, `PESO_DETECTIVO=0.15`, `PESO_CORRECTIVO=0.15`.

@@ -5,9 +5,8 @@
 - Baseline: `9308b9a670c7444b3f3355c58c4dc51ef1bd1a97`.
 - Rama: `desarrollo`.
 - Commit técnico: `82787eb30b175f47b6244b8adf345c0c6baeafde`.
-- Estado: `IMPLEMENTADA / VALIDADA LOCALMENTE / BLOQUEADA EXTERNAMENTE EN CERTIFICACIÓN ORACLE`.
-- `FASE_3.1=EN_PROGRESO`.
-- No se declara cierre final mientras `ORACLE_315_CERTIFIED=FALSE`.
+- Estado: `CERRADA / CERTIFICADA / FINAL`.
+- `FASE_3.1=CERRADA / CERTIFICADA / FINAL`.
 
 ## Alcance y paridad
 
@@ -87,3 +86,15 @@ El bloqueo fue `System.Net.Sockets.SocketException / AccessDenied` al abrir el s
 ## Continuación
 
 Queda pendiente resolver puntualmente la vulnerabilidad `HIGH` de `fast-uri` antes del Quality Gate remoto final y repetir exclusivamente el postcheck 26 read-only cuando Oracle permita conexión. Hasta entonces, 3.1.5 no se declara cerrada y FASE 3.1 permanece `EN_PROGRESO`.
+
+## Actualización de cierre Oracle y FASE 3.1
+
+- Fecha/hora local: 2026-09-03 08:41 (UTC-06).
+- Seguridad npm completada: `fast-uri` pasó de `3.1.5` a `3.1.6`; `NPM_AUDIT_HIGH=0`; `NPM_AUDIT_CRITICAL=0`; Quality Gate previo `33766574874` terminó `completed/success` sobre `804bff16b81255d661a8f52279fea285e7218784`.
+- Conectividad: `TCP_CONNECTIVITY=PASS`; SQL*Plus `11.2.0.3.0` conectó con `SQLPLUS_CONNECTIVITY_EXITCODE=0`; no se modificaron políticas del sistema ni red.
+- Postcheck: SHA-256 `58823DFB93BED19EA0D347BC3668C3059E01534BA5A2635580A56C53C81F42A8`; `POSTCHECK_26_EXITCODE=0`; `POSTCHECK_26_STATUS=PASS`; ejecución única read-only.
+- Evidencia institucional: `FORMULAS=34`, `FORMULA_VERSIONES=34`, `FORMULA_USOS=0`; `FUNCIONES=10`, `FUNCION_VERSIONES=10`, `FUNCION_ARGUMENTOS=18`; `PARAMETROS=3`, `PARAMETRO_VERSIONES=3`. `CK_RL_MR_FUA_TYPE=ENABLED`; hashes de fórmulas/funciones/parámetros válidos `34/34`, `10/10`, `3/3`; `INVALID_HASHES=0`.
+- Integridad: `INVALID_NATIVE_HANDLERS=0`, `INVALID_FUNCTION_ARGUMENTS=0`, `INVALID_ARGUMENT_TYPES=0`; todos los huérfanos y duplicados `0`; `INVALID_SEMANTIC_SOURCE_REFERENCES=0`; `INVALID_OBJECTS=0`; `DISABLED_CONSTRAINTS=0`; `HISTORICAL_MUTATIONS=0`; `STANDARD_HASH_OCCURRENCES=0`; `ORACLE_11G_IDENTIFIER_LENGTH_VIOLATIONS=0`.
+- Transición Oracle: DDL 28 aplicado una sola vez; el primer intento de DML 25 falló antes de persistir por `STANDARD_HASH` incompatible con Oracle 11.2.0.1; DML 25 corregido terminó `ExitCode=0`; el primer postcheck falló por identificador Oracle 11g demasiado largo y fue corregido. No se reejecutaron DDL/DML y recovery 27 jamás se ejecutó.
+- Regresión publicada: frontend `716/716`, E2E `29/29`, lint/build PASS, `NPM_CI_EXITCODE=0`, audit HIGH/CRITICAL `0/0`. No se repitieron suites funcionales completas porque el código no cambió después del SHA certificado; el cierre final queda sujeto al Quality Gate del commit documental final.
+- Estado final: `FASE_3.1.5=CERRADA/CERTIFICADA/FINAL`; `FASE_3.1=CERRADA/CERTIFICADA/FINAL`; `ORACLE_315_CERTIFIED=TRUE`.

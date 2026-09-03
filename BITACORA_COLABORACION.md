@@ -6632,6 +6632,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervención - Codex - Fase 3.1.5 fórmulas institucionales
 
+## Registro de cierre - Codex - Certificación final FASE 3.1.5 y FASE 3.1
+
+- Fecha/hora local: 2026-09-03 08:41 (UTC-06). Rama `desarrollo`. Base de cierre `804bff16b81255d661a8f52279fea285e7218784`.
+- Oracle recuperado sin cambios de infraestructura: TCP PASS; SQL*Plus read-only PASS con ExitCode 0; POSTCHECK 26 ejecutado una sola vez con SHA `58823DFB93BED19EA0D347BC3668C3059E01534BA5A2635580A56C53C81F42A8` y ExitCode 0.
+- Postcheck: fórmulas `34`, versiones `34`, usos `0`; funciones `10`, versiones `10`, argumentos `18`; parámetros `3`, versiones `3`; hashes válidos `34/34`, `10/10`, `3/3`; inválidos, huérfanos, duplicados, referencias, objetos, constraints e histórico: `0`.
+- Transición preservada: DDL 28 aplicado previamente una vez; DML 25 corregido aplicado previamente con ExitCode 0; no se reejecutaron DDL/DML; recovery 27 jamás ejecutado.
+- Seguridad/regresión heredada certificada: `fast-uri=3.1.6`, npm audit HIGH/CRITICAL `0/0`, frontend `716/716`, E2E `29/29`, lint/build PASS. El Quality Gate final se verificará sobre el commit documental de cierre, no sobre un SHA anterior.
+- Estado autorizado tras esta evidencia: `3.1.5=CERRADA/CERTIFICADA/FINAL`; `FASE_3.1=CERRADA/CERTIFICADA/FINAL`, sujeto a publicación y Quality Gate del SHA documental final.
+
 - Fecha/hora local: 2026-09-02 15:59 (UTC-06). Autor: Codex. Rama `desarrollo`. Baseline `9308b9a670c7444b3f3355c58c4dc51ef1bd1a97`.
 - Alcance: paridad institucional Excel/DML para 34 fórmulas, pinning exacto de `FormulaVersion`, resultados `NUMBER/DECIMAL`, semántica `Blank`/`""`, handlers nativos anidados y rechazo de recursión compuesta. Oracle no se ejecutó.
 - Dataset/paridad: `FORMULAS_INSTITUCIONALES=34/34`; `FORMULA_DATASET_DML_PARITY=34/34`; expectedByField exacto de 34 resultados; `MIN`, `AND`, `LOOKUP`; pesos `0.70/0.15/0.15`.
