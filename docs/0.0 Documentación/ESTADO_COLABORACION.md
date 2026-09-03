@@ -876,3 +876,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Riesgos heredados: validador estructural reporta tres hallazgos legacy fuera de esta intervencion; fetch no pudo escribir `.git/FETCH_HEAD` por permisos. No se hizo pull, no se toco Oracle y los tres untracked preexistentes se preservan.
 - Punto exacto: staging/commit documental, push solo a `origin/desarrollo`, verificacion HEAD remoto y Quality Gate del SHA final exacto. No iniciar Fase 5.
 - Las variantes históricas se conservan por integridad de la bitácora; esta es la definición consolidada vigente.
+
+## Estado vigente - Corrección visual FASE 4 pendiente de UAT
+
+- Fecha/hora local: `2026-09-03 14:49 UTC-06`. Autor: `COD` / `CODEX`; cliente: `CLI`. Rama: `desarrollo`.
+- `BASELINE=367fb478f2b1657ba360a0ce69334018abcb231b`; `CORRECTIVE_SHA=9d0588327d8e6b2ef5d32a5df6d4cd564f58cc07`, publicado en `origin/desarrollo`.
+- `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_4_UX_VISUAL=PENDIENTE_APROBACION_USUARIO`; `FASE_4_ESTADO=EN_VALIDACION_VISUAL`; `FASE_4_FINAL=NO`; `FASE_5_HABILITADA=FALSE`.
+- Corrección focal: Configuración de Cálculo ahora usa toolbar contextual, master/detail adaptativo, detalle solo con selección, dossier útil para Reglas, master/detail de Catálogos, identidad de Funciones sin duplicación y estados vacíos compactos. No se modificaron backend, Oracle, dependencias, manifests, lockfile, tsconfig, contratos ni arquitectura.
+- Evidencia técnica: TSC PASS; Vitest `718/718`; lint/build PASS; E2E `29/29`; backend `591/591`, `FAIL=0`; audit `HIGH=0`, `CRITICAL=0`; DB/documentation/skills/diff PASS.
+- Evidencia visual: capturas internas de layout generadas con fixture no son aceptación. El backend local real respondió `401` sin sesión autorizada; QA visual con datos reales y aprobación expresa del usuario permanecen pendientes.
+- Punto de continuación: obtener una sesión autorizada para capturas reales de Fórmulas, detalle, Funciones, Parámetros, Reglas y Catálogos en `1920x1080`, `1536x1024`, `1366x768` y tablet; después solicitar UAT visual. No iniciar FASE 5.

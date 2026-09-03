@@ -85,3 +85,15 @@ La validacion automatica responsive cubre el comportamiento existente del Builde
 ## Estado de cierre
 
 La implementacion tecnica Fase 4 esta validada localmente y publicada en el commit tecnico indicado. El cierre formal de fase depende de confirmar el push y el Quality Gate remoto del SHA final; el resultado se registrara en la bitacora y el estado colaborativo sin reutilizar runs de otro SHA.
+
+## Reapertura exclusiva de aceptación visual - corrección UX
+
+- Fecha/hora local: `2026-09-03 14:49 UTC-06`. Autor: `COD` / `CODEX`; cliente: `CLI`.
+- Motivo: la UAT visual posterior determinó que la entrega anterior aún presentaba apariencia CRUD, panel de detalle vacío, contenedores redundantes, espacio muerto en Reglas y una cuadrícula de tarjetas en Catálogos. Esta reapertura no reabre la arquitectura FASE 3.1 ni la funcionalidad certificada.
+- Baseline de trabajo: `367fb478f2b1657ba360a0ce69334018abcb231b`. Commit correctivo publicado: `9d0588327d8e6b2ef5d32a5df6d4cd564f58cc07`.
+- Corrección aplicada únicamente en Configuración de Cálculo: toolbar contextual por pestaña e inclusión de inactivas contextualizada; listado adaptativo que ocupa el ancho cuando no hay selección; detalle dinámico solo con selección; identidad de Funciones sin repetir código/nombre; dossier compacto para Reglas; master/detail para Catálogos y sus elementos; estados vacíos proporcionales; responsive y focus states scoped.
+- Archivos correctivos: `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/configuracion-calculo/configuracion-calculo.component.html`, `.scss`, `.ts` y `.spec.ts`.
+- Invariantes: `NEW_ENGINE=0`, `NEW_PUBLICATION_GATE=0`, `NEW_AUDIT_SYSTEM=0`, `NEW_CATALOG_SYSTEM=0`, `NEW_RULE_SYSTEM=0`, `NEW_TABLES=0`, `NEW_ENDPOINTS=0`, `RBAC_CHANGES=0`, `DYNAMIC_EXECUTION=0`, `HISTORICAL_MUTATIONS=0`; `VER_ID_27_28_MUTATIONS=0`; `VER_ID_24_53_REGRESSION=0`; Builder sin renderer/serializer/normalizer paralelo y FormulaVersion preservada.
+- Validación técnica ejecutada: TSC E2E/spec PASS; Vitest `718/718 PASS`; lint PASS; build PASS; Playwright `29/29 PASS`; backend Release `591/591 PASS`, `FAIL=0`; DB scripts PASS; documentación PASS; Agent Skills `14/14 PASS`; `git diff --check` PASS; npm audit repetido con acceso aprobado, `HIGH=0`, `CRITICAL=0`.
+- QA visual: se generaron capturas internas de layout con fixture para revisar la intervención, pero no se consideran UAT ni aceptación. La navegación contra el backend local real respondió `401` en los endpoints de Matrices sin una sesión autorizada; por tanto las capturas reales con datos institucionales y la aprobación visual del usuario quedan pendientes.
+- Estado vigente y fail-closed: `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_4_UX_VISUAL=PENDIENTE_APROBACION_USUARIO`; `FASE_4_ESTADO=EN_VALIDACION_VISUAL`; `FASE_4_FINAL=NO`; `FASE_5_HABILITADA=FALSE`.
