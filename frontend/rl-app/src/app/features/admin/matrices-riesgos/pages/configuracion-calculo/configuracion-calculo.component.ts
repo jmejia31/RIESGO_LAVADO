@@ -26,7 +26,7 @@ import {
   ParametroDto,
   ParametroVersionDto
 } from '../../models/calculo-configuracion.models';
-import { MetodologiaFormulario } from '../../models/matrices-riesgos.models';
+import { CatalogoMatrices, MetodologiaFormulario } from '../../models/matrices-riesgos.models';
 
 type ConfigTab = 'formulas' | 'funciones' | 'parametros' | 'reglas' | 'catalogos';
 
@@ -95,6 +95,7 @@ export class ConfiguracionCalculoComponent implements OnInit {
   readonly funcionArgumentos = signal<FuncionArgumentoDto[]>([]);
   readonly parametroSeleccionado = signal<ParametroDto | null>(null);
   readonly parametroVersiones = signal<ParametroVersionDto[]>([]);
+  readonly catalogoSeleccionado = signal<CatalogoMatrices | null>(null);
   readonly handlerKeys = ['IF_V1', 'IFERROR_V1', 'ROUND_V1', 'ROUNDDOWN_V1', 'MAX_V1', 'MIN_V1', 'MOD_V1', 'OR_V1', 'AND_V1', 'LOOKUP_V1'];
 
   readonly modoFormula = signal<'none' | 'create' | 'version' | 'edit'>('none');
@@ -204,6 +205,10 @@ export class ConfiguracionCalculoComponent implements OnInit {
       next: versiones => this.parametroVersiones.set(versiones),
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el detalle del parámetro.'))
     });
+  }
+
+  seleccionarCatalogo(item: CatalogoMatrices): void {
+    this.catalogoSeleccionado.set(item);
   }
 
   cargarParametroVersion(version: ParametroVersionDto): void {

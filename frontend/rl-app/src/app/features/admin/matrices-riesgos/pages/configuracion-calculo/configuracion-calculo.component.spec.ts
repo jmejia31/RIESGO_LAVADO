@@ -22,7 +22,7 @@ describe('ConfiguracionCalculoComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [ConfiguracionCalculoComponent], providers: [
       { provide: CalculoConfiguracionService, useValue: config },
-      { provide: MatricesRiesgosService, useValue: { metodologiaVigente: vi.fn(() => of({ versionFormularioId: 1, codigo: 'FORM', version: 1, secciones: [], catalogos: [], reglas: [] })) } }
+      { provide: MatricesRiesgosService, useValue: { metodologiaVigente: vi.fn(() => of({ versionFormularioId: 1, codigo: 'FORM', version: 1, secciones: [], catalogos: [{ codigo: 'CAT_RIESGO', nombre: 'Niveles de riesgo', elementos: [{ codigo: 'ALTO', valor: 'Alto', orden: 1 }] }], reglas: [{ codigo: 'RULE_VRI', version: '1.0', algoritmoId: 'ALG_VRI' }] })) } }
     ] }).compileComponents();
     fixture = TestBed.createComponent(ConfiguracionCalculoComponent);
     component = fixture.componentInstance;
@@ -54,5 +54,22 @@ describe('ConfiguracionCalculoComponent', () => {
     component.cambiarEstadoVersion('function', { id: 2, versionRow: 1, estado: 'APPROVED' } as never, 'PUBLISHED');
     expect(config.cambiarEstadoFuncionVersion).not.toHaveBeenCalled();
     expect(component.error()).toContain('Publication Gate');
+  });
+
+  it('reserva el detalle solo cuando existe una selección', () => {
+    const layout = () => fixture.nativeElement.querySelector('.config-data-layout') as HTMLElement;
+    expect(layout().classList.contains('has-selection')).toBe(false);
+    component.seleccionarFormula(component.formulas()[0]);
+    fixture.detectChanges();
+    expect(layout().classList.contains('has-selection')).toBe(true);
+  });
+
+  it('presenta catálogos como master/detail con sus elementos reales', () => {
+    component.seleccionarTab('catalogos');
+    component.seleccionarCatalogo(component.metodologia()!.catalogos[0]);
+    fixture.detectChanges();
+    expect(component.catalogoSeleccionado()?.codigo).toBe('CAT_RIESGO');
+    expect(fixture.nativeElement.querySelector('.catalog-layout.has-selection')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('Alto');
   });
 });
