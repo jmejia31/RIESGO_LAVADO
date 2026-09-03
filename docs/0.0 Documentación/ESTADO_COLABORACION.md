@@ -859,3 +859,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Cod/Codex: desarrollo, mantenimiento, pruebas y asistencia tecnica.
 - Chat/ChatGPT: analisis, diseno, desarrollo, revision integral y coordinacion de continuidad.
 - La colaboracion permanece gobernada por `AGENTS.md`, `.agents/AGENTS.md` y las Agent Skills compartidas.
+## Estado vigente - Nomenclatura oficial de colaboradores
+
+- `COD = CODEX`; `CHAT = CHATGPT`; `ANTIG = ANTIGRAVITY`.
+- `CODEX_CLI_AS_SEPARATE_AGENT=FALSE`; Codex CLI es una superficie de Codex y `COD_INCLUDES_CODEX_CLI=TRUE`.
+- `COD C` y `COD_C` no son identificadores oficiales. `ANTIG` siempre significa `ANTIGRAVITY`.
+- Las variantes históricas se conservan por integridad de la bitácora; esta es la definición consolidada vigente.

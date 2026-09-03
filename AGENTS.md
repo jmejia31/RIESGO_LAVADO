@@ -14,6 +14,22 @@
 
 ## 1. Integrantes y responsabilidad
 
+### Nomenclatura oficial de colaboradores
+
+La codificacion corta oficial para trazabilidad, handoffs y registros operativos es:
+
+```text
+COD   = CODEX
+CHAT  = CHATGPT
+ANTIG = ANTIGRAVITY
+```
+
+- `COD` identifica a Codex como colaborador.
+- Codex CLI es una interfaz o cliente mediante el cual puede operar Codex; no constituye un colaborador independiente.
+- Una ejecución desde Codex CLI mantiene la autoría `COD`. La superficie puede registrarse opcionalmente como metadata secundaria: `CLIENTE=CLI`.
+- No deben utilizarse `COD C` ni `COD_C` como identificadores de colaborador.
+- `ANTIG` siempre significa `ANTIGRAVITY`.
+
 - **Antigravity**: pair programming, arquitectura, refactorización y verificación técnica.
 - **Codex**: desarrollo, mantenimiento, pruebas y asistencia técnica.
 - **ChatGPT**: análisis, diseño, desarrollo, revisión integral y coordinación de continuidad.

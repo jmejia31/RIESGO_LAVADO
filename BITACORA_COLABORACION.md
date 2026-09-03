@@ -6679,3 +6679,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - `COD=CODEX`; `COD C` es la identidad operativa asignada a este agente en la continuidad actual: responsable de desarrollo, mantenimiento, pruebas y asistencia tecnica.
 - `CHAT=CHATGPT`: responsable de analisis, diseno, desarrollo, revision integral y coordinacion de continuidad.
 - Las tres identidades trabajan bajo `AGENTS.md`, `.agents/AGENTS.md` y las Agent Skills compartidas. Esta entrada no abre una fase ni cambia la arquitectura, el codigo, Oracle, las dependencias o `main`.
+## Registro de normalizacion - Nomenclatura oficial de colaboradores multiagente
+
+- Fecha: 2026-09-03 (UTC-06). Rama `desarrollo`. Cambio exclusivamente documental.
+- Nomenclatura oficial vigente: `COD = CODEX`; `CHAT = CHATGPT`; `ANTIG = ANTIGRAVITY`.
+- Codex CLI es una superficie o cliente de Codex y no un colaborador separado. Una intervencion desde Codex CLI conserva la autoria `COD`; opcionalmente puede registrarse `CLIENTE=CLI` como metadata secundaria.
+- `COD C` y `COD_C` quedan descartados como identificadores oficiales de colaborador. Si una entrada historica anterior usa una variante distinta, se conserva por integridad historica; esta entrada constituye la definicion vigente desde este punto.
+- La grafia correcta es `ANTIGRAVITY`, nunca `ANTIGARVITY`.
