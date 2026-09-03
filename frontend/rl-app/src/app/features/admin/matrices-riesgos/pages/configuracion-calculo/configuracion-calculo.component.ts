@@ -68,6 +68,7 @@ interface ParameterDraftForm {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './configuracion-calculo.component.html',
+  styleUrl: './configuracion-calculo.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConfiguracionCalculoComponent implements OnInit {

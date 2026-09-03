@@ -20,6 +20,7 @@ type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo' | 'configura
     ConfiguracionCalculoComponent
   ],
   templateUrl: './matrices-riesgos-ciclo-integral.component.html',
+  styleUrl: './matrices-riesgos-ciclo-integral.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MatricesRiesgosCicloIntegralComponent {

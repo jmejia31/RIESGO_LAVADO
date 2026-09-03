@@ -45,6 +45,7 @@ type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
   standalone: true,
   imports: [CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
   templateUrl: './matrices-riesgos.component.html',
+  styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MatricesRiesgosComponent implements OnInit, OnDestroy {

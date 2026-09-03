@@ -1,0 +1,128 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.calculation-workspace {
+  --workspace-ink: #0f1f3d;
+  --workspace-muted: #60708a;
+  --workspace-line: #dbe4f0;
+  color: var(--workspace-ink);
+}
+
+.calculation-workspace__header {
+  border-color: var(--workspace-line) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgb(29 78 216 / 0.1), transparent 30%),
+    linear-gradient(135deg, #ffffff 0%, #f7faff 100%) !important;
+  box-shadow: 0 14px 35px rgb(30 58 138 / 0.07) !important;
+}
+
+.calculation-workspace__header h2 {
+  letter-spacing: -0.03em;
+  color: var(--workspace-ink) !important;
+}
+
+.calculation-workspace__header > div > div > p:last-child {
+  color: var(--workspace-muted) !important;
+}
+
+.calculation-workspace__header nav {
+  border-color: var(--workspace-line) !important;
+  gap: 0.35rem !important;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.calculation-workspace__header nav::-webkit-scrollbar {
+  display: none;
+}
+
+.calculation-workspace__header nav button {
+  flex: 0 0 auto;
+  min-height: 2.6rem;
+  border-color: transparent !important;
+  border-radius: 0.7rem !important;
+  color: var(--workspace-muted) !important;
+  font-size: 0.8rem;
+}
+
+.calculation-workspace__header nav button:hover {
+  background: #eaf1fb !important;
+  color: var(--workspace-ink) !important;
+}
+
+.calculation-workspace__header nav button.bg-blue-600 {
+  background: var(--workspace-ink) !important;
+  color: #ffffff !important;
+  box-shadow: 0 5px 14px rgb(15 31 61 / 0.16);
+}
+
+.calculation-workspace > div > section,
+.calculation-workspace > div > div > section {
+  border-color: var(--workspace-line) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 10px 26px rgb(15 31 61 / 0.05) !important;
+}
+
+.calculation-workspace > div.grid {
+  gap: 0.85rem !important;
+}
+
+.calculation-workspace section h3 {
+  color: var(--workspace-ink) !important;
+  letter-spacing: -0.015em;
+}
+
+.calculation-workspace section > div:first-child,
+.calculation-workspace section > header {
+  border-color: var(--workspace-line) !important;
+}
+
+.calculation-workspace input,
+.calculation-workspace select,
+.calculation-workspace textarea {
+  border-color: #cbd7e6 !important;
+  border-radius: 0.65rem !important;
+  color: var(--workspace-ink);
+}
+
+.calculation-workspace input:focus,
+.calculation-workspace select:focus,
+.calculation-workspace textarea:focus {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 0.14);
+  outline: none;
+}
+
+.calculation-workspace table thead {
+  background: #f7f9fc;
+  color: #53647d;
+}
+
+.calculation-workspace table th {
+  border-color: var(--workspace-line) !important;
+  font-size: 0.66rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.calculation-workspace table tbody tr:hover {
+  background: #f8fbff;
+}
+
+.calculation-workspace > .rounded-2xl[role='alert'],
+.calculation-workspace > .rounded-2xl[role='status'] {
+  border-radius: 0.8rem !important;
+}
+
+@media (max-width: 640px) {
+  .calculation-workspace__header {
+    padding: 1rem !important;
+  }
+
+  .calculation-workspace > div > section,
+  .calculation-workspace > div > div > section {
+    border-radius: 0.85rem !important;
+  }
+}
