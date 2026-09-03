@@ -6672,3 +6672,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Incidente histórico: `fast-uri=3.1.5` presentó `HIGH`; se corrigió quirúrgicamente mediante override a `fast-uri=3.1.6`. NPM audit final: `HIGH=0`, `CRITICAL=0`.
 - Quality Gate general final: `RUN=33768618747`; `STATUS=completed`; `CONCLUSION=success`; `HEAD_SHA=b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
 - Estado final: `PENDING_AGENT_SKILLS=0`; `FASE_3.1=CERRADA/CERTIFICADA/FINAL`.
+## Registro de continuidad - Identidades operativas del equipo
+
+- Fecha/hora local: 2026-09-03 (UTC-06). Rama `desarrollo`. Se documenta la nomenclatura operativa compartida del equipo.
+- `ANTIG=ANTIGRAVITY`: responsable de pair programming, arquitectura, refactorizacion y verificacion tecnica.
+- `COD=CODEX`; `COD C` es la identidad operativa asignada a este agente en la continuidad actual: responsable de desarrollo, mantenimiento, pruebas y asistencia tecnica.
+- `CHAT=CHATGPT`: responsable de analisis, diseno, desarrollo, revision integral y coordinacion de continuidad.
+- Las tres identidades trabajan bajo `AGENTS.md`, `.agents/AGENTS.md` y las Agent Skills compartidas. Esta entrada no abre una fase ni cambia la arquitectura, el codigo, Oracle, las dependencias o `main`.

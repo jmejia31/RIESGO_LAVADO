@@ -851,3 +851,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `FAST_URI=3.1.6`; `NPM_AUDIT_HIGH=0`; `NPM_AUDIT_CRITICAL=0`.
 - `QUALITY_GATE_RUN=33768618747`; `QUALITY_GATE_CONCLUSION=success`; SHA validado: `b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
 - `FASE_3_1=CERRADA/CERTIFICADA/FINAL`; `PENDING_AGENT_SKILLS=0`.
+## Estado vigente - Identidades operativas del equipo
+
+- `AGENTE_ACTIVO=COD C` (`Codex`).
+- `ANTIG=ANTIGRAVITY`; `COD=CODEX`; `CHAT=CHATGPT`.
+- Antig/Antigravity: pair programming, arquitectura, refactorizacion y verificacion tecnica.
+- Cod/Codex: desarrollo, mantenimiento, pruebas y asistencia tecnica.
+- Chat/ChatGPT: analisis, diseno, desarrollo, revision integral y coordinacion de continuidad.
+- La colaboracion permanece gobernada por `AGENTS.md`, `.agents/AGENTS.md` y las Agent Skills compartidas.
