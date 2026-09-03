@@ -8,6 +8,7 @@
 > 2. [`BITACORA_COLABORACION.md`](../BITACORA_COLABORACION.md).
 > 3. [`docs/0.0 Documentación/ESTADO_COLABORACION.md`](../docs/0.0%20Documentación/ESTADO_COLABORACION.md).
 > 4. `README.md` y la documentación específica del módulo que será intervenido.
+> 5. [`Agent Skills compartidas`](../.agents/skills/README.md) y las `SKILL.md` que correspondan al objetivo de la intervención.
 
 ---
 
@@ -25,6 +26,16 @@ Ningún agente puede atribuirse aprobación funcional, cierre de fase, validaci�
 - **Codex y Antigravity** trabajan en el checkout local `C:\RIESGO_LAVADO` y en el repositorio oficial remoto. Todo cambio local confirmado debe publicarse inmediatamente en `origin/desarrollo`; el remoto es la fuente de verdad compartida.
 - **ChatGPT** trabaja prioritariamente mediante el repositorio remoto `https://github.com/jmejia31/RIESGO_LAVADO`. Puede trabajar en un checkout local únicamente si confirma que su entorno realmente dispone de acceso; no se le exigirá una ruta local concreta.
 - Todo resultado de cualquier colaborador debe informar el commit, los archivos modificados, las pruebas ejecutadas y la publicación en `desarrollo`. Si una verificación local no fue posible, debe declararse como pendiente y explicar la limitación.
+
+### 1.2 Agent Skills compartidas
+
+- La biblioteca oficial del proyecto vive en `.agents/skills/` y se versiona en `desarrollo`.
+- Las skills implementan el estándar abierto Agent Skills; `AGENTS.md` continúa siendo la autoridad transversal.
+- Al iniciar una intervención se debe activar `riesgo-lavado-continuidad` y todas las skills especializadas cuya `description` coincida con la tarea.
+- Una tarea puede activar múltiples skills. No crear variantes privadas separadas para Codex, Antigravity o ChatGPT como fuente de verdad.
+- Si el cliente no hace descubrimiento automático, debe leer explícitamente las `SKILL.md` aplicables antes de modificar archivos.
+- Todo cambio dentro de `.agents/skills/` debe ejecutar `python tools/validate_agent_skills.py` antes de publicarse.
+- La arquitectura y política de estas skills se documenta en [`AGENT_SKILLS.md`](../docs/0.0%20Documentación/AGENT_SKILLS.md).
 
 ---
 
@@ -52,11 +63,12 @@ git diff --check
 
 ### 3.1 Revisión inicial
 
-1. Leer los tres documentos obligatorios de colaboración.
+1. Leer los documentos obligatorios de colaboración.
 2. Identificar quién trabajó por última vez, qué commits produjo y cuál fue el punto de continuación.
 3. Revisar documentación central y documentación del módulo afectado.
-4. Comparar lo documentado con el código, dependencias, pruebas y estado Git actuales.
-5. Clasificar toda evidencia como:
+4. Identificar y activar las Agent Skills aplicables.
+5. Comparar lo documentado con el código, dependencias, pruebas y estado Git actuales.
+6. Clasificar toda evidencia como:
    - **Ejecutada y verificada en esta intervención**.
    - **Reportada por una intervención anterior, no reproducida**.
    - **Pendiente por dependencia externa**.
@@ -71,6 +83,7 @@ No presentar como verificado un resultado heredado que no se ejecutó nuevamente
 4. Agregar o actualizar pruebas de regresión para cada cambio funcional.
 5. Usar enlaces relativos del repositorio; están prohibidos enlaces locales `file:///C:/...` en documentación versionada.
 6. No fijar cifras de pruebas en este protocolo. Los conteos reales pertenecen a la bitácora de cada ejecución.
+7. Seguir las skills activadas como procedimiento del dominio sin contradecir este protocolo.
 
 ### 3.3 Verificación mínima
 
@@ -89,6 +102,7 @@ cd ../..
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_repository_structure.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_database_scripts.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_documentation_links.ps1
+python tools/validate_agent_skills.py
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_quality_gates.ps1
 ```
 
@@ -131,6 +145,7 @@ Esta regla se aplica a:
 
 - código fuente, pruebas y configuración;
 - documentación, bitácora y estado colaborativo;
+- Agent Skills y sus validadores;
 - cualquier otro archivo creado o modificado durante la intervención.
 
 Secuencia mínima de cierre de intervención:
