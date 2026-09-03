@@ -6686,3 +6686,16 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Codex CLI es una superficie o cliente de Codex y no un colaborador separado. Una intervencion desde Codex CLI conserva la autoria `COD`; opcionalmente puede registrarse `CLIENTE=CLI` como metadata secundaria.
 - `COD C` y `COD_C` quedan descartados como identificadores oficiales de colaborador. Si una entrada historica anterior usa una variante distinta, se conserva por integridad historica; esta entrada constituye la definicion vigente desde este punto.
 - La grafia correcta es `ANTIGRAVITY`, nunca `ANTIGARVITY`.
+
+## Registro FASE 4 - Rediseno visual y UX Full Pro
+
+- Fecha/hora local: 2026-09-03 12:14 (UTC-06). Autor: `COD` / `CODEX`; cliente `CLI`. Rama `desarrollo`.
+- Baselines: operativo `4728dd5cc7bb5b24c00d95d5de38ebde35fe7b73`; ancla tecnica FASE 3.1 `b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
+- Objetivo: reconciliar y redisenar visualmente el shell del ciclo integral, Matrices de Riesgos y workspace de Configuracion de Calculo, preservando contratos, permisos, estados, Builder y arquitectura certificada.
+- Commit tecnico: `d198e5825923c0240088a20f3ebcd182d5264f19` (`feat(matrices): implement phase 4 visual ux redesign`). Staging explicito de nueve archivos frontend; no se incluyeron `.vscode/`, `agosto_rest.txt` ni el PDF de requisitos preexistentes.
+- Cambios: estilos scoped para shell, hero institucional, KPI compactos, tabs, filtros, tablas, focus rings, estados hover/readonly y responsive. No se modificaron backend, Oracle, package manifests, lockfile, tsconfig, rutas ni contratos.
+- Invariantes: `NEW_ENGINE=0`, `NEW_PUBLICATION_GATE=0`, `NEW_AUDIT_SYSTEM=0`, `NEW_CATALOG_SYSTEM=0`, `NEW_RULE_SYSTEM=0`, `NEW_TABLES=0`, `RBAC_CHANGES=0`, `DYNAMIC_EXECUTION=0`, `HISTORICAL_MUTATIONS=0`; `VER_ID_27_28_MUTATIONS=0`; `VER_ID_24_53_REGRESSION=0`.
+- Pruebas ejecutadas: TSC E2E PASS; TSC spec PASS; lint PASS; build Angular PASS con warnings existentes; Vitest `716/716 PASS`; Playwright `29/29 PASS`; backend Release `591/591 PASS` y `FAIL=0`; quality gates local PASS; npm audit `HIGH=0`, `CRITICAL=0`; links PASS; scripts DB PASS; Agent Skills `14 PASS`; diff check PASS.
+- QA visual real: capturas E2E frescas en `1536x1024` para shell, Matrices, consolidado y Builder editable/preview/JSON; foco modal, responsive scoped y ausencia de overflow global revisados. `agent-browser` no estaba instalado; se uso Playwright E2E del proyecto.
+- Pendientes externos: confirmar push y Quality Gate remoto del SHA final. `validate_repository_structure.ps1` conserva tres hallazgos legacy fuera de scope. Fetch sigue bloqueado por permiso sobre `.git/FETCH_HEAD`; no se ejecuto `git pull`.
+- Punto de continuacion: publicar commit tecnico y este cierre documental en `origin/desarrollo`, verificar SHA remoto exacto y registrar conclusion real; no iniciar Fase 5.

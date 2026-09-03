@@ -864,4 +864,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `COD = CODEX`; `CHAT = CHATGPT`; `ANTIG = ANTIGRAVITY`.
 - `CODEX_CLI_AS_SEPARATE_AGENT=FALSE`; Codex CLI es una superficie de Codex y `COD_INCLUDES_CODEX_CLI=TRUE`.
 - `COD C` y `COD_C` no son identificadores oficiales. `ANTIG` siempre significa `ANTIGRAVITY`.
+
+## Estado vigente - FASE 4 Rediseno visual y UX Full Pro
+
+- `FASE_4=IMPLEMENTADA/VALIDADA_LOCALMENTE/PENDIENTE_DE_CIERRE_REMOTO`.
+- `BASELINE_OPERATIONAL=4728dd5cc7bb5b24c00d95d5de38ebde35fe7b73`; `TECHNICAL_FREEZE_3_1=b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
+- Commit tecnico: `d198e5825923c0240088a20f3ebcd182d5264f19`. Se modificaron exclusivamente nueve archivos scoped de frontend en ciclo integral, Matrices y Configuracion de Calculo.
+- UX: shell/tabs, hero, KPI, filtros, tablas, foco, estados y responsive normalizados. Builder preservado sin renderer, serializer, normalizador ni motor paralelo.
+- Contratos: backend autoridad; `NEW_ENGINE=0`; `NEW_PUBLICATION_GATE=0`; `NEW_AUDIT_SYSTEM=0`; `NEW_CATALOG_SYSTEM=0`; `NEW_RULE_SYSTEM=0`; `NEW_TABLES=0`; `RBAC_CHANGES=0`; `DYNAMIC_EXECUTION=0`; `HISTORICAL_MUTATIONS=0`; `VER_ID_27_28_MUTATIONS=0`; `VER_ID_24_53_REGRESSION=0`.
+- Evidencia: TSC PASS; lint PASS; build PASS; Vitest `716/716`; E2E `29/29`; backend `591/591`, FAIL=0; local quality gates PASS; npm audit HIGH/CRITICAL `0/0`; links PASS; DB scripts PASS; Agent Skills `14 PASS`; diff check PASS; QA visual real `1536x1024` PASS.
+- Riesgos heredados: validador estructural reporta tres hallazgos legacy fuera de esta intervencion; fetch no pudo escribir `.git/FETCH_HEAD` por permisos. No se hizo pull, no se toco Oracle y los tres untracked preexistentes se preservan.
+- Punto exacto: staging/commit documental, push solo a `origin/desarrollo`, verificacion HEAD remoto y Quality Gate del SHA final exacto. No iniciar Fase 5.
 - Las variantes históricas se conservan por integridad de la bitácora; esta es la definición consolidada vigente.
