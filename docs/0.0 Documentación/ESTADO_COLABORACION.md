@@ -800,6 +800,17 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 ## Estado vigente - parche de seguridad qs posterior a 3.1.4
 
+## Estado vigente - Fase 3.1.5 fórmulas institucionales
+
+- Fecha/hora local: 2026-09-02 15:59 (UTC-06). Rama `desarrollo`. Baseline `9308b9a670c7444b3f3355c58c4dc51ef1bd1a97`; commit técnico `82787eb30b175f47b6244b8adf345c0c6baeafde`.
+- Estado: `3.1.5=IMPLEMENTADA/VALIDADA_LOCALMENTE/BLOQUEADA_EXTERNAMENTE_EN_CERTIFICACION_ORACLE`; `FASE_3.1=EN_PROGRESO`. No se declara cierre.
+- Paridad: `FORMULAS_INSTITUCIONALES=34/34`; `FORMULA_DATASET_DML_PARITY=34/34`; expectedByField exacto de 34 resultados; `MIN`, `AND`, `LOOKUP`; pesos `PESO_PREVENTIVO=0.70`, `PESO_DETECTIVO=0.15`, `PESO_CORRECTIVO=0.15`.
+- Pruebas: focal backend `49/49`; backend completo `591/591`; frontend aislado `716/716`; E2E `29/29`; lint/build PASS. Cobertura backend `31.08%`/`35.34%`; frontend `60.50%`/`54.19%`/`55.27%`/`61.15%`. NPM CI aislado `0`, cache eliminado. NPM audit `1`, `HIGH=1`, `fast-uri`; no audit fix ni actualización de dependencias.
+- Gates: DB scripts y enlaces PASS; structural validator FAIL por condiciones heredadas fuera de scope; `LOCAL_QUALITY_GATES=FAIL` aunque cobertura/regresión/lint/build/E2E pasaron.
+- Controles: ciclos, referencias, dependencias despinneadas, handlers/tipos inválidos, código DB, ejecución dinámica, nuevas tablas/engine/gate/auditoría/catálogo/dependencias, RBAC, mutaciones históricas, STANDARD_HASH y violaciones Oracle 11g: todos `0`.
+- Oracle: DDL 28 aplicado; DML 25 aplicado `ExitCode=0`; `DDL_28_REEXECUTED=NO`; `DML_25_REEXECUTED=NO`; `RECOVERY_27_EXECUTED=NO`; `POSTCHECK_26_EXECUTED_FINAL=NO_CONNECTION`; `ORACLE_315_BLOCKED_EXTERNAL_ENVIRONMENT=TRUE`; `ORACLE_315_CERTIFIED=FALSE`; `SocketException / AccessDenied` antes de SQL*Plus; hash `58823DFB93BED19EA0D347BC3668C3059E01534BA5A2635580A56C53C81F42A8`.
+- Punto de continuación: resolver `fast-uri` antes del Quality Gate remoto final y repetir exclusivamente `26_postcheck_formula_institucional_315_solo_lectura.sql` cuando Oracle permita conexión. Recovery jamás ejecutado; untracked preexistentes preservados.
+
 - Fecha/hora local: 2026-09-02 (UTC-6). Rama `desarrollo`. Base `1dd720143ddf685a0c660dc0f1ee7d4e68346154`; commit técnico `f87568c692aad1eb95fd5290d109377795ed028b`.
 - Quality Gate causal: `33651107541` falló únicamente en la auditoría npm reproducible por `qs@6.15.3`, introducido por `karma@6.4.4 -> body-parser@1.20.6`, bajo los advisories `GHSA-x5fp-wj9c-mxmx` y `GHSA-4mjr-xmp4-gh2g`.
 - Corrección: override transitivo `qs=6.16.0` y lock regenerado exclusivamente con `npm install --package-lock-only --ignore-scripts`. Verificación aislada: `npm ci` PASS, `npm audit --audit-level=high` PASS con HIGH=0 y CRITICAL=0; frontend `716/716`, lint, build y E2E `29/29` PASS.

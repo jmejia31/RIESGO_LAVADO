@@ -6630,6 +6630,20 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervencion - Codex - parche de seguridad qs posterior a 3.1.4
 
+## Registro de intervención - Codex - Fase 3.1.5 fórmulas institucionales
+
+- Fecha/hora local: 2026-09-02 15:59 (UTC-06). Autor: Codex. Rama `desarrollo`. Baseline `9308b9a670c7444b3f3355c58c4dc51ef1bd1a97`.
+- Alcance: paridad institucional Excel/DML para 34 fórmulas, pinning exacto de `FormulaVersion`, resultados `NUMBER/DECIMAL`, semántica `Blank`/`""`, handlers nativos anidados y rechazo de recursión compuesta. Oracle no se ejecutó.
+- Dataset/paridad: `FORMULAS_INSTITUCIONALES=34/34`; `FORMULA_DATASET_DML_PARITY=34/34`; expectedByField exacto de 34 resultados; `MIN`, `AND`, `LOOKUP`; pesos `0.70/0.15/0.15`.
+- Commit técnico: `82787eb30b175f47b6244b8adf345c0c6baeafde`, staging explícito de backend, pruebas y scripts Oracle 24/25/26/27/28. No frontend ni untracked ambientales.
+- Regresión: focal backend `49/49`; backend completo `591/591`; frontend aislado `716/716`; E2E `29/29`; lint/build PASS. Cobertura backend `31.08%` líneas/`35.34%` ramas; frontend `60.50%`/`54.19%`/`55.27%`/`61.15%`.
+- NPM: CI aislado `0` y cache eliminado. Audit aislado `1`, `HIGH=1`, causa `fast-uri`; no audit fix ni actualización de dependencias. DB scripts y enlaces PASS; estructura FAIL por hallazgos legacy fuera de scope; `LOCAL_QUALITY_GATES=FAIL`.
+- Oracle preservado: DDL 28 aplicado; DML 25 aplicado `ExitCode=0`; sin reejecución DDL/DML ni recovery; `POSTCHECK_26_EXECUTED_FINAL=NO_CONNECTION`; `ORACLE_315_BLOCKED_EXTERNAL_ENVIRONMENT=TRUE`; `ORACLE_315_CERTIFIED=FALSE`; causa `System.Net.Sockets.SocketException / AccessDenied` antes de SQL*Plus. Hash: `58823DFB93BED19EA0D347BC3668C3059E01534BA5A2635580A56C53C81F42A8`.
+- Controles: ciclos, referencias, dependencias despinneadas, handlers/tipos inválidos, código ejecutable DB, ejecución dinámica, tablas/engine/gate/auditoría/catálogo/dependencias nuevas, RBAC, mutaciones históricas, STANDARD_HASH y violaciones de identificadores Oracle 11g: todos `0`.
+- Cambios y entorno: `git diff --check=PASS`; temporales aislados eliminados; `.vscode/`, `agosto_rest.txt` y el PDF preservados como untracked preexistentes; `main` intacta.
+- Documentación canónica: `docs/3. Módulo Matrices de Riesgos/FASE_3_1_5_FORMULAS_INSTITUCIONALES_PARIDAD.md`. Commit documental y publicación quedan pendientes.
+- Estado: `3.1.5=IMPLEMENTADA/VALIDADA_LOCALMENTE/BLOQUEADA_EXTERNAMENTE_EN_CERTIFICACION_ORACLE`; `FASE_3.1=EN_PROGRESO`. Pendientes: resolver `fast-uri` antes del Quality Gate remoto y repetir únicamente POSTCHECK 26 read-only cuando Oracle recupere conectividad.
+
 - Fecha/hora local: 2026-09-02 (UTC-6). Autor: Codex. Rama: `desarrollo`. Base: `1dd720143ddf685a0c660dc0f1ee7d4e68346154`. Commit técnico: `f87568c692aad1eb95fd5290d109377795ed028b` (`fix(frontend): patch qs security advisories`).
 - Defecto: Quality Gate `33651107541` falló únicamente en `Verify npm security audit and reproducible installation` porque la cadena `karma@6.4.4 -> body-parser@1.20.6 -> qs@6.15.3` era vulnerable bajo `GHSA-x5fp-wj9c-mxmx` y `GHSA-4mjr-xmp4-gh2g`.
 - Corrección mínima: se añadió únicamente el override transitivo `"qs": "6.16.0"` y se regeneró `package-lock.json` con `--package-lock-only --ignore-scripts`; no se actualizaron Angular, Node, npm ni dependencias no relacionadas.
