@@ -842,3 +842,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Histórico: `VER_JSON`, `VER_HASH`, `EVA_VERSION_ID` y `EVA_CALCULOS_JSON` intactos; VER_ID 24, 27, 28 y 53 sin mutación. `P0=0`, `P1_PROPIOS_3_1_2=0`, `NEW_AUDIT_SYSTEMS=0`, `RBAC_CHANGES=0`.
 - Entorno Git: se observan tres untracked preexistentes: `.vscode/`, `agosto_rest.txt` y el PDF de requisitos. `agosto_capturas/` no está presente. Se clasifica `PREEXISTING_ENVIRONMENT_DRIFT=1`, `INTERVENTION_ATTRIBUTION=NONE`; no es blocker ni deuda de 3.1.2. Tracked limpio, staged=0, unexpected untracked=0, archivos propios 3.1.2 pendientes=0 y `SCOPE_WORKTREE_CLEAN=TRUE`.
 - Evidencia remota de cierre: GitHub Actions run `33526999211` sobre `2996a6342aebbe231256e612db4f941d681b54b0` terminó `status=completed`, `conclusion=success`, con `head_sha` coincidente. No se persisten estados transitorios de CI que requieran un commit documental posterior. No se inicia 3.1.3.
+## Estado vigente - Agent Skills cerradas y operativas
+
+- Fecha/hora local: 2026-09-03 (UTC-06). Rama `desarrollo`. La infraestructura de Agent Skills queda documentada y operativa.
+- `AGENT_SKILLS_IMPLEMENTED=TRUE`; `AGENT_SKILLS_COUNT=14`; `AGENT_SKILLS_ACTIVATED=TRUE`; `AGENT_SKILLS_VALIDATION=PASS`.
+- `GIT_HOOKS=ACTIVE` (`core.hooksPath=.githooks`); `AGENT_SKILLS_CI=SUCCESS`.
+- `MAIN_RULESET_ID=22139842`; `MAIN_RULESET=ACTIVE`; target `refs/heads/main`.
+- `FAST_URI=3.1.6`; `NPM_AUDIT_HIGH=0`; `NPM_AUDIT_CRITICAL=0`.
+- `QUALITY_GATE_RUN=33768618747`; `QUALITY_GATE_CONCLUSION=success`; SHA validado: `b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
+- `FASE_3_1=CERRADA/CERTIFICADA/FINAL`; `PENDING_AGENT_SKILLS=0`.
