@@ -886,3 +886,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia técnica: TSC PASS; Vitest `718/718`; lint/build PASS; E2E `29/29`; backend `591/591`, `FAIL=0`; audit `HIGH=0`, `CRITICAL=0`; DB/documentation/skills/diff PASS.
 - Evidencia visual: capturas internas de layout generadas con fixture no son aceptación. El backend local real respondió `401` sin sesión autorizada; QA visual con datos reales y aprobación expresa del usuario permanecen pendientes.
 - Punto de continuación: obtener una sesión autorizada para capturas reales de Fórmulas, detalle, Funciones, Parámetros, Reglas y Catálogos en `1920x1080`, `1536x1024`, `1366x768` y tablet; después solicitar UAT visual. No iniciar FASE 5.
+
+## Estado vigente - Pulido final de escalabilidad FASE 4
+
+- Fecha/hora local: `2026-09-04 13:51 UTC-06`. Autor: `COD` / `CODEX`; rama `desarrollo`. Baseline de entrada `9d2eb42166012cc20eea7ff38308aeb73979b2e9`; commit técnico `7cd1b04b421a448f2f31c8c9c4ec9ee1eef688db`.
+- `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_4_UX_VISUAL=LISTA_PARA_APROBACION_FINAL_USUARIO`; `FASE_4_FINAL=NO`; `FASE_5_HABILITADA=FALSE`.
+- Pulido implementado en Configuración de Cálculo: contador sin selección como resultados, anterior/siguiente contextual, toolbar unificada, metadata de funciones sin duplicación, tabs desktop consistentes, altura adaptativa de colecciones pequeñas y selección con scroll master preservado.
+- Evidencia real: `AUTH_SESSION_VALID=TRUE`; aplicación y backend locales reales; `MOCKS_USED=FALSE`; `FIXTURES_USED=FALSE`; 34 fórmulas y 5 catálogos visibles; `scrollTop=901` antes y después de seleccionar; overflow horizontal global `FALSE`. Capturas finales: `C:\Users\FRANCI~1.PER\AppData\Local\Temp\fase4-uat-polish-final-v7` (fuera del repositorio).
+- Validación: frontend `724/724 PASS`; backend `591/591 PASS`; E2E `29/29 PASS` serial; TSC, lint, build, DB scripts, documentación y diff check PASS; audit de esta intervención `HIGH=0`, `CRITICAL=0`; Agent Skills `14/14 PASS`. El validador estructural conserva tres hallazgos legacy fuera de alcance.
+- Arquitectura preservada: sin cambios backend/Oracle/endpoints/dependencias/RBAC/Builder; `NEW_ENGINE=0`; `NEW_PUBLICATION_GATE=0`; `NEW_AUDIT_SYSTEM=0`; `NEW_CATALOG_SYSTEM=0`; `NEW_RULE_SYSTEM=0`; `NEW_TABLES=0`; `DYNAMIC_EXECUTION=0`; `HISTORICAL_MUTATIONS=0`; `VER_ID_27_28_MUTATIONS=0`; `VER_ID_24_53_REGRESSION=0`.
+- Punto exacto de continuación: publicar `7cd1b04b421a448f2f31c8c9c4ec9ee1eef688db`, verificar sincronización y Quality Gate exacto; luego entregar las capturas para aprobación visual del usuario. No declarar FASE 4 cerrada ni iniciar FASE 5.
