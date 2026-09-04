@@ -146,8 +146,10 @@ export class ConfiguracionCalculoComponent implements OnInit {
   parametrosFiltrados(): ParametroDto[] { return this.filtrar(this.parametros()); }
 
   seleccionarFormula(item: FormulaDto): void {
-    this.formulaSeleccionada.set(item);
-    this.modoFormula.set('none');
+    this.preservarScrollMaster(() => {
+      this.formulaSeleccionada.set(item);
+      this.modoFormula.set('none');
+    });
     forkJoin({ versiones: this.config.listarFormulaVersiones(item.id), usos: this.config.listarFormulaUsages(item.id) }).subscribe({
       next: data => { this.formulaVersiones.set(data.versiones); this.formulaUsages.set(data.usos); },
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el detalle de la fórmula.'))
@@ -155,8 +157,10 @@ export class ConfiguracionCalculoComponent implements OnInit {
   }
 
   seleccionarFuncion(item: FuncionDto): void {
-    this.funcionSeleccionada.set(item);
-    this.modoFuncion.set('none');
+    this.preservarScrollMaster(() => {
+      this.funcionSeleccionada.set(item);
+      this.modoFuncion.set('none');
+    });
     this.config.listarFuncionVersiones(item.id).subscribe({
       next: versiones => { this.funcionVersiones.set(versiones); this.funcionArgumentos.set([]); },
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el detalle de la función.'))
@@ -199,8 +203,10 @@ export class ConfiguracionCalculoComponent implements OnInit {
   }
 
   seleccionarParametro(item: ParametroDto): void {
-    this.parametroSeleccionado.set(item);
-    this.modoParametro.set('none');
+    this.preservarScrollMaster(() => {
+      this.parametroSeleccionado.set(item);
+      this.modoParametro.set('none');
+    });
     this.config.listarParametroVersiones(item.id).subscribe({
       next: versiones => this.parametroVersiones.set(versiones),
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el detalle del parámetro.'))
@@ -360,6 +366,12 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private validarFuncion(): boolean { if ((this.modoFuncion() === 'create' && (!this.funcionForm.codigo.trim() || !this.funcionForm.nombre.trim())) || (this.funcionForm.tipo === 'NATIVE' && !this.funcionForm.handlerKey.trim()) || (this.funcionForm.tipo === 'COMPOSITE' && !this.funcionForm.definicionDsl.trim())) { this.error.set('Completa los datos requeridos del contrato de función.'); return false; } return true; }
   private validarParametro(): boolean { if ((this.modoParametro() === 'create' && (!this.parametroForm.codigo.trim() || !this.parametroForm.nombre.trim())) || !this.parametroForm.tipo) { this.error.set('Código, nombre y tipo son obligatorios.'); return false; } return true; }
   private filtrar<T extends { codigo: string; nombre: string }>(items: T[]): T[] { const q = this.busqueda().trim().toLowerCase(); return q ? items.filter(item => item.codigo.toLowerCase().includes(q) || item.nombre.toLowerCase().includes(q)) : items; }
+  private preservarScrollMaster(action: () => void): void {
+    const pane = typeof document === 'undefined' ? null : document.querySelector<HTMLElement>('.calculation-workspace > div.grid > section:first-child > .divide-y');
+    const scrollTop = pane?.scrollTop ?? 0;
+    action();
+    if (pane && scrollTop > 0) setTimeout(() => { if (pane.isConnected) pane.scrollTop = scrollTop; }, 50);
+  }
   private ejecutar(observable: import('rxjs').Observable<unknown>): import('rxjs').Observable<unknown> { this.guardando.set(true); this.error.set(null); return observable; }
   private finalizar(texto: string): void { this.guardando.set(false); this.mensaje.set(texto); this.cargar(); }
   private fallar(error: unknown, fallback: string): void { this.guardando.set(false); this.error.set(this.mensajeError(error, fallback)); }
@@ -368,6 +380,6 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private nuevaFormulaForm(): FormulaDraftForm { return { codigo: '', nombre: '', descripcion: '', expresion: '', tipoResultado: 'DECIMAL' }; }
   private nuevaFuncionForm(): FunctionDraftForm { return { codigo: '', nombre: '', descripcion: '', categoria: 'CALCULO', tipo: 'NATIVE', tipoResultado: 'DECIMAL', handlerKey: '', definicionDsl: '', minArity: 1, maxArity: 1 }; }
   private nuevoParametroForm(): ParameterDraftForm { return { codigo: '', nombre: '', descripcion: '', tipo: 'DECIMAL', valorEntero: null, valorDecimal: null, valorBooleano: null, valorTexto: '', valorFecha: '' }; }
-  private posicion<T extends { id: number }>(items: T[], selected: T | null): string { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; return index >= 0 ? `${index + 1} de ${items.length}` : `0 de ${items.length}`; }
+  private posicion<T extends { id: number }>(items: T[], selected: T | null): string { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; return index >= 0 ? `${index + 1} de ${items.length}` : `${items.length} resultados`; }
   private siguienteIndice<T extends { id: number }>(items: T[], selected: T | null, delta: -1 | 1): number | null { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; const next = index < 0 ? (delta === 1 ? 0 : -1) : index + delta; return next >= 0 && next < items.length ? next : null; }
 }

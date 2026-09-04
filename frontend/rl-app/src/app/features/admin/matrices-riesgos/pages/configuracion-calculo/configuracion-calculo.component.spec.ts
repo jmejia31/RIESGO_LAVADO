@@ -64,6 +64,43 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(layout().classList.contains('has-selection')).toBe(true);
   });
 
+  it('muestra resultados sin selección y oculta la navegación contextual', () => {
+    expect(component.formulaPosicion()).toBe('1 resultados');
+    const navigation = fixture.nativeElement.querySelector('.config-record-navigation') as HTMLElement;
+    expect(navigation.textContent).toContain('1 resultados');
+    expect(navigation.querySelectorAll('button')).toHaveLength(0);
+
+    component.seleccionarFormula(component.formulas()[0]);
+    fixture.detectChanges();
+    expect(component.formulaPosicion()).toBe('1 de 1');
+    expect(navigation.querySelectorAll('button')).toHaveLength(2);
+  });
+
+  it('no repite metadata genérica de funciones cuando código y nombre coinciden', () => {
+    component.funciones.set([{ id: 20, codigo: 'AND', nombre: 'AND', categoria: 'CALCULO', estado: 'ACTIVE', versionRow: 1 }]);
+    component.seleccionarTab('funciones');
+    fixture.detectChanges();
+
+    const content = fixture.nativeElement.textContent as string;
+    expect(content).not.toContain('Configuración versionada');
+    expect(content).not.toContain('CALCULO');
+    expect(content.match(/AND/g)?.length).toBe(1);
+  });
+
+  it('restaura el scroll del master después de abrir el detalle', () => {
+    vi.useFakeTimers();
+    try {
+      const master = fixture.nativeElement.querySelector('.config-panel-view section:first-child > .divide-y') as HTMLElement;
+      master.scrollTop = 40;
+      component.seleccionarFormula(component.formulas()[0]);
+      fixture.detectChanges();
+      vi.runAllTimers();
+      expect(master.scrollTop).toBe(40);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('mantiene listas y detalle como panes independientes en las colecciones', () => {
     const tabs: Array<'formulas' | 'funciones' | 'parametros'> = ['formulas', 'funciones', 'parametros'];
 
