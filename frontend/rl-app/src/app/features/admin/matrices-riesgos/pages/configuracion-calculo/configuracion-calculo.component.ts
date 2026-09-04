@@ -211,6 +211,40 @@ export class ConfiguracionCalculoComponent implements OnInit {
     this.catalogoSeleccionado.set(item);
   }
 
+  formulaPosicion(): string {
+    return this.posicion(this.formulasFiltradas(), this.formulaSeleccionada());
+  }
+
+  funcionPosicion(): string {
+    return this.posicion(this.funcionesFiltradas(), this.funcionSeleccionada());
+  }
+
+  parametroPosicion(): string {
+    return this.posicion(this.parametrosFiltrados(), this.parametroSeleccionado());
+  }
+
+  navegarFormula(delta: -1 | 1): void {
+    const items = this.formulasFiltradas();
+    const next = this.siguienteIndice(items, this.formulaSeleccionada(), delta);
+    if (next !== null) this.seleccionarFormula(items[next]);
+  }
+
+  navegarFuncion(delta: -1 | 1): void {
+    const items = this.funcionesFiltradas();
+    const next = this.siguienteIndice(items, this.funcionSeleccionada(), delta);
+    if (next !== null) this.seleccionarFuncion(items[next]);
+  }
+
+  navegarParametro(delta: -1 | 1): void {
+    const items = this.parametrosFiltrados();
+    const next = this.siguienteIndice(items, this.parametroSeleccionado(), delta);
+    if (next !== null) this.seleccionarParametro(items[next]);
+  }
+
+  puedeNavegar<T extends { id: number }>(items: T[], selected: T | null, delta: -1 | 1): boolean {
+    return this.siguienteIndice(items, selected, delta) !== null;
+  }
+
   cargarParametroVersion(version: ParametroVersionDto): void {
     if (version.estado !== 'DRAFT') return;
     this.parametroVersionEditando.set(version);
@@ -334,4 +368,6 @@ export class ConfiguracionCalculoComponent implements OnInit {
   private nuevaFormulaForm(): FormulaDraftForm { return { codigo: '', nombre: '', descripcion: '', expresion: '', tipoResultado: 'DECIMAL' }; }
   private nuevaFuncionForm(): FunctionDraftForm { return { codigo: '', nombre: '', descripcion: '', categoria: 'CALCULO', tipo: 'NATIVE', tipoResultado: 'DECIMAL', handlerKey: '', definicionDsl: '', minArity: 1, maxArity: 1 }; }
   private nuevoParametroForm(): ParameterDraftForm { return { codigo: '', nombre: '', descripcion: '', tipo: 'DECIMAL', valorEntero: null, valorDecimal: null, valorBooleano: null, valorTexto: '', valorFecha: '' }; }
+  private posicion<T extends { id: number }>(items: T[], selected: T | null): string { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; return index >= 0 ? `${index + 1} de ${items.length}` : `0 de ${items.length}`; }
+  private siguienteIndice<T extends { id: number }>(items: T[], selected: T | null, delta: -1 | 1): number | null { const index = selected ? items.findIndex(item => item.id === selected.id) : -1; const next = index < 0 ? (delta === 1 ? 0 : -1) : index + delta; return next >= 0 && next < items.length ? next : null; }
 }

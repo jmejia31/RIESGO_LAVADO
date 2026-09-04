@@ -64,6 +64,20 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(layout().classList.contains('has-selection')).toBe(true);
   });
 
+  it('mantiene listas y detalle como panes independientes en las colecciones', () => {
+    const tabs: Array<'formulas' | 'funciones' | 'parametros'> = ['formulas', 'funciones', 'parametros'];
+
+    for (const tab of tabs) {
+      component.seleccionarTab(tab);
+      fixture.detectChanges();
+      const layout = fixture.nativeElement.querySelector('.calculation-workspace > div.grid') as HTMLElement;
+
+      expect(layout).not.toBeNull();
+      expect(layout.querySelector('section:first-child > div.divide-y')).not.toBeNull();
+      expect(layout.querySelector('section:nth-child(2)')).not.toBeNull();
+    }
+  });
+
   it('presenta catálogos como master/detail con sus elementos reales', () => {
     component.seleccionarTab('catalogos');
     component.seleccionarCatalogo(component.metodologia()!.catalogos[0]);
@@ -71,5 +85,48 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(component.catalogoSeleccionado()?.codigo).toBe('CAT_RIESGO');
     expect(fixture.nativeElement.querySelector('.catalog-layout.has-selection')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Alto');
+  });
+
+  it('navega dentro del resultado filtrado sin perder la selección lógica', () => {
+    component.formulas.set([
+      { id: 10, codigo: 'F_RIESGO_01', nombre: 'Riesgo uno', estado: 'ACTIVE', versionRow: 1 },
+      { id: 11, codigo: 'F_RIESGO_02', nombre: 'Riesgo dos', estado: 'ACTIVE', versionRow: 1 },
+      { id: 12, codigo: 'F_OTRA', nombre: 'Otra fórmula', estado: 'ACTIVE', versionRow: 1 }
+    ]);
+    component.busqueda.set('riesgo');
+    component.seleccionarFormula(component.formulas()[0]);
+    fixture.detectChanges();
+
+    expect(component.formulaPosicion()).toBe('1 de 2');
+    expect(component.puedeNavegar(component.formulasFiltradas(), component.formulaSeleccionada(), 1)).toBe(true);
+    component.navegarFormula(1);
+    fixture.detectChanges();
+
+    expect(component.formulaSeleccionada()?.id).toBe(11);
+    expect(component.formulaPosicion()).toBe('2 de 2');
+    expect(component.puedeNavegar(component.formulasFiltradas(), component.formulaSeleccionada(), 1)).toBe(false);
+    expect(fixture.nativeElement.querySelector('.config-detail-panel')).not.toBeNull();
+  });
+
+  it('mantiene navegación independiente para funciones y parámetros', () => {
+    component.funciones.set([
+      { id: 20, codigo: 'AND', nombre: 'AND', categoria: 'CALCULO', estado: 'ACTIVE', versionRow: 1 },
+      { id: 21, codigo: 'OR', nombre: 'OR', categoria: 'CALCULO', estado: 'ACTIVE', versionRow: 1 }
+    ]);
+    component.parametros.set([
+      { id: 30, codigo: 'P_ONE', nombre: 'Uno', tipo: 'DECIMAL', estado: 'ACTIVE', versionRow: 1 },
+      { id: 31, codigo: 'P_TWO', nombre: 'Dos', tipo: 'DECIMAL', estado: 'ACTIVE', versionRow: 1 }
+    ]);
+
+    component.seleccionarFuncion(component.funciones()[0]);
+    component.navegarFuncion(1);
+    expect(component.funcionSeleccionada()?.id).toBe(21);
+    expect(component.funcionPosicion()).toBe('2 de 2');
+
+    component.seleccionarTab('parametros');
+    component.seleccionarParametro(component.parametros()[0]);
+    component.navegarParametro(1);
+    expect(component.parametroSeleccionado()?.id).toBe(31);
+    expect(component.parametroPosicion()).toBe('2 de 2');
   });
 });
