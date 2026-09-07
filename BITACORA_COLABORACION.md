@@ -6723,3 +6723,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Hallazgo fuera de alcance: `validate_repository_structure.ps1` mantiene tres condiciones legacy preexistentes: carpeta fuente vacía `dynamic-form-layout`, servicio en carpeta heredada y carpeta heredada `core/services`; no se modificaron.
 - Invariantes: `NEW_ENGINE=0`, `NEW_PUBLICATION_GATE=0`, `NEW_AUDIT_SYSTEM=0`, `NEW_CATALOG_SYSTEM=0`, `NEW_RULE_SYSTEM=0`, `NEW_TABLES=0`, `NEW_ENDPOINTS=0`, `RBAC_CHANGES=0`, `HISTORICAL_MUTATIONS=0`, `DYNAMIC_EXECUTION=0`; `VER_ID_27_28_MUTATIONS=0`; `VER_ID_24_53_REGRESSION=0`; `RENDERER_PARALLEL=0`; `SERIALIZER_PARALLEL=0`; `NORMALIZER_PARALLEL=0`.
 - Estado: `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_4_UX_VISUAL=LISTA_PARA_APROBACION_FINAL_USUARIO`; `FASE_4_FINAL=NO`; `FASE_5_HABILITADA=FALSE`. Pendiente publicar y verificar el Quality Gate exacto del SHA; la aprobación visual corresponde exclusivamente al usuario.
+
+## Registro de cierre formal definitivo - FASE 4 aprobada por el usuario
+
+- Fecha/hora local: `2026-09-07` (UTC-06). Autor: `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`.
+- Aprobación: Javier Mejía declaró expresamente `APROBADA FASE 4`. `FASE_4_APROBACION_USUARIO=EXPRESA`; `FASE_4_UX_VISUAL=APROBADA`; `FASE_4_FINAL=SI`; `FASE_4_RESULTADO=CERRADA_DEFINITIVAMENTE`.
+- Base técnica: SHA `50f102f98a2991551ccd19200fd5c42e5f3034b7`; Quality Gate `34151844552`, `STATUS=completed`, `CONCLUSION=success`; frontend `725/725`, TSC/lint/build PASS, E2E `29/29`, backend `591/591`, npm audit `HIGH=0`, `CRITICAL=0`.
+- Alcance cerrado: se completaron y validaron las correcciones finales de iconografía operacional y clipping de `FUENTE OPERATIVA` / `FUENTE MAESTRA`. `Retirar` utiliza semántica archive/box, diferenciada de eliminación; master/detail, scroll interno, navegación masiva, selección persistente y `GLOBAL_HORIZONTAL_OVERFLOW=FALSE` quedaron preservados.
+- Archivos modificados en esta intervención: `BITACORA_COLABORACION.md` y `docs/0.0 Documentación/ESTADO_COLABORACION.md`. No se modificaron archivos de aplicación, backend, Oracle, workflows, dependencias, tests ni capturas.
+- Publicación de esta documentación: pendiente de commit, push y Quality Gate exacto del commit documental. Los tres untracked preexistentes se preservan y `main` no se toca.
+- Estado posterior: `FASE_5_HABILITADA=TRUE` únicamente como habilitación futura; `FASE_5_INICIADA=FALSE`. Punto de continuación: esperar una nueva instrucción expresa antes de iniciar Fase 5.

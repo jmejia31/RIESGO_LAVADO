@@ -1,5 +1,16 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - Cierre formal definitivo FASE 4
+
+- Fecha/hora local: `2026-09-07` (UTC-06). Autor: `COD` / `CODEX`; rama `desarrollo`.
+- `FASE_4_APROBACION_USUARIO=EXPRESA`; `FASE_4_UX_VISUAL=APROBADA`; `FASE_4_FINAL=SI`; `FASE_4_RESULTADO=CERRADA_DEFINITIVAMENTE`.
+- `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_5_HABILITADA=TRUE`; `FASE_5_INICIADA=FALSE`.
+- SHA técnico certificado: `50f102f98a2991551ccd19200fd5c42e5f3034b7`. Quality Gate técnico: run `34151844552`, `status=completed`, `conclusion=success`.
+- Cierre UX aprobado: iconografía operacional validada; `Retirar` usa semántica de archivado/retiro y no eliminación; clipping de `FUENTE OPERATIVA` y `FUENTE MAESTRA` corregido; escalabilidad master/detail, navegación, scroll interno y ausencia de overflow horizontal preservadas.
+- Evidencia técnica certificada: frontend `725/725 PASS`; TSC PASS; lint PASS; build PASS; E2E `29/29 PASS`; backend `591/591 PASS`; npm audit `HIGH=0`, `CRITICAL=0`; Quality Gate técnico PASS.
+- La Fase 5 queda únicamente habilitada para una intervención posterior autorizada; no se inicia en este cierre.
+- Punto exacto de continuación: mantener Fase 5 sin iniciar hasta una nueva instrucción expresa. No modificar `main`.
+
 ## Estado vigente - Fase 3 cerrada tecnicamente
 
 - Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`.
@@ -865,7 +876,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `CODEX_CLI_AS_SEPARATE_AGENT=FALSE`; Codex CLI es una superficie de Codex y `COD_INCLUDES_CODEX_CLI=TRUE`.
 - `COD C` y `COD_C` no son identificadores oficiales. `ANTIG` siempre significa `ANTIGRAVITY`.
 
-## Estado vigente - FASE 4 Rediseno visual y UX Full Pro
+## Registro histórico - FASE 4 Rediseno visual y UX Full Pro
 
 - `FASE_4=IMPLEMENTADA/VALIDADA_LOCALMENTE/PENDIENTE_DE_CIERRE_REMOTO`.
 - `BASELINE_OPERATIONAL=4728dd5cc7bb5b24c00d95d5de38ebde35fe7b73`; `TECHNICAL_FREEZE_3_1=b2fd0b0fa4b99a863793cb6f50bb1f5f58c96800`.
@@ -877,7 +888,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Punto exacto: staging/commit documental, push solo a `origin/desarrollo`, verificacion HEAD remoto y Quality Gate del SHA final exacto. No iniciar Fase 5.
 - Las variantes históricas se conservan por integridad de la bitácora; esta es la definición consolidada vigente.
 
-## Estado vigente - Corrección visual FASE 4 pendiente de UAT
+## Registro histórico - Corrección visual FASE 4 pendiente de UAT
 
 - Fecha/hora local: `2026-09-03 14:49 UTC-06`. Autor: `COD` / `CODEX`; cliente: `CLI`. Rama: `desarrollo`.
 - `BASELINE=367fb478f2b1657ba360a0ce69334018abcb231b`; `CORRECTIVE_SHA=9d0588327d8e6b2ef5d32a5df6d4cd564f58cc07`, publicado en `origin/desarrollo`.
@@ -887,7 +898,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia visual: capturas internas de layout generadas con fixture no son aceptación. El backend local real respondió `401` sin sesión autorizada; QA visual con datos reales y aprobación expresa del usuario permanecen pendientes.
 - Punto de continuación: obtener una sesión autorizada para capturas reales de Fórmulas, detalle, Funciones, Parámetros, Reglas y Catálogos en `1920x1080`, `1536x1024`, `1366x768` y tablet; después solicitar UAT visual. No iniciar FASE 5.
 
-## Estado vigente - Pulido final de escalabilidad FASE 4
+## Registro histórico - Pulido final de escalabilidad FASE 4
 
 - Fecha/hora local: `2026-09-04 13:51 UTC-06`. Autor: `COD` / `CODEX`; rama `desarrollo`. Baseline de entrada `9d2eb42166012cc20eea7ff38308aeb73979b2e9`; commit técnico `7cd1b04b421a448f2f31c8c9c4ec9ee1eef688db`.
 - `FASE_4_TECNICA_CORRECTIVA=PASS`; `FASE_4_REGRESION_FUNCIONAL=PASS`; `FASE_4_UX_VISUAL=LISTA_PARA_APROBACION_FINAL_USUARIO`; `FASE_4_FINAL=NO`; `FASE_5_HABILITADA=FALSE`.
