@@ -11,10 +11,13 @@ import {
   EvaluacionRiesgoResumenDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
+  FiltroReporteMatrices,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
   RespuestasFormulario,
   RiesgoReporteFila,
+  ReporteMatricesPaginado,
+  ReporteMatricesTotales,
   ValorRespuestaFormulario,
   VersionFormularioDto
 } from '../../models/matrices-riesgos.models';
@@ -193,6 +196,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
+  readonly totalRegistrosConsolidado = signal(0);
+  readonly totalPaginasServidorConsolidado = signal(0);
+  readonly totalesConsolidado = signal<ReporteMatricesTotales>({
+    totalRiesgos: 0,
+    totalConEvaluacionOficial: 0,
+    totalSinEvaluacionOficial: 0,
+    totalAltoCritico: 0
+  });
+  readonly consolidadoUsaServidor = signal(false);
+  readonly ordenConsolidado = signal('fechaEvaluacion');
+  readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
 
   readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => {
     const buscar = this.filtroBuscarConsolidado().trim().toLowerCase();
@@ -207,19 +221,27 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   });
 
-  readonly estadosConsolidado = computed(() => Array.from(new Set(
-    this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
-  )).sort());
+  readonly estadosConsolidado = computed(() => Array.from(new Set([
+    'APROBADA',
+    'BORRADOR',
+    'CERRADA',
+    'EN_REVISION',
+    'OBSERVADA',
+    'RECHAZADA',
+    ...this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
+  ])).sort());
 
   readonly consolidadoNivelAltoCritico = computed(() => this.consolidadoFiltrado()
     .filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length);
 
   readonly totalPaginasConsolidado = computed(() => {
+    if (this.consolidadoUsaServidor()) return this.totalPaginasServidorConsolidado();
     const porPagina = this.registrosPorPaginaConsolidado();
     return porPagina > 0 ? Math.ceil(this.consolidadoFiltrado().length / porPagina) : 0;
   });
 
   readonly consolidadoPaginado = computed<RiesgoReporteFila[]>(() => {
+    if (this.consolidadoUsaServidor()) return this.consolidado();
     const lista = this.consolidadoFiltrado();
     const porPagina = this.registrosPorPaginaConsolidado();
     const total = this.totalPaginasConsolidado();
@@ -504,6 +526,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const total = this.totalPaginasConsolidado();
     if (!Number.isInteger(nuevaPagina) || total <= 0 || nuevaPagina < 1 || nuevaPagina > total) return;
     this.paginaConsolidado.set(nuevaPagina);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
   }
 
   cambiarRegistrosPorPaginaConsolidado(cantidad: number): void {
@@ -511,6 +534,41 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) return;
     this.registrosPorPaginaConsolidado.set(num);
     this.paginaConsolidado.set(1);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+  }
+
+  ordenarConsolidado(campo: string): void {
+    if (this.ordenConsolidado() === campo) {
+      this.direccionConsolidado.update(actual => actual === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.ordenConsolidado.set(campo);
+      this.direccionConsolidado.set('asc');
+    }
+    this.paginaConsolidado.set(1);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+  }
+
+  cambiarBuscarConsolidado(valor: string): void {
+    this.filtroBuscarConsolidado.set(valor);
+    this.paginaConsolidado.set(1);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+  }
+
+  cambiarEstadoConsolidado(valor: string): void {
+    this.filtroEstadoConsolidado.set(valor);
+    this.paginaConsolidado.set(1);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+  }
+
+  limpiarFiltrosConsolidado(): void {
+    this.filtroBuscarConsolidado.set('');
+    this.filtroEstadoConsolidado.set('TODOS');
+    this.paginaConsolidado.set(1);
+    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+  }
+
+  limiteSuperiorConsolidado(): number {
+    return Math.min(this.paginaConsolidado() * this.registrosPorPaginaConsolidado(), this.totalRegistrosConsolidado());
   }
 
   cambiarPaginaFamilias(nuevaPagina: number): void {
@@ -1067,9 +1125,29 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarConsolidado(): void {
     this.cargandoConsolidado.set(true);
     this.errorConsolidado.set(null);
-    this.service.obtenerConsolidado().subscribe({
-      next: filas => {
-        this.consolidado.set(filas);
+    const filtro = this.filtroReporteConsolidado();
+    const serviceWithPaging = this.service as MatricesRiesgosService & {
+      obtenerConsolidadoPaginado?: (filtro: FiltroReporteMatrices) => Observable<ReporteMatricesPaginado>;
+    };
+    const solicitud: Observable<ReporteMatricesPaginado | RiesgoReporteFila[]> = typeof serviceWithPaging.obtenerConsolidadoPaginado === 'function'
+      ? serviceWithPaging.obtenerConsolidadoPaginado(filtro) as Observable<ReporteMatricesPaginado>
+      : this.service.obtenerConsolidado();
+    solicitud.subscribe({
+      next: resultado => {
+        if (Array.isArray(resultado)) {
+          this.consolidadoUsaServidor.set(false);
+          this.consolidado.set(resultado);
+          this.totalRegistrosConsolidado.set(resultado.length);
+          this.totalPaginasServidorConsolidado.set(0);
+        } else {
+          this.consolidadoUsaServidor.set(true);
+          this.consolidado.set(resultado.items);
+          this.totalRegistrosConsolidado.set(resultado.totalRegistros);
+          this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
+          this.totalesConsolidado.set(resultado.totales);
+          this.paginaConsolidado.set(resultado.pagina);
+          this.registrosPorPaginaConsolidado.set(resultado.tamanoPagina as 10 | 20 | 50);
+        }
         this.cargandoConsolidado.set(false);
       },
       error: error => {
@@ -1083,8 +1161,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   descargarConsolidado(formato: 'excel' | 'pdf'): void {
     this.limpiarAlertas();
     const solicitud = formato === 'excel'
-      ? this.service.descargarConsolidadoExcel()
-      : this.service.descargarConsolidadoPdf();
+      ? this.service.descargarConsolidadoExcel(this.filtroReporteConsolidado())
+      : this.service.descargarConsolidadoPdf(this.filtroReporteConsolidado());
 
     solicitud.subscribe({
       next: blob => {
@@ -1160,6 +1238,17 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.modalNuevaEvaluacionAbierto.set(true);
   }
 
+  private filtroReporteConsolidado(): FiltroReporteMatrices {
+    return {
+      buscar: this.filtroBuscarConsolidado().trim() || undefined,
+      estadoEvaluacion: this.filtroEstadoConsolidado() === 'TODOS' ? undefined : this.filtroEstadoConsolidado(),
+      pagina: this.paginaConsolidado(),
+      tamanoPagina: this.registrosPorPaginaConsolidado() as 10 | 20 | 50,
+      ordenarPor: this.ordenConsolidado(),
+      orden: this.direccionConsolidado()
+    };
+  }
+
   cerrarModalNuevaEvaluacion(): void {
     ++this.secuenciaVersionNuevaEvaluacion;
     this.modalNuevaEvaluacionAbierto.set(false);
@@ -1205,6 +1294,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo obtener el detalle de la evaluación.'));
       }
+    });
+  }
+
+  abrirModalVerDesdeConsolidado(fila: RiesgoReporteFila): void {
+    this.abrirModalVer({
+      evaId: fila.evaluacionId,
+      evaRiesgoId: fila.riesgoId,
+      riesgoCodigo: fila.codigoRiesgo,
+      riesgoNombre: fila.codigoRiesgo,
+      evaVersionId: fila.versionFormularioId,
+      versionCodigo: `VERSION_${fila.versionFormularioId}`,
+      versionNumero: 0,
+      estado: fila.estadoEvaluacion,
+      evaEstado: fila.estadoEvaluacion,
+      vri: fila.vri,
+      vrr: fila.vrr,
+      nivelResidual: fila.nivelResidual,
+      fechaEval: fila.fechaEvaluacion,
+      evaFechaEval: fila.fechaEvaluacion
     });
   }
 

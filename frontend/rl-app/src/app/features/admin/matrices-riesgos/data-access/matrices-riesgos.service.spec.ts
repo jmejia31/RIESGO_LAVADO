@@ -63,6 +63,44 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith(filas);
   });
 
+  it('consulta consolidado paginado en servidor y conserva filtros y orden', () => {
+    const resultado = vi.fn();
+    service.obtenerConsolidadoPaginado({
+      buscar: 'R-001',
+      estadoEvaluacion: 'APROBADA',
+      pagina: 2,
+      tamanoPagina: 50,
+      ordenarPor: 'vrr',
+      orden: 'asc'
+    }).subscribe(resultado);
+    const request = http.expectOne(req => req.url === `${apiUrl}/consolidado/paginado`);
+    expect(request.request.params.get('buscar')).toBe('R-001');
+    expect(request.request.params.get('estadoEvaluacion')).toBe('APROBADA');
+    expect(request.request.params.get('pagina')).toBe('2');
+    expect(request.request.params.get('tamanoPagina')).toBe('50');
+    expect(request.request.params.get('ordenarPor')).toBe('vrr');
+    expect(request.request.params.get('orden')).toBe('asc');
+    const pagina = { items: [], pagina: 2, tamanoPagina: 50, totalRegistros: 51, totalPaginas: 2, totales: { totalRiesgos: 1, totalConEvaluacionOficial: 1, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } };
+    request.flush({ success: true, datos: pagina });
+    expect(resultado).toHaveBeenCalledWith(pagina);
+  });
+
+  it('aplica los mismos filtros al exportar PDF y Excel', () => {
+    const filtro = { buscar: 'R-002', estadoEvaluacion: 'CERRADA', ordenarPor: 'codigo', orden: 'desc' as const };
+    service.descargarConsolidadoPdf(filtro).subscribe();
+    const pdf = http.expectOne(req => req.url === `${apiUrl}/reportes/consolidado.pdf`);
+    expect(pdf.request.params.get('buscar')).toBe('R-002');
+    expect(pdf.request.params.get('estadoEvaluacion')).toBe('CERRADA');
+    expect(pdf.request.params.get('ordenarPor')).toBe('codigo');
+    pdf.flush(new Blob(['pdf']));
+
+    service.descargarConsolidadoExcel(filtro).subscribe();
+    const excel = http.expectOne(req => req.url === `${apiUrl}/reportes/consolidado.xlsx`);
+    expect(excel.request.params.get('buscar')).toBe('R-002');
+    expect(excel.request.params.get('estadoEvaluacion')).toBe('CERRADA');
+    excel.flush(new Blob(['xlsx']));
+  });
+
   it('lista riesgos maestros desde Oracle', () => {
     const observer = vi.fn();
     service.listarRiesgos().subscribe(observer);

@@ -625,6 +625,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas);
     }
 
+    public async Task<ServiceResult<ReporteMatricesPaginadoDto>> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)
+    {
+        ReporteMatricesPaginadoDto resultado = await _repo.ObtenerConsolidadoPaginadoAsync(filtro);
+        return ServiceResult<ReporteMatricesPaginadoDto>.Ok(resultado);
+    }
+
+    public async Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro)
+    {
+        IReadOnlyList<RiesgoReporteFilaDto> filas = await _repo.ObtenerConsolidadoParaExportacionAsync(filtro);
+        return ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas);
+    }
+
     public async Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaVigenteAsync()
     {
         MetodologiaFormularioDto? metodologia = await _repo.ObtenerMetodologiaDinamicaVigenteAsync();

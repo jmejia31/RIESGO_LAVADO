@@ -27,9 +27,9 @@
       <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
       <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
     } @else {
-      <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total registros</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ consolidadoFiltrado().length }}</p><p class="text-xs text-gray-500">Filas consolidadas visibles</p></article>
-      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ consolidadoFiltrado().length }}</p><p class="text-xs text-blue-700/80">Registros con estado</p></article>
-      <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ consolidadoNivelAltoCritico() }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
+      <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total registros</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ consolidadoUsaServidor() ? totalesConsolidado().totalRiesgos : consolidadoFiltrado().length }}</p><p class="text-xs text-gray-500">Proyección consolidada</p></article>
+      <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ consolidadoUsaServidor() ? totalesConsolidado().totalConEvaluacionOficial : consolidadoFiltrado().length }}</p><p class="text-xs text-blue-700/80">Registros con estado</p></article>
+      <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ consolidadoUsaServidor() ? totalesConsolidado().totalAltoCritico : consolidadoNivelAltoCritico() }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
   </div>
@@ -287,11 +287,11 @@
       <div class="matrices-filter-surface grid grid-cols-1 gap-3 rounded-xl border border-gray-100 bg-gray-50/70 p-4 lg:grid-cols-[minmax(260px,1fr)_200px_120px_auto] lg:items-end" data-ui-filter-block="consolidado">
         <div>
           <label for="consolidado-buscar" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Buscar</label>
-          <input id="consolidado-buscar" type="search" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código, área o dueño" [ngModel]="filtroBuscarConsolidado()" (ngModelChange)="filtroBuscarConsolidado.set($event); paginaConsolidado.set(1)" />
+          <input id="consolidado-buscar" type="search" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" placeholder="Buscar por código, área o dueño" [ngModel]="filtroBuscarConsolidado()" (ngModelChange)="cambiarBuscarConsolidado($event)" />
         </div>
         <div>
           <label for="consolidado-estado" class="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500">Estado</label>
-          <select id="consolidado-estado" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoConsolidado()" (ngModelChange)="filtroEstadoConsolidado.set($event); paginaConsolidado.set(1)">
+          <select id="consolidado-estado" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="filtroEstadoConsolidado()" (ngModelChange)="cambiarEstadoConsolidado($event)">
             <option value="TODOS">Todos los estados</option>
             @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ estado }}</option> }
           </select>
@@ -302,12 +302,12 @@
             @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
           </select>
         </div>
-        <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="filtroBuscarConsolidado.set(''); filtroEstadoConsolidado.set('TODOS')">Limpiar filtros</button>
+        <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="limpiarFiltrosConsolidado()">Limpiar filtros</button>
       </div>
       <div class="matrices-table-surface overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-            <tr><th class="px-6 py-3">Código</th><th class="px-6 py-3">Área</th><th class="px-6 py-3">Dueño</th><th class="px-6 py-3">VRI</th><th class="px-6 py-3">Inherente</th><th class="px-6 py-3">VRR</th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3">Estado</th></tr>
+            <tr><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('codigo')">Código</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('area')">Área</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('dueno')">Dueño</button></th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vri')">VRI</button></th><th class="px-6 py-3">Inherente</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('vrr')">VRR</button></th><th class="px-6 py-3">Residual</th><th class="px-6 py-3">Respuesta</th><th class="px-6 py-3"><button type="button" (click)="ordenarConsolidado('estado')">Estado</button></th><th class="px-6 py-3">Versión</th><th class="px-6 py-3">Acciones</th></tr>
           </thead>
           <tbody class="divide-y divide-gray-100 bg-white text-gray-700">
             @for (fila of consolidadoPaginado(); track fila.evaluacionId) {
@@ -321,13 +321,15 @@
                 <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ fila.nivelResidual }}</span></td>
                 <td class="px-6 py-4">{{ fila.respuestaRiesgo }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
+                <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
+                <td class="px-6 py-4"><button type="button" class="text-ihss-900 font-bold hover:underline" (click)="abrirModalVerDesdeConsolidado(fila)">Ver</button></td>
               </tr>
-            } @empty { <tr><td colspan="9" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
+            } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
           </tbody>
         </table>
       </div>
       <div class="flex flex-col gap-3 border-t border-gray-100 pt-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
-        <p>Mostrando <strong class="text-gray-900">{{ consolidadoFiltrado().length === 0 ? 0 : ((paginaConsolidado() - 1) * registrosPorPaginaConsolidado()) + 1 }}–{{ consolidadoFiltrado().length === 0 ? 0 : (paginaConsolidado() * registrosPorPaginaConsolidado() > consolidadoFiltrado().length ? consolidadoFiltrado().length : paginaConsolidado() * registrosPorPaginaConsolidado()) }}</strong> de <strong class="text-gray-900">{{ consolidadoFiltrado().length }}</strong> registros</p>
+        <p>Mostrando <strong class="text-gray-900">{{ totalRegistrosConsolidado() === 0 ? 0 : ((paginaConsolidado() - 1) * registrosPorPaginaConsolidado()) + 1 }}–{{ totalRegistrosConsolidado() === 0 ? 0 : limiteSuperiorConsolidado() }}</strong> de <strong class="text-gray-900">{{ totalRegistrosConsolidado() }}</strong> registros</p>
         <div class="flex items-center gap-2">
           <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" [disabled]="paginaConsolidado() <= 1 || totalPaginasConsolidado() === 0" (click)="cambiarPaginaConsolidado(paginaConsolidado() - 1)">Anterior</button>
           <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasConsolidado() === 0 ? 0 : paginaConsolidado() }} / {{ totalPaginasConsolidado() }}</span>

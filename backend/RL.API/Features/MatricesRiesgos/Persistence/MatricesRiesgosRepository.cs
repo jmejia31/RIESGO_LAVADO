@@ -1445,6 +1445,207 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return lista;
     }
 
+    public async Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)
+    {
+        filtro ??= new FiltroReporteMatricesDto();
+        int pagina = Math.Max(1, filtro.Pagina);
+        int tamanoPagina = NormalizarTamanoPagina(filtro.TamanoPagina);
+        string where = ConstruirWhereConsolidado(filtro);
+        string orderBy = ConstruirOrdenConsolidado(filtro);
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        string fromWhere = $@"
+              FROM RL_MR_PROYECCIONES_EVALUACION p
+              JOIN RL_MR_EVALUACIONES_RIESGO e
+                ON e.EVA_ID = p.PROY_EVALUACION_ID
+             WHERE e.EVA_ACTIVO = 1
+               {where}";
+
+        int totalRegistros;
+        await using (var countCmd = CrearComando($"SELECT COUNT(*) {fromWhere}", conn))
+        {
+            AgregarParametrosFiltro(countCmd, filtro);
+            totalRegistros = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+        }
+
+        var totales = new ReporteMatricesTotalesDto();
+        const string totalSql = @"
+            SELECT COUNT(DISTINCT p.PROY_CODIGO_RIESGO),
+                   COUNT(DISTINCT CASE WHEN p.PROY_ESTADO_EVALUACION = 'APROBADA' THEN p.PROY_CODIGO_RIESGO END),
+                   0,
+                   COUNT(DISTINCT CASE WHEN UPPER(p.PROY_NIVEL_RESIDUAL) IN ('ALTO', 'CRITICO') THEN p.PROY_CODIGO_RIESGO END)";
+        await using (var totalCmd = CrearComando($"{totalSql} {fromWhere}", conn))
+        {
+            AgregarParametrosFiltro(totalCmd, filtro);
+            await using var totalReader = await totalCmd.ExecuteReaderAsync();
+            if (await totalReader.ReadAsync())
+            {
+                totales.TotalRiesgos = Convert.ToInt32(totalReader.GetValue(0));
+                totales.TotalConEvaluacionOficial = Convert.ToInt32(totalReader.GetValue(1));
+                totales.TotalSinEvaluacionOficial = 0;
+                totales.TotalAltoCritico = Convert.ToInt32(totalReader.GetValue(3));
+            }
+        }
+
+        int offset = (pagina - 1) * tamanoPagina;
+        int maxRow = offset + tamanoPagina;
+        const string columnas = @"e.EVA_RIESGO_ID,
+                   p.PROY_EVALUACION_ID,
+                   e.EVA_VERSION_ID,
+                   p.PROY_CODIGO_RIESGO,
+                   p.PROY_AREA_PRINCIPAL,
+                   p.PROY_DUENO_RIESGO,
+                   p.PROY_VRI,
+                   p.PROY_NIVEL_INHERENTE,
+                   p.PROY_VRR,
+                   p.PROY_NIVEL_RESIDUAL,
+                   p.PROY_RESPUESTA_RIESGO,
+                   p.PROY_ESTADO_EVALUACION,
+                   p.PROY_FECHA_EVAL";
+        string dataSql = $@"
+            SELECT q.*
+              FROM (
+                    SELECT {columnas}, ROWNUM AS CONSOLIDADO_ROWNUM
+                      FROM (
+                            SELECT {columnas}
+                              {fromWhere}
+                             {orderBy}
+                           )
+                     WHERE ROWNUM <= :maxRow
+                   ) q
+             WHERE q.CONSOLIDADO_ROWNUM > :offset";
+
+        var filas = new List<RiesgoReporteFilaDto>();
+        await using (var dataCmd = CrearComando(dataSql, conn))
+        {
+            AgregarParametrosFiltro(dataCmd, filtro);
+            dataCmd.Parameters.Add(new OracleParameter("maxRow", maxRow));
+            dataCmd.Parameters.Add(new OracleParameter("offset", offset));
+            await using var reader = await dataCmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) filas.Add(MapearFilaReporte(reader));
+        }
+
+        int totalPaginas = totalRegistros == 0 ? 0 : (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
+        int paginaNormalizada = totalPaginas == 0 ? 1 : Math.Min(pagina, totalPaginas);
+        return new ReporteMatricesPaginadoDto
+        {
+            Items = filas,
+            Pagina = paginaNormalizada,
+            TamanoPagina = tamanoPagina,
+            TotalRegistros = totalRegistros,
+            TotalPaginas = totalPaginas,
+            Totales = totales
+        };
+    }
+
+    public async Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro)
+    {
+        filtro ??= new FiltroReporteMatricesDto();
+        string where = ConstruirWhereConsolidado(filtro);
+        string orderBy = ConstruirOrdenConsolidado(filtro);
+        const string columnas = @"e.EVA_RIESGO_ID,
+                   p.PROY_EVALUACION_ID,
+                   e.EVA_VERSION_ID,
+                   p.PROY_CODIGO_RIESGO,
+                   p.PROY_AREA_PRINCIPAL,
+                   p.PROY_DUENO_RIESGO,
+                   p.PROY_VRI,
+                   p.PROY_NIVEL_INHERENTE,
+                   p.PROY_VRR,
+                   p.PROY_NIVEL_RESIDUAL,
+                   p.PROY_RESPUESTA_RIESGO,
+                   p.PROY_ESTADO_EVALUACION,
+                   p.PROY_FECHA_EVAL";
+        string sql = $@"
+            SELECT {columnas}
+              FROM RL_MR_PROYECCIONES_EVALUACION p
+              JOIN RL_MR_EVALUACIONES_RIESGO e
+                ON e.EVA_ID = p.PROY_EVALUACION_ID
+             WHERE e.EVA_ACTIVO = 1
+               {where}
+             {orderBy}";
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = CrearComando(sql, conn);
+        AgregarParametrosFiltro(cmd, filtro);
+        var filas = new List<RiesgoReporteFilaDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync()) filas.Add(MapearFilaReporte(reader));
+        return filas;
+    }
+
+    private static RiesgoReporteFilaDto MapearFilaReporte(IDataRecord reader) => new()
+    {
+        RiesgoId = reader.GetInt64(0),
+        EvaluacionId = reader.GetInt64(1),
+        VersionFormularioId = reader.GetInt64(2),
+        CodigoRiesgo = reader.GetString(3),
+        AreaPrincipal = reader.GetString(4),
+        DuenoRiesgo = reader.GetString(5),
+        Vri = reader.GetInt32(6),
+        NivelInherente = reader.GetString(7),
+        Vrr = reader.GetInt32(8),
+        NivelResidual = reader.GetString(9),
+        RespuestaRiesgo = reader.GetString(10),
+        EstadoEvaluacion = reader.GetString(11),
+        FechaEvaluacion = reader.GetDateTime(12)
+    };
+
+    private static int NormalizarTamanoPagina(int tamanoPagina) =>
+        tamanoPagina switch { 10 or 20 or 50 => tamanoPagina, _ => 20 };
+
+    private static string ConstruirWhereConsolidado(FiltroReporteMatricesDto filtro)
+    {
+        var where = new StringBuilder();
+        if (!string.IsNullOrWhiteSpace(filtro.Buscar))
+            where.Append(" AND (UPPER(NVL(p.PROY_CODIGO_RIESGO, '')) LIKE :buscar OR UPPER(NVL(p.PROY_AREA_PRINCIPAL, '')) LIKE :buscar OR UPPER(NVL(p.PROY_DUENO_RIESGO, '')) LIKE :buscar OR UPPER(NVL(p.PROY_RESPUESTA_RIESGO, '')) LIKE :buscar OR UPPER(NVL(p.PROY_ESTADO_EVALUACION, '')) LIKE :buscar)");
+        if (!string.IsNullOrWhiteSpace(filtro.Area)) where.Append(" AND UPPER(p.PROY_AREA_PRINCIPAL) = UPPER(:area)");
+        if (!string.IsNullOrWhiteSpace(filtro.DuenoRiesgo)) where.Append(" AND UPPER(p.PROY_DUENO_RIESGO) = UPPER(:duenoRiesgo)");
+        if (!string.IsNullOrWhiteSpace(filtro.EstadoEvaluacion)) where.Append(" AND p.PROY_ESTADO_EVALUACION = :estadoEvaluacion");
+        if (!string.IsNullOrWhiteSpace(filtro.NivelInherente)) where.Append(" AND p.PROY_NIVEL_INHERENTE = :nivelInherente");
+        if (!string.IsNullOrWhiteSpace(filtro.NivelResidual)) where.Append(" AND p.PROY_NIVEL_RESIDUAL = :nivelResidual");
+        if (!string.IsNullOrWhiteSpace(filtro.RespuestaRiesgo)) where.Append(" AND p.PROY_RESPUESTA_RIESGO = :respuestaRiesgo");
+        if (filtro.FechaInicio.HasValue) where.Append(" AND p.PROY_FECHA_EVAL >= :fechaInicio");
+        if (filtro.FechaFin.HasValue) where.Append(" AND p.PROY_FECHA_EVAL < :fechaFinExclusiva");
+        return where.ToString();
+    }
+
+    private static string ConstruirOrdenConsolidado(FiltroReporteMatricesDto filtro)
+    {
+        string campo = (filtro.OrdenarPor ?? "fechaEvaluacion").Trim().ToLowerInvariant();
+        string direccion = string.Equals(filtro.Orden, "asc", StringComparison.OrdinalIgnoreCase) ? "ASC" : "DESC";
+        string columna = campo switch
+        {
+            "codigo" or "codigoriesgo" or "riesgo" => "p.PROY_CODIGO_RIESGO",
+            "area" => "p.PROY_AREA_PRINCIPAL",
+            "dueno" or "duenoriesgo" => "p.PROY_DUENO_RIESGO",
+            "vri" => "p.PROY_VRI",
+            "vrr" => "p.PROY_VRR",
+            "nivelinherente" => "p.PROY_NIVEL_INHERENTE",
+            "nivelresidual" => "p.PROY_NIVEL_RESIDUAL",
+            "estado" or "estadoevaluacion" => "p.PROY_ESTADO_EVALUACION",
+            "version" or "versionformulario" => "e.EVA_VERSION_ID",
+            _ => "p.PROY_FECHA_EVAL"
+        };
+        return $"ORDER BY {columna} {direccion}, p.PROY_EVALUACION_ID DESC";
+    }
+
+    private static void AgregarParametrosFiltro(OracleCommand cmd, FiltroReporteMatricesDto filtro)
+    {
+        if (!string.IsNullOrWhiteSpace(filtro.Buscar)) cmd.Parameters.Add(new OracleParameter("buscar", $"%{filtro.Buscar.Trim().ToUpperInvariant()}%"));
+        if (!string.IsNullOrWhiteSpace(filtro.Area)) cmd.Parameters.Add(new OracleParameter("area", filtro.Area.Trim()));
+        if (!string.IsNullOrWhiteSpace(filtro.DuenoRiesgo)) cmd.Parameters.Add(new OracleParameter("duenoRiesgo", filtro.DuenoRiesgo.Trim()));
+        if (!string.IsNullOrWhiteSpace(filtro.EstadoEvaluacion)) cmd.Parameters.Add(new OracleParameter("estadoEvaluacion", filtro.EstadoEvaluacion.Trim()));
+        if (!string.IsNullOrWhiteSpace(filtro.NivelInherente)) cmd.Parameters.Add(new OracleParameter("nivelInherente", filtro.NivelInherente.Trim()));
+        if (!string.IsNullOrWhiteSpace(filtro.NivelResidual)) cmd.Parameters.Add(new OracleParameter("nivelResidual", filtro.NivelResidual.Trim()));
+        if (!string.IsNullOrWhiteSpace(filtro.RespuestaRiesgo)) cmd.Parameters.Add(new OracleParameter("respuestaRiesgo", filtro.RespuestaRiesgo.Trim()));
+        if (filtro.FechaInicio.HasValue) cmd.Parameters.Add(new OracleParameter("fechaInicio", filtro.FechaInicio.Value.Date));
+        if (filtro.FechaFin.HasValue) cmd.Parameters.Add(new OracleParameter("fechaFinExclusiva", filtro.FechaFin.Value.Date.AddDays(1)));
+    }
+
     public async Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()
     {
         await using var conn = _db.CreateConnection();

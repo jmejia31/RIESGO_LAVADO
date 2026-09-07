@@ -57,6 +57,22 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         Assert.Contains("Sin registros para mostrar", Encoding.ASCII.GetString(pdf.Contenido), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ExportacionesConFiltro_ConservanVersionFechaNumericaYMetadata()
+    {
+        var filas = CrearFilas(1);
+        ArchivoReporteDto excel = _service.CrearExcelConsolidado(filas, "Estado=APROBADA");
+        ArchivoReporteDto pdf = _service.CrearPdfConsolidado(filas, "Estado=APROBADA");
+
+        using var stream = new MemoryStream(excel.Contenido);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+        string hoja = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
+        Assert.Contains("r=\"M2\" s=\"2\"", hoja, StringComparison.Ordinal);
+        Assert.Contains("<v>1</v>", hoja, StringComparison.Ordinal);
+        Assert.Contains("Filtros: Estado=APROBADA", Encoding.ASCII.GetString(pdf.Contenido), StringComparison.Ordinal);
+        Assert.Contains("V1", Encoding.ASCII.GetString(pdf.Contenido), StringComparison.Ordinal);
+    }
+
     private static IReadOnlyList<RiesgoReporteFilaDto> CrearFilas(int cantidad) =>
         Enumerable.Range(1, cantidad).Select(i => new RiesgoReporteFilaDto
         {

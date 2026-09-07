@@ -180,6 +180,12 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoTipadoAsync() =>
         _inner.ObtenerConsolidadoTipadoAsync();
 
+    public Task<ServiceResult<ReporteMatricesPaginadoDto>> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro) =>
+        _inner.ObtenerConsolidadoPaginadoAsync(filtro);
+
+    public Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro) =>
+        _inner.ObtenerConsolidadoParaExportacionAsync(filtro);
+
     public Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaVigenteAsync() =>
         _cache.GetOrCreateAsync(
             ApplicationCacheScopes.MatricesFormularios,

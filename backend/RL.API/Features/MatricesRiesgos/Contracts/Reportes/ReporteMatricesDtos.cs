@@ -70,4 +70,6 @@ public sealed class FiltroReporteMatricesDto
     public DateTime? FechaFin { get; set; }
     public int Pagina { get; set; } = 1;
     public int TamanoPagina { get; set; } = 20;
+    public string? OrdenarPor { get; set; }
+    public string? Orden { get; set; }
 }

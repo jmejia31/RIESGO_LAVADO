@@ -8,8 +8,8 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 
 public interface IMatricesRiesgosReportExportService
 {
-    ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas);
-    ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas);
+    ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null);
+    ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null);
 }
 
 /// <summary>
@@ -24,7 +24,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         "VRI", "Nivel inherente", "VRR", "Nivel residual", "Respuesta", "Estado", "Fecha evaluación"
     };
 
-    public ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas)
+    public ArchivoReporteDto CrearExcelConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null)
     {
         using var output = new MemoryStream();
         using (var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
@@ -65,7 +65,8 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
                   <fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
                   <borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
                   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-                  <cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+                  <numFmts count="1"><numFmt numFmtId="164" formatCode="yyyy-mm-dd hh:mm:ss"/></numFmts>
+                  <cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>
                   <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
                 </styleSheet>
                 """);
@@ -98,7 +99,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
                 sheet.Append(CeldaTexto(10, row, fila.NivelResidual));
                 sheet.Append(CeldaTexto(11, row, fila.RespuestaRiesgo));
                 sheet.Append(CeldaTexto(12, row, fila.EstadoEvaluacion));
-                sheet.Append(CeldaTexto(13, row, fila.FechaEvaluacion.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)));
+                sheet.Append(CeldaFecha(13, row, fila.FechaEvaluacion));
                 sheet.Append("</row>");
             }
             sheet.Append("</sheetData><autoFilter ref=\"A1:M1\"/></worksheet>");
@@ -111,7 +112,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             $"Matriz_Riesgos_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx");
     }
 
-    public ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas)
+    public ArchivoReporteDto CrearPdfConsolidado(IReadOnlyList<RiesgoReporteFilaDto> filas, string? filtros = null)
     {
         const int filasPorPagina = 28;
         int paginas = Math.Max(1, (int)Math.Ceiling(filas.Count / (double)filasPorPagina));
@@ -127,7 +128,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
             int paginaId = 4 + pagina * 2;
             int contenidoId = paginaId + 1;
             referenciasPaginas.Add(paginaId);
-            List<string> lineas = ConstruirLineasPdf(filas, pagina, filasPorPagina, paginas);
+            List<string> lineas = ConstruirLineasPdf(filas, pagina, filasPorPagina, paginas, filtros);
             string stream = ConstruirStreamPdf(lineas);
             int longitud = Encoding.ASCII.GetByteCount(stream);
             objetos[contenidoId] = $"<< /Length {longitud} >>\nstream\n{stream}\nendstream";
@@ -141,12 +142,13 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         return new ArchivoReporteDto(pdf, "application/pdf", $"Matriz_Riesgos_{DateTime.UtcNow:yyyyMMdd_HHmmss}.pdf");
     }
 
-    private static List<string> ConstruirLineasPdf(IReadOnlyList<RiesgoReporteFilaDto> filas, int pagina, int filasPorPagina, int totalPaginas)
+    private static List<string> ConstruirLineasPdf(IReadOnlyList<RiesgoReporteFilaDto> filas, int pagina, int filasPorPagina, int totalPaginas, string? filtros)
     {
         var lineas = new List<string>
         {
             "SGRLA - IHSS | Matriz Consolidada de Riesgos LA/FT",
             $"Generado UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} | Pagina {pagina + 1}/{totalPaginas}",
+            $"Filtros: {filtros ?? "Sin filtros"}",
             "Codigo | Area | Responsable | VRI/Nivel | VRR/Nivel | Respuesta | Estado",
             new string('-', 105)
         };
@@ -155,7 +157,7 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         for (int i = inicio; i < fin; i++)
         {
             RiesgoReporteFilaDto f = filas[i];
-            string linea = $"{f.CodigoRiesgo} | {f.AreaPrincipal} | {f.DuenoRiesgo} | {f.Vri}/{f.NivelInherente} | {f.Vrr}/{f.NivelResidual} | {f.RespuestaRiesgo} | {f.EstadoEvaluacion}";
+            string linea = $"{f.CodigoRiesgo} | V{f.VersionFormularioId} | {f.AreaPrincipal} | {f.DuenoRiesgo} | {f.Vri}/{f.NivelInherente} | {f.Vrr}/{f.NivelResidual} | {f.RespuestaRiesgo} | {f.EstadoEvaluacion}";
             lineas.Add(Acortar(linea, 110));
         }
         if (filas.Count == 0) lineas.Add("Sin registros para mostrar.");
@@ -209,6 +211,9 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
 
     private static string CeldaNumero(int columna, int fila, long valor) =>
         $"<c r=\"{ReferenciaCelda(columna, fila)}\"><v>{valor.ToString(CultureInfo.InvariantCulture)}</v></c>";
+
+    private static string CeldaFecha(int columna, int fila, DateTime valor) =>
+        $"<c r=\"{ReferenciaCelda(columna, fila)}\" s=\"2\"><v>{valor.ToOADate().ToString(CultureInfo.InvariantCulture)}</v></c>";
 
     private static string ReferenciaCelda(int columna, int fila)
     {

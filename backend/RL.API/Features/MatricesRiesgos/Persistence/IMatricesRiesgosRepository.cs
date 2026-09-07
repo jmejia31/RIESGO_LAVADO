@@ -46,6 +46,8 @@ public interface IMatricesRiesgosRepository
     Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, Func<Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
     Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync();
+    Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro);
+    Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro);
     Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync();
     Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaPorVersionAsync(long versionId);
 }

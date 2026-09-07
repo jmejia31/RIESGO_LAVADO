@@ -200,6 +200,22 @@ export interface ReporteMatricesPaginado {
   totales: ReporteMatricesTotales;
 }
 
+export interface FiltroReporteMatrices {
+  buscar?: string;
+  area?: string;
+  duenoRiesgo?: string;
+  estadoEvaluacion?: string;
+  nivelInherente?: string;
+  nivelResidual?: string;
+  respuestaRiesgo?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  pagina?: number;
+  tamanoPagina?: 10 | 20 | 50;
+  ordenarPor?: string;
+  orden?: 'asc' | 'desc';
+}
+
 export interface MapaTransicionCelda {
   nivelInherente: string;
   nivelResidual: string;

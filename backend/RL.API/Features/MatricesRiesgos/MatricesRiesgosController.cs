@@ -415,6 +415,21 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("consolidado/paginado")]
+    public async Task<IActionResult> ObtenerConsolidadoPaginado([FromQuery] FiltroReporteMatricesDto filtro)
+    {
+        try
+        {
+            var result = await _service.ObtenerConsolidadoPaginadoAsync(filtro);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener matriz consolidada paginada.");
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("metodologia/vigente")]
     public async Task<IActionResult> ObtenerMetodologiaVigente()
     {

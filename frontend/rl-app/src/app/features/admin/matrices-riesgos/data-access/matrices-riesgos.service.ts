@@ -12,8 +12,10 @@ import {
   EvaluacionRiesgoDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
+  FiltroReporteMatrices,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
+  ReporteMatricesPaginado,
   RiesgoReporteFila,
   VincularEvidenciaDto,
   VersionFormularioDto
@@ -68,6 +70,12 @@ export class MatricesRiesgosService {
   obtenerConsolidado(): Observable<RiesgoReporteFila[]> {
     return this.http
       .get<ApiResponse<RiesgoReporteFila[]>>(`${this.apiUrl}/consolidado`)
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerConsolidadoPaginado(filtro: FiltroReporteMatrices): Observable<ReporteMatricesPaginado> {
+    return this.http
+      .get<ApiResponse<ReporteMatricesPaginado>>(`${this.apiUrl}/consolidado/paginado`, { params: this.parametrosReporte(filtro) })
       .pipe(map(response => response.datos));
   }
 
@@ -370,12 +378,36 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.datos));
   }
 
-  descargarConsolidadoExcel(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/reportes/consolidado.xlsx`, { responseType: 'blob' });
+  descargarConsolidadoExcel(filtro?: FiltroReporteMatrices): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/reportes/consolidado.xlsx`, { responseType: 'blob', params: this.parametrosReporte(filtro) });
   }
 
-  descargarConsolidadoPdf(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/reportes/consolidado.pdf`, { responseType: 'blob' });
+  descargarConsolidadoPdf(filtro?: FiltroReporteMatrices): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/reportes/consolidado.pdf`, { responseType: 'blob', params: this.parametrosReporte(filtro) });
+  }
+
+  private parametrosReporte(filtro?: FiltroReporteMatrices): HttpParams {
+    let params = new HttpParams();
+    if (!filtro) return params;
+    const valores: Record<string, string | number | undefined> = {
+      buscar: filtro.buscar,
+      area: filtro.area,
+      duenoRiesgo: filtro.duenoRiesgo,
+      estadoEvaluacion: filtro.estadoEvaluacion,
+      nivelInherente: filtro.nivelInherente,
+      nivelResidual: filtro.nivelResidual,
+      respuestaRiesgo: filtro.respuestaRiesgo,
+      fechaInicio: filtro.fechaInicio,
+      fechaFin: filtro.fechaFin,
+      pagina: filtro.pagina,
+      tamanoPagina: filtro.tamanoPagina,
+      ordenarPor: filtro.ordenarPor,
+      orden: filtro.orden
+    };
+    for (const [clave, valor] of Object.entries(valores)) {
+      if (valor !== undefined && valor !== null && String(valor).trim() !== '') params = params.set(clave, String(valor));
+    }
+    return params;
   }
 
   cargarEvidencia(archivo: File): Observable<EvidenciaDto> {

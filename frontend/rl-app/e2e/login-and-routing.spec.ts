@@ -219,6 +219,20 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
       datos = [versionFormulario];
     } else if (/\/formularios\/\d+$/.test(path) && method === 'GET') {
       datos = versionFormulario;
+    } else if (path.endsWith('/consolidado/paginado')) {
+      datos = {
+        items: consolidadoTipado,
+        pagina: 1,
+        tamanoPagina: 10,
+        totalRegistros: consolidadoTipado.length,
+        totalPaginas: 1,
+        totales: {
+          totalRiesgos: consolidadoTipado.length,
+          totalConEvaluacionOficial: consolidadoTipado.length,
+          totalSinEvaluacionOficial: 0,
+          totalAltoCritico: consolidadoTipado.filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length,
+        },
+      };
     } else if (path.endsWith('/consolidado')) {
       datos = consolidadoTipado;
     } else if (path.endsWith('/riesgos') && method === 'GET') {
