@@ -76,6 +76,35 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(navigation.querySelectorAll('button')).toHaveLength(2);
   });
 
+  it('mantiene las acciones operativas como icon-buttons accesibles', () => {
+    const assertIconAction = (label: string, title = label) => {
+      const button = fixture.nativeElement.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement;
+      expect(button).not.toBeNull();
+      expect(button.textContent?.trim()).toBe('');
+      expect(button.title).toBe(title);
+      expect(button.querySelector('svg')).not.toBeNull();
+    };
+
+    assertIconAction('Nueva fórmula');
+    component.seleccionarFormula(component.formulas()[0]);
+    fixture.detectChanges();
+    assertIconAction('Nueva versión de fórmula', 'Nueva versión');
+    assertIconAction('Desactivar fórmula', 'Desactivar');
+    assertIconAction('Retirar fórmula', 'Retirar');
+
+    component.seleccionarTab('funciones');
+    fixture.detectChanges();
+    assertIconAction('Nueva función');
+    component.seleccionarTab('parametros');
+    fixture.detectChanges();
+    assertIconAction('Nuevo parámetro');
+
+    component.seleccionarTab('catalogos');
+    component.seleccionarCatalogo(component.metodologia()!.catalogos[0]);
+    fixture.detectChanges();
+    assertIconAction('Cerrar detalle del catálogo', 'Cerrar detalle');
+  });
+
   it('no repite metadata genérica de funciones cuando código y nombre coinciden', () => {
     component.funciones.set([{ id: 20, codigo: 'AND', nombre: 'AND', categoria: 'CALCULO', estado: 'ACTIVE', versionRow: 1 }]);
     component.seleccionarTab('funciones');
