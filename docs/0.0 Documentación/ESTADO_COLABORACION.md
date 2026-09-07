@@ -1,5 +1,19 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente - FASE 5.1 Integracion funcional completa
+
+- Fecha/hora local: `2026-09-07 15:14` (UTC-06). Autor: `COD` / `CODEX`; rama `desarrollo`; baseline inicial `fd4190c174fb84151f2ffcc4133a99f641237e1c`.
+- Alcance certificado: ciclo Familia/Formulario, Version, Publicacion, Riesgo, Evaluacion, Respuestas, calculo backend, Resultados, Controles, Evaluacion de controles, Planes, Actividades, Flujos/Historial y Auditoria institucional. No se abrio FASE 5.2.
+- Estado funcional: `END_TO_END_INTEGRATION=PASS`; `CREATE_CURRENT_PUBLISHED_VERSION=PASS`; `DRAFT_ISOLATION=PASS`; `PUBLISH_FUTURE_CREATE=PASS`; `HISTORICAL_BINDING=PASS`; `HISTORICAL_EDIT=PASS`; `HISTORICAL_VIEW=PASS`; `BACKEND_AUTHORITATIVE_CALCULATION=PASS`; `CONTROLS_INTEGRATION=PASS`; `PLANS_ACTIVITIES_INTEGRATION=PASS`; `FLOW_HISTORY=PASS`; `AUDIT_INTEGRATION=PASS`.
+- Gates A-D: `BACKEND_SEARCH=PASS`; `SERVER_PAGINATION=PASS`; `LIGHTWEIGHT_LIST_DTO=PASS`; `CONCURRENCY_CONFLICT=PASS`; `N_PLUS_ONE_LIST=PASS`. El listado usa filtros, conteo y paginacion server-side, DTO de resumen sin CLOB de formulario, orden estable y concurrencia atomica con 409.
+- Evidencia fresca: backend Matrices `470/470`; backend total `591/591`; frontend focal `94/94`; frontend total `725/725`; E2E `29/29`; TSC, lint, build y analyzers `PASS`; npm audit reproducible `HIGH=0`, `CRITICAL=0`; `git diff --check=PASS`.
+- Cobertura: backend `31.08%` lineas / `35.34%` ramas; frontend `61.00%` sentencias / `54.34%` ramas / `56.30%` funciones / `61.62%` lineas. Suite de integracion de repositorio `4/4 PASS` sin escrituras Oracle institucionales.
+- Invariantes: no se agregaron renderers, serializers, normalizers, motores, Publication Gates, tablas, auditorias paralelas, ejecucion dinamica ni cambios de RBAC; FormulaEngine y snapshots versionados publicados permanecen preservados. `ARCHITECTURE_INVARIANTS=PASS`.
+- Validadores: base de datos, documentacion, contratos dinamicos/autorizacion/UAT, inventario 17 objetos, GOV-02/GOV-03, FE-01 y FE-03/FE-04 `PASS`. El validador estructural conserva tres condiciones legacy fuera de alcance ya conocidas. La alerta pre-Oracle local corresponde a `appsettings.json` ignorado y no versionado; no se modifico.
+- UAT: automatizado contractual `PASS`; UAT manual autenticado institucional no disponible porque no habia superficie CUA/browser autenticada en la ejecucion. No se presenta como evidencia ejecutada.
+- Cambios funcionales: ninguno requerido despues de la inspeccion focal; solo se actualizan esta bitacora y el estado vivo para certificar la fase. Se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos, sin stage.
+- Punto de continuidad: ejecutar stage explicito de ambos documentos, `git diff --cached --check`, commit documental, push solo a `origin/desarrollo`, confirmar `LOCAL_HEAD == ORIGIN_DESARROLLO == REMOTE_DESARROLLO`, `AHEAD=0`, `BEHIND=0`, `TRACKED=0`, `STAGED=0`, y certificar el Quality Gate exacto del SHA final. `FASE_5_2_HABILITADA=TRUE`; `FASE_5_2_INICIADA=FALSE`.
+
 ## Estado vigente - Cierre formal definitivo FASE 4
 
 - Fecha/hora local: `2026-09-07` (UTC-06). Autor: `COD` / `CODEX`; rama `desarrollo`.
