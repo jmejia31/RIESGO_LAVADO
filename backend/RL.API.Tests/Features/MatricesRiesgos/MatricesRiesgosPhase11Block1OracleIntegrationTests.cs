@@ -110,7 +110,7 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
         Assert.Equal("PUBLISHED", version.VerEstado);
         Assert.True(version.VerVigente);
 
-        var metodologia = await repository.ObtenerMetodologiaDinamicaVigenteAsync();
+        var metodologia = await repository.ObtenerMetodologiaDinamicaPorVersionAsync(version.VerId);
         Assert.NotNull(metodologia);
         Assert.Equal("MATRIZ_RIESGOS_LAFT_V1", metodologia!.Codigo);
         Assert.Equal(4, metodologia.Secciones.Count);

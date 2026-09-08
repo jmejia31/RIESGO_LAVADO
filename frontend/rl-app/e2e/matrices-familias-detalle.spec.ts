@@ -94,6 +94,7 @@ async function stubLecturasBase(page: Page): Promise<void> {
 
     let datos: unknown = [];
     if (path.endsWith('/familias')) datos = [familiaListado];
+    else if (/\/familias\/7$/.test(path) && request.method() === 'GET') datos = familiaDetalle;
     else if (path.endsWith('/formulario/version-vigente')) datos = versionVigente;
     else if (path.endsWith('/metodologia/vigente')) datos = {
       versionFormularioId: 71,

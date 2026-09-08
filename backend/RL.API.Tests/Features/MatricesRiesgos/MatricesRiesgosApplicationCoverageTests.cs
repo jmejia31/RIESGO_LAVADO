@@ -484,8 +484,8 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     public async Task MetodologiaInexistente_Retorna404()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync), _ =>
-            Task.FromResult<MetodologiaFormularioDto?>(null));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaPredeterminadaAsync), _ =>
+            Task.FromResult<FamiliaPredeterminadaDto?>(null));
 
         ServiceResult<MetodologiaFormularioDto> result = await service.ObtenerMetodologiaDinamicaVigenteAsync();
 

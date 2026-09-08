@@ -43,7 +43,14 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.ListarHistorialVersionesFormularioAsync), _ => Task.FromResult(new List<VersionFormularioDto> { version }));
         repo.On(nameof(IMatricesRiesgosRepository.ListarFamiliasFormularioAsync), _ => Task.FromResult(new List<FamiliaFormularioDto> { familia }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaFormularioPorIdAsync), _ => Task.FromResult<FamiliaFormularioDto?>(familia));
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync), _ => Task.FromResult<MetodologiaFormularioDto?>(new MetodologiaFormularioDto()));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaPredeterminadaAsync), _ => Task.FromResult<FamiliaPredeterminadaDto?>(new FamiliaPredeterminadaDto
+        {
+            Configurada = true,
+            FamiliaCodigo = "MATRIZ_RIESGOS",
+            TieneVersionVigente = true,
+            VersionVigenteId = 7
+        }));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaPorVersionAsync), _ => Task.FromResult<MetodologiaFormularioDto?>(new MetodologiaFormularioDto()));
 
         ServiceResult<VersionFormularioDto> vigente = await service.ObtenerVersionVigenteFormularioAsync("  matriz_riesgos  ");
         ServiceResult<VersionFormularioDto> porId = await service.ObtenerVersionFormularioAsync(7);

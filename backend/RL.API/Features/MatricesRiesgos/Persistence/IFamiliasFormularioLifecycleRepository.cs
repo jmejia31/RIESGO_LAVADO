@@ -5,7 +5,8 @@ public enum ResultadoCambioEstadoFamiliaFormulario
     Exito,
     NoExiste,
     YaEstabaEnEstado,
-    TieneVersionVigente
+    TieneVersionVigente,
+    EsPredeterminada
 }
 
 public enum ResultadoEliminacionFamiliaFormulario

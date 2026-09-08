@@ -95,6 +95,12 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
                 return ResultadoCambioEstadoFamiliaFormulario.YaEstabaEnEstado;
             }
 
+            if (familia.Predeterminada)
+            {
+                await transaction.RollbackAsync();
+                return ResultadoCambioEstadoFamiliaFormulario.EsPredeterminada;
+            }
+
             const string sqlVigente = @"
                 SELECT COUNT(*)
                   FROM RL_MR_VERSIONES_FORMULARIO
@@ -226,11 +232,12 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         OracleTransaction transaction,
         long famId)
     {
-        const string sql = @"
-            SELECT FAM_CODIGO,
-                   FAM_NOMBRE,
-                   FAM_DESCRIPCION,
-                   FAM_ACTIVO
+            const string sql = @"
+                SELECT FAM_CODIGO,
+                       FAM_NOMBRE,
+                       FAM_DESCRIPCION,
+                       FAM_ACTIVO,
+                       FAM_PREDETERMINADA
               FROM RL_MR_FAMILIAS_FORMULARIO
              WHERE FAM_ID = :famId
              FOR UPDATE";
@@ -247,7 +254,8 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
             reader.GetString(0),
             reader.GetString(1),
             reader.IsDBNull(2) ? null : reader.GetString(2),
-            reader.GetInt32(3) == 1);
+            reader.GetInt32(3) == 1,
+            reader.GetInt32(4) == 1);
     }
 
     private async Task RegistrarCambioEstadoAsync(
@@ -296,5 +304,6 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         string Codigo,
         string Nombre,
         string? Descripcion,
-        bool Activa);
+        bool Activa,
+        bool Predeterminada);
 }

@@ -14,6 +14,15 @@ public enum ResultadoEliminacionEvidencia
     FalloCommit
 }
 
+public enum ResultadoFamiliaPredeterminada
+{
+    Exito,
+    NoExiste,
+    Inactiva,
+    SinVersionVigente,
+    Conflicto
+}
+
 public interface IMatricesRiesgosRepository
 {
     Task<VersionFormularioDto?> ObtenerVersionVigenteFormularioAsync(string familiaCodigo);
@@ -29,6 +38,8 @@ public interface IMatricesRiesgosRepository
     Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync();
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId);
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo);
+    Task<FamiliaPredeterminadaDto?> ObtenerFamiliaPredeterminadaAsync();
+    Task<ResultadoFamiliaPredeterminada> EstablecerFamiliaPredeterminadaAsync(long famId, long usuarioId, string? ip);
     Task<long> CrearFamiliaFormularioAsync(string famCodigo, string famNombre, string? famDescripcion, bool famActivo);
     Task<bool> ActualizarFamiliaFormularioAsync(long famId, string famNombre, string? famDescripcion, bool famActivo);
     Task<bool> DesactivarFamiliaFormularioAtomicoAsync(long famId);

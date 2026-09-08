@@ -8,7 +8,7 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 
 public interface IMatricesRiesgosAppService
 {
-    Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string familiaCodigo);
+    Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo);
     Task<ServiceResult<VersionFormularioDto>> ObtenerVersionFormularioAsync(long versionId);
     Task<ServiceResult<long>> CrearBorradorFormularioAsync(long familiaId, string codigoFormulario, string jsonConfig, long usuarioId);
     Task<ServiceResult<long>> ClonarVersionFormularioAsync(long versionOrigenId, long usuarioId);
@@ -20,6 +20,8 @@ public interface IMatricesRiesgosAppService
 
     Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync();
     Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId);
+    Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync();
+    Task<ServiceResult> EstablecerFamiliaPredeterminadaAsync(long famId, long usuarioId, string? ip);
     Task<ServiceResult<long>> CrearFamiliaFormularioAsync(CrearFamiliaFormularioDto dto);
     Task<ServiceResult> ActualizarFamiliaFormularioAsync(long famId, ActualizarFamiliaFormularioDto dto);
     Task<ServiceResult> DesactivarFamiliaFormularioAsync(long famId);

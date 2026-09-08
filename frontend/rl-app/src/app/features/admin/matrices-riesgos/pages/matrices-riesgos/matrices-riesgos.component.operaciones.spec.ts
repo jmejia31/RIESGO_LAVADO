@@ -244,6 +244,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
   });
 
   it('clona versiones y conserva el error visible cuando el backend rechaza la solicitud', () => {
+    component.seleccionarFamilia('FORM_A');
     component.clonarVersion({ ...version, verVigente: false, verEstado: 'DRAFT' });
     expect(service['clonarVersionFormulario']).toHaveBeenCalledWith(10);
     expect(service['listarHistorialVersionesFormulario']).toHaveBeenCalled();

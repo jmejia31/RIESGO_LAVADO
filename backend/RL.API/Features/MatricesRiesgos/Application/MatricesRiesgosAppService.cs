@@ -34,8 +34,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         _auditoriaRepo = auditoriaRepo;
     }
 
-    public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string familiaCodigo)
+    public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo)
     {
+        if (string.IsNullOrWhiteSpace(familiaCodigo))
+        {
+            FamiliaPredeterminadaDto? predeterminada = await _repo.ObtenerFamiliaPredeterminadaAsync();
+            if (predeterminada is null || !predeterminada.Configurada || string.IsNullOrWhiteSpace(predeterminada.FamiliaCodigo))
+            {
+                return ServiceResult<VersionFormularioDto>.NotFound(
+                    "No existe una familia de formulario predeterminada configurada.");
+            }
+
+            familiaCodigo = predeterminada.FamiliaCodigo;
+        }
+
         VersionFormularioDto? version = await _repo.ObtenerVersionVigenteFormularioAsync(familiaCodigo);
         return version is null
             ? ServiceResult<VersionFormularioDto>.NotFound($"No existe una versión publicada y vigente para la familia '{familiaCodigo}'.")
@@ -182,6 +194,16 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Solo las versiones en estado PUBLISHED pueden cambiar su estado de vigencia.");
         }
 
+        if (!vigente && version.VerVigente)
+        {
+            FamiliaFormularioDto? familia = await _repo.ObtenerFamiliaFormularioPorIdAsync(version.VerFamiliaId);
+            if (familia?.FamPredeterminada == true && familia.TieneVersionVigente)
+            {
+                return ServiceResult.BadRequest(
+                    "No se puede retirar la única versión publicada y vigente de la familia predeterminada.");
+            }
+        }
+
         bool actualizado = await _repo.CambiarEstadoVigenciaFormularioAsync(versionId, vigente, usuarioId);
         return actualizado
             ? ServiceResult.Ok("Vigencia actualizada correctamente.")
@@ -296,6 +318,12 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("El nombre de la familia es obligatorio.");
         }
 
+        if (!dto.FamActivo && existente.FamPredeterminada)
+        {
+            return ServiceResult.BadRequest(
+                "Esta familia es actualmente la predeterminada. Establezca otra familia como predeterminada antes de desactivarla.");
+        }
+
         if (!dto.FamActivo && existente.TieneVersionVigente)
         {
             return ServiceResult.BadRequest("No se puede desactivar la familia mientras posea una versión publicada vigente.");
@@ -323,6 +351,12 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (existente is null)
         {
             return ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}.");
+        }
+
+        if (existente.FamPredeterminada)
+        {
+            return ServiceResult.BadRequest(
+                "Esta familia es actualmente la predeterminada. Establezca otra familia como predeterminada antes de desactivarla.");
         }
 
         bool desactivado = await _repo.DesactivarFamiliaFormularioAtomicoAsync(famId);
@@ -625,6 +659,31 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas);
     }
 
+    public async Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync()
+    {
+        FamiliaPredeterminadaDto? familia = await _repo.ObtenerFamiliaPredeterminadaAsync();
+        return ServiceResult<FamiliaPredeterminadaDto>.Ok(familia ?? new FamiliaPredeterminadaDto());
+    }
+
+    public async Task<ServiceResult> EstablecerFamiliaPredeterminadaAsync(long famId, long usuarioId, string? ip)
+    {
+        if (famId <= 0)
+        {
+            return ServiceResult.BadRequest("El ID de familia especificado es inválido.");
+        }
+
+        ResultadoFamiliaPredeterminada resultado = await _repo.EstablecerFamiliaPredeterminadaAsync(famId, usuarioId, ip);
+        return resultado switch
+        {
+            ResultadoFamiliaPredeterminada.Exito => ServiceResult.Ok("Familia de formulario predeterminada establecida exitosamente."),
+            ResultadoFamiliaPredeterminada.NoExiste => ServiceResult.NotFound($"No se encontró la familia de formulario con ID {famId}."),
+            ResultadoFamiliaPredeterminada.Conflicto => ServiceResult.Conflict("La familia predeterminada cambió concurrentemente. Intente nuevamente."),
+            ResultadoFamiliaPredeterminada.Inactiva or ResultadoFamiliaPredeterminada.SinVersionVigente => ServiceResult.BadRequest(
+                "La familia debe estar activa y contar con una versión publicada y vigente antes de establecerla como predeterminada."),
+            _ => ServiceResult.BadRequest("No se pudo establecer la familia predeterminada.")
+        };
+    }
+
     public async Task<ServiceResult<ReporteMatricesPaginadoDto>> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)
     {
         ReporteMatricesPaginadoDto resultado = await _repo.ObtenerConsolidadoPaginadoAsync(filtro);
@@ -639,7 +698,18 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public async Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaVigenteAsync()
     {
-        MetodologiaFormularioDto? metodologia = await _repo.ObtenerMetodologiaDinamicaVigenteAsync();
+        FamiliaPredeterminadaDto? predeterminada = await _repo.ObtenerFamiliaPredeterminadaAsync();
+        if (predeterminada is null
+            || !predeterminada.Configurada
+            || !predeterminada.TieneVersionVigente
+            || !predeterminada.VersionVigenteId.HasValue)
+        {
+            return ServiceResult<MetodologiaFormularioDto>.NotFound(
+                "No existe una familia de formulario predeterminada con version publicada y vigente.");
+        }
+
+        MetodologiaFormularioDto? metodologia = await _repo.ObtenerMetodologiaDinamicaPorVersionAsync(
+            predeterminada.VersionVigenteId.Value);
         return metodologia is null
             ? ServiceResult<MetodologiaFormularioDto>.NotFound("No existe una metodología dinámica publicada y vigente.")
             : ServiceResult<MetodologiaFormularioDto>.Ok(metodologia);

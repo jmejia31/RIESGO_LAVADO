@@ -122,9 +122,11 @@ export class MatricesRiesgosService {
   }
 
   obtenerVersionVigenteFormulario(
-    familiaCodigo = 'MATRIZ_RIESGOS_LAFT'
+    familiaCodigo?: string
   ): Observable<VersionFormularioDto> {
-    const params = new HttpParams().set('familiaCodigo', familiaCodigo);
+    const params = familiaCodigo?.trim()
+      ? new HttpParams().set('familiaCodigo', familiaCodigo.trim())
+      : undefined;
     return this.http
       .get<ApiResponse<VersionFormularioDto>>(`${this.apiUrl}/formulario/version-vigente`, { params })
       .pipe(map(response => response.datos));
@@ -137,9 +139,9 @@ export class MatricesRiesgosService {
   }
 
   listarHistorialVersionesFormulario(
-    familiaCodigo = 'MATRIZ_RIESGOS_LAFT'
+    familiaCodigo: string
   ): Observable<VersionFormularioDto[]> {
-    const params = new HttpParams().set('familiaCodigo', familiaCodigo);
+    const params = new HttpParams().set('familiaCodigo', familiaCodigo.trim());
     return this.http
       .get<ApiResponse<VersionFormularioDto[]>>(`${this.apiUrl}/formularios/historial`, { params })
       .pipe(map(response => response.datos));

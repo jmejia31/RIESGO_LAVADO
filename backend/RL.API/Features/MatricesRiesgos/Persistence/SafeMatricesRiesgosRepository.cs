@@ -74,6 +74,15 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
     public Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo) =>
         _inner.ObtenerFamiliaFormularioPorCodigoAsync(famCodigo);
 
+    public Task<FamiliaPredeterminadaDto?> ObtenerFamiliaPredeterminadaAsync() =>
+        _inner.ObtenerFamiliaPredeterminadaAsync();
+
+    public Task<ResultadoFamiliaPredeterminada> EstablecerFamiliaPredeterminadaAsync(
+        long famId,
+        long usuarioId,
+        string? ip) =>
+        _inner.EstablecerFamiliaPredeterminadaAsync(famId, usuarioId, ip);
+
     public async Task<long> CrearFamiliaFormularioAsync(
         string famCodigo,
         string famNombre,

@@ -939,7 +939,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarVersiones(): void {
     this.cargandoPlantillas.set(true);
     this.errorPlantillas.set(null);
-    const codigo = this.familiaSeleccionada() || 'MATRIZ_RIESGOS_LAFT';
+    const codigo = this.familiaSeleccionada();
+    if (!codigo) {
+      this.versiones.set([]);
+      this.cargandoPlantillas.set(false);
+      this.detalleFamiliaRef?.instance.refrescar();
+      return;
+    }
     this.service.listarHistorialVersionesFormulario(codigo).subscribe({
       next: versiones => {
         this.versiones.set(versiones);

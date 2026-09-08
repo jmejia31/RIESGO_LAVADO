@@ -353,6 +353,31 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 await cmdApagar.ExecuteNonQueryAsync();
             }
 
+            if (!vigente)
+            {
+                const string sqlBloqueoDefault = @"
+                    SELECT COUNT(*)
+                      FROM RL_MR_VERSIONES_FORMULARIO v
+                      JOIN RL_MR_FAMILIAS_FORMULARIO f
+                        ON f.FAM_ID = v.VER_FAMILIA_ID
+                     WHERE v.VER_ID = :versionId
+                       AND v.VER_ESTADO = 'PUBLISHED'
+                       AND v.VER_VIGENTE = 1
+                       AND f.FAM_PREDETERMINADA = 1
+                       AND (SELECT COUNT(*)
+                              FROM RL_MR_VERSIONES_FORMULARIO v2
+                             WHERE v2.VER_FAMILIA_ID = v.VER_FAMILIA_ID
+                               AND v2.VER_ESTADO = 'PUBLISHED'
+                               AND v2.VER_VIGENTE = 1) = 1";
+                await using var cmdBloqueo = CrearComando(sqlBloqueoDefault, conn, trans);
+                cmdBloqueo.Parameters.Add(new OracleParameter("versionId", versionId));
+                if (Convert.ToInt32(await cmdBloqueo.ExecuteScalarAsync()) > 0)
+                {
+                    await trans.RollbackAsync();
+                    return false;
+                }
+            }
+
             const string sql = @"
                 UPDATE RL_MR_VERSIONES_FORMULARIO
                    SET VER_VIGENTE = :vigente,
@@ -473,6 +498,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_DESCRIPCION,
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
+                   f.FAM_PREDETERMINADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
@@ -492,9 +518,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamNombre = reader.GetString(2),
                 FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
                 FamActivo = reader.GetInt32(4) == 1,
-                FamFechaCreacion = reader.GetDateTime(5),
-                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
-                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+                 FamFechaCreacion = reader.GetDateTime(5),
+                 FamPredeterminada = reader.GetInt32(6) == 1,
+                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
+                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
             });
         }
 
@@ -513,6 +540,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_DESCRIPCION,
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
+                   f.FAM_PREDETERMINADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
@@ -532,9 +560,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamNombre = reader.GetString(2),
                 FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
                 FamActivo = reader.GetInt32(4) == 1,
-                FamFechaCreacion = reader.GetDateTime(5),
-                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
-                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+                 FamFechaCreacion = reader.GetDateTime(5),
+                 FamPredeterminada = reader.GetInt32(6) == 1,
+                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
+                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
             };
         }
 
@@ -553,6 +582,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                    f.FAM_DESCRIPCION,
                    f.FAM_ACTIVO,
                    f.FAM_FECHA_CREACION,
+                   f.FAM_PREDETERMINADA,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
                    (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
               FROM RL_MR_FAMILIAS_FORMULARIO f
@@ -572,13 +602,193 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 FamNombre = reader.GetString(2),
                 FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
                 FamActivo = reader.GetInt32(4) == 1,
-                FamFechaCreacion = reader.GetDateTime(5),
-                TotalVersiones = Convert.ToInt32(reader.GetValue(6)),
-                TieneVersionVigente = Convert.ToInt32(reader.GetValue(7)) > 0
+                 FamFechaCreacion = reader.GetDateTime(5),
+                 FamPredeterminada = reader.GetInt32(6) == 1,
+                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
+                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
             };
         }
 
         return null;
+    }
+
+    public async Task<FamiliaPredeterminadaDto?> ObtenerFamiliaPredeterminadaAsync()
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT f.FAM_ID,
+                   f.FAM_CODIGO,
+                   f.FAM_NOMBRE,
+                   (SELECT COUNT(*)
+                      FROM RL_MR_VERSIONES_FORMULARIO v
+                     WHERE v.VER_FAMILIA_ID = f.FAM_ID
+                       AND v.VER_ESTADO = 'PUBLISHED'
+                       AND v.VER_VIGENTE = 1) AS VERSIONES_VIGENTES,
+                   (SELECT MAX(v.VER_ID)
+                      FROM RL_MR_VERSIONES_FORMULARIO v
+                     WHERE v.VER_FAMILIA_ID = f.FAM_ID
+                       AND v.VER_ESTADO = 'PUBLISHED'
+                       AND v.VER_VIGENTE = 1) AS VERSION_ID,
+                   (SELECT MAX(v.VER_CODIGO)
+                      FROM RL_MR_VERSIONES_FORMULARIO v
+                     WHERE v.VER_FAMILIA_ID = f.FAM_ID
+                       AND v.VER_ESTADO = 'PUBLISHED'
+                       AND v.VER_VIGENTE = 1) AS VERSION_CODIGO,
+                   (SELECT MAX(v.VER_VERSION)
+                      FROM RL_MR_VERSIONES_FORMULARIO v
+                     WHERE v.VER_FAMILIA_ID = f.FAM_ID
+                       AND v.VER_ESTADO = 'PUBLISHED'
+                       AND v.VER_VIGENTE = 1) AS VERSION_NUMERO
+              FROM RL_MR_FAMILIAS_FORMULARIO f
+             WHERE f.FAM_PREDETERMINADA = 1";
+
+        await using var cmd = CrearComando(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        int versionesVigentes = Convert.ToInt32(reader.GetValue(3));
+        return new FamiliaPredeterminadaDto
+        {
+            Configurada = true,
+            FamiliaId = reader.GetInt64(0),
+            FamiliaCodigo = reader.GetString(1),
+            FamiliaNombre = reader.GetString(2),
+            TieneVersionVigente = versionesVigentes == 1,
+            VersionVigenteId = versionesVigentes == 1 && !reader.IsDBNull(4) ? reader.GetInt64(4) : null,
+            VersionCodigo = versionesVigentes == 1 && !reader.IsDBNull(5) ? reader.GetString(5) : null,
+            Version = versionesVigentes == 1 && !reader.IsDBNull(6) ? reader.GetInt32(6) : null
+        };
+    }
+
+    public async Task<ResultadoFamiliaPredeterminada> EstablecerFamiliaPredeterminadaAsync(
+        long famId,
+        long usuarioId,
+        string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var transaction = conn.BeginTransaction();
+
+        try
+        {
+            const string sqlFamilia = @"
+                SELECT FAM_CODIGO, FAM_NOMBRE, FAM_ACTIVO, FAM_PREDETERMINADA
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_ID = :famId
+                 FOR UPDATE";
+
+            string codigo;
+            string nombre;
+            bool activa;
+            await using (var cmdFamilia = CrearComando(sqlFamilia, conn, transaction))
+            {
+                cmdFamilia.Parameters.Add(new OracleParameter("famId", famId));
+                await using var reader = await cmdFamilia.ExecuteReaderAsync();
+                if (!await reader.ReadAsync())
+                {
+                    await transaction.RollbackAsync();
+                    return ResultadoFamiliaPredeterminada.NoExiste;
+                }
+
+                codigo = reader.GetString(0);
+                nombre = reader.GetString(1);
+                activa = reader.GetInt32(2) == 1;
+            }
+
+            if (!activa)
+            {
+                await transaction.RollbackAsync();
+                return ResultadoFamiliaPredeterminada.Inactiva;
+            }
+
+            const string sqlVersionVigente = @"
+                SELECT COUNT(*)
+                  FROM RL_MR_VERSIONES_FORMULARIO
+                 WHERE VER_FAMILIA_ID = :famId
+                   AND VER_ESTADO = 'PUBLISHED'
+                   AND VER_VIGENTE = 1";
+            await using (var cmdVersion = CrearComando(sqlVersionVigente, conn, transaction))
+            {
+                cmdVersion.Parameters.Add(new OracleParameter("famId", famId));
+                if (Convert.ToInt32(await cmdVersion.ExecuteScalarAsync()) != 1)
+                {
+                    await transaction.RollbackAsync();
+                    return ResultadoFamiliaPredeterminada.SinVersionVigente;
+                }
+            }
+
+            string? codigoAnterior = null;
+            long? idAnterior = null;
+            const string sqlBloquearActual = @"
+                SELECT FAM_ID, FAM_CODIGO
+                  FROM RL_MR_FAMILIAS_FORMULARIO
+                 WHERE FAM_PREDETERMINADA = 1
+                 FOR UPDATE";
+            await using (var cmdActual = CrearComando(sqlBloquearActual, conn, transaction))
+            await using (var readerActual = await cmdActual.ExecuteReaderAsync())
+            {
+                if (await readerActual.ReadAsync())
+                {
+                    idAnterior = readerActual.GetInt64(0);
+                    codigoAnterior = readerActual.GetString(1);
+                }
+            }
+
+            const string sqlQuitar = @"
+                UPDATE RL_MR_FAMILIAS_FORMULARIO
+                   SET FAM_PREDETERMINADA = 0
+                 WHERE FAM_PREDETERMINADA = 1";
+            await using (var cmdQuitar = CrearComando(sqlQuitar, conn, transaction))
+            {
+                await cmdQuitar.ExecuteNonQueryAsync();
+            }
+
+            const string sqlEstablecer = @"
+                UPDATE RL_MR_FAMILIAS_FORMULARIO
+                   SET FAM_PREDETERMINADA = 1
+                 WHERE FAM_ID = :famId
+                   AND FAM_ACTIVO = 1";
+            await using (var cmdEstablecer = CrearComando(sqlEstablecer, conn, transaction))
+            {
+                cmdEstablecer.Parameters.Add(new OracleParameter("famId", famId));
+                if (await cmdEstablecer.ExecuteNonQueryAsync() != 1)
+                {
+                    await transaction.RollbackAsync();
+                    return ResultadoFamiliaPredeterminada.NoExiste;
+                }
+            }
+
+            await _auditoriaRepository.RegistrarAsync(
+                conn,
+                transaction,
+                "RL_MR_FAMILIAS_FORMULARIO",
+                famId.ToString(),
+                "UPDATE",
+                JsonSerializer.Serialize(new { FamiliaId = idAnterior, FamiliaCodigo = codigoAnterior, FamPredeterminada = idAnterior.HasValue }),
+                JsonSerializer.Serialize(new { FamiliaId = famId, FamiliaCodigo = codigo, FamiliaNombre = nombre, FamPredeterminada = true }),
+                usuarioId,
+                null,
+                ip,
+                ModuloAuditoria);
+
+            await transaction.CommitAsync();
+            return ResultadoFamiliaPredeterminada.Exito;
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            await transaction.RollbackAsync();
+            return ResultadoFamiliaPredeterminada.Conflicto;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<long> CrearFamiliaFormularioAsync(string famCodigo, string famNombre, string? famDescripcion, bool famActivo)
@@ -617,16 +827,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
 
         const string sql = @"
             UPDATE RL_MR_FAMILIAS_FORMULARIO
-               SET FAM_NOMBRE = :famNombre,
+             SET FAM_NOMBRE = :famNombre,
                    FAM_DESCRIPCION = :famDescripcion,
                    FAM_ACTIVO = :famActivo
-             WHERE FAM_ID = :famId";
+             WHERE FAM_ID = :famId
+               AND (FAM_PREDETERMINADA = 0 OR :famActivoGuard = 1)";
 
         await using var cmd = conn.CreateCommand();
         cmd.CommandText = sql;
         cmd.Parameters.Add(new OracleParameter("famNombre", (famNombre ?? string.Empty).Trim()));
         cmd.Parameters.Add(new OracleParameter("famDescripcion", (object?)famDescripcion?.Trim() ?? DBNull.Value));
         cmd.Parameters.Add(new OracleParameter("famActivo", famActivo ? 1 : 0));
+        cmd.Parameters.Add(new OracleParameter("famActivoGuard", famActivo ? 1 : 0));
         cmd.Parameters.Add(new OracleParameter("famId", famId));
 
         int rows = await cmd.ExecuteNonQueryAsync();
@@ -664,7 +876,8 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             const string sqlUpdate = @"
                 UPDATE RL_MR_FAMILIAS_FORMULARIO
                    SET FAM_ACTIVO = 0
-                 WHERE FAM_ID = :famId";
+                 WHERE FAM_ID = :famId
+                   AND FAM_PREDETERMINADA = 0";
 
             int rows;
             await using (var cmdUpdate = conn.CreateCommand())
@@ -1655,15 +1868,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         await conn.OpenAsync();
 
         const string sql = @"
-            SELECT VER_ID, VER_CODIGO, VER_VERSION, VER_JSON
-              FROM (
-                    SELECT VER_ID, VER_CODIGO, VER_VERSION, VER_JSON
-                      FROM RL_MR_VERSIONES_FORMULARIO
-                     WHERE VER_ESTADO = 'PUBLISHED'
-                       AND VER_VIGENTE = 1
-                     ORDER BY VER_FECHA_INICIO DESC, VER_ID DESC
-                   )
-             WHERE ROWNUM = 1";
+            SELECT v.VER_ID, v.VER_CODIGO, v.VER_VERSION, v.VER_JSON
+              FROM RL_MR_VERSIONES_FORMULARIO v
+              JOIN RL_MR_FAMILIAS_FORMULARIO f
+                ON f.FAM_ID = v.VER_FAMILIA_ID
+             WHERE f.FAM_PREDETERMINADA = 1
+               AND v.VER_ESTADO = 'PUBLISHED'
+               AND v.VER_VIGENTE = 1
+               AND (SELECT COUNT(*)
+                      FROM RL_MR_VERSIONES_FORMULARIO v2
+                     WHERE v2.VER_FAMILIA_ID = v.VER_FAMILIA_ID
+                       AND v2.VER_ESTADO = 'PUBLISHED'
+                       AND v2.VER_VIGENTE = 1) = 1";
 
         await using var cmd = CrearComando(sql, conn);
         await using var reader = await cmd.ExecuteReaderAsync();

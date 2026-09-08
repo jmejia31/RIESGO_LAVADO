@@ -192,7 +192,15 @@ public sealed class MatricesRiesgosApplicationTests
             Catalogos = Array.Empty<CatalogoMatricesDto>(),
             Reglas = new[] { new ReglaCalculoMatricesDto { Codigo = "CALCULO_VRI_VRR", Version = "1.0" } }
         };
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaVigenteAsync), _ =>
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaPredeterminadaAsync), _ =>
+            Task.FromResult<FamiliaPredeterminadaDto?>(new FamiliaPredeterminadaDto
+            {
+                Configurada = true,
+                FamiliaCodigo = "FAM_A",
+                TieneVersionVigente = true,
+                VersionVigenteId = 10
+            }));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerMetodologiaDinamicaPorVersionAsync), _ =>
             Task.FromResult<MetodologiaFormularioDto?>(metodologia));
 
         ServiceResult<MetodologiaFormularioDto> result = await service.ObtenerMetodologiaDinamicaVigenteAsync();

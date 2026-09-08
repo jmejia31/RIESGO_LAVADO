@@ -35,6 +35,9 @@ Esta carpeta contiene el paquete controlado para la transición física del Mód
    - Limpieza idempotente y segura de respaldos temporales (`B10_001` .. `B10_041`, `BKP_F10_MAP`, `BKP_F10_SECUENCIAS`).
    - Solo se ejecuta manualmente tras autorizar la eliminación definitiva de respaldos del modelo previo.
 
+7. `29_ddl_familia_predeterminada_fp1.sql`
+   - Cambio aditivo de FP.1 para persistir la familia predeterminada, con `CHECK` e indice unico condicional.
+   - No asigna una familia automaticamente y solo puede ejecutarse despues del gate puntual de autorizacion Oracle.
 
 ## Restricciones
 

@@ -10,9 +10,22 @@ public sealed class FamiliaFormularioDto
     public string FamNombre { get; set; } = string.Empty;
     public string? FamDescripcion { get; set; }
     public bool FamActivo { get; set; }
+    public bool FamPredeterminada { get; set; }
     public DateTime FamFechaCreacion { get; set; }
     public int TotalVersiones { get; set; }
     public bool TieneVersionVigente { get; set; }
+}
+
+public sealed class FamiliaPredeterminadaDto
+{
+    public bool Configurada { get; set; }
+    public long? FamiliaId { get; set; }
+    public string? FamiliaCodigo { get; set; }
+    public string? FamiliaNombre { get; set; }
+    public bool TieneVersionVigente { get; set; }
+    public long? VersionVigenteId { get; set; }
+    public string? VersionCodigo { get; set; }
+    public int? Version { get; set; }
 }
 
 public sealed class CrearFamiliaFormularioDto

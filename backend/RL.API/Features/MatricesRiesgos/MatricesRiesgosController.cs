@@ -160,7 +160,7 @@ public sealed class MatricesRiesgosController : ControllerBase
     }
 
     [HttpGet("formulario/version-vigente")]
-    public async Task<IActionResult> ObtenerVersionVigenteFormulario([FromQuery] string familiaCodigo = "MATRIZ_RIESGOS_LAFT")
+    public async Task<IActionResult> ObtenerVersionVigenteFormulario([FromQuery] string? familiaCodigo = null)
     {
         try
         {
@@ -411,6 +411,36 @@ public sealed class MatricesRiesgosController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error al obtener matriz consolidada tipada.");
+            return Error500(ex);
+        }
+    }
+
+    [HttpGet("familias/predeterminada")]
+    public async Task<IActionResult> ObtenerFamiliaPredeterminada()
+    {
+        try
+        {
+            return Responder(await _service.ObtenerFamiliaPredeterminadaAsync());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener la familia de formulario predeterminada.");
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("familias/{id:long}/predeterminada")]
+    [Authorize(Roles = SystemRoles.Administrador)]
+    [AuditRequired("Establecimiento de familia de formulario predeterminada")]
+    public async Task<IActionResult> EstablecerFamiliaPredeterminada(long id)
+    {
+        try
+        {
+            return Responder(await _service.EstablecerFamiliaPredeterminadaAsync(id, ObtenerUsuarioId(), ObtenerIp()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al establecer la familia de formulario predeterminada ID {Id}", id);
             return Error500(ex);
         }
     }

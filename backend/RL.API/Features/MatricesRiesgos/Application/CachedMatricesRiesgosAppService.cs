@@ -25,7 +25,7 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
         _settings = settings;
     }
 
-    public Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string familiaCodigo) =>
+    public Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo) =>
         _cache.GetOrCreateAsync(
             ApplicationCacheScopes.MatricesFormularios,
             $"vigente:{NormalizeFamily(familiaCodigo)}",
@@ -121,6 +121,14 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
             () => _inner.ObtenerFamiliaFormularioPorIdAsync(famId),
             static result => result.Success);
 
+    public Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync() =>
+        _cache.GetOrCreateAsync(
+            ApplicationCacheScopes.MatricesFormularios,
+            "familia-predeterminada",
+            _settings.FormularioVersionTtl,
+            _inner.ObtenerFamiliaPredeterminadaAsync,
+            static result => result.Success);
+
     public async Task<ServiceResult<long>> CrearFamiliaFormularioAsync(CrearFamiliaFormularioDto dto)
     {
         ServiceResult<long> result = await _inner.CrearFamiliaFormularioAsync(dto);
@@ -138,6 +146,13 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public async Task<ServiceResult> DesactivarFamiliaFormularioAsync(long famId)
     {
         ServiceResult result = await _inner.DesactivarFamiliaFormularioAsync(famId);
+        InvalidateIfSuccessful(result.Success);
+        return result;
+    }
+
+    public async Task<ServiceResult> EstablecerFamiliaPredeterminadaAsync(long famId, long usuarioId, string? ip)
+    {
+        ServiceResult result = await _inner.EstablecerFamiliaPredeterminadaAsync(famId, usuarioId, ip);
         InvalidateIfSuccessful(result.Success);
         return result;
     }
@@ -210,6 +225,6 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
         }
     }
 
-    private static string NormalizeFamily(string familiaCodigo) =>
+    private static string NormalizeFamily(string? familiaCodigo) =>
         (familiaCodigo ?? string.Empty).Trim().ToUpperInvariant();
 }
