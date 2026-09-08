@@ -39,6 +39,22 @@ public sealed class MatricesRiesgosRepositorySqlContractTests
         Assert.True(normalizacion < offset);
     }
 
+    [Fact]
+    public void ConsolidadoPaginado_ProyectaLaConsultaInternaSinAliasFueraDeAlcance()
+    {
+        string source = LeerRepositorioMatrices();
+
+        Assert.Contains(
+            "SELECT base.*, ROWNUM AS CONSOLIDADO_ROWNUM",
+            source,
+            StringComparison.Ordinal);
+        Assert.Contains(") base", source, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "SELECT {columnas}, ROWNUM AS CONSOLIDADO_ROWNUM",
+            source,
+            StringComparison.Ordinal);
+    }
+
     private static string LeerRepositorioMatrices()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);

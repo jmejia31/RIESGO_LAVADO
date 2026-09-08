@@ -1725,12 +1725,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         string dataSql = $@"
             SELECT q.*
               FROM (
-                    SELECT {columnas}, ROWNUM AS CONSOLIDADO_ROWNUM
+                    SELECT base.*, ROWNUM AS CONSOLIDADO_ROWNUM
                       FROM (
                             SELECT {columnas}
                               {fromWhere}
                              {orderBy}
-                           )
+                           ) base
                      WHERE ROWNUM <= :maxRow
                    ) q
              WHERE q.CONSOLIDADO_ROWNUM > :offset";

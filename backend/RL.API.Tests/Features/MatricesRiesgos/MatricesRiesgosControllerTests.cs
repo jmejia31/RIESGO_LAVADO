@@ -1,4 +1,5 @@
 #pragma warning disable CA1416
+using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text.Json;
@@ -102,6 +103,29 @@ public sealed class MatricesRiesgosControllerTests
         IActionResult result = await controller.ObtenerConsolidado();
 
         Assert.IsType<OkObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task ObtenerConsolidadoPaginado_Vacio_RetornaOkConContratoVacio()
+    {
+        MatricesRiesgosController controller = CrearController(out InterfaceStub service);
+        service.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoPaginadoAsync), _ =>
+            Task.FromResult(ServiceResult<ReporteMatricesPaginadoDto>.Ok(new ReporteMatricesPaginadoDto
+            {
+                Items = Array.Empty<RiesgoReporteFilaDto>(),
+                Pagina = 1,
+                TamanoPagina = 20,
+                TotalRegistros = 0,
+                TotalPaginas = 0,
+                Totales = new ReporteMatricesTotalesDto()
+            })));
+
+        IActionResult result = await controller.ObtenerConsolidadoPaginado(new FiltroReporteMatricesDto());
+
+        OkObjectResult ok = Assert.IsType<OkObjectResult>(result);
+        object datos = ok.Value!.GetType().GetProperty("datos")!.GetValue(ok.Value)!;
+        Assert.Equal(0, datos.GetType().GetProperty("TotalRegistros")!.GetValue(datos));
+        Assert.Empty((IReadOnlyList<RiesgoReporteFilaDto>)datos.GetType().GetProperty("Items")!.GetValue(datos)!);
     }
 
     [Fact]
