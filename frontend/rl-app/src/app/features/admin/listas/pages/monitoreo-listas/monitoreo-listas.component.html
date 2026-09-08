@@ -672,11 +672,7 @@
             <div>
               <h3 class="text-lg font-bold text-gray-900">Detalle de coincidencia</h3>
               <p class="text-xs text-gray-500">
-                @if (tipoActivo() === 'empleado') {
-                  Empleado IHSS: {{ personaSeleccionadaEmpleado()?.nombre }} (Identidad: {{ personaSeleccionadaEmpleado()?.identidad }})
-                } @else {
-                  Persona Natural: {{ personaSeleccionada()?.nombre }} (DNI: {{ personaSeleccionada()?.numeroIdentificacion }})
-                }
+                Revise la información, coincidencias y trazabilidad del sujeto.
               </p>
             </div>
             <button (click)="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">

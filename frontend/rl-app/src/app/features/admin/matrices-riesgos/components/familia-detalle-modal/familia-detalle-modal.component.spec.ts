@@ -147,6 +147,21 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(texto).not.toContain('Descripción resumida del listado');
   });
 
+  it('mantiene código y nombre con un único owner visual en Información general', () => {
+    vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
+    const fixture = crearComponente();
+    fixture.detectChanges();
+
+    const resumen = (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Resumen de la familia"]');
+    const informacion = (fixture.nativeElement as HTMLElement).querySelector('[aria-labelledby="titulo-info-familia"]');
+    const textoInformacion = informacion?.textContent ?? '';
+
+    expect(resumen?.textContent).not.toContain('FAMILIA_AUTORITATIVA');
+    expect(resumen?.textContent).not.toContain('Familia autoritativa');
+    expect(textoInformacion.match(/FAMILIA_AUTORITATIVA/g) ?? []).toHaveLength(1);
+    expect(textoInformacion.match(/Familia autoritativa/g) ?? []).toHaveLength(1);
+  });
+
   it('4. trata 404 como no encontrada sin mezclarlo con error genérico', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(throwError(() => ({ status: 404 })));
     const fixture = crearComponente();

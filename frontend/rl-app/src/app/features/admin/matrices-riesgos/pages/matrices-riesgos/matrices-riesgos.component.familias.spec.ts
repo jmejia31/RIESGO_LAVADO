@@ -170,6 +170,39 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).toBeNull();
   });
 
+  it('mantiene la familia de Nueva Evaluación con un único owner visual en el selector', () => {
+    const familiaPrueba: FamiliaFormularioDto = {
+      ...mockFamilias[0],
+      famCodigo: 'PRUEBA_FORMULARIO',
+      famNombre: 'Prueba de Formulario',
+      tieneVersionVigente: true
+    };
+    component.cerrarModalGestorFamilias();
+    component.familias.set([familiaPrueba]);
+    component.familiaPredeterminada.set({
+      configurada: true,
+      familiaId: familiaPrueba.famId,
+      familiaCodigo: familiaPrueba.famCodigo,
+      familiaNombre: familiaPrueba.famNombre,
+      tieneVersionVigente: true,
+      versionVigenteId: 1,
+      versionCodigo: 'PRUEBA_FORMULARIO',
+      version: 4
+    });
+
+    component.nuevaEvaluacion();
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('[data-modal="nueva-evaluacion"]') as HTMLElement;
+    const header = dialog.querySelector('#titulo-modal-nueva-eval')?.parentElement;
+    const matchingOptions = Array.from(dialog.querySelectorAll('option'))
+      .filter(option => option.textContent?.includes('Prueba de Formulario'));
+
+    expect(header?.textContent).not.toContain('Prueba de Formulario');
+    expect(matchingOptions).toHaveLength(1);
+    expect(dialog.textContent).not.toContain('Familia: Prueba de Formulario');
+  });
+
   it('9. Confirmar activación y desactivación llaman al servicio Angular', () => {
     vi.spyOn(service, 'desactivarFamiliaFormulario').mockReturnValue(of(true));
     vi.spyOn(service, 'activarFamiliaFormulario').mockReturnValue(of(true));

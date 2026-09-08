@@ -1104,11 +1104,14 @@
               Nueva Evaluación de Riesgo
             </h3>
             <p class="text-xs text-gray-500">
-            @if (familiaNuevaSeleccionada(); as familiaNueva) {
-              Familia: <strong>{{ familiaNueva.famNombre }}</strong>
-              @if (versionVigente(); as versionNueva) { <span> · Versión activa: <strong>v{{ versionNueva.verVersion }}</strong></span> }
+            @if (familiaNuevaSeleccionada()) {
+              @if (versionVigente(); as versionNueva) {
+                Versión activa: <strong>v{{ versionNueva.verVersion }}</strong>
+              } @else {
+                Cargando la versión activa de la familia seleccionada.
+              }
             } @else {
-              Seleccione una familia para cargar su formulario activo.
+              Seleccione una familia para comenzar.
             }
             </p>
           </div>
@@ -1121,7 +1124,7 @@
           <section class="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/30 p-5" aria-labelledby="titulo-configuracion-nueva-eval">
             <div>
               <h4 id="titulo-configuracion-nueva-eval" class="text-base font-bold text-gray-900">Configuración de la evaluación</h4>
-              <p class="mt-1 text-sm text-gray-500">Seleccione la familia de formulario y el riesgo institucional que serán utilizados para generar la evaluación.</p>
+              <p class="mt-1 text-sm text-gray-500">Seleccione la familia y el riesgo institucional para generar la evaluación.</p>
             </div>
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div class="rounded-2xl border border-blue-100 bg-blue-50/40 p-5 space-y-4">
