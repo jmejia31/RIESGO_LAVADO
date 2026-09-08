@@ -29,4 +29,26 @@ public sealed class MatricesRiesgosF42PaginaEfectivaTests
         int paginaEfectiva = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(totalRegistros: 25, registrosPorPagina: 10, paginaSolicitada: 2);
         Assert.Equal(2, paginaEfectiva);
     }
+
+    [Fact]
+    public void PaginaSolicitadaFueraDeRango_UsaUltimaPaginaConContenido()
+    {
+        int paginaEfectiva = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(
+            totalRegistros: 25,
+            registrosPorPagina: 10,
+            paginaSolicitada: 999);
+
+        Assert.Equal(3, paginaEfectiva);
+    }
+
+    [Fact]
+    public void PaginaSolicitadaCero_UsaPaginaUno()
+    {
+        int paginaEfectiva = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(
+            totalRegistros: 25,
+            registrosPorPagina: 10,
+            paginaSolicitada: 0);
+
+        Assert.Equal(1, paginaEfectiva);
+    }
 }

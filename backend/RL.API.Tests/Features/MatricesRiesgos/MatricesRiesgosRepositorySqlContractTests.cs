@@ -27,6 +27,18 @@ public sealed class MatricesRiesgosRepositorySqlContractTests
         Assert.Contains("FOR UPDATE", source, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ConsolidadoNormalizaPaginaAntesDeConstruirOffset()
+    {
+        string source = LeerRepositorioMatrices();
+        int normalizacion = source.IndexOf("PaginacionEvaluacionesHelper.CalcularPaginaEfectiva", StringComparison.Ordinal);
+        int offset = source.IndexOf("int offset = (paginaNormalizada - 1) * tamanoPagina;", StringComparison.Ordinal);
+
+        Assert.True(normalizacion >= 0);
+        Assert.True(offset >= 0);
+        Assert.True(normalizacion < offset);
+    }
+
     private static string LeerRepositorioMatrices()
     {
         DirectoryInfo? directory = new(AppContext.BaseDirectory);

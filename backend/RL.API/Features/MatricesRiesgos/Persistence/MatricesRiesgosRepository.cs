@@ -1489,7 +1489,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             }
         }
 
-        int offset = (pagina - 1) * tamanoPagina;
+        int totalPaginas = totalRegistros == 0 ? 0 : (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
+        int paginaNormalizada = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(
+            totalRegistros,
+            tamanoPagina,
+            pagina);
+        int offset = (paginaNormalizada - 1) * tamanoPagina;
         int maxRow = offset + tamanoPagina;
         const string columnas = @"e.EVA_RIESGO_ID,
                    p.PROY_EVALUACION_ID,
@@ -1527,8 +1532,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             while (await reader.ReadAsync()) filas.Add(MapearFilaReporte(reader));
         }
 
-        int totalPaginas = totalRegistros == 0 ? 0 : (int)Math.Ceiling(totalRegistros / (double)tamanoPagina);
-        int paginaNormalizada = totalPaginas == 0 ? 1 : Math.Min(pagina, totalPaginas);
         return new ReporteMatricesPaginadoDto
         {
             Items = filas,

@@ -18,7 +18,8 @@ public sealed class InstitutionalXlsxWorkbook
         string title,
         IReadOnlyList<string> headers,
         IEnumerable<IReadOnlyList<object?>> rows,
-        InstitutionalReportOrientation? orientation = null)
+        InstitutionalReportOrientation? orientation = null,
+        string? metadata = null)
     {
         var materialized = rows.Select(row => (IReadOnlyList<object?>)row.ToArray()).ToList();
         _sheets.Add(new InstitutionalXlsxSheet(
@@ -27,6 +28,7 @@ public sealed class InstitutionalXlsxWorkbook
             headers.ToArray(),
             materialized,
             orientation ?? InstitutionalReportStandard.ResolveOrientation(headers.Count),
+            metadata,
             null));
     }
 
@@ -53,6 +55,7 @@ public sealed class InstitutionalXlsxWorkbook
             Array.Empty<string>(),
             Array.Empty<IReadOnlyList<object?>>(),
             orientation,
+            null,
             new InstitutionalXlsxDocument(
                 rows.ToArray(),
                 columnCount,
@@ -149,6 +152,7 @@ public sealed class InstitutionalXlsxWorkbook
     private static string StylesXml() =>
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
         "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">" +
+        "<numFmts count=\"1\"><numFmt numFmtId=\"165\" formatCode=\"dd/mm/yyyy hh:mm\"/></numFmts>" +
         "<fonts count=\"8\">" +
         "<font><sz val=\"10\"/><name val=\"Arial\"/><color rgb=\"FF1F2937\"/></font>" +
         "<font><b/><sz val=\"14\"/><name val=\"Arial\"/><color rgb=\"FFFFFFFF\"/></font>" +
@@ -168,7 +172,7 @@ public sealed class InstitutionalXlsxWorkbook
         "<bottom style=\"thin\"><color rgb=\"FFD5DEE7\"/></bottom></border>" +
         "<border><bottom style=\"thin\"><color rgb=\"FFD5DEE7\"/></bottom></border></borders>" +
         "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>" +
-        "<cellXfs count=\"13\">" +
+        "<cellXfs count=\"14\">" +
         "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"top\" wrapText=\"1\"/></xf>" +
         "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"2\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
         "<xf numFmtId=\"0\" fontId=\"2\" fillId=\"2\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
@@ -182,6 +186,7 @@ public sealed class InstitutionalXlsxWorkbook
         "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
         "<xf numFmtId=\"0\" fontId=\"0\" fillId=\"3\" borderId=\"1\" xfId=\"0\" applyAlignment=\"1\"><alignment horizontal=\"center\" vertical=\"center\" wrapText=\"1\"/></xf>" +
         "<xf numFmtId=\"0\" fontId=\"7\" fillId=\"2\" borderId=\"0\" xfId=\"0\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
+        "<xf numFmtId=\"165\" fontId=\"0\" fillId=\"0\" borderId=\"1\" xfId=\"0\" applyNumberFormat=\"1\" applyAlignment=\"1\"><alignment vertical=\"center\" wrapText=\"1\"/></xf>" +
         "</cellXfs><cellStyles count=\"1\"><cellStyle name=\"Normal\" xfId=\"0\" builtinId=\"0\"/></cellStyles></styleSheet>";
 
     private string WorksheetXml(InstitutionalXlsxSheet sheet) =>
@@ -197,7 +202,10 @@ public sealed class InstitutionalXlsxWorkbook
         var rows = new StringBuilder();
         rows.Append(RowXml(1, new object?[] { sheet.Title }, 1, maxColumns));
         rows.Append(RowXml(2, new object?[] { $"{InstitutionalReportStandard.InstitutionName} · Generado {DateTime.Now.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)}" }, 0, maxColumns));
-        rows.Append("<row r=\"3\"/>");
+        if (string.IsNullOrWhiteSpace(sheet.Metadata))
+            rows.Append("<row r=\"3\"/>");
+        else
+            rows.Append(RowXml(3, new object?[] { sheet.Metadata }, 6, maxColumns));
         rows.Append(RowXml(4, sheet.Headers.Cast<object?>().ToArray(), 2, maxColumns));
         for (var index = 0; index < sheet.Rows.Count; index++)
             rows.Append(RowXml(index + 5, sheet.Rows[index], index % 2 == 1 ? 3 : 4, maxColumns));
@@ -213,7 +221,7 @@ public sealed class InstitutionalXlsxWorkbook
                "<sheetFormatPr defaultRowHeight=\"18\"/>" +
                $"<cols>{columns}</cols><sheetData>{rows}</sheetData>" +
                $"<autoFilter ref=\"A4:{lastColumn}{lastRow}\"/>" +
-               $"<mergeCells count=\"2\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/></mergeCells>" +
+               $"<mergeCells count=\"{(string.IsNullOrWhiteSpace(sheet.Metadata) ? 2 : 3)}\"><mergeCell ref=\"A1:{lastColumn}1\"/><mergeCell ref=\"A2:{lastColumn}2\"/>{(string.IsNullOrWhiteSpace(sheet.Metadata) ? string.Empty : $"<mergeCell ref=\"A3:{lastColumn}3\"/>")}</mergeCells>" +
                "<printOptions horizontalCentered=\"1\"/><pageMargins left=\"0.35\" right=\"0.35\" top=\"0.65\" bottom=\"0.55\" header=\"0.2\" footer=\"0.2\"/>" +
                $"<pageSetup paperSize=\"9\" orientation=\"{orientation}\" fitToWidth=\"1\" fitToHeight=\"0\"/>" +
                "<headerFooter><oddHeader>&amp;C&amp;&quot;Arial,Bold&quot;&amp;10 INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL</oddHeader>" +
@@ -305,6 +313,9 @@ public sealed class InstitutionalXlsxWorkbook
         var reference = $"{ColumnName(columnNumber)}{rowNumber}";
         if (value is null)
             return $"<c r=\"{reference}\" s=\"{style}\" t=\"inlineStr\"><is><t></t></is></c>";
+
+        if (value is DateTime dateTime)
+            return $"<c r=\"{reference}\" s=\"{(int)InstitutionalXlsxCellStyle.Date}\"><v>{dateTime.ToOADate().ToString(CultureInfo.InvariantCulture)}</v></c>";
 
         if (value is byte or short or int or long or float or double or decimal)
         {
@@ -414,6 +425,7 @@ public sealed class InstitutionalXlsxWorkbook
         IReadOnlyList<string> Headers,
         IReadOnlyList<IReadOnlyList<object?>> Rows,
         InstitutionalReportOrientation Orientation,
+        string? Metadata,
         InstitutionalXlsxDocument? Document);
 
     private sealed record InstitutionalXlsxDocument(
@@ -437,7 +449,8 @@ public enum InstitutionalXlsxCellStyle
     HeaderRight = 9,
     CenteredBody = 10,
     AlternateCenteredBody = 11,
-    Institution = 12
+    Institution = 12,
+    Date = 13
 }
 
 public sealed record InstitutionalXlsxDocumentCell(

@@ -347,10 +347,10 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
 
     #endregion
 
-    #region 5. ReportExportService: Casos Límite PDF (Truncamiento > 110 caracteres y Caracteres Especiales)
+    #region 5. ReportExportService: Contrato Institucional PDF
 
     [Fact]
-    public void ReportExportService_CrearPdfConsolidado_TruncaTextosLargosYNormalizaCaracteresEspeciales()
+    public void ReportExportService_CrearPdfConsolidado_UsaEstandarInstitucionalYNoTruncaDatos()
     {
         var exportador = new MatricesRiesgosReportExportService();
 
@@ -381,9 +381,18 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         Assert.NotEmpty(pdf.Contenido);
         Assert.True(pdf.Contenido.Length > 100);
 
-        // Verificar cabecera %PDF-1.4
+        string texto = Encoding.Latin1.GetString(pdf.Contenido);
         string header = Encoding.ASCII.GetString(pdf.Contenido, 0, 8);
         Assert.StartsWith("%PDF-1.4", header, StringComparison.Ordinal);
+        Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", texto, StringComparison.Ordinal);
+        Assert.Contains("SGRLA-IHSS", texto, StringComparison.Ordinal);
+        Assert.Contains("/MediaBox [0 0 841.89 595.28]", texto, StringComparison.Ordinal);
+        Assert.Contains("COD-MUY-LARGO", texto, StringComparison.Ordinal);
+        Assert.Contains("XXXXXXXXXX", texto, StringComparison.Ordinal);
+        Assert.Contains("María", texto, StringComparison.Ordinal);
+        Assert.Contains("Peña", texto, StringComparison.Ordinal);
+        Assert.DoesNotContain("...", texto, StringComparison.Ordinal);
+        Assert.Contains("Página 1 de 1", texto, StringComparison.Ordinal);
     }
 
     #endregion

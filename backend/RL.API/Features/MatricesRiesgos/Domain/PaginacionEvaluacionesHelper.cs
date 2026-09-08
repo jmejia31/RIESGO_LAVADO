@@ -8,8 +8,9 @@ public static class PaginacionEvaluacionesHelper
             ? (int)Math.Ceiling((double)totalRegistros / registrosPorPagina)
             : 0;
 
+        int paginaNormalizada = Math.Max(1, paginaSolicitada);
         return totalPaginas == 0
             ? 1
-            : Math.Min(paginaSolicitada, totalPaginas);
+            : Math.Min(paginaNormalizada, totalPaginas);
     }
 }
