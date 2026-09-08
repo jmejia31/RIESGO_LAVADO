@@ -6811,3 +6811,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - UAT: existe sesion autenticada real segun evidencia visual del usuario (`AUTHENTICATED_BROWSER_SESSION_EXISTS=TRUE`), pero la superficie CUA disponible para Codex sigue sin acceso (`CODEX_BROWSER_AUTOMATION_ACCESS=FALSE`); por ello no se afirma una nueva captura manual ejecutada por Codex. La evidencia visual del usuario es consistente con Oracle: contexto `DEFAULT`, familia 19 y version 24. No se crearon evaluaciones, riesgos, fixtures persistentes ni se reanudo FASE 5.3.
 - Scope: se modificaron unicamente `MatricesRiesgosRepository.cs`, `MatricesRiesgosRepositorySqlContractTests.cs`, `MatricesRiesgosControllerTests.cs` y esta documentacion/estado. Se preserva sin tocar el cambio rastreado preexistente de `frontend/rl-app/tsconfig.json`, ajeno a este parche, ademas de los tres untracked preexistentes.
 - Punto de continuacion: commit tecnico focal, actualizacion documental y Quality Gate nuevo del SHA final; no reanudar FASE 5.3.
+
+## Registro de cierre - FP.2 correccion focal
+
+- Commit tecnico: `d1a4bb9a6f660974c3cbbf8b5487e34126b26d4b`; publicado en `origin/desarrollo`.
+- Quality Gate exacto del commit tecnico: `34275420641`, `headBranch=desarrollo`, `headSha` coincidente, `status=completed`, `conclusion=success`.
+- Estado final comprobado read-only: default unico `FAM_ID=19` (`PRUEBA_FORMULARIO`), version vigente `VER_ID=24`/v4, consolidado activo `0`, auditoria de asignacion `AUD_ID=1520`. La aplicacion no repitio PUT ni ejecuto DML directo.
+- Cierre: `FP_2=CERRADA_DEFINITIVAMENTE`; `CONSOLIDADO_HTTP_500=FIXED`; `CONSOLIDADO_EMPTY_STATE=PASS`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. El estado autenticado fue aportado por el usuario; Codex no tuvo superficie CUA para una nueva captura manual.

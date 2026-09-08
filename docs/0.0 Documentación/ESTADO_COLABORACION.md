@@ -974,3 +974,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - UAT: la sesion autenticada real existe segun la evidencia visual del usuario; Codex no dispone de acceso de automatizacion CUA (`apps=[]`, `browsers=[]`). La captura aportada es consistente con el estado Oracle; no se declara una nueva captura manual local como ejecutada por Codex.
 - Scope actual: tres archivos de codigo/prueba focales y esta documentacion. `frontend/rl-app/tsconfig.json` conserva un cambio rastreado preexistente fuera de alcance y no fue alterado; se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos.
 - Estado: `FP_2_HABILITADA=TRUE`; `FP_2_INICIADA=TRUE`; cierre tecnico pendiente de commit/push y Quality Gate exacto nuevo. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no iniciar FASE 5.3.
+
+## Estado de cierre - FP.2 correccion focal de consolidado vacio
+
+- Commit tecnico/final de esta correccion: `d1a4bb9a6f660974c3cbbf8b5487e34126b26d4b`, publicado en `origin/desarrollo`.
+- Quality Gate exacto: run `34275420641`; `headBranch=desarrollo`; `headSha` coincidente; `status=completed`; `conclusion=success`.
+- Oracle read-only posterior: `DEFAULT_FAMILY_COUNT=1`; `DEFAULT_FAMILY_ID=19`; `DEFAULT_FAMILY_CODE=PRUEBA_FORMULARIO`; version vigente `24`/v4; `AUDIT_ASSIGNMENT_COUNT=1` (`AUD_ID=1520`). `DIRECT_ORACLE_DML=0`; no se repitio PUT.
+- Correccion final: la consulta paginada del consolidado deja de referenciar alias fuera de alcance y soporta base vacia sin `ORA-00904`; regresiones backend `611/611`, frontend `733/733`, E2E serial `31/31`, TSC/lint/build/audit/diff/skills PASS.
+- Estado: `FP_2=CERRADA_DEFINITIVAMENTE`; `FP_2_HABILITADA=TRUE`; `FP_2_INICIADA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. No iniciar FASE 5.3.
