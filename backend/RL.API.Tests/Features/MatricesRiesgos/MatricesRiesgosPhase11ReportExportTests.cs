@@ -66,7 +66,6 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
     {
         ArchivoReporteDto excel = _service.CrearExcelConsolidado(Array.Empty<RiesgoReporteFilaDto>());
         ArchivoReporteDto pdf = _service.CrearPdfConsolidado(Array.Empty<RiesgoReporteFilaDto>());
-        File.WriteAllBytes("C:\\Temp\\fase52-empty.pdf", pdf.Contenido);
         Assert.True(excel.Contenido.Length > 0);
         string pdfTexto = Encoding.Latin1.GetString(pdf.Contenido);
         Assert.Contains("(Sin)", pdfTexto, StringComparison.Ordinal);
