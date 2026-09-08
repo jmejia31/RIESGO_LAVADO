@@ -951,3 +951,4 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Alcance excluido: no se inicio FP.2; no se ejecutaron migracion ni escrituras de los 59 riesgos; no se tocaron FormulaEngine, formulas, catalogos, versiones historicas, `main`, secretos ni modulos externos.
 - Publicacion: commit tecnico listo para push; el cierre documental se publicara en un commit separado con el Quality Gate exacto del SHA final. Se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos sin stagear.
 - Estado: `FP_1=IMPLEMENTADA_Y_VALIDADA_LOCALMENTE`; `FP_2_HABILITADA=TRUE`; `FP_2_INICIADA=FALSE`; `FASE_5_3_REANUDABLE=FALSE`; `FASE_5_3_REANUDADA=FALSE`.
+- Correccion post-QG: el validador de autorizacion se actualizo de 9 a 10 mutaciones administrativas para incluir el endpoint FP.1 de familia predeterminada; validacion focal PASS. No hubo cambios adicionales de producto, Oracle, datos ni permisos.
