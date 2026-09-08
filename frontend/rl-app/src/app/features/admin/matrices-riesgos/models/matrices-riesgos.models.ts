@@ -27,9 +27,22 @@ export interface FamiliaFormularioDto {
   famNombre: string;
   famDescripcion?: string | null;
   famActivo: boolean;
+  /** Campo agregado por FP.2; opcional para compatibilidad con fixtures históricos. */
+  famPredeterminada?: boolean;
   famFechaCreacion: string;
   totalVersiones: number;
   tieneVersionVigente: boolean;
+}
+
+export interface FamiliaPredeterminadaDto {
+  configurada: boolean;
+  familiaId?: number | null;
+  familiaCodigo?: string | null;
+  familiaNombre?: string | null;
+  tieneVersionVigente: boolean;
+  versionVigenteId?: number | null;
+  versionCodigo?: string | null;
+  version?: number | null;
 }
 
 export interface CrearFamiliaFormularioDto {

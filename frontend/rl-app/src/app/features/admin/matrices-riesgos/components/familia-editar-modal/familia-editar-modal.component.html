@@ -246,6 +246,12 @@
                   <span>No se puede desactivar mientras exista una versión publicada vigente.</span>
                 </p>
               }
+              @if (familia.famPredeterminada) {
+                <p class="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2 text-[11px] leading-4 text-blue-800" data-ui-fam-edit="default-lock-reason">
+                  <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.7 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.7Z"/></svg>
+                  <span>Establezca otra familia como predeterminada antes de desactivar esta familia.</span>
+                </p>
+              }
               @if (familia.totalVersiones > 0) {
                 <p class="mt-3 flex items-start gap-2 rounded-lg bg-gray-50 px-3 py-2 text-[11px] leading-4 text-gray-500" data-ui-fam-edit="delete-lock-reason">
                   <svg class="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11V8a4 4 0 10-8 0v3m-1 0h18v10H3V11z"/></svg>

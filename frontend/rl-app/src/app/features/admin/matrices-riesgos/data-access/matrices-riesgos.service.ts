@@ -12,6 +12,7 @@ import {
   EvaluacionRiesgoDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
+  FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
@@ -83,6 +84,18 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<FamiliaFormularioDto[]>>(`${this.apiUrl}/familias`)
       .pipe(map(response => response.datos));
+  }
+
+  obtenerFamiliaPredeterminada(): Observable<FamiliaPredeterminadaDto> {
+    return this.http
+      .get<ApiResponse<FamiliaPredeterminadaDto>>(`${this.apiUrl}/familias/predeterminada`)
+      .pipe(map(response => response.datos));
+  }
+
+  establecerFamiliaPredeterminada(id: number): Observable<boolean> {
+    return this.http
+      .put<ApiResponse<unknown>>(`${this.apiUrl}/familias/${id}/predeterminada`, {}, this.confirmado)
+      .pipe(map(response => response.success));
   }
 
   obtenerFamiliaFormularioPorId(id: number): Observable<FamiliaFormularioDto> {

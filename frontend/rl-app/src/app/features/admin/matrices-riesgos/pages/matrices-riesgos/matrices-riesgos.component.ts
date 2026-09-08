@@ -11,6 +11,7 @@ import {
   EvaluacionRiesgoResumenDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
+  FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
   MetodologiaFormulario,
@@ -66,8 +67,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly suscripcionesEditarFamilia: Subscription[] = [];
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
   private focoRetornoEditarFamilia: HTMLElement | null = null;
+  private focoRetornoPredeterminada: HTMLElement | null = null;
   private detalleEnContexto = false;
   private secuenciaVersionNuevaEvaluacion = 0;
+  private secuenciaContextoPredeterminado = 0;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
@@ -88,6 +91,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly cargandoFormulario = signal(false);
   readonly errorFormulario = signal<string | null>(null);
+
+  readonly familiaPredeterminada = signal<FamiliaPredeterminadaDto | null>(null);
+  readonly cargandoFamiliaPredeterminada = signal(false);
+  readonly errorFamiliaPredeterminada = signal<string | null>(null);
+  readonly operacionPredeterminadaEnCurso = signal(false);
+  readonly familiaObjetivoPredeterminada = signal<FamiliaFormularioDto | null>(null);
+  readonly modalConfirmarPredeterminadaAbierto = signal(false);
 
   readonly cargandoConsolidado = signal(false);
   readonly errorConsolidado = signal<string | null>(null);
@@ -111,6 +121,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly registrosPorPaginaFamilias = signal(10);
   readonly familiaNuevaSeleccionada = computed(() =>
     this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada()) ?? null
+  );
+  readonly familiasElegibles = computed(() =>
+    this.familias().filter(familia => familia.famActivo && familia.tieneVersionVigente)
+  );
+  readonly configuracionFamiliaPredeterminadaPendiente = computed(() =>
+    !this.cargandoFamiliaPredeterminada()
+      && !this.errorFamiliaPredeterminada()
+      && this.familiaPredeterminada()?.configurada !== true
   );
 
   readonly totalFamilias = computed(() => this.familias().length);
@@ -344,7 +362,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   @HostListener('document:keydown.escape', ['$event'])
   manejarTeclaEscape(event: Event): void {
-    if (this.detalleFamiliaDinamicoAbierto()) {
+    if (this.modalConfirmarPredeterminadaAbierto()) {
+      event.preventDefault();
+      this.cancelarConfirmacionFamiliaPredeterminada();
+    } else if (this.detalleFamiliaDinamicoAbierto()) {
       event.preventDefault();
       this.cerrarModalVerFamilia();
     } else if (this.modalVerAbierto()) {
@@ -478,6 +499,16 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const familia = this.familias().find(item => item.famCodigo === codigo);
+    if (this.modalNuevaEvaluacionAbierto() && familia && !this.familiaEsElegible(familia)) {
+      this.familiaSeleccionada.set('');
+      this.versionVigente.set(null);
+      this.metodologia.set(null);
+      this.errorFormulario.set(this.motivoFamiliaNoElegible(familia));
+      this.cargandoFormulario.set(false);
+      return;
+    }
+
     const secuencia = ++this.secuenciaVersionNuevaEvaluacion;
     this.familiaSeleccionada.set(codigo);
     this.versionEditando.set(null);
@@ -494,7 +525,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
         this.versionVigente.set(version);
         this.inicializarRespuestas();
-        this.cargandoFormulario.set(false);
+        const cargarMetodologiaPorVersion = (this.service as MatricesRiesgosService & {
+          metodologiaPorVersion?: (versionId: number) => Observable<MetodologiaFormulario>;
+        }).metodologiaPorVersion;
+        if (typeof cargarMetodologiaPorVersion !== 'function' || !version.verId) {
+          this.cargandoFormulario.set(false);
+          return;
+        }
+        cargarMetodologiaPorVersion.call(this.service, version.verId).subscribe({
+          next: metodologia => {
+            if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+            this.metodologia.set(metodologia);
+            this.inicializarRespuestas();
+            this.cargandoFormulario.set(false);
+          },
+          error: error => {
+            if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
+            this.cargandoFormulario.set(false);
+            this.errorFormulario.set(this.obtenerMensajeError(error, 'No se pudo cargar la metodología de la versión seleccionada.'));
+          }
+        });
       },
       error: () => {
         if (secuencia !== this.secuenciaVersionNuevaEvaluacion || this.familiaSeleccionada() !== codigo) return;
@@ -966,6 +1016,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarFormularioVigente(): void {
+    const obtenerDefault = (this.service as MatricesRiesgosService & {
+      obtenerFamiliaPredeterminada?: () => Observable<FamiliaPredeterminadaDto>;
+    }).obtenerFamiliaPredeterminada;
+    if (typeof obtenerDefault === 'function') {
+      this.cargarFamiliaPredeterminada();
+      return;
+    }
+
     this.cargandoFormulario.set(true);
     this.errorFormulario.set(null);
 
@@ -1164,6 +1222,92 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     });
   }
 
+  cargarFamiliaPredeterminada(): void {
+    const obtenerDefault = (this.service as MatricesRiesgosService & {
+      obtenerFamiliaPredeterminada?: () => Observable<FamiliaPredeterminadaDto>;
+    }).obtenerFamiliaPredeterminada;
+    if (typeof obtenerDefault !== 'function') return;
+
+    const secuencia = ++this.secuenciaContextoPredeterminado;
+    this.cargandoFamiliaPredeterminada.set(true);
+    this.errorFamiliaPredeterminada.set(null);
+    obtenerDefault.call(this.service).subscribe({
+      next: configuracion => {
+        if (secuencia !== this.secuenciaContextoPredeterminado) return;
+        this.familiaPredeterminada.set(configuracion);
+        if (!configuracion.configurada) {
+          this.versionVigente.set(null);
+          this.metodologia.set(null);
+          this.errorFormulario.set(null);
+          this.cargandoFormulario.set(false);
+          this.cargandoFamiliaPredeterminada.set(false);
+          return;
+        }
+
+        const versionId = Number(configuracion.versionVigenteId);
+        if (!Number.isInteger(versionId) || versionId <= 0) {
+          this.versionVigente.set(null);
+          this.metodologia.set(null);
+          this.errorFamiliaPredeterminada.set('La configuración de la familia predeterminada no contiene una versión vigente válida.');
+          this.cargandoFormulario.set(false);
+          this.cargandoFamiliaPredeterminada.set(false);
+          return;
+        }
+
+        this.cargandoFormulario.set(true);
+        this.cargarContextoPorVersion(versionId, secuencia, false);
+      },
+      error: error => {
+        if (secuencia !== this.secuenciaContextoPredeterminado) return;
+        this.familiaPredeterminada.set(null);
+        this.errorFamiliaPredeterminada.set(this.obtenerMensajeError(error, 'No se pudo consultar la familia predeterminada.'));
+        this.versionVigente.set(null);
+        this.metodologia.set(null);
+        this.cargandoFormulario.set(false);
+        this.cargandoFamiliaPredeterminada.set(false);
+      }
+    });
+  }
+
+  private cargarContextoPorVersion(versionId: number, secuencia: number, esNuevaEvaluacion: boolean): void {
+    const obtenerVersion = (this.service as MatricesRiesgosService & {
+      obtenerVersionFormulario?: (id: number) => Observable<VersionFormularioDto>;
+    }).obtenerVersionFormulario;
+    const obtenerMetodologia = (this.service as MatricesRiesgosService & {
+      metodologiaPorVersion?: (id: number) => Observable<MetodologiaFormulario>;
+    }).metodologiaPorVersion;
+
+    if (typeof obtenerVersion !== 'function' || typeof obtenerMetodologia !== 'function') {
+      this.cargandoFormulario.set(false);
+      return;
+    }
+
+    forkJoin({
+      version: obtenerVersion.call(this.service, versionId),
+      metodologia: obtenerMetodologia.call(this.service, versionId)
+    }).subscribe({
+      next: resultado => {
+        if ((!esNuevaEvaluacion && secuencia !== this.secuenciaContextoPredeterminado)
+          || (esNuevaEvaluacion && secuencia !== this.secuenciaVersionNuevaEvaluacion)) return;
+        this.versionVigente.set(resultado.version);
+        this.metodologia.set(resultado.metodologia);
+        this.inicializarRespuestas();
+        this.errorFormulario.set(null);
+        this.cargandoFormulario.set(false);
+        if (!esNuevaEvaluacion) this.cargandoFamiliaPredeterminada.set(false);
+      },
+      error: error => {
+        if ((!esNuevaEvaluacion && secuencia !== this.secuenciaContextoPredeterminado)
+          || (esNuevaEvaluacion && secuencia !== this.secuenciaVersionNuevaEvaluacion)) return;
+        this.versionVigente.set(null);
+        this.metodologia.set(null);
+        this.errorFormulario.set(this.obtenerMensajeError(error, 'No se pudo cargar la versión exacta de la familia seleccionada.'));
+        this.cargandoFormulario.set(false);
+        if (!esNuevaEvaluacion) this.cargandoFamiliaPredeterminada.set(false);
+      }
+    });
+  }
+
   descargarConsolidado(formato: 'excel' | 'pdf'): void {
     this.limpiarAlertas();
     const solicitud = formato === 'excel'
@@ -1242,6 +1386,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.metodologiaHistorica.set(null);
     this.respuestas.set({});
     this.modalNuevaEvaluacionAbierto.set(true);
+
+    const codigoPredeterminado = this.familiaPredeterminada()?.familiaCodigo;
+    if (this.familiaPredeterminada()?.configurada && codigoPredeterminado) {
+      this.seleccionarFamilia(codigoPredeterminado);
+    }
   }
 
   private filtroReporteConsolidado(): FiltroReporteMatrices {
@@ -1263,6 +1412,86 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.metodologia.set(null);
     this.respuestas.set({});
     this.globalState.limpiarError();
+    if (typeof (this.service as MatricesRiesgosService & {
+      obtenerFamiliaPredeterminada?: () => Observable<FamiliaPredeterminadaDto>;
+    }).obtenerFamiliaPredeterminada === 'function') {
+      this.cargarFamiliaPredeterminada();
+    }
+  }
+
+  familiaEsElegible(familia: FamiliaFormularioDto | null | undefined): boolean {
+    // Fixtures legacy pueden omitir el campo; el contrato HTTP real siempre lo informa.
+    return !!familia?.famActivo && familia.tieneVersionVigente !== false;
+  }
+
+  motivoFamiliaNoElegible(familia: FamiliaFormularioDto | null | undefined): string {
+    if (!familia) return 'Seleccione una familia para continuar.';
+    if (!familia.famActivo) return 'La familia está inactiva.';
+    if (familia.tieneVersionVigente === false) return 'La familia no tiene una versión vigente publicada.';
+    return '';
+  }
+
+  etiquetaFamiliaNueva(familia: FamiliaFormularioDto): string {
+    const motivo = this.motivoFamiliaNoElegible(familia);
+    return motivo ? `${familia.famNombre} (${familia.famCodigo}) — ${motivo}` : `${familia.famNombre} (${familia.famCodigo})`;
+  }
+
+  abrirConfirmacionFamiliaPredeterminada(familia: FamiliaFormularioDto, event?: Event): void {
+    if (!this.usuarioEsAdministrador() || familia.famPredeterminada || !this.familiaEsElegible(familia)) return;
+    this.familiaObjetivoPredeterminada.set(familia);
+    this.focoRetornoPredeterminada = event?.currentTarget instanceof HTMLElement
+      ? event.currentTarget
+      : document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    this.modalConfirmarPredeterminadaAbierto.set(true);
+    setTimeout(() => document.getElementById('confirmar-familia-predeterminada')?.focus(), 0);
+  }
+
+  usuarioEsAdministrador(): boolean {
+    return this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']);
+  }
+
+  cancelarConfirmacionFamiliaPredeterminada(): void {
+    this.modalConfirmarPredeterminadaAbierto.set(false);
+    this.familiaObjetivoPredeterminada.set(null);
+    const foco = this.focoRetornoPredeterminada;
+    this.focoRetornoPredeterminada = null;
+    setTimeout(() => foco?.focus(), 0);
+  }
+
+  confirmarFamiliaPredeterminada(): void {
+    const familia = this.familiaObjetivoPredeterminada();
+    const establecer = (this.service as MatricesRiesgosService & {
+      establecerFamiliaPredeterminada?: (id: number) => Observable<boolean>;
+    }).establecerFamiliaPredeterminada;
+    if (!familia || typeof establecer !== 'function' || this.operacionPredeterminadaEnCurso()) return;
+
+    this.operacionPredeterminadaEnCurso.set(true);
+    establecer.call(this.service, familia.famId).subscribe({
+      next: success => {
+        this.operacionPredeterminadaEnCurso.set(false);
+        if (!success) {
+          this.mostrarError('No se pudo establecer la familia predeterminada.');
+          return;
+        }
+        this.cancelarConfirmacionFamiliaPredeterminada();
+        this.mostrarMensaje(`La familia «${familia.famNombre}» se estableció como predeterminada.`);
+        this.cargarFamilias();
+        this.cargarFamiliaPredeterminada();
+      },
+      error: error => {
+        this.operacionPredeterminadaEnCurso.set(false);
+        const status = Number((error as { status?: number })?.status);
+        if (status === 409) {
+          this.mostrarError('La configuración cambió mientras realizabas la operación. Se actualizó el estado actual; inténtalo nuevamente.');
+        } else if (status === 400) {
+          this.mostrarError(this.obtenerMensajeError(error, 'La familia debe estar activa y contar con una versión publicada y vigente antes de establecerla como predeterminada.'));
+        } else {
+          this.mostrarError(this.obtenerMensajeError(error, 'No se pudo establecer la familia predeterminada.'));
+        }
+        this.cargarFamilias();
+        this.cargarFamiliaPredeterminada();
+      }
+    });
   }
 
   abrirModalVer(resumen: EvaluacionRiesgoResumenDto): void {

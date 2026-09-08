@@ -39,6 +39,26 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith(metodologia);
   });
 
+  it('consulta la familia predeterminada sin convertir configuracion ausente en 404', () => {
+    const resultado = vi.fn();
+    service.obtenerFamiliaPredeterminada().subscribe(resultado);
+    const request = http.expectOne(`${apiUrl}/familias/predeterminada`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: { configurada: false, tieneVersionVigente: false } });
+    expect(resultado).toHaveBeenCalledWith({ configurada: false, tieneVersionVigente: false });
+  });
+
+  it('establece una familia predeterminada con PUT y confirmacion institucional', () => {
+    const resultado = vi.fn();
+    service.establecerFamiliaPredeterminada(22).subscribe(resultado);
+    const request = http.expectOne(`${apiUrl}/familias/22/predeterminada`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({});
+    expect(request.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    request.flush({ success: true, datos: null });
+    expect(resultado).toHaveBeenCalledWith(true);
+  });
+
   it('consulta el consolidado mediante filas tipadas', () => {
     const resultado = vi.fn();
     const filas = [{

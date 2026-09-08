@@ -79,6 +79,7 @@ export class FamiliaEditarModalComponent implements OnChanges, AfterViewInit, On
       && this.esAdministrador()
       && familia.famActivo
       && !familia.tieneVersionVigente
+      && !familia.famPredeterminada
       && !this.operando()
       && !this.guardando()
     );

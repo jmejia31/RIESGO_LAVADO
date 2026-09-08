@@ -4,7 +4,7 @@ import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
-import { FamiliaFormularioDto } from '../../models/matrices-riesgos.models';
+import { FamiliaFormularioDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { Subject, of, throwError } from 'rxjs';
 
 describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias', () => {
@@ -81,6 +81,10 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
       verVigente: true,
       verFechaCreacion: '2026-01-01',
       verUsrCreacion: 1
+    }));
+    vi.spyOn(service, 'obtenerFamiliaPredeterminada').mockReturnValue(of({
+      configurada: false,
+      tieneVersionVigente: false
     }));
 
     component.familias.set(mockFamilias);
@@ -342,5 +346,69 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component.respuestas.set({ c: 'valor' });
     expect(component.puedeGuardar()).toBe(true);
     expect(component.totalCompletados()).toBe(1);
+  });
+
+  it('25. representa la ausencia de familia predeterminada como configuración pendiente', () => {
+    component.familiaPredeterminada.set({ configurada: false, tieneVersionVigente: false });
+    component.errorFormulario.set(null);
+    component.tab.set('evaluaciones');
+    fixture.detectChanges();
+
+    expect(component.configuracionFamiliaPredeterminadaPendiente()).toBe(true);
+    expect(fixture.nativeElement.querySelector('[data-ui-default-family-state]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-ui-default-family-state]').className).toContain('bg-sky-50');
+  });
+
+  it('26. preselecciona la familia predeterminada y carga version/metodologia por identificador exacto', () => {
+    const version = {
+      verId: 77,
+      verFamiliaId: 1,
+      verCodigo: 'EMPLEADOS_V2',
+      verVersion: 2,
+      verJson: JSON.stringify({ secciones: [] }),
+      verHash: 'hash-77',
+      verEstado: 'PUBLISHED',
+      verVigente: true,
+      verFechaCreacion: '2026-08-01',
+      verUsrCreacion: 1
+    } as VersionFormularioDto;
+    vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(version));
+    const metodologia = { versionFormularioId: 77, codigo: 'EMPLEADOS_V2', version: 2, secciones: [], catalogos: [], reglas: [] };
+    vi.spyOn(service, 'metodologiaPorVersion').mockReturnValue(of(metodologia));
+    component.familiaPredeterminada.set({ configurada: true, familiaCodigo: 'EMPLEADOS', versionVigenteId: 77, tieneVersionVigente: true });
+
+    component.nuevaEvaluacion();
+
+    expect(component.familiaSeleccionada()).toBe('EMPLEADOS');
+    expect(component.versionVigente()?.verId).toBe(77);
+    expect(component.metodologia()?.versionFormularioId).toBe(77);
+    expect(service.metodologiaPorVersion).toHaveBeenCalledWith(77);
+  });
+
+  it('27. sin predeterminada permite selección manual de una familia elegible', () => {
+    const version = { verId: 88, verFamiliaId: 1, verCodigo: 'EMPLEADOS', verVersion: 1, verJson: '{}', verHash: 'h', verEstado: 'PUBLISHED', verVigente: true, verFechaCreacion: '2026-01-01', verUsrCreacion: 1 } as VersionFormularioDto;
+    vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(version));
+    vi.spyOn(service, 'metodologiaPorVersion').mockReturnValue(of({ versionFormularioId: 88, codigo: 'EMPLEADOS', version: 1, secciones: [], catalogos: [], reglas: [] }));
+    component.familiaPredeterminada.set({ configurada: false, tieneVersionVigente: false });
+
+    component.nuevaEvaluacion();
+    expect(component.familiaSeleccionada()).toBe('');
+    component.seleccionarFamilia('EMPLEADOS');
+
+    expect(component.familiaSeleccionada()).toBe('EMPLEADOS');
+    expect(component.versionVigente()?.verId).toBe(88);
+  });
+
+  it('28. confirma una sola vez el cambio de familia predeterminada', () => {
+    const establecer = vi.spyOn(service, 'establecerFamiliaPredeterminada').mockReturnValue(of(true));
+    component.familias.set([{ ...mockFamilias[0], famPredeterminada: false }]);
+    component.abrirConfirmacionFamiliaPredeterminada(component.familias()[0]);
+    expect(component.modalConfirmarPredeterminadaAbierto()).toBe(true);
+
+    component.confirmarFamiliaPredeterminada();
+    component.confirmarFamiliaPredeterminada();
+
+    expect(establecer).toHaveBeenCalledTimes(1);
+    expect(component.modalConfirmarPredeterminadaAbierto()).toBe(false);
   });
 });

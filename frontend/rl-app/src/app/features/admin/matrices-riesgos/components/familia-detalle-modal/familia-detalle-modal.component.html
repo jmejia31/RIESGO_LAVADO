@@ -110,6 +110,12 @@
         </div>
       } @else if (detalle(); as fam) {
         <div class="space-y-5" data-ui-fam-detail-state="success">
+          @if (fam.famPredeterminada) {
+            <div class="inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800" data-ui-fam-detail-default-badge aria-label="Familia predeterminada">
+              <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.7 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.7Z"/></svg>
+              <span>Predeterminada</span>
+            </div>
+          }
           <section class="grid overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" aria-label="Resumen de la familia">
             <div class="flex items-center gap-3 border-b border-gray-100 p-4 sm:border-r lg:border-b-0">
               <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-700 text-white"><span class="font-mono text-sm font-bold">&lt;/&gt;</span></div>
