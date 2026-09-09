@@ -1066,3 +1066,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Contratos corregidos: descarga conserva el tipo real (`PDF -> .pdf/application/pdf`, `Excel -> .xlsx/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`); el Blob descargado es el mismo del preview; Excel mantiene cabecera separada y roles KEY_VALUE/SPACER sin conflicto; PDF limita tablas al ancho imprimible.
 - Regresion verificada: frontend `758/758`, backend `611/611`, E2E `32/32`; E2E de XLSX real y viewports responsive PASS; TSC spec, lint, build, npm audit (`0 vulnerabilities`), diff check, documentacion links y Agent Skills PASS.
 - Arquitectura congelada: sin cambios backend/API/Oracle/dependencias, sin cambios de FormulaEngine/calculo/contratos persistidos, `FASE_5_3_REANUDABLE=TRUE`, `FASE_5_3_REANUDADA=FALSE`. El commit y Quality Gate exacto del SHA final quedan pendientes.
+
+## Cierre UX-GLOBAL-REPORTS-MODALS-EXPORTS-HARDENING.1
+
+- La guarda de geometria quedó portable entre Windows y CI Linux en `7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; no se modificaron contratos ni productivo backend.
+- Quality Gate tecnico exacto: `RUN=34388711402`; `SHA=7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; `STATUS=completed`; `CONCLUSION=success`. Frontend `758/758`, backend `611/611`, E2E `32/32`; npm audit sin vulnerabilidades.
+- Este registro documental requiere el Quality Gate de su propio SHA final. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3.

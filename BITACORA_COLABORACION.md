@@ -6914,3 +6914,9 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - PDF/modales: el ancho de tabla se limita dinámicamente al área imprimible; el preview PDF usa altura dependiente de viewport; el preview Excel y las superficies de coincidencias aprovechan workspace; E2E verificó bounds y overflow en `320`, `375`, `768`, `1024`, `1280`, `1366`, `1536` y `1920` px.
 - Pruebas verificadas: frontend `758/758 PASS`; backend Release `611/611 PASS`; E2E completo `32/32 PASS`; E2E responsive/preview real XLSX PASS; TSC spec, lint, build, `npm audit` (`0 vulnerabilities`), diff check, documentación links y Agent Skills PASS. Validador estructural conserva tres hallazgos legacy fuera de este alcance.
 - Restricciones preservadas: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. Pendiente commit, push y Quality Gate exacto del SHA final; no reanudar FASE 5.3.
+
+## Cierre UX-GLOBAL-REPORTS-MODALS-EXPORTS-HARDENING.1
+
+- Correccion de portabilidad de la guarda de geometria en `7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`, publicada en `origin/desarrollo`; el path del preview se resuelve con `join` para que la prueba sea identica en Windows y CI Linux.
+- Quality Gate del commit tecnico: `RUN=34388711402`; `HEAD_SHA=7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; `STATUS=completed`; `CONCLUSION=success`. Regresion verificada: frontend `758/758`, backend `611/611`, E2E `32/32`; sin cambios backend/API/Oracle/dependencias.
+- El cierre documental se publica en un commit posterior y su Quality Gate exacto sera el SHA final del handoff. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
