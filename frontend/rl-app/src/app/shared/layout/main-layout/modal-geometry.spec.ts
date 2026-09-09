@@ -167,7 +167,8 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
       }
     };
     collect(appRoot);
-    const preview = sources.find(({ path }) => path.endsWith('shared\\report-preview\\report-preview.component.html'));
+    const previewPath = join('shared', 'report-preview', 'report-preview.component.html');
+    const preview = sources.find(({ path }) => path.endsWith(previewPath));
     expect(preview?.source).toMatch(/modal-container-card[^>]*modal-size-workspace/);
 
     const highDensity = sources.filter(({ source }) => /data-modal-density="(?:wide-table|history-form)"/.test(source));
