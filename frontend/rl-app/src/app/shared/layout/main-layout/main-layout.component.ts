@@ -7,10 +7,12 @@ import { CatalogoService } from '../../../core/configuration/catalogo.service';
 import { Modulo } from '../../../core/configuration/catalogo.models';
 import { GlobalHttpStateService } from '../../../core/services/global-http-state.service';
 
+import { ActionIconComponent } from '../../components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [ActionIconComponent, CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './main-layout.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

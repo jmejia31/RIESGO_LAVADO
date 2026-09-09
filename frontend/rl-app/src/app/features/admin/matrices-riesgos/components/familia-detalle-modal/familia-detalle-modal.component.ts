@@ -31,10 +31,12 @@ interface ActividadFamiliaViewModel {
   tono: 'green' | 'blue' | 'purple' | 'amber';
 }
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-familia-detalle-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [ActionIconComponent, CommonModule],
   templateUrl: './familia-detalle-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

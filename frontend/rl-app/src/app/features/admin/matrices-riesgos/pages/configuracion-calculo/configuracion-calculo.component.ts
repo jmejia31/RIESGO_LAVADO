@@ -63,10 +63,12 @@ interface ParameterDraftForm {
   valorFecha: string;
 }
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-configuracion-calculo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './configuracion-calculo.component.html',
   styleUrl: './configuracion-calculo.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

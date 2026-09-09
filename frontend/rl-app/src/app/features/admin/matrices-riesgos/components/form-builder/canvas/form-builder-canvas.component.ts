@@ -3,10 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampoBuilderModel, SeccionBuilderModel } from '../../../models/form-builder.models';
 
+import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-form-builder-canvas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './form-builder-canvas.component.html',
   styleUrls: ['./form-builder-canvas.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

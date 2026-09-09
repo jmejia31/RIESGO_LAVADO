@@ -8,10 +8,12 @@ export interface FamiliaCreadaEvent {
   nombre: string;
 }
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-familia-crear-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './familia-crear-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

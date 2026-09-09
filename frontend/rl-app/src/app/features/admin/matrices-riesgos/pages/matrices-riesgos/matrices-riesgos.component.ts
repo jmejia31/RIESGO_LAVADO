@@ -44,10 +44,12 @@ import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-sema
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
+  imports: [ActionIconComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
   templateUrl: './matrices-riesgos.component.html',
   styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

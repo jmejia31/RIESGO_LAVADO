@@ -11,10 +11,12 @@ import {
   SenalAlertaGuardarDto
 } from '../../models/matrices-riesgos-fase11.models';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-monitoreo-operativo.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

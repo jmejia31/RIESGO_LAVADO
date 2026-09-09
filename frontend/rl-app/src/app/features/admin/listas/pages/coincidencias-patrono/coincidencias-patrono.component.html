@@ -39,7 +39,7 @@
             </svg>
           </span>
           <input type="text" [ngModel]="buscarTerm()" (ngModelChange)="buscarTerm.set($event); paginaActual.set(1)"
-            placeholder="Buscar..."
+            placeholder="Buscar por nombre o número de identificación..."
             class="w-full bg-white border border-gray-300 text-gray-700 text-xs rounded-xl pl-9 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all duration-200">
         </div>
       </div>
@@ -91,11 +91,8 @@
                       <div class="relative group inline-block">
                         <button (click)="verDetalles(item)" title="Ver detalles de la coincidencia" aria-label="Ver detalles de la coincidencia"
                           class="p-2 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 ring-1 ring-inset ring-teal-700/10 transition-colors">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                          </svg>
-                        </button>
+            <app-action-icon action="view"></app-action-icon>
+          </button>
                         <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                           Ver detalles
                           <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
@@ -106,10 +103,8 @@
                       <div class="relative group inline-block">
                         <button (click)="imprimir(item)" title="Descargar coincidencias" aria-label="Descargar coincidencias"
                           class="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 ring-1 ring-inset ring-green-700/10 transition-colors">
-                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                          </svg>
-                        </button>
+            <app-action-icon action="print"></app-action-icon>
+          </button>
                         <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                           Exportar a Excel
                           <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
@@ -176,10 +171,8 @@
           </p>
         </div>
         <button (click)="cerrarModal()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal detalles" title="Cerrar modal detalles">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+            <app-action-icon action="close"></app-action-icon>
+          </button>
       </div>
 
       <!-- Contenido / Tabla de Detalles -->
@@ -193,7 +186,7 @@
               </svg>
             </span>
             <input type="text" [ngModel]="buscarTermDetalle()" (ngModelChange)="buscarTermDetalle.set($event); paginaDetalleActual.set(1)"
-              placeholder="Buscar en el detalle..."
+              placeholder="Buscar en el detalle de la coincidencia..."
               class="w-full bg-white border border-gray-300 text-gray-700 text-xs rounded-xl pl-9 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-500/20 focus:border-ihss-500 transition-all duration-200">
           </div>
 
@@ -254,10 +247,8 @@
                         <div class="relative group inline-block">
                           <button (click)="calificar(r, 1)" [disabled]="r.tipoCalificacion === 'Positivo'" title="Marcar como positivo" aria-label="Marcar como positivo"
                             class="p-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 ring-1 ring-inset ring-red-700/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                          </button>
+            <app-action-icon action="mark-positive"></app-action-icon>
+          </button>
                           <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                             Calificar como Positivo
                             <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
@@ -268,10 +259,8 @@
                         <div class="relative group inline-block">
                           <button (click)="calificar(r, 2)" [disabled]="r.tipoCalificacion === 'Falso Positivo'" title="Marcar como falso positivo" aria-label="Marcar como falso positivo"
                             class="p-1 rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 ring-1 ring-inset ring-yellow-700/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                          </button>
+            <app-action-icon action="mark-false-positive"></app-action-icon>
+          </button>
                           <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                             Calificar como Falso Positivo
                             <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
@@ -282,11 +271,8 @@
                         <div class="relative group inline-block">
                           <button (click)="mostrarDetalleRegistro(r)" title="Ver detalle del registro" aria-label="Ver detalle del registro"
                             class="p-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 ring-1 ring-inset ring-blue-700/10 transition-colors">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                          </button>
+            <app-action-icon action="view"></app-action-icon>
+          </button>
                           <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                             Ver detalle completo
                             <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
@@ -342,7 +328,9 @@
             Siguiente
           </button>
         </div>
-         <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 hover:bg-ihss-800 text-white transition-colors"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+         <button (click)="cerrarModal()" title="Cerrar detalle de coincidencias" aria-label="Cerrar detalle de coincidencias" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 hover:bg-ihss-800 text-white transition-colors">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
       </div>
 
     </div>

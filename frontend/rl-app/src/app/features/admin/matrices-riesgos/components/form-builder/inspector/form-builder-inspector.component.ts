@@ -10,10 +10,12 @@ export interface InspectorCatalogoOption {
   cantidadElementos: number;
 }
 
+import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-form-builder-inspector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './form-builder-inspector.component.html',
   styleUrls: ['./form-builder-inspector.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

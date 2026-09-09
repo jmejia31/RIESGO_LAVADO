@@ -4,10 +4,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { ConfigSistema, LoginSlide } from '../../../../../core/configuration/configuracion.models';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-configuracion',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './configuracion.component.html',
 })

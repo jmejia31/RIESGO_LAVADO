@@ -6,10 +6,12 @@ import { ResumenLista, TipoListaCautela } from '../../models/listas.models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-cargar-listas',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './cargar-listas.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -88,10 +88,30 @@ function productionSources(appRoot: string): Array<{ path: string; source: strin
   return sources;
 }
 
+function canonicalActionNames(appRoot: string): Set<string> {
+  const registryPath = join(appRoot, 'shared', 'components', 'action-icon', 'action-icon.component.ts');
+  const registry = readFileSync(registryPath, 'utf8');
+  const start = registry.indexOf('export const ACTION_ICON_PATHS');
+  const end = registry.indexOf('\n};', start);
+  const body = registry.slice(start, end < 0 ? registry.length : end);
+  return new Set([...body.matchAll(/^\s*(?:'([^']+)'|([a-z-]+)):\s*\[/gm)].map(match => match[1] ?? match[2]));
+}
+
+function declaredActionIcons(body: string): string[] {
+  const tags = [...body.matchAll(/<app-action-icon\b[^>]*>/gi)].map(match => match[0]);
+  return tags.flatMap(tag => {
+    const binding = tag.match(/\[action\]\s*=\s*["']([^"']+)["']/i);
+    if (binding) return [...binding[1].matchAll(/['"]([a-z-]+)['"]/gi)].map(match => match[1]);
+    const input = tag.match(/\baction\s*=\s*["']([^"']+)["']/i);
+    return input ? [input[1]] : [];
+  });
+}
+
 describe('regla global de acciones icon-only', () => {
   it('mantiene acciones productivas sin texto visible y con nombre/tooltip accesibles', () => {
     const workingDirectory = cwd();
     const appRoot = join(workingDirectory, 'src', 'app');
+    const canonicalActions = canonicalActionNames(appRoot);
     const violations: string[] = [];
 
     for (const { path, source } of productionSources(appRoot)) {
@@ -100,12 +120,19 @@ describe('regla global de acciones icon-only', () => {
         const text = visibleButtonText(button.body);
         const hasAriaLabel = /aria-label|attr\.aria-label/i.test(button.attrs);
         const hasTooltip = /\btitle\s*=|\[title\]|attr\.title/i.test(button.attrs);
-        const hasIcon = /<svg\b|animate-spin/i.test(button.body);
+        const actionIconCount = (button.body.match(/<app-action-icon\b/gi) ?? []).length;
+        const actionIcons = declaredActionIcons(button.body);
+        const hasIcon = /<app-action-icon\b/i.test(button.body);
         const location = `${relative(workingDirectory, path)}:${lineAt(source, button.offset)}`;
         if (text) violations.push(`${location}: visible text "${text}"`);
         if (!hasAriaLabel) violations.push(`${location}: missing aria-label`);
         if (!hasTooltip) violations.push(`${location}: missing title/tooltip`);
         if (!hasIcon) violations.push(`${location}: missing semantic icon`);
+        if (actionIconCount !== 1) violations.push(`${location}: expected exactly one canonical action icon`);
+        for (const action of actionIcons) {
+          if (!canonicalActions.has(action)) violations.push(`${location}: action "${action}" is not registered in the canonical icon catalog`);
+        }
+        if (/<svg\b/i.test(button.body)) violations.push(`${location}: local SVG action icon bypasses the canonical catalog`);
       }
     }
 

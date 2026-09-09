@@ -1027,3 +1027,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Commit técnico publicado: `eb822a8eba04e79d1078187eb14478516ce94d98`. Quality Gate exacto `34310327824`: `head_branch=desarrollo`, `head_sha=eb822a8eba04e79d1078187eb14478516ce94d98`, `status=completed`, `conclusion=success`.
 - Cierre funcional verificado: acciones productivas con texto visible `0`; acciones sin `aria-label` `0`; acciones sin tooltip/title `0`; guardia de regresión `PASS`; navegación/selección textual preservada; frontend `737/737`, backend `611/611`, E2E `31/31`; TSC spec, lint, build, audit, diff check y Agent Skills `PASS`.
 - Alcance preservado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. El presente registro será publicado en un commit documental final, cuyo Quality Gate exacto se verificará antes de declarar el cierre definitivo.
+
+## Registro UX-ACTION-ICON-ONLY.1 - catalogo central y copy contextual
+
+- Fecha/hora local: `2026-09-09`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `c2ccaad738f06c7a51870732ed924a4499d8a0de`.
+- Se auditaron `27` plantillas HTML y `3` templates inline productivos. Se centralizo la iconografia de acciones en `app-action-icon` y su registro canonico; se convirtieron `251` controles y se conservaron `15` acciones ya conformes.
+- Inventario final: `ACTION_BUTTONS_FOUND=266`; `ACTION_BUTTONS_WITH_VISIBLE_TEXT=0`; `ACTION_ICON_WITHOUT_ARIA_LABEL=0`; `ACTION_ICON_WITHOUT_TOOLTIP=0`; navegacion y seleccion textuales preservadas.
+- Gates: `GLOBAL_ICON_CATALOG=PASS`; `CANONICAL_ICON_SOURCE=PASS`; `LOCAL_DUPLICATE_ACTION_ICONS=0`; `ACTION_ICON_CONSISTENCY=PASS`; `ICON_REGRESSION_GUARD=PASS`; `ALL_UI_COPY_AUDITED=PASS`; `COPY_UX_REGRESSION_GUARD=PASS`.
+- Pruebas ejecutadas: frontend `742/742`; backend `611/611`; E2E `31/31`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), diff check, documentacion links y Agent Skills `PASS`. El validador estructural conserva tres hallazgos legacy preexistentes fuera de scope.
+- Alcance congelado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FORM_RENDERER_CHANGES=0`; `FORMULA_ENGINE_CHANGES=0`; `CALCULATION_ENGINE_CHANGES=0`; FASE 5.3 permanece no reanudada. Pendientes de cierre: commit, push y Quality Gate exacto del SHA final.

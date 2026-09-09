@@ -79,10 +79,12 @@ type InstanciaInternaMonitoreo = {
  * Coincidencias reutilizan un contrato institucional único que replica el
  * título, secciones, orden, campos, tablas, mensajes vacíos y resúmenes del PDF.
  */
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html'
 })

@@ -12,10 +12,12 @@ import { ResultadoValidacionAd } from '../../models/active-directorio.models';
 
 type EstadoAd = 'idle' | 'verificando' | 'valido' | 'no-existe' | 'bloqueado' | 'inactivo' | 'error';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector:    'app-usuarios',
   standalone:  true,
-  imports:     [CommonModule, FormsModule, ReactiveFormsModule],
+  imports:     [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './usuarios.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

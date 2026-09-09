@@ -9,6 +9,7 @@ import { jsPDF } from 'jspdf';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
 import { of, forkJoin } from 'rxjs';
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
@@ -18,7 +19,7 @@ type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | Coincidenc
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html',
 })

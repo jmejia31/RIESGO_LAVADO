@@ -5,10 +5,12 @@ import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase11.models';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-matrices-riesgos-gestion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-gestion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

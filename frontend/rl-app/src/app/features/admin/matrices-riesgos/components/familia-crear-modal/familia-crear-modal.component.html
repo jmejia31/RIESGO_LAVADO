@@ -32,7 +32,7 @@
                   [disabled]="guardando()"
                   (click)="solicitarCierre()"
                   data-ui-fam-create-action="regresar">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            <app-action-icon action="back"></app-action-icon>
           </button>
           <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Regresar a Familias de Formularios</span>
         </div>
@@ -43,7 +43,7 @@
                   title="Cerrar ventana"
                   [disabled]="guardando()"
                   (click)="solicitarCierre()">
-            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <app-action-icon action="close"></app-action-icon>
           </button>
           <span class="pointer-events-none absolute right-0 top-full z-50 mt-2 whitespace-nowrap rounded-lg bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100 group-focus-within:opacity-100" role="tooltip">Cerrar ventana</span>
         </div>
@@ -55,7 +55,9 @@
         <div class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-ui-fam-create-state="error">
           <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="flex-1 font-medium">{{ errorTexto }}</span>
-          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" title="Cerrar mensaje de error" (click)="error.set(null)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+          <button type="button" class="rounded-md p-1 text-red-400 hover:bg-red-100 hover:text-red-700" aria-label="Cerrar error" title="Cerrar mensaje de error" (click)="error.set(null)">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
         </div>
       }
 
@@ -182,19 +184,15 @@
               aria-label="Regresar sin crear la familia"
               [disabled]="guardando()"
               (click)="solicitarCierre()">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-      </button>
+            <app-action-icon action="back"></app-action-icon>
+          </button>
        <button type="submit" title="Crear la familia de formularios" aria-label="Crear la familia de formularios"
               class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="guardando() || familiaForm.invalid"
               title="Crear la familia de formularios"
               data-ui-fam-create-action="submit">
-        @if (guardando()) {
-          <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-        } @else {
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
-        }
-      </button>
+<app-action-icon action="save" [loading]="guardando()"></app-action-icon>
+          </button>
     </div>
   </form>
 </dialog>

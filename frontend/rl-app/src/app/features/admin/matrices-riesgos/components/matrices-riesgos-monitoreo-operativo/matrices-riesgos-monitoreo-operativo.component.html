@@ -49,8 +49,12 @@
           <div><label for="alerta-estado" class="block text-sm font-medium">Estado</label><select id="alerta-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaEstado"><option value="ACTIVO">Activo</option><option value="INACTIVO">Inactivo</option></select></div>
           <div class="md:col-span-2"><label for="alerta-indicador" class="block text-sm font-medium">Indicador</label><input id="alerta-indicador" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="alertaIndicador" maxlength="150"></div>
         </div>
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Registrar alerta" aria-label="Registrar alerta" [disabled]="guardando()" (click)="crearAlerta()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3 4 7v5c0 4.5 3.4 7.7 8 9 4.6-1.3 8-4.5 8-9V7l-8-4Z"/></svg></button>
-        <div class="space-y-2">@for (alerta of alertas(); track alerta.aleId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ alerta.aleCodigo }}</strong> · {{ alerta.aleEstado }}<p class="mt-1 text-slate-600">{{ alerta.aleIndicador }}</p></div><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-blue-700" [disabled]="guardando()" [attr.title]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" [attr.aria-label]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" (click)="cambiarEstado(alerta)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 1 0-18 0 9 9 0 0 0 18 0z"/></svg></button></div></article> } @empty { <p class="text-sm text-slate-500">Sin señales de alerta.</p> }</div>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Registrar alerta" aria-label="Registrar alerta" [disabled]="guardando()" (click)="crearAlerta()">
+            <app-action-icon action="save"></app-action-icon>
+          </button>
+        <div class="space-y-2">@for (alerta of alertas(); track alerta.aleId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><div class="flex items-center justify-between gap-3"><div><strong>{{ alerta.aleCodigo }}</strong> · {{ alerta.aleEstado }}<p class="mt-1 text-slate-600">{{ alerta.aleIndicador }}</p></div><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-blue-700" [disabled]="guardando()" [attr.title]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" [attr.aria-label]="alerta.aleEstado === 'ACTIVO' ? 'Inactivar alerta' : 'Activar alerta'" (click)="cambiarEstado(alerta)">
+            <app-action-icon action="activate"></app-action-icon>
+          </button></div></article> } @empty { <p class="text-sm text-slate-500">Sin señales de alerta.</p> }</div>
       </section>
 
       <section class="space-y-4 rounded-xl border border-slate-200 p-4">
@@ -60,7 +64,9 @@
           <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><input id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"></div>
           <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado" maxlength="500"></textarea></div>
         </div>
-        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Guardar monitoreo" aria-label="Guardar monitoreo" [disabled]="guardando()" (click)="registrarAutomonitoreo()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4 4L19 6"/></svg></button>
+        <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Guardar monitoreo" aria-label="Guardar monitoreo" [disabled]="guardando()" (click)="registrarAutomonitoreo()">
+            <app-action-icon action="save"></app-action-icon>
+          </button>
         <div class="space-y-2">@for (item of automonitoreos(); track item.monId) { <article class="rounded-lg border border-slate-200 p-3 text-sm"><strong>{{ item.monFecha | date:'short' }}</strong><p class="text-slate-600">{{ item.monResultado }}</p></article> } @empty { <p class="text-sm text-slate-500">Sin registros de automonitoreo.</p> }</div>
       </section>
     </div>

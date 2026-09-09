@@ -15,10 +15,12 @@ import {
   PlanMitigacionGuardarDto
 } from '../../models/matrices-riesgos-fase11.models';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-mitigacion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -6,10 +6,12 @@ import { CoincidenciaEmpleadoDetalle, CoincidenciaEmpleadoResumen } from '../../
 import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-coincidencias-empleado',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './coincidencias-empleado.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

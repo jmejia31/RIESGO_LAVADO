@@ -26,10 +26,12 @@ export interface FamiliaEstadoCambiadoEvent {
   accion: 'ACTIVADA' | 'DESACTIVADA';
 }
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-familia-editar-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './familia-editar-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

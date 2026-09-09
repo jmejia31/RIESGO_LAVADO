@@ -5,11 +5,12 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { AuthService } from '../../../../core/auth/auth.service';
 import { ConfiguracionService } from '../../../../core/configuration/configuracion.service';
 import { LoginSlide } from '../../../../core/configuration/configuracion.models';
+import { ActionIconComponent, renderActionIconSvg } from '../../../../shared/components/action-icon/action-icon.component';
 
 @Component({
   selector:    'app-login',
   standalone:  true,
-  imports:     [CommonModule, ReactiveFormsModule],
+  imports:     [ActionIconComponent, CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -179,11 +180,8 @@ export class LoginComponent implements OnInit, OnDestroy {
               <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nueva Contraseña</label>
               <div style="position: relative;">
                 <input id="swal-new-password" type="password" class="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-500" placeholder="Mínimo 8 caracteres" style="margin-bottom: 15px; padding-right: 40px; width: 100%;">
-                <button type="button" id="toggle-new-pw" style="position: absolute; right: 10px; top: 12px; border: none; background: none; cursor: pointer; color: #9ca3af;">
-                  <svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
+                <button type="button" id="toggle-new-pw" aria-label="Mostrar contraseña" title="Mostrar contraseña" style="position: absolute; right: 10px; top: 12px; border: none; background: none; cursor: pointer; color: #9ca3af;">
+                  ${renderActionIconSvg('show-password')}
                 </button>
               </div>
             </div>
@@ -191,11 +189,8 @@ export class LoginComponent implements OnInit, OnDestroy {
               <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Confirmar Nueva Contraseña</label>
               <div style="position: relative;">
                 <input id="swal-confirm-password" type="password" class="w-full p-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-500" placeholder="Repita la contraseña" style="padding-right: 40px; width: 100%;">
-                <button type="button" id="toggle-confirm-pw" style="position: absolute; right: 10px; top: 12px; border: none; background: none; cursor: pointer; color: #9ca3af;">
-                  <svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
+                <button type="button" id="toggle-confirm-pw" aria-label="Mostrar contraseña" title="Mostrar contraseña" style="position: absolute; right: 10px; top: 12px; border: none; background: none; cursor: pointer; color: #9ca3af;">
+                  ${renderActionIconSvg('show-password')}
                 </button>
               </div>
             </div>
@@ -212,14 +207,9 @@ export class LoginComponent implements OnInit, OnDestroy {
           const newPwInput = document.getElementById('swal-new-password') as HTMLInputElement;
           const confirmPwInput = document.getElementById('swal-confirm-password') as HTMLInputElement;
 
-          const eyeOpen = `<svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>`;
+          const eyeOpen = renderActionIconSvg('show-password');
 
-          const eyeClosed = `<svg style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-          </svg>`;
+          const eyeClosed = renderActionIconSvg('hide-password');
 
           toggleNew?.addEventListener('click', () => {
             const isPassword = newPwInput.type === 'password';

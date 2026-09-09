@@ -44,10 +44,12 @@ export interface FeedbackCatalogo {
   mensaje: string;
 }
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-form-builder',
   standalone: true,
-  imports: [
+  imports: [ActionIconComponent,
     CommonModule,
     FormsModule,
     FormBuilderToolbarComponent,

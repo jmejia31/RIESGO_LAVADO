@@ -12,10 +12,12 @@ function normalizarTexto(valor: string | undefined | null): string {
     .trim();
 }
 
+import { ActionIconComponent } from '../../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-form-builder-palette',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './form-builder-palette.component.html',
   styleUrls: ['./form-builder-palette.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

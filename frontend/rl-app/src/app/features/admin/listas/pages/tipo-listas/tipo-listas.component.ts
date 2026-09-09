@@ -4,10 +4,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ListasService } from '../../data-access/listas.service';
 import { TipoListaCautela } from '../../models/listas.models';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-tipo-listas',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './tipo-listas.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

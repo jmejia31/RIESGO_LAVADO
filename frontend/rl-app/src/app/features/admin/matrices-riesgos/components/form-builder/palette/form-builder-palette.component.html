@@ -7,10 +7,14 @@
     <div class="palette-search">
       <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m21 21-4.35-4.35m2.1-5.4a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/></svg>
       <input type="text" id="buscador-palette" [ngModel]="terminoBusqueda()" (ngModelChange)="terminoBusqueda.set($event)" placeholder="Buscar campo..." aria-label="Buscar campo o tipo de control">
-      @if (terminoBusqueda()) { <button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100" (click)="limpiarBusqueda()" title="Limpiar búsqueda de campos" aria-label="Limpiar búsqueda de campos"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button> }
+      @if (terminoBusqueda()) { <button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-slate-500 hover:bg-slate-100" (click)="limpiarBusqueda()" title="Limpiar búsqueda de campos" aria-label="Limpiar búsqueda de campos">
+            <app-action-icon action="clear-filters"></app-action-icon>
+          </button> }
     </div>
     @if (terminoBusqueda()) {
-      <div class="palette-search-meta"><span>{{ totalFiltrados() }} control(es) encontrado(s)</span><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-blue-700 hover:bg-blue-50" (click)="limpiarBusqueda()" title="Mostrar todos los campos" aria-label="Mostrar todos los campos"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button></div>
+      <div class="palette-search-meta"><span>{{ totalFiltrados() }} control(es) encontrado(s)</span><button type="button" class="inline-flex h-7 w-7 items-center justify-center rounded text-blue-700 hover:bg-blue-50" (click)="limpiarBusqueda()" title="Mostrar todos los campos" aria-label="Mostrar todos los campos">
+            <app-action-icon action="clear-filters"></app-action-icon>
+          </button></div>
     }
     @if (!seccionActivaId && !soloLectura) {
       <div class="palette-notice"><span aria-hidden="true">!</span><span>Selecciona una sección en el lienzo para agregar campos.</span></div>

@@ -6,10 +6,12 @@ import { CoincidenciaPatronoDetalle, CoincidenciaPatronoResumen } from '../../mo
 import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
+import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+
 @Component({
   selector: 'app-coincidencias-patrono',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [ActionIconComponent, CommonModule, FormsModule],
   templateUrl: './coincidencias-patrono.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })
