@@ -170,7 +170,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).toBeNull();
   });
 
-  it('mantiene la familia de Nueva Evaluación con un único owner visual en el selector', () => {
+  it('mantiene la familia de Nueva Evaluación con un único owner visual en el selector', async () => {
     const familiaPrueba: FamiliaFormularioDto = {
       ...mockFamilias[0],
       famCodigo: 'PRUEBA_FORMULARIO',
@@ -192,15 +192,20 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
 
     component.nuevaEvaluacion();
     fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
 
     const dialog = fixture.nativeElement.querySelector('[data-modal="nueva-evaluacion"]') as HTMLElement;
     const header = dialog.querySelector('#titulo-modal-nueva-eval')?.parentElement;
-    const matchingOptions = Array.from(dialog.querySelectorAll('option'))
-      .filter(option => option.textContent?.includes('Prueba de Formulario'));
+    const selector = dialog.querySelector('#modal-selector-familia') as HTMLSelectElement;
+    const selectedOption = Array.from(selector.options).find(option => option.value === 'PRUEBA_FORMULARIO');
+    const visibleDialogText = dialog.textContent ?? '';
 
     expect(header?.textContent).not.toContain('Prueba de Formulario');
-    expect(matchingOptions).toHaveLength(1);
-    expect(dialog.textContent).not.toContain('Familia: Prueba de Formulario');
+    expect(visibleDialogText.match(/Prueba de Formulario/g)).toHaveLength(1);
+    expect(visibleDialogText).not.toContain('(PRUEBA_FORMULARIO)');
+    expect(selectedOption?.textContent?.trim()).toBe('Prueba de Formulario');
+    expect(selector.value).toBe('PRUEBA_FORMULARIO');
   });
 
   it('9. Confirmar activación y desactivación llaman al servicio Angular', () => {

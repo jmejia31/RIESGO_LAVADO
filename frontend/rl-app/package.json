@@ -39,7 +39,7 @@
     "esbuild": "0.28.1",
     "@modelcontextprotocol/sdk": "1.30.0",
     "@hono/node-server": "2.0.12",
-    "hono": "4.12.34",
+    "hono": "4.13.5",
     "dompurify": "3.4.13",
     "fast-uri": "3.1.6",
     "immutable": "5.1.8",
@@ -61,7 +61,7 @@
     "@tailwindcss/forms": "^0.5.9",
     "@types/jasmine": "~5.1.0",
     "@types/node": "26.2.0",
-    "@vitest/coverage-v8": "^4.0.8",
+    "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.4.20",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
@@ -77,6 +77,6 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.57.2",
-    "vitest": "^4.0.8"
+    "vitest": "^4.1.11"
   }
 }

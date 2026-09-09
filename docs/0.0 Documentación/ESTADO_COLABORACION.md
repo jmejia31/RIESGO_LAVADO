@@ -994,3 +994,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Se preservan las repeticiones funcionalmente justificadas de contexto de documento/estado en Form Builder, contextos independientes de Configuracion de Calculo y preview de Configuracion del Sistema. El validador estructural conserva tres hallazgos legacy fuera de alcance (`dynamic-form-layout` vacia y `core/services` heredado).
 - Archivos UX-DEDUP: tres plantillas, dos specs Angular de presentacion, un spec focal nuevo de Monitoreo y el assert E2E que ahora valida el owner selector. No se tocaron tsconfig, package manifests, backend, Oracle ni los tres untracked preexistentes.
 - Estado: `UX_DEDUP_AUDIT=PASS`; `GATE_VISUAL=PASS`; `FP1_REGRESSION=PASS`; `FP2_REGRESSION=PASS`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. Pendiente unico: commit/push y Quality Gate exacto de este SHA; no reanudar FASE 5.3.
+
+## Estado vigente - UX-DEDUP.1 correccion visual final y SEC-VITEST.1
+
+- Baseline: `bb5a83dc93c0d39b4e46ad9c1bf09cd5eead7a53`; rama `desarrollo`; la correccion final mantiene el alcance frontend y no reabre FP.1/FP.2.
+- Nueva Evaluacion: el selector muestra solo el nombre de familia (`Prueba de Formulario`), sin el codigo tecnico entre parentesis; el valor interno continua siendo `PRUEBA_FORMULARIO`. El texto auxiliar del formulario ya no repite la version activa.
+- Evidencia: test focal `28/28`, frontend `736/736`, backend `611/611`, E2E `31/31`, TSC spec, lint, build, `npm audit` estricto y diff check PASS.
+- SEC-VITEST.1 resuelto con Vitest/coverage `4.1.11` y Hono `4.13.5`; el lockfile instala esas versiones y el audit estricto quedó sin vulnerabilidades. `npm ci --ignore-scripts` fue intentado pero encontró un bloqueo EPERM del `esbuild.exe` local; la instalación se rehidrató sin scripts y quedó validada. No hubo cambios backend/API/Oracle ni mutaciones de datos.
+- Estado de cierre: `VISUAL_FIX=PASS`; `NPM_AUDIT=PASS`; Quality Gate del SHA nuevo pendiente de verificacion exacta. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3.

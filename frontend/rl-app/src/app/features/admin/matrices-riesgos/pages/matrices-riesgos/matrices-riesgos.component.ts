@@ -1433,7 +1433,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   etiquetaFamiliaNueva(familia: FamiliaFormularioDto): string {
     const motivo = this.motivoFamiliaNoElegible(familia);
-    return motivo ? `${familia.famNombre} (${familia.famCodigo}) — ${motivo}` : `${familia.famNombre} (${familia.famCodigo})`;
+    return motivo ? `${familia.famNombre} — ${motivo}` : familia.famNombre;
   }
 
   abrirConfirmacionFamiliaPredeterminada(familia: FamiliaFormularioDto, event?: Event): void {

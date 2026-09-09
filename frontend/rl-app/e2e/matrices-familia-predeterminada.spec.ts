@@ -89,7 +89,7 @@ test('FP.2 sin default mantiene selector vacío y permite selección manual sin 
   await expect(selector).toHaveValue('');
   await selector.selectOption('FAMILIA_UAT');
   await expect(selector).toHaveValue('FAMILIA_UAT');
-  await expect(selector.locator('option:checked')).toContainText('Familia UAT elegible');
+  await expect(selector.locator('option:checked')).toHaveText('Familia UAT elegible');
   await expect(page.locator('[data-modal="nueva-evaluacion"] .modal-header-institutional')).toContainText('Versión activa:');
   await page.getByRole('button', { name: 'Cancelar' }).last().click();
   expect(putCount).toBe(0);
