@@ -6863,3 +6863,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Evidencia visual automatizada: E2E completo PASS con capturas temporales de superficies representativas y viewports configurados por el harness; `AUTOMATED_VISUAL_UAT=PASS`. No se modificaron backend, API, Oracle, dependencias, FormulaEngine, contratos persistidos ni FASE 5.3. `ORACLE_DDL=0`; `ORACLE_DML=0`; `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`.
 - La validación estructural independiente mantiene tres hallazgos legacy preexistentes fuera de este scope (carpeta `dynamic-form-layout` vacía y ubicación heredada de `core/services`); no se modificaron.
 - Estado previo a publicación: cambios técnicos y de pruebas listos para staging explícito; falta commit, push a `origin/desarrollo` y Quality Gate exacto del SHA publicado. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+
+## Registro UX-ACTION-ICON-ONLY.1 - Quality Gate técnico certificado y cierre documental
+
+- Fecha/hora local: `2026-09-08`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`. Commit técnico publicado: `eb822a8eba04e79d1078187eb14478516ce94d98` (`feat(ui): enforce icon-only action controls`).
+- Quality Gate exacto del commit técnico: `RUN=34310327824`; `HEAD_SHA=eb822a8eba04e79d1078187eb14478516ce94d98`; `HEAD_BRANCH=desarrollo`; `STATUS=completed`; `CONCLUSION=success`.
+- Certificación: guarda global de acciones icon-only `PASS`; acciones productivas con texto visible `0`; acciones sin `aria-label` `0`; acciones sin tooltip/title `0`; navegación y selección textuales preservadas; frontend `737/737`, backend `611/611`, E2E `31/31`; TSC spec, lint, build, audit, diff check y Agent Skills `PASS`.
+- Arquitectura: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; FASE 5.3 no reanudada. Este registro documental se incorporará en un commit posterior y requerirá su propio Quality Gate exacto antes del cierre final.

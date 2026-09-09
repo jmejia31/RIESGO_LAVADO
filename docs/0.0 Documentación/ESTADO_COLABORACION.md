@@ -1020,3 +1020,10 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Scope congelado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `ORACLE_MIGRATION_59_RISKS=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
 - Validación estructural independiente: conserva tres hallazgos legacy fuera de esta intervención; no afectan la guarda UX ni fueron modificados.
 - Punto de continuación: staging explícito de archivos UX-ACTION-ICON-ONLY.1, commit, push a `origin/desarrollo`, espera del Quality Gate exacto y cierre. No iniciar ni reanudar FASE 5.3.
+
+## Estado de cierre documental - UX-ACTION-ICON-ONLY.1
+
+- Fecha/hora local: `2026-09-08`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`.
+- Commit técnico publicado: `eb822a8eba04e79d1078187eb14478516ce94d98`. Quality Gate exacto `34310327824`: `head_branch=desarrollo`, `head_sha=eb822a8eba04e79d1078187eb14478516ce94d98`, `status=completed`, `conclusion=success`.
+- Cierre funcional verificado: acciones productivas con texto visible `0`; acciones sin `aria-label` `0`; acciones sin tooltip/title `0`; guardia de regresión `PASS`; navegación/selección textual preservada; frontend `737/737`, backend `611/611`, E2E `31/31`; TSC spec, lint, build, audit, diff check y Agent Skills `PASS`.
+- Alcance preservado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. El presente registro será publicado en un commit documental final, cuyo Quality Gate exacto se verificará antes de declarar el cierre definitivo.
