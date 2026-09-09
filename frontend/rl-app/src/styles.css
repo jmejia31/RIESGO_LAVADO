@@ -91,6 +91,7 @@
     backdrop-filter: blur(4px) !important;
     -webkit-backdrop-filter: blur(4px) !important;
     overflow-y: auto !important;
+    overscroll-behavior: contain;
   }
 
   /* 2. TARJETA GLOBAL */
@@ -126,6 +127,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 1.5rem;
   }
   .modal-footer-institutional {
@@ -277,6 +279,43 @@ dialog.modal-backdrop-overlay {
   width: 98.3vw !important;
   max-width: 1510px !important;
   height: calc(100dvh - 28px) !important;
+}
+
+/* Las variantes conservan su semántica y se adaptan al espacio físico real. */
+.modal-size-sm,
+.modal-size-md,
+.modal-size-lg,
+.modal-size-xl,
+.modal-size-workspace {
+  min-width: 0;
+  max-height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop-overlay,
+  dialog.modal-backdrop-overlay {
+    align-items: flex-start !important;
+    padding: var(--modal-viewport-gap) !important;
+  }
+
+  .modal-container-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
+    border-radius: 0.875rem;
+  }
+
+  .modal-size-workspace {
+    width: 100% !important;
+    height: calc(100dvh - (2 * var(--modal-viewport-gap))) !important;
+  }
+
+  .modal-header-institutional,
+  .modal-body-scrollable,
+  .modal-footer-institutional {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 }
 
 /* El workspace aprobado ocupa el lienzo de 1536x1024 con 14px perimetrales. */

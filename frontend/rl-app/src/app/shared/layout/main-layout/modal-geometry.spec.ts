@@ -8,6 +8,12 @@ import { GlobalHttpStateService } from '../../../core/services/global-http-state
 import { of } from 'rxjs';
 import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
+// @ts-ignore: Vitest ejecuta esta guarda leyendo plantillas productivas desde Node.js.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+// @ts-ignore: Vitest ejecuta esta guarda leyendo plantillas productivas desde Node.js.
+import { join } from 'node:path';
+// @ts-ignore: Vitest ejecuta esta guarda en Node.js.
+import { cwd } from 'node:process';
 
 @Component({
   standalone: true,
@@ -117,5 +123,36 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
       expect(card.classList.contains(variante)).toBe(true);
       expect(card.classList.contains('modal-container-card')).toBe(true);
     }
+  });
+
+  it('4. todas las superficies productivas usan tamaño canónico y no fijan alturas de documento en píxeles', () => {
+    const appRoot = join(cwd(), 'src', 'app');
+    const sources: Array<{ path: string; source: string }> = [];
+    const collect = (root: string) => {
+      for (const entry of readdirSync(root)) {
+        const path = join(root, entry);
+        if (statSync(path).isDirectory()) collect(path);
+        else if (path.endsWith('.html')) {
+          sources.push({ path, source: readFileSync(path, 'utf8') });
+        } else if (path.endsWith('.ts') && !path.endsWith('.spec.ts')) {
+          const source = readFileSync(path, 'utf8');
+          for (const match of source.matchAll(/template\s*:\s*`([\s\S]*?)`/g)) {
+            sources.push({ path: `${path} (inline template)`, source: match[1] });
+          }
+        }
+      }
+    };
+    collect(appRoot);
+    const canonical = /\bmodal-size-(?:sm|md|lg|xl|workspace)\b/;
+    const violations: string[] = [];
+    for (const { path, source } of sources) {
+      for (const match of source.matchAll(/modal-container-card[^>]*>/g)) {
+        if (!canonical.test(match[0])) violations.push(`${path}: missing modal size`);
+      }
+      if (/modal-container-card[^>]*h-\[[0-9]+px\]/.test(source)) {
+        violations.push(`${path}: fixed pixel modal height`);
+      }
+    }
+    expect(violations).toEqual([]);
   });
 });

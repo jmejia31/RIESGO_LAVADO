@@ -27,6 +27,9 @@ function productionSources(appRoot: string): Array<{ path: string; source: strin
   return sources;
 }
 
+const APP_ROOT = join(cwd(), 'src', 'app');
+const PRODUCTIVE_SOURCES = productionSources(APP_ROOT);
+
 const GENERIC_COPY_RULES: Array<{ name: string; pattern: RegExp }> = [
   { name: 'generic empty state', pattern: /\bno hay registros disponibles\b|\bno hay datos\b|\bsin informaci(?:ón|Ã³n)\b|\bsin registros\s*[.!]?\s*(?:<\/|$)/gi },
   { name: 'generic detail tooltip', pattern: /\bver detalle del registro\b|\bver detalle completo\b/gi },
@@ -35,7 +38,6 @@ const GENERIC_COPY_RULES: Array<{ name: string; pattern: RegExp }> = [
 
 describe('copy UX contextualizado', () => {
   it('no reintroduce descripciones productivas genéricas conocidas', () => {
-    const appRoot = join(cwd(), 'src', 'app');
     const genericPhrases = [
       'Gestione la información del sistema.',
       'Administre los registros.',
@@ -50,7 +52,7 @@ describe('copy UX contextualizado', () => {
       'Buscar...'
     ];
     const violations: string[] = [];
-    for (const { path, source } of productionSources(appRoot)) {
+    for (const { path, source } of PRODUCTIVE_SOURCES) {
       for (const phrase of genericPhrases) {
         if (source.includes(phrase)) violations.push(`${relative(cwd(), path)}: ${phrase}`);
       }
@@ -59,9 +61,8 @@ describe('copy UX contextualizado', () => {
   });
 
   it('rechaza estados, tooltips y ayudas genéricas cuando el contexto funcional está disponible', () => {
-    const appRoot = join(cwd(), 'src', 'app');
     const violations: string[] = [];
-    for (const { path, source } of productionSources(appRoot)) {
+    for (const { path, source } of PRODUCTIVE_SOURCES) {
       for (const rule of GENERIC_COPY_RULES) {
         rule.pattern.lastIndex = 0;
         if (rule.pattern.test(source)) violations.push(`${relative(cwd(), path)}: ${rule.name}`);
@@ -71,8 +72,7 @@ describe('copy UX contextualizado', () => {
   });
 
   it('conserva copy contextual en las superficies UX principales', () => {
-    const appRoot = join(cwd(), 'src', 'app');
-    const read = (relativePath: string) => readFileSync(join(appRoot, relativePath), 'utf8');
+    const read = (relativePath: string) => readFileSync(join(APP_ROOT, relativePath), 'utf8');
     const matrices = read('features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.html');
     const familia = read('features/admin/matrices-riesgos/components/familia-detalle-modal/familia-detalle-modal.component.html');
     const monitoreo = read('features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.html');
@@ -83,12 +83,11 @@ describe('copy UX contextualizado', () => {
   });
 
   it('usa placeholders de búsqueda específicos para las coincidencias', () => {
-    const appRoot = join(cwd(), 'src', 'app');
     for (const file of [
       'features/admin/listas/pages/coincidencias-empleado/coincidencias-empleado.component.html',
       'features/admin/listas/pages/coincidencias-patrono/coincidencias-patrono.component.html'
     ]) {
-      const source = readFileSync(join(appRoot, file), 'utf8');
+      const source = readFileSync(join(APP_ROOT, file), 'utf8');
       expect(source).toContain('Buscar por nombre o número de identificación...');
       expect(source).toContain('Buscar en el detalle de la coincidencia...');
     }

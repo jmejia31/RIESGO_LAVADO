@@ -255,7 +255,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     expect(component.guardando()).toBe(false);
   });
 
-  it('descarga el consolidado y revoca la URL temporal; tambien informa errores del reporte', () => {
+  it('abre el preview del consolidado y conserva el manejo de errores del reporte', async () => {
     const crearUrl = vi.fn().mockReturnValue('blob:matriz');
     const revocarUrl = vi.fn();
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: crearUrl });
@@ -264,9 +264,9 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
 
     component.descargarConsolidado('excel');
     expect(service['descargarConsolidadoExcel']).toHaveBeenCalled();
-    expect(crearUrl).toHaveBeenCalled();
-    expect(click).toHaveBeenCalled();
-    expect(revocarUrl).toHaveBeenCalledWith('blob:matriz');
+    await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
+    expect((component as any).reportPreview.state().kind).toBe('excel');
+    expect(click).not.toHaveBeenCalled();
 
     service['descargarConsolidadoPdf'].mockReturnValue(throwError(() => ({ error: { detail: 'PDF no disponible' } })));
     component.descargarConsolidado('pdf');

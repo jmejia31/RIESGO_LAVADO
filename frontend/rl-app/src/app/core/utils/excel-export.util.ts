@@ -18,6 +18,12 @@ export interface WorkBook {
   sheets: Array<{ name: string; sheet: WorkSheet }>;
 }
 
+export interface ExcelPreviewSheet {
+  name: string;
+  rows: unknown[][];
+  totalRows: number;
+}
+
 const NAVY = 'FF123B63';
 const WHITE = 'FFFFFFFF';
 const BODY = 'FF1F2937';
@@ -54,11 +60,20 @@ export function construirLibroInstitucional(workbook: WorkBook): ExcelJS.Workboo
 }
 
 export async function writeFile(workbook: WorkBook, fileName: string): Promise<void> {
+  await downloadBlob(await workbookToBlob(workbook), fileName);
+}
+
+/** Genera el mismo binario que se presenta en el visor, sin iniciar una descarga. */
+export async function workbookToBlob(workbook: WorkBook): Promise<Blob> {
   const excel = construirLibroInstitucional(workbook);
   const buffer = await excel.xlsx.writeBuffer();
-  const blob = new Blob([buffer as BlobPart], {
+  return new Blob([buffer as BlobPart], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   });
+}
+
+/** Descarga explícita desde un flujo que ya pasó por una vista previa. */
+export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const enlace = document.createElement('a');
   enlace.href = url;
@@ -67,6 +82,15 @@ export async function writeFile(workbook: WorkBook, fileName: string): Promise<v
   enlace.click();
   document.body.removeChild(enlace);
   URL.revokeObjectURL(url);
+}
+
+export function createExcelPreview(workbook: WorkBook): ExcelPreviewSheet[] {
+  const sheets = workbook.sheets.length ? workbook.sheets : [{ name: 'Reporte', sheet: { data: [] } }];
+  return sheets.map(({ name, sheet }) => ({
+    name,
+    rows: (sheet.data ?? []).map(row => [...row]),
+    totalRows: sheet.data?.length ?? 0
+  }));
 }
 
 function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source: WorkSheet): void {

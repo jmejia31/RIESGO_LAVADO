@@ -362,7 +362,12 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     fileName: string
   ): void {
     const workbook = crearLibroExcelInstitucionalDesdeReporte(report, sheetName);
-    void XLSX.writeFile(workbook, fileName);
+    void this.reportPreview.openExcel(
+      workbook,
+      fileName,
+      `Vista previa de ${report.title.toLowerCase()}`,
+      'Revise las hojas y filas del reporte antes de descargar el archivo.'
+    );
   }
 
   private construirDatosExcelListaPrincipal(reporte: ReporteListaPrincipal): string[][] {
@@ -438,7 +443,12 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
         archivo: fileName
       }
     ).subscribe({
-      next: () => void XLSX.writeFile(wb, fileName),
+      next: () => void this.reportPreview.openExcel(
+        wb,
+        fileName,
+        `Vista previa de ${reporte.title.toLowerCase()}`,
+        'Revise las filas filtradas y los totales antes de descargar el archivo.'
+      ),
       error: (err: unknown) => instancia.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
     });
   }

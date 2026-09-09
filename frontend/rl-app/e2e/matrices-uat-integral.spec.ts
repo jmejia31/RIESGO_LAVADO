@@ -119,6 +119,39 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await expect(page.getByText('Riesgo creado correctamente.')).toBeVisible();
 });
 
+test('preview de exportaciones consolidado conserva el modal dentro del viewport', async ({ page }) => {
+  const pdf = '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF';
+  await page.route('**/api/matrices-riesgos/reportes/consolidado.pdf', route => route.fulfill({
+    status: 200, contentType: 'application/pdf', body: Buffer.from(pdf)
+  }));
+  await page.route('**/api/matrices-riesgos/reportes/consolidado.xlsx', route => route.fulfill({
+    status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: Buffer.from('fixture-xlsx')
+  }));
+
+  for (const viewport of [{ width: 375, height: 812 }, { width: 768, height: 900 }, { width: 1536, height: 1024 }]) {
+    await page.setViewportSize(viewport);
+    await page.goto('/matrices-riesgos');
+    await page.getByRole('tab', { name: 'Consolidado' }).click();
+    await page.getByRole('button', { name: 'Generar reporte PDF de la matriz consolidada' }).click();
+    const preview = page.locator('[data-report-preview]');
+    await expect(preview).toBeVisible();
+    await expect(preview.getByRole('button', { name: 'Descargar reporte revisado' })).toBeVisible();
+    const box = await preview.locator('.modal-container-card').boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) throw new Error('No se pudo medir el preview PDF.');
+    expect(box.width).toBeLessThanOrEqual(viewport.width);
+    expect(box.height).toBeLessThanOrEqual(viewport.height);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
+    await expect(preview).toBeHidden();
+
+    await page.getByRole('button', { name: 'Exportar matriz consolidada a Excel' }).click();
+    await expect(preview).toBeVisible();
+    await expect(preview.locator('[data-excel-preview-table]')).toBeVisible();
+    await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
+  }
+});
+
 test('UAT registra control, efectividad, plan y actividad', async ({ page }) => {
   const recibidos: Record<string, any> = {};
   let controlCreado = false;

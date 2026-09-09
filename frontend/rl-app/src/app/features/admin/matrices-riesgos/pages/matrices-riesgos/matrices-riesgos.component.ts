@@ -45,6 +45,7 @@ import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-sema
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 @Component({
   selector: 'app-matrices-riesgos',
@@ -59,6 +60,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private readonly globalState = inject(GlobalHttpStateService);
   private readonly authService = inject(AuthService);
   private readonly calculoConfig = inject(CalculoConfiguracionService, { optional: true });
+  private readonly reportPreview = inject(ReportPreviewService);
   private readonly applicationRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private detalleFamiliaRef: ComponentRef<FamiliaDetalleModalComponent> | null = null;
@@ -1308,14 +1310,24 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       : this.service.descargarConsolidadoPdf(this.filtroReporteConsolidado());
 
     solicitud.subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const enlace = document.createElement('a');
-        enlace.href = url;
-        enlace.download = formato === 'excel' ? 'Matriz_Riesgos.xlsx' : 'Matriz_Riesgos.pdf';
-        enlace.click();
-        URL.revokeObjectURL(url);
-      },
+        next: blob => {
+          const esExcel = formato === 'excel';
+          if (esExcel) {
+            void this.reportPreview.openExcelBlob(
+              blob,
+              'Matriz_Riesgos.xlsx',
+              'Vista previa de la matriz consolidada de riesgos',
+              'Revise los riesgos y filtros aplicados antes de descargar el libro Excel.'
+            );
+          } else {
+            this.reportPreview.openPdf(
+              blob,
+              'Matriz_Riesgos.pdf',
+              'Vista previa del reporte consolidado de riesgos',
+              'Revise la proyección consolidada antes de descargar el documento.'
+            );
+          }
+        },
       error: error => this.mostrarError(this.obtenerMensajeError(error, `No se pudo generar el reporte ${formato.toUpperCase()}.`))
     });
   }

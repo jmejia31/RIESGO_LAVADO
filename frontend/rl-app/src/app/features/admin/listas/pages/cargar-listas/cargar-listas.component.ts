@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 @Component({
   selector: 'app-cargar-listas',
@@ -16,6 +17,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CargarListasComponent implements OnInit {
+  private readonly reportPreview = inject(ReportPreviewService);
   tiposListas = signal<TipoListaCautela[]>([]);
   resumenListas = signal<ResumenLista[]>([]);
   cargandoTipos = signal(true);
@@ -288,7 +290,12 @@ export class CargarListasComponent implements OnInit {
           XLSX.utils.book_append_sheet(wb, ws, item.lista);
 
           const fileName = `${this.nombreArchivoSeguro(item.lista)}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-          XLSX.writeFile(wb, fileName);
+            void this.reportPreview.openExcel(
+              wb,
+              fileName,
+              `Vista previa de la lista ${item.lista}`,
+              'Revise los registros de la lista antes de descargar el archivo.'
+            );
 
           Swal.default.fire({
             allowOutsideClick: false,

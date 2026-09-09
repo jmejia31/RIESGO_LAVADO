@@ -127,6 +127,8 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
         filtros: expect.stringContaining('Tipo: Personas jurídicas')
       })
     );
-    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
+    expect((component as any).reportPreview.state().kind).toBe('excel');
+    expect(click).not.toHaveBeenCalled();
   });
 });

@@ -1043,3 +1043,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Se corrigieron residuos semánticos de iconos y copy: acciones con significado de editar/cerrar/cancelar/ver/crear ya usan el icono correspondiente; consolidado y coincidencias emplean estados y tooltips contextuales.
 - Reauditoría real: `27` HTML y `4` templates inline productivos; guardas focales `6/6 PASS`; frontend `744/744`, backend `611/611`, E2E `31/31`; TSC spec, lint, build, audit y diff check PASS.
 - Alcance: sin cambios backend/API/Oracle/dependencias; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; pendiente publicar el commit residual y verificar su Quality Gate exacto.
+
+## Estado vigente - UX-GLOBAL-RESPONSIVE-EXPORT-PREVIEW.1
+
+- Fecha/hora local: `2026-09-09 10:08 UTC-06`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `9506a3046f33ad72176c94462f4a4daa119de5af`.
+- Se implemento un preview compartido para PDF y Excel, con descarga explicita desde el visor, preview Excel desde el mismo workbook/blob, hojas paginadas y limpieza de URLs Blob. Los productores existentes de listas y matrices fueron migrados sin cambiar contratos ni datos.
+- Auditoria fresca: `HTML_TEMPLATES=28`, `INLINE_TEMPLATES=4`, `MODALS=21`; tamaños `SM=1`, `MD=4`, `LG=3`, `XL=8`, `WORKSPACE=5`; `PDF_EXPORTS=5`, `EXCEL_EXPORTS=10`; `DIRECT_EXPORT_WITHOUT_PREVIEW=0`.
+- Regresion verificada en esta intervencion: frontend `749/749`, backend `611/611`, E2E `32/32`; TSC spec, lint, build, audit estricto (`0 vulnerabilities`) y diff check PASS. Se preservan los tres hallazgos estructurales legacy fuera de scope; no se modificaron backend/API/Oracle/dependencias y FASE 5.3 no fue reanudada.
+- Punto exacto: revisar diff, staging explicito, commit/push a `origin/desarrollo`, esperar Quality Gate exacto del SHA final y cerrar solo con `STATUS=completed`, `CONCLUSION=success`.

@@ -381,11 +381,8 @@ describe('MonitoreoListasComponent', () => {
     expect(click).not.toHaveBeenCalled();
   });
 
-  it('audita y exporta la lista principal juridica con los datos filtrados', async () => {
-    let nombreDescarga = '';
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      nombreDescarga = this.download;
-    });
+  it('audita y abre la vista previa de la lista principal juridica con los datos filtrados', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     component.juridicasRaw.set([{
       numeroPatrono: 'P-100', rtn: '08019000123456', nombre: 'Empresa Segura',
       listaCoincidencia: 'Lista Uno', esProveedorIhss: 'Si', fechaEncontro: '2026-07-10'
@@ -399,8 +396,9 @@ describe('MonitoreoListasComponent', () => {
       'ExportacionMonitoreoListas',
       expect.objectContaining({ tipo: 'juridica', cantidadRegistros: 1 })
     );
-    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
-    expect(nombreDescarga).toMatch(/^Reporte_Juridicas_\d{4}-\d{2}-\d{2}\.xlsx$/);
+    await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
+    expect((component as any).reportPreview.state().kind).toBe('excel');
+    expect(click).not.toHaveBeenCalled();
   });
 
   it('cancela la exportacion principal si no puede registrar la auditoria', async () => {
@@ -420,11 +418,8 @@ describe('MonitoreoListasComponent', () => {
     expect(consoleError).toHaveBeenCalled();
   });
 
-  it('genera una ficha de patrono solamente despues de auditarla', async () => {
-    let nombreDescarga = '';
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-      nombreDescarga = this.download;
-    });
+  it('genera la vista previa de una ficha de patrono solamente despues de auditarla', async () => {
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     service['getPositivoPorDocumento'].mockReturnValue(of({
       motivoIngreso: 'Coincidencia validada', origenRegistro: 'DNP_LISTAS'
     }));
@@ -444,8 +439,9 @@ describe('MonitoreoListasComponent', () => {
       'ExportacionFichaPerfil',
       expect.objectContaining({ tipo: 'juridica', cantidadSeguimientos: 1 })
     );
-    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
-    expect(nombreDescarga).toBe('Ficha_Patrono_P-200.xlsx');
+    await vi.waitFor(() => expect((component as any).reportPreview.state()).not.toBeNull());
+    expect((component as any).reportPreview.state().fileName).toBe('Ficha_Patrono_P-200.xlsx');
+    expect(click).not.toHaveBeenCalled();
     expect(component.cargando()).toBe(false);
   });
 

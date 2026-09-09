@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
@@ -7,6 +7,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 @Component({
   selector: 'app-coincidencias-patrono',
@@ -16,6 +17,7 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class CoincidenciasPatronoComponent implements OnInit {
+  private readonly reportPreview = inject(ReportPreviewService);
   resumen = signal<CoincidenciaPatronoResumen[]>([]);
   cargando = signal(true);
   
@@ -310,7 +312,12 @@ export class CoincidenciasPatronoComponent implements OnInit {
             }
           ).subscribe({
             next: () => {
-              XLSX.writeFile(wb, fileName);
+                void this.reportPreview.openExcel(
+                  wb,
+                  fileName,
+                  'Vista previa del reporte de coincidencias de patronos',
+                  'Revise los registros de la fecha seleccionada antes de descargar el archivo.'
+                );
               Swal.default.fire({
                 allowOutsideClick: false,
                 title: 'Exito',

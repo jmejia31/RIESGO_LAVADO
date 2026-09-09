@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ListasService } from '../../data-access/listas.service';
 import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../../models/listas.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
@@ -10,6 +9,7 @@ import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
 import { of, forkJoin } from 'rxjs';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
@@ -24,7 +24,7 @@ type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | Coincidenc
   templateUrl: './monitoreo-listas.component.html',
 })
 export class MonitoreoListasComponent implements OnInit {
-  private sanitizer = inject(DomSanitizer);
+  protected readonly reportPreview = inject(ReportPreviewService);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
   private readonly tiposMonitoreo: FiltroTipo[] = ['juridica', 'natural', 'empleado'];
@@ -47,10 +47,6 @@ export class MonitoreoListasComponent implements OnInit {
   detallesEmpleado = signal<DetalleCoincidenciaEmpleado[]>([]);
   personaSeleccionada = signal<CoincidenciaNatural | null>(null);
   personaSeleccionadaEmpleado = signal<CoincidenciaEmpleado | null>(null);
-
-  // Visor PDF
-  pdfUrl = signal<SafeResourceUrl | null>(null);
-  pdfModalAbierto = signal(false);
 
   // Modal Registrar Motivo
   modalMotivoAbierto = signal(false);
@@ -631,9 +627,13 @@ export class MonitoreoListasComponent implements OnInit {
     // Generar Blob y abrir modal de visualización
     agregarPiesInstitucionalesPdf(doc);
     const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.pdfModalAbierto.set(true);
+    const tipo = isEmpleado ? 'empleado' : 'persona-natural';
+    this.reportPreview.openPdf(
+      blob,
+      `Reporte_Detallado_Coincidencias_${tipo}.pdf`,
+      'Vista previa del reporte detallado de coincidencias',
+      'Revise el documento completo antes de descargarlo.'
+    );
   }
 
   formatDate(dateStr: string): string {
@@ -655,11 +655,6 @@ export class MonitoreoListasComponent implements OnInit {
   // Fecha propia del alta en Riesgo Lavado; no reemplaza la fecha de coincidencia de DNP.
   private obtenerFechaRegistroInterno(rowFecha?: string | null, positivo?: { fechaRegistroInterno?: string | null } | null): string | null {
     return positivo?.fechaRegistroInterno || rowFecha || null;
-  }
-
-  cerrarPdfModal() {
-    this.pdfModalAbierto.set(false);
-    this.pdfUrl.set(null);
   }
 
   private obtenerRangoSeguimientoReporte(noDocumento?: string): RangoSeguimientoReporte {
@@ -805,13 +800,14 @@ export class MonitoreoListasComponent implements OnInit {
     return y + 8;
   }
 
-  private abrirPdf(doc: jsPDF) {
+  private abrirPdf(doc: jsPDF, fileName: string, title: string) {
     agregarPiesInstitucionalesPdf(doc);
-    agregarPiesInstitucionalesPdf(doc);
-    const blob = doc.output('blob');
-    const url = URL.createObjectURL(blob);
-    this.pdfUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
-    this.pdfModalAbierto.set(true);
+    this.reportPreview.openPdf(
+      doc.output('blob'),
+      fileName,
+      title,
+      'Revise el documento completo antes de descargarlo.'
+    );
   }
 
   imprimirReportePatrono(row: CoincidenciaJuridica) {
@@ -1037,7 +1033,7 @@ export class MonitoreoListasComponent implements OnInit {
       rangoSeguimiento
     );
 
-    this.abrirPdf(doc);
+    this.abrirPdf(doc, `Reporte_Integral_Persona_Natural_${row.numeroIdentificacion}.pdf`, 'Vista previa del reporte integral de persona natural');
   }
 
   imprimirReporteEmpleado(row: CoincidenciaEmpleado) {
@@ -1209,7 +1205,7 @@ export class MonitoreoListasComponent implements OnInit {
       rangoSeguimiento
     );
 
-    this.abrirPdf(doc);
+    this.abrirPdf(doc, `Reporte_Integral_Empleado_${row.identidad}.pdf`, 'Vista previa del reporte integral de empleado');
   }
 
   generarPdfPatrono(row: CoincidenciaJuridica, positivo: any, seguimientos: Seguimiento[], rangoSeguimiento: RangoSeguimientoReporte) {
@@ -1287,7 +1283,7 @@ export class MonitoreoListasComponent implements OnInit {
       rangoSeguimiento
     );
 
-    this.abrirPdf(doc);
+    this.abrirPdf(doc, `Reporte_Integral_Patrono_${row.numeroPatrono}.pdf`, 'Vista previa del reporte integral de patrono');
   }
 
   private ajustarColumnasExcel(ws: XLSX.WorkSheet, data: any[][]) {
@@ -1339,7 +1335,12 @@ export class MonitoreoListasComponent implements OnInit {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    XLSX.writeFile(wb, fileName);
+    void this.reportPreview.openExcel(
+      wb,
+      fileName,
+      `Vista previa de ${sheetName.toLowerCase()}`,
+      'Revise el contenido del reporte antes de descargar el archivo.'
+    );
   }
 
   private manejarErrorAuditoriaObligatoria(err: unknown, operacion: string) {
@@ -1615,7 +1616,7 @@ export class MonitoreoListasComponent implements OnInit {
           archivo: fileName
         }
       ).subscribe({
-        next: () => XLSX.writeFile(wb, fileName),
+        next: () => void this.reportPreview.openExcel(wb, fileName, 'Vista previa del reporte detallado de coincidencias', 'Revise los registros antes de descargar el archivo.'),
         error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
       });
     } else {
@@ -1681,7 +1682,7 @@ export class MonitoreoListasComponent implements OnInit {
           archivo: fileName
         }
       ).subscribe({
-        next: () => XLSX.writeFile(wb, fileName),
+        next: () => void this.reportPreview.openExcel(wb, fileName, 'Vista previa del reporte detallado de coincidencias', 'Revise los registros antes de descargar el archivo.'),
         error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
       });
     }
@@ -1774,7 +1775,7 @@ export class MonitoreoListasComponent implements OnInit {
         archivo: fileName
       }
     ).subscribe({
-      next: () => XLSX.writeFile(wb, fileName),
+      next: () => void this.reportPreview.openExcel(wb, fileName, `Vista previa del reporte de coincidencias ${tipo}`, 'Revise los registros filtrados antes de descargar el archivo.'),
       error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
     });
   }
@@ -1948,7 +1949,12 @@ export class MonitoreoListasComponent implements OnInit {
         archivo: fileName
       }
     ).subscribe({
-      next: () => doc.save(fileName),
+      next: () => this.reportPreview.openPdf(
+        doc.output('blob'),
+        fileName,
+        'Vista previa del reporte de monitoreo de listas',
+        'Revise las coincidencias filtradas antes de descargar el documento.'
+      ),
       error: err => this.manejarErrorAuditoriaObligatoria(err, 'exportación PDF')
     });
   }
