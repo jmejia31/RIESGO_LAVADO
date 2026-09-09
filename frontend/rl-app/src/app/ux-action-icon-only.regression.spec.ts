@@ -52,6 +52,7 @@ function extractButtons(source: string): ButtonBlock[] {
 function visibleButtonText(body: string): string {
   return body
     .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<app-action-icon\b[\s\S]*?<\/app-action-icon>/gi, ' ')
     .replace(/<svg\b[\s\S]*?<\/svg>/gi, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\{\{[\s\S]*?\}\}/g, ' ')
@@ -69,6 +70,48 @@ function isNonActionControl(attrs: string, source: string, offset: number): bool
 
 function isAction(attrs: string): boolean {
   return /\(click\)|\(ngSubmit\)|type\s*=\s*["']submit["']/i.test(attrs);
+}
+
+type SemanticAction = 'edit' | 'view' | 'delete' | 'create' | 'save' | 'close' | 'cancel' | 'refresh' | 'retry' | 'clear-filters' | 'export-excel' | 'export-pdf' | 'upload' | 'download' | 'print' | 'sync';
+
+const SEMANTIC_ACTION_RULES: Array<{ action: SemanticAction; pattern: RegExp }> = [
+  { action: 'close', pattern: /^(?:cerrar|close)\b/i },
+  { action: 'cancel', pattern: /^(?:cancelar|cancel)\b/i },
+  { action: 'retry', pattern: /^(?:reintentar|retry)\b/i },
+  { action: 'refresh', pattern: /^(?:actualizar|recargar|refrescar|refresh)\b/i },
+  { action: 'sync', pattern: /^(?:sincronizar|sync)\b/i },
+  { action: 'clear-filters', pattern: /^(?:limpiar(?: filtros)?|restablecer filtros|mostrar todos|show all|clear filters?)\b/i },
+  { action: 'edit', pattern: /^(?:editar|modificar|edit)\b/i },
+  { action: 'view', pattern: /^(?:ver|consultar|visualizar|mostrar|view)\b/i },
+  { action: 'delete', pattern: /^(?:eliminar|borrar|remover|delete)\b/i },
+  { action: 'create', pattern: /^(?:crear|nuevo|nueva|agregar|añadir|add|new)\b/i },
+  { action: 'save', pattern: /^(?:guardar|aplicar cambios|save)\b/i },
+  { action: 'export-excel', pattern: /^(?:exportar|descargar) (?:a |en )?(?:excel|xlsx)\b|^descargar coincidencias\b/i },
+  { action: 'export-pdf', pattern: /^(?:generar|exportar|descargar|ver) (?:el |un )?(?:reporte )?pdf\b/i },
+  { action: 'upload', pattern: /^(?:subir|cargar|upload)\b/i },
+  { action: 'download', pattern: /^(?:descargar|download)\b/i },
+  { action: 'print', pattern: /^(?:imprimir|print)\b/i }
+];
+
+function accessibleActionText(attrs: string): string[] {
+  const values = [...attrs.matchAll(/(?:\[attr\.)?(?:title|aria-label)\]?\s*=\s*["']([^"']+)["']/gi)].flatMap(match => {
+    const value = match[1].trim();
+    const literals = [...value.matchAll(/['"]([^'"]+)['"]/g)].map(literal => literal[1].trim());
+    return [value, ...literals];
+  });
+  return [...new Set(values.filter(Boolean))];
+}
+
+function expectedSemanticActions(attrs: string): SemanticAction[] {
+  const expected = new Set<SemanticAction>();
+  for (const text of accessibleActionText(attrs)) {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (/^mostrar u ocultar contrase/i.test(normalized)) continue;
+    if (/^ver versiones\b/i.test(normalized)) continue;
+    const rule = SEMANTIC_ACTION_RULES.find(candidate => candidate.pattern.test(normalized));
+    if (rule) expected.add(rule.action);
+  }
+  return [...expected];
 }
 
 function lineAt(source: string, offset: number): number {
@@ -133,6 +176,29 @@ describe('regla global de acciones icon-only', () => {
           if (!canonicalActions.has(action)) violations.push(`${location}: action "${action}" is not registered in the canonical icon catalog`);
         }
         if (/<svg\b/i.test(button.body)) violations.push(`${location}: local SVG action icon bypasses the canonical catalog`);
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
+
+  it('alinea el icono canónico con la operación descrita por cada acción', () => {
+    const workingDirectory = cwd();
+    const appRoot = join(workingDirectory, 'src', 'app');
+    const violations: string[] = [];
+
+    for (const { path, source } of productionSources(appRoot)) {
+      for (const button of extractButtons(source)) {
+        if (!isAction(button.attrs) || isNonActionControl(button.attrs, source, button.offset)) continue;
+        const expected = expectedSemanticActions(button.attrs);
+        if (expected.length === 0) continue;
+        const actions = declaredActionIcons(button.body);
+        const location = `${relative(workingDirectory, path)}:${lineAt(source, button.offset)}`;
+        const expectedSet = new Set(expected);
+        const actionSet = new Set(actions);
+        if (actions.length !== expected.length || [...expectedSet].some(action => !actionSet.has(action))) {
+          violations.push(`${location}: expected actions="${expected.join(',')}" for ${accessibleActionText(button.attrs).join(' / ')}, found actions="${actions.join(',')}"`);
+        }
       }
     }
 

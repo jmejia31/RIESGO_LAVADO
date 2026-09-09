@@ -315,7 +315,7 @@
           <div class="modal-footer-institutional">
             <button type="button" (click)="cancelar()" title="Cancelar edición de usuario" aria-label="Cancelar edición de usuario"
               class="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
             <button type="submit" title="Guardar usuario" aria-label="Guardar usuario"
               [disabled]="guardando() || form.invalid || estadoAd() === 'verificando' || (esDominio && (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error'))"

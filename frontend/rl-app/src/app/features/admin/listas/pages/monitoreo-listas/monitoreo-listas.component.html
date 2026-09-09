@@ -964,7 +964,7 @@
                       <div class="flex items-center gap-2">
                         <span class="text-[10px] text-gray-400">{{ (file.size / (1024 * 1024)) | number:'1.1-2' }} MB</span>
                         <button (click)="eliminarArchivoSeguimientoManual($index)" class="text-red-500 hover:text-red-700 transition-colors" title="Eliminar archivo adjunto" aria-label="Eliminar archivo adjunto">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="delete"></app-action-icon>
           </button>
                       </div>
                     </div>
@@ -976,7 +976,7 @@
 
           <div class="modal-footer-institutional">
             <button (click)="cerrarModalMotivo()" [disabled]="guardandoMotivo()" title="Cancelar registro de motivo" aria-label="Cancelar registro de motivo" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
             <button (click)="guardarMotivo()" [disabled]="guardandoMotivo() || !formTipoDocId() || !formOrigenRegistro() || !formMotivo().trim()" title="Guardar motivo" aria-label="Guardar motivo"
               class="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1001,7 +1001,7 @@
             </p>
           </div>
           <button (click)="cerrarModalSeguimiento()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal seguimiento" title="Cerrar modal seguimiento">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
 
@@ -1054,10 +1054,10 @@
                         <div class="flex items-center gap-2">
                           <span>{{ seg.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</span>
                           <button (click)="iniciarEdicionSeguimiento(seg)" class="text-blue-600 hover:text-blue-800 transition-colors p-0.5" title="Editar seguimiento" aria-label="Editar seguimiento">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="edit"></app-action-icon>
           </button>
                           <button (click)="eliminarSeguimiento(seg)" class="text-red-500 hover:text-red-700 transition-colors p-0.5" title="Eliminar seguimiento" aria-label="Eliminar seguimiento">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="delete"></app-action-icon>
           </button>
                         </div>
                       </div>
@@ -1155,13 +1155,13 @@
             <div class="pt-2 flex flex-col gap-2">
               <button (click)="guardarSeguimiento()" [disabled]="guardandoSeguimiento() || !formComentarioSeguimiento().trim()" title="Guardar seguimiento" aria-label="Guardar seguimiento"
                 class="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-bold">
-<app-action-icon action="follow-up" [loading]="guardandoSeguimiento()"></app-action-icon>
+<app-action-icon action="save" [loading]="guardandoSeguimiento()"></app-action-icon>
           </button>
 
               @if (modoEdicion()) {
                 <button (click)="cancelarEdicion()" [disabled]="guardandoSeguimiento()" title="Cancelar edición del seguimiento" aria-label="Cancelar edición del seguimiento"
                   class="w-full px-4 py-2 border border-gray-250 bg-white text-gray-700 rounded-xl hover:bg-gray-50 font-semibold text-xs transition-colors">
-            <app-action-icon action="follow-up"></app-action-icon>
+                            <app-action-icon action="cancel"></app-action-icon>
           </button>
               }
             </div>
@@ -1173,7 +1173,7 @@
         <div class="modal-footer-institutional">
           <button (click)="cerrarModalSeguimiento()" [disabled]="guardandoSeguimiento()" title="Cerrar seguimiento" aria-label="Cerrar seguimiento"
             class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
-            <app-action-icon action="follow-up"></app-action-icon>
+                            <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
 

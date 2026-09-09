@@ -6879,3 +6879,11 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Gates: `GLOBAL_ICON_CATALOG=PASS`; `CANONICAL_ICON_SOURCE=PASS`; `LOCAL_DUPLICATE_ACTION_ICONS=0`; `ACTION_ICON_CONSISTENCY=PASS`; `ICON_REGRESSION_GUARD=PASS`; `ALL_UI_COPY_AUDITED=PASS`; `COPY_UX_REGRESSION_GUARD=PASS`.
 - Pruebas ejecutadas: frontend `742/742`; backend `611/611`; E2E `31/31`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), diff check, documentacion links y Agent Skills `PASS`. El validador estructural conserva tres hallazgos legacy preexistentes fuera de scope.
 - Alcance congelado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FORM_RENDERER_CHANGES=0`; `FORMULA_ENGINE_CHANGES=0`; `CALCULATION_ENGINE_CHANGES=0`; FASE 5.3 permanece no reanudada. Pendientes de cierre: commit, push y Quality Gate exacto del SHA final.
+
+## Registro UX-GLOBAL-CONSISTENCY.1-R - cierre de guardas semánticas y copy contextual
+
+- Fecha/hora local: `2026-09-09`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `769d471f47d91ea92d1de791ab1ae691237bdc3d`.
+- Correcciones focales: las acciones etiquetadas como cierre/cancelación/consulta/creación usan ahora su icono semántico canónico; se corrigieron los cuatro residuos reportados en monitoreo, consolidado y coincidencias de empleado/patrono.
+- Guardas reforzadas: `ux-action-icon-only.regression.spec.ts` valida la correspondencia entre operación descrita e icono; `ux-copy-context.regression.spec.ts` detecta estados, tooltips y ayudas genéricas sin marcar como deuda los estados contextualizados.
+- Reauditoría: `27` plantillas HTML y `4` templates inline productivos; guardas focales `6/6 PASS`; frontend `744/744 PASS`; backend Release `611/611 PASS`; E2E `31/31 PASS`; TSC spec, lint, build, `npm audit --audit-level=high` (`0 vulnerabilities`) y `git diff --check` PASS.
+- Alcance preservado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; dependencias sin cambios; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; `main` intacta. Quality Gate del SHA residual queda pendiente hasta publicar el commit final.

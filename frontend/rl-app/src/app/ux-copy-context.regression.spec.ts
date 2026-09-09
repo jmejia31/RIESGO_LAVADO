@@ -27,6 +27,12 @@ function productionSources(appRoot: string): Array<{ path: string; source: strin
   return sources;
 }
 
+const GENERIC_COPY_RULES: Array<{ name: string; pattern: RegExp }> = [
+  { name: 'generic empty state', pattern: /\bno hay registros disponibles\b|\bno hay datos\b|\bsin informaci(?:ón|Ã³n)\b|\bsin registros\s*[.!]?\s*(?:<\/|$)/gi },
+  { name: 'generic detail tooltip', pattern: /\bver detalle del registro\b|\bver detalle completo\b/gi },
+  { name: 'generic record description', pattern: /\binformaci(?:ón|Ã³n) del registro\b|\bdetalles del registro\b|\blistado de registros\b/gi }
+];
+
 describe('copy UX contextualizado', () => {
   it('no reintroduce descripciones productivas genéricas conocidas', () => {
     const appRoot = join(cwd(), 'src', 'app');
@@ -47,6 +53,18 @@ describe('copy UX contextualizado', () => {
     for (const { path, source } of productionSources(appRoot)) {
       for (const phrase of genericPhrases) {
         if (source.includes(phrase)) violations.push(`${relative(cwd(), path)}: ${phrase}`);
+      }
+    }
+    expect(violations).toEqual([]);
+  });
+
+  it('rechaza estados, tooltips y ayudas genéricas cuando el contexto funcional está disponible', () => {
+    const appRoot = join(cwd(), 'src', 'app');
+    const violations: string[] = [];
+    for (const { path, source } of productionSources(appRoot)) {
+      for (const rule of GENERIC_COPY_RULES) {
+        rule.pattern.lastIndex = 0;
+        if (rule.pattern.test(source)) violations.push(`${relative(cwd(), path)}: ${rule.name}`);
       }
     }
     expect(violations).toEqual([]);

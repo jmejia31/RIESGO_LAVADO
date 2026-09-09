@@ -31,10 +31,10 @@
     </div>
     <div class="flex justify-end gap-2 md:col-span-2">
        @if (editandoId() > 0) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300" title="Cancelar edición del riesgo" aria-label="Cancelar edición del riesgo" (click)="nuevo()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button> }
        <button type="submit" title="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}" aria-label="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()">
-            <app-action-icon action="refresh"></app-action-icon>
+            <app-action-icon [action]="editandoId() > 0 ? 'refresh' : 'create'"></app-action-icon>
           </button>
     </div>
   </form>

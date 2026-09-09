@@ -143,9 +143,9 @@
 
           <!-- Botones de Acción -->
           <div class="modal-footer-institutional">
-            <button type="button" (click)="cancelar()" [disabled]="guardando()" title="Cancelar edición del tipo de lista" aria-label="Cancelar edición del tipo de lista"
+          <button type="button" (click)="cancelar()" [disabled]="guardando()" title="Cancelar edición del tipo de lista" aria-label="Cancelar edición del tipo de lista"
               class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
             <button type="submit" [disabled]="guardando() || form.invalid" title="Guardar tipo de lista" aria-label="Guardar tipo de lista"
               class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-colors shadow-sm">

@@ -46,7 +46,8 @@ describe('MatricesReporteTablaComponent', () => {
     component.filas = [];
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.textContent).toContain('No hay registros disponibles.');
+    expect(element.textContent).toContain('No existen riesgos consolidados para la consulta actual.');
+    expect(element.textContent).not.toContain('No hay registros disponibles.');
     expect(element.textContent).toContain('0 registro(s)');
   });
 

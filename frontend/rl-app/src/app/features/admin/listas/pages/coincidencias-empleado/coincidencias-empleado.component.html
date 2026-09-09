@@ -103,7 +103,7 @@
                       <div class="relative group inline-block">
                         <button (click)="imprimir(item)" title="Descargar coincidencias" aria-label="Descargar coincidencias"
                           class="p-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 ring-1 ring-inset ring-green-700/10 transition-colors">
-            <app-action-icon action="print"></app-action-icon>
+            <app-action-icon action="export-excel"></app-action-icon>
           </button>
                         <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
                           Exportar a Excel
@@ -269,12 +269,12 @@
 
                         <!-- Ver Detalle -->
                         <div class="relative group inline-block">
-                          <button (click)="mostrarDetalleRegistro(r)" title="Ver detalle del registro" aria-label="Ver detalle del registro"
+                          <button (click)="mostrarDetalleRegistro(r)" title="Ver detalle de la coincidencia del empleado" aria-label="Ver detalle de la coincidencia del empleado"
                             class="p-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 ring-1 ring-inset ring-blue-700/10 transition-colors">
             <app-action-icon action="view"></app-action-icon>
           </button>
                           <span class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 scale-0 group-hover:scale-100 transition-all duration-150 origin-top bg-slate-900 text-white text-[10px] font-bold py-1 px-2.5 rounded-lg shadow-xl whitespace-nowrap z-20">
-                            Ver detalle completo
+                            Ver detalle de la coincidencia del empleado
                             <span class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-slate-900"></span>
                           </span>
                         </div>

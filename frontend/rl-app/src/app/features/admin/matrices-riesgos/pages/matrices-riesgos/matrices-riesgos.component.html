@@ -814,7 +814,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de familia" aria-label="Cancelar edición de familia" (click)="cerrarModalFamilia()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-sm disabled:opacity-50" title="Guardar familia" aria-label="Guardar familia" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">
             <app-action-icon action="save"></app-action-icon>
@@ -957,7 +957,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de evaluación" aria-label="Cancelar edición de evaluación" (click)="cerrarModalEditar()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
           <button type="button" title="Guardar cambios de evaluación" aria-label="Guardar cambios de evaluación"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
@@ -983,7 +983,7 @@
             </p>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar seguimiento" title="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
 
@@ -1050,7 +1050,7 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar seguimiento" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
-            <app-action-icon action="follow-up"></app-action-icon>
+            <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1101,7 +1101,7 @@
                 </select>
               </div>
               <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-blue-200 bg-white text-blue-700 shadow-sm transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40" aria-label="Ver detalle de familia" title="Ver detalle de familia" [disabled]="!familiaNuevaSeleccionada()" (click)="familiaNuevaSeleccionada() && abrirModalVerFamilia(familiaNuevaSeleccionada()!, true)">
-            <app-action-icon action="create"></app-action-icon>
+            <app-action-icon action="view"></app-action-icon>
           </button>
             </div>
             @if (cargandoFormulario()) { <p class="text-xs font-semibold text-blue-700" role="status">Cargando la versión activa de la familia...</p> }
@@ -1169,13 +1169,13 @@
 
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
-            <app-action-icon action="close"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
           <button type="button" title="Crear evaluación" aria-label="Crear evaluación"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
                   [disabled]="guardando() || !puedeGuardar()"
                   (click)="guardarEvaluacion()">
-            <app-action-icon action="save"></app-action-icon>
+                  <app-action-icon action="create"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1190,7 +1190,7 @@
             <p class="mt-1 text-xs text-gray-500">Confirme el contexto inicial del módulo.</p>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cancelar configuración de familia predeterminada" title="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
-            <app-action-icon action="configure"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
         </div>
         <div class="modal-body-scrollable space-y-4 text-sm">
@@ -1202,7 +1202,7 @@
         </div>
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/30" title="Cancelar configuración de familia predeterminada" aria-label="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
-            <app-action-icon action="configure"></app-action-icon>
+            <app-action-icon action="cancel"></app-action-icon>
           </button>
           <button id="confirmar-familia-predeterminada" type="button" title="Confirmar familia predeterminada" aria-label="Confirmar familia predeterminada" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 text-white transition-colors hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-ihss-600/40 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="operacionPredeterminadaEnCurso()" (click)="confirmarFamiliaPredeterminada()">
             <app-action-icon action="configure"></app-action-icon>
