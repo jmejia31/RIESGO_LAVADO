@@ -218,10 +218,10 @@ test('duplica secciones sin colisiones, conserva cards y expone menu contextual'
   expect(claves).toHaveLength(6);
   expect(new Set(claves.map(texto => texto.split(' · ')[0].trim())).size).toBe(6);
   await secciones.nth(1).getByRole('button', { name: 'Acciones de sección' }).click();
-  await expect(dialogo.getByRole('button', { name: 'Mover arriba' })).toBeVisible();
+  await expect(dialogo.getByRole('button', { name: 'Mover sección arriba' })).toBeVisible();
   await page.screenshot({ path: 'test-results/ui-form-final-b-menu-open-1536x1024.png', fullPage: true });
   await lienzo.locator('.form-builder-canvas__scroll').click({ position: { x: 8, y: 8 } });
-  await expect(dialogo.getByRole('button', { name: 'Mover arriba' })).toBeHidden();
+  await expect(dialogo.getByRole('button', { name: 'Mover sección arriba' })).toBeHidden();
   await page.screenshot({ path: 'test-results/ui-form-final-b-menu-1536x1024.png', fullPage: true });
 });
 
@@ -267,7 +267,7 @@ test('captura JSON Técnico con búsqueda, validación y sincronización separad
   await expect(dialogo.getByRole('button', { name: 'Copiar JSON' })).toBeVisible();
   await expect(dialogo.getByRole('searchbox', { name: 'Buscar en JSON técnico' })).toBeVisible();
   await expect(dialogo.getByRole('button', { name: 'Validar' })).toBeVisible();
-  await expect(dialogo.getByRole('button', { name: 'Sincronizar hacia el Lienzo Visual' })).toBeVisible();
+  await expect(dialogo.getByRole('button', { name: 'Sincronizar JSON hacia el lienzo visual' })).toBeVisible();
   await dialogo.getByRole('searchbox', { name: 'Buscar en JSON técnico' }).fill('area_responsable');
   await expect(dialogo).toContainText('1 coincidencia(s)');
   await dialogo.getByRole('button', { name: 'Validar' }).click();

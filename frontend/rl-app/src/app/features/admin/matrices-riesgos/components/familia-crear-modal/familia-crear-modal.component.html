@@ -25,7 +25,7 @@
       </div>
       <div class="ml-4 flex shrink-0 items-center gap-2">
         <div class="group relative">
-          <button type="button"
+        <button type="button" aria-label="Regresar sin crear la familia"
                   class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Regresar a Familias de Formularios"
                   title="Regresar a Familias de Formularios"
@@ -177,23 +177,22 @@
 
     <div class="modal-footer-institutional px-5 py-4 sm:px-8">
       <button type="button"
-              class="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               title="Regresar sin crear la familia"
+              aria-label="Regresar sin crear la familia"
               [disabled]="guardando()"
               (click)="solicitarCierre()">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Regresar
       </button>
-      <button type="submit"
+       <button type="submit" title="Crear la familia de formularios" aria-label="Crear la familia de formularios"
               class="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="guardando() || familiaForm.invalid"
               title="Crear la familia de formularios"
               data-ui-fam-create-action="submit">
         @if (guardando()) {
           <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-          <span>Creando familia...</span>
         } @else {
-          <span>Crear familia</span>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
         }
       </button>
     </div>

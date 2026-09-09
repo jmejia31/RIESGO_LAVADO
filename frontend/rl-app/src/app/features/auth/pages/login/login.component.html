@@ -52,8 +52,9 @@
         <!-- Indicadores de Slides -->
         <div class="flex gap-3 mt-10">
           @for (s of slides(); track s.id) {
-            <button 
+            <button data-ui-control="selection"
               (click)="seleccionarSlide($index)"
+              [attr.aria-label]="'Mostrar diapositiva ' + ($index + 1)"
               class="h-1.5 transition-all duration-300 rounded-full"
               [class]="slideActual() === $index ? 'w-10 bg-white' : 'w-4 bg-white/30 hover:bg-white/50'">
             </button>
@@ -136,6 +137,8 @@
             <button 
               type="button"
               (click)="mostrarPw.set(!mostrarPw())"
+              title="Mostrar u ocultar contraseña"
+              aria-label="Mostrar u ocultar contraseña"
               class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-ihss-600 transition-colors">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 @if (mostrarPw()) {
@@ -156,13 +159,13 @@
             <input type="checkbox" formControlName="remember" class="w-4 h-4 rounded border-gray-300 text-ihss-600 focus:ring-ihss-500 transition-all">
             <span class="text-sm text-gray-500 font-medium group-hover:text-gray-700 transition-colors">Recordarme</span>
           </label>
-          <button type="button" (click)="abrirRecuperacionPassword()" class="text-sm font-semibold text-ihss-700 hover:text-ihss-800 transition-colors">
-            ¿Olvidó su contraseña?
+          <button type="button" (click)="abrirRecuperacionPassword()" title="Recuperar contraseña" aria-label="Recuperar contraseña" class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-ihss-700 hover:bg-ihss-50 hover:text-ihss-800 transition-colors">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2m-9 0h8a2 2 0 0 1 2 2v7H6v-7a2 2 0 0 1 2-2Zm4 4v2"/></svg>
           </button>
         </div>
 
         <button 
-          type="submit" 
+          type="submit" title="Iniciar sesión" aria-label="Iniciar sesión"
           [disabled]="cargando()"
           class="w-full py-4 bg-ihss-700 hover:bg-ihss-800 text-white font-bold rounded-2xl shadow-lg shadow-ihss-700/20 hover:shadow-ihss-700/30 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.98]">
           @if (cargando()) {
@@ -170,9 +173,8 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            <span>Verificando credenciales...</span>
           } @else {
-            <span>Iniciar Sesión</span>
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h13m0 0-4-4m4 4-4 4"/></svg>
           }
         </button>
         @if (cargando()) {

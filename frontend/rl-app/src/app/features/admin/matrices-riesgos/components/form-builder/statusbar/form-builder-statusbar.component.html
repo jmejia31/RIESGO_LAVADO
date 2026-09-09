@@ -9,8 +9,8 @@
       <span class="form-builder-statusbar__separator">&middot;</span><span>{{ catalogosCount }} cat&aacute;logo(s)</span>
     </div>
     <div class="form-builder-statusbar__actions">
-      <button type="button" class="form-builder-statusbar__cancel" (click)="cancelar.emit()">Cancelar</button>
-      <button type="button" class="form-builder-statusbar__save" [disabled]="!puedeGuardar" (click)="guardar.emit()">Guardar Cambios</button>
+      <button type="button" class="form-builder-statusbar__cancel inline-flex h-8 w-8 items-center justify-center" title="Cancelar cambios" aria-label="Cancelar cambios" (click)="cancelar.emit()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+      <button type="button" class="form-builder-statusbar__save inline-flex h-8 w-8 items-center justify-center" title="Guardar cambios" aria-label="Guardar cambios" [disabled]="!puedeGuardar" (click)="guardar.emit()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 12 4 4L19 6"/></svg></button>
     </div>
   </div>
 </footer>

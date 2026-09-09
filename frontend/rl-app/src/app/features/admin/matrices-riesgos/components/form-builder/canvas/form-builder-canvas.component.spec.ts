@@ -130,8 +130,8 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       const cards = el.querySelectorAll('article');
       const botonesPrimerCampo = cards[0].querySelectorAll('button[title]');
 
-      const btnSubir = Array.from(botonesPrimerCampo).find(b => b.getAttribute('title') === 'Mover arriba') as HTMLButtonElement;
-      const btnBajar = Array.from(botonesPrimerCampo).find(b => b.getAttribute('title') === 'Mover abajo') as HTMLButtonElement;
+      const btnSubir = Array.from(botonesPrimerCampo).find(b => b.getAttribute('title') === 'Mover campo arriba') as HTMLButtonElement;
+      const btnBajar = Array.from(botonesPrimerCampo).find(b => b.getAttribute('title') === 'Mover campo abajo') as HTMLButtonElement;
 
       expect(btnSubir?.disabled).toBe(true);
       expect(btnBajar?.disabled).toBe(false);
@@ -142,8 +142,8 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
       const cards = el.querySelectorAll('article');
       const botonesUltimoCampo = cards[2].querySelectorAll('button[title]');
 
-      const btnSubir = Array.from(botonesUltimoCampo).find(b => b.getAttribute('title') === 'Mover arriba') as HTMLButtonElement;
-      const btnBajar = Array.from(botonesUltimoCampo).find(b => b.getAttribute('title') === 'Mover abajo') as HTMLButtonElement;
+      const btnSubir = Array.from(botonesUltimoCampo).find(b => b.getAttribute('title') === 'Mover campo arriba') as HTMLButtonElement;
+      const btnBajar = Array.from(botonesUltimoCampo).find(b => b.getAttribute('title') === 'Mover campo abajo') as HTMLButtonElement;
 
       expect(btnSubir?.disabled).toBe(false);
       expect(btnBajar?.disabled).toBe(true);
@@ -155,7 +155,7 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
 
       const el = fixture.nativeElement as HTMLElement;
       const cards = el.querySelectorAll('article');
-      const btnSubir = cards[1].querySelector('button[title="Mover arriba"]') as HTMLButtonElement;
+      const btnSubir = cards[1].querySelector('button[title="Mover campo arriba"]') as HTMLButtonElement;
       btnSubir.click();
 
       expect(emitido).toEqual({ seccionId: 'sec_1', index: 1, direccion: 'subir' });
@@ -167,7 +167,7 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
 
       const el = fixture.nativeElement as HTMLElement;
       const cards = el.querySelectorAll('article');
-      const btnBajar = cards[1].querySelector('button[title="Mover abajo"]') as HTMLButtonElement;
+      const btnBajar = cards[1].querySelector('button[title="Mover campo abajo"]') as HTMLButtonElement;
       btnBajar.click();
 
       expect(emitido).toEqual({ seccionId: 'sec_1', index: 1, direccion: 'bajar' });
@@ -265,8 +265,8 @@ describe('FormBuilderCanvasComponent — UI-FORM.3 Lienzo, Secciones y Field Car
 
     it('oculta acciones destructivas y de reordenamiento de campos y secciones', () => {
       const el = fixture.nativeElement as HTMLElement;
-      expect(el.querySelectorAll('button[title="Mover arriba"]').length).toBe(0);
-      expect(el.querySelectorAll('button[title="Mover abajo"]').length).toBe(0);
+      expect(el.querySelectorAll('button[title="Mover campo arriba"]').length).toBe(0);
+      expect(el.querySelectorAll('button[title="Mover campo abajo"]').length).toBe(0);
       expect(el.querySelectorAll('button[title="Eliminar campo"]').length).toBe(0);
       expect(el.querySelectorAll('button[title="Eliminar sección"]').length).toBe(0);
     });

@@ -317,7 +317,7 @@ test('muestra el formulario de acceso institucional', async ({ page }) => {
 
   await expect(page.getByRole('heading', { name: 'Prevención de Lavado' })).toBeVisible();
   await expect(page.getByLabel('Correo o Usuario')).toBeVisible();
-  await expect(page.getByLabel('Contraseña')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Contraseña' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Iniciar Sesión' })).toBeVisible();
 });
 
@@ -339,7 +339,7 @@ test('valida campos obligatorios sin enviar credenciales', async ({ page }) => {
 
 test('permite alternar la visibilidad de la contraseña', async ({ page }) => {
   await page.goto('/login');
-  const password = page.getByLabel('Contraseña');
+  const password = page.getByRole('textbox', { name: 'Contraseña' });
 
   await password.fill('clave-segura');
   await expect(password).toHaveAttribute('type', 'password');
@@ -461,7 +461,7 @@ test('long form test-only valida robustez con un escenario representativo', asyn
   const metodologia = { ...metodologiaFormulario, versionFormularioId: 910, codigo: 'FORM_LONG_UAT', version: 90, secciones, catalogos: [] };
   await stubAuthenticatedMatrices(page, { version, metodologia });
   await page.goto('/matrices-riesgos');
-  await page.getByRole('button', { name: /Nueva evalu/ }).click();
+  await page.getByRole('button', { name: /crear nueva evaluación/i }).click();
   const modal = page.locator('[data-modal="nueva-evaluacion"]');
   const scroll = modal.locator('.modal-body-scrollable');
   await modal.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
@@ -473,5 +473,5 @@ test('long form test-only valida robustez con un escenario representativo', asyn
   await expect(modal.locator('[data-evaluation-field="long_field_90"]')).toBeVisible();
   const metrics = await scroll.evaluate(element => ({ vertical: element.scrollHeight > element.clientHeight, horizontal: element.scrollWidth > element.clientWidth, top: element.scrollTop }));
   expect(metrics.vertical).toBe(true); expect(metrics.horizontal).toBe(false); expect(metrics.top).toBeGreaterThan(0);
-  await expect(modal.getByRole('button', { name: /Crear Evalu/ })).toBeVisible();
+  await expect(modal.getByRole('button', { name: /crear evaluación/i })).toBeVisible();
 });

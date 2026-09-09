@@ -305,7 +305,9 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
     expect(component.errorEvaluaciones()).toBe('Fallo controlado F3.2');
     expect(component.cargandoEvaluaciones()).toBe(false);
     expect(fixture.nativeElement.textContent).toContain('Fallo controlado F3.2');
-    expect(fixture.nativeElement.textContent).toContain('Reintentar');
+    const retryButton = fixture.nativeElement.querySelector('button[aria-label="Reintentar carga de evaluaciones"]') as HTMLButtonElement;
+    expect(retryButton).toBeTruthy();
+    expect(retryButton.getAttribute('title')).toBe('Reintentar carga de evaluaciones');
   });
 
   it('normaliza items nulos sin romper el contrato Array de la tabla', () => {

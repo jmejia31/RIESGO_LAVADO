@@ -21,7 +21,7 @@
         <h2 class="text-sm font-bold">Familia predeterminada pendiente de configuración</h2>
         <p class="mt-1 text-xs leading-5 text-sky-800">Aún no se ha definido qué familia debe cargarse inicialmente en el módulo.</p>
         @if (usuarioEsAdministrador()) {
-          <button type="button" class="mt-3 inline-flex items-center rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs font-bold text-sky-900 shadow-sm transition-colors hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500/40" aria-label="Configurar familia predeterminada" (click)="seleccionarTab('plantillas')">Configurar familia predeterminada</button>
+          <button type="button" class="mt-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-sky-300 bg-white text-sky-900 shadow-sm transition-colors hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-500/40" aria-label="Configurar familia predeterminada" title="Configurar familia predeterminada" (click)="seleccionarTab('plantillas')"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 6h9m-9 6h9m-9 6h9M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg></button>
         } @else {
           <p class="mt-3 text-xs font-semibold text-sky-800">Un administrador debe definir la familia predeterminada.</p>
         }
@@ -32,7 +32,7 @@
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm" role="alert" aria-live="assertive">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 00-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ errorDefault }}</span>
-      <button type="button" class="rounded-lg px-3 py-1.5 text-xs font-bold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/30" (click)="cargarFamiliaPredeterminada()">Reintentar</button>
+      <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500/30" title="Reintentar carga de familia predeterminada" aria-label="Reintentar carga de familia predeterminada" (click)="cargarFamiliaPredeterminada()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
     </div>
   }
   <!-- KPIs contextuales de la pestaña activa -->
@@ -59,14 +59,14 @@
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ errorTexto }}</span>
-      <button type="button" class="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800 transition-colors" aria-label="Cerrar notificación" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      <button type="button" class="rounded-lg p-1 text-red-500 hover:bg-red-100 hover:text-red-800 transition-colors" aria-label="Cerrar notificación" title="Cerrar notificación" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
   }
   @if (mensaje(); as mensajeTexto) {
     <output class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 shadow-sm animate-fade-in" aria-live="polite">
       <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       <span class="flex-1 font-medium">{{ mensajeTexto }}</span>
-      <button type="button" class="rounded-lg p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" aria-label="Cerrar notificación" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+      <button type="button" class="rounded-lg p-1 text-emerald-500 hover:bg-emerald-100 hover:text-emerald-800 transition-colors" aria-label="Cerrar notificación" title="Cerrar notificación" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
      </output>
   }
 
@@ -78,7 +78,7 @@
         { id: 'consolidado', texto: 'Consolidado' },
         { id: 'plantillas', texto: 'Plantillas' }
       ]; track opcion.id) {
-        <button type="button"
+            <button type="button" data-ui-control="navigation"
                 role="tab"
                 [attr.id]="'tab-' + opcion.id"
                 [attr.aria-selected]="tab() === opcion.id"
@@ -109,7 +109,7 @@
       } @else if (errorEvaluaciones(); as errorEv) {
         <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
           <span>{{ errorEv }}</span>
-          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarEvaluaciones()">Reintentar</button>
+          <button type="button" class="inline-flex h-8 w-8 items-center justify-center bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" title="Reintentar carga de evaluaciones" aria-label="Reintentar carga de evaluaciones" (click)="cargarEvaluaciones()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
         </div>
       }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -117,17 +117,16 @@
           <h2 class="text-lg font-bold text-gray-900">Evaluaciones de Riesgo</h2>
           <p class="text-xs text-gray-500">Estado operativo proveniente del último flujo transaccional registrado.</p>
         </div>
-        <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="nuevaEvaluacion()">
+        <button type="button" title="Crear nueva evaluación" aria-label="Crear nueva evaluación" class="inline-flex h-10 w-10 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm" (click)="nuevaEvaluacion()">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          <span>Nueva evaluación</span>
         </button>
       </div>
       <div class="matrices-filter-surface flex flex-col sm:flex-row sm:items-end gap-3">
         <div class="flex-1 min-w-[200px]"><label for="filtro-buscar" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Buscar</label><input id="filtro-buscar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" type="search" placeholder="Buscar por código, nombre o evaluación..." [ngModel]="filtroBuscar()" (ngModelChange)="alCambiarFiltroBuscar($event)"></div>
         <div class="w-full sm:w-48"><label for="filtro-estado" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Estado</label><select id="filtro-estado" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors" [ngModel]="filtroEstado()" (ngModelChange)="alCambiarFiltroEstado($event)"><option value="">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="EN_REVISION">En revisión</option><option value="OBSERVADA">Observada</option><option value="APROBADA">Aprobada</option><option value="RECHAZADA">Rechazada</option><option value="CERRADA">Cerrada</option></select></div>
         <div class="w-full sm:w-auto">
-          <button type="button" class="w-full px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm disabled:opacity-50 whitespace-nowrap" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
-            Limpiar filtros
+          <button type="button" title="Limpiar filtros de evaluaciones" aria-label="Limpiar filtros de evaluaciones" class="inline-flex h-10 w-10 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50" [disabled]="!filtroBuscar() && !filtroEstado()" (click)="limpiarFiltrosEvaluaciones()">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M9 12h6m-3 0v8"/></svg>
           </button>
         </div>
         <div class="w-full sm:w-28">
@@ -267,7 +266,7 @@
               </button>
             }
 
-            <button type="button"
+            <button type="button" data-ui-control="navigation" aria-label="Página siguiente"
                     class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     [disabled]="cargandoEvaluaciones() || totalPaginas() === 0 || pagina() >= totalPaginas()"
                     (click)="cambiarPagina(pagina() + 1)">
@@ -288,20 +287,18 @@
       } @else if (errorConsolidado(); as errorCons) {
         <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 flex items-center justify-between gap-3">
           <span>{{ errorCons }}</span>
-          <button type="button" class="px-3 py-1 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" (click)="cargarConsolidado()">Reintentar</button>
+          <button type="button" class="inline-flex h-8 w-8 items-center justify-center bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors" title="Reintentar carga del consolidado" aria-label="Reintentar carga del consolidado" (click)="cargarConsolidado()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
         </div>
       }
       <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div><h2 class="text-lg font-bold text-gray-900">Matriz Consolidada</h2><p class="text-xs text-gray-500">Proyección relacional tipada y exportable institucionalmente.</p></div>
         <div class="flex flex-wrap gap-2">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-sm transition-colors shadow-sm" (click)="cargarConsolidado()">Actualizar</button>
-          <button type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="descargarConsolidado('excel')">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>Exportar Excel</span>
+          <button type="button" title="Actualizar matriz consolidada" aria-label="Actualizar matriz consolidada" class="inline-flex h-10 w-10 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-sm" (click)="cargarConsolidado()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
+           <button type="button" title="Exportar matriz consolidada a Excel" aria-label="Exportar matriz consolidada a Excel" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-sm" (click)="descargarConsolidado('excel')">
+             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           </button>
-          <button type="button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm" (click)="descargarConsolidado('pdf')">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h6M5 3h10l4 4v14H5V3z"/></svg>
-            <span>Generar PDF</span>
+           <button type="button" title="Generar reporte PDF de la matriz consolidada" aria-label="Generar reporte PDF de la matriz consolidada" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm" (click)="descargarConsolidado('pdf')">
+             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h6M5 3h10l4 4v14H5V3z"/></svg>
           </button>
         </div>
       </div>
@@ -323,7 +320,7 @@
             @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
           </select>
         </div>
-        <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="limpiarFiltrosConsolidado()">Limpiar filtros</button>
+        <button type="button" title="Limpiar filtros del consolidado" aria-label="Limpiar filtros del consolidado" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="limpiarFiltrosConsolidado()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M9 12h6m-3 0v8"/></svg></button>
       </div>
       <div class="matrices-table-surface overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[1100px] w-full divide-y divide-gray-200 text-sm">
@@ -343,7 +340,7 @@
                 <td class="px-6 py-4">{{ fila.respuestaRiesgo }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
-                <td class="px-6 py-4"><button type="button" class="text-ihss-900 font-bold hover:underline" (click)="abrirModalVerDesdeConsolidado(fila)">Ver</button></td>
+                <td class="px-6 py-4"><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-900 hover:bg-ihss-50" title="Ver detalle del consolidado" aria-label="Ver detalle del consolidado" (click)="abrirModalVerDesdeConsolidado(fila)"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 12s3.5-6.75 9.75-6.75S21.75 12 21.75 12 18.25 18.75 12 18.75 2.25 12 2.25 12Z"/><circle cx="12" cy="12" r="2.75" stroke-width="2"/></svg></button></td>
               </tr>
             } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
           </tbody>
@@ -352,9 +349,9 @@
       <div class="flex flex-col gap-3 border-t border-gray-100 pt-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
         <p>Mostrando <strong class="text-gray-900">{{ totalRegistrosConsolidado() === 0 ? 0 : ((paginaConsolidado() - 1) * registrosPorPaginaConsolidado()) + 1 }}–{{ totalRegistrosConsolidado() === 0 ? 0 : limiteSuperiorConsolidado() }}</strong> de <strong class="text-gray-900">{{ totalRegistrosConsolidado() }}</strong> registros</p>
         <div class="flex items-center gap-2">
-          <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" [disabled]="paginaConsolidado() <= 1 || totalPaginasConsolidado() === 0" (click)="cambiarPaginaConsolidado(paginaConsolidado() - 1)">Anterior</button>
+           <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" aria-label="Página anterior" [disabled]="paginaConsolidado() <= 1 || totalPaginasConsolidado() === 0" (click)="cambiarPaginaConsolidado(paginaConsolidado() - 1)">Anterior</button>
           <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasConsolidado() === 0 ? 0 : paginaConsolidado() }} / {{ totalPaginasConsolidado() }}</span>
-          <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" [disabled]="totalPaginasConsolidado() === 0 || paginaConsolidado() >= totalPaginasConsolidado()" (click)="cambiarPaginaConsolidado(paginaConsolidado() + 1)">Siguiente</button>
+           <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" aria-label="Página siguiente" [disabled]="totalPaginasConsolidado() === 0 || paginaConsolidado() >= totalPaginasConsolidado()" (click)="cambiarPaginaConsolidado(paginaConsolidado() + 1)">Siguiente</button>
         </div>
       </div>
     </section>
@@ -371,9 +368,8 @@
               </div>
             </div>
             @if (esAdministrador()) {
-              <button type="button" class="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" title="Crear una nueva familia" (click)="abrirModalCrearFamilia()" data-ui-fam-action="nueva-familia">
+              <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30" title="Crear una nueva familia" aria-label="Crear una nueva familia" (click)="abrirModalCrearFamilia()" data-ui-fam-action="nueva-familia">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Nueva familia
               </button>
             }
           </div>
@@ -426,7 +422,7 @@
                 @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
               </select>
             </div>
-            <button type="button" class="h-11 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de familias" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()">Limpiar filtros</button>
+            <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de familias" aria-label="Limpiar filtros de familias" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M9 12h6m-3 0v8"/></svg></button>
           </div>
         </div>
 
@@ -439,7 +435,7 @@
           } @else if (errorFamilias(); as errorFam) {
             <div class="flex min-h-56 flex-col items-center justify-center gap-4 p-10 text-center">
               <p class="max-w-xl text-sm font-semibold text-red-700">{{ errorFam }}</p>
-              <button type="button" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700" title="Reintentar carga de familias" (click)="cargarFamilias()">Reintentar</button>
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-700" title="Reintentar carga de familias" aria-label="Reintentar carga de familias" (click)="cargarFamilias()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
             </div>
           } @else {
             <div class="overflow-x-auto">
@@ -537,9 +533,9 @@
             <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
               <p>Mostrando <strong class="text-gray-900">{{ familiasFiltradas().length === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ familiasFiltradas().length === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > familiasFiltradas().length ? familiasFiltradas().length : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ familiasFiltradas().length }}</strong> familias</p>
               <div class="flex flex-wrap items-center gap-2">
-                <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
+                 <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" aria-label="Página anterior" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
                 <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasFamilias() === 0 ? 0 : paginaFamilias() }} / {{ totalPaginasFamilias() }}</span>
-                <button type="button" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" [disabled]="totalPaginasFamilias() === 0 || paginaFamilias() >= totalPaginasFamilias()" (click)="cambiarPaginaFamilias(paginaFamilias() + 1)">Siguiente</button>
+                 <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" aria-label="Página siguiente" [disabled]="totalPaginasFamilias() === 0 || paginaFamilias() >= totalPaginasFamilias()" (click)="cambiarPaginaFamilias(paginaFamilias() + 1)">Siguiente</button>
               </div>
             </div>
           }
@@ -588,12 +584,11 @@
           </div>
           <div class="flex items-center gap-3">
             @if (esAdministrador()) {
-              <button type="button" class="h-9 px-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center gap-1.5" (click)="abrirModalCrearFamilia()">
+              <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm" title="Crear nueva familia" aria-label="Crear nueva familia" (click)="abrirModalCrearFamilia()">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>+ Nueva Familia</span>
               </button>
             }
-            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
+             <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar gestor de familias" title="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()">
               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
           </div>
@@ -626,8 +621,8 @@
                 </select>
               </div>
               @if (filtroBuscarFamilia().trim() || filtroEstadoFamilia() !== 'TODAS') {
-                <button type="button" class="px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-ihss-900 bg-gray-200/70 hover:bg-gray-200 rounded-xl transition-colors" (click)="limpiarFiltrosFamilias()">
-                  Limpiar
+                <button type="button" class="inline-flex h-8 w-8 items-center justify-center text-gray-600 hover:text-ihss-900 bg-gray-200/70 hover:bg-gray-200 rounded-xl transition-colors" title="Limpiar filtros de familias" aria-label="Limpiar filtros de familias" (click)="limpiarFiltrosFamilias()">
+                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 8h12M9 12h6m-3 0v8"/></svg>
                 </button>
               }
             </div>
@@ -737,7 +732,7 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalGestorFamilias()">Cerrar</button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar gestor de familias" aria-label="Cerrar gestor de familias" (click)="cerrarModalGestorFamilias()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
         </div>
       </div>
     </dialog>
@@ -751,7 +746,7 @@
             <h3 id="titulo-modal-familia" class="text-base sm:text-lg font-bold text-gray-900">{{ modoEdicionFamilia() ? 'Editar Familia de Formulario' : 'Nueva Familia de Formulario' }}</h3>
             <p class="text-xs text-gray-500">Configuración de agrupador institucional de matrices</p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" (click)="cerrarModalFamilia()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar diálogo" title="Cerrar diálogo" (click)="cerrarModalFamilia()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -761,7 +756,7 @@
             <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive">
               <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               <span class="flex-1 font-medium">{{ errorModalTexto }}</span>
-              <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+               <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error" title="Cerrar error" (click)="errorModal.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
           }
 
@@ -792,8 +787,8 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalFamilia()">Cancelar</button>
-          <button type="button" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()">{{ guardando() ? 'Guardando...' : 'Guardar' }}</button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de familia" aria-label="Cancelar edición de familia" (click)="cerrarModalFamilia()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-sm disabled:opacity-50" title="Guardar familia" aria-label="Guardar familia" [disabled]="guardando() || !nuevaFamiliaCodigo.trim() || !nuevaFamiliaNombre.trim()" (click)="guardarFamilia()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg></button>
         </div>
        </div>
      </dialog>
@@ -811,7 +806,7 @@
               {{ evaluacionResumenSeleccionada()?.riesgoNombre }} | Versión: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
             </p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar vista" (click)="cerrarModalVer()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar vista" title="Cerrar vista" (click)="cerrarModalVer()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -859,9 +854,7 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalVer()">
-            Cerrar
-          </button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar vista de evaluación" aria-label="Cerrar vista de evaluación" (click)="cerrarModalVer()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
         </div>
       </div>
     </dialog>
@@ -879,7 +872,7 @@
               Metodología Histórica: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
             </p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar edición" (click)="cerrarModalEditar()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar edición" title="Cerrar edición" (click)="cerrarModalEditar()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -888,14 +881,14 @@
           <div class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-uat="feedback-edicion-error">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span class="flex-1 font-medium">{{ errorEdicion }}</span>
-            <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error de edición" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+             <button type="button" class="rounded p-0.5 text-red-400 hover:text-red-700" aria-label="Cerrar error de edición" title="Cerrar error de edición" (click)="error.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
           </div>
         }
         @if (mensaje(); as mensajeEdicion) {
           <output class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" aria-live="polite" data-uat="feedback-edicion-exito">
             <svg aria-hidden="true" class="h-5 w-5 flex-shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <span class="flex-1 font-medium">{{ mensajeEdicion }}</span>
-            <button type="button" class="rounded p-0.5 text-emerald-400 hover:text-emerald-700" aria-label="Cerrar confirmación de edición" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+             <button type="button" class="rounded p-0.5 text-emerald-400 hover:text-emerald-700" aria-label="Cerrar confirmación de edición" title="Cerrar confirmación de edición" (click)="mensaje.set(null)"><svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
           </output>
         }
 
@@ -927,14 +920,12 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalEditar()">
-            Cancelar
-          </button>
-          <button type="button"
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de evaluación" aria-label="Cancelar edición de evaluación" (click)="cerrarModalEditar()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+          <button type="button" title="Guardar cambios de evaluación" aria-label="Guardar cambios de evaluación"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
                   [disabled]="guardando() || !puedeGuardar()"
                   (click)="guardarEvaluacion()">
-            {{ guardando() ? 'Guardando...' : 'Guardar Cambios' }}
+            <svg class="h-4 w-4" [class.animate-spin]="guardando()" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
           </button>
         </div>
       </div>
@@ -953,7 +944,7 @@
               {{ evaluacionResumenSeleccionada()?.riesgoCodigo }} · Estado Actual: <strong class="text-gray-900">{{ evaluacionResumenSeleccionada()?.estado }}</strong>
             </p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar seguimiento" title="Cerrar seguimiento" (click)="cerrarModalSeguimiento()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -983,11 +974,11 @@
                 </div>
               </div>
               <div class="flex justify-end pt-1">
-                <button type="button"
+                <button type="button" title="Aplicar transición de estado" aria-label="Aplicar transición de estado"
                         class="px-4 py-2 bg-ihss-900 hover:bg-ihss-800 text-white font-bold text-xs rounded-xl transition-all shadow-sm disabled:opacity-50"
                         [disabled]="guardando() || !nuevoEstado"
                         (click)="transicionarEvaluacionModal()">
-                  {{ guardando() ? 'Procesando...' : 'Aplicar Transición' }}
+                  <svg class="h-4 w-4" [class.animate-spin]="guardando()" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
                 </button>
               </div>
             </section>
@@ -1020,9 +1011,7 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalSeguimiento()">
-            Cerrar
-          </button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cerrar seguimiento" aria-label="Cerrar seguimiento" (click)="cerrarModalSeguimiento()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
         </div>
       </div>
     </dialog>
@@ -1048,7 +1037,7 @@
             }
             </p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar creación" (click)="cerrarModalNuevaEvaluacion()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar creación" title="Cerrar creación" (click)="cerrarModalNuevaEvaluacion()">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -1139,14 +1128,12 @@
         </div>
 
         <div class="modal-footer-institutional">
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalNuevaEvaluacion()">
-            Cancelar
-          </button>
-          <button type="button"
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+          <button type="button" title="Crear evaluación" aria-label="Crear evaluación"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
                   [disabled]="guardando() || !puedeGuardar()"
                   (click)="guardarEvaluacion()">
-            {{ guardando() ? 'Guardando...' : 'Crear Evaluación' }}
+            <svg class="h-4 w-4" [class.animate-spin]="guardando()" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
           </button>
         </div>
       </div>
@@ -1160,7 +1147,7 @@
             <h2 id="titulo-confirmar-familia-predeterminada" class="text-base sm:text-lg font-bold text-gray-900">Establecer familia predeterminada</h2>
             <p class="mt-1 text-xs text-gray-500">Confirme el contexto inicial del módulo.</p>
           </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
+           <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cancelar configuración de familia predeterminada" title="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
           </button>
         </div>
@@ -1172,8 +1159,8 @@
           <p class="rounded-xl border border-sky-200 bg-sky-50 p-4 text-xs leading-5 text-sky-900">Esta familia será seleccionada inicialmente al ingresar al módulo y al crear nuevas evaluaciones. Las evaluaciones existentes conservarán su versión histórica.</p>
         </div>
         <div class="modal-footer-institutional">
-          <button type="button" class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/30" (click)="cancelarConfirmacionFamiliaPredeterminada()">Cancelar</button>
-          <button id="confirmar-familia-predeterminada" type="button" class="rounded-xl bg-ihss-900 px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-ihss-600/40 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="operacionPredeterminadaEnCurso()" (click)="confirmarFamiliaPredeterminada()">{{ operacionPredeterminadaEnCurso() ? 'Guardando...' : 'Confirmar' }}</button>
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500/30" title="Cancelar configuración de familia predeterminada" aria-label="Cancelar configuración de familia predeterminada" (click)="cancelarConfirmacionFamiliaPredeterminada()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg></button>
+          <button id="confirmar-familia-predeterminada" type="button" title="Confirmar familia predeterminada" aria-label="Confirmar familia predeterminada" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-ihss-900 text-white transition-colors hover:bg-ihss-800 focus:outline-none focus:ring-2 focus:ring-ihss-600/40 disabled:cursor-not-allowed disabled:opacity-50" [disabled]="operacionPredeterminadaEnCurso()" (click)="confirmarFamiliaPredeterminada()"><svg class="h-4 w-4" [class.animate-spin]="operacionPredeterminadaEnCurso()" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg></button>
         </div>
       </div>
     </dialog>

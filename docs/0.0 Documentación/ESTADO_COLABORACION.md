@@ -1010,3 +1010,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia focal: specs Angular `69/69 PASS`; suite frontend `736/736 PASS`; backend `611/611 PASS`; E2E `31/31 PASS`; TSC spec, lint, build, `npm audit` estricto (`0 vulnerabilidades`) y diff check PASS. Sin cambios backend/API/Oracle, dependencias, FormulaEngine, versionamiento o FASE 5.3.
 - Quality Gate UX-DEDUP.1 anterior certificado: `RUN=34298936305`, `SHA=0a403e6aed39bb5a09e351e4ec5d4c6ff54f7662`, `STATUS=completed`, `CONCLUSION=success`; no se presenta como el QG del commit residual.
 - Estado: `UX_DEDUP_RESIDUAL=IMPLEMENTADO`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; pendiente exclusivamente commit/push y Quality Gate exacto del nuevo SHA. No reanudar FASE 5.3.
+
+## Estado vigente - UX-ACTION-ICON-ONLY.1
+
+- Fecha/hora local: `2026-09-08 22:14 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `e1e63fcb7068d57e7c06f4d488c41de91c6e2de2`.
+- Auditoría global: `HTML_TEMPLATES_SCANNED=27`; `INLINE_TEMPLATES_SCANNED=3`; `ACTION_BUTTONS_FOUND=272` en el inventario del baseline; `ACTION_BUTTONS_CONVERTED=203`; `ACTION_BUTTONS_ALREADY_COMPLIANT=69`; `ACTION_BUTTONS_WITH_VISIBLE_TEXT=0`; `ACTION_ICON_WITHOUT_ARIA_LABEL=0`; `ACTION_ICON_WITHOUT_TOOLTIP=0`.
+- Guarda `ux-action-icon-only.regression.spec.ts`: `PASS`; controles textuales de navegación y selección preservados. Las acciones productivas ahora son icon-only con tooltip/title, aria-label, icono y estados accesibles.
+- Regresión: frontend `737/737 PASS`; backend `611/611 PASS`; E2E `31/31 PASS`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), cobertura y diff check `PASS`; Agent Skills `14/14 PASS`.
+- Scope congelado: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `ORACLE_MIGRATION_59_RISKS=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+- Validación estructural independiente: conserva tres hallazgos legacy fuera de esta intervención; no afectan la guarda UX ni fueron modificados.
+- Punto de continuación: staging explícito de archivos UX-ACTION-ICON-ONLY.1, commit, push a `origin/desarrollo`, espera del Quality Gate exacto y cierre. No iniciar ni reanudar FASE 5.3.

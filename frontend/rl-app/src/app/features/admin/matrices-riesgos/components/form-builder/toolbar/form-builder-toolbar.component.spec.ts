@@ -72,7 +72,7 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       const el = fixture.nativeElement as HTMLElement;
       const btnGuardar = el.querySelector('#btn-guardar-builder') as HTMLButtonElement;
       expect(btnGuardar).toBeTruthy();
-      expect(btnGuardar.textContent).toContain('Guardar Borrador');
+      expect(btnGuardar.getAttribute('aria-label')).toBe('Guardar Borrador');
       expect(btnGuardar.disabled).toBe(false);
 
       btnGuardar.click();
@@ -92,7 +92,7 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       const el = fixture.nativeElement as HTMLElement;
       const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
       expect(btnPublicar).toBeTruthy();
-      expect(btnPublicar.textContent).toContain('Publicar Versión');
+      expect(btnPublicar.getAttribute('aria-label')).toBe('Publicar Versión');
       expect(btnPublicar.disabled).toBe(false);
 
       btnPublicar.click();
@@ -181,11 +181,11 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
 
       expect(btnGuardar.disabled).toBe(true);
-      expect(btnGuardar.textContent).toContain('Guardar Borrador');
+      expect(btnGuardar.getAttribute('aria-label')).toBe('Guardar Borrador');
       expect(btnGuardar.textContent).not.toContain('Guardando...');
 
       expect(btnPublicar.disabled).toBe(true);
-      expect(btnPublicar.textContent).toContain('Publicar Versión');
+      expect(btnPublicar.getAttribute('aria-label')).toBe('Publicar Versión');
       expect(btnPublicar.textContent).not.toContain('Publicando...');
     });
 
@@ -201,9 +201,9 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
 
       expect(btnGuardar.disabled).toBe(true);
-      expect(btnGuardar.textContent).toContain('Guardando...');
+      expect(btnGuardar.getAttribute('aria-label')).toBe('Guardando...');
       expect(btnPublicar.disabled).toBe(true);
-      expect(btnPublicar.textContent).toContain('Publicar Versión');
+      expect(btnPublicar.getAttribute('aria-label')).toBe('Publicar Versión');
       expect(btnPublicar.textContent).not.toContain('Publicando...');
     });
 
@@ -219,9 +219,9 @@ describe('FormBuilderToolbarComponent (UI-FORM.5)', () => {
       const btnPublicar = el.querySelector('#btn-publicar-builder') as HTMLButtonElement;
 
       expect(btnPublicar.disabled).toBe(true);
-      expect(btnPublicar.textContent).toContain('Publicando...');
+      expect(btnPublicar.getAttribute('aria-label')).toBe('Publicando...');
       expect(btnGuardar.disabled).toBe(true);
-      expect(btnGuardar.textContent).toContain('Guardar Borrador');
+      expect(btnGuardar.getAttribute('aria-label')).toBe('Guardar Borrador');
       expect(btnGuardar.textContent).not.toContain('Guardando...');
     });
 

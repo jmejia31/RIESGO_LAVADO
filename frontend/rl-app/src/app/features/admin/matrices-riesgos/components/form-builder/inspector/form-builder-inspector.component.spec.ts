@@ -186,7 +186,7 @@ describe('FormBuilderInspectorComponent — UI-FORM.4 Inspector Profesional', ()
       component.navegarCatalogos.subscribe(() => emitido = true);
 
       const el = fixture.nativeElement as HTMLElement;
-      const btnAdmin = Array.from(el.querySelectorAll('button')).find(b => b.textContent?.includes('Administrar Catálogos'));
+      const btnAdmin = el.querySelector('button[aria-label="Administrar catálogos"]') as HTMLButtonElement | null;
       btnAdmin?.click();
 
       expect(emitido).toBe(true);

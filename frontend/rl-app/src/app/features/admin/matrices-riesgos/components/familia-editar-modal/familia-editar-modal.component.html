@@ -78,7 +78,7 @@
           </span>
           <h4 class="mt-4 text-lg font-bold text-gray-900">Familia no disponible</h4>
           <p class="mt-1 max-w-md text-sm text-gray-500">No fue posible recuperar la familia solicitada. Puede haber sido eliminada o ya no estar disponible.</p>
-          <button type="button" class="mt-5 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50" title="Reintentar carga de la familia" (click)="reintentar()">Reintentar</button>
+          <button type="button" class="mt-5 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50" title="Reintentar carga de la familia" aria-label="Reintentar carga de la familia" (click)="reintentar()"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5.6 18.4A9 9 0 1 0 5.6 5.6L4 7"/></svg></button>
         </div>
       } @else if (detalle(); as familia) {
         <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(330px,0.9fr)]">
@@ -266,23 +266,23 @@
 
     <div class="modal-footer-institutional px-5 py-4 sm:px-8">
       <button type="button"
-              class="inline-flex min-w-28 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
               title="Regresar a Familias de Formularios"
+              aria-label="Regresar a Familias de Formularios"
               [disabled]="guardando() || operando()"
               (click)="solicitarCierre()">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Regresar
       </button>
       <button type="submit"
-              class="inline-flex min-w-40 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition-all hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-55"
               [disabled]="!detalle() || guardando() || operando() || familiaForm.invalid || !hayCambios() || !esAdministrador()"
               title="Guardar cambios de la familia"
+              aria-label="Guardar cambios de la familia"
               data-ui-fam-edit-action="guardar">
         @if (guardando()) {
           <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-          <span>Guardando...</span>
         } @else {
-          <span>Guardar cambios</span>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12l4 4L19 6"/></svg>
         }
       </button>
     </div>

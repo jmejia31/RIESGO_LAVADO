@@ -5,12 +5,11 @@
       <h1 class="text-2xl font-bold text-gray-900">Usuarios del Sistema (Riesgos)</h1>
       <p class="text-sm text-gray-500 mt-0.5">{{ usuarios().length }} usuarios registrados</p>
     </div>
-    <button (click)="prepararNuevo()"
+    <button (click)="prepararNuevo()" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
       class="flex items-center justify-center gap-2 px-5 py-2.5 bg-ihss-700 text-white font-semibold text-sm rounded-xl hover:bg-ihss-800 transition-colors w-full sm:w-auto">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
       </svg>
-      Nuevo Usuario
     </button>
   </div>
 
@@ -83,7 +82,7 @@
               </td>
               <td class="px-5 py-4">
                 <div class="flex items-center gap-1 whitespace-nowrap">
-                <button (click)="prepararEdicion(u)"
+                <button (click)="prepararEdicion(u)" aria-label="Editar usuario"
                   class="p-2 text-ihss-600 hover:bg-ihss-50 rounded-lg transition-colors"
                   title="Editar Usuario">
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,7 +90,7 @@
                   </svg>
                 </button>
                 @if (u.esUsuarioDominio !== 1) {
-                  <button (click)="reiniciarPassword(u)"
+                  <button (click)="reiniciarPassword(u)" aria-label="Reiniciar contraseña"
                     class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                     title="Reiniciar Contraseña">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,7 +120,7 @@
             <h2 class="text-base sm:text-lg font-bold text-gray-900">{{ editando() ? 'Editar Usuario' : 'Crear Usuario' }}</h2>
             <p class="text-xs text-gray-500 mt-0.5">{{ editando() ? 'Actualiza' : 'Ingresa' }} la información requerida del usuario.</p>
           </div>
-          <button type="button" (click)="cancelar()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal usuario">
+          <button type="button" (click)="cancelar()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal usuario" title="Cerrar modal usuario">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -322,11 +321,11 @@
 
           <!-- Footer Actions -->
           <div class="modal-footer-institutional">
-            <button type="button" (click)="cancelar()"
+            <button type="button" (click)="cancelar()" title="Cancelar edición de usuario" aria-label="Cancelar edición de usuario"
               class="px-4 py-2 border border-gray-200 bg-white text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
-              Cancelar
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
-            <button type="submit"
+            <button type="submit" title="Guardar usuario" aria-label="Guardar usuario"
               [disabled]="guardando() || form.invalid || estadoAd() === 'verificando' || (esDominio && (estadoAd() === 'no-existe' || estadoAd() === 'bloqueado' || estadoAd() === 'inactivo' || estadoAd() === 'error'))"
               class="px-5 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (guardando()) {
@@ -334,9 +333,6 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                 </svg>
-                Guardando...
-              } @else {
-                {{ editando() ? 'Guardar Cambios' : 'Registrar Usuario' }}
               }
             </button>
           </div>

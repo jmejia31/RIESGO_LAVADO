@@ -6,12 +6,11 @@
       <p class="text-sm text-gray-500 mt-1">Gestione las diferentes categorías y listas de cautela parametrizadas en el sistema.</p>
     </div>
     <div>
-      <button (click)="prepararNuevo()"
+      <button (click)="prepararNuevo()" title="Crear nuevo tipo de lista" aria-label="Crear nuevo tipo de lista"
         class="inline-flex items-center justify-center gap-2 bg-ihss-600 hover:bg-ihss-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm text-sm w-full sm:w-auto">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
         </svg>
-        Nuevo Tipo de Lista
       </button>
     </div>
   </div>
@@ -54,7 +53,7 @@
                 <td class="px-6 py-4 text-gray-800">{{ item.cantidadColumnas || '-' }}</td>
                 <td class="px-6 py-4 text-right">
                   <div class="flex items-center justify-end gap-2">
-                    <button (click)="prepararEdicion(item)"
+                    <button (click)="prepararEdicion(item)" aria-label="Editar tipo de lista"
                       class="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                       title="Editar">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +61,7 @@
                           d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                         </svg>
                     </button>
-                    <button (click)="eliminar(item)"
+                    <button (click)="eliminar(item)" aria-label="Eliminar tipo de lista"
                       class="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                       title="Eliminar">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,7 +97,7 @@
             </h3>
             <p class="text-xs text-gray-500">Parámetros del tipo de archivo y estructura</p>
           </div>
-          <button (click)="cancelar()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal tipo lista">
+          <button (click)="cancelar()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal tipo lista" title="Cerrar modal tipo lista">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -154,17 +153,16 @@
 
           <!-- Botones de Acción -->
           <div class="modal-footer-institutional">
-            <button type="button" (click)="cancelar()" [disabled]="guardando()"
-              class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors">
-              Cancelar
+            <button type="button" (click)="cancelar()" [disabled]="guardando()" title="Cancelar edición del tipo de lista" aria-label="Cancelar edición del tipo de lista"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12"/></svg>
             </button>
-            <button type="submit" [disabled]="guardando() || form.invalid"
-              class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-4 py-2 rounded-xl font-semibold text-xs transition-colors shadow-sm">
+            <button type="submit" [disabled]="guardando() || form.invalid" title="Guardar tipo de lista" aria-label="Guardar tipo de lista"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white transition-colors shadow-sm">
               @if (guardando()) {
                 <div class="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin"></div>
-                Guardando...
               } @else {
-                Guardar
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
               }
             </button>
           </div>

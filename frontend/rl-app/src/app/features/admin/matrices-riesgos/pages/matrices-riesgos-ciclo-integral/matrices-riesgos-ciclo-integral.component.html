@@ -6,11 +6,11 @@
         <p class="text-sm text-slate-600">Captura, riesgo maestro, mitigación y seguimiento operativo en un único módulo.</p>
       </div>
       <nav class="matrices-cycle-nav__tabs flex flex-wrap gap-2" aria-label="Ciclo funcional de Matrices de Riesgos">
-        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'matriz'" [class.text-white]="vista() === 'matriz'" (click)="seleccionarVista('matriz')">Matriz y evaluaciones</button>
-        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'riesgos'" [class.text-white]="vista() === 'riesgos'" (click)="seleccionarVista('riesgos')">Riesgos</button>
-        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'mitigacion'" [class.text-white]="vista() === 'mitigacion'" (click)="seleccionarVista('mitigacion')">Mitigación</button>
-        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'monitoreo'" [class.text-white]="vista() === 'monitoreo'" (click)="seleccionarVista('monitoreo')">Monitoreo</button>
-        <button type="button" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'configuracion'" [class.text-white]="vista() === 'configuracion'" (click)="seleccionarVista('configuracion')">Configuración de cálculo</button>
+        <button type="button" data-ui-control="navigation" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'matriz'" [class.text-white]="vista() === 'matriz'" (click)="seleccionarVista('matriz')">Matriz y evaluaciones</button>
+        <button type="button" data-ui-control="navigation" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'riesgos'" [class.text-white]="vista() === 'riesgos'" (click)="seleccionarVista('riesgos')">Riesgos</button>
+        <button type="button" data-ui-control="navigation" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'mitigacion'" [class.text-white]="vista() === 'mitigacion'" (click)="seleccionarVista('mitigacion')">Mitigación</button>
+        <button type="button" data-ui-control="navigation" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'monitoreo'" [class.text-white]="vista() === 'monitoreo'" (click)="seleccionarVista('monitoreo')">Monitoreo</button>
+        <button type="button" data-ui-control="navigation" class="rounded-xl px-4 py-2 text-sm font-semibold" [class.bg-slate-900]="vista() === 'configuracion'" [class.text-white]="vista() === 'configuracion'" (click)="seleccionarVista('configuracion')">Configuración de cálculo</button>
       </nav>
     </div>
   </div>
