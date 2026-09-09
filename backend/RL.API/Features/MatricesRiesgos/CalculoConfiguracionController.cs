@@ -5,6 +5,7 @@ using RL.API.Core.Security;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Shared.Results;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.MatricesRiesgos;
 
@@ -109,13 +110,7 @@ public sealed class CalculoConfiguracionController : ControllerBase
     public async Task<IActionResult> CambiarEstadoParametroVersion(long id, [FromBody] CambiarEstadoConfiguracionDto dto) => Responder(await _service.CambiarEstadoParametroVersionAsync(id, dto, UsuarioId(), Ip()));
 
     private long UsuarioId() => Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-    private string? Ip()
-    {
-        string? forwarded = Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(forwarded)) return forwarded.Split(',')[0].Trim();
-        string? real = Request.Headers["X-Real-IP"].FirstOrDefault();
-        return !string.IsNullOrWhiteSpace(real) ? real.Trim() : HttpContext.Connection.RemoteIpAddress?.ToString();
-    }
+    private string? Ip() => HttpContext.GetClientIp();
 
     private IActionResult Responder(ServiceResult result) => result.Success
         ? Ok(new { success = true, mensaje = result.Message })

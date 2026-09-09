@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -6,6 +7,7 @@ using System.Text;
 using RL.API.Infrastructure.Caching;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Health;
+using RL.API.Infrastructure.Http;
 using RL.API.Infrastructure.RateLimiting;
 using RL.API.Middleware;
 using RL.API.Features.Auditoria.Application;
@@ -105,6 +107,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // por RemoteIpAddress y las autenticadas por identificador de usuario, sin confiar en headers spoofeables.
 builder.Services.AddApplicationRateLimiting(builder.Configuration);
 
+// La IP de auditoría sólo acepta headers reenviados desde proxies configurados explícitamente.
+builder.Services.Configure<ClientIpOptions>(builder.Configuration.GetSection(ClientIpOptions.SectionName));
+builder.Services.AddScoped<IClientIpResolver, ClientIpResolver>();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    var trustedProxies = builder.Configuration.GetSection($"{ClientIpOptions.SectionName}:TrustedProxies")
+        .Get<string[]>() ?? Array.Empty<string>();
+    foreach (var value in trustedProxies)
+    {
+        if (System.Net.IPAddress.TryParse(value, out var proxy))
+            options.KnownProxies.Add(proxy);
+    }
+});
+
 // BE-02: caché en memoria solo para lecturas estables con TTL acotado e invalidación explícita.
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IApplicationCache, ApplicationMemoryCache>();
@@ -179,6 +196,9 @@ builder.Services.AddSingleton<IMatricesRiesgosReportExportService, MatricesRiesg
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
+
+// Debe ejecutarse antes de autenticación, rate limiting y cualquier auditoría que consuma RemoteIpAddress.
+app.UseForwardedHeaders();
 
 // Proceso de ejecución HTTP: aplica manejo de errores, routing, CORS, autenticación,
 // rate limiting y autorización en un orden explícito para que las políticas por endpoint

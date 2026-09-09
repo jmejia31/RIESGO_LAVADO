@@ -5,6 +5,7 @@ using RL.API.Features.Listas.Application;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Core.Security;
 using RL.API.Shared.Results;
+using RL.API.Infrastructure.Http;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -133,7 +134,7 @@ namespace RL.API.Features.Listas
             try
             {
                 var usuarioId = ObtenerUsuarioId();
-                var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+                var ip = HttpContext.GetClientIp();
                 var result = await _listasService.ObtenerDetalleListaParaExportarAsync(id, usuarioId, ip);
                 return Ok(new { success = true, datos = result.Data });
             }

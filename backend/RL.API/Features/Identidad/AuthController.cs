@@ -5,6 +5,7 @@ using RL.API.Features.Identidad.Application;
 using RL.API.Features.Identidad.Contracts;
 using RL.API.Features.Identidad.Integrations.ActiveDirectory;
 using RL.API.Core.Security;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.Identidad;
 
@@ -37,7 +38,7 @@ public class AuthController : ControllerBase
 
         try
         {
-            var ip       = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ip       = HttpContext.GetClientIp();
             var response = await _authService.LoginAsync(dto, ip ?? "unknown");
 
             if (response == null)
@@ -64,7 +65,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequestDto dto)
     {
-        var ip       = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var ip       = HttpContext.GetClientIp();
         var response = await _authService.RefreshTokenAsync(dto.RefreshToken, ip ?? "unknown");
 
         if (response == null)

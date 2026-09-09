@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Auditoria.Application;
 using RL.API.Features.Auditoria.Contracts;
 using RL.API.Core.Security;
+using RL.API.Infrastructure.Http;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -63,7 +64,7 @@ namespace RL.API.Features.Auditoria
                 return BadRequest(new { success = false, mensaje = "Datos de auditoría inválidos." });
 
             var usuarioId = Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var ip = HttpContext.GetClientIp();
             await _service.RegistrarExportacionAsync(dto, usuarioId, ip);
             return Ok(new { success = true, mensaje = "Auditoría de exportación registrada." });
         }

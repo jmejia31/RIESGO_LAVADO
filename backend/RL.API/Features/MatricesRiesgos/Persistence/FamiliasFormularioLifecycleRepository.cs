@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
 
@@ -284,7 +285,7 @@ public sealed class FamiliasFormularioLifecycleRepository : IFamiliasFormularioL
         HttpContext? httpContext = _httpContextAccessor.HttpContext;
         string? id = httpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         long? usuarioId = long.TryParse(id, out long parsed) ? parsed : null;
-        string? ip = httpContext?.Connection.RemoteIpAddress?.ToString();
+        string? ip = httpContext?.GetClientIp();
         return (usuarioId, ip);
     }
 

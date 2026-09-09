@@ -1096,3 +1096,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Cierre UX-BITACORA-INSTITUTIONAL-REDESIGN.1: `FINAL_SHA=f277308237d0fb60c393c53e025b228673b9ac47`; `QUALITY_GATE_RUN=34401644382`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. Bitacora visual, filtros contractuales, detalle JSON, iconografia canonica y responsive quedan verificados.
 - Regresion final: frontend `768/768`, backend `611/611`, E2E `34/34`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), links, base de datos, Agent Skills y diff check PASS. `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`.
 - Estado vigente: `BRANCH=desarrollo`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. No reanudar FASE 5.3.
+
+## Estado vigente - UX-BITACORA-UAT-CORRECTION-2
+
+- Fecha/hora local: `2026-09-09 15:42 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `a8345460fc36bb3bf05826ceec248f84163057d3`; remoto sin avance durante la intervención. `main` permanece intacta.
+- Bitácora implementada como consola única compacta: filtros contractuales en grid responsive, `Mostrar` junto a limpiar/filtros, tabla `w-full` con distribución proporcional, fechas y entidades compactas, modules de exportación con copy institucional, paginación por ventana y footer sin selector ni overflow.
+- IP: fuente única `IClientIpResolver` para escritores de auditoría, forwarded headers confiables antes de consumidores, normalización IPv4-mapped y loopback, sin fabricar históricos. `AUDIT_IP_WRITERS_FOUND=13`; `AUDIT_IP_WRITERS_USING_CANONICAL_RESOLVER=13`; bypasses directos en escritores `0`.
+- Detalle: valores anteriores/nuevos anidados se serializan como JSON legible; `[object Object]` queda cubierto por guardas y pruebas. No se agregan Resultado, Correlation ID, Regional ni Número Patrono.
+- Verificación: frontend `771/771`, backend `618/618`, E2E serial `36/36`; Bitácora focal `4/4`; TSC spec, lint, build, audit (`0 vulnerabilities`), base de datos, enlaces y diff check PASS. Screenshots automatizados en desktop/tablet/móvil revisados.
+- Pendientes honestos: la ejecución paralela E2E se descartó por caída del servidor Angular y la serial pasó; el validador estructural conserva tres hallazgos legacy fuera de scope; `validate_agent_skills.py` no pudo ejecutarse porque no hay Python operativo disponible. Falta commit/push y Quality Gate exacto del SHA final.
+- `ORACLE_DDL=0`; `ORACLE_DML_MIGRATION=0`; `API_CHANGES=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. No reanudar FASE 5.3.

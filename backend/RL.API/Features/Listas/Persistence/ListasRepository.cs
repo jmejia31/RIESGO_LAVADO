@@ -6,6 +6,7 @@ using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.Listas.Persistence
 {
@@ -1494,21 +1495,7 @@ namespace RL.API.Features.Listas.Persistence
             await cmd.ExecuteNonQueryAsync();
         }
 
-        private string? ObtenerIpCliente()
-        {
-            var context = _httpContextAccessor.HttpContext;
-            if (context == null) return null;
-
-            var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(forwardedFor))
-                return forwardedFor.Split(',')[0].Trim();
-
-            var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(realIp))
-                return realIp.Trim();
-
-            return context.Connection.RemoteIpAddress?.ToString();
-        }
+        private string? ObtenerIpCliente() => _httpContextAccessor.HttpContext?.GetClientIp();
 
         private static string ConstruirMensajeCargaExitosa(int registrosAnteriores, int registrosNuevos)
             => $"Carga exitosa. Se reemplazaron {registrosAnteriores} registros anteriores por {registrosNuevos} registros nuevos.";

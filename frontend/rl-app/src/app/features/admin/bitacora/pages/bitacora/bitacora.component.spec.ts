@@ -15,7 +15,7 @@ describe('BitacoraComponent — rediseño institucional', () => {
     registroId: '123',
     accion: 'UPDATE',
     datosAnt: '{"activo":false}',
-    datosNvo: '{"activo":true}',
+    datosNvo: '{"activo":true,"perfil":{"nivel":"admin"}}',
     usrId: 102,
     usrEmail: 'javier.mejia@ihss.hn',
     ip: '10.0.0.8',
@@ -109,6 +109,8 @@ describe('BitacoraComponent — rediseño institucional', () => {
     expect(dialog.textContent).toContain('Valores anteriores');
     expect(dialog.textContent).toContain('Valores nuevos');
     expect(dialog.textContent).toContain('activo');
+    expect(dialog.textContent).toContain('"nivel"');
+    expect(dialog.textContent).not.toContain('[object Object]');
     expect(dialog.querySelectorAll('button')).toHaveLength(2);
     expect(Array.from(dialog.querySelectorAll('button')).every(button => !(button.textContent ?? '').trim())).toBe(true);
   });
@@ -123,6 +125,44 @@ describe('BitacoraComponent — rediseño institucional', () => {
     expect(component.getDescripcionEvento({ ...evento, accion: 'LOGIN' })).toBe('Inicio de sesión registrado para el usuario.');
     expect(component.getDescripcionEvento({ ...evento, accion: 'DELETE' })).toBe('Eliminación o inactivación registrada para RL_USUARIOS #123.');
     expect(component.getModuloLabel('MonitoreoListas')).toBe('Monitoreo de Listas');
+    expect(component.getModuloLabel('ExportacionMonitoreoListas')).toBe('Monitoreo de Listas');
+    expect(component.getModuloLabel('ExportacionCoincidenciasPatrono')).toBe('Coincidencias Patrono');
+    expect(component.getModuloLabel('ExportacionCoincidenciasEmpleado')).toBe('Coincidencias Empleado');
+    expect(component.getModuloLabel('ExportacionFichaPerfil')).toBe('Ficha de Perfil');
+    expect(component.getModuloLabel('ExportacionListas')).toBe('Listas de Cautela');
     expect(component.getModuloLabel('ModuloNoCatalogado')).toBe('ModuloNoCatalogado');
+  });
+
+  it('renderiza una ventana de paginación compacta y calcula correctamente el rango vacío', () => {
+    component.totalRegistros.set(1310);
+    fixture.detectChanges();
+
+    expect(component.paginationItems().filter(item => item.type === 'page').length).toBeLessThanOrEqual(7);
+    expect(component.paginationItems().some(item => item.type === 'ellipsis')).toBe(true);
+    expect(component.showingRange()).toEqual({ start: 1, end: 10, total: 1310 });
+
+    component.totalRegistros.set(0);
+    fixture.detectChanges();
+    expect(component.showingRange()).toEqual({ start: 0, end: 0, total: 0 });
+  });
+
+  it('normaliza IP mapeada y loopback sin fabricar una dirección histórica', () => {
+    expect(component.getIpDisplay('::ffff:172.19.0.214')).toBe('172.19.0.214');
+    expect(component.getIpDisplay('::1')).toBe('Local (127.0.0.1)');
+    expect(component.getIpDisplay('2001:db8::8')).toBe('2001:db8::8');
+    expect(component.getIpDisplay()).toBe('-');
+  });
+
+  it('ubica el selector de tamaño junto a las acciones y no en el footer', () => {
+    component.datos.set([evento]);
+    component.totalRegistros.set(1);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const pageSize = root.querySelector('#bitacora-page-size');
+    expect(pageSize?.closest('section')?.getAttribute('aria-labelledby')).toBe('bitacora-filters-title');
+    expect(pageSize?.closest('section')?.querySelector('[aria-label="Limpiar filtros de bitácora"]')).not.toBeNull();
+    expect(root.querySelector('[aria-label="Paginación de eventos de auditoría"] #bitacora-page-size')).toBeNull();
+    expect(root.querySelector('[aria-label="Paginación de eventos de auditoría"].overflow-x-auto')).toBeNull();
+    expect(root.querySelector('table')?.classList.contains('w-full')).toBe(true);
   });
 });

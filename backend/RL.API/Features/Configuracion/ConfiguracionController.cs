@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Configuracion.Application;
 using RL.API.Features.Configuracion.Contracts;
 using RL.API.Core.Security;
+using RL.API.Infrastructure.Http;
 using System.Security.Claims;
 
 namespace RL.API.Features.Configuracion;
@@ -163,5 +164,5 @@ public class ConfiguracionController : ControllerBase
         return Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
     }
 
-    private string? ObtenerIp() => HttpContext.Connection.RemoteIpAddress?.ToString();
+    private string? ObtenerIp() => HttpContext.GetClientIp();
 }

@@ -5,6 +5,7 @@ using RL.API.Core.Security;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Shared.Results;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.MatricesRiesgos;
 
@@ -43,12 +44,7 @@ public sealed class MatricesRiesgosGestionController : ControllerBase
     private long ObtenerUsuarioId() => Convert.ToInt64(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
     private string? ObtenerIp()
-    {
-        string? forwardedFor = Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(forwardedFor)) return forwardedFor.Split(',')[0].Trim();
-        string? realIp = Request.Headers["X-Real-IP"].FirstOrDefault();
-        return !string.IsNullOrWhiteSpace(realIp) ? realIp.Trim() : HttpContext.Connection.RemoteIpAddress?.ToString();
-    }
+        => HttpContext.GetClientIp();
 
     private IActionResult Responder(ServiceResult result) => result.Success
         ? Ok(new { success = true, mensaje = result.Message })

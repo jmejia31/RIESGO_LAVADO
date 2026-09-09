@@ -6,6 +6,10 @@ import { AuditoriaDto } from '../../models/auditoria.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 
+export type PaginationItem =
+  | { type: 'page'; page: number }
+  | { type: 'ellipsis'; key: string };
+
 @Component({
   selector: 'app-bitacora',
   standalone: true,
@@ -42,9 +46,35 @@ export class BitacoraComponent implements OnInit {
     return Math.ceil(this.totalRegistros() / this.limite()) || 1;
   });
 
-  paginasArray = computed(() => {
+  paginationItems = computed<PaginationItem[]>(() => {
     const total = this.paginasTotales();
-    return Array.from({ length: total }, (_, i) => i + 1);
+    const current = this.paginaActual();
+
+    if (total <= 1) return [{ type: 'page', page: 1 }];
+
+    const pages = new Set<number>([1, total]);
+    const start = Math.max(2, current - 2);
+    const end = Math.min(total - 1, current + 2);
+    for (let page = start; page <= end; page++) pages.add(page);
+
+    const ordered = [...pages].sort((a, b) => a - b);
+    const items: PaginationItem[] = [];
+    let previous: number | null = null;
+    for (const page of ordered) {
+      if (previous !== null && page - previous > 1) {
+        items.push({ type: 'ellipsis', key: `${previous}-${page}` });
+      }
+      items.push({ type: 'page', page });
+      previous = page;
+    }
+    return items;
+  });
+
+  showingRange = computed(() => {
+    const total = this.totalRegistros();
+    const start = total === 0 ? 0 : (this.paginaActual() - 1) * this.limite() + 1;
+    const end = total === 0 ? 0 : Math.min(this.paginaActual() * this.limite(), total);
+    return { start, end, total };
   });
 
   propiedadesComparadas = computed(() => {
@@ -89,22 +119,22 @@ export class BitacoraComponent implements OnInit {
       const hasAnt = key in objAnt;
       const hasNvo = key in objNvo;
       
-      const stringAnt = hasAnt ? (typeof valAnt === 'object' ? JSON.stringify(valAnt) : String(valAnt)) : null;
-      const stringNvo = hasNvo ? (typeof valNvo === 'object' ? JSON.stringify(valNvo) : String(valNvo)) : null;
+      const stringAnt = hasAnt ? this.serializeAuditValue(valAnt) : null;
+      const stringNvo = hasNvo ? this.serializeAuditValue(valNvo) : null;
       
       const changed = stringAnt !== stringNvo;
 
       if (hasAnt) {
         antList.push({
           key,
-          value: valAnt === null ? 'null' : (typeof valAnt === 'string' ? `"${valAnt}"` : String(valAnt)),
+          value: this.serializeAuditValue(valAnt),
           changed
         });
       }
       if (hasNvo) {
         nvoList.push({
           key,
-          value: valNvo === null ? 'null' : (typeof valNvo === 'string' ? `"${valNvo}"` : String(valNvo)),
+          value: this.serializeAuditValue(valNvo),
           changed
         });
       }
@@ -234,8 +264,22 @@ export class BitacoraComponent implements OnInit {
       case 'AdminUsuarios': return 'Gestión de Usuarios';
       case 'MonitoreoListas': return 'Monitoreo de Listas';
       case 'CargaListas': return 'Carga de Listas';
+      case 'ExportacionListas': return 'Listas de Cautela';
+      case 'ExportacionMonitoreoListas': return 'Monitoreo de Listas';
+      case 'ExportacionCoincidenciasPatrono': return 'Coincidencias Patrono';
+      case 'ExportacionCoincidenciasEmpleado': return 'Coincidencias Empleado';
+      case 'ExportacionFichaPerfil': return 'Ficha de Perfil';
       default: return modulo || 'No indicado';
     }
+  }
+
+  getIpDisplay(ip?: string): string {
+    if (!ip?.trim()) return '-';
+    const normalized = ip.trim().replace(/^\[|\]$/g, '');
+    const mapped = normalized.match(/^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i)?.[1];
+    const value = mapped || normalized;
+    if (value === '::1' || value === '0:0:0:0:0:0:0:1') return 'Local (127.0.0.1)';
+    return value;
   }
 
   getDescripcionEvento(row: AuditoriaDto): string {
@@ -274,7 +318,11 @@ export class BitacoraComponent implements OnInit {
     }
   }
 
-  mathMin(a: number, b: number): number {
-    return Math.min(a, b);
+  private serializeAuditValue(value: unknown): string {
+    if (value === null) return 'null';
+    if (typeof value === 'string') return `"${value}"`;
+    if (typeof value === 'object') return JSON.stringify(value, null, 2) ?? 'null';
+    return String(value);
   }
+
 }

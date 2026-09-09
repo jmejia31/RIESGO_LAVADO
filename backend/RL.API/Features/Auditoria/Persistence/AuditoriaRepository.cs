@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Contracts;
 using RL.API.Infrastructure.Database;
+using RL.API.Infrastructure.Http;
 
 namespace RL.API.Features.Auditoria.Persistence;
 
@@ -49,7 +51,9 @@ public class AuditoriaRepository : IAuditoriaRepository
             throw new InvalidOperationException("La conexión compartida de auditoría debe estar abierta.");
         }
 
-        ip = string.IsNullOrWhiteSpace(ip) ? ObtenerIpCliente() : ip;
+        // La solicitud actual siempre es la autoridad para la IP auditada.
+        // El parámetro sólo sirve para operaciones fuera de un contexto HTTP.
+        ip = ObtenerIpCliente() ?? NormalizarIpProporcionada(ip);
 
         if (string.IsNullOrEmpty(email) && usrId.HasValue)
         {
@@ -101,18 +105,14 @@ public class AuditoriaRepository : IAuditoriaRepository
 
     private string? ObtenerIpCliente()
     {
-        var context = _httpContextAccessor.HttpContext;
-        if (context == null) return null;
+        return _httpContextAccessor.HttpContext?.GetClientIp();
+    }
 
-        var forwardedFor = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(forwardedFor))
-            return forwardedFor.Split(',')[0].Trim();
-
-        var realIp = context.Request.Headers["X-Real-IP"].FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(realIp))
-            return realIp.Trim();
-
-        return context.Connection.RemoteIpAddress?.ToString();
+    private static string? NormalizarIpProporcionada(string? ip)
+    {
+        if (!IPAddress.TryParse(ip?.Trim(), out var parsed)) return string.IsNullOrWhiteSpace(ip) ? null : ip.Trim();
+        if (parsed.IsIPv4MappedToIPv6) parsed = parsed.MapToIPv4();
+        return IPAddress.IsLoopback(parsed) ? "127.0.0.1" : parsed.ToString();
     }
 
     public async Task<(List<AuditoriaDto> Datos, int Total)> ObtenerBitacoraPaginadaAsync(

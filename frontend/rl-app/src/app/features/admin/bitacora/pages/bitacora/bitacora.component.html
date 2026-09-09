@@ -1,8 +1,8 @@
-<div class="w-full space-y-5">
-  <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="bitacora-title">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<div class="w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+  <section class="border-b border-gray-200 px-4 py-4 sm:px-5 sm:py-5" aria-labelledby="bitacora-title">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="flex items-start gap-3">
-        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ihss-50 text-ihss-700 ring-1 ring-ihss-100" aria-hidden="true">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ihss-50 text-ihss-700 ring-1 ring-ihss-100" aria-hidden="true">
           <app-action-icon action="history"></app-action-icon>
         </div>
         <div>
@@ -10,15 +10,15 @@
           <p class="mt-1 max-w-3xl text-sm text-gray-500">Auditoría y registro de acciones, eventos y cambios de datos del SGRLA-IHSS.</p>
         </div>
       </div>
-      <div class="rounded-xl border border-ihss-100 bg-ihss-50 px-3 py-2 text-right text-xs text-ihss-800" aria-live="polite">
+      <div class="rounded-lg border border-ihss-100 bg-ihss-50 px-3 py-1.5 text-right text-xs text-ihss-800" aria-live="polite">
         <span class="block font-semibold">Eventos encontrados</span>
         <span class="text-sm font-bold">{{ totalRegistros() }}</span>
       </div>
     </div>
   </section>
 
-  <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="bitacora-filters-title">
-    <div class="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+  <section class="border-b border-gray-200 px-4 py-3 sm:px-5" aria-labelledby="bitacora-filters-title">
+    <div class="mb-2 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 id="bitacora-filters-title" class="text-sm font-bold uppercase tracking-wide text-gray-800">Filtros de auditoría</h2>
         <p class="text-xs text-gray-500">Refine los eventos por usuario, módulo, acción, entidad y período.</p>
@@ -28,7 +28,7 @@
       }
     </div>
 
-    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-4">
       <div class="flex flex-col">
         <label for="bitacora-search" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Búsqueda general</label>
         <input id="bitacora-search" type="text" [(ngModel)]="filtroBuscar" (ngModelChange)="programarBusquedaAutomatica()"
@@ -90,7 +90,14 @@
       </div>
     }
 
-    <div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4">
+    <div class="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
+      <label for="bitacora-page-size" class="text-xs font-semibold text-gray-500">Mostrar</label>
+      <select id="bitacora-page-size" data-ui-control="selection" [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1); cargarDatos()"
+        class="rounded-lg border border-gray-200 bg-white py-1 pl-2 pr-7 text-xs focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-500/20">
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+      </select>
       <button type="button" (click)="filtrarDocumentosEliminados()" [disabled]="cargando()"
         title="Mostrar documentos eliminados" aria-label="Mostrar documentos eliminados"
         [class]="filtroDocumentosEliminadosActivo()
@@ -106,8 +113,8 @@
     </div>
   </section>
 
-  <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" aria-labelledby="bitacora-results-title">
-    <div class="flex flex-col gap-1 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+  <section class="overflow-hidden" aria-labelledby="bitacora-results-title">
+    <div class="flex flex-col gap-1 border-b border-gray-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
       <div>
         <h2 id="bitacora-results-title" class="text-sm font-bold text-gray-900">Eventos de auditoría</h2>
         <p class="text-xs text-gray-500">Consulte usuario, módulo, acción, entidad, registro y momento del evento.</p>
@@ -128,18 +135,28 @@
           <p class="text-xs text-gray-400">Ajuste la búsqueda, el módulo, la acción, la entidad o el período.</p>
         </div>
       } @else {
-        <table class="min-w-[1180px] w-full text-left text-sm text-gray-700">
+        <table class="min-w-[1120px] w-full table-fixed text-left text-sm text-gray-700">
+          <colgroup>
+            <col class="w-[10%]" />
+            <col class="w-[14%]" />
+            <col class="w-[13%]" />
+            <col class="w-[8%]" />
+            <col class="w-[16%]" />
+            <col class="w-[26%]" />
+            <col class="w-[8%]" />
+            <col class="w-[5%]" />
+          </colgroup>
           <caption class="sr-only">Eventos de auditoría registrados en el SGRLA-IHSS</caption>
           <thead class="border-b border-gray-200 bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
             <tr>
-              <th scope="col" class="w-32 px-4 py-3">Fecha</th>
-              <th scope="col" class="min-w-48 px-4 py-3">Usuario</th>
-              <th scope="col" class="min-w-40 px-4 py-3">Módulo</th>
-              <th scope="col" class="px-4 py-3">Acción</th>
-              <th scope="col" class="min-w-44 px-4 py-3">Entidad / registro</th>
-              <th scope="col" class="min-w-72 px-4 py-3">Descripción del evento</th>
-              <th scope="col" class="px-4 py-3">IP</th>
-              <th scope="col" class="w-20 px-4 py-3 text-center">Detalle</th>
+              <th scope="col" class="px-3 py-2.5">Fecha</th>
+              <th scope="col" class="px-3 py-2.5">Usuario</th>
+              <th scope="col" class="px-3 py-2.5">Módulo</th>
+              <th scope="col" class="px-3 py-2.5">Acción</th>
+              <th scope="col" class="px-3 py-2.5">Entidad / registro</th>
+              <th scope="col" class="px-3 py-2.5">Descripción del evento</th>
+              <th scope="col" class="px-3 py-2.5">IP</th>
+              <th scope="col" class="px-3 py-2.5 text-center">Detalle</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -149,23 +166,23 @@
                   <span class="block font-semibold text-gray-700">{{ row.fecha | date:'dd/MM/yyyy' }}</span>
                   <span class="block text-gray-500">{{ row.fecha | date:'HH:mm:ss' }}</span>
                 </td>
-                <td class="px-4 py-3 align-top">
+                <td class="min-w-0 px-3 py-2.5 align-top">
                   <span class="block max-w-56 truncate font-medium text-gray-900" [title]="row.usrEmail || 'Sistema'">{{ row.usrEmail || 'Sistema' }}</span>
                   @if (row.usrId) {
                     <span class="text-[10px] text-gray-400">ID: {{ row.usrId }}</span>
                   }
                 </td>
-                <td class="px-4 py-3 align-top text-xs text-gray-600">{{ getModuloLabel(row.modulo) }}</td>
-                <td class="whitespace-nowrap px-4 py-3 align-top">
+                <td class="min-w-0 px-3 py-2.5 align-top text-xs text-gray-600">{{ getModuloLabel(row.modulo) }}</td>
+                <td class="whitespace-nowrap px-3 py-2.5 align-top">
                   <span [class]="getBadgeClass(row.accion)" class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">{{ row.accion }}</span>
                 </td>
-                <td class="px-4 py-3 align-top font-mono text-xs text-gray-600" [title]="row.tabla + ' (#' + row.registroId + ')'">
-                  <span class="block max-w-52 truncate">{{ row.tabla }}</span>
+                <td class="min-w-0 px-3 py-2.5 align-top font-mono text-xs text-gray-600" [title]="row.tabla + ' (#' + row.registroId + ')'">
+                  <span class="block truncate">{{ row.tabla }}</span>
                   <span class="block text-gray-400">#{{ row.registroId }}</span>
                 </td>
-                <td class="max-w-80 px-4 py-3 align-top text-xs leading-5 text-gray-600">{{ getDescripcionEvento(row) }}</td>
-                <td class="whitespace-nowrap px-4 py-3 align-top font-mono text-xs text-gray-500" [title]="row.ip || 'IP no disponible'">{{ row.ip || '-' }}</td>
-                <td class="px-4 py-3 text-center align-top">
+                <td class="min-w-0 px-3 py-2.5 align-top text-xs leading-5 text-gray-600" [title]="getDescripcionEvento(row)"><span class="line-clamp-2">{{ getDescripcionEvento(row) }}</span></td>
+                <td class="whitespace-nowrap px-3 py-2.5 align-top font-mono text-xs text-gray-500" [title]="row.ip || 'IP no disponible'">{{ getIpDisplay(row.ip) }}</td>
+                <td class="px-3 py-2.5 text-center align-top">
                   @if (row.datosAnt || row.datosNvo) {
                     <button type="button" (click)="verDetalle(row)" title="Ver detalle de auditoría" aria-label="Ver detalle de auditoría"
                       class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ihss-200 bg-ihss-50 text-ihss-900 transition-colors hover:bg-ihss-100 focus:outline-none focus:ring-2 focus:ring-ihss-500 focus:ring-offset-2">
@@ -181,25 +198,21 @@
         </table>
 
         <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/50 px-4 py-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-          <div>Mostrando {{ (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalRegistros()) }} de {{ totalRegistros() }} eventos</div>
-          <div class="flex flex-wrap items-center gap-3">
-            <label for="bitacora-page-size">Mostrar</label>
-            <select id="bitacora-page-size" [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1); cargarDatos()"
-              class="rounded-lg border border-gray-200 bg-white py-1 pl-2 pr-7 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20">
-              <option [value]="10">10</option>
-              <option [value]="25">25</option>
-              <option [value]="50">50</option>
-            </select>
-            <div class="flex items-center gap-1 overflow-x-auto" aria-label="Paginación de eventos de auditoría">
+          <div>Mostrando {{ showingRange().start }} a {{ showingRange().end }} de {{ showingRange().total }} eventos</div>
+          <div class="flex max-w-full items-center justify-center gap-1" aria-label="Paginación de eventos de auditoría">
               <button type="button" data-ui-control="navigation" (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
                 title="Página anterior de eventos" aria-label="Página anterior de eventos"
                 class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-500 disabled:cursor-not-allowed disabled:opacity-40">
                 <app-action-icon action="previous"></app-action-icon>
               </button>
-              @for (page of paginasArray(); track page) {
-                <button type="button" data-ui-control="navigation" (click)="cambiarPagina(page)" aria-label="Ir a página {{ page }}"
-                  [class]="paginaActual() === page ? 'bg-ihss-900 text-white' : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
-                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500">{{ page }}</button>
+              @for (item of paginationItems(); track item.type === 'page' ? item.page : item.key) {
+                @if (item.type === 'page') {
+                  <button type="button" data-ui-control="navigation" (click)="cambiarPagina(item.page)" aria-label="Ir a página {{ item.page }}"
+                    [class]="paginaActual() === item.page ? 'bg-ihss-900 text-white' : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                    class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500">{{ item.page }}</button>
+                } @else {
+                  <span class="inline-flex h-8 w-6 shrink-0 items-center justify-center text-gray-400" aria-hidden="true">…</span>
+                }
               }
               <button type="button" data-ui-control="navigation" (click)="cambiarPagina(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()"
                 title="Página siguiente de eventos" aria-label="Página siguiente de eventos"
@@ -207,7 +220,6 @@
                 <app-action-icon action="next"></app-action-icon>
               </button>
             </div>
-          </div>
         </div>
       }
     </div>
