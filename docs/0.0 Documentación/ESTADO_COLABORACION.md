@@ -1051,3 +1051,10 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Auditoria fresca: `HTML_TEMPLATES=28`, `INLINE_TEMPLATES=4`, `MODALS=21`; tamaños `SM=1`, `MD=4`, `LG=3`, `XL=8`, `WORKSPACE=5`; `PDF_EXPORTS=5`, `EXCEL_EXPORTS=10`; `DIRECT_EXPORT_WITHOUT_PREVIEW=0`.
 - Regresion verificada en esta intervencion: frontend `749/749`, backend `611/611`, E2E `32/32`; TSC spec, lint, build, audit estricto (`0 vulnerabilities`) y diff check PASS. Se preservan los tres hallazgos estructurales legacy fuera de scope; no se modificaron backend/API/Oracle/dependencias y FASE 5.3 no fue reanudada.
 - Punto exacto: revisar diff, staging explicito, commit/push a `origin/desarrollo`, esperar Quality Gate exacto del SHA final y cerrar solo con `STATUS=completed`, `CONCLUSION=success`.
+
+## Estado de cierre - UX-GLOBAL-RESPONSIVE-EXPORT-PREVIEW.1
+
+- Commit tecnico: `6e8f92bd7d41e9a997d8cd6cc5af9d0c5da99f14`; Quality Gate exacto `34375109588`, `STATUS=completed`, `CONCLUSION=success`, SHA coincidente.
+- El frontend cuenta con `28` HTML y `4` templates inline productivos auditados, `21` modales clasificados (SM `1`, MD `4`, LG `3`, XL `8`, workspace `5`), `5` exportaciones PDF y `10` exportaciones Excel, todas con preview previo y descarga explicita desde el visor compartido.
+- Evidencia: frontend `749/749`, backend `611/611`, E2E `32/32`, TSC spec/lint/build/audit/diff PASS; sin cambios backend/API/Oracle/dependencias. Se preservan los tres hallazgos estructurales legacy fuera de scope y los tres untracked preexistentes.
+- `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3. El commit documental actual requiere su propio Quality Gate exacto antes del cierre final.

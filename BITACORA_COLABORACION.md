@@ -6897,3 +6897,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Archivos nuevos principales: `frontend/rl-app/src/app/shared/report-preview/report-preview.service.ts`, `report-preview.component.ts`, `report-preview.component.html`, `export-preview.regression.spec.ts` y el E2E responsive de preview. Se ajustaron utilitario Excel, productores PDF/Excel, estilos modales y pruebas existentes.
 - Evidencia verificada: frontend `749/749 PASS`; backend `611/611 PASS`; E2E `32/32 PASS`; TSC spec, lint, build, `npm audit` (`0 vulnerabilidades`) y `git diff --check` PASS. Los warnings de build son los presupuestos SCSS/CommonJS preexistentes. La validacion estructural reporta tres hallazgos legacy fuera de este scope; Agent Skills PASS mediante el runtime Python alterno disponible.
 - Estado: `ALL_INTERFACES_AUDITED=PASS`; `ALL_MODALS_AUDITED=PASS`; `PDF_EXPORT_WITHOUT_PREVIEW=0`; `EXCEL_EXPORT_WITHOUT_PREVIEW=0`; `DIRECT_EXPORT_WITHOUT_PREVIEW=0`; `BLOB_URL_CLEANUP=PASS`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. Pendiente commit, push y Quality Gate exacto del SHA final; no reanudar FASE 5.3.
+
+## Registro de cierre - UX-GLOBAL-RESPONSIVE-EXPORT-PREVIEW.1
+
+- Commit tecnico publicado: `6e8f92bd7d41e9a997d8cd6cc5af9d0c5da99f14`; Quality Gate exacto `RUN=34375109588`, `HEAD_SHA=6e8f92bd7d41e9a997d8cd6cc5af9d0c5da99f14`, `STATUS=completed`, `CONCLUSION=success`.
+- Cierre verificado: `ALL_INTERFACES_AUDITED=PASS`; `ALL_MODALS_AUDITED=PASS`; `UNNECESSARY_MODAL_SCROLL=0`; `MODAL_GLOBAL_OVERFLOW=0`; `FIXED_HEIGHT_MODAL_DEBT=0`; `PDF_EXPORTS=5/5` con preview; `EXCEL_EXPORTS=10/10` con preview; `DIRECT_EXPORT_WITHOUT_PREVIEW=0`; `BLOB_URL_CLEANUP=PASS`.
+- Regresion final del codigo: frontend `749/749 PASS`; backend `611/611 PASS`; E2E `32/32 PASS`; TSC spec, lint, build, npm audit (`0 vulnerabilities`) y diff check PASS. No hubo cambios backend/API/Oracle/dependencias. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+- El presente registro documental se publica en un commit posterior y su Quality Gate exacto se verificara antes del cierre definitivo del handoff.
