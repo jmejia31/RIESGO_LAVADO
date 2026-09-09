@@ -1106,3 +1106,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificación: frontend `771/771`, backend `618/618`, E2E serial `36/36`; Bitácora focal `4/4`; TSC spec, lint, build, audit (`0 vulnerabilities`), base de datos, enlaces y diff check PASS. Screenshots automatizados en desktop/tablet/móvil revisados.
 - Pendientes honestos: la ejecución paralela E2E se descartó por caída del servidor Angular y la serial pasó; el validador estructural conserva tres hallazgos legacy fuera de scope; `validate_agent_skills.py` no pudo ejecutarse porque no hay Python operativo disponible. Falta commit/push y Quality Gate exacto del SHA final.
 - `ORACLE_DDL=0`; `ORACLE_DML_MIGRATION=0`; `API_CHANGES=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. No reanudar FASE 5.3.
+
+## Cierre UX-BITACORA-UAT-CORRECTION-2
+
+- Commit técnico `792452b514fe11abf0d4331db4d46cff8d8fd7d4` publicado en `origin/desarrollo`; Quality Gate técnico `34409581255`, `STATUS=completed`, `CONCLUSION=success`.
+- Cierre visual y funcional verificado: consola única compacta, `Mostrar` junto a las acciones superiores, footer sin selector, paginación por ventana (`131` páginas, máximo `9` ítems), rango vacío correcto, tabla a ancho completo, módulos técnicos presentados con copy institucional y detalle JSON anidado sin `[object Object]`.
+- Pipeline IP verificado con `13/13` escritores usando `IClientIpResolver`, sin bypasses directos; pruebas de proxy confiable/no confiable, IPv4-mapped y loopback PASS; sin fabricación de IP histórica. Filtros Bitácora mantienen exactamente el contrato vigente.
+- Regresión final del commit técnico: frontend `771/771`, backend `618/618`, E2E serial `36/36`, Bitácora focal `4/4`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), database scripts, documentation links y diff check PASS. Responsive visual automatizado PASS en desktop, tablet y móvil.
+- Limitaciones declaradas: tres hallazgos del validador estructural son legacy y fuera de scope; Agent Skills no pudo ejecutarse porque el entorno carece de Python operativo. No se declara PASS para esas dos validaciones locales.
+- Documentación append-only publicada en un commit posterior; ese commit requiere su Quality Gate exacto. `ORACLE_DDL=0`; `ORACLE_DML_MIGRATION=0`; `API_CHANGES=0`; `DEPENDENCY_CHANGES=0`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
