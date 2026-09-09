@@ -1,5 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
 import { Buffer } from 'node:buffer';
+import * as ExcelJS from 'exceljs';
 
 function tokenAdministrador(): string {
   const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -19,6 +20,7 @@ const evaluacion = {
   evaVri: 7, evaVrr: 4, evaFechaEval: '2026-08-07T12:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
 };
 const riesgo = { rieId: 7, rieCodigo: 'R-007', rieNombre: 'Riesgo UAT', rieDescripcion: 'Base UAT', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T12:00:00Z' };
+const pdfFixture = '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF';
 
 async function preparar(page: Page): Promise<void> {
   await page.addInitScript(token => {
@@ -30,10 +32,25 @@ async function preparar(page: Page): Promise<void> {
   await page.route('**/api/configuracion/sistema', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', colorPrimario: '#1e3a8a', colorSecundario: '#1d4ed8', timeoutSesion: 30 } }) }));
   await page.route('**/api/configuracion/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
 
-  await page.route('**/api/matrices-riesgos/**', route => {
+  await page.route('**/api/matrices-riesgos/**', async route => {
     const req = route.request();
     const path = new URL(req.url()).pathname;
     const method = req.method();
+    if (path.endsWith('/reportes/consolidado.pdf')) {
+      return route.fulfill({ status: 200, contentType: 'application/pdf', body: Buffer.from(pdfFixture) });
+    }
+    if (path.endsWith('/reportes/consolidado.xlsx')) {
+      const reportWorkbook = new ExcelJS.Workbook();
+      const reportSheet = reportWorkbook.addWorksheet('Coincidencias');
+      reportSheet.addRows([
+        ['Código', 'Nombre', 'Estado'],
+        ['R-001', 'Riesgo UAT 1', 'ACTIVO'],
+        ['R-002', 'Riesgo UAT 2', 'ACTIVO']
+      ]);
+      const reportBuffer = await reportWorkbook.xlsx.writeBuffer();
+      const reportBody = Buffer.isBuffer(reportBuffer) ? reportBuffer : Buffer.from(reportBuffer as ArrayBuffer);
+      return route.fulfill({ status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: reportBody });
+    }
     let datos: unknown = [];
 
     if (path.endsWith('/formulario/version-vigente')) datos = version;
@@ -71,29 +88,32 @@ async function preparar(page: Page): Promise<void> {
 
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
   });
-  await page.route('**/api/matrices-riesgos*', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-    success: true,
-    datos: {
-      items: [{
-        evaId: 20,
-        evaRiesgoId: 7,
-        riesgoCodigo: 'R-007',
-        riesgoNombre: 'Riesgo UAT',
-        evaVersionId: 10,
-        versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
-        versionNumero: 1,
-        estado: 'BORRADOR',
-        vri: 7,
-        vrr: 4,
-        nivelResidual: 'MEDIO',
-        fechaEval: '2026-08-07T12:00:00Z'
-      }],
-      pagina: 1,
-      registrosPorPagina: 10,
-      totalRegistros: 1,
-      totalPaginas: 1
-    }
-  }) }));
+  await page.route('**/api/matrices-riesgos*', route => {
+    const path = new URL(route.request().url()).pathname;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+      success: true,
+      datos: {
+        items: [{
+          evaId: 20,
+          evaRiesgoId: 7,
+          riesgoCodigo: 'R-007',
+          riesgoNombre: 'Riesgo UAT',
+          evaVersionId: 10,
+          versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
+          versionNumero: 1,
+          estado: 'BORRADOR',
+          vri: 7,
+          vrr: 4,
+          nivelResidual: 'MEDIO',
+          fechaEval: '2026-08-07T12:00:00Z'
+        }],
+        pagina: 1,
+        registrosPorPagina: 10,
+        totalRegistros: 1,
+        totalPaginas: 1
+      }
+    }) });
+  });
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
@@ -120,15 +140,17 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
 });
 
 test('preview de exportaciones consolidado conserva el modal dentro del viewport', async ({ page }) => {
-  const pdf = '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF';
-  await page.route('**/api/matrices-riesgos/reportes/consolidado.pdf', route => route.fulfill({
-    status: 200, contentType: 'application/pdf', body: Buffer.from(pdf)
-  }));
-  await page.route('**/api/matrices-riesgos/reportes/consolidado.xlsx', route => route.fulfill({
-    status: 200, contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', body: Buffer.from('fixture-xlsx')
-  }));
-
-  for (const viewport of [{ width: 375, height: 812 }, { width: 768, height: 900 }, { width: 1536, height: 1024 }]) {
+  test.setTimeout(120_000);
+  for (const viewport of [
+    { width: 320, height: 568 },
+    { width: 375, height: 812 },
+    { width: 768, height: 1024 },
+    { width: 1024, height: 768 },
+    { width: 1280, height: 720 },
+    { width: 1366, height: 768 },
+    { width: 1536, height: 1024 },
+    { width: 1920, height: 1080 }
+  ]) {
     await page.setViewportSize(viewport);
     await page.goto('/matrices-riesgos');
     await page.getByRole('tab', { name: 'Consolidado' }).click();
@@ -141,6 +163,9 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     if (!box) throw new Error('No se pudo medir el preview PDF.');
     expect(box.width).toBeLessThanOrEqual(viewport.width);
     expect(box.height).toBeLessThanOrEqual(viewport.height);
+    if (viewport.width >= 1024) {
+      expect(box.width).toBeGreaterThanOrEqual(Math.min(viewport.width * 0.9, 1510 * 0.9));
+    }
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
     await expect(preview).toBeHidden();
@@ -148,6 +173,13 @@ test('preview de exportaciones consolidado conserva el modal dentro del viewport
     await page.getByRole('button', { name: 'Exportar matriz consolidada a Excel' }).click();
     await expect(preview).toBeVisible();
     await expect(preview.locator('[data-excel-preview-table]')).toBeVisible();
+    await expect(preview.getByText('Coincidencias', { exact: true })).toBeVisible();
+    await expect(preview.getByRole('columnheader', { name: 'Código' })).toBeVisible();
+    await expect(preview.getByText('R-001', { exact: true })).toBeVisible();
+    await expect(preview.getByText('Riesgo UAT 1', { exact: true })).toBeVisible();
+    const downloadPromise = page.waitForEvent('download');
+    await preview.getByRole('button', { name: 'Descargar reporte revisado' }).click();
+    expect((await downloadPromise).suggestedFilename()).toBe('Matriz_Riesgos.xlsx');
     await preview.getByRole('button', { name: 'Cerrar vista previa' }).first().click();
   }
 });

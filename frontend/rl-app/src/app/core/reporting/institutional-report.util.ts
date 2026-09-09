@@ -101,12 +101,40 @@ export function resolverMargenesTablaInstitucional(margin?: Record<string, numbe
   };
 }
 
+export function resolverAnchoUtilPdf(doc: jsPDF, margin: Record<string, number>): number {
+  return Math.max(1, doc.internal.pageSize.getWidth() - margin['left'] - margin['right']);
+}
+
+export function resolverAnchoTablaInstitucional(doc: jsPDF, requestedWidth: number | undefined, margin: Record<string, number>): number {
+  const usableWidth = resolverAnchoUtilPdf(doc, margin);
+  return Math.min(typeof requestedWidth === 'number' ? requestedWidth : usableWidth, usableWidth);
+}
+
+function limitarAnchosColumnas(columnStyles: Record<string, any> | undefined, usableWidth: number): Record<string, any> | undefined {
+  if (!columnStyles) return undefined;
+  const entries = Object.entries(columnStyles);
+  const explicitWidth = entries.reduce((total, [, style]) => total + (typeof style?.cellWidth === 'number' ? style.cellWidth : 0), 0);
+  if (explicitWidth <= usableWidth || explicitWidth === 0) return columnStyles;
+  const ratio = usableWidth / explicitWidth;
+  const scaled: Array<[string, any]> = entries.map(([key, style]) => [
+    key,
+    typeof style?.cellWidth === 'number'
+      ? { ...style, cellWidth: Math.max(4, style.cellWidth * ratio) }
+      : style
+  ]);
+  return Object.fromEntries(scaled);
+}
+
 export function autoTableInstitucional(doc: jsPDF, options: Record<string, any>): void {
   const originalDidDrawPage = options['didDrawPage'];
   const margin = resolverMargenesTablaInstitucional(options['margin']);
+  const usableWidth = resolverAnchoUtilPdf(doc, margin);
+  const tableWidth = resolverAnchoTablaInstitucional(doc, options['tableWidth'], margin);
 
   autoTable(doc, {
     ...options,
+    tableWidth,
+    columnStyles: limitarAnchosColumnas(options['columnStyles'], usableWidth),
     showHead: 'everyPage',
     rowPageBreak: 'avoid',
     pageBreak: 'auto',

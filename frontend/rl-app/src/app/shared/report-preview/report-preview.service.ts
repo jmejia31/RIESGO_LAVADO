@@ -3,11 +3,11 @@ import * as ExcelJS from 'exceljs';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import {
   createExcelPreview,
+  createExcelPreviewFromRows,
   downloadBlob,
   ExcelPreviewSheet,
   WorkBook,
-  workbookToBlob,
-  writeFile
+  workbookToBlob
 } from '../../core/utils/excel-export.util';
 
 export type ReportPreviewKind = 'pdf' | 'excel';
@@ -77,10 +77,10 @@ export class ReportPreviewService {
           }
           rows.push(values);
         });
-        return { name: worksheet.name, rows, totalRows: rows.length };
+        return createExcelPreviewFromRows(worksheet.name, rows);
       });
     } catch {
-      sheets = [{ name: 'Reporte', rows: [], totalRows: 0 }];
+      sheets = [createExcelPreviewFromRows('Reporte', [])];
     }
     if (sequence === this.previewSequence) {
       this.state.set({ kind: 'excel', title, description, fileName, blob, sheets });
@@ -96,10 +96,8 @@ export class ReportPreviewService {
   download(): void {
     const current = this.state();
     if (!current) return;
-    if (current.kind === 'excel' && current.workbook) {
-      void writeFile(current.workbook, current.fileName);
-      return;
-    }
+    // La descarga usa exactamente el artefacto que el usuario revisó.
+    // Esto evita regenerar un workbook distinto al previewado.
     downloadBlob(current.blob, current.fileName);
   }
 

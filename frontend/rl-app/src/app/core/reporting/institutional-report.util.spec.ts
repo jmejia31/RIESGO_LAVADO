@@ -11,6 +11,8 @@ import {
   autoTableInstitucional,
   COLORES_REPORTE_INSTITUCIONAL,
   MARGEN_SUPERIOR_TABLA_CONTINUACION_MM,
+  resolverAnchoTablaInstitucional,
+  resolverAnchoUtilPdf,
   resolverMargenesTablaInstitucional
 } from './institutional-report.util';
 
@@ -70,5 +72,25 @@ describe('estándar institucional de reportería', () => {
     agregarPiesInstitucionalesPdf(doc);
     agregarPiesInstitucionalesPdf(doc);
     expect((doc as any).__reporteInstitucionalFinalizado).toBe(true);
+  });
+
+  it('mantiene el ancho efectivo de las tablas dentro de los margenes imprimibles', () => {
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const margin = resolverMargenesTablaInstitucional({ left: 14, right: 14 });
+    const usableWidth = resolverAnchoUtilPdf(doc, margin);
+    expect(resolverAnchoTablaInstitucional(doc, usableWidth + 100, margin)).toBe(usableWidth);
+    autoTableInstitucional(doc, {
+      startY: 50,
+      margin,
+      tableWidth: usableWidth + 100,
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: 90 },
+        2: { cellWidth: 90 }
+      },
+      head: [['A', 'B', 'C']],
+      body: [['Texto', 'Texto', 'Texto']]
+    });
+    expect((doc as any).lastAutoTable).toBeTruthy();
   });
 });

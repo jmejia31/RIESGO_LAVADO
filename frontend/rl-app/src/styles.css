@@ -276,9 +276,9 @@ dialog.modal-backdrop-overlay {
 }
 
 .modal-size-workspace {
-  width: 98.3vw !important;
+  width: min(98.3vw, 1510px) !important;
   max-width: 1510px !important;
-  height: calc(100dvh - 28px) !important;
+  height: min(calc(100dvh - 28px), 1100px) !important;
 }
 
 /* Las variantes conservan su semántica y se adaptan al espacio físico real. */
@@ -321,6 +321,32 @@ dialog.modal-backdrop-overlay {
 /* El workspace aprobado ocupa el lienzo de 1536x1024 con 14px perimetrales. */
 .form-builder-modal-overlay {
   padding: 14px !important;
+}
+
+.report-preview-document {
+  display: block;
+  height: min(72dvh, calc(100dvh - 12rem));
+  min-height: 20rem;
+}
+
+.report-preview-table {
+  min-width: max-content;
+}
+
+.report-preview-context {
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .report-preview-document {
+    height: calc(100dvh - 12rem);
+    min-height: 16rem;
+  }
+
+  .report-preview-table {
+    min-width: 48rem;
+  }
 }
 
 /* Cuando el constructor se abre desde el detalle, permanece como contexto padre. */

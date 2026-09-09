@@ -1058,3 +1058,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - El frontend cuenta con `28` HTML y `4` templates inline productivos auditados, `21` modales clasificados (SM `1`, MD `4`, LG `3`, XL `8`, workspace `5`), `5` exportaciones PDF y `10` exportaciones Excel, todas con preview previo y descarga explicita desde el visor compartido.
 - Evidencia: frontend `749/749`, backend `611/611`, E2E `32/32`, TSC spec/lint/build/audit/diff PASS; sin cambios backend/API/Oracle/dependencias. Se preservan los tres hallazgos estructurales legacy fuera de scope y los tres untracked preexistentes.
 - `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3. El commit documental actual requiere su propio Quality Gate exacto antes del cierre final.
+
+## Estado vigente - UX-GLOBAL-REPORTS-MODALS-EXPORTS-HARDENING.1
+
+- Fecha/hora local: `2026-09-09 12:09 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `9b30705522140932b055ea80a5c0452c5c3a995e`.
+- Auditoria fresca: `28` HTML, `4` templates inline productivos, `21` modales; tamaños `SM=1`, `MD=3`, `LG=3`, `XL=4`, `WORKSPACE=10`. Previews de reportes `16/16` usan workspace; detalles de coincidencias usan workspace.
+- Contratos corregidos: descarga conserva el tipo real (`PDF -> .pdf/application/pdf`, `Excel -> .xlsx/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`); el Blob descargado es el mismo del preview; Excel mantiene cabecera separada y roles KEY_VALUE/SPACER sin conflicto; PDF limita tablas al ancho imprimible.
+- Regresion verificada: frontend `758/758`, backend `611/611`, E2E `32/32`; E2E de XLSX real y viewports responsive PASS; TSC spec, lint, build, npm audit (`0 vulnerabilities`), diff check, documentacion links y Agent Skills PASS.
+- Arquitectura congelada: sin cambios backend/API/Oracle/dependencias, sin cambios de FormulaEngine/calculo/contratos persistidos, `FASE_5_3_REANUDABLE=TRUE`, `FASE_5_3_REANUDADA=FALSE`. El commit y Quality Gate exacto del SHA final quedan pendientes.

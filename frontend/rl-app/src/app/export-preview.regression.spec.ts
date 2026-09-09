@@ -27,7 +27,9 @@ describe('contrato global de vista previa de exportaciones', () => {
     for (const path of collectFiles(appRoot, '.ts').filter(file => !file.endsWith('.spec.ts'))) {
       if (allowed.has(path)) continue;
       const source = readFileSync(path, 'utf8');
-      for (const pattern of [/\bXLSX\.writeFile\s*\(/g, /\bdoc\.save\s*\(/g, /\benlace\.click\s*\(/g]) {
+      const attachmentDownload = /\ba\.download\s*=\s*evi\.nombreArchivo/.test(source);
+      for (const pattern of [/\bXLSX\.writeFile\s*\(/g, /\bdoc\.save\s*\(/g, /\b(?:enlace|anchor|a)\.click\s*\(/g]) {
+        if (attachmentDownload && pattern.source.includes('click')) continue;
         if (pattern.test(source)) violations.push(`${relative(cwd(), path)}: ${pattern}`);
         pattern.lastIndex = 0;
       }
@@ -46,5 +48,24 @@ describe('contrato global de vista previa de exportaciones', () => {
       return /XLSX\.utils|jsPDF|descargarConsolidado/.test(source) && !/reportPreview\.open(?:Pdf|Excel|ExcelBlob)/.test(source);
     });
     expect(missing.map(file => relative(cwd(), file))).toEqual([]);
+  });
+
+  it('mantiene paridad entre el tipo de preview y el artefacto descargado', () => {
+    const servicePath = join(cwd(), 'src', 'app', 'shared', 'report-preview', 'report-preview.service.ts');
+    const utilityPath = join(cwd(), 'src', 'app', 'core', 'utils', 'excel-export.util.ts');
+    const serviceSource = readFileSync(servicePath, 'utf8');
+    const utilitySource = readFileSync(utilityPath, 'utf8');
+    expect(serviceSource).toContain('downloadBlob(current.blob, current.fileName)');
+    expect(serviceSource).not.toContain('writeFile(current.workbook');
+    expect(utilitySource).toContain('normalizarNombreArchivoGeneral');
+    expect(utilitySource).toContain('normalizarNombreArchivoExcel');
+    expect(utilitySource).toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  });
+
+  it('exige que el preview compartido use la superficie workspace', () => {
+    const previewPath = join(cwd(), 'src', 'app', 'shared', 'report-preview', 'report-preview.component.html');
+    const source = readFileSync(previewPath, 'utf8');
+    expect(source).toMatch(/modal-container-card[^>]*modal-size-workspace/);
+    expect(source).not.toMatch(/modal-container-card[^>]*modal-size-xl/);
   });
 });

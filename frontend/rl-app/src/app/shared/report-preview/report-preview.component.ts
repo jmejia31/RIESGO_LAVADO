@@ -20,10 +20,17 @@ export class ReportPreviewComponent implements OnDestroy {
     const total = this.currentSheet()?.totalRows ?? 0;
     return Math.max(1, Math.ceil(total / this.pageSize));
   });
+  readonly headerRow = computed(() => this.currentSheet()?.headerRow ?? null);
+  readonly contextRows = computed(() => this.currentSheet()?.contextRows ?? []);
   readonly currentRows = computed(() => {
-    const rows = this.currentSheet()?.rows ?? [];
+    const rows = this.currentSheet()?.dataRows ?? [];
     const start = this.page() * this.pageSize;
     return rows.slice(start, start + this.pageSize);
+  });
+  readonly currentRowRoles = computed(() => {
+    const roles = this.currentSheet()?.dataRowRoles ?? [];
+    const start = this.page() * this.pageSize;
+    return roles.slice(start, start + this.pageSize);
   });
 
   constructor() {

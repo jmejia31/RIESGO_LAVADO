@@ -18,10 +18,18 @@ export interface WorkBook {
   sheets: Array<{ name: string; sheet: WorkSheet }>;
 }
 
+export type ExcelRowRole = 'TITLE' | 'HEADER' | 'SECTION' | 'KEY_VALUE' | 'PARAGRAPH' | 'DATA' | 'SPACER';
+
 export interface ExcelPreviewSheet {
   name: string;
   rows: unknown[][];
+  rowRoles: ExcelRowRole[];
+  headerRow: unknown[] | null;
+  contextRows: unknown[][];
+  dataRows: unknown[][];
+  dataRowRoles: ExcelRowRole[];
   totalRows: number;
+  sourceRows: number;
 }
 
 const NAVY = 'FF123B63';
@@ -60,7 +68,7 @@ export function construirLibroInstitucional(workbook: WorkBook): ExcelJS.Workboo
 }
 
 export async function writeFile(workbook: WorkBook, fileName: string): Promise<void> {
-  await downloadBlob(await workbookToBlob(workbook), fileName);
+  await downloadBlob(await workbookToBlob(workbook), normalizarNombreArchivoExcel(fileName));
 }
 
 /** Genera el mismo binario que se presenta en el visor, sin iniciar una descarga. */
@@ -77,7 +85,7 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const enlace = document.createElement('a');
   enlace.href = url;
-  enlace.download = normalizarNombreArchivo(fileName);
+  enlace.download = normalizarNombreArchivoGeneral(fileName);
   document.body.appendChild(enlace);
   enlace.click();
   document.body.removeChild(enlace);
@@ -86,11 +94,12 @@ export function downloadBlob(blob: Blob, fileName: string): void {
 
 export function createExcelPreview(workbook: WorkBook): ExcelPreviewSheet[] {
   const sheets = workbook.sheets.length ? workbook.sheets : [{ name: 'Reporte', sheet: { data: [] } }];
-  return sheets.map(({ name, sheet }) => ({
-    name,
-    rows: (sheet.data ?? []).map(row => [...row]),
-    totalRows: sheet.data?.length ?? 0
-  }));
+  return sheets.map(({ name, sheet }) => createExcelPreviewSheet(name, sheet));
+}
+
+/** Construye la vista previa desde filas ya leídas de un XLSX remoto. */
+export function createExcelPreviewFromRows(name: string, rows: unknown[][]): ExcelPreviewSheet {
+  return createExcelPreviewSheet(name, { data: rows });
 }
 
 function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source: WorkSheet): void {
@@ -110,18 +119,22 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
   data.forEach(row => worksheet.addRow(row.map(normalizarValor)));
   if (worksheet.rowCount === 0) worksheet.addRow(['Sin información']);
 
+  const explicitKeyValueRows = normalizarFilas(source['!keyValueRows'] ?? [], worksheet.rowCount);
+  const keyValueRows = explicitKeyValueRows.length ? explicitKeyValueRows : detectarFilasClaveValor(data);
+  const keyValueSet = new Set(keyValueRows);
+  const explicitParagraphRows = normalizarFilas(source['!paragraphRows'] ?? [], worksheet.rowCount);
+  const paragraphRows = explicitParagraphRows;
+  const paragraphSet = new Set(paragraphRows);
   const headerRows = normalizarFilas(
-    source['!headerRows']?.length ? source['!headerRows'] : detectarFilasEncabezado(data),
+    source['!headerRows']?.length ? source['!headerRows'] : detectarFilasEncabezado(data, new Set([...keyValueSet, ...paragraphSet])),
     worksheet.rowCount
-  );
+  ).filter(row => !keyValueSet.has(row) && !paragraphSet.has(row));
   const headerSet = new Set(headerRows);
   const sectionRows = normalizarFilas(
-    source['!sectionRows']?.length ? source['!sectionRows'] : detectarFilasSeccion(data, headerSet),
+    source['!sectionRows']?.length ? source['!sectionRows'] : detectarFilasSeccion(data, new Set([...headerSet, ...keyValueSet, ...paragraphSet])),
     worksheet.rowCount
-  );
+  ).filter(row => !headerSet.has(row) && !keyValueSet.has(row) && !paragraphSet.has(row));
   const sectionSet = new Set(sectionRows);
-  const keyValueRows = normalizarFilas(source['!keyValueRows'] ?? [], worksheet.rowCount);
-  const paragraphRows = normalizarFilas(source['!paragraphRows'] ?? [], worksheet.rowCount);
 
   // Cuerpo: sólo las celdas que realmente existen reciben formato. Esto evita
   // que Excel pinte columnas vacías hasta XFD o más allá del documento real.
@@ -240,7 +253,7 @@ function crearHojaInstitucional(workbook: ExcelJS.Workbook, name: string, source
   worksheet.properties.defaultRowHeight = 18;
 }
 
-function detectarFilasEncabezado(data: unknown[][]): number[] {
+export function detectarFilasEncabezado(data: unknown[][], excludedRows = new Set<number>()): number[] {
   const rows: number[] = [];
   const conocidas = new Set([
     'condición actúa', 'condicion actua', 'número patronal', 'numero patronal',
@@ -248,24 +261,28 @@ function detectarFilasEncabezado(data: unknown[][]): number[] {
     'dni / identificación', 'dni / identidad', 'fecha'
   ]);
 
+  const firstRow = data[0] ?? [];
+  if (esCabeceraTabular(firstRow)) rows.push(1);
+
   for (let index = 1; index < data.length; index++) {
+    if (excludedRows.has(index + 1)) continue;
     const row = data[index];
     const values = row.map(value => String(value ?? '').trim()).filter(Boolean);
     if (values.length < 3) continue;
     const previousValues = (data[index - 1] ?? []).filter(value => String(value ?? '').trim() !== '');
     const first = values[0].toLocaleLowerCase('es-HN');
     const knownHeader = conocidas.has(first) || (first === 'fecha' && values.some(value => value.toLocaleLowerCase('es-HN') === 'usuario'));
-    if (previousValues.length <= 1 || knownHeader) rows.push(index + 1);
+    if ((previousValues.length <= 1 || knownHeader) && !pareceFilaClaveValor(row)) rows.push(index + 1);
   }
 
   return rows;
 }
 
-function detectarFilasSeccion(data: unknown[][], headerRows: Set<number>): number[] {
+function detectarFilasSeccion(data: unknown[][], protectedRows: Set<number>): number[] {
   const rows: number[] = [];
   for (let index = 3; index < data.length; index++) {
     const rowNumber = index + 1;
-    if (headerRows.has(rowNumber)) continue;
+    if (protectedRows.has(rowNumber)) continue;
     const values = data[index].map(value => String(value ?? '').trim()).filter(Boolean);
     if (values.length !== 1) continue;
     const text = values[0].toLocaleLowerCase('es-HN');
@@ -273,6 +290,85 @@ function detectarFilasSeccion(data: unknown[][], headerRows: Set<number>): numbe
     rows.push(rowNumber);
   }
   return rows;
+}
+
+function detectarFilasClaveValor(data: unknown[][]): number[] {
+  return data
+    .map((row, index) => pareceFilaClaveValor(row) ? index + 1 : 0)
+    .filter((row): row is number => row > 0);
+}
+
+function pareceFilaClaveValor(row: unknown[]): boolean {
+  const values = row.map(value => String(value ?? '').trim()).filter(Boolean);
+  if (values.length < 4 || values.length % 2 !== 0) return false;
+
+  const etiquetasConocidas = new Set([
+    'número patronal', 'numero patronal', 'rtn', 'nombre / razón social', 'nombre / razon social',
+    'proveedor ihss', 'lista de coincidencia', 'lista coincidencia', 'estado monitoreo',
+    'fecha coincidencia', 'fecha calificación', 'fecha calificacion', 'registro interno',
+    'origen del registro', 'dni / identificación', 'dni / identificacion', 'nombre completo'
+  ]);
+  const etiquetas = values.filter((_, index) => index % 2 === 0);
+  const valores = values.filter((_, index) => index % 2 === 1);
+  const etiquetasReconocidas = etiquetas.filter(value => {
+    const normalizada = value.replace(/:$/, '').toLocaleLowerCase('es-HN');
+    return etiquetasConocidas.has(normalizada);
+  }).length;
+  const valoresNoEtiquetas = valores.filter(value => {
+    const normalizada = value.replace(/:$/, '').toLocaleLowerCase('es-HN');
+    return !etiquetasConocidas.has(normalizada);
+  }).length;
+  return etiquetasReconocidas >= 2 && valoresNoEtiquetas >= 2;
+}
+
+function esCabeceraTabular(row: unknown[]): boolean {
+  const values = row.map(value => String(value ?? '').trim()).filter(Boolean);
+  return values.length >= 2 && !pareceFilaClaveValor(row);
+}
+
+export function detectarRolesFilasExcel(data: unknown[][], source: WorkSheet = { data }): ExcelRowRole[] {
+  const maxRow = data.length;
+  const explicitKeyValue = new Set(normalizarFilas(source['!keyValueRows'] ?? [], maxRow));
+  const keyValueRows = explicitKeyValue.size ? explicitKeyValue : new Set(detectarFilasClaveValor(data));
+  const paragraphRows = new Set(normalizarFilas(source['!paragraphRows'] ?? [], maxRow));
+  const explicitHeaders = new Set(normalizarFilas(source['!headerRows'] ?? [], maxRow));
+  const detectedHeaders = new Set(detectarFilasEncabezado(data, new Set([...keyValueRows, ...paragraphRows])));
+  const headers = explicitHeaders.size ? explicitHeaders : detectedHeaders;
+  const sections = new Set(normalizarFilas(source['!sectionRows'] ?? [], maxRow));
+
+  return data.map((row, index) => {
+    const rowNumber = index + 1;
+    if (row.every(value => String(value ?? '').trim() === '')) return 'SPACER';
+    if (keyValueRows.has(rowNumber)) return 'KEY_VALUE';
+    if (paragraphRows.has(rowNumber)) return 'PARAGRAPH';
+    if (sections.has(rowNumber)) return 'SECTION';
+    if (headers.has(rowNumber) && !keyValueRows.has(rowNumber) && !paragraphRows.has(rowNumber)) return 'HEADER';
+    if (rowNumber === 1) return 'TITLE';
+    return 'DATA';
+  });
+}
+
+function createExcelPreviewSheet(name: string, source: WorkSheet): ExcelPreviewSheet {
+  const rows = (source.data ?? []).map(row => [...row]);
+  const rowRoles = detectarRolesFilasExcel(rows, source);
+  const headerIndex = rowRoles.findIndex(role => role === 'HEADER');
+  const headerRow = headerIndex >= 0 ? rows[headerIndex] : null;
+  const contextRows = headerIndex > 0 ? rows.slice(0, headerIndex) : [];
+  const dataStart = headerIndex >= 0 ? headerIndex + 1 : 0;
+  const dataRows = rows.slice(dataStart);
+  const dataRowRoles = rowRoles.slice(dataStart);
+
+  return {
+    name,
+    rows,
+    rowRoles,
+    headerRow,
+    contextRows,
+    dataRows,
+    dataRowRoles,
+    totalRows: dataRows.length,
+    sourceRows: rows.length
+  };
 }
 
 function resolverCabeceraPrincipal(data: unknown[][], headerRows: number[], explicit?: number): number {
@@ -335,7 +431,12 @@ function normalizarNombreHoja(name: string): string {
   return (limpio || 'Reporte').slice(0, 31);
 }
 
-function normalizarNombreArchivo(fileName: string): string {
-  const limpio = (fileName || 'Reporte.xlsx').replace(/[\\/:*?"<>|]/g, '_');
+export function normalizarNombreArchivoGeneral(fileName: string): string {
+  const limpio = (fileName || 'Reporte').replace(/[\\/:*?"<>|]/g, '_').trim();
+  return limpio || 'Reporte';
+}
+
+export function normalizarNombreArchivoExcel(fileName: string): string {
+  const limpio = normalizarNombreArchivoGeneral(fileName || 'Reporte');
   return limpio.replace(/\.(xls|xlsx)$/i, '') + '.xlsx';
 }

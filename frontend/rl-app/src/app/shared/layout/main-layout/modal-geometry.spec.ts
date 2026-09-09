@@ -155,4 +155,31 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
     }
     expect(violations).toEqual([]);
   });
+
+  it('5. los previews y las superficies tabulares de alta densidad usan workspace', () => {
+    const appRoot = join(cwd(), 'src', 'app');
+    const sources: Array<{ path: string; source: string }> = [];
+    const collect = (root: string) => {
+      for (const entry of readdirSync(root)) {
+        const path = join(root, entry);
+        if (statSync(path).isDirectory()) collect(path);
+        else if (path.endsWith('.html')) sources.push({ path, source: readFileSync(path, 'utf8') });
+      }
+    };
+    collect(appRoot);
+    const preview = sources.find(({ path }) => path.endsWith('shared\\report-preview\\report-preview.component.html'));
+    expect(preview?.source).toMatch(/modal-container-card[^>]*modal-size-workspace/);
+
+    const highDensity = sources.filter(({ source }) => /data-modal-density="(?:wide-table|history-form)"/.test(source));
+    expect(highDensity.length).toBeGreaterThan(0);
+    for (const { source } of highDensity) {
+      expect(source).toMatch(/modal-container-card[^>]*modal-size-workspace|modal-container-card[^>]*modal-size-xl/);
+    }
+  });
+
+  it('6. el visor PDF usa geometria dependiente del viewport', () => {
+    const source = readFileSync(join(cwd(), 'src', 'app', 'shared', 'report-preview', 'report-preview.component.html'), 'utf8');
+    expect(source).toContain('report-preview-document');
+    expect(source).not.toMatch(/h-\[[0-9]+px\]/);
+  });
 });

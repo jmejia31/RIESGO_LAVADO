@@ -1,6 +1,6 @@
 @if (preview.state(); as state) {
   <div class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="report-preview-title" data-report-preview>
-    <div class="modal-container-card modal-size-xl w-full max-w-[90rem]">
+    <div class="modal-container-card modal-size-workspace">
       <header class="modal-header-institutional gap-4">
         <div class="min-w-0">
           <h2 id="report-preview-title" class="truncate text-base font-bold text-slate-900 sm:text-lg">{{ state.title }}</h2>
@@ -14,48 +14,62 @@
 
       <div class="modal-body-scrollable min-h-0 space-y-4">
         @if (state.kind === 'pdf' && state.pdfUrl) {
-          <iframe [src]="state.pdfUrl" title="Documento PDF en vista previa" class="h-[calc(100dvh-13rem)] min-h-[24rem] w-full rounded-xl border border-slate-200 shadow-sm"></iframe>
+          <iframe [src]="state.pdfUrl" title="Documento PDF en vista previa" class="report-preview-document w-full rounded-xl border border-slate-200 shadow-sm"></iframe>
         } @else if (state.kind === 'excel') {
           @if (state.sheets; as sheets) {
-          <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <div>
-              <p class="text-sm font-semibold text-slate-800">Vista previa del libro Excel</p>
-              <p class="text-xs text-slate-500">{{ currentSheet()?.totalRows ?? 0 }} filas en la hoja seleccionada</p>
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div>
+                <p class="text-sm font-semibold text-slate-800">Vista previa del libro Excel</p>
+                <p class="text-xs text-slate-500">{{ currentSheet()?.totalRows ?? 0 }} filas de datos en la hoja seleccionada</p>
+              </div>
+              <nav class="flex max-w-full flex-wrap gap-2" aria-label="Hojas del libro Excel">
+                @for (sheet of sheets; track sheet.name; let i = $index) {
+                  <button type="button" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" [class.bg-blue-900]="selectedSheet() === i" [class.text-white]="selectedSheet() === i" [class.border-blue-900]="selectedSheet() === i" [class.bg-white]="selectedSheet() !== i" [class.text-slate-700]="selectedSheet() !== i" (click)="selectSheet(i)">{{ sheet.name }}</button>
+                }
+              </nav>
             </div>
-            <nav class="flex max-w-full flex-wrap gap-2" aria-label="Hojas del libro Excel">
-              @for (sheet of sheets; track sheet.name; let i = $index) {
-                <button type="button" class="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500" [class.bg-blue-900]="selectedSheet() === i" [class.text-white]="selectedSheet() === i" [class.border-blue-900]="selectedSheet() === i" [class.bg-white]="selectedSheet() !== i" [class.text-slate-700]="selectedSheet() !== i" (click)="selectSheet(i)">{{ sheet.name }}</button>
-              }
-            </nav>
-          </div>
-          <div class="overflow-x-auto rounded-xl border border-slate-200" data-excel-preview-table>
-            <table class="min-w-full border-collapse text-left text-xs">
-              @if (currentRows().length > 0) {
-                <thead class="bg-slate-900 text-white">
-                  <tr>
-                    @for (cell of currentRows()[0]; track $index) { <th class="whitespace-nowrap px-3 py-2 font-semibold">{{ cell }}</th> }
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (row of currentRows().slice(1); track $index) {
-                    <tr class="border-t border-slate-200 even:bg-slate-50">
-                      @for (cell of row; track $index) { <td class="max-w-[28rem] px-3 py-2 align-top text-slate-700">{{ cell }}</td> }
+
+            @if (contextRows().length > 0) {
+              <div class="report-preview-context rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-700" data-excel-preview-context>
+                @for (row of contextRows(); track $index) {
+                  <p class="border-b border-slate-100 py-1 last:border-b-0">{{ row.join(' | ') }}</p>
+                }
+              </div>
+            }
+
+            <div class="overflow-x-auto rounded-xl border border-slate-200" data-excel-preview-table>
+              <table class="report-preview-table min-w-full border-collapse text-left text-xs">
+                @if (headerRow(); as header) {
+                  <thead class="sticky top-0 z-10 bg-slate-900 text-white">
+                    <tr>
+                      @for (cell of header; track $index) { <th class="whitespace-nowrap px-3 py-2 font-semibold">{{ cell }}</th> }
                     </tr>
+                  </thead>
+                }
+                <tbody>
+                  @if (currentRows().length > 0) {
+                    @for (row of currentRows(); track $index; let rowIndex = $index) {
+                      <tr class="border-t border-slate-200 even:bg-slate-50" [attr.data-excel-row-role]="currentRowRoles()[rowIndex]">
+                        @for (cell of row; track $index) {
+                          <td class="max-w-[28rem] px-3 py-2 align-top text-slate-700" [class.font-semibold]="currentRowRoles()[rowIndex] === 'SECTION' || currentRowRoles()[rowIndex] === 'HEADER'">{{ cell }}</td>
+                        }
+                      </tr>
+                    }
+                  } @else {
+                    <tr><td class="px-3 py-8 text-center text-slate-500">La hoja no contiene filas para revisar.</td></tr>
                   }
                 </tbody>
-              } @else {
-                <tbody><tr><td class="px-3 py-8 text-center text-slate-500">La hoja no contiene filas para revisar.</td></tr></tbody>
-              }
-            </table>
-          </div>
-          <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-              <span>Filas de revisión {{ currentSheet()?.totalRows ? page() * pageSize + 1 : 0 }}–{{ Math.min((page() + 1) * pageSize, currentSheet()?.totalRows ?? 0) }} de {{ currentSheet()?.totalRows ?? 0 }}</span>
-            <div class="flex items-center gap-2">
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="previousPage()" [disabled]="page() === 0" title="Filas anteriores" aria-label="Filas anteriores"><app-action-icon action="previous" /></button>
-              <span>Página {{ page() + 1 }} de {{ pageCount() }}</span>
-              <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="nextPage()" [disabled]="page() >= pageCount() - 1" title="Filas siguientes" aria-label="Filas siguientes"><app-action-icon action="next" /></button>
+              </table>
             </div>
-          </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <span>Filas de datos {{ currentSheet()?.totalRows ? page() * pageSize + 1 : 0 }}-{{ Math.min((page() + 1) * pageSize, currentSheet()?.totalRows ?? 0) }} de {{ currentSheet()?.totalRows ?? 0 }}</span>
+              <div class="flex items-center gap-2">
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="previousPage()" [disabled]="page() === 0" title="Filas anteriores" aria-label="Filas anteriores"><app-action-icon action="previous" /></button>
+                <span>Página {{ page() + 1 }} de {{ pageCount() }}</span>
+                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="nextPage()" [disabled]="page() >= pageCount() - 1" title="Filas siguientes" aria-label="Filas siguientes"><app-action-icon action="next" /></button>
+              </div>
+            </div>
           }
         }
       </div>
