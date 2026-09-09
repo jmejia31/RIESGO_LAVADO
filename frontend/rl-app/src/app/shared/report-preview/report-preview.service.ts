@@ -93,12 +93,50 @@ export class ReportPreviewService {
     return value;
   }
 
-  download(): void {
+  async download(): Promise<boolean> {
     const current = this.state();
-    if (!current) return;
+    if (!current) return false;
     // La descarga usa exactamente el artefacto que el usuario revisó.
     // Esto evita regenerar un workbook distinto al previewado.
-    downloadBlob(current.blob, current.fileName);
+    try {
+      downloadBlob(current.blob, current.fileName);
+    } catch {
+      await this.notificarDescargaFallida(current);
+      return false;
+    }
+
+    await this.notificarDescargaIniciada(current);
+    return true;
+  }
+
+  private async notificarDescargaIniciada(current: ReportPreviewState): Promise<void> {
+    const Swal = await import('sweetalert2');
+    const contenido = current.title.replace(/^Vista previa (?:del|de la|de los|de las|de)\s+/i, '').trim();
+    await Swal.default.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Descarga iniciada',
+      text: contenido ? `Descarga iniciada: ${contenido}.` : 'Descarga iniciada correctamente.',
+      showConfirmButton: false,
+      timer: 3500,
+      timerProgressBar: true
+    });
+  }
+
+  private async notificarDescargaFallida(current: ReportPreviewState): Promise<void> {
+    const Swal = await import('sweetalert2');
+    const contenido = current.title.replace(/^Vista previa (?:del|de la|de los|de las|de)\s+/i, '').trim();
+    await Swal.default.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'error',
+      title: 'No fue posible iniciar la descarga',
+      text: contenido ? `No fue posible iniciar la descarga de ${contenido}.` : 'No fue posible iniciar la descarga del reporte.',
+      showConfirmButton: false,
+      timer: 4500,
+      timerProgressBar: true
+    });
   }
 
   close(): void {

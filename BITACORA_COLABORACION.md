@@ -6920,3 +6920,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Correccion de portabilidad de la guarda de geometria en `7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`, publicada en `origin/desarrollo`; el path del preview se resuelve con `join` para que la prueba sea identica en Windows y CI Linux.
 - Quality Gate del commit tecnico: `RUN=34388711402`; `HEAD_SHA=7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; `STATUS=completed`; `CONCLUSION=success`. Regresion verificada: frontend `758/758`, backend `611/611`, E2E `32/32`; sin cambios backend/API/Oracle/dependencias.
 - El cierre documental se publica en un commit posterior y su Quality Gate exacto sera el SHA final del handoff. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+
+## Registro UX-GLOBAL-EXPORT-DOWNLOAD-SEMANTICS.1
+
+- Fecha/hora local: `2026-09-09 13:30 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `2a4ccbf40a6fef1ecfb1d7fe4a62a2b0c00a3cba`. Se preservan `.vscode/`, `agosto_rest.txt` y el PDF de requisitos sin stagear; `main` permanece intacta.
+- Alcance: correccion frontend exclusiva de la semantica de exportacion. Se auditaron `14` aperturas de preview productivas (`10` Excel y `4` PDF) en Cargar Listas, Coincidencias, Monitoreo de Listas y Matrices.
+- Se eliminaron las tres alertas de exito prematuras posteriores a `openExcel`; los loaders existentes se cierran antes de presentar el preview. La confirmacion de descarga queda centralizada en `ReportPreviewService.download()`, usa el Blob previewado y emite un toast no bloqueante unicamente despues del click real. La ruta de error no emite exito y el preview permanece abierto.
+- Guardas y pruebas: `PREVIEW_OPEN_SUCCESS_ALERTS=0`; pruebas del servicio cubren PDF/Excel sin notificacion al abrir, descarga iniciada y fallo de descarga; la guarda global revisa ventanas funcionales posteriores a cada apertura de preview.
+- Regresion verificada en esta intervencion: frontend `762/762`; backend Release `611/611`; E2E `32/32`; TSC spec, lint, build, `npm audit --audit-level=high` (`0 vulnerabilities`) y `git diff --check` PASS. La primera ejecucion backend fue bloqueada por el proceso local del backend; se identifico por ruta exacta, se detuvo esa instancia y la repeticion paso.
+- Restricciones preservadas: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. Pendiente commit, push y Quality Gate exacto del SHA final.

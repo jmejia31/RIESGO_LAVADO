@@ -16,6 +16,17 @@ function collectFiles(root: string, extension: string): string[] {
   return files;
 }
 
+function findPrematureDownloadMessages(source: string): string[] {
+  const violations: string[] = [];
+  const previewCall = /reportPreview\.open(?:Pdf|Excel|ExcelBlob)\s*\(/g;
+  for (const match of source.matchAll(previewCall)) {
+    const block = source.slice(match.index ?? 0, (match.index ?? 0) + 1800);
+    const hasSuccessAlert = /(?:Swal(?:\.default)?\.fire|mostrarMensaje|toast)[\s\S]{0,900}(?:icon\s*:\s*['"]success['"]|[ÉE]xito|exitosamente|descargad|se exportaron)/i.test(block);
+    if (hasSuccessAlert) violations.push(block.slice(0, 120).replace(/\s+/g, ' '));
+  }
+  return violations;
+}
+
 describe('contrato global de vista previa de exportaciones', () => {
   it('no permite descargas directas desde productores de reportes', () => {
     const appRoot = join(cwd(), 'src', 'app');
@@ -60,6 +71,15 @@ describe('contrato global de vista previa de exportaciones', () => {
     expect(utilitySource).toContain('normalizarNombreArchivoGeneral');
     expect(utilitySource).toContain('normalizarNombreArchivoExcel');
     expect(utilitySource).toContain('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  });
+
+  it('impide anunciar éxito de descarga al abrir el preview', () => {
+    const appRoot = join(cwd(), 'src', 'app');
+    const violations: string[] = [];
+    for (const path of collectFiles(appRoot, '.ts').filter(file => !file.endsWith('.spec.ts'))) {
+      violations.push(...findPrematureDownloadMessages(readFileSync(path, 'utf8')).map(message => `${relative(cwd(), path)}: ${message}`));
+    }
+    expect(violations).toEqual([]);
   });
 
   it('exige que el preview compartido use la superficie workspace', () => {

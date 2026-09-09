@@ -312,19 +312,13 @@ export class CoincidenciasPatronoComponent implements OnInit {
             }
           ).subscribe({
             next: () => {
+              Swal.default.close();
                 void this.reportPreview.openExcel(
                   wb,
                   fileName,
                   'Vista previa del reporte de coincidencias de patronos',
                   'Revise los registros de la fecha seleccionada antes de descargar el archivo.'
                 );
-              Swal.default.fire({
-                allowOutsideClick: false,
-                title: 'Exito',
-                text: `Se exportaron ${registros.length} registros exitosamente.`,
-                icon: 'success',
-                confirmButtonColor: '#1e3a8a'
-              });
             },
             error: err => {
               console.error('No se pudo registrar auditoría de exportación:', err);

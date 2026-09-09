@@ -46,7 +46,7 @@ export class ReportPreviewComponent implements OnDestroy {
   }
 
   download(): void {
-    this.preview.download();
+    void this.preview.download();
   }
 
   selectSheet(index: number): void {

@@ -1072,3 +1072,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - La guarda de geometria quedó portable entre Windows y CI Linux en `7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; no se modificaron contratos ni productivo backend.
 - Quality Gate tecnico exacto: `RUN=34388711402`; `SHA=7f18dc9d6fa9dd33cd98b0a08df737ecb75346f9`; `STATUS=completed`; `CONCLUSION=success`. Frontend `758/758`, backend `611/611`, E2E `32/32`; npm audit sin vulnerabilidades.
 - Este registro documental requiere el Quality Gate de su propio SHA final. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3.
+
+## Estado vigente - UX-GLOBAL-EXPORT-DOWNLOAD-SEMANTICS.1
+
+- Fecha/hora local: `2026-09-09 13:30 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `2a4ccbf40a6fef1ecfb1d7fe4a62a2b0c00a3cba`.
+- Se corrigio la semantica global de descargas del preview compartido: abrir un preview ya no anuncia exito; `ReportPreviewService.download()` descarga el artefacto actual y notifica `Descarga iniciada` solo despues del trigger del navegador. El error de trigger muestra un mensaje de error y no falso exito.
+- Inventario verificado: `14` aperturas de preview productivas (`10` Excel, `4` PDF) en `6` archivos productores. No quedaron mensajes `Se exportaron ... exitosamente` en los bloques posteriores a `openPdf/openExcel`.
+- Regresion: frontend `762/762`, backend `611/611`, E2E `32/32`, TSC spec, lint, build, audit y diff check PASS. Guardas de preview y pruebas del servicio PASS. Sin cambios backend/API/Oracle/dependencias.
+- Punto de continuacion: stage explicito de los siete archivos de codigo/pruebas y estos dos documentos, commit, push a `origin/desarrollo`, Quality Gate del SHA final exacto y cierre. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.

@@ -290,6 +290,7 @@ export class CargarListasComponent implements OnInit {
           XLSX.utils.book_append_sheet(wb, ws, item.lista);
 
           const fileName = `${this.nombreArchivoSeguro(item.lista)}_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+          Swal.default.close();
             void this.reportPreview.openExcel(
               wb,
               fileName,
@@ -297,13 +298,6 @@ export class CargarListasComponent implements OnInit {
               'Revise los registros de la lista antes de descargar el archivo.'
             );
 
-          Swal.default.fire({
-            allowOutsideClick: false,
-            title: 'Éxito',
-            text: `Se exportaron ${registros.length} registros exitosamente.`,
-            icon: 'success',
-            confirmButtonColor: '#1e3a8a'
-          });
         },
         error: (err) => {
           this.exportandoTipoId.set(null);
