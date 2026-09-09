@@ -72,7 +72,7 @@ function isAction(attrs: string): boolean {
   return /\(click\)|\(ngSubmit\)|type\s*=\s*["']submit["']/i.test(attrs);
 }
 
-type SemanticAction = 'edit' | 'view' | 'delete' | 'create' | 'save' | 'close' | 'cancel' | 'refresh' | 'retry' | 'clear-filters' | 'export-excel' | 'export-pdf' | 'upload' | 'download' | 'print' | 'sync';
+type SemanticAction = 'edit' | 'view' | 'delete' | 'create' | 'save' | 'close' | 'cancel' | 'refresh' | 'retry' | 'clear-filters' | 'filter' | 'export-excel' | 'export-pdf' | 'upload' | 'download' | 'print' | 'sync';
 
 const SEMANTIC_ACTION_RULES: Array<{ action: SemanticAction; pattern: RegExp }> = [
   { action: 'close', pattern: /^(?:cerrar|close)\b/i },
@@ -81,6 +81,7 @@ const SEMANTIC_ACTION_RULES: Array<{ action: SemanticAction; pattern: RegExp }> 
   { action: 'refresh', pattern: /^(?:actualizar|recargar|refrescar|refresh)\b/i },
   { action: 'sync', pattern: /^(?:sincronizar|sync)\b/i },
   { action: 'clear-filters', pattern: /^(?:limpiar(?: filtros)?|restablecer filtros|mostrar todos|show all|clear filters?)\b/i },
+  { action: 'filter', pattern: /^(?:filtrar|filter|mostrar documentos eliminados)\b/i },
   { action: 'edit', pattern: /^(?:editar|modificar|edit)\b/i },
   { action: 'view', pattern: /^(?:ver|consultar|visualizar|mostrar|view)\b/i },
   { action: 'delete', pattern: /^(?:eliminar|borrar|remover|delete)\b/i },

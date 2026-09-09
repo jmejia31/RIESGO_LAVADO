@@ -1,30 +1,57 @@
-<div class="w-full space-y-6">
-
-  <!-- Encabezado -->
-  <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-      <h2 class="text-2xl font-bold text-gray-800">Bitácora de Sistema</h2>
-      <p class="text-sm text-gray-500">Auditoría y registro de acciones realizadas en la plataforma.</p>
+<div class="w-full space-y-5">
+  <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6" aria-labelledby="bitacora-title">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex items-start gap-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-ihss-50 text-ihss-700 ring-1 ring-ihss-100" aria-hidden="true">
+          <app-action-icon action="history"></app-action-icon>
+        </div>
+        <div>
+          <h1 id="bitacora-title" class="text-xl font-bold text-gray-900 sm:text-2xl">Bitácora General del Sistema</h1>
+          <p class="mt-1 max-w-3xl text-sm text-gray-500">Auditoría y registro de acciones, eventos y cambios de datos del SGRLA-IHSS.</p>
+        </div>
+      </div>
+      <div class="rounded-xl border border-ihss-100 bg-ihss-50 px-3 py-2 text-right text-xs text-ihss-800" aria-live="polite">
+        <span class="block font-semibold">Eventos encontrados</span>
+        <span class="text-sm font-bold">{{ totalRegistros() }}</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Filtros Avanzados -->
-  <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+  <section class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="bitacora-filters-title">
+    <div class="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 id="bitacora-filters-title" class="text-sm font-bold uppercase tracking-wide text-gray-800">Filtros de auditoría</h2>
+        <p class="text-xs text-gray-500">Refine los eventos por usuario, módulo, acción, entidad y período.</p>
+      </div>
+      @if (filtroDocumentosEliminadosActivo()) {
+        <span class="inline-flex w-fit items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 ring-1 ring-red-600/10">Documentos eliminados</span>
+      }
+    </div>
 
-      <!-- Búsqueda General -->
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
       <div class="flex flex-col">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Buscar</label>
-        <input type="text" [(ngModel)]="filtroBuscar" (ngModelChange)="programarBusquedaAutomatica()"
-          placeholder="Usuario, tabla, IP..."
-          class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
+        <label for="bitacora-search" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Búsqueda general</label>
+        <input id="bitacora-search" type="text" [(ngModel)]="filtroBuscar" (ngModelChange)="programarBusquedaAutomatica()"
+          placeholder="Usuario, tabla, IP o ID de registro"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors placeholder:text-gray-400 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20" />
       </div>
 
-      <!-- Acción -->
       <div class="flex flex-col">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Acción</label>
-        <select [(ngModel)]="filtroAccion" (ngModelChange)="onFiltroAccionChange()"
-          class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
+        <label for="bitacora-module" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Módulo</label>
+        <select id="bitacora-module" [(ngModel)]="filtroModulo" (ngModelChange)="onFiltroModuloChange()"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20">
+          <option value="">Todos</option>
+          <option value="Auth">Autenticación (Auth)</option>
+          <option value="AdminUsuarios">Gestión de Usuarios</option>
+          <option value="MonitoreoListas">Monitoreo de Listas</option>
+          <option value="CargaListas">Carga de Listas</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col">
+        <label for="bitacora-action" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Acción</label>
+        <select id="bitacora-action" [(ngModel)]="filtroAccion" (ngModelChange)="onFiltroAccionChange()"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20">
           <option value="">Todas</option>
           <option value="INSERT">INSERT (Crear)</option>
           <option value="UPDATE">UPDATE (Modificar)</option>
@@ -36,263 +63,224 @@
         </select>
       </div>
 
-      <!-- Módulo -->
       <div class="flex flex-col">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Módulo</label>
-        <select [(ngModel)]="filtroModulo" (ngModelChange)="onFiltroModuloChange()"
-          class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white font-medium text-gray-700">
-          <option value="">Todos</option>
-          <option value="Auth">Autenticación (Auth)</option>
-          <option value="AdminUsuarios">Gestión de Usuarios</option>
-          <option value="MonitoreoListas">Monitoreo de Listas</option>
-          <option value="CargaListas">Carga de Listas</option>
-        </select>
+        <label for="bitacora-table" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Entidad / tabla</label>
+        <input id="bitacora-table" type="text" [(ngModel)]="filtroTabla" (ngModelChange)="programarBusquedaAutomatica()"
+          placeholder="Ej. RL_USUARIOS"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 font-mono text-sm text-gray-700 transition-colors placeholder:font-sans placeholder:text-gray-400 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20" />
       </div>
 
-      <!-- Fecha Inicio -->
       <div class="flex flex-col">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Desde</label>
-        <input type="date" [(ngModel)]="filtroFechaInicio" (ngModelChange)="programarBusquedaAutomatica()"
-          class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white" />
+        <label for="bitacora-start-date" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Fecha inicial</label>
+        <input id="bitacora-start-date" type="date" [(ngModel)]="filtroFechaInicio" (ngModelChange)="programarBusquedaAutomatica()"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20" />
       </div>
 
-      <!-- Fecha Fin -->
       <div class="flex flex-col">
-        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Hasta</label>
-        <input type="date" [(ngModel)]="filtroFechaFin" (ngModelChange)="programarBusquedaAutomatica()"
-          class="px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm bg-white" />
+        <label for="bitacora-end-date" class="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-500">Fecha final</label>
+        <input id="bitacora-end-date" type="date" [(ngModel)]="filtroFechaFin" (ngModelChange)="programarBusquedaAutomatica()"
+          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20" />
       </div>
-
     </div>
 
     @if (errorCarga()) {
-      <div class="p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl">
-        {{ errorCarga() }}
+      <div class="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <span class="font-semibold">Consulta no disponible:</span>
+        <span>{{ errorCarga() }}</span>
       </div>
     }
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-      <button (click)="filtrarDocumentosEliminados()" [disabled]="cargando()" title="Filtrar documentos eliminados" aria-label="Filtrar documentos eliminados"
+    <div class="mt-4 flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-4">
+      <button type="button" (click)="filtrarDocumentosEliminados()" [disabled]="cargando()"
+        title="Mostrar documentos eliminados" aria-label="Mostrar documentos eliminados"
         [class]="filtroDocumentosEliminadosActivo()
-          ? 'px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold text-xs transition-colors shadow-sm'
-          : 'px-4 py-2 border border-red-200 rounded-xl bg-red-50 text-red-700 hover:bg-red-100 font-semibold text-xs transition-colors'">
+          ? 'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+          : 'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-red-200 bg-red-50 text-red-700 transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'">
         <app-action-icon action="filter"></app-action-icon>
       </button>
-
-      <div class="flex justify-end gap-2 w-full sm:w-auto">
-        <button (click)="limpiarFiltros()" [disabled]="cargando()" title="Limpiar filtros de bitácora" aria-label="Limpiar filtros de bitácora"
-          class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-semibold text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
-            <app-action-icon action="clear-filters"></app-action-icon>
-          </button>
-      </div>
+      <button type="button" (click)="limpiarFiltros()" [disabled]="cargando()"
+        title="Limpiar filtros de bitácora" aria-label="Limpiar filtros de bitácora"
+        class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+        <app-action-icon action="clear-filters"></app-action-icon>
+      </button>
     </div>
-  </div>
+  </section>
 
-  <!-- Tabla y Paginación -->
-  <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+  <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm" aria-labelledby="bitacora-results-title">
+    <div class="flex flex-col gap-1 border-b border-gray-100 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div>
+        <h2 id="bitacora-results-title" class="text-sm font-bold text-gray-900">Eventos de auditoría</h2>
+        <p class="text-xs text-gray-500">Consulte usuario, módulo, acción, entidad, registro y momento del evento.</p>
+      </div>
+      <span class="text-xs font-medium text-gray-500">{{ totalRegistros() }} resultados</span>
+    </div>
 
-    <div class="overflow-x-auto rounded-xl border border-gray-200">
+    <div class="overflow-x-auto">
       @if (cargando()) {
-        <div class="py-20 flex flex-col items-center justify-center gap-3">
-          <svg class="animate-spin h-8 w-8 text-ihss-900" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p class="text-sm font-medium text-gray-500">Cargando registros...</p>
+        <div class="flex min-h-48 flex-col items-center justify-center gap-3 p-6" aria-live="polite">
+          <app-action-icon action="refresh" [loading]="true" class="h-8 w-8 text-ihss-700"></app-action-icon>
+          <p class="text-sm font-medium text-gray-500">Cargando eventos de auditoría...</p>
+        </div>
+      } @else if (datos().length === 0) {
+        <div class="flex min-h-48 flex-col items-center justify-center gap-2 p-6 text-center">
+          <app-action-icon action="history" class="h-10 w-10 text-gray-300"></app-action-icon>
+          <p class="text-sm font-medium text-gray-600">No se encontraron eventos de auditoría con los filtros seleccionados.</p>
+          <p class="text-xs text-gray-400">Ajuste la búsqueda, el módulo, la acción, la entidad o el período.</p>
         </div>
       } @else {
-        @if (datos().length === 0) {
-          <div class="py-20 flex flex-col items-center justify-center gap-2">
-            <svg class="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-sm font-medium text-gray-500">No se encontraron registros en la bitácora.</p>
-          </div>
-        } @else {
-          <table class="min-w-[1120px] w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-              <tr>
-                <th class="px-6 py-3 text-left">Fecha y Hora</th>
-                <th class="px-6 py-3 text-left">Usuario</th>
-                <th class="px-6 py-3 text-left">Acción</th>
-                <th class="px-6 py-3 text-left">Tabla Afectada</th>
-                <th class="px-6 py-3 text-left">ID Registro</th>
-                <th class="px-6 py-3 text-left">Módulo</th>
-                <th class="px-6 py-3 text-left">IP</th>
-                <th class="px-6 py-3 text-center">Detalle</th>
+        <table class="min-w-[1180px] w-full text-left text-sm text-gray-700">
+          <caption class="sr-only">Eventos de auditoría registrados en el SGRLA-IHSS</caption>
+          <thead class="border-b border-gray-200 bg-gray-50 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+            <tr>
+              <th scope="col" class="w-32 px-4 py-3">Fecha</th>
+              <th scope="col" class="min-w-48 px-4 py-3">Usuario</th>
+              <th scope="col" class="min-w-40 px-4 py-3">Módulo</th>
+              <th scope="col" class="px-4 py-3">Acción</th>
+              <th scope="col" class="min-w-44 px-4 py-3">Entidad / registro</th>
+              <th scope="col" class="min-w-72 px-4 py-3">Descripción del evento</th>
+              <th scope="col" class="px-4 py-3">IP</th>
+              <th scope="col" class="w-20 px-4 py-3 text-center">Detalle</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (row of datos(); track row.audId) {
+              <tr class="transition-colors hover:bg-ihss-50/40">
+                <td class="whitespace-nowrap px-4 py-3 align-top text-xs text-gray-600">
+                  <span class="block font-semibold text-gray-700">{{ row.fecha | date:'dd/MM/yyyy' }}</span>
+                  <span class="block text-gray-500">{{ row.fecha | date:'HH:mm:ss' }}</span>
+                </td>
+                <td class="px-4 py-3 align-top">
+                  <span class="block max-w-56 truncate font-medium text-gray-900" [title]="row.usrEmail || 'Sistema'">{{ row.usrEmail || 'Sistema' }}</span>
+                  @if (row.usrId) {
+                    <span class="text-[10px] text-gray-400">ID: {{ row.usrId }}</span>
+                  }
+                </td>
+                <td class="px-4 py-3 align-top text-xs text-gray-600">{{ getModuloLabel(row.modulo) }}</td>
+                <td class="whitespace-nowrap px-4 py-3 align-top">
+                  <span [class]="getBadgeClass(row.accion)" class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">{{ row.accion }}</span>
+                </td>
+                <td class="px-4 py-3 align-top font-mono text-xs text-gray-600" [title]="row.tabla + ' (#' + row.registroId + ')'">
+                  <span class="block max-w-52 truncate">{{ row.tabla }}</span>
+                  <span class="block text-gray-400">#{{ row.registroId }}</span>
+                </td>
+                <td class="max-w-80 px-4 py-3 align-top text-xs leading-5 text-gray-600">{{ getDescripcionEvento(row) }}</td>
+                <td class="whitespace-nowrap px-4 py-3 align-top font-mono text-xs text-gray-500" [title]="row.ip || 'IP no disponible'">{{ row.ip || '-' }}</td>
+                <td class="px-4 py-3 text-center align-top">
+                  @if (row.datosAnt || row.datosNvo) {
+                    <button type="button" (click)="verDetalle(row)" title="Ver detalle de auditoría" aria-label="Ver detalle de auditoría"
+                      class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ihss-200 bg-ihss-50 text-ihss-900 transition-colors hover:bg-ihss-100 focus:outline-none focus:ring-2 focus:ring-ihss-500 focus:ring-offset-2">
+                      <app-action-icon action="view"></app-action-icon>
+                    </button>
+                  } @else {
+                    <span class="text-xs text-gray-400" aria-label="Sin detalle de valores">-</span>
+                  }
+                </td>
               </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200 text-sm text-gray-700">
-              @for (row of datos(); track row.audId) {
-                <tr class="hover:bg-gray-50/50 transition-colors">
-                  <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
-                    {{ row.fecha | date:'dd/MM/yyyy HH:mm:ss' }}
-                  </td>
-                  <td class="px-6 py-4">
-                    <span class="font-medium text-gray-900 block">{{ row.usrEmail || 'Sistema' }}</span>
-                    @if (row.usrId) {
-                      <span class="text-[10px] text-gray-400">ID: {{ row.usrId }}</span>
-                    }
-                  </td>
-                  <td class="px-6 py-4 whitespace-nowrap">
-                    <span [class]="getBadgeClass(row.accion)" class="inline-flex px-2.5 py-1 rounded text-xs font-semibold">
-                      {{ row.accion }}
-                    </span>
-                  </td>
-                  <td class="px-6 py-4 font-mono text-xs text-gray-600">
-                    {{ row.tabla }}
-                  </td>
-                  <td class="px-6 py-4 text-xs font-semibold text-gray-700">
-                    {{ row.registroId }}
-                  </td>
-                  <td class="px-6 py-4 text-xs text-gray-500">
-                    {{ row.modulo || '-' }}
-                  </td>
-                  <td class="px-6 py-4 text-xs text-gray-500 font-mono">
-                    {{ row.ip || '-' }}
-                  </td>
-                  <td class="px-6 py-4 text-center whitespace-nowrap">
-                    @if (row.datosAnt || row.datosNvo) {
-                      <button (click)="verDetalle(row)" title="Ver detalle de auditoría" aria-label="Ver detalle de auditoría"
-                        class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-ihss-50 hover:bg-ihss-100 rounded-lg transition-colors border border-ihss-200">
-            <app-action-icon action="view"></app-action-icon>
-          </button>
-                    } @else {
-                      <span class="text-xs text-gray-400">-</span>
-                    }
-                  </td>
-                </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/50 px-4 py-3 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div>Mostrando {{ (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalRegistros()) }} de {{ totalRegistros() }} eventos</div>
+          <div class="flex flex-wrap items-center gap-3">
+            <label for="bitacora-page-size">Mostrar</label>
+            <select id="bitacora-page-size" [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1); cargarDatos()"
+              class="rounded-lg border border-gray-200 bg-white py-1 pl-2 pr-7 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-600/20">
+              <option [value]="10">10</option>
+              <option [value]="25">25</option>
+              <option [value]="50">50</option>
+            </select>
+            <div class="flex items-center gap-1 overflow-x-auto" aria-label="Paginación de eventos de auditoría">
+              <button type="button" data-ui-control="navigation" (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1"
+                title="Página anterior de eventos" aria-label="Página anterior de eventos"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-500 disabled:cursor-not-allowed disabled:opacity-40">
+                <app-action-icon action="previous"></app-action-icon>
+              </button>
+              @for (page of paginasArray(); track page) {
+                <button type="button" data-ui-control="navigation" (click)="cambiarPagina(page)" aria-label="Ir a página {{ page }}"
+                  [class]="paginaActual() === page ? 'bg-ihss-900 text-white' : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'"
+                  class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-500">{{ page }}</button>
               }
-            </tbody>
-          </table>
-
-          <!-- Paginación -->
-          <div class="px-6 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-t border-gray-150 bg-gray-50/30">
-            <div class="text-xs text-gray-500">
-              Mostrando {{ (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalRegistros()) }} de {{ totalRegistros() }} registros
-            </div>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3 text-xs text-gray-500">
-              <span>Mostrar</span>
-              <select [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1); cargarDatos()"
-                class="border border-gray-200 rounded-xl pl-3 pr-8 py-1 focus:outline-none bg-white">
-                <option [value]="10">10</option>
-                <option [value]="25">25</option>
-                <option [value]="50">50</option>
-              </select>
-
-              <div class="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-                <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1" title="Página anterior" aria-label="Página anterior"
-                  class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                @for (page of paginasArray(); track page) {
-                  <button data-ui-control="navigation" (click)="cambiarPagina(page)" aria-label="Ir a página {{ page }}"
-                    [class]="paginaActual() === page
-                      ? 'bg-ihss-900 text-white font-bold'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all">
-                    {{ page }}
-                  </button>
-                }
-
-                <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()" title="Página siguiente" aria-label="Página siguiente"
-                  class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+              <button type="button" data-ui-control="navigation" (click)="cambiarPagina(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()"
+                title="Página siguiente de eventos" aria-label="Página siguiente de eventos"
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-500 disabled:cursor-not-allowed disabled:opacity-40">
+                <app-action-icon action="next"></app-action-icon>
+              </button>
             </div>
           </div>
-        }
+        </div>
       }
     </div>
-  </div>
+  </section>
 
-  <!-- Modal de Visor de Cambios JSON -->
   @if (modalDetalleAbierto()) {
-    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true">
-      <div class="modal-container-card modal-size-lg">
-
-          <div class="modal-header-institutional items-start">
-            <div>
-              <h3 class="text-base sm:text-lg font-bold text-gray-900">Detalle de Valores Auditados</h3>
-              <p class="text-xs text-gray-500 mt-0.5">
-                Registro ID: {{ registroSeleccionado()?.audId }} | Tabla: {{ registroSeleccionado()?.tabla }}
-                <span class="mx-2 text-gray-300">|</span>
-                Usuario: <span class="font-semibold text-gray-700">{{ registroSeleccionado()?.usrEmail || 'Sistema' }}</span>
-                <span class="mx-2 text-gray-300">|</span>
-                Fecha: <span class="font-semibold text-gray-700">{{ registroSeleccionado()?.fecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
-              </p>
-            </div>
-            <button (click)="cerrarModalDetalle()" class="rounded-xl p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" aria-label="Cerrar modal auditoría" title="Cerrar modal auditoría">
-            <app-action-icon action="close"></app-action-icon>
-          </button>
-          </div>
-
-          <div class="modal-body-scrollable space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-              <!-- Datos Anteriores -->
-              <div class="flex flex-col space-y-2">
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Valores Anteriores</span>
-                @if (propiedadesComparadas().esJson) {
-                  <div class="border border-gray-250 rounded-xl overflow-hidden bg-gray-50 divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
-                    @for (item of propiedadesComparadas().ant; track item.key) {
-                      <div class="p-3 flex justify-between items-start gap-4 text-xs font-mono transition-colors"
-                           [class]="item.changed ? 'bg-red-50 text-red-800 border-l-4 border-red-500 pl-2' : 'text-gray-700'">
-                        <span class="font-semibold text-gray-500 shrink-0" [class.text-red-700]="item.changed">"{{ item.key }}":</span>
-                        <span class="text-right break-all">{{ item.value }}</span>
-                      </div>
-                    }
-                    @if (propiedadesComparadas().ant.length === 0) {
-                      <div class="p-4 text-xs text-gray-400 italic text-center">Sin valores anteriores</div>
-                    }
-                  </div>
-                } @else {
-                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs font-mono text-gray-800 overflow-x-auto min-h-[150px] max-h-[400px]">
-{{ formatJson(registroSeleccionado()?.datosAnt) }}
-                  </pre>
-                }
-              </div>
-
-              <!-- Datos Nuevos -->
-              <div class="flex flex-col space-y-2">
-                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Valores Nuevos</span>
-                @if (propiedadesComparadas().esJson) {
-                  <div class="border border-gray-250 rounded-xl overflow-hidden bg-gray-50 divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
-                    @for (item of propiedadesComparadas().nvo; track item.key) {
-                      <div class="p-3 flex justify-between items-start gap-4 text-xs font-mono transition-colors"
-                           [class]="item.changed ? 'bg-emerald-50 text-emerald-800 border-l-4 border-emerald-500 pl-2' : 'text-gray-700'">
-                        <span class="font-semibold text-gray-500 shrink-0" [class.text-emerald-700]="item.changed">"{{ item.key }}":</span>
-                        <span class="text-right break-all" [class.font-bold]="item.changed">{{ item.value }}</span>
-                      </div>
-                    }
-                    @if (propiedadesComparadas().nvo.length === 0) {
-                      <div class="p-4 text-xs text-gray-400 italic text-center">Sin valores nuevos</div>
-                    }
-                  </div>
-                } @else {
-                  <pre class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs font-mono text-gray-800 overflow-x-auto min-h-[150px] max-h-[400px]">
-{{ formatJson(registroSeleccionado()?.datosNvo) }}
-                  </pre>
-                }
-              </div>
-
+    <div class="modal-backdrop-overlay" role="dialog" aria-modal="true" aria-labelledby="bitacora-detail-title" aria-describedby="bitacora-detail-description">
+      <div class="modal-container-card modal-size-xl" (click)="$event.stopPropagation()">
+        <div class="modal-header-institutional items-start gap-4">
+          <div class="min-w-0">
+            <h2 id="bitacora-detail-title" class="text-base font-bold text-gray-900 sm:text-lg">Detalle de Auditoría</h2>
+            <p id="bitacora-detail-description" class="mt-1 text-xs text-gray-500">Consulte los valores anteriores y nuevos registrados para este evento.</p>
+            <div class="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600 sm:grid-cols-2 xl:grid-cols-4">
+              <span><strong class="text-gray-500">Registro:</strong> {{ registroSeleccionado()?.audId }}</span>
+              <span class="min-w-0 truncate" [title]="registroSeleccionado()?.tabla || ''"><strong class="text-gray-500">Tabla:</strong> {{ registroSeleccionado()?.tabla }}</span>
+              <span class="min-w-0 truncate" [title]="registroSeleccionado()?.usrEmail || 'Sistema'"><strong class="text-gray-500">Usuario:</strong> {{ registroSeleccionado()?.usrEmail || 'Sistema' }}</span>
+              <span><strong class="text-gray-500">Fecha:</strong> {{ registroSeleccionado()?.fecha | date:'dd/MM/yyyy HH:mm:ss' }}</span>
             </div>
           </div>
-
-          <div class="modal-footer-institutional">
-            <button (click)="cerrarModalDetalle()" title="Cerrar detalle de auditoría" aria-label="Cerrar detalle de auditoría" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors">
+          <button type="button" (click)="cerrarModalDetalle()" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-ihss-500" aria-label="Cerrar detalle de auditoría" title="Cerrar detalle de auditoría">
             <app-action-icon action="close"></app-action-icon>
           </button>
-          </div>
+        </div>
 
+        <div class="modal-body-scrollable space-y-4">
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <section class="min-w-0" aria-labelledby="bitacora-old-values">
+              <h3 id="bitacora-old-values" class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Valores anteriores</h3>
+              @if (propiedadesComparadas().esJson) {
+                <div class="max-h-[min(28rem,45dvh)] overflow-y-auto rounded-xl border border-gray-200 bg-gray-50">
+                  @for (item of propiedadesComparadas().ant; track item.key) {
+                    <div class="flex items-start justify-between gap-4 border-b border-gray-200 p-3 text-xs font-mono last:border-b-0" [class]="item.changed ? 'border-l-4 border-l-red-500 bg-red-50 text-red-800' : 'text-gray-700'">
+                      <span class="shrink-0 font-semibold text-gray-500" [class.text-red-700]="item.changed">"{{ item.key }}":</span>
+                      <span class="break-all text-right">{{ item.value }}</span>
+                    </div>
+                  }
+                  @if (propiedadesComparadas().ant.length === 0) {
+                    <div class="p-4 text-center text-xs italic text-gray-400">Sin valores anteriores para este evento.</div>
+                  }
+                </div>
+              } @else {
+                <pre class="min-h-36 max-h-[min(28rem,45dvh)] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-800">{{ formatJson(registroSeleccionado()?.datosAnt) }}</pre>
+              }
+            </section>
+
+            <section class="min-w-0" aria-labelledby="bitacora-new-values">
+              <h3 id="bitacora-new-values" class="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">Valores nuevos</h3>
+              @if (propiedadesComparadas().esJson) {
+                <div class="max-h-[min(28rem,45dvh)] overflow-y-auto rounded-xl border border-gray-200 bg-gray-50">
+                  @for (item of propiedadesComparadas().nvo; track item.key) {
+                    <div class="flex items-start justify-between gap-4 border-b border-gray-200 p-3 text-xs font-mono last:border-b-0" [class]="item.changed ? 'border-l-4 border-l-emerald-500 bg-emerald-50 text-emerald-800' : 'text-gray-700'">
+                      <span class="shrink-0 font-semibold text-gray-500" [class.text-emerald-700]="item.changed">"{{ item.key }}":</span>
+                      <span class="break-all text-right" [class.font-bold]="item.changed">{{ item.value }}</span>
+                    </div>
+                  }
+                  @if (propiedadesComparadas().nvo.length === 0) {
+                    <div class="p-4 text-center text-xs italic text-gray-400">Sin valores nuevos para este evento.</div>
+                  }
+                </div>
+              } @else {
+                <pre class="min-h-36 max-h-[min(28rem,45dvh)] overflow-auto rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-800">{{ formatJson(registroSeleccionado()?.datosNvo) }}</pre>
+              }
+            </section>
+          </div>
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" (click)="cerrarModalDetalle()" title="Cerrar detalle de auditoría" aria-label="Cerrar detalle de auditoría"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-ihss-500">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
+        </div>
       </div>
     </div>
   }
-
 </div>

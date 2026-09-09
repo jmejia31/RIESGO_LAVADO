@@ -1084,3 +1084,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Cierre tecnico publicado en `38d5427186e55acecfb88244563a16c9b73358bc`; Quality Gate exacto `RUN=34395823979`, `STATUS=completed`, `CONCLUSION=success`. La confirmacion de descarga se emite unicamente despues del click real en `ReportPreviewService.download()`; no se muestran exitos prematuros al abrir PDF o Excel.
 - UX-GLOBAL-EXPORT-DOWNLOAD-SEMANTICS.1 queda funcionalmente verificada: `PREVIEW_OPEN_SUCCESS_ALERTS=0`; `PREVIEW_OPEN_DOWNLOAD_SUCCESS_MESSAGES=0`; `DOWNLOAD_SUCCESS_ONLY_AFTER_DOWNLOAD_ACTION=PASS`; `REPORT_PREVIEW_DOWNLOAD_PARITY=PASS`; `DIRECT_EXPORT_WITHOUT_PREVIEW=0`; `EXPORT_TYPE_MISMATCH=0`. Regresion: frontend `762/762`, backend `611/611`, E2E `32/32`; audit sin vulnerabilidades.
 - Cierre documental final pendiente de su propio Quality Gate; preservar `BACKEND_PRODUCT_CHANGES=0`, `API_CHANGES=0`, `ORACLE_DDL=0`, `ORACLE_DML=0`, `DEPENDENCY_CHANGES=0`, `FASE_5_3_REANUDABLE=TRUE` y `FASE_5_3_REANUDADA=FALSE`.
+
+## Estado vigente - UX-BITACORA-INSTITUTIONAL-REDESIGN.1
+
+- Fecha/hora local: `2026-09-09 14:15 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `520052f5105c0c428aa2fc9b376add363767acde`. El remoto avanzo respecto del SHA de referencia y se utilizo el HEAD fresco; `main` permanece intacta.
+- Bitacora rediseñada como consola institucional compacta: titulo y copy contextual SGRLA-IHSS, filtros reales del contrato, tabla densa y legible, detalle JSON con comparacion anterior/nuevo, iconos canonicos y responsive movil/tablet/desktop.
+- Filtros soportados: `buscar`, `modulo`, `accion`, `tabla`, `fechaInicio`, `fechaFin`. Se preservan debounce automatico, paginacion, filtro de documentos eliminados y valores tecnicos originales; no se agregan columnas o datos inexistentes.
+- Evidencia verificada en esta intervencion: frontend `768/768`, E2E `34/34` serial, backend Release PASS, TSC spec, lint, build, npm audit sin vulnerabilidades, documentacion links, scripts de base de datos y diff check PASS. E2E focal Bitacora PASS con viewports `1366x768` y `375x812`; overflow global false.
+- Scope: solo Bitacora, pruebas focales y una guarda UX existente; `BACKEND_PRODUCT_CHANGES=0`, `API_CHANGES=0`, `ORACLE_DDL=0`, `ORACLE_DML=0`, `DEPENDENCY_CHANGES=0`. Se preservan los tres untracked preexistentes y FASE 5.3 no ha sido reanudada.
+- Estado actual: implementacion y regresion listas; falta commit, push y Quality Gate exacto del SHA final. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.

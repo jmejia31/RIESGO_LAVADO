@@ -141,7 +141,7 @@ export class BitacoraComponent implements OnInit {
         console.error('Error al cargar bitácora:', err);
         this.datos.set([]);
         this.totalRegistros.set(0);
-        this.errorCarga.set(err?.error?.mensaje || 'No se pudo cargar la bitacora con los filtros indicados.');
+        this.errorCarga.set(err?.error?.mensaje || 'No se pudo cargar la bitácora con los filtros indicados.');
         this.cargando.set(false);
       }
     });
@@ -218,13 +218,39 @@ export class BitacoraComponent implements OnInit {
   getBadgeClass(accion: string): string {
     switch (accion) {
       case 'INSERT': return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10';
-      case 'UPDATE': return 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/10';
+      case 'UPDATE': return 'bg-ihss-50 text-ihss-700 ring-1 ring-ihss-600/10';
       case 'DELETE': return 'bg-red-50 text-red-700 ring-1 ring-red-600/10';
       case 'VER': return 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/10';
-      case 'UPLOAD': return 'bg-purple-50 text-purple-700 ring-1 ring-purple-600/10';
+      case 'UPLOAD': return 'bg-sky-50 text-sky-700 ring-1 ring-sky-600/10';
       case 'LOGIN': return 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/10';
       case 'LOGOUT': return 'bg-slate-50 text-slate-700 ring-1 ring-slate-600/10';
       default: return 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/10';
+    }
+  }
+
+  getModuloLabel(modulo?: string): string {
+    switch (modulo) {
+      case 'Auth': return 'Autenticación';
+      case 'AdminUsuarios': return 'Gestión de Usuarios';
+      case 'MonitoreoListas': return 'Monitoreo de Listas';
+      case 'CargaListas': return 'Carga de Listas';
+      default: return modulo || 'No indicado';
+    }
+  }
+
+  getDescripcionEvento(row: AuditoriaDto): string {
+    const entidad = row.tabla || 'la entidad auditada';
+    const registro = row.registroId ? ` #${row.registroId}` : '';
+
+    switch (row.accion.toUpperCase()) {
+      case 'LOGIN': return 'Inicio de sesión registrado para el usuario.';
+      case 'LOGOUT': return 'Cierre de sesión registrado para el usuario.';
+      case 'INSERT': return `Creación de registro en ${entidad}${registro}.`;
+      case 'UPDATE': return `Modificación del registro${registro} en ${entidad}.`;
+      case 'DELETE': return `Eliminación o inactivación registrada para ${entidad}${registro}.`;
+      case 'VER': return `Consulta registrada sobre ${entidad}${registro}.`;
+      case 'UPLOAD': return `Carga registrada en ${entidad}${registro}.`;
+      default: return `Evento ${row.accion} registrado en ${entidad}${registro}.`;
     }
   }
 
