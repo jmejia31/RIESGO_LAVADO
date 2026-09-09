@@ -108,7 +108,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly errorFamilias = signal<string | null>(null);
 
   readonly modalGestorFamiliasAbierto = signal<boolean>(false);
-  readonly modalVerFamiliaAbierto = signal<FamiliaFormularioDto | null>(null);
   readonly detalleFamiliaDinamicoAbierto = signal(false);
   readonly filtroBuscarFamilia = signal('');
   readonly filtroEstadoFamilia = signal('TODAS');
@@ -643,8 +642,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
     this.cerrarModalVerFamilia();
     this.cerrarModalGestorFamilias();
-    this.modalVerFamiliaAbierto.set(null);
-
     const componentRef = createComponent(FamiliaDetalleModalComponent, {
       environmentInjector: this.environmentInjector
     });
@@ -690,12 +687,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     this.detalleFamiliaDinamicoAbierto.set(false);
-    this.modalVerFamiliaAbierto.set(null);
-  }
-
-  abrirDetalleVersionesDesdeFamilia(familia: FamiliaFormularioDto): void {
-    this.cerrarModalVerFamilia();
-    this.abrirModalVerFamilia(familia);
   }
 
   abrirModalCrearFamilia(): void {

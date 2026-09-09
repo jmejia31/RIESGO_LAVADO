@@ -160,8 +160,8 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component.abrirModalVerFamilia(mockFamilias[0]);
 
     expect(component.detalleFamiliaDinamicoAbierto()).toBe(true);
-    expect(component.modalVerFamiliaAbierto()).toBeNull();
     expect(service.obtenerFamiliaFormularioPorId).toHaveBeenCalledWith(1);
+    expect(fixture.nativeElement.querySelector('dialog[aria-labelledby="titulo-modal-ver-familia"]')).toBeNull();
     expect(document.body.querySelector('[data-ui-fam-detail="modal"]')).not.toBeNull();
     expect(document.body.textContent).toContain('Descripción de prueba para detalle');
 

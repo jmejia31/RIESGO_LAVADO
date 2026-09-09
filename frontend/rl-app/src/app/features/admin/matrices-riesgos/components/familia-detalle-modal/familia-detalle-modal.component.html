@@ -142,8 +142,6 @@
                 <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Código</dt><dd class="font-mono text-gray-700">{{ fam.famCodigo }}</dd></div>
                 <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Nombre</dt><dd class="text-gray-700">{{ fam.famNombre }}</dd></div>
                 <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Descripción</dt><dd class="whitespace-pre-wrap text-gray-600">{{ fam.famDescripcion || 'Sin descripción registrada.' }}</dd></div>
-                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Estado</dt><dd><span class="inline-flex rounded-md px-2 py-1 text-[10px] font-bold" [class.bg-emerald-100]="fam.famActivo" [class.text-emerald-700]="fam.famActivo" [class.bg-gray-100]="!fam.famActivo" [class.text-gray-600]="!fam.famActivo">{{ fam.famActivo ? 'ACTIVA' : 'INACTIVA' }}</span></dd></div>
-                <div class="grid grid-cols-[140px_1fr] gap-4 py-3"><dt class="font-bold text-gray-700">Fecha de creación</dt><dd class="text-gray-600">{{ fam.famFechaCreacion | date:'dd/MM/yyyy' }}</dd></div>
               </dl>
             </section>
 

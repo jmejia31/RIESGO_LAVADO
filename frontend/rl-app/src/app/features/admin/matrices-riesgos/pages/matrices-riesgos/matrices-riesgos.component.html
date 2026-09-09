@@ -743,73 +743,6 @@
     </dialog>
   }
 
-  @if (modalVerFamiliaAbierto(); as famVer) {
-<dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-ver-familia" (keydown.escape)="$event.preventDefault(); $event.stopPropagation()">
-      <div class="modal-container-card modal-size-md">
-        <div class="modal-header-institutional">
-          <div>
-            <h3 id="titulo-modal-ver-familia" class="text-base sm:text-lg font-bold text-gray-900">Familia: {{ famVer.famNombre }}</h3>
-            <p class="text-xs text-gray-500">Detalle y trazabilidad de la familia de formularios</p>
-          </div>
-          <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar consulta" (click)="cerrarModalVerFamilia()">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-          </button>
-        </div>
-
-        <div class="modal-body-scrollable space-y-4 text-sm">
-           <dl class="space-y-4">
-            <div class="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-            <div>
-              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Código institucional</dt>
-              <dd class="mt-1 font-mono font-bold text-ihss-900 text-sm">{{ famVer.famCodigo }}</dd>
-            </div>
-            <div>
-              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Estado</dt>
-              <dd class="mt-1 font-bold">
-                <span class="rounded-md px-2.5 py-0.5 text-xs"
-                      [class.bg-emerald-50]="famVer.famActivo"
-                      [class.text-emerald-700]="famVer.famActivo"
-                      [class.bg-gray-100]="!famVer.famActivo"
-                      [class.text-gray-600]="!famVer.famActivo">
-                  {{ famVer.famActivo ? 'ACTIVA' : 'INACTIVA' }}
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total de versiones</dt>
-              <dd class="mt-1 font-bold text-gray-900">{{ famVer.totalVersiones }}</dd>
-            </div>
-            <div>
-              <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Versión vigente</dt>
-              <dd class="mt-1 font-bold text-gray-900">{{ famVer.tieneVersionVigente ? 'Sí' : 'No' }}</dd>
-            </div>
-            </div>
-
-           <div>
-            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Nombre</dt>
-            <dd class="font-bold text-gray-900">{{ famVer.famNombre }}</dd>
-          </div>
-
-          <div>
-            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Descripción</dt>
-            <dd class="text-gray-600 leading-relaxed">{{ famVer.famDescripcion || 'Sin descripción registrada.' }}</dd>
-          </div>
-
-          <div>
-            <dt class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-1">Fecha de creación</dt>
-            <dd class="text-gray-700 text-xs">{{ famVer.famFechaCreacion | date:'medium' }}</dd>
-           </div>
-           </dl>
-         </div>
-
-        <div class="modal-footer-institutional">
-        <button type="button" class="px-4 py-2 bg-ihss-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm" (click)="abrirDetalleVersionesDesdeFamilia(famVer)">Ver versiones de esta familia</button>
-          <button type="button" class="px-4 py-2 border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 font-bold text-xs sm:text-sm transition-colors" (click)="cerrarModalVerFamilia()">Cerrar</button>
-        </div>
-      </div>
-    </dialog>
-  }
-
   @if (modalFamiliaAbierto()) {
      <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-familia">
       <div class="modal-container-card modal-size-md">
@@ -940,7 +873,7 @@
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-editar" class="text-base sm:text-lg font-bold text-gray-900">
-              Editar Evaluación #{{ evaluacionSeleccionada()?.evaId }} · {{ evaluacionResumenSeleccionada()?.riesgoCodigo }}
+              Editar Evaluación #{{ evaluacionSeleccionada()?.evaId }}
             </h3>
             <p class="text-xs text-gray-500">
               Metodología Histórica: <strong>{{ evaluacionResumenSeleccionada()?.versionCodigo }} · v{{ evaluacionResumenSeleccionada()?.versionNumero }}</strong>
@@ -1060,7 +993,7 @@
             </section>
           } @else {
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 text-xs text-gray-500 text-center">
-              Esta evaluación se encuentra en estado terminal <strong>{{ evaluacionResumenSeleccionada()?.estado }}</strong> y no admite transiciones automáticas.
+              Esta evaluación se encuentra en un estado terminal y no admite transiciones automáticas.
             </div>
           }
 

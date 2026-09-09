@@ -294,7 +294,13 @@ describe('MatricesRiesgosComponent', () => {
     }));
 
     component.editarEvaluacion(resumen);
+    fixture.detectChanges();
     expect(component.modalEditarAbierto()).toBe(true);
+    const dialog = fixture.nativeElement.querySelector('dialog[aria-labelledby="titulo-modal-editar"]') as HTMLElement | null;
+    expect(dialog).not.toBeNull();
+    expect(dialog?.textContent?.match(/RIE-005/g) ?? []).toHaveLength(1);
+    expect(dialog?.textContent?.match(/Riesgo 005/g) ?? []).toHaveLength(1);
+    expect(dialog?.querySelector('#titulo-modal-editar')?.textContent).not.toContain('RIE-005');
     expect(component.riesgoId()).toBe(5);
     expect(component.valorRespuesta(component.secciones()[0].campos[0])).toBe('Cumplimiento');
 

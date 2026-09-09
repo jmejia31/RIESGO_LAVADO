@@ -1002,3 +1002,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia: test focal `28/28`, frontend `736/736`, backend `611/611`, E2E `31/31`, TSC spec, lint, build, `npm audit` estricto y diff check PASS.
 - SEC-VITEST.1 resuelto con Vitest/coverage `4.1.11` y Hono `4.13.5`; el lockfile instala esas versiones y el audit estricto quedó sin vulnerabilidades. `npm ci --ignore-scripts` fue intentado pero encontró un bloqueo EPERM del `esbuild.exe` local; la instalación se rehidrató sin scripts y quedó validada. No hubo cambios backend/API/Oracle ni mutaciones de datos.
 - Estado de cierre: `VISUAL_FIX=PASS`; `NPM_AUDIT=PASS`; Quality Gate del SHA nuevo pendiente de verificacion exacta. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; no reanudar FASE 5.3.
+
+## Estado vigente - UX-DEDUP.1-R cierre residual quirurgico
+
+- Fecha/hora local: `2026-09-08 20:01 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline `0a403e6aed39bb5a09e351e4ec5d4c6ff54f7662`.
+- Correcciones residuales: resumen de detalle de familia como owner unico de Estado/Fecha de creacion; Informacion general limitada a Codigo/Nombre/Descripcion; encabezado de edicion sin codigo de riesgo duplicado; mensaje terminal sin repetir el estado; modal inline legacy de familia eliminado tras confirmar que el flujo vigente es el componente dinamico.
+- Evidencia focal: specs Angular `69/69 PASS`; suite frontend `736/736 PASS`; backend `611/611 PASS`; E2E `31/31 PASS`; TSC spec, lint, build, `npm audit` estricto (`0 vulnerabilidades`) y diff check PASS. Sin cambios backend/API/Oracle, dependencias, FormulaEngine, versionamiento o FASE 5.3.
+- Quality Gate UX-DEDUP.1 anterior certificado: `RUN=34298936305`, `SHA=0a403e6aed39bb5a09e351e4ec5d4c6ff54f7662`, `STATUS=completed`, `CONCLUSION=success`; no se presenta como el QG del commit residual.
+- Estado: `UX_DEDUP_RESIDUAL=IMPLEMENTADO`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`; pendiente exclusivamente commit/push y Quality Gate exacto del nuevo SHA. No reanudar FASE 5.3.

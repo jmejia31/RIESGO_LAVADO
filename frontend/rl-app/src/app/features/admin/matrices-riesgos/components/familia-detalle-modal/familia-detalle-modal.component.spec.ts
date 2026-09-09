@@ -154,10 +154,13 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
 
     const resumen = (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Resumen de la familia"]');
     const informacion = (fixture.nativeElement as HTMLElement).querySelector('[aria-labelledby="titulo-info-familia"]');
+    const textoResumen = resumen?.textContent ?? '';
     const textoInformacion = informacion?.textContent ?? '';
 
-    expect(resumen?.textContent).not.toContain('FAMILIA_AUTORITATIVA');
-    expect(resumen?.textContent).not.toContain('Familia autoritativa');
+    expect(textoResumen.match(/Estado/g) ?? []).toHaveLength(1);
+    expect(textoResumen.match(/Fecha de creación/g) ?? []).toHaveLength(1);
+    expect(textoInformacion.match(/Estado/g) ?? []).toHaveLength(0);
+    expect(textoInformacion.match(/Fecha de creación/g) ?? []).toHaveLength(0);
     expect(textoInformacion.match(/FAMILIA_AUTORITATIVA/g) ?? []).toHaveLength(1);
     expect(textoInformacion.match(/Familia autoritativa/g) ?? []).toHaveLength(1);
   });
