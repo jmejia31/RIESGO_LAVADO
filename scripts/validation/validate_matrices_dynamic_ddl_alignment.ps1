@@ -161,7 +161,7 @@ $requiredRepositoryTokens = [ordered]@{
     'reglaCodigo' = 'El resultado debe conservar el código de regla.'
     'reglaVersion' = 'El resultado debe conservar la versión de regla.'
     'algoritmoId' = 'El resultado debe conservar el algoritmo.'
-    'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync' = 'El consolidado debe ser tipado.'
+    'Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)' = 'El consolidado debe utilizar el contrato paginado tipado.'
     'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync' = 'La metodología debe usar contrato neutro.'
     'VersionFormularioId = versionId' = 'La metodología debe conservar la versión.'
     'Secciones = secciones' = 'La metodología debe conservar secciones.'
@@ -210,11 +210,11 @@ Assert-Contains $script06 "'RL_MR_TRAZAS_CALCULO'" 'El script 06 debe retirar RL
 # 5. Contratos Backend/Angular y suite Oracle.
 foreach ($token in @(
     'Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto',
-    'Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()',
+    'Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)',
     'Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync()'
 )) { Assert-Contains $repositoryContract $token "IMatricesRiesgosRepository no contiene '$token'." }
 foreach ($token in @('ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>','ServiceResult<MetodologiaFormularioDto>')) { Assert-Contains $appServiceContract $token "IMatricesRiesgosAppService no contiene '$token'." }
-foreach ($token in @('ObtenerConsolidadoTipadoAsync','ObtenerMetodologiaDinamicaVigenteAsync')) { Assert-Contains $controller $token "MatricesRiesgosController no contiene '$token'." }
+foreach ($token in @('ObtenerConsolidadoPaginado','ObtenerMetodologiaDinamicaVigenteAsync')) { Assert-Contains $controller $token "MatricesRiesgosController no contiene '$token'." }
 foreach ($token in @('MetodologiaFormulario','SeccionFormulario','CampoFormulario','CatalogoMatrices','ReglaCalculoMatrices','RiesgoReporteFila')) { Assert-Contains $angularModels $token "Angular no contiene '$token'." }
 Assert-Contains $program 'AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>()' 'Program.cs no registra MatricesRiesgosRepository.'
 Assert-NotContains $program 'MatricesRiesgosRepositoryFacade' 'Program.cs referencia la fachada retirada.'

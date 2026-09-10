@@ -53,7 +53,7 @@ foreach ($token in @(
     'evaluaciones/{id:long}/flujos','evidencias/vinculos','evidencias/cargar','evidencias/{id:long}','consolidado','metodologia/vigente'
 )) { Require $principal $token "Falta contrato Backend crítico '$token'." }
 
-foreach ($token in @('[HttpGet]','[HttpGet("{id:long}")]','[HttpPost]','[HttpPut("{id:long}")]')) {
+foreach ($token in @('[HttpGet("paginado")]','[HttpGet("{id:long}")]','[HttpPost]','[HttpPut("{id:long}")]')) {
     Require $gestion $token "Gestión de riesgos perdió endpoint '$token'."
 }
 foreach ($token in @('CrearControl','ActualizarControl','EvaluarControl','CrearPlan','ActualizarPlan','CrearActividad','ActualizarActividad')) {
@@ -67,9 +67,9 @@ foreach ($token in @('consolidado.xlsx','consolidado.pdf','Descarga de reporte c
 }
 
 foreach ($method in @(
-    'metodologiaVigente','obtenerConsolidado','obtenerVersionVigenteFormulario','listarHistorialVersionesFormulario',
+    'metodologiaVigente','obtenerConsolidadoPaginado','obtenerVersionVigenteFormulario','listarHistorialVersionesFormulario',
     'crearBorradorFormulario','clonarVersionFormulario','actualizarBorradorFormulario','publicarVersionFormulario','cambiarVigenciaFormulario',
-    'listarRiesgos','obtenerRiesgo','crearRiesgo','actualizarRiesgo','listarEvaluaciones','obtenerEvaluacion','crearEvaluacion',
+    'listarRiesgosPaginados','obtenerRiesgo','crearRiesgo','actualizarRiesgo','listarEvaluaciones','obtenerEvaluacion','crearEvaluacion',
     'actualizarEvaluacion','transicionarEvaluacion','obtenerFlujos','listarControles','crearControl','actualizarControl','evaluarControl',
     'listarPlanes','crearPlan','actualizarPlan','listarActividades','crearActividad','actualizarActividad','listarAlertas','crearAlerta',
     'cambiarEstadoAlerta','listarAutomonitoreo','registrarAutomonitoreo','obtenerResumenOperativo','descargarConsolidadoExcel',
