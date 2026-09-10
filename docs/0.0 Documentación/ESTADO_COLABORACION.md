@@ -1154,3 +1154,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Guardas añadidas/fortalecidas en `DbPaginationRegressionGuardTests` y `db-pagination.regression.spec.ts`: SQL set-based/analítico, cancellation, ausencia de precarga/fallbacks y ausencia de rutas full-list retiradas.
 - Limitaciones: `npm ci` bloqueado inicialmente por `EPERM` sobre binario en uso; dependencias restauradas con `npm install --ignore-scripts` y pruebas verificadas. Python ausente para `validate_agent_skills.py`; el validador estructural mantiene tres hallazgos heredados fuera de scope. Sin cambios de backend de negocio, API funcional, Oracle DDL ni migración de datos.
 - Punto de continuación: revisar diff/status, stagear sólo archivos de esta intervención, commit/push, obtener Quality Gate sobre SHA final exacto, anexar cierre y verificar AHEAD/BEHIND. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+
+### Cierre PERF-MONITOREO-LISTAS-HARDENING-1 + ARCH-LEGACY-UNBOUNDED-ENDPOINTS-CLEANUP-1
+
+- Commit final publicado: `9bb99aa9f9a95a47c6447a3f54e8a5b49fa75ccb`; Quality Gate `RUN=34495348060`; `STATUS=completed`; `CONCLUSION=success`.
+- Estado: `MONITORING_DB_DATASET_EVALUATIONS_AFTER=1` para página normal; `CORRELATED_RL_LISTA_POSITIVOS_LOOKUPS_AFTER=0`; `MONITORING_FULL_DATA_PRELOAD=0`; `BACKEND_CANCELLATION_PROPAGATION=PASS`; rutas legacy full-list sin consumidores retiradas; rutas paginadas/exportaciones filtradas preservadas.
+- Evidencia real: medianas SQLPlus de cuatro ejecuciones con conexión incluida: jurídicas `648 -> 505 ms`, naturales `4472 -> 1770 ms`, empleados `1744 -> 792 ms`. Dataset accesible pequeño; no se declara objetivo API productivo <=5 s sin entorno reproducible equivalente.
+- Regresión final: backend `616/616`; frontend `780/780` en `78` archivos; E2E `36/36`; lint, build, npm audit (`0 vulnerabilities`), restore/build/test .NET, validadores de base de datos/enlaces, guardas de matrices y diff check PASS.
+- Restricciones: `ORACLE_DDL=0`; `ORACLE_DATA_MIGRATION=0`; `DEPENDENCY_CHANGES=0`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. `validate_agent_skills.py` permanece pendiente localmente por ausencia de Python operativo.
