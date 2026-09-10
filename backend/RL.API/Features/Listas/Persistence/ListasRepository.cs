@@ -952,7 +952,7 @@ namespace RL.API.Features.Listas.Persistence
             CancellationToken cancellationToken)
         {
             var requestStopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var filteredSql = $"SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q WHERE 1 = 1";
+            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
             AppendMonitoringFilters(ref filteredSql, consulta);
 
             await using var conn = _db.CreateConnection();
@@ -1069,7 +1069,7 @@ namespace RL.API.Features.Listas.Persistence
             string orderBy,
             Func<OracleDataReader, T> map)
         {
-            var filteredSql = $"SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q WHERE 1 = 1";
+            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
             AppendMonitoringFilters(ref filteredSql, consulta);
 
             await using var conn = _db.CreateConnection();

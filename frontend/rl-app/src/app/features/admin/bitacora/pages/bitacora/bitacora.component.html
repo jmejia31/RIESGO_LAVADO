@@ -205,7 +205,7 @@
               <app-action-icon action="history"></app-action-icon>
             </span>
             <h2 id="bitacora-detail-title" class="truncate text-sm font-bold sm:text-base">
-              Detalle de Registro #{{ registroSeleccionado()?.audId }}
+              Detalle de Auditoría
             </h2>
           </div>
           <button type="button" (click)="cerrarModalDetalle()"
@@ -230,7 +230,6 @@
             <section class="grid grid-cols-1 gap-x-8 gap-y-3 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-3" aria-label="Metadatos del evento auditado">
               <div><span class="font-bold text-gray-800">Fecha:</span> {{ registroSeleccionado()?.fecha | date:'dd/MM/yyyy HH:mm:ss' }}</div>
               <div class="min-w-0"><span class="font-bold text-gray-800">Usuario:</span> <span class="break-words">{{ registroSeleccionado()?.usrEmail || 'Sistema' }}</span></div>
-              <div><span class="font-bold text-gray-800">Regional:</span> {{ detalleAuditoria().regional }}</div>
 
               <div><span class="font-bold text-gray-800">Módulo:</span> {{ getModuloLabel(registroSeleccionado()?.modulo) }}</div>
               <div class="flex flex-wrap items-center gap-2">
@@ -239,37 +238,16 @@
                   {{ registroSeleccionado()?.accion || 'N/D' }}
                 </span>
               </div>
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-bold text-gray-800">Resultado:</span>
-                <span [class]="getResultadoBadgeClass(detalleAuditoria().resultado)" class="inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold">
-                  {{ detalleAuditoria().resultado }}
-                </span>
-              </div>
-
               <div><span class="font-bold text-gray-800">Registro:</span> {{ getRegistroDetalleLabel(registroSeleccionado()) }}</div>
-              <div><span class="font-bold text-gray-800">Método HTTP:</span> {{ detalleAuditoria().metodoHttp }}</div>
               <div><span class="font-bold text-gray-800">IP:</span> {{ getIpDisplay(registroSeleccionado()?.ip) }}</div>
 
-              <div class="min-w-0 sm:col-span-2">
-                <span class="font-bold text-gray-800">Endpoint:</span>
-                <span class="break-all font-mono text-xs text-ihss-700">{{ detalleAuditoria().endpoint }}</span>
-              </div>
-              <div class="min-w-0">
-                <span class="font-bold text-gray-800">Correlation ID:</span>
-                <span class="break-all font-mono text-xs text-ihss-700">{{ detalleAuditoria().correlationId }}</span>
-              </div>
-
-              <div class="min-w-0 sm:col-span-2 lg:col-span-3">
-                <span class="font-bold text-gray-800">User Agent:</span>
-                <span class="break-all text-xs text-gray-600">{{ detalleAuditoria().userAgent }}</span>
-              </div>
             </section>
 
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <fieldset class="min-w-0">
                 <legend class="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-600">
                   <span class="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden="true"></span>
-                  Valor Anterior
+                  Valores anteriores
                 </legend>
                 <pre class="min-h-12 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700">{{ registroSeleccionado()?.datosAnt ? formatJson(registroSeleccionado()?.datosAnt) : 'N/A' }}</pre>
               </fieldset>
@@ -277,7 +255,7 @@
               <fieldset class="min-w-0">
                 <legend class="mb-2 flex items-center gap-1.5 text-xs font-semibold text-gray-600">
                   <span class="h-1.5 w-1.5 rounded-full bg-ihss-600" aria-hidden="true"></span>
-                  Valor Nuevo
+                  Valores nuevos
                 </legend>
                 <pre class="min-h-12 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs text-gray-700">{{ registroSeleccionado()?.datosNvo ? formatJson(registroSeleccionado()?.datosNvo) : 'N/A' }}</pre>
               </fieldset>

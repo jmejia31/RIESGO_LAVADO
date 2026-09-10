@@ -39,6 +39,15 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
+    public void Monitoreo_AplicaFiltroDeEstadoFueraDelNivelQueDefineElAlias()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+
+        Assert.Contains("SELECT f.* FROM (SELECT q.*", source, StringComparison.Ordinal);
+        Assert.Contains("AND ESTADO_MONITOREO = :estado", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Monitoreo_UsaProyeccionSetBasedYMetadataAnaliticaSinLookupsCorrelacionados()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));

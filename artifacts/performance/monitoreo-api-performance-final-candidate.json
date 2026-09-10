@@ -1,0 +1,224 @@
+{
+  "generatedAt": "2026-09-10T20:18:38.615Z",
+  "gitSha": "97f3577b58dd4788bff2dfacac026514593d81ad",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "DOTNET_PRODUCTION",
+    "oracleReal": true,
+    "runs": 10,
+    "warmups": 2,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "juridicas",
+      "naturales",
+      "empleados"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "juridicas": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        1279.2,
+        1718.75,
+        1309.57,
+        2334.57,
+        836.99,
+        9403.31,
+        2906.7,
+        727.96,
+        6771.31
+      ],
+      "minMs": 727.96,
+      "maxMs": 9403.31,
+      "meanMs": 3032.04,
+      "medianMs": 1718.75,
+      "p90Ms": 9403.31,
+      "p95Ms": 9403.31,
+      "totalRecords": 4,
+      "datasetVolumeClass": "SMALL",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": {
+        "minMs": 3075.88,
+        "maxMs": 9566.44,
+        "meanMs": 6209.57,
+        "medianMs": 4755.83,
+        "p90Ms": 9566.44,
+        "p95Ms": 9566.44,
+        "samplesMs": [
+          9566.44,
+          4755.83,
+          9252.96,
+          3075.88,
+          4396.72
+        ]
+      },
+      "concurrency5": null,
+      "failures": [
+        "cold: timeout 10000ms (10026.36ms)",
+        "warm-warmup-1: timeout 10000ms (10016.32ms)",
+        "warm-warmup-2: timeout 10000ms (10008.56ms)",
+        "warm-run-7: timeout 10000ms (10016.59ms)",
+        "filtered-run-1: timeout 10000ms (10001.47ms)",
+        "filtered-run-2: timeout 10000ms (10005.58ms)",
+        "filtered-run-5: timeout 10000ms (10001.29ms)",
+        "filtered-run-8: timeout 10000ms (10001.63ms)",
+        "filtered-run-10: timeout 10000ms (10012.09ms)"
+      ],
+      "result": "FAIL"
+    },
+    "naturales": {
+      "coldMs": 3976.84,
+      "warmSamplesMs": [
+        7561.85,
+        2148.75,
+        1478.73,
+        6935.52,
+        3440.73,
+        4650.19,
+        6841.96,
+        6497.77,
+        3998.45,
+        3025.7
+      ],
+      "minMs": 1478.73,
+      "maxMs": 7561.85,
+      "meanMs": 4657.97,
+      "medianMs": 3998.45,
+      "p90Ms": 6935.52,
+      "p95Ms": 7561.85,
+      "totalRecords": 242,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "minMs": 8924.63,
+        "maxMs": 9608.22,
+        "meanMs": 9193.48,
+        "medianMs": 9047.59,
+        "p90Ms": 9608.22,
+        "p95Ms": 9608.22,
+        "samplesMs": [
+          9608.22,
+          8924.63,
+          9047.59
+        ]
+      },
+      "pageSize25": {
+        "minMs": 2030.48,
+        "maxMs": 8289.82,
+        "meanMs": 4257.33,
+        "medianMs": 4322.83,
+        "p90Ms": 5651.79,
+        "p95Ms": 8289.82,
+        "samplesMs": [
+          5651.79,
+          4719.02,
+          2030.48,
+          8289.82,
+          2767.63,
+          4322.83,
+          4703.29,
+          2649.78,
+          2270.02,
+          5168.61
+        ]
+      },
+      "filtered": {
+        "minMs": 2104.61,
+        "maxMs": 9533.56,
+        "meanMs": 6117.28,
+        "medianMs": 6333.36,
+        "p90Ms": 9533.56,
+        "p95Ms": 9533.56,
+        "samplesMs": [
+          2104.61,
+          8929.29,
+          8115.66,
+          6341.34,
+          2231.02,
+          5349.41,
+          6333.36,
+          9533.56
+        ]
+      },
+      "concurrency5": null,
+      "failures": [
+        "page2-warmup-2: timeout 10000ms (10014.58ms)",
+        "page2-run-1: timeout 10000ms (10002.49ms)",
+        "page2-run-2: timeout 10000ms (10010.04ms)",
+        "page2-run-4: timeout 10000ms (10008.63ms)",
+        "page2-run-5: timeout 10000ms (10002.79ms)",
+        "page2-run-6: timeout 10000ms (10008.79ms)",
+        "page2-run-7: timeout 10000ms (10004.90ms)",
+        "page2-run-10: timeout 10000ms (10011.16ms)",
+        "filtered-run-9: timeout 10000ms (10003.90ms)",
+        "filtered-run-10: timeout 10000ms (10008.00ms)"
+      ],
+      "result": "FAIL"
+    },
+    "empleados": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        4482.17,
+        478.66,
+        2580.73,
+        144.41,
+        2603.4,
+        432.43,
+        454.9,
+        862.61,
+        132.89
+      ],
+      "minMs": 132.89,
+      "maxMs": 4482.17,
+      "meanMs": 1352.47,
+      "medianMs": 478.66,
+      "p90Ms": 4482.17,
+      "p95Ms": 4482.17,
+      "totalRecords": 7,
+      "datasetVolumeClass": "SMALL",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": {
+        "minMs": 121.86,
+        "maxMs": 9661.12,
+        "meanMs": 1201.48,
+        "medianMs": 151.88,
+        "p90Ms": 434.22,
+        "p95Ms": 9661.12,
+        "samplesMs": [
+          401.45,
+          9661.12,
+          121.86,
+          405.88,
+          427,
+          434.22,
+          133.73,
+          143.42,
+          151.88,
+          134.29
+        ]
+      },
+      "concurrency5": null,
+      "failures": [
+        "cold: timeout 10000ms (10012.44ms)",
+        "warm-warmup-1: timeout 10000ms (10005.62ms)",
+        "warm-run-5: timeout 10000ms (10000.96ms)"
+      ],
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 22,
+  "result": "FAIL"
+}
