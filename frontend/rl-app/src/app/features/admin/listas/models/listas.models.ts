@@ -128,6 +128,43 @@ export interface CoincidenciaPatronoDetalle {
 
 export type CoincidenciaEmpleadoDetalle = CoincidenciaPatronoDetalle;
 
+export interface Paginado<T> {
+  items: T[];
+  pagina: number;
+  tamanoPagina: number;
+  totalRegistros: number;
+  totalPaginas: number;
+}
+
+export interface MonitoreoTotales {
+  totalRegistros: number;
+  pendientes: number;
+  conMotivo: number;
+  manuales: number;
+  cerradosPasivos: number;
+}
+
+export interface MonitoreoPaginado<T> extends Paginado<T> {
+  totales: MonitoreoTotales;
+}
+
+export interface ConsultaMonitoreoPaginada {
+  pagina: number;
+  tamanoPagina: number;
+  buscar?: string;
+  estado?: string;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
+}
+
+export interface ConsultaCoincidenciasPaginada {
+  pagina: number;
+  tamanoPagina: number;
+  buscar?: string;
+  calificacion?: string;
+  fecha?: string;
+}
+
 export interface Evidencia {
   evidenciaId: number;
   nombreArchivo: string;

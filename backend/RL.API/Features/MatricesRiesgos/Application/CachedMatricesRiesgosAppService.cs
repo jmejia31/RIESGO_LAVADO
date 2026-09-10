@@ -121,6 +121,9 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
             () => _inner.ObtenerFamiliaFormularioPorIdAsync(famId),
             static result => result.Success);
 
+    public Task<ServiceResult<FamiliasFormularioPaginadasDto>> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro) =>
+        _inner.ListarFamiliasFormularioPaginadasAsync(filtro);
+
     public Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync() =>
         _cache.GetOrCreateAsync(
             ApplicationCacheScopes.MatricesFormularios,

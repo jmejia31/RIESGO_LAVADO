@@ -7,6 +7,7 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 public interface IMatricesRiesgosGestionService
 {
     Task<ServiceResult<IReadOnlyList<RiesgoDto>>> ListarRiesgosAsync(bool incluirInactivos);
+    Task<ServiceResult<RiesgosPaginadosDto>> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta);
     Task<ServiceResult<RiesgoDto>> ObtenerRiesgoAsync(long riesgoId);
     Task<ServiceResult<long>> CrearRiesgoAsync(RiesgoGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult> ActualizarRiesgoAsync(long riesgoId, RiesgoGuardarDto dto, long usuarioId, string? ip);
@@ -23,6 +24,9 @@ public sealed class MatricesRiesgosGestionService : IMatricesRiesgosGestionServi
 
     public async Task<ServiceResult<IReadOnlyList<RiesgoDto>>> ListarRiesgosAsync(bool incluirInactivos) =>
         ServiceResult<IReadOnlyList<RiesgoDto>>.Ok(await _repo.ListarRiesgosAsync(incluirInactivos));
+
+    public async Task<ServiceResult<RiesgosPaginadosDto>> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta) =>
+        ServiceResult<RiesgosPaginadosDto>.Ok(await _repo.ListarRiesgosPaginadosAsync(consulta ?? new ConsultaRiesgosPaginadaDto()));
 
     public async Task<ServiceResult<RiesgoDto>> ObtenerRiesgoAsync(long riesgoId)
     {

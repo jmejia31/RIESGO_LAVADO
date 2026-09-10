@@ -416,6 +416,21 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpGet("familias/paginado")]
+    public async Task<IActionResult> ListarFamiliasFormularioPaginadas([FromQuery] ConsultaFamiliasFormularioPaginadaDto filtro)
+    {
+        try
+        {
+            var result = await _service.ListarFamiliasFormularioPaginadasAsync(filtro);
+            return Responder(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al listar familias de formulario paginadas.");
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("familias/predeterminada")]
     public async Task<IActionResult> ObtenerFamiliaPredeterminada()
     {

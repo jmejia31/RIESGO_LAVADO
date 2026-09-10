@@ -23,7 +23,7 @@
             <span class="block text-sm">Personas jurídicas</span>
             <span class="block text-xs font-medium opacity-75">Patronos, empresas y proveedores</span>
           </span>
-          <span class="text-lg font-bold">{{ juridicasRaw().length }}</span>
+          <span class="text-lg font-bold">{{ juridicasTotales().totalRegistros }}</span>
         </button>
 
         <button data-ui-control="selection" (click)="cambiarTipo('natural')"
@@ -33,7 +33,7 @@
             <span class="block text-sm">Personas naturales</span>
             <span class="block text-xs font-medium opacity-75">Afiliados y terceros identificados</span>
           </span>
-          <span class="text-lg font-bold">{{ naturalesRaw().length }}</span>
+          <span class="text-lg font-bold">{{ naturalesTotales().totalRegistros }}</span>
         </button>
 
         <button data-ui-control="selection" (click)="cambiarTipo('empleado')"
@@ -43,7 +43,7 @@
             <span class="block text-sm">Empleados</span>
             <span class="block text-xs font-medium opacity-75">Control interno y seguimiento</span>
           </span>
-          <span class="text-lg font-bold">{{ empleadosRaw().length }}</span>
+          <span class="text-lg font-bold">{{ empleadosTotales().totalRegistros }}</span>
         </button>
       </div>
     </div>
@@ -103,22 +103,6 @@
           </div>
         </section>
 
-        <section class="rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Listas con mayor presencia</p>
-          <div class="mt-3 space-y-2">
-            @for (item of resumenListasActual(); track item.lista) {
-              <div class="flex items-center gap-3">
-                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-gray-700">{{ item.lista }}</span>
-                <span class="text-xs font-bold text-gray-500">{{ item.total }}</span>
-                <div class="h-2 w-28 rounded-full bg-gray-200 overflow-hidden">
-                  <div class="h-full rounded-full bg-ihss-700" [style.width.%]="totalActual() ? mathMin((item.total / totalActual()) * 100, 100) : 0"></div>
-                </div>
-              </div>
-            } @empty {
-              <p class="text-sm text-gray-500">No hay coincidencias para la vista seleccionada.</p>
-            }
-          </div>
-        </section>
       </div>
     </div>
   </section>
@@ -184,11 +168,11 @@
         <p class="text-xs text-gray-500">La búsqueda se actualiza automáticamente y la exportación respeta la vista filtrada.</p>
       </div>
       <div class="flex flex-col sm:flex-row lg:justify-end gap-2">
-        <button (click)="exportarListaPrincipal()" [disabled]="datosFiltrados().length === 0" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel"
+        <button (click)="exportarListaPrincipal()" [disabled]="totalActual() === 0" title="Exportar coincidencias a Excel" aria-label="Exportar coincidencias a Excel"
           class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             <app-action-icon action="export-excel"></app-action-icon>
           </button>
-        <button (click)="exportarPdfListaPrincipal()" [disabled]="datosFiltrados().length === 0" title="Generar reporte PDF de coincidencias" aria-label="Generar reporte PDF de coincidencias"
+        <button (click)="exportarPdfListaPrincipal()" [disabled]="totalActual() === 0" title="Generar reporte PDF de coincidencias" aria-label="Generar reporte PDF de coincidencias"
           class="w-full sm:w-auto px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             <app-action-icon action="export-pdf"></app-action-icon>
           </button>
@@ -202,12 +186,12 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </span>
-        <input type="text" [ngModel]="busqueda()" (ngModelChange)="busqueda.set($event); paginaActual.set(1)"
+        <input type="text" [ngModel]="busqueda()" (ngModelChange)="cambiarBusqueda($event)"
           placeholder="Buscar por coincidencia, nombre o número de identificación..."
           class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors text-sm" />
       </div>
 
-      <select [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event); paginaActual.set(1)"
+      <select [ngModel]="filtroEstado()" (ngModelChange)="cambiarEstado($event)"
         class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700">
         <option value="todos">Todos los registros</option>
         <option value="pendiente">Pendiente</option>
@@ -215,9 +199,9 @@
         <option value="cerrado_pasivo">Cerrado / Pasivo</option>
       </select>
 
-      <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="filtroFechaDesde.set($event); paginaActual.set(1)"
+      <input type="date" [ngModel]="filtroFechaDesde()" (ngModelChange)="cambiarFechaDesde($event)"
         class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
-      <input type="date" [ngModel]="filtroFechaHasta()" (ngModelChange)="filtroFechaHasta.set($event); paginaActual.set(1)"
+      <input type="date" [ngModel]="filtroFechaHasta()" (ngModelChange)="cambiarFechaHasta($event)"
         class="w-full border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors bg-white text-sm text-gray-700" />
 
       <button (click)="limpiarFiltrosPrincipales()" [disabled]="!hayFiltrosPrincipalesActivos()" title="Limpiar filtros de coincidencias" aria-label="Limpiar filtros de coincidencias"
@@ -227,7 +211,7 @@
 
       <label class="w-full">
         <span class="sr-only">Registros por página</span>
-        <select [ngModel]="limite()" (ngModelChange)="limite.set(+$event); paginaActual.set(1)"
+        <select [ngModel]="limite()" (ngModelChange)="cambiarLimite(+$event)"
           class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors">
           <option [value]="10">10 registros</option>
           <option [value]="25">25 registros</option>
@@ -584,10 +568,10 @@
           <!-- Paginación -->
           <div class="px-6 py-4 flex items-center justify-between border-t border-gray-150 bg-gray-50/30">
             <div class="text-xs text-gray-500">
-              Mostrando {{ (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), datosFiltrados().length) }} de {{ datosFiltrados().length }} registros
+              Mostrando {{ totalActual() === 0 ? 0 : (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalActual()) }} de {{ totalActual() }} registros
             </div>
             <div class="flex items-center gap-1">
-               <button data-ui-control="navigation" (click)="paginaActual.set(paginaActual() - 1)" [disabled]="paginaActual() === 1" title="Página anterior" aria-label="Página anterior"
+               <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1" title="Página anterior" aria-label="Página anterior"
                 class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -595,7 +579,7 @@
               </button>
 
               @for (page of paginasArray(); track page) {
-                <button data-ui-control="navigation" (click)="paginaActual.set(page)" [attr.aria-label]="'Ir a página ' + page"
+                <button data-ui-control="navigation" (click)="cambiarPagina(page)" [attr.aria-label]="'Ir a página ' + page"
                   [class]="paginaActual() === page
                     ? 'bg-ihss-900 text-white font-bold'
                     : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
@@ -604,7 +588,7 @@
                 </button>
               }
 
-              <button data-ui-control="navigation" (click)="paginaActual.set(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()" title="Página siguiente" aria-label="Página siguiente"
+              <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()" title="Página siguiente" aria-label="Página siguiente"
                 class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

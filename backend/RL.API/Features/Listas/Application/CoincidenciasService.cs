@@ -15,6 +15,7 @@ public sealed class CoincidenciasService : ICoincidenciasService
     }
 
     public Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenPatronoAsync() => _repo.ObtenerResumenCoincidenciasPatronoAsync();
+    public Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta) => _repo.ObtenerResumenCoincidenciasPatronoPaginadoAsync(consulta);
 
     public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoAsync(string? fecha)
     {
@@ -28,7 +29,17 @@ public sealed class CoincidenciasService : ICoincidenciasService
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
     }
 
+    public async Task<ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+    {
+        if (string.IsNullOrWhiteSpace(consulta.Fecha))
+            return ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>.BadRequest("La fecha es obligatoria.");
+
+        return ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>.Ok(
+            await _repo.ObtenerDetalleCoincidenciasPatronoPaginadoAsync(consulta));
+    }
+
     public Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenEmpleadoAsync() => _repo.ObtenerResumenCoincidenciasEmpleadoAsync();
+    public Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta) => _repo.ObtenerResumenCoincidenciasEmpleadoPaginadoAsync(consulta);
 
     public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetalleEmpleadoAsync(string? fecha)
     {
@@ -38,6 +49,15 @@ public sealed class CoincidenciasService : ICoincidenciasService
 
         var result = await _repo.ObtenerDetalleCoincidenciasEmpleadoAsync(fechaNormalizada);
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
+    }
+
+    public async Task<ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>> ObtenerDetalleEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+    {
+        if (string.IsNullOrWhiteSpace(consulta.Fecha))
+            return ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>.BadRequest("La fecha es obligatoria.");
+
+        return ServiceResult<PaginadoDto<CoincidenciaPatronoDetalleDto>>.Ok(
+            await _repo.ObtenerDetalleCoincidenciasEmpleadoPaginadoAsync(consulta));
     }
 
     public async Task<ServiceResult> CalificarAsync(long id, int tipoCalificacionId, long usuarioId, bool esEmpleado)

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
-import { CoincidenciaPatronoDetalle, CoincidenciaPatronoResumen } from '../../models/listas.models';
+import { CoincidenciaPatronoDetalle, CoincidenciaPatronoResumen, Paginado } from '../../models/listas.models';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
@@ -25,6 +25,8 @@ export class CoincidenciasPatronoComponent implements OnInit {
   buscarTerm = signal('');
   paginaActual = signal(1);
   registrosPorPagina = signal(25);
+  totalRegistros = signal(0);
+  totalPaginasServidor = signal(0);
   
   // Detalle Modal
   mostrarModal = signal(false);
@@ -37,6 +39,10 @@ export class CoincidenciasPatronoComponent implements OnInit {
   filtroCalificacion = signal<string>('Todas');
   paginaDetalleActual = signal(1);
   registrosDetallePorPagina = signal(25);
+  totalRegistrosDetalle = signal(0);
+  totalPaginasDetalleServidor = signal(0);
+  private secuenciaCargaResumen = 0;
+  private secuenciaCargaDetalle = 0;
 
   protected readonly Math = Math;
 
@@ -50,13 +56,19 @@ export class CoincidenciasPatronoComponent implements OnInit {
   }
 
   cargarResumen() {
+    const solicitudId = ++this.secuenciaCargaResumen;
     this.cargando.set(true);
-    this.listasService.getResumenCoincidenciasPatrono().subscribe({
+    this.listasService.getResumenCoincidenciasPatronoPaginado({ pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscarTerm() }).subscribe({
       next: (datos) => {
-        this.resumen.set(datos);
+        if (solicitudId !== this.secuenciaCargaResumen) return;
+        this.resumen.set(datos.items);
+        this.totalRegistros.set(datos.totalRegistros);
+        this.totalPaginasServidor.set(datos.totalPaginas);
+        this.paginaActual.set(datos.pagina);
         this.cargando.set(false);
       },
       error: (err) => {
+        if (solicitudId !== this.secuenciaCargaResumen) return;
         console.error('Error al cargar resumen:', err);
         this.cargando.set(false);
         this.mostrarError(
@@ -69,30 +81,21 @@ export class CoincidenciasPatronoComponent implements OnInit {
 
   // Filtrado y paginación del resumen
   resumenFiltrado = computed(() => {
-    const term = this.buscarTerm().toLowerCase().trim();
-    const datos = this.resumen();
-    if (!term) return datos;
-    return datos.filter(item => {
-      const fechaStr = this.formatearFechaSimple(item.fechaEncontro).toLowerCase();
-      return fechaStr.includes(term) || item.cantidadRegistros.toString().includes(term);
-    });
+    return this.resumen();
   });
 
   totalPaginas = computed(() => {
-    const count = this.resumenFiltrado().length;
-    const size = this.registrosPorPagina();
-    return Math.ceil(count / size) || 1;
+    return this.totalPaginasServidor();
   });
 
   resumenPaginado = computed(() => {
-    const datos = this.resumenFiltrado();
-    const idx = (this.paginaActual() - 1) * this.registrosPorPagina();
-    return datos.slice(idx, idx + this.registrosPorPagina());
+    return this.resumen();
   });
 
   cambiarPagina(p: number) {
     if (p >= 1 && p <= this.totalPaginas()) {
       this.paginaActual.set(p);
+      this.cargarResumen();
     }
   }
 
@@ -132,12 +135,53 @@ export class CoincidenciasPatronoComponent implements OnInit {
     this.filtroCalificacion.set('Todas');
     this.paginaDetalleActual.set(1);
     
-    this.listasService.getDetalleCoincidenciasPatrono(f).subscribe({
+    this.cargarDetalle();
+  }
+
+  cambiarBuscar(valor: string): void {
+    this.buscarTerm.set(valor);
+    this.paginaActual.set(1);
+    this.cargarResumen();
+  }
+
+  cambiarRegistrosPorPagina(valor: number): void {
+    this.registrosPorPagina.set(Number(valor));
+    this.paginaActual.set(1);
+    this.cargarResumen();
+  }
+
+  cambiarBuscarDetalle(valor: string): void {
+    this.buscarTermDetalle.set(valor);
+    this.paginaDetalleActual.set(1);
+    this.cargarDetalle();
+  }
+
+  cambiarCalificacion(valor: string): void {
+    this.filtroCalificacion.set(valor);
+    this.paginaDetalleActual.set(1);
+    this.cargarDetalle();
+  }
+
+  cambiarRegistrosDetallePorPagina(valor: number): void {
+    this.registrosDetallePorPagina.set(Number(valor));
+    this.paginaDetalleActual.set(1);
+    this.cargarDetalle();
+  }
+
+  private cargarDetalle(): void {
+    const solicitudId = ++this.secuenciaCargaDetalle;
+    this.cargandoDetalle.set(true);
+    this.listasService.getDetalleCoincidenciasPatronoPaginado({ fecha: this.fechaSeleccionada(), pagina: this.paginaDetalleActual(), tamanoPagina: this.registrosDetallePorPagina(), buscar: this.buscarTermDetalle(), calificacion: this.filtroCalificacion() === 'Todas' ? '' : this.filtroCalificacion() }).subscribe({
       next: (datos) => {
-        this.detalleRegistros.set(datos);
+        if (solicitudId !== this.secuenciaCargaDetalle) return;
+        this.detalleRegistros.set(datos.items);
+        this.totalRegistrosDetalle.set(datos.totalRegistros);
+        this.totalPaginasDetalleServidor.set(datos.totalPaginas);
+        this.paginaDetalleActual.set(datos.pagina);
         this.cargandoDetalle.set(false);
       },
       error: (err) => {
+        if (solicitudId !== this.secuenciaCargaDetalle) return;
         console.error('Error al cargar detalle:', err);
         this.cargandoDetalle.set(false);
         this.mostrarError(
@@ -153,43 +197,21 @@ export class CoincidenciasPatronoComponent implements OnInit {
   }
 
   detalleFiltrado = computed(() => {
-    const term = this.buscarTermDetalle().toLowerCase().trim();
-    const calif = this.filtroCalificacion();
-    const datos = this.detalleRegistros();
-    
-    return datos.filter(r => {
-      const matchTerm = !term || 
-        (r.nombre && r.nombre.toLowerCase().includes(term)) ||
-        (r.dni && r.dni.toLowerCase().includes(term)) ||
-        (r.numeroPatrono && r.numeroPatrono.toLowerCase().includes(term)) ||
-        (r.listaCoincidencia && r.listaCoincidencia.toLowerCase().includes(term)) ||
-        (r.tipoPersona && r.tipoPersona.toLowerCase().includes(term));
-        
-      let matchCalif = true;
-      if (calif !== 'Todas') {
-        const c = r.tipoCalificacion || 'Primera Vez';
-        matchCalif = (c === calif);
-      }
-
-      return matchTerm && matchCalif;
-    });
+    return this.detalleRegistros();
   });
 
   totalPaginasDetalle = computed(() => {
-    const count = this.detalleFiltrado().length;
-    const size = this.registrosDetallePorPagina();
-    return Math.ceil(count / size) || 1;
+    return this.totalPaginasDetalleServidor();
   });
 
   detallePaginado = computed(() => {
-    const datos = this.detalleFiltrado();
-    const idx = (this.paginaDetalleActual() - 1) * this.registrosDetallePorPagina();
-    return datos.slice(idx, idx + this.registrosDetallePorPagina());
+    return this.detalleRegistros();
   });
 
   cambiarPaginaDetalle(p: number) {
     if (p >= 1 && p <= this.totalPaginasDetalle()) {
       this.paginaDetalleActual.set(p);
+      this.cargarDetalle();
     }
   }
 

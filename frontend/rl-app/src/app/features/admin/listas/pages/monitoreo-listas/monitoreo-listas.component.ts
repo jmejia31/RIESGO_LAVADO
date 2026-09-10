@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin, of, Observable } from 'rxjs';
 import { ListasService } from '../../data-access/listas.service';
 import {
   CoincidenciaJuridica,
@@ -50,7 +50,8 @@ type InstanciaInternaMonitoreo = {
   };
   listasService: ListasService;
   cargando: { set(value: boolean): void };
-  construirReporteListaPrincipalPdf(): ReporteListaPrincipal | null;
+  construirReporteListaPrincipalPdf(dataFiltrada?: RegistroMonitoreo[]): ReporteListaPrincipal | null;
+  obtenerDatosMonitoreoParaExportar(): Observable<RegistroMonitoreo[]>;
   obtenerResumenFiltrosPrincipales(): string;
   datosFiltrados(): RegistroMonitoreo[];
   esCerradoPasivo(item: RegistroMonitoreo): boolean;
@@ -370,9 +371,8 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
     );
   }
 
-  private construirDatosExcelListaPrincipal(reporte: ReporteListaPrincipal): string[][] {
+  private construirDatosExcelListaPrincipal(reporte: ReporteListaPrincipal, datosFiltrados: RegistroMonitoreo[] = this.interna().datosFiltrados()): string[][] {
     const instancia = this.interna();
-    const datosFiltrados = instancia.datosFiltrados();
     const pendientes = datosFiltrados.filter(item =>
       !instancia.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)
     ).length;
@@ -406,10 +406,16 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
   override exportarListaPrincipal(): void {
     const instancia = this.interna();
     const tipo = this.tipoActivo();
-    const reporte = instancia.construirReporteListaPrincipalPdf();
-    if (!reporte) return;
+    instancia.cargando.set(true);
+    instancia.obtenerDatosMonitoreoParaExportar().subscribe({
+      next: datosFiltrados => {
+        const reporte = instancia.construirReporteListaPrincipalPdf(datosFiltrados);
+        if (!reporte) {
+          instancia.cargando.set(false);
+          return;
+        }
 
-    const dataExcel = this.construirDatosExcelListaPrincipal(reporte);
+    const dataExcel = this.construirDatosExcelListaPrincipal(reporte, datosFiltrados);
     const ws = XLSX.utils.aoa_to_sheet(dataExcel);
     ws['!headerRows'] = [11];
     ws['!sectionRows'] = [10];
@@ -439,17 +445,26 @@ export class MonitoreoListasComponent extends MonitoreoListasComponentBase {
         tipo,
         titulo: reporte.title,
         filtros: instancia.obtenerResumenFiltrosPrincipales(),
-        cantidadRegistros: reporte.rows.length,
+        cantidadRegistros: datosFiltrados.length,
         archivo: fileName
       }
     ).subscribe({
-      next: () => void this.reportPreview.openExcel(
+      next: () => {
+        instancia.cargando.set(false);
+        void this.reportPreview.openExcel(
         wb,
         fileName,
         `Vista previa de ${reporte.title.toLowerCase()}`,
         'Revise las filas filtradas y los totales antes de descargar el archivo.'
-      ),
+        );
+      },
       error: (err: unknown) => instancia.manejarErrorAuditoriaObligatoria(err, 'exportación Excel')
+    });
+      },
+      error: (err: unknown) => {
+        instancia.cargando.set(false);
+        instancia.manejarErrorAuditoriaObligatoria(err, 'preparación de exportación Excel');
+      }
     });
   }
 

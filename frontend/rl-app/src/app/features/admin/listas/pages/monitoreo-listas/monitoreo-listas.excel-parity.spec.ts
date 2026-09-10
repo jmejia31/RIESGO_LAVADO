@@ -15,6 +15,12 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
       getJuridicas: vi.fn(() => of([])),
       getNaturales: vi.fn(() => of([])),
       getEmpleados: vi.fn(() => of([])),
+      getJuridicasPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getJuridicasParaExportar: vi.fn(() => of([])),
+      getNaturalesPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getNaturalesParaExportar: vi.fn(() => of([])),
+      getEmpleadosPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getEmpleadosParaExportar: vi.fn(() => of([])),
       getTiposDocumento: vi.fn(() => of([])),
       getTiposListasCautela: vi.fn(() => of([])),
       getPoliticaEvidencias: vi.fn(() => of({
@@ -71,6 +77,7 @@ describe('MonitoreoListasComponent - paridad Excel/PDF', () => {
       fechaCalifico: '2026-07-11T12:00:00',
       fechaRegistroInterno: '2026-07-12T12:00:00'
     }] as never);
+    service['getJuridicasParaExportar'].mockReturnValue(of(component.juridicasRaw()));
 
     const instancia = component as unknown as {
       construirReporteListaPrincipalPdf(): { title: string; headers: string[]; rows: string[][] };

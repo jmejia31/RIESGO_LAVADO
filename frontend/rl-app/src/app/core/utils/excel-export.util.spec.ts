@@ -192,6 +192,8 @@ describe('generador Excel institucional', () => {
     });
     const blobUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:download');
     const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    blobUrl.mockClear();
+    revoke.mockClear();
     downloadBlob(pdf, 'Reporte.pdf');
     downloadBlob(xlsx, 'Reporte.xlsx');
     await writeFile({ sheets: [{ name: 'Reporte', sheet: { data: [['Codigo'], ['R-001']] } }] }, 'Reporte');

@@ -14,13 +14,16 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
     listarFamiliasFormulario: ReturnType<typeof vi.fn>;
+    listarFamiliasFormularioPaginadas: ReturnType<typeof vi.fn>;
     actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
     metodologiaVigente: ReturnType<typeof vi.fn>;
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
+    listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
+    obtenerConsolidadoPaginado: ReturnType<typeof vi.fn>;
   };
 
   const jsonRicoInicial = JSON.stringify({
@@ -74,13 +77,16 @@ describe('MatricesRiesgosComponent — Persistencia Bidireccional de Plantilla (
         famDescripcion: '',
         famActivo: true
       }])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } })),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true, mensaje: 'Guardado' })),
       metodologiaVigente: vi.fn().mockReturnValue(of({ versionFormularioId: 100, codigo: 'MATRIZ_LAFT_BIDIRECCIONAL', version: 1, secciones: [], catalogos: [], reglas: [] })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({ versionFormularioId: 100, codigo: 'MATRIZ_LAFT_BIDIRECCIONAL', version: 1, secciones: [], catalogos: [], reglas: [] })),
       obtenerEvaluacion: vi.fn().mockReturnValue(of(null)),
       listarRiesgos: vi.fn().mockReturnValue(of([])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of({ items: [], pagina: 1, registrosPorPagina: 10, totalRegistros: 0, totalPaginas: 0 })),
-      obtenerConsolidado: vi.fn().mockReturnValue(of([]))
+      obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
     };
 
     await TestBed.configureTestingModule({

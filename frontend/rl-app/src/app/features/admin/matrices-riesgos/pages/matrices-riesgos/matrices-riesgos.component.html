@@ -553,7 +553,7 @@
               </table>
             </div>
             <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
-              <p>Mostrando <strong class="text-gray-900">{{ familiasFiltradas().length === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ familiasFiltradas().length === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > familiasFiltradas().length ? familiasFiltradas().length : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ familiasFiltradas().length }}</strong> familias</p>
+              <p>Mostrando <strong class="text-gray-900">{{ totalRegistrosFamilias() === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ totalRegistrosFamilias() === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > totalRegistrosFamilias() ? totalRegistrosFamilias() : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ totalRegistrosFamilias() }}</strong> familias</p>
               <div class="flex flex-wrap items-center gap-2">
                  <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" aria-label="Página anterior" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
                 <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasFamilias() === 0 ? 0 : paginaFamilias() }} / {{ totalPaginasFamilias() }}</span>

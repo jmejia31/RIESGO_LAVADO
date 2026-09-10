@@ -79,6 +79,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
   private secuenciaCargaEvaluaciones = 0;
+  private secuenciaCargaFamilias = 0;
+  private secuenciaCargaConsolidado = 0;
 
   readonly esAdministrador = computed(() => this.authService.tieneRol(['ADMIN', 'ADMINISTRADOR']));
 
@@ -122,8 +124,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly registrosPorPaginaConsolidado = signal(10);
   readonly paginaFamilias = signal(1);
   readonly registrosPorPaginaFamilias = signal(10);
+  readonly totalRegistrosFamilias = signal(0);
+  readonly totalPaginasFamiliasServidor = signal(0);
+  readonly totalesFamiliasServidor = signal({ totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 });
   readonly familiaNuevaSeleccionada = computed(() =>
-    this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada()) ?? null
+    this.familias().find(familia => familia.famCodigo === this.familiaSeleccionada())
+      ?? (() => {
+        const predeterminada = this.familiaPredeterminada();
+        if (!predeterminada?.configurada || predeterminada.familiaCodigo !== this.familiaSeleccionada()) return null;
+        return {
+          famId: predeterminada.familiaId ?? 0,
+          famCodigo: predeterminada.familiaCodigo ?? '',
+          famNombre: predeterminada.familiaNombre ?? '',
+          famDescripcion: null,
+          famActivo: true,
+          famPredeterminada: true,
+          famFechaCreacion: new Date(0).toISOString(),
+          totalVersiones: predeterminada.tieneVersionVigente ? 1 : 0,
+          tieneVersionVigente: predeterminada.tieneVersionVigente
+        } satisfies FamiliaFormularioDto;
+      })()
   );
   readonly familiasElegibles = computed(() =>
     this.familias().filter(familia => familia.famActivo && familia.tieneVersionVigente)
@@ -134,43 +154,21 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       && this.familiaPredeterminada()?.configurada !== true
   );
 
-  readonly totalFamilias = computed(() => this.familias().length);
-  readonly totalFamiliasActivas = computed(() => this.familias().filter(f => f.famActivo).length);
-  readonly totalFamiliasInactivas = computed(() => this.familias().filter(f => !f.famActivo).length);
-  readonly totalVersionesFamilias = computed(() => this.familias().reduce((total, f) => total + Math.max(0, Number(f.totalVersiones) || 0), 0));
+  readonly totalFamilias = computed(() => this.totalesFamiliasServidor().totalFamilias);
+  readonly totalFamiliasActivas = computed(() => this.totalesFamiliasServidor().activas);
+  readonly totalFamiliasInactivas = computed(() => this.totalesFamiliasServidor().inactivas);
+  readonly totalVersionesFamilias = computed(() => this.totalesFamiliasServidor().totalVersiones);
 
   readonly familiasFiltradas = computed<FamiliaFormularioDto[]>(() => {
-    const lista = this.familias();
-    const buscar = this.filtroBuscarFamilia().trim().toLowerCase();
-    const estado = this.filtroEstadoFamilia();
-    const vigencia = this.filtroVigenciaFamilia();
-
-    return lista.filter(f => {
-      const cumpleBuscar = !buscar
-        || f.famCodigo.toLowerCase().includes(buscar)
-        || f.famNombre.toLowerCase().includes(buscar);
-      const cumpleEstado = estado === 'TODAS'
-        || (estado === 'ACTIVAS' && f.famActivo)
-        || (estado === 'INACTIVAS' && !f.famActivo);
-      const cumpleVigencia = vigencia === 'TODAS'
-        || (vigencia === 'VIGENTES' && f.tieneVersionVigente)
-        || (vigencia === 'SIN_VIGENTE' && !f.tieneVersionVigente);
-      return cumpleBuscar && cumpleEstado && cumpleVigencia;
-    });
+    return this.familias();
   });
 
   readonly totalPaginasFamilias = computed(() => {
-    const porPagina = this.registrosPorPaginaFamilias();
-    return porPagina > 0 ? Math.ceil(this.familiasFiltradas().length / porPagina) : 0;
+    return this.totalPaginasFamiliasServidor();
   });
 
   readonly familiasPaginadas = computed<FamiliaFormularioDto[]>(() => {
-    const lista = this.familiasFiltradas();
-    const porPagina = this.registrosPorPaginaFamilias();
-    const totalPaginas = this.totalPaginasFamilias();
-    const paginaEfectiva = totalPaginas === 0 ? 1 : Math.min(Math.max(this.paginaFamilias(), 1), totalPaginas);
-    const inicio = (paginaEfectiva - 1) * porPagina;
-    return lista.slice(inicio, inicio + porPagina);
+    return this.familias();
   });
 
   readonly metodologia = signal<MetodologiaFormulario | null>(null);
@@ -225,22 +223,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     totalSinEvaluacionOficial: 0,
     totalAltoCritico: 0
   });
-  readonly consolidadoUsaServidor = signal(false);
+  readonly consolidadoUsaServidor = signal(true);
   readonly ordenConsolidado = signal('fechaEvaluacion');
   readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
 
-  readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => {
-    const buscar = this.filtroBuscarConsolidado().trim().toLowerCase();
-    const estado = this.filtroEstadoConsolidado();
-    return this.consolidado().filter(fila => {
-      const coincideBusqueda = !buscar
-        || fila.codigoRiesgo.toLowerCase().includes(buscar)
-        || fila.areaPrincipal.toLowerCase().includes(buscar)
-        || fila.duenoRiesgo.toLowerCase().includes(buscar);
-      const coincideEstado = estado === 'TODOS' || fila.estadoEvaluacion === estado;
-      return coincideBusqueda && coincideEstado;
-    });
-  });
+  readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => this.consolidado());
 
   readonly estadosConsolidado = computed(() => Array.from(new Set([
     'APROBADA',
@@ -256,19 +243,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     .filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length);
 
   readonly totalPaginasConsolidado = computed(() => {
-    if (this.consolidadoUsaServidor()) return this.totalPaginasServidorConsolidado();
-    const porPagina = this.registrosPorPaginaConsolidado();
-    return porPagina > 0 ? Math.ceil(this.consolidadoFiltrado().length / porPagina) : 0;
+    return this.totalPaginasServidorConsolidado();
   });
 
   readonly consolidadoPaginado = computed<RiesgoReporteFila[]>(() => {
-    if (this.consolidadoUsaServidor()) return this.consolidado();
-    const lista = this.consolidadoFiltrado();
-    const porPagina = this.registrosPorPaginaConsolidado();
-    const total = this.totalPaginasConsolidado();
-    const pagina = total === 0 ? 1 : Math.min(Math.max(this.paginaConsolidado(), 1), total);
-    const inicio = (pagina - 1) * porPagina;
-    return lista.slice(inicio, inicio + porPagina);
+    return this.consolidado();
   });
 
   readonly modalVerAbierto = signal<boolean>(false);
@@ -460,28 +439,33 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarFamilias(): void {
-    if (typeof this.service.listarFamiliasFormulario !== 'function') {
-      this.familias.set([]);
-      this.cargandoFamilias.set(false);
-      return;
-    }
-
+    const solicitudId = ++this.secuenciaCargaFamilias;
     this.cargandoFamilias.set(true);
     this.errorFamilias.set(null);
-    this.service.listarFamiliasFormulario().subscribe({
-      next: familias => {
-        this.familias.set(familias);
-        if (this.familiaSeleccionada() && !familias.some(f => f.famCodigo === this.familiaSeleccionada())) {
+    this.service.listarFamiliasFormularioPaginadas({
+      pagina: this.paginaFamilias(),
+      tamanoPagina: this.registrosPorPaginaFamilias(),
+      buscar: this.filtroBuscarFamilia(),
+      estado: this.filtroEstadoFamilia() as 'TODAS' | 'ACTIVAS' | 'INACTIVAS',
+      vigencia: this.filtroVigenciaFamilia() as 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE'
+    }).subscribe({
+      next: resultado => {
+        if (solicitudId !== this.secuenciaCargaFamilias) return;
+        this.familias.set(resultado.items);
+        this.paginaFamilias.set(resultado.pagina);
+        this.totalRegistrosFamilias.set(resultado.totalRegistros);
+        this.totalPaginasFamiliasServidor.set(resultado.totalPaginas);
+        this.totalesFamiliasServidor.set(resultado.totales);
+        if (this.familiaSeleccionada() && !resultado.items.some(f => f.famCodigo === this.familiaSeleccionada())) {
           this.familiaSeleccionada.set('');
-        }
-        const totalPaginas = this.totalPaginasFamilias();
-        if (totalPaginas > 0 && this.paginaFamilias() > totalPaginas) {
-          this.paginaFamilias.set(totalPaginas);
         }
         this.cargandoFamilias.set(false);
       },
       error: error => {
+        if (solicitudId !== this.secuenciaCargaFamilias) return;
         this.familias.set([]);
+        this.totalRegistrosFamilias.set(0);
+        this.totalPaginasFamiliasServidor.set(0);
         this.errorFamilias.set(this.obtenerMensajeError(error, 'No se pudieron cargar las familias de formularios.'));
         this.cargandoFamilias.set(false);
       }
@@ -573,6 +557,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.filtroEstadoFamilia.set('TODAS');
     this.filtroVigenciaFamilia.set('TODAS');
     this.paginaFamilias.set(1);
+    this.cargarFamilias();
+  }
+
+  cambiarBuscarFamilia(valor: string): void {
+    this.filtroBuscarFamilia.set(valor);
+    this.paginaFamilias.set(1);
+    this.cargarFamilias();
+  }
+
+  cambiarEstadoFamilia(valor: string): void {
+    this.filtroEstadoFamilia.set(valor);
+    this.paginaFamilias.set(1);
+    this.cargarFamilias();
+  }
+
+  cambiarVigenciaFamilia(valor: string): void {
+    this.filtroVigenciaFamilia.set(valor);
+    this.paginaFamilias.set(1);
+    this.cargarFamilias();
   }
 
   cambiarPaginaConsolidado(nuevaPagina: number): void {
@@ -630,6 +633,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       return;
     }
     this.paginaFamilias.set(nuevaPagina);
+    this.cargarFamilias();
   }
 
   cambiarRegistrosPorPaginaFamilias(cantidad: number): void {
@@ -639,6 +643,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
     this.registrosPorPaginaFamilias.set(num);
     this.paginaFamilias.set(1);
+    this.cargarFamilias();
   }
 
   abrirModalVerFamilia(fam: FamiliaFormularioDto, desdeNuevaEvaluacion = false): void {
@@ -1037,8 +1042,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarRiesgos(): void {
-    this.service.listarRiesgos().subscribe({
-      next: riesgos => this.riesgos.set(riesgos),
+    this.service.listarRiesgosPaginados(false, 1, 200).subscribe({
+      next: respuesta => this.riesgos.set(respuesta.items),
       error: () => this.riesgos.set([])
     });
   }
@@ -1182,34 +1187,23 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   cargarConsolidado(): void {
+    const solicitudId = ++this.secuenciaCargaConsolidado;
     this.cargandoConsolidado.set(true);
     this.errorConsolidado.set(null);
     const filtro = this.filtroReporteConsolidado();
-    const serviceWithPaging = this.service as MatricesRiesgosService & {
-      obtenerConsolidadoPaginado?: (filtro: FiltroReporteMatrices) => Observable<ReporteMatricesPaginado>;
-    };
-    const solicitud: Observable<ReporteMatricesPaginado | RiesgoReporteFila[]> = typeof serviceWithPaging.obtenerConsolidadoPaginado === 'function'
-      ? serviceWithPaging.obtenerConsolidadoPaginado(filtro) as Observable<ReporteMatricesPaginado>
-      : this.service.obtenerConsolidado();
-    solicitud.subscribe({
+    this.service.obtenerConsolidadoPaginado(filtro).subscribe({
       next: resultado => {
-        if (Array.isArray(resultado)) {
-          this.consolidadoUsaServidor.set(false);
-          this.consolidado.set(resultado);
-          this.totalRegistrosConsolidado.set(resultado.length);
-          this.totalPaginasServidorConsolidado.set(0);
-        } else {
-          this.consolidadoUsaServidor.set(true);
-          this.consolidado.set(resultado.items);
-          this.totalRegistrosConsolidado.set(resultado.totalRegistros);
-          this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
-          this.totalesConsolidado.set(resultado.totales);
-          this.paginaConsolidado.set(resultado.pagina);
-          this.registrosPorPaginaConsolidado.set(resultado.tamanoPagina as 10 | 20 | 50);
-        }
+        if (solicitudId !== this.secuenciaCargaConsolidado) return;
+        this.consolidado.set(resultado.items);
+        this.totalRegistrosConsolidado.set(resultado.totalRegistros);
+        this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
+        this.totalesConsolidado.set(resultado.totales);
+        this.paginaConsolidado.set(resultado.pagina);
+        this.registrosPorPaginaConsolidado.set(resultado.tamanoPagina as 10 | 20 | 50);
         this.cargandoConsolidado.set(false);
       },
       error: error => {
+        if (solicitudId !== this.secuenciaCargaConsolidado) return;
         const msg = this.obtenerMensajeError(error, 'No se pudo cargar la matriz consolidada.');
         this.errorConsolidado.set(msg);
         this.cargandoConsolidado.set(false);

@@ -311,6 +311,9 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
     public Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro) =>
         _inner.ObtenerConsolidadoParaExportacionAsync(filtro);
 
+    public Task<FamiliasFormularioPaginadasDto> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro) =>
+        _inner.ListarFamiliasFormularioPaginadasAsync(filtro);
+
     public Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync() =>
         _inner.ObtenerMetodologiaDinamicaVigenteAsync();
 

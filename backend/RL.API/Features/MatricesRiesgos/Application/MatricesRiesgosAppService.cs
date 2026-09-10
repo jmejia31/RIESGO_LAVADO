@@ -242,6 +242,13 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<List<FamiliaFormularioDto>>.Ok(familias);
     }
 
+    public async Task<ServiceResult<FamiliasFormularioPaginadasDto>> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro)
+    {
+        filtro ??= new ConsultaFamiliasFormularioPaginadaDto();
+        var resultado = await _repo.ListarFamiliasFormularioPaginadasAsync(filtro);
+        return ServiceResult<FamiliasFormularioPaginadasDto>.Ok(resultado);
+    }
+
     public async Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId)
     {
         if (famId <= 0)

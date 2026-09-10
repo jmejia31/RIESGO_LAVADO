@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos.Contracts;
 
@@ -26,6 +27,28 @@ public sealed class FamiliaPredeterminadaDto
     public long? VersionVigenteId { get; set; }
     public string? VersionCodigo { get; set; }
     public int? Version { get; set; }
+}
+
+public sealed class ConsultaFamiliasFormularioPaginadaDto
+{
+    public int Pagina { get; set; } = 1;
+    public int TamanoPagina { get; set; } = 10;
+    public string? Buscar { get; set; }
+    public string Estado { get; set; } = "TODAS";
+    public string Vigencia { get; set; } = "TODAS";
+}
+
+public sealed class FamiliasFormularioTotalesDto
+{
+    public int TotalFamilias { get; init; }
+    public int Activas { get; init; }
+    public int Inactivas { get; init; }
+    public int TotalVersiones { get; init; }
+}
+
+public sealed class FamiliasFormularioPaginadasDto : PaginadoDto<FamiliaFormularioDto>
+{
+    public FamiliasFormularioTotalesDto Totales { get; init; } = new();
 }
 
 public sealed class CrearFamiliaFormularioDto

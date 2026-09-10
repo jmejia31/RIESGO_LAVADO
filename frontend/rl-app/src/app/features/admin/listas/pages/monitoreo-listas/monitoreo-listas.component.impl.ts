@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
-import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica } from '../../models/listas.models';
+import { CoincidenciaJuridica, CoincidenciaNatural, CoincidenciaEmpleado, DetalleCoincidenciaNatural, DetalleCoincidenciaEmpleado, TipoDocumento, TipoListaCautela, RegistrarPositivoDto, Seguimiento, Evidencia, EvidenciaPolitica, MonitoreoTotales, ConsultaMonitoreoPaginada } from '../../models/listas.models';
 import { ConfiguracionService } from '../../../../../core/configuration/configuracion.service';
 import { jsPDF } from 'jspdf';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
-import { of, forkJoin } from 'rxjs';
+import { of, forkJoin, Observable } from 'rxjs';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
@@ -27,10 +27,7 @@ export class MonitoreoListasComponent implements OnInit {
   protected readonly reportPreview = inject(ReportPreviewService);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
-  private readonly tiposMonitoreo: FiltroTipo[] = ['juridica', 'natural', 'empleado'];
-  private readonly tiposCargados = new Set<FiltroTipo>();
-  private readonly tiposEnCarga = new Set<FiltroTipo>();
-  private precargaSolicitada = false;
+  private secuenciaCargaDatos = 0;
   readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
@@ -115,6 +112,13 @@ export class MonitoreoListasComponent implements OnInit {
   juridicasRaw = signal<CoincidenciaJuridica[]>([]);
   naturalesRaw = signal<CoincidenciaNatural[]>([]);
   empleadosRaw = signal<CoincidenciaEmpleado[]>([]);
+  private readonly totalesVacios: MonitoreoTotales = { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 };
+  juridicasTotales = signal<MonitoreoTotales>(this.totalesVacios);
+  naturalesTotales = signal<MonitoreoTotales>(this.totalesVacios);
+  empleadosTotales = signal<MonitoreoTotales>(this.totalesVacios);
+  juridicasPaginas = signal(0);
+  naturalesPaginas = signal(0);
+  empleadosPaginas = signal(0);
 
   datosConsolidados = computed<MonitoreoRegistro[]>(() => [
     ...this.juridicasRaw(),
@@ -134,30 +138,17 @@ export class MonitoreoListasComponent implements OnInit {
     return 'Empleados';
   });
 
-  totalActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item)).length);
-  pendientesActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length);
-  conMotivoActual = computed(() => this.datosActivos().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length);
-  cerradosPasivosActual = computed(() => this.datosActivos().filter(item => this.esCerradoPasivo(item)).length);
-  positivosManualesActual = computed(() => this.datosActivos().filter(item => !!item.esManual && !this.esCerradoPasivo(item)).length);
-
-  totalGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item)).length);
-  pendientesGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length);
-  conMotivoGeneral = computed(() => this.datosConsolidados().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length);
-  positivosManualesGeneral = computed(() => this.datosConsolidados().filter(item => !!item.esManual && !this.esCerradoPasivo(item)).length);
-  cerradosPasivosGeneral = computed(() => this.datosConsolidados().filter(item => this.esCerradoPasivo(item)).length);
-
-  resumenListasActual = computed(() => {
-    const resumen = new Map<string, number>();
-    this.datosActivos().forEach(item => {
-      const lista = (item.listaCoincidencia || 'Sin lista').trim();
-      resumen.set(lista, (resumen.get(lista) || 0) + 1);
-    });
-
-    return Array.from(resumen.entries())
-      .map(([lista, total]) => ({ lista, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
-  });
+  totalesActuales = computed(() => this.tipoActivo() === 'juridica' ? this.juridicasTotales() : this.tipoActivo() === 'natural' ? this.naturalesTotales() : this.empleadosTotales());
+  totalActual = computed(() => this.totalesActuales().totalRegistros);
+  pendientesActual = computed(() => this.totalesActuales().pendientes);
+  conMotivoActual = computed(() => this.totalesActuales().conMotivo);
+  cerradosPasivosActual = computed(() => this.totalesActuales().cerradosPasivos);
+  positivosManualesActual = computed(() => this.totalesActuales().manuales);
+  totalGeneral = computed(() => this.totalActual());
+  pendientesGeneral = computed(() => this.pendientesActual());
+  conMotivoGeneral = computed(() => this.conMotivoActual());
+  positivosManualesGeneral = computed(() => this.positivosManualesActual());
+  cerradosPasivosGeneral = computed(() => this.cerradosPasivosActual());
 
   hayFiltrosPrincipalesActivos = computed(() =>
     !!this.busqueda().trim() ||
@@ -198,12 +189,51 @@ export class MonitoreoListasComponent implements OnInit {
     this.cargarDatos({ tipo, force: false });
   }
 
+  cambiarBusqueda(valor: string): void {
+    this.busqueda.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  cambiarEstado(valor: FiltroEstado): void {
+    this.filtroEstado.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  cambiarFechaDesde(valor: string): void {
+    this.filtroFechaDesde.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  cambiarFechaHasta(valor: string): void {
+    this.filtroFechaHasta.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  cambiarLimite(valor: number): void {
+    if (![10, 25, 50].includes(valor)) return;
+    this.limite.set(valor);
+    this.paginaActual.set(1);
+    this.cargarDatos();
+  }
+
+  cambiarPagina(pagina: number): void {
+    const total = this.paginasTotales();
+    if (!Number.isInteger(pagina) || total <= 0 || pagina < 1 || pagina > total) return;
+    this.paginaActual.set(pagina);
+    this.cargarDatos();
+  }
+
   limpiarFiltrosPrincipales() {
     this.busqueda.set('');
     this.filtroEstado.set('todos');
     this.filtroFechaDesde.set('');
     this.filtroFechaHasta.set('');
     this.paginaActual.set(1);
+    this.cargarDatos();
   }
 
   private limitarTexto(valor: string | null | undefined): string {
@@ -224,94 +254,32 @@ export class MonitoreoListasComponent implements OnInit {
 
   cargarDatos(options: { tipo?: FiltroTipo; force?: boolean; mostrarLoader?: boolean } = {}) {
     const tipo = options.tipo ?? this.tipoActivo();
-    const force = options.force ?? true;
     const mostrarLoader = options.mostrarLoader ?? true;
+    const solicitud = ++this.secuenciaCargaDatos;
 
-    if (!force && this.tiposCargados.has(tipo)) {
-      this.cargando.set(false);
-      return;
-    }
-
-    if (this.tiposEnCarga.has(tipo)) {
-      if (mostrarLoader && tipo === this.tipoActivo() && !this.tiposCargados.has(tipo)) {
-        this.cargando.set(true);
-      }
-      return;
-    }
-
-    this.tiposEnCarga.add(tipo);
     if (mostrarLoader && tipo === this.tipoActivo()) {
       this.cargando.set(true);
     }
-
-    const terminarCarga = () => {
-      this.tiposEnCarga.delete(tipo);
-      if (tipo === this.tipoActivo()) {
-        this.cargando.set(false);
-      }
-      this.precargarTiposRestantes();
-    };
-
+    const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null };
     if (tipo === 'juridica') {
-      this.listasService.getJuridicas().subscribe({
-        next: (res) => { this.juridicasRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
-        error: () => { this.juridicasRaw.set([]); terminarCarga(); }
+      this.listasService.getJuridicasPaginadas(consulta).subscribe({
+        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.juridicasRaw.set(res.items); this.juridicasTotales.set(res.totales); this.juridicasPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
+        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.juridicasRaw.set([]); this.juridicasTotales.set(this.totalesVacios); this.cargando.set(false); }
       });
     } else if (tipo === 'natural') {
-      this.listasService.getNaturales().subscribe({
-        next: (res) => { this.naturalesRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
-        error: () => { this.naturalesRaw.set([]); terminarCarga(); }
+      this.listasService.getNaturalesPaginadas(consulta).subscribe({
+        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.naturalesRaw.set(res.items); this.naturalesTotales.set(res.totales); this.naturalesPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
+        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.naturalesRaw.set([]); this.naturalesTotales.set(this.totalesVacios); this.cargando.set(false); }
       });
     } else if (tipo === 'empleado') {
-      this.listasService.getEmpleados().subscribe({
-        next: (res) => { this.empleadosRaw.set(res); this.tiposCargados.add(tipo); terminarCarga(); },
-        error: () => { this.empleadosRaw.set([]); terminarCarga(); }
+      this.listasService.getEmpleadosPaginadas(consulta).subscribe({
+        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.empleadosRaw.set(res.items); this.empleadosTotales.set(res.totales); this.empleadosPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
+        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.empleadosRaw.set([]); this.empleadosTotales.set(this.totalesVacios); this.cargando.set(false); }
       });
     }
   }
 
-  private precargarTiposRestantes() {
-    if (this.precargaSolicitada) return;
-    this.precargaSolicitada = true;
-
-    setTimeout(() => {
-      this.tiposMonitoreo
-        .filter(tipo => tipo !== this.tipoActivo())
-        .forEach(tipo => this.cargarDatos({ tipo, force: false, mostrarLoader: false }));
-    }, 0);
-  }
-
-  // Filtrado reactivo en memoria
-  datosFiltrados = computed(() => {
-    const query = this.busqueda().trim().toLowerCase();
-    const tipo = this.tipoActivo();
-    const estado = this.filtroEstado();
-    const desde = this.filtroFechaDesde();
-    const hasta = this.filtroFechaHasta();
-
-    if (tipo === 'juridica') {
-      const data = this.juridicasRaw();
-      return data.filter(item =>
-        this.coincideTexto(item, query, [item.nombre, item.rtn, item.numeroPatrono, item.listaCoincidencia]) &&
-        this.coincideEstado(item, estado) &&
-        this.coincideFecha(item, desde, hasta)
-      );
-    } else if (tipo === 'natural') {
-      const data = this.naturalesRaw();
-      return data.filter(item =>
-        this.coincideTexto(item, query, [item.nombre, item.numeroIdentificacion, item.listaCoincidencia]) &&
-        this.coincideEstado(item, estado) &&
-        this.coincideFecha(item, desde, hasta)
-      );
-    } else {
-      const data = this.empleadosRaw();
-      return data.filter(item =>
-        this.coincideTexto(item, query, [item.nombre, item.identidad, item.listaCoincidencia]) &&
-        this.coincideEstado(item, estado) &&
-        this.coincideFecha(item, desde, hasta)
-      );
-    }
-  });
+  datosFiltrados = computed(() => this.datosActivos());
 
   private coincideTexto(item: unknown, query: string, valores: Array<string | null | undefined>): boolean {
     if (!query) return true;
@@ -391,32 +359,32 @@ export class MonitoreoListasComponent implements OnInit {
   // Datos paginados reactivos por tipo
   juridicasPaginadas = computed(() => {
     if (this.tipoActivo() !== 'juridica') return [];
-    const filtered = this.datosFiltrados() as CoincidenciaJuridica[];
-    const startIndex = (this.paginaActual() - 1) * this.limite();
-    return filtered.slice(startIndex, startIndex + this.limite());
+    return this.juridicasRaw();
   });
 
   naturalesPaginadas = computed(() => {
     if (this.tipoActivo() !== 'natural') return [];
-    const filtered = this.datosFiltrados() as CoincidenciaNatural[];
-    const startIndex = (this.paginaActual() - 1) * this.limite();
-    return filtered.slice(startIndex, startIndex + this.limite());
+    return this.naturalesRaw();
   });
 
   empleadosPaginadas = computed(() => {
     if (this.tipoActivo() !== 'empleado') return [];
-    const filtered = this.datosFiltrados() as CoincidenciaEmpleado[];
-    const startIndex = (this.paginaActual() - 1) * this.limite();
-    return filtered.slice(startIndex, startIndex + this.limite());
+    return this.empleadosRaw();
   });
 
   paginasTotales = computed(() => {
-    return Math.ceil(this.datosFiltrados().length / this.limite()) || 1;
+    if (this.tipoActivo() === 'juridica') return this.juridicasPaginas();
+    if (this.tipoActivo() === 'natural') return this.naturalesPaginas();
+    return this.empleadosPaginas();
   });
 
   paginasArray = computed(() => {
     const total = this.paginasTotales();
-    return Array.from({ length: total }, (_, i) => i + 1);
+    const actual = this.paginaActual();
+    if (total <= 0) return [];
+    const paginas = new Set<number>([1, total]);
+    for (let pagina = Math.max(1, actual - 2); pagina <= Math.min(total, actual + 2); pagina++) paginas.add(pagina);
+    return [...paginas].sort((a, b) => a - b);
   });
 
   abrirDetalle(row: CoincidenciaNatural) {
@@ -1798,9 +1766,26 @@ export class MonitoreoListasComponent implements OnInit {
     return 'Todos los registros';
   }
 
-  private construirReporteListaPrincipalPdf(): { title: string; headers: string[]; rows: string[][] } | null {
+  public obtenerConsultaMonitoreoActual(): ConsultaMonitoreoPaginada {
+    return {
+      pagina: 1,
+      tamanoPagina: 200,
+      buscar: this.busqueda(),
+      estado: this.filtroEstado(),
+      fechaDesde: this.filtroFechaDesde() || null,
+      fechaHasta: this.filtroFechaHasta() || null
+    };
+  }
+
+  public obtenerDatosMonitoreoParaExportar(): Observable<MonitoreoRegistro[]> {
+    const consulta = this.obtenerConsultaMonitoreoActual();
+    if (this.tipoActivo() === 'juridica') return this.listasService.getJuridicasParaExportar(consulta);
+    if (this.tipoActivo() === 'natural') return this.listasService.getNaturalesParaExportar(consulta);
+    return this.listasService.getEmpleadosParaExportar(consulta);
+  }
+
+  public construirReporteListaPrincipalPdf(dataFiltrada: MonitoreoRegistro[] = this.datosFiltrados()): { title: string; headers: string[]; rows: string[][] } | null {
     const tipo = this.tipoActivo();
-    const dataFiltrada = this.datosFiltrados();
     if (dataFiltrada.length === 0) return null;
 
     if (tipo === 'juridica') {
@@ -1853,7 +1838,21 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   exportarPdfListaPrincipal() {
-    const reporte = this.construirReporteListaPrincipalPdf();
+    this.cargando.set(true);
+    this.obtenerDatosMonitoreoParaExportar().subscribe({
+      next: dataFiltrada => {
+        this.cargando.set(false);
+        this.exportarPdfListaPrincipalConDatos(dataFiltrada);
+      },
+      error: err => {
+        this.cargando.set(false);
+        this.manejarErrorAuditoriaObligatoria(err, 'preparación de exportación PDF');
+      }
+    });
+  }
+
+  private exportarPdfListaPrincipalConDatos(dataFiltrada: MonitoreoRegistro[]) {
+    const reporte = this.construirReporteListaPrincipalPdf(dataFiltrada);
     if (!reporte) return;
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -1863,9 +1862,9 @@ export class MonitoreoListasComponent implements OnInit {
 
     const resumen = [
       ['Registros filtrados', String(reporte.rows.length), 'Coincidencias visibles en la vista actual'],
-      ['Pendientes', String(this.datosFiltrados().filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length), 'Requieren motivo o revisión'],
-      ['Con motivo', String(this.datosFiltrados().filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length), 'Con sustento registrado'],
-      ['Cerrados / pasivos', String(this.datosFiltrados().filter(item => this.esCerradoPasivo(item)).length), 'Registros no activos']
+      ['Pendientes', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && (!item.tieneMotivo || !!item.esManual)).length), 'Requieren motivo o revisión'],
+      ['Con motivo', String(dataFiltrada.filter(item => !this.esCerradoPasivo(item) && !!item.tieneMotivo && !item.esManual).length), 'Con sustento registrado'],
+      ['Cerrados / pasivos', String(dataFiltrada.filter(item => this.esCerradoPasivo(item)).length), 'Registros no activos']
     ];
     const resumenTabla = [
       [...resumen[0], ...resumen[1]],

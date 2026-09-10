@@ -271,6 +271,9 @@ public class AuthService : IAuthService
         return await _usuarioRepo.ListarAsync();
     }
 
+    public Task<UsuariosPaginadosDto> ListarUsuariosPaginadoAsync(ConsultaUsuariosPaginadaDto consulta)
+        => _usuarioRepo.ListarPaginadoAsync(consulta);
+
     public async Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo, long actualizadoPor)
     {
         long id = HashIdHelper.DecodeId(uid);

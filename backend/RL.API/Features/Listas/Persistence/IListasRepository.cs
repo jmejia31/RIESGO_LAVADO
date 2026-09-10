@@ -1,13 +1,20 @@
 using Microsoft.AspNetCore.Http;
 using RL.API.Features.Listas.Contracts;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.Listas.Persistence;
 
 public interface IListasRepository
 {
     Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasAsync();
+    Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta);
+    Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta);
     Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesAsync();
+    Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta);
+    Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta);
     Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosAsync();
+    Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta);
+    Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta);
     Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion);
     Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion);
     Task<List<TipoDocumentoDto>> ObtenerTiposDocumentoAsync();
@@ -30,9 +37,13 @@ public interface IListasRepository
     Task<List<ResumenListaDto>> ObtenerResumenListasAsync();
     Task<List<Dictionary<string, object>>> ObtenerDetalleListaParaExportarAsync(int tipoListaId);
     Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPatronoAsync();
+    Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta);
     Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoAsync(string fecha);
+    Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta);
     Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasEmpleadoAsync();
+    Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta);
     Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoAsync(string fecha);
+    Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta);
     Task<bool> CalificarCoincidenciaAsync(long reporteCoincidenciaId, int tipoCalificacionId, long usuarioId, bool esEmpleado);
     Task<string> ObtenerResumenMatchListaAsync(long dataId, string nombre);
     Task<(bool EsValido, string Mensaje)> ValidarArchivoCautelaAsync(IFormFile archivo, int tipoListaCautelaId);

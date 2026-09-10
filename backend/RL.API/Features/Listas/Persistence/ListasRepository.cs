@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
@@ -7,6 +8,7 @@ using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Http;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.Listas.Persistence
 {
@@ -216,6 +218,83 @@ namespace RL.API.Features.Listas.Persistence
             }
             return list;
         }
+
+        public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoPaginadoAsync(
+                consulta,
+                ConstruirConsultaMonitoreoJuridicas(),
+                "NOMBRE ASC, NUMEPATRO ASC",
+                reader => new CoincidenciaJuridicaDto
+                {
+                    Rtn = Texto(reader, "RTN"),
+                    Nombre = Texto(reader, "NOMBRE"),
+                    NumeroPatrono = Texto(reader, "NUMEPATRO"),
+                    ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
+                    FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
+                    FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
+                    FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
+                    EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"),
+                    TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
+                    EsManual = Entero(reader, "ES_MANUAL") == 1
+                });
+
+        public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoJuridicas(), "NOMBRE ASC, NUMEPATRO ASC", reader => new CoincidenciaJuridicaDto
+            {
+                Rtn = Texto(reader, "RTN"), Nombre = Texto(reader, "NOMBRE"), NumeroPatrono = Texto(reader, "NUMEPATRO"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
+                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
+                EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
+            });
+
+        public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoPaginadoAsync(
+                consulta,
+                ConstruirConsultaMonitoreoNaturales(),
+                "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC",
+                reader => new CoincidenciaNaturalDto
+                {
+                    NumeroIdentificacion = Texto(reader, "NUMERO_IDENTIFICACION"),
+                    Nombre = Texto(reader, "NOMBRE"),
+                    ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
+                    TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                    FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
+                    FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
+                    FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
+                    TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
+                    EsManual = Entero(reader, "ES_MANUAL") == 1
+                });
+
+        public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoNaturales(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC", reader => new CoincidenciaNaturalDto
+            {
+                NumeroIdentificacion = Texto(reader, "NUMERO_IDENTIFICACION"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
+            });
+
+        public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoPaginadoAsync(
+                consulta,
+                ConstruirConsultaMonitoreoEmpleados(),
+                "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC",
+                reader => new CoincidenciaEmpleadoDto
+                {
+                    Identidad = Texto(reader, "IDENTIDAD"),
+                    Nombre = Texto(reader, "NOMBRE"),
+                    ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
+                    TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                    FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
+                    FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
+                    FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
+                    TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
+                    EsManual = Entero(reader, "ES_MANUAL") == 1
+                });
+
+        public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
+            => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoEmpleados(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC", reader => new CoincidenciaEmpleadoDto
+            {
+                Identidad = Texto(reader, "IDENTIDAD"), Nombre = Texto(reader, "NOMBRE"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), TotalRepetidos = Entero(reader, "TOTAL_REPETIDOS"),
+                FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
+            });
 
         public async Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion)
         {
@@ -1057,6 +1136,249 @@ namespace RL.API.Features.Listas.Persistence
             }
 
             return resultList;
+        }
+
+        private async Task<MonitoreoPaginadoDto<T>> ObtenerMonitoreoPaginadoAsync<T>(
+            ConsultaMonitoreoPaginadaDto consulta,
+            string baseSql,
+            string orderBy,
+            Func<OracleDataReader, T> map)
+        {
+            var filteredSql = $"SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q WHERE 1 = 1";
+            AppendMonitoringFilters(ref filteredSql, consulta);
+
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+
+            var paged = await ExecutePageAsync(conn, filteredSql, orderBy, consulta.Pagina, consulta.TamanoPagina, command => AddMonitoringParameters(command, consulta), map);
+
+            await using var totalsCommand = conn.CreateCommand();
+            totalsCommand.BindByName = true;
+            totalsCommand.CommandText = $@"
+                SELECT COUNT(*) AS TOTAL_REGISTROS,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END), 0) AS PENDIENTES,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END), 0) AS CON_MOTIVO,
+                       NVL(SUM(CASE WHEN ES_MANUAL = 1 THEN 1 ELSE 0 END), 0) AS MANUALES,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END), 0) AS CERRADOS_PASIVOS
+                FROM ({filteredSql}) f";
+            AddMonitoringParameters(totalsCommand, consulta);
+            await using var totalsReader = await totalsCommand.ExecuteReaderAsync();
+            if (await totalsReader.ReadAsync())
+            {
+                return new MonitoreoPaginadoDto<T>
+                {
+                    Items = paged.Items,
+                    Pagina = paged.Pagina,
+                    TamanoPagina = paged.TamanoPagina,
+                    TotalRegistros = paged.TotalRegistros,
+                    TotalPaginas = paged.TotalPaginas,
+                    Totales = new MonitoreoTotalesDto
+                    {
+                        TotalRegistros = Entero(totalsReader, "TOTAL_REGISTROS"),
+                        Pendientes = Entero(totalsReader, "PENDIENTES"),
+                        ConMotivo = Entero(totalsReader, "CON_MOTIVO"),
+                        Manuales = Entero(totalsReader, "MANUALES"),
+                        CerradosPasivos = Entero(totalsReader, "CERRADOS_PASIVOS")
+                    }
+                };
+            }
+
+            return new MonitoreoPaginadoDto<T>
+            {
+                Items = paged.Items,
+                Pagina = paged.Pagina,
+                TamanoPagina = paged.TamanoPagina,
+                TotalRegistros = paged.TotalRegistros,
+                TotalPaginas = paged.TotalPaginas
+            };
+        }
+
+        private async Task<List<T>> ObtenerMonitoreoCompletoAsync<T>(
+            ConsultaMonitoreoPaginadaDto consulta,
+            string baseSql,
+            string orderBy,
+            Func<OracleDataReader, T> map)
+        {
+            var filteredSql = $"SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q WHERE 1 = 1";
+            AppendMonitoringFilters(ref filteredSql, consulta);
+
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = $"{filteredSql} ORDER BY {orderBy}";
+            AddMonitoringParameters(command, consulta);
+            var items = new List<T>();
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) items.Add(map(reader));
+            return items;
+        }
+
+        private async Task<PaginadoDto<T>> ExecutePageAsync<T>(
+            OracleConnection conn,
+            string filteredSql,
+            string orderBy,
+            int requestedPage,
+            int requestedPageSize,
+            Action<OracleCommand> addParameters,
+            Func<OracleDataReader, T> map)
+        {
+            var pageSize = Math.Clamp(requestedPageSize, 1, 200);
+            await using var countCommand = conn.CreateCommand();
+            countCommand.BindByName = true;
+            countCommand.CommandText = $"SELECT COUNT(*) FROM ({filteredSql}) count_query";
+            addParameters(countCommand);
+            var total = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+            var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+            var page = totalPages == 0 ? 1 : Math.Clamp(requestedPage, 1, totalPages);
+            var firstRow = (page - 1) * pageSize;
+            var lastRow = page * pageSize;
+
+            var items = new List<T>();
+            if (total > 0)
+            {
+                await using var pageCommand = conn.CreateCommand();
+                pageCommand.BindByName = true;
+                pageCommand.CommandText = $@"
+                    SELECT *
+                    FROM (
+                        SELECT q.*, ROWNUM AS NUMERO_FILA
+                        FROM (
+                            {filteredSql}
+                            ORDER BY {orderBy}
+                        ) q
+                        WHERE ROWNUM <= :filaFinal
+                    )
+                    WHERE NUMERO_FILA > :filaInicial";
+                addParameters(pageCommand);
+                pageCommand.Parameters.Add(new OracleParameter("filaFinal", lastRow));
+                pageCommand.Parameters.Add(new OracleParameter("filaInicial", firstRow));
+                await using var reader = await pageCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                    items.Add(map(reader));
+            }
+
+            return new PaginadoDto<T>
+            {
+                Items = items,
+                Pagina = page,
+                TamanoPagina = pageSize,
+                TotalRegistros = total,
+                TotalPaginas = totalPages
+            };
+        }
+
+        private static void AppendMonitoringFilters(ref string sql, ConsultaMonitoreoPaginadaDto consulta)
+        {
+            if (!string.IsNullOrWhiteSpace(consulta.Buscar))
+                sql += " AND (UPPER(NOMBRE) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(LISTA_CONCIDENCIA) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(BUSQUEDA) LIKE '%' || UPPER(:buscar) || '%')";
+            if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase))
+                sql += " AND ESTADO_MONITOREO = :estado";
+            if (consulta.FechaDesde.HasValue)
+                sql += " AND TRUNC(NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO)) >= TRUNC(:fechaDesde)";
+            if (consulta.FechaHasta.HasValue)
+                sql += " AND TRUNC(NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO)) <= TRUNC(:fechaHasta)";
+        }
+
+        private static void AddMonitoringParameters(OracleCommand command, ConsultaMonitoreoPaginadaDto consulta)
+        {
+            if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
+            if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase)) command.Parameters.Add(new OracleParameter("estado", consulta.Estado));
+            if (consulta.FechaDesde.HasValue) command.Parameters.Add(new OracleParameter("fechaDesde", consulta.FechaDesde.Value));
+            if (consulta.FechaHasta.HasValue) command.Parameters.Add(new OracleParameter("fechaHasta", consulta.FechaHasta.Value));
+        }
+
+        private static string ConstruirConsultaMonitoreoJuridicas() => @"
+            WITH Coincidencias AS (
+                SELECT D.RTN, D.NOMBRE, D.NUMEPATRO, R.LISTA_CONCIDENCIA, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
+                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO OR lp.LSP_NO_DOCUMENTO = D.RTN) AND lp.LSP_ESTADO_REGISTRO = 1) AS FECHA_REGISTRO_INTERNO, D.ES_PROVEEDOR_IHSS,
+                       NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO OR lp.LSP_NO_DOCUMENTO = D.RTN) AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) AS TIENE_MOTIVO
+                FROM DNP_IHSS.V_DATOS_EMPRESA d INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS r ON D.NUMEPATRO = R.NUMERO_PATRONO
+                WHERE D.TIPO_EMPRESA_ID = 1 AND R.TIPO_CALIFICACION_ID = 1)
+            SELECT RTN, NOMBRE, NUMEPATRO, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, ES_PROVEEDOR_IHSS, TIENE_MOTIVO, 0 AS ES_MANUAL, RTN || ' ' || NUMEPATRO AS BUSQUEDA FROM Coincidencias
+            UNION ALL
+            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, lp.LSP_NO_DOCUMENTO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 0, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
+            FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
+            WHERE lp.LSP_TIPO_POSITIVO_ID = 1 AND lp.LSP_ESTADO_REGISTRO = 1
+              AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMEPATRO = lp.LSP_NO_DOCUMENTO OR c.RTN = lp.LSP_NO_DOCUMENTO)";
+
+        private static string ConstruirConsultaMonitoreoNaturales() => @"
+            WITH Coincidencias AS (
+                SELECT D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
+                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION AND lp.LSP_ESTADO_REGISTRO = 1) FECHA_REGISTRO_INTERNO, NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) TIENE_MOTIVO
+                FROM (SELECT DISTINCT NUMERO_IDENTIFICACION, TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' ')) NOMBRE FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES) D
+                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.NUMERO_IDENTIFICACION = R.DNI
+                WHERE R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL
+                GROUP BY D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA)
+            SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
+            UNION ALL
+            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
+            FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
+            WHERE lp.LSP_TIPO_POSITIVO_ID = 2 AND lp.LSP_ESTADO_REGISTRO = 1
+              AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMERO_IDENTIFICACION = lp.LSP_NO_DOCUMENTO)";
+
+        private static string ConstruirConsultaMonitoreoEmpleados() => @"
+            WITH Coincidencias AS (
+                SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
+                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.IDENTIDAD AND lp.LSP_ESTADO_REGISTRO = 1) FECHA_REGISTRO_INTERNO, NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.IDENTIDAD AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) TIENE_MOTIVO
+                FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
+                WHERE D.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA)
+            SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD AS BUSQUEDA FROM Coincidencias
+            UNION ALL
+            SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
+            FROM RL_LISTA_POSITIVOS lp LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
+            WHERE lp.LSP_TIPO_POSITIVO_ID = 3 AND lp.LSP_ESTADO_REGISTRO = 1
+              AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.IDENTIDAD = lp.LSP_NO_DOCUMENTO)";
+
+        private static string Texto(DbDataReader reader, string column) => reader[column] == DBNull.Value ? string.Empty : reader[column]?.ToString() ?? string.Empty;
+        private static int Entero(DbDataReader reader, string column) => reader[column] == DBNull.Value ? 0 : Convert.ToInt32(reader[column]);
+        private static DateTime? Fecha(DbDataReader reader, string column) => reader[column] == DBNull.Value ? null : Convert.ToDateTime(reader[column]);
+        private static string BoolTexto(DbDataReader reader, string column)
+        {
+            var value = Texto(reader, column).Trim().ToUpperInvariant();
+            return value is "S" or "SI" or "1" ? "Si" : "No";
+        }
+
+        public async Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+            => await ObtenerResumenCoincidenciasPaginadoAsync(consulta, "TIPO_PERSONA NOT LIKE '%IHSS'");
+
+        public async Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+            => await ObtenerResumenCoincidenciasPaginadoAsync(consulta, "TIPO_PERSONA LIKE '%IHSS'");
+
+        private async Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta, string personFilter)
+        {
+            var sql = $"SELECT FECHA_ENCONTRO AS FechaEncontro, COUNT(*) AS CantidadRegistros FROM DNP_IHSS.V_REPORTE_COINCIDENCIA WHERE {personFilter}";
+            if (!string.IsNullOrWhiteSpace(consulta.Buscar)) sql += " AND TO_CHAR(FECHA_ENCONTRO, 'YYYY-MM-DD') LIKE '%' || :buscar || '%'";
+            sql += " GROUP BY FECHA_ENCONTRO";
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            return await ExecutePageAsync(conn, sql, "FECHA_ENCONTRO DESC", consulta.Pagina, consulta.TamanoPagina, command => { if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim())); }, reader => new CoincidenciaPatronoResumenDto { FechaEncontro = Fecha(reader, "FechaEncontro"), CantidadRegistros = Entero(reader, "CantidadRegistros") });
+        }
+
+        public Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+            => ObtenerDetalleCoincidenciasPaginadoAsync(consulta, "TIPO_PERSONA NOT LIKE '%IHSS'");
+
+        public Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta)
+            => ObtenerDetalleCoincidenciasPaginadoAsync(consulta, "TIPO_PERSONA LIKE '%IHSS'");
+
+        private async Task<PaginadoDto<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta, string personFilter)
+        {
+            var sql = $@"SELECT REPORTE_COINCIDENCIA_ID, DATA_ID, DNI, FECHA_ENCONTRO, LISTA_CONCIDENCIA, NACIONALIDAD, NOMBRE, NUMERO_PATRONO, OBSERVACION_LISTA, TIPO_PERSONA, USUARIO_ENCONTRO, TIPO_CALIFICACION
+                FROM DNP_IHSS.V_REPORTE_COINCIDENCIA WHERE {personFilter} AND TRUNC(FECHA_ENCONTRO) = TO_DATE(:fecha, 'YYYY-MM-DD')";
+            if (!string.IsNullOrWhiteSpace(consulta.Buscar)) sql += " AND (UPPER(NOMBRE) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(DNI) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(NUMERO_PATRONO) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(LISTA_CONCIDENCIA) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(TIPO_PERSONA) LIKE '%' || UPPER(:buscar) || '%')";
+            if (!string.IsNullOrWhiteSpace(consulta.Calificacion)) sql += " AND UPPER(TIPO_CALIFICACION) = UPPER(:calificacion)";
+            await using var conn = _db.CreateConnection();
+            await conn.OpenAsync();
+            return await ExecutePageAsync(conn, sql, "NOMBRE ASC, REPORTE_COINCIDENCIA_ID ASC", consulta.Pagina, consulta.TamanoPagina, command =>
+            {
+                command.Parameters.Add(new OracleParameter("fecha", consulta.Fecha ?? string.Empty));
+                if (!string.IsNullOrWhiteSpace(consulta.Buscar)) command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
+                if (!string.IsNullOrWhiteSpace(consulta.Calificacion)) command.Parameters.Add(new OracleParameter("calificacion", consulta.Calificacion.Trim()));
+            }, reader => new CoincidenciaPatronoDetalleDto
+            {
+                ReporteCoincidenciaId = Convert.ToInt64(reader["REPORTE_COINCIDENCIA_ID"]), DataId = reader["DATA_ID"] == DBNull.Value ? 0 : Convert.ToInt64(reader["DATA_ID"]), Dni = Texto(reader, "DNI"), FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"), Nacionalidad = Texto(reader, "NACIONALIDAD"), Nombre = Texto(reader, "NOMBRE"), NumeroPatrono = Texto(reader, "NUMERO_PATRONO"), ObservacionLista = Texto(reader, "OBSERVACION_LISTA"), TipoPersona = Texto(reader, "TIPO_PERSONA"), UsuarioEncontro = reader["USUARIO_ENCONTRO"] == DBNull.Value ? 0 : Convert.ToInt64(reader["USUARIO_ENCONTRO"]), TipoCalificacion = Texto(reader, "TIPO_CALIFICACION")
+            });
         }
 
         public async Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPatronoAsync()

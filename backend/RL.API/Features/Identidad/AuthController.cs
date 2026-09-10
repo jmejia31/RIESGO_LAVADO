@@ -219,6 +219,15 @@ public class AuthController : ControllerBase
         return Ok(new { success = true, datos = usuarios });
     }
 
+    [HttpGet("usuarios/paginado")]
+    [Authorize(Roles = "ADMINISTRADOR")]
+    [ModuloAuthorize(2)]
+    public async Task<IActionResult> ListarUsuariosPaginado([FromQuery] ConsultaUsuariosPaginadaDto consulta)
+    {
+        var usuarios = await _authService.ListarUsuariosPaginadoAsync(consulta);
+        return Ok(new { success = true, datos = usuarios });
+    }
+
     /// <summary>Activar o desactivar usuario (solo Admin)</summary>
     [HttpPut("usuarios/{uid}/estado")]
     [Authorize(Roles = "ADMINISTRADOR")]

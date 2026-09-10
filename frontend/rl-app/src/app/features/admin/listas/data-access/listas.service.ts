@@ -22,7 +22,11 @@ import {
   ResumenLista,
   Seguimiento,
   TipoDocumento,
-  TipoListaCautela
+  TipoListaCautela,
+  ConsultaMonitoreoPaginada,
+  ConsultaCoincidenciasPaginada,
+  Paginado,
+  MonitoreoPaginado
 } from '../models/listas.models';
 
 @Injectable({
@@ -41,14 +45,77 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
+  getJuridicasPaginadas(consulta: ConsultaMonitoreoPaginada): Observable<MonitoreoPaginado<CoincidenciaJuridica>> {
+    return this.http.get<{ success: boolean; datos: MonitoreoPaginado<CoincidenciaJuridica> }>(`${this.apiUrl}/juridicas/paginado`, { params: this.toMonitoringParams(consulta) })
+      .pipe(map(res => res.datos));
+  }
+
+  getJuridicasParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaJuridica[]> {
+    return this.http.get<{ success: boolean; datos: CoincidenciaJuridica[] }>(`${this.apiUrl}/juridicas/exportar`, { params: this.toMonitoringParams(consulta) })
+      .pipe(map(res => res.datos));
+  }
+
   getNaturales(): Observable<CoincidenciaNatural[]> {
     return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales`)
+      .pipe(map(res => res.datos));
+  }
+
+  getNaturalesPaginadas(consulta: ConsultaMonitoreoPaginada): Observable<MonitoreoPaginado<CoincidenciaNatural>> {
+    return this.http.get<{ success: boolean; datos: MonitoreoPaginado<CoincidenciaNatural> }>(`${this.apiUrl}/naturales/paginado`, { params: this.toMonitoringParams(consulta) })
+      .pipe(map(res => res.datos));
+  }
+
+  getNaturalesParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaNatural[]> {
+    return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales/exportar`, { params: this.toMonitoringParams(consulta) })
       .pipe(map(res => res.datos));
   }
 
   getEmpleados(): Observable<CoincidenciaEmpleado[]> {
     return this.http.get<{ success: boolean; datos: CoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados`)
       .pipe(map(res => res.datos));
+  }
+
+  getEmpleadosPaginadas(consulta: ConsultaMonitoreoPaginada): Observable<MonitoreoPaginado<CoincidenciaEmpleado>> {
+    return this.http.get<{ success: boolean; datos: MonitoreoPaginado<CoincidenciaEmpleado> }>(`${this.apiUrl}/empleados/paginado`, { params: this.toMonitoringParams(consulta) })
+      .pipe(map(res => res.datos));
+  }
+
+  getEmpleadosParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaEmpleado[]> {
+    return this.http.get<{ success: boolean; datos: CoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados/exportar`, { params: this.toMonitoringParams(consulta) })
+      .pipe(map(res => res.datos));
+  }
+
+  getResumenCoincidenciasPatronoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoResumen>> {
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-patrono/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+  }
+
+  getDetalleCoincidenciasPatronoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoDetalle>> {
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-patrono/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+  }
+
+  getResumenCoincidenciasEmpleadoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoResumen>> {
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoResumen> }>(`${this.apiUrl}/coincidencias-empleado/resumen/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+  }
+
+  getDetalleCoincidenciasEmpleadoPaginado(consulta: ConsultaCoincidenciasPaginada): Observable<Paginado<CoincidenciaPatronoDetalle>> {
+    return this.http.get<{ success: boolean; datos: Paginado<CoincidenciaPatronoDetalle> }>(`${this.apiUrl}/coincidencias-empleado/detalle/paginado`, { params: this.toCoincidenciasParams(consulta) }).pipe(map(res => res.datos));
+  }
+
+  private toMonitoringParams(consulta: ConsultaMonitoreoPaginada): HttpParams {
+    let params = new HttpParams().set('pagina', consulta.pagina).set('tamanoPagina', consulta.tamanoPagina);
+    if (consulta.buscar) params = params.set('buscar', consulta.buscar);
+    if (consulta.estado) params = params.set('estado', consulta.estado);
+    if (consulta.fechaDesde) params = params.set('fechaDesde', consulta.fechaDesde);
+    if (consulta.fechaHasta) params = params.set('fechaHasta', consulta.fechaHasta);
+    return params;
+  }
+
+  private toCoincidenciasParams(consulta: ConsultaCoincidenciasPaginada): HttpParams {
+    let params = new HttpParams().set('pagina', consulta.pagina).set('tamanoPagina', consulta.tamanoPagina);
+    if (consulta.buscar) params = params.set('buscar', consulta.buscar);
+    if (consulta.calificacion) params = params.set('calificacion', consulta.calificacion);
+    if (consulta.fecha) params = params.set('fecha', consulta.fecha);
+    return params;
   }
 
   getDetalleNatural(numeroIdentificacion: string): Observable<DetalleCoincidenciaNatural[]> {

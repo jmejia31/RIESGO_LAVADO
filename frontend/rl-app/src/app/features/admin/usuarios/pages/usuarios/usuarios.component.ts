@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -22,7 +22,13 @@ import { ActionIconComponent } from '../../../../../shared/components/action-ico
   changeDetection: ChangeDetectionStrategy.Eager
 })
 export class UsuariosComponent implements OnInit, OnDestroy {
+  protected readonly Math = Math;
   usuarios     = signal<UsuarioInfoDto[]>([]);
+  totalRegistros = signal(0);
+  paginaActual = signal(1);
+  registrosPorPagina = signal(25);
+  buscar = signal('');
+  totalPaginas = computed(() => this.totalRegistros() === 0 ? 0 : Math.ceil(this.totalRegistros() / this.registrosPorPagina()));
   roles        = signal<Rol[]>([]);
   cargando     = signal(true);
   mostrarForm  = signal(false);
@@ -44,6 +50,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   form!: FormGroup;
 
   private subs = new Subscription();
+  private secuenciaCarga = 0;
 
   constructor(
     private http: HttpClient,
@@ -154,17 +161,41 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   }
 
   cargar() {
+    const solicitudId = ++this.secuenciaCarga;
     this.cargando.set(true);
     this.errorListado.set(null);
-    this.http.get<{ success: boolean; datos: UsuarioInfoDto[] }>(`${environment.apiUrl}/auth/usuarios`)
+    this.http.get<{ success: boolean; datos: { items: UsuarioInfoDto[]; pagina: number; tamanoPagina: number; totalRegistros: number; totalPaginas: number } }>(`${environment.apiUrl}/auth/usuarios/paginado`, {
+      params: { pagina: this.paginaActual(), tamanoPagina: this.registrosPorPagina(), buscar: this.buscar() }
+    })
       .subscribe({
-        next:  r => { this.usuarios.set(r.datos); this.cargando.set(false); },
+        next:  r => { if (solicitudId !== this.secuenciaCarga) return; this.usuarios.set(r.datos.items); this.totalRegistros.set(r.datos.totalRegistros); this.paginaActual.set(r.datos.pagina); this.cargando.set(false); },
         error: (err) => {
+          if (solicitudId !== this.secuenciaCarga) return;
           this.usuarios.set([]);
+          this.totalRegistros.set(0);
           this.errorListado.set(err?.error?.mensaje || 'No se pudo cargar el listado de usuarios.');
           this.cargando.set(false);
         }
       });
+  }
+
+  cambiarBusqueda(valor: string): void {
+    this.buscar.set(valor);
+    this.paginaActual.set(1);
+    this.cargar();
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas()) return;
+    this.paginaActual.set(pagina);
+    this.cargar();
+  }
+
+  cambiarRegistrosPorPagina(valor: number): void {
+    if (![10, 25, 50].includes(Number(valor))) return;
+    this.registrosPorPagina.set(Number(valor));
+    this.paginaActual.set(1);
+    this.cargar();
   }
 
   cancelar() {

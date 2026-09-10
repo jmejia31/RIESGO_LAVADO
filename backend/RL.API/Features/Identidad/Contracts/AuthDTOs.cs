@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using RL.API.Shared.Results;
 
 namespace RL.API.Features.Identidad.Contracts;
 
@@ -69,6 +70,17 @@ public class UsuarioInfoDto
 
     [JsonProperty("debeCambiarPassword")]
     public bool DebeCambiarPassword { get; set; }
+}
+
+public class ConsultaUsuariosPaginadaDto
+{
+    public int Pagina { get; set; } = 1;
+    public int TamanoPagina { get; set; } = 25;
+    public string? Buscar { get; set; }
+}
+
+public class UsuariosPaginadosDto : PaginadoDto<UsuarioInfoDto>
+{
 }
 
 public class CrearUsuarioDto

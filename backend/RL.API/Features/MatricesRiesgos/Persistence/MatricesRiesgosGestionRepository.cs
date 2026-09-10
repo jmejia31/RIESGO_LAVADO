@@ -9,6 +9,7 @@ namespace RL.API.Features.MatricesRiesgos.Persistence;
 public interface IMatricesRiesgosGestionRepository
 {
     Task<IReadOnlyList<RiesgoDto>> ListarRiesgosAsync(bool incluirInactivos);
+    Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta);
     Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId);
     Task<long> CrearRiesgoAsync(RiesgoGuardarDto dto, long usuarioId, string? ip);
     Task<bool> ActualizarRiesgoAsync(long riesgoId, RiesgoGuardarDto dto, long usuarioId, string? ip);
@@ -42,6 +43,68 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) lista.Add(Mapear(reader));
         return lista;
+    }
+
+    public async Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta)
+    {
+        consulta ??= new ConsultaRiesgosPaginadaDto();
+        var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);
+        var sql = @"
+            SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_DESCRIPCION,
+                   RIE_ACTIVO, RIE_USR_CREACION, RIE_FECHA_CREACION
+              FROM RL_MR_RIESGOS
+             WHERE 1 = 1";
+        if (!consulta.IncluirInactivos) sql += " AND RIE_ACTIVO = 1";
+        if (!string.IsNullOrWhiteSpace(consulta.Buscar))
+            sql += " AND (UPPER(RIE_CODIGO) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(RIE_NOMBRE) LIKE '%' || UPPER(:buscar) || '%')";
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        await using var count = new OracleCommand($"SELECT COUNT(*) FROM ({sql}) q", conn) { BindByName = true };
+        AddRiesgoSearchParameter(count, consulta);
+        var total = Convert.ToInt32(await count.ExecuteScalarAsync());
+        var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+        var page = totalPages == 0 ? 1 : Math.Clamp(consulta.Pagina, 1, totalPages);
+        var firstRow = (page - 1) * pageSize;
+        var lastRow = page * pageSize;
+        var items = new List<RiesgoDto>();
+
+        if (total > 0)
+        {
+            var pagedSql = $@"
+                SELECT *
+                  FROM (
+                    SELECT q.*, ROWNUM AS NUMERO_FILA
+                      FROM (
+                        {sql}
+                        ORDER BY RIE_CODIGO ASC, RIE_ID ASC
+                      ) q
+                     WHERE ROWNUM <= :filaFinal
+                  )
+                 WHERE NUMERO_FILA > :filaInicial";
+            await using var command = new OracleCommand(pagedSql, conn) { BindByName = true };
+            AddRiesgoSearchParameter(command, consulta);
+            command.Parameters.Add(new OracleParameter("filaFinal", lastRow));
+            command.Parameters.Add(new OracleParameter("filaInicial", firstRow));
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) items.Add(Mapear(reader));
+        }
+
+        return new RiesgosPaginadosDto
+        {
+            Items = items,
+            Pagina = page,
+            TamanoPagina = pageSize,
+            TotalRegistros = total,
+            TotalPaginas = totalPages
+        };
+    }
+
+    private static void AddRiesgoSearchParameter(OracleCommand command, ConsultaRiesgosPaginadaDto consulta)
+    {
+        if (!string.IsNullOrWhiteSpace(consulta.Buscar))
+            command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
     }
 
     public async Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId)

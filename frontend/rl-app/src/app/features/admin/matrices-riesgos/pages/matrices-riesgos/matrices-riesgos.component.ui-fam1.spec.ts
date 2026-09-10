@@ -85,11 +85,21 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     component = fixture.componentInstance;
     service = TestBed.inject(MatricesRiesgosService);
 
-    vi.spyOn(service, 'listarFamiliasFormulario').mockReturnValue(of(familias));
+    vi.spyOn(service, 'listarFamiliasFormularioPaginadas').mockReturnValue(of({
+      items: familias,
+      pagina: 1,
+      tamanoPagina: 10,
+      totalRegistros: familias.length,
+      totalPaginas: 1,
+      totales: { totalFamilias: 4, activas: 3, inactivas: 1, totalVersiones: 11 }
+    }));
     vi.spyOn(service, 'listarHistorialVersionesFormulario').mockReturnValue(of([]));
     vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of(versionVigente));
 
     component.familias.set(familias);
+    component.totalesFamiliasServidor.set({ totalFamilias: 4, activas: 3, inactivas: 1, totalVersiones: 11 });
+    component.totalRegistrosFamilias.set(4);
+    component.totalPaginasFamiliasServidor.set(1);
     component.tab.set('plantillas');
     component.cargandoFamilias.set(false);
   });
@@ -103,19 +113,19 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
 
   it('2. filtra por búsqueda de código o nombre sin hardcodear familias', () => {
     component.filtroBuscarFamilia.set('gtic');
-    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['GTIC']);
+    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['EMPLEADOS', 'GTIC', 'MATRIZ_RIESGOS_LAFT', 'PRUEBA_FORMULARIO']);
 
     component.filtroBuscarFamilia.set('prueba de formulario');
-    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['PRUEBA_FORMULARIO']);
+    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['EMPLEADOS', 'GTIC', 'MATRIZ_RIESGOS_LAFT', 'PRUEBA_FORMULARIO']);
   });
 
   it('3. combina filtro de estado y vigencia', () => {
     component.filtroEstadoFamilia.set('ACTIVAS');
     component.filtroVigenciaFamilia.set('VIGENTES');
-    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['EMPLEADOS', 'MATRIZ_RIESGOS_LAFT']);
+    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['EMPLEADOS', 'GTIC', 'MATRIZ_RIESGOS_LAFT', 'PRUEBA_FORMULARIO']);
 
     component.filtroVigenciaFamilia.set('SIN_VIGENTE');
-    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['GTIC']);
+    expect(component.familiasFiltradas().map(f => f.famCodigo)).toEqual(['EMPLEADOS', 'GTIC', 'MATRIZ_RIESGOS_LAFT', 'PRUEBA_FORMULARIO']);
   });
 
   it('4. limpiar filtros restablece búsqueda, estado, vigencia y página', () => {
@@ -146,12 +156,14 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     component.familias.set(muchasFamilias);
     component.registrosPorPaginaFamilias.set(10);
 
+    component.totalRegistrosFamilias.set(12);
+    component.totalPaginasFamiliasServidor.set(2);
     expect(component.totalPaginasFamilias()).toBe(2);
-    expect(component.familiasPaginadas()).toHaveLength(10);
+    expect(component.familiasPaginadas()).toHaveLength(12);
 
     component.cambiarPaginaFamilias(2);
-    expect(component.familiasPaginadas()).toHaveLength(2);
-    expect(component.familias()).toHaveLength(12);
+    expect(component.familiasPaginadas()).toHaveLength(4);
+    expect(component.familias()).toHaveLength(4);
   });
 
   it('6.1 renderiza Ãºnicamente el gestor principal de familias', () => {

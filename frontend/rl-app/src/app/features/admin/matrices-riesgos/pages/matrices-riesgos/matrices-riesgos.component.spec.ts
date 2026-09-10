@@ -16,10 +16,13 @@ describe('MatricesRiesgosComponent', () => {
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
+    listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
+    obtenerConsolidadoPaginado: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
     listarFamiliasFormulario: ReturnType<typeof vi.fn>;
+    listarFamiliasFormularioPaginadas: ReturnType<typeof vi.fn>;
     obtenerFamiliaFormularioPorId: ReturnType<typeof vi.fn>;
     crearFamiliaFormulario: ReturnType<typeof vi.fn>;
     actualizarFamiliaFormulario: ReturnType<typeof vi.fn>;
@@ -41,6 +44,7 @@ describe('MatricesRiesgosComponent', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 0 } })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({
         famId: 1,
         famCodigo: 'MATRIZ_RIESGOS_LAFT',
@@ -143,6 +147,14 @@ describe('MatricesRiesgosComponent', () => {
         rieUsrCreacion: 1,
         rieFechaCreacion: '2026-08-07T08:00:00'
       }])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [{
+        rieId: 5,
+        rieCodigo: 'R-005',
+        rieNombre: 'Riesgo institucional',
+        rieActivo: true,
+        rieUsrCreacion: 1,
+        rieFechaCreacion: '2026-08-07T08:00:00'
+      }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of({
         items: [],
         pagina: 1,
@@ -150,7 +162,8 @@ describe('MatricesRiesgosComponent', () => {
         totalRegistros: 0,
         totalPaginas: 0
       })),
-      obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([])),
       crearEvaluacion: vi.fn().mockReturnValue(of(20)),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),
@@ -182,7 +195,7 @@ describe('MatricesRiesgosComponent', () => {
     expect(component).toBeTruthy();
     expect(service.obtenerVersionVigenteFormulario).toHaveBeenCalled();
     expect(service.metodologiaVigente).toHaveBeenCalled();
-    expect(service.listarRiesgos).toHaveBeenCalled();
+    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(false, 1, 200);
     expect(component.versionVigente()?.verId).toBe(10);
     expect(component.riesgos()[0].rieCodigo).toBe('R-005');
   });
@@ -254,7 +267,7 @@ describe('MatricesRiesgosComponent', () => {
 
     component.seleccionarTab('consolidado');
     expect(component.tab()).toBe('consolidado');
-    expect(service.obtenerConsolidado).toHaveBeenCalled();
+    expect(service.obtenerConsolidadoPaginado).toHaveBeenCalled();
   });
 
   it('edita una evaluacion existente en modal, transiciona su estado y recarga sus flujos', () => {

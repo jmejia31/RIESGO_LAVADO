@@ -51,4 +51,17 @@
       </tbody>
     </table>
   </div>
+  <div class="flex flex-col gap-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+    <span>Mostrando {{ totalRegistros() === 0 ? 0 : ((pagina() - 1) * tamanoPagina()) + 1 }} a {{ Math.min(pagina() * tamanoPagina(), totalRegistros()) }} de {{ totalRegistros() }} riesgos</span>
+    <div class="flex items-center gap-1" aria-label="Paginación de riesgos">
+      <button type="button" class="rounded-lg border border-slate-300 px-2 py-1 disabled:opacity-40" [disabled]="pagina() <= 1" (click)="cambiarPagina(pagina() - 1)" title="Página anterior de riesgos" aria-label="Página anterior de riesgos">‹</button>
+      @for (page of paginasVisibles(); track page) {
+        <button type="button" class="min-w-8 rounded-lg border px-2 py-1" [class.bg-slate-900]="page === pagina()" [class.text-white]="page === pagina()" [class.border-slate-900]="page === pagina()" (click)="cambiarPagina(page)" [attr.aria-current]="page === pagina() ? 'page' : null">{{ page }}</button>
+      }
+      <button type="button" class="rounded-lg border border-slate-300 px-2 py-1 disabled:opacity-40" [disabled]="pagina() >= totalPaginas()" (click)="cambiarPagina(pagina() + 1)" title="Página siguiente de riesgos" aria-label="Página siguiente de riesgos">›</button>
+      <select class="ml-2 rounded-lg border border-slate-300 px-2 py-1" [ngModel]="tamanoPagina()" (ngModelChange)="cambiarTamanoPagina(+$event)" aria-label="Riesgos por página">
+        <option [ngValue]="10">10</option><option [ngValue]="25">25</option><option [ngValue]="50">50</option>
+      </select>
+    </div>
+  </div>
 </section>

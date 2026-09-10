@@ -88,8 +88,10 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
 
   beforeEach(async () => {
     serviceMock = {
-      listarFamiliasFormulario: vi.fn().mockReturnValue(of([])),
+     listarFamiliasFormulario: vi.fn().mockReturnValue(of([])),
+     listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } })),
       listarRiesgos: vi.fn().mockReturnValue(of([])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of(paginado)),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
       metodologiaVigente: vi.fn().mockReturnValue(of({
@@ -121,7 +123,8 @@ describe('MatricesRiesgosComponent — tabla de evaluaciones', () => {
       })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({})),
       obtenerFlujos: vi.fn().mockReturnValue(of([])),
-      obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([]))
     };
 

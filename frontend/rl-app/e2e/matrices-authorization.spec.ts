@@ -73,7 +73,8 @@ async function stubLecturasMatrices(page: Page): Promise<void> {
     }
 
     let datos: unknown = [];
-    if (path.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true }];
+    if (path.endsWith('/familias/paginado')) datos = { items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } };
+    else if (path.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true }];
     else if (path.endsWith('/familias/1')) datos = { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: 'Familia E2E de autorización.', famActivo: true, famFechaCreacion: '2026-08-07T08:00:00Z', totalVersiones: 1, tieneVersionVigente: true };
     else if (path.endsWith('/formulario/version-vigente')) datos = versionPublicada;
     else if (path.endsWith('/metodologia/vigente')) datos = {

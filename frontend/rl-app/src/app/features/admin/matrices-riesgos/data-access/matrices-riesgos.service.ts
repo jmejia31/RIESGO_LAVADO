@@ -12,6 +12,8 @@ import {
   EvaluacionRiesgoDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
+  FamiliasFormularioPaginadasDto,
+  ConsultaFamiliasFormularioPaginada,
   FamiliaPredeterminadaDto,
   FiltroReporteMatrices,
   FlujoEvaluacionDto,
@@ -35,6 +37,7 @@ import {
   ResumenMatricesOperativoDto,
   RiesgoDto,
   RiesgoGuardarDto,
+  RiesgosPaginadosDto,
   SenalAlertaDto,
   SenalAlertaGuardarDto
 } from '../models/matrices-riesgos-fase11.models';
@@ -83,6 +86,18 @@ export class MatricesRiesgosService {
   listarFamiliasFormulario(): Observable<FamiliaFormularioDto[]> {
     return this.http
       .get<ApiResponse<FamiliaFormularioDto[]>>(`${this.apiUrl}/familias`)
+      .pipe(map(response => response.datos));
+  }
+
+  listarFamiliasFormularioPaginadas(filtro: ConsultaFamiliasFormularioPaginada): Observable<FamiliasFormularioPaginadasDto> {
+    let params = new HttpParams()
+      .set('pagina', String(filtro.pagina ?? 1))
+      .set('tamanoPagina', String(filtro.tamanoPagina ?? 10))
+      .set('estado', filtro.estado ?? 'TODAS')
+      .set('vigencia', filtro.vigencia ?? 'TODAS');
+    if (filtro.buscar?.trim()) params = params.set('buscar', filtro.buscar.trim());
+    return this.http
+      .get<ApiResponse<FamiliasFormularioPaginadasDto>>(`${this.apiUrl}/familias/paginado`, { params })
       .pipe(map(response => response.datos));
   }
 
@@ -221,6 +236,17 @@ export class MatricesRiesgosService {
     const params = new HttpParams().set('incluirInactivos', String(incluirInactivos));
     return this.http
       .get<ApiResponse<RiesgoDto[]>>(`${this.apiUrl}/riesgos`, { params })
+      .pipe(map(response => response.datos));
+  }
+
+  listarRiesgosPaginados(incluirInactivos = false, pagina = 1, tamanoPagina = 25, buscar = ''): Observable<RiesgosPaginadosDto> {
+    let params = new HttpParams()
+      .set('incluirInactivos', String(incluirInactivos))
+      .set('pagina', String(pagina))
+      .set('tamanoPagina', String(tamanoPagina));
+    if (buscar.trim()) params = params.set('buscar', buscar.trim());
+    return this.http
+      .get<ApiResponse<RiesgosPaginadosDto>>(`${this.apiUrl}/riesgos/paginado`, { params })
       .pipe(map(response => response.datos));
   }
 

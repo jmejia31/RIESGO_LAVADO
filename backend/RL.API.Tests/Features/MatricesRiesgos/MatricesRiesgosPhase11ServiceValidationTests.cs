@@ -344,6 +344,14 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public bool ThrowInvalidOperation { get; set; }
 
         public Task<IReadOnlyList<RiesgoDto>> ListarRiesgosAsync(bool incluirInactivos) => Task.FromResult(Riesgos);
+        public Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta) => Task.FromResult(new RiesgosPaginadosDto
+        {
+            Items = Riesgos,
+            Pagina = 1,
+            TamanoPagina = consulta.TamanoPagina,
+            TotalRegistros = Riesgos.Count,
+            TotalPaginas = Riesgos.Count == 0 ? 0 : 1
+        });
         public Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId) => Task.FromResult(Riesgo);
         public Task<long> CrearRiesgoAsync(RiesgoGuardarDto dto, long usuarioId, string? ip) =>
             ThrowInvalidOperation ? Task.FromException<long>(new InvalidOperationException("Fallo controlado")) : Task.FromResult(CreateId);

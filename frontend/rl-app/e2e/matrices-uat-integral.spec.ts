@@ -77,6 +77,7 @@ async function preparar(page: Page): Promise<void> {
       totalPaginas: 1
     };
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
+    else if (path.endsWith('/consolidado/paginado')) datos = { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } };
     else if (path.endsWith('/consolidado')) datos = [];
     else if (path.endsWith('/mitigacion/evaluaciones/20/controles')) datos = [];
     else if (path.endsWith('/mitigacion/evaluaciones/20/planes')) datos = [];

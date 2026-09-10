@@ -64,6 +64,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }
       ])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz de Riesgos LAFT', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 0 } })),
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(version)),
       obtenerVersionFormulario: vi.fn().mockImplementation((id: number) => of({ ...version, verId: id })),
       metodologiaVigente: vi.fn().mockReturnValue(of({
@@ -84,6 +85,7 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
         reglas: []
       })),
       listarRiesgos: vi.fn().mockReturnValue(of([{ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo', rieActivo: true }])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [{ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo', rieActivo: true }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of({
         items: [evaluacionResumen],
         pagina: 1,
@@ -91,7 +93,8 @@ describe('MatricesRiesgosComponent flujos y evidencias', () => {
         totalRegistros: 1,
         totalPaginas: 1
       })),
-      obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([version])),
       crearEvaluacion: vi.fn().mockReturnValue(of({ success: true, datos: 20 })),
       actualizarEvaluacion: vi.fn().mockReturnValue(of({ success: true })),

@@ -62,6 +62,16 @@ namespace RL.API.Features.Listas
             return Ok(new { success = true, datos = result });
         }
 
+        [HttpGet("juridicas/paginado")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerJuridicasPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerJuridicasPaginadasAsync(consulta) });
+
+        [HttpGet("juridicas/exportar")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerJuridicasParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerJuridicasParaExportarAsync(consulta) });
+
         [HttpGet("naturales")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerNaturales()
@@ -70,6 +80,16 @@ namespace RL.API.Features.Listas
             return Ok(new { success = true, datos = result });
         }
 
+        [HttpGet("naturales/paginado")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerNaturalesPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesPaginadasAsync(consulta) });
+
+        [HttpGet("naturales/exportar")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerNaturalesParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesParaExportarAsync(consulta) });
+
         [HttpGet("empleados")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerEmpleados()
@@ -77,6 +97,16 @@ namespace RL.API.Features.Listas
             var result = await _listasService.ObtenerEmpleadosAsync();
             return Ok(new { success = true, datos = result });
         }
+
+        [HttpGet("empleados/paginado")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerEmpleadosPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosPaginadasAsync(consulta) });
+
+        [HttpGet("empleados/exportar")]
+        [ModuloAuthorize(4)]
+        public async Task<IActionResult> ObtenerEmpleadosParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
+            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosParaExportarAsync(consulta) });
 
         [HttpGet("naturales/{numeroIdentificacion}/detalle")]
         [ModuloAuthorize(4)]
@@ -297,6 +327,14 @@ namespace RL.API.Features.Listas
             }
         }
 
+        [HttpGet("coincidencias-patrono/resumen/paginado")]
+        [ModuloAuthorize(8)]
+        public async Task<IActionResult> ObtenerResumenCoincidenciasPatronoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            try { return Ok(new { success = true, datos = await _coincidenciasService.ObtenerResumenPatronoPaginadoAsync(consulta) }); }
+            catch (Exception ex) { Serilog.Log.Error(ex, "Error en resumen paginado de coincidencias de patrono"); return Error500(ex); }
+        }
+
         [HttpGet("coincidencias-patrono/detalle")]
         [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerDetalleCoincidenciasPatrono([FromQuery] string fecha)
@@ -313,6 +351,18 @@ namespace RL.API.Features.Listas
                 Serilog.Log.Error(ex, "Error en ObtenerDetalleCoincidenciasPatrono para la fecha {Fecha}", fecha);
                 return Error500(ex);
             }
+        }
+
+        [HttpGet("coincidencias-patrono/detalle/paginado")]
+        [ModuloAuthorize(8)]
+        public async Task<IActionResult> ObtenerDetalleCoincidenciasPatronoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            try
+            {
+                var result = await _coincidenciasService.ObtenerDetallePatronoPaginadoAsync(consulta);
+                return result.Success ? Ok(new { success = true, datos = result.Data }) : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+            }
+            catch (Exception ex) { Serilog.Log.Error(ex, "Error en detalle paginado de coincidencias de patrono"); return Error500(ex); }
         }
 
         public record CalificarRequest(int TipoCalificacionId);
@@ -389,6 +439,14 @@ namespace RL.API.Features.Listas
             }
         }
 
+        [HttpGet("coincidencias-empleado/resumen/paginado")]
+        [ModuloAuthorize(9)]
+        public async Task<IActionResult> ObtenerResumenCoincidenciasEmpleadoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            try { return Ok(new { success = true, datos = await _coincidenciasService.ObtenerResumenEmpleadoPaginadoAsync(consulta) }); }
+            catch (Exception ex) { Serilog.Log.Error(ex, "Error en resumen paginado de coincidencias de empleado"); return Error500(ex); }
+        }
+
         [HttpGet("coincidencias-empleado/detalle")]
         [ModuloAuthorize(9)]
         public async Task<IActionResult> ObtenerDetalleCoincidenciasEmpleado([FromQuery] string fecha)
@@ -405,6 +463,18 @@ namespace RL.API.Features.Listas
                 Serilog.Log.Error(ex, "Error en ObtenerDetalleCoincidenciasEmpleado para la fecha {Fecha}", fecha);
                 return Error500(ex);
             }
+        }
+
+        [HttpGet("coincidencias-empleado/detalle/paginado")]
+        [ModuloAuthorize(9)]
+        public async Task<IActionResult> ObtenerDetalleCoincidenciasEmpleadoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
+        {
+            try
+            {
+                var result = await _coincidenciasService.ObtenerDetalleEmpleadoPaginadoAsync(consulta);
+                return result.Success ? Ok(new { success = true, datos = result.Data }) : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
+            }
+            catch (Exception ex) { Serilog.Log.Error(ex, "Error en detalle paginado de coincidencias de empleado"); return Error500(ex); }
         }
 
         [HttpPut("coincidencias-empleado/{id}/calificar")]

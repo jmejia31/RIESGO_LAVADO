@@ -1658,6 +1658,115 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return lista;
     }
 
+    public async Task<FamiliasFormularioPaginadasDto> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro)
+    {
+        int tamanoPagina = Math.Clamp(filtro.TamanoPagina, 1, 200);
+        string estado = (filtro.Estado ?? "TODAS").Trim().ToUpperInvariant();
+        string vigencia = (filtro.Vigencia ?? "TODAS").Trim().ToUpperInvariant();
+        string buscar = (filtro.Buscar ?? string.Empty).Trim().ToUpperInvariant();
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        const string baseSql = @"
+            SELECT f.FAM_ID,
+                   f.FAM_CODIGO,
+                   f.FAM_NOMBRE,
+                   f.FAM_DESCRIPCION,
+                   f.FAM_ACTIVO,
+                   f.FAM_FECHA_CREACION,
+                   f.FAM_PREDETERMINADA,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
+                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
+              FROM RL_MR_FAMILIAS_FORMULARIO f
+             WHERE (:buscar IS NULL OR UPPER(f.FAM_CODIGO) LIKE '%' || :buscar || '%' OR UPPER(f.FAM_NOMBRE) LIKE '%' || :buscar || '%')
+               AND (:estado = 'TODAS' OR (:estado = 'ACTIVAS' AND f.FAM_ACTIVO = 1) OR (:estado = 'INACTIVAS' AND f.FAM_ACTIVO = 0))
+               AND (:vigencia = 'TODAS'
+                    OR (:vigencia = 'VIGENTES' AND EXISTS (SELECT 1 FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1))
+                    OR (:vigencia = 'SIN_VIGENTE' AND NOT EXISTS (SELECT 1 FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1)))";
+
+        void AddFilterParameters(OracleCommand cmd)
+        {
+            cmd.Parameters.Add(new OracleParameter("buscar", string.IsNullOrWhiteSpace(buscar) ? DBNull.Value : buscar));
+            cmd.Parameters.Add(new OracleParameter("estado", estado));
+            cmd.Parameters.Add(new OracleParameter("vigencia", vigencia));
+        }
+
+        await using var countCmd = conn.CreateCommand();
+        countCmd.BindByName = true;
+        countCmd.CommandText = $"SELECT COUNT(*) FROM ({baseSql}) q";
+        AddFilterParameters(countCmd);
+        int total = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var totalsCmd = conn.CreateCommand();
+        totalsCmd.BindByName = true;
+        totalsCmd.CommandText = $@"
+            SELECT COUNT(*) AS TOTAL_FAMILIAS,
+                   NVL(SUM(CASE WHEN FAM_ACTIVO = 1 THEN 1 ELSE 0 END), 0) AS ACTIVAS,
+                   NVL(SUM(CASE WHEN FAM_ACTIVO = 0 THEN 1 ELSE 0 END), 0) AS INACTIVAS,
+                   NVL(SUM(TOTAL_VERSIONES), 0) AS TOTAL_VERSIONES
+              FROM ({baseSql}) q";
+        AddFilterParameters(totalsCmd);
+        await using var totalsReader = await totalsCmd.ExecuteReaderAsync();
+        await totalsReader.ReadAsync();
+        var totales = new FamiliasFormularioTotalesDto
+        {
+            TotalFamilias = Convert.ToInt32(totalsReader["TOTAL_FAMILIAS"]),
+            Activas = Convert.ToInt32(totalsReader["ACTIVAS"]),
+            Inactivas = Convert.ToInt32(totalsReader["INACTIVAS"]),
+            TotalVersiones = Convert.ToInt32(totalsReader["TOTAL_VERSIONES"])
+        };
+
+        int totalPaginas = tamanoPagina > 0 ? (int)Math.Ceiling((double)total / tamanoPagina) : 0;
+        int pagina = PaginacionEvaluacionesHelper.CalcularPaginaEfectiva(total, tamanoPagina, filtro.Pagina);
+        int filaInicial = (pagina - 1) * tamanoPagina;
+        int filaFinal = filaInicial + tamanoPagina;
+
+        await using var pageCmd = conn.CreateCommand();
+        pageCmd.BindByName = true;
+        pageCmd.CommandText = $@"
+            SELECT * FROM (
+                SELECT q.*, ROWNUM AS NUMERO_FILA
+                  FROM (
+                    {baseSql}
+                    ORDER BY FAM_CODIGO ASC, FAM_ID ASC
+                  ) q
+                 WHERE ROWNUM <= :filaFinal
+            )
+             WHERE NUMERO_FILA > :filaInicial";
+        AddFilterParameters(pageCmd);
+        pageCmd.Parameters.Add(new OracleParameter("filaFinal", filaFinal));
+        pageCmd.Parameters.Add(new OracleParameter("filaInicial", filaInicial));
+
+        var items = new List<FamiliaFormularioDto>();
+        await using var reader = await pageCmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new FamiliaFormularioDto
+            {
+                FamId = Convert.ToInt64(reader["FAM_ID"]),
+                FamCodigo = reader["FAM_CODIGO"]?.ToString() ?? string.Empty,
+                FamNombre = reader["FAM_NOMBRE"]?.ToString() ?? string.Empty,
+                FamDescripcion = reader["FAM_DESCRIPCION"] == DBNull.Value ? null : reader["FAM_DESCRIPCION"]?.ToString(),
+                FamActivo = Convert.ToInt32(reader["FAM_ACTIVO"]) == 1,
+                FamFechaCreacion = Convert.ToDateTime(reader["FAM_FECHA_CREACION"]),
+                FamPredeterminada = Convert.ToInt32(reader["FAM_PREDETERMINADA"]) == 1,
+                TotalVersiones = Convert.ToInt32(reader["TOTAL_VERSIONES"]),
+                TieneVersionVigente = Convert.ToInt32(reader["TIENE_VIGENTE"]) > 0
+            });
+        }
+
+        return new FamiliasFormularioPaginadasDto
+        {
+            Items = items,
+            Pagina = pagina,
+            TamanoPagina = tamanoPagina,
+            TotalRegistros = total,
+            TotalPaginas = totalPaginas,
+            Totales = totales
+        };
+    }
+
     public async Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro)
     {
         filtro ??= new FiltroReporteMatricesDto();

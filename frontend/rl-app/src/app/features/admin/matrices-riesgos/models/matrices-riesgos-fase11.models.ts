@@ -15,6 +15,14 @@ export interface RiesgoGuardarDto {
   rieActivo: boolean;
 }
 
+export interface RiesgosPaginadosDto {
+  items: RiesgoDto[];
+  pagina: number;
+  tamanoPagina: number;
+  totalRegistros: number;
+  totalPaginas: number;
+}
+
 export interface ControlRiesgoDto {
   conId: number;
   conEvaluacionId: number;

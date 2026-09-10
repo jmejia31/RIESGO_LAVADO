@@ -8,6 +8,7 @@ describe('MatricesRiesgosGestionComponent', () => {
   let component: MatricesRiesgosGestionComponent;
   let service: {
     listarRiesgos: ReturnType<typeof vi.fn>;
+    listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     crearRiesgo: ReturnType<typeof vi.fn>;
     actualizarRiesgo: ReturnType<typeof vi.fn>;
   };
@@ -35,6 +36,7 @@ describe('MatricesRiesgosGestionComponent', () => {
   beforeEach(async () => {
     service = {
       listarRiesgos: vi.fn().mockReturnValue(of([riesgoActivo, riesgoInactivo])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [riesgoActivo, riesgoInactivo], pagina: 1, tamanoPagina: 25, totalRegistros: 2, totalPaginas: 1 })),
       crearRiesgo: vi.fn().mockReturnValue(of(8)),
       actualizarRiesgo: vi.fn().mockReturnValue(of({ success: true }))
     };
@@ -48,21 +50,21 @@ describe('MatricesRiesgosGestionComponent', () => {
   });
 
   it('carga riesgos activos e inactivos al inicializar', () => {
-    expect(service.listarRiesgos).toHaveBeenCalledWith(true);
+    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(true, 1, 25);
     expect(component.riesgos()).toHaveLength(2);
     expect(component.cargando()).toBe(false);
     expect(component.error()).toBeNull();
   });
 
   it('maneja error al listar riesgos y propaga mensaje por defecto si no viene del backend', () => {
-    service.listarRiesgos.mockReturnValue(throwError(() => ({})));
+    service.listarRiesgosPaginados.mockReturnValue(throwError(() => ({})));
     component.cargar();
     expect(component.error()).toBe('No se pudieron cargar los riesgos.');
     expect(component.cargando()).toBe(false);
   });
 
   it('maneja error con mensaje institucional al listar riesgos', () => {
-    service.listarRiesgos.mockReturnValue(throwError(() => ({ error: { mensaje: 'Error de conexión' } })));
+    service.listarRiesgosPaginados.mockReturnValue(throwError(() => ({ error: { mensaje: 'Error de conexión' } })));
     component.cargar();
     expect(component.error()).toBe('Error de conexión');
     expect(component.cargando()).toBe(false);

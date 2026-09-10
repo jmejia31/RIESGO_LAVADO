@@ -24,6 +24,12 @@ describe('MonitoreoListasComponent', () => {
       getJuridicas: vi.fn(() => of([])),
       getNaturales: vi.fn(() => of([])),
       getEmpleados: vi.fn(() => of([])),
+      getJuridicasPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getJuridicasParaExportar: vi.fn(() => of([])),
+      getNaturalesPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getNaturalesParaExportar: vi.fn(() => of([])),
+      getEmpleadosPaginadas: vi.fn(() => of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } })),
+      getEmpleadosParaExportar: vi.fn(() => of([])),
       getTiposDocumento: vi.fn(() => of([])),
       getTiposListasCautela: vi.fn(() => of([])),
       getPoliticaEvidencias: vi.fn(() => of({
@@ -74,18 +80,18 @@ describe('MonitoreoListasComponent', () => {
 
   it('carga las coincidencias juridicas y finaliza el indicador', () => {
     const juridicas = [{ numeroPatrono: 'P-01', nombre: 'Empresa Uno' }];
-    service['getJuridicas'].mockReturnValue(of(juridicas));
+    service['getJuridicasPaginadas'].mockReturnValue(of({ items: juridicas, pagina: 1, tamanoPagina: 10, totalRegistros: juridicas.length, totalPaginas: 1, totales: { totalRegistros: juridicas.length, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } }));
 
     component.cargarDatos();
 
-    expect(service['getJuridicas']).toHaveBeenCalledOnce();
+    expect(service['getJuridicasPaginadas']).toHaveBeenCalledOnce();
     expect(component.juridicasRaw()).toEqual(juridicas);
     expect(component.cargando()).toBe(false);
   });
 
   it('cambia a personas naturales, limpia la busqueda y recarga el servicio correcto', () => {
     const naturales = [{ numeroIdentificacion: '0801', nombre: 'Ana' }];
-    service['getNaturales'].mockReturnValue(of(naturales));
+    service['getNaturalesPaginadas'].mockReturnValue(of({ items: naturales, pagina: 1, tamanoPagina: 10, totalRegistros: naturales.length, totalPaginas: 1, totales: { totalRegistros: naturales.length, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } }));
     component.busqueda.set('anterior');
     component.paginaActual.set(4);
 
@@ -94,19 +100,19 @@ describe('MonitoreoListasComponent', () => {
     expect(component.tipoActivo()).toBe('natural');
     expect(component.busqueda()).toBe('');
     expect(component.paginaActual()).toBe(1);
-    expect(service['getNaturales']).toHaveBeenCalledOnce();
+    expect(service['getNaturalesPaginadas']).toHaveBeenCalledOnce();
     expect(component.naturalesRaw()).toEqual(naturales);
   });
 
-  it('reutiliza datos cargados al volver a la misma categoria sin consultar nuevamente la API', () => {
+  it('recarga únicamente la página solicitada al volver a la misma categoría', () => {
     const naturales = [{ numeroIdentificacion: '0801', nombre: 'Ana' }];
-    service['getNaturales'].mockReturnValue(of(naturales));
+    service['getNaturalesPaginadas'].mockReturnValue(of({ items: naturales, pagina: 1, tamanoPagina: 10, totalRegistros: naturales.length, totalPaginas: 1, totales: { totalRegistros: naturales.length, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } }));
 
     component.cambiarTipo('natural');
     component.busqueda.set('ana');
     component.cambiarTipo('natural');
 
-    expect(service['getNaturales']).toHaveBeenCalledOnce();
+    expect(service['getNaturalesPaginadas']).toHaveBeenCalledTimes(2);
     expect(component.naturalesRaw()).toEqual(naturales);
     expect(component.busqueda()).toBe('');
     expect(component.cargando()).toBe(false);
@@ -115,7 +121,7 @@ describe('MonitoreoListasComponent', () => {
   it('limpia resultados de empleados y detiene la carga cuando el servicio falla', () => {
     component.tipoActivo.set('empleado');
     component.empleadosRaw.set([{ identidad: '01' }] as never);
-    service['getEmpleados'].mockReturnValue(throwError(() => new Error('API no disponible')));
+    service['getEmpleadosPaginadas'].mockReturnValue(throwError(() => new Error('API no disponible')));
 
     component.cargarDatos();
 
@@ -157,7 +163,7 @@ describe('MonitoreoListasComponent', () => {
 
     component.ngOnInit();
 
-    expect(service['getJuridicas']).toHaveBeenCalledOnce();
+    expect(service['getJuridicasPaginadas']).toHaveBeenCalledOnce();
     expect(component.listaTiposDocumento()).toEqual(tiposDocumento);
     expect(component.listaTiposListasCautela()).toEqual(tiposLista);
     expect(component.politicaEvidencias().extensionesPermitidas).toContain('.pdf');
@@ -198,7 +204,7 @@ describe('MonitoreoListasComponent', () => {
     });
     expect(component.guardandoMotivo()).toBe(false);
     expect(component.modalMotivoAbierto()).toBe(false);
-    expect(service['getJuridicas']).toHaveBeenCalled();
+    expect(service['getJuridicasPaginadas']).toHaveBeenCalled();
   });
 
   it('registra un seguimiento nuevo y recarga su historial', async () => {
@@ -387,6 +393,7 @@ describe('MonitoreoListasComponent', () => {
       numeroPatrono: 'P-100', rtn: '08019000123456', nombre: 'Empresa Segura',
       listaCoincidencia: 'Lista Uno', esProveedorIhss: 'Si', fechaEncontro: '2026-07-10'
     }] as never);
+    service['getJuridicasParaExportar'].mockReturnValue(of(component.juridicasRaw()));
 
     component.exportarListaPrincipal();
 
@@ -408,6 +415,7 @@ describe('MonitoreoListasComponent', () => {
     component.juridicasRaw.set([{
       numeroPatrono: 'P-101', rtn: '08019000123457', nombre: 'Empresa Dos', listaCoincidencia: 'Lista Uno'
     }] as never);
+    service['getJuridicasParaExportar'].mockReturnValue(of(component.juridicasRaw()));
 
     component.exportarListaPrincipal();
 

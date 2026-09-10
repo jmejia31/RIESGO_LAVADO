@@ -413,6 +413,89 @@ public class UsuarioRepository : IUsuarioRepository
         return list;
     }
 
+    public async Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto consulta)
+    {
+        var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);
+        var filter = string.IsNullOrWhiteSpace(consulta.Buscar)
+            ? string.Empty
+            : " AND (UPPER(U.USR_NOMBRE) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(U.USR_APELLIDO) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(U.USR_EMAIL) LIKE '%' || UPPER(:buscar) || '%')";
+        var from = @"
+            FROM RL_USUARIOS U
+            INNER JOIN RL_ROLES R ON U.USR_ROL_ID = R.ROL_ID
+            LEFT JOIN RL_DOMINIO D ON U.USR_DOM_ID = D.DOM_ID";
+
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+
+        await using var countCommand = conn.CreateCommand();
+        countCommand.BindByName = true;
+        countCommand.CommandText = $"SELECT COUNT(*) {from} WHERE 1 = 1 {filter}";
+        if (!string.IsNullOrWhiteSpace(consulta.Buscar)) countCommand.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
+        var total = Convert.ToInt32(await countCommand.ExecuteScalarAsync());
+        var totalPages = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+        var page = totalPages == 0 ? 1 : Math.Clamp(consulta.Pagina, 1, totalPages);
+        var first = (page - 1) * pageSize;
+        var last = page * pageSize;
+        var users = new List<UsuarioInfoDto>();
+
+        if (total > 0)
+        {
+            await using var pageCommand = conn.CreateCommand();
+            pageCommand.BindByName = true;
+            pageCommand.CommandText = $@"
+                SELECT * FROM (
+                    SELECT q.*, ROWNUM AS NUMERO_FILA
+                    FROM (
+                        SELECT U.USR_ID, U.USR_NOMBRE, U.USR_APELLIDO, U.USR_EMAIL,
+                               R.ROL_NOMBRE, R.ROL_ID, U.ES_USUARIO_DOMINIO, U.USUARIO_DOMINIO,
+                               U.USR_DOM_ID, D.DOM_NOMBRE, U.USR_DNI
+                        {from}
+                        WHERE 1 = 1 {filter}
+                        ORDER BY U.USR_NOMBRE ASC, U.USR_APELLIDO ASC, U.USR_ID ASC
+                    ) q
+                    WHERE ROWNUM <= :filaFinal
+                ) WHERE NUMERO_FILA > :filaInicial";
+            if (!string.IsNullOrWhiteSpace(consulta.Buscar)) pageCommand.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
+            pageCommand.Parameters.Add(new OracleParameter("filaFinal", last));
+            pageCommand.Parameters.Add(new OracleParameter("filaInicial", first));
+            await using var reader = await pageCommand.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                users.Add(new UsuarioInfoDto
+                {
+                    Id = Convert.ToInt64(reader["USR_ID"]), Nombre = reader["USR_NOMBRE"].ToString()!, Apellido = reader["USR_APELLIDO"].ToString()!, Email = reader["USR_EMAIL"].ToString()!,
+                    Rol = (reader["ROL_NOMBRE"]?.ToString() ?? string.Empty).Trim().ToUpperInvariant(), RolId = Convert.ToInt32(reader["ROL_ID"]), EsUsuarioDominio = Convert.ToInt32(reader["ES_USUARIO_DOMINIO"]), UsuarioDominio = reader["USUARIO_DOMINIO"]?.ToString(),
+                    DominioId = reader["USR_DOM_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["USR_DOM_ID"]), Dominio = reader["DOM_NOMBRE"]?.ToString(), Dni = reader["USR_DNI"]?.ToString()
+                });
+            }
+        }
+
+        if (users.Count > 0)
+        {
+            await using var modulesCommand = conn.CreateCommand();
+            modulesCommand.BindByName = true;
+            var placeholders = new List<string>();
+            for (var index = 0; index < users.Count; index++)
+            {
+                var parameterName = $"usuario{index}";
+                placeholders.Add($":{parameterName}");
+                modulesCommand.Parameters.Add(new OracleParameter(parameterName, users[index].Id));
+            }
+            modulesCommand.CommandText = $"SELECT USM_USR_ID, USM_MOD_ID FROM RL_USUARIO_MODULOS WHERE USM_USR_ID IN ({string.Join(",", placeholders)})";
+            await using var modulesReader = await modulesCommand.ExecuteReaderAsync();
+            var modules = new Dictionary<long, List<int>>();
+            while (await modulesReader.ReadAsync())
+            {
+                var userId = Convert.ToInt64(modulesReader["USM_USR_ID"]);
+                if (!modules.TryGetValue(userId, out var values)) modules[userId] = values = new List<int>();
+                values.Add(Convert.ToInt32(modulesReader["USM_MOD_ID"]));
+            }
+            foreach (var user in users) user.ModulosIds = modules.TryGetValue(user.Id, out var values) ? values : new List<int>();
+        }
+
+        return new UsuariosPaginadosDto { Items = users, Pagina = page, TamanoPagina = pageSize, TotalRegistros = total, TotalPaginas = totalPages };
+    }
+
     private static Usuario MapUsuario(System.Data.Common.DbDataReader r) => new()
     {
         UsrId           = Convert.ToInt64(r["USR_ID"]),

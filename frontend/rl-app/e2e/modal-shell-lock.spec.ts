@@ -33,7 +33,8 @@ async function preparar(page: Page): Promise<void> {
   await page.route('**/api/matrices-riesgos/**', route => {
     const ruta = new URL(route.request().url()).pathname;
     let datos: unknown = [];
-    if (ruta.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true }];
+    if (ruta.endsWith('/familias/paginado')) datos = { items: [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 2 } };
+    else if (ruta.endsWith('/familias')) datos = [{ famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true }];
     else if (ruta.endsWith('/familias/1')) datos = { famId: 1, famCodigo: 'MATRIZ_RIESGOS_LAFT', famNombre: 'Matriz UAT', famDescripcion: 'Familia E2E del shell modal.', famActivo: true, famFechaCreacion: '2026-08-13T12:00:00Z', totalVersiones: 2, tieneVersionVigente: true };
     else if (ruta.endsWith('/formulario/version-vigente')) datos = publicada;
     else if (ruta.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: publicada.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };

@@ -36,6 +36,7 @@ public interface IMatricesRiesgosRepository
     Task<List<VersionFormularioDto>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
 
     Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync();
+    Task<FamiliasFormularioPaginadasDto> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro);
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId);
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo);
     Task<FamiliaPredeterminadaDto?> ObtenerFamiliaPredeterminadaAsync();

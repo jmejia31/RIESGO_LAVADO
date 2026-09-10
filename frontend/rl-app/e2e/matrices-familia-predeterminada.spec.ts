@@ -52,6 +52,7 @@ async function preparar(page: Page): Promise<void> {
     const path = new URL(request.url()).pathname;
     let datos: unknown = [];
     if (path.endsWith('/familias/predeterminada')) datos = { configurada: false, tieneVersionVigente: false };
+    else if (path.endsWith('/familias/paginado')) datos = { items: [familia], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } };
     else if (path.endsWith('/familias')) datos = [familia];
     else if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/metodologia/version/501')) datos = { versionFormularioId: 501, codigo: version.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };

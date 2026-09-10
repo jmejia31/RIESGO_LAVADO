@@ -24,6 +24,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     obtenerVersionVigenteFormulario: ReturnType<typeof vi.fn>;
     listarHistorialVersionesFormulario: ReturnType<typeof vi.fn>;
     listarFamiliasFormulario: ReturnType<typeof vi.fn>;
+    listarFamiliasFormularioPaginadas: ReturnType<typeof vi.fn>;
     actualizarBorradorFormulario: ReturnType<typeof vi.fn>;
     publicarVersionFormulario: ReturnType<typeof vi.fn>;
     cambiarVigenciaFormulario: ReturnType<typeof vi.fn>;
@@ -34,8 +35,10 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
+    listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
     obtenerConsolidado: ReturnType<typeof vi.fn>;
+    obtenerConsolidadoPaginado: ReturnType<typeof vi.fn>;
   };
 
   const baseVersion: VersionFormularioDto = {
@@ -74,6 +77,7 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       obtenerVersionVigenteFormulario: vi.fn().mockReturnValue(of(baseVersion)),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([baseVersion])),
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([{ famId: 1, famCodigo: 'MATRIZ_LAFT', famNombre: 'Matriz LAFT', famActivo: true, totalVersiones: 1, tieneVersionVigente: false }])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'MATRIZ_LAFT', famNombre: 'Matriz LAFT', famActivo: true, totalVersiones: 1, tieneVersionVigente: false }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } })),
       actualizarBorradorFormulario: vi.fn().mockReturnValue(of({ success: true })),
       publicarVersionFormulario: vi.fn().mockReturnValue(of({ success: true })),
       cambiarVigenciaFormulario: vi.fn().mockReturnValue(of({ success: true })),
@@ -84,8 +88,10 @@ describe('MatricesRiesgosComponent — UI-FORM.5 Estados y Ciclo de Edición', (
       metodologiaPorVersion: vi.fn().mockReturnValue(of(null)),
       obtenerEvaluacion: vi.fn().mockReturnValue(of(null)),
       listarRiesgos: vi.fn().mockReturnValue(of([])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of([])),
-      obtenerConsolidado: vi.fn().mockReturnValue(of(null))
+      obtenerConsolidado: vi.fn().mockReturnValue(of(null)),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } }))
     };
 
     await TestBed.configureTestingModule({

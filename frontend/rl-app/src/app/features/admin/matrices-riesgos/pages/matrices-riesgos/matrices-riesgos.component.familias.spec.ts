@@ -49,6 +49,20 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     }
   ];
 
+  const paginadoFamilias = (items: FamiliaFormularioDto[], pagina = 1) => ({
+    items,
+    pagina,
+    tamanoPagina: 10,
+    totalRegistros: items.length,
+    totalPaginas: items.length ? 1 : 0,
+    totales: {
+      totalFamilias: items.length,
+      activas: items.filter(familia => familia.famActivo).length,
+      inactivas: items.filter(familia => !familia.famActivo).length,
+      totalVersiones: items.reduce((total, familia) => total + (familia.totalVersiones ?? 0), 0)
+    }
+  });
+
   beforeEach(async () => {
     authMock.tieneRol.mockReturnValue(true);
 
@@ -68,7 +82,15 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     component = fixture.componentInstance;
     service = TestBed.inject(MatricesRiesgosService);
 
-    vi.spyOn(service, 'listarFamiliasFormulario').mockReturnValue(of(mockFamilias));
+    vi.spyOn(service, 'listarFamiliasFormularioPaginadas').mockImplementation((consulta: any) => {
+      const buscar = String(consulta?.buscar ?? '').trim().toLowerCase();
+      let items = mockFamilias.filter(familia =>
+        (!buscar || familia.famCodigo.toLowerCase().includes(buscar) || familia.famNombre.toLowerCase().includes(buscar)) &&
+        (consulta?.estado === 'ACTIVAS' ? familia.famActivo : consulta?.estado === 'INACTIVAS' ? !familia.famActivo : true) &&
+        (consulta?.vigencia === 'VIGENTES' ? familia.tieneVersionVigente : consulta?.vigencia === 'SIN_VIGENTE' ? !familia.tieneVersionVigente : true)
+      );
+      return of(paginadoFamilias(items));
+    });
     vi.spyOn(service, 'listarHistorialVersionesFormulario').mockReturnValue(of([]));
     vi.spyOn(service, 'obtenerVersionVigenteFormulario').mockReturnValue(of({
       verId: 1,
@@ -143,7 +165,7 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('6. Búsqueda por texto, filtro por estado y botón Limpiar', () => {
-    component.filtroBuscarFamilia.set('QA_TEST');
+    component.cambiarBuscarFamilia('QA_TEST');
     fixture.detectChanges();
     expect(component.familiasFiltradas().length).toBe(1);
 
@@ -229,17 +251,17 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('11. UI-FAM.QA carga familias desde backend y finaliza el estado loading', () => {
-    const respuesta = new Subject<FamiliaFormularioDto[]>();
-    vi.mocked(service.listarFamiliasFormulario).mockReturnValueOnce(respuesta);
+    const respuesta = new Subject<ReturnType<typeof paginadoFamilias>>();
+    vi.mocked(service.listarFamiliasFormularioPaginadas).mockReturnValueOnce(respuesta);
     component.familias.set([]);
 
     component.cargarFamilias();
     expect(component.cargandoFamilias()).toBe(true);
 
-    respuesta.next(mockFamilias);
+    respuesta.next(paginadoFamilias(mockFamilias));
     respuesta.complete();
 
-    expect(service.listarFamiliasFormulario).toHaveBeenCalled();
+    expect(service.listarFamiliasFormularioPaginadas).toHaveBeenCalled();
     expect(component.familias()).toEqual(mockFamilias);
     expect(component.cargandoFamilias()).toBe(false);
     expect(component.errorFamilias()).toBeNull();
@@ -261,31 +283,31 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
   });
 
   it('13. UI-FAM.QA filtra familias activas', () => {
-    component.filtroEstadoFamilia.set('ACTIVAS');
+    component.cambiarEstadoFamilia('ACTIVAS');
     expect(component.familiasFiltradas().map(f => f.famId)).toEqual([1, 2]);
   });
 
   it('14. UI-FAM.QA filtra familias inactivas', () => {
-    component.filtroEstadoFamilia.set('INACTIVAS');
+    component.cambiarEstadoFamilia('INACTIVAS');
     expect(component.familiasFiltradas().map(f => f.famId)).toEqual([3]);
   });
 
   it('15. UI-FAM.QA filtra familias con versión vigente', () => {
-    component.filtroVigenciaFamilia.set('VIGENTES');
+    component.cambiarVigenciaFamilia('VIGENTES');
     expect(component.familiasFiltradas().map(f => f.famId)).toEqual([1]);
   });
 
   it('16. UI-FAM.QA filtra familias sin versión vigente', () => {
-    component.filtroVigenciaFamilia.set('SIN_VIGENTE');
+    component.cambiarVigenciaFamilia('SIN_VIGENTE');
     expect(component.familiasFiltradas().map(f => f.famId)).toEqual([2, 3]);
   });
 
   it('17. UI-FAM.QA muestra estado vacío cuando búsqueda y filtros no tienen coincidencias', () => {
     mostrarGestorPrincipal();
-    component.filtroBuscarFamilia.set('NO_EXISTE_999');
+    component.cambiarBuscarFamilia('NO_EXISTE_999');
     fixture.detectChanges();
 
-    expect(component.familiasFiltradas()).toEqual([]);
+    expect(component.familias()).toEqual([]);
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('No hay familias que coincidan con los filtros.');
   });
 

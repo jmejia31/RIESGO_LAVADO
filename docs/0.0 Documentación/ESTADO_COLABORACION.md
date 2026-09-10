@@ -1097,6 +1097,17 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Regresion final: frontend `768/768`, backend `611/611`, E2E `34/34`; TSC spec, lint, build, npm audit (`0 vulnerabilities`), links, base de datos, Agent Skills y diff check PASS. `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML=0`; `DEPENDENCY_CHANGES=0`.
 - Estado vigente: `BRANCH=desarrollo`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. No reanudar FASE 5.3.
 
+## Estado vigente - ARCH-PAGINATION-DB-SIDE-1
+
+- Fecha/hora local: `2026-09-09 23:00 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `d385b4b1aa069cbd8fca9ba5d427fba30f88cfe1`. El remoto ya estaba por delante del baseline solicitado y se preservo el HEAD real; `main` intacta.
+- Se auditaron `28` HTML, `145` TS bajo la aplicacion y `112` archivos C# de Features. Las grillas persistentes certificadas son `13`: Bitacora, Usuarios, tres tipos de Monitoreo, cuatro superficies de Coincidencias, Evaluaciones, Consolidado, Familias y Riesgos.
+- Estado de paginacion: `DB_SIDE_BEFORE=3`, `CLIENT_SIDE_BEFORE=10`, `UNPAGED_UNBOUNDED_BEFORE=1`; despues `DB_SIDE_AFTER=13`, `CLIENT_SIDE_PERSISTENT_AFTER=0`, `UNPAGED_UNBOUNDED_AFTER=0`. Filtros y COUNT se ejecutan en SQL, con ROWNUM, bind parameters, orden estable y page-size limitado. Usuarios carga modulos solo para la pagina; Monitoreo no precarga los tres universos.
+- Exportaciones: las grillas usan consultas completas filtradas dedicadas para construir artefactos; `ReportPreview` conserva unicamente su paginacion local de un workbook ya generado como excepcion valida. No se usa `999999` ni concatenacion de paginas en Angular.
+- Guardas y archivos nuevos: `frontend/rl-app/src/app/db-pagination.regression.spec.ts`, `backend/RL.API.Tests/Infrastructure/DbPaginationRegressionGuardTests.cs`, `backend/RL.API/Shared/Results/PaginadoDto.cs`, contratos paginados de Listas/Riesgos y sus integraciones.
+- Regresion verificada: frontend `776/776`, backend `622/622`, E2E serial `36/36`, foco matrices `28/28`, lint/build Release PASS, npm audit `0 vulnerabilities`, validadores de database/documentation links PASS y diff check PASS. La prueba Agent Skills queda pendiente por Python no operativo; el validador estructural mantiene tres hallazgos legacy fuera de este scope.
+- Restricciones: `ORACLE_DDL=0`, `ORACLE_DATA_MIGRATION=0`, sin reglas de negocio/scoring/FormulaEngine/versionamiento funcional y sin FASE 5.3. Las adiciones de endpoints paginados son parte exclusiva de esta arquitectura; no alteran contratos legacy ni negocio. `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+- Punto exacto de continuacion: repetir/confirmar validaciones finales si se modifica algo, revisar diff y status, stagear explicitamente solo archivos de esta intervencion (sin los tres untracked preexistentes), commit, push a `origin/desarrollo`, comprobar AHEAD/BEHIND y obtener Quality Gate exacto del SHA final. No reanudar FASE 5.3.
+
 ## Estado vigente - UX-BITACORA-UAT-CORRECTION-2
 
 - Fecha/hora local: `2026-09-09 15:42 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `a8345460fc36bb3bf05826ceec248f84163057d3`; remoto sin avance durante la intervención. `main` permanece intacta.

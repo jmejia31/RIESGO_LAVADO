@@ -3,7 +3,7 @@
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
     <div>
       <h1 class="text-2xl font-bold text-gray-900">Usuarios del Sistema (Riesgos)</h1>
-      <p class="text-sm text-gray-500 mt-0.5">{{ usuarios().length }} usuarios registrados</p>
+      <p class="text-sm text-gray-500 mt-0.5">{{ totalRegistros() }} usuarios registrados</p>
     </div>
     <button (click)="prepararNuevo()" title="Crear nuevo usuario" aria-label="Crear nuevo usuario"
       class="flex items-center justify-center gap-2 px-5 py-2.5 bg-ihss-700 text-white font-semibold text-sm rounded-xl hover:bg-ihss-800 transition-colors w-full sm:w-auto">
@@ -98,6 +98,17 @@
           }
         </tbody>
       </table>
+      </div>
+      <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-3 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+        <span>Mostrando {{ totalRegistros() === 0 ? 0 : ((paginaActual() - 1) * registrosPorPagina()) + 1 }} a {{ Math.min(paginaActual() * registrosPorPagina(), totalRegistros()) }} de {{ totalRegistros() }} usuarios</span>
+        <div class="flex items-center gap-1.5">
+          <button type="button" class="rounded-lg border border-gray-200 bg-white px-2 py-1.5 disabled:opacity-40" [disabled]="paginaActual() <= 1" (click)="cambiarPagina(paginaActual() - 1)" aria-label="Página anterior de usuarios" title="Página anterior de usuarios">‹</button>
+          <span class="rounded-lg bg-ihss-900 px-2.5 py-1.5 font-bold text-white">{{ totalPaginas() === 0 ? 0 : paginaActual() }} / {{ totalPaginas() }}</span>
+          <button type="button" class="rounded-lg border border-gray-200 bg-white px-2 py-1.5 disabled:opacity-40" [disabled]="paginaActual() >= totalPaginas()" (click)="cambiarPagina(paginaActual() + 1)" aria-label="Página siguiente de usuarios" title="Página siguiente de usuarios">›</button>
+          <select class="ml-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5" [ngModel]="registrosPorPagina()" (ngModelChange)="cambiarRegistrosPorPagina($event)" aria-label="Usuarios por página">
+            <option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
+          </select>
+        </div>
       </div>
     }
   </div>

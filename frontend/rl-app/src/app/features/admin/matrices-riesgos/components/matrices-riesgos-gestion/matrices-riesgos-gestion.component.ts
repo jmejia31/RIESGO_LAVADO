@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -23,6 +23,20 @@ export class MatricesRiesgosGestionComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly mensaje = signal<string | null>(null);
   readonly editandoId = signal(0);
+  readonly Math = Math;
+  readonly pagina = signal(1);
+  readonly tamanoPagina = signal(25);
+  readonly totalRegistros = signal(0);
+  private secuenciaCarga = 0;
+  readonly totalPaginas = computed(() => this.totalRegistros() === 0 ? 0 : Math.ceil(this.totalRegistros() / this.tamanoPagina()));
+  readonly paginasVisibles = computed(() => {
+    const total = this.totalPaginas();
+    const actual = this.pagina();
+    if (total === 0) return [];
+    const pages = new Set([1, total]);
+    for (let page = Math.max(1, actual - 2); page <= Math.min(total, actual + 2); page++) pages.add(page);
+    return [...pages].sort((a, b) => a - b);
+  });
 
   codigo = '';
   nombre = '';
@@ -34,15 +48,32 @@ export class MatricesRiesgosGestionComponent implements OnInit {
   }
 
   cargar(): void {
+    const solicitudId = ++this.secuenciaCarga;
     this.cargando.set(true);
     this.error.set(null);
-    this.service.listarRiesgos(true).subscribe({
-      next: riesgos => {
-        this.riesgos.set(riesgos);
+    this.service.listarRiesgosPaginados(true, this.pagina(), this.tamanoPagina()).subscribe({
+      next: resultado => {
+        if (solicitudId !== this.secuenciaCarga) return;
+        this.riesgos.set(resultado.items);
+        this.totalRegistros.set(resultado.totalRegistros);
+        this.pagina.set(resultado.pagina);
         this.cargando.set(false);
       },
-      error: (error: unknown) => this.finalizarError(error, 'No se pudieron cargar los riesgos.')
+      error: (error: unknown) => { if (solicitudId === this.secuenciaCarga) this.finalizarError(error, 'No se pudieron cargar los riesgos.'); }
     });
+  }
+
+  cambiarPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPaginas() || pagina === this.pagina()) return;
+    this.pagina.set(pagina);
+    this.cargar();
+  }
+
+  cambiarTamanoPagina(tamano: number): void {
+    if (![10, 25, 50].includes(Number(tamano))) return;
+    this.tamanoPagina.set(Number(tamano));
+    this.pagina.set(1);
+    this.cargar();
   }
 
   nuevo(limpiarMensajes = true): void {

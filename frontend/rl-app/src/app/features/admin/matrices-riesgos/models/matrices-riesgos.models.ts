@@ -34,6 +34,28 @@ export interface FamiliaFormularioDto {
   tieneVersionVigente: boolean;
 }
 
+export interface ConsultaFamiliasFormularioPaginada {
+  pagina?: number;
+  tamanoPagina?: number;
+  buscar?: string;
+  estado?: 'TODAS' | 'ACTIVAS' | 'INACTIVAS';
+  vigencia?: 'TODAS' | 'VIGENTES' | 'SIN_VIGENTE';
+}
+
+export interface FamiliasFormularioPaginadasDto {
+  items: FamiliaFormularioDto[];
+  pagina: number;
+  tamanoPagina: number;
+  totalRegistros: number;
+  totalPaginas: number;
+  totales: {
+    totalFamilias: number;
+    activas: number;
+    inactivas: number;
+    totalVersiones: number;
+  };
+}
+
 export interface FamiliaPredeterminadaDto {
   configurada: boolean;
   familiaId?: number | null;

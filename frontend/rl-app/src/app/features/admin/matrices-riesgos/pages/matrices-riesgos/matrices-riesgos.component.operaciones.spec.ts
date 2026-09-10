@@ -67,6 +67,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([
         { famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }
       ])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [{ famId: 1, famCodigo: 'FORM_A', famNombre: 'Formulario A', famDescripcion: '', famActivo: true }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 0 } })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
       crearFamiliaFormulario: vi.fn().mockReturnValue(of(2)),
       actualizarFamiliaFormulario: vi.fn().mockReturnValue(of(true)),
@@ -99,6 +100,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
         reglas: []
       })),
       listarRiesgos: vi.fn().mockReturnValue(of([{ rieId: 5, rieCodigo: 'R-5', rieNombre: 'Riesgo', rieActivo: true }])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [{ rieId: 5, rieCodigo: 'R-5', rieNombre: 'Riesgo', rieActivo: true }], pagina: 1, tamanoPagina: 200, totalRegistros: 1, totalPaginas: 1 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of({
         items: [evaluacionResumen],
         pagina: 1,
@@ -106,7 +108,8 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
         totalRegistros: 1,
         totalPaginas: 1
       })),
-      obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+obtenerConsolidado: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       descargarConsolidadoExcel: vi.fn().mockReturnValue(of(new Blob(['excel']))),
       descargarConsolidadoPdf: vi.fn().mockReturnValue(of(new Blob(['pdf']))),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([version])),
@@ -200,7 +203,7 @@ describe('MatricesRiesgosComponent — operaciones del componente', () => {
     expect(component.errorEvaluaciones()).toBe('Evaluaciones no disponibles');
     expect(component.cargandoEvaluaciones()).toBe(false);
 
-    service['obtenerConsolidado'].mockReturnValue(throwError(() => ({ error: { errors: { filtro: ['Filtro invalido'] } } })));
+    service['obtenerConsolidadoPaginado'].mockReturnValue(throwError(() => ({ error: { errors: { filtro: ['Filtro invalido'] } } })));
     component.cargarConsolidado();
     expect(component.errorConsolidado()).toBe('Filtro invalido');
     expect(component.cargandoConsolidado()).toBe(false);

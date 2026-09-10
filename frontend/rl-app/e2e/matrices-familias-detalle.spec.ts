@@ -93,7 +93,8 @@ async function stubLecturasBase(page: Page): Promise<void> {
     const path = url.pathname;
 
     let datos: unknown = [];
-    if (path.endsWith('/familias')) datos = [familiaListado];
+    if (path.endsWith('/familias/paginado')) datos = { items: [familiaListado], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 2 } };
+    else if (path.endsWith('/familias')) datos = [familiaListado];
     else if (/\/familias\/7$/.test(path) && request.method() === 'GET') datos = familiaDetalle;
     else if (path.endsWith('/formulario/version-vigente')) datos = versionVigente;
     else if (path.endsWith('/metodologia/vigente')) datos = {

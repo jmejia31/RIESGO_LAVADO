@@ -81,6 +81,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
   beforeEach(async () => {
     serviceMock = {
       listarFamiliasFormulario: vi.fn().mockReturnValue(of([mockFamilia])),
+      listarFamiliasFormularioPaginadas: vi.fn().mockReturnValue(of({ items: [mockFamilia], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1, totales: { totalFamilias: 1, activas: 1, inactivas: 0, totalVersiones: 1 } })),
       listarVersionesFormulario: vi.fn().mockReturnValue(of([mockVersion])),
       listarHistorialVersionesFormulario: vi.fn().mockReturnValue(of([mockVersion])),
       obtenerFormularioVigente: vi.fn().mockReturnValue(of({
@@ -96,9 +97,11 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
       metodologiaPorVersion: vi.fn().mockReturnValue(of({ secciones: [] })),
       listarRiesgosCatalogos: vi.fn().mockReturnValue(of([])),
       listarRiesgos: vi.fn().mockReturnValue(of([])),
+      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluacionesRiesgoPaginadas: vi.fn().mockReturnValue(of(mockPaginado)),
       listarEvaluaciones: vi.fn().mockReturnValue(of(mockPaginado)),
       obtenerConsolidadoReporte: vi.fn().mockReturnValue(of([])),
+      obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       obtenerConsolidado: vi.fn().mockReturnValue(of([]))
     };
 
@@ -186,7 +189,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
 
   // 7. fallo Consolidado no bloquea otras tabs.
   it('7. fallo Consolidado no bloquea otras tabs', () => {
-    serviceMock.obtenerConsolidado.mockReturnValue(throwError(() => new Error('Error consolidado')));
+    serviceMock.obtenerConsolidadoPaginado.mockReturnValue(throwError(() => new Error('Error consolidado')));
     component.seleccionarTab('consolidado');
 
     expect(component.errorConsolidado()).toBeTruthy();
@@ -198,7 +201,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
 
   // 8. fallo Plantillas no bloquea otras tabs.
   it('8. fallo Plantillas no bloquea otras tabs', () => {
-    serviceMock.listarFamiliasFormulario.mockReturnValue(throwError(() => new Error('Error familias')));
+    serviceMock.listarFamiliasFormularioPaginadas.mockReturnValue(throwError(() => new Error('Error familias')));
     component.seleccionarTab('plantillas');
 
     expect(component.familias().length).toBe(0);
@@ -225,7 +228,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
 
     component.seleccionarTab('plantillas');
 
-    expect(serviceMock.listarFamiliasFormulario).toHaveBeenCalledTimes(1);
+    expect(serviceMock.listarFamiliasFormularioPaginadas).toHaveBeenCalledTimes(1);
     expect(serviceMock.listarHistorialVersionesFormulario).not.toHaveBeenCalled();
   });
 
