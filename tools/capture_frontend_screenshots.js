@@ -83,11 +83,11 @@ async function main() {
   await page.route('**/api/catalogos/modulos', route => route.fulfill(json({ success: true, datos: moduleCatalog })));
   await page.route('**/api/catalogos/roles', route => route.fulfill(json({ success: true, datos: [{ rolId: 1, rolNombre: 'ADMINISTRADOR', rolActivo: 1 }] })));
   await page.route('**/api/catalogos/dominios', route => route.fulfill(json({ success: true, datos: [] })));
-  await page.route('**/api/auth/usuarios', route => route.fulfill(json({ success: true, datos: [] })));
+  await page.route('**/api/auth/usuarios/paginado**', route => route.fulfill(json({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0 } })));
   await page.route('**/api/listas/evidencias/politica', route => route.fulfill(json({ success: true, datos: { maximoMb: 10, extensionesPermitidas: ['pdf','docx','xlsx','jpg','png'], tiposPermitidosTexto: 'PDF, Word, Excel e imagenes' } })));
-  await page.route('**/api/listas/juridicas', route => route.fulfill(json({ success: true, datos: [] })));
-  await page.route('**/api/listas/naturales', route => route.fulfill(json({ success: true, datos: [] })));
-  await page.route('**/api/listas/empleados', route => route.fulfill(json({ success: true, datos: [] })));
+  await page.route('**/api/listas/juridicas/paginado**', route => route.fulfill(json({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } } })));
+  await page.route('**/api/listas/naturales/paginado**', route => route.fulfill(json({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } } })));
+  await page.route('**/api/listas/empleados/paginado**', route => route.fulfill(json({ success: true, datos: { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRegistros: 0, pendientes: 0, conMotivo: 0, manuales: 0, cerradosPasivos: 0 } } })));
   await page.route('**/api/listas/tipos-documento', route => route.fulfill(json({ success: true, datos: [] })));
   await page.route('**/api/listas/tipos-listas-cautela', route => route.fulfill(json({ success: true, datos: [] })));
   await page.route('**/api/listas/resumen', route => route.fulfill(json({ success: true, datos: [] })));

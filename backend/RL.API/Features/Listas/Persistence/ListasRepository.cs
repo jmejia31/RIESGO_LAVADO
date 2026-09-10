@@ -25,201 +25,7 @@ namespace RL.API.Features.Listas.Persistence
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasAsync()
-        {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                WITH Coincidencias AS (
-                    select D.RTN, D.NOMBRE, D.NUMEPATRO, R.LISTA_CONCIDENCIA, R.FECHA_ENCONTRO, R.FECHA_CALIFICO, D.ES_PROVEEDOR_IHSS,
-                           NVL((select 1 from RL_LISTA_POSITIVOS lp where (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO or lp.LSP_NO_DOCUMENTO = D.RTN) and lp.LSP_MOTIVO_INGRESO is not null and lp.LSP_ESTADO_REGISTRO = 1 and rownum = 1), 0) as TIENE_MOTIVO,
-                           (select min(lp.LSP_FECHA_CREACION) from RL_LISTA_POSITIVOS lp where (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO or lp.LSP_NO_DOCUMENTO = D.RTN) and lp.LSP_ESTADO_REGISTRO = 1) as FECHA_REGISTRO_INTERNO
-                    from DNP_IHSS.V_DATOS_EMPRESA d
-                    inner join DNP_IHSS.REPORTE_COINCIDENCIAS r on D.NUMEPATRO = R.NUMERO_PATRONO
-                    where D.TIPO_EMPRESA_ID = 1 and R.TIPO_CALIFICACION_ID = 1
-                )
-                SELECT RTN, NOMBRE, NUMEPATRO, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, ES_PROVEEDOR_IHSS, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
-                UNION ALL
-                -- Los positivos manuales no tienen fecha DNP de coincidencia/calificacion; se expone aparte su registro interno.
-                SELECT 
-                     lp.LSP_NO_DOCUMENTO AS RTN,
-                     lp.LSP_NOMBRE_COMPLETO AS NOMBRE,
-                     lp.LSP_NO_DOCUMENTO AS NUMEPATRO,
-                     NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL') AS LISTA_CONCIDENCIA,
-                     CAST(NULL AS DATE) AS FECHA_ENCONTRO,
-                     CAST(NULL AS DATE) AS FECHA_CALIFICO,
-                     lp.LSP_FECHA_CREACION AS FECHA_REGISTRO_INTERNO,
-                     0 AS ES_PROVEEDOR_IHSS,
-                     1 AS TIENE_MOTIVO,
-                     1 AS ES_MANUAL
-                FROM RL_LISTA_POSITIVOS lp
-                LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
-                WHERE lp.LSP_TIPO_POSITIVO_ID = 1
-                  AND lp.LSP_ESTADO_REGISTRO = 1
-                  AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMEPATRO = lp.LSP_NO_DOCUMENTO OR c.RTN = lp.LSP_NO_DOCUMENTO)";
-
-            var list = new List<CoincidenciaJuridicaDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new CoincidenciaJuridicaDto
-                {
-                    Rtn = reader["RTN"]?.ToString() ?? string.Empty,
-                    Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
-                    NumeroPatrono = reader["NUMEPATRO"]?.ToString() ?? string.Empty,
-                    ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
-                    FechaEncontro = reader["FECHA_ENCONTRO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_ENCONTRO"]),
-                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
-                    FechaRegistroInterno = reader["FECHA_REGISTRO_INTERNO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_REGISTRO_INTERNO"]),
-                    EsProveedorIhss = (reader["ES_PROVEEDOR_IHSS"]?.ToString()?.Trim().ToUpper() == "S" || 
-                                       reader["ES_PROVEEDOR_IHSS"]?.ToString()?.Trim().ToUpper() == "SI" || 
-                                       reader["ES_PROVEEDOR_IHSS"]?.ToString()?.Trim() == "1") ? "Si" : "No",
-                    TieneMotivo = Convert.ToInt32(reader["TIENE_MOTIVO"]) == 1,
-                    EsManual = Convert.ToInt32(reader["ES_MANUAL"]) == 1
-                });
-            }
-            return list;
-        }
-
-        public async Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesAsync()
-        {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                WITH Coincidencias AS (
-                    SELECT
-                           D.NUMERO_IDENTIFICACION,
-                           D.NOMBRE,
-                           R.LISTA_CONCIDENCIA,
-                           COUNT(*) AS TOTAL_REPETIDOS,
-                           MAX(R.FECHA_ENCONTRO) AS FECHA_ENCONTRO,
-                           MAX(R.FECHA_CALIFICO) AS FECHA_CALIFICO,
-                           (select min(lp.LSP_FECHA_CREACION) from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION and lp.LSP_ESTADO_REGISTRO = 1) as FECHA_REGISTRO_INTERNO,
-                           NVL((select 1 from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION and lp.LSP_MOTIVO_INGRESO is not null and lp.LSP_ESTADO_REGISTRO = 1 and rownum = 1), 0) as TIENE_MOTIVO
-                    FROM (
-                        SELECT DISTINCT
-                               NUMERO_IDENTIFICACION,
-                               TRIM(REGEXP_REPLACE(NOMBRES_PERSONA,'[[:space:]]+',' ')) NOMBRE
-                        FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES
-                    ) D
-                    INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R
-                        ON D.NUMERO_IDENTIFICACION = R.DNI
-                    WHERE R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL
-                    GROUP BY
-                           D.NUMERO_IDENTIFICACION,
-                           D.NOMBRE,
-                           R.LISTA_CONCIDENCIA
-                )
-                SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
-                UNION ALL
-                SELECT 
-                    lp.LSP_NO_DOCUMENTO AS NUMERO_IDENTIFICACION,
-                    lp.LSP_NOMBRE_COMPLETO AS NOMBRE,
-                    NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL') AS LISTA_CONCIDENCIA,
-                    0 AS TOTAL_REPETIDOS,
-                    CAST(NULL AS DATE) AS FECHA_ENCONTRO,
-                    CAST(NULL AS DATE) AS FECHA_CALIFICO,
-                    lp.LSP_FECHA_CREACION AS FECHA_REGISTRO_INTERNO,
-                    1 AS TIENE_MOTIVO,
-                    1 AS ES_MANUAL
-                FROM RL_LISTA_POSITIVOS lp
-                LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
-                WHERE lp.LSP_TIPO_POSITIVO_ID = 2
-                  AND lp.LSP_ESTADO_REGISTRO = 1
-                  AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMERO_IDENTIFICACION = lp.LSP_NO_DOCUMENTO)
-                ORDER BY TOTAL_REPETIDOS DESC";
-
-            var list = new List<CoincidenciaNaturalDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new CoincidenciaNaturalDto
-                {
-                    NumeroIdentificacion = reader["NUMERO_IDENTIFICACION"]?.ToString() ?? string.Empty,
-                    Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
-                    ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
-                    TotalRepetidos = Convert.ToInt32(reader["TOTAL_REPETIDOS"]),
-                    FechaEncontro = reader["FECHA_ENCONTRO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_ENCONTRO"]),
-                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
-                    FechaRegistroInterno = reader["FECHA_REGISTRO_INTERNO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_REGISTRO_INTERNO"]),
-                    TieneMotivo = Convert.ToInt32(reader["TIENE_MOTIVO"]) == 1,
-                    EsManual = Convert.ToInt32(reader["ES_MANUAL"]) == 1
-                });
-            }
-            return list;
-        }
-
-        public async Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosAsync()
-        {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                WITH Coincidencias AS (
-                    SELECT
-                        D.identidad,
-                        TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO ,'[[:space:]]+',' ')) AS nombre,
-                        R.lista_concidencia,
-                        COUNT(*) AS total_repetidos,
-                        MAX(R.FECHA_ENCONTRO) AS FECHA_ENCONTRO,
-                        MAX(R.FECHA_CALIFICO) AS FECHA_CALIFICO,
-                        (select min(lp.LSP_FECHA_CREACION) from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.identidad and lp.LSP_ESTADO_REGISTRO = 1) as FECHA_REGISTRO_INTERNO,
-                        NVL((select 1 from RL_LISTA_POSITIVOS lp where lp.LSP_NO_DOCUMENTO = D.identidad and lp.LSP_MOTIVO_INGRESO is not null and lp.LSP_ESTADO_REGISTRO = 1 and rownum = 1), 0) as TIENE_MOTIVO
-                    FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D
-                    JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R
-                        ON D.identidad = R.DNI
-                       AND R.TIPO_CALIFICACION_ID = 1
-                    WHERE D.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
-                    GROUP BY
-                        D.identidad,
-                        TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO,'[[:space:]]+',' ')),
-                        R.lista_concidencia
-                )
-                SELECT identidad, nombre, lista_concidencia, total_repetidos, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL FROM Coincidencias
-                UNION ALL
-                SELECT 
-                    lp.LSP_NO_DOCUMENTO AS identidad,
-                    lp.LSP_NOMBRE_COMPLETO AS nombre,
-                    NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL') AS lista_concidencia,
-                    0 AS total_repetidos,
-                    CAST(NULL AS DATE) AS FECHA_ENCONTRO,
-                    CAST(NULL AS DATE) AS FECHA_CALIFICO,
-                    lp.LSP_FECHA_CREACION AS FECHA_REGISTRO_INTERNO,
-                    1 AS TIENE_MOTIVO,
-                    1 AS ES_MANUAL
-                FROM RL_LISTA_POSITIVOS lp
-                LEFT JOIN DNP_IHSS.TIPO_LISTAS_CAUTELA lc ON lp.LSP_TIPO_LISTA_CAUTELA_ID = lc.TIPO_LISTA_CAUTELA_ID
-                WHERE lp.LSP_TIPO_POSITIVO_ID = 3
-                  AND lp.LSP_ESTADO_REGISTRO = 1
-                  AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.identidad = lp.LSP_NO_DOCUMENTO)
-                ORDER BY total_repetidos DESC";
-
-            var list = new List<CoincidenciaEmpleadoDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new CoincidenciaEmpleadoDto
-                {
-                    Identidad = reader["IDENTIDAD"]?.ToString() ?? string.Empty,
-                    Nombre = reader["NOMBRE"]?.ToString() ?? string.Empty,
-                    ListaCoincidencia = reader["LISTA_CONCIDENCIA"]?.ToString() ?? string.Empty,
-                    TotalRepetidos = Convert.ToInt32(reader["TOTAL_REPETIDOS"]),
-                    FechaEncontro = reader["FECHA_ENCONTRO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_ENCONTRO"]),
-                    FechaCalifico = reader["FECHA_CALIFICO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_CALIFICO"]),
-                    FechaRegistroInterno = reader["FECHA_REGISTRO_INTERNO"] == DBNull.Value ? null : Convert.ToDateTime(reader["FECHA_REGISTRO_INTERNO"]),
-                    TieneMotivo = Convert.ToInt32(reader["TIENE_MOTIVO"]) == 1,
-                    EsManual = Convert.ToInt32(reader["ES_MANUAL"]) == 1
-                });
-            }
-            return list;
-        }
-
-        public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+        public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
             => ObtenerMonitoreoPaginadoAsync(
                 consulta,
                 ConstruirConsultaMonitoreoJuridicas(),
@@ -236,7 +42,7 @@ namespace RL.API.Features.Listas.Persistence
                     EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1
-                });
+                }, cancellationToken);
 
         public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoJuridicas(), "NOMBRE ASC, NUMEPATRO ASC", reader => new CoincidenciaJuridicaDto
@@ -246,7 +52,7 @@ namespace RL.API.Features.Listas.Persistence
                 EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
             });
 
-        public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+        public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
             => ObtenerMonitoreoPaginadoAsync(
                 consulta,
                 ConstruirConsultaMonitoreoNaturales(),
@@ -262,7 +68,7 @@ namespace RL.API.Features.Listas.Persistence
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1
-                });
+                }, cancellationToken);
 
         public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoNaturales(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC", reader => new CoincidenciaNaturalDto
@@ -271,7 +77,7 @@ namespace RL.API.Features.Listas.Persistence
                 FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"), FechaCalifico = Fecha(reader, "FECHA_CALIFICO"), FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"), TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1, EsManual = Entero(reader, "ES_MANUAL") == 1
             });
 
-        public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta)
+        public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
             => ObtenerMonitoreoPaginadoAsync(
                 consulta,
                 ConstruirConsultaMonitoreoEmpleados(),
@@ -287,7 +93,7 @@ namespace RL.API.Features.Listas.Persistence
                     FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1
-                });
+                }, cancellationToken);
 
         public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoEmpleados(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC", reader => new CoincidenciaEmpleadoDto
@@ -1142,56 +948,120 @@ namespace RL.API.Features.Listas.Persistence
             ConsultaMonitoreoPaginadaDto consulta,
             string baseSql,
             string orderBy,
-            Func<OracleDataReader, T> map)
+            Func<OracleDataReader, T> map,
+            CancellationToken cancellationToken)
         {
+            var requestStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var filteredSql = $"SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q WHERE 1 = 1";
             AppendMonitoringFilters(ref filteredSql, consulta);
 
             await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
+            await conn.OpenAsync(cancellationToken);
 
-            var paged = await ExecutePageAsync(conn, filteredSql, orderBy, consulta.Pagina, consulta.TamanoPagina, command => AddMonitoringParameters(command, consulta), map);
-
-            await using var totalsCommand = conn.CreateCommand();
-            totalsCommand.BindByName = true;
-            totalsCommand.CommandText = $@"
-                SELECT COUNT(*) AS TOTAL_REGISTROS,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END), 0) AS PENDIENTES,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END), 0) AS CON_MOTIVO,
-                       NVL(SUM(CASE WHEN ES_MANUAL = 1 THEN 1 ELSE 0 END), 0) AS MANUALES,
-                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END), 0) AS CERRADOS_PASIVOS
+            // La consulta analítica entrega página, conteo y KPIs desde la misma
+            // proyección filtrada. Así se evita ejecutar el dataset complejo tres
+            // veces por petición (COUNT + página + totales).
+            var enrichedSql = $@"
+                SELECT f.*,
+                       COUNT(*) OVER () AS TOTAL_REGISTROS,
+                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END) OVER (), 0) AS PENDIENTES,
+                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END) OVER (), 0) AS CON_MOTIVO,
+                       NVL(SUM(CASE WHEN f.ES_MANUAL = 1 THEN 1 ELSE 0 END) OVER (), 0) AS MANUALES,
+                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END) OVER (), 0) AS CERRADOS_PASIVOS
                 FROM ({filteredSql}) f";
-            AddMonitoringParameters(totalsCommand, consulta);
-            await using var totalsReader = await totalsCommand.ExecuteReaderAsync();
-            if (await totalsReader.ReadAsync())
+
+            var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);
+            var requestedPage = Math.Max(consulta.Pagina, 1);
+            var page = requestedPage;
+            var total = 0;
+
+            // Para páginas distintas de la primera se obtiene un conteo previo
+            // únicamente para normalizar una página fuera de rango sin volver a
+            // traer el universo completo. La consulta de página sigue aportando
+            // los KPIs y el total canónico en la misma ejecución.
+            if (requestedPage > 1)
             {
-                return new MonitoreoPaginadoDto<T>
-                {
-                    Items = paged.Items,
-                    Pagina = paged.Pagina,
-                    TamanoPagina = paged.TamanoPagina,
-                    TotalRegistros = paged.TotalRegistros,
-                    TotalPaginas = paged.TotalPaginas,
-                    Totales = new MonitoreoTotalesDto
-                    {
-                        TotalRegistros = Entero(totalsReader, "TOTAL_REGISTROS"),
-                        Pendientes = Entero(totalsReader, "PENDIENTES"),
-                        ConMotivo = Entero(totalsReader, "CON_MOTIVO"),
-                        Manuales = Entero(totalsReader, "MANUALES"),
-                        CerradosPasivos = Entero(totalsReader, "CERRADOS_PASIVOS")
-                    }
-                };
+                await using var rangeCommand = conn.CreateCommand();
+                rangeCommand.BindByName = true;
+                rangeCommand.CommandText = $"SELECT COUNT(*) FROM ({filteredSql}) count_query";
+                AddMonitoringParameters(rangeCommand, consulta);
+                total = Convert.ToInt32(await rangeCommand.ExecuteScalarAsync(cancellationToken));
+                var totalPagesForRange = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
+                page = totalPagesForRange == 0 ? 1 : Math.Clamp(requestedPage, 1, totalPagesForRange);
             }
+
+            var firstRow = (page - 1) * pageSize;
+            var lastRow = page * pageSize;
+            var items = new List<T>();
+            var pageStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            await using var pageCommand = conn.CreateCommand();
+            pageCommand.BindByName = true;
+            pageCommand.CommandText = $@"
+                SELECT *
+                FROM (
+                    SELECT q.*, ROWNUM AS NUMERO_FILA
+                    FROM (
+                        {enrichedSql}
+                        ORDER BY {orderBy}
+                    ) q
+                    WHERE ROWNUM <= :filaFinal
+                )
+                WHERE NUMERO_FILA > :filaInicial";
+            AddMonitoringParameters(pageCommand, consulta);
+            pageCommand.Parameters.Add(new OracleParameter("filaFinal", lastRow));
+            pageCommand.Parameters.Add(new OracleParameter("filaInicial", firstRow));
+            await using var reader = await pageCommand.ExecuteReaderAsync(cancellationToken);
+
+            var pageTotal = total;
+            var pagePendientes = 0;
+            var pageConMotivo = 0;
+            var pageManuales = 0;
+            var pageCerradosPasivos = 0;
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                if (pageTotal == 0) pageTotal = Entero(reader, "TOTAL_REGISTROS");
+                pagePendientes = Entero(reader, "PENDIENTES");
+                pageConMotivo = Entero(reader, "CON_MOTIVO");
+                pageManuales = Entero(reader, "MANUALES");
+                pageCerradosPasivos = Entero(reader, "CERRADOS_PASIVOS");
+                items.Add(map(reader));
+            }
+
+            pageStopwatch.Stop();
+            requestStopwatch.Stop();
+            var totalPages = pageTotal == 0 ? 0 : (int)Math.Ceiling(pageTotal / (double)pageSize);
+            var effectivePage = totalPages == 0 ? 1 : Math.Clamp(page, 1, totalPages);
+            Serilog.Log.Information(
+                "MonitoringQuery completed: type={MonitoringType} page={Page} pageSize={PageSize} filtered={Filtered} pageQueryMs={PageQueryMs} totalRequestMs={TotalRequestMs}",
+                ResolveMonitoringType(baseSql), effectivePage, pageSize,
+                !string.IsNullOrWhiteSpace(consulta.Buscar) || !string.Equals(consulta.Estado, "todos", StringComparison.OrdinalIgnoreCase) || consulta.FechaDesde.HasValue || consulta.FechaHasta.HasValue,
+                pageStopwatch.ElapsedMilliseconds, requestStopwatch.ElapsedMilliseconds);
 
             return new MonitoreoPaginadoDto<T>
             {
-                Items = paged.Items,
-                Pagina = paged.Pagina,
-                TamanoPagina = paged.TamanoPagina,
-                TotalRegistros = paged.TotalRegistros,
-                TotalPaginas = paged.TotalPaginas
+                Items = items,
+                Pagina = effectivePage,
+                TamanoPagina = pageSize,
+                TotalRegistros = pageTotal,
+                TotalPaginas = totalPages,
+                Totales = new MonitoreoTotalesDto
+                {
+                    TotalRegistros = pageTotal,
+                    Pendientes = pagePendientes,
+                    ConMotivo = pageConMotivo,
+                    Manuales = pageManuales,
+                    CerradosPasivos = pageCerradosPasivos
+                }
             };
         }
+
+        private static string ResolveMonitoringType(string baseSql)
+            => baseSql.Contains("TIPO_EMPRESA_ID", StringComparison.OrdinalIgnoreCase)
+                ? "juridica"
+                : baseSql.Contains("V_EMPLEADOS_IHSS_PLANILLAS", StringComparison.OrdinalIgnoreCase)
+                    ? "empleado"
+                    : "natural";
 
         private async Task<List<T>> ObtenerMonitoreoCompletoAsync<T>(
             ConsultaMonitoreoPaginadaDto consulta,
@@ -1275,9 +1145,9 @@ namespace RL.API.Features.Listas.Persistence
             if (!string.IsNullOrWhiteSpace(consulta.Estado) && !consulta.Estado.Equals("todos", StringComparison.OrdinalIgnoreCase))
                 sql += " AND ESTADO_MONITOREO = :estado";
             if (consulta.FechaDesde.HasValue)
-                sql += " AND TRUNC(NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO)) >= TRUNC(:fechaDesde)";
+                sql += " AND NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO) >= TRUNC(:fechaDesde)";
             if (consulta.FechaHasta.HasValue)
-                sql += " AND TRUNC(NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO)) <= TRUNC(:fechaHasta)";
+                sql += " AND NVL(FECHA_ENCONTRO, FECHA_REGISTRO_INTERNO) < TRUNC(:fechaHasta) + 1";
         }
 
         private static void AddMonitoringParameters(OracleCommand command, ConsultaMonitoreoPaginadaDto consulta)
@@ -1289,11 +1159,27 @@ namespace RL.API.Features.Listas.Persistence
         }
 
         private static string ConstruirConsultaMonitoreoJuridicas() => @"
-            WITH Coincidencias AS (
+            WITH POSITIVOS_AGG AS (
+                SELECT LSP_NO_DOCUMENTO,
+                       MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
+                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
+                FROM RL_LISTA_POSITIVOS
+                WHERE LSP_ESTADO_REGISTRO = 1
+                GROUP BY LSP_NO_DOCUMENTO
+            ), Coincidencias AS (
                 SELECT D.RTN, D.NOMBRE, D.NUMEPATRO, R.LISTA_CONCIDENCIA, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
-                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO OR lp.LSP_NO_DOCUMENTO = D.RTN) AND lp.LSP_ESTADO_REGISTRO = 1) AS FECHA_REGISTRO_INTERNO, D.ES_PROVEEDOR_IHSS,
-                       NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE (lp.LSP_NO_DOCUMENTO = D.NUMEPATRO OR lp.LSP_NO_DOCUMENTO = D.RTN) AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) AS TIENE_MOTIVO
-                FROM DNP_IHSS.V_DATOS_EMPRESA d INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS r ON D.NUMEPATRO = R.NUMERO_PATRONO
+                       CASE
+                           WHEN pp.FECHA_REGISTRO_INTERNO IS NULL THEN pr.FECHA_REGISTRO_INTERNO
+                           WHEN pr.FECHA_REGISTRO_INTERNO IS NULL THEN pp.FECHA_REGISTRO_INTERNO
+                           WHEN pp.FECHA_REGISTRO_INTERNO <= pr.FECHA_REGISTRO_INTERNO THEN pp.FECHA_REGISTRO_INTERNO
+                           ELSE pr.FECHA_REGISTRO_INTERNO
+                       END AS FECHA_REGISTRO_INTERNO,
+                       D.ES_PROVEEDOR_IHSS,
+                       GREATEST(NVL(pp.TIENE_MOTIVO, 0), NVL(pr.TIENE_MOTIVO, 0)) AS TIENE_MOTIVO
+                FROM DNP_IHSS.V_DATOS_EMPRESA d
+                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS r ON D.NUMEPATRO = R.NUMERO_PATRONO
+                LEFT JOIN POSITIVOS_AGG pp ON pp.LSP_NO_DOCUMENTO = D.NUMEPATRO
+                LEFT JOIN POSITIVOS_AGG pr ON pr.LSP_NO_DOCUMENTO = D.RTN
                 WHERE D.TIPO_EMPRESA_ID = 1 AND R.TIPO_CALIFICACION_ID = 1)
             SELECT RTN, NOMBRE, NUMEPATRO, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, ES_PROVEEDOR_IHSS, TIENE_MOTIVO, 0 AS ES_MANUAL, RTN || ' ' || NUMEPATRO AS BUSQUEDA FROM Coincidencias
             UNION ALL
@@ -1303,13 +1189,22 @@ namespace RL.API.Features.Listas.Persistence
               AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMEPATRO = lp.LSP_NO_DOCUMENTO OR c.RTN = lp.LSP_NO_DOCUMENTO)";
 
         private static string ConstruirConsultaMonitoreoNaturales() => @"
-            WITH Coincidencias AS (
+            WITH POSITIVOS_AGG AS (
+                SELECT LSP_NO_DOCUMENTO,
+                       MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
+                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
+                FROM RL_LISTA_POSITIVOS
+                WHERE LSP_ESTADO_REGISTRO = 1
+                GROUP BY LSP_NO_DOCUMENTO
+            ), Coincidencias AS (
                 SELECT D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
-                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION AND lp.LSP_ESTADO_REGISTRO = 1) FECHA_REGISTRO_INTERNO, NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) TIENE_MOTIVO
+                       p.FECHA_REGISTRO_INTERNO,
+                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
                 FROM (SELECT DISTINCT NUMERO_IDENTIFICACION, TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' ')) NOMBRE FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES) D
                 INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.NUMERO_IDENTIFICACION = R.DNI
+                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION
                 WHERE R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL
-                GROUP BY D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA)
+                GROUP BY D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO)
             SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
             UNION ALL
             SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
@@ -1318,12 +1213,22 @@ namespace RL.API.Features.Listas.Persistence
               AND NOT EXISTS (SELECT 1 FROM Coincidencias c WHERE c.NUMERO_IDENTIFICACION = lp.LSP_NO_DOCUMENTO)";
 
         private static string ConstruirConsultaMonitoreoEmpleados() => @"
-            WITH Coincidencias AS (
+            WITH POSITIVOS_AGG AS (
+                SELECT LSP_NO_DOCUMENTO,
+                       MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
+                       MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
+                FROM RL_LISTA_POSITIVOS
+                WHERE LSP_ESTADO_REGISTRO = 1
+                GROUP BY LSP_NO_DOCUMENTO
+            ), Coincidencias AS (
                 SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
-                       (SELECT MIN(lp.LSP_FECHA_CREACION) FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.IDENTIDAD AND lp.LSP_ESTADO_REGISTRO = 1) FECHA_REGISTRO_INTERNO, NVL((SELECT 1 FROM RL_LISTA_POSITIVOS lp WHERE lp.LSP_NO_DOCUMENTO = D.IDENTIDAD AND lp.LSP_MOTIVO_INGRESO IS NOT NULL AND lp.LSP_ESTADO_REGISTRO = 1 AND ROWNUM = 1), 0) TIENE_MOTIVO
-                FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
+                       p.FECHA_REGISTRO_INTERNO,
+                       NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
+                FROM DNP_IHSS.V_EMPLEADOS_IHSS_PLANILLAS D
+                JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.IDENTIDAD = R.DNI AND R.TIPO_CALIFICACION_ID = 1
+                LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.IDENTIDAD
                 WHERE D.PERIODO = TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
-                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA)
+                GROUP BY D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')), R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO)
             SELECT IDENTIDAD, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, IDENTIDAD AS BUSQUEDA FROM Coincidencias
             UNION ALL
             SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
@@ -1381,35 +1286,7 @@ namespace RL.API.Features.Listas.Persistence
             });
         }
 
-        public async Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasPatronoAsync()
-        {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                SELECT 
-                    FECHA_ENCONTRO AS FechaEncontro,
-                    COUNT(*) AS CantidadRegistros
-                FROM DNP_IHSS.V_REPORTE_COINCIDENCIA
-                WHERE TIPO_PERSONA NOT LIKE '%IHSS'
-                GROUP BY FECHA_ENCONTRO
-                ORDER BY FECHA_ENCONTRO DESC";
-
-            var list = new List<CoincidenciaPatronoResumenDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new CoincidenciaPatronoResumenDto
-                {
-                    FechaEncontro = reader["FechaEncontro"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaEncontro"]),
-                    CantidadRegistros = Convert.ToInt32(reader["CantidadRegistros"])
-                });
-            }
-            return list;
-        }
-
-        public async Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoAsync(string fecha)
+        public async Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasPatronoParaExportarAsync(string fecha)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();
@@ -1450,35 +1327,7 @@ namespace RL.API.Features.Listas.Persistence
             return list;
         }
 
-        public async Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenCoincidenciasEmpleadoAsync()
-        {
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync();
-
-            await using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"
-                SELECT 
-                    FECHA_ENCONTRO AS FechaEncontro,
-                    COUNT(*) AS CantidadRegistros
-                FROM DNP_IHSS.V_REPORTE_COINCIDENCIA
-                WHERE TIPO_PERSONA LIKE '%IHSS'
-                GROUP BY FECHA_ENCONTRO
-                ORDER BY FECHA_ENCONTRO DESC";
-
-            var list = new List<CoincidenciaPatronoResumenDto>();
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                list.Add(new CoincidenciaPatronoResumenDto
-                {
-                    FechaEncontro = reader["FechaEncontro"] == DBNull.Value ? null : Convert.ToDateTime(reader["FechaEncontro"]),
-                    CantidadRegistros = Convert.ToInt32(reader["CantidadRegistros"])
-                });
-            }
-            return list;
-        }
-
-        public async Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoAsync(string fecha)
+        public async Task<List<CoincidenciaPatronoDetalleDto>> ObtenerDetalleCoincidenciasEmpleadoParaExportarAsync(string fecha)
         {
             await using var conn = _db.CreateConnection();
             await conn.OpenAsync();

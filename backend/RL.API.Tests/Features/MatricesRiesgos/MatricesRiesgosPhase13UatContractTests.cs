@@ -74,10 +74,9 @@ public sealed class MatricesRiesgosPhase13UatContractTests
             nameof(MatricesRiesgosController.CargarEvidencia),
             nameof(MatricesRiesgosController.VincularEvidencia),
             nameof(MatricesRiesgosController.EliminarEvidencia),
-            nameof(MatricesRiesgosController.ObtenerConsolidado),
             nameof(MatricesRiesgosController.ObtenerMetodologiaVigente));
 
-        AssertMetodos(typeof(MatricesRiesgosGestionController), "Listar", "Obtener", "Crear", "Actualizar");
+        AssertMetodos(typeof(MatricesRiesgosGestionController), "ListarPaginado", "Obtener", "Crear", "Actualizar");
         AssertMetodos(typeof(MatricesRiesgosMitigacionController),
             "ListarControles", "CrearControl", "ActualizarControl", "ListarEvaluacionesControl", "EvaluarControl",
             "ListarPlanes", "CrearPlan", "ActualizarPlan", "ListarActividades", "CrearActividad", "ActualizarActividad");

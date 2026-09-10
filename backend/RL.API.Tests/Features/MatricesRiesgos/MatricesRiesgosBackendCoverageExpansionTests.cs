@@ -41,7 +41,6 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionVigenteFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(version));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(version));
         repo.On(nameof(IMatricesRiesgosRepository.ListarHistorialVersionesFormularioAsync), _ => Task.FromResult(new List<VersionFormularioDto> { version }));
-        repo.On(nameof(IMatricesRiesgosRepository.ListarFamiliasFormularioAsync), _ => Task.FromResult(new List<FamiliaFormularioDto> { familia }));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaFormularioPorIdAsync), _ => Task.FromResult<FamiliaFormularioDto?>(familia));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerFamiliaPredeterminadaAsync), _ => Task.FromResult<FamiliaPredeterminadaDto?>(new FamiliaPredeterminadaDto
         {
@@ -55,14 +54,12 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         ServiceResult<VersionFormularioDto> vigente = await service.ObtenerVersionVigenteFormularioAsync("  matriz_riesgos  ");
         ServiceResult<VersionFormularioDto> porId = await service.ObtenerVersionFormularioAsync(7);
         ServiceResult<List<VersionFormularioDto>> historial = await service.ListarHistorialVersionesFormularioAsync(" matriz_riesgos ");
-        ServiceResult<List<FamiliaFormularioDto>> familias = await service.ListarFamiliasFormularioAsync();
         ServiceResult<FamiliaFormularioDto> familiaPorId = await service.ObtenerFamiliaFormularioPorIdAsync(2);
         ServiceResult<MetodologiaFormularioDto> metodologia = await service.ObtenerMetodologiaDinamicaVigenteAsync();
 
         Assert.True(vigente.Success);
         Assert.True(porId.Success);
         Assert.True(historial.Success);
-        Assert.True(familias.Success);
         Assert.True(familiaPorId.Success);
         Assert.True(metodologia.Success);
 
@@ -71,7 +68,6 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
             call => AssertCacheCall(call, "vigente:MATRIZ_RIESGOS", true, settings.FormularioVersionTtl),
             call => AssertCacheCall(call, "version:7", true, settings.FormularioVersionTtl),
             call => AssertCacheCall(call, "historial:MATRIZ_RIESGOS", true, settings.FormularioVersionTtl),
-            call => AssertCacheCall(call, "familias-list", true, settings.FormularioVersionTtl),
             call => AssertCacheCall(call, "familia-id:2", true, settings.FormularioVersionTtl),
             call => AssertCacheCall(call, "metodologia-vigente", true, settings.FormularioVersionTtl));
     }
@@ -146,8 +142,6 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         repo.On(nameof(IMatricesRiesgosRepository.ListarEvaluacionesPaginadasAsync), _ => Task.FromResult(new EvaluacionesPaginadasDto()));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerFlujosEvaluacionAsync), _ => Task.FromResult(new List<FlujoEvaluacionDto>()));
         repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ => Task.FromResult<EvidenciaDto?>(null));
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync), _ =>
-            Task.FromResult<IReadOnlyList<RiesgoReporteFilaDto>>(Array.Empty<RiesgoReporteFilaDto>()));
 
         var cache = new RecordingApplicationCache();
         var service = new CachedMatricesRiesgosAppService(inner, cache, new ApplicationCacheSettings());
@@ -156,7 +150,6 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         Assert.True((await service.ListarEvaluacionesPaginadasAsync(new ConsultaEvaluacionPaginadaDto())).Success);
         Assert.True((await service.ObtenerFlujosEvaluacionAsync(50)).Success);
         Assert.Equal(404, (await service.ObtenerEvidenciaFisicaAsync(70)).StatusCode);
-        Assert.True((await service.ObtenerConsolidadoTipadoAsync()).Success);
 
         Assert.Empty(cache.Calls);
         Assert.Empty(cache.Invalidations);

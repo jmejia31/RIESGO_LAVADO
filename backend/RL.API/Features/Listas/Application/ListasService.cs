@@ -18,14 +18,11 @@ public sealed class ListasService : IListasService
         _auditoriaRepo = auditoriaRepo;
     }
 
-    public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasAsync() => _repo.ObtenerJuridicasAsync();
-    public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerJuridicasPaginadasAsync(consulta);
+    public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default) => _repo.ObtenerJuridicasPaginadasAsync(consulta, cancellationToken);
     public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerJuridicasParaExportarAsync(consulta);
-    public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesAsync() => _repo.ObtenerNaturalesAsync();
-    public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerNaturalesPaginadasAsync(consulta);
+    public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default) => _repo.ObtenerNaturalesPaginadasAsync(consulta, cancellationToken);
     public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerNaturalesParaExportarAsync(consulta);
-    public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosAsync() => _repo.ObtenerEmpleadosAsync();
-    public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerEmpleadosPaginadasAsync(consulta);
+    public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default) => _repo.ObtenerEmpleadosPaginadasAsync(consulta, cancellationToken);
     public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta) => _repo.ObtenerEmpleadosParaExportarAsync(consulta);
     public Task<List<DetalleCoincidenciaNaturalDto>> ObtenerDetalleNaturalAsync(string numeroIdentificacion) => _repo.ObtenerDetalleNaturalAsync(numeroIdentificacion);
     public Task<List<DetalleCoincidenciaEmpleadoDto>> ObtenerDetalleEmpleadoAsync(string numeroIdentificacion) => _repo.ObtenerDetalleEmpleadoAsync(numeroIdentificacion);

@@ -28,20 +28,6 @@ public sealed class MatricesRiesgosNeutralContractsTests
     }
 
     [Fact]
-    public void ReporteConsolidado_ExponeFilaTipadaEnRepositorioYAplicacion()
-    {
-        MethodInfo repositorio = Assert.Single(
-            typeof(IMatricesRiesgosRepository).GetMethods(),
-            metodo => metodo.Name == nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync));
-        MethodInfo aplicacion = Assert.Single(
-            typeof(IMatricesRiesgosAppService).GetMethods(),
-            metodo => metodo.Name == nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync));
-
-        Assert.Equal(typeof(Task<IReadOnlyList<RiesgoReporteFilaDto>>), repositorio.ReturnType);
-        Assert.Equal(typeof(Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>>), aplicacion.ReturnType);
-    }
-
-    [Fact]
     public void MetodologiaVigente_ExponeContratoNeutroEnRepositorioYAplicacion()
     {
         MethodInfo repositorio = Assert.Single(

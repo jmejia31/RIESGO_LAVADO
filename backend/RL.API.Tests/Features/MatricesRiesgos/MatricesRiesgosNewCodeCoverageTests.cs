@@ -373,11 +373,6 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
         var r5 = await cached.ObtenerEvidenciaFisicaAsync(1);
         Assert.False(r5.Success);
 
-        // 6. ObtenerConsolidadoTipado (line 181)
-        repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync), _ =>
-            Task.FromResult<IReadOnlyList<RiesgoReporteFilaDto>>(new List<RiesgoReporteFilaDto>()));
-        var r6 = await cached.ObtenerConsolidadoTipadoAsync();
-        Assert.True(r6.Success);
     }
 
     #endregion

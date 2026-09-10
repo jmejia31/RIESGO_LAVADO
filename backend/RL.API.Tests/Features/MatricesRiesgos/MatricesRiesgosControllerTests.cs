@@ -90,22 +90,6 @@ public sealed class MatricesRiesgosControllerTests
     }
 
     [Fact]
-    public async Task ObtenerConsolidado_RetornaFilasTipadas()
-    {
-        MatricesRiesgosController controller = CrearController(out InterfaceStub service);
-        IReadOnlyList<RiesgoReporteFilaDto> filas = new List<RiesgoReporteFilaDto>
-        {
-            new() { RiesgoId = 1, EvaluacionId = 2, CodigoRiesgo = "R-001" }
-        };
-        service.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ =>
-            Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas)));
-
-        IActionResult result = await controller.ObtenerConsolidado();
-
-        Assert.IsType<OkObjectResult>(result);
-    }
-
-    [Fact]
     public async Task ObtenerConsolidadoPaginado_Vacio_RetornaOkConContratoVacio()
     {
         MatricesRiesgosController controller = CrearController(out InterfaceStub service);

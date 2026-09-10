@@ -8,7 +8,6 @@ namespace RL.API.Features.MatricesRiesgos.Persistence;
 
 public interface IMatricesRiesgosGestionRepository
 {
-    Task<IReadOnlyList<RiesgoDto>> ListarRiesgosAsync(bool incluirInactivos);
     Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta);
     Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId);
     Task<long> CrearRiesgoAsync(RiesgoGuardarDto dto, long usuarioId, string? ip);
@@ -25,24 +24,6 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
         _auditoria = auditoria ?? throw new ArgumentNullException(nameof(auditoria));
-    }
-
-    public async Task<IReadOnlyList<RiesgoDto>> ListarRiesgosAsync(bool incluirInactivos)
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-        string sql = @"
-            SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_DESCRIPCION,
-                   RIE_ACTIVO, RIE_USR_CREACION, RIE_FECHA_CREACION
-              FROM RL_MR_RIESGOS" +
-            (incluirInactivos ? string.Empty : " WHERE RIE_ACTIVO = 1") +
-            " ORDER BY RIE_CODIGO";
-
-        await using var cmd = new OracleCommand(sql, conn) { BindByName = true };
-        var lista = new List<RiesgoDto>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync()) lista.Add(Mapear(reader));
-        return lista;
     }
 
     public async Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta)

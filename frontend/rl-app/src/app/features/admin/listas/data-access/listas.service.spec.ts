@@ -27,12 +27,12 @@ describe('ListasService', () => {
     }
   });
 
-  it('obtiene y extrae las coincidencias juridicas de la respuesta API', () => {
-    const juridicas = [{ noDocumento: '0801199912345' }] as never[];
+  it('obtiene únicamente la página de coincidencias jurídicas', () => {
+    const juridicas = { items: [{ numeroPatrono: 'P-01' }], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1 } as never;
     const result = vi.fn();
-    service.getJuridicas().subscribe(result);
+    service.getJuridicasPaginadas({ pagina: 1, tamanoPagina: 10 }).subscribe(result);
 
-    const request = http.expectOne(`${apiUrl}/juridicas`);
+    const request = http.expectOne(req => req.url === `${apiUrl}/juridicas/paginado`);
     expect(request.request.method).toBe('GET');
     request.flush({ success: true, datos: juridicas });
     expect(result).toHaveBeenCalledWith(juridicas);
@@ -86,9 +86,9 @@ describe('ListasService', () => {
 
   it('propaga un error HTTP de consulta para que el componente pueda recuperarse', () => {
     const error = vi.fn();
-    service.getJuridicas().subscribe({ error });
+    service.getJuridicasPaginadas({ pagina: 1, tamanoPagina: 10 }).subscribe({ error });
 
-    const request = http.expectOne(`${apiUrl}/juridicas`);
+    const request = http.expectOne(req => req.url === `${apiUrl}/juridicas/paginado`);
     request.flush({ mensaje: 'Servicio no disponible' }, { status: 503, statusText: 'Unavailable' });
 
     expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 503 }));

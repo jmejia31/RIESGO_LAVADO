@@ -71,21 +71,9 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.datos));
   }
 
-  obtenerConsolidado(): Observable<RiesgoReporteFila[]> {
-    return this.http
-      .get<ApiResponse<RiesgoReporteFila[]>>(`${this.apiUrl}/consolidado`)
-      .pipe(map(response => response.datos));
-  }
-
   obtenerConsolidadoPaginado(filtro: FiltroReporteMatrices): Observable<ReporteMatricesPaginado> {
     return this.http
       .get<ApiResponse<ReporteMatricesPaginado>>(`${this.apiUrl}/consolidado/paginado`, { params: this.parametrosReporte(filtro) })
-      .pipe(map(response => response.datos));
-  }
-
-  listarFamiliasFormulario(): Observable<FamiliaFormularioDto[]> {
-    return this.http
-      .get<ApiResponse<FamiliaFormularioDto[]>>(`${this.apiUrl}/familias`)
       .pipe(map(response => response.datos));
   }
 
@@ -230,13 +218,6 @@ export class MatricesRiesgosService {
       `${this.apiUrl}/formularios/${id}`,
       this.confirmado
     );
-  }
-
-  listarRiesgos(incluirInactivos = false): Observable<RiesgoDto[]> {
-    const params = new HttpParams().set('incluirInactivos', String(incluirInactivos));
-    return this.http
-      .get<ApiResponse<RiesgoDto[]>>(`${this.apiUrl}/riesgos`, { params })
-      .pipe(map(response => response.datos));
   }
 
   listarRiesgosPaginados(incluirInactivos = false, pagina = 1, tamanoPagina = 25, buscar = ''): Observable<RiesgosPaginadosDto> {

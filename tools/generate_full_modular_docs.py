@@ -31,7 +31,7 @@ MODULES = [
             "core/guards/auth.guard.ts, modulo.guard.ts, role.guard.ts",
         ],
         "endpoints": [
-            ("GET", "/api/auth/usuarios", "Lista usuarios"),
+            ("GET", "/api/auth/usuarios/paginado", "Lista usuarios paginada"),
             ("POST", "/api/auth/usuarios", "Crear usuario"),
             ("PUT", "/api/auth/usuarios/{uid}", "Editar usuario"),
             ("PUT", "/api/auth/usuarios/{uid}/estado", "Cambiar estado"),
@@ -94,9 +94,9 @@ MODULES = [
         "capture": "03_monitoreo_listas.png",
         "frontend": ["features/admin/monitoreo-listas/monitoreo-listas.component.ts", "core/services/listas.service.ts"],
         "endpoints": [
-            ("GET", "/api/listas/juridicas", "Coincidencias juridicas"),
-            ("GET", "/api/listas/naturales", "Coincidencias naturales"),
-            ("GET", "/api/listas/empleados", "Coincidencias empleados"),
+            ("GET", "/api/listas/juridicas/paginado", "Coincidencias juridicas paginadas"),
+            ("GET", "/api/listas/naturales/paginado", "Coincidencias naturales paginadas"),
+            ("GET", "/api/listas/empleados/paginado", "Coincidencias empleados paginadas"),
             ("POST", "/api/listas/positivos", "Registrar motivo positivo"),
             ("GET", "/api/listas/positivos/{noDocumento}/seguimientos", "Seguimientos"),
             ("POST", "/api/listas/positivos/{noDocumento}/seguimientos", "Crear seguimiento/evidencia"),

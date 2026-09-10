@@ -74,6 +74,23 @@ describe('DB pagination regression contract', () => {
     expect(productionSource).not.toMatch(/(?:tamanoPagina|registrosPorPagina|pageSize)\s*[:=]\s*999999/i);
     expect(readFileSync(join(appRoot, 'shared/report-preview/report-preview.component.ts'), 'utf8')).toContain('rows.slice');
   });
+
+  it('keeps monitoring and users on paged endpoints without full-universe preload', () => {
+    const monitoring = readFileSync(join(appRoot, 'features/admin/listas/data-access/listas.service.ts'), 'utf8');
+    const monitoringComponent = readFileSync(join(appRoot, 'features/admin/listas/pages/monitoreo-listas/monitoreo-listas.component.impl.ts'), 'utf8');
+    const users = readFileSync(join(appRoot, 'features/admin/usuarios/pages/usuarios/usuarios.component.ts'), 'utf8');
+
+    expect(monitoring).toContain('/juridicas/paginado');
+    expect(monitoring).toContain('/naturales/paginado');
+    expect(monitoring).toContain('/empleados/paginado');
+    expect(monitoring).not.toMatch(/\$\{this\.apiUrl\}\/(?:juridicas|naturales|empleados)(?:["'`]|\?)/);
+    expect(monitoringComponent).not.toContain('precargarTiposRestantes');
+    expect(monitoringComponent).not.toContain('getJuridicas()');
+    expect(monitoringComponent).not.toContain('getNaturales()');
+    expect(monitoringComponent).not.toContain('getEmpleados()');
+    expect(users).toContain('/auth/usuarios/paginado');
+    expect(users).not.toMatch(/get\(`\$\{environment\.apiUrl\}\/auth\/usuarios`\)/);
+  });
 });
 
 function collectFiles(root: string, extension: string): string[] {

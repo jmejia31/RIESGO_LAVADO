@@ -204,11 +204,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     totalSinEvaluacionOficial: 0,
     totalAltoCritico: 0
   });
-  readonly consolidadoUsaServidor = signal(true);
   readonly ordenConsolidado = signal('fechaEvaluacion');
   readonly direccionConsolidado = signal<'asc' | 'desc'>('desc');
-
-  readonly consolidadoFiltrado = computed<RiesgoReporteFila[]>(() => this.consolidado());
 
   readonly estadosConsolidado = computed(() => Array.from(new Set([
     'APROBADA',
@@ -219,9 +216,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     'RECHAZADA',
     ...this.consolidado().map(fila => fila.estadoEvaluacion).filter(Boolean)
   ])).sort());
-
-  readonly consolidadoNivelAltoCritico = computed(() => this.consolidadoFiltrado()
-    .filter(fila => fila.nivelResidual === 'ALTO' || fila.nivelResidual === 'CRITICO').length);
 
   readonly totalPaginasConsolidado = computed(() => {
     return this.totalPaginasServidorConsolidado();
@@ -563,7 +557,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const total = this.totalPaginasConsolidado();
     if (!Number.isInteger(nuevaPagina) || total <= 0 || nuevaPagina < 1 || nuevaPagina > total) return;
     this.paginaConsolidado.set(nuevaPagina);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   cambiarRegistrosPorPaginaConsolidado(cantidad: number): void {
@@ -571,7 +565,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     if (!Number.isInteger(num) || !this.opcionesRegistrosPorPagina.includes(num as 10 | 20 | 50)) return;
     this.registrosPorPaginaConsolidado.set(num);
     this.paginaConsolidado.set(1);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   ordenarConsolidado(campo: string): void {
@@ -582,26 +576,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       this.direccionConsolidado.set('asc');
     }
     this.paginaConsolidado.set(1);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   cambiarBuscarConsolidado(valor: string): void {
     this.filtroBuscarConsolidado.set(valor);
     this.paginaConsolidado.set(1);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   cambiarEstadoConsolidado(valor: string): void {
     this.filtroEstadoConsolidado.set(valor);
     this.paginaConsolidado.set(1);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   limpiarFiltrosConsolidado(): void {
     this.filtroBuscarConsolidado.set('');
     this.filtroEstadoConsolidado.set('TODOS');
     this.paginaConsolidado.set(1);
-    if (this.consolidadoUsaServidor()) this.cargarConsolidado();
+    this.cargarConsolidado();
   }
 
   limiteSuperiorConsolidado(): number {

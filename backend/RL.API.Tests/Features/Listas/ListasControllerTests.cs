@@ -32,45 +32,6 @@ public sealed class ListasControllerTests
     }
 
     [Fact]
-    public async Task ObtenerJuridicas_RetornaOk()
-    {
-        var controller = CrearController(out var listasStub, out _, out _);
-        
-        listasStub.On(nameof(IListasService.ObtenerJuridicasAsync), _ => Task.FromResult(new List<CoincidenciaJuridicaDto>()));
-
-        var result = await controller.ObtenerJuridicas();
-
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
-    public async Task ObtenerNaturales_RetornaOk()
-    {
-        var controller = CrearController(out var listasStub, out _, out _);
-        
-        listasStub.On(nameof(IListasService.ObtenerNaturalesAsync), _ => Task.FromResult(new List<CoincidenciaNaturalDto>()));
-
-        var result = await controller.ObtenerNaturales();
-
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
-    public async Task ObtenerEmpleados_RetornaOk()
-    {
-        var controller = CrearController(out var listasStub, out _, out _);
-        
-        listasStub.On(nameof(IListasService.ObtenerEmpleadosAsync), _ => Task.FromResult(new List<CoincidenciaEmpleadoDto>()));
-
-        var result = await controller.ObtenerEmpleados();
-
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(okResult.Value);
-    }
-
-    [Fact]
     public async Task ObtenerTiposDocumento_RetornaOk()
     {
         var controller = CrearController(out var listasStub, out _, out _);

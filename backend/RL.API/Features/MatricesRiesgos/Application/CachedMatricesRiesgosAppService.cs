@@ -105,14 +105,6 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
             () => _inner.ListarHistorialVersionesFormularioAsync(familiaCodigo),
             static result => result.Success);
 
-    public Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync() =>
-        _cache.GetOrCreateAsync(
-            ApplicationCacheScopes.MatricesFormularios,
-            "familias-list",
-            _settings.FormularioVersionTtl,
-            _inner.ListarFamiliasFormularioAsync,
-            static result => result.Success);
-
     public Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId) =>
         _cache.GetOrCreateAsync(
             ApplicationCacheScopes.MatricesFormularios,
@@ -194,9 +186,6 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip) =>
         _inner.EliminarEvidenciaAsync(evidenciaId, usuarioId, ip);
-
-    public Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoTipadoAsync() =>
-        _inner.ObtenerConsolidadoTipadoAsync();
 
     public Task<ServiceResult<ReporteMatricesPaginadoDto>> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro) =>
         _inner.ObtenerConsolidadoPaginadoAsync(filtro);

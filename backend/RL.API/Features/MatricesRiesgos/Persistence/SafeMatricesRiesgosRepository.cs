@@ -66,9 +66,6 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
     public Task<List<VersionFormularioDto>> ListarHistorialVersionesFormularioAsync(string familiaCodigo) =>
         _inner.ListarHistorialVersionesFormularioAsync(familiaCodigo);
 
-    public Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync() =>
-        _inner.ListarFamiliasFormularioAsync();
-
     public Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId) =>
         _inner.ObtenerFamiliaFormularioPorIdAsync(famId);
 
@@ -301,9 +298,6 @@ public sealed class SafeMatricesRiesgosRepository : IMatricesRiesgosRepository
         long usuarioId,
         string? ip) =>
         _inner.EliminarEvidenciaSeguraAsync(evidenciaId, eliminarArchivoFisico, usuarioId, ip);
-
-    public Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync() =>
-        _inner.ObtenerConsolidadoTipadoAsync();
 
     public Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro) =>
         _inner.ObtenerConsolidadoPaginadoAsync(filtro);

@@ -18,7 +18,6 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> EliminarVersionFormularioAsync(long versionId);
     Task<ServiceResult<List<VersionFormularioDto>>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
 
-    Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync();
     Task<ServiceResult<FamiliasFormularioPaginadasDto>> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro);
     Task<ServiceResult<FamiliaFormularioDto>> ObtenerFamiliaFormularioPorIdAsync(long famId);
     Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync();
@@ -39,7 +38,6 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip);
     Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip);
 
-    Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoTipadoAsync();
     Task<ServiceResult<ReporteMatricesPaginadoDto>> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro);
     Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro);
     Task<ServiceResult<MetodologiaFormularioDto>> ObtenerMetodologiaDinamicaVigenteAsync();

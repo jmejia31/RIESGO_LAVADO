@@ -16,7 +16,6 @@ public interface IUsuarioRepository
     Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip);
     Task RevocarRefreshTokenAsync(string token);
     Task RevocarTodosTokensAsync(long usrId);
-    Task<List<UsuarioInfoDto>> ListarAsync();
     Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto consulta);
     Task<bool> ActualizarAsync(long id, ActualizarUsuarioDto dto, string? hash, string? salt);
     Task<bool> ActualizarEstadoAsync(long id, bool activo);

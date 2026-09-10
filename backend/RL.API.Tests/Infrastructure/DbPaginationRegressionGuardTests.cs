@@ -39,6 +39,62 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
+    public void Monitoreo_UsaProyeccionSetBasedYMetadataAnaliticaSinLookupsCorrelacionados()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var monitoringStart = source.IndexOf("ObtenerMonitoreoPaginadoAsync", StringComparison.Ordinal);
+        var monitoringEnd = source.IndexOf("private static string ResolveMonitoringType", monitoringStart, StringComparison.Ordinal);
+        Assert.True(monitoringStart >= 0 && monitoringEnd > monitoringStart);
+        var monitoring = source[monitoringStart..monitoringEnd];
+
+        Assert.Contains("COUNT(*) OVER ()", monitoring, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PENDIENTES", monitoring, StringComparison.Ordinal);
+        Assert.DoesNotContain("totalsCommand", monitoring, StringComparison.Ordinal);
+        Assert.Contains("cancellationToken", monitoring, StringComparison.Ordinal);
+
+        foreach (var builder in new[] { "ConstruirConsultaMonitoreoJuridicas", "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
+        {
+            var start = source.IndexOf("private static string " + builder, StringComparison.Ordinal);
+            Assert.True(start >= 0);
+            var end = source.IndexOf("private static string ConstruirConsultaMonitoreo", start + builder.Length, StringComparison.Ordinal);
+            var sql = source[start..(end > start ? end : source.Length)];
+            Assert.Contains("POSITIVOS_AGG", sql, StringComparison.Ordinal);
+            Assert.DoesNotContain("SELECT MIN(lp.", sql, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("NVL((SELECT 1 FROM RL_LISTA_POSITIVOS", sql, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public void LegacyFullListRoutesAndMethods_NoPermanecenComoSuperficieProductiva()
+    {
+        var listasController = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/ListasController.cs"));
+        var listasRepository = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var authController = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Identidad/AuthController.cs"));
+        var authRepository = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Identidad/Persistence/UsuarioRepository.cs"));
+        var matricesController = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosController.cs"));
+        var gestionController = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosGestionController.cs"));
+        var gestionRepository = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosGestionRepository.cs"));
+
+        foreach (var route in new[] { "HttpGet(\"juridicas\")", "HttpGet(\"naturales\")", "HttpGet(\"empleados\")" })
+            Assert.DoesNotContain(route, listasController, StringComparison.Ordinal);
+        Assert.DoesNotContain("HttpGet(\"usuarios\")", authController, StringComparison.Ordinal);
+        Assert.DoesNotContain("ObtenerJuridicasAsync()", listasRepository, StringComparison.Ordinal);
+        Assert.DoesNotContain("ObtenerNaturalesAsync()", listasRepository, StringComparison.Ordinal);
+        Assert.DoesNotContain("ObtenerEmpleadosAsync()", listasRepository, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListarAsync()", authRepository, StringComparison.Ordinal);
+        Assert.DoesNotContain("HttpGet(\"familias\")", matricesController, StringComparison.Ordinal);
+        Assert.DoesNotContain("HttpGet(\"consolidado\")", matricesController, StringComparison.Ordinal);
+        Assert.DoesNotContain("[HttpGet]", gestionController, StringComparison.Ordinal);
+        Assert.DoesNotContain("ListarRiesgosAsync(bool", gestionRepository, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"juridicas/paginado\")", listasController, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"juridicas/exportar\")", listasController, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"usuarios/paginado\")", authController, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"familias/paginado\")", matricesController, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"consolidado/paginado\")", matricesController, StringComparison.Ordinal);
+        Assert.Contains("HttpGet(\"paginado\")", gestionController, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void UsuariosPaginados_CargaModulosSoloParaLaPagina()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Identidad/Persistence/UsuarioRepository.cs"));

@@ -23,10 +23,6 @@ public sealed class MatricesRiesgosGestionController : ControllerBase
         _service = service;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> Listar([FromQuery] bool incluirInactivos = false) =>
-        Responder(await _service.ListarRiesgosAsync(incluirInactivos));
-
     [HttpGet("paginado")]
     public async Task<IActionResult> ListarPaginado([FromQuery] ConsultaRiesgosPaginadaDto consulta) =>
         Responder(await _service.ListarRiesgosPaginadosAsync(consulta));

@@ -24,24 +24,6 @@ public sealed class MatricesRiesgosFamiliasServiceValidationTests
     }
 
     [Fact]
-    public async Task ListarFamilias_DevuelveListaExitosa()
-    {
-        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
-        var familiasEsperadas = new List<FamiliaFormularioDto>
-        {
-            new() { FamId = 1, FamCodigo = "LAFT_MATRIZ", FamNombre = "Matriz LAFT", FamActivo = true }
-        };
-        repo.On(nameof(IMatricesRiesgosRepository.ListarFamiliasFormularioAsync), _ => Task.FromResult(familiasEsperadas));
-
-        ServiceResult<List<FamiliaFormularioDto>> result = await service.ListarFamiliasFormularioAsync();
-
-        Assert.True(result.Success);
-        Assert.NotNull(result.Data);
-        Assert.Single(result.Data!);
-        Assert.Equal("LAFT_MATRIZ", result.Data![0].FamCodigo);
-    }
-
-    [Fact]
     public async Task ObtenerFamiliaPorId_RechazaIdInvalido()
     {
         MatricesRiesgosAppService service = CrearServicio(out _);

@@ -35,7 +35,6 @@ public interface IMatricesRiesgosRepository
     Task<bool> EliminarVersionFormularioAsync(long versionId);
     Task<List<VersionFormularioDto>> ListarHistorialVersionesFormularioAsync(string familiaCodigo);
 
-    Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync();
     Task<FamiliasFormularioPaginadasDto> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro);
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId);
     Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorCodigoAsync(string famCodigo);
@@ -57,7 +56,6 @@ public interface IMatricesRiesgosRepository
     Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip);
     Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, Func<Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
-    Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync();
     Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro);
     Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoParaExportacionAsync(FiltroReporteMatricesDto filtro);
     Task<MetodologiaFormularioDto?> ObtenerMetodologiaDinamicaVigenteAsync();

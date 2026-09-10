@@ -54,54 +54,30 @@ namespace RL.API.Features.Listas
             });
         }
 
-        [HttpGet("juridicas")]
-        [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerJuridicas()
-        {
-            var result = await _listasService.ObtenerJuridicasAsync();
-            return Ok(new { success = true, datos = result });
-        }
-
         [HttpGet("juridicas/paginado")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerJuridicasPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
-            => Ok(new { success = true, datos = await _listasService.ObtenerJuridicasPaginadasAsync(consulta) });
+            => Ok(new { success = true, datos = await _listasService.ObtenerJuridicasPaginadasAsync(consulta, HttpContext.RequestAborted) });
 
         [HttpGet("juridicas/exportar")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerJuridicasParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
             => Ok(new { success = true, datos = await _listasService.ObtenerJuridicasParaExportarAsync(consulta) });
 
-        [HttpGet("naturales")]
-        [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerNaturales()
-        {
-            var result = await _listasService.ObtenerNaturalesAsync();
-            return Ok(new { success = true, datos = result });
-        }
-
         [HttpGet("naturales/paginado")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerNaturalesPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
-            => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesPaginadasAsync(consulta) });
+            => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesPaginadasAsync(consulta, HttpContext.RequestAborted) });
 
         [HttpGet("naturales/exportar")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerNaturalesParaExportar([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
             => Ok(new { success = true, datos = await _listasService.ObtenerNaturalesParaExportarAsync(consulta) });
 
-        [HttpGet("empleados")]
-        [ModuloAuthorize(4)]
-        public async Task<IActionResult> ObtenerEmpleados()
-        {
-            var result = await _listasService.ObtenerEmpleadosAsync();
-            return Ok(new { success = true, datos = result });
-        }
-
         [HttpGet("empleados/paginado")]
         [ModuloAuthorize(4)]
         public async Task<IActionResult> ObtenerEmpleadosPaginadas([FromQuery] ConsultaMonitoreoPaginadaDto consulta)
-            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosPaginadasAsync(consulta) });
+            => Ok(new { success = true, datos = await _listasService.ObtenerEmpleadosPaginadasAsync(consulta, HttpContext.RequestAborted) });
 
         [HttpGet("empleados/exportar")]
         [ModuloAuthorize(4)]
@@ -311,22 +287,6 @@ namespace RL.API.Features.Listas
             return Ok(new { success = true, mensaje = "Auditoría de reporte impreso registrada." });
         }
 
-        [HttpGet("coincidencias-patrono/resumen")]
-        [ModuloAuthorize(8)]
-        public async Task<IActionResult> ObtenerResumenCoincidenciasPatrono()
-        {
-            try
-            {
-                var result = await _coincidenciasService.ObtenerResumenPatronoAsync();
-                return Ok(new { success = true, datos = result });
-            }
-            catch (Exception ex)
-            {
-                Serilog.Log.Error(ex, "Error en ObtenerResumenCoincidenciasPatrono");
-                return Error500(ex);
-            }
-        }
-
         [HttpGet("coincidencias-patrono/resumen/paginado")]
         [ModuloAuthorize(8)]
         public async Task<IActionResult> ObtenerResumenCoincidenciasPatronoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
@@ -335,20 +295,20 @@ namespace RL.API.Features.Listas
             catch (Exception ex) { Serilog.Log.Error(ex, "Error en resumen paginado de coincidencias de patrono"); return Error500(ex); }
         }
 
-        [HttpGet("coincidencias-patrono/detalle")]
+        [HttpGet("coincidencias-patrono/detalle/exportar")]
         [ModuloAuthorize(8)]
-        public async Task<IActionResult> ObtenerDetalleCoincidenciasPatrono([FromQuery] string fecha)
+        public async Task<IActionResult> ObtenerDetalleCoincidenciasPatronoParaExportar([FromQuery] string fecha)
         {
             try
             {
-                var result = await _coincidenciasService.ObtenerDetallePatronoAsync(fecha);
+                var result = await _coincidenciasService.ObtenerDetallePatronoParaExportarAsync(fecha);
                 return result.Success
                     ? Ok(new { success = true, datos = result.Data })
                     : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
             }
             catch (Exception ex)
             {
-                Serilog.Log.Error(ex, "Error en ObtenerDetalleCoincidenciasPatrono para la fecha {Fecha}", fecha);
+                Serilog.Log.Error(ex, "Error en exportación de detalle de coincidencias de patrono para la fecha {Fecha}", fecha);
                 return Error500(ex);
             }
         }
@@ -423,22 +383,6 @@ namespace RL.API.Features.Listas
             }
         }
 
-        [HttpGet("coincidencias-empleado/resumen")]
-        [ModuloAuthorize(9)]
-        public async Task<IActionResult> ObtenerResumenCoincidenciasEmpleado()
-        {
-            try
-            {
-                var result = await _coincidenciasService.ObtenerResumenEmpleadoAsync();
-                return Ok(new { success = true, datos = result });
-            }
-            catch (Exception ex)
-            {
-                Serilog.Log.Error(ex, "Error en ObtenerResumenCoincidenciasEmpleado");
-                return Error500(ex);
-            }
-        }
-
         [HttpGet("coincidencias-empleado/resumen/paginado")]
         [ModuloAuthorize(9)]
         public async Task<IActionResult> ObtenerResumenCoincidenciasEmpleadoPaginado([FromQuery] ConsultaCoincidenciasPaginadaDto consulta)
@@ -447,20 +391,20 @@ namespace RL.API.Features.Listas
             catch (Exception ex) { Serilog.Log.Error(ex, "Error en resumen paginado de coincidencias de empleado"); return Error500(ex); }
         }
 
-        [HttpGet("coincidencias-empleado/detalle")]
+        [HttpGet("coincidencias-empleado/detalle/exportar")]
         [ModuloAuthorize(9)]
-        public async Task<IActionResult> ObtenerDetalleCoincidenciasEmpleado([FromQuery] string fecha)
+        public async Task<IActionResult> ObtenerDetalleCoincidenciasEmpleadoParaExportar([FromQuery] string fecha)
         {
             try
             {
-                var result = await _coincidenciasService.ObtenerDetalleEmpleadoAsync(fecha);
+                var result = await _coincidenciasService.ObtenerDetalleEmpleadoParaExportarAsync(fecha);
                 return result.Success
                     ? Ok(new { success = true, datos = result.Data })
                     : StatusCode(result.StatusCode, new { success = false, mensaje = result.Message });
             }
             catch (Exception ex)
             {
-                Serilog.Log.Error(ex, "Error en ObtenerDetalleCoincidenciasEmpleado para la fecha {Fecha}", fecha);
+                Serilog.Log.Error(ex, "Error en exportación de detalle de coincidencias de empleado para la fecha {Fecha}", fecha);
                 return Error500(ex);
             }
         }

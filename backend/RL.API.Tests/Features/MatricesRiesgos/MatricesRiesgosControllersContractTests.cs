@@ -55,22 +55,6 @@ public sealed class MatricesRiesgosControllersContractTests
     #region 1. MatricesRiesgosGestionController Tests
 
     [Fact]
-    public async Task GestionController_Listar_RetornaOkConDatos()
-    {
-        IMatricesRiesgosGestionService service = InterfaceStub.Create<IMatricesRiesgosGestionService>(out InterfaceStub stub);
-        var datos = new List<RiesgoDto> { new() { RieId = 1, RieCodigo = "R-01", RieNombre = "Riesgo 1" } };
-        stub.On(nameof(IMatricesRiesgosGestionService.ListarRiesgosAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoDto>>.Ok(datos)));
-
-        var controller = new MatricesRiesgosGestionController(service);
-        ConfigurarContextoHttp(controller);
-
-        IActionResult result = await controller.Listar(true);
-
-        OkObjectResult ok = Assert.IsType<OkObjectResult>(result);
-        Assert.NotNull(ok.Value);
-    }
-
-    [Fact]
     public async Task GestionController_Obtener_RetornaNotFound_CuandoNoExiste()
     {
         IMatricesRiesgosGestionService service = InterfaceStub.Create<IMatricesRiesgosGestionService>(out InterfaceStub stub);
@@ -333,7 +317,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IMatricesRiesgosReportExportService exportService = InterfaceStub.Create<IMatricesRiesgosReportExportService>(out InterfaceStub exportStub);
 
         IReadOnlyList<RiesgoReporteFilaDto> filas = new List<RiesgoReporteFilaDto> { new() { RiesgoId = 1, CodigoRiesgo = "R-01" } };
-        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas)));
+        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoParaExportacionAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas)));
 
         var archivoEsperado = new ArchivoReporteDto(new byte[] { 0x50, 0x4B, 0x03, 0x04 }, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Reporte.xlsx");
         exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearExcelConsolidado), _ => archivoEsperado);
@@ -355,7 +339,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IMatricesRiesgosAppService matricesService = InterfaceStub.Create<IMatricesRiesgosAppService>(out InterfaceStub matricesStub);
         IMatricesRiesgosReportExportService exportService = InterfaceStub.Create<IMatricesRiesgosReportExportService>(out _);
 
-        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.NotFound("Consolidado no disponible")));
+        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoParaExportacionAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.NotFound("Consolidado no disponible")));
 
         var controller = new MatricesRiesgosReportesController(matricesService, exportService);
         ConfigurarContextoHttp(controller);
@@ -373,7 +357,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IMatricesRiesgosReportExportService exportService = InterfaceStub.Create<IMatricesRiesgosReportExportService>(out InterfaceStub exportStub);
 
         IReadOnlyList<RiesgoReporteFilaDto> filas = new List<RiesgoReporteFilaDto> { new() { RiesgoId = 1, CodigoRiesgo = "R-01" } };
-        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas)));
+        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoParaExportacionAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas)));
 
         var archivoEsperado = new ArchivoReporteDto(Encoding.ASCII.GetBytes("%PDF-1.4..."), "application/pdf", "Reporte.pdf");
         exportStub.On(nameof(IMatricesRiesgosReportExportService.CrearPdfConsolidado), _ => archivoEsperado);
@@ -394,7 +378,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IMatricesRiesgosAppService matricesService = InterfaceStub.Create<IMatricesRiesgosAppService>(out InterfaceStub matricesStub);
         IMatricesRiesgosReportExportService exportService = InterfaceStub.Create<IMatricesRiesgosReportExportService>(out _);
 
-        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(new ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>(false, default, "Error interno", 500)));
+        matricesStub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoParaExportacionAsync), _ => Task.FromResult(new ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>(false, default, "Error interno", 500)));
 
         var controller = new MatricesRiesgosReportesController(matricesService, exportService);
         ConfigurarContextoHttp(controller);
@@ -512,26 +496,22 @@ public sealed class MatricesRiesgosControllersContractTests
     {
         var controller = CrearMatricesController(out InterfaceStub stub);
 
-        stub.On(nameof(IMatricesRiesgosAppService.ListarFamiliasFormularioAsync), _ => Task.FromResult(ServiceResult<List<FamiliaFormularioDto>>.Ok(new List<FamiliaFormularioDto>())));
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerFamiliaFormularioPorIdAsync), _ => Task.FromResult(ServiceResult<FamiliaFormularioDto>.Ok(new FamiliaFormularioDto { FamId = 1 })));
         stub.On(nameof(IMatricesRiesgosAppService.CrearFamiliaFormularioAsync), _ => Task.FromResult(ServiceResult<long>.Ok(10L, "Creada")));
         stub.On(nameof(IMatricesRiesgosAppService.ActualizarFamiliaFormularioAsync), _ => Task.FromResult(ServiceResult.Ok("Actualizada")));
         stub.On(nameof(IMatricesRiesgosAppService.DesactivarFamiliaFormularioAsync), _ => Task.FromResult(ServiceResult.Ok("Desactivada")));
 
-        Assert.IsType<OkObjectResult>(await controller.ListarFamiliasFormulario());
         Assert.IsType<OkObjectResult>(await controller.ObtenerFamiliaFormularioPorId(1));
         Assert.IsType<OkObjectResult>(await controller.CrearFamiliaFormulario(new CrearFamiliaFormularioDto { FamCodigo = "F1", FamNombre = "Fam 1" }));
         Assert.IsType<OkObjectResult>(await controller.ActualizarFamiliaFormulario(1, new ActualizarFamiliaFormularioDto { FamNombre = "Fam 1 Mod" }));
         Assert.IsType<OkObjectResult>(await controller.DesactivarFamiliaFormulario(1));
 
         // Test Exceptions
-        stub.On(nameof(IMatricesRiesgosAppService.ListarFamiliasFormularioAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerFamiliaFormularioPorIdAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.CrearFamiliaFormularioAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.ActualizarFamiliaFormularioAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.DesactivarFamiliaFormularioAsync), _ => throw new InvalidOperationException("Error"));
 
-        Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ListarFamiliasFormulario()).StatusCode);
         Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ObtenerFamiliaFormularioPorId(1)).StatusCode);
         Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.CrearFamiliaFormulario(new CrearFamiliaFormularioDto())).StatusCode);
         Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ActualizarFamiliaFormulario(1, new ActualizarFamiliaFormularioDto())).StatusCode);
@@ -597,11 +577,9 @@ public sealed class MatricesRiesgosControllersContractTests
     {
         var controller = CrearMatricesController(out InterfaceStub stub);
 
-        stub.On(nameof(IMatricesRiesgosAppService.ObtenerConsolidadoTipadoAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerMetodologiaDinamicaVigenteAsync), _ => throw new InvalidOperationException("Error"));
         stub.On(nameof(IMatricesRiesgosAppService.ObtenerVersionVigenteFormularioAsync), _ => throw new InvalidOperationException("Error"));
 
-        Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ObtenerConsolidado()).StatusCode);
         Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ObtenerMetodologiaVigente()).StatusCode);
         Assert.Equal(500, Assert.IsType<ObjectResult>(await controller.ObtenerVersionVigenteFormulario("MATRIZ")).StatusCode);
     }

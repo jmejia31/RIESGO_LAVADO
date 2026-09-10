@@ -252,7 +252,6 @@ public sealed class IdentidadModuleCharacterizationTests
         public Task<bool> CambiarPasswordAsync(long usrId, CambiarPasswordDto dto) => Task.FromResult(false);
         public Task<UsuarioInfoDto?> CrearUsuarioAsync(CrearUsuarioDto dto, long creadoPor) => Task.FromResult<UsuarioInfoDto?>(null);
         public Task<bool> ActualizarUsuarioAsync(string uid, ActualizarUsuarioDto dto, long actualizadoPor) => Task.FromResult(false);
-        public Task<List<UsuarioInfoDto>> ListarUsuariosAsync() => Task.FromResult(new List<UsuarioInfoDto>());
         public Task<UsuariosPaginadosDto> ListarUsuariosPaginadoAsync(ConsultaUsuariosPaginadaDto dto) => Task.FromResult(new UsuariosPaginadosDto { Pagina = 1, TamanoPagina = dto.TamanoPagina, TotalRegistros = 0, TotalPaginas = 0 });
         public Task<bool> ActualizarEstadoUsuarioAsync(string uid, bool activo, long actualizadoPor) => Task.FromResult(false);
         public Task<bool> RecuperarPasswordAsync(string email) => Task.FromResult(false);
@@ -280,7 +279,6 @@ public sealed class IdentidadModuleCharacterizationTests
         public Task GuardarRefreshTokenAsync(long usrId, string token, DateTime expira, string? ip) { RefreshTokenGuardado = token; RefreshTokenExpira = expira; return Task.CompletedTask; }
         public Task RevocarRefreshTokenAsync(string token) { TokensRevocados.Add(token); return Task.CompletedTask; }
         public Task RevocarTodosTokensAsync(long usrId) => Task.CompletedTask;
-        public Task<List<UsuarioInfoDto>> ListarAsync() => Task.FromResult(new List<UsuarioInfoDto>());
         public Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto dto) => Task.FromResult(new UsuariosPaginadosDto { Pagina = 1, TamanoPagina = dto.TamanoPagina, TotalRegistros = 0, TotalPaginas = 0 });
         public Task<bool> ActualizarAsync(long id, ActualizarUsuarioDto dto, string? hash, string? salt) => Task.FromResult(false);
         public Task<bool> ActualizarEstadoAsync(long id, bool activo) => Task.FromResult(false);

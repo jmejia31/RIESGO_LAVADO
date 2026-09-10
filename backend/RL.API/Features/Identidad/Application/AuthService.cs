@@ -266,11 +266,6 @@ public class AuthService : IAuthService
         return ok;
     }
 
-    public async Task<List<UsuarioInfoDto>> ListarUsuariosAsync()
-    {
-        return await _usuarioRepo.ListarAsync();
-    }
-
     public Task<UsuariosPaginadosDto> ListarUsuariosPaginadoAsync(ConsultaUsuariosPaginadaDto consulta)
         => _usuarioRepo.ListarPaginadoAsync(consulta);
 

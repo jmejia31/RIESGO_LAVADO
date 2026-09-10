@@ -184,11 +184,6 @@ describe('MatricesRiesgosService cobertura complementaria', () => {
     expect(request.request.method).toBe('PUT');
     request.flush({ success: true });
 
-    service.listarRiesgos(true).subscribe();
-    request = http.expectOne(req => req.url === `${apiUrl}/riesgos`);
-    expect(request.request.params.get('incluirInactivos')).toBe('true');
-    request.flush({ success: true, datos: [] });
-
     service.obtenerRiesgo(9).subscribe();
     request = http.expectOne(`${apiUrl}/riesgos/9`);
     request.flush({ success: true, datos: { rieId: 9 } });

@@ -356,63 +356,6 @@ public class UsuarioRepository : IUsuarioRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task<List<UsuarioInfoDto>> ListarAsync()
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
-            SELECT U.USR_ID, U.USR_NOMBRE, U.USR_APELLIDO, U.USR_EMAIL,
-                   R.ROL_NOMBRE, R.ROL_ID, U.ES_USUARIO_DOMINIO, U.USUARIO_DOMINIO,
-                   U.USR_DOM_ID, D.DOM_NOMBRE, U.USR_DNI
-            FROM RL_USUARIOS U
-            INNER JOIN RL_ROLES R ON U.USR_ROL_ID = R.ROL_ID
-            LEFT JOIN RL_DOMINIO D ON U.USR_DOM_ID = D.DOM_ID
-            ORDER BY U.USR_NOMBRE";
-
-        var list = new List<UsuarioInfoDto>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            list.Add(new UsuarioInfoDto
-            {
-                Id       = Convert.ToInt64(reader["USR_ID"]),
-                Nombre   = reader["USR_NOMBRE"].ToString()!,
-                Apellido = reader["USR_APELLIDO"].ToString()!,
-                Email    = reader["USR_EMAIL"].ToString()!,
-                Rol      = (reader["ROL_NOMBRE"]?.ToString() ?? string.Empty).Trim().ToUpper(),
-                RolId    = Convert.ToInt32(reader["ROL_ID"]),
-                EsUsuarioDominio = Convert.ToInt32(reader["ES_USUARIO_DOMINIO"]),
-                UsuarioDominio  = reader["USUARIO_DOMINIO"]?.ToString(),
-                DominioId = reader["USR_DOM_ID"] == DBNull.Value ? null : Convert.ToInt32(reader["USR_DOM_ID"]),
-                Dominio  = reader["DOM_NOMBRE"]?.ToString(),
-                Dni      = reader["USR_DNI"]?.ToString()
-            });
-        }
-
-        // Query modules mapping
-        await using var mCmd = conn.CreateCommand();
-        mCmd.CommandText = "SELECT USM_USR_ID, USM_MOD_ID FROM RL_USUARIO_MODULOS";
-        var modMap = new Dictionary<long, List<int>>();
-        await using var mReader = await mCmd.ExecuteReaderAsync();
-        while (await mReader.ReadAsync())
-        {
-            long uId = Convert.ToInt64(mReader["USM_USR_ID"]);
-            int mId = Convert.ToInt32(mReader["USM_MOD_ID"]);
-            if (!modMap.ContainsKey(uId))
-                modMap[uId] = new List<int>();
-            modMap[uId].Add(mId);
-        }
-
-        foreach (var u in list)
-        {
-            u.ModulosIds = modMap.TryGetValue(u.Id, out var ids) ? ids : new List<int>();
-        }
-
-        return list;
-    }
-
     public async Task<UsuariosPaginadosDto> ListarPaginadoAsync(ConsultaUsuariosPaginadaDto consulta)
     {
         var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);

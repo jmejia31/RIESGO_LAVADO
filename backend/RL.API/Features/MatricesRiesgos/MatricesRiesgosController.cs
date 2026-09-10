@@ -175,21 +175,6 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
-    [HttpGet("familias")]
-    public async Task<IActionResult> ListarFamiliasFormulario()
-    {
-        try
-        {
-            var result = await _service.ListarFamiliasFormularioAsync();
-            return Responder(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al listar las familias de formulario.");
-            return Error500(ex);
-        }
-    }
-
     [HttpGet("familias/{id:long}")]
     public async Task<IActionResult> ObtenerFamiliaFormularioPorId(long id)
     {
@@ -400,21 +385,6 @@ public sealed class MatricesRiesgosController : ControllerBase
     // ============================================================
     // 4. REPORTES Y METODOLOGÍA CON CONTRATOS NEUTROS
     // ============================================================
-
-    [HttpGet("consolidado")]
-    public async Task<IActionResult> ObtenerConsolidado()
-    {
-        try
-        {
-            var result = await _service.ObtenerConsolidadoTipadoAsync();
-            return Responder(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al obtener matriz consolidada tipada.");
-            return Error500(ex);
-        }
-    }
 
     [HttpGet("familias/paginado")]
     public async Task<IActionResult> ListarFamiliasFormularioPaginadas([FromQuery] ConsultaFamiliasFormularioPaginadaDto filtro)

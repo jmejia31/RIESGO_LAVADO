@@ -178,9 +178,9 @@ FRONT_ROUTES = [
 
 
 MONITOREO_ENDPOINTS = [
-    ("GET", "/api/listas/juridicas", "Consulta coincidencias juridicas y positivos manuales", "Modulo 4"),
-    ("GET", "/api/listas/naturales", "Consulta coincidencias naturales y positivos manuales", "Modulo 4"),
-    ("GET", "/api/listas/empleados", "Consulta coincidencias de empleados y positivos manuales", "Modulo 4"),
+    ("GET", "/api/listas/juridicas/paginado", "Consulta paginada de coincidencias juridicas y positivos manuales", "Modulo 4"),
+    ("GET", "/api/listas/naturales/paginado", "Consulta paginada de coincidencias naturales y positivos manuales", "Modulo 4"),
+    ("GET", "/api/listas/empleados/paginado", "Consulta paginada de coincidencias de empleados y positivos manuales", "Modulo 4"),
     ("GET", "/api/listas/naturales/{numeroIdentificacion}/detalle", "Detalle de coincidencia natural", "Modulo 4"),
     ("GET", "/api/listas/empleados/{numeroIdentificacion}/detalle", "Detalle de coincidencia empleado", "Modulo 4"),
     ("GET", "/api/listas/tipos-documento", "Catalogo de tipos de documento", "Modulo 4"),
@@ -204,7 +204,7 @@ SECURITY_ENDPOINTS = [
     ("POST", "/api/auth/logout", "Cierre de sesion", "AuditRequired Logout"),
     ("PUT", "/api/auth/password", "Cambio de contrasena", "AuditRequired"),
     ("GET", "/api/auth/perfil", "Perfil, modulos y bandera de cambio de clave", "Authorize"),
-    ("GET", "/api/auth/usuarios", "Listado de usuarios", "Modulo 2"),
+    ("GET", "/api/auth/usuarios/paginado", "Listado paginado de usuarios", "Modulo 2"),
     ("POST", "/api/auth/usuarios", "Creacion de usuario", "Modulo 2 + AuditRequired"),
     ("PUT", "/api/auth/usuarios/{uid}", "Edicion de usuario", "Modulo 2 + AuditRequired"),
     ("PUT", "/api/auth/usuarios/{uid}/estado", "Cambio de estado", "Modulo 2 + AuditRequired"),

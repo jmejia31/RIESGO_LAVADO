@@ -209,16 +209,6 @@ public class AuthController : ControllerBase
         }
     }
 
-    /// <summary>Listar todos los usuarios (solo Admin)</summary>
-    [HttpGet("usuarios")]
-    [Authorize(Roles = "ADMINISTRADOR")]
-    [ModuloAuthorize(2)]
-    public async Task<IActionResult> ListarUsuarios()
-    {
-        var usuarios = await _authService.ListarUsuariosAsync();
-        return Ok(new { success = true, datos = usuarios });
-    }
-
     [HttpGet("usuarios/paginado")]
     [Authorize(Roles = "ADMINISTRADOR")]
     [ModuloAuthorize(2)]

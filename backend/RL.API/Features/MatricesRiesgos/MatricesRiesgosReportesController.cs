@@ -29,15 +29,11 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
     public async Task<IActionResult> DescargarExcel([FromQuery] FiltroReporteMatricesDto? filtro = null)
     {
         filtro ??= new FiltroReporteMatricesDto();
-        var resultado = Request.Query.Count == 0
-            ? await _matrices.ObtenerConsolidadoTipadoAsync()
-            : await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
+        var resultado = await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
         if (!resultado.Success || resultado.Data is null)
             return StatusCode(resultado.StatusCode, new { success = false, mensaje = resultado.Message });
 
-        ArchivoReporteDto archivo = Request.Query.Count == 0
-            ? _exportador.CrearExcelConsolidado(resultado.Data)
-            : _exportador.CrearExcelConsolidado(resultado.Data, DescribirFiltros(filtro));
+        ArchivoReporteDto archivo = _exportador.CrearExcelConsolidado(resultado.Data, DescribirFiltros(filtro));
         return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
     }
 
@@ -47,15 +43,11 @@ public sealed class MatricesRiesgosReportesController : ControllerBase
     public async Task<IActionResult> DescargarPdf([FromQuery] FiltroReporteMatricesDto? filtro = null)
     {
         filtro ??= new FiltroReporteMatricesDto();
-        var resultado = Request.Query.Count == 0
-            ? await _matrices.ObtenerConsolidadoTipadoAsync()
-            : await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
+        var resultado = await _matrices.ObtenerConsolidadoParaExportacionAsync(filtro);
         if (!resultado.Success || resultado.Data is null)
             return StatusCode(resultado.StatusCode, new { success = false, mensaje = resultado.Message });
 
-        ArchivoReporteDto archivo = Request.Query.Count == 0
-            ? _exportador.CrearPdfConsolidado(resultado.Data)
-            : _exportador.CrearPdfConsolidado(resultado.Data, DescribirFiltros(filtro));
+        ArchivoReporteDto archivo = _exportador.CrearPdfConsolidado(resultado.Data, DescribirFiltros(filtro));
         return File(archivo.Contenido, archivo.ContentType, archivo.NombreArchivo);
     }
 

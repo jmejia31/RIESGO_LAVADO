@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ListasService } from '../../data-access/listas.service';
@@ -7,7 +7,8 @@ import { ConfiguracionService } from '../../../../../core/configuration/configur
 import { jsPDF } from 'jspdf';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
-import { of, forkJoin, Observable } from 'rxjs';
+import { EMPTY, of, forkJoin, Observable, Subject, Subscription } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
@@ -17,6 +18,15 @@ type FiltroTipo = 'juridica' | 'natural' | 'empleado';
 type FiltroEstado = 'todos' | 'pendiente' | 'con_motivo' | 'cerrado_pasivo';
 type RangoSeguimientoReporte = { desde?: string; hasta?: string; texto: string };
 type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | CoincidenciaEmpleado;
+type SolicitudMonitoreo = {
+  tipo: FiltroTipo;
+  consulta: ConsultaMonitoreoPaginada;
+};
+
+type RespuestaMonitoreo = {
+  tipo: FiltroTipo;
+  respuesta: { items: MonitoreoRegistro[]; pagina: number; totalPaginas: number; totalRegistros: number; totales: MonitoreoTotales };
+};
 
 @Component({
   selector: 'app-monitoreo-listas',
@@ -25,11 +35,13 @@ type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | Coincidenc
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html',
 })
-export class MonitoreoListasComponent implements OnInit {
+export class MonitoreoListasComponent implements OnInit, OnDestroy {
   protected readonly reportPreview = inject(ReportPreviewService);
   private configService = inject(ConfiguracionService);
   private filtroSeguimientoTimer: ReturnType<typeof setTimeout> | null = null;
-  private secuenciaCargaDatos = 0;
+  private readonly solicitudesMonitoreo$ = new Subject<SolicitudMonitoreo>();
+  private monitoreoSubscription: Subscription | null = null;
+  private busquedaTimer: ReturnType<typeof setTimeout> | null = null;
   readonly maxTextoTextarea = 1000;
 
   tipoActivo = signal<FiltroTipo>('juridica');
@@ -166,6 +178,7 @@ export class MonitoreoListasComponent implements OnInit {
   constructor(private listasService: ListasService) {}
 
   ngOnInit() {
+    this.iniciarPipelineMonitoreo();
     this.cargarDatos();
     this.listasService.getTiposDocumento().subscribe({
       next: (res) => this.listaTiposDocumento.set(res),
@@ -191,10 +204,17 @@ export class MonitoreoListasComponent implements OnInit {
     this.cargarDatos({ tipo, force: false });
   }
 
+  ngOnDestroy(): void {
+    if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
+    this.solicitudesMonitoreo$.complete();
+    this.monitoreoSubscription?.unsubscribe();
+  }
+
   cambiarBusqueda(valor: string): void {
     this.busqueda.set(valor);
     this.paginaActual.set(1);
-    this.cargarDatos();
+    if (this.busquedaTimer) clearTimeout(this.busquedaTimer);
+    this.busquedaTimer = setTimeout(() => this.cargarDatos(), 350);
   }
 
   cambiarEstado(valor: FiltroEstado): void {
@@ -255,30 +275,67 @@ export class MonitoreoListasComponent implements OnInit {
   }
 
   cargarDatos(options: { tipo?: FiltroTipo; force?: boolean; mostrarLoader?: boolean } = {}) {
+    this.iniciarPipelineMonitoreo();
     const tipo = options.tipo ?? this.tipoActivo();
     const mostrarLoader = options.mostrarLoader ?? true;
-    const solicitud = ++this.secuenciaCargaDatos;
 
     if (mostrarLoader && tipo === this.tipoActivo()) {
       this.cargando.set(true);
     }
     const consulta = { pagina: this.paginaActual(), tamanoPagina: this.limite(), buscar: this.busqueda(), estado: this.filtroEstado(), fechaDesde: this.filtroFechaDesde() || null, fechaHasta: this.filtroFechaHasta() || null };
-    if (tipo === 'juridica') {
-      this.listasService.getJuridicasPaginadas(consulta).subscribe({
-        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.juridicasRaw.set(res.items); this.juridicasTotales.set(res.totales); this.juridicasPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
-        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.juridicasRaw.set([]); this.juridicasTotales.set(this.totalesVacios); this.cargando.set(false); }
-      });
-    } else if (tipo === 'natural') {
-      this.listasService.getNaturalesPaginadas(consulta).subscribe({
-        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.naturalesRaw.set(res.items); this.naturalesTotales.set(res.totales); this.naturalesPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
-        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.naturalesRaw.set([]); this.naturalesTotales.set(this.totalesVacios); this.cargando.set(false); }
-      });
-    } else if (tipo === 'empleado') {
-      this.listasService.getEmpleadosPaginadas(consulta).subscribe({
-        next: (res) => { if (solicitud !== this.secuenciaCargaDatos || tipo !== this.tipoActivo()) return; this.empleadosRaw.set(res.items); this.empleadosTotales.set(res.totales); this.empleadosPaginas.set(res.totalPaginas); this.paginaActual.set(res.pagina); this.cargando.set(false); },
-        error: () => { if (solicitud !== this.secuenciaCargaDatos) return; this.empleadosRaw.set([]); this.empleadosTotales.set(this.totalesVacios); this.cargando.set(false); }
-      });
-    }
+    this.solicitudesMonitoreo$.next({ tipo, consulta });
+  }
+
+  private iniciarPipelineMonitoreo(): void {
+    if (this.monitoreoSubscription) return;
+
+    this.monitoreoSubscription = this.solicitudesMonitoreo$.pipe(
+      switchMap(({ tipo, consulta }) => this.consultarMonitoreo(tipo, consulta).pipe(
+        map(respuesta => ({ tipo, respuesta } as RespuestaMonitoreo)),
+        catchError(() => {
+          if (tipo === this.tipoActivo()) {
+            if (tipo === 'juridica') {
+              this.juridicasRaw.set([]);
+              this.juridicasTotales.set(this.totalesVacios);
+              this.juridicasPaginas.set(0);
+            } else if (tipo === 'natural') {
+              this.naturalesRaw.set([]);
+              this.naturalesTotales.set(this.totalesVacios);
+              this.naturalesPaginas.set(0);
+            } else {
+              this.empleadosRaw.set([]);
+              this.empleadosTotales.set(this.totalesVacios);
+              this.empleadosPaginas.set(0);
+            }
+            this.cargando.set(false);
+          }
+          return EMPTY;
+        })
+      ))
+    ).subscribe(({ tipo, respuesta }) => {
+      if (tipo !== this.tipoActivo()) return;
+      if (tipo === 'juridica') {
+        this.juridicasRaw.set(respuesta.items as CoincidenciaJuridica[]);
+        this.juridicasTotales.set(respuesta.totales);
+        this.juridicasPaginas.set(respuesta.totalPaginas);
+      } else if (tipo === 'natural') {
+        this.naturalesRaw.set(respuesta.items as CoincidenciaNatural[]);
+        this.naturalesTotales.set(respuesta.totales);
+        this.naturalesPaginas.set(respuesta.totalPaginas);
+      } else {
+        this.empleadosRaw.set(respuesta.items as CoincidenciaEmpleado[]);
+        this.empleadosTotales.set(respuesta.totales);
+        this.empleadosPaginas.set(respuesta.totalPaginas);
+      }
+      this.paginaActual.set(respuesta.pagina);
+      this.cargando.set(false);
+    });
+  }
+
+  private consultarMonitoreo(tipo: FiltroTipo, consulta: ConsultaMonitoreoPaginada): Observable<RespuestaMonitoreo['respuesta']> {
+    if (tipo === 'juridica') return this.listasService.getJuridicasPaginadas(consulta);
+    if (tipo === 'natural') return this.listasService.getNaturalesPaginadas(consulta);
+    return this.listasService.getEmpleadosPaginadas(consulta);
   }
 
   datosFiltrados = computed(() => this.datosActivos());

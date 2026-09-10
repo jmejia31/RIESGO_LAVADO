@@ -241,7 +241,7 @@ export class CoincidenciasPatronoComponent implements OnInit {
         }
       });
 
-      this.listasService.getDetalleCoincidenciasPatrono(f).subscribe({
+      this.listasService.getDetalleCoincidenciasPatronoParaExportar(f).subscribe({
         next: (registros) => {
           if (!registros || registros.length === 0) {
             Swal.default.fire({

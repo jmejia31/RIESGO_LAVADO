@@ -40,11 +40,6 @@ export class ListasService {
   // Fachada HTTP del módulo de monitoreo de listas: centraliza consultas, evidencias,
   // seguimientos, exportaciones y auditoría para que los componentes no construyan contratos REST.
 
-  getJuridicas(): Observable<CoincidenciaJuridica[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaJuridica[] }>(`${this.apiUrl}/juridicas`)
-      .pipe(map(res => res.datos));
-  }
-
   getJuridicasPaginadas(consulta: ConsultaMonitoreoPaginada): Observable<MonitoreoPaginado<CoincidenciaJuridica>> {
     return this.http.get<{ success: boolean; datos: MonitoreoPaginado<CoincidenciaJuridica> }>(`${this.apiUrl}/juridicas/paginado`, { params: this.toMonitoringParams(consulta) })
       .pipe(map(res => res.datos));
@@ -55,11 +50,6 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
-  getNaturales(): Observable<CoincidenciaNatural[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales`)
-      .pipe(map(res => res.datos));
-  }
-
   getNaturalesPaginadas(consulta: ConsultaMonitoreoPaginada): Observable<MonitoreoPaginado<CoincidenciaNatural>> {
     return this.http.get<{ success: boolean; datos: MonitoreoPaginado<CoincidenciaNatural> }>(`${this.apiUrl}/naturales/paginado`, { params: this.toMonitoringParams(consulta) })
       .pipe(map(res => res.datos));
@@ -67,11 +57,6 @@ export class ListasService {
 
   getNaturalesParaExportar(consulta: ConsultaMonitoreoPaginada): Observable<CoincidenciaNatural[]> {
     return this.http.get<{ success: boolean; datos: CoincidenciaNatural[] }>(`${this.apiUrl}/naturales/exportar`, { params: this.toMonitoringParams(consulta) })
-      .pipe(map(res => res.datos));
-  }
-
-  getEmpleados(): Observable<CoincidenciaEmpleado[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaEmpleado[] }>(`${this.apiUrl}/empleados`)
       .pipe(map(res => res.datos));
   }
 
@@ -264,13 +249,8 @@ export class ListasService {
       .pipe(map(res => res.datos));
   }
 
-  getResumenCoincidenciasPatrono(): Observable<CoincidenciaPatronoResumen[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoResumen[] }>(`${this.apiUrl}/coincidencias-patrono/resumen`)
-      .pipe(map(res => res.datos));
-  }
-
-  getDetalleCoincidenciasPatrono(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-patrono/detalle?fecha=${fecha}`)
+  getDetalleCoincidenciasPatronoParaExportar(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
+    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-patrono/detalle/exportar?fecha=${fecha}`)
       .pipe(map(res => res.datos));
   }
 
@@ -288,13 +268,8 @@ export class ListasService {
       .pipe(map(res => res.detalle));
   }
 
-  getResumenCoincidenciasEmpleado(): Observable<CoincidenciaPatronoResumen[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoResumen[] }>(`${this.apiUrl}/coincidencias-empleado/resumen`)
-      .pipe(map(res => res.datos));
-  }
-
-  getDetalleCoincidenciasEmpleado(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
-    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-empleado/detalle?fecha=${fecha}`)
+  getDetalleCoincidenciasEmpleadoParaExportar(fecha: string): Observable<CoincidenciaPatronoDetalle[]> {
+    return this.http.get<{ success: boolean; datos: CoincidenciaPatronoDetalle[] }>(`${this.apiUrl}/coincidencias-empleado/detalle/exportar?fecha=${fecha}`)
       .pipe(map(res => res.datos));
   }
 

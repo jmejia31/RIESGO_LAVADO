@@ -486,48 +486,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         return lista;
     }
 
-    public async Task<List<FamiliaFormularioDto>> ListarFamiliasFormularioAsync()
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-
-        const string sql = @"
-            SELECT f.FAM_ID,
-                   f.FAM_CODIGO,
-                   f.FAM_NOMBRE,
-                   f.FAM_DESCRIPCION,
-                   f.FAM_ACTIVO,
-                   f.FAM_FECHA_CREACION,
-                   f.FAM_PREDETERMINADA,
-                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID) AS TOTAL_VERSIONES,
-                   (SELECT COUNT(*) FROM RL_MR_VERSIONES_FORMULARIO v WHERE v.VER_FAMILIA_ID = f.FAM_ID AND v.VER_VIGENTE = 1) AS TIENE_VIGENTE
-              FROM RL_MR_FAMILIAS_FORMULARIO f
-             ORDER BY f.FAM_CODIGO ASC";
-
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = sql;
-
-        var lista = new List<FamiliaFormularioDto>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            lista.Add(new FamiliaFormularioDto
-            {
-                FamId = reader.GetInt64(0),
-                FamCodigo = reader.GetString(1),
-                FamNombre = reader.GetString(2),
-                FamDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
-                FamActivo = reader.GetInt32(4) == 1,
-                 FamFechaCreacion = reader.GetDateTime(5),
-                 FamPredeterminada = reader.GetInt32(6) == 1,
-                 TotalVersiones = Convert.ToInt32(reader.GetValue(7)),
-                 TieneVersionVigente = Convert.ToInt32(reader.GetValue(8)) > 0
-            });
-        }
-
-        return lista;
-    }
-
     public async Task<FamiliaFormularioDto?> ObtenerFamiliaFormularioPorIdAsync(long famId)
     {
         await using var conn = _db.CreateConnection();
@@ -1606,56 +1564,6 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             await trans.RollbackAsync();
             throw;
         }
-    }
-
-    public async Task<IReadOnlyList<RiesgoReporteFilaDto>> ObtenerConsolidadoTipadoAsync()
-    {
-        await using var conn = _db.CreateConnection();
-        await conn.OpenAsync();
-
-        const string sql = @"
-            SELECT e.EVA_RIESGO_ID,
-                   p.PROY_EVALUACION_ID,
-                   e.EVA_VERSION_ID,
-                   p.PROY_CODIGO_RIESGO,
-                   p.PROY_AREA_PRINCIPAL,
-                   p.PROY_DUENO_RIESGO,
-                   p.PROY_VRI,
-                   p.PROY_NIVEL_INHERENTE,
-                   p.PROY_VRR,
-                   p.PROY_NIVEL_RESIDUAL,
-                   p.PROY_RESPUESTA_RIESGO,
-                   p.PROY_ESTADO_EVALUACION,
-                   p.PROY_FECHA_EVAL
-              FROM RL_MR_PROYECCIONES_EVALUACION p
-              JOIN RL_MR_EVALUACIONES_RIESGO e
-                ON e.EVA_ID = p.PROY_EVALUACION_ID
-             WHERE e.EVA_ACTIVO = 1
-             ORDER BY p.PROY_FECHA_EVAL DESC, p.PROY_EVALUACION_ID DESC";
-
-        await using var cmd = CrearComando(sql, conn);
-        var lista = new List<RiesgoReporteFilaDto>();
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            lista.Add(new RiesgoReporteFilaDto
-            {
-                RiesgoId = reader.GetInt64(0),
-                EvaluacionId = reader.GetInt64(1),
-                VersionFormularioId = reader.GetInt64(2),
-                CodigoRiesgo = reader.GetString(3),
-                AreaPrincipal = reader.GetString(4),
-                DuenoRiesgo = reader.GetString(5),
-                Vri = reader.GetInt32(6),
-                NivelInherente = reader.GetString(7),
-                Vrr = reader.GetInt32(8),
-                NivelResidual = reader.GetString(9),
-                RespuestaRiesgo = reader.GetString(10),
-                EstadoEvaluacion = reader.GetString(11),
-                FechaEvaluacion = reader.GetDateTime(12)
-            });
-        }
-        return lista;
     }
 
     public async Task<FamiliasFormularioPaginadasDto> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro)

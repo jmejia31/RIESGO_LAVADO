@@ -163,23 +163,6 @@ public sealed class MatricesRiesgosApplicationTests
     }
 
     [Fact]
-    public async Task Consolidado_RetornaFilasTipadas()
-    {
-        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
-        IReadOnlyList<RiesgoReporteFilaDto> filas = new List<RiesgoReporteFilaDto>
-        {
-            new() { RiesgoId = 1, EvaluacionId = 2, CodigoRiesgo = "R-001", Vri = 7, Vrr = 4 }
-        };
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerConsolidadoTipadoAsync), _ => Task.FromResult(filas));
-
-        ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>> result = await service.ObtenerConsolidadoTipadoAsync();
-
-        Assert.True(result.Success);
-        Assert.Single(result.Data!);
-        Assert.Equal("R-001", result.Data![0].CodigoRiesgo);
-    }
-
-    [Fact]
     public async Task Metodologia_RetornaVersionSeccionesCatalogosYReglas()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);

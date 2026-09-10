@@ -161,7 +161,7 @@ def add_test_matrix(doc, results):
     result_map = {r["name"]: r for r in results}
     rows = [
         ("Login", "No ejecutada", "Requiere credencial confirmada. No se intentó para evitar bloqueo de cuenta o escritura de auditoría fallida."),
-        ("Acceso por módulo", "Ejecutada", "Validado con token JWT de prueba con módulos 2 al 9; /api/auth/perfil y /api/auth/usuarios respondieron 200."),
+        ("Acceso por módulo", "Ejecutada", "Validado con token JWT de prueba con módulos 2 al 9; /api/auth/perfil y /api/auth/usuarios/paginado respondieron 200."),
         ("Crear usuario", "Pendiente controlado", "Escribe en RL_USUARIOS y auditoría. Debe ejecutarse solo con usuario de prueba y limpieza aprobada."),
         ("Editar usuario", "Pendiente controlado", "Escribe en RL_USUARIOS y auditoría. Debe ejecutarse solo sobre usuario de prueba."),
         ("Cargar lista", "Pendiente controlado", "Escribe registros de lista y auditoría. Requiere archivo de prueba y tipo de lista aprobado."),

@@ -20,14 +20,11 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         };
         var service = new MatricesRiesgosGestionService(repo);
 
-        var lista = await service.ListarRiesgosAsync(false);
         var invalido = await service.ObtenerRiesgoAsync(0);
         var encontrado = await service.ObtenerRiesgoAsync(9);
         repo.Riesgo = null;
         var inexistente = await service.ObtenerRiesgoAsync(99);
 
-        Assert.True(lista.Success);
-        Assert.Single(lista.Data!);
         Assert.Equal(400, invalido.StatusCode);
         Assert.True(encontrado.Success);
         Assert.Equal(9, encontrado.Data!.RieId);
@@ -343,7 +340,6 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public bool UpdateResult { get; set; } = true;
         public bool ThrowInvalidOperation { get; set; }
 
-        public Task<IReadOnlyList<RiesgoDto>> ListarRiesgosAsync(bool incluirInactivos) => Task.FromResult(Riesgos);
         public Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta) => Task.FromResult(new RiesgosPaginadosDto
         {
             Items = Riesgos,

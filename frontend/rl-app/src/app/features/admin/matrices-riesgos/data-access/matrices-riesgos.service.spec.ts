@@ -59,30 +59,6 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith(true);
   });
 
-  it('consulta el consolidado mediante filas tipadas', () => {
-    const resultado = vi.fn();
-    const filas = [{
-      riesgoId: 1,
-      evaluacionId: 2,
-      versionFormularioId: 10,
-      codigoRiesgo: 'R-001',
-      areaPrincipal: 'Cumplimiento',
-      duenoRiesgo: 'Responsable',
-      vri: 7,
-      nivelInherente: 'ALTO',
-      vrr: 4,
-      nivelResidual: 'MODERADO',
-      respuestaRiesgo: 'MITIGAR',
-      estadoEvaluacion: 'APROBADA',
-      fechaEvaluacion: '2026-08-03T10:00:00'
-    }];
-    service.obtenerConsolidado().subscribe(resultado);
-    const request = http.expectOne(`${apiUrl}/consolidado`);
-    expect(request.request.method).toBe('GET');
-    request.flush({ success: true, datos: filas });
-    expect(resultado).toHaveBeenCalledWith(filas);
-  });
-
   it('consulta consolidado paginado en servidor y conserva filtros y orden', () => {
     const resultado = vi.fn();
     service.obtenerConsolidadoPaginado({
@@ -119,16 +95,6 @@ describe('MatricesRiesgosService', () => {
     expect(excel.request.params.get('buscar')).toBe('R-002');
     expect(excel.request.params.get('estadoEvaluacion')).toBe('CERRADA');
     excel.flush(new Blob(['xlsx']));
-  });
-
-  it('lista riesgos maestros desde Oracle', () => {
-    const observer = vi.fn();
-    service.listarRiesgos().subscribe(observer);
-    const request = http.expectOne(req => req.url === `${apiUrl}/riesgos`);
-    expect(request.request.method).toBe('GET');
-    expect(request.request.params.get('incluirInactivos')).toBe('false');
-    request.flush({ success: true, datos: [{ rieId: 1, rieCodigo: 'R-001' }] });
-    expect(observer).toHaveBeenCalledWith([{ rieId: 1, rieCodigo: 'R-001' }]);
   });
 
   it('crea riesgo maestro con confirmación de cambio', () => {

@@ -236,12 +236,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         return ServiceResult<List<VersionFormularioDto>>.Ok(versiones);
     }
 
-    public async Task<ServiceResult<List<FamiliaFormularioDto>>> ListarFamiliasFormularioAsync()
-    {
-        List<FamiliaFormularioDto> familias = await _repo.ListarFamiliasFormularioAsync();
-        return ServiceResult<List<FamiliaFormularioDto>>.Ok(familias);
-    }
-
     public async Task<ServiceResult<FamiliasFormularioPaginadasDto>> ListarFamiliasFormularioPaginadasAsync(ConsultaFamiliasFormularioPaginadaDto filtro)
     {
         filtro ??= new ConsultaFamiliasFormularioPaginadaDto();
@@ -658,12 +652,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             default:
                 return ServiceResult.BadRequest("Resultado de eliminación desconocido.");
         }
-    }
-
-    public async Task<ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>> ObtenerConsolidadoTipadoAsync()
-    {
-        IReadOnlyList<RiesgoReporteFilaDto> filas = await _repo.ObtenerConsolidadoTipadoAsync();
-        return ServiceResult<IReadOnlyList<RiesgoReporteFilaDto>>.Ok(filas);
     }
 
     public async Task<ServiceResult<FamiliaPredeterminadaDto>> ObtenerFamiliaPredeterminadaAsync()

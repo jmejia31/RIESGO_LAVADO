@@ -241,7 +241,7 @@ export class CoincidenciasEmpleadoComponent implements OnInit {
         }
       });
 
-      this.listasService.getDetalleCoincidenciasEmpleado(f).subscribe({
+      this.listasService.getDetalleCoincidenciasEmpleadoParaExportar(f).subscribe({
         next: (registros) => {
           if (!registros || registros.length === 0) {
             Swal.default.fire({

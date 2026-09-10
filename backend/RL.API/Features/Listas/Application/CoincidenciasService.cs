@@ -14,10 +14,9 @@ public sealed class CoincidenciasService : ICoincidenciasService
         _repo = repo;
     }
 
-    public Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenPatronoAsync() => _repo.ObtenerResumenCoincidenciasPatronoAsync();
     public Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenPatronoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta) => _repo.ObtenerResumenCoincidenciasPatronoPaginadoAsync(consulta);
 
-    public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoAsync(string? fecha)
+    public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetallePatronoParaExportarAsync(string? fecha)
     {
         // Proceso de consulta de detalle: normaliza la fecha antes de consultar Oracle
         // para mantener consistencia entre filtros de patronos y empleados.
@@ -25,7 +24,7 @@ public sealed class CoincidenciasService : ICoincidenciasService
         if (fechaNormalizada == null)
             return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parámetro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
 
-        var result = await _repo.ObtenerDetalleCoincidenciasPatronoAsync(fechaNormalizada);
+        var result = await _repo.ObtenerDetalleCoincidenciasPatronoParaExportarAsync(fechaNormalizada);
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
     }
 
@@ -38,16 +37,15 @@ public sealed class CoincidenciasService : ICoincidenciasService
             await _repo.ObtenerDetalleCoincidenciasPatronoPaginadoAsync(consulta));
     }
 
-    public Task<List<CoincidenciaPatronoResumenDto>> ObtenerResumenEmpleadoAsync() => _repo.ObtenerResumenCoincidenciasEmpleadoAsync();
     public Task<PaginadoDto<CoincidenciaPatronoResumenDto>> ObtenerResumenEmpleadoPaginadoAsync(ConsultaCoincidenciasPaginadaDto consulta) => _repo.ObtenerResumenCoincidenciasEmpleadoPaginadoAsync(consulta);
 
-    public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetalleEmpleadoAsync(string? fecha)
+    public async Task<ServiceResult<List<CoincidenciaPatronoDetalleDto>>> ObtenerDetalleEmpleadoParaExportarAsync(string? fecha)
     {
         var fechaNormalizada = NormalizarFecha(fecha);
         if (fechaNormalizada == null)
             return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.BadRequest("El parámetro fecha es obligatorio y debe tener formato YYYY-MM-DD.");
 
-        var result = await _repo.ObtenerDetalleCoincidenciasEmpleadoAsync(fechaNormalizada);
+        var result = await _repo.ObtenerDetalleCoincidenciasEmpleadoParaExportarAsync(fechaNormalizada);
         return ServiceResult<List<CoincidenciaPatronoDetalleDto>>.Ok(result);
     }
 
