@@ -7061,3 +7061,4 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 - Commit final publicado en `origin/desarrollo`: `a18dbda`; `HEAD=origin/desarrollo`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`. `main` sigue intacta en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.
 - No existe Quality Gate exitoso de certificación de rendimiento para este SHA: la evidencia HTTP real es `FAIL` (`FAILED_REQUESTS=22`) y el entorno no pudo ejecutar los hooks Python. La certificación permanece abierta/fallida hasta corregir el cuello Oracle y repetir el benchmark completo.
+- Actualización remota: Quality Gate técnico del commit `268da8188b830679aa5236013e105c681da0ffc1` completó con `RUN=34529019503`, `STATUS=completed`, `CONCLUSION=success`. Este gate valida el repositorio, no convierte el benchmark full-stack Oracle en PASS.
