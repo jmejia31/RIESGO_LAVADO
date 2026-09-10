@@ -37,6 +37,9 @@
               </div>
             }
 
+            <div class="flex justify-end">
+              <app-page-size-selector [value]="pageSize()" [options]="[25, 50, 100]" ariaLabel="Filas de la vista previa por página" (valueChange)="changePageSize($event)" />
+            </div>
             <div class="overflow-x-auto rounded-xl border border-slate-200" data-excel-preview-table>
               <table class="report-preview-table min-w-full border-collapse text-left text-xs">
                 @if (headerRow(); as header) {
@@ -62,14 +65,7 @@
               </table>
             </div>
 
-            <div class="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
-              <span>Filas de datos {{ currentSheet()?.totalRows ? page() * pageSize + 1 : 0 }}-{{ Math.min((page() + 1) * pageSize, currentSheet()?.totalRows ?? 0) }} de {{ currentSheet()?.totalRows ?? 0 }}</span>
-              <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="previousPage()" [disabled]="page() === 0" title="Filas anteriores" aria-label="Filas anteriores"><app-action-icon action="previous" /></button>
-                <span>Página {{ page() + 1 }} de {{ pageCount() }}</span>
-                <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50" (click)="nextPage()" [disabled]="page() >= pageCount() - 1" title="Filas siguientes" aria-label="Filas siguientes"><app-action-icon action="next" /></button>
-              </div>
-            </div>
+            <app-data-pagination [page]="page() + 1" [pageSize]="pageSize()" [totalRecords]="currentSheet()?.totalRows ?? 0" itemLabel="filas" (pageChange)="changePage($event)" />
           }
         }
       </div>

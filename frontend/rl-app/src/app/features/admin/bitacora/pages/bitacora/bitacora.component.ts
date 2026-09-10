@@ -5,15 +5,13 @@ import { AuditoriaService } from '../../data-access/auditoria.service';
 import { AuditoriaDto } from '../../models/auditoria.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
-
-export type PaginationItem =
-  | { type: 'page'; page: number }
-  | { type: 'ellipsis'; key: string };
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 
 @Component({
   selector: 'app-bitacora',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './bitacora.component.html',
 })
@@ -44,30 +42,6 @@ export class BitacoraComponent implements OnInit {
 
   paginasTotales = computed(() => {
     return Math.ceil(this.totalRegistros() / this.limite()) || 1;
-  });
-
-  paginationItems = computed<PaginationItem[]>(() => {
-    const total = this.paginasTotales();
-    const current = this.paginaActual();
-
-    if (total <= 1) return [{ type: 'page', page: 1 }];
-
-    const pages = new Set<number>([1, total]);
-    const start = Math.max(2, current - 2);
-    const end = Math.min(total - 1, current + 2);
-    for (let page = start; page <= end; page++) pages.add(page);
-
-    const ordered = [...pages].sort((a, b) => a - b);
-    const items: PaginationItem[] = [];
-    let previous: number | null = null;
-    for (const page of ordered) {
-      if (previous !== null && page - previous > 1) {
-        items.push({ type: 'ellipsis', key: `${previous}-${page}` });
-      }
-      items.push({ type: 'page', page });
-      previous = page;
-    }
-    return items;
   });
 
   showingRange = computed(() => {

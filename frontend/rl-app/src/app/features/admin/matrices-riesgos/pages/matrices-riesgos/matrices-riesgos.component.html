@@ -139,18 +139,7 @@
             <app-action-icon action="clear-filters"></app-action-icon>
           </button>
         </div>
-        <div class="w-full sm:w-28">
-          <label for="filtro-registros-por-pagina" class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 whitespace-nowrap">Por página</label>
-          <select id="filtro-registros-por-pagina"
-                  class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-bold text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  [disabled]="cargandoEvaluaciones()"
-                  [ngModel]="registrosPorPagina()"
-                  (ngModelChange)="cambiarRegistrosPorPagina($event)">
-            @for (opc of opcionesRegistrosPorPagina; track opc) {
-              <option [value]="opc">{{ opc }}</option>
-            }
-          </select>
-        </div>
+        <app-page-size-selector selectId="filtro-registros-por-pagina" [value]="registrosPorPagina()" [options]="opcionesRegistrosPorPagina" ariaLabel="Evaluaciones por página" (valueChange)="cambiarRegistrosPorPagina($event)" />
       </div>
       <div class="matrices-table-surface overflow-x-auto rounded-xl border border-gray-200">
         <table class="min-w-[900px] w-full divide-y divide-gray-200 text-sm">
@@ -233,57 +222,7 @@
         </table>
       </div>
 
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-3 border-t border-gray-100 text-xs text-gray-600">
-        <div class="flex items-center gap-2">
-          <span>Mostrando</span>
-          <span class="font-bold text-gray-900">
-            {{ totalRegistros() === 0 ? 0 : ((pagina() - 1) * registrosPorPagina()) + 1 }}
-            –
-            {{ totalRegistros() === 0 ? 0 : (pagina() * registrosPorPagina() > totalRegistros() ? totalRegistros() : pagina() * registrosPorPagina()) }}
-          </span>
-          <span>de</span>
-          <span class="font-bold text-gray-900">{{ totalRegistros() }}</span>
-          <span>registros</span>
-        </div>
-
-        <div class="flex items-center gap-1 flex-wrap">
-          <span class="sr-only">Pág. {{ totalPaginas() === 0 ? 0 : pagina() }} de {{ totalPaginas() }}</span>
-          <button type="button"
-                  class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  [disabled]="cargandoEvaluaciones() || totalPaginas() === 0 || pagina() <= 1"
-                  (click)="cambiarPagina(pagina() - 1)">
-            Anterior
-          </button>
-
-            @for (numPag of paginasVisibles(); track numPag; let idx = $index) {
-              @if (idx > 0 && numPag > paginasVisibles()[idx - 1] + 1) {
-                <span class="px-1.5 py-1 text-gray-400 font-bold select-none">…</span>
-              }
-              <button type="button"
-                      class="min-w-[32px] px-2 py-1.5 border rounded-lg font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      [class.bg-ihss-900]="numPag === pagina()"
-                      [class.text-white]="numPag === pagina()"
-                      [class.border-ihss-900]="numPag === pagina()"
-                      [class.bg-white]="numPag !== pagina()"
-                      [class.text-gray-700]="numPag !== pagina()"
-                      [class.border-gray-200]="numPag !== pagina()"
-                      [class.hover:bg-gray-50]="numPag !== pagina()"
-                      [attr.aria-label]="'Ir a la página ' + numPag"
-                      [attr.aria-current]="numPag === pagina() ? 'page' : null"
-                      [disabled]="cargandoEvaluaciones() || numPag === pagina()"
-                      (click)="cambiarPagina(numPag)">
-                {{ numPag }}
-              </button>
-            }
-
-            <button type="button" data-ui-control="navigation" aria-label="Página siguiente"
-                    class="px-3 py-1.5 border border-gray-200 rounded-lg bg-white font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                    [disabled]="cargandoEvaluaciones() || totalPaginas() === 0 || pagina() >= totalPaginas()"
-                    (click)="cambiarPagina(pagina() + 1)">
-              Siguiente
-            </button>
-          </div>
-        </div>
+      <app-data-pagination [page]="pagina()" [pageSize]="registrosPorPagina()" [totalRecords]="totalRegistros()" itemLabel="registros" [disabled]="cargandoEvaluaciones()" (pageChange)="cambiarPagina($event)" />
       </section>
   }
 
@@ -328,12 +267,7 @@
             @for (estado of estadosConsolidado(); track estado) { <option [value]="estado">{{ estado }}</option> }
           </select>
         </div>
-        <div>
-          <label for="consolidado-por-pagina" class="mb-1.5 block whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-500">Por página</label>
-          <select id="consolidado-por-pagina" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="registrosPorPaginaConsolidado()" (ngModelChange)="cambiarRegistrosPorPaginaConsolidado($event)">
-            @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
-          </select>
-        </div>
+        <app-page-size-selector [value]="registrosPorPaginaConsolidado()" [options]="opcionesRegistrosPorPagina" ariaLabel="Consolidado por página" (valueChange)="cambiarRegistrosPorPaginaConsolidado($event)" />
         <button type="button" title="Limpiar filtros del consolidado" aria-label="Limpiar filtros del consolidado" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="!filtroBuscarConsolidado().trim() && filtroEstadoConsolidado() === 'TODOS'" (click)="limpiarFiltrosConsolidado()">
             <app-action-icon action="clear-filters"></app-action-icon>
           </button>
@@ -364,14 +298,7 @@
           </tbody>
         </table>
       </div>
-      <div class="flex flex-col gap-3 border-t border-gray-100 pt-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
-        <p>Mostrando <strong class="text-gray-900">{{ totalRegistrosConsolidado() === 0 ? 0 : ((paginaConsolidado() - 1) * registrosPorPaginaConsolidado()) + 1 }}–{{ totalRegistrosConsolidado() === 0 ? 0 : limiteSuperiorConsolidado() }}</strong> de <strong class="text-gray-900">{{ totalRegistrosConsolidado() }}</strong> registros</p>
-        <div class="flex items-center gap-2">
-           <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" aria-label="Página anterior" [disabled]="paginaConsolidado() <= 1 || totalPaginasConsolidado() === 0" (click)="cambiarPaginaConsolidado(paginaConsolidado() - 1)">Anterior</button>
-          <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasConsolidado() === 0 ? 0 : paginaConsolidado() }} / {{ totalPaginasConsolidado() }}</span>
-           <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" aria-label="Página siguiente" [disabled]="totalPaginasConsolidado() === 0 || paginaConsolidado() >= totalPaginasConsolidado()" (click)="cambiarPaginaConsolidado(paginaConsolidado() + 1)">Siguiente</button>
-        </div>
-      </div>
+      <app-data-pagination [page]="paginaConsolidado()" [pageSize]="registrosPorPaginaConsolidado()" [totalRecords]="totalRegistrosConsolidado()" itemLabel="registros" [disabled]="cargandoConsolidado()" (pageChange)="cambiarPaginaConsolidado($event)" />
     </section>
   }
 
@@ -434,12 +361,7 @@
                 <option value="TODAS">Todas</option><option value="VIGENTES">Con vigente</option><option value="SIN_VIGENTE">Sin vigente</option>
               </select>
             </div>
-            <div>
-              <label for="familias-por-pagina-superior" class="mb-1.5 block whitespace-nowrap text-[11px] font-bold uppercase tracking-wider text-gray-500">Por página</label>
-              <select id="familias-por-pagina-superior" class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-ihss-600" [ngModel]="registrosPorPaginaFamilias()" (ngModelChange)="cambiarRegistrosPorPaginaFamilias($event)">
-                @for (opc of opcionesRegistrosPorPagina; track opc) { <option [value]="opc">{{ opc }}</option> }
-              </select>
-            </div>
+            <app-page-size-selector [value]="registrosPorPaginaFamilias()" [options]="opcionesRegistrosPorPagina" ariaLabel="Familias por página" (valueChange)="cambiarRegistrosPorPaginaFamilias($event)" />
             <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de familias" aria-label="Limpiar filtros de familias" [disabled]="!filtroBuscarFamilia().trim() && filtroEstadoFamilia() === 'TODAS' && filtroVigenciaFamilia() === 'TODAS'" (click)="limpiarFiltrosFamilias()">
             <app-action-icon action="clear-filters"></app-action-icon>
           </button>
@@ -552,14 +474,7 @@
                 </tbody>
               </table>
             </div>
-            <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-4 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
-              <p>Mostrando <strong class="text-gray-900">{{ totalRegistrosFamilias() === 0 ? 0 : ((paginaFamilias() - 1) * registrosPorPaginaFamilias()) + 1 }}–{{ totalRegistrosFamilias() === 0 ? 0 : (paginaFamilias() * registrosPorPaginaFamilias() > totalRegistrosFamilias() ? totalRegistrosFamilias() : paginaFamilias() * registrosPorPaginaFamilias()) }}</strong> de <strong class="text-gray-900">{{ totalRegistrosFamilias() }}</strong> familias</p>
-              <div class="flex flex-wrap items-center gap-2">
-                 <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página anterior" aria-label="Página anterior" [disabled]="paginaFamilias() <= 1 || totalPaginasFamilias() === 0" (click)="cambiarPaginaFamilias(paginaFamilias() - 1)">Anterior</button>
-                <span class="rounded-lg bg-ihss-900 px-3 py-1.5 font-bold text-white">{{ totalPaginasFamilias() === 0 ? 0 : paginaFamilias() }} / {{ totalPaginasFamilias() }}</span>
-                 <button type="button" data-ui-control="navigation" class="rounded-lg border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 disabled:opacity-35" title="Página siguiente" aria-label="Página siguiente" [disabled]="totalPaginasFamilias() === 0 || paginaFamilias() >= totalPaginasFamilias()" (click)="cambiarPaginaFamilias(paginaFamilias() + 1)">Siguiente</button>
-              </div>
-            </div>
+            <app-data-pagination [page]="paginaFamilias()" [pageSize]="registrosPorPaginaFamilias()" [totalRecords]="totalRegistrosFamilias()" itemLabel="familias" [disabled]="cargandoFamilias()" (pageChange)="cambiarPaginaFamilias($event)" />
           }
         </div>
       </section>

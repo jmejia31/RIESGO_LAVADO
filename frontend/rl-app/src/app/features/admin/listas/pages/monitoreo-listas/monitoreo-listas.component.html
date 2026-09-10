@@ -209,15 +209,7 @@
             <app-action-icon action="clear-filters"></app-action-icon>
           </button>
 
-      <label class="w-full">
-        <span class="sr-only">Registros por página</span>
-        <select [ngModel]="limite()" (ngModelChange)="cambiarLimite(+$event)"
-          class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-ihss-600 transition-colors">
-          <option [value]="10">10 registros</option>
-          <option [value]="25">25 registros</option>
-          <option [value]="50">50 registros</option>
-        </select>
-      </label>
+      <app-page-size-selector [value]="limite()" [options]="[10, 25, 50]" ariaLabel="Monitoreo de listas por página" (valueChange)="cambiarLimite($event)" />
     </div>
 
     <!-- Tabla -->
@@ -565,37 +557,7 @@
             </tbody>
           </table>
 
-          <!-- Paginación -->
-          <div class="px-6 py-4 flex items-center justify-between border-t border-gray-150 bg-gray-50/30">
-            <div class="text-xs text-gray-500">
-              Mostrando {{ totalActual() === 0 ? 0 : (paginaActual() - 1) * limite() + 1 }} a {{ mathMin(paginaActual() * limite(), totalActual()) }} de {{ totalActual() }} registros
-            </div>
-            <div class="flex items-center gap-1">
-               <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() - 1)" [disabled]="paginaActual() === 1" title="Página anterior" aria-label="Página anterior"
-                class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              @for (page of paginasArray(); track page) {
-                <button data-ui-control="navigation" (click)="cambiarPagina(page)" [attr.aria-label]="'Ir a página ' + page"
-                  [class]="paginaActual() === page
-                    ? 'bg-ihss-900 text-white font-bold'
-                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'"
-                  class="w-8 h-8 rounded-lg flex items-center justify-center text-xs transition-all">
-                  {{ page }}
-                </button>
-              }
-
-              <button data-ui-control="navigation" (click)="cambiarPagina(paginaActual() + 1)" [disabled]="paginaActual() === paginasTotales()" title="Página siguiente" aria-label="Página siguiente"
-                class="p-2 border border-gray-200 rounded-lg bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-all">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <app-data-pagination [page]="paginaActual()" [pageSize]="limite()" [totalRecords]="totalActual()" itemLabel="registros" [disabled]="cargando()" (pageChange)="cambiarPagina($event)" />
 
         }
       }

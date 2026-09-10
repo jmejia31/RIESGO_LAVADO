@@ -81,11 +81,13 @@ type InstanciaInternaMonitoreo = {
  * título, secciones, orden, campos, tablas, mensajes vacíos y resúmenes del PDF.
  */
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html'
 })

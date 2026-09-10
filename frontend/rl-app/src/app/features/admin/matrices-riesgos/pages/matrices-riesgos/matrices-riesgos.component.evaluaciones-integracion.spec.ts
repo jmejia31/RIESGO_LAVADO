@@ -220,17 +220,17 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     fixture.detectChanges();
 
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
-    const btnAnterior = buttons.find(b => b.textContent?.includes('Anterior'));
-    const btnSiguiente = buttons.find(b => b.textContent?.includes('Siguiente'));
+    const btnAnterior = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página anterior'));
+    const btnSiguiente = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página siguiente'));
     const btnActivo = buttons.find(b => b.getAttribute('aria-current') === 'page');
 
     expect(btnAnterior).toBeTruthy();
     expect(btnSiguiente).toBeTruthy();
     expect(btnActivo?.textContent?.trim()).toBe('6');
-    expect(btnActivo?.getAttribute('aria-label')).toBe('Ir a la página 6');
+    expect(btnActivo?.getAttribute('aria-label')).toBe('Ir a página 6');
 
-    // 1 ... 4 5 6 7 8 ... 25
-    expect(component.paginasVisibles()).toEqual([1, 4, 5, 6, 7, 8, 25]);
+    // La ventana numérica es responsabilidad del componente compartido.
+    expect(fixture.nativeElement.querySelectorAll('app-data-pagination button[aria-label^="Ir a página"]').length).toBeLessThanOrEqual(7);
   });
 
   // 7. 0 REGISTROS
@@ -240,11 +240,11 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Mostrando 0 – 0');
+    expect(text).toContain('Mostrando 0 a 0');
 
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
-    const btnAnterior = buttons.find(b => b.textContent?.includes('Anterior'));
-    const btnSiguiente = buttons.find(b => b.textContent?.includes('Siguiente'));
+    const btnAnterior = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página anterior'));
+    const btnSiguiente = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página siguiente'));
 
     expect(btnAnterior?.disabled).toBe(true);
     expect(btnSiguiente?.disabled).toBe(true);
@@ -257,8 +257,8 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     fixture.detectChanges();
 
     const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
-    const btnAnterior = buttons.find(b => b.textContent?.includes('Anterior'));
-    const btnSiguiente = buttons.find(b => b.textContent?.includes('Siguiente'));
+    const btnAnterior = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página anterior'));
+    const btnSiguiente = buttons.find(b => b.getAttribute('aria-label')?.startsWith('Página siguiente'));
 
     expect(btnAnterior?.disabled).toBe(true);
     expect(btnSiguiente?.disabled).toBe(true);
@@ -271,7 +271,7 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Mostrando 21 – 23');
+    expect(text).toContain('Mostrando 21 a 23');
     expect(component.totalRegistros()).toBe(23);
   });
 

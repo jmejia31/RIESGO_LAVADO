@@ -6,11 +6,13 @@ import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.servi
 import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase11.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 
 @Component({
   selector: 'app-matrices-riesgos-gestion',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-gestion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -29,15 +31,6 @@ export class MatricesRiesgosGestionComponent implements OnInit {
   readonly totalRegistros = signal(0);
   private secuenciaCarga = 0;
   readonly totalPaginas = computed(() => this.totalRegistros() === 0 ? 0 : Math.ceil(this.totalRegistros() / this.tamanoPagina()));
-  readonly paginasVisibles = computed(() => {
-    const total = this.totalPaginas();
-    const actual = this.pagina();
-    if (total === 0) return [];
-    const pages = new Set([1, total]);
-    for (let page = Math.max(1, actual - 2); page <= Math.min(total, actual + 2); page++) pages.add(page);
-    return [...pages].sort((a, b) => a - b);
-  });
-
   codigo = '';
   nombre = '';
   descripcion = '';

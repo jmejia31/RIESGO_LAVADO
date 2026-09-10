@@ -94,7 +94,7 @@ test('muestra la consola de Bitácora y abre el detalle del evento', async ({ pa
   await expect(page.getByRole('cell', { name: 'Gestión de Usuarios' }).first()).toBeVisible();
   await expect(page.getByText('Modificación del registro #123 en RL_USUARIOS.', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Mostrando 1 a 10 de 1310 eventos', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('Mostrar', { exact: true })).toBeVisible();
+  await expect(page.locator('#bitacora-page-size')).toBeVisible();
   await page.screenshot({ path: 'test-results/bitacora-desktop-1366x768.png', fullPage: true });
 
   const request = page.waitForRequest(request => request.method() === 'GET' && request.url().includes('/api/auditoria') && request.url().includes('buscar=javier'));
@@ -126,7 +126,7 @@ test('mantiene paginación compacta y mueve el tamaño a la barra de filtros', a
 
   const pageSizeRequest = page.waitForRequest(request => request.method() === 'GET'
     && new URL(request.url()).searchParams.get('limite') === '25');
-  await page.getByLabel('Mostrar', { exact: true }).selectOption('25');
+  await page.locator('#bitacora-page-size').selectOption('25');
   await pageSizeRequest;
   await expect(page.getByText('Mostrando 1 a 25 de 1310 eventos', { exact: true })).toBeVisible();
   await expect(page.locator('[aria-label="Paginación de eventos de auditoría"] #bitacora-page-size')).toHaveCount(0);

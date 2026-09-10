@@ -135,10 +135,12 @@ describe('BitacoraComponent — rediseño institucional', () => {
 
   it('renderiza una ventana de paginación compacta y calcula correctamente el rango vacío', () => {
     component.totalRegistros.set(1310);
+    component.datos.set([evento]);
     fixture.detectChanges();
 
-    expect(component.paginationItems().filter(item => item.type === 'page').length).toBeLessThanOrEqual(7);
-    expect(component.paginationItems().some(item => item.type === 'ellipsis')).toBe(true);
+    const pagination = fixture.nativeElement.querySelector('app-data-pagination') as HTMLElement;
+    expect(pagination.querySelectorAll('button[aria-label^="Ir a página"]').length).toBeLessThanOrEqual(7);
+    expect(pagination.querySelector('span[aria-hidden="true"]')?.textContent).toContain('…');
     expect(component.showingRange()).toEqual({ start: 1, end: 10, total: 1310 });
 
     component.totalRegistros.set(0);

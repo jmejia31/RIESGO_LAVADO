@@ -29,6 +29,9 @@
         </svg>
       </div>
     } @else {
+      <div class="flex justify-end border-b border-gray-100 px-5 py-3">
+        <app-page-size-selector [value]="registrosPorPagina()" [options]="[10, 25, 50]" ariaLabel="Usuarios por página" (valueChange)="cambiarRegistrosPorPagina($event)" />
+      </div>
       <div class="overflow-x-auto custom-scrollbar">
       <table class="min-w-[920px] w-full text-sm">
         <thead>
@@ -99,17 +102,7 @@
         </tbody>
       </table>
       </div>
-      <div class="flex flex-col gap-3 border-t border-gray-100 bg-gray-50/40 px-5 py-3 text-xs text-gray-600 sm:flex-row sm:items-center sm:justify-between">
-        <span>Mostrando {{ totalRegistros() === 0 ? 0 : ((paginaActual() - 1) * registrosPorPagina()) + 1 }} a {{ Math.min(paginaActual() * registrosPorPagina(), totalRegistros()) }} de {{ totalRegistros() }} usuarios</span>
-        <div class="flex items-center gap-1.5">
-          <button type="button" class="rounded-lg border border-gray-200 bg-white px-2 py-1.5 disabled:opacity-40" [disabled]="paginaActual() <= 1" (click)="cambiarPagina(paginaActual() - 1)" aria-label="Página anterior de usuarios" title="Página anterior de usuarios">‹</button>
-          <span class="rounded-lg bg-ihss-900 px-2.5 py-1.5 font-bold text-white">{{ totalPaginas() === 0 ? 0 : paginaActual() }} / {{ totalPaginas() }}</span>
-          <button type="button" class="rounded-lg border border-gray-200 bg-white px-2 py-1.5 disabled:opacity-40" [disabled]="paginaActual() >= totalPaginas()" (click)="cambiarPagina(paginaActual() + 1)" aria-label="Página siguiente de usuarios" title="Página siguiente de usuarios">›</button>
-          <select class="ml-2 rounded-lg border border-gray-200 bg-white px-2 py-1.5" [ngModel]="registrosPorPagina()" (ngModelChange)="cambiarRegistrosPorPagina($event)" aria-label="Usuarios por página">
-            <option [value]="10">10</option><option [value]="25">25</option><option [value]="50">50</option>
-          </select>
-        </div>
-      </div>
+      <app-data-pagination [page]="paginaActual()" [pageSize]="registrosPorPagina()" [totalRecords]="totalRegistros()" itemLabel="usuarios" [disabled]="cargando()" (pageChange)="cambiarPagina($event)" />
     }
   </div>
 

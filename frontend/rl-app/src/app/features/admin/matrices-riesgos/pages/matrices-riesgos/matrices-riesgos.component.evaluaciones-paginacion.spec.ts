@@ -167,25 +167,27 @@ describe('MatricesRiesgosComponent — evaluaciones: paginación y concurrencia'
     expect(serviceMock.listarEvaluaciones).not.toHaveBeenCalled();
   });
 
-  it('6. 0 registros: pagina coherente y 0 paginasVisibles', () => {
+  it('6. 0 registros: pagina coherente y sin páginas navegables', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(of(crearPaginado(1, 10, 0, 0, 0)));
 
     component.cargarEvaluaciones();
+    fixture.detectChanges();
 
     expect(component.totalRegistros()).toBe(0);
     expect(component.totalPaginas()).toBe(0);
     expect(component.pagina()).toBe(1);
-    expect(component.paginasVisibles()).toEqual([]);
+    expect(fixture.nativeElement.querySelectorAll('app-data-pagination button[aria-label^="Ir a página"]').length).toBe(0);
   });
 
   it('7. 1 página: Anterior/Siguiente no navegables', () => {
     serviceMock.listarEvaluaciones.mockReturnValue(of(crearPaginado(1, 10, 5, 1, 5)));
 
     component.cargarEvaluaciones();
+    fixture.detectChanges();
 
     expect(component.pagina()).toBe(1);
     expect(component.totalPaginas()).toBe(1);
-    expect(component.paginasVisibles()).toEqual([1]);
+    expect(fixture.nativeElement.querySelectorAll('app-data-pagination button[aria-label^="Ir a página"]').length).toBe(1);
   });
 
   it('8. Page-size: 10 -> 20, pagina=1, filtros preservados, 1 consulta', () => {
@@ -236,39 +238,6 @@ describe('MatricesRiesgosComponent — evaluaciones: paginación y concurrencia'
     component.cambiarRegistrosPorPagina(10);
 
     expect(serviceMock.listarEvaluaciones).not.toHaveBeenCalled();
-  });
-
-  it('12. paginasVisibles en inicio', () => {
-    component.totalPaginas.set(10);
-    component.pagina.set(1);
-
-    expect(component.paginasVisibles()).toEqual([1, 2, 3, 10]);
-  });
-
-  it('13. paginasVisibles intermedia', () => {
-    component.totalPaginas.set(25);
-    component.pagina.set(6);
-
-    expect(component.paginasVisibles()).toEqual([1, 4, 5, 6, 7, 8, 25]);
-  });
-
-  it('14. paginasVisibles final', () => {
-    component.totalPaginas.set(10);
-    component.pagina.set(10);
-
-    expect(component.paginasVisibles()).toEqual([1, 8, 9, 10]);
-  });
-
-  it('15. gaps correctos', () => {
-    component.totalPaginas.set(20);
-    component.pagina.set(10);
-
-    const vis = component.paginasVisibles();
-    expect(vis).toEqual([1, 8, 9, 10, 11, 12, 20]);
-    // Gap 1 -> 8 es > 1 (requiere ellipsis)
-    expect(vis[1] - vis[0]).toBeGreaterThan(1);
-    // Gap 12 -> 20 es > 1 (requiere ellipsis)
-    expect(vis[vis.length - 1] - vis[vis.length - 2]).toBeGreaterThan(1);
   });
 
   it('16. Concurrencia: Respuesta A pendiente, B nueva, B SUCCESS, A SUCCESS -> Prevalece B', () => {
@@ -522,7 +491,7 @@ describe('MatricesRiesgosComponent — evaluaciones: paginación y concurrencia'
     fixture.detectChanges();
 
     const btnAnterior = Array.from(fixture.nativeElement.querySelectorAll('button'))
-      .find((b: any) => b.textContent.includes('Anterior'));
+      .find((b: any) => b.getAttribute('aria-label')?.startsWith('Página anterior'));
 
     expect((btnAnterior as HTMLButtonElement).disabled).toBe(true);
   });

@@ -7,12 +7,14 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import * as XLSX from '../../../../../core/utils/excel-export.util';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 @Component({
   selector: 'app-coincidencias-empleado',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
   templateUrl: './coincidencias-empleado.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

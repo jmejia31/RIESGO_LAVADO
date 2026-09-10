@@ -45,12 +45,14 @@ import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-sema
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 @Component({
   selector: 'app-matrices-riesgos',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, FormBuilderComponent, DynamicFieldRendererComponent],
   templateUrl: './matrices-riesgos.component.html',
   styleUrl: './matrices-riesgos.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -189,27 +191,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluaciones = signal<EvaluacionRiesgoResumenDto[]>([]);
   readonly totalRegistros = signal(0);
   readonly totalPaginas = signal(0);
-
-  readonly paginasVisibles = computed<number[]>(() => {
-    const total = this.totalPaginas();
-    const actual = this.pagina();
-
-    if (total <= 0) return [];
-
-    const candidatos = [
-      1,
-      actual - 2,
-      actual - 1,
-      actual,
-      actual + 1,
-      actual + 2,
-      total
-    ];
-
-    const validos = candidatos.filter(p => Number.isInteger(p) && p >= 1 && p <= total);
-    const unicos = Array.from(new Set(validos));
-    return unicos.sort((a, b) => a - b);
-  });
 
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);

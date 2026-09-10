@@ -13,11 +13,13 @@ import { ResultadoValidacionAd } from '../../models/active-directorio.models';
 type EstadoAd = 'idle' | 'verificando' | 'valido' | 'no-existe' | 'bloqueado' | 'inactivo' | 'error';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 
 @Component({
   selector:    'app-usuarios',
   standalone:  true,
-  imports:     [ActionIconComponent, CommonModule, FormsModule, ReactiveFormsModule],
+  imports:     [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './usuarios.component.html',
   changeDetection: ChangeDetectionStrategy.Eager
 })

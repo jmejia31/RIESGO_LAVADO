@@ -263,7 +263,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     const panel = fixture.nativeElement.querySelector('#panel-evaluaciones') as HTMLElement;
     const textoSinEspacios = (panel.textContent || '').replace(/\s+/g, '');
     expect(textoSinEspacios).toContain('de37registros');
-    expect(textoSinEspacios).toContain('Pág.1de4');
+    expect(textoSinEspacios).toContain('Mostrando1a10de37registros');
   });
 
   it('presenta estado vacio institucional sin romper las nueve columnas', () => {

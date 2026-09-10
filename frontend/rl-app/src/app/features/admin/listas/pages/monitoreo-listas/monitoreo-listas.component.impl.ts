@@ -9,6 +9,8 @@ import * as XLSX from '../../../../../core/utils/excel-export.util';
 import { agregarEncabezadoInstitucionalPdf, agregarPiesInstitucionalesPdf, asegurarEspacioSeccionPdf, autoTableInstitucional } from '../../../../../core/reporting/institutional-report.util';
 import { of, forkJoin, Observable } from 'rxjs';
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
+import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
 import { ReportPreviewService } from '../../../../../shared/report-preview/report-preview.service';
 
 type FiltroTipo = 'juridica' | 'natural' | 'empleado';
@@ -19,7 +21,7 @@ type MonitoreoRegistro = CoincidenciaJuridica | CoincidenciaNatural | Coincidenc
 @Component({
   selector: 'app-monitoreo-listas',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, DataPaginationComponent, PageSizeSelectorComponent, CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './monitoreo-listas.component.html',
 })
@@ -376,15 +378,6 @@ export class MonitoreoListasComponent implements OnInit {
     if (this.tipoActivo() === 'juridica') return this.juridicasPaginas();
     if (this.tipoActivo() === 'natural') return this.naturalesPaginas();
     return this.empleadosPaginas();
-  });
-
-  paginasArray = computed(() => {
-    const total = this.paginasTotales();
-    const actual = this.paginaActual();
-    if (total <= 0) return [];
-    const paginas = new Set<number>([1, total]);
-    for (let pagina = Math.max(1, actual - 2); pagina <= Math.min(total, actual + 2); pagina++) paginas.add(pagina);
-    return [...paginas].sort((a, b) => a - b);
   });
 
   abrirDetalle(row: CoincidenciaNatural) {

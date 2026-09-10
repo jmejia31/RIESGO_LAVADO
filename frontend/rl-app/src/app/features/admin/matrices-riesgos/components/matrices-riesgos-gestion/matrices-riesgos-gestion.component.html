@@ -39,6 +39,9 @@
     </div>
   </form>
 
+  <div class="flex justify-end">
+    <app-page-size-selector [value]="tamanoPagina()" [options]="[10, 25, 50]" ariaLabel="Riesgos por página" (valueChange)="cambiarTamanoPagina($event)" />
+  </div>
   <div class="overflow-x-auto rounded-xl border border-slate-200">
     <table class="min-w-[760px] w-full divide-y divide-slate-200 text-sm">
       <thead class="bg-slate-100 text-left text-xs uppercase text-slate-600"><tr><th class="px-4 py-3">Código</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Descripción</th><th class="px-4 py-3">Estado</th><th class="px-4 py-3">Acción</th></tr></thead>
@@ -51,17 +54,5 @@
       </tbody>
     </table>
   </div>
-  <div class="flex flex-col gap-3 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-    <span>Mostrando {{ totalRegistros() === 0 ? 0 : ((pagina() - 1) * tamanoPagina()) + 1 }} a {{ Math.min(pagina() * tamanoPagina(), totalRegistros()) }} de {{ totalRegistros() }} riesgos</span>
-    <div class="flex items-center gap-1" aria-label="Paginación de riesgos">
-      <button type="button" class="rounded-lg border border-slate-300 px-2 py-1 disabled:opacity-40" [disabled]="pagina() <= 1" (click)="cambiarPagina(pagina() - 1)" title="Página anterior de riesgos" aria-label="Página anterior de riesgos">‹</button>
-      @for (page of paginasVisibles(); track page) {
-        <button type="button" class="min-w-8 rounded-lg border px-2 py-1" [class.bg-slate-900]="page === pagina()" [class.text-white]="page === pagina()" [class.border-slate-900]="page === pagina()" (click)="cambiarPagina(page)" [attr.aria-current]="page === pagina() ? 'page' : null">{{ page }}</button>
-      }
-      <button type="button" class="rounded-lg border border-slate-300 px-2 py-1 disabled:opacity-40" [disabled]="pagina() >= totalPaginas()" (click)="cambiarPagina(pagina() + 1)" title="Página siguiente de riesgos" aria-label="Página siguiente de riesgos">›</button>
-      <select class="ml-2 rounded-lg border border-slate-300 px-2 py-1" [ngModel]="tamanoPagina()" (ngModelChange)="cambiarTamanoPagina(+$event)" aria-label="Riesgos por página">
-        <option [ngValue]="10">10</option><option [ngValue]="25">25</option><option [ngValue]="50">50</option>
-      </select>
-    </div>
-  </div>
+  <app-data-pagination [page]="pagina()" [pageSize]="tamanoPagina()" [totalRecords]="totalRegistros()" itemLabel="riesgos" [disabled]="cargando()" (pageChange)="cambiarPagina($event)" />
 </section>
