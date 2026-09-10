@@ -1172,3 +1172,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificación local fresca: spec focal `2/2`; frontend `781/781` en `78` archivos; backend Release `616/616`; E2E `36/36`; lint, build, npm audit (`0 vulnerabilities`), scripts de base de datos, enlaces y `git diff --check` PASS.
 - Limitaciones: el validador estructural mantiene tres hallazgos legacy fuera de alcance y Python no está operativo para `validate_agent_skills.py`; no se presentan como PASS. No se alteraron los tres untracked preexistentes.
 - Estado: pendiente stage explícito, commit, push y Quality Gate del SHA final exacto. Se preservan las garantías de rendimiento y paginación del cierre anterior; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
+
+### Cierre MONITOREO-LISTAS-KPI-DEDUP.1
+
+- Commit final: `9d7e347ce142a37218fd63ba48af158774ac3c3a`; Quality Gate `RUN=34506694997`; `STATUS=completed`; `CONCLUSION=success`.
+- Estado final: `MONITORING_TOP_KPI_CARDS=5`; `MONITORING_SELECTED_VIEW_DUPLICATE_BLOCK=0`; `MONITORING_KPI_DUPLICATION=0`; `MONITORING_CLOSED_PASSIVE_TOP_CARD=PASS`; `MONITORING_KPI_LAYOUT_RESPONSIVE=PASS`; `COPY_KPI_TOTAL_SEMANTICALLY_CORRECT=PASS`; `ADDITIONAL_KPI_HTTP_REQUESTS=0`; `ADDITIONAL_KPI_DB_QUERIES=0`; `MONITORING_HIDDEN_LEGACY_UI=0`.
+- La implementación mantiene los contratos de paginación y rendimiento, reutiliza metadata existente para los cinco indicadores y no agrega consultas ni llamadas HTTP. No hubo cambios backend/API/Oracle/dependencias.
+- Verificación: frontend `781/781`, backend `616/616`, E2E `36/36`; lint, build, audit (`0 vulnerabilities`), validadores de database/documentation links y diff check PASS. Se conservan documentadas las limitaciones del validador estructural legacy y Python no operativo.
+- Estado remoto: `BRANCH=desarrollo`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.
