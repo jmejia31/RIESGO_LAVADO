@@ -1196,3 +1196,8 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Commit final publicado en `origin/desarrollo`: `a18dbda`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `main` intacta en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.
 - No se obtuvo Quality Gate exitoso para la certificación: el benchmark full-stack contra Oracle real permanece `FAIL` con `FAILED_REQUESTS=22`. La deuda requiere una mejora reproducible de Oracle/infraestructura y una nueva medición; no se presenta como PASS.
 - Actualización remota: el Quality Gate técnico del commit `268da8188b830679aa5236013e105c681da0ffc1` completó con `RUN=34529019503`, `STATUS=completed`, `CONCLUSION=success`; se mantiene separado de la certificación de rendimiento, que continúa `FAIL`.
+
+### Cierre documental final
+
+- Commit documental final publicado: `bf3bc7e9751eabd953ddece04dc4897a2fec3ce6`; Quality Gate exacto `RUN=34529715575`; `STATUS=completed`; `CONCLUSION=success`. `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `main` intacta.
+- Certificación: `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL`; `FULL_STACK_HTTP_BENCHMARK=FAIL`; `FAILED_REQUESTS=22`. El gate verde valida el repositorio, no la superación del umbral de latencia Oracle.
