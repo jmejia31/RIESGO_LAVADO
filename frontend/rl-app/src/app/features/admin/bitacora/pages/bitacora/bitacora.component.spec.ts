@@ -105,14 +105,35 @@ describe('BitacoraComponent — rediseño institucional', () => {
     fixture.detectChanges();
 
     const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
-    expect(dialog.querySelector('h2')?.textContent).toContain('Detalle de Auditoría');
-    expect(dialog.textContent).toContain('Valores anteriores');
-    expect(dialog.textContent).toContain('Valores nuevos');
+    expect(dialog.querySelector('h2')?.textContent).toContain('Detalle de Registro #42');
+    expect(dialog.textContent).toContain('Descripción del Evento');
+    expect(dialog.textContent).toContain('Valor Anterior');
+    expect(dialog.textContent).toContain('Valor Nuevo');
+    expect(dialog.textContent).toContain('Método HTTP');
+    expect(dialog.textContent).toContain('Correlation ID');
+    expect(dialog.textContent).toContain('User Agent');
     expect(dialog.textContent).toContain('activo');
     expect(dialog.textContent).toContain('"nivel"');
     expect(dialog.textContent).not.toContain('[object Object]');
     expect(dialog.querySelectorAll('button')).toHaveLength(2);
     expect(Array.from(dialog.querySelectorAll('button')).every(button => !(button.textContent ?? '').trim())).toBe(true);
+  });
+
+  it('presenta resultado y descripción específica cuando el payload de auditoría los contiene', () => {
+    component.verDetalle({
+      ...evento,
+      accion: 'LOGIN',
+      datosAnt: undefined,
+      datosNvo: '{"Resultado":"EXITOSO","Identificador":"javier.mejia@ihss.hn"}'
+    });
+    fixture.detectChanges();
+
+    const dialog = fixture.nativeElement.querySelector('[role="dialog"]') as HTMLElement;
+    expect(dialog.textContent).toContain('Inicio de sesión exitoso para usuario: javier.mejia@ihss.hn');
+    expect(dialog.textContent).toContain('EXITOSO');
+    expect(dialog.textContent).toContain('Regional:');
+    expect(dialog.textContent).toContain('N/D');
+    expect(component.getRegistroDetalleLabel(evento)).toBe('Usuario (#123)');
   });
 
   it('usa un estado vacío específico para eventos de auditoría', () => {

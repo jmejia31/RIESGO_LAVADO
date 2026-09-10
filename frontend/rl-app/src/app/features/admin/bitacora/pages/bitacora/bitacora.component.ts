@@ -51,6 +51,47 @@ export class BitacoraComponent implements OnInit {
     return { start, end, total };
   });
 
+  detalleAuditoria = computed(() => {
+    const row = this.registroSeleccionado();
+    if (!row) {
+      return {
+        descripcion: '',
+        resultado: 'N/D',
+        regional: 'N/D',
+        metodoHttp: 'N/D',
+        endpoint: 'N/D',
+        correlationId: 'N/D',
+        userAgent: 'N/D',
+        identificador: 'N/D'
+      };
+    }
+
+    const payloads = [this.parseAuditObject(row.datosNvo), this.parseAuditObject(row.datosAnt)]
+      .filter((value): value is Record<string, unknown> => value !== null);
+    const read = (...aliases: string[]) => {
+      for (const payload of payloads) {
+        const value = this.findAuditValue(payload, aliases);
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return this.serializeAuditMetadataValue(value);
+        }
+      }
+      return 'N/D';
+    };
+
+    const resultado = read('Resultado', 'Result', 'EstadoResultado', 'Status');
+    const identificador = read('Identificador', 'Usuario', 'Username', 'Email');
+    return {
+      descripcion: this.buildDetalleDescripcion(row, resultado, identificador),
+      resultado,
+      regional: read('Regional', 'RegionalId', 'Region', 'RegionId'),
+      metodoHttp: read('MetodoHttp', 'MetodoHTTP', 'HttpMethod', 'Method', 'Metodo'),
+      endpoint: read('Endpoint', 'Ruta', 'Path', 'Url'),
+      correlationId: read('CorrelationId', 'CorrelationID', 'RequestId', 'TraceId'),
+      userAgent: read('UserAgent', 'User-Agent', 'Browser', 'Navegador'),
+      identificador
+    };
+  });
+
   propiedadesComparadas = computed(() => {
     const row = this.registroSeleccionado();
     if (!row) return { esJson: false, ant: [], nvo: [] };
@@ -270,6 +311,86 @@ export class BitacoraComponent implements OnInit {
       case 'UPLOAD': return `Carga registrada en ${entidad}${registro}.`;
       default: return `Evento ${row.accion} registrado en ${entidad}${registro}.`;
     }
+  }
+
+  getRegistroDetalleLabel(row: AuditoriaDto | null): string {
+    if (!row) return 'N/D';
+    const tabla = row.tabla?.trim() || 'Registro';
+    const entidad = tabla === 'RL_USUARIOS'
+      ? 'Usuario'
+      : tabla === 'RL_LISTA_POSITIVOS'
+        ? 'Registro de Lista Positiva'
+        : tabla;
+    return row.registroId ? `${entidad} (#${row.registroId})` : entidad;
+  }
+
+  getResultadoBadgeClass(resultado: string): string {
+    const value = (resultado || '').toUpperCase();
+    if (value.includes('EXITO') || value.includes('SUCCESS') || value === 'OK') {
+      return 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/10';
+    }
+    if (value.includes('FALL') || value.includes('ERROR') || value.includes('FAIL')) {
+      return 'bg-red-50 text-red-700 ring-1 ring-red-600/10';
+    }
+    return 'bg-gray-50 text-gray-700 ring-1 ring-gray-600/10';
+  }
+
+  private buildDetalleDescripcion(row: AuditoriaDto, resultado: string, identificador: string): string {
+    const action = row.accion.toUpperCase();
+    const normalizedResult = resultado.toUpperCase();
+    const actor = identificador !== 'N/D' ? identificador : (row.usrEmail || 'usuario');
+
+    if (action === 'LOGIN') {
+      if (normalizedResult.includes('EXITO') || normalizedResult.includes('SUCCESS')) {
+        return `Inicio de sesión exitoso para usuario: ${actor}`;
+      }
+      if (normalizedResult.includes('FALL') || normalizedResult.includes('ERROR') || normalizedResult.includes('FAIL')) {
+        return `Intento de inicio de sesión fallido para usuario: ${actor}`;
+      }
+    }
+
+    return this.getDescripcionEvento(row);
+  }
+
+  private parseAuditObject(value?: string | null): Record<string, unknown> | null {
+    if (!value) return null;
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? parsed as Record<string, unknown>
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private findAuditValue(source: Record<string, unknown>, aliases: string[]): unknown {
+    const normalize = (value: string) => value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[\s_\-]/g, '')
+      .toLowerCase();
+    const expected = new Set(aliases.map(normalize));
+
+    for (const [key, value] of Object.entries(source)) {
+      if (expected.has(normalize(key))) return value;
+    }
+
+    for (const value of Object.values(source)) {
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const nested = this.findAuditValue(value as Record<string, unknown>, aliases);
+        if (nested !== undefined) return nested;
+      }
+    }
+
+    return undefined;
+  }
+
+  private serializeAuditMetadataValue(value: unknown): string {
+    if (value === null || value === undefined) return 'N/D';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') return JSON.stringify(value);
+    return String(value);
   }
 
   verDetalle(row: AuditoriaDto) {
