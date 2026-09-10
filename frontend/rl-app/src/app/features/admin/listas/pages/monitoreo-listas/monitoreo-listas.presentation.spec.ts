@@ -81,4 +81,42 @@ describe('MonitoreoListasComponent — deduplicación de detalle', () => {
     expect(subjectCard?.textContent).toContain(nombre);
     expect(subjectCard?.textContent).toContain(documento);
   });
+
+  it('renderiza cinco KPIs superiores sin bloque duplicado y cambia con el tipo activo', () => {
+    fixture.detectChanges();
+    component.juridicasTotales.set({
+      totalRegistros: 10, pendientes: 4, conMotivo: 3, manuales: 2, cerradosPasivos: 1
+    });
+    component.naturalesTotales.set({
+      totalRegistros: 20, pendientes: 8, conMotivo: 6, manuales: 4, cerradosPasivos: 2
+    });
+    component.empleadosTotales.set({
+      totalRegistros: 30, pendientes: 12, conMotivo: 9, manuales: 6, cerradosPasivos: 3
+    });
+    component.cargando.set(false);
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const cards = () => Array.from(root.querySelectorAll('[data-ui-monitoring-kpi]')) as HTMLElement[];
+
+    expect(root.querySelector('[data-ui-monitoring-kpis]')).not.toBeNull();
+    expect(cards()).toHaveLength(5);
+    expect(cards().map(card => card.dataset['uiMonitoringKpi'])).toEqual([
+      'active', 'pending', 'with-reason', 'manual', 'closed-passive'
+    ]);
+    expect(root.querySelector('[data-ui-monitoring-selected-view]')).toBeNull();
+    expect(root.textContent).not.toContain('Vista seleccionada');
+    expect(root.textContent).not.toContain('Total consolidado del módulo');
+    expect(root.querySelector('[data-ui-monitoring-kpi="closed-passive"]')?.textContent).toContain('1');
+
+    component.tipoActivo.set('natural');
+    fixture.detectChanges();
+    expect(root.querySelector('[data-ui-monitoring-kpi="active"]')?.textContent).toContain('20');
+    expect(root.querySelector('[data-ui-monitoring-kpi="closed-passive"]')?.textContent).toContain('2');
+
+    component.tipoActivo.set('empleado');
+    fixture.detectChanges();
+    expect(root.querySelector('[data-ui-monitoring-kpi="active"]')?.textContent).toContain('30');
+    expect(root.querySelector('[data-ui-monitoring-kpi="closed-passive"]')?.textContent).toContain('3');
+  });
 });

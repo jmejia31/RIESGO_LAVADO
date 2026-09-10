@@ -1162,3 +1162,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Evidencia real: medianas SQLPlus de cuatro ejecuciones con conexión incluida: jurídicas `648 -> 505 ms`, naturales `4472 -> 1770 ms`, empleados `1744 -> 792 ms`. Dataset accesible pequeño; no se declara objetivo API productivo <=5 s sin entorno reproducible equivalente.
 - Regresión final: backend `616/616`; frontend `780/780` en `78` archivos; E2E `36/36`; lint, build, npm audit (`0 vulnerabilities`), restore/build/test .NET, validadores de base de datos/enlaces, guardas de matrices y diff check PASS.
 - Restricciones: `ORACLE_DDL=0`; `ORACLE_DATA_MIGRATION=0`; `DEPENDENCY_CHANGES=0`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`. `validate_agent_skills.py` permanece pendiente localmente por ausencia de Python operativo.
+
+## Estado vigente - MONITOREO-LISTAS-KPI-DEDUP.1
+
+- Fecha/hora local: `2026-09-10 11:07 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo `8bc459baa8b04070a71dbfe51247b82da373fadb`. `main` permanece intacta y los tres untracked preexistentes se preservan sin stagear.
+- Se corrigió exclusivamente la presentación de KPIs de Monitoreo de Listas. La grilla superior tiene cinco tarjetas: coincidencias activas, pendientes de motivo, con motivo registrado, positivos manuales y cerrados/pasivos. La quinta reutiliza `cerradosPasivosGeneral()` sin endpoint ni consulta adicional.
+- Se eliminó completamente del template el bloque productivo `Vista seleccionada` y sus cuatro indicadores duplicados, junto con markup legacy oculto sustituido. El copy del total ahora es `Total de coincidencias del tipo seleccionado`; el layout superior usa grid responsive 1/2/3/5 y la tarjeta cerrados/pasivos usa semántica neutral slate.
+- Archivos modificados: template y spec de presentación de Monitoreo de Listas, además de `BITACORA_COLABORACION.md` y este estado vivo. No hay cambios backend/API/Oracle/dependencias ni cambios a paginación o SQL.
+- Verificación local fresca: spec focal `2/2`; frontend `781/781` en `78` archivos; backend Release `616/616`; E2E `36/36`; lint, build, npm audit (`0 vulnerabilities`), scripts de base de datos, enlaces y `git diff --check` PASS.
+- Limitaciones: el validador estructural mantiene tres hallazgos legacy fuera de alcance y Python no está operativo para `validate_agent_skills.py`; no se presentan como PASS. No se alteraron los tres untracked preexistentes.
+- Estado: pendiente stage explícito, commit, push y Quality Gate del SHA final exacto. Se preservan las garantías de rendimiento y paginación del cierre anterior; `FASE_5_3_REANUDABLE=TRUE`; `FASE_5_3_REANUDADA=FALSE`.

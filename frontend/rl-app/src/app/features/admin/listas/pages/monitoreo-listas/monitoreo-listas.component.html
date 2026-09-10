@@ -49,116 +49,36 @@
     </div>
 
     <div class="p-5 space-y-5">
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+      <div data-ui-monitoring-kpis class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 items-stretch">
+        <article data-ui-monitoring-kpi="active" class="flex h-full flex-col rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Coincidencias activas</p>
           <p class="mt-2 text-3xl font-bold text-gray-900">{{ totalGeneral() }}</p>
-          <p class="text-xs text-gray-500">Total consolidado del módulo</p>
+          <p class="mt-auto pt-2 text-xs text-gray-500">Total de coincidencias del tipo seleccionado</p>
         </article>
-        <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
+        <article data-ui-monitoring-kpi="pending" class="flex h-full flex-col rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Pendientes de motivo</p>
           <p class="mt-2 text-3xl font-bold text-amber-700">{{ pendientesGeneral() }}</p>
-          <p class="text-xs text-amber-700/80">Requieren análisis de Cumplimiento</p>
+          <p class="mt-auto pt-2 text-xs text-amber-700/80">Requieren análisis de Cumplimiento</p>
         </article>
-        <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
+        <article data-ui-monitoring-kpi="with-reason" class="flex h-full flex-col rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Con motivo registrado</p>
           <p class="mt-2 text-3xl font-bold text-emerald-700">{{ conMotivoGeneral() }}</p>
-          <p class="text-xs text-emerald-700/80">Preparadas para seguimiento</p>
+          <p class="mt-auto pt-2 text-xs text-emerald-700/80">Preparadas para seguimiento</p>
         </article>
-        <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
+        <article data-ui-monitoring-kpi="manual" class="flex h-full flex-col rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
           <p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Positivos manuales</p>
           <p class="mt-2 text-3xl font-bold text-blue-700">{{ positivosManualesGeneral() }}</p>
-          <p class="text-xs text-blue-700/80">Registrados por la Sección de Cumplimiento</p>
+          <p class="mt-auto pt-2 text-xs text-blue-700/80">Registrados por la Sección de Cumplimiento</p>
+        </article>
+        <article data-ui-monitoring-kpi="closed-passive" class="flex h-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <p class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Cerrados / Pasivos</p>
+          <p class="mt-2 text-3xl font-bold text-slate-700">{{ cerradosPasivosGeneral() }}</p>
+          <p class="mt-auto pt-2 text-xs text-slate-600">Registros cerrados o fuera de seguimiento activo</p>
         </article>
       </div>
 
-      <div class="grid grid-cols-1 xl:grid-cols-[1.2fr_0.8fr] gap-4">
-        <section class="rounded-xl border border-gray-100 bg-gray-50 p-4">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Vista seleccionada</p>
-              <h3 class="text-base font-bold text-gray-900">{{ etiquetaTipoActivo() }}</h3>
-            </div>
-            <span class="rounded-full bg-white px-3 py-1 text-xs font-bold text-gray-600 border border-gray-200">
-              {{ totalActual() }} registro(s)
-            </span>
-          </div>
-          <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div class="rounded-lg bg-white p-3 border border-gray-100">
-              <p class="text-[11px] font-semibold text-gray-400 uppercase">Pendientes</p>
-              <p class="text-xl font-bold text-amber-700">{{ pendientesActual() }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 border border-gray-100">
-              <p class="text-[11px] font-semibold text-gray-400 uppercase">Con motivo</p>
-              <p class="text-xl font-bold text-emerald-700">{{ conMotivoActual() }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 border border-gray-100">
-              <p class="text-[11px] font-semibold text-gray-400 uppercase">Manuales</p>
-              <p class="text-xl font-bold text-blue-700">{{ positivosManualesActual() }}</p>
-            </div>
-            <div class="rounded-lg bg-white p-3 border border-gray-100">
-              <p class="text-[11px] font-semibold text-gray-400 uppercase">Cerrados / Pasivos</p>
-              <p class="text-xl font-bold text-slate-700">{{ cerradosPasivosActual() }}</p>
-            </div>
-          </div>
-        </section>
-
-      </div>
     </div>
   </section>
-
-  <!-- Encabezado -->
-  <div class="hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex-col md:flex-row justify-between items-start md:items-center gap-4">
-    <div>
-      <h2 class="text-2xl font-bold text-gray-800">Monitoreo de Listas</h2>
-      <p class="text-sm text-gray-500">Coincidencias en listas de riesgo clasificadas por categoría.</p>
-    </div>
-    <button (click)="agregarPositivoManual()" title="Agregar positivo manual" aria-label="Agregar positivo manual"
-      class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 shadow-sm">
-            <app-action-icon action="create"></app-action-icon>
-          </button>
-  </div>
-
-  <!-- Filtros en forma de Botones Grandes (Categorías) -->
-  <div class="hidden grid-cols-3 gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
-
-    <!-- Botón Jurídicas -->
-    <button data-ui-control="selection" (click)="cambiarTipo('juridica')"
-      [class]="tipoActivo() === 'juridica'
-        ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20'
-        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'"
-      class="flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-all duration-200 gap-2">
-      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
-      </svg>
-      <span class="text-sm sm:text-base">Jurídicas</span>
-    </button>
-
-    <!-- Botón Naturales -->
-    <button data-ui-control="selection" (click)="cambiarTipo('natural')"
-      [class]="tipoActivo() === 'natural'
-        ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20'
-        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'"
-      class="flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-all duration-200 gap-2">
-      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-      <span class="text-sm sm:text-base">Naturales</span>
-    </button>
-
-    <!-- Botón Empleados -->
-    <button data-ui-control="selection" (click)="cambiarTipo('empleado')"
-      [class]="tipoActivo() === 'empleado'
-        ? 'bg-ihss-900 text-white ring-2 ring-ihss-600/20'
-        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'"
-      class="flex flex-col items-center justify-center p-4 rounded-xl font-semibold transition-all duration-200 gap-2">
-      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-      <span class="text-sm sm:text-base">Empleados</span>
-    </button>
-
-  </div>
 
   <!-- Buscador y Tabla de Contenido -->
   <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-5">
