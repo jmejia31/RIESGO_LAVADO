@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-09-10T21:33:44.931Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "DOTNET_PRODUCTION_REAL_ORACLE_HYPOTHESIS_NATURAL_AGG",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 1,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [],
+      "minMs": null,
+      "maxMs": null,
+      "meanMs": null,
+      "medianMs": null,
+      "p90Ms": null,
+      "p95Ms": null,
+      "totalRecords": 0,
+      "datasetVolumeClass": "EMPTY",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": {
+        "minMs": 8691.29,
+        "maxMs": 8691.29,
+        "meanMs": 8691.29,
+        "medianMs": 8691.29,
+        "p90Ms": 8691.29,
+        "p95Ms": 8691.29,
+        "samplesMs": [
+          8691.29
+        ]
+      },
+      "concurrency5": null,
+      "failures": [
+        "cold: timeout 10000ms (10008.76ms)",
+        "warm-warmup-1: timeout 10000ms (10016.75ms)",
+        "warm-run-1: timeout 10000ms (10010.20ms)"
+      ],
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 3,
+  "result": "FAIL"
+}

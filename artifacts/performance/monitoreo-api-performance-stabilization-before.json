@@ -1,0 +1,76 @@
+{
+  "generatedAt": "2026-09-10T21:23:08.004Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "DOTNET_DEBUG_REAL_ORACLE_BASELINE",
+    "oracleReal": true,
+    "runs": 3,
+    "warmups": 1,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": 6717.7,
+      "warmSamplesMs": [
+        9449.7,
+        5851.24
+      ],
+      "minMs": 5851.24,
+      "maxMs": 9449.7,
+      "meanMs": 7650.47,
+      "medianMs": 5851.24,
+      "p90Ms": 9449.7,
+      "p95Ms": 9449.7,
+      "totalRecords": 242,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "minMs": 2033.61,
+        "maxMs": 5136.62,
+        "meanMs": 3081.36,
+        "medianMs": 2073.86,
+        "p90Ms": 5136.62,
+        "p95Ms": 5136.62,
+        "samplesMs": [
+          2033.61,
+          5136.62,
+          2073.86
+        ]
+      },
+      "filtered": {
+        "minMs": 8857.91,
+        "maxMs": 8857.91,
+        "meanMs": 8857.91,
+        "medianMs": 8857.91,
+        "p90Ms": 8857.91,
+        "p95Ms": 8857.91,
+        "samplesMs": [
+          8857.91
+        ]
+      },
+      "concurrency5": null,
+      "failures": [
+        "warm-run-1: timeout 10000ms (10004.71ms)",
+        "page2-run-1: timeout 10000ms (10005.42ms)",
+        "page2-run-2: timeout 10000ms (10002.61ms)",
+        "page2-run-3: timeout 10000ms (10001.34ms)",
+        "pageSize25-warmup-1: timeout 10000ms (10011.65ms)",
+        "filtered-run-2: timeout 10000ms (10004.62ms)",
+        "filtered-run-3: timeout 10000ms (10007.94ms)"
+      ],
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 7,
+  "result": "FAIL"
+}

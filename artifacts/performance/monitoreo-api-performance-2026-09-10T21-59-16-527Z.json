@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-09-10T21:59:16.530Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "FULL_STACK_PRODUCTION_MODE_REAL_ORACLE",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 0,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        6935.05
+      ],
+      "minMs": 6935.05,
+      "maxMs": 6935.05,
+      "meanMs": 6935.05,
+      "medianMs": 6935.05,
+      "p90Ms": 6935.05,
+      "p95Ms": 6935.05,
+      "totalRecords": 252,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "minMs": 1787.97,
+        "maxMs": 1787.97,
+        "meanMs": 1787.97,
+        "medianMs": 1787.97,
+        "p90Ms": 1787.97,
+        "p95Ms": 1787.97,
+        "samplesMs": [
+          1787.97
+        ]
+      },
+      "pageSize25": {
+        "minMs": 6732.86,
+        "maxMs": 6732.86,
+        "meanMs": 6732.86,
+        "medianMs": 6732.86,
+        "p90Ms": 6732.86,
+        "p95Ms": 6732.86,
+        "samplesMs": [
+          6732.86
+        ]
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 1,
+        "page2": 1,
+        "pageSize25": 1,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.81ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.63ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.81ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.63ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 2,
+  "result": "FAIL"
+}

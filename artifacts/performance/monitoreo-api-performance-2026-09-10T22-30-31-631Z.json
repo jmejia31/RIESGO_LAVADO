@@ -1,0 +1,634 @@
+{
+  "generatedAt": "2026-09-10T22:30:31.635Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "FULL_STACK_PRODUCTION_MODE_REAL_ORACLE",
+    "oracleReal": true,
+    "runs": 10,
+    "warmups": 2,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "juridicas",
+      "naturales",
+      "empleados"
+    ],
+    "concurrency": 5,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "juridicas": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        8582.68,
+        1003.72,
+        4943.57,
+        5386.47,
+        6165.51,
+        643.99
+      ],
+      "minMs": 643.99,
+      "maxMs": 8582.68,
+      "meanMs": 4454.32,
+      "medianMs": 4943.57,
+      "p90Ms": 8582.68,
+      "p95Ms": 8582.68,
+      "totalRecords": 4,
+      "datasetVolumeClass": "SMALL",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": {
+        "minMs": 334.09,
+        "maxMs": 9189.38,
+        "meanMs": 4498.54,
+        "medianMs": 5124.37,
+        "p90Ms": 9189.38,
+        "p95Ms": 9189.38,
+        "samplesMs": [
+          5732.93,
+          1558.49,
+          6923.11,
+          5124.37,
+          9189.38,
+          334.09,
+          5388.42,
+          1737.57
+        ]
+      },
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 6,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 8,
+        "concurrency5": 0
+      },
+      "failedSamples": [
+        {
+          "scenario": "concurrency5",
+          "kind": "error",
+          "message": "timeout 10000ms (10004.71ms)"
+        }
+      ],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.16ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.14ms)"
+        },
+        {
+          "scenario": "warm-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.27ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.93ms)"
+        },
+        {
+          "scenario": "warm-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.26ms)"
+        },
+        {
+          "scenario": "warm-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.47ms)"
+        },
+        {
+          "scenario": "warm-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.26ms)"
+        },
+        {
+          "scenario": "filtered-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.19ms)"
+        },
+        {
+          "scenario": "filtered-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.16ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.16ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.14ms)"
+        },
+        {
+          "scenario": "warm-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.27ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.93ms)"
+        },
+        {
+          "scenario": "warm-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.26ms)"
+        },
+        {
+          "scenario": "warm-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.47ms)"
+        },
+        {
+          "scenario": "warm-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.26ms)"
+        },
+        {
+          "scenario": "filtered-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.19ms)"
+        },
+        {
+          "scenario": "filtered-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.16ms)"
+        },
+        {
+          "scenario": "concurrency5",
+          "kind": "error",
+          "message": "timeout 10000ms (10004.71ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    },
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        3423.23,
+        2286.4,
+        4131.33,
+        6172.93,
+        8170.45,
+        6287.28,
+        1838.57
+      ],
+      "minMs": 1838.57,
+      "maxMs": 8170.45,
+      "meanMs": 4615.74,
+      "medianMs": 4131.33,
+      "p90Ms": 8170.45,
+      "p95Ms": 8170.45,
+      "totalRecords": 242,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "minMs": 3871.22,
+        "maxMs": 9147.05,
+        "meanMs": 6363.06,
+        "medianMs": 6119.18,
+        "p90Ms": 9147.05,
+        "p95Ms": 9147.05,
+        "samplesMs": [
+          9147.05,
+          6119.18,
+          3871.22,
+          6314.76
+        ]
+      },
+      "pageSize25": {
+        "minMs": 1140.79,
+        "maxMs": 9608.45,
+        "meanMs": 5194.76,
+        "medianMs": 4178.32,
+        "p90Ms": 9608.45,
+        "p95Ms": 9608.45,
+        "samplesMs": [
+          8491.03,
+          6306.67,
+          3992.2,
+          1140.79,
+          3096.78,
+          4178.32,
+          4743.86,
+          9608.45
+        ]
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 7,
+        "page2": 4,
+        "pageSize25": 8,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [
+        {
+          "scenario": "concurrency5",
+          "kind": "error",
+          "message": "timeout 10000ms (10014.33ms)"
+        }
+      ],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10000.90ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10013.14ms)"
+        },
+        {
+          "scenario": "warm-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.24ms)"
+        },
+        {
+          "scenario": "warm-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.24ms)"
+        },
+        {
+          "scenario": "warm-run-8",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10003.45ms)"
+        },
+        {
+          "scenario": "page2-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.34ms)"
+        },
+        {
+          "scenario": "page2-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.45ms)"
+        },
+        {
+          "scenario": "page2-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.62ms)"
+        },
+        {
+          "scenario": "page2-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.04ms)"
+        },
+        {
+          "scenario": "page2-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.23ms)"
+        },
+        {
+          "scenario": "page2-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.46ms)"
+        },
+        {
+          "scenario": "page2-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.55ms)"
+        },
+        {
+          "scenario": "page2-run-10",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.93ms)"
+        },
+        {
+          "scenario": "pageSize25-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10013.17ms)"
+        },
+        {
+          "scenario": "pageSize25-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.43ms)"
+        },
+        {
+          "scenario": "pageSize25-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.26ms)"
+        },
+        {
+          "scenario": "pageSize25-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.03ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.33ms)"
+        },
+        {
+          "scenario": "filtered-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10016.43ms)"
+        },
+        {
+          "scenario": "filtered-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.41ms)"
+        },
+        {
+          "scenario": "filtered-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10001.58ms)"
+        },
+        {
+          "scenario": "filtered-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.90ms)"
+        },
+        {
+          "scenario": "filtered-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.24ms)"
+        },
+        {
+          "scenario": "filtered-run-7",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.32ms)"
+        },
+        {
+          "scenario": "filtered-run-8",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.10ms)"
+        },
+        {
+          "scenario": "filtered-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.18ms)"
+        },
+        {
+          "scenario": "filtered-run-10",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.20ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10000.90ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10013.14ms)"
+        },
+        {
+          "scenario": "warm-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.24ms)"
+        },
+        {
+          "scenario": "warm-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.24ms)"
+        },
+        {
+          "scenario": "warm-run-8",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10003.45ms)"
+        },
+        {
+          "scenario": "page2-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.34ms)"
+        },
+        {
+          "scenario": "page2-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.45ms)"
+        },
+        {
+          "scenario": "page2-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.62ms)"
+        },
+        {
+          "scenario": "page2-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.04ms)"
+        },
+        {
+          "scenario": "page2-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.23ms)"
+        },
+        {
+          "scenario": "page2-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.46ms)"
+        },
+        {
+          "scenario": "page2-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.55ms)"
+        },
+        {
+          "scenario": "page2-run-10",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10007.93ms)"
+        },
+        {
+          "scenario": "pageSize25-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10013.17ms)"
+        },
+        {
+          "scenario": "pageSize25-warmup-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.43ms)"
+        },
+        {
+          "scenario": "pageSize25-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.26ms)"
+        },
+        {
+          "scenario": "pageSize25-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.03ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.33ms)"
+        },
+        {
+          "scenario": "filtered-run-2",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10016.43ms)"
+        },
+        {
+          "scenario": "filtered-run-3",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.41ms)"
+        },
+        {
+          "scenario": "filtered-run-4",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10001.58ms)"
+        },
+        {
+          "scenario": "filtered-run-5",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.90ms)"
+        },
+        {
+          "scenario": "filtered-run-6",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10008.24ms)"
+        },
+        {
+          "scenario": "filtered-run-7",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10012.32ms)"
+        },
+        {
+          "scenario": "filtered-run-8",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.10ms)"
+        },
+        {
+          "scenario": "filtered-run-9",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.18ms)"
+        },
+        {
+          "scenario": "filtered-run-10",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.20ms)"
+        },
+        {
+          "scenario": "concurrency5",
+          "kind": "error",
+          "message": "timeout 10000ms (10014.33ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    },
+    "empleados": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        413.33,
+        170.86,
+        732.15,
+        150.24,
+        188.15,
+        471.58,
+        411.48,
+        136.31,
+        426.91,
+        109.11
+      ],
+      "minMs": 109.11,
+      "maxMs": 732.15,
+      "meanMs": 321.01,
+      "medianMs": 188.15,
+      "p90Ms": 471.58,
+      "p95Ms": 732.15,
+      "totalRecords": 7,
+      "datasetVolumeClass": "SMALL",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": {
+        "minMs": 96.25,
+        "maxMs": 609.12,
+        "meanMs": 287.39,
+        "medianMs": 148.66,
+        "p90Ms": 430.48,
+        "p95Ms": 609.12,
+        "samplesMs": [
+          609.12,
+          96.25,
+          408.22,
+          410.18,
+          145.63,
+          400.1,
+          127.3,
+          148.66,
+          430.48,
+          97.96
+        ]
+      },
+      "concurrency5": {
+        "minMs": 1148.74,
+        "maxMs": 1148.74,
+        "meanMs": 1148.74,
+        "medianMs": 1148.74,
+        "p90Ms": 1148.74,
+        "p95Ms": 1148.74,
+        "samplesMs": [
+          1148.74,
+          1148.74,
+          1148.74,
+          1148.74,
+          1148.74
+        ]
+      },
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 10,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 10,
+        "concurrency5": 5
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.46ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10002.86ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10015.46ms)"
+        },
+        {
+          "scenario": "warm-warmup-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10002.86ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 40,
+  "result": "FAIL"
+}

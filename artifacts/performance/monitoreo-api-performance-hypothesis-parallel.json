@@ -1,0 +1,88 @@
+{
+  "generatedAt": "2026-09-10T21:44:43.634Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "DOTNET_PRODUCTION_REAL_ORACLE_HYPOTHESIS_PARALLEL",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 0,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [],
+      "minMs": null,
+      "maxMs": null,
+      "meanMs": null,
+      "medianMs": null,
+      "p90Ms": null,
+      "p95Ms": null,
+      "totalRecords": 0,
+      "datasetVolumeClass": "EMPTY",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 0,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10018.03ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10006.61ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.12ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10018.03ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10006.61ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.12ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 3,
+  "result": "FAIL"
+}

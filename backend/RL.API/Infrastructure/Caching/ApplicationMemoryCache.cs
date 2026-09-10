@@ -12,6 +12,7 @@ public static class ApplicationCacheScopes
     public const string MatricesFormularios = "be02:matrices-formularios";
     public const string ConfiguracionSistema = "be02:configuracion-sistema";
     public const string LoginSlides = "be02:login-slides";
+    public const string MonitoreoMetadata = "be02:monitoreo-metadata";
 }
 
 /// <summary>
@@ -23,10 +24,12 @@ public sealed class ApplicationCacheSettings
     public int FormularioVersionTtlSeconds { get; set; } = 120;
     public int ConfiguracionSistemaTtlSeconds { get; set; } = 120;
     public int LoginSlidesTtlSeconds { get; set; } = 60;
+    public int MonitoreoMetadataTtlSeconds { get; set; } = 20;
 
     public TimeSpan FormularioVersionTtl => Normalize(FormularioVersionTtlSeconds);
     public TimeSpan ConfiguracionSistemaTtl => Normalize(ConfiguracionSistemaTtlSeconds);
     public TimeSpan LoginSlidesTtl => Normalize(LoginSlidesTtlSeconds);
+    public TimeSpan MonitoreoMetadataTtl => Normalize(MonitoreoMetadataTtlSeconds);
 
     private static TimeSpan Normalize(int configuredSeconds) =>
         TimeSpan.FromSeconds(Math.Clamp(configuredSeconds, 5, 900));

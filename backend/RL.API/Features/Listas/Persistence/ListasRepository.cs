@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.Listas.Contracts;
+using RL.API.Infrastructure.Caching;
 using RL.API.Infrastructure.Database;
 using RL.API.Infrastructure.Http;
 using RL.API.Shared.Results;
@@ -17,12 +18,21 @@ namespace RL.API.Features.Listas.Persistence
         private readonly OracleDbContext _db;
         private readonly IAuditoriaRepository _auditoriaRepo;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IApplicationCache _cache;
+        private readonly ApplicationCacheSettings _cacheSettings;
 
-        public ListasRepository(OracleDbContext db, IAuditoriaRepository auditoriaRepo, IHttpContextAccessor httpContextAccessor)
+        public ListasRepository(
+            OracleDbContext db,
+            IAuditoriaRepository auditoriaRepo,
+            IHttpContextAccessor httpContextAccessor,
+            IApplicationCache cache,
+            ApplicationCacheSettings cacheSettings)
         {
             _db = db;
             _auditoriaRepo = auditoriaRepo;
             _httpContextAccessor = httpContextAccessor;
+            _cache = cache;
+            _cacheSettings = cacheSettings;
         }
 
         public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
@@ -305,6 +315,7 @@ namespace RL.API.Features.Listas.Persistence
                     };
                     string dataJsonNvo = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
                     await _auditoriaRepo.RegistrarAsync("RL_LISTA_POSITIVOS", existingId.Value.ToString(), "UPDATE", existingDataJson, dataJsonNvo, creadoPorId, null, null, "MonitoreoListas");
+                    _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 }
                 return success;
             }
@@ -354,6 +365,7 @@ namespace RL.API.Features.Listas.Persistence
                     };
                     string dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(auditDto);
                     await _auditoriaRepo.RegistrarAsync("RL_LISTA_POSITIVOS", newId.ToString(), "INSERT", null, dataJson, creadoPorId, null, null, "MonitoreoListas");
+                    _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 }
 
                 return success;
@@ -507,6 +519,7 @@ namespace RL.API.Features.Listas.Persistence
             // Auditoría
             var dataJson = Newtonsoft.Json.JsonConvert.SerializeObject(new { PositivoId = positivoId, Motivo = motivo });
             await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", newId.ToString(), "INSERT", null, dataJson, usuarioId, null, null, "MonitoreoListas");
+            _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
 
             return newId;
         }
@@ -622,6 +635,7 @@ namespace RL.API.Features.Listas.Persistence
                 var valAnterior = Newtonsoft.Json.JsonConvert.SerializeObject(new { Motivo = anteriorMotivo });
                 var valNuevo = Newtonsoft.Json.JsonConvert.SerializeObject(new { Motivo = motivoIngreso });
                 await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", detalleId.ToString(), "UPDATE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 return true;
             }
             return false;
@@ -724,6 +738,7 @@ namespace RL.API.Features.Listas.Persistence
                     MotivoEliminacion = motivoEliminacion
                 });
                 await _auditoriaRepo.RegistrarAsync("RL_DETALLE_LISTA", detalleId.ToString(), "DELETE", valAnterior, valNuevo, usuarioId, null, null, "MonitoreoListas");
+                _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 return true;
             }
             return false;
@@ -952,109 +967,214 @@ namespace RL.API.Features.Listas.Persistence
             CancellationToken cancellationToken)
         {
             var requestStopwatch = System.Diagnostics.Stopwatch.StartNew();
-            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
-            AppendMonitoringFilters(ref filteredSql, consulta);
-
-            await using var conn = _db.CreateConnection();
-            await conn.OpenAsync(cancellationToken);
-
-            // La consulta analítica entrega página, conteo y KPIs desde la misma
-            // proyección filtrada. Así se evita ejecutar el dataset complejo tres
-            // veces por petición (COUNT + página + totales).
-            var enrichedSql = $@"
-                SELECT f.*,
-                       COUNT(*) OVER () AS TOTAL_REGISTROS,
-                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END) OVER (), 0) AS PENDIENTES,
-                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END) OVER (), 0) AS CON_MOTIVO,
-                       NVL(SUM(CASE WHEN f.ES_MANUAL = 1 THEN 1 ELSE 0 END) OVER (), 0) AS MANUALES,
-                       NVL(SUM(CASE WHEN f.ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END) OVER (), 0) AS CERRADOS_PASIVOS
-                FROM ({filteredSql}) f";
-
+            var filteredSql = ConstruirConsultaMonitoreoFiltrada(baseSql, consulta);
             var pageSize = Math.Clamp(consulta.TamanoPagina, 1, 200);
             var requestedPage = Math.Max(consulta.Pagina, 1);
-            var page = requestedPage;
-            var total = 0;
 
-            // Para páginas distintas de la primera se obtiene un conteo previo
-            // únicamente para normalizar una página fuera de rango sin volver a
-            // traer el universo completo. La consulta de página sigue aportando
-            // los KPIs y el total canónico en la misma ejecución.
-            if (requestedPage > 1)
+            await using var conn = _db.CreateConnection();
+            var connectionStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            await conn.OpenAsync(cancellationToken);
+            connectionStopwatch.Stop();
+
+            var pageResult = await EjecutarPaginaMonitoreoAsync(
+                conn, filteredSql, orderBy, requestedPage, pageSize, consulta, map, cancellationToken);
+
+            var metadataLookupStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var metadata = await _cache.GetOrCreateAsync(
+                ApplicationCacheScopes.MonitoreoMetadata,
+                CrearClaveMetadataMonitoreo(baseSql, consulta),
+                _cacheSettings.MonitoreoMetadataTtl,
+                () => ObtenerMetadataMonitoreoAsync(filteredSql, consulta, cancellationToken),
+                cancellationToken: cancellationToken);
+            metadataLookupStopwatch.Stop();
+
+            var totalPages = metadata.TotalRegistros == 0
+                ? 0
+                : (int)Math.Ceiling(metadata.TotalRegistros / (double)pageSize);
+            var effectivePage = totalPages == 0 ? 1 : Math.Clamp(requestedPage, 1, totalPages);
+            if (pageResult.Items.Count == 0 && effectivePage != requestedPage)
             {
-                await using var rangeCommand = conn.CreateCommand();
-                rangeCommand.BindByName = true;
-                rangeCommand.CommandText = $"SELECT COUNT(*) FROM ({filteredSql}) count_query";
-                AddMonitoringParameters(rangeCommand, consulta);
-                total = Convert.ToInt32(await rangeCommand.ExecuteScalarAsync(cancellationToken));
-                var totalPagesForRange = total == 0 ? 0 : (int)Math.Ceiling(total / (double)pageSize);
-                page = totalPagesForRange == 0 ? 1 : Math.Clamp(requestedPage, 1, totalPagesForRange);
+                // Sólo una página vacía activa la normalización y el único reintento.
+                pageResult = await EjecutarPaginaMonitoreoAsync(
+                    conn, filteredSql, orderBy, effectivePage, pageSize, consulta, map, cancellationToken);
             }
 
+            requestStopwatch.Stop();
+            Serilog.Log.Information(
+                "MonitoringQuery completed: type={MonitoringType} page={Page} pageSize={PageSize} filtered={Filtered} connectionOpenMs={ConnectionOpenMs} pageExecuteMs={PageExecuteMs} firstRowMs={FirstRowMs} rowsReadMs={RowsReadMs} mappingMs={MappingMs} metadataLookupMs={MetadataLookupMs} totalRepositoryMs={TotalRepositoryMs}",
+                ResolveMonitoringType(baseSql), effectivePage, pageSize,
+                !string.IsNullOrWhiteSpace(consulta.Buscar)
+                    || !string.Equals(consulta.Estado, "todos", StringComparison.OrdinalIgnoreCase)
+                    || consulta.FechaDesde.HasValue || consulta.FechaHasta.HasValue,
+                connectionStopwatch.ElapsedMilliseconds, pageResult.ExecuteMs, pageResult.FirstRowMs,
+                pageResult.RowsReadMs, pageResult.MappingMs, metadataLookupStopwatch.ElapsedMilliseconds,
+                requestStopwatch.ElapsedMilliseconds);
+
+            return new MonitoreoPaginadoDto<T>
+            {
+                Items = pageResult.Items,
+                Pagina = effectivePage,
+                TamanoPagina = pageSize,
+                TotalRegistros = metadata.TotalRegistros,
+                TotalPaginas = totalPages,
+                Totales = new MonitoreoTotalesDto
+                {
+                    TotalRegistros = metadata.TotalRegistros,
+                    Pendientes = metadata.Pendientes,
+                    ConMotivo = metadata.ConMotivo,
+                    Manuales = metadata.Manuales,
+                    CerradosPasivos = metadata.CerradosPasivos
+                }
+            };
+        }
+
+        private sealed record MonitoreoMetadata(int TotalRegistros, int Pendientes, int ConMotivo, int Manuales, int CerradosPasivos);
+
+        private sealed record MonitoreoPageResult<T>(List<T> Items, long ExecuteMs, long FirstRowMs, long RowsReadMs, long MappingMs);
+
+        private async Task<MonitoreoPageResult<T>> EjecutarPaginaMonitoreoAsync<T>(
+            OracleConnection conn,
+            string filteredSql,
+            string orderBy,
+            int page,
+            int pageSize,
+            ConsultaMonitoreoPaginadaDto consulta,
+            Func<OracleDataReader, T> map,
+            CancellationToken cancellationToken)
+        {
             var firstRow = (page - 1) * pageSize;
             var lastRow = page * pageSize;
-            var items = new List<T>();
-            var pageStopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-            await using var pageCommand = conn.CreateCommand();
-            pageCommand.BindByName = true;
-            pageCommand.CommandText = $@"
+            var items = new List<T>(pageSize);
+            var executeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = $@"
                 SELECT *
                 FROM (
                     SELECT q.*, ROWNUM AS NUMERO_FILA
                     FROM (
-                        {enrichedSql}
+                        {filteredSql}
                         ORDER BY {orderBy}
                     ) q
                     WHERE ROWNUM <= :filaFinal
                 )
                 WHERE NUMERO_FILA > :filaInicial";
-            AddMonitoringParameters(pageCommand, consulta);
-            pageCommand.Parameters.Add(new OracleParameter("filaFinal", lastRow));
-            pageCommand.Parameters.Add(new OracleParameter("filaInicial", firstRow));
-            await using var reader = await pageCommand.ExecuteReaderAsync(cancellationToken);
-
-            var pageTotal = total;
-            var pagePendientes = 0;
-            var pageConMotivo = 0;
-            var pageManuales = 0;
-            var pageCerradosPasivos = 0;
-            while (await reader.ReadAsync(cancellationToken))
+            AddMonitoringParameters(command, consulta);
+            command.Parameters.Add(new OracleParameter("filaFinal", lastRow));
+            command.Parameters.Add(new OracleParameter("filaInicial", firstRow));
+            OracleDataReader reader;
+            try
             {
-                if (pageTotal == 0) pageTotal = Entero(reader, "TOTAL_REGISTROS");
-                pagePendientes = Entero(reader, "PENDIENTES");
-                pageConMotivo = Entero(reader, "CON_MOTIVO");
-                pageManuales = Entero(reader, "MANUALES");
-                pageCerradosPasivos = Entero(reader, "CERRADOS_PASIVOS");
-                items.Add(map(reader));
+                reader = await command.ExecuteReaderAsync(cancellationToken);
             }
-
-            pageStopwatch.Stop();
-            requestStopwatch.Stop();
-            var totalPages = pageTotal == 0 ? 0 : (int)Math.Ceiling(pageTotal / (double)pageSize);
-            var effectivePage = totalPages == 0 ? 1 : Math.Clamp(page, 1, totalPages);
-            Serilog.Log.Information(
-                "MonitoringQuery completed: type={MonitoringType} page={Page} pageSize={PageSize} filtered={Filtered} pageQueryMs={PageQueryMs} totalRequestMs={TotalRequestMs}",
-                ResolveMonitoringType(baseSql), effectivePage, pageSize,
-                !string.IsNullOrWhiteSpace(consulta.Buscar) || !string.Equals(consulta.Estado, "todos", StringComparison.OrdinalIgnoreCase) || consulta.FechaDesde.HasValue || consulta.FechaHasta.HasValue,
-                pageStopwatch.ElapsedMilliseconds, requestStopwatch.ElapsedMilliseconds);
-
-            return new MonitoreoPaginadoDto<T>
+            catch (OracleException exception) when (exception.Number == 1013)
             {
-                Items = items,
-                Pagina = effectivePage,
-                TamanoPagina = pageSize,
-                TotalRegistros = pageTotal,
-                TotalPaginas = totalPages,
-                Totales = new MonitoreoTotalesDto
+                Serilog.Log.Warning(
+                    "MonitoringQuery cancelled by Oracle: phase=page requestAborted={RequestAborted}",
+                    cancellationToken.IsCancellationRequested || _httpContextAccessor.HttpContext?.RequestAborted.IsCancellationRequested == true);
+                throw;
+            }
+            await using (reader)
+            {
+                executeStopwatch.Stop();
+
+                var firstRowStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var firstRowMs = 0L;
+                var rowsReadStopwatch = new System.Diagnostics.Stopwatch();
+                var mappingMs = 0L;
+                var hasRow = false;
+                while (await reader.ReadAsync(cancellationToken))
                 {
-                    TotalRegistros = pageTotal,
-                    Pendientes = pagePendientes,
-                    ConMotivo = pageConMotivo,
-                    Manuales = pageManuales,
-                    CerradosPasivos = pageCerradosPasivos
+                    if (!hasRow)
+                    {
+                        firstRowStopwatch.Stop();
+                        firstRowMs = firstRowStopwatch.ElapsedMilliseconds;
+                        rowsReadStopwatch.Start();
+                        hasRow = true;
+                    }
+
+                    var mappingStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    items.Add(map(reader));
+                    mappingStopwatch.Stop();
+                    mappingMs += mappingStopwatch.ElapsedMilliseconds;
                 }
-            };
+                rowsReadStopwatch.Stop();
+                if (!hasRow) firstRowMs = firstRowStopwatch.ElapsedMilliseconds;
+
+                return new MonitoreoPageResult<T>(
+                    items, executeStopwatch.ElapsedMilliseconds, firstRowMs,
+                    rowsReadStopwatch.ElapsedMilliseconds, mappingMs);
+            }
         }
+
+        private async Task<MonitoreoMetadata> ObtenerMetadataMonitoreoAsync(
+            string filteredSql,
+            ConsultaMonitoreoPaginadaDto consulta,
+            CancellationToken cancellationToken)
+        {
+            var metadataStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            await using var conn = _db.CreateConnection();
+            var connectionStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            await conn.OpenAsync(cancellationToken);
+            connectionStopwatch.Stop();
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = $@"
+                SELECT COUNT(*) AS TOTAL_REGISTROS,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'pendiente' THEN 1 ELSE 0 END), 0) AS PENDIENTES,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'con_motivo' THEN 1 ELSE 0 END), 0) AS CON_MOTIVO,
+                       NVL(SUM(CASE WHEN ES_MANUAL = 1 THEN 1 ELSE 0 END), 0) AS MANUALES,
+                       NVL(SUM(CASE WHEN ESTADO_MONITOREO = 'cerrado_pasivo' THEN 1 ELSE 0 END), 0) AS CERRADOS_PASIVOS
+                FROM ({filteredSql}) metadata_query";
+            AddMonitoringParameters(command, consulta);
+            OracleDataReader reader;
+            var executeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                reader = await command.ExecuteReaderAsync(cancellationToken);
+            }
+            catch (OracleException exception) when (exception.Number == 1013)
+            {
+                Serilog.Log.Warning(
+                    "MonitoringQuery cancelled by Oracle: phase=metadata requestAborted={RequestAborted}",
+                    cancellationToken.IsCancellationRequested || _httpContextAccessor.HttpContext?.RequestAborted.IsCancellationRequested == true);
+                throw;
+            }
+            await using (reader)
+            {
+                executeStopwatch.Stop();
+                if (!await reader.ReadAsync(cancellationToken))
+                {
+                    metadataStopwatch.Stop();
+                    Serilog.Log.Information(
+                        "MonitoringMetadata completed: connectionOpenMs={ConnectionOpenMs} executeMs={ExecuteMs} totalMs={TotalMs}",
+                        connectionStopwatch.ElapsedMilliseconds, executeStopwatch.ElapsedMilliseconds,
+                        metadataStopwatch.ElapsedMilliseconds);
+                    return new MonitoreoMetadata(0, 0, 0, 0, 0);
+                }
+                var metadata = new MonitoreoMetadata(
+                    Entero(reader, "TOTAL_REGISTROS"), Entero(reader, "PENDIENTES"),
+                    Entero(reader, "CON_MOTIVO"), Entero(reader, "MANUALES"), Entero(reader, "CERRADOS_PASIVOS"));
+                metadataStopwatch.Stop();
+                Serilog.Log.Information(
+                    "MonitoringMetadata completed: connectionOpenMs={ConnectionOpenMs} executeMs={ExecuteMs} totalMs={TotalMs}",
+                    connectionStopwatch.ElapsedMilliseconds, executeStopwatch.ElapsedMilliseconds,
+                    metadataStopwatch.ElapsedMilliseconds);
+                return metadata;
+            }
+        }
+
+        private static string ConstruirConsultaMonitoreoFiltrada(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+        {
+            var filteredSql = $"SELECT f.* FROM (SELECT q.*, CASE WHEN q.ES_MANUAL = 1 THEN 'manual' WHEN q.TIENE_MOTIVO = 1 THEN 'con_motivo' ELSE 'pendiente' END AS ESTADO_MONITOREO FROM ({baseSql}) q) f WHERE 1 = 1";
+            AppendMonitoringFilters(ref filteredSql, consulta);
+            return filteredSql;
+        }
+
+        private static string CrearClaveMetadataMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+            => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
+                consulta.Estado?.Trim().ToLowerInvariant(), consulta.FechaDesde?.ToString("O"),
+                consulta.FechaHasta?.ToString("O"));
 
         private static string ResolveMonitoringType(string baseSql)
             => baseSql.Contains("TIPO_EMPRESA_ID", StringComparison.OrdinalIgnoreCase)
@@ -1164,7 +1284,7 @@ namespace RL.API.Features.Listas.Persistence
                        MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
                        MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
-                WHERE LSP_ESTADO_REGISTRO = 1
+                WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 1
                 GROUP BY LSP_NO_DOCUMENTO
             ), Coincidencias AS (
                 SELECT D.RTN, D.NOMBRE, D.NUMEPATRO, R.LISTA_CONCIDENCIA, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
@@ -1194,17 +1314,38 @@ namespace RL.API.Features.Listas.Persistence
                        MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
                        MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
-                WHERE LSP_ESTADO_REGISTRO = 1
+                WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 2
                 GROUP BY LSP_NO_DOCUMENTO
+            ), REPORTE_AGG AS (
+                SELECT DNI, LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS,
+                       MAX(FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(FECHA_CALIFICO) FECHA_CALIFICO
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS
+                WHERE TIPO_CALIFICACION_ID = 1 AND FECHA_CALIFICO IS NOT NULL
+                GROUP BY DNI, LISTA_CONCIDENCIA
+            ), REPORTE_IDS AS (
+                SELECT DISTINCT DNI FROM REPORTE_AGG
+            ), PERSONA_FUENTE AS (
+                SELECT D.NUMERO_IDENTIFICACION, TRIM(D.NOMBRES_PERSONA) AS NOMBRES_PERSONA
+                FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES D
+                INNER JOIN REPORTE_IDS I ON I.DNI = D.NUMERO_IDENTIFICACION
+            ), PERSONA_FUENTE_DISTINCTA AS (
+                SELECT NUMERO_IDENTIFICACION, NOMBRES_PERSONA
+                FROM PERSONA_FUENTE
+                GROUP BY NUMERO_IDENTIFICACION, NOMBRES_PERSONA
+            ), PERSONAS AS (
+                SELECT NUMERO_IDENTIFICACION,
+                       TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' ')) AS NOMBRE
+                FROM PERSONA_FUENTE_DISTINCTA
+                GROUP BY NUMERO_IDENTIFICACION,
+                         TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' '))
             ), Coincidencias AS (
-                SELECT D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
+                SELECT R.DNI AS NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, R.TOTAL_REPETIDOS, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
                        p.FECHA_REGISTRO_INTERNO,
                        NVL(p.TIENE_MOTIVO, 0) AS TIENE_MOTIVO
-                FROM (SELECT DISTINCT NUMERO_IDENTIFICACION, TRIM(REGEXP_REPLACE(NOMBRES_PERSONA, '[[:space:]]+', ' ')) NOMBRE FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES) D
-                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON D.NUMERO_IDENTIFICACION = R.DNI
+                FROM REPORTE_AGG R
+                INNER JOIN PERSONAS D ON D.NUMERO_IDENTIFICACION = R.DNI
                 LEFT JOIN POSITIVOS_AGG p ON p.LSP_NO_DOCUMENTO = D.NUMERO_IDENTIFICACION
-                WHERE R.TIPO_CALIFICACION_ID = 1 AND R.FECHA_CALIFICO IS NOT NULL
-                GROUP BY D.NUMERO_IDENTIFICACION, D.NOMBRE, R.LISTA_CONCIDENCIA, p.FECHA_REGISTRO_INTERNO, p.TIENE_MOTIVO)
+            )
             SELECT NUMERO_IDENTIFICACION, NOMBRE, LISTA_CONCIDENCIA, TOTAL_REPETIDOS, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, TIENE_MOTIVO, 0 AS ES_MANUAL, NUMERO_IDENTIFICACION AS BUSQUEDA FROM Coincidencias
             UNION ALL
             SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), 0, CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA
@@ -1218,7 +1359,7 @@ namespace RL.API.Features.Listas.Persistence
                        MIN(LSP_FECHA_CREACION) AS FECHA_REGISTRO_INTERNO,
                        MAX(CASE WHEN LSP_MOTIVO_INGRESO IS NOT NULL THEN 1 ELSE 0 END) AS TIENE_MOTIVO
                 FROM RL_LISTA_POSITIVOS
-                WHERE LSP_ESTADO_REGISTRO = 1
+                WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 3
                 GROUP BY LSP_NO_DOCUMENTO
             ), Coincidencias AS (
                 SELECT D.IDENTIDAD, TRIM(REGEXP_REPLACE(D.NOMBRE_EMPLEADO, '[[:space:]]+', ' ')) NOMBRE, R.LISTA_CONCIDENCIA, COUNT(*) TOTAL_REPETIDOS, MAX(R.FECHA_ENCONTRO) FECHA_ENCONTRO, MAX(R.FECHA_CALIFICO) FECHA_CALIFICO,
@@ -1437,6 +1578,7 @@ namespace RL.API.Features.Listas.Persistence
                     nuevoDataJson,
                     usuarioId, null, null,
                     "Coincidencias");
+                _cache.Invalidate(ApplicationCacheScopes.MonitoreoMetadata);
                 return true;
             }
             return false;

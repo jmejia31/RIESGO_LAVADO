@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-09-10T21:49:53.094Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "DOTNET_PRODUCTION_REAL_ORACLE_HYPOTHESIS_BASE_VIEW",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 0,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [
+        3908.23
+      ],
+      "minMs": 3908.23,
+      "maxMs": 3908.23,
+      "meanMs": 3908.23,
+      "medianMs": 3908.23,
+      "p90Ms": 3908.23,
+      "p95Ms": 3908.23,
+      "totalRecords": 242,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "minMs": 1178.7,
+        "maxMs": 1178.7,
+        "meanMs": 1178.7,
+        "medianMs": 1178.7,
+        "p90Ms": 1178.7,
+        "p95Ms": 1178.7,
+        "samplesMs": [
+          1178.7
+        ]
+      },
+      "pageSize25": {
+        "minMs": 1410.07,
+        "maxMs": 1410.07,
+        "meanMs": 1410.07,
+        "medianMs": 1410.07,
+        "p90Ms": 1410.07,
+        "p95Ms": 1410.07,
+        "samplesMs": [
+          1410.07
+        ]
+      },
+      "filtered": {
+        "minMs": 7394.61,
+        "maxMs": 7394.61,
+        "meanMs": 7394.61,
+        "medianMs": 7394.61,
+        "p90Ms": 7394.61,
+        "p95Ms": 7394.61,
+        "samplesMs": [
+          7394.61
+        ]
+      },
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 1,
+        "page2": 1,
+        "pageSize25": 1,
+        "filtered": 1,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10018.89ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10018.89ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 1,
+  "result": "FAIL"
+}

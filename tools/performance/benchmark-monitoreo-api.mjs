@@ -6,7 +6,7 @@ import { performance } from 'node:perf_hooks';
 
 const apiBase = (process.env.RL_API_URL ?? 'http://localhost:5043/api').replace(/\/$/, '');
 const runs = positiveInteger(process.env.RL_PERF_RUNS, 10);
-const warmups = positiveInteger(process.env.RL_PERF_WARMUPS, 2);
+const warmups = nonNegativeInteger(process.env.RL_PERF_WARMUPS, 2);
 const timeoutMs = positiveInteger(process.env.RL_PERF_TIMEOUT_MS, 10_000);
 const oracleReal = process.env.RL_PERF_ORACLE_REAL === 'true';
 const outputJson = resolve(process.env.RL_PERF_OUTPUT_JSON ?? defaultJsonPath());
@@ -27,6 +27,11 @@ const includeConcurrency = process.env.RL_PERF_SKIP_CONCURRENCY !== 'true';
 function positiveInteger(value, fallback) {
   const parsed = Number(value);
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function nonNegativeInteger(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : fallback;
 }
 
 function defaultJsonPath() {
@@ -161,8 +166,11 @@ async function measureType(token, type) {
   const concurrencyStats = concurrencySamples.length ? stats(concurrencySamples) : null;
   const pass = Boolean(cold && warmSamples.length === runs && failures.length === 0 && oracleReal
     && cold.elapsedMs <= 5000 && warmStats.medianMs <= 3000 && warmStats.p95Ms <= 5000
-    && (!page2Stats || page2Stats.medianMs <= 5000)
-    && (!page25Stats || page25Stats.medianMs <= 5000));
+    && (!page2Stats || page2Stats.medianMs <= 3000)
+    && (!page25Stats || page25Stats.medianMs <= 3000)
+    && (!filteredStats || filteredStats.medianMs <= 5000));
+  const timeoutSamples = failures.filter(failure => failure.kind === 'timeout');
+  const failedSamples = failures.filter(failure => failure.kind !== 'timeout');
   return {
     coldMs: cold ? round(cold.elapsedMs) : null,
     warmSamplesMs: warmSamples.map(sample => round(sample.elapsedMs)),
@@ -173,14 +181,33 @@ async function measureType(token, type) {
     pageSize25: page25Stats ? { ...page25Stats, samplesMs: page25Samples.map(sample => round(sample.elapsedMs)) } : { applicable: false },
     filtered: filteredStats ? { ...filteredStats, samplesMs: filteredSamples.map(sample => round(sample.elapsedMs)) } : null,
     concurrency5: concurrencyStats ? { ...concurrencyStats, samplesMs: concurrencySamples.map(sample => round(sample.elapsedMs)) } : null,
+    successfulSamples: {
+      cold: cold ? 1 : 0,
+      warm: warmSamples.length,
+      page2: page2Samples.length,
+      pageSize25: page25Samples.length,
+      filtered: filteredSamples.length,
+      concurrency5: concurrencySamples.length,
+    },
+    failedSamples,
+    timeoutSamples,
     failures,
+    globalP95Ms: failures.length === 0 ? warmStats.p95Ms : null,
     result: pass ? 'PASS' : 'FAIL',
   };
 }
 
 async function capture(failures, label, operation) {
   try { return await operation(); }
-  catch (error) { failures.push(`${label}: ${error.message}`); return null; }
+  catch (error) {
+    const message = error?.message ?? String(error);
+    failures.push({
+      scenario: label,
+      kind: message.startsWith('timeout ') ? 'timeout' : 'error',
+      message,
+    });
+    return null;
+  }
 }
 
 async function collect(failures, label, warmupCount, sampleCount, operation) {
@@ -202,14 +229,15 @@ async function concurrent(failures, token, type) {
     const elapsedMs = performance.now() - started;
     return results.map(() => ({ elapsedMs }));
   } catch (error) {
-    failures.push(`concurrency5: ${error.message}`);
+    const message = error?.message ?? String(error);
+    failures.push({ scenario: 'concurrency5', kind: 'error', message });
     return [];
   }
 }
 
 function markdown(report) {
   const rows = Object.entries(report.tests).map(([key, value]) =>
-    `| ${key} | ${value.coldMs ?? 'FAIL'} | ${value.medianMs ?? 'FAIL'} | ${value.p90Ms ?? 'FAIL'} | ${value.p95Ms ?? 'FAIL'} | ${value.maxMs ?? 'FAIL'} | ${value.totalRecords} | ${value.result} |`);
+    `| ${key} | ${value.coldMs ?? 'FAIL'} | ${value.medianMs ?? 'FAIL'} | ${value.p90Ms ?? 'FAIL'} | ${value.globalP95Ms ?? 'FAIL'} | ${value.maxMs ?? 'FAIL'} | ${value.totalRecords} | ${value.result} |`);
   return `# Certificación HTTP de Monitoreo de Listas\n\n` +
     `Modo: **${report.environment.apiMode}**; Oracle real: **${report.environment.oracleReal}**; SHA: \`${report.gitSha}\`.\n\n` +
     `Medición: cuerpo HTTP completo consumido con response.text(); ${report.environment.runs} ejecuciones warm y ${report.environment.warmups} warmups por escenario; timeout ${report.environment.timeoutMs} ms.\n\n` +

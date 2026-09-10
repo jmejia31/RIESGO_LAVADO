@@ -48,18 +48,22 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
-    public void Monitoreo_UsaProyeccionSetBasedYMetadataAnaliticaSinLookupsCorrelacionados()
+    public void Monitoreo_UsaPaginaSeparadaMetadataCacheadaYLookupsSetBased()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
-        var monitoringStart = source.IndexOf("ObtenerMonitoreoPaginadoAsync", StringComparison.Ordinal);
-        var monitoringEnd = source.IndexOf("private static string ResolveMonitoringType", monitoringStart, StringComparison.Ordinal);
+        var monitoringStart = source.IndexOf("private async Task<MonitoreoPaginadoDto<T>> ObtenerMonitoreoPaginadoAsync", StringComparison.Ordinal);
+        var monitoringEnd = source.IndexOf("private sealed record MonitoreoMetadata", monitoringStart, StringComparison.Ordinal);
         Assert.True(monitoringStart >= 0 && monitoringEnd > monitoringStart);
         var monitoring = source[monitoringStart..monitoringEnd];
 
-        Assert.Contains("COUNT(*) OVER ()", monitoring, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("PENDIENTES", monitoring, StringComparison.Ordinal);
-        Assert.DoesNotContain("totalsCommand", monitoring, StringComparison.Ordinal);
+        Assert.DoesNotContain("COUNT(*) OVER", monitoring, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SUM(CASE", monitoring, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("rangeCommand", monitoring, StringComparison.Ordinal);
+        Assert.Contains("EjecutarPaginaMonitoreoAsync", monitoring, StringComparison.Ordinal);
+        Assert.Contains("ObtenerMetadataMonitoreoAsync", monitoring, StringComparison.Ordinal);
+        Assert.Contains("_cache.GetOrCreateAsync", monitoring, StringComparison.Ordinal);
         Assert.Contains("cancellationToken", monitoring, StringComparison.Ordinal);
+        Assert.DoesNotContain("ObtenerMonitoreoPaginadoLegacyAsync", source, StringComparison.Ordinal);
 
         foreach (var builder in new[] { "ConstruirConsultaMonitoreoJuridicas", "ConstruirConsultaMonitoreoNaturales", "ConstruirConsultaMonitoreoEmpleados" })
         {

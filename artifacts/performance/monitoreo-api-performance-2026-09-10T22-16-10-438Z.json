@@ -1,0 +1,220 @@
+{
+  "generatedAt": "2026-09-10T22:16:10.443Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "FULL_STACK_PRODUCTION_MODE_REAL_ORACLE",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 0,
+    "timeoutMs": 10000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "juridicas",
+      "naturales",
+      "empleados"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "juridicas": {
+      "coldMs": null,
+      "warmSamplesMs": [],
+      "minMs": null,
+      "maxMs": null,
+      "meanMs": null,
+      "medianMs": null,
+      "p90Ms": null,
+      "p95Ms": null,
+      "totalRecords": 0,
+      "datasetVolumeClass": "EMPTY",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 0,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.51ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10014.43ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10014.95ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10009.51ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10014.43ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10014.95ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    },
+    "naturales": {
+      "coldMs": null,
+      "warmSamplesMs": [],
+      "minMs": null,
+      "maxMs": null,
+      "meanMs": null,
+      "medianMs": null,
+      "p90Ms": null,
+      "p95Ms": null,
+      "totalRecords": 0,
+      "datasetVolumeClass": "EMPTY",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 0,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.92ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.97ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10006.90ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10010.92ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10005.97ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10006.90ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    },
+    "empleados": {
+      "coldMs": null,
+      "warmSamplesMs": [],
+      "minMs": null,
+      "maxMs": null,
+      "meanMs": null,
+      "medianMs": null,
+      "p90Ms": null,
+      "p95Ms": null,
+      "totalRecords": 0,
+      "datasetVolumeClass": "EMPTY",
+      "page2": {
+        "applicable": false
+      },
+      "pageSize25": {
+        "applicable": false
+      },
+      "filtered": null,
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 0,
+        "warm": 0,
+        "page2": 0,
+        "pageSize25": 0,
+        "filtered": 0,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10003.72ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.84ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.04ms)"
+        }
+      ],
+      "failures": [
+        {
+          "scenario": "cold",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10003.72ms)"
+        },
+        {
+          "scenario": "warm-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10011.84ms)"
+        },
+        {
+          "scenario": "filtered-run-1",
+          "kind": "timeout",
+          "message": "timeout 10000ms (10004.04ms)"
+        }
+      ],
+      "globalP95Ms": null,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 9,
+  "result": "FAIL"
+}

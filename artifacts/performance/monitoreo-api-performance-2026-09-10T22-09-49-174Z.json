@@ -1,0 +1,84 @@
+{
+  "generatedAt": "2026-09-10T22:09:49.178Z",
+  "gitSha": "3a8782bf9482349062a65b639d7978791f8f715b",
+  "environment": {
+    "apiBase": "http://<host>/api",
+    "apiMode": "FULL_STACK_PRODUCTION_MODE_REAL_ORACLE",
+    "oracleReal": true,
+    "runs": 1,
+    "warmups": 0,
+    "timeoutMs": 30000,
+    "measurement": "TIME_TO_FULL_RESPONSE_BODY",
+    "coldMethod": "first request per endpoint after API readiness; process startup excluded",
+    "types": [
+      "naturales"
+    ],
+    "concurrency": 0,
+    "userObservedBaselineMs": 60000
+  },
+  "tests": {
+    "naturales": {
+      "coldMs": 28104.81,
+      "warmSamplesMs": [
+        4678.82
+      ],
+      "minMs": 4678.82,
+      "maxMs": 4678.82,
+      "meanMs": 4678.82,
+      "medianMs": 4678.82,
+      "p90Ms": 4678.82,
+      "p95Ms": 4678.82,
+      "totalRecords": 242,
+      "datasetVolumeClass": "MEDIUM",
+      "page2": {
+        "minMs": 6817.64,
+        "maxMs": 6817.64,
+        "meanMs": 6817.64,
+        "medianMs": 6817.64,
+        "p90Ms": 6817.64,
+        "p95Ms": 6817.64,
+        "samplesMs": [
+          6817.64
+        ]
+      },
+      "pageSize25": {
+        "minMs": 1429.08,
+        "maxMs": 1429.08,
+        "meanMs": 1429.08,
+        "medianMs": 1429.08,
+        "p90Ms": 1429.08,
+        "p95Ms": 1429.08,
+        "samplesMs": [
+          1429.08
+        ]
+      },
+      "filtered": {
+        "minMs": 23581.55,
+        "maxMs": 23581.55,
+        "meanMs": 23581.55,
+        "medianMs": 23581.55,
+        "p90Ms": 23581.55,
+        "p95Ms": 23581.55,
+        "samplesMs": [
+          23581.55
+        ]
+      },
+      "concurrency5": null,
+      "successfulSamples": {
+        "cold": 1,
+        "warm": 1,
+        "page2": 1,
+        "pageSize25": 1,
+        "filtered": 1,
+        "concurrency5": 0
+      },
+      "failedSamples": [],
+      "timeoutSamples": [],
+      "failures": [],
+      "globalP95Ms": 4678.82,
+      "result": "FAIL"
+    }
+  },
+  "failedRequests": 0,
+  "result": "FAIL"
+}
