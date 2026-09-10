@@ -1136,3 +1136,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificación local: frontend `78` archivos / `781` pruebas, backend `622/622`, E2E oficial `36/36`, lint PASS, build PASS, `npm audit=0 vulnerabilities`, diff check PASS. La primera ejecución focal directa de Playwright sin servidor devolvió `ERR_CONNECTION_REFUSED`; se repitió por el runner oficial, que inicia el servidor, y finalizó `36/36`.
 - Restricciones: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML_MIGRATION=0`; `DEPENDENCY_CHANGES=0`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDADA=FALSE`. Los tres untracked preexistentes permanecen sin stagear.
 - Estado: implementación lista para cierre técnico; pendiente validación final, commit/push y Quality Gate sobre el SHA final exacto. No reanudar FASE 5.3.
+
+### Cierre técnico
+
+- Commit de implementación: `abaed859a67943f61d94dd2d9fa84ea2ead17632`, publicado en `origin/desarrollo`; Quality Gate `RUN=34480458393`, `STATUS=completed`, `CONCLUSION=success`.
+- Evidencia final verificada: `HTML_TEMPLATES_AUDITED=28`; `INLINE_TEMPLATES_AUDITED=6`; `PAGINATION_SURFACES_FOUND=12`; `PAGINATION_SURFACES_USING_SHARED_COMPONENT=12`; `PAGE_SIZE_SELECTORS_FOUND=12`; `PAGE_SIZE_SELECTORS_USING_SHARED_COMPONENT=12`; frontend `78/781`; backend `622/622`; E2E `36/36`; lint/build/audit/diff check PASS.
+- Restricciones finales: `BACKEND_PRODUCT_CHANGES=0`; `API_CHANGES=0`; `ORACLE_DDL=0`; `ORACLE_DML_MIGRATION=0`; `DEPENDENCY_CHANGES=0`; `MAIN_INTACTA=TRUE`; `FASE_5_3_REANUDADA=FALSE`. La nota documental append-only de este cierre requiere un Quality Gate propio para su SHA final.
