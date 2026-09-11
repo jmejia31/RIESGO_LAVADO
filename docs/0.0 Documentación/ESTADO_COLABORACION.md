@@ -1236,3 +1236,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 - SHA final: `17026011e83c7ba02225be1f123d3dcfbc9a530e`; Quality Gate exacto `RUN=34615198093`; `STATUS=completed`; `CONCLUSION=success`.
 - `NPM_AUDIT_AFTER=0 vulnerabilities`; `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`.
+
+### Cierre final con SHA exacto
+
+- Commit final de trazabilidad: `94fdfd19dd747907ae3c7830edca53cfdd01309f`; Quality Gate exacto `RUN=34615859227`; `STATUS=completed`; `CONCLUSION=success`.
