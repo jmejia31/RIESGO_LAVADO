@@ -1240,3 +1240,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 ### Cierre final con SHA exacto
 
 - Commit final de trazabilidad: `94fdfd19dd747907ae3c7830edca53cfdd01309f`; Quality Gate exacto `RUN=34615859227`; `STATUS=completed`; `CONCLUSION=success`.
+
+## Estado vigente — DBA-ORACLE-PRECHANGE-VERIFICATION-1
+
+- Fecha/hora local: `2026-09-11 10:08 -06:00`; autor `COD` / `CODEX`; rama `desarrollo`; baseline efectivo inicial `e19cc1bd6589f50087fc2283962d1bd82a3e4af9`. Durante la auditoría se integró por fast-forward el cambio concurrente `214eed3c5efeae26edf80ba7215ae017027d4828` de Bitácora, sin sobrescribirlo; `main` intacta. Se mantuvieron sin tocar los tres untracked preexistentes.
+- Auditoría directa, 100% read-only, contra Oracle real: `CURRENT_SCHEMA=RIESGO_LAVADO`, `SESSION_USER=RIESGO_LAVADO`, `DATABASE=hpprod1`. Se agregó `tools/performance/audit-oracle-prechange.ps1`, que emplea sólo `SELECT`, evita `EXPLAIN PLAN` para no escribir `PLAN_TABLE`, y elimina su archivo temporal con credenciales después de SQL*Plus.
+- Evidencia actual: `REPORTE_COINCIDENCIAS` tiene únicamente su PK por `REPORTE_COINCIDENCIA_ID`; ninguna P0 tiene match exacto, prefijo ni cobertura preexistente. `SOCIOS`/`REPRESENTANTES` no tienen índice de identificación; `DATOS_EMPRESA` y `MMATAMOROS.PATRONOS` ya cubren sus claves patronales. `RL_LISTA_POSITIVOS` conserva cobertura parcial; P2 no se justifica con seis filas.
+- Planes read-only y decisión: Naturales `3681079459`, Jurídicas `3681022051`, Empleados `1437433635`; los dos primeros conservan full scans de fuentes DNP/MMATAMOROS. Se recomienda `P0=2`, `P1=2`, `P2=0`, más revisión DBA de estadísticas stale. La cuenta operativa no expone `CREATE INDEX`, `ANALYZE ANY`, `V$SQL` ni `ALL_SEGMENTS`; la siguiente acción es `DBA_REQUIRED`.
+- Documentación: `docs/performance/ORACLE_MONITOREO_PRECHANGE_AUDIT.md` separa hechos de esta auditoría de la propuesta DBA histórica y no contiene host, cadena de conexión, contraseña ni datos personales.
+- Restricciones verificadas: `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DBMS_STATS_EXECUTED=0`; no se modificaron contratos, reglas LA/FT, paginación, frontend ni backend productivo. `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_PHYSICAL_OPTIMIZATION`; no se declara PASS ni se repite el benchmark antes de un cambio DBA autorizado.
+- Pendiente inmediato: ejecutar validadores de documentación/base, publicar los cuatro archivos de esta intervención, comprobar Quality Gate para el SHA final, y después esperar aprobación/aplicación DBA antes de reanudar el benchmark. `FASE_5_3_REANUDABLE=FALSE`; `FASE_5_3_REANUDADA=FALSE`.
