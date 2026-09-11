@@ -7103,3 +7103,8 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Quality Gate exacto del SHA publicado: `RUN=34614451970`, `STATUS=completed`, `CONCLUSION=success`. La verificacion npm reproducible quedo en `0 vulnerabilities`.
 - Estado final de esta etapa: `RESULTADO=DBA_PHYSICAL_OPTIMIZATION_READY_FOR_APPROVAL`; `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`. No se ejecutaron Oracle DDL, DML, indices ni DBMS_STATS.
 - La preparacion DBA contiene planes EXPLAIN reales, inventario fisico, estadisticas, recomendaciones P0/P1/P2 y rollback comentado. La certificacion full-stack no se reabre hasta que un DBA autorice/aplique cambios y se repita el benchmark contractual sin suavizar umbrales.
+
+### Certificacion exacta del cierre documental
+
+- SHA final de la intervencion: `17026011e83c7ba02225be1f123d3dcfbc9a530e`; Quality Gate exacto `RUN=34615198093`; `STATUS=completed`; `CONCLUSION=success`.
+- `NPM_AUDIT=0 vulnerabilities`; `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`.

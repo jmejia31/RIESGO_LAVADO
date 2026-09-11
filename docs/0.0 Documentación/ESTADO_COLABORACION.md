@@ -1231,3 +1231,8 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Entregable: `DBA_PHYSICAL_OPTIMIZATION_READY_FOR_APPROVAL`. Se crearon el script read-only de diagnostico y el plan/reporte DBA con DDL comentado y rollback. `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DBMS_STATS` no ejecutado.
 - Estado de rendimiento: `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`; no se presenta el gate tecnico como certificacion de latencia Oracle.
 - Limitaciones declaradas: `validate_repository_structure.ps1` conserva tres hallazgos legacy preexistentes; `validate_agent_skills.py` queda pendiente por ausencia de Python operativo local. Los tres untracked preexistentes siguen sin stagear.
+
+### Certificacion exacta del cierre documental
+
+- SHA final: `17026011e83c7ba02225be1f123d3dcfbc9a530e`; Quality Gate exacto `RUN=34615198093`; `STATUS=completed`; `CONCLUSION=success`.
+- `NPM_AUDIT_AFTER=0 vulnerabilities`; `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`.
