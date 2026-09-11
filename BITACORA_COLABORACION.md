@@ -7096,3 +7096,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Regresion verificada en esta intervencion: backend `617/617 PASS`; frontend `781/781 PASS` en `78` archivos; E2E `36/36 PASS`; lint PASS; build Angular PASS; `npm audit` PASS. Validadores de base de datos, enlaces y diff check quedan por ejecutar despues de cerrar la documentacion.
 - Estado: `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`; no se repite el benchmark contractual antes de aplicar el cambio fisico autorizado. `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `FASE_5_3_REANUDABLE=FALSE`; `FASE_5_3_REANUDADA=FALSE`.
 - Pendientes de cierre: validadores finales, stage/commit/push, Quality Gate nuevo del SHA final exacto y completar esta entrada con sus identificadores reales. Python no esta disponible localmente para `validate_agent_skills.py` y los hooks asociados; no se presenta esa validacion como PASS.
+
+### Cierre de publicacion PERF-ORACLE-PHYSICAL-OPTIMIZATION-PREP-1 + SEC-NPM-AUDIT-REMEDIATION-1
+
+- El commit de la intervencion y los ajustes concurrentes integrados quedaron publicados en `origin/desarrollo`: `79a67ab6c69224f2647eec7ea689104b8d19d3ba`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`. `main` permanece en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39` sin cambios.
+- Quality Gate exacto del SHA publicado: `RUN=34614451970`, `STATUS=completed`, `CONCLUSION=success`. La verificacion npm reproducible quedo en `0 vulnerabilities`.
+- Estado final de esta etapa: `RESULTADO=DBA_PHYSICAL_OPTIMIZATION_READY_FOR_APPROVAL`; `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`. No se ejecutaron Oracle DDL, DML, indices ni DBMS_STATS.
+- La preparacion DBA contiene planes EXPLAIN reales, inventario fisico, estadisticas, recomendaciones P0/P1/P2 y rollback comentado. La certificacion full-stack no se reabre hasta que un DBA autorice/aplique cambios y se repita el benchmark contractual sin suavizar umbrales.

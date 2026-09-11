@@ -1223,3 +1223,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Plan DBA creado: `docs/performance/ORACLE_MONITOREO_PHYSICAL_OPTIMIZATION_PLAN.sql` con DDL totalmente comentado, orden de prioridad P0/P1/P2 y rollback; reporte `docs/performance/ORACLE_MONITOREO_PHYSICAL_OPTIMIZATION_REPORT.md` con plan before, cardinalidades, cuellos, riesgos y `DBMS_STATS_REQUIRED=TRUE` separado. `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE` permanece.
 - Regresion ejecutada: backend `617/617`, frontend `781/781` en `78` archivos, E2E `36/36`, lint y build PASS; pendientes al momento de esta anotacion: validadores finales, publicacion y Quality Gate del SHA final. `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`.
 - Punto de continuacion: ejecutar validaciones finales, publicar unicamente los cambios npm/diagnostico/documentacion/tests autorizados en `origin/desarrollo`, esperar el nuevo Quality Gate exacto y actualizar este estado con SHA/run reales. Python no operativo localmente deja `validate_agent_skills.py` pendiente.
+
+### Cierre PERF-ORACLE-PHYSICAL-OPTIMIZATION-PREP-1 + SEC-NPM-AUDIT-REMEDIATION-1
+
+- Commit final publicado en `origin/desarrollo`: `79a67ab6c69224f2647eec7ea689104b8d19d3ba`; `AHEAD=0`; `BEHIND=0`; `REMOTE_SYNC=PASS`; `main` intacta en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.
+- Quality Gate exacto: `RUN=34614451970`; `STATUS=completed`; `CONCLUSION=success`. `NPM_AUDIT_AFTER=0 vulnerabilities`; frontend y regresion local permanecen verdes.
+- Entregable: `DBA_PHYSICAL_OPTIMIZATION_READY_FOR_APPROVAL`. Se crearon el script read-only de diagnostico y el plan/reporte DBA con DDL comentado y rollback. `ORACLE_DDL_EXECUTED=0`; `ORACLE_DML_EXECUTED=0`; `DBMS_STATS` no ejecutado.
+- Estado de rendimiento: `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_PENDING_DBA_CHANGE`; no se presenta el gate tecnico como certificacion de latencia Oracle.
+- Limitaciones declaradas: `validate_repository_structure.ps1` conserva tres hallazgos legacy preexistentes; `validate_agent_skills.py` queda pendiente por ausencia de Python operativo local. Los tres untracked preexistentes siguen sin stagear.
