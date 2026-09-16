@@ -145,16 +145,23 @@ public sealed class DbPaginationRegressionGuardTests
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
         var juridicasSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoJuridicas");
+        var reporteJuridicasStart = juridicasSql.IndexOf("REPORTE_JURIDICAS AS (", StringComparison.Ordinal);
+        var reporteJuridicasEnd = juridicasSql.IndexOf("), EMPRESA_FUENTE AS", reporteJuridicasStart, StringComparison.Ordinal);
         var empresaFuenteStart = juridicasSql.IndexOf("EMPRESA_FUENTE AS (", StringComparison.Ordinal);
         var empresaFuenteEnd = juridicasSql.IndexOf("), Coincidencias AS", empresaFuenteStart, StringComparison.Ordinal);
 
+        Assert.True(reporteJuridicasStart >= 0 && reporteJuridicasEnd > reporteJuridicasStart);
         Assert.True(empresaFuenteStart >= 0 && empresaFuenteEnd > empresaFuenteStart);
+        var reporteJuridicas = juridicasSql[reporteJuridicasStart..reporteJuridicasEnd];
         var empresaFuente = juridicasSql[empresaFuenteStart..empresaFuenteEnd];
 
         Assert.DoesNotContain("DNP_IHSS.V_DATOS_EMPRESA", juridicasSql, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE", empresaFuente, StringComparison.Ordinal);
-        Assert.Contains("MMATAMOROS.PATRONOS P", empresaFuente, StringComparison.Ordinal);
-        Assert.Contains("P.NUMEPATRO = DE.NUMERO_PATRONAL", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.REPORTE_COINCIDENCIAS", reporteJuridicas, StringComparison.Ordinal);
+        Assert.Contains("TIPO_CALIFICACION_ID = 1", reporteJuridicas, StringComparison.Ordinal);
+        Assert.Contains("NUMERO_PATRONO IS NOT NULL", reporteJuridicas, StringComparison.Ordinal);
+        Assert.Contains("FROM REPORTE_JURIDICAS R", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("MMATAMOROS.PATRONOS P ON P.NUMEPATRO = R.NUMERO_PATRONO", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = P.NUMEPATRO", empresaFuente, StringComparison.Ordinal);
         Assert.Contains("DE.TIPO_EMPRESA_ID = 1", empresaFuente, StringComparison.Ordinal);
 
         foreach (var requiredFunctionalRelation in new[]
