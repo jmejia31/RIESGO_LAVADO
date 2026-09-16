@@ -6,7 +6,9 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, '..');
 const angularCli = resolve(projectRoot, 'node_modules/@angular/cli/bin/ng.js');
 const playwrightCli = resolve(projectRoot, 'node_modules/@playwright/test/cli.js');
-const serverUrl = 'http://127.0.0.1:4200/login';
+const serverPort = process.env.E2E_PORT ?? '4201';
+const e2eBaseUrl = `http://127.0.0.1:${serverPort}`;
+const serverUrl = `${e2eBaseUrl}/login`;
 const testArguments = process.argv.slice(2);
 
 let stopping = false;
@@ -14,7 +16,7 @@ let serverOutput = '';
 
 const server = spawn(
   process.execPath,
-  [angularCli, 'serve', '--host', '127.0.0.1', '--port', '4200'],
+  [angularCli, 'serve', '--host', '127.0.0.1', '--port', serverPort],
   {
     cwd: projectRoot,
     windowsHide: true,
@@ -75,7 +77,7 @@ try {
     cwd: projectRoot,
     windowsHide: true,
     stdio: 'inherit',
-    env: process.env,
+    env: { ...process.env, E2E_BASE_URL: e2eBaseUrl },
   });
 
   const testExitCode = await new Promise((resolveExit, reject) => {

@@ -110,8 +110,18 @@ describe('BitacoraComponent — rediseño institucional', () => {
     expect(dialog.textContent).toContain('activo');
     expect(dialog.textContent).toContain('"nivel"');
     expect(dialog.textContent).not.toContain('[object Object]');
-    expect(dialog.querySelectorAll('button')).toHaveLength(2);
-    expect(Array.from(dialog.querySelectorAll('button')).every(button => !(button.textContent ?? '').trim())).toBe(true);
+    const closeButtons = dialog.querySelectorAll('button');
+    expect(closeButtons).toHaveLength(1);
+
+    const closeButton = closeButtons.item(0);
+    expect(closeButton.textContent?.trim()).toBe('');
+    expect(closeButton.getAttribute('aria-label')).toBe('Cerrar detalle de auditoría');
+    expect(closeButton.getAttribute('title')).toBe('Cerrar detalle de auditoría');
+
+    closeButton.click();
+    fixture.detectChanges();
+    expect(component.modalDetalleAbierto()).toBe(false);
+    expect(fixture.nativeElement.querySelector('[role="dialog"]')).toBeNull();
   });
 
   it('usa un estado vacío específico para eventos de auditoría', () => {

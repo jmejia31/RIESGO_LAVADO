@@ -141,6 +141,33 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
+    public void MonitoreoJuridicas_UsaFuenteLigeraEquivalenteSinLaVistaPesada()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var juridicasSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoJuridicas");
+        var empresaFuenteStart = juridicasSql.IndexOf("EMPRESA_FUENTE AS (", StringComparison.Ordinal);
+        var empresaFuenteEnd = juridicasSql.IndexOf("), Coincidencias AS", empresaFuenteStart, StringComparison.Ordinal);
+
+        Assert.True(empresaFuenteStart >= 0 && empresaFuenteEnd > empresaFuenteStart);
+        var empresaFuente = juridicasSql[empresaFuenteStart..empresaFuenteEnd];
+
+        Assert.DoesNotContain("DNP_IHSS.V_DATOS_EMPRESA", juridicasSql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("MMATAMOROS.PATRONOS P", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("P.NUMEPATRO = DE.NUMERO_PATRONAL", empresaFuente, StringComparison.Ordinal);
+        Assert.Contains("DE.TIPO_EMPRESA_ID = 1", empresaFuente, StringComparison.Ordinal);
+
+        foreach (var requiredFunctionalRelation in new[]
+                 {
+                     "MMATAMOROS.ACTIECON", "MMATAMOROS.SECTORES", "DNP_IHSS.DEPARTAMENTOS",
+                     "DNP_IHSS.MUNICIPIOS", "DNP_IHSS.TIPO_EMPRESA", "DNP_IHSS.TIPO_RIESGO"
+                 })
+            Assert.Contains(requiredFunctionalRelation, empresaFuente, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("SELECT (SELECT", juridicasSql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void UsuariosPaginados_CargaModulosSoloParaLaPagina()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Identidad/Persistence/UsuarioRepository.cs"));

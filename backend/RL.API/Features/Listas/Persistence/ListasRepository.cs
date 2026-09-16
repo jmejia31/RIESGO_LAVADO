@@ -1286,6 +1286,46 @@ namespace RL.API.Features.Listas.Persistence
                 FROM RL_LISTA_POSITIVOS
                 WHERE LSP_ESTADO_REGISTRO = 1 AND LSP_TIPO_POSITIVO_ID = 1
                 GROUP BY LSP_NO_DOCUMENTO
+            ), EMPRESA_FUENTE AS (
+                SELECT P.RTN,
+                       P.NOMBRE,
+                       P.NUMEPATRO,
+                       DE.ES_PROVEEDOR_IHSS,
+                       DE.TIPO_EMPRESA_ID
+                FROM DNP_IHSS.DATOS_EMPRESA DE
+                INNER JOIN MMATAMOROS.PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL
+                WHERE DE.TIPO_EMPRESA_ID = 1
+                  AND EXISTS (
+                      SELECT 1
+                      FROM MMATAMOROS.ACTIECON A
+                      WHERE A.ACTIECON = P.ACTIECON
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM MMATAMOROS.SECTORES S
+                      WHERE S.SECTOR = P.SECTOR
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM DNP_IHSS.DEPARTAMENTOS DP
+                      WHERE DP.DEPARTAMENTO_ID = P.DEPARTAMENTO
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM DNP_IHSS.MUNICIPIOS M
+                      WHERE M.DEPARTAMENTO_ID = P.DEPARTAMENTO
+                        AND M.MUNICIPIO_ID = P.MUNICIPIO
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM DNP_IHSS.TIPO_EMPRESA TE
+                      WHERE TE.TIPO_EMPRESA_ID = DE.TIPO_EMPRESA_ID
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM DNP_IHSS.TIPO_RIESGO TR
+                      WHERE TR.TIPO_RIESGO_ID = DE.TIPO_RIESGO_ID
+                  )
             ), Coincidencias AS (
                 SELECT D.RTN, D.NOMBRE, D.NUMEPATRO, R.LISTA_CONCIDENCIA, R.FECHA_ENCONTRO, R.FECHA_CALIFICO,
                        CASE
@@ -1296,11 +1336,11 @@ namespace RL.API.Features.Listas.Persistence
                        END AS FECHA_REGISTRO_INTERNO,
                        D.ES_PROVEEDOR_IHSS,
                        GREATEST(NVL(pp.TIENE_MOTIVO, 0), NVL(pr.TIENE_MOTIVO, 0)) AS TIENE_MOTIVO
-                FROM DNP_IHSS.V_DATOS_EMPRESA d
+                FROM EMPRESA_FUENTE D
                 INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS r ON D.NUMEPATRO = R.NUMERO_PATRONO
                 LEFT JOIN POSITIVOS_AGG pp ON pp.LSP_NO_DOCUMENTO = D.NUMEPATRO
                 LEFT JOIN POSITIVOS_AGG pr ON pr.LSP_NO_DOCUMENTO = D.RTN
-                WHERE D.TIPO_EMPRESA_ID = 1 AND R.TIPO_CALIFICACION_ID = 1)
+                WHERE R.TIPO_CALIFICACION_ID = 1)
             SELECT RTN, NOMBRE, NUMEPATRO, LISTA_CONCIDENCIA, FECHA_ENCONTRO, FECHA_CALIFICO, FECHA_REGISTRO_INTERNO, ES_PROVEEDOR_IHSS, TIENE_MOTIVO, 0 AS ES_MANUAL, RTN || ' ' || NUMEPATRO AS BUSQUEDA FROM Coincidencias
             UNION ALL
             SELECT lp.LSP_NO_DOCUMENTO, lp.LSP_NOMBRE_COMPLETO, lp.LSP_NO_DOCUMENTO, NVL(lc.LISTA_CAUTELA_DESCRICPION, 'MANUAL'), CAST(NULL AS DATE), CAST(NULL AS DATE), lp.LSP_FECHA_CREACION, 0, 1, 1, lp.LSP_NO_DOCUMENTO AS BUSQUEDA

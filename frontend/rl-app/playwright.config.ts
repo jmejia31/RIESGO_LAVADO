@@ -12,7 +12,7 @@ export default defineConfig({
   ],
   outputDir: 'test-results',
   use: {
-    baseURL: 'http://127.0.0.1:4200',
+    baseURL: process.env['E2E_BASE_URL'] ?? 'http://127.0.0.1:4200',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
   },
