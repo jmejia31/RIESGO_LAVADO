@@ -1,0 +1,718 @@
+﻿
+SQL*Plus: Release 11.2.0.3.0 Production on Wed Sep 16 10:16:24 2026
+
+Copyright (c) 1982, 2011, Oracle.  All rights reserved.
+
+Conectado.
+=== NATURALES_FUNCTIONAL_EQUIVALENCE ===
+
+'ACTUAL_TOTAL='||COUNT(*)
+----------------------------------------------------------
+ACTUAL_TOTAL=30464
+LIGHTWEIGHT_TOTAL=30464
+ONLY_CURRENT=0
+ONLY_LIGHTWEIGHT=0
+
+4 filas seleccionadas.
+
+=== TABLE_STATS ===
+
+OWNER			       TABLE_NAME			NUM_ROWS LAST_ANA     BLOCKS
+------------------------------ ------------------------------ ---------- -------- ----------
+MMATAMOROS		       PATRONOS 			   94588 09/07/26	8149
+PATROTEMP		       PATRONOS 			   79563 13/09/17	5756
+
+2 filas seleccionadas.
+
+
+OWNER			       TABLE_NAME			NUM_ROWS LAST_ANA     BLOCKS
+------------------------------ ------------------------------ ---------- -------- ----------
+MMATAMOROS		       PATRONOS 			   94588 09/07/26	8149
+MMATAMOROS		       PLANILLAS		       180592953 12/12/24    3745679
+
+2 filas seleccionadas.
+
+
+OWNER			       TABLE_NAME			NUM_ROWS LAST_ANA     BLOCKS
+------------------------------ ------------------------------ ---------- -------- ----------
+DNP_IHSS		       DATOS_EMPRESA			   26429 21/05/26	 338
+DNP_IHSS		       REPORTE_COINCIDENCIAS		   31767 01/09/26	 768
+DNP_IHSS		       REPRESENTANTES			   19275 21/05/26	 611
+DNP_IHSS		       SOCIOS				   34713 21/05/26	 706
+DNP_IHSS		       TIPO_LISTAS_CAUTELA		       6 17/06/26	   8
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS		       6 13/07/26	   5
+
+6 filas seleccionadas.
+
+=== INDEXES ===
+
+OWNER			       INDEX_NAME		      TABLE_NAME		     UNIQUENES STATUS
+------------------------------ ------------------------------ ------------------------------ --------- --------
+MMATAMOROS		       ESTADO_IDX		      PATRONOS			     NONUNIQUE VALID
+MMATAMOROS		       PATRONOS_IDX_NUMPA	      PATRONOS			     NONUNIQUE VALID
+MMATAMOROS		       PATRONOS_IDX$$_01B60003	      PATRONOS			     NONUNIQUE VALID
+MMATAMOROS		       PATRONOS_IDX$$_01B60008	      PATRONOS			     NONUNIQUE VALID
+MMATAMOROS		       PK_PATRONOS_PATRONOS	      PATRONOS			     UNIQUE    VALID
+MMATAMOROS		       RTN			      PATRONOS			     NONUNIQUE VALID
+MMATAMOROS		       I_PLANILLAS_IDENTIDAD	      PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       I_PLANILLAS_NUMEAFIL	      PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       IU_PERIODO_NUMEPLAN	      PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       KPLIDENPERIO		      PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       PLANILLAS_IDX$$_04E20002       PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       PLANILLAS_IDX$$_05130000       PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       PLANILLAS_IDX$$_05130001       PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       PLANILLAS_PERIODO	      PLANILLAS 		     NONUNIQUE VALID
+MMATAMOROS		       PLANILLAS_PRIMARIA	      PLANILLAS 		     UNIQUE    VALID
+
+15 filas seleccionadas.
+
+
+OWNER			       INDEX_NAME		      TABLE_NAME		     UNIQUENES STATUS
+------------------------------ ------------------------------ ------------------------------ --------- --------
+DNP_IHSS		       DATOS_EMPRESA_PK 	      DATOS_EMPRESA		     UNIQUE    VALID
+DNP_IHSS		       IND_NUMERO_PATRONO	      DATOS_EMPRESA		     UNIQUE    VALID
+DNP_IHSS		       PERPORTE_COINCIDENCIAS_PK      REPORTE_COINCIDENCIAS	     UNIQUE    VALID
+DNP_IHSS		       REPRESENTANTES_PK	      REPRESENTANTES		     UNIQUE    VALID
+DNP_IHSS		       SOCIOS_PK		      SOCIOS			     UNIQUE    VALID
+DNP_IHSS		       LISTAS_CAUTELA_PK	      TIPO_LISTAS_CAUTELA	     UNIQUE    VALID
+RIESGO_LAVADO		       IDX_RL_LSP_ESTADO	      RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       IDX_RL_LSP_NOMBRE_COMPLETO     RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       IDX_RL_LSP_ORIGEN	      RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       IDX_RL_LSP_USR_CREACION	      RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       IDX_RL_LSP_USR_INACTIVO	      RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       IDX_RL_LSP_USR_MODIF	      RL_LISTA_POSITIVOS	     NONUNIQUE VALID
+RIESGO_LAVADO		       PK_RL_LISTA_POSITIVOS	      RL_LISTA_POSITIVOS	     UNIQUE    VALID
+RIESGO_LAVADO		       UQ_RL_LSP_DOCUMENTO	      RL_LISTA_POSITIVOS	     UNIQUE    VALID
+
+14 filas seleccionadas.
+
+=== INDEX_COLUMNS ===
+
+INDEX_OWNER		       INDEX_NAME		      TABLE_NAME		     COLUMN_POSITION
+------------------------------ ------------------------------ ------------------------------ ---------------
+COLUMN_NAME
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+MMATAMOROS		       ESTADO_IDX		      PATRONOS					   1
+ESTADO
+
+MMATAMOROS		       PATRONOS_IDX_NUMPA	      PATRONOS					   1
+SYS_NC00084$
+
+MMATAMOROS		       PATRONOS_IDX$$_01B60003	      PATRONOS					   1
+LUGADIST
+
+MMATAMOROS		       PATRONOS_IDX$$_01B60003	      PATRONOS					   2
+ESTADO
+
+MMATAMOROS		       PATRONOS_IDX$$_01B60003	      PATRONOS					   3
+PLANIELEC
+
+MMATAMOROS		       PATRONOS_IDX$$_01B60003	      PATRONOS					   4
+NUMEPATRO
+
+MMATAMOROS		       PATRONOS_IDX$$_01B60008	      PATRONOS					   1
+SYS_NC00083$
+
+MMATAMOROS		       PK_PATRONOS_PATRONOS	      PATRONOS					   1
+NUMEPATRO
+
+MMATAMOROS		       RTN			      PATRONOS					   1
+RTN
+
+MMATAMOROS		       I_PLANILLAS_IDENTIDAD	      PLANILLAS 				   1
+IDENTIDAD
+
+MMATAMOROS		       I_PLANILLAS_NUMEAFIL	      PLANILLAS 				   1
+NUMEAFIL
+
+MMATAMOROS		       IU_PERIODO_NUMEPLAN	      PLANILLAS 				   1
+PERIODO
+
+MMATAMOROS		       IU_PERIODO_NUMEPLAN	      PLANILLAS 				   2
+NUMEPLAN
+
+MMATAMOROS		       KPLIDENPERIO		      PLANILLAS 				   1
+IDENTIDAD
+
+MMATAMOROS		       KPLIDENPERIO		      PLANILLAS 				   2
+PERIODO
+
+MMATAMOROS		       PLANILLAS_IDX$$_04E20002       PLANILLAS 				   1
+NUMEPATRO
+
+MMATAMOROS		       PLANILLAS_IDX$$_05130000       PLANILLAS 				   1
+NOMBRE
+
+MMATAMOROS		       PLANILLAS_IDX$$_05130001       PLANILLAS 				   1
+PERIODO
+
+MMATAMOROS		       PLANILLAS_IDX$$_05130001       PLANILLAS 				   2
+LUGAR
+
+MMATAMOROS		       PLANILLAS_IDX$$_05130001       PLANILLAS 				   3
+ZONA
+
+MMATAMOROS		       PLANILLAS_PERIODO	      PLANILLAS 				   1
+PERIODO
+
+MMATAMOROS		       PLANILLAS_PERIODO	      PLANILLAS 				   2
+NUMEPATRO
+
+MMATAMOROS		       PLANILLAS_PERIODO	      PLANILLAS 				   3
+IDENTIDAD
+
+MMATAMOROS		       PLANILLAS_PRIMARIA	      PLANILLAS 				   1
+PERIODO
+
+MMATAMOROS		       PLANILLAS_PRIMARIA	      PLANILLAS 				   2
+NUMEPATRO
+
+MMATAMOROS		       PLANILLAS_PRIMARIA	      PLANILLAS 				   3
+NUMEPLAN
+
+MMATAMOROS		       PLANILLAS_PRIMARIA	      PLANILLAS 				   4
+IDENTIDAD
+
+
+27 filas seleccionadas.
+
+
+INDEX_OWNER		       INDEX_NAME		      TABLE_NAME		     COLUMN_POSITION
+------------------------------ ------------------------------ ------------------------------ ---------------
+COLUMN_NAME
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DNP_IHSS		       DATOS_EMPRESA_PK 	      DATOS_EMPRESA				   1
+DATOS_EMPRESA_ID
+
+DNP_IHSS		       IND_NUMERO_PATRONO	      DATOS_EMPRESA				   1
+NUMERO_PATRONAL
+
+DNP_IHSS		       PERPORTE_COINCIDENCIAS_PK      REPORTE_COINCIDENCIAS			   1
+REPORTE_COINCIDENCIA_ID
+
+DNP_IHSS		       REPRESENTANTES_PK	      REPRESENTANTES				   1
+REPRESENTANTE_ID
+
+DNP_IHSS		       SOCIOS_PK		      SOCIOS					   1
+SOCIO_ID
+
+DNP_IHSS		       LISTAS_CAUTELA_PK	      TIPO_LISTAS_CAUTELA			   1
+TIPO_LISTA_CAUTELA_ID
+
+RIESGO_LAVADO		       IDX_RL_LSP_ESTADO	      RL_LISTA_POSITIVOS			   1
+LSP_ESTADO_REGISTRO
+
+RIESGO_LAVADO		       IDX_RL_LSP_NOMBRE_COMPLETO     RL_LISTA_POSITIVOS			   1
+LSP_NOMBRE_COMPLETO
+
+RIESGO_LAVADO		       IDX_RL_LSP_ORIGEN	      RL_LISTA_POSITIVOS			   1
+LSP_ORIGEN_REGISTRO
+
+RIESGO_LAVADO		       IDX_RL_LSP_USR_CREACION	      RL_LISTA_POSITIVOS			   1
+LSP_USR_CREACION_ID
+
+RIESGO_LAVADO		       IDX_RL_LSP_USR_INACTIVO	      RL_LISTA_POSITIVOS			   1
+LSP_USR_INACTIVO_ID
+
+RIESGO_LAVADO		       IDX_RL_LSP_USR_MODIF	      RL_LISTA_POSITIVOS			   1
+LSP_USR_MODIFICACION_ID
+
+RIESGO_LAVADO		       PK_RL_LISTA_POSITIVOS	      RL_LISTA_POSITIVOS			   1
+LSP_POSITIVO_ID
+
+RIESGO_LAVADO		       UQ_RL_LSP_DOCUMENTO	      RL_LISTA_POSITIVOS			   1
+LSP_TIPO_DOCUMENTO_ID
+
+RIESGO_LAVADO		       UQ_RL_LSP_DOCUMENTO	      RL_LISTA_POSITIVOS			   2
+LSP_NO_DOCUMENTO
+
+
+15 filas seleccionadas.
+
+=== INDEX_EXPRESSIONS ===
+
+INDEX_OWNER		       INDEX_NAME		      TABLE_NAME		     COLUMN_POSITION COLUMN_EXPRESSION
+------------------------------ ------------------------------ ------------------------------ --------------- --------------------------------------------------------------------------------
+MMATAMOROS		       PATRONOS_IDX_NUMPA	      PATRONOS					   1 SUBSTR("NUMEPATRO",1,11)
+MMATAMOROS		       PATRONOS_IDX$$_01B60008	      PATRONOS					   1 SUBSTR("NUMEPATRO",4,4)
+
+2 filas seleccionadas.
+
+=== COLUMN_STATS ===
+
+OWNER			       TABLE_NAME		      COLUMN_NAME		     NUM_DISTINCT    DENSITY LAST_ANA
+------------------------------ ------------------------------ ------------------------------ ------------ ---------- --------
+MMATAMOROS		       PATRONOS 		      IDENTIDAD 			     4594 ,000217675 13/05/25
+MMATAMOROS		       PATRONOS 		      NUMEPATRO 			    94383 ,000010652 13/05/25
+MMATAMOROS		       PATRONOS 		      PERIODO					1	   1 13/05/25
+MMATAMOROS		       PATRONOS 		      RTN				    40240 ,000090522 13/05/25
+MMATAMOROS		       PLANILLAS		      IDENTIDAD 			  3540224 1,0769E-06 12/12/24
+MMATAMOROS		       PLANILLAS		      NUMEPATRO 			    83376 ,000831947 12/12/24
+MMATAMOROS		       PLANILLAS		      PERIODO				      407 ,003787879 12/12/24
+
+7 filas seleccionadas.
+
+
+OWNER			       TABLE_NAME		      COLUMN_NAME		     NUM_DISTINCT    DENSITY LAST_ANA
+------------------------------ ------------------------------ ------------------------------ ------------ ---------- --------
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      DNI				      597 ,002294862 01/09/26
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      FECHA_CALIFICO			     1366 ,000732064 01/09/26
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      LISTA_CONCIDENCIA 			5	  ,2 01/09/26
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      NOMBRE				     4136 ,000241779 01/09/26
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      NUMERO_PATRONO			     3818 ,000261917 01/09/26
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      TIPO_CALIFICACION_ID			3  ,00001574 01/09/26
+DNP_IHSS		       REPRESENTANTES		      NUMERO_IDENTIFICACION		    12445 ,000080354 21/05/26
+DNP_IHSS		       REPRESENTANTES		      RTN				    12336 ,000081064 21/05/26
+DNP_IHSS		       SOCIOS			      NUMERO_IDENTIFICACION		    18576 ,000053833 21/05/26
+DNP_IHSS		       SOCIOS			      RTN				    18640 ,000053648 21/05/26
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      LSP_ESTADO_REGISTRO			1 ,083333333 13/07/26
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      LSP_NO_DOCUMENTO				6 ,166666667 13/07/26
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      LSP_TIPO_POSITIVO_ID			3 ,083333333 13/07/26
+
+13 filas seleccionadas.
+
+=== CONSTRAINTS ===
+
+OWNER			       TABLE_NAME		      CONSTRAINT_NAME		     C STATUS
+------------------------------ ------------------------------ ------------------------------ - --------
+DNP_IHSS		       DATOS_EMPRESA		      DATOS_EMPRESA_PK		     P ENABLED
+DNP_IHSS		       DATOS_EMPRESA		      DATOS_EMPRESA_R01 	     R ENABLED
+DNP_IHSS		       DATOS_EMPRESA		      DATOS_EMPRESA_R02 	     R ENABLED
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      PERPORTE_COINCIDENCIAS_PK      P ENABLED
+DNP_IHSS		       REPORTE_COINCIDENCIAS	      REPORTE_COINCIDENCIAS_R01      R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_PK 	     P ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R01	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R02	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R03	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R04	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R05	     R DISABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R06	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R07	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R08	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R09	     R ENABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R10	     R DISABLED
+DNP_IHSS		       REPRESENTANTES		      REPRESENTANTES_R11	     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_PK 		     P ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R01		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R02		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R03		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R04		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R05		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R06		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R07		     R ENABLED
+DNP_IHSS		       SOCIOS			      SOCIOS_R08		     R ENABLED
+DNP_IHSS		       TIPO_LISTAS_CAUTELA	      LISTAS_CAUTELA_PK 	     P ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      CK_RL_LSP_ESTADO		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      CK_RL_LSP_ORIGEN_REG	     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      FK_RL_LSP_USR_CREACION	     R ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      FK_RL_LSP_USR_INACTIVO	     R ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      FK_RL_LSP_USR_MODIF	     R ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      PK_RL_LISTA_POSITIVOS	     P ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      RL_LISTA_POSITIVOS_R01	     R ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      RL_LISTA_POSITIVOS_R02	     R ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036877		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036878		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036879		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036880		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036881		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      SYS_C0036882		     C ENABLED
+RIESGO_LAVADO		       RL_LISTA_POSITIVOS	      UQ_RL_LSP_DOCUMENTO	     U ENABLED
+
+42 filas seleccionadas.
+
+=== VIEW_VISIBILITY ===
+
+OWNER			       VIEW_NAME
+------------------------------ ------------------------------
+DNP_IHSS		       V_DATOS_EMPRESA
+DNP_IHSS		       V_EMPLEADOS_IHSS_PLANILLAS
+DNP_IHSS		       V_SOCIOS_REPRESENTANTES
+
+3 filas seleccionadas.
+
+=== VIEW_DEFINITIONS ===
+
+VIEW_NAME		       TEXT
+------------------------------ --------------------------------------------------------------------------------
+V_DATOS_EMPRESA 	       SELECT P.NUMEPATRO, P.NOMBRE, P.RAZOSOCI, P.RTN,  P.ACTIECON, A.DESCRIPCION ACTI
+			       VIDAD_ECoNOMICA, P.SECTOR SECTOR_ID, S.DESCRIPCION SECTOR,
+			       D.DEPARTAMENTO_ID DEPARTAMENTO_ID_PATRONO,
+			       UPPER(D.DESCRIPCION_DEPARTAMENTO) DEPARTAMENTO_PATRONO, M.MUNICIPIO_ID MUNICIPIO
+			       _ID_PATRONO, UPPER(M.DESCRIPCION_MUNICIPIO) MUNICIPIO_PATRONO,
+			       DE.DATOS_EMPRESA_ID, DE.TIPO_EMPRESA_ID, TE.TIPO_EMPRESA_DESCRIPCION, DE.FECHA_C
+			       ONSTITUCION, DE.NUMERO_DECRETO, DE.PERMISO_OPERACION,
+			       DE.PERTENECE_GRUPO_FINANCIERO, DE.GRUPO_FINANCIERO, DE.VENTAS_INGRESOS, DE.PORCE
+			       NTAJE_EFECTIVO, DE.ES_PROVEEDOR_IHSS, de.tipo_riesgo_id, TR.RIESGO_EMPRESA_DESCR
+			       IPCION RIESGO,
+			       DECODE(P.ESTADO,'A','ACTIVO','P','PASIVO','C','CANCELADO') ESTADO, NO_MATRICULA_
+			       ESCRITURA,
+			       (select U.NOMBRE_USUARIO from usuario u where DE.USUARIO_CREO = U.ID_USUARIO) us
+			       uario_creo, DE.FECHA_CREACION,
+			       (select U.NOMBRE_USUARIO from usuario u where DE.usuario_modifico = U.ID_USUARIO
+			       ) usuario_modifico, DE.FECHA_MODIFICACION,
+			       (SELECT UU.REGIONA_ID
+					   FROM DATOS_EMPRESA DE2
+					   INNER JOIN USUARIO_UBICACION UU ON DE2.USUARIO_CREO = UU.USUARIO_ID
+			       where DE2.DATOS_EMPRESA_ID = DE.DATOS_EMPRESA_ID ) regional_usuario
+			       FROM DATOS_EMPRESA DE
+			       INNER JOIN PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL
+			       INNER JOIN ACTIECON A ON P.ACTIECON = A.ACTIECON
+			       INNER JOIN SECTORES S ON P.SECTOR = S.SECTOR
+			       INNER JOIN DEPARTAMENTOS   D ON P.DEPARTAMENTO = D.DEPARTAMENTO_ID
+			       INNER JOIN MUNICIPIOS M ON P.DEPARTAMENTO = M.DEPARTAMENTO_ID AND P.MUNICIPIO =
+			       M.MUNICIPIO_ID
+			       INNER JOIN TIPO_EMPRESA TE ON DE.TIPO_EMPRESA_ID = TE.TIPO_EMPRESA_ID
+			       INNER JOIN TIPO_RIESGO TR ON DE.TIPO_RIESGO_ID = TR.TIPO_RIESGO_ID
+
+V_EMPLEADOS_IHSS_PLANILLAS     SELECT P.NUMEPATRO, P.NOMBRE, P.RAZOSOCI, P.RTN, PL.IDENTIDAD, PL.NOMBRE NOMBRE_
+			       EMPLEADO , PL.PERIODO
+			       FROM mmatamoros.PATRONOS@hpprod1_pro P
+			       INNER JOIN mmatamoros.planillas@hpprod1_pro PL ON P.NUMEPATRO = PL.NUMEPATRO
+			       WHERE P.RTN = '08019003249605'  AND P.NUMEPATRO NOT IN ('101196100017',
+								   '101196100018',
+								   '101197601072',
+								   '101197601074',
+								   '102200501222',
+								   '102200501223',
+								   '103200501562',
+								   '103200501563',
+								   '106199200272',
+								   '106199200273',
+								   '201197200012',
+								   '201197200013',
+								   '202198501042',
+								   '202198501043',
+								   '203199100232',
+								   '203199100233',
+								   '206197300012',
+								   '206197300013',
+								   '208198500012',
+								   '208198500013',
+								   '208198500014',
+								   '226197200012',
+								   '226197200013',
+								   '227200601132',
+								   '227200601133',
+								   '229197200012',
+								   '229197200013',
+								   '301197200012',
+								   '301197200013',
+								   '325199200042',
+								   '325199200043',
+								   '445197200682',
+								   '445197200683',
+								   '502199200232',
+								   '502199200233')
+			       ORDER BY P.NUMEPATRO
+
+V_SOCIOS_REPRESENTANTES        SELECT 'SOCIO' TIPO_CONDICION_ACTUA_DESC,
+					 VS.SOCIO_ID ID_PERSONA,
+					 VS.NOMBRE_SOCIO NOMBRES_PERSONA,
+					 VS.NUMERO_IDENTIFICACION,
+					 VS.RTN,
+					 VS.PORCENTAJE_PARTICIPACION PORCENTAJE_PARTICIPACION,
+					 VS.NOMBRE_PATRONO NOMBRE_EMPRESA,
+					 VS.NUMERO_PATRONAL,
+					 A.DESCRIPCION ACTIVIDA_ECONOMICA,
+					 (SELECT DESCRIPCION
+					    FROM HONDURAS
+					   WHERE DEPARTAMENTO = P.DEPARTAMENTO AND MUNICIPIO = '00')
+					    DEPARTAMENTO,
+					 (SELECT DESCRIPCION
+					    FROM HONDURAS
+					   WHERE     DEPARTAMENTO = P.DEPARTAMENTO
+						 AND MUNICIPIO = P.MUNICIPIO
+						 AND ALDEA = '00')
+					    MUNICIPIO,
+					 P.DIREVIEJA DIRECCION,
+					 L.DESCRIPCION REGIONAL,
+					 TRUNC (VS.FECHA_REGISTRO) FECHA_REGISTRO,
+					 VS.DATOS_EMPRESA_ID,
+					 VS.ES_PEP,
+					 TF.TIPO_FUNCIONARIO_DESCRIPCION,
+					 VS.ESTADO_REGISTRO,
+					 US0.NOMBRE_USUARIO USUARIO_CREO,
+					 VS.FECHA_CREACION FECHA_CREO,
+					 US1.NOMBRE_USUARIO USUARIO_MODIFICO,
+					 VS.FECHA_MODIFICO,
+					 vs.PERIODO_PEP_INICIO,
+					 vs.PERIODO_PEP_FIN
+				    FROM V_SOCIOS VS
+					 LEFT JOIN PATRONOS P ON VS.NUMERO_PATRONAL = P.NUMEPATRO
+					 LEFT JOIN ACTIECON A ON P.ACTIECON = A.ACTIECON
+					 LEFT JOIN LUGARES L ON P.LUGAR = L.LUGAR
+					 LEFT JOIN TIPO_FUNCIONARIO TF
+					    ON VS.TIPO_FUNCIONARIO_ID = TF.TIPO_FUNCIONARIO_ID
+					 LEFT JOIN USUARIO US0 ON US0.ID_USUARIO = VS.USUARIO_CREO
+					 LEFT JOIN USUARIO US1 ON US1.ID_USUARIO = VS.USUARIO_MODIFICO
+				  UNION
+				  SELECT VR.TIPO_CONDICION_ACTUA_DESC,
+					 VR.REPRESENTANTE_ID ID_PERSONA,
+					 VR.NOMBRES_PERSONA,
+					 VR.NUMERO_IDENTIFICACION,
+					 VR.RTN,
+					 0 PORCENTAJE_PARTICIPACION,
+					 VR.NOMBRE_PATRONO NOMBRE_EMPRESA,
+					 VR.NUMERO_PATRONAL,
+					 A.DESCRIPCION ACTIVIDA_ECONOMICA,
+					 (SELECT DESCRIPCION
+					    FROM HONDURAS
+					   WHERE DEPARTAMENTO = P.DEPARTAMENTO AND MUNICIPIO = '00')
+					    DEPARTAMENTO,
+					 (SELECT DESCRIPCION
+					    FROM HONDURAS
+					   WHERE     DEPARTAMENTO = P.DEPARTAMENTO
+						 AND MUNICIPIO = P.MUNICIPIO
+						 AND ALDEA = '00')
+					    MUNICIPIO,
+					 P.DIREVIEJA DIRECCION,
+					 L.DESCRIPCION REGIONAL,
+					 TRUNC (VR.FECHA_REGISTRO) FECHA_REGISTRO,
+					 VR.DATOS_EMPRESA_ID,
+					 VR.ES_PEP,
+					 TF.TIPO_FUNCIONARIO_DESCRIPCION,
+					 VR.ESTADO_REGISTRO,
+					 US0.NOMBRE_USUARIO USUARIO_CREO,
+					 VR.FECHA_CREO,
+					 US1.NOMBRE_USUARIO USUARIO_MODIFICO,
+					 VR.FECHA_MODIFICO,
+					 vr.PERIODO_PEP_INICIO,
+					 vR.PERIODO_PEP_FIN
+				    FROM V_REPRESENTANTES VR
+					 LEFT JOIN PATRONOS P ON VR.NUMERO_PATRONAL = P.NUMEPATRO
+					 LEFT JOIN ACTIECON A ON P.ACTIECON = A.ACTIECON
+					 LEFT JOIN LUGARES L ON P.LUGAR = L.LUGAR
+					 LEFT JOIN TIPO_FUNCIONARIO TF
+					    ON VR.TIPO_FUNCIONARIO_ID = TF.TIPO_FUNCIONARIO_ID
+					 LEFT JOIN USUARIO US0 ON US0.ID_USUARIO = VR.USUARIO_CREO
+					 LEFT JOIN USUARIO US1 ON US1.ID_USUARIO = VR.USUARIO_MODIFICO
+
+
+3 filas seleccionadas.
+
+=== PLAN_NATURALES ===
+
+Explicado.
+
+
+PLAN_TABLE_OUTPUT
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 893154089
+
+--------------------------------------------------------------------------------------------------------------------
+| Id  | Operation			     | Name			   | Rows  | Bytes | Cost (%CPU)| Time	   |
+--------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT		     |				   |	 1 |  2087 |   775   (2)| 00:00:10 |
+|*  1 |  VIEW				     |				   |	 1 |  2087 |   775   (2)| 00:00:10 |
+|*  2 |   COUNT STOPKEY 		     |				   |	   |	   |		|	   |
+|   3 |    VIEW 			     |				   |	 1 |  2074 |   775   (2)| 00:00:10 |
+|   4 |     TEMP TABLE TRANSFORMATION	     |				   |	   |	   |		|	   |
+|   5 |      LOAD AS SELECT		     | SYS_TEMP_0FD9D7162_1B36B23B |	   |	   |		|	   |
+|   6 |       HASH GROUP BY		     |				   |   234 |  6084 |   211   (1)| 00:00:03 |
+|*  7 |        TABLE ACCESS FULL	     | REPORTE_COINCIDENCIAS	   |   234 |  6084 |   210   (1)| 00:00:03 |
+|   8 |      LOAD AS SELECT		     | SYS_TEMP_0FD9D7163_1B36B23B |	   |	   |		|	   |
+|   9 |       HASH UNIQUE		     |				   |   194 |  1358 |	 3  (34)| 00:00:01 |
+|  10 |        VIEW			     |				   |   234 |  1638 |	 2   (0)| 00:00:01 |
+|  11 | 	TABLE ACCESS FULL	     | SYS_TEMP_0FD9D7162_1B36B23B |   234 |  6084 |	 2   (0)| 00:00:01 |
+|* 12 |      SORT ORDER BY STOPKEY	     |				   |	 1 |  2081 |   562   (2)| 00:00:07 |
+|* 13 |       HASH JOIN 		     |				   |	 1 |  2081 |   561   (2)| 00:00:07 |
+|  14 |        VIEW			     |				   |	 2 |  4032 |   558   (2)| 00:00:07 |
+|  15 | 	HASH GROUP BY		     |				   |	 2 |   532 |   558   (2)| 00:00:07 |
+|  16 | 	 VIEW			     | VM_NWVW_0		   |	 2 |   532 |   557   (2)| 00:00:07 |
+|  17 | 	  HASH GROUP BY 	     |				   |	 2 |   532 |   557   (2)| 00:00:07 |
+|  18 | 	   VIEW 		     |				   |	 2 |   532 |   556   (2)| 00:00:07 |
+|  19 | 	    SORT UNIQUE 	     |				   |	 2 |   239 |   556  (49)| 00:00:07 |
+|  20 | 	     UNION-ALL		     |				   |	   |	   |		|	   |
+|  21 | 	      NESTED LOOPS SEMI      |				   |	 1 |   112 |   290   (1)| 00:00:04 |
+|  22 | 	       NESTED LOOPS SEMI     |				   |	 1 |   106 |   290   (1)| 00:00:04 |
+|* 23 | 		HASH JOIN	     |				   |   339 | 31527 |   290   (1)| 00:00:04 |
+|* 24 | 		 HASH JOIN	     |				   |   339 | 25425 |   196   (1)| 00:00:03 |
+|  25 | 		  VIEW		     |				   |   194 |  1358 |	 2   (0)| 00:00:01 |
+|  26 | 		   TABLE ACCESS FULL | SYS_TEMP_0FD9D7163_1B36B23B |   194 |  1358 |	 2   (0)| 00:00:01 |
+|* 27 | 		  TABLE ACCESS FULL  | SOCIOS			   | 32429 |  2153K|   194   (1)| 00:00:03 |
+|  28 | 		 TABLE ACCESS FULL   | DATOS_EMPRESA		   | 26429 |   464K|	93   (0)| 00:00:02 |
+|* 29 | 		INDEX UNIQUE SCAN    | PK_PATRONOS_PATRONOS	   |	 1 |	13 |	 0   (0)| 00:00:01 |
+|* 30 | 	       INDEX UNIQUE SCAN     | SYS_C0035399		   |   299 |  1794 |	 0   (0)| 00:00:01 |
+|  31 | 	      NESTED LOOPS SEMI      |				   |	 1 |   127 |   264   (1)| 00:00:04 |
+|  32 | 	       NESTED LOOPS SEMI     |				   |	 1 |   121 |   264   (1)| 00:00:04 |
+|  33 | 		NESTED LOOPS SEMI    |				   |	 1 |   115 |   264   (1)| 00:00:04 |
+|* 34 | 		 HASH JOIN	     |				   |   300 | 30600 |   264   (1)| 00:00:04 |
+|* 35 | 		  HASH JOIN	     |				   |   300 | 25200 |   170   (1)| 00:00:03 |
+|  36 | 		   VIEW 	     |				   |   194 |  1358 |	 2   (0)| 00:00:01 |
+|  37 | 		    TABLE ACCESS FULL| SYS_TEMP_0FD9D7163_1B36B23B |   194 |  1358 |	 2   (0)| 00:00:01 |
+|* 38 | 		   TABLE ACCESS FULL | REPRESENTANTES		   | 19275 |  1449K|   167   (0)| 00:00:03 |
+|  39 | 		  TABLE ACCESS FULL  | DATOS_EMPRESA		   | 26429 |   464K|	93   (0)| 00:00:02 |
+|* 40 | 		 INDEX UNIQUE SCAN   | PK_PATRONOS_PATRONOS	   |	 1 |	13 |	 0   (0)| 00:00:01 |
+|* 41 | 		INDEX UNIQUE SCAN    | SYS_C0035399		   |   299 |  1794 |	 0   (0)| 00:00:01 |
+|* 42 | 	       INDEX UNIQUE SCAN     | SYS_C0035399		   |   299 |  1794 |	 0   (0)| 00:00:01 |
+|  43 |        VIEW			     |				   |   234 | 15210 |	 2   (0)| 00:00:01 |
+|  44 | 	TABLE ACCESS FULL	     | SYS_TEMP_0FD9D7162_1B36B23B |   234 |  6084 |	 2   (0)| 00:00:01 |
+--------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("NUMERO_FILA">0)
+   2 - filter(ROWNUM<=10)
+   7 - filter("FECHA_CALIFICO" IS NOT NULL AND "TIPO_CALIFICACION_ID"=1)
+  12 - filter(ROWNUM<=10)
+  13 - access("D"."NUMERO_IDENTIFICACION"="R"."DNI")
+  23 - access("DE"."DATOS_EMPRESA_ID"="S"."DATOS_EMPRESA_ID")
+  24 - access("I"."DNI"="S"."NUMERO_IDENTIFICACION")
+  27 - filter("S"."NUMERO_IDENTIFICACION" IS NOT NULL AND "S"."TIPO_IDENTIFICACION_ID" IS NOT NULL AND
+	      "S"."TIPO_GENERO_ID" IS NOT NULL AND "S"."PAIS_NACIONALIDAD_ID" IS NOT NULL AND "S"."PAIS_DOMICILIO_ID" IS
+	      NOT NULL AND "S"."DEPARTAMENTO_ID" IS NOT NULL)
+  29 - access("PA"."NUMEPATRO"="DE"."NUMERO_PATRONAL")
+       filter(SUBSTR("PA"."NUMEPATRO",1,11)=SUBSTR("DE"."NUMERO_PATRONAL",1,11))
+  30 - access("MU"."MUNICIPIO_ID"="S"."MUNICIPIO_ID" AND "MU"."DEPARTAMENTO_ID"="S"."DEPARTAMENTO_ID")
+  34 - access("DE"."DATOS_EMPRESA_ID"="R"."DATOS_EMPRESA_ID")
+  35 - access("I"."DNI"="R"."NUMERO_IDENTIFICACION")
+  38 - filter("R"."TIPO_CONDICION_ACTUA_ID" IS NOT NULL AND "R"."TIPO_IDENTIFICACION_ID" IS NOT NULL AND
+	      "R"."TIPO_GENERO_ID" IS NOT NULL AND "R"."PAIS_NACIONALIDAD_ID" IS NOT NULL AND
+	      "R"."DEPARTAMENTO_NACIMIENTO_ID" IS NOT NULL AND "R"."DEPARTAMENTO_RESIDENCIA_ID" IS NOT NULL AND
+	      "R"."TIPO_OCUPACION_ID" IS NOT NULL)
+  40 - access("PA"."NUMEPATRO"="DE"."NUMERO_PATRONAL")
+       filter(SUBSTR("PA"."NUMEPATRO",1,11)=SUBSTR("DE"."NUMERO_PATRONAL",1,11))
+  41 - access("MR"."MUNICIPIO_ID"="R"."MUNICIPIO_RESIDENCIA_ID" AND
+	      "MR"."DEPARTAMENTO_ID"="R"."DEPARTAMENTO_RESIDENCIA_ID")
+  42 - access("MN"."MUNICIPIO_ID"="R"."MUNICIPIO_NACIMIENTO_ID" AND
+	      "MN"."DEPARTAMENTO_ID"="R"."DEPARTAMENTO_NACIMIENTO_ID")
+
+80 filas seleccionadas.
+
+=== PLAN_JURIDICAS ===
+
+Explicado.
+
+
+PLAN_TABLE_OUTPUT
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 3681022051
+
+----------------------------------------------------------------------------------------------------------
+| Id  | Operation			 | Name 		 | Rows  | Bytes | Cost (%CPU)| Time	 |
+----------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT		 |			 |     1 |   131 |  2426   (1)| 00:00:30 |
+|*  1 |  VIEW				 |			 |     1 |   131 |  2426   (1)| 00:00:30 |
+|*  2 |   COUNT STOPKEY 		 |			 |	 |	 |	      | 	 |
+|   3 |    VIEW 			 |			 |     1 |   118 |  2426   (1)| 00:00:30 |
+|*  4 |     SORT ORDER BY STOPKEY	 |			 |     1 |   143 |  2426   (1)| 00:00:30 |
+|   5 |      NESTED LOOPS		 |			 |	 |	 |	      | 	 |
+|   6 |       NESTED LOOPS		 |			 |     1 |   143 |  2425   (1)| 00:00:30 |
+|   7 |        NESTED LOOPS		 |			 |     1 |   111 |  2424   (1)| 00:00:30 |
+|   8 | 	NESTED LOOPS		 |			 |     1 |   105 |  2424   (1)| 00:00:30 |
+|   9 | 	 NESTED LOOPS		 |			 |     1 |   102 |  2424   (1)| 00:00:30 |
+|* 10 | 	  HASH JOIN		 |			 |     1 |    99 |  2424   (1)| 00:00:30 |
+|* 11 | 	   TABLE ACCESS FULL	 | REPORTE_COINCIDENCIAS |  2745 | 74115 |   210   (1)| 00:00:03 |
+|* 12 | 	   TABLE ACCESS FULL	 | PATRONOS		 | 94588 |  6650K|  2213   (1)| 00:00:27 |
+|* 13 | 	  INDEX UNIQUE SCAN	 | PK_SECTORES_SECTOR	 |     1 |     3 |     0   (0)| 00:00:01 |
+|* 14 | 	 INDEX UNIQUE SCAN	 | SYS_C0035395 	 |     1 |     3 |     0   (0)| 00:00:01 |
+|* 15 | 	INDEX UNIQUE SCAN	 | SYS_C0035399 	 |     1 |     6 |     0   (0)| 00:00:01 |
+|* 16 |        INDEX UNIQUE SCAN	 | IND_NUMERO_PATRONO	 |     1 |	 |     0   (0)| 00:00:01 |
+|* 17 |       TABLE ACCESS BY INDEX ROWID| DATOS_EMPRESA	 |     1 |    32 |     1   (0)| 00:00:01 |
+----------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("NUMERO_FILA">0)
+   2 - filter(ROWNUM<=10)
+   4 - filter(ROWNUM<=10)
+  10 - access(SUBSTR("P"."NUMEPATRO",1,11)=SUBSTR("R"."NUMERO_PATRONO",1,11) AND
+	      "P"."NUMEPATRO"="R"."NUMERO_PATRONO")
+  11 - filter("R"."NUMERO_PATRONO" IS NOT NULL AND "R"."TIPO_CALIFICACION_ID"=1)
+  12 - filter("P"."ACTIECON" IS NOT NULL)
+  13 - access("P"."SECTOR"="S"."SECTOR")
+  14 - access("P"."DEPARTAMENTO"="D"."DEPARTAMENTO_ID")
+  15 - access("P"."MUNICIPIO"="M"."MUNICIPIO_ID" AND "P"."DEPARTAMENTO"="M"."DEPARTAMENTO_ID")
+  16 - access("P"."NUMEPATRO"="DE"."NUMERO_PATRONAL")
+       filter(SUBSTR("P"."NUMEPATRO",1,11)=SUBSTR("DE"."NUMERO_PATRONAL",1,11))
+  17 - filter("DE"."TIPO_EMPRESA_ID"=1 AND "DE"."TIPO_RIESGO_ID" IS NOT NULL)
+
+41 filas seleccionadas.
+
+=== PLAN_EMPLEADOS ===
+
+Explicado.
+
+
+PLAN_TABLE_OUTPUT
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Plan hash value: 1437433635
+
+------------------------------------------------------------------------------------------------------------------
+| Id  | Operation		 | Name 		 | Rows  | Bytes | Cost (%CPU)| Time	 | Inst   |IN-OUT|
+------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT	 |			 |     1 |  2082 |   224   (2)| 00:00:03 |	  |	 |
+|*  1 |  VIEW			 |			 |     1 |  2082 |   224   (2)| 00:00:03 |	  |	 |
+|*  2 |   COUNT STOPKEY 	 |			 |	 |	 |	      | 	 |	  |	 |
+|   3 |    VIEW 		 |			 |     1 |  2069 |   224   (2)| 00:00:03 |	  |	 |
+|*  4 |     SORT ORDER BY STOPKEY|			 |     1 |   109 |   224   (2)| 00:00:03 |	  |	 |
+|   5 |      HASH GROUP BY	 |			 |     1 |   109 |   224   (2)| 00:00:03 |	  |	 |
+|*  6 |       HASH JOIN 	 |			 |     1 |   109 |   222   (1)| 00:00:03 |	  |	 |
+|   7 |        REMOTE		 |			 |     2 |    42 |     4   (0)| 00:00:01 | HPPRO~ | R->S |
+|*  8 |        TABLE ACCESS FULL | REPORTE_COINCIDENCIAS |  2574 | 66924 |   210   (1)| 00:00:03 |	  |	 |
+------------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("NUMERO_FILA">0)
+   2 - filter(ROWNUM<=10)
+   4 - filter(ROWNUM<=10)
+   6 - access("PL"."IDENTIDAD"="R"."DNI")
+   8 - filter("R"."DNI" IS NOT NULL AND "R"."TIPO_CALIFICACION_ID"=1)
+
+Remote SQL Information (identified by operation id):
+----------------------------------------------------
+
+   7 - SELECT "A1"."RTN","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPAT
+       RO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO",
+       "A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"
+       ."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NU
+       MEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPA
+       TRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO","A1"."NUMEPATRO"
+       ,"A2"."PERIODO","A2"."NOMBRE","A2"."IDENTIDAD","A2"."IDENTIDAD","A2"."NOMBRE","A2"."IDENTIDAD","A2"."NUMEP
+       ATRO" FROM "MMATAMOROS"."PATRONOS" "A1","MMATAMOROS"."PLANILLAS" "A2" WHERE
+       "A2"."PERIODO"=TRUNC(ADD_MONTHS(SYSDATE@!,(-1)),'fmmm') AND "A1"."NUMEPATRO"="A2"."NUMEPATRO" AND
+       "A2"."NUMEPATRO"<>'101196100017' AND "A2"."NUMEPATRO"<>'101196100018' AND
+       "A2"."NUMEPATRO"<>'101197601072' AND "A2"."NUMEPATRO"<>'101197601074' AND
+       "A2"."NUMEPATRO"<>'102200501222' AND "A2"."NUMEPATRO"<>'102200501223' AND
+       "A2"."NUMEPATRO"<>'103200501562' AND "A2"."NUMEPATRO"<>'103200501563' AND
+       "A2"."NUMEPATRO"<>'106199200272' AND "A2"."NUMEPATRO"<>'106199200273' AND
+       "A2"."NUMEPATRO"<>'201197200012' AND "A2"."NUMEPATRO"<>'201197200013' AND
+       "A2"."NUMEPATRO"<>'202198501042' AND "A2"."NUMEPATRO"<>'202198501043' AND
+       "A2"."NUMEPATRO"<>'203199100232' AND "A2"."NUMEPATRO"<>'203199100233' AND
+       "A2"."NUMEPATRO"<>'206197300012' AND "A2"."NUMEPATRO"<>'206197300013' AND
+       "A2"."NUMEPATRO"<>'208198500012' AND "A2"."NUMEPATRO"<>'208198500013' AND
+       "A2"."NUMEPATRO"<>'208198500014' AND "A2"."NUMEPATRO"<>'226197200012' AND
+       "A2"."NUMEPATRO"<>'226197200013' AND "A2"."NUMEPATRO"<>'227200601132' AND
+       "A2"."NUMEPATRO"<>'227200601133' AND "A2"."NUMEPATRO"<>'229197200012' AND
+       "A2"."NUMEPATRO"<>'229197200013' AND "A2"."NUMEPATRO"<>'301197200012' AND
+       "A2"."NUMEPATRO"<>'301197200013' AND "A2"."NUMEPATRO"<>'325199200042' AND
+       "A2"."NUMEPATRO"<>'325199200043' AND "A2"."NUMEPATRO"<>'445197200682' AND
+       "A2"."NUMEPATRO"<>'445197200683' AND "A2"."NUMEPATRO"<>'502199200232' AND
+       "A2"."NUMEPATRO"<>'502199200233' AND "A1"."RTN"='08019003249605' AND "A1"."NUMEPATRO"<>'101196100017' AND
+       "A1"."NUMEPATRO"<>'101196100018' AND "A1"."NUMEPATRO"<>'101197601072' AND
+       "A1"."NUMEPATRO"<>'101197601074' AND "A1"."NUMEPATRO"<>'102200501222' AND
+       "A1"."NUMEPATRO"<>'102200501223' AND "A1"."NUMEPATRO"<>'103200501562' AND
+       "A1"."NUMEPATRO"<>'103200501563' AND "A1"."NUMEPATRO"<>'106199200272' AND
+       "A1"."NUMEPATRO"<>'106199200273' AND "A1"."NUMEPATRO"<>'201197200012' AND
+       "A1"."NUMEPATRO"<>'201197200013' AND "A1"."NUMEPATRO"<>'202198501042' AND
+       "A1"."NUMEPATRO"<>'202198501043' AND "A1"."NUMEPATRO"<>'203199100232' AND
+       "A1"."NUMEPATRO"<>'203199100233' AND "A1"."NUMEPATRO"<>'206197300012' AND
+       "A1"."NUMEPATRO"<>'206197300013' AND "A1"."NUMEPATRO"<>'208198500012' AND
+       "A1"."NUMEPATRO"<>'208198500013' AND "A1"."NUMEPATRO"<>'208198500014' AND
+       "A1"."NUMEPATRO"<>'226197200012' AND "A1"."NUMEPATRO"<>'226197200013' AND
+       "A1"."NUMEPATRO"<>'227200601132' AND "A1"."NUMEPATRO"<>'227200601133' AND
+       "A1"."NUMEPATRO"<>'229197200012' AND "A1"."NUMEPATRO"<>'229197200013' AND
+       "A1"."NUMEPATRO"<>'301197200012' AND "A1"."NUMEPATRO"<>'301197200013' AND
+       "A1"."NUMEPATRO"<>'325199200042' AND "A1"."NUMEPATRO"<>'325199200043' AND
+       "A1"."NUMEPATRO"<>'445197200682' AND "A1"."NUMEPATRO"<>'445197200683' AND
+       "A1"."NUMEPATRO"<>'502199200232' AND "A1"."NUMEPATRO"<>'502199200233' (accessing 'HPPROD1_PRO' )
+
+
+73 filas seleccionadas.
+
+Desconectado de Oracle Database 11g Enterprise Edition Release 11.2.0.1.0 - 64bit Production
+With the Partitioning, OLAP, Data Mining and Real Application Testing options

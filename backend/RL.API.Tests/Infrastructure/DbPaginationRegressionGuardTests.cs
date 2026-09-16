@@ -108,6 +108,39 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
+    public void MonitoreoNaturales_UsaFuenteLigeraEquivalenteSinLaVistaPesada()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var naturalesSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoNaturales");
+        var personaFuenteStart = naturalesSql.IndexOf("PERSONA_FUENTE AS (", StringComparison.Ordinal);
+        var personaFuenteEnd = naturalesSql.IndexOf("), PERSONA_FUENTE_DISTINCTA AS", personaFuenteStart, StringComparison.Ordinal);
+
+        Assert.True(personaFuenteStart >= 0 && personaFuenteEnd > personaFuenteStart);
+        var personaFuente = naturalesSql[personaFuenteStart..personaFuenteEnd];
+
+        // El detalle natural requiere más columnas de la vista; esta guarda cubre sólo el hot path paginado.
+        Assert.DoesNotContain("DNP_IHSS.V_SOCIOS_REPRESENTANTES", naturalesSql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DNP_IHSS.SOCIOS S", personaFuente, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.REPRESENTANTES R", personaFuente, StringComparison.Ordinal);
+        Assert.Contains("INNER JOIN REPORTE_IDS I ON I.DNI = S.NUMERO_IDENTIFICACION", personaFuente, StringComparison.Ordinal);
+        Assert.Contains("INNER JOIN REPORTE_IDS I ON I.DNI = R.NUMERO_IDENTIFICACION", personaFuente, StringComparison.Ordinal);
+        Assert.Contains("SELECT DISTINCT", personaFuente, StringComparison.Ordinal);
+        Assert.Contains("UNION", personaFuente, StringComparison.Ordinal);
+        Assert.DoesNotContain("UNION ALL", personaFuente, StringComparison.OrdinalIgnoreCase);
+
+        foreach (var requiredFunctionalRelation in new[]
+                 {
+                     "DNP_IHSS.TIPO_IDENTIFICACION", "DNP_IHSS.TIPO_GENERO", "DNP_IHSS.PAISES_NACIONALIDAD",
+                     "DNP_IHSS.DEPARTAMENTOS", "DNP_IHSS.MUNICIPIOS", "DNP_IHSS.TIPO_CONDICION_ACTUA",
+                     "DNP_IHSS.TIPO_OCUPACION", "DNP_IHSS.DATOS_EMPRESA", "MMATAMOROS.PATRONOS PA",
+                     "PA.NUMEPATRO = DE.NUMERO_PATRONAL"
+                 })
+            Assert.Contains(requiredFunctionalRelation, personaFuente, StringComparison.Ordinal);
+
+        Assert.DoesNotContain("SELECT (SELECT", naturalesSql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void UsuariosPaginados_CargaModulosSoloParaLaPagina()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Identidad/Persistence/UsuarioRepository.cs"));
@@ -134,5 +167,13 @@ public sealed class DbPaginationRegressionGuardTests
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AGENTS.md")))
             directory = directory.Parent;
         return directory?.FullName ?? throw new DirectoryNotFoundException("No se encontró la raíz del repositorio.");
+    }
+
+    private static string ExtractSqlBuilder(string source, string builder)
+    {
+        var start = source.IndexOf("private static string " + builder, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"No se encontro el builder {builder}.");
+        var end = source.IndexOf("private static string ConstruirConsultaMonitoreo", start + builder.Length, StringComparison.Ordinal);
+        return source[start..(end > start ? end : source.Length)];
     }
 }

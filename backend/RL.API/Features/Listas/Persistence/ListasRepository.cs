@@ -1325,9 +1325,115 @@ namespace RL.API.Features.Listas.Persistence
             ), REPORTE_IDS AS (
                 SELECT DISTINCT DNI FROM REPORTE_AGG
             ), PERSONA_FUENTE AS (
-                SELECT D.NUMERO_IDENTIFICACION, TRIM(D.NOMBRES_PERSONA) AS NOMBRES_PERSONA
-                FROM DNP_IHSS.V_SOCIOS_REPRESENTANTES D
-                INNER JOIN REPORTE_IDS I ON I.DNI = D.NUMERO_IDENTIFICACION
+                SELECT DISTINCT
+                       S.NUMERO_IDENTIFICACION,
+                       TRIM(S.NOMBRES || ' ' || S.APELLIDOS) AS NOMBRES_PERSONA
+                FROM DNP_IHSS.SOCIOS S
+                INNER JOIN REPORTE_IDS I ON I.DNI = S.NUMERO_IDENTIFICACION
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM DNP_IHSS.TIPO_IDENTIFICACION TI
+                    WHERE TI.TIPO_IDENTIFICACION_ID = S.TIPO_IDENTIFICACION_ID
+                )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.TIPO_GENERO TG
+                        WHERE TG.TIPO_GENERO_ID = S.TIPO_GENERO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.PAISES_NACIONALIDAD PN
+                        WHERE PN.PAIS_NACIONALIDAD_ID = S.PAIS_NACIONALIDAD_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.PAISES_NACIONALIDAD PD
+                        WHERE PD.PAIS_NACIONALIDAD_ID = S.PAIS_DOMICILIO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.DEPARTAMENTOS D
+                        WHERE D.DEPARTAMENTO_ID = S.DEPARTAMENTO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.MUNICIPIOS MU
+                        WHERE MU.DEPARTAMENTO_ID = S.DEPARTAMENTO_ID
+                          AND MU.MUNICIPIO_ID = S.MUNICIPIO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.DATOS_EMPRESA DE
+                        WHERE DE.DATOS_EMPRESA_ID = S.DATOS_EMPRESA_ID
+                          AND EXISTS (
+                              SELECT 1
+                              FROM MMATAMOROS.PATRONOS PA
+                              WHERE PA.NUMEPATRO = DE.NUMERO_PATRONAL
+                          )
+                    )
+                UNION
+                SELECT DISTINCT
+                       R.NUMERO_IDENTIFICACION,
+                       TRIM(R.NOMBRES || ' ' || R.APELLIDOS) AS NOMBRES_PERSONA
+                FROM DNP_IHSS.REPRESENTANTES R
+                INNER JOIN REPORTE_IDS I ON I.DNI = R.NUMERO_IDENTIFICACION
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM DNP_IHSS.TIPO_CONDICION_ACTUA CA
+                    WHERE CA.TIPO_CONDICION_ACTUA_ID = R.TIPO_CONDICION_ACTUA_ID
+                )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.TIPO_IDENTIFICACION TI
+                        WHERE TI.TIPO_IDENTIFICACION_ID = R.TIPO_IDENTIFICACION_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.TIPO_GENERO TG
+                        WHERE TG.TIPO_GENERO_ID = R.TIPO_GENERO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.PAISES_NACIONALIDAD PN
+                        WHERE PN.PAIS_NACIONALIDAD_ID = R.PAIS_NACIONALIDAD_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.DEPARTAMENTOS DN
+                        WHERE DN.DEPARTAMENTO_ID = R.DEPARTAMENTO_NACIMIENTO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.MUNICIPIOS MN
+                        WHERE MN.DEPARTAMENTO_ID = R.DEPARTAMENTO_NACIMIENTO_ID
+                          AND MN.MUNICIPIO_ID = R.MUNICIPIO_NACIMIENTO_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.DEPARTAMENTOS DR
+                        WHERE DR.DEPARTAMENTO_ID = R.DEPARTAMENTO_RESIDENCIA_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.MUNICIPIOS MR
+                        WHERE MR.DEPARTAMENTO_ID = R.DEPARTAMENTO_RESIDENCIA_ID
+                          AND MR.MUNICIPIO_ID = R.MUNICIPIO_RESIDENCIA_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.TIPO_OCUPACION OC
+                        WHERE OC.TIPO_OCUPACION_ID = R.TIPO_OCUPACION_ID
+                    )
+                    AND EXISTS (
+                        SELECT 1
+                        FROM DNP_IHSS.DATOS_EMPRESA DE
+                        WHERE DE.DATOS_EMPRESA_ID = R.DATOS_EMPRESA_ID
+                          AND EXISTS (
+                              SELECT 1
+                              FROM MMATAMOROS.PATRONOS PA
+                              WHERE PA.NUMEPATRO = DE.NUMERO_PATRONAL
+                          )
+                    )
             ), PERSONA_FUENTE_DISTINCTA AS (
                 SELECT NUMERO_IDENTIFICACION, NOMBRES_PERSONA
                 FROM PERSONA_FUENTE
