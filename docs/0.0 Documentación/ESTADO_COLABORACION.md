@@ -1277,3 +1277,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Contencion: el lock de `ApplicationMemoryCache` ahora se identifica por `effectiveKey`, manteniendo la invalidacion por scope. Esto evita que metadata de filtros o tipos distintos se serialice indebidamente.
 - Cobertura actual: pruebas focales `21/21`, backend `625/625`, Release build, frontend `781/781`, E2E `36/36`, TSC, lint, npm audit y Quality Gate local completos PASS. No se ejecutaron benchmarks en esta intervencion.
 - Punto de continuacion: publicar el commit de este parche en `origin/desarrollo`; despues, y solo con autorizacion expresa, ejecutar una sola medicion contractual de Juridicas. La certificacion production-like sigue pendiente de esa medicion; no hay declaracion de PASS de rendimiento.
+
+## Estado vigente - AUDITORIA-DBLINKS-DNP-IHSS-RIESGO-LAVADO-1
+
+- Utilitario read-only disponible: `database/_utilitarios/98_auditar_dblinks.sql`. Debe ejecutarse manualmente dos veces, una conectado como `DNP_IHSS` y otra como `RIESGO_LAVADO`; cada ejecucion reporta links privados, links publicos/accesibles, sinonimos remotos y dependencias de objetos por dblink.
+- El utilitario no esta incluido en los maestros de instalacion ni actualizacion y no ejecuta DDL, DML, `DBMS_STATS`, cambios de sesion ni cambios de datos.
+- Resultado verificable actual: no hay sintaxis de dblink declarada en la busqueda focalizada de scripts y backend. La confirmacion de los objetos Oracle existentes sigue pendiente de ejecutar el utilitario con sesiones autenticadas funcionales para ambos esquemas; no se debe inferir que no existan links hasta obtener esa salida.

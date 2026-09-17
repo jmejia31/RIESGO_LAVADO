@@ -7147,6 +7147,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Pruebas ejecutadas: focales `21/21 PASS`; backend completo `625/625 PASS`; build Release PASS (`0` warnings, `0` errors); Quality Gate local fresco PASS: frontend `781/781`, E2E `36/36`, TSC, lint, audit npm y validadores. Un primer E2E aislado de Quality Gate tuvo un fallo transitorio de foco; el spec focal paso y la repeticion completa posterior paso `36/36`, sin reintentos ni cambios de timeout.
 - Restricciones y siguiente punto: no se ejecuto benchmark ni se modifico Oracle. La siguiente accion requiere autorizacion separada para una sola medicion contractual; no debe inferirse certificacion de rendimiento de estas pruebas locales.
 
+## Registro AUDITORIA-DBLINKS-DNP-IHSS-RIESGO-LAVADO-1
+
+- Fecha/hora local: `2026-09-17 10:21 -06:00`; autor `COD`; rama `desarrollo`; baseline `c83539da4f93043dba330120afb8b97244c4db46`. Alcance exclusivo: preparar una auditoria Oracle manual y read-only de database links para `DNP_IHSS` y `RIESGO_LAVADO`.
+- Se agrego `database/_utilitarios/98_auditar_dblinks.sql`. No se incluye desde maestros de instalacion o actualizacion; usa solo `SELECT` sobre `USER_DB_LINKS`, `ALL_DB_LINKS`, `ALL_SYNONYMS` y `USER_DEPENDENCIES`, y debe ejecutarse por separado autenticado como cada esquema. No equivale ni sustituye una conexion por esquema con `ALTER SESSION`.
+- Evidencia de esta intervencion: la busqueda focalizada de referencias declarativas en `database` y `backend/RL.API` no encontro uso de dblink; las coincidencias de `@` fueron direcciones de correo. La consulta directa de diccionario desde este equipo no pudo certificarse: SQL*Plus y ODP.NET no completaron la conexion; sus procesos propios fueron cerrados. Por tanto, la existencia real de links queda pendiente de la salida del utilitario.
+- Restricciones: `ORACLE_DDL=0`; `ORACLE_DML=0`; `DBMS_STATS=0`; no se tocaron `main`, configuracion, datos ni credenciales. Siguiente punto: ejecutar el utilitario en SQL Developer, SQLcl o SQL*Plus con las dos credenciales institucionales y conservar su salida.
+
 ## Registro DBA-ORACLE-PRECHANGE-VERIFICATION-1
 
 - Fecha/hora local: `2026-09-11 10:08 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo inicial `e19cc1bd6589f50087fc2283962d1bd82a3e4af9`. Durante la auditoría se integró por fast-forward el cambio concurrente `214eed3c5efeae26edf80ba7215ae017027d4828` de Bitácora, sin sobrescribirlo; `main` permanece en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`. Se preservan sin stage `.vscode/`, `agosto_rest.txt` y el PDF de requisitos preexistentes.
