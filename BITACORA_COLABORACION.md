@@ -1,5 +1,53 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Cierre Formal y Definitivo — Fase 5.3 Migración y Conciliación Institucional 59 Riesgos
+
+- **Fecha y hora**: 2026-09-17 14:48 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `9e9c9046a70e11bc0d432019a7c129314ae2f3d3`.
+- **Objetivo y alcance**:
+  - Ejecutar de principio a fin y certificar la Fase 5.3: migración y conciliación de los 59 riesgos del libro `Matrices de Riesgos.xlsx` hacia la base de datos Oracle institucional en la rama `desarrollo`.
+  - Aplicación de decisiones funcionales expresamente autorizadas por Javier Mejía exclusivamente como DATOS DE PRUEBA:
+    - `TEST_DATA_DECISION_ROTR_ALMACENBIENE_23_OWNER=GTIC`
+    - `TEST_DATA_DECISION_RCUMP_COMPRAS_37_RESPONSE=MITIGAR`
+    - Se deja expresa constancia de su naturaleza de prueba (no constituyen definiciones definitivas de producción).
+- **Infraestructura Oracle y Semilla Institucional**:
+  - Script ejecutado: `database/19_matrices_riesgos/fase11/01_semillas_datos_iniciales_modelo_17_tablas.sql`.
+  - Script de validación ejecutado: `database/19_matrices_riesgos/fase11/02_validar_semillas_bloque1_solo_lectura.sql` (`VALIDACION FASE 11 BLOQUE 1: CORRECTA`).
+  - Entidad sembrada y certificada:
+    - `FAMILIA=MATRIZ_RIESGOS_LAFT` (`FAM_ID=22`, `FAM_PREDETERMINADA=1`).
+    - `VERSION=MATRIZ_RIESGOS_LAFT_V1` (`VER_ID=61`, `VER_VERSION=1`, `ESTADO=PUBLISHED`, `VIGENTE=1`, `VER_HASH=f2f84f21b6cc46762fd6087bc41df449b31ca87b058c763689bdfb3bba961f90`).
+- **Herramienta Transaccional de Migración C#**:
+  - Implementada en `tools/MatricesRiesgosMigrator/` con soporte para lectura de `Matrices de Riesgos.xlsx`, aplicación de datos de prueba, validación de contrato de esquema de 12 campos con `FormularioValidador`, migración transaccional de 59 riesgos a `RL_MR_RIESGOS`, `RL_MR_EVALUACIONES_RIESGO` y `RL_MR_PROYECCIONES_EVALUACION`, auditoría read-only de reconciliación y prueba de idempotencia en segunda pasada.
+- **Certificación de Métricas**:
+  - `SOURCE_ROWS=59`
+  - `APPROVED_FOR_MIGRATION=59`
+  - `REJECTED_DOCUMENTED=0`
+  - `SILENTLY_SKIPPED=0`
+  - `DUPLICATE_SOURCE_CODES=0`
+  - `UNMAPPED_REQUIRED_FIELDS=0`
+  - `MIGRATED_SOURCE_RISKS=59`
+  - `MISSING_SOURCE_RISKS=0`
+  - `DUPLICATE_SOURCE_RISKS=0`
+  - `ORPHAN_EVALUATIONS=0`
+  - `ORPHAN_PROJECTIONS=0`
+  - `INVALID_VERSION_BINDINGS=0`
+  - `RISKS_RECONCILED=59`
+  - `UNEXPLAINED_DIFFERENCES=0`
+  - `IDEMPOTENCY_TEST=PASS`
+  - `SECOND_RUN_DUPLICATES=0`
+- **Suites de Verificación Ejecutadas**:
+  - Backend Tests: `632/632 PASS` (se incorporó `MatricesRiesgosFase53MigrationParityTests.cs` con pruebas de contrato y validación de los 59 riesgos).
+  - Frontend Tests: `781/781 PASS` (78 archivos).
+  - E2E Tests: `36/36 PASS` (Playwright Chromium headless).
+  - Release Build: `PASS` (backend Release y frontend production bundle).
+  - Quality Gates Locales: `PASS` (`tools/run_quality_gates.ps1`).
+  - Validadores: `validate_repository_structure.ps1` PASS, `validate_database_scripts.ps1` PASS, `validate_documentation_links.ps1` PASS (140 archivos, 177 enlaces).
+- **Estado Final**:
+  - `FASE_5_3=CERRADA`
+  - `FINAL_MODULE_STATUS=CLOSED`
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`. `NO_MERGE=TRUE`.
+
 ## Registro de cierre técnico Fase 3 - migración segura de refresh tokens
 
 - Fecha/hora local: 2026-08-28 (UTC-6). Rama `desarrollo`.

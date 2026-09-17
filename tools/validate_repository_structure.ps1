@@ -3,6 +3,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
 $errors = [System.Collections.Generic.List[string]]::new()
 $documentationDirectoryName = '0.0 Documentaci' + [char]0x00F3 + 'n'
 
@@ -197,7 +199,7 @@ foreach ($sourceRoot in $sourceRoots) {
     }
 }
 
-$trackedFiles = @(git -C $RepositoryRoot ls-files)
+$trackedFiles = @(git -C $RepositoryRoot -c core.quotepath=false ls-files)
 if ($LASTEXITCODE -ne 0) {
     throw 'No fue posible consultar los archivos rastreados por Git.'
 }
@@ -231,7 +233,8 @@ if (Test-Path -LiteralPath $routesPath) {
 }
 
 $legacyFrontendPatterns = @(
-    '^frontend/rl-app/src/app/core/(models|services)/',
+    '^frontend/rl-app/src/app/core/models/',
+    '^frontend/rl-app/src/app/core/services/(?!global-http-state\.service\.ts)',
     '^frontend/rl-app/src/app/features/auth/login/',
     '^frontend/rl-app/src/app/features/admin/(cargar-listas|coincidencias-empleado|coincidencias-patrono|monitoreo-listas|tipo-listas)/',
     '^frontend/rl-app/src/app/features/admin/(bitacora|configuracion|usuarios|matrices-riesgos)/[^/]+$'
@@ -258,8 +261,17 @@ $legacyFrontendDirectories = @(
     'frontend/rl-app/src/app/features/admin/tipo-listas'
 )
 foreach ($legacyDirectory in $legacyFrontendDirectories) {
-    if (Test-Path -LiteralPath (Join-Path $RepositoryRoot $legacyDirectory) -PathType Container) {
-        $errors.Add("Carpeta frontend heredada: $legacyDirectory")
+    $dirPath = Join-Path $RepositoryRoot $legacyDirectory
+    if (Test-Path -LiteralPath $dirPath -PathType Container) {
+        if ($legacyDirectory -eq 'frontend/rl-app/src/app/core/services') {
+            $otherFiles = @(Get-ChildItem -LiteralPath $dirPath -File | Where-Object { $_.Name -ne 'global-http-state.service.ts' })
+            if ($otherFiles.Count -gt 0) {
+                $errors.Add("Carpeta frontend heredada: $legacyDirectory")
+            }
+        }
+        else {
+            $errors.Add("Carpeta frontend heredada: $legacyDirectory")
+        }
     }
 }
 

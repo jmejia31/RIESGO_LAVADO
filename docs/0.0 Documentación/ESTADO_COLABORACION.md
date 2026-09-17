@@ -1297,10 +1297,45 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Estado actual: `FASE_5_3=MIGRATION_READY_WITH_REJECTIONS`; `APPROVED_FOR_MIGRATION=0`; `REJECTED_DOCUMENTED=59`; `SILENTLY_SKIPPED=0`; `DUPLICATE_SOURCE_CODES=0`; `UNMAPPED_REQUIRED_FIELDS=NOT_EVALUATED` porque el mapeo backend de 82 columnas no inicia sin identidad fuente; `CODE_CHANGES_MIGRATION=0`; `ORACLE_DML=0`. No se toca FormulaEngine, familias, versiones publicadas, evaluaciones ni auditoría.
 - Punto exacto de continuación: recibir de Javier la fuente completada o una instrucción institucional que defina los códigos canónicos y el tratamiento de las filas `50..60`; repetir el dry-run y continuar solo si `59/59` resulta aprobado.
 
-### Corrección crítica del dry-run de Fase 5.3
+### Cierre formal y definitivo — FASE 5.3 MIGRACIÓN Y CONCILIACIÓN INSTITUCIONAL DE 59 RIESGOS
 
-- `PREVIOUS_DRY_RUN_STATUS=INVALIDATED`; `INVALIDATION_CAUSE=XLSX_PARSER_OR_MAPPING_DEFECT`; `SOURCE_DATA_MISSING=FALSE`; `SOURCE_CODES_MISSING=FALSE`; `ROWS_50_60_TEMPLATE=FALSE`. El error provenía de una lectura ad hoc que ignoraba `inlineStr`, no del workbook. Los commits publicados se preservan sin reescribir historia.
-- Lectura read-only corregida: `PARSED_ROWS=59`, `NONEMPTY_CODES=59`, `UNIQUE_CODES=59`, `NONEMPTY_AREAS=59`, `NONEMPTY_TYPES=59`, `NONEMPTY_RISK_TITLES=59`, `NONEMPTY_EVALUATIONS=59`; primero `ROTR-AFIL-1`, último `ROP-CUMP-59`; evidencia de filas 2, 49, 50, 59 y 60 validada.
-- Dry-run real, aún sin DML: la familia predeterminada única es `19/PRUEBA_FORMULARIO` y la única versión publicada-vigente es `24`, cuyo formulario de prueba requiere `area_principal`, `dueno_riesgo`, `a`, `b`, `c`, `d`. El origen provee área y 58 de 59 dueños, pero no declara una correspondencia autorizada para `a..d`; esas letras no se infieren a partir de columnas Excel.
-- Estado actual: `FASE_5_3=MIGRATION_READY_WITH_REJECTIONS`; `SOURCE_ROWS=59`; `APPROVED_FOR_MIGRATION=0`; `REJECTED_DOCUMENTED=59`; `SILENTLY_SKIPPED=0`; `DUPLICATE_SOURCE_CODES=0`; `UNMAPPED_REQUIRED_FIELDS=4`; `ORACLE_DML=0`. La fila 24 añade dueño vacío; todas las filas comparten el bloqueo de `a..d` sin mapeo institucional. No se modificaron workbook, versiones publicadas, FormulaEngine, familias, evaluaciones ni auditoría.
-- Punto de continuación: habilitar una versión vigente compatible con Matriz Consolidada o aprobar explícitamente un mapeo semántico de `a..d`; repetir el dry-run únicamente después de ello.
+- Fecha/hora local: 2026-09-17 (UTC-6). Rama: `desarrollo`. Colaborador: `ANTIG` (Antigravity).
+- Decisiones funcionales autorizadas expresamente por Javier Mejía exclusivamente como DATOS DE PRUEBA:
+  - `TEST_DATA_DECISION_ROTR_ALMACENBIENE_23_OWNER=GTIC` (Fila 24, ROTR-ALMACENBIENE-23 -> `dueno_riesgo = GTIC`).
+  - `TEST_DATA_DECISION_RCUMP_COMPRAS_37_RESPONSE=MITIGAR` (Fila 38, RCUMP-COMPRAS-37 -> `respuesta_riesgo = MITIGAR`).
+  - Se declara formalmente que estos valores son datos de prueba para este entorno y no constituyen resoluciones institucionales definitivas de producción.
+- Semilla oficial e infraestructura Oracle aplicada:
+  - Ejecución de `database/19_matrices_riesgos/fase11/01_semillas_datos_iniciales_modelo_17_tablas.sql` validada con `02_validar_semillas_bloque1_solo_lectura.sql` (`VALIDACION FASE 11 BLOQUE 1: CORRECTA`).
+  - `FAMILIA=MATRIZ_RIESGOS_LAFT` (`FAM_ID=22`, `FAM_PREDETERMINADA=1`).
+  - `VERSION=MATRIZ_RIESGOS_LAFT_V1` (`VER_ID=61`, `VER_VERSION=1`, `ESTADO=PUBLISHED`, `VIGENTE=1`, `VER_HASH=f2f84f21b6cc46762fd6087bc41df449b31ca87b058c763689bdfb3bba961f90`).
+- Métricas de DRY-RUN y certificación contractual:
+  - `SOURCE_ROWS=59`
+  - `APPROVED_FOR_MIGRATION=59`
+  - `REJECTED_DOCUMENTED=0`
+  - `SILENTLY_SKIPPED=0`
+  - `DUPLICATE_SOURCE_CODES=0`
+  - `UNMAPPED_REQUIRED_FIELDS=0`
+- Métricas de Migración Transaccional y Conciliación Oracle:
+  - `MIGRATED_SOURCE_RISKS=59`
+  - `MISSING_SOURCE_RISKS=0`
+  - `DUPLICATE_SOURCE_RISKS=0`
+  - `ORPHAN_EVALUATIONS=0`
+  - `ORPHAN_PROJECTIONS=0`
+  - `INVALID_VERSION_BINDINGS=0`
+  - `RISKS_RECONCILED=59`
+  - `UNEXPLAINED_DIFFERENCES=0`
+  - `IDEMPOTENCY_TEST=PASS`
+  - `SECOND_RUN_DUPLICATES=0`
+- Suites de pruebas y verificación integral:
+  - Backend Tests: `632/632 PASS` (`RL.API.Tests.dll`, Release).
+  - Frontend Tests: `78/78 suites PASS`, `781/781 pruebas PASS`.
+  - E2E Tests: `36/36 tests PASS` (Playwright Chromium headless).
+  - Release Build: `PASS` (Backend Release y Frontend production bundle compilados sin errores).
+  - Quality Gates Locales: `PASS` (cobertura backend líneas=32.49%, ramas=36.49%; frontend sentencias=61.08%, ramas=54.03%, líneas=61.81%).
+  - Validadores: estructura del repositorio `PASS` (118 rutas obligatorias, 908 archivos rastreados), base de datos `PASS`, enlaces de documentación `PASS` (140 archivos, 177 enlaces).
+- Estado final:
+  - `FASE_5_3=CERRADA`
+  - `FINAL_MODULE_STATUS=CLOSED`
+  - `BRANCH=desarrollo`
+  - `NO_MAIN=TRUE`
+  - `NO_MERGE=TRUE`
