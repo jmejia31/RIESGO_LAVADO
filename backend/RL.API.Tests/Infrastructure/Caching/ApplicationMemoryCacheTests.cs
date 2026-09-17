@@ -77,7 +77,7 @@ public sealed class ApplicationMemoryCacheTests
     }
 
     [Fact]
-    public async Task GetOrCreateAsync_EvitaCacheStampedeEnMismoAlcance()
+    public async Task GetOrCreateAsync_EvitaCacheStampedeEnMismaClave()
     {
         using var memory = new MemoryCache(new MemoryCacheOptions());
         using var cache = new ApplicationMemoryCache(memory);
@@ -100,6 +100,38 @@ public sealed class ApplicationMemoryCacheTests
 
         Assert.All(results, value => Assert.Equal(77, value));
         Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public async Task GetOrCreateAsync_ClavesDistintasDelMismoAlcanceNoSeBloquean()
+    {
+        using var memory = new MemoryCache(new MemoryCacheOptions());
+        using var cache = new ApplicationMemoryCache(memory);
+        var primeraFactoryIniciada = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var liberarPrimeraFactory = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Task<int> primera = cache.GetOrCreateAsync(
+            "scope",
+            "clave-a",
+            TimeSpan.FromMinutes(1),
+            async () =>
+            {
+                primeraFactoryIniciada.SetResult();
+                await liberarPrimeraFactory.Task;
+                return 1;
+            });
+
+        await primeraFactoryIniciada.Task;
+        Task<int> segunda = cache.GetOrCreateAsync(
+            "scope",
+            "clave-b",
+            TimeSpan.FromMinutes(1),
+            () => Task.FromResult(2));
+
+        Assert.Same(segunda, await Task.WhenAny(segunda, Task.Delay(TimeSpan.FromSeconds(1))));
+        Assert.Equal(2, await segunda);
+        liberarPrimeraFactory.SetResult();
+        Assert.Equal(1, await primera);
     }
 
     [Fact]

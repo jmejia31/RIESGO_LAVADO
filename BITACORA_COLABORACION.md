@@ -7138,6 +7138,15 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 - Commit final de trazabilidad publicado: `94fdfd19dd747907ae3c7830edca53cfdd01309f`; Quality Gate exacto `RUN=34615859227`; `STATUS=completed`; `CONCLUSION=success`.
 
+## Registro MONITOREO-JURIDICAS-FAST-PATH-AND-CACHE-KEY-LOCK-1
+
+- Fecha/hora local: `2026-09-16 19:45 -06:00`; autor `COD`; rama `desarrollo`; baseline remoto `fec07e9b09b42fd8a718154068b06e3705792689`; `origin/main` verificado en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39` antes de publicar. Se preservan fuera del stage `.vscode/`, `agosto_rest.txt`, los artefactos de benchmark preexistentes y el PDF de requisitos.
+- Alcance: parche final exclusivamente de backend para reducir el coste de Juridicas de resultado pequeno, sin ejecutar benchmark en esta intervencion y sin cambios Oracle, DDL, DML, indices, estadisticas ni `main`.
+- Implementacion: la primera pagina de Juridicas ejecuta una lectura limitada a `tamanoPagina + 1`, sin `ORDER BY` Oracle. Si caben todos los registros, ordena en memoria por `NOMBRE ASC`, `NUMEPATRO ASC`, construye los contadores contractuales y omite tanto el flujo paginado normal como el metadata Oracle. Con mas de una pagina, conserva el flujo SQL y metadata preexistentes sin cambios. Naturales y Empleados no reciben el fast path.
+- Cache: `ApplicationMemoryCache` conserva la invalidacion por scope, pero serializa factories por `effectiveKey`; claves distintas dentro de un mismo scope ya no esperan el mismo `SemaphoreSlim`.
+- Pruebas ejecutadas: focales `21/21 PASS`; backend completo `625/625 PASS`; build Release PASS (`0` warnings, `0` errors); Quality Gate local fresco PASS: frontend `781/781`, E2E `36/36`, TSC, lint, audit npm y validadores. Un primer E2E aislado de Quality Gate tuvo un fallo transitorio de foco; el spec focal paso y la repeticion completa posterior paso `36/36`, sin reintentos ni cambios de timeout.
+- Restricciones y siguiente punto: no se ejecuto benchmark ni se modifico Oracle. La siguiente accion requiere autorizacion separada para una sola medicion contractual; no debe inferirse certificacion de rendimiento de estas pruebas locales.
+
 ## Registro DBA-ORACLE-PRECHANGE-VERIFICATION-1
 
 - Fecha/hora local: `2026-09-11 10:08 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline efectivo inicial `e19cc1bd6589f50087fc2283962d1bd82a3e4af9`. Durante la auditoría se integró por fast-forward el cambio concurrente `214eed3c5efeae26edf80ba7215ae017027d4828` de Bitácora, sin sobrescribirlo; `main` permanece en `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`. Se preservan sin stage `.vscode/`, `agosto_rest.txt` y el PDF de requisitos preexistentes.

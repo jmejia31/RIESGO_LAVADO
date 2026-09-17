@@ -50,12 +50,12 @@ public interface IApplicationCache
 
 /// <summary>
 /// Caché en memoria por instancia con invalidación explícita mediante change tokens.
-/// Un lock por alcance evita cache stampede sin crear una colección de locks por cada ID.
+/// Un lock por clave efectiva evita cache stampede sin bloquear lecturas de claves independientes.
 /// </summary>
 public sealed class ApplicationMemoryCache : IApplicationCache, IDisposable
 {
     private readonly IMemoryCache _memoryCache;
-    private readonly ConcurrentDictionary<string, SemaphoreSlim> _scopeLocks = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _effectiveKeyLocks = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _scopeTokens = new(StringComparer.Ordinal);
     private bool _disposed;
 
@@ -83,7 +83,7 @@ public sealed class ApplicationMemoryCache : IApplicationCache, IDisposable
             return cached!;
         }
 
-        SemaphoreSlim gate = _scopeLocks.GetOrAdd(scope, static _ => new SemaphoreSlim(1, 1));
+        SemaphoreSlim gate = _effectiveKeyLocks.GetOrAdd(effectiveKey, static _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync(cancellationToken);
         try
         {
@@ -164,7 +164,7 @@ public sealed class ApplicationMemoryCache : IApplicationCache, IDisposable
             token.Dispose();
         }
 
-        foreach (SemaphoreSlim gate in _scopeLocks.Values)
+        foreach (SemaphoreSlim gate in _effectiveKeyLocks.Values)
         {
             gate.Dispose();
         }

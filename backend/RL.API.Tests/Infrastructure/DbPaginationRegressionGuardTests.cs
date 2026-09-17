@@ -78,6 +78,40 @@ public sealed class DbPaginationRegressionGuardTests
     }
 
     [Fact]
+    public void MonitoreoJuridicas_FastPathPrimeraPaginaEsLimitadoYNoAfectaOtrosTipos()
+    {
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal);
+        var juridicasStart = source.IndexOf("public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync", StringComparison.Ordinal);
+        var naturalesStart = source.IndexOf("public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync", StringComparison.Ordinal);
+        var empleadosStart = source.IndexOf("public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync", StringComparison.Ordinal);
+
+        Assert.True(juridicasStart >= 0 && naturalesStart > juridicasStart && empleadosStart > naturalesStart);
+        var juridicas = source[juridicasStart..naturalesStart];
+        var naturales = source[naturalesStart..empleadosStart];
+        var empleados = source[empleadosStart..source.IndexOf("public Task<List<CoincidenciaEmpleadoDto>>", empleadosStart, StringComparison.Ordinal)];
+
+        Assert.Contains("CrearRespuestaJuridicaFastPath", juridicas, StringComparison.Ordinal);
+        Assert.DoesNotContain("CrearRespuestaJuridicaFastPath", naturales, StringComparison.Ordinal);
+        Assert.DoesNotContain("CrearRespuestaJuridicaFastPath", empleados, StringComparison.Ordinal);
+        Assert.Contains("WHERE ROWNUM <= :filaLimite", source, StringComparison.Ordinal);
+        Assert.Contains("pageSize + 1", source, StringComparison.Ordinal);
+        Assert.Contains("limitedItemCount <= pageSize", source, StringComparison.Ordinal);
+        Assert.Contains("CerradosPasivos = 0", source, StringComparison.Ordinal);
+
+        var monitoringStart = source.IndexOf("private async Task<MonitoreoPaginadoDto<T>> ObtenerMonitoreoPaginadoAsync", StringComparison.Ordinal);
+        var monitoringEnd = source.IndexOf("private sealed record MonitoreoMetadata", monitoringStart, StringComparison.Ordinal);
+        var monitoring = source[monitoringStart..monitoringEnd];
+        Assert.True(monitoring.IndexOf("return fastPathResponseFactory", StringComparison.Ordinal)
+                    < monitoring.IndexOf("ObtenerMetadataMonitoreoAsync", StringComparison.Ordinal));
+
+        var limitedStart = source.IndexOf("EjecutarPrimeraPaginaMonitoreoLimitadaAsync", StringComparison.Ordinal);
+        var limitedEnd = source.IndexOf("private async Task<MonitoreoPageResult<T>> EjecutarPaginaMonitoreoAsync", limitedStart, StringComparison.Ordinal);
+        var limitedSql = source[limitedStart..limitedEnd];
+        Assert.DoesNotContain("ORDER BY", limitedSql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void LegacyFullListRoutesAndMethods_NoPermanecenComoSuperficieProductiva()
     {
         var listasController = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/ListasController.cs"));
@@ -143,7 +177,8 @@ public sealed class DbPaginationRegressionGuardTests
     [Fact]
     public void MonitoreoJuridicas_UsaFuenteLigeraEquivalenteSinLaVistaPesada()
     {
-        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"));
+        var source = File.ReadAllText(Path.Combine(RepositoryRoot(), "backend/RL.API/Features/Listas/Persistence/ListasRepository.cs"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal);
         var juridicasSql = ExtractSqlBuilder(source, "ConstruirConsultaMonitoreoJuridicas");
         var coincidenciasStart = juridicasSql.IndexOf("Coincidencias AS (", StringComparison.Ordinal);
         var coincidenciasEnd = juridicasSql.IndexOf(")\n            SELECT RTN", coincidenciasStart, StringComparison.Ordinal);

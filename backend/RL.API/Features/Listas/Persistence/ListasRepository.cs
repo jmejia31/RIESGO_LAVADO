@@ -52,7 +52,7 @@ namespace RL.API.Features.Listas.Persistence
                     EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"),
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1
-                }, cancellationToken);
+                }, cancellationToken, CrearRespuestaJuridicaFastPath);
 
         public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoJuridicas(), "NOMBRE ASC, NUMEPATRO ASC", reader => new CoincidenciaJuridicaDto
@@ -964,7 +964,8 @@ namespace RL.API.Features.Listas.Persistence
             string baseSql,
             string orderBy,
             Func<OracleDataReader, T> map,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            Func<List<T>, int, MonitoreoPaginadoDto<T>>? fastPathResponseFactory = null)
         {
             var requestStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var filteredSql = ConstruirConsultaMonitoreoFiltrada(baseSql, consulta);
@@ -975,6 +976,26 @@ namespace RL.API.Features.Listas.Persistence
             var connectionStopwatch = System.Diagnostics.Stopwatch.StartNew();
             await conn.OpenAsync(cancellationToken);
             connectionStopwatch.Stop();
+
+            if (fastPathResponseFactory is not null && requestedPage == 1)
+            {
+                var limitedPage = await EjecutarPrimeraPaginaMonitoreoLimitadaAsync(
+                    conn, filteredSql, pageSize, consulta, map, cancellationToken);
+
+                if (PuedeUsarFastPathPrimeraPagina(requestedPage, limitedPage.Items.Count, pageSize))
+                {
+                    requestStopwatch.Stop();
+                    Serilog.Log.Information(
+                        "MonitoringQuery completed: type={MonitoringType} page={Page} pageSize={PageSize} filtered={Filtered} connectionOpenMs={ConnectionOpenMs} pageExecuteMs={PageExecuteMs} firstRowMs={FirstRowMs} rowsReadMs={RowsReadMs} mappingMs={MappingMs} metadataLookupMs={MetadataLookupMs} totalRepositoryMs={TotalRepositoryMs}",
+                        ResolveMonitoringType(baseSql), requestedPage, pageSize,
+                        !string.IsNullOrWhiteSpace(consulta.Buscar)
+                            || !string.Equals(consulta.Estado, "todos", StringComparison.OrdinalIgnoreCase)
+                            || consulta.FechaDesde.HasValue || consulta.FechaHasta.HasValue,
+                        connectionStopwatch.ElapsedMilliseconds, limitedPage.ExecuteMs, limitedPage.FirstRowMs,
+                        limitedPage.RowsReadMs, limitedPage.MappingMs, 0, requestStopwatch.ElapsedMilliseconds);
+                    return fastPathResponseFactory(limitedPage.Items, pageSize);
+                }
+            }
 
             var pageResult = await EjecutarPaginaMonitoreoAsync(
                 conn, filteredSql, orderBy, requestedPage, pageSize, consulta, map, cancellationToken);
@@ -1031,6 +1052,111 @@ namespace RL.API.Features.Listas.Persistence
         private sealed record MonitoreoMetadata(int TotalRegistros, int Pendientes, int ConMotivo, int Manuales, int CerradosPasivos);
 
         private sealed record MonitoreoPageResult<T>(List<T> Items, long ExecuteMs, long FirstRowMs, long RowsReadMs, long MappingMs);
+
+        private static bool PuedeUsarFastPathPrimeraPagina(int requestedPage, int limitedItemCount, int pageSize)
+            => requestedPage == 1 && limitedItemCount <= pageSize;
+
+        private static MonitoreoPaginadoDto<CoincidenciaJuridicaDto> CrearRespuestaJuridicaFastPath(
+            List<CoincidenciaJuridicaDto> items,
+            int pageSize)
+        {
+            var orderedItems = items
+                .Select((item, index) => new { item, index })
+                .OrderBy(entry => entry.item.Nombre, Comparer<string>.Create(CompararTextoOracleAsc))
+                .ThenBy(entry => entry.item.NumeroPatrono, Comparer<string>.Create(CompararTextoOracleAsc))
+                .ThenBy(entry => entry.index)
+                .Select(entry => entry.item)
+                .ToList();
+            var manuales = orderedItems.Count(item => item.EsManual);
+            var conMotivo = orderedItems.Count(item => !item.EsManual && item.TieneMotivo);
+            var pendientes = orderedItems.Count - manuales - conMotivo;
+
+            return new MonitoreoPaginadoDto<CoincidenciaJuridicaDto>
+            {
+                Items = orderedItems,
+                Pagina = 1,
+                TamanoPagina = pageSize,
+                TotalRegistros = orderedItems.Count,
+                TotalPaginas = orderedItems.Count == 0 ? 0 : 1,
+                Totales = new MonitoreoTotalesDto
+                {
+                    TotalRegistros = orderedItems.Count,
+                    Pendientes = pendientes,
+                    ConMotivo = conMotivo,
+                    Manuales = manuales,
+                    CerradosPasivos = 0
+                }
+            };
+        }
+
+        private static int CompararTextoOracleAsc(string? left, string? right)
+        {
+            if (left is null) return right is null ? 0 : 1;
+            if (right is null) return -1;
+            return StringComparer.Ordinal.Compare(left, right);
+        }
+
+        private async Task<MonitoreoPageResult<T>> EjecutarPrimeraPaginaMonitoreoLimitadaAsync<T>(
+            OracleConnection conn,
+            string filteredSql,
+            int pageSize,
+            ConsultaMonitoreoPaginadaDto consulta,
+            Func<OracleDataReader, T> map,
+            CancellationToken cancellationToken)
+        {
+            var items = new List<T>(pageSize + 1);
+            var executeStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            await using var command = conn.CreateCommand();
+            command.BindByName = true;
+            command.CommandText = $@"
+                SELECT *
+                FROM ({filteredSql})
+                WHERE ROWNUM <= :filaLimite";
+            AddMonitoringParameters(command, consulta);
+            command.Parameters.Add(new OracleParameter("filaLimite", pageSize + 1));
+            OracleDataReader reader;
+            try
+            {
+                reader = await command.ExecuteReaderAsync(cancellationToken);
+            }
+            catch (OracleException exception) when (exception.Number == 1013)
+            {
+                Serilog.Log.Warning(
+                    "MonitoringQuery cancelled by Oracle: phase=fast-path requestAborted={RequestAborted}",
+                    cancellationToken.IsCancellationRequested || _httpContextAccessor.HttpContext?.RequestAborted.IsCancellationRequested == true);
+                throw;
+            }
+            await using (reader)
+            {
+                executeStopwatch.Stop();
+                var firstRowStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var firstRowMs = 0L;
+                var rowsReadStopwatch = new System.Diagnostics.Stopwatch();
+                var mappingMs = 0L;
+                var hasRow = false;
+                while (await reader.ReadAsync(cancellationToken))
+                {
+                    if (!hasRow)
+                    {
+                        firstRowStopwatch.Stop();
+                        firstRowMs = firstRowStopwatch.ElapsedMilliseconds;
+                        rowsReadStopwatch.Start();
+                        hasRow = true;
+                    }
+
+                    var mappingStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                    items.Add(map(reader));
+                    mappingStopwatch.Stop();
+                    mappingMs += mappingStopwatch.ElapsedMilliseconds;
+                }
+                rowsReadStopwatch.Stop();
+                if (!hasRow) firstRowMs = firstRowStopwatch.ElapsedMilliseconds;
+
+                return new MonitoreoPageResult<T>(
+                    items, executeStopwatch.ElapsedMilliseconds, firstRowMs,
+                    rowsReadStopwatch.ElapsedMilliseconds, mappingMs);
+            }
+        }
 
         private async Task<MonitoreoPageResult<T>> EjecutarPaginaMonitoreoAsync<T>(
             OracleConnection conn,
