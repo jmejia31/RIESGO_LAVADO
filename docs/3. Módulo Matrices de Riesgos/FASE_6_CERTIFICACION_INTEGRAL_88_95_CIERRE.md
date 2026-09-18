@@ -223,8 +223,7 @@ Cada fila revisada contiene `SOURCE_COLUMN`, `SOURCE_NONEMPTY_COUNT`, `SEMANTIC_
 - `npm run lint=PASS`; `npm run build=PASS`; `npm audit --audit-level=high=0`; `run_quality_gates.ps1=PASS` (cobertura backend 32.49% líneas/36.49% ramas; frontend 61.08% sentencias/54.03% ramas/57.02% funciones/61.81% líneas).
 - `TSC=PASS` por compilación de producción; `DIFF_CHECK=PASS`; estructura, SQL y enlaces documentales: PASS.
 - `python tools/validate_agent_skills.py=PENDIENTE`, porque Python no está instalado/disponible en el entorno.
-- El Quality Gate remoto del SHA final de esta continuación aún no existe porque los cambios no han sido publicados; el gate heredado no se reutiliza.
-- `QUALITY_GATE_RUN=PENDIENTE_PUBLICACION`; `QUALITY_GATE_SHA=PENDIENTE`; `QUALITY_GATE_STATUS=PENDIENTE`; `QUALITY_GATE_CONCLUSION=PENDIENTE`. No se declara cierre con un run heredado.
+- `QUALITY_GATE_RUN=35377565394`; `QUALITY_GATE_SHA=40580039c3f648030d4ecae05fbe90ffc6223942`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. Es el gate del SHA exacto publicado; no se reutilizó un run heredado.
 
 ## 12. Deuda residual y punto de continuación
 
