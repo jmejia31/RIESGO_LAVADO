@@ -26,6 +26,7 @@ public static class Program
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         bool executeMigration = args.Any(a => string.Equals(a, "--migrate", StringComparison.OrdinalIgnoreCase));
+        bool enrichExisting = args.Any(a => string.Equals(a, "--enrich-existing", StringComparison.OrdinalIgnoreCase));
         string repoRoot = Directory.GetCurrentDirectory();
         while (!string.IsNullOrEmpty(repoRoot) && !File.Exists(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx")))
         {
@@ -41,8 +42,8 @@ public static class Program
         string schemaPath = Path.Combine(repoRoot, "database", "19_matrices_riesgos", "fase11", "formulario_matriz_riesgos_laft_v1.json");
 
         Console.WriteLine("================================================================================");
-        Console.WriteLine("HERRAMIENTA TRANSACCIONAL DE MIGRACIÓN Y CONCILIACIÓN FASE 5.3");
-        Console.WriteLine($"MODO: {(executeMigration ? "MIGRACIÓN TRANSACCIONAL Y PRUEBA DE IDEMPOTENCIA" : "DRY-RUN DE CERTIFICACIÓN")}");
+        Console.WriteLine("HERRAMIENTA TRANSACCIONAL DE MIGRACIÓN, ENRIQUECIMIENTO Y CONCILIACIÓN");
+        Console.WriteLine($"MODO: {(enrichExisting ? (executeMigration ? "ENRICH_EXISTING TRANSACCIONAL" : "ENRICH_EXISTING DRY-RUN") : (executeMigration ? "MIGRACIÓN TRANSACCIONAL Y PRUEBA DE IDEMPOTENCIA" : "DRY-RUN DE CERTIFICACIÓN"))}");
         Console.WriteLine($"EXCEL ORIGEN: {excelPath}");
         Console.WriteLine($"SCHEMA CONTRATO: {schemaPath}");
         Console.WriteLine("================================================================================");
@@ -77,8 +78,11 @@ public static class Program
 
         if (!executeMigration)
         {
-            Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
-            return 0;
+            if (!enrichExisting)
+            {
+                Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
+                return 0;
+            }
         }
 
         // 3. Ejecutar Migración en Oracle
@@ -88,6 +92,11 @@ public static class Program
             ?? throw new InvalidOperationException("No se encontró la cadena de conexión OracleDB.");
 
         await using var connection = new OracleConnection(connectionString);
+        connection.ConnectionString = new OracleConnectionStringBuilder(connectionString)
+        {
+            ConnectionTimeout = 60,
+            Pooling = false
+        }.ConnectionString;
         await connection.OpenAsync();
 
         Console.WriteLine("\n--- Conexión Oracle establecida ---");
@@ -99,6 +108,11 @@ public static class Program
             $"SELECT VER_ID FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_CODIGO = '{VersionEsperada}' AND VER_ESTADO = 'PUBLISHED' AND VER_VIGENTE = 1"));
 
         Console.WriteLine($"FAMILIA_ID={familiaId} ({FamiliaEsperada}) | VERSION_ID={versionId} ({VersionEsperada})");
+
+        if (enrichExisting)
+        {
+            return await EjecutarEnriquecimientoExistenteAsync(connection, versionId, sourceRisks, executeMigration);
+        }
 
         // PASO 1 DE MIGRACIÓN: Primera ejecución transaccional
         Console.WriteLine("\n>>> EJECUTANDO PRIMERA PASADA DE MIGRACIÓN TRANSACCIONAL <<<");
@@ -168,8 +182,8 @@ public static class Program
             string areaFinal = !string.IsNullOrWhiteSpace(area) ? area : areaConsolidada;
 
             string tipoRiesgo = Convert.ToString(reader.GetValue(4), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
-            string proceso = Convert.ToString(reader.GetValue(5), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
-            string procedimiento = Convert.ToString(reader.GetValue(6), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string procedimiento = Convert.ToString(reader.GetValue(5), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string objetivosEstrategicos = Convert.ToString(reader.GetValue(6), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
             string titulo = Convert.ToString(reader.GetValue(7), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
             string descripcion = Convert.ToString(reader.GetValue(8), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
 
@@ -202,6 +216,23 @@ public static class Program
             string respuestaRaw = Convert.ToString(reader.GetValue(38), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
             string respuesta = MapearRespuestaRiesgo(respuestaRaw);
 
+            string regimenAfectado = Convert.ToString(reader.GetValue(14), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string transversalidad = Convert.ToString(reader.GetValue(15), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string escalaPreventiva = Convert.ToString(reader.GetValue(20), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string nivelPreventivo = Convert.ToString(reader.GetValue(21), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string escalaDetectiva = Convert.ToString(reader.GetValue(24), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string nivelDetectivo = Convert.ToString(reader.GetValue(25), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string escalaCorrectiva = Convert.ToString(reader.GetValue(28), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string nivelCorrectivo = Convert.ToString(reader.GetValue(29), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string automatizacion = Convert.ToString(reader.GetValue(31), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string plan = Convert.ToString(reader.GetValue(39), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            int cantidadAcciones = ParseInt(reader.GetValue(40));
+            string actividades = Convert.ToString(reader.GetValue(41), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            int cantidadActividades = ParseInt(reader.GetValue(42));
+            string monitoreoSeguimiento = Convert.ToString(reader.GetValue(43), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string responsables = Convert.ToString(reader.GetValue(44), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+            string senalesAlerta = Convert.ToString(reader.GetValue(69), CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+
             // DATO DE PRUEBA AUTORIZADO 2: Fila 38 RCUMP-COMPRAS-37
             if (string.Equals(code, "RCUMP-COMPRAS-37", StringComparison.OrdinalIgnoreCase) && (string.IsNullOrWhiteSpace(respuesta) || respuesta == "UNKNOWN"))
             {
@@ -228,7 +259,32 @@ public static class Program
                 frecRes,
                 impRes,
                 respuesta
-            ));
+            )
+            {
+                AreaConsolidada = areaConsolidada,
+                TipoRiesgo = tipoRiesgo,
+                Procedimiento = procedimiento,
+                ObjetivosEstrategicos = objetivosEstrategicos,
+                RegimenAfectado = regimenAfectado,
+                Transversalidad = transversalidad,
+                ControlPreventivoItems = SplitSourceItems(Convert.ToString(reader.GetValue(19), CultureInfo.InvariantCulture)),
+                ControlDetectivoItems = SplitSourceItems(Convert.ToString(reader.GetValue(23), CultureInfo.InvariantCulture)),
+                ControlCorrectivoItems = SplitSourceItems(Convert.ToString(reader.GetValue(27), CultureInfo.InvariantCulture)),
+                EscalaPreventiva = escalaPreventiva,
+                NivelPreventivo = nivelPreventivo,
+                EscalaDetectiva = escalaDetectiva,
+                NivelDetectivo = nivelDetectivo,
+                EscalaCorrectiva = escalaCorrectiva,
+                NivelCorrectivo = nivelCorrectivo,
+                Automatizacion = automatizacion,
+                PlanItems = SplitSourceItems(plan),
+                CantidadAccionesFuente = cantidadAcciones,
+                ActividadItems = SplitSourceItems(actividades),
+                CantidadActividadesFuente = cantidadActividades,
+                MonitoreoSeguimiento = monitoreoSeguimiento,
+                Responsables = responsables,
+                SenalAlertaItems = SplitSourceItems(senalesAlerta)
+            });
         }
 
         return rows;
@@ -317,6 +373,23 @@ public static class Program
     private static int ParseInt(object? val) =>
         int.TryParse(Convert.ToString(val, CultureInfo.InvariantCulture), out int n) ? n : 0;
 
+    private static IReadOnlyList<string> SplitSourceItems(string? value)
+    {
+        string normalized = (value ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Trim();
+        if (string.IsNullOrWhiteSpace(normalized)) return Array.Empty<string>();
+
+        var items = System.Text.RegularExpressions.Regex.Split(
+                normalized,
+                @"(?m)(?=^\s*\d+(?:\.\d+)*\s*[-.)])")
+            .Select(item => item.Trim())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .Select(item => System.Text.RegularExpressions.Regex.Replace(item, @"^\s*\d+(?:\.\d+)*\s*[-.)]\s*", string.Empty).Trim())
+            .Where(item => !string.IsNullOrWhiteSpace(item))
+            .ToArray();
+
+        return items.Length == 0 ? new[] { normalized } : items;
+    }
+
     private static async Task<DryRunResult> ExecuteDryRunAsync(List<SourceRiskRow> sourceRisks, string schemaJson)
     {
         var validator = new FormularioValidador();
@@ -401,6 +474,204 @@ public static class Program
             }
         }
     }
+
+    private static async Task<int> EjecutarEnriquecimientoExistenteAsync(
+        OracleConnection connection,
+        long versionId,
+        IReadOnlyList<SourceRiskRow> sourceRisks,
+        bool executeMigration)
+    {
+        int targetRisksFound = 0;
+        int targetEvaluationsFound = 0;
+        int evaluationsToEnrich = 0;
+        int controlsToCreate = 0;
+        int controlEvaluationsToCreate = 0;
+        int plansToCreate = 0;
+        int activitiesToCreate = 0;
+        int alertsToCreate = 0;
+        var rejections = new List<string>();
+
+        foreach (var source in sourceRisks)
+        {
+            long? riesgoId = await ScalarNullableAsync(connection,
+                "SELECT RIE_ID FROM RL_MR_RIESGOS WHERE RIE_CODIGO = :codigo AND RIE_ACTIVO = 1",
+                new OracleParameter("codigo", source.Code));
+            if (riesgoId is null)
+            {
+                rejections.Add($"{source.Code}: riesgo destino inexistente.");
+                continue;
+            }
+
+            targetRisksFound++;
+            long? evaluacionId = await ScalarNullableAsync(connection,
+                @"SELECT EVA_ID
+                    FROM RL_MR_EVALUACIONES_RIESGO
+                   WHERE EVA_RIESGO_ID = :riesgoId
+                     AND EVA_VERSION_ID = :versionId
+                     AND EVA_ACTIVO = 1",
+                new OracleParameter("riesgoId", riesgoId.Value),
+                new OracleParameter("versionId", versionId));
+            if (evaluacionId is null)
+            {
+                rejections.Add($"{source.Code}: evaluación V1 destino inexistente.");
+                continue;
+            }
+
+            targetEvaluationsFound++;
+            evaluationsToEnrich++;
+
+            foreach (ControlSpec control in CrearEspecificacionesControl(source))
+            {
+                if (string.IsNullOrWhiteSpace(control.Automatizacion))
+                {
+                    rejections.Add($"{source.Code}/{control.Tipo}: automatización fuente ausente; no se inventa CON_AUTOMATIZACION.");
+                    continue;
+                }
+
+                if (control.Descripciones.Count > 0)
+                {
+                    rejections.Add($"{source.Code}/{control.Tipo}: estado de control fuente ausente; no se inventa CON_ESTADO.");
+                }
+
+                foreach (string descripcion in control.Descripciones)
+                {
+                    bool exists = Convert.ToInt32(await ScalarAsync(connection, null,
+                        @"SELECT COUNT(*)
+                            FROM RL_MR_CONTROLES_RIESGO
+                           WHERE CON_EVALUACION_ID = :evaluacionId
+                             AND CON_TIPO = :tipo
+                             AND CON_DESCRIPCION = :descripcion",
+                        new OracleParameter("evaluacionId", evaluacionId.Value),
+                        new OracleParameter("tipo", control.Tipo),
+                        new OracleParameter("descripcion", descripcion))) > 0;
+                    if (!exists) controlsToCreate++;
+                }
+            }
+
+            for (int alertaIndex = 0; alertaIndex < source.SenalAlertaItems.Count; alertaIndex++)
+            {
+                string codigo = ConstruirCodigoAlerta(source.Code, alertaIndex + 1);
+                bool exists = Convert.ToInt32(await ScalarAsync(connection, null,
+                    @"SELECT COUNT(*)
+                        FROM RL_MR_SENALES_ALERTA
+                       WHERE ALE_EVALUACION_ID = :evaluacionId
+                         AND ALE_CODIGO = :codigo",
+                    new OracleParameter("evaluacionId", evaluacionId.Value),
+                    new OracleParameter("codigo", codigo))) > 0;
+                if (!exists) alertsToCreate++;
+            }
+
+            if (source.PlanItems.Count > 0)
+            {
+                rejections.Add($"{source.Code}: plan fuente sin fechas, presupuesto y estado; no se crean RL_MR_PLANES con datos inventados.");
+            }
+
+            if (source.ActividadItems.Count > 0)
+            {
+                rejections.Add($"{source.Code}: actividades fuente sin fechas y estado por actividad; no se crean RL_MR_ACTIVIDADES con datos inventados.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(source.MonitoreoSeguimiento))
+            {
+                rejections.Add($"{source.Code}: monitoreo/seguimiento fuente no es un evento de automonitoreo completo; faltan estados y usuario institucional.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(source.Responsables))
+            {
+                rejections.Add($"{source.Code}: responsables fuente son de nivel plan y no pueden asignarse a actividades sin alineación semántica.");
+            }
+
+            // Las columnas de efectividad son agregadas por tipo en el origen.
+            // No se duplica el mismo porcentaje en cada control normalizado.
+            if (TieneEfectividadFuente(source)) controlEvaluationsToCreate += 0;
+        }
+
+        Console.WriteLine("\n--- ENRICH_EXISTING DRY-RUN ---");
+        Console.WriteLine($"SOURCE_RISKS={sourceRisks.Count}");
+        Console.WriteLine($"TARGET_RISKS_FOUND={targetRisksFound}");
+        Console.WriteLine($"MISSING_TARGET_RISKS={sourceRisks.Count - targetRisksFound}");
+        Console.WriteLine($"TARGET_EVALUATIONS_FOUND={targetEvaluationsFound}");
+        Console.WriteLine($"EVALUATIONS_TO_ENRICH={evaluationsToEnrich}");
+        Console.WriteLine($"CONTROLS_TO_CREATE={controlsToCreate}");
+        Console.WriteLine($"CONTROL_EVALUATIONS_TO_CREATE={controlEvaluationsToCreate}");
+        Console.WriteLine($"PLANS_TO_CREATE={plansToCreate}");
+        Console.WriteLine($"ACTIVITIES_TO_CREATE={activitiesToCreate}");
+        Console.WriteLine($"ALERTS_TO_CREATE={alertsToCreate}");
+        Console.WriteLine("FIELDS_TO_ADD_TO_V2=5");
+        Console.WriteLine($"REJECTIONS={rejections.Count}");
+        foreach (string rejection in rejections.Distinct(StringComparer.Ordinal))
+        {
+            Console.WriteLine($"REJECTION={rejection}");
+        }
+
+        if (!executeMigration)
+        {
+            Console.WriteLine("ENRICH_EXISTING_DML=NOT_EXECUTED");
+            return rejections.Count == 0 ? 0 : 5;
+        }
+
+        if (rejections.Count > 0)
+        {
+            Console.WriteLine("ENRICH_EXISTING_DML=BLOCKED_FAIL_CLOSED");
+            return 5;
+        }
+
+        throw new InvalidOperationException(
+            "ENRICH_EXISTING DML requiere que el dry-run cierre sin rechazos; no se permite una ejecución parcial.");
+    }
+
+    private static IReadOnlyList<ControlSpec> CrearEspecificacionesControl(SourceRiskRow source) =>
+        new[]
+        {
+            new ControlSpec("PREVENTIVO", source.ControlPreventivoItems, NormalizarAutomatizacion(source.Automatizacion)),
+            new ControlSpec("DETECTIVO", source.ControlDetectivoItems, NormalizarAutomatizacion(source.Automatizacion)),
+            new ControlSpec("CORRECTIVO", source.ControlCorrectivoItems, NormalizarAutomatizacion(source.Automatizacion))
+        };
+
+    private static string? NormalizarAutomatizacion(string valor)
+    {
+        string normalizado = (valor ?? string.Empty).Trim().ToUpperInvariant()
+            .Replace("Á", "A", StringComparison.Ordinal)
+            .Replace("É", "E", StringComparison.Ordinal)
+            .Replace("Í", "I", StringComparison.Ordinal)
+            .Replace("Ó", "O", StringComparison.Ordinal)
+            .Replace("Ú", "U", StringComparison.Ordinal);
+        if (normalizado.Contains("SEMI", StringComparison.Ordinal)) return "SEMIAUTOMATICO";
+        if (normalizado.Contains("AUTOM", StringComparison.Ordinal)) return "AUTOMATICO";
+        if (normalizado.Contains("MANUAL", StringComparison.Ordinal)) return "MANUAL";
+        return string.IsNullOrWhiteSpace(normalizado) ? null : normalizado;
+    }
+
+    private static bool TieneEfectividadFuente(SourceRiskRow source) =>
+        source.ControlesPreventivo > 0 || source.ControlesDetectivo > 0 || source.ControlesCorrectivo > 0 ||
+        !string.IsNullOrWhiteSpace(source.EscalaPreventiva) ||
+        !string.IsNullOrWhiteSpace(source.EscalaDetectiva) ||
+        !string.IsNullOrWhiteSpace(source.EscalaCorrectiva);
+
+    private static string ConstruirCodigoAlerta(string riesgoCodigo, int ordinal) =>
+        Truncar($"{riesgoCodigo}-AL-{ordinal}", 50).ToUpperInvariant();
+
+    private static async Task<object?> ScalarAsync(
+        OracleConnection conn,
+        OracleTransaction? tx,
+        string sql,
+        params OracleParameter[] parameters)
+    {
+        await using var cmd = new OracleCommand(sql, conn) { BindByName = true, Transaction = tx };
+        cmd.Parameters.AddRange(parameters);
+        return await cmd.ExecuteScalarAsync();
+    }
+
+    private static async Task<long?> ScalarNullableAsync(
+        OracleConnection conn,
+        string sql,
+        params OracleParameter[] parameters)
+    {
+        object? value = await ScalarAsync(conn, null, sql, parameters);
+        return value is null || value == DBNull.Value ? null : Convert.ToInt64(value, CultureInfo.InvariantCulture);
+    }
+
+    private sealed record ControlSpec(string Tipo, IReadOnlyList<string> Descripciones, string? Automatizacion);
 
     private static async Task<MigrationBatchResult> MigrateBatchAsync(
         OracleConnection connection,
@@ -686,7 +957,32 @@ public sealed record SourceRiskRow(
     int FrecuenciaResidual,
     int ImpactoResidual,
     string RespuestaRiesgo
-);
+)
+{
+    public string AreaConsolidada { get; init; } = string.Empty;
+    public string TipoRiesgo { get; init; } = string.Empty;
+    public string Procedimiento { get; init; } = string.Empty;
+    public string ObjetivosEstrategicos { get; init; } = string.Empty;
+    public string RegimenAfectado { get; init; } = string.Empty;
+    public string Transversalidad { get; init; } = string.Empty;
+    public IReadOnlyList<string> ControlPreventivoItems { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ControlDetectivoItems { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ControlCorrectivoItems { get; init; } = Array.Empty<string>();
+    public string EscalaPreventiva { get; init; } = string.Empty;
+    public string NivelPreventivo { get; init; } = string.Empty;
+    public string EscalaDetectiva { get; init; } = string.Empty;
+    public string NivelDetectivo { get; init; } = string.Empty;
+    public string EscalaCorrectiva { get; init; } = string.Empty;
+    public string NivelCorrectivo { get; init; } = string.Empty;
+    public string Automatizacion { get; init; } = string.Empty;
+    public IReadOnlyList<string> PlanItems { get; init; } = Array.Empty<string>();
+    public int CantidadAccionesFuente { get; init; }
+    public IReadOnlyList<string> ActividadItems { get; init; } = Array.Empty<string>();
+    public int CantidadActividadesFuente { get; init; }
+    public string MonitoreoSeguimiento { get; init; } = string.Empty;
+    public string Responsables { get; init; } = string.Empty;
+    public IReadOnlyList<string> SenalAlertaItems { get; init; } = Array.Empty<string>();
+}
 
 public sealed record DryRunResult(
     int SourceRows,
