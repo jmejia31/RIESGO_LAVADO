@@ -74,6 +74,34 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         "SEQ_RL_MR_AUTOMONITOREO"
     };
 
+    // El motor de cálculo persistido es parte del módulo, pero no forma parte
+    // del modelo operativo reducido de 17 tablas. Estas tablas se validan como
+    // un segundo conjunto explícito para no confundir configuración activa con
+    // objetos históricos de importación que deben permanecer retirados.
+    internal static readonly string[] TablasConfiguracionCalculo =
+    {
+        "RL_MR_FORMULAS",
+        "RL_MR_FORMULA_USOS",
+        "RL_MR_FORMULA_VERSIONES",
+        "RL_MR_FUNCION_ARGUMENTOS",
+        "RL_MR_FUNCIONES",
+        "RL_MR_FUNCION_VERSIONES",
+        "RL_MR_PARAMETROS_CALCULO",
+        "RL_MR_PARAMETRO_VERSIONES"
+    };
+
+    internal static readonly string[] SecuenciasConfiguracionCalculo =
+    {
+        "SEQ_RL_MR_FORMULAS",
+        "SEQ_RL_MR_FORMULA_USOS",
+        "SEQ_RL_MR_FORMULA_VERSIONES",
+        "SEQ_RL_MR_FUNCION_ARGUMENTOS",
+        "SEQ_RL_MR_FUNCIONES",
+        "SEQ_RL_MR_FUNCION_VERSIONES",
+        "SEQ_RL_MR_PARAMETROS",
+        "SEQ_RL_MR_PARAMETRO_VERSIONES"
+    };
+
     internal static readonly string[] TablasRetiradas =
     {
         "RL_MR_EVI_APROBACION",
@@ -356,13 +384,19 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         string[] tablasActuales = await ObtenerNombresAsync(
             conn,
             "SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME LIKE 'RL_MR_%' ORDER BY TABLE_NAME");
-        string[] tablasEsperadas = TablasModelo17.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        string[] tablasEsperadas = TablasModelo17
+            .Concat(TablasConfiguracionCalculo)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
         Assert.Equal(tablasEsperadas, tablasActuales);
 
         string[] secuenciasActuales = await ObtenerNombresAsync(
             conn,
             "SELECT SEQUENCE_NAME FROM USER_SEQUENCES WHERE SEQUENCE_NAME LIKE 'SEQ_RL_MR_%' ORDER BY SEQUENCE_NAME");
-        string[] secuenciasEsperadas = SecuenciasModelo17.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        string[] secuenciasEsperadas = SecuenciasModelo17
+            .Concat(SecuenciasConfiguracionCalculo)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
         Assert.Equal(secuenciasEsperadas, secuenciasActuales);
 
         Assert.Equal(1, await ContarObjetoAsync(conn, "USER_TABLES", "TABLE_NAME", "RL_USUARIOS"));

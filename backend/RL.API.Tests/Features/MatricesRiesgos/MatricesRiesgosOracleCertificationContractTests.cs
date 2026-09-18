@@ -22,6 +22,17 @@ public sealed class MatricesRiesgosOracleCertificationContractTests
             MatricesRiesgosRepositoryIntegrationTests.SecuenciasModelo17
                 .Distinct(StringComparer.Ordinal)
                 .Count());
+
+        Assert.Equal(8, MatricesRiesgosRepositoryIntegrationTests.TablasConfiguracionCalculo.Length);
+        Assert.Equal(8, MatricesRiesgosRepositoryIntegrationTests.SecuenciasConfiguracionCalculo.Length);
+        Assert.Empty(
+            MatricesRiesgosRepositoryIntegrationTests.TablasModelo17.Intersect(
+                MatricesRiesgosRepositoryIntegrationTests.TablasConfiguracionCalculo,
+                StringComparer.Ordinal));
+        Assert.Empty(
+            MatricesRiesgosRepositoryIntegrationTests.SecuenciasModelo17.Intersect(
+                MatricesRiesgosRepositoryIntegrationTests.SecuenciasConfiguracionCalculo,
+                StringComparer.Ordinal));
     }
 
     [Fact]

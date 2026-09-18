@@ -1339,3 +1339,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
   - `BRANCH=desarrollo`
   - `NO_MAIN=TRUE`
   - `NO_MERGE=TRUE`
+
+## Estado vigente - FASE-6-CERTIFICACION-INTEGRAL-MATRICES-88-95
+
+- Fecha/hora local: `2026-09-18 10:48 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline `cf9173136dbb12316fcbccebb5ddcd87c1e50424`; `origin/main=35d1d68840e073469e3dfdf05e9a64dc5d49fd39`. `FASE_5_3_REOPENED=FALSE` y no se remigraron los 59 riesgos.
+- Fase 6 ejecutada como una única fase. Se agregó la consulta versionada read-only `database/19_matrices_riesgos/fase6/01_certificacion_integral_readonly.sql`, se corrigió el inventario del arnés Oracle (17 tablas operativas + 8 de configuración de cálculo), y se documentó la matriz contractual completa de 82 campos y la equivalencia de migración/exportación.
+- Oracle read-only PASS en `hpprod1/RIESGO_LAVADO`: familia 22, V1 61 publicada/vigente/hash íntegro, 59 riesgos/evaluaciones/proyecciones, huérfanos 0, duplicados 0, bindings inválidos 0, JSON inválido 0, objetos inválidos 0. ODP.NET tuvo timeout al repetir el arnés; no hubo DDL/DML.
+- Gates locales: backend `632/632`, frontend `781/781`, E2E `36/36`, lint, build, npm audit 0, quality gates local, estructura, base, enlaces y diff PASS. `validate_agent_skills.py` pendiente por ausencia de Python.
+- Bloqueos de cierre: `CONTRACT_GAPS=28` campos fuente no vacíos sin mapeo persistido completo; V2/ciclo real/concurrencia/performance requieren entorno y DML Oracle controlados; no se inventaron valores ni se modificó V1. `P0=0`, `P1=2`, `FASE_6=NO_CERRADA`, `FINAL_MODULE_PROGRESS` no puede declararse 95%.
+- Siguiente punto exacto: resolver el contrato autorizado de los 28 campos, ejecutar V2 DRAFT/publicación controlada con rollback, repetir ciclo/performance/concurrencia, publicar el commit final y verificar Quality Gate remoto del SHA exacto. Untracked ajenos permanecen fuera de staging.
