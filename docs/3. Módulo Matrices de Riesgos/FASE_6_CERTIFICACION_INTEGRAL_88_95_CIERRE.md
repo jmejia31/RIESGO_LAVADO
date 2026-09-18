@@ -270,3 +270,8 @@ La suite Oracle `Category=OracleIntegration` también fue intentada: 2 pruebas p
 ## ESTADO DE CIERRE DE ESTA CONTINUACIÓN
 
 El código, pruebas y evidencia de aplicación quedan preparados para commit/push. Los valores heredados de esta sección sólo se reemplazan por conteos obtenidos en la regresión final y por el Quality Gate del SHA final. Las deudas transversales permanecen separadas: Jurídicas production-like, `VER_ID_27/28`, RBAC global y los dos valores `TEST_DATA_ONLY` (`ROTR-ALMACENBIENE-23 → GTIC`, `RCUMP-COMPRAS-37 → MITIGAR`).
+## CERTIFICACIÓN FINAL DEL SHA PUBLICADO
+
+`FINAL_SHA=2fcc597785c5a68ca373b9c441efa37c11423522`; `QUALITY_GATE_RUN=35387051265`; `QUALITY_GATE_SHA=2fcc597785c5a68ca373b9c441efa37c11423522`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. El gate remoto ejecutó analyzers bloqueantes, lint, validadores de base/UI/documentación, build Release, quality gates locales, E2E, contenedores backend/frontend y verificación non-root.
+
+Con las decisiones funcionales autorizadas, V2 DRAFT creada, ciclo real controlado limpio, paridad 59/59/59, seguridad corregida, performance sin timeout/error, concurrencia sin duplicación/transacción parcial, regresión verde y gate remoto exacto verde, `FASE_6=CERRADA` y `FINAL_MODULE_PROGRESS=95%`. Las restricciones externas documentadas (Python ausente y suite OracleIntegration heredada ODP.NET/harness con expectativa histórica B10_) no se presentan como PASS ni alteran los invariantes Oracle actuales certificados por SQL*Plus/API.
