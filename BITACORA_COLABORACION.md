@@ -7249,6 +7249,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Publicación: commit `40580039c3f648030d4ecae05fbe90ffc6223942` publicado en `origin/desarrollo`; `HEAD==origin/desarrollo`; `origin/main` permaneció `35d1d68840e073469e3dfdf05e9a64dc5d49fd39`.
 - Quality Gate remoto del SHA exacto: `QUALITY_GATE_RUN=35377565394`; `QUALITY_GATE_SHA=40580039c3f648030d4ecae05fbe90ffc6223942`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. El gate verde valida el código/documentación publicada, pero no autoriza decisión funcional ni DML Oracle.
 
+## Registro FASE-6-CERTIFICACION-INTEGRAL-MATRICES-88-95-GATE-FINAL-DOCUMENTAL
+
+- Fecha/hora local: `2026-09-18 12:06 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; SHA verificado `ddbad96271aaeef76aaa032c3071bf347315bea5`; `FASE_5_3_REOPENED=FALSE`.
+- Verificación remota del SHA final documental: `QUALITY_GATE_RUN=35378229957`; `QUALITY_GATE_SHA=ddbad96271aaeef76aaa032c3071bf347315bea5`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. El workflow completo terminó verde, incluyendo validadores, analyzers, build, tests, cobertura, E2E y contenedores.
+- Estado funcional sin cambios: `FASE_6=BLOCKED_FUNCTIONAL_DECISION`; no se ejecutó DDL/DML Oracle; `main` permanece intacta; no se reabrió Fase 5.3.
+
 ## Registro FASE-6-CERTIFICACION-INTEGRAL-MATRICES-88-95
 
 - Fecha/hora local: `2026-09-18 10:48 -06:00`; autor `COD` / `CODEX`; cliente `CLI`; rama `desarrollo`; baseline inicial `cf9173136dbb12316fcbccebb5ddcd87c1e50424`; `origin/desarrollo` inicial igual al baseline; `origin/main=35d1d68840e073469e3dfdf05e9a64dc5d49fd39`. `FASE_5_3_REOPENED=FALSE`. Se preservan sin stage `.vscode/`, `agosto_rest.txt`, los artefactos de performance preexistentes y el PDF del cliente.
