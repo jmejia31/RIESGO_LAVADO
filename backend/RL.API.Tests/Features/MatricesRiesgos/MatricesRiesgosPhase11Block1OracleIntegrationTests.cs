@@ -16,6 +16,7 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// Solo abre Oracle cuando RL_ORACLE_INTEGRATION_REQUIRED=true y la conexión
 /// se suministra mediante variable de entorno o User Secrets.
 /// </summary>
+[Collection("MatricesRiesgosOracle")]
 public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
 {
     private const string FamiliaCodigo = "MATRIZ_RIESGOS_LAFT";
@@ -43,6 +44,10 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
             ?? configuration["ConnectionStrings:OracleDB"];
         Assert.False(string.IsNullOrWhiteSpace(connectionString));
 
+        // El runner puede encadenar suites Oracle en el mismo proceso. Limpiar
+        // el pool antes de abrir evita reutilizar una sesión que el proveedor
+        // dejó en estado de conexión pendiente; no altera datos ni configuración.
+        OracleConnection.ClearAllPools();
         await using var connection = new OracleConnection(connectionString);
         await connection.OpenAsync();
 
@@ -95,7 +100,10 @@ public sealed class MatricesRiesgosPhase11Block1OracleIntegrationTests
                AND REG_ALGORITMO_ID = 'MATRICES_VRI_ADITIVO_1_9'
                AND REG_ACTIVA = 1")));
 
-        Assert.Equal(41, Convert.ToInt32(await ScalarAsync(connection, @"
+        // Las tablas B10_* pertenecen a una arquitectura histórica retirada.
+        // El contrato vigente utiliza el modelo operativo RL_MR_* y no debe
+        // exigir objetos que ya no forman parte del despliegue aprobado.
+        Assert.Equal(0, Convert.ToInt32(await ScalarAsync(connection, @"
             SELECT COUNT(*)
               FROM USER_TABLES
              WHERE TABLE_NAME LIKE 'B10\_%' ESCAPE '\'")));

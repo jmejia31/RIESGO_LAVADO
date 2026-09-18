@@ -1,0 +1,29 @@
+-- FASE 7 - rollback lógico opcional de V2 únicamente.
+-- Nunca elimina V1, riesgos históricos ni evaluaciones V1.
+SET DEFINE ON
+SET SERVEROUTPUT ON SIZE UNLIMITED
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+DEFINE confirmacion = '&1'
+DECLARE
+  v_status VARCHAR2(20);
+  v_vigente NUMBER;
+  v_hash VARCHAR2(64);
+  v_bindings NUMBER;
+BEGIN
+  IF UPPER(TRIM(q'[&confirmacion]')) <> 'ROLLBACK_V2_DRAFT' THEN
+    RAISE_APPLICATION_ERROR(-20730, 'Rollback requiere el argumento ROLLBACK_V2_DRAFT.');
+  END IF;
+  SELECT VER_ESTADO, VER_VIGENTE, VER_HASH INTO v_status, v_vigente, v_hash
+    FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=63 FOR UPDATE;
+  SELECT COUNT(*) INTO v_bindings FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_VERSION_ID=63;
+  IF v_status <> 'DRAFT' OR v_vigente <> 0 OR LOWER(v_hash) <> '769b5b25cd7cbb03b69782b5864828fb53155c070483b6d22ef5adf36d295651' OR v_bindings <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20731, 'V2 no cumple condiciones de retiro seguro; rollback abortado.');
+  END IF;
+  DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=63;
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('ROLLBACK_V2_DRAFT=PASS');
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('ROLLBACK_V2_DRAFT=NOT_REQUIRED');
+END;
+/

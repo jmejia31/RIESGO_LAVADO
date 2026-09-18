@@ -1,0 +1,41 @@
+{
+  "module": "MatricesRiesgos",
+  "releaseVersion": "fase-7-deployment-readiness-98",
+  "gitSha": "23637818731046d53c526dfc14cc9193d2b121de",
+  "databaseVersion": {
+    "model": "RL_MR_17_TABLES_PLUS_8_CALCULATION_TABLES",
+    "familyId": 22,
+    "familyCode": "MATRIZ_RIESGOS_LAFT",
+    "v1": { "id": 61, "code": "MATRIZ_RIESGOS_LAFT_V1", "status": "PUBLISHED", "vigente": 1, "hash": "f2f84f21b6cc46762fd6087bc41df449b31ca87b058c763689bdfb3bba961f90" },
+    "v2": { "id": 63, "code": "MATRIZ_RIESGOS_LAFT_V2", "status": "DRAFT", "vigente": 0, "hash": "769b5b25cd7cbb03b69782b5864828fb53155c070483b6d22ef5adf36d295651" }
+  },
+  "backendArtifact": { "project": "backend/RL.API/RL.API.csproj", "framework": "net10.0", "dockerfile": "backend/RL.API/Dockerfile", "health": "/healthz", "readiness": "/readyz" },
+  "frontendArtifact": { "project": "frontend/rl-app", "node": "24.18.0", "dockerfile": "frontend/rl-app/Dockerfile", "webServer": "nginx:1.31.3-alpine", "health": "/healthz" },
+  "requiredScripts": {
+    "preflight": "deployment/matrices-riesgos/oracle/01_preflight_release.sql",
+    "install": "deployment/matrices-riesgos/oracle/02_install_guarded.sql",
+    "upgrade": "deployment/matrices-riesgos/oracle/03_upgrade_guarded.sql",
+    "postflight": "deployment/matrices-riesgos/oracle/04_postflight_release.sql",
+    "rollback": "deployment/matrices-riesgos/oracle/05_rollback_v2_draft_guarded.sql",
+    "smokeTests": "deployment/matrices-riesgos/smoke/smoke-tests.ps1",
+    "configDrift": "deployment/matrices-riesgos/validation/validate-config-drift.ps1",
+    "packageGenerator": "deployment/matrices-riesgos/New-ReleasePackage.ps1"
+  },
+  "preflight": ["schema", "objects", "constraints", "family", "v1", "v2", "catalogs", "risks", "bindings", "json", "invalidObjects"],
+  "install": { "mode": "guarded-idempotent", "noDestructiveDdl": true, "requiresApprovedTransitionForCleanDatabase": true },
+  "upgrade": { "mode": "delta-detection", "preservesHistoricalV1": true, "publishesV2": false },
+  "seed": { "systemSeed": "database/19_matrices_riesgos/fase11/01_semillas_datos_iniciales_modelo_17_tablas.sql", "testDataIncluded": false, "placeholders": 2 },
+  "migration": { "tool": "tools/MatricesRiesgosMigrator", "mode": "ENRICH_EXISTING", "sourceSha256": "5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385" },
+  "postflight": "deployment/matrices-riesgos/oracle/04_postflight_release.sql",
+  "rollback": { "code": "redeploy-previous-image", "configuration": "restore-approved-environment-file", "database": "logical-only-or-v2-draft-guarded", "historicalV1Protected": true },
+  "backup": "docs/3. Módulo Matrices de Riesgos/GUIA_DBA_MATRICES_RIESGOS.md",
+  "restore": "docs/3. Módulo Matrices de Riesgos/MANUAL_OPERATIVO_MATRICES_RIESGOS.md",
+  "healthcheck": { "backend": "/healthz", "readiness": "/readyz", "frontend": "/healthz" },
+  "smokeTests": "deployment/matrices-riesgos/smoke/smoke-tests.ps1",
+  "knownRestrictions": [
+    "V2 remains DRAFT and VIGENTE=0 until institutional authorization.",
+    "Two Fase 5.3 values remain TEST_DATA_ONLY and block production acceptance if unresolved.",
+    "Data Pump restore requires institutional DBA privileges and an isolated target.",
+    "RTO/RPO are not institutionally defined."
+  ]
+}

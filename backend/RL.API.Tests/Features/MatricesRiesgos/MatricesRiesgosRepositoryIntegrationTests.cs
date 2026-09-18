@@ -28,6 +28,7 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// esquema. Únicamente certifica objetos existentes y utiliza registros aislados
 /// que se eliminan al terminar cada escenario confirmado.
 /// </summary>
+[Collection("MatricesRiesgosOracle")]
 public sealed class MatricesRiesgosRepositoryIntegrationTests
 {
     private const string PrefijoPrueba = "TMR17_";
@@ -355,6 +356,10 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
         try
         {
+            // La suite puede ejecutarse después de otra clase Oracle dentro del
+            // mismo proceso. El timeout observado era una solicitud al pool,
+            // no una consulta lenta ni un fallo del esquema.
+            OracleConnection.ClearAllPools();
             await using OracleConnection conn = CrearConexion();
             await conn.OpenAsync();
 

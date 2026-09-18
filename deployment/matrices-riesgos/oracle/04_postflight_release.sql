@@ -1,0 +1,6 @@
+-- FASE 7 - postflight. Reutiliza las mismas invariantes de preflight.
+SET DEFINE OFF
+SET SERVEROUTPUT ON SIZE UNLIMITED
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+@@01_preflight_release.sql
+PROMPT POSTFLIGHT=PASS
