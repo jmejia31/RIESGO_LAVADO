@@ -43,3 +43,4 @@ P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos: placeholders de prue
 - Backend: regresión completa `636/636`; OracleIntegration dedicado `5/5`; el harness ya no exige `B10_*` retiradas y serializa/limpia su pool.
 - Validadores: estructura, SQL, documentación, manifest/config drift y release package PASS. Python no está instalado para `validate_agent_skills.py`; Docker no está disponible localmente.
 - Restore real y clean install sobre un objetivo Oracle aislado: `NOT_EXECUTED_EXTERNAL_ENVIRONMENT`; no se declara PASS artificial ni se tocó `hpprod1` destructivamente.
+- Quality Gate del commit de release `70c1a7edffe614fa3cc36fab58b02077dbfe039b`: run `35393615771`, `completed/success`; el CI verificó también compose y builds de contenedores con usuarios non-root.

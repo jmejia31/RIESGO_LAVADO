@@ -7299,3 +7299,8 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Capacitación: `TRAINING_MATERIAL=PASS`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`. Placeholders de Fase 5.3 permanecen `PRODUCTION_TEST_PLACEHOLDERS=2` y bloquean la aceptación productiva si no se resuelven.
 - Restricciones externas no ocultas: `python tools/validate_agent_skills.py` no ejecutable por ausencia de Python; clean install en base Oracle vacía y restore Data Pump no se ejecutaron porque no existe objetivo aislado disponible y `hpprod1` no puede alterarse destructivamente. Se prepararon los procedimientos y no se declara evidencia de restore real.
 - Punto de continuación exacto: si el gate institucional exige certificación física de clean install/restore, ejecutar el bloque externo documentado en el cierre Fase 7 sobre una base Oracle aislada; no tocar `hpprod1`, no publicar V2 y continuar después desde esos postchecks.
+## Registro FASE-7-RELEASE-QG-VERIFICACION
+
+- Release commit publicado: `70c1a7edffe614fa3cc36fab58b02077dbfe039b`; rama `desarrollo`; `ORIGIN_DESARROLLO=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `origin/main=35d1d68840e073469e3dfdf05e9a64dc5d49fd39`; `AHEAD=0`; `BEHIND=0`; `MAIN_INTACTA=TRUE`.
+- Quality Gate remoto del SHA exacto: `QUALITY_GATE_RUN=35393615771`; `QUALITY_GATE_SHA=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. CI validó analyzers, tests, cobertura, E2E, compose y builds de contenedores.
+- Estado: paquete de despliegue y documentación publicados. `FASE_7` permanece bloqueada únicamente por clean install/restore Oracle en un objetivo aislado externo no disponible; no se declara producción desplegada ni restore real.

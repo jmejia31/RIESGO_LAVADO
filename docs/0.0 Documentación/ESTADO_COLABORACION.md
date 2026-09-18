@@ -1391,3 +1391,8 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Entregables: `deployment/matrices-riesgos`, `FASE_7_INVENTARIO_RELEASE.md`, `FASE_7_DESPLIEGUE_DOCUMENTACION_CAPACITACION_CIERRE.md`, manuales técnico/funcional/operativo/DBA/soporte, plan/material/checklist/plantillas de capacitación y release notes.
 - `TRAINING_MATERIAL=PASS`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`; `PRODUCTION_TEST_PLACEHOLDERS=2`; producción no desplegada. RTO/RPO no definidos institucionalmente. Docker y Python no están disponibles localmente.
 - Clean install sobre Oracle aislado y restore Data Pump no ejecutados: no existe objetivo externo disponible y `hpprod1` no se puede alterar destructivamente. Se prepararon los procedimientos, pero no se inventa evidencia de restore físico. Punto exacto: ejecutar esos dos gates en un Oracle aislado institucional y continuar con postflight/smoke; no reiniciar Fase 7, no tocar Fase 6/V1/V2.
+### Verificación de publicación Fase 7
+
+- `RELEASE_COMMIT=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `ORIGIN_DESARROLLO=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `AHEAD=0`; `BEHIND=0`; `MAIN_INTACTA=TRUE`.
+- `QUALITY_GATE_RUN=35393615771`; `QUALITY_GATE_SHA=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`; CI incluyó contenedores y usuarios non-root.
+- Continuación exacta: ejecutar clean install y restore en Oracle aislado institucional; no usar `hpprod1` de forma destructiva.
