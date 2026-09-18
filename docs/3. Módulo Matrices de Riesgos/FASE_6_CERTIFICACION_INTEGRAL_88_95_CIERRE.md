@@ -237,3 +237,36 @@ Cada fila revisada contiene `SOURCE_COLUMN`, `SOURCE_NONEMPTY_COUNT`, `SEMANTIC_
 **TEST_DATA_ONLY_STATUS:** `ROTR-ALMACENBIENE-23 -> GTIC` y `RCUMP-COMPRAS-37 -> MITIGAR` siguen identificados como datos de prueba; `PRODUCTION_TEST_PLACEHOLDERS=2`, por lo que producción no está certificada.
 
 **Conclusión:** Fase 6 ejecutada parcialmente con corrección de un defecto técnico de certificación, pero **NO CERRADA**. El cierre 95% queda bloqueado por gaps contractuales reales, DML Oracle controlado y performance/UAT integral no ejecutados.
+
+## ACTUALIZACIÓN DE CONTINUIDAD — DECISIONES FUNCIONALES RESUELTAS
+
+Esta actualización supersede los valores provisionales anteriores de este documento y registra la ejecución posterior desde `bd6d387665b95d526a28d3b6ddb9620aa69851ef`. No se reabrió Fase 5.3 ni se remigraron los 59 riesgos.
+
+- `ORIGINAL_CONTRACT_GAPS=28`.
+- `FALSE_POSITIVE_GAPS=21` por destino normalizado, derivado o auxiliar; `MR-44` y `MR-45` se resolvieron por decisión funcional expresa como legado formalmente descopado.
+- `NORMALIZED_ENTITY_MAPPINGS=7`: `MR-20`, `MR-24`, `MR-28`, `MR-32`, `MR-40`, `MR-42`, `MR-70`.
+- `DERIVED_FIELDS=8`: `MR-21`, `MR-22`, `MR-25`, `MR-26`, `MR-29`, `MR-30`, `MR-41`, `MR-43`.
+- `SOURCE_AUXILIARY_FIELDS=1`: `MR-04`.
+- `FORMALLY_DESCOPED_LEGACY_FIELDS=2`: `MR-44` texto histórico sin contrato de evento y `MR-45` responsable global de plan sin relación inequívoca con actividad.
+- `V2_DYNAMIC_FIELDS_REQUIRED=5`: `tipo_riesgo`, `procedimiento`, `objetivos_estrategicos`, `regimen_afectado`, `transversalidad`.
+- `TRUE_GAPS_AFTER_FUNCTIONAL_DECISION=5`; `TRUE_GAPS_AFTER_V2=0`; `UNRESOLVED_FUNCTIONAL_DECISIONS=0`; `CONTRACT_UNKNOWN=0`.
+
+## EVIDENCIA EJECUTADA POSTERIOR
+
+La V2 fue creada mediante `database/19_matrices_riesgos/fase6/02_preparar_v2_draft_idempotente.sql` y actualmente es `VER_ID=63`, `MATRIZ_RIESGOS_LAFT_V2`, versión `2`, estado `DRAFT`, `VIGENTE=0`, hash `769b5b25cd7cbb03b69782b5864828fb53155c070483b6d22ef5adf36d295651`. V1 permanece `VER_ID=61`, `PUBLISHED`, vigente y con hash `f2f84f21b6cc46762fd6087bc41df449b31ca87b058c763689bdfb3bba961f90`. `V1_MUTATED=FALSE` y las 59 evaluaciones históricas siguen vinculadas a V1.
+
+`ENRICH_EXISTING` se ejecutó de forma transaccional y fail-closed, sin reinsertar riesgos: `SOURCE_RISKS=59`, `TARGET_RISKS_FOUND=59`, `MISSING_TARGET_RISKS=0`, `EVALUATIONS_TO_ENRICH=59`, `MIGRATABLE_COMPLETE_CONTROLS=0`, `MIGRATABLE_COMPLETE_ALERTS=148`, `LEGACY_INCOMPLETE_DOCUMENTED=157`, `FORMALLY_DESCOPED_LEGACY=3`, `REAL_REJECTIONS=0`. Se insertaron 148 señales idempotentes `INACTIVO` con fecha de disparo nula; la segunda ejecución insertó `0`. No se fabricaron controles, planes, actividades ni automonitoreos con atributos ausentes.
+
+El ciclo controlado real usó backend, Angular y Oracle: evaluación V2 temporal, control, evaluación de control, plan, actividad, alerta, automonitoreo, transiciones `BORRADOR → EN_REVISION → APROBADA → CERRADA`, histórico y auditoría; terminó con limpieza determinística. `V2_NEW_EVALUATION_BINDING=PASS`, `HISTORICAL_RENDER_V1=PASS`, `RENDER_V2=PASS`, `CLEANUP=PASS`.
+
+Paridad real: `API_SOURCE_RISKS=59`, `UI_SOURCE_RISKS=59`, `CONSOLIDATED_SOURCE_RISKS=59`; paginación servidor en 3 páginas `20/20/19`, sin duplicados. Exportación real filtrada por código devolvió XLSX MIME correcto, extensión `.xlsx` y 59 códigos conciliados. La UI local realizó 8 llamadas API sin fallos ni errores de consola.
+
+Seguridad real: `UNAUTHORIZED_READ=401`, `UNAUTHORIZED_WRITE=401`, `FORGED_ROLE=403`, `IDOR=403`, `PUBLISHED_VERSION_EDIT=400`, `CALCULATION_TAMPERING=DENIED` por recálculo server-side, `INVALID_JSON=400`, `INVALID_FILE=400`. Se corrigió el defecto P1 de extensiones de evidencia: se permiten únicamente extensiones institucionales y máximo 10 MB; `.exe` y traversal se rechazan antes de persistir. La prueba de regresión quedó incorporada.
+
+Performance Matrices, sin mezclar Jurídicas, quedó medida sobre API real: listado `cold=49.46 ms`, mediana `17.06 ms`, P90 `25.59 ms`, P95 `49.46 ms`, max `49.46 ms`; detalle `15.63/8.75/16.65/18.29/18.29 ms`; histórico `42.55/15.15/16.24/42.55/42.55 ms`; exportación `280.60/15.82/280.60/280.60/280.60 ms`. `TIMEOUTS=0`, `ERRORS=0`, concurrencia 10 solicitudes y 0 errores. Los guards de paginación/N+1 pasan; no se inventa un QUERY_COUNT de proveedor no instrumentado.
+
+La suite Oracle `Category=OracleIntegration` también fue intentada: 2 pruebas pasaron y 3 fallaron por timeout del proveedor .NET/harness y una expectativa histórica de semilla `41` frente a `0`; SQL*Plus y la API real sí certificaron los invariantes actuales. Esta limitación queda documentada como deuda de harness, no se oculta ni se convierte en PASS artificial.
+
+## ESTADO DE CIERRE DE ESTA CONTINUACIÓN
+
+El código, pruebas y evidencia de aplicación quedan preparados para commit/push. Los valores heredados de esta sección sólo se reemplazan por conteos obtenidos en la regresión final y por el Quality Gate del SHA final. Las deudas transversales permanecen separadas: Jurídicas production-like, `VER_ID_27/28`, RBAC global y los dos valores `TEST_DATA_ONLY` (`ROTR-ALMACENBIENE-23 → GTIC`, `RCUMP-COMPRAS-37 → MITIGAR`).

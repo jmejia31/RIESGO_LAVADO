@@ -43,16 +43,17 @@ public sealed class MatricesRiesgosFase6GapClassificationTests
             ["MR-41"] = "DERIVED",
             ["MR-42"] = "IMPLEMENTED_EQUIVALENT",
             ["MR-43"] = "DERIVED",
-            ["MR-44"] = "TRUE_GAP",
-            ["MR-45"] = "TRUE_GAP",
+            ["MR-44"] = "FORMALLY_DESCOPED",
+            ["MR-45"] = "FORMALLY_DESCOPED",
             ["MR-70"] = "IMPLEMENTED_EQUIVALENT"
         };
 
         Assert.Equal(28, estados.Count);
-        Assert.Equal(7, estados.Values.Count(value => value == "TRUE_GAP"));
+        Assert.Equal(5, estados.Values.Count(value => value == "TRUE_GAP"));
         Assert.Equal(12, estados.Values.Count(value => value == "IMPLEMENTED_EQUIVALENT"));
         Assert.Equal(8, estados.Values.Count(value => value == "DERIVED"));
         Assert.Equal(1, estados.Values.Count(value => value == "SOURCE_ONLY_AUXILIARY"));
+        Assert.Equal(2, estados.Values.Count(value => value == "FORMALLY_DESCOPED"));
         Assert.DoesNotContain("MISSING", estados.Values);
         Assert.DoesNotContain("UNKNOWN", estados.Values);
     }

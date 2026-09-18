@@ -17,6 +17,12 @@ namespace RL.API.Features.MatricesRiesgos.Application;
 
 public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 {
+    private const long MaxEvidenceBytes = 10L * 1024L * 1024L;
+    private static readonly HashSet<string> AllowedEvidenceExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf", ".png", ".jpg", ".jpeg", ".doc", ".docx", ".xls", ".xlsx"
+    };
+
     private readonly IMatricesRiesgosRepository _repo;
     private readonly IFormularioValidador _validador;
     private readonly IMatricesRiesgoService _calculador;
@@ -513,9 +519,27 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult<EvidenciaDto>.BadRequest("El archivo cargado está vacío.");
         }
 
+        string nombreOriginal = Path.GetFileName(archivo.FileName);
+        if (string.IsNullOrWhiteSpace(nombreOriginal)
+            || !string.Equals(nombreOriginal, archivo.FileName, StringComparison.Ordinal)
+            || nombreOriginal.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            return ServiceResult<EvidenciaDto>.BadRequest("El nombre del archivo de evidencia no es válido.");
+        }
+
+        if (archivo.Length > MaxEvidenceBytes)
+        {
+            return ServiceResult<EvidenciaDto>.BadRequest("El archivo de evidencia supera el límite de 10 MB.");
+        }
+
+        string extension = Path.GetExtension(nombreOriginal).ToLowerInvariant();
+        if (!AllowedEvidenceExtensions.Contains(extension))
+        {
+            return ServiceResult<EvidenciaDto>.BadRequest("La extensión del archivo de evidencia no está permitida.");
+        }
+
         string uploadsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "App_Data", "Evidencias");
         Directory.CreateDirectory(uploadsPath);
-        string extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
         string nombreFisico = $"{Guid.NewGuid()}{extension}";
         string rutaCompleta = Path.Combine(uploadsPath, nombreFisico);
 

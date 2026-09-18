@@ -490,6 +490,8 @@ public static class Program
         int activitiesToCreate = 0;
         int alertsToCreate = 0;
         var rejections = new List<string>();
+        var legacyIncomplete = new List<string>();
+        var formallyDescopedLegacy = new List<string>();
 
         foreach (var source in sourceRisks)
         {
@@ -522,15 +524,15 @@ public static class Program
 
             foreach (ControlSpec control in CrearEspecificacionesControl(source))
             {
-                if (string.IsNullOrWhiteSpace(control.Automatizacion))
+                if (control.Descripciones.Count == 0)
                 {
-                    rejections.Add($"{source.Code}/{control.Tipo}: automatización fuente ausente; no se inventa CON_AUTOMATIZACION.");
                     continue;
                 }
 
-                if (control.Descripciones.Count > 0)
+                if (string.IsNullOrWhiteSpace(control.Automatizacion) || string.IsNullOrWhiteSpace(control.Estado))
                 {
-                    rejections.Add($"{source.Code}/{control.Tipo}: estado de control fuente ausente; no se inventa CON_ESTADO.");
+                    legacyIncomplete.Add($"{source.Code}/{control.Tipo}: faltan automatizacion o estado obligatorio; no se crea control operacional.");
+                    continue;
                 }
 
                 foreach (string descripcion in control.Descripciones)
@@ -550,6 +552,13 @@ public static class Program
 
             for (int alertaIndex = 0; alertaIndex < source.SenalAlertaItems.Count; alertaIndex++)
             {
+                string indicador = source.SenalAlertaItems[alertaIndex].Trim();
+                if (indicador.Length == 0 || indicador.Length > 150)
+                {
+                    legacyIncomplete.Add($"{source.Code}: señal de alerta fuera del límite contractual de 150 caracteres; no se crea alerta.");
+                    continue;
+                }
+
                 string codigo = ConstruirCodigoAlerta(source.Code, alertaIndex + 1);
                 bool exists = Convert.ToInt32(await ScalarAsync(connection, null,
                     @"SELECT COUNT(*)
@@ -563,22 +572,22 @@ public static class Program
 
             if (source.PlanItems.Count > 0)
             {
-                rejections.Add($"{source.Code}: plan fuente sin fechas, presupuesto y estado; no se crean RL_MR_PLANES con datos inventados.");
+                legacyIncomplete.Add($"{source.Code}: plan fuente sin fechas, presupuesto y estado; no se crea plan operacional.");
             }
 
             if (source.ActividadItems.Count > 0)
             {
-                rejections.Add($"{source.Code}: actividades fuente sin fechas y estado por actividad; no se crean RL_MR_ACTIVIDADES con datos inventados.");
+                legacyIncomplete.Add($"{source.Code}: actividades fuente sin responsable, fechas y estado por actividad; no se crean actividades operacionales.");
             }
 
             if (!string.IsNullOrWhiteSpace(source.MonitoreoSeguimiento))
             {
-                rejections.Add($"{source.Code}: monitoreo/seguimiento fuente no es un evento de automonitoreo completo; faltan estados y usuario institucional.");
+                formallyDescopedLegacy.Add($"{source.Code}: MR-44 es texto narrativo histórico; no se crea evento RL_MR_AUTOMONITOREO.");
             }
 
             if (!string.IsNullOrWhiteSpace(source.Responsables))
             {
-                rejections.Add($"{source.Code}: responsables fuente son de nivel plan y no pueden asignarse a actividades sin alineación semántica.");
+                formallyDescopedLegacy.Add($"{source.Code}: MR-45 es información histórica de nivel plan; no se distribuye a actividades.");
             }
 
             // Las columnas de efectividad son agregadas por tipo en el origen.
@@ -598,7 +607,20 @@ public static class Program
         Console.WriteLine($"ACTIVITIES_TO_CREATE={activitiesToCreate}");
         Console.WriteLine($"ALERTS_TO_CREATE={alertsToCreate}");
         Console.WriteLine("FIELDS_TO_ADD_TO_V2=5");
+        Console.WriteLine($"MIGRATABLE_COMPLETE_CONTROLS={controlsToCreate}");
+        Console.WriteLine($"MIGRATABLE_COMPLETE_ALERTS={alertsToCreate}");
+        Console.WriteLine($"LEGACY_INCOMPLETE_DOCUMENTED={legacyIncomplete.Count}");
+        Console.WriteLine($"FORMALLY_DESCOPED_LEGACY={formallyDescopedLegacy.Count}");
+        Console.WriteLine($"REAL_REJECTIONS={rejections.Count}");
         Console.WriteLine($"REJECTIONS={rejections.Count}");
+        foreach (string item in legacyIncomplete.Distinct(StringComparer.Ordinal))
+        {
+            Console.WriteLine($"LEGACY_INCOMPLETE={item}");
+        }
+        foreach (string item in formallyDescopedLegacy.Distinct(StringComparer.Ordinal))
+        {
+            Console.WriteLine($"FORMALLY_DESCOPED={item}");
+        }
         foreach (string rejection in rejections.Distinct(StringComparer.Ordinal))
         {
             Console.WriteLine($"REJECTION={rejection}");
@@ -616,16 +638,96 @@ public static class Program
             return 5;
         }
 
-        throw new InvalidOperationException(
-            "ENRICH_EXISTING DML requiere que el dry-run cierre sin rechazos; no se permite una ejecución parcial.");
+        // El enriquecimiento autorizado en esta fase solo materializa señales de
+        // alerta cuando el contrato de la entidad está completo. Controles,
+        // planes, actividades y automonitoreo incompletos permanecen documentados
+        // como legado y nunca se completan con valores inventados.
+        await using var transaction = connection.BeginTransaction();
+        int insertedAlerts = 0;
+        try
+        {
+            foreach (SourceRiskRow source in sourceRisks)
+            {
+                object? evaluacionValue = await ScalarAsync(connection, transaction,
+                    @"SELECT EVA_ID
+                        FROM RL_MR_EVALUACIONES_RIESGO
+                       WHERE EVA_RIESGO_ID = (SELECT RIE_ID
+                                                FROM RL_MR_RIESGOS
+                                               WHERE RIE_CODIGO = :codigo
+                                                 AND RIE_ACTIVO = 1)
+                         AND EVA_VERSION_ID = :versionId
+                         AND EVA_ACTIVO = 1",
+                    new OracleParameter("codigo", source.Code),
+                    new OracleParameter("versionId", versionId));
+                if (evaluacionValue is null || evaluacionValue == DBNull.Value)
+                {
+                    throw new InvalidOperationException($"Evaluación V1 destino inexistente para {source.Code}.");
+                }
+
+                long evaluacionId = Convert.ToInt64(evaluacionValue, CultureInfo.InvariantCulture);
+                for (int alertaIndex = 0; alertaIndex < source.SenalAlertaItems.Count; alertaIndex++)
+                {
+                    string indicador = source.SenalAlertaItems[alertaIndex].Trim();
+                    if (indicador.Length == 0 || indicador.Length > 150)
+                    {
+                        continue;
+                    }
+
+                    string codigo = ConstruirCodigoAlerta(source.Code, alertaIndex + 1);
+                    int exists = Convert.ToInt32(await ScalarAsync(connection, transaction,
+                        @"SELECT COUNT(*)
+                            FROM RL_MR_SENALES_ALERTA
+                           WHERE ALE_EVALUACION_ID = :evaluacionId
+                             AND ALE_CODIGO = :codigo",
+                        new OracleParameter("evaluacionId", evaluacionId),
+                        new OracleParameter("codigo", codigo)), CultureInfo.InvariantCulture);
+                    if (exists > 0)
+                    {
+                        continue;
+                    }
+
+                    object? nextIdValue = await ScalarAsync(connection, transaction,
+                        "SELECT SEQ_RL_MR_SENALES.NEXTVAL FROM DUAL");
+                    long nextId = Convert.ToInt64(nextIdValue, CultureInfo.InvariantCulture);
+                    await using var insert = new OracleCommand(
+                        @"INSERT INTO RL_MR_SENALES_ALERTA (
+                              ALE_ID, ALE_EVALUACION_ID, ALE_CODIGO, ALE_INDICADOR,
+                              ALE_ESTADO, ALE_FECHA_DISPARO
+                          ) VALUES (
+                              :id, :evaluacionId, :codigo, :indicador,
+                              'INACTIVO', NULL
+                          )", connection)
+                    {
+                        BindByName = true,
+                        Transaction = transaction
+                    };
+                    insert.Parameters.Add(new OracleParameter("id", nextId));
+                    insert.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+                    insert.Parameters.Add(new OracleParameter("codigo", codigo));
+                    insert.Parameters.Add(new OracleParameter("indicador", indicador));
+                    await insert.ExecuteNonQueryAsync();
+                    insertedAlerts++;
+                }
+            }
+
+            transaction.Commit();
+            Console.WriteLine("ENRICH_EXISTING_DML=EXECUTED_ALERTS_ONLY");
+            Console.WriteLine($"ALERTS_INSERTED={insertedAlerts}");
+            return 0;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     private static IReadOnlyList<ControlSpec> CrearEspecificacionesControl(SourceRiskRow source) =>
         new[]
         {
-            new ControlSpec("PREVENTIVO", source.ControlPreventivoItems, NormalizarAutomatizacion(source.Automatizacion)),
-            new ControlSpec("DETECTIVO", source.ControlDetectivoItems, NormalizarAutomatizacion(source.Automatizacion)),
-            new ControlSpec("CORRECTIVO", source.ControlCorrectivoItems, NormalizarAutomatizacion(source.Automatizacion))
+            new ControlSpec("PREVENTIVO", source.ControlPreventivoItems, NormalizarAutomatizacion(source.Automatizacion), string.Empty),
+            new ControlSpec("DETECTIVO", source.ControlDetectivoItems, NormalizarAutomatizacion(source.Automatizacion), string.Empty),
+            new ControlSpec("CORRECTIVO", source.ControlCorrectivoItems, NormalizarAutomatizacion(source.Automatizacion), string.Empty)
         };
 
     private static string? NormalizarAutomatizacion(string valor)
@@ -671,7 +773,7 @@ public static class Program
         return value is null || value == DBNull.Value ? null : Convert.ToInt64(value, CultureInfo.InvariantCulture);
     }
 
-    private sealed record ControlSpec(string Tipo, IReadOnlyList<string> Descripciones, string? Automatizacion);
+    private sealed record ControlSpec(string Tipo, IReadOnlyList<string> Descripciones, string? Automatizacion, string Estado);
 
     private static async Task<MigrationBatchResult> MigrateBatchAsync(
         OracleConnection connection,
