@@ -181,8 +181,8 @@ La matriz siguiente es la trazabilidad completa exigida. Las columnas de origen 
 - `npm run lint=PASS`; `npm run build=PASS`; `npm audit --audit-level=high=0`; `run_quality_gates.ps1=PASS` (cobertura backend 32.49% líneas/36.49% ramas; frontend 61.07% sentencias/54.03% ramas/56.96% funciones/61.80% líneas).
 - `TSC=PASS` por compilación de producción; `DIFF_CHECK=PASS`; estructura, SQL y enlaces documentales: PASS.
 - `python tools/validate_agent_skills.py=PENDIENTE`, porque Python no está instalado/disponible en el entorno.
-- Quality Gate remoto del SHA final: pendiente de commit/push; no se declara cierre remoto.
-- `QUALITY_GATE_RUN=PENDING`; `QUALITY_GATE_SHA=PENDING`; no se declara cierre remoto.
+- Quality Gate remoto del commit funcional `d845bcca248ee0b0ef641bf7fd33a6f2729140c7`: run `35371223798`, `STATUS=completed`, `CONCLUSION=success`, incluyendo analizadores, build, pruebas, cobertura, E2E y contenedores.
+- `QUALITY_GATE_RUN=35371223798`; `QUALITY_GATE_SHA=d845bcca248ee0b0ef641bf7fd33a6f2729140c7`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. El gate no elimina los gaps funcionales ni convierte Fase 6 en cerrada.
 
 ## 12. Deuda residual y punto de continuación
 
