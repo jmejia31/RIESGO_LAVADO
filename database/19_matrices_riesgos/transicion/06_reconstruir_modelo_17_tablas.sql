@@ -3,7 +3,8 @@
 -- Script: 06_reconstruir_modelo_17_tablas.sql
 -- Uso: SOLO manual, con respaldo validado y autorizacion expresa.
 -- No esta incluido en 00_APLICAR_MODULO_MATRICES_RIESGOS.sql.
--- ATENCION: elimina objetos RL_MR_* de prueba y los reconstruye.
+-- ATENCION: elimina el modelo RL_MR_* vigente (17 tablas operativas + 8 de configuracion de calculo) y reconstruye las 17 tablas operativas.
+-- Las 8 tablas de configuracion de calculo deben recrearse inmediatamente con transicion/15_ddl_configuracion_calculo_312.sql.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -46,6 +47,10 @@ BEGIN
   -- Se eliminan primero las dependencias y luego las entidades raiz.
   FOR t IN (
     SELECT column_value nombre FROM TABLE(sys.odcivarchar2list(
+      -- Configuracion de calculo (modelo vigente de 25 tablas). Se retira primero en orden hijo-padre
+      -- para que la reconstruccion no deje tablas sobrevivientes sin secuencias o FKs eliminadas.
+      'RL_MR_FUNCION_ARGUMENTOS','RL_MR_FORMULA_USOS','RL_MR_FUNCION_VERSIONES','RL_MR_FORMULA_VERSIONES',
+      'RL_MR_PARAMETRO_VERSIONES','RL_MR_FUNCIONES','RL_MR_FORMULAS','RL_MR_PARAMETROS_CALCULO',
       'RL_MR_EVIDENCIAS_VINCULOS','RL_MR_EVI_APROBACION','RL_MR_EVI_REVISION','RL_MR_EVI_AUTOMONITOREO',
       'RL_MR_EVI_ALERTA','RL_MR_EVI_ACTIVIDAD','RL_MR_EVI_PLAN','RL_MR_EVI_CONTROL',
       'RL_MR_EVI_EVALUACION','RL_MR_EVI_RIESGO','RL_MR_DETALLES_IMPORTACION',
