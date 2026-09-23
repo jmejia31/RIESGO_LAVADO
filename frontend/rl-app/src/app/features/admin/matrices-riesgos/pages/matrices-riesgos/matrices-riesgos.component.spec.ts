@@ -343,7 +343,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.versionEditando()).toBeNull();
   });
 
-  it('crea una nueva versiÃ³n directamente desde el Detalle de Familia y vincula evidencia', () => {
+  it('crea una nueva versión directamente desde el Detalle de Familia y vincula evidencia', () => {
     component.crearNuevaVersionDesdeDetalle({ famId: 1, famCodigo: 'FORM_NUEVO', famNombre: 'Formulario nuevo' } as never);
     expect(service.crearBorradorFormulario).toHaveBeenCalledWith(
       1,
