@@ -5,6 +5,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using RL.API.Features.Auditoria.Persistence;
@@ -98,15 +99,157 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     public async Task<ServiceResult<long>> ClonarVersionFormularioAsync(long versionOrigenId, long usuarioId)
     {
+        VersionFormularioDto? origen = await _repo.ObtenerVersionFormularioAsync(versionOrigenId);
+        if (origen is null)
+        {
+            return ServiceResult<long>.NotFound($"No se encontró la versión origen ID {versionOrigenId}.");
+        }
+
+        string jsonClonado;
         try
         {
-            long id = await _repo.ClonarVersionFormularioAsync(versionOrigenId, usuarioId);
-            return ServiceResult<long>.Ok(id, "Versión clonada como borrador exitosamente.");
+            jsonClonado = PrepararCamposAdministrablesEnBorradorClonado(origen.VerJson);
         }
-        catch (KeyNotFoundException ex)
+        catch (JsonException ex)
         {
-            return ServiceResult<long>.NotFound(ex.Message);
+            return ServiceResult<long>.BadRequest($"La definición de la versión origen no es JSON válido: {ex.Message}");
         }
+
+        long id = await _repo.CrearBorradorFormularioAsync(
+            origen.VerFamiliaId,
+            origen.VerCodigo,
+            jsonClonado,
+            usuarioId);
+
+        return ServiceResult<long>.Ok(id, "Versión clonada como borrador exitosamente.");
+    }
+
+    private static string PrepararCamposAdministrablesEnBorradorClonado(string jsonConfig)
+    {
+        JsonNode? parsed = JsonNode.Parse(jsonConfig);
+        if (parsed is not JsonObject root)
+        {
+            throw new JsonException("La definición del formulario debe ser un objeto JSON.");
+        }
+
+        JsonObject definicion = root["definicionFormulario"] as JsonObject ?? root;
+        JsonArray? secciones = definicion["secciones"] as JsonArray;
+        if (secciones is null)
+        {
+            return jsonConfig;
+        }
+
+        bool encontroDueno = false;
+        bool encontroRespuesta = false;
+
+        foreach (JsonNode? seccionNode in secciones)
+        {
+            if (seccionNode is not JsonObject seccion || seccion["campos"] is not JsonArray campos) continue;
+
+            foreach (JsonNode? campoNode in campos)
+            {
+                if (campoNode is not JsonObject campo) continue;
+                string? clave = ObtenerTextoJson(campo, "clave")
+                    ?? ObtenerTextoJson(campo, "rutaDatos")
+                    ?? ObtenerTextoJson(campo, "identificador")
+                    ?? ObtenerTextoJson(campo, "id");
+
+                if (string.Equals(clave, "dueno_riesgo", StringComparison.OrdinalIgnoreCase))
+                {
+                    campo["tipo"] = "texto-sugerido";
+                    campo["codigoCatalogo"] = "MR_AREA_RESPONSABLE";
+                    encontroDueno = true;
+                }
+                else if (string.Equals(clave, "respuesta_riesgo", StringComparison.OrdinalIgnoreCase))
+                {
+                    campo["tipo"] = "texto-sugerido";
+                    campo["codigoCatalogo"] = "MR_RESPUESTA_RIESGO";
+                    encontroRespuesta = true;
+                }
+            }
+        }
+
+        if (encontroDueno)
+        {
+            AsegurarCatalogoAdministrable(root, definicion, "MR_AREA_RESPONSABLE", "Áreas responsables", Array.Empty<(string Codigo, string Valor)>());
+        }
+
+        if (encontroRespuesta)
+        {
+            AsegurarCatalogoAdministrable(root, definicion, "MR_RESPUESTA_RIESGO", "Respuestas al riesgo", new[]
+            {
+                ("EVITAR", "Evitar"),
+                ("MITIGAR", "Mitigar"),
+                ("TRANSFERIR", "Transferir"),
+                ("ACEPTAR", "Aceptar")
+            });
+        }
+
+        return root.ToJsonString();
+    }
+
+    private static void AsegurarCatalogoAdministrable(
+        JsonObject root,
+        JsonObject definicion,
+        string codigo,
+        string nombre,
+        IReadOnlyList<(string Codigo, string Valor)> elementosIniciales)
+    {
+        JsonObject contenedor = definicion;
+        JsonNode? catalogosNode = definicion["catalogos"];
+        if (catalogosNode is null && !ReferenceEquals(root, definicion) && root["catalogos"] is not null)
+        {
+            contenedor = root;
+            catalogosNode = root["catalogos"];
+        }
+
+        JsonArray catalogos;
+        if (catalogosNode is JsonArray existentes)
+        {
+            catalogos = existentes;
+        }
+        else if (catalogosNode is null)
+        {
+            catalogos = new JsonArray();
+            contenedor["catalogos"] = catalogos;
+        }
+        else
+        {
+            return;
+        }
+
+        foreach (JsonNode? catalogoNode in catalogos)
+        {
+            if (catalogoNode is not JsonObject catalogo) continue;
+            string? codigoExistente = ObtenerTextoJson(catalogo, "codigo") ?? ObtenerTextoJson(catalogo, "identificador");
+            if (string.Equals(codigoExistente, codigo, StringComparison.OrdinalIgnoreCase)) return;
+        }
+
+        var elementos = new JsonArray();
+        for (int i = 0; i < elementosIniciales.Count; i++)
+        {
+            (string codigoElemento, string valorElemento) = elementosIniciales[i];
+            elementos.Add(new JsonObject
+            {
+                ["codigo"] = codigoElemento,
+                ["valor"] = valorElemento,
+                ["orden"] = i + 1
+            });
+        }
+
+        catalogos.Add(new JsonObject
+        {
+            ["codigo"] = codigo,
+            ["nombre"] = nombre,
+            ["elementos"] = elementos
+        });
+    }
+
+    private static string? ObtenerTextoJson(JsonObject objeto, string propiedad)
+    {
+        return objeto[propiedad] is JsonValue valor && valor.TryGetValue<string>(out string? texto)
+            ? texto
+            : null;
     }
 
     public async Task<ServiceResult> ActualizarBorradorFormularioAsync(
