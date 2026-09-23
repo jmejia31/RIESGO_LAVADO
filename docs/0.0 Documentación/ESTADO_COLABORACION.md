@@ -1501,3 +1501,16 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Validación: encoding gate `PASS` con `MOJIBAKE_FINDINGS=0`; backend focal actualizado `32/32 PASS`; backend completo `657/657 PASS`; frontend completo `79/79 archivos, 791/791 PASS`; migrador Release build, validador de base de datos, documentación y diff check `PASS`.
 - `ORACLE_DML_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`. No se tocaron archivos untracked ajenos.
 - **Continuación exacta:** publicar el cierre en `origin/desarrollo`; Javier ejecuta manualmente 31→32→33→34 y 36→37→38→39; usa 35/40 solo para restaurar; luego valida la pantalla con Ctrl+F5.
+
+
+## Estado vigente - RTO INSTITUCIONAL PROPUESTO Y DOCUMENTADO
+
+- Fecha local: `2026-09-23` (UTC-6); rama `desarrollo`; intervención documental de continuidad.
+- Se formalizó la propuesta institucional de RTO en `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md`.
+- Decisión propuesta: `RTO_PROPOSED=4 horas`; atención, diagnóstico y escalamiento desde `INCIDENT_RESPONSE_TARGET=0 minutos`.
+- `CATASTROPHIC_EXCEPTION=TRUE`: ante fuerza mayor, ciberincidente, infraestructura crítica, Oracle/DBA, telecomunicaciones, terceros u otra dependencia fuera del control efectivo de Desarrollo/GTIC, la recuperación utiliza el tiempo técnicamente necesario con trazabilidad y escalamiento.
+- Gobierno de responsabilidades: la continuidad es institucional y compartida; superar el RTO no determina por sí mismo negligencia ni responsabilidad personal. Deben considerarse causa raíz, control efectivo, accesos, infraestructura, DBA, seguridad, terceros, autorizaciones, recursos y evidencia objetiva.
+- El encargado del sistema debe actuar, escalar, coordinar, comunicar y conservar evidencia dentro de sus facultades; no sustituye funciones de Infraestructura, DBA, Seguridad o Negocio ni asume automáticamente tiempos atribuibles a esas dependencias.
+- Estado honesto hasta firma: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. Sólo después de aprobación, firma y archivo corresponde registrar `RTO_DEFINED=TRUE` y `RTO_VALUE=4 horas`.
+- `RPO_DEFINED=FALSE`; capacitación institucional y despliegue productivo continúan pendientes.
+- Este cierre documental no cambia código, Oracle, V1/V2, hashes, interfaces, seguridad, tenancy ni `main`.
