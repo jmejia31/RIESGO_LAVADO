@@ -54,6 +54,14 @@ jobs:
         shell: pwsh
         run: ./tools/validate_text_encoding.ps1
 
+      - name: Validate canonical risk workbook text
+        run: >-
+          dotnet run
+          --project tools/MatricesRiesgosMigrator/MatricesRiesgosMigrator.csproj
+          --configuration Release
+          --
+          --inspect-source-risk-text
+
       - name: Run .NET analyzers with compiler warnings blocking
         run: >-
           dotnet build RIESGO_LAVADO.sln
