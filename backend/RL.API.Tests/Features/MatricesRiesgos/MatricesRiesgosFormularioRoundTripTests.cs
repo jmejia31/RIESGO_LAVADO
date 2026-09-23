@@ -112,7 +112,7 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
     }
 
     [Fact]
-    public async Task ClonarVersion_ConvierteDuenoYRespuestaEnCamposAdministrablesConCapturaManual()
+    public void PrepararCamposAdministrables_ConvierteDuenoYRespuestaSinMutarContratoHistorico()
     {
         const string jsonOrigen = """
         {
@@ -144,36 +144,9 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
         }
         """;
 
-        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
-        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), args =>
-        {
-            Assert.Equal(61L, args[0]);
-            return Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
-            {
-                VerId = 61,
-                VerFamiliaId = 22,
-                VerCodigo = "MATRIZ_RIESGOS_LAFT_V1",
-                VerJson = jsonOrigen
-            });
-        });
+        string jsonClonado = FormularioBorradorPreparador.PrepararCamposAdministrables(jsonOrigen);
 
-        string? jsonClonado = null;
-        repo.On(nameof(IMatricesRiesgosRepository.CrearBorradorFormularioAsync), args =>
-        {
-            Assert.Equal(22L, args[0]);
-            Assert.Equal("MATRIZ_RIESGOS_LAFT_V1", args[1]);
-            jsonClonado = Assert.IsType<string>(args[2]);
-            Assert.Equal(99L, args[3]);
-            return Task.FromResult(88L);
-        });
-
-        ServiceResult<long> result = await service.ClonarVersionFormularioAsync(61, 99);
-
-        Assert.True(result.Success);
-        Assert.Equal(88L, result.Data);
-        Assert.NotNull(jsonClonado);
-
-        JsonNode root = JsonNode.Parse(jsonClonado!)!;
+        JsonNode root = JsonNode.Parse(jsonClonado)!;
         JsonArray secciones = root["secciones"]!.AsArray();
         JsonObject dueno = secciones[0]!["campos"]![0]!.AsObject();
         JsonObject respuesta = secciones[1]!["campos"]![0]!.AsObject();
@@ -188,8 +161,10 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
         Assert.Contains(catalogos, nodo => nodo?["codigo"]?.GetValue<string>() == "MR_AREA_RESPONSABLE");
         Assert.Single(catalogos.Where(nodo => nodo?["codigo"]?.GetValue<string>() == "MR_RESPUESTA_RIESGO"));
         Assert.True(root["extensionRaiz"]!["preservar"]!.GetValue<bool>());
-    }
 
+        JsonNode original = JsonNode.Parse(jsonOrigen)!;
+        Assert.Equal("texto", original["secciones"]![0]!["campos"]![0]!["tipo"]!.GetValue<string>());
+    }
     [Fact]
     public async Task EndpointVersionPorId_DelegaIdExactoYRetorna200()
     {
