@@ -7411,3 +7411,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Commit técnico/documental:** `ff12bb6eb596528ae908122d4a300ab3e92f3439`, rama `desarrollo`; publicación remota pendiente al momento de redactar este registro.
 - **Estado de cierre:** `CODE_FIX=PASS`, `SQL_SCRIPTS_READY=PASS`, `ORACLE_DML_EXECUTED_BY_CODEX=NO`, `MANUAL_DB_EXECUTION_REQUIRED=YES`, `MANUAL_EXECUTION_PENDING=YES`.
 - **Pendiente externo:** resolver los tres timeouts del quality gate global frontend y ejecutar manualmente en Oracle 31→32→33→34; no declarar la base corregida antes de un postcheck real.
+
+## Registro de intervención — COD — Corrección integral de descripciones visibles
+
+- **Fecha y hora local:** 2026-09-23 14:22 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `e9808b3`.
+- **Objetivo:** atender la evidencia visual de `RIE_DESCRIPCION` (`Descripci¿n`, `vinculaci¿n`, `P¿rdidas`, `econ¿micas`, `verificaci¿n`, `validaci¿n`, `instituci¿n`, `autom¿ticos`) sin borrar ni reemplazar información fuera del alcance.
+- **Causa/evidencia:** U+00BF está incrustado dentro de palabras donde corresponde una vocal acentuada; no se aplica `REPLACE('¿', ...)` global porque `¿Qué pasó?` es texto correcto.
+- **Implementación:** se ampliaron los normalizadores C# y Angular con reparaciones contextuales y regresiones para el texto de la captura, `DueÃ±o`, `Dueï¿o`, U+FFFD y preguntas legítimas. La escritura nueva continúa rechazando marcadores de corrupción.
+- **Scripts adicionales:** `36_precheck_descripciones_riesgos.sql`, `37_backup_rl_mr_riesgos_descripciones.sql`, `38_corregir_descripciones_encoding.sql`, `39_postcheck_descripciones_riesgos.sql`, `40_rollback_descripciones_riesgos.sql`. El correctivo 38 solo transforma patrones conocidos en `RIE_DESCRIPCION`; no usa Excel como fuente semántica y no toca otras columnas.
+- **Protección de datos:** backup independiente sin sobrescritura; actualización exclusiva de `RIE_DESCRIPCION`; rollback por `RIE_ID + RIE_CODIGO`; Oracle no fue contactado para DML/DDL.
+- **Pruebas ejecutadas:** backend focal `16/16 PASS`; frontend focal `3/3 PASS`; validador Oracle PASS; `git diff --check` PASS. Suites completas, E2E y Oracle permanecen con sus estados/pedientes documentados.
+- **Estado:** `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.

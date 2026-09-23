@@ -1479,3 +1479,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Validación fresca: backend `655/655 PASS`; frontend `79/79 archivos, 791/791 PASS`; focalizada `44/44 PASS`; lint/build/migrador/estructura/BD/enlaces PASS. `run_quality_gates.ps1` fue ejecutado y terminó `FAIL` por 3 timeouts de regresiones globales frontend (`76/79`, `788/791`) en la corrida con cobertura. E2E queda pendiente; Oracle precheck/postcheck/DML requieren ejecución manual.
 - **Continuación exacta:** revisar diff y scripts, ejecutar gates restantes, commit/push a `origin/desarrollo`; luego Javier ejecuta `31_precheck` → `32_backup` → `33_corregir` → `34_postcheck`, y `35_rollback` solo si corresponde.
 - **Cierre publicado local:** commit `ff12bb6eb596528ae908122d4a300ab3e92f3439` contiene código, pruebas, scripts y documentación de esta intervención. Falta únicamente confirmar el `push` y que `origin/desarrollo` apunte al mismo SHA.
+
+# Estado vigente — Corrección contextual de descripciones Oracle pendiente (COD)
+
+- **Fecha:** 2026-09-23 (UTC-6). **Rama:** `desarrollo`. **SHA inicial:** `e9808b3`.
+- La captura visual confirmó corrupción también en `RIE_DESCRIPCION`: `Descripci¿n`, `vinculaci¿n`, `P¿rdidas`, `econ¿micas`, `verificaci¿n`, `validaci¿n`, `instituci¿n` y `autom¿ticos`.
+- Backend y frontend amplían la reparación contextual sin prohibir `¿Qué pasó?`, signos válidos ni caracteres españoles. No se aplican sustituciones globales.
+- Scripts manuales 36–40: precheck read-only, backup no sobrescribible, corrección exclusiva de `RIE_DESCRIPCION`, postcheck y rollback. No se sincronizan descripciones contra Excel porque la fuente canónica semántica no está demostrada; solo se corrigen secuencias de codificación observadas.
+- Validación fresca: backend focal `16/16 PASS`, frontend focal `3/3 PASS`, validador de base de datos PASS, diff check PASS. No se ejecutó Oracle DML/DDL; la ejecución manual y la verificación visual permanecen pendientes.
+- `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`.
+- **Continuación exacta:** actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`; ejecutar 31→32→33→34 para nombres y 36→37→38→39 para descripciones; usar 35 o 40 únicamente si se requiere restauración; confirmar `RCUMP-COMPRAS-24` visualmente.

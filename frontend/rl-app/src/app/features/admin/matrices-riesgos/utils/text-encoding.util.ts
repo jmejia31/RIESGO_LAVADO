@@ -22,7 +22,18 @@ const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [string, string]> = [
   ['ejecuci\u00BFn', 'ejecuci\u00F3n'], ['supervisi\u00BFn', 'supervisi\u00F3n'],
   ['prevenci\u00BFn', 'prevenci\u00F3n'], ['Due\u00BFo', 'Due\u00F1o'], ['due\u00BFo', 'due\u00F1o'],
   ['v\u00BFnculo', 'v\u00EDnculo'], ['t\u00BFrmin', 't\u00E9rmin'], ['t\u00BFcnica', 't\u00E9cnica'],
-  ['p\u00BAblica', 'p\u00FAblica'], ['m\u00BFs', 'm\u00E1s']
+  ['p\u00BAblica', 'p\u00FAblica'], ['m\u00BFs', 'm\u00E1s'],
+  ['Descripci\u00BFn', 'Descripción'], ['descripci\u00BFn', 'descripción'],
+  ['vinculaci\u00BFn', 'vinculación'], ['P\u00BFrdidas', 'Pérdidas'],
+  ['p\u00BFrdidas', 'pérdidas'], ['econ\u00BFmicas', 'económicas'],
+  ['verificaci\u00BFn', 'verificación'], ['validaci\u00BFn', 'validación'],
+  ['instituci\u00BFn', 'institución'], ['autom\u00BFticos', 'automáticos'],
+  ['il\u00BFcitas', 'ilícitas'], ['capacitaci\u00BFn', 'capacitación'],
+  ['documentaci\u00BFn', 'documentación'], ['organizaci\u00BFn', 'organización'],
+  ['operaci\u00BFn', 'operación'], ['protecci\u00BFn', 'protección'],
+  ['situaci\u00BFn', 'situación'], ['funci\u00BFn', 'función'],
+  ['administraci\u00BFn', 'administración'], ['identificaci\u00BFn', 'identificación'],
+  ['calificaci\u00BFn', 'calificación'], ['relaci\u00BFn', 'relación']
 ];
 
 const SIGNO_PREGUNTA_INCRUSTADO = /[\p{L}]\u00BF(?=[\p{L}])/u;

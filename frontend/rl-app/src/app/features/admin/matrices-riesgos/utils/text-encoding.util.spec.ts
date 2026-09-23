@@ -7,6 +7,8 @@ describe('Integridad de texto visible UTF-8', () => {
     expect(normalizarTextoVisibleUtf8('Informaci\u00C3\u00B3n t\u00C3\u00A9cnica')).toBe('Información técnica');
     expect(normalizarTextoVisibleUtf8('Due\u00C3\u00B1o')).toBe('Dueño');
     expect(normalizarTextoVisibleUtf8('Due\u00EF\u00BFo')).toBe('Dueño');
+    expect(normalizarTextoVisibleUtf8('Descripci\u00BFn: vinculaci\u00BFn, P\u00BFrdidas econ\u00BFmicas, verificaci\u00BFn, validaci\u00BFn, instituci\u00BFn, autom\u00BFticos e il\u00BFcitas'))
+      .toBe('Descripción: vinculación, Pérdidas económicas, verificación, validación, institución, automáticos e ilícitas');
   });
 
   it('preserva caracteres españoles y signos de pregunta legítimos', () => {
