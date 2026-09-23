@@ -80,7 +80,24 @@ El correctivo:
 
 4. Repetir el validador SQL read-only y el modo `--verify-risk-text`. Ambos deben finalizar en `PASS`.
 
-La herramienta toma la conexión Oracle desde la configuración local existente del backend; no versionar credenciales ni copiarlas a comandos, logs o documentación.
+La herramienta toma la conexión Oracle en este orden:
+
+1. variable de entorno de la sesión actual `ConnectionStrings__OracleDB`;
+2. fallback local `backend/RL.API/appsettings.json`.
+
+Para una intervención puntual se recomienda la variable de entorno de PowerShell, sin guardar la credencial en archivos ni versionarla:
+
+```powershell
+$env:ConnectionStrings__OracleDB = '<CADENA_ORACLE_LOCAL>'
+```
+
+Al terminar la intervención:
+
+```powershell
+Remove-Item Env:ConnectionStrings__OracleDB
+```
+
+No pegar la cadena real en commits, documentación, issues ni logs.
 
 ## Restricciones
 
