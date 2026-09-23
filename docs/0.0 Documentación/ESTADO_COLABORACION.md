@@ -1436,9 +1436,9 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 - Fecha local: `2026-09-23` (UTC-6); autor `CHAT`; rama `desarrollo`; SHA inicial `e929092261eeb1fc7a35370f5c7ec0642f1b0abc`.
 - Decisión del propietario: `GTIC` y `MITIGAR` permanecen `TEST_DATA_ONLY`; `PRODUCTION_TEST_PLACEHOLDERS=2`, pero `PRODUCTION_TEST_PLACEHOLDERS_BLOCKING=0` y `PRODUCTION_VALUES_PENDING=0`.
-- El contrato funcional de `dueno_riesgo` queda: captura manual del área responsable.
-- Se incorpora el tipo dinámico `texto-sugerido`: permite escribir libremente y, opcionalmente, elegir sugerencias de un catálogo administrable. El catálogo no restringe el valor.
-- Para nuevas versiones, `dueno_riesgo` usa `MR_AREA_RESPONSABLE`, creado vacío; no se siembra `GTIC` como valor institucional.
+- El contrato funcional de `dueno_riesgo` y `respuesta_riesgo` queda en patrón híbrido: lista desplegable administrable + opción `Otro / Escribir manualmente…`.
+- `dueno_riesgo` usa `MR_AREA_RESPONSABLE`, creado vacío; `respuesta_riesgo` usa su catálogo independiente `MR_RESPUESTA_RIESGO` con los valores base ya existentes.
+- Al clonar una versión, el nuevo borrador adapta ambos campos a `texto-sugerido`; la versión origen no se modifica ni cambia de hash.
 - V1/V2 persistidas e históricos no se modifican. No hay DML/DDL Oracle ni cambio de modelo físico.
 - Impacto: contrato de formulario dinámico, renderer Angular y validador ASP.NET. Interfaces REST, tablas Oracle, tenancy y seguridad: sin cambio.
 - `MAPA_ARQUITECTURA=NO_APLICA`: no cambia la relación entre componentes ni el ownership de datos.
