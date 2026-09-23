@@ -1514,3 +1514,19 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Estado honesto hasta firma: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. Sólo después de aprobación, firma y archivo corresponde registrar `RTO_DEFINED=TRUE` y `RTO_VALUE=4 horas`.
 - `RPO_DEFINED=FALSE`; capacitación institucional y despliegue productivo continúan pendientes.
 - Este cierre documental no cambia código, Oracle, V1/V2, hashes, interfaces, seguridad, tenancy ni `main`.
+
+
+## Estado vigente - RTO INSTITUCIONAL PROPUESTO / FIRMA PENDIENTE
+
+- Fecha local: `2026-09-23` (UTC-6); rama `desarrollo`; intervención documental de continuidad.
+- Se incorporó al repositorio la documentación institucional del RTO en `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/`.
+- Fuente canónica editable: `ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md`.
+- Copia física imprimible/firmable: `Acta_RTO_Institucional_SGRLA_IHSS_v1_1.pdf`.
+- Criterio propuesto: `RTO_PROPOSED=4 horas`; `INCIDENT_RESPONSE_TARGET=0 minutos`; `CATASTROPHIC_EXCEPTION=TRUE`.
+- El objetivo de 0 minutos corresponde al inicio inmediato de atención, diagnóstico y escalamiento; no se declara un RTO de 0 minutos ni recuperación instantánea.
+- La continuidad se documenta como responsabilidad institucional compartida. La superación del RTO no determina por sí sola responsabilidad personal de Desarrollo/GTIC ni del encargado del sistema; deben evaluarse causa raíz, control efectivo, accesos, recursos, infraestructura, Oracle/DBA, seguridad, telecomunicaciones, terceros, autorizaciones y evidencia objetiva.
+- Para eventos catastróficos o dependencias externas críticas se reconoce el tiempo técnicamente necesario para una recuperación segura, con trazabilidad y escalamiento.
+- Estado de gobierno: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. Sólo después de aprobación, firma y archivo institucional corresponde registrar `RTO_DEFINED=TRUE` y `RTO_VALUE=4 horas`.
+- RPO continúa pendiente: `RPO_DEFINED=FALSE`.
+- No se modificaron código, Oracle, datos, V1/V2, hashes, `main`, `DNP_IHSS` ni `MMATAMOROS`. `MAPA_ARQUITECTURA=NO_APLICA`.
+- Seguimiento institucional actualizado en issue #22.
