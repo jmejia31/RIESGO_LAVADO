@@ -27,6 +27,9 @@ const REEMPLAZOS_MOJIBAKE: ReadonlyArray<readonly [string, string]> = [
 const TOKEN_REEMPLAZO = '(?:\\u00EF\\u00BF\\u00BD|\\uFFFD)';
 
 const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [RegExp, string]> = [
+  // Reparar primero sufijos genéricos para conservar mayúsculas/minúsculas del texto original.
+  [new RegExp('i' + TOKEN_REEMPLAZO + 'n', 'gi'), 'ión'],
+  [new RegExp('e' + TOKEN_REEMPLAZO + 'o', 'gi'), 'eño'],
   [new RegExp('Identificaci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Identificación'],
   [new RegExp(TOKEN_REEMPLAZO + 'rea\\b', 'gi'), 'Área'],
   [new RegExp('Due' + TOKEN_REEMPLAZO + 'o', 'gi'), 'Dueño'],
@@ -42,8 +45,6 @@ const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [RegExp, string]> = [
   [new RegExp('Catastr' + TOKEN_REEMPLAZO + 'fico', 'gi'), 'Catastrófico'],
   [new RegExp('Cr' + TOKEN_REEMPLAZO + 'tico', 'gi'), 'Crítico'],
   [new RegExp('M' + TOKEN_REEMPLAZO + 'ltiple', 'gi'), 'Múltiple'],
-  [new RegExp('i' + TOKEN_REEMPLAZO + 'n', 'gi'), 'ión'],
-  [new RegExp('e' + TOKEN_REEMPLAZO + 'o', 'gi'), 'eño'],
   [new RegExp('est' + TOKEN_REEMPLAZO + 'n\\b', 'gi'), 'están'],
   [new RegExp('inter' + TOKEN_REEMPLAZO + 's\\b', 'gi'), 'interés'],
   [new RegExp('t' + TOKEN_REEMPLAZO + 'cnic', 'gi'), 'técnic'],
