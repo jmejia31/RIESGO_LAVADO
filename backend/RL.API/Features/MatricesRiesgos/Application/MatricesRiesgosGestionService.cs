@@ -1,4 +1,5 @@
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Shared.Results;
 
@@ -75,6 +76,8 @@ public sealed class MatricesRiesgosGestionService : IMatricesRiesgosGestionServi
         if (codigo.Length is < 1 or > 30) return "El código del riesgo debe contener entre 1 y 30 caracteres.";
         if (nombre.Length is < 1 or > 250) return "El nombre del riesgo debe contener entre 1 y 250 caracteres.";
         if (descripcion.Length > 2000) return "La descripción del riesgo no puede exceder 2000 caracteres.";
+        if (TextoVisibleUtf8Normalizer.ContieneMojibake(nombre) || TextoVisibleUtf8Normalizer.ContieneMojibake(descripcion))
+            return "El texto del riesgo contiene caracteres de codificación inválidos.";
         return null;
     }
 }
