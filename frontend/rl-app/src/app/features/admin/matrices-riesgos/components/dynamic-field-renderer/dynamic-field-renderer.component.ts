@@ -277,6 +277,7 @@ export class DynamicFieldRendererComponent {
   private modoManualSelectorFlexible = false;
 
   get valorSeleccionSelectorFlexible(): string {
+    if (this.opcionesDisponibles.length === 0) return '__MANUAL__';
     if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) {
       return this.modoManualSelectorFlexible ? '__MANUAL__' : '';
     }
