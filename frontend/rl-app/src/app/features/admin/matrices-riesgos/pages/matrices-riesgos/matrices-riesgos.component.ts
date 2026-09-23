@@ -41,6 +41,7 @@ import {
   tieneValorRespuesta
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
+import { normalizarTextoVisibleUtf8 } from '../../utils/text-encoding.util';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -1018,7 +1019,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cargarRiesgos(): void {
     this.service.listarRiesgosPaginados(false, 1, 200).subscribe({
-      next: respuesta => this.riesgos.set(respuesta.items),
+      next: respuesta => this.riesgos.set(
+        respuesta.items.map(riesgo => ({
+          ...riesgo,
+          rieNombre: normalizarTextoVisibleUtf8(riesgo.rieNombre),
+          rieDescripcion: riesgo.rieDescripcion ? normalizarTextoVisibleUtf8(riesgo.rieDescripcion) : riesgo.rieDescripcion
+        }))
+      ),
       error: () => this.riesgos.set([])
     });
   }
@@ -1120,7 +1127,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
           return;
         }
 
-        const items = Array.isArray(paginado?.items) ? paginado.items : [];
+        const items = Array.isArray(paginado?.items)
+          ? paginado.items.map(item => ({
+              ...item,
+              riesgoNombre: normalizarTextoVisibleUtf8(item.riesgoNombre)
+            }))
+          : [];
         this.evaluaciones.set(items);
 
         const totalReg = Number.isFinite(paginado?.totalRegistros) && Math.floor(paginado.totalRegistros) >= 0
