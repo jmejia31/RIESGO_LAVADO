@@ -48,6 +48,30 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(host.querySelector('textarea')).not.toBeNull();
   });
 
+  it('mantiene texto manual y ofrece sugerencias administrables sin restringir el valor', () => {
+    const emitSpy = vi.spyOn(component.valorChange, 'emit');
+    component.opcionesCatalogo = [
+      { codigo: 'GTIC', valor: 'Gerencia de Tecnología de Información y Comunicaciones' },
+      { codigo: 'RRHH', valor: 'Recursos Humanos' }
+    ];
+
+    const host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_AREA_RESPONSABLE' }), 'Área escrita manualmente');
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+    const datalist = host.querySelector('datalist') as HTMLDataListElement;
+
+    expect(input).not.toBeNull();
+    expect(input.value).toBe('Área escrita manualmente');
+    expect(input.getAttribute('list')).toBe(datalist.id);
+    expect(Array.from(datalist.options).map(opcion => opcion.value)).toEqual([
+      'Gerencia de Tecnología de Información y Comunicaciones',
+      'Recursos Humanos'
+    ]);
+
+    input.value = 'Área no catalogada';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(emitSpy).toHaveBeenCalledWith('Área no catalogada');
+  });
+
   it('renderiza selector de catálogo y mantiene opción nula controlada', () => {
     component.opcionesCatalogo = [
       { codigo: 'A', valor: 'Alto' },
