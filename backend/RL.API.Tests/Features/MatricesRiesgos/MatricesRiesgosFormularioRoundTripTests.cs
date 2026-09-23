@@ -111,6 +111,83 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
     }
 
     [Fact]
+    public async Task ClonarVersion_ConvierteDuenoYRespuestaEnCamposAdministrablesConCapturaManual()
+    {
+        const string jsonOrigen = """
+        {
+          "codigoFormulario":"MATRIZ_RIESGOS_LAFT",
+          "secciones":[
+            {
+              "clave":"identificacion",
+              "campos":[
+                {"clave":"dueno_riesgo","etiqueta":"Dueño","tipo":"texto","obligatorio":true}
+              ]
+            },
+            {
+              "clave":"residual",
+              "campos":[
+                {"clave":"respuesta_riesgo","etiqueta":"Respuesta","tipo":"selector-catalogo","codigoCatalogo":"MR_RESPUESTA_RIESGO","obligatorio":true}
+              ]
+            }
+          ],
+          "catalogos":[
+            {
+              "codigo":"MR_RESPUESTA_RIESGO",
+              "nombre":"Respuesta al riesgo",
+              "elementos":[
+                {"codigo":"MITIGAR","valor":"Mitigar","orden":1}
+              ]
+            }
+          ],
+          "extensionRaiz":{"preservar":true}
+        }
+        """;
+
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), args =>
+        {
+            Assert.Equal(61L, args[0]);
+            return Task.FromResult<VersionFormularioDto?>(new VersionFormularioDto
+            {
+                VerId = 61,
+                VerFamiliaId = 22,
+                VerCodigo = "MATRIZ_RIESGOS_LAFT_V1",
+                VerJson = jsonOrigen
+            });
+        });
+
+        string? jsonClonado = null;
+        repo.On(nameof(IMatricesRiesgosRepository.CrearBorradorFormularioAsync), args =>
+        {
+            Assert.Equal(22L, args[0]);
+            Assert.Equal("MATRIZ_RIESGOS_LAFT_V1", args[1]);
+            jsonClonado = Assert.IsType<string>(args[2]);
+            Assert.Equal(99L, args[3]);
+            return Task.FromResult(88L);
+        });
+
+        ServiceResult<long> result = await service.ClonarVersionFormularioAsync(61, 99);
+
+        Assert.True(result.Success);
+        Assert.Equal(88L, result.Data);
+        Assert.NotNull(jsonClonado);
+
+        JsonNode root = JsonNode.Parse(jsonClonado!)!;
+        JsonArray secciones = root["secciones"]!.AsArray();
+        JsonObject dueno = secciones[0]!["campos"]![0]!.AsObject();
+        JsonObject respuesta = secciones[1]!["campos"]![0]!.AsObject();
+        Assert.Equal("texto-sugerido", dueno["tipo"]!.GetValue<string>());
+        Assert.Equal("MR_AREA_RESPONSABLE", dueno["codigoCatalogo"]!.GetValue<string>());
+        Assert.Equal("texto-sugerido", respuesta["tipo"]!.GetValue<string>());
+        Assert.Equal("MR_RESPUESTA_RIESGO", respuesta["codigoCatalogo"]!.GetValue<string>());
+
+        JsonArray catalogos = root["catalogos"]!.AsArray();
+        Assert.Contains(catalogos, nodo => nodo?["codigo"]?.GetValue<string>() == "MR_AREA_RESPONSABLE");
+        Assert.Single(catalogos.Where(nodo => nodo?["codigo"]?.GetValue<string>() == "MR_RESPUESTA_RIESGO"));
+        Assert.True(root["extensionRaiz"]!["preservar"]!.GetValue<bool>());
+    }
+
+    [Fact]
     public async Task EndpointVersionPorId_DelegaIdExactoYRetorna200()
     {
         IMatricesRiesgosAppService app = InterfaceStub.Create<IMatricesRiesgosAppService>(out InterfaceStub stub);
