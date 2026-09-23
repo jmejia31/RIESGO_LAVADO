@@ -7304,3 +7304,19 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Release commit publicado: `70c1a7edffe614fa3cc36fab58b02077dbfe039b`; rama `desarrollo`; `ORIGIN_DESARROLLO=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `origin/main=35d1d68840e073469e3dfdf05e9a64dc5d49fd39`; `AHEAD=0`; `BEHIND=0`; `MAIN_INTACTA=TRUE`.
 - Quality Gate remoto del SHA exacto: `QUALITY_GATE_RUN=35393615771`; `QUALITY_GATE_SHA=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. CI validó analyzers, tests, cobertura, E2E, compose y builds de contenedores.
 - Estado: paquete de despliegue y documentación publicados. `FASE_7` permanece bloqueada únicamente por clean install/restore Oracle en un objetivo aislado externo no disponible; no se declara producción desplegada ni restore real.
+
+
+## Registro FASE-7-CIERRE-REAL-RESTORE-Y-MONITOREO
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT` / `CHATGPT`; rama `desarrollo`; baseline funcional `aae6c8b19fbb0e89a8bcff77acb1a8a2c7fcbd18`; `main` no fue modificada.
+- Objetivo: cerrar pendientes reales de Fase 7 y volver a dejar el repositorio original como fuente única de continuidad, sin abrir nuevas fases.
+- Evidencia Oracle aportada por Javier: clean install estructural real y restore institucional ejecutados sobre `hpprod1/RIESGO_LAVADO`. El objetivo compartía base física con `DNP_IHSS`; `PHYSICAL_ISOLATION=FALSE`. La excepción fue autorizada expresamente y se documenta sin afirmar aislamiento.
+- Resultado estructural y restore: `25 tablas / 25 secuencias`, `465` filas RL_MR restauradas, `59` riesgos, `59` evaluaciones, `59` proyecciones, `148` alertas, familia 22 predeterminada, V1 61 y V2 63 presentes, inválidos `0`, constraints deshabilitadas `0`, huérfanos de usuario `0`; `RESTORE_DATOS_RL_MR_V2=PASS`.
+- Release real post-restore: `PREFLIGHT=PASS` y `POSTFLIGHT=PASS`.
+- Corrección Oracle 11g: `29_ddl_familia_predeterminada_fp1.sql` quedó parse-safe mediante SQL dinámico; el modelo final mantiene 25/25.
+- Monitoreo: el DBA rechazó cambios físicos no replicables en `DNP_IHSS/MMATAMOROS`; el backend eliminó la dependencia del hint `IX_RCOINC_MON_TIPO_PATRONO` y añadió caché corta por página/filtros para Jurídicas, Naturales y Empleados, sin DDL externo.
+- Evidencia HTTP final: Jurídicas `12620 -> 24 ms`, Naturales `19128 -> 21 ms`, Empleados `22394 -> 20 ms`, todos HTTP 200. La repetición cacheada pasa; la carga fría sigue limitada por Oracle y se mantiene `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_COLD_ORIGIN_LATENCY`.
+- Pruebas/gates heredados verificados por remoto para el SHA funcional exacto: Quality Gate `#1505`, SHA `aae6c8b19fbb0e89a8bcff77acb1a8a2c7fcbd18`, `completed/success`.
+- Archivos de cierre actualizados: `FASE_7_DESPLIEGUE_DOCUMENTACION_CAPACITACION_CIERRE.md`, `BACKUP_RESTORE_FASE7.md`, `MONITOREO_API_PERFORMANCE_CERTIFICATION.md`, esta bitácora y `ESTADO_COLABORACION.md`.
+- Estado: `FASE_7=CERRADA_EN_DESARROLLO_CON_EXCEPCION_DOCUMENTADA`; `RELEASE_READINESS=PASS`; `PRODUCTION_DEPLOYED=FALSE`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`. No quedan bloqueos de desarrollo de Fase 7; producción/capacitación y la latencia fría del origen Oracle quedan como actividades externas posteriores.
+- Punto de continuación: sincronizar el checkout original `C:\RIESGO_LAVADO` con `origin/desarrollo`; no continuar trabajando desde `C:\RIESGO_LAVADO_F7`. No publicar en `main` sin autorización expresa.

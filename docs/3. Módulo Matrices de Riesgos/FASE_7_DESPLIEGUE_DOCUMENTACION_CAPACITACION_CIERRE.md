@@ -1,6 +1,6 @@
 # Fase 7 — Despliegue, documentación y capacitación
 
-> Estado de esta intervención: `FASE_7=BLOCKED_EXTERNAL_ACTION` únicamente por clean install y restore Oracle en objetivo aislado no disponible localmente. No es un bloqueo funcional; el paquete y los procedimientos están preparados.
+> Estado vigente: `FASE_7=CERRADA_EN_DESARROLLO_CON_EXCEPCION_DOCUMENTADA`. El clean install, restore de datos y pre/postflight se ejecutaron realmente en `hpprod1/RIESGO_LAVADO` con autorización expresa del DBA y de Javier Mejía. El objetivo no fue físicamente aislado: `RIESGO_LAVADO` comparte la misma base con `DNP_IHSS`, por lo que el cierre registra esa excepción sin presentarla como aislamiento institucional. `PRODUCTION_DEPLOYED=FALSE`.
 
 ## Baseline y alcance
 
@@ -44,3 +44,36 @@ P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos: placeholders de prue
 - Validadores: estructura, SQL, documentación, manifest/config drift y release package PASS. Python no está instalado para `validate_agent_skills.py`; Docker no está disponible localmente.
 - Restore real y clean install sobre un objetivo Oracle aislado: `NOT_EXECUTED_EXTERNAL_ENVIRONMENT`; no se declara PASS artificial ni se tocó `hpprod1` destructivamente.
 - Quality Gate del commit de release `70c1a7edffe614fa3cc36fab58b02077dbfe039b`: run `35393615771`, `completed/success`; el CI verificó también compose y builds de contenedores con usuarios non-root.
+
+
+## Actualización de cierre real — 2026-09-23
+
+Evidencia aportada por Javier Mejía durante la ejecución controlada y conservada como evidencia de sesión:
+
+- Objetivo real: Oracle 11g, host `desdb`, servicio `hpprod1`, schema `RIESGO_LAVADO`.
+- Autorización previa: respaldo/restore institucional disponible, DBA autorizó la prueba y Javier autorizó la eliminación temporal de los 465 registros RL_MR para probar reconstrucción y posterior restauración.
+- Excepción de aislamiento: `PHYSICAL_ISOLATION=FALSE`. El schema comparte la base física con `DNP_IHSS`; no se declara un entorno aislado. La transición se limitó a objetos `RL_MR_*` y preservó `RL_USUARIOS`, `RL_AUDITORIA`, `SEQ_RL_AUDITORIA` y el schema `DNP_IHSS`.
+- Clean install estructural verificado: reconstrucción base `17/17`, luego configuración de cálculo hasta `25 tablas / 25 secuencias`; `FAM_PREDETERMINADA` presente, constraint `CK_RL_MR_FUA_TYPE` habilitada, índice `UQ_RL_MR_FAMILIA_DEFAULT` válido, objetos inválidos `0`, constraints deshabilitadas `0`.
+- Compatibilidad Oracle 11g corregida en `29_ddl_familia_predeterminada_fp1.sql` usando SQL dinámico para evitar referencia parse-time a la columna recién creada.
+- Restore real validado: `RL_MR_TABLES=25`, `RL_MR_SEQUENCES=25`, `TOTAL_RL_MR_ROWS=465`, `RL_MR_RIESGOS=59`, `RL_MR_EVALUACIONES_RIESGO=59`, `RL_MR_PROYECCIONES_EVALUACION=59`, `RL_MR_SENALES_ALERTA=148`, `INVALID_OBJECTS=0`, `DISABLED_CONSTRAINTS=0`, `ORPHAN_USER_REFERENCES=0`, `FAMILY_22_DEFAULT=1`, `V1_61=1`, `V2_63=1`, `RESTORE_DATOS_RL_MR_V2=PASS`.
+- Release preflight después del restore: `PREFLIGHT=PASS`; 25 tablas, 25 secuencias, familia 22, V1 61, V2 63, 4 catálogos, regla activa, 59 riesgos/evaluaciones/proyecciones, duplicados/huérfanos/bindings/JSON/objetos inválidos y constraints deshabilitadas en `0`.
+- Release postflight después del restore: `POSTFLIGHT=PASS`.
+- Diagnóstico read-only de dependencias de Monitoreo: acceso confirmado a `RL_LISTA_POSITIVOS`, objetos requeridos de `DNP_IHSS` y `MMATAMOROS`; no se ejecutó DDL sobre esos esquemas.
+- Monitoreo de Listas: se retiró del backend la dependencia explícita del hint `IX_RCOINC_MON_TIPO_PATRONO` para mantener compatibilidad con producción. Se agregó caché corta e invalidable por página/filtros para Jurídicas, Naturales y Empleados sin modificar `DNP_IHSS` ni `MMATAMOROS`.
+- Validación HTTP final del caché, todos `HTTP 200`: Jurídicas `12620 ms -> 24 ms`, Naturales `19128 ms -> 21 ms`, Empleados `22394 ms -> 20 ms`. La mejora de repetición queda verificada; la primera carga fría continúa limitada por el origen Oracle y no se reclasifica artificialmente como certificación production-like.
+- Código funcional final de esta optimización: `aae6c8b19fbb0e89a8bcff77acb1a8a2c7fcbd18`; Quality Gate `#1505` completado en `success`.
+
+### Estado de cierre
+
+- `FASE_7=CERRADA_EN_DESARROLLO_CON_EXCEPCION_DOCUMENTADA`
+- `RELEASE_READINESS=PASS`
+- `CLEAN_INSTALL_REAL=PASS_WITH_NON_ISOLATED_ENVIRONMENT_EXCEPTION`
+- `RESTORE_REAL=PASS`
+- `PREFLIGHT_AFTER_RESTORE=PASS`
+- `POSTFLIGHT_AFTER_RESTORE=PASS`
+- `MONITOREO_WARM_PAGE_CACHE=PASS`
+- `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_COLD_ORIGIN_LATENCY`
+- `PRODUCTION_DEPLOYED=FALSE`
+- `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`
+
+El trabajo de desarrollo/release de Fase 7 queda cerrado. Producción, capacitación institucional y cualquier optimización física sobre schemas ajenos siguen siendo actividades externas posteriores y no se presentan como ejecutadas.

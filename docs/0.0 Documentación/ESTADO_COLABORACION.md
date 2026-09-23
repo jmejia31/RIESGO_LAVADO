@@ -1396,3 +1396,16 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `RELEASE_COMMIT=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `ORIGIN_DESARROLLO=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `AHEAD=0`; `BEHIND=0`; `MAIN_INTACTA=TRUE`.
 - `QUALITY_GATE_RUN=35393615771`; `QUALITY_GATE_SHA=70c1a7edffe614fa3cc36fab58b02077dbfe039b`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`; CI incluyó contenedores y usuarios non-root.
 - Continuación exacta: ejecutar clean install y restore en Oracle aislado institucional; no usar `hpprod1` de forma destructiva.
+
+
+## Estado vigente - FASE 7 CERRADA EN DESARROLLO CON EXCEPCION DOCUMENTADA
+
+- Fecha de cierre: `2026-09-23`; autor de cierre `CHAT`; rama `desarrollo`.
+- `FASE_7=CERRADA_EN_DESARROLLO_CON_EXCEPCION_DOCUMENTADA`; `RELEASE_READINESS=PASS`; `PRODUCTION_DEPLOYED=FALSE`.
+- Clean install y restore ya no están pendientes: se ejecutaron realmente en `hpprod1/RIESGO_LAVADO` con autorización DBA/Javier. `PHYSICAL_ISOLATION=FALSE`: el objetivo compartía base con `DNP_IHSS`; esa condición queda registrada como excepción y no como cumplimiento del criterio original de aislamiento.
+- Estado Oracle final aportado: 25 tablas, 25 secuencias, 465 filas RL_MR, 59 riesgos/evaluaciones/proyecciones, 148 alertas, familia 22 predeterminada, V1 61, V2 63, inválidos 0, constraints deshabilitadas 0, huérfanos de usuario 0. `RESTORE_DATOS_RL_MR_V2=PASS`, `PREFLIGHT_AFTER_RESTORE=PASS`, `POSTFLIGHT_AFTER_RESTORE=PASS`.
+- Monitoreo: no se modificaron `DNP_IHSS` ni `MMATAMOROS`. El backend ya no depende del índice experimental `IX_RCOINC_MON_TIPO_PATRONO`; usa caché corta e invalidable por tipo/página/filtros para los tres tabs. Evidencia final HTTP 200: Jurídicas `12620/24 ms`, Naturales `19128/21 ms`, Empleados `22394/20 ms`.
+- `MONITOREO_WARM_PAGE_CACHE=PASS`; `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_COLD_ORIGIN_LATENCY`. La primera carga fría sigue siendo una limitación del origen Oracle/servidor y no se oculta como PASS.
+- Código funcional final: `aae6c8b19fbb0e89a8bcff77acb1a8a2c7fcbd18`; Quality Gate remoto `#1505=completed/success`.
+- No quedan pendientes técnicos que bloqueen el cierre de desarrollo/release de Fase 7. Permanecen fuera del cierre: despliegue productivo, capacitación institucional y cualquier intervención física en schemas externos, todas sujetas a autorización institucional.
+- Fuente de verdad para continuar: `origin/desarrollo`. El checkout operativo debe volver a ser `C:\RIESGO_LAVADO`; `C:\RIESGO_LAVADO_F7` queda sólo como clon temporal de la prueba.

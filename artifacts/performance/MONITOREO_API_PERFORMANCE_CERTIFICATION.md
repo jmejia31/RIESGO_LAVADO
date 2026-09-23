@@ -43,3 +43,35 @@ La implementacion mantiene paginacion DB-side, metadata cacheada unicamente,
 pagina sin conteo preventivo, lookups set-based, cancelacion ODP.NET y rutas
 dedicadas de exportacion. La evidencia final demuestra que esas mejoras no
 alcanzan los umbrales full-stack exigidos contra el Oracle disponible.
+
+
+## Addendum 2026-09-23 — mitigación backend sin tocar schemas externos
+
+El DBA indicó que no deben crearse índices nuevos en `DNP_IHSS` ni `MMATAMOROS` que no puedan reproducirse en producción. En consecuencia:
+
+- no se ejecutó DDL ni `DBMS_STATS` sobre esos schemas;
+- se eliminó la dependencia explícita del hint `IX_RCOINC_MON_TIPO_PATRONO` del SQL productivo;
+- se conservó la optimización SQL de Naturales;
+- se añadió caché corta por tipo/página/tamaño/filtros en el backend, usando el alcance de Monitoreo ya invalidado por mutaciones locales.
+
+Evidencia HTTP final sobre el backend F7, todos `HTTP 200`:
+
+| Tipo | Primera corrida ms | Segunda corrida ms | Repetición |
+|---|---:|---:|---|
+| Jurídicas | 12,620 | 24 | PASS |
+| Naturales | 19,128 | 21 | PASS |
+| Empleados | 22,394 | 20 | PASS |
+
+La instrumentación aisló en Jurídicas un caso real con `connectionOpenMs=0`, `pageExecuteMs=6559`, `firstRowMs=0`, `rowsReadMs=2`, `mappingMs=2`, `metadataLookupMs=0`, `totalRepositoryMs=6563`: el costo frío está dominado por ejecución Oracle, no por serialización ni metadata.
+
+Estado actualizado:
+
+```text
+MONITOREO_WARM_PAGE_CACHE=PASS
+EXTERNAL_SCHEMA_DDL=0
+DNP_IHSS_MODIFIED=FALSE
+MMATAMOROS_MODIFIED=FALSE
+PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_COLD_ORIGIN_LATENCY
+```
+
+El resultado production-like global continúa en `FAIL` porque la primera carga fría supera el contrato de 10 s. La mitigación sí elimina el costo repetido dentro del TTL del caché y queda cubierta por invalidación explícita ante cambios realizados por la aplicación.
