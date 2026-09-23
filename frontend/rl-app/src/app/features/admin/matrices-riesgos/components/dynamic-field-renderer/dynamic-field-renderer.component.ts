@@ -123,6 +123,27 @@ export interface OpcionCampoRenderer {
                    [value]="valorEscalar ?? ''"
                    (input)="emitirTexto($any($event.target).value)" />
           }
+          @case ('texto-sugerido') {
+            <input [id]="idControl"
+                   type="text"
+                   class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                   [required]="campo.obligatorio"
+                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                   [attr.list]="opcionesDisponibles.length > 0 ? idListaSugerencias : null"
+                   [readOnly]="campo.soloLectura"
+                   [value]="valorEscalar ?? ''"
+                   (input)="emitirTexto($any($event.target).value)" />
+            @if (opcionesDisponibles.length > 0) {
+              <datalist [id]="idListaSugerencias">
+                @for (opcion of opcionesDisponibles; track opcion.codigo) {
+                  <option [value]="opcion.valor">{{ opcion.codigo }}</option>
+                }
+              </datalist>
+            }
+            <p class="mt-1 text-[11px] font-medium text-gray-500">
+              Escriba el valor manualmente o seleccione una sugerencia administrada.
+            </p>
+          }
           @case ('numero') {
             <input [id]="idControl"
                    type="number"
@@ -242,6 +263,10 @@ export class DynamicFieldRendererComponent {
       .replace(/[^A-Za-z0-9_-]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'campo';
     return `${prefijo}-${clave}`;
+  }
+
+  get idListaSugerencias(): string {
+    return this.idControl + '-sugerencias';
   }
 
   get valorEscalar(): string | number | boolean | null {
