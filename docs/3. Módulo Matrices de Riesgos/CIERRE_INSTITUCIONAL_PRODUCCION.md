@@ -16,23 +16,29 @@ Seguimiento: [GitHub issue #22](https://github.com/jmejia31/RIESGO_LAVADO/issues
 - No se autorizan ni requieren cambios físicos adicionales sobre `DNP_IHSS` o `MMATAMOROS`.
 - `main` no se modifica por este cierre institucional.
 
-## 1. Valores definitivos de producción
+## 1. Valores de prueba y contrato del responsable — CERRADO
 
-Estado actual:
+Decisión expresa del propietario, **2026-09-23**:
 
 ```text
 PRODUCTION_TEST_PLACEHOLDERS=2
+PRODUCTION_TEST_PLACEHOLDERS_BLOCKING=0
+PRODUCTION_VALUES_PENDING=0
 ROTR-ALMACENBIENE-23.dueno_riesgo=GTIC       # TEST_DATA_ONLY
 RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR    # TEST_DATA_ONLY
-PRODUCTION_VALUES_CONFIRMED=FALSE
+PRODUCTION_VALUES_DECISION=CLOSED_AS_TEST_DATA
 ```
 
-Se requiere decisión institucional explícita para cada valor:
+Los dos valores anteriores pertenecen a datos de prueba y **no se promueven a valores institucionales productivos ni a seeds de producción**. Por tanto, no bloquean release ni despliegue.
 
-- ratificar `GTIC` como dueño definitivo o indicar el dueño aprobado;
-- ratificar `MITIGAR` como respuesta definitiva o indicar la respuesta aprobada.
+Para `dueno_riesgo`, el requerimiento del cliente queda definido así:
 
-Hasta esa decisión no se reclasifican como datos productivos y no se inventan sustitutos.
+- **Responsable o dueño del riesgo: captura manual.**
+- El usuario debe escribir e indicar el **área responsable**.
+- La captura manual sigue siendo válida aunque el área no exista en un catálogo.
+- Como mejora administrable, el formulario dinámico soporta `texto-sugerido`: texto libre con sugerencias obtenidas de un catálogo mantenible por administradores.
+- El catálogo propuesto es `MR_AREA_RESPONSABLE`; nace vacío para no convertir `GTIC` ni ningún dato de prueba en catálogo institucional por inferencia.
+- V1/V2 históricas no se mutan retroactivamente. Las definiciones ya existentes continúan siendo válidas como texto manual; nuevas versiones pueden usar el control administrable sin perder la escritura libre.
 
 ## 2. RTO/RPO institucionales
 
