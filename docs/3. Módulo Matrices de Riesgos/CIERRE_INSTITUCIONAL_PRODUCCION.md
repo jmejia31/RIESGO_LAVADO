@@ -31,14 +31,14 @@ PRODUCTION_VALUES_DECISION=CLOSED_AS_TEST_DATA
 
 Los dos valores anteriores pertenecen a datos de prueba y **no se promueven a valores institucionales productivos ni a seeds de producción**. Por tanto, no bloquean release ni despliegue.
 
-Para `dueno_riesgo`, el requerimiento del cliente queda definido así:
+El criterio funcional queda definido para **ambos campos**:
 
-- **Responsable o dueño del riesgo: captura manual.**
-- El usuario debe escribir e indicar el **área responsable**.
-- La captura manual sigue siendo válida aunque el área no exista en un catálogo.
-- Como mejora administrable, el formulario dinámico soporta `texto-sugerido`: texto libre con sugerencias obtenidas de un catálogo mantenible por administradores.
-- El catálogo propuesto es `MR_AREA_RESPONSABLE`; nace vacío para no convertir `GTIC` ni ningún dato de prueba en catálogo institucional por inferencia.
-- V1/V2 históricas no se mutan retroactivamente. Las definiciones ya existentes continúan siendo válidas como texto manual; nuevas versiones pueden usar el control administrable sin perder la escritura libre.
+- **Responsable o dueño del riesgo / área responsable**: lista desplegable administrable mediante `MR_AREA_RESPONSABLE`, con opción `Otro / Escribir manualmente…`. El catálogo nace vacío para no convertir `GTIC` ni otro dato de prueba en valor institucional por inferencia.
+- **Respuesta al riesgo**: lista desplegable administrable mediante `MR_RESPUESTA_RIESGO`, conservando como valores iniciales `EVITAR`, `MITIGAR`, `TRANSFERIR` y `ACEPTAR`, y con opción `Otro / Escribir manualmente…` para respuestas institucionales futuras.
+- El tipo dinámico `texto-sugerido` conserva el código de catálogo cuando se selecciona una opción administrada y acepta texto libre cuando se elige captura manual.
+- Cada campo tiene su **propio mantenimiento de catálogo** dentro del Form Builder; los dos catálogos son independientes.
+- Al clonar una versión existente para crear un nuevo borrador, la aplicación adapta automáticamente `dueno_riesgo` y `respuesta_riesgo` al patrón flexible sin modificar la versión origen.
+- V1/V2 históricas no se mutan retroactivamente ni cambian sus hashes. La mejora aplica a nuevos borradores/versiones administrables.
 
 ## 2. RTO/RPO institucionales
 
