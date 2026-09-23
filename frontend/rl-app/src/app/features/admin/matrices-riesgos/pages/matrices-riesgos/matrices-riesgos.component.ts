@@ -2092,15 +2092,24 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
             {
               id: "dueno_riesgo",
               clave: "dueno_riesgo",
-              etiqueta: "Dueño del riesgo",
-              tipo: "texto",
+              etiqueta: "Responsable o dueño del riesgo (área responsable)",
+              tipo: "texto-sugerido",
+              codigoCatalogo: "MR_AREA_RESPONSABLE",
               obligatorio: true,
-              soloLectura: false
+              soloLectura: false,
+              placeholder: "Escriba el área responsable",
+              textoAyuda: "Entrada manual con sugerencias administrables; se permite escribir un área que no esté catalogada."
             }
           ]
         }
       ],
-      catalogos: [],
+      catalogos: [
+        {
+          codigo: "MR_AREA_RESPONSABLE",
+          nombre: "Áreas responsables (sugerencias)",
+          elementos: []
+        }
+      ],
       reglas: []
     };
 
