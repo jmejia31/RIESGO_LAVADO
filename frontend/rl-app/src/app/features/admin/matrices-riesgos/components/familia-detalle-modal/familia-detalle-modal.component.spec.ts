@@ -257,7 +257,7 @@ describe('FamiliaDetalleModalComponent — UI-FAM.2', () => {
     expect(ver).toHaveBeenCalledWith({ familia, version: versiones[1], modoEdicion: false });
   });
 
-  it('10b. solicita ediciÃ³n de una versiÃ³n desde el detalle sin derivar al gestor', () => {
+  it('10b. solicita edición de una versión desde el detalle sin derivar al gestor', () => {
     vi.spyOn(service, 'obtenerFamiliaFormularioPorId').mockReturnValue(of(familia));
     const fixture = crearComponente();
     const ver = vi.spyOn(fixture.componentInstance.verDefinicion, 'emit');
