@@ -87,6 +87,7 @@ export interface CampoFormulario {
   /** Conserva el tipo recibido cuando el renderer debe degradarlo a `desconocido`. */
   tipoOriginal?: string | null;
   codigoCatalogo?: string | null;
+  permiteValorManual?: boolean;
   opciones?: string[] | null;
   formula?: string | null;
   obligatorio: boolean;
