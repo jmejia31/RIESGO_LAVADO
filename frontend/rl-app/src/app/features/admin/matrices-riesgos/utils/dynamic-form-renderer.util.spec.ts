@@ -69,6 +69,42 @@ describe('Renderer dinámico — normalización defensiva', () => {
     }));
   });
 
+  it('corrige mojibake en títulos, etiquetas y catálogos sin alterar códigos técnicos', () => {
+    const bad = '\u00EF\u00BF\u00BD';
+    const definicion = normalizarDefinicionFormulario({
+      codigoFormulario: 'MATRIZ_RIESGOS_LAFT',
+      nombreFormulario: 'Matriz de Riesgos LA/FT',
+      secciones: [{
+        clave: 'identificacion',
+        titulo: `Identificaci${bad}n del riesgo`,
+        campos: [
+          { clave: 'area_principal', etiqueta: `${bad}rea principal`, tipo: 'texto' },
+          { clave: 'dueno_riesgo', etiqueta: `Due${bad}o del riesgo`, tipo: 'texto' },
+          { clave: 'objetivos_estrategicos', etiqueta: `Objetivo(s) estrat${bad}gico(s)`, tipo: 'texto' },
+          { clave: 'regimen_afectado', etiqueta: `R${bad}gimen afectado`, tipo: 'texto' },
+          { clave: 'transversalidad', etiqueta: `Transversalidad o interrelaci${bad}n con otros riesgos`, tipo: 'texto' }
+        ]
+      }],
+      catalogos: [{
+        codigo: 'MR_IMPACTO_1_5',
+        nombre: 'Impacto',
+        elementos: [{ codigo: '5', valor: `5 - Catastr${bad}fico`, orden: 5 }]
+      }]
+    });
+
+    expect(definicion.codigoFormulario).toBe('MATRIZ_RIESGOS_LAFT');
+    expect(definicion.secciones[0].titulo).toBe('Identificación del riesgo');
+    expect(definicion.secciones[0].campos.map(campo => campo.etiqueta)).toEqual([
+      'Área principal',
+      'Dueño del riesgo',
+      'Objetivo(s) estratégico(s)',
+      'Régimen afectado',
+      'Transversalidad o interrelación con otros riesgos'
+    ]);
+    expect(definicion.catalogos?.[0].codigo).toBe('MR_IMPACTO_1_5');
+    expect(definicion.catalogos?.[0].elementos[0].valor).toBe('5 - Catastrófico');
+  });
+
   it('ordena secciones y limita columnas/anchos inválidos a defaults seguros', () => {
     const definicion = normalizarDefinicionFormulario({
       secciones: [

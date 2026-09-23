@@ -1,4 +1,5 @@
 import { ReglaCalculoMatrices } from './matrices-riesgos.models';
+import { normalizarTextoVisibleUtf8 } from '../utils/text-encoding.util';
 
 export type TipoControlBuilder =
   | 'texto'
@@ -163,6 +164,11 @@ function texto(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
+function textoVisible(value: unknown): string | undefined {
+  const valor = texto(value);
+  return valor ? normalizarTextoVisibleUtf8(valor) : undefined;
+}
+
 function numeroEnteroPositivo(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isInteger(value) && value > 0 ? value : fallback;
 }
@@ -237,14 +243,14 @@ function normalizarCatalogo(raw: unknown, codigoMapa: string | undefined, index:
   if (!esObjeto(raw)) return null;
 
   const codigo = texto(raw['codigo']) ?? texto(raw['identificador']) ?? codigoMapa ?? `CATALOGO_${index + 1}`;
-  const nombre = texto(raw['nombre']) ?? texto(raw['etiqueta']) ?? texto(raw['descripcion']) ?? codigo;
+  const nombre = textoVisible(raw['nombre']) ?? textoVisible(raw['etiqueta']) ?? textoVisible(raw['descripcion']) ?? codigo;
   const elementosFuente: 'elementos' | 'elementosRespaldo' = Array.isArray(raw['elementos']) ? 'elementos' : 'elementosRespaldo';
   const rawElementos = Array.isArray(raw[elementosFuente]) ? raw[elementosFuente] as unknown[] : [];
   const elementos: ElementoCatalogoBuilderModel[] = rawElementos
     .filter(esObjeto)
     .map((elemento, elementoIndex) => ({
       codigo: texto(elemento['codigo']) ?? `ELEMENTO_${elementoIndex + 1}`,
-      valor: texto(elemento['valor']) ?? texto(elemento['etiqueta']) ?? texto(elemento['codigo']) ?? `Elemento ${elementoIndex + 1}`,
+      valor: textoVisible(elemento['valor']) ?? textoVisible(elemento['etiqueta']) ?? texto(elemento['codigo']) ?? `Elemento ${elementoIndex + 1}`,
       orden: numeroEnteroPositivo(elemento['orden'], elementoIndex + 1),
       metadatosOriginales: clonarJson(elemento)
     }));
@@ -314,15 +320,19 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           id: `field_${texto(cmp['identificador']) ?? clave}`,
           clave,
           claveFuente,
-          etiqueta: texto(cmp['etiqueta']) ?? `Campo ${cmpIdx + 1}`,
-          descripcion: texto(cmp['descripcion']),
+          etiqueta: textoVisible(cmp['etiqueta']) ?? `Campo ${cmpIdx + 1}`,
+          descripcion: textoVisible(cmp['descripcion']),
           tipo: tipoResuelto.tipo,
           tipoOriginal: tipoResuelto.tipoOriginal,
           catalogoFuente,
           formulaFuente,
           codigoCatalogo: catalogoFuente ? texto(cmp[catalogoFuente]) : undefined,
           permiteValorManual: cmp['permiteValorManual'] === true,
-          opciones: Array.isArray(cmp['opciones']) ? (cmp['opciones'] as unknown[]).filter((opcion): opcion is string => typeof opcion === 'string') : undefined,
+          opciones: Array.isArray(cmp['opciones'])
+            ? (cmp['opciones'] as unknown[])
+              .filter((opcion): opcion is string => typeof opcion === 'string')
+              .map(opcion => normalizarTextoVisibleUtf8(opcion))
+            : undefined,
           formula: formulaFuente ? texto(cmp[formulaFuente]) : undefined,
           formulaId: typeof cmp['formulaId'] === 'number' ? cmp['formulaId'] : undefined,
           formulaVersionId: typeof cmp['formulaVersionId'] === 'number' ? cmp['formulaVersionId'] : undefined,
@@ -330,8 +340,8 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           formulaVersion: typeof cmp['formulaVersion'] === 'number' ? cmp['formulaVersion'] : undefined,
           obligatorio: !!cmp['obligatorio'],
           soloLectura: !!cmp['soloLectura'] || tipoResuelto.tipo === 'formula',
-          placeholder: texto(cmp['placeholder']),
-          textoAyuda: texto(cmp['textoAyuda']),
+          placeholder: textoVisible(cmp['placeholder']),
+          textoAyuda: textoVisible(cmp['textoAyuda']),
           orden: numeroEnteroPositivo(cmp['orden'], cmpIdx + 1),
           anchoColumnas: typeof cmp['anchoColumnas'] === 'number' && cmp['anchoColumnas'] >= 1 && cmp['anchoColumnas'] <= 6 ? cmp['anchoColumnas'] : 1,
           metadatosOriginales: clonarJson(cmp)
@@ -344,7 +354,7 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
         id: `sec_${texto(sec['identificador']) ?? clave}`,
         clave,
         claveFuente,
-        titulo: texto(sec['titulo']) ?? `Sección ${secIdx + 1}`,
+        titulo: textoVisible(sec['titulo']) ?? `Sección ${secIdx + 1}`,
         orden: numeroEnteroPositivo(sec['orden'], secIdx + 1),
         columnasPorFila: typeof sec['columnasPorFila'] === 'number' && sec['columnasPorFila'] >= 1 && sec['columnasPorFila'] <= 6 ? sec['columnasPorFila'] : 2,
         campos,
@@ -363,8 +373,8 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
 
     return {
       codigoFormulario: texto(rawDefinicion[codigoFuente]) ?? defaultCodigo,
-      nombreFormulario: texto(rawDefinicion[nombreFuente]) ?? defaultNombre,
-      descripcion: texto(rawDefinicion['descripcion']),
+      nombreFormulario: textoVisible(rawDefinicion[nombreFuente]) ?? normalizarTextoVisibleUtf8(defaultNombre),
+      descripcion: textoVisible(rawDefinicion['descripcion']),
       secciones: secciones.length > 0 ? secciones : construirModeloVacio(defaultCodigo, defaultNombre).secciones,
       catalogos: catalogosNormalizados.catalogos,
       reglas,

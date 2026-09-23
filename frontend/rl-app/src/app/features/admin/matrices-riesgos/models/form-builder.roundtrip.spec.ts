@@ -2,9 +2,9 @@ import { duplicarSeccionBuilderModel, normalizarJsonABuilderModel, serializarBui
 import { validarFormBuilderModel } from '../utils/form-builder-validator.util';
 
 describe('Contrato bidireccional del Form Builder', () => {
-  it('duplica una secciÃ³n dos veces con copias profundas, IDs y claves Ãºnicos', () => {
+  it('duplica una sección dos veces con copias profundas, IDs y claves únicos', () => {
     const original: FormBuilderModel = {
-      codigoFormulario: 'FORM_DUP', nombreFormulario: 'DuplicaciÃ³n', catalogos: [{ codigo: 'CAT', nombre: 'CatÃ¡logo', elementos: [{ codigo: 'A', valor: 'Alto', orden: 1 }] }],
+      codigoFormulario: 'FORM_DUP', nombreFormulario: 'Duplicación', catalogos: [{ codigo: 'CAT', nombre: 'Catálogo', elementos: [{ codigo: 'A', valor: 'Alto', orden: 1 }] }],
       secciones: [{ id: 'sec_1', clave: 'riesgo', titulo: 'Riesgo', orden: 1, columnasPorFila: 3, campos: [
         { id: 'field_1', clave: 'nivel', etiqueta: 'Nivel', tipo: 'selector-catalogo', codigoCatalogo: 'CAT', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
         { id: 'field_2', clave: 'factor', etiqueta: 'Factor', tipo: 'formula', formula: 'nivel * 2', obligatorio: false, soloLectura: true, anchoColumnas: 2 }
@@ -32,13 +32,49 @@ describe('Contrato bidireccional del Form Builder', () => {
     expect(validarFormBuilderModel(roundTrip)).toEqual([]);
   });
 
-  it('duplica secciÃ³n vacÃ­a conservando columnas y no muta el origen', () => {
+  it('duplica sección vacía conservando columnas y no muta el origen', () => {
     const model: FormBuilderModel = { codigoFormulario: 'F', nombreFormulario: 'F', secciones: [{ id: 's', clave: 's', titulo: 'S', orden: 1, columnasPorFila: 6, campos: [] }] };
     const result = duplicarSeccionBuilderModel(model, 's');
     expect(result!.seccion.campos).toEqual([]);
     expect(result!.seccion.columnasPorFila).toBe(6);
     expect(model.secciones).toHaveLength(1);
     expect(result!.model.secciones).toHaveLength(2);
+  });
+
+  it('repara texto visible corrupto al cargar y persiste la corrección sin tocar claves técnicas', () => {
+    const bad = '\u00EF\u00BF\u00BD';
+    const original = {
+      codigoFormulario: 'MATRIZ_RIESGOS_LAFT',
+      nombreFormulario: 'Matriz de Riesgos LA/FT',
+      secciones: [{
+        clave: 'identificacion',
+        titulo: `Identificaci${bad}n del riesgo`,
+        campos: [
+          { clave: 'area_principal', etiqueta: `${bad}rea principal`, tipo: 'texto', obligatorio: true },
+          { clave: 'dueno_riesgo', etiqueta: `Due${bad}o del riesgo`, tipo: 'texto', obligatorio: true }
+        ]
+      }],
+      catalogos: [{
+        codigo: 'MR_NIVEL_RIESGO',
+        nombre: 'Nivel de riesgo',
+        elementos: [{ codigo: 'CRITICO', valor: `Cr${bad}tico`, orden: 1 }]
+      }]
+    };
+
+    const model = normalizarJsonABuilderModel(JSON.stringify(original));
+    expect(model.codigoFormulario).toBe('MATRIZ_RIESGOS_LAFT');
+    expect(model.secciones[0].titulo).toBe('Identificación del riesgo');
+    expect(model.secciones[0].campos[0].etiqueta).toBe('Área principal');
+    expect(model.secciones[0].campos[1].etiqueta).toBe('Dueño del riesgo');
+    expect(model.catalogos?.[0].elementos[0].valor).toBe('Crítico');
+
+    const serializado = JSON.parse(serializarBuilderModelAJson(model));
+    expect(serializado.codigoFormulario).toBe('MATRIZ_RIESGOS_LAFT');
+    expect(serializado.secciones[0].titulo).toBe('Identificación del riesgo');
+    expect(serializado.secciones[0].campos[0].clave).toBe('area_principal');
+    expect(serializado.secciones[0].campos[0].etiqueta).toBe('Área principal');
+    expect(serializado.catalogos[0].elementos[0].codigo).toBe('CRITICO');
+    expect(serializado.catalogos[0].elementos[0].valor).toBe('Crítico');
   });
 
   it('preserva metadatos conocidos y futuros al editar una propiedad soportada', () => {

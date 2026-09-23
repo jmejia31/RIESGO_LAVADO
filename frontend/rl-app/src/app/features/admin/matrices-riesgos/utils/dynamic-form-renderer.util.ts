@@ -5,6 +5,7 @@ import {
   RespuestasFormulario,
   ValorRespuestaFormulario
 } from '../models/matrices-riesgos.models';
+import { normalizarTextoVisibleUtf8 } from './text-encoding.util';
 
 export type TipoCampoRenderer =
   | 'texto'
@@ -84,16 +85,9 @@ function textoLimpio(valor: unknown): string {
 }
 
 function normalizarEtiquetaVisible(valor: string): string {
-  return valor
-    .replace(/Identificacion/gi, 'Identificación')
-    .replace(/IdentificaciÃ³n/gi, 'Identificación')
-    .replace(/Due[?Ã]o/gi, 'Dueño')
-    .replace(/Evaluacion/gi, 'Evaluación')
-    .replace(/Configuracion/gi, 'Configuración')
-    .replace(/Definicion/gi, 'Definición')
-    .replace(/\bVersion\b/gi, 'Versión')
-    .replace(/\bArea\b/gi, 'Área');
+  return normalizarTextoVisibleUtf8(valor);
 }
+
 
 function numeroEnteroEnRango(valor: unknown, defecto: number, minimo: number, maximo: number): number {
   const numero = Number(valor);
@@ -121,7 +115,7 @@ function opcionesSeguras(valor: unknown): string[] | null {
   if (!Array.isArray(valor)) return null;
 
   const opciones = valor
-    .map(opcion => textoLimpio(opcion))
+    .map(opcion => normalizarTextoVisibleUtf8(textoLimpio(opcion)))
     .filter(Boolean);
 
   return opciones.length > 0 ? Array.from(new Set(opciones)) : null;
@@ -221,6 +215,52 @@ function normalizarSecciones(valor: unknown): DefinicionFormularioEditable['secc
     .sort((a, b) => a.orden - b.orden);
 }
 
+function normalizarCatalogosVisibles(valor: unknown): DefinicionFormularioEditable['catalogos'] {
+  if (!Array.isArray(valor)) return undefined;
+
+  return valor
+    .map((catalogo, indiceCatalogo) => {
+      const raw = comoRegistro(catalogo);
+      if (!raw) return null;
+
+      const codigo = textoLimpio(primerValor(raw, ['codigo', 'code', 'identificador']));
+      if (!codigo) return null;
+
+      const elementosRaw = primerValor(raw, ['elementos', 'items', 'opciones']);
+      const elementos = Array.isArray(elementosRaw)
+        ? elementosRaw
+          .map((elemento, indiceElemento) => {
+            const rawElemento = comoRegistro(elemento);
+            if (!rawElemento) return null;
+            const codigoElemento = textoLimpio(primerValor(rawElemento, ['codigo', 'code', 'id']));
+            if (!codigoElemento) return null;
+            return {
+              codigo: codigoElemento,
+              valor: normalizarTextoVisibleUtf8(
+                textoLimpio(primerValor(rawElemento, ['valor', 'etiqueta', 'label'])) || codigoElemento
+              ),
+              orden: numeroEnteroEnRango(
+                primerValor(rawElemento, ['orden', 'order']),
+                indiceElemento + 1,
+                0,
+                100000
+              )
+            };
+          })
+          .filter(noEsNulo)
+        : [];
+
+      return {
+        codigo,
+        nombre: normalizarTextoVisibleUtf8(
+          textoLimpio(primerValor(raw, ['nombre', 'etiqueta', 'name'])) || codigo
+        ),
+        elementos
+      };
+    })
+    .filter(noEsNulo);
+}
+
 function objetoDefinicion(valor: unknown): Record<string, unknown> | null {
   if (typeof valor === 'string') {
     if (!valor.trim()) return null;
@@ -250,11 +290,11 @@ export function normalizarDefinicionFormulario(
 
   return {
     codigoFormulario: textoLimpio(primerValor(raw, ['codigoFormulario', 'formCode'])) || codigoDefecto,
-    nombreFormulario: textoLimpio(primerValor(raw, ['nombreFormulario', 'formName'])) || nombreDefecto || codigoDefecto,
+    nombreFormulario: normalizarTextoVisibleUtf8(
+      textoLimpio(primerValor(raw, ['nombreFormulario', 'formName'])) || nombreDefecto || codigoDefecto
+    ),
     secciones: normalizarSecciones(seccionesRaw),
-    catalogos: Array.isArray(catalogosRaw)
-      ? catalogosRaw as DefinicionFormularioEditable['catalogos']
-      : undefined,
+    catalogos: normalizarCatalogosVisibles(catalogosRaw),
     reglas: Array.isArray(reglasRaw)
       ? reglasRaw as DefinicionFormularioEditable['reglas']
       : undefined
