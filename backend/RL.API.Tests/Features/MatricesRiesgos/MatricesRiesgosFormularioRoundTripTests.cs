@@ -112,7 +112,7 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
     }
 
     [Fact]
-    public void PrepararCamposAdministrables_ConvierteDuenoYRespuestaSinMutarContratoHistorico()
+    public void PrepararCamposAdministrables_ConvierteAreaYDuenoSinAlterarRespuestaRiesgo()
     {
         const string jsonOrigen = """
         {
@@ -121,6 +121,7 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
             {
               "clave":"identificacion",
               "campos":[
+                {"clave":"area_principal","etiqueta":"Área principal","tipo":"texto","obligatorio":true},
                 {"clave":"dueno_riesgo","etiqueta":"Dueño","tipo":"texto","obligatorio":true}
               ]
             },
@@ -148,22 +149,31 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
 
         JsonNode root = JsonNode.Parse(jsonClonado)!;
         JsonArray secciones = root["secciones"]!.AsArray();
-        JsonObject dueno = secciones[0]!["campos"]![0]!.AsObject();
+        JsonObject area = secciones[0]!["campos"]![0]!.AsObject();
+        JsonObject dueno = secciones[0]!["campos"]![1]!.AsObject();
         JsonObject respuesta = secciones[1]!["campos"]![0]!.AsObject();
+
+        Assert.Equal("selector-catalogo", area["tipo"]!.GetValue<string>());
+        Assert.True(area["permiteValorManual"]!.GetValue<bool>());
+        Assert.Equal("MR_AREA_PRINCIPAL", area["codigoCatalogo"]!.GetValue<string>());
+
         Assert.Equal("selector-catalogo", dueno["tipo"]!.GetValue<string>());
         Assert.True(dueno["permiteValorManual"]!.GetValue<bool>());
         Assert.Equal("MR_AREA_RESPONSABLE", dueno["codigoCatalogo"]!.GetValue<string>());
+
         Assert.Equal("selector-catalogo", respuesta["tipo"]!.GetValue<string>());
-        Assert.True(respuesta["permiteValorManual"]!.GetValue<bool>());
         Assert.Equal("MR_RESPUESTA_RIESGO", respuesta["codigoCatalogo"]!.GetValue<string>());
+        Assert.Null(respuesta["permiteValorManual"]);
 
         JsonArray catalogos = root["catalogos"]!.AsArray();
+        Assert.Contains(catalogos, nodo => nodo?["codigo"]?.GetValue<string>() == "MR_AREA_PRINCIPAL");
         Assert.Contains(catalogos, nodo => nodo?["codigo"]?.GetValue<string>() == "MR_AREA_RESPONSABLE");
         Assert.Single(catalogos.Where(nodo => nodo?["codigo"]?.GetValue<string>() == "MR_RESPUESTA_RIESGO"));
         Assert.True(root["extensionRaiz"]!["preservar"]!.GetValue<bool>());
 
         JsonNode original = JsonNode.Parse(jsonOrigen)!;
         Assert.Equal("texto", original["secciones"]![0]!["campos"]![0]!["tipo"]!.GetValue<string>());
+        Assert.Equal("texto", original["secciones"]![0]!["campos"]![1]!["tipo"]!.GetValue<string>());
     }
     [Fact]
     public async Task EndpointVersionPorId_DelegaIdExactoYRetorna200()
