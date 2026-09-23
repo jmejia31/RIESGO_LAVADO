@@ -1414,10 +1414,8 @@ namespace RL.API.Features.Listas.Persistence
                 GROUP BY LSP_NO_DOCUMENTO
             ), Coincidencias AS (
                 SELECT /*+
-                          LEADING(DE R P)
-                          USE_HASH(R)
-                          USE_NL(P)
-                          FULL(DE)
+                          LEADING(R DE P)
+                          USE_NL(DE P)
                           FULL(R)
                        */
                        P.RTN,
@@ -1434,8 +1432,8 @@ namespace RL.API.Features.Listas.Persistence
                        END AS FECHA_REGISTRO_INTERNO,
                        DE.ES_PROVEEDOR_IHSS,
                        GREATEST(NVL(pp.TIENE_MOTIVO, 0), NVL(pr.TIENE_MOTIVO, 0)) AS TIENE_MOTIVO
-                FROM DNP_IHSS.DATOS_EMPRESA DE
-                INNER JOIN DNP_IHSS.REPORTE_COINCIDENCIAS R ON R.NUMERO_PATRONO = DE.NUMERO_PATRONAL
+                FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
+                INNER JOIN DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = R.NUMERO_PATRONO
                 INNER JOIN MMATAMOROS.PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL
                 LEFT JOIN POSITIVOS_AGG pp ON pp.LSP_NO_DOCUMENTO = P.NUMEPATRO
                 LEFT JOIN POSITIVOS_AGG pr ON pr.LSP_NO_DOCUMENTO = P.RTN
