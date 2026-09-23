@@ -1438,7 +1438,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Decisión del propietario: `GTIC` y `MITIGAR` permanecen `TEST_DATA_ONLY`; `PRODUCTION_TEST_PLACEHOLDERS=2`, pero `PRODUCTION_TEST_PLACEHOLDERS_BLOCKING=0` y `PRODUCTION_VALUES_PENDING=0`.
 - El contrato funcional de `dueno_riesgo` y `respuesta_riesgo` queda en patrón híbrido: lista desplegable administrable + opción `Otro / Escribir manualmente…`.
 - `dueno_riesgo` usa `MR_AREA_RESPONSABLE`, creado vacío; `respuesta_riesgo` usa su catálogo independiente `MR_RESPUESTA_RIESGO` con los valores base ya existentes.
-- Al clonar una versión, el nuevo borrador adapta ambos campos a `texto-sugerido`; la versión origen no se modifica ni cambia de hash.
+- Al clonar una versión, el nuevo borrador adapta ambos campos a `selector-catalogo` + `permiteValorManual=true`; la versión origen no se modifica ni cambia de hash.
 - V1/V2 persistidas e históricos no se modifican. No hay DML/DDL Oracle ni cambio de modelo físico.
 - Impacto: contrato de formulario dinámico, renderer Angular y validador ASP.NET. Interfaces REST, tablas Oracle, tenancy y seguridad: sin cambio.
 - `MAPA_ARQUITECTURA=NO_APLICA`: no cambia la relación entre componentes ni el ownership de datos.
