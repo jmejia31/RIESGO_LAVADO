@@ -50,6 +50,10 @@ jobs:
         shell: pwsh
         run: ./scripts/validation/validate_gov02_gov03_quality_container.ps1
 
+      - name: Validate UTF-8 text integrity
+        shell: pwsh
+        run: ./tools/validate_text_encoding.ps1
+
       - name: Run .NET analyzers with compiler warnings blocking
         run: >-
           dotnet build RIESGO_LAVADO.sln
