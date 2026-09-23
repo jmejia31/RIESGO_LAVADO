@@ -1970,6 +1970,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                             Tipo = LeerTexto(campoElement, "tipo", "texto"),
                             CodigoCatalogo = LeerTextoNullable(campoElement, "codigoCatalogo")
                                 ?? LeerTextoNullable(campoElement, "catalogoCodigo"),
+                            PermiteValorManual = LeerBooleano(campoElement, "permiteValorManual", false),
                             Obligatorio = LeerBooleano(campoElement, "obligatorio", false),
                             SoloLectura = LeerBooleano(campoElement, "soloLectura", false)
                         });
