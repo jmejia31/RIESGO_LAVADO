@@ -25,7 +25,7 @@ Verificar existencia, tamaño razonable, checksum, log de Data Pump, fecha/hora,
 
 ## RESTORE_VALIDATION
 
-`RESTORE_INSTRUCTIONS_COMPLETE=TRUE`. La validación destructiva institucional no se ejecuta sobre `hpprod1`; requiere un ambiente aislado y privilegios DBA. Hasta disponer de ese objetivo, el paquete es reproducible y listo para la prueba institucional de continuidad, sin afirmar restore productivo.
+`RESTORE_INSTRUCTIONS_COMPLETE=TRUE`. Como política general, un restore institucional debe preferir un objetivo aislado y privilegios DBA. Para esta Fase 7 se ejecutó posteriormente una prueba excepcional sobre `hpprod1/RIESGO_LAVADO` con autorización expresa y `PHYSICAL_ISOLATION=FALSE`; el resultado y la excepción están registrados abajo. No se afirma restore productivo.
 
 
 ## EJECUCION_REAL_2026_09_22_23

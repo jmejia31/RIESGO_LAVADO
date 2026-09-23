@@ -12,7 +12,7 @@ El inventario está en `FASE_7_INVENTARIO_RELEASE.md` y el manifest en `deployme
 
 ## Continuidad
 
-Rollback de código/configuración es redeploy/restauración aprobada. El rollback Oracle de V2 solo es lógico y condicionado; nunca elimina la historia V1. Backup/restore se documentan sin ejecutar restore destructivo en `hpprod1`. La matriz de contingencia cubre Oracle, API, frontend, storage, exportación, configuración, disk full y estados de versión.
+Rollback de código/configuración es redeploy/restauración aprobada. El rollback Oracle de V2 solo es lógico y condicionado; nunca elimina la historia V1. La prueba real de clean install/restore se ejecutó posteriormente en `hpprod1/RIESGO_LAVADO` con autorización expresa y excepción de aislamiento documentada; ver la actualización de cierre al final de este documento. La matriz de contingencia cubre Oracle, API, frontend, storage, exportación, configuración, disk full y estados de versión.
 
 ## Paquetes y configuración
 
@@ -28,7 +28,7 @@ Se entregan manual técnico, funcional, operativo, guía DBA, soporte, plan/mate
 
 ## Defectos y deuda
 
-P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos: placeholders de prueba (2), RTO/RPO no definidos, restore institucional sin objetivo aislado, deuda Jurídicas, VER_ID 27/28 y RBAC granular global. No constituyen una afirmación de producción desplegada.
+P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos como restricciones/deudas no bloqueantes del cierre de desarrollo: placeholders de prueba (2), RTO/RPO no definidos, excepción de aislamiento de la prueba real, latencia fría de Monitoreo contra el origen Oracle, VER_ID 27/28 y RBAC granular global. No constituyen una afirmación de producción desplegada.
 
 ## Conclusión
 
@@ -42,7 +42,7 @@ P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos: placeholders de prue
 - Frontend: `npm ci`, lint, producción y `npm audit=0` PASS; tests `781/781`; E2E `36/36`.
 - Backend: regresión completa `636/636`; OracleIntegration dedicado `5/5`; el harness ya no exige `B10_*` retiradas y serializa/limpia su pool.
 - Validadores: estructura, SQL, documentación, manifest/config drift y release package PASS. Python no está instalado para `validate_agent_skills.py`; Docker no está disponible localmente.
-- Restore real y clean install sobre un objetivo Oracle aislado: `NOT_EXECUTED_EXTERNAL_ENVIRONMENT`; no se declara PASS artificial ni se tocó `hpprod1` destructivamente.
+- Estado histórico al momento del primer cierre documental: clean install/restore aislado estaba `NOT_EXECUTED_EXTERNAL_ENVIRONMENT`. Este punto quedó superado por la ejecución real autorizada descrita en la actualización 2026-09-23; el objetivo real no fue aislado y esa excepción queda explícita.
 - Quality Gate del commit de release `70c1a7edffe614fa3cc36fab58b02077dbfe039b`: run `35393615771`, `completed/success`; el CI verificó también compose y builds de contenedores con usuarios non-root.
 
 

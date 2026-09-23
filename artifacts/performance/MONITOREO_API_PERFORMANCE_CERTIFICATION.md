@@ -35,14 +35,11 @@ Se requiere una optimizacion fisica DBA separada, con planes y medicion antes/
 despues, para `DNP_IHSS.REPORTE_COINCIDENCIAS`, las fuentes de socios y
 representantes y las claves de `RL_LISTA_POSITIVOS`.
 
-**`DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`**
+**Estado histórico de la auditoría:** `DATABASE_PHYSICAL_OPTIMIZATION_REQUIRED=TRUE`. La decisión DBA posterior no autorizó cambios físicos no replicables en `DNP_IHSS`/`MMATAMOROS`; el addendum de 2026-09-23 registra la mitigación backend adoptada en su lugar.
 
 ## Cambios preservados
 
-La implementacion mantiene paginacion DB-side, metadata cacheada unicamente,
-pagina sin conteo preventivo, lookups set-based, cancelacion ODP.NET y rutas
-dedicadas de exportacion. La evidencia final demuestra que esas mejoras no
-alcanzan los umbrales full-stack exigidos contra el Oracle disponible.
+La implementación evaluada en la certificación histórica mantenía paginación DB-side, caché de metadata, página sin conteo preventivo, lookups set-based, cancelación ODP.NET y rutas dedicadas de exportación. Esa corrida no alcanzó los umbrales full-stack. El addendum posterior amplía el caché a páginas de Monitoreo y registra su efecto sin reclasificar la latencia fría como PASS.
 
 
 ## Addendum 2026-09-23 — mitigación backend sin tocar schemas externos
