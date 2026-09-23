@@ -2,7 +2,6 @@ import { ReglaCalculoMatrices } from './matrices-riesgos.models';
 
 export type TipoControlBuilder =
   | 'texto'
-  | 'texto-sugerido'
   | 'numero'
   | 'fecha'
   | 'texto-largo'
@@ -56,6 +55,7 @@ export interface CampoBuilderModel {
   formulaCodigo?: string;
   formulaVersion?: number;
   codigoCatalogo?: string;
+  permiteValorManual?: boolean;
   opciones?: string[];
   formula?: string;
   obligatorio: boolean;
@@ -140,7 +140,6 @@ export function duplicarSeccionBuilderModel(model: FormBuilderModel, seccionId: 
 
 export const TIPOS_CONTROLES_DISPONIBLES: TipoControlDefinicion[] = [
   { tipo: 'texto', etiqueta: 'Texto', descripcion: 'Entrada de texto corto', icono: 'font-size', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
-  { tipo: 'texto-sugerido', etiqueta: 'Texto con sugerencias', descripcion: 'Entrada manual con sugerencias administrables desde un catálogo; no restringe el valor escrito', icono: 'list', categoria: 'seleccion', requiereCatalogo: true, requiereOpciones: false, requiereFormula: false },
   { tipo: 'numero', etiqueta: 'Número', descripcion: 'Valores numéricos enteros o decimales', icono: 'hashtag', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
   { tipo: 'fecha', etiqueta: 'Fecha', descripcion: 'Selector de fecha (dd/mm/aaaa)', icono: 'calendar', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
   { tipo: 'texto-largo', etiqueta: 'Texto largo', descripcion: 'Área de texto de múltiples líneas', icono: 'align-left', categoria: 'basico', requiereCatalogo: false, requiereOpciones: false, requiereFormula: false },
@@ -175,9 +174,6 @@ function normalizarTipoBuilder(value: unknown): { tipo: TipoControlBuilder; tipo
 
   switch (normalizado) {
     case 'texto': tipo = 'texto'; break;
-    case 'texto-sugerido':
-    case 'texto-con-sugerencias':
-    case 'texto-catalogo-sugerido': tipo = 'texto-sugerido'; break;
     case 'numero':
     case 'numérico':
     case 'numerico':
@@ -325,6 +321,7 @@ export function normalizarJsonABuilderModel(jsonStr: string, defaultCodigo: stri
           catalogoFuente,
           formulaFuente,
           codigoCatalogo: catalogoFuente ? texto(cmp[catalogoFuente]) : undefined,
+          permiteValorManual: cmp['permiteValorManual'] === true,
           opciones: Array.isArray(cmp['opciones']) ? (cmp['opciones'] as unknown[]).filter((opcion): opcion is string => typeof opcion === 'string') : undefined,
           formula: formulaFuente ? texto(cmp[formulaFuente]) : undefined,
           formulaId: typeof cmp['formulaId'] === 'number' ? cmp['formulaId'] : undefined,
@@ -403,6 +400,7 @@ function serializarCampo(campo: CampoBuilderModel, index: number): JsonObject {
   const catalogoFuente = campo.catalogoFuente ?? ('codigoCatalogo' in raw ? 'codigoCatalogo' : 'catalogo' in raw ? 'catalogo' : 'codigoCatalogo');
   if (campo.codigoCatalogo) raw[catalogoFuente] = campo.codigoCatalogo;
   else if (esNuevo || catalogoFuente in raw) raw[catalogoFuente] = null;
+  if (campo.permiteValorManual || 'permiteValorManual' in raw) raw['permiteValorManual'] = !!campo.permiteValorManual;
 
   if (campo.opciones && campo.opciones.length > 0) raw['opciones'] = campo.opciones;
   else if (esNuevo || 'opciones' in raw) raw['opciones'] = null;
