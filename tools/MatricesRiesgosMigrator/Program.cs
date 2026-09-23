@@ -30,6 +30,10 @@ public static class Program
         bool inspectSourceRiskText = args.Any(a => string.Equals(a, "--inspect-source-risk-text", StringComparison.OrdinalIgnoreCase));
         bool repairRiskText = args.Any(a => string.Equals(a, "--repair-risk-text", StringComparison.OrdinalIgnoreCase));
         bool verifyRiskText = args.Any(a => string.Equals(a, "--verify-risk-text", StringComparison.OrdinalIgnoreCase));
+        string? inspectRiskCode = args
+            .FirstOrDefault(a => a.StartsWith("--inspect-risk-code=", StringComparison.OrdinalIgnoreCase))
+            ?.Split('=', 2)[1]
+            .Trim();
         string repoRoot = Directory.GetCurrentDirectory();
         while (!string.IsNullOrEmpty(repoRoot) && !File.Exists(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx")))
         {
@@ -44,9 +48,11 @@ public static class Program
         string excelPath = Path.Combine(repoRoot, "Matrices de Riesgos.xlsx");
         string schemaPath = Path.Combine(repoRoot, "database", "19_matrices_riesgos", "fase11", "formulario_matriz_riesgos_laft_v1.json");
 
-        string modo = inspectSourceRiskText
-            ? "INSPECCION TEXTO FUENTE"
-            : verifyRiskText
+        string modo = !string.IsNullOrWhiteSpace(inspectRiskCode)
+            ? $"INSPECCION UNICODE RIESGO {inspectRiskCode}"
+            : inspectSourceRiskText
+                ? "INSPECCION TEXTO FUENTE"
+                : verifyRiskText
                 ? "VERIFICACION TEXTO MAESTRO ORACLE"
                 : repairRiskText
                     ? (executeMigration ? "REPARACION TEXTO MAESTRO ORACLE" : "REPARACION TEXTO MAESTRO DRY-RUN")
@@ -94,7 +100,7 @@ public static class Program
             return 2;
         }
 
-        bool requiereOracle = executeMigration || enrichExisting || repairRiskText || verifyRiskText;
+        bool requiereOracle = executeMigration || enrichExisting || repairRiskText || verifyRiskText || !string.IsNullOrWhiteSpace(inspectRiskCode);
         if (!requiereOracle)
         {
             Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
@@ -126,6 +132,11 @@ public static class Program
         await connection.OpenAsync();
 
         Console.WriteLine("\n--- Conexión Oracle establecida ---");
+
+        if (!string.IsNullOrWhiteSpace(inspectRiskCode))
+        {
+            return await InspeccionarUnicodeRiesgoAsync(connection, sourceRisks, inspectRiskCode);
+        }
 
         if (repairRiskText || verifyRiskText)
         {
@@ -225,6 +236,67 @@ public static class Program
             || value.Contains("\u00F0\u0178", StringComparison.Ordinal);
     }
 
+    private static async Task<int> InspeccionarUnicodeRiesgoAsync(
+        OracleConnection connection,
+        IReadOnlyCollection<SourceRiskRow> sourceRisks,
+        string code)
+    {
+        SourceRiskRow? source = sourceRisks.FirstOrDefault(
+            r => string.Equals(r.Code, code, StringComparison.OrdinalIgnoreCase));
+
+        const string sql = @"
+            SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_DESCRIPCION
+              FROM RL_MR_RIESGOS
+             WHERE UPPER(RIE_CODIGO) = UPPER(:codigo)";
+
+        await using var cmd = new OracleCommand(sql, connection) { BindByName = true };
+        cmd.Parameters.Add(new OracleParameter("codigo", code));
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            Console.WriteLine($"RISK_INSPECT_STATUS=NOT_FOUND|{code}");
+            return 10;
+        }
+
+        string dbCode = reader.GetString(1);
+        string dbName = reader.GetString(2);
+        string dbDescription = reader.IsDBNull(3) ? string.Empty : reader.GetString(3);
+
+        Console.WriteLine($"RISK_INSPECT_CODE={dbCode}");
+        Console.WriteLine($"RISK_INSPECT_DB_NAME={dbName}");
+        Console.WriteLine($"RISK_INSPECT_DB_NAME_CODEPOINTS={FormatearCodePoints(dbName)}");
+        Console.WriteLine($"RISK_INSPECT_DB_NAME_MOJIBAKE={(ContieneMojibake(dbName) ? "YES" : "NO")}");
+        Console.WriteLine($"RISK_INSPECT_DB_DESCRIPTION_MOJIBAKE={(ContieneMojibake(dbDescription) ? "YES" : "NO")}");
+
+        if (source is not null)
+        {
+            Console.WriteLine($"RISK_INSPECT_SOURCE_NAME={source.Titulo}");
+            Console.WriteLine($"RISK_INSPECT_SOURCE_NAME_CODEPOINTS={FormatearCodePoints(source.Titulo)}");
+            Console.WriteLine($"RISK_INSPECT_NAME_EQUAL={(string.Equals(dbName, Truncar(source.Titulo, 250), StringComparison.Ordinal) ? "YES" : "NO")}");
+        }
+        else
+        {
+            Console.WriteLine("RISK_INSPECT_SOURCE_NAME=NOT_FOUND");
+        }
+
+        Console.WriteLine("RISK_INSPECT_STATUS=PASS");
+        return 0;
+    }
+
+    private static string FormatearCodePoints(string value)
+    {
+        if (string.IsNullOrEmpty(value)) return "<EMPTY>";
+
+        var parts = new List<string>();
+        foreach (Rune rune in value.EnumerateRunes())
+        {
+            parts.Add($"U+{rune.Value:X4}");
+        }
+
+        return string.Join(' ', parts);
+    }
+
     private static async Task<int> VerificarOCorregirTextoRiesgosAsync(
         OracleConnection connection,
         IReadOnlyCollection<SourceRiskRow> sourceRisks,
@@ -271,7 +343,8 @@ public static class Program
             .ToArray();
 
         var repairs = new List<RiskTextRepairItem>();
-        int cleanMismatches = 0;
+        int cleanNameMismatches = 0;
+        int cleanDescriptionMismatches = 0;
 
         foreach (SourceRiskRow source in sourceRisks.OrderBy(r => r.RowNumber))
         {
@@ -296,9 +369,10 @@ public static class Program
                     repairName,
                     repairDescription));
             }
-            else if (nameDiffers || descriptionDiffers)
+            else
             {
-                cleanMismatches++;
+                if (nameDiffers) cleanNameMismatches++;
+                if (descriptionDiffers) cleanDescriptionMismatches++;
             }
         }
 
@@ -308,7 +382,9 @@ public static class Program
         Console.WriteLine($"RISK_TEXT_MISSING_CODES={missingCodes.Length}");
         Console.WriteLine($"RISK_TEXT_DUPLICATE_CODES={duplicateCodes.Count}");
         Console.WriteLine($"RISK_TEXT_CORRUPTED_ROWS={repairs.Count}");
-        Console.WriteLine($"RISK_TEXT_CLEAN_MISMATCHES={cleanMismatches}");
+        Console.WriteLine($"RISK_TEXT_CLEAN_NAME_MISMATCHES={cleanNameMismatches}");
+        Console.WriteLine($"RISK_TEXT_CLEAN_DESCRIPTION_MISMATCHES={cleanDescriptionMismatches}");
+        Console.WriteLine($"RISK_TEXT_CLEAN_MISMATCHES={Math.Max(cleanNameMismatches, cleanDescriptionMismatches)}");
         Console.WriteLine($"RISK_TEXT_MODE={(ejecutarCorreccion ? "EXECUTE" : "DRY_RUN")}");
 
         foreach (string code in missingCodes)
