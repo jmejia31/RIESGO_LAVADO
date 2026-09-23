@@ -55,7 +55,7 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
       { codigo: 'RRHH', valor: 'Recursos Humanos' }
     ];
 
-    let host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_AREA_RESPONSABLE' }), 'GTIC');
+    let host = render(campo('selector-catalogo', { codigoCatalogo: 'MR_AREA_RESPONSABLE', permiteValorManual: true }), 'GTIC');
     const select = host.querySelector('select') as HTMLSelectElement;
 
     expect(select).not.toBeNull();
@@ -83,7 +83,7 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
 
   it('muestra automáticamente la captura manual cuando el valor guardado no está catalogado', () => {
     component.opcionesCatalogo = [{ codigo: 'MITIGAR', valor: 'Mitigar' }];
-    const host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_RESPUESTA_RIESGO' }), 'Respuesta especial');
+    const host = render(campo('selector-catalogo', { codigoCatalogo: 'MR_RESPUESTA_RIESGO', permiteValorManual: true }), 'Respuesta especial');
     const select = host.querySelector('select') as HTMLSelectElement;
     const input = host.querySelector('input[type="text"]') as HTMLInputElement;
 
