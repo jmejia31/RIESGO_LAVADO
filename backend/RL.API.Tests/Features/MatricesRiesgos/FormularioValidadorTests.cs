@@ -366,5 +366,67 @@ public sealed class FormularioValidadorTests
         Assert.False(result.Valido);
         Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("deben ser números enteros"));
     }
+    [Fact]
+    public async Task ValidarDefinicion_TextoSugeridoConCatalogo_ValidaContrato()
+    {
+        const string config = """
+        {
+          "secciones":[{
+            "clave":"identificacion",
+            "titulo":"Identificación",
+            "campos":[{
+              "clave":"dueno_riesgo",
+              "etiqueta":"Responsable o dueño del riesgo (área responsable)",
+              "tipo":"texto-sugerido",
+              "codigoCatalogo":"MR_AREA_RESPONSABLE",
+              "obligatorio":true
+            }]
+          }],
+          "catalogos":[{
+            "codigo":"MR_AREA_RESPONSABLE",
+            "nombre":"Áreas responsables",
+            "elementos":[{"codigo":"GTIC","valor":"Gerencia de Tecnología","orden":1}]
+          }]
+        }
+        """;
+
+        var result = await _validador.ValidarDefinicionPublicableAsync(config);
+
+        Assert.True(result.Valido);
+        Assert.Empty(result.Errores);
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_TextoSugerido_AceptaAreaManualFueraDelCatalogo()
+    {
+        const string config = """
+        {
+          "secciones":[{
+            "clave":"identificacion",
+            "titulo":"Identificación",
+            "campos":[{
+              "clave":"dueno_riesgo",
+              "etiqueta":"Responsable o dueño del riesgo",
+              "tipo":"texto-sugerido",
+              "codigoCatalogo":"MR_AREA_RESPONSABLE",
+              "obligatorio":true
+            }]
+          }],
+          "catalogos":[{
+            "codigo":"MR_AREA_RESPONSABLE",
+            "nombre":"Áreas responsables",
+            "elementos":[{"codigo":"GTIC","valor":"Gerencia de Tecnología","orden":1}]
+          }]
+        }
+        """;
+
+        var result = await _validador.ValidarRespuestasAsync(
+            """{"dueno_riesgo":"Área responsable escrita manualmente"}""",
+            config);
+
+        Assert.True(result.Valido);
+        Assert.Empty(result.Errores);
+    }
+
 }
 
