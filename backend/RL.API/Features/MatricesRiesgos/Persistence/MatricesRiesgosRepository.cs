@@ -188,10 +188,12 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         VersionFormularioDto origen = await ObtenerVersionFormularioAsync(versionOrigenId)
             ?? throw new KeyNotFoundException($"No se encontró la versión origen ID {versionOrigenId}.");
 
+        string jsonClonado = FormularioBorradorPreparador.PrepararCamposAdministrables(origen.VerJson);
+
         return await CrearBorradorFormularioAsync(
             origen.VerFamiliaId,
             origen.VerCodigo,
-            origen.VerJson,
+            jsonClonado,
             usuarioId);
     }
 
