@@ -166,7 +166,7 @@ describe('MatricesRiesgosComponent — UI-FAM.1 Gestor principal de Familias', (
     expect(component.familias()).toHaveLength(4);
   });
 
-  it('6.1 renderiza Ãºnicamente el gestor principal de familias', () => {
+  it('6.1 renderiza únicamente el gestor principal de familias', () => {
     component.tab.set('plantillas');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-ui-fam="gestor-principal"]')).not.toBeNull();
