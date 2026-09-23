@@ -51,20 +51,20 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(component.bloqueadoParaMutacion).toBe(true);
   });
 
-  it('muestra una vista previa de solo lectura con el renderer Ãºnico y las opciones reales', () => {
+  it('muestra una vista previa de solo lectura con el renderer único y las opciones reales', () => {
     component.model.set({
       codigoFormulario: 'PREVIEW',
       nombreFormulario: 'Formulario de prueba',
       descripcion: 'Consulta segura',
       secciones: [{
-        id: 'sec-preview', clave: 'identificacion', titulo: 'IdentificaciÃ³n', orden: 1, columnasPorFila: 2,
+        id: 'sec-preview', clave: 'identificacion', titulo: 'Identificación', orden: 1, columnasPorFila: 2,
         campos: [
           { id: 'c1', clave: 'texto', etiqueta: 'Texto', tipo: 'texto', obligatorio: true, soloLectura: false, anchoColumnas: 1 },
-          { id: 'c2', clave: 'area', etiqueta: 'Ãrea', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_REAL', obligatorio: false, soloLectura: false, anchoColumnas: 1 },
+          { id: 'c2', clave: 'area', etiqueta: 'Área', tipo: 'selector-catalogo', codigoCatalogo: 'CAT_REAL', obligatorio: false, soloLectura: false, anchoColumnas: 1 },
           { id: 'c3', clave: 'formula', etiqueta: 'Resultado', tipo: 'formula', formula: 'a + b', obligatorio: false, soloLectura: false, anchoColumnas: 2 }
         ]
       }],
-      catalogos: [{ codigo: 'CAT_REAL', nombre: 'CatÃ¡logo real', elementos: [{ codigo: 'A', valor: 'OpciÃ³n A', orden: 1 }, { codigo: 'B', valor: 'OpciÃ³n B', orden: 2 }] }]
+      catalogos: [{ codigo: 'CAT_REAL', nombre: 'Catálogo real', elementos: [{ codigo: 'A', valor: 'Opción A', orden: 1 }, { codigo: 'B', valor: 'Opción B', orden: 2 }] }]
     });
     const serializadoAntes = serializarBuilderModelAJson(component.model());
     component.cambiarVista('preview');
@@ -74,7 +74,7 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(fixture.nativeElement.querySelectorAll('app-dynamic-field-renderer')).toHaveLength(3);
     expect(fixture.nativeElement.querySelector('app-form-builder-palette')).toBeNull();
     expect(fixture.nativeElement.querySelector('[data-preview-field="area"] select')).toBeTruthy();
-    expect(fixture.nativeElement.querySelector('[data-preview-field="area"]')?.textContent).toContain('OpciÃ³n A');
+    expect(fixture.nativeElement.querySelector('[data-preview-field="area"]')?.textContent).toContain('Opción A');
     expect(fixture.nativeElement.textContent).toContain('Resultado');
     expect(fixture.nativeElement.querySelector('[data-preview-field="formula"] [aria-readonly="true"]')).toBeTruthy();
     expect(serializarBuilderModelAJson(component.model())).toBe(serializadoAntes);
@@ -101,7 +101,7 @@ describe('FormBuilderComponent y Adaptador Normalizador (Fases 3 y 4)', () => {
     expect(emitir).not.toHaveBeenCalled();
   });
 
-  it('rechaza JSON invÃ¡lido sin tocar el modelo ni activar sincronizaciÃ³n', () => {
+  it('rechaza JSON inválido sin tocar el modelo ni activar sincronización', () => {
     const modeloAntes = serializarBuilderModelAJson(component.model());
     component.jsonAvanzadoStr.set('{"secciones":');
     component.validarJsonTecnico();
