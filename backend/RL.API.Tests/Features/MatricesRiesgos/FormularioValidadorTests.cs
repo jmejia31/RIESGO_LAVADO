@@ -367,7 +367,7 @@ public sealed class FormularioValidadorTests
         Assert.Contains(result.Errores, e => e.Campo == "c1" && e.Mensaje.Contains("deben ser números enteros"));
     }
     [Fact]
-    public async Task ValidarDefinicion_TextoSugeridoConCatalogo_ValidaContrato()
+    public async Task ValidarDefinicion_SelectorConValorManual_ValidaContrato()
     {
         const string config = """
         {
@@ -377,8 +377,9 @@ public sealed class FormularioValidadorTests
             "campos":[{
               "clave":"dueno_riesgo",
               "etiqueta":"Responsable o dueño del riesgo (área responsable)",
-              "tipo":"texto-sugerido",
+              "tipo":"selector-catalogo",
               "codigoCatalogo":"MR_AREA_RESPONSABLE",
+              "permiteValorManual":true,
               "obligatorio":true
             }]
           }],
@@ -397,7 +398,7 @@ public sealed class FormularioValidadorTests
     }
 
     [Fact]
-    public async Task ValidarRespuestas_TextoSugerido_AceptaAreaManualFueraDelCatalogo()
+    public async Task ValidarRespuestas_SelectorConValorManual_AceptaAreaFueraDelCatalogo()
     {
         const string config = """
         {
@@ -407,8 +408,9 @@ public sealed class FormularioValidadorTests
             "campos":[{
               "clave":"dueno_riesgo",
               "etiqueta":"Responsable o dueño del riesgo",
-              "tipo":"texto-sugerido",
+              "tipo":"selector-catalogo",
               "codigoCatalogo":"MR_AREA_RESPONSABLE",
+              "permiteValorManual":true,
               "obligatorio":true
             }]
           }],
@@ -426,6 +428,38 @@ public sealed class FormularioValidadorTests
 
         Assert.True(result.Valido);
         Assert.Empty(result.Errores);
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_SelectorSinValorManual_RechazaValorFueraDelCatalogo()
+    {
+        const string config = """
+        {
+          "secciones":[{
+            "clave":"identificacion",
+            "titulo":"Identificación",
+            "campos":[{
+              "clave":"respuesta_riesgo",
+              "etiqueta":"Respuesta al riesgo",
+              "tipo":"selector-catalogo",
+              "codigoCatalogo":"MR_RESPUESTA_RIESGO",
+              "obligatorio":true
+            }]
+          }],
+          "catalogos":[{
+            "codigo":"MR_RESPUESTA_RIESGO",
+            "nombre":"Respuestas",
+            "elementos":[{"codigo":"MITIGAR","valor":"Mitigar","orden":1}]
+          }]
+        }
+        """;
+
+        var result = await _validador.ValidarRespuestasAsync(
+            """{"respuesta_riesgo":"OTRA"}""",
+            config);
+
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, e => e.Campo == "respuesta_riesgo");
     }
 
 }
