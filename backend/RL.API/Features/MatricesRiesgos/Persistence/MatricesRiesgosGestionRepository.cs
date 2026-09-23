@@ -2,6 +2,7 @@ using System.Text.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
@@ -239,8 +240,10 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
     {
         RieId = reader.GetInt64(0),
         RieCodigo = reader.GetString(1),
-        RieNombre = reader.GetString(2),
-        RieDescripcion = reader.IsDBNull(3) ? null : reader.GetString(3),
+        RieNombre = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
+        RieDescripcion = reader.IsDBNull(3)
+            ? null
+            : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
         RieActivo = reader.GetInt32(4) == 1,
         RieUsrCreacion = reader.GetInt64(5),
         RieFechaCreacion = reader.GetDateTime(6)
