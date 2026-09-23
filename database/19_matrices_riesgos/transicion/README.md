@@ -59,6 +59,8 @@ Secuencia:
 dotnet run --project tools/MatricesRiesgosMigrator/MatricesRiesgosMigrator.csproj --configuration Release -- --verify-risk-text
 ```
 
+Si existen filas corruptas, el resultado esperado de este precheck es `RISK_TEXT_STATUS=NEEDS_REPAIR` y el proceso retorna código `8`; eso indica que el correctivo debe ejecutarse, no que la fuente canónica esté dañada.
+
 3. Correctivo transaccional, únicamente sobre filas cuyo texto actual contiene marcadores de mojibake:
 
 ```powershell
