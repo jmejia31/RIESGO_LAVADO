@@ -271,9 +271,10 @@ public static class Program
             string canonicalDescription = Truncar(source.Descripcion, 2000);
             bool nameDiffers = !string.Equals(current.Name, canonicalName, StringComparison.Ordinal);
             bool descriptionDiffers = !string.Equals(current.Description ?? string.Empty, canonicalDescription, StringComparison.Ordinal);
-            bool corrupted = ContieneMojibake(current.Name) || ContieneMojibake(current.Description);
+            bool repairName = ContieneMojibake(current.Name);
+            bool repairDescription = ContieneMojibake(current.Description);
 
-            if (corrupted)
+            if (repairName || repairDescription)
             {
                 repairs.Add(new RiskTextRepairItem(
                     current.Id,
@@ -281,7 +282,9 @@ public static class Program
                     current.Name,
                     current.Description,
                     canonicalName,
-                    canonicalDescription));
+                    canonicalDescription,
+                    repairName,
+                    repairDescription));
             }
             else if (nameDiffers || descriptionDiffers)
             {
@@ -310,8 +313,16 @@ public static class Program
 
         foreach (RiskTextRepairItem repair in repairs)
         {
-            Console.WriteLine(
-                $"RISK_TEXT_REPAIR|{repair.Code}|{repair.CurrentName.Replace("|", "/", StringComparison.Ordinal)}|=>|{repair.CanonicalName.Replace("|", "/", StringComparison.Ordinal)}");
+            if (repair.RepairName)
+            {
+                Console.WriteLine(
+                    $"RISK_TEXT_REPAIR_NAME|{repair.Code}|{repair.CurrentName.Replace("|", "/", StringComparison.Ordinal)}|=>|{repair.CanonicalName.Replace("|", "/", StringComparison.Ordinal)}");
+            }
+
+            if (repair.RepairDescription)
+            {
+                Console.WriteLine($"RISK_TEXT_REPAIR_DESCRIPTION|{repair.Code}");
+            }
         }
 
         if (missingCodes.Length > 0 || duplicateCodes.Count > 0)
@@ -357,7 +368,9 @@ public static class Program
                 r.CurrentName,
                 r.CurrentDescription,
                 r.CanonicalName,
-                r.CanonicalDescription
+                r.CanonicalDescription,
+                r.RepairName,
+                r.RepairDescription
             }).ToArray()
         };
 
@@ -387,8 +400,13 @@ public static class Program
                     BindByName = true,
                     Transaction = transaction
                 };
-                cmd.Parameters.Add(new OracleParameter("nombre", repair.CanonicalName));
-                cmd.Parameters.Add(new OracleParameter("descripcion", repair.CanonicalDescription));
+                string targetName = repair.RepairName ? repair.CanonicalName : repair.CurrentName;
+                string? targetDescription = repair.RepairDescription
+                    ? repair.CanonicalDescription
+                    : repair.CurrentDescription;
+
+                cmd.Parameters.Add(new OracleParameter("nombre", targetName));
+                cmd.Parameters.Add(new OracleParameter("descripcion", (object?)targetDescription ?? DBNull.Value));
                 cmd.Parameters.Add(new OracleParameter("id", repair.Id));
                 cmd.Parameters.Add(new OracleParameter("codigo", repair.Code));
 
@@ -1330,7 +1348,9 @@ public sealed record RiskTextRepairItem(
     string CurrentName,
     string? CurrentDescription,
     string CanonicalName,
-    string CanonicalDescription
+    string CanonicalDescription,
+    bool RepairName,
+    bool RepairDescription
 );
 
 public sealed record SourceRiskRow(
