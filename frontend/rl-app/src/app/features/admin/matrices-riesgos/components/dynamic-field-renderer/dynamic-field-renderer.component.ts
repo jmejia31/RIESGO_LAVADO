@@ -123,35 +123,6 @@ export interface OpcionCampoRenderer {
                    [value]="valorEscalar ?? ''"
                    (input)="emitirTexto($any($event.target).value)" />
           }
-          @case ('texto-sugerido') {
-            <select [id]="idControl"
-                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                    [required]="campo.obligatorio"
-                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
-                    [disabled]="campo.soloLectura"
-                    [value]="valorSeleccionTextoSugerido"
-                    (change)="cambiarTextoSugerido($any($event.target).value)">
-              <option value="">Seleccione una opción</option>
-              @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                <option [value]="opcion.codigo">{{ opcion.valor }}</option>
-              }
-              <option value="__MANUAL__">Otro / Escribir manualmente…</option>
-            </select>
-            @if (mostrarEntradaManualTextoSugerido) {
-              <input [id]="idControl + '-manual'"
-                     type="text"
-                     class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                     [required]="campo.obligatorio"
-                     [attr.aria-required]="campo.obligatorio ? 'true' : null"
-                     [attr.aria-label]="campo.etiqueta + ' - valor manual'"
-                     [readOnly]="campo.soloLectura"
-                     [value]="valorManualTextoSugerido"
-                     (input)="emitirTexto($any($event.target).value)" />
-            }
-            <p class="mt-1 text-[11px] font-medium text-gray-500">
-              Seleccione un valor administrado o elija “Otro / Escribir manualmente…”.
-            </p>
-          }
           @case ('numero') {
             <input [id]="idControl"
                    type="number"
@@ -183,20 +154,50 @@ export interface OpcionCampoRenderer {
                       (input)="emitirTexto($any($event.target).value)"></textarea>
           }
           @case ('selector-catalogo') {
-            <select [id]="idControl"
-                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                    [required]="campo.obligatorio"
-                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
-                    [disabled]="campo.soloLectura || opcionesDisponibles.length === 0"
-                    [value]="valorEscalar ?? ''"
-                    (change)="emitirSeleccion($any($event.target).value)">
-              <option value="" [selected]="!valorEscalar">Seleccione una opción</option>
-              @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                <option [value]="opcion.codigo" [selected]="opcion.codigo === valorEscalar">{{ opcion.valor }}</option>
+            @if (campo.permiteValorManual) {
+              <select [id]="idControl"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                      [required]="campo.obligatorio"
+                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                      [disabled]="campo.soloLectura"
+                      [value]="valorSeleccionSelectorFlexible"
+                      (change)="cambiarSelectorFlexible($any($event.target).value)">
+                <option value="">Seleccione una opción</option>
+                @for (opcion of opcionesDisponibles; track opcion.codigo) {
+                  <option [value]="opcion.codigo">{{ opcion.valor }}</option>
+                }
+                <option value="__MANUAL__">Otro / Escribir manualmente…</option>
+              </select>
+              @if (mostrarEntradaManualSelectorFlexible) {
+                <input [id]="idControl + '-manual'"
+                       type="text"
+                       class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                       [required]="campo.obligatorio"
+                       [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                       [attr.aria-label]="campo.etiqueta + ' - valor manual'"
+                       [readOnly]="campo.soloLectura"
+                       [value]="valorManualSelectorFlexible"
+                       (input)="emitirTexto($any($event.target).value)" />
               }
-            </select>
-            @if (opcionesDisponibles.length === 0) {
-              <p class="mt-1 text-[11px] font-semibold text-amber-700" role="status">No hay opciones disponibles.</p>
+              <p class="mt-1 text-[11px] font-medium text-gray-500">
+                Seleccione un valor administrado o elija “Otro / Escribir manualmente…”.
+              </p>
+            } @else {
+              <select [id]="idControl"
+                      class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                      [required]="campo.obligatorio"
+                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                      [disabled]="campo.soloLectura || opcionesDisponibles.length === 0"
+                      [value]="valorEscalar ?? ''"
+                      (change)="emitirSeleccion($any($event.target).value)">
+                <option value="" [selected]="!valorEscalar">Seleccione una opción</option>
+                @for (opcion of opcionesDisponibles; track opcion.codigo) {
+                  <option [value]="opcion.codigo" [selected]="opcion.codigo === valorEscalar">{{ opcion.valor }}</option>
+                }
+              </select>
+              @if (opcionesDisponibles.length === 0) {
+                <p class="mt-1 text-[11px] font-semibold text-amber-700" role="status">No hay opciones disponibles.</p>
+              }
             }
           }
           @case ('checkbox') {
@@ -273,11 +274,11 @@ export class DynamicFieldRendererComponent {
     return `${prefijo}-${clave}`;
   }
 
-  private modoManualTextoSugerido = false;
+  private modoManualSelectorFlexible = false;
 
-  get valorSeleccionTextoSugerido(): string {
+  get valorSeleccionSelectorFlexible(): string {
     if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) {
-      return this.modoManualTextoSugerido ? '__MANUAL__' : '';
+      return this.modoManualSelectorFlexible ? '__MANUAL__' : '';
     }
 
     const valorActual = String(this.valor);
@@ -286,14 +287,14 @@ export class DynamicFieldRendererComponent {
       : '__MANUAL__';
   }
 
-  get mostrarEntradaManualTextoSugerido(): boolean {
-    if (this.opcionesDisponibles.length === 0 || this.modoManualTextoSugerido) return true;
+  get mostrarEntradaManualSelectorFlexible(): boolean {
+    if (this.opcionesDisponibles.length === 0 || this.modoManualSelectorFlexible) return true;
     if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return false;
     return !this.opcionesDisponibles.some(opcion => opcion.codigo === String(this.valor));
   }
 
-  get valorManualTextoSugerido(): string {
-    if (!this.mostrarEntradaManualTextoSugerido || !tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return '';
+  get valorManualSelectorFlexible(): string {
+    if (!this.mostrarEntradaManualSelectorFlexible || !tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return '';
     return String(this.valor);
   }
 
@@ -335,7 +336,7 @@ export class DynamicFieldRendererComponent {
         : this.valor === true ? 'Sí' : 'No';
     }
 
-    if (this.tipo === 'selector-catalogo' || this.tipo === 'radio' || this.tipo === 'texto-sugerido') {
+    if (this.tipo === 'selector-catalogo' || this.tipo === 'radio') {
       if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return '-';
       return this.etiquetaOpcion(String(this.valor));
     }
@@ -384,17 +385,17 @@ export class DynamicFieldRendererComponent {
     this.valorChange.emit(valor === null || valor === undefined || valor === '' ? null : String(valor));
   }
 
-  cambiarTextoSugerido(valor: unknown): void {
+  cambiarSelectorFlexible(valor: unknown): void {
     const seleccionado = valor === null || valor === undefined ? '' : String(valor);
     if (seleccionado === '__MANUAL__') {
-      this.modoManualTextoSugerido = true;
+      this.modoManualSelectorFlexible = true;
       if (this.opcionesDisponibles.some(opcion => opcion.codigo === String(this.valor ?? ''))) {
         this.valorChange.emit(null);
       }
       return;
     }
 
-    this.modoManualTextoSugerido = false;
+    this.modoManualSelectorFlexible = false;
     this.emitirSeleccion(seleccionado);
   }
 
