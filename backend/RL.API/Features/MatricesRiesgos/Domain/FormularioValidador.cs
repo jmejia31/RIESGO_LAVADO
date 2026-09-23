@@ -10,7 +10,7 @@ public sealed class FormularioValidador : IFormularioValidador
 {
     private static readonly HashSet<string> TiposCanónicos = new(StringComparer.OrdinalIgnoreCase)
     {
-        "texto", "texto-sugerido", "numero", "fecha", "texto-largo", "selector-catalogo",
+        "texto", "numero", "fecha", "texto-largo", "selector-catalogo",
         "radio", "catalogo-multiple", "checkbox", "formula"
     };
 
@@ -18,7 +18,6 @@ public sealed class FormularioValidador : IFormularioValidador
     {
         ["numerico"] = "numero", ["numérico"] = "numero", ["entero"] = "numero", ["decimal"] = "numero",
         ["textarea"] = "texto-largo", ["area-texto"] = "texto-largo",
-        ["texto-con-sugerencias"] = "texto-sugerido", ["texto-catalogo-sugerido"] = "texto-sugerido",
         ["catalogo"] = "selector-catalogo", ["select"] = "selector-catalogo", ["seleccion"] = "selector-catalogo",
         ["opciones"] = "radio", ["multiselect"] = "catalogo-multiple", ["seleccion-multiple"] = "catalogo-multiple",
         ["sino"] = "checkbox", ["bool"] = "checkbox", ["booleano"] = "checkbox",
@@ -107,7 +106,7 @@ public sealed class FormularioValidador : IFormularioValidador
                     if (!TiposCanónicos.Contains(normalizedType))
                         result.Errores.Add(new FormularioValidationError(key!, "El tipo de campo no está soportado por el runtime."));
 
-                    if (normalizedType is "selector-catalogo" or "catalogo-multiple" or "texto-sugerido")
+                    if (normalizedType is "selector-catalogo" or "catalogo-multiple")
                     {
                         if (TryGetText(field, "codigoCatalogo", out string? catalogRef)
                             || TryGetText(field, "catalogoCodigo", out catalogRef)
@@ -254,7 +253,6 @@ public sealed class FormularioValidador : IFormularioValidador
                         break;
 
                     case "texto":
-                    case "texto-sugerido":
                     case "texto-largo":
                         if (valorElemento.ValueKind != JsonValueKind.String)
                         {
@@ -274,7 +272,7 @@ public sealed class FormularioValidador : IFormularioValidador
                                 ? valorElemento.GetRawText()
                                 : valorElemento.GetString() ?? string.Empty;
 
-                            if (metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
+                            if (!metadatos.PermiteValorManual && metadatos.OpcionesCatalogo.Count > 0 && !metadatos.OpcionesCatalogo.Contains(codigo))
                             {
                                 result.Errores.Add(new FormularioValidationError(campoId, $"El valor '{codigo}' no corresponde a un código válido del catálogo para el campo '{metadatos.Etiqueta}'."));
                             }
@@ -385,11 +383,12 @@ public sealed class FormularioValidador : IFormularioValidador
                     string etiqueta = ObtenerPropiedadString(campo, "etiqueta") ?? id;
                     string tipo = ObtenerPropiedadString(campo, "tipo") ?? "texto";
                     bool obligatorio = campo.TryGetProperty("obligatorio", out JsonElement oblProp) && oblProp.ValueKind == JsonValueKind.True;
+                    bool permiteValorManual = campo.TryGetProperty("permiteValorManual", out JsonElement manualProp) && manualProp.ValueKind == JsonValueKind.True;
                     string regex = ObtenerPropiedadString(campo, "regexValidacion") ?? ObtenerPropiedadString(campo, "expresionValidacion") ?? string.Empty;
 
                     var opciones = ExtraerCodicesOpciones(campo, catalogosRaiz);
 
-                    var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, regex, aliases, opciones);
+                    var metadatos = new CampoMetadatos(id, etiqueta, tipo, obligatorio, permiteValorManual, regex, aliases, opciones);
                     campos[id] = metadatos;
                     foreach (string alias in aliases)
                     {
@@ -549,6 +548,7 @@ public sealed class FormularioValidador : IFormularioValidador
         public string Etiqueta { get; }
         public string Tipo { get; }
         public bool Obligatorio { get; }
+        public bool PermiteValorManual { get; }
         public string RegexValidacion { get; }
         public List<string> Aliases { get; }
         public HashSet<string> OpcionesCatalogo { get; }
@@ -558,6 +558,7 @@ public sealed class FormularioValidador : IFormularioValidador
             string etiqueta,
             string tipo,
             bool obligatorio,
+            bool permiteValorManual,
             string regexValidacion,
             List<string> aliases,
             HashSet<string> opcionesCatalogo)
@@ -566,6 +567,7 @@ public sealed class FormularioValidador : IFormularioValidador
             Etiqueta = etiqueta;
             Tipo = tipo;
             Obligatorio = obligatorio;
+            PermiteValorManual = permiteValorManual;
             RegexValidacion = regexValidacion;
             Aliases = aliases;
             OpcionesCatalogo = opcionesCatalogo;
