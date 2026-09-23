@@ -19,6 +19,21 @@ describe('Integridad de texto visible UTF-8', () => {
     expect(normalizarTextoVisibleUtf8(`Valoraci${bad}n`)).toBe('Valoración');
   });
 
+  it('repara los patrones observados en nombres de riesgos institucionales', () => {
+    const bad = '\u00EF\u00BF\u00BD';
+
+    expect(normalizarTextoVisibleUtf8(`Registro de proveedores con informaci${bad}n inconsistente`))
+      .toBe('Registro de proveedores con información inconsistente');
+    expect(normalizarTextoVisibleUtf8(`Empresas que no est${bad}n inscritas`))
+      .toBe('Empresas que no están inscritas');
+    expect(normalizarTextoVisibleUtf8(`evaluaci${bad}n t${bad}cnica, econ${bad}mica`))
+      .toBe('evaluación técnica, económica');
+    expect(normalizarTextoVisibleUtf8(`Definici${bad}n sin garant${bad}as adecuadas de ejecuci${bad}n`))
+      .toBe('Definición sin garantías adecuadas de ejecución');
+    expect(normalizarTextoVisibleUtf8(`t${bad}rminos de referencia de una licitaci${bad}n p${bad}blica`))
+      .toBe('términos de referencia de una licitación pública');
+  });
+
   it('corrige términos visibles sin tilde sin alterar identificadores técnicos ajenos al helper', () => {
     expect(normalizarTextoVisibleUtf8('Identificacion del riesgo')).toBe('Identificación del riesgo');
     expect(normalizarTextoVisibleUtf8('Area responsable')).toBe('Área responsable');
