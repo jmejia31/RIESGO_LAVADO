@@ -39,6 +39,47 @@ Esta carpeta contiene el paquete controlado para la transición física del Mód
    - Cambio aditivo de FP.1 para persistir la familia predeterminada, con `CHECK` e indice unico condicional.
    - No asigna una familia automaticamente y solo puede ejecutarse despues del gate puntual de autorizacion Oracle.
 
+## Correctivo controlado de codificación del catálogo maestro
+
+Cuando `RL_MR_RIESGOS.RIE_NOMBRE` o `RIE_DESCRIPCION` presente mojibake, no se debe corregir texto a mano ni por sustituciones globales.
+
+Fuente canónica: `Matrices de Riesgos.xlsx`, hoja `Matriz Consolidada`, filas 2 a 60.
+
+Secuencia:
+
+1. Validación Oracle solo lectura:
+
+```sql
+@database/19_matrices_riesgos/transicion/30_validar_codificacion_riesgos_maestros_solo_lectura.sql
+```
+
+2. Comparación dry-run contra el Excel institucional:
+
+```powershell
+dotnet run --project tools/MatricesRiesgosMigrator/MatricesRiesgosMigrator.csproj --configuration Release -- --verify-risk-text
+```
+
+3. Correctivo transaccional, únicamente sobre filas cuyo texto actual contiene marcadores de mojibake:
+
+```powershell
+dotnet run --project tools/MatricesRiesgosMigrator/MatricesRiesgosMigrator.csproj --configuration Release -- --repair-risk-text --migrate
+```
+
+El correctivo:
+
+- empareja exclusivamente por `RIE_CODIGO`;
+- exige las 59 filas canónicas y aborta ante códigos faltantes/duplicados;
+- actualiza únicamente `RIE_NOMBRE` y `RIE_DESCRIPCION`;
+- no inserta ni elimina riesgos;
+- no modifica evaluaciones, proyecciones, formularios, V1/V2 ni hashes;
+- genera backup JSON previo bajo `artifacts/oracle/`;
+- ejecuta una única transacción y rollback ante cualquier fila inesperada;
+- realiza postcheck y exige `RISK_TEXT_POST_MOJIBAKE=0`.
+
+4. Repetir el validador SQL read-only y el modo `--verify-risk-text`. Ambos deben finalizar en `PASS`.
+
+La herramienta toma la conexión Oracle desde la configuración local existente del backend; no versionar credenciales ni copiarlas a comandos, logs o documentación.
+
 ## Restricciones
 
 El script `06` no está incluido en `00_APLICAR_MODULO_MATRICES_RIESGOS.sql` ni en instaladores automáticos.
