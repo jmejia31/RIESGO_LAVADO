@@ -10,7 +10,7 @@ public sealed class FormularioValidador : IFormularioValidador
 {
     private static readonly HashSet<string> TiposCanónicos = new(StringComparer.OrdinalIgnoreCase)
     {
-        "texto", "numero", "fecha", "texto-largo", "selector-catalogo",
+        "texto", "texto-sugerido", "numero", "fecha", "texto-largo", "selector-catalogo",
         "radio", "catalogo-multiple", "checkbox", "formula"
     };
 
@@ -18,6 +18,7 @@ public sealed class FormularioValidador : IFormularioValidador
     {
         ["numerico"] = "numero", ["numérico"] = "numero", ["entero"] = "numero", ["decimal"] = "numero",
         ["textarea"] = "texto-largo", ["area-texto"] = "texto-largo",
+        ["texto-con-sugerencias"] = "texto-sugerido", ["texto-catalogo-sugerido"] = "texto-sugerido",
         ["catalogo"] = "selector-catalogo", ["select"] = "selector-catalogo", ["seleccion"] = "selector-catalogo",
         ["opciones"] = "radio", ["multiselect"] = "catalogo-multiple", ["seleccion-multiple"] = "catalogo-multiple",
         ["sino"] = "checkbox", ["bool"] = "checkbox", ["booleano"] = "checkbox",
@@ -106,7 +107,7 @@ public sealed class FormularioValidador : IFormularioValidador
                     if (!TiposCanónicos.Contains(normalizedType))
                         result.Errores.Add(new FormularioValidationError(key!, "El tipo de campo no está soportado por el runtime."));
 
-                    if (normalizedType is "selector-catalogo" or "catalogo-multiple")
+                    if (normalizedType is "selector-catalogo" or "catalogo-multiple" or "texto-sugerido")
                     {
                         if (TryGetText(field, "codigoCatalogo", out string? catalogRef)
                             || TryGetText(field, "catalogoCodigo", out catalogRef)
@@ -253,6 +254,7 @@ public sealed class FormularioValidador : IFormularioValidador
                         break;
 
                     case "texto":
+                    case "texto-sugerido":
                     case "texto-largo":
                         if (valorElemento.ValueKind != JsonValueKind.String)
                         {
