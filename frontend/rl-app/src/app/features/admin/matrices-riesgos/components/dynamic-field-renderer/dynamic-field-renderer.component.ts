@@ -162,11 +162,11 @@ export interface OpcionCampoRenderer {
                       [disabled]="campo.soloLectura"
                       [value]="valorSeleccionSelectorFlexible"
                       (change)="cambiarSelectorFlexible($any($event.target).value)">
-                <option value="">Seleccione una opción</option>
+                <option value="" [selected]="valorSeleccionSelectorFlexible === ''">Seleccione una opción</option>
                 @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                  <option [value]="opcion.codigo">{{ opcion.valor }}</option>
+                  <option [value]="opcion.codigo" [selected]="opcion.codigo === valorSeleccionSelectorFlexible">{{ opcion.valor }}</option>
                 }
-                <option value="__MANUAL__">Otro / Escribir manualmente…</option>
+                <option value="__MANUAL__" [selected]="valorSeleccionSelectorFlexible === '__MANUAL__'">Otro / Escribir manualmente…</option>
               </select>
               @if (mostrarEntradaManualSelectorFlexible) {
                 <input [id]="idControl + '-manual'"
