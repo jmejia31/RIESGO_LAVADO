@@ -36,23 +36,59 @@ namespace RL.API.Features.Listas.Persistence
         }
 
         public Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
-            => ObtenerMonitoreoPaginadoAsync(
-                consulta,
-                ConstruirConsultaMonitoreoJuridicas(),
-                "NOMBRE ASC, NUMEPATRO ASC",
-                reader => new CoincidenciaJuridicaDto
+        {
+            var baseSql = ConstruirConsultaMonitoreoJuridicas();
+
+            Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> Factory() =>
+                ObtenerMonitoreoPaginadoAsync(
+                    consulta,
+                    baseSql,
+                    "NOMBRE ASC, NUMEPATRO ASC",
+                    reader => new CoincidenciaJuridicaDto
+                    {
+                        Rtn = Texto(reader, "RTN"),
+                        Nombre = Texto(reader, "NOMBRE"),
+                        NumeroPatrono = Texto(reader, "NUMEPATRO"),
+                        ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
+                        FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
+                        FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
+                        FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
+                        EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"),
+                        TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
+                        EsManual = Entero(reader, "ES_MANUAL") == 1
+                    }, cancellationToken, CrearRespuestaJuridicaFastPath);
+
+            return ObtenerJuridicasPaginadasCacheadaAsync(
+                consulta, baseSql, Factory, cancellationToken);
+        }
+
+        private async Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasCacheadaAsync(
+            ConsultaMonitoreoPaginadaDto consulta,
+            string baseSql,
+            Func<Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>>> factory,
+            CancellationToken cancellationToken)
+        {
+            var lookupStopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var factoryExecuted = false;
+            var result = await _cache.GetOrCreateAsync(
+                ApplicationCacheScopes.MonitoreoMetadata,
+                CrearClavePaginaJuridicas(baseSql, consulta),
+                _cacheSettings.MonitoreoMetadataTtl,
+                async () =>
                 {
-                    Rtn = Texto(reader, "RTN"),
-                    Nombre = Texto(reader, "NOMBRE"),
-                    NumeroPatrono = Texto(reader, "NUMEPATRO"),
-                    ListaCoincidencia = Texto(reader, "LISTA_CONCIDENCIA"),
-                    FechaEncontro = Fecha(reader, "FECHA_ENCONTRO"),
-                    FechaCalifico = Fecha(reader, "FECHA_CALIFICO"),
-                    FechaRegistroInterno = Fecha(reader, "FECHA_REGISTRO_INTERNO"),
-                    EsProveedorIhss = BoolTexto(reader, "ES_PROVEEDOR_IHSS"),
-                    TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
-                    EsManual = Entero(reader, "ES_MANUAL") == 1
-                }, cancellationToken, CrearRespuestaJuridicaFastPath);
+                    factoryExecuted = true;
+                    return await factory();
+                },
+                cancellationToken: cancellationToken);
+            lookupStopwatch.Stop();
+
+            Serilog.Log.Information(
+                "MonitoringJuridicasPage cacheHit={CacheHit} cacheLookupMs={CacheLookupMs} page={Page} pageSize={PageSize}",
+                !factoryExecuted, lookupStopwatch.ElapsedMilliseconds,
+                Math.Max(1, consulta.Pagina), Math.Clamp(consulta.TamanoPagina, 1, 200));
+
+            return result;
+        }
 
         public Task<List<CoincidenciaJuridicaDto>> ObtenerJuridicasParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoJuridicas(), "NOMBRE ASC, NUMEPATRO ASC", reader => new CoincidenciaJuridicaDto
@@ -1296,6 +1332,10 @@ namespace RL.API.Features.Listas.Persistence
             AppendMonitoringFilters(ref filteredSql, consulta);
             return filteredSql;
         }
+
+        private static string CrearClavePaginaJuridicas(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+            => string.Join("|", "page", CrearClaveMetadataMonitoreo(baseSql, consulta),
+                Math.Max(1, consulta.Pagina), Math.Clamp(consulta.TamanoPagina, 1, 200));
 
         private static string CrearClaveMetadataMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", ResolveMonitoringType(baseSql), consulta.Buscar?.Trim().ToUpperInvariant(),
