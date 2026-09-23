@@ -31,13 +31,14 @@ PRODUCTION_VALUES_DECISION=CLOSED_AS_TEST_DATA
 
 Los dos valores anteriores pertenecen a datos de prueba y **no se promueven a valores institucionales productivos ni a seeds de producción**. Por tanto, no bloquean release ni despliegue.
 
-El criterio funcional queda definido para **ambos campos**:
+El criterio funcional queda definido para los **dos campos de Identificación del riesgo mostrados al usuario**:
 
-- **Responsable o dueño del riesgo / área responsable**: lista desplegable administrable mediante `MR_AREA_RESPONSABLE`, con opción `Otro / Escribir manualmente…`. El catálogo nace vacío para no convertir `GTIC` ni otro dato de prueba en valor institucional por inferencia.
-- **Respuesta al riesgo**: lista desplegable administrable mediante `MR_RESPUESTA_RIESGO`, conservando como valores iniciales `EVITAR`, `MITIGAR`, `TRANSFERIR` y `ACEPTAR`, y con opción `Otro / Escribir manualmente…` para respuestas institucionales futuras.
-- El selector oficial `selector-catalogo` con `permiteValorManual=true` conserva el código de catálogo cuando se selecciona una opción administrada y acepta texto libre cuando se elige captura manual.
-- Cada campo tiene su **propio mantenimiento de catálogo** dentro del Form Builder; los dos catálogos son independientes.
-- Al clonar una versión existente para crear un nuevo borrador, la aplicación adapta automáticamente `dueno_riesgo` y `respuesta_riesgo` al patrón flexible de selector administrable + valor manual sin modificar la versión origen.
+- **Área principal**: lista desplegable administrable mediante `MR_AREA_PRINCIPAL`, con opción `Otro / Escribir manualmente…`. El catálogo es independiente y nace vacío para no inventar áreas institucionales.
+- **Responsable o dueño del riesgo / área responsable**: lista desplegable administrable mediante `MR_AREA_RESPONSABLE`, también con opción `Otro / Escribir manualmente…`. El catálogo nace vacío para no convertir `GTIC` ni otro dato de prueba en valor institucional por inferencia.
+- Ambos usan el tipo oficial `selector-catalogo` con `permiteValorManual=true`; por tanto conservan los 9 tipos oficiales del Form Builder y no introducen un control nuevo.
+- Cada campo tiene su **propio mantenimiento de catálogo** dentro del Form Builder, aunque una institución pueda cargar valores similares en ambos.
+- Al clonar una versión existente para crear un nuevo borrador, la aplicación adapta automáticamente `area_principal` y `dueno_riesgo` al patrón flexible sin modificar la versión origen.
+- `respuesta_riesgo` no forma parte de esta mejora. `RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR` continúa únicamente como dato de prueba no bloqueante y el contrato vigente del campo de respuesta no se altera.
 - V1/V2 históricas no se mutan retroactivamente ni cambian sus hashes. La mejora aplica a nuevos borradores/versiones administrables.
 
 ## 2. RTO/RPO institucionales
