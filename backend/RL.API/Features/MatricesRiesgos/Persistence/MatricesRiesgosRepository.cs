@@ -1041,7 +1041,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 EvaId = reader.GetInt64(0),
                 EvaRiesgoId = reader.GetInt64(1),
                 RiesgoCodigo = reader.GetString(2),
-                RiesgoNombre = reader.GetString(3),
+                RiesgoNombre = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
                 EvaVersionId = reader.GetInt64(4),
                 VersionCodigo = reader.GetString(5),
                 VersionNumero = reader.GetInt32(6),
