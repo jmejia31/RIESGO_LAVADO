@@ -35,9 +35,9 @@ El criterio funcional queda definido para **ambos campos**:
 
 - **Responsable o dueño del riesgo / área responsable**: lista desplegable administrable mediante `MR_AREA_RESPONSABLE`, con opción `Otro / Escribir manualmente…`. El catálogo nace vacío para no convertir `GTIC` ni otro dato de prueba en valor institucional por inferencia.
 - **Respuesta al riesgo**: lista desplegable administrable mediante `MR_RESPUESTA_RIESGO`, conservando como valores iniciales `EVITAR`, `MITIGAR`, `TRANSFERIR` y `ACEPTAR`, y con opción `Otro / Escribir manualmente…` para respuestas institucionales futuras.
-- El tipo dinámico `texto-sugerido` conserva el código de catálogo cuando se selecciona una opción administrada y acepta texto libre cuando se elige captura manual.
+- El selector oficial `selector-catalogo` con `permiteValorManual=true` conserva el código de catálogo cuando se selecciona una opción administrada y acepta texto libre cuando se elige captura manual.
 - Cada campo tiene su **propio mantenimiento de catálogo** dentro del Form Builder; los dos catálogos son independientes.
-- Al clonar una versión existente para crear un nuevo borrador, la aplicación adapta automáticamente `dueno_riesgo` y `respuesta_riesgo` al patrón flexible sin modificar la versión origen.
+- Al clonar una versión existente para crear un nuevo borrador, la aplicación adapta automáticamente `dueno_riesgo` y `respuesta_riesgo` al patrón flexible de selector administrable + valor manual sin modificar la versión origen.
 - V1/V2 históricas no se mutan retroactivamente ni cambian sus hashes. La mejora aplica a nuevos borradores/versiones administrables.
 
 ## 2. RTO/RPO institucionales
