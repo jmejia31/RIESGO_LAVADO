@@ -276,7 +276,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.error()).toBe('PDF no disponible');
   });
 
-  it('rechaza crear una versiÃ³n si el contexto de familia es invÃ¡lido', () => {
+  it('rechaza crear una versión si el contexto de familia es inválido', () => {
     component.crearNuevaVersionDesdeDetalle({ famId: 0 } as never);
     expect(component.error()).toContain('familia');
     expect(service['crearBorradorFormulario']).not.toHaveBeenCalled();
