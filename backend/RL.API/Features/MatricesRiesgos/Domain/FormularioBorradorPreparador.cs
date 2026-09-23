@@ -22,8 +22,8 @@ public static class FormularioBorradorPreparador
             return jsonConfig;
         }
 
+        bool encontroAreaPrincipal = false;
         bool encontroDueno = false;
-        bool encontroRespuesta = false;
 
         foreach (JsonNode? seccionNode in secciones)
         {
@@ -37,37 +37,31 @@ public static class FormularioBorradorPreparador
                     ?? ObtenerTexto(campo, "identificador")
                     ?? ObtenerTexto(campo, "id");
 
-                if (string.Equals(clave, "dueno_riesgo", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(clave, "area_principal", StringComparison.OrdinalIgnoreCase))
+                {
+                    campo["tipo"] = "selector-catalogo";
+                    campo["codigoCatalogo"] = "MR_AREA_PRINCIPAL";
+                    campo["permiteValorManual"] = true;
+                    encontroAreaPrincipal = true;
+                }
+                else if (string.Equals(clave, "dueno_riesgo", StringComparison.OrdinalIgnoreCase))
                 {
                     campo["tipo"] = "selector-catalogo";
                     campo["codigoCatalogo"] = "MR_AREA_RESPONSABLE";
                     campo["permiteValorManual"] = true;
                     encontroDueno = true;
                 }
-                else if (string.Equals(clave, "respuesta_riesgo", StringComparison.OrdinalIgnoreCase))
-                {
-                    campo["tipo"] = "selector-catalogo";
-                    campo["codigoCatalogo"] = "MR_RESPUESTA_RIESGO";
-                    campo["permiteValorManual"] = true;
-                    encontroRespuesta = true;
-                }
             }
+        }
+
+        if (encontroAreaPrincipal)
+        {
+            AsegurarCatalogo(root, definicion, "MR_AREA_PRINCIPAL", "Áreas principales", Array.Empty<(string Codigo, string Valor)>());
         }
 
         if (encontroDueno)
         {
             AsegurarCatalogo(root, definicion, "MR_AREA_RESPONSABLE", "Áreas responsables", Array.Empty<(string Codigo, string Valor)>());
-        }
-
-        if (encontroRespuesta)
-        {
-            AsegurarCatalogo(root, definicion, "MR_RESPUESTA_RIESGO", "Respuestas al riesgo", new[]
-            {
-                ("EVITAR", "Evitar"),
-                ("MITIGAR", "Mitigar"),
-                ("TRANSFERIR", "Transferir"),
-                ("ACEPTAR", "Aceptar")
-            });
         }
 
         return root.ToJsonString();
