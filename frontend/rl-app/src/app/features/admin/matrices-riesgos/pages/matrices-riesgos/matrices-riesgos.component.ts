@@ -2085,9 +2085,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
               id: "area_principal",
               clave: "area_principal",
               etiqueta: "Área principal",
-              tipo: "texto",
+              tipo: "selector-catalogo",
+              codigoCatalogo: "MR_AREA_PRINCIPAL",
+              permiteValorManual: true,
               obligatorio: true,
-              soloLectura: false
+              soloLectura: false,
+              placeholder: "Escriba el área principal",
+              textoAyuda: "Seleccione un área administrada o use la opción manual si aún no está catalogada."
             },
             {
               id: "dueno_riesgo",
@@ -2106,8 +2110,13 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       ],
       catalogos: [
         {
+          codigo: "MR_AREA_PRINCIPAL",
+          nombre: "Áreas principales",
+          elementos: []
+        },
+        {
           codigo: "MR_AREA_RESPONSABLE",
-          nombre: "Áreas responsables (sugerencias)",
+          nombre: "Áreas responsables",
           elementos: []
         }
       ],
