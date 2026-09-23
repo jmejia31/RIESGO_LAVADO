@@ -1409,3 +1409,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Código funcional final: `aae6c8b19fbb0e89a8bcff77acb1a8a2c7fcbd18`; Quality Gate remoto `#1505=completed/success`.
 - No quedan pendientes técnicos que bloqueen el cierre de desarrollo/release de Fase 7. Permanecen fuera del cierre: despliegue productivo, capacitación institucional y cualquier intervención física en schemas externos, todas sujetas a autorización institucional.
 - Fuente de verdad para continuar: `origin/desarrollo`. El checkout operativo debe volver a ser `C:\RIESGO_LAVADO`; `C:\RIESGO_LAVADO_F7` queda sólo como clon temporal de la prueba.
+
+
+## Estado vigente - CIERRE DE RENDIMIENTO DE MONITOREO
+
+- Fecha: `2026-09-23`; decisión expresa de Javier Mejía.
+- `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER`.
+- Evidencia final HTTP 200: Jurídicas `2800/15 ms`, Naturales `1903/14 ms`, Empleados `694/13 ms` (primera/repetida).
+- `MONITOREO_WARM_PAGE_CACHE=PASS`.
+- `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`.
+- La corrida production-like histórica conserva su resultado FAIL como evidencia histórica, pero deja de ser pendiente/bloqueo abierto del proyecto.
+- No se autorizan ni requieren cambios físicos adicionales sobre `DNP_IHSS` o `MMATAMOROS`.

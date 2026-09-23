@@ -72,3 +72,31 @@ PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL_COLD_ORIGIN_LATENCY
 ```
 
 El resultado production-like global continúa en `FAIL` porque la primera carga fría supera el contrato de 10 s. La mitigación sí elimina el costo repetido dentro del TTL del caché y queda cubierta por invalidación explícita ante cambios realizados por la aplicación.
+
+
+## Cierre funcional del punto de rendimiento — decisión de propietario 2026-09-23
+
+Javier Mejía declara cerrado el punto de rendimiento de Monitoreo con la evidencia vigente. La aceptación aplica al alcance de desarrollo y release actual y no reescribe la evidencia histórica de latencia fría.
+
+Evidencia final observada en navegador, todos HTTP 200:
+
+```text
+JURIDICAS  primera=2800 ms   repetida=15 ms
+NATURALES primera=1903 ms   repetida=14 ms
+EMPLEADOS primera=694 ms    repetida=13 ms
+```
+
+Evidencia previa equivalente también mostró repetición cacheada en el rango 20–24 ms. La variabilidad de la primera carga se atribuye al origen/servidor Oracle compartido; el backend evita repetir ese costo dentro del TTL mediante caché invalidable por tipo, página, tamaño y filtros.
+
+Estado acordado:
+
+```text
+MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER
+WARM_PAGE_CACHE=PASS
+COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION
+EXTERNAL_SCHEMA_DDL=0
+DNP_IHSS_MODIFIED=FALSE
+MMATAMOROS_MODIFIED=FALSE
+```
+
+La certificación histórica `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=FAIL` se conserva como registro de la corrida contractual original; ya no constituye un bloqueo abierto del proyecto porque el propietario acepta explícitamente la restricción fría y cierra este punto.

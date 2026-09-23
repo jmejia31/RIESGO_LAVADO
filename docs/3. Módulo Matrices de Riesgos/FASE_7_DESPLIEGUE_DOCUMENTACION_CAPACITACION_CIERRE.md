@@ -77,3 +77,18 @@ Evidencia aportada por Javier Mejía durante la ejecución controlada y conserva
 - `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`
 
 El trabajo de desarrollo/release de Fase 7 queda cerrado. Producción, capacitación institucional y cualquier optimización física sobre schemas ajenos siguen siendo actividades externas posteriores y no se presentan como ejecutadas.
+
+
+### Decisión final sobre rendimiento de Monitoreo — 2026-09-23
+
+Javier Mejía declara cerrado el punto de rendimiento de Monitoreo. Se acepta como restricción conocida la variabilidad de la primera carga contra el Oracle compartido y se considera satisfactoria la mitigación backend con caché corta e invalidable.
+
+Última evidencia visible: Jurídicas `2800 -> 15 ms`, Naturales `1903 -> 14 ms`, Empleados `694 -> 13 ms`, todos HTTP 200.
+
+```text
+MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER
+COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION
+MONITOREO_WARM_PAGE_CACHE=PASS
+```
+
+Este punto deja de ser pendiente del cierre de desarrollo/release. No autoriza cambios físicos en `DNP_IHSS` ni `MMATAMOROS`.

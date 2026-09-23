@@ -7320,3 +7320,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Archivos de cierre actualizados: `FASE_7_DESPLIEGUE_DOCUMENTACION_CAPACITACION_CIERRE.md`, `BACKUP_RESTORE_FASE7.md`, `MONITOREO_API_PERFORMANCE_CERTIFICATION.md`, esta bitácora y `ESTADO_COLABORACION.md`.
 - Estado: `FASE_7=CERRADA_EN_DESARROLLO_CON_EXCEPCION_DOCUMENTADA`; `RELEASE_READINESS=PASS`; `PRODUCTION_DEPLOYED=FALSE`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`. No quedan bloqueos de desarrollo de Fase 7; producción/capacitación y la latencia fría del origen Oracle quedan como actividades externas posteriores.
 - Punto de continuación: sincronizar el checkout original `C:\RIESGO_LAVADO` con `origin/desarrollo`; no continuar trabajando desde `C:\RIESGO_LAVADO_F7`. No publicar en `main` sin autorización expresa.
+
+
+## Registro CIERRE-PUNTO-RENDIMIENTO-MONITOREO
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT`; aprobador `Javier Mejía`; rama `desarrollo`.
+- Decisión expresa del propietario: el punto de rendimiento de Monitoreo queda cerrado.
+- Evidencia final observada, HTTP 200: Jurídicas `2800 ms -> 15 ms`; Naturales `1903 ms -> 14 ms`; Empleados `694 ms -> 13 ms`.
+- La caché de página corta e invalidable permanece como mitigación. No se modificaron `DNP_IHSS` ni `MMATAMOROS`; no se crean índices externos.
+- La latencia fría del origen Oracle queda `ACCEPTED_KNOWN_RESTRICTION`; la certificación contractual histórica FAIL se conserva como evidencia y ya no bloquea el cierre por decisión explícita del propietario.
+- Estado: `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER`.
