@@ -27,14 +27,15 @@ public static class TextoVisibleUtf8Normalizer
 
     private static readonly (Regex Pattern, string Replacement)[] ReparacionesContexto =
     {
+        // Reparar primero sufijos genéricos para conservar mayúsculas/minúsculas del texto original.
+        (CrearRegex("i" + TokenReemplazo + "n"), "ión"),
+        (CrearRegex("e" + TokenReemplazo + "o"), "eño"),
         (CrearRegex("Identificaci" + TokenReemplazo + "n"), "Identificación"),
         (CrearRegex(TokenReemplazo + "rea\\b"), "Área"),
         (CrearRegex("Due" + TokenReemplazo + "o"), "Dueño"),
         (CrearRegex("estrat" + TokenReemplazo + "gic"), "estratégic"),
         (CrearRegex("R" + TokenReemplazo + "gimen"), "Régimen"),
         (CrearRegex("interrelaci" + TokenReemplazo + "n"), "interrelación"),
-        (CrearRegex("i" + TokenReemplazo + "n"), "ión"),
-        (CrearRegex("e" + TokenReemplazo + "o"), "eño"),
         (CrearRegex("est" + TokenReemplazo + "n\\b"), "están"),
         (CrearRegex("inter" + TokenReemplazo + "s\\b"), "interés"),
         (CrearRegex("t" + TokenReemplazo + "cnic"), "técnic"),
