@@ -91,6 +91,22 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(input.value).toBe('Respuesta especial');
   });
 
+  it('activa captura manual automáticamente cuando el catálogo flexible está vacío', () => {
+    component.opcionesCatalogo = [];
+    const host = render(campo('selector-catalogo', {
+      codigoCatalogo: 'MR_AREA_RESPONSABLE',
+      permiteValorManual: true,
+      obligatorio: true
+    }));
+
+    const select = host.querySelector('select') as HTMLSelectElement;
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+
+    expect(select.value).toBe('__MANUAL__');
+    expect(input).not.toBeNull();
+    expect(input.required).toBe(true);
+  });
+
   it('renderiza selector de catálogo y mantiene opción nula controlada', () => {
     component.opcionesCatalogo = [
       { codigo: 'A', valor: 'Alto' },
