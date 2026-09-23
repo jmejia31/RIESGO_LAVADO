@@ -48,28 +48,47 @@ describe('DynamicFieldRendererComponent — controles dinámicos', () => {
     expect(host.querySelector('textarea')).not.toBeNull();
   });
 
-  it('mantiene texto manual y ofrece sugerencias administrables sin restringir el valor', () => {
+  it('renderiza desplegable administrable y permite cambiar a captura manual', () => {
     const emitSpy = vi.spyOn(component.valorChange, 'emit');
     component.opcionesCatalogo = [
       { codigo: 'GTIC', valor: 'Gerencia de Tecnología de Información y Comunicaciones' },
       { codigo: 'RRHH', valor: 'Recursos Humanos' }
     ];
 
-    const host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_AREA_RESPONSABLE' }), 'Área escrita manualmente');
-    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
-    const datalist = host.querySelector('datalist') as HTMLDataListElement;
+    let host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_AREA_RESPONSABLE' }), 'GTIC');
+    const select = host.querySelector('select') as HTMLSelectElement;
 
-    expect(input).not.toBeNull();
-    expect(input.value).toBe('Área escrita manualmente');
-    expect(input.getAttribute('list')).toBe(datalist.id);
-    expect(Array.from(datalist.options).map(opcion => opcion.value)).toEqual([
+    expect(select).not.toBeNull();
+    expect(Array.from(select.options).map(opcion => opcion.textContent?.trim())).toEqual([
+      'Seleccione una opción',
       'Gerencia de Tecnología de Información y Comunicaciones',
-      'Recursos Humanos'
+      'Recursos Humanos',
+      'Otro / Escribir manualmente…'
     ]);
+    expect(select.value).toBe('GTIC');
+    expect(host.querySelector('input[type="text"]')).toBeNull();
 
+    select.value = '__MANUAL__';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    fixture.detectChanges();
+    expect(emitSpy).toHaveBeenCalledWith(null);
+
+    host = fixture.nativeElement as HTMLElement;
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+    expect(input).not.toBeNull();
     input.value = 'Área no catalogada';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(emitSpy).toHaveBeenCalledWith('Área no catalogada');
+  });
+
+  it('muestra automáticamente la captura manual cuando el valor guardado no está catalogado', () => {
+    component.opcionesCatalogo = [{ codigo: 'MITIGAR', valor: 'Mitigar' }];
+    const host = render(campo('texto-sugerido', { codigoCatalogo: 'MR_RESPUESTA_RIESGO' }), 'Respuesta especial');
+    const select = host.querySelector('select') as HTMLSelectElement;
+    const input = host.querySelector('input[type="text"]') as HTMLInputElement;
+
+    expect(select.value).toBe('__MANUAL__');
+    expect(input.value).toBe('Respuesta especial');
   });
 
   it('renderiza selector de catálogo y mantiene opción nula controlada', () => {
