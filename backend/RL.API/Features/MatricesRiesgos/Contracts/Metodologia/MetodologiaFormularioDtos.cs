@@ -31,6 +31,7 @@ public sealed class CampoFormularioDto
     public string Etiqueta { get; set; } = string.Empty;
     public string Tipo { get; set; } = string.Empty;
     public string? CodigoCatalogo { get; set; }
+    public bool PermiteValorManual { get; set; }
     public bool Obligatorio { get; set; }
     public bool SoloLectura { get; set; }
 }
