@@ -200,6 +200,30 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.riesgos()[0].rieCodigo).toBe('R-005');
   });
 
+  it('normaliza mojibake del catálogo maestro de riesgos antes de renderizarlo', () => {
+    const bad = '\u00EF\u00BF\u00BD';
+    service.listarRiesgosPaginados.mockReturnValue(of({
+      items: [{
+        rieId: 24,
+        rieCodigo: 'RCUMP-COMPRAS-24',
+        rieNombre: `Registro de proveedores con informaci${bad}n inconsistente`,
+        rieDescripcion: `Evaluaci${bad}n t${bad}cnica del proveedor`,
+        rieActivo: true,
+        rieUsrCreacion: 1,
+        rieFechaCreacion: '2026-08-07T08:00:00'
+      }],
+      pagina: 1,
+      tamanoPagina: 200,
+      totalRegistros: 1,
+      totalPaginas: 1
+    }));
+
+    component.cargarRiesgos();
+
+    expect(component.riesgos()[0].rieNombre).toBe('Registro de proveedores con información inconsistente');
+    expect(component.riesgos()[0].rieDescripcion).toBe('Evaluación técnica del proveedor');
+  });
+
   it('construye secciones y campos desde la versión del formulario', () => {
     expect(component.secciones()).toHaveLength(1);
     expect(component.secciones()[0].campos[0].clave).toBe('area_principal');
