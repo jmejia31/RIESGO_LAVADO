@@ -163,7 +163,7 @@ test('captura el estado editable del constructor a 1536x1024', async ({ page }) 
   await expect(dialogo.getByText('Acciones', { exact: false })).toBeVisible();
   await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__cancel')).toBeVisible();
   await expect(dialogo.locator('[data-form-builder-region="statusbar"] .form-builder-statusbar__save')).toBeEnabled();
-  await expect(dialogo.getByText('Modo de visualizaciÃ³n y consulta tÃ©cnica', { exact: false })).toHaveCount(0);
+  await expect(dialogo.getByText('Modo de visualización y consulta técnica', { exact: false })).toHaveCount(0);
   await dialogo.locator('#summary-acciones-builder').click();
   await expect(dialogo.locator('#btn-agregar-seccion')).toBeVisible();
   await expect(dialogo.locator('#btn-nuevo-catalogo-header')).toHaveCount(0);
