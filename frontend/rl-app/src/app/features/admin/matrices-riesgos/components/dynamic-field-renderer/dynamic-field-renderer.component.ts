@@ -124,24 +124,32 @@ export interface OpcionCampoRenderer {
                    (input)="emitirTexto($any($event.target).value)" />
           }
           @case ('texto-sugerido') {
-            <input [id]="idControl"
-                   type="text"
-                   class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                   [required]="campo.obligatorio"
-                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
-                   [attr.list]="opcionesDisponibles.length > 0 ? idListaSugerencias : null"
-                   [readOnly]="campo.soloLectura"
-                   [value]="valorEscalar ?? ''"
-                   (input)="emitirTexto($any($event.target).value)" />
-            @if (opcionesDisponibles.length > 0) {
-              <datalist [id]="idListaSugerencias">
-                @for (opcion of opcionesDisponibles; track opcion.codigo) {
-                  <option [value]="opcion.valor">{{ opcion.codigo }}</option>
-                }
-              </datalist>
+            <select [id]="idControl"
+                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                    [required]="campo.obligatorio"
+                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                    [disabled]="campo.soloLectura"
+                    [value]="valorSeleccionTextoSugerido"
+                    (change)="cambiarTextoSugerido($any($event.target).value)">
+              <option value="">Seleccione una opción</option>
+              @for (opcion of opcionesDisponibles; track opcion.codigo) {
+                <option [value]="opcion.codigo">{{ opcion.valor }}</option>
+              }
+              <option value="__MANUAL__">Otro / Escribir manualmente…</option>
+            </select>
+            @if (mostrarEntradaManualTextoSugerido) {
+              <input [id]="idControl + '-manual'"
+                     type="text"
+                     class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
+                     [required]="campo.obligatorio"
+                     [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                     [attr.aria-label]="campo.etiqueta + ' - valor manual'"
+                     [readOnly]="campo.soloLectura"
+                     [value]="valorManualTextoSugerido"
+                     (input)="emitirTexto($any($event.target).value)" />
             }
             <p class="mt-1 text-[11px] font-medium text-gray-500">
-              Escriba el valor manualmente o seleccione una sugerencia administrada.
+              Seleccione un valor administrado o elija “Otro / Escribir manualmente…”.
             </p>
           }
           @case ('numero') {
@@ -265,8 +273,28 @@ export class DynamicFieldRendererComponent {
     return `${prefijo}-${clave}`;
   }
 
-  get idListaSugerencias(): string {
-    return this.idControl + '-sugerencias';
+  private modoManualTextoSugerido = false;
+
+  get valorSeleccionTextoSugerido(): string {
+    if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) {
+      return this.modoManualTextoSugerido ? '__MANUAL__' : '';
+    }
+
+    const valorActual = String(this.valor);
+    return this.opcionesDisponibles.some(opcion => opcion.codigo === valorActual)
+      ? valorActual
+      : '__MANUAL__';
+  }
+
+  get mostrarEntradaManualTextoSugerido(): boolean {
+    if (this.opcionesDisponibles.length === 0 || this.modoManualTextoSugerido) return true;
+    if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return false;
+    return !this.opcionesDisponibles.some(opcion => opcion.codigo === String(this.valor));
+  }
+
+  get valorManualTextoSugerido(): string {
+    if (!this.mostrarEntradaManualTextoSugerido || !tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return '';
+    return String(this.valor);
   }
 
   get valorEscalar(): string | number | boolean | null {
@@ -307,7 +335,7 @@ export class DynamicFieldRendererComponent {
         : this.valor === true ? 'Sí' : 'No';
     }
 
-    if (this.tipo === 'selector-catalogo' || this.tipo === 'radio') {
+    if (this.tipo === 'selector-catalogo' || this.tipo === 'radio' || this.tipo === 'texto-sugerido') {
       if (!tieneValorRespuesta(this.valor) || Array.isArray(this.valor)) return '-';
       return this.etiquetaOpcion(String(this.valor));
     }
@@ -354,6 +382,20 @@ export class DynamicFieldRendererComponent {
 
   emitirSeleccion(valor: unknown): void {
     this.valorChange.emit(valor === null || valor === undefined || valor === '' ? null : String(valor));
+  }
+
+  cambiarTextoSugerido(valor: unknown): void {
+    const seleccionado = valor === null || valor === undefined ? '' : String(valor);
+    if (seleccionado === '__MANUAL__') {
+      this.modoManualTextoSugerido = true;
+      if (this.opcionesDisponibles.some(opcion => opcion.codigo === String(this.valor ?? ''))) {
+        this.valorChange.emit(null);
+      }
+      return;
+    }
+
+    this.modoManualTextoSugerido = false;
+    this.emitirSeleccion(seleccionado);
   }
 
   alternarOpcion(codigo: string, event: Event): void {
