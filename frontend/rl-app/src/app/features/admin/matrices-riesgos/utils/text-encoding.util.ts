@@ -41,7 +41,19 @@ const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [RegExp, string]> = [
   [new RegExp('secci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'sección'],
   [new RegExp('Catastr' + TOKEN_REEMPLAZO + 'fico', 'gi'), 'Catastrófico'],
   [new RegExp('Cr' + TOKEN_REEMPLAZO + 'tico', 'gi'), 'Crítico'],
-  [new RegExp('M' + TOKEN_REEMPLAZO + 'ltiple', 'gi'), 'Múltiple']
+  [new RegExp('M' + TOKEN_REEMPLAZO + 'ltiple', 'gi'), 'Múltiple'],
+  [new RegExp('i' + TOKEN_REEMPLAZO + 'n', 'gi'), 'ión'],
+  [new RegExp('e' + TOKEN_REEMPLAZO + 'o', 'gi'), 'eño'],
+  [new RegExp('est' + TOKEN_REEMPLAZO + 'n\\b', 'gi'), 'están'],
+  [new RegExp('inter' + TOKEN_REEMPLAZO + 's\\b', 'gi'), 'interés'],
+  [new RegExp('t' + TOKEN_REEMPLAZO + 'cnic', 'gi'), 'técnic'],
+  [new RegExp('econ' + TOKEN_REEMPLAZO + 'mic', 'gi'), 'económic'],
+  [new RegExp('t' + TOKEN_REEMPLAZO + 'rmin', 'gi'), 'términ'],
+  [new RegExp('garant' + TOKEN_REEMPLAZO + 'a', 'gi'), 'garantía'],
+  [new RegExp('p' + TOKEN_REEMPLAZO + 'blic', 'gi'), 'públic'],
+  [new RegExp('pol' + TOKEN_REEMPLAZO + 'tic', 'gi'), 'polític'],
+  [new RegExp('c' + TOKEN_REEMPLAZO + 'nyuge', 'gi'), 'cónyuge'],
+  [new RegExp('v' + TOKEN_REEMPLAZO + 'ncul', 'gi'), 'víncul']
 ];
 
 const REPARACIONES_ORTOGRAFICAS: ReadonlyArray<readonly [RegExp, string]> = [
