@@ -7433,3 +7433,19 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Gate corregido:** `tools/validate_text_encoding.ps1` usa `IndexOf` compatible con Windows PowerShell; resultado fresco `TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`.
 - **Pruebas ejecutadas:** backend focal actualizado `32/32 PASS`; backend completo `657/657 PASS`; frontend completo `79/79 archivos, 791/791 PASS`; migrador Release build PASS; validadores Oracle/documentación PASS; encoding gate PASS; diff check PASS. Oracle no fue conectado ni modificado.
 - **Estado:** `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.
+
+
+## Registro RTO-INSTITUCIONAL-V1-1-PROPUESTO
+
+- Fecha local: `2026-09-23` (UTC-6); autor documental: CHAT / CHATGPT; rama `desarrollo`.
+- Objetivo: formalizar una propuesta institucional de continuidad que exija atención inmediata ante caídas sin convertir el RTO en una promesa técnicamente imposible ni asignar automáticamente responsabilidad personal a Desarrollo/GTIC o al encargado del sistema.
+- Documento canónico versionado: `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md`.
+- Propuesta: `RTO_PROPOSED=4 horas`; `INCIDENT_RESPONSE_TARGET=0 minutos`; `CATASTROPHIC_EXCEPTION=TRUE`.
+- El minuto 0 representa inicio inmediato de atención, diagnóstico y escalamiento; no representa recuperación instantánea ni disponibilidad absoluta.
+- El RTO de 4 horas aplica bajo condiciones normales y con dependencias técnicas disponibles. Si la recuperación depende de infraestructura crítica, Oracle/DBA, seguridad, telecomunicaciones, proveedor, fuerza mayor, autorizaciones o restricciones de acceso fuera del control efectivo de Desarrollo/GTIC, se documenta la causa y se emplea el tiempo técnicamente necesario para recuperar y validar de forma segura.
+- Protección operativa: la continuidad se define como responsabilidad institucional compartida. La superación del RTO, aisladamente, no prueba negligencia ni determina responsabilidad disciplinaria, civil, administrativa o personal; debe evaluarse causa raíz, control efectivo, recursos, accesos, terceros, autorizaciones, escalamiento y evidencia.
+- Responsabilidad del encargado: actuar oportunamente, diagnosticar dentro de sus competencias, escalar, coordinar, comunicar y conservar trazabilidad; no sustituir funciones formales de Infraestructura, DBA, Seguridad o Negocio.
+- La propuesta incluye hoja de aprobaciones para Negocio, Infraestructura, DBA, Desarrollo/GTIC, encargado del sistema y Asesoría Legal/Compliance cuando aplique.
+- Estado real: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. Sólo una aprobación/firma/archivo institucional permite cambiar a `RTO_DEFINED=TRUE`, `RTO_VALUE=4 horas`.
+- `RPO_DEFINED=FALSE`; capacitación y despliegue productivo continúan pendientes.
+- No hubo cambio funcional ni DML/DDL; `main` no fue modificado.
