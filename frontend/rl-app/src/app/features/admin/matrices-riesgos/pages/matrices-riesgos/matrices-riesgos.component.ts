@@ -41,7 +41,7 @@ import {
   tieneValorRespuesta
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
-import { normalizarTextoVisibleUtf8 } from '../../utils/text-encoding.util';
+import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -1022,8 +1022,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       next: respuesta => this.riesgos.set(
         respuesta.items.map(riesgo => ({
           ...riesgo,
-          rieNombre: normalizarTextoVisibleUtf8(riesgo.rieNombre),
-          rieDescripcion: riesgo.rieDescripcion ? normalizarTextoVisibleUtf8(riesgo.rieDescripcion) : riesgo.rieDescripcion
+          rieNombre: normalizarMojibakeVisibleUtf8(riesgo.rieNombre),
+          rieDescripcion: riesgo.rieDescripcion ? normalizarMojibakeVisibleUtf8(riesgo.rieDescripcion) : riesgo.rieDescripcion
         }))
       ),
       error: () => this.riesgos.set([])
@@ -1130,7 +1130,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         const items = Array.isArray(paginado?.items)
           ? paginado.items.map(item => ({
               ...item,
-              riesgoNombre: normalizarTextoVisibleUtf8(item.riesgoNombre)
+              riesgoNombre: normalizarMojibakeVisibleUtf8(item.riesgoNombre)
             }))
           : [];
         this.evaluaciones.set(items);
