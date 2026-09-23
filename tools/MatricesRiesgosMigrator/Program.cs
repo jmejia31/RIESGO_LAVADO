@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ExcelDataReader;
 using Microsoft.Extensions.Configuration;
@@ -16,6 +17,8 @@ namespace RL.Tools.MatricesRiesgosMigrator;
 
 public static class Program
 {
+    private static readonly Regex SignoPreguntaIncrustado =
+        new("(?i)(?<=\\p{L})\\u00BF(?=\\p{L})", RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(100));
     private const string FamiliaEsperada = "MATRIZ_RIESGOS_LAFT";
     private const string VersionEsperada = "MATRIZ_RIESGOS_LAFT_V1";
     private const string HashEsperado = "f2f84f21b6cc46762fd6087bc41df449b31ca87b058c763689bdfb3bba961f90";
@@ -31,6 +34,10 @@ public static class Program
         bool repairRiskText = args.Any(a => string.Equals(a, "--repair-risk-text", StringComparison.OrdinalIgnoreCase));
         bool repairRiskNames = args.Any(a => string.Equals(a, "--repair-risk-names", StringComparison.OrdinalIgnoreCase));
         bool verifyRiskText = args.Any(a => string.Equals(a, "--verify-risk-text", StringComparison.OrdinalIgnoreCase));
+        bool generateRiskNameSql = args.Any(a => string.Equals(a, "--generate-risk-name-sql", StringComparison.OrdinalIgnoreCase));
+        string? riskNameSqlOutput = args
+            .FirstOrDefault(a => a.StartsWith("--risk-name-sql-output=", StringComparison.OrdinalIgnoreCase))
+            ?.Split('=', 2)[1].Trim();
         string? inspectRiskCode = args
             .FirstOrDefault(a => a.StartsWith("--inspect-risk-code=", StringComparison.OrdinalIgnoreCase))
             ?.Split('=', 2)[1]
@@ -91,6 +98,14 @@ public static class Program
         if (inspectSourceRiskText)
         {
             return InspeccionarTextoRiesgosFuente(sourceRisks);
+        }
+
+        if (generateRiskNameSql)
+        {
+            string outputPath = string.IsNullOrWhiteSpace(riskNameSqlOutput)
+                ? Path.Combine(repoRoot, "artifacts", "oracle", "risk-name-sync-generated.sql")
+                : Path.GetFullPath(riskNameSqlOutput);
+            return GenerarSqlNombresRiesgos(sourceRisks, outputPath);
         }
 
         // 2. Ejecutar Dry-Run de validación contractual
@@ -245,7 +260,62 @@ public static class Program
             || value.Contains('\u00C3')
             || value.Contains('\u00C2')
             || value.Contains("\u00E2\u20AC", StringComparison.Ordinal)
-            || value.Contains("\u00F0\u0178", StringComparison.Ordinal);
+            || value.Contains("\u00F0\u0178", StringComparison.Ordinal)
+            || SignoPreguntaIncrustado.IsMatch(value);
+    }
+
+    private static int GenerarSqlNombresRiesgos(IReadOnlyCollection<SourceRiskRow> sourceRisks, string outputPath)
+    {
+        if (sourceRisks.Count != 59 || sourceRisks.Any(r => ContieneMojibake(r.Titulo)))
+        {
+            Console.WriteLine("RISK_NAME_SQL_GENERATION_STATUS=FAIL_SOURCE");
+            return 6;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? Directory.GetCurrentDirectory());
+        var sql = new StringBuilder()
+            .AppendLine("-- Generado por MatricesRiesgosMigrator --generate-risk-name-sql")
+            .AppendLine("-- Revisión manual requerida; este modo no abre Oracle ni ejecuta DML.")
+            .AppendLine("-- Incluye todos los códigos fuente con predicado de diferencia; 33 es el correctivo controlado de los códigos auditados.")
+            .AppendLine("SET SERVEROUTPUT ON")
+            .AppendLine("DECLARE v_rows NUMBER := 0; BEGIN");
+        foreach (SourceRiskRow risk in sourceRisks.OrderBy(r => r.RowNumber))
+        {
+            sql.Append("  UPDATE RL_MR_RIESGOS SET RIE_NOMBRE = ")
+                .Append(ToOracleUnistr(risk.Titulo))
+                .Append(" WHERE RIE_CODIGO = '")
+                .Append(risk.Code.Replace("'", "''", StringComparison.Ordinal))
+                .Append("' AND RIE_NOMBRE <> ")
+                .Append(ToOracleUnistr(risk.Titulo))
+                .AppendLine("; v_rows := v_rows + SQL%ROWCOUNT;");
+        }
+        sql.AppendLine("  DBMS_OUTPUT.PUT_LINE('GENERATED_EXPECTED_UPDATES=' || v_rows);")
+            .AppendLine("  ROLLBACK;")
+            .AppendLine("END;")
+            .AppendLine("/");
+        File.WriteAllText(outputPath, sql.ToString(), new UTF8Encoding(false));
+        Console.WriteLine($"RISK_NAME_SQL_GENERATED_PATH={outputPath}");
+        Console.WriteLine($"RISK_NAME_SQL_GENERATED_SOURCE_ROWS={sourceRisks.Count}");
+        Console.WriteLine("RISK_NAME_SQL_GENERATION_STATUS=PASS_REVIEW_ONLY");
+        return 0;
+    }
+
+    private static string ToOracleUnistr(string value)
+    {
+        var builder = new StringBuilder("UNISTR('");
+        foreach (Rune rune in value.EnumerateRunes())
+        {
+            if (rune.Value == '\'') builder.Append("''");
+            else if (rune.Value < 128 && rune.Value != '\\') builder.Append((char)rune.Value);
+            else if (rune.Value <= 0xFFFF) builder.Append('\\').Append(rune.Value.ToString("X4", CultureInfo.InvariantCulture));
+            else
+            {
+                int scalar = rune.Value - 0x10000;
+                builder.Append('\\').Append((0xD800 + (scalar >> 10)).ToString("X4", CultureInfo.InvariantCulture));
+                builder.Append('\\').Append((0xDC00 + (scalar & 0x3FF)).ToString("X4", CultureInfo.InvariantCulture));
+            }
+        }
+        return builder.Append("')").ToString();
     }
 
     private static async Task<int> InspeccionarUnicodeRiesgoAsync(

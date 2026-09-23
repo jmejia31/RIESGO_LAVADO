@@ -1470,3 +1470,11 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `MAPA_ARQUITECTURA=NO_APLICA`; REST, seguridad, tenancy, V1/V2, hashes e históricos no cambian.
 - Continuación exacta: actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`, ejecutar verificación/correctivo/postverificación Oracle autorizados y volver a validar visualmente el selector.
 
+# Estado vigente — Corrección controlada de nombres Unicode de riesgos (COD)
+
+- **Fecha:** 2026-09-23 (UTC-6). **Rama:** `desarrollo`. **Base:** `349360676086c3c3d34909e475a9ebaa34ddeafe`.
+- **Estado:** `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- `RL_MR_RIESGOS.RIE_NOMBRE` queda protegido en backend/frontend contra mojibake contextual (`U+00BF` incrustado, `U+FFFD`, `ï¿`, `Ã`, `Â`) sin prohibir `¿`, `¡` ni diacríticos españoles válidos. `RIE_DESCRIPCION` no se sincroniza.
+- Se generaron scripts manuales 31–35 en `database/19_matrices_riesgos/transicion/`. El conjunto auditado de diferencias es `43` según artefacto previo; el correctivo calcula `EXPECTED_UPDATES` dinámicamente y aborta ante divergencia.
+- Validación fresca: backend `655/655 PASS`; frontend `79/79 archivos, 791/791 PASS`; focalizada `44/44 PASS`; lint/build/migrador/estructura/BD/enlaces PASS. `run_quality_gates.ps1` fue ejecutado y terminó `FAIL` por 3 timeouts de regresiones globales frontend (`76/79`, `788/791`) en la corrida con cobertura. E2E queda pendiente; Oracle precheck/postcheck/DML requieren ejecución manual.
+- **Continuación exacta:** revisar diff y scripts, ejecutar gates restantes, commit/push a `origin/desarrollo`; luego Javier ejecuta `31_precheck` → `32_backup` → `33_corregir` → `34_postcheck`, y `35_rollback` solo si corresponde.

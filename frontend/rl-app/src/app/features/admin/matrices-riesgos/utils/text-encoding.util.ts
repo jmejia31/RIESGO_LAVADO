@@ -1,103 +1,50 @@
 const REEMPLAZOS_MOJIBAKE: ReadonlyArray<readonly [string, string]> = [
-  ['\u00C3\u00A1', 'á'],
-  ['\u00C3\u00A9', 'é'],
-  ['\u00C3\u00AD', 'í'],
-  ['\u00C3\u00B3', 'ó'],
-  ['\u00C3\u00BA', 'ú'],
-  ['\u00C3\u00B1', 'ñ'],
-  ['\u00C3\u0081', 'Á'],
-  ['\u00C3\u0089', 'É'],
-  ['\u00C3\u008D', 'Í'],
-  ['\u00C3\u0093', 'Ó'],
-  ['\u00C3\u009A', 'Ú'],
-  ['\u00C3\u0091', 'Ñ'],
-  ['\u00C2\u00BF', '¿'],
-  ['\u00C2\u00A1', '¡'],
-  ['\u00C2\u00B0', '°'],
-  ['\u00C2\u00BA', 'º'],
-  ['\u00C2\u00AA', 'ª'],
-  ['\u00E2\u20AC\u201C', '–'],
-  ['\u00E2\u20AC\u201D', '—'],
-  ['\u00E2\u20AC\u0153', '“'],
-  ['\u00E2\u20AC\u009D', '”'],
-  ['\u00E2\u20AC\u02DC', '‘'],
-  ['\u00E2\u20AC\u2122', '’']
+  ['\u00C3\u00A1', '\u00E1'], ['\u00C3\u00A9', '\u00E9'], ['\u00C3\u00AD', '\u00ED'],
+  ['\u00C3\u00B3', '\u00F3'], ['\u00C3\u00BA', '\u00FA'], ['\u00C3\u00B1', '\u00F1'],
+  ['\u00C3\u0081', '\u00C1'], ['\u00C3\u0089', '\u00C9'], ['\u00C3\u008D', '\u00CD'],
+  ['\u00C3\u0093', '\u00D3'], ['\u00C3\u009A', '\u00DA'], ['\u00C3\u0091', '\u00D1'],
+  ['\u00C2\u00BF', '\u00BF'], ['\u00C2\u00A1', '\u00A1'], ['\u00C2\u00B0', '\u00B0'],
+  ['\u00C2\u00BA', '\u00BA'], ['\u00C2\u00AA', '\u00AA']
 ];
 
-const TOKEN_REEMPLAZO = '(?:\\u00EF\\u00BF\\u00BD|\\uFFFD)';
-
-const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [RegExp, string]> = [
-  // Reparar primero sufijos genéricos para conservar mayúsculas/minúsculas del texto original.
-  [new RegExp('i' + TOKEN_REEMPLAZO + 'n', 'gi'), 'ión'],
-  [new RegExp('e' + TOKEN_REEMPLAZO + 'o', 'gi'), 'eño'],
-  [new RegExp('Identificaci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Identificación'],
-  [new RegExp(TOKEN_REEMPLAZO + 'rea\\b', 'gi'), 'Área'],
-  [new RegExp('Due' + TOKEN_REEMPLAZO + 'o', 'gi'), 'Dueño'],
-  [new RegExp('estrat' + TOKEN_REEMPLAZO + 'gic', 'gi'), 'estratégic'],
-  [new RegExp('R' + TOKEN_REEMPLAZO + 'gimen', 'gi'), 'Régimen'],
-  [new RegExp('interrelaci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'interrelación'],
-  [new RegExp('Valoraci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Valoración'],
-  [new RegExp('Evaluaci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Evaluación'],
-  [new RegExp('Configuraci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Configuración'],
-  [new RegExp('Definici' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Definición'],
-  [new RegExp('Selecci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'Selección'],
-  [new RegExp('secci' + TOKEN_REEMPLAZO + 'n', 'gi'), 'sección'],
-  [new RegExp('Catastr' + TOKEN_REEMPLAZO + 'fico', 'gi'), 'Catastrófico'],
-  [new RegExp('Cr' + TOKEN_REEMPLAZO + 'tico', 'gi'), 'Crítico'],
-  [new RegExp('M' + TOKEN_REEMPLAZO + 'ltiple', 'gi'), 'Múltiple'],
-  [new RegExp('est' + TOKEN_REEMPLAZO + 'n\\b', 'gi'), 'están'],
-  [new RegExp('inter' + TOKEN_REEMPLAZO + 's\\b', 'gi'), 'interés'],
-  [new RegExp('t' + TOKEN_REEMPLAZO + 'cnic', 'gi'), 'técnic'],
-  [new RegExp('econ' + TOKEN_REEMPLAZO + 'mic', 'gi'), 'económic'],
-  [new RegExp('t' + TOKEN_REEMPLAZO + 'rmin', 'gi'), 'términ'],
-  [new RegExp('garant' + TOKEN_REEMPLAZO + 'a', 'gi'), 'garantía'],
-  [new RegExp('p' + TOKEN_REEMPLAZO + 'blic', 'gi'), 'públic'],
-  [new RegExp('pol' + TOKEN_REEMPLAZO + 'tic', 'gi'), 'polític'],
-  [new RegExp('c' + TOKEN_REEMPLAZO + 'nyuge', 'gi'), 'cónyuge'],
-  [new RegExp('v' + TOKEN_REEMPLAZO + 'ncul', 'gi'), 'víncul']
+const REPARACIONES_CONTEXTO: ReadonlyArray<readonly [string, string]> = [
+  ['Identificaci\u00BFn', 'Identificaci\u00F3n'], ['Evaluaci\u00BFn', 'Evaluaci\u00F3n'],
+  ['Configuraci\u00BFn', 'Configuraci\u00F3n'], ['Definici\u00BFn', 'Definici\u00F3n'],
+  ['\u00BFrea', '\u00C1rea'], ['estrat\u00BFgic', 'estrat\u00E9gic'],
+  ['R\u00BFgimen', 'R\u00E9gimen'],
+  ['Cr\u00BFtico', 'Cr\u00EDtico'], ['Catastr\u00BFfico', 'Catastr\u00F3fico'],
+  ['interrelaci\u00BFn', 'interrelaci\u00F3n'],
+  ['informaci\u00BFn', 'informaci\u00F3n'], ['evaluaci\u00BFn', 'evaluaci\u00F3n'],
+  ['gesti\u00BFn', 'gesti\u00F3n'], ['aprobaci\u00BFn', 'aprobaci\u00F3n'],
+  ['adjudicaci\u00BFn', 'adjudicaci\u00F3n'], ['contrataci\u00BFn', 'contrataci\u00F3n'],
+  ['licitaci\u00BFn', 'licitaci\u00F3n'], ['pensi\u00BFn', 'pensi\u00F3n'],
+  ['prestaci\u00BFn', 'prestaci\u00F3n'], ['definici\u00BFn', 'definici\u00F3n'],
+  ['ejecuci\u00BFn', 'ejecuci\u00F3n'], ['supervisi\u00BFn', 'supervisi\u00F3n'],
+  ['prevenci\u00BFn', 'prevenci\u00F3n'], ['Due\u00BFo', 'Due\u00F1o'], ['due\u00BFo', 'due\u00F1o'],
+  ['v\u00BFnculo', 'v\u00EDnculo'], ['t\u00BFrmin', 't\u00E9rmin'], ['t\u00BFcnica', 't\u00E9cnica'],
+  ['p\u00BAblica', 'p\u00FAblica'], ['m\u00BFs', 'm\u00E1s']
 ];
 
-const REPARACIONES_ORTOGRAFICAS: ReadonlyArray<readonly [RegExp, string]> = [
-  [/\bIdentificacion\b/gi, 'Identificación'],
-  [/\bEvaluacion\b/gi, 'Evaluación'],
-  [/\bConfiguracion\b/gi, 'Configuración'],
-  [/\bDefinicion\b/gi, 'Definición'],
-  [/\bSeleccion\b/gi, 'Selección'],
-  [/\bVersion\b/gi, 'Versión'],
-  [/\bArea\b/gi, 'Área']
-];
+const SIGNO_PREGUNTA_INCRUSTADO = /[\p{L}]\u00BF(?=[\p{L}])/u;
 
 export function contieneMojibakeVisible(valor: string): boolean {
-  return valor.includes('\uFFFD')
-    || valor.includes('\u00EF\u00BF\u00BD')
-    || valor.includes('\u00C3')
-    || valor.includes('\u00C2')
-    || valor.includes('\u00E2\u20AC')
-    || valor.includes('\u00F0\u0178');
+  return valor.includes('\uFFFD') || valor.includes('\u00EF\u00BF\u00BD')
+    || valor.includes('\u00C3') || valor.includes('\u00C2') || valor.includes('\u00E2\u20AC')
+    || valor.includes('\u00F0\u0178') || SIGNO_PREGUNTA_INCRUSTADO.test(valor);
 }
 
 export function normalizarMojibakeVisibleUtf8(valor: string): string {
   if (!valor) return valor;
-
   let resultado = valor;
-
-  for (const [origen, destino] of REEMPLAZOS_MOJIBAKE) {
-    resultado = resultado.split(origen).join(destino);
-  }
-
-  for (const [patron, reemplazo] of REPARACIONES_CONTEXTO) {
-    resultado = resultado.replace(patron, reemplazo);
-  }
-
+  for (const [origen, destino] of REEMPLAZOS_MOJIBAKE) resultado = resultado.split(origen).join(destino);
+  resultado = resultado.replace(/([\p{L}])\uFFFD(?=[\p{L}])/gu, '$1\u00BF');
+  resultado = resultado.split('\u00EF\u00BF\uFFFD').join('\u00BF');
+  resultado = resultado.replace(/\u00EF\u00BF\u00BD/g, '\u00BF')
+    .replace(/\u00EF\u00BFo/g, '\u00F1o').replace(/\uFFFDo/g, '\u00F1o');
+  for (const [origen, destino] of REPARACIONES_CONTEXTO) resultado = resultado.split(origen).join(destino);
   return resultado;
 }
 
 export function normalizarTextoVisibleUtf8(valor: string): string {
-  let resultado = normalizarMojibakeVisibleUtf8(valor);
-
-  for (const [patron, reemplazo] of REPARACIONES_ORTOGRAFICAS) {
-    resultado = resultado.replace(patron, reemplazo);
-  }
-
-  return resultado;
+  return normalizarMojibakeVisibleUtf8(valor);
 }
