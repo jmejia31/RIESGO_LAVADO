@@ -69,7 +69,7 @@ El correctivo:
 
 - empareja exclusivamente por `RIE_CODIGO`;
 - exige las 59 filas canónicas y aborta ante códigos faltantes/duplicados;
-- actualiza únicamente `RIE_NOMBRE` y `RIE_DESCRIPCION`;
+- actualiza únicamente el campo (`RIE_NOMBRE` y/o `RIE_DESCRIPCION`) que contenga mojibake; un campo sano de la misma fila se preserva byte a byte;
 - no inserta ni elimina riesgos;
 - no modifica evaluaciones, proyecciones, formularios, V1/V2 ni hashes;
 - genera backup JSON previo bajo `artifacts/oracle/`;
