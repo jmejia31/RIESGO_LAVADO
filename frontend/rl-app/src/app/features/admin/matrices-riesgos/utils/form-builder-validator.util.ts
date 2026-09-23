@@ -96,7 +96,7 @@ export function validarFormBuilderModel(model: FormBuilderModel): FormBuilderVal
           errores.push({ campo: cmp.clave || posicion, mensaje: `El campo "${cmp.clave || posicion}" requiere una etiqueta visible.` });
         }
 
-        if (cmp.tipo === 'selector-catalogo' || cmp.tipo === 'catalogo-multiple') {
+        if (cmp.tipo === 'selector-catalogo' || cmp.tipo === 'catalogo-multiple' || cmp.tipo === 'texto-sugerido') {
           const codigoCatalogo = cmp.codigoCatalogo?.trim();
           if (!codigoCatalogo) {
             errores.push({ campo: cmp.clave || posicion, mensaje: `El campo "${cmp.etiqueta || cmp.clave}" requiere asociar un catálogo institucional.` });
