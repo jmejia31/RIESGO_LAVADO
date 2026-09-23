@@ -9,10 +9,9 @@ import {
 } from './dynamic-form-renderer.util';
 
 describe('Renderer dinámico — normalización defensiva', () => {
-  it('normaliza los diez tipos canónicos y sus aliases operativos', () => {
+  it('normaliza los nueve tipos canónicos y sus aliases operativos', () => {
     const casos: Array<[string, string]> = [
       ['texto', 'texto'],
-      ['texto-con-sugerencias', 'texto-sugerido'],
       ['number', 'numero'],
       ['date', 'fecha'],
       ['textarea', 'texto-largo'],
@@ -124,6 +123,27 @@ describe('Renderer dinámico — normalización defensiva', () => {
       tipo: 'desconocido',
       tipoOriginal: 'widget-v2',
       soloLectura: true
+    }));
+  });
+
+  it('normaliza el permiso de valor manual en selectores de catálogo', () => {
+    const definicion = normalizarDefinicionFormulario({
+      secciones: [{
+        clave: 'general',
+        campos: [{
+          clave: 'responsable',
+          etiqueta: 'Responsable',
+          tipo: 'selector-catalogo',
+          codigoCatalogo: 'MR_AREA_RESPONSABLE',
+          permiteValorManual: true
+        }]
+      }]
+    });
+
+    expect(definicion.secciones[0].campos[0]).toEqual(expect.objectContaining({
+      tipo: 'selector-catalogo',
+      codigoCatalogo: 'MR_AREA_RESPONSABLE',
+      permiteValorManual: true
     }));
   });
 
