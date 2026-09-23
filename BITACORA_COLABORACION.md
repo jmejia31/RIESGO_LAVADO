@@ -7330,3 +7330,18 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - La caché de página corta e invalidable permanece como mitigación. No se modificaron `DNP_IHSS` ni `MMATAMOROS`; no se crean índices externos.
 - La latencia fría del origen Oracle queda `ACCEPTED_KNOWN_RESTRICTION`; la certificación contractual histórica FAIL se conserva como evidencia y ya no bloquea el cierre por decisión explícita del propietario.
 - Estado: `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER`.
+
+## Registro CIERRE-INSTITUCIONAL-PRODUCCION-TRACKING
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT` / `CHATGPT`; rama `desarrollo`; SHA inicial `7e4850094fc57121914028a4cab8d642b4403317`.
+- Objetivo: avanzar el cierre institucional sin inventar valores ni reabrir trabajo técnico ya cerrado.
+- Skills/protocolo aplicados: gobierno transversal, `riesgo-lavado-continuidad`, `riesgo-lavado-documentacion`, `riesgo-lavado-cierre-fase` y `riesgo-lavado-quality-gates`. UI/backend/Oracle no aplican porque no hay cambio funcional.
+- Impacto: documentación/gobierno de release únicamente; interfaces/datos/seguridad/cache/arquitectura `NO_CHANGE`; `MAPA_ARQUITECTURA=NO_APLICA`.
+- Se creó GitHub issue #22, asignado a `jmejia31`, con cuatro pendientes institucionales: valores productivos, RTO/RPO, capacitación y despliegue.
+- Se elimina como pendiente abierto la latencia fría de Monitoreo; se preserva la certificación histórica FAIL sin alterar su evidencia y se mantiene `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`.
+- Estado no inventado: `PRODUCTION_TEST_PLACEHOLDERS=2`, `RTO_DEFINED=FALSE`, `RPO_DEFINED=FALSE`, `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`, `PRODUCTION_DEPLOYED=FALSE`.
+- Archivos de control actualizados: Fase 7, certificación de performance, release notes, estado colaborativo, esta bitácora y nuevo documento `CIERRE_INSTITUCIONAL_PRODUCCION.md`.
+- Pruebas funcionales no ejecutadas: no hay cambio de código/datos. Validación aplicable: revisión de consistencia documental y CI/Quality Gate remoto del SHA publicado.
+- No se tocó `main`, Oracle, restore, `DNP_IHSS`, `MMATAMOROS` ni índices externos.
+- Punto exacto de continuación: obtener decisiones/evidencia institucional para issue #22 y sólo entonces actualizar los estados productivos correspondientes.
+

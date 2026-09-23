@@ -1,6 +1,6 @@
 # Monitoreo de Listas - certificacion HTTP production-like
 
-**Resultado: FAIL.** No se certifica `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=PASS`.
+**Resultado contractual histórico (corrida 2026-09-10): FAIL.** No se certificó `PRODUCTION_LIKE_PERFORMANCE_CERTIFICATION=PASS` para esa corrida. **Estado vigente desde 2026-09-23:** `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER`, `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION` y `MONITOREO_WARM_PAGE_CACHE=PASS`; el FAIL histórico se conserva como evidencia y ya no representa un pendiente abierto.
 
 La corrida final reproducible se ejecuto con `RL.API` compilada en `Release`,
 `ASPNETCORE_ENVIRONMENT=Production`, Oracle real, JWT del proyecto y HTTP

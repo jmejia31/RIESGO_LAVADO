@@ -19,7 +19,7 @@ V1 ID 61 continúa `PUBLISHED`, vigente 1 e inmutable. V2 ID 63 continúa `DRAFT
 
 ## Restricciones conocidas
 
-`PRODUCTION_TEST_PLACEHOLDERS=2`: `GTIC` y `MITIGAR` siguen siendo datos de prueba y bloquean aceptación productiva si no se resuelven. El entrenamiento institucional aún no fue ejecutado. RTO/RPO no están definidos institucionalmente. Restore real requiere objetivo aislado y privilegio DBA.
+`PRODUCTION_TEST_PLACEHOLDERS=2`: `GTIC` y `MITIGAR` siguen siendo datos de prueba y bloquean aceptación productiva si no se resuelven. La capacitación institucional aún no fue ejecutada y RTO/RPO no están definidos institucionalmente. El clean install/restore real ya fue ejecutado y validado con la excepción de aislamiento documentada en Fase 7; no es un pendiente abierto. El rendimiento de Monitoreo también quedó cerrado por decisión del propietario, con la latencia fría aceptada como restricción conocida. El seguimiento institucional restante está en issue #22.
 
 ## Instalación y soporte
 

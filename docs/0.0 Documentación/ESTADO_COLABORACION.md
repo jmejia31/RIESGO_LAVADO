@@ -1420,3 +1420,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`.
 - La corrida production-like histórica conserva su resultado FAIL como evidencia histórica, pero deja de ser pendiente/bloqueo abierto del proyecto.
 - No se autorizan ni requieren cambios físicos adicionales sobre `DNP_IHSS` o `MMATAMOROS`.
+
+## Estado vigente - CIERRE INSTITUCIONAL PARA PRODUCCION EN SEGUIMIENTO
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT`; rama `desarrollo`; baseline inicial `7e4850094fc57121914028a4cab8d642b4403317`.
+- Se corrigió la contradicción documental que todavía listaba la latencia fría de Monitoreo como deuda abierta. Estado vigente: `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER`, `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`, `MONITOREO_WARM_PAGE_CACHE=PASS`.
+- Se creó el seguimiento institucional [issue #22](https://github.com/jmejia31/RIESGO_LAVADO/issues/22), asignado a `jmejia31`.
+- Pendientes externos reales: ratificación/reemplazo de los dos valores `TEST_DATA_ONLY`, definición RTO/RPO, ejecución/aceptación de capacitación y despliegue productivo.
+- `PRODUCTION_TEST_PLACEHOLDERS=2`; `RTO_DEFINED=FALSE`; `RPO_DEFINED=FALSE`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`; `PRODUCTION_DEPLOYED=FALSE`.
+- No se tocaron código, datos, Oracle, `DNP_IHSS`, `MMATAMOROS`, índices ni `main`. `MAPA_ARQUITECTURA=NO_APLICA`.
+- Nuevo documento de control: `docs/3. Módulo Matrices de Riesgos/CIERRE_INSTITUCIONAL_PRODUCCION.md`.
+- Punto de continuación: resolver los cuatro checkboxes de issue #22 con evidencia institucional; no reabrir Fase 5.3/6/7 ni rendimiento de Monitoreo.
+

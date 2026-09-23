@@ -24,11 +24,22 @@ La suite OracleIntegration final se ejecuta verde con 5/5: la aserción históri
 
 ## Documentación y capacitación
 
-Se entregan manual técnico, funcional, operativo, guía DBA, soporte, plan/material/checklist y plantillas. `TRAINING_MATERIAL=PASS`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE` hasta Fase 8.
+Se entregan manual técnico, funcional, operativo, guía DBA, soporte, plan/material/checklist y plantillas. `TRAINING_MATERIAL=PASS`; `INSTITUTIONAL_TRAINING_EXECUTED=FALSE` hasta que la capacitación sea efectivamente impartida y aceptada con evidencia institucional.
 
 ## Defectos y deuda
 
-P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos como restricciones/deudas no bloqueantes del cierre de desarrollo: placeholders de prueba (2), RTO/RPO no definidos, excepción de aislamiento de la prueba real, latencia fría de Monitoreo contra el origen Oracle, VER_ID 27/28 y RBAC granular global. No constituyen una afirmación de producción desplegada.
+P0/P1/CRITICAL/HIGH deben ser cero. Permanecen explícitos como restricciones/deudas no bloqueantes del cierre de desarrollo: placeholders de prueba (2), RTO/RPO no definidos, excepción de aislamiento de la prueba real, VER_ID 27/28 y RBAC granular global. La latencia fría de Monitoreo ya no es un pendiente abierto: `MONITOREO_PERFORMANCE_POINT=CLOSED_BY_OWNER` y `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`. No constituyen una afirmación de producción desplegada.
+
+## Pendientes institucionales para producción
+
+El seguimiento operativo se concentra en [issue #22](https://github.com/jmejia31/RIESGO_LAVADO/issues/22). Estos puntos no son desarrollo pendiente y no autorizan inventar decisiones institucionales:
+
+1. **Valores definitivos de producción:** `ROTR-ALMACENBIENE-23` mantiene `dueno_riesgo=GTIC` y `RCUMP-COMPRAS-37` mantiene `respuesta_riesgo=MITIGAR` exclusivamente como `TEST_DATA_ONLY` hasta ratificación o reemplazo institucional.
+2. **RTO/RPO:** siguen sin definición institucional; deben ser aprobados por DBA/Infraestructura/Negocio.
+3. **Capacitación institucional:** material y checklist están listos; falta ejecución, asistencia y aceptación/evaluación registradas.
+4. **Despliegue productivo:** `PRODUCTION_DEPLOYED=FALSE`; al autorizarse requiere backup previo, preflight, despliegue, postflight y smoke final con evidencia del SHA desplegado.
+
+No se reabren reconstrucción/restore de Fase 7, índices/DDL en `DNP_IHSS` o `MMATAMOROS`, ni el punto de rendimiento de Monitoreo.
 
 ## Conclusión
 
