@@ -197,12 +197,12 @@ public static class Program
     {
         if (string.IsNullOrEmpty(value)) return false;
 
-        return value.Contains('�')
-            || value.Contains("ï¿½", StringComparison.Ordinal)
-            || value.Contains('Ã')
-            || value.Contains('Â')
-            || value.Contains("â€", StringComparison.Ordinal)
-            || value.Contains("ðŸ", StringComparison.Ordinal);
+        return value.Contains('\uFFFD')
+            || value.Contains("\u00EF\u00BF\u00BD", StringComparison.Ordinal)
+            || value.Contains('\u00C3')
+            || value.Contains('\u00C2')
+            || value.Contains("\u00E2\u20AC", StringComparison.Ordinal)
+            || value.Contains("\u00F0\u0178", StringComparison.Ordinal);
     }
 
     private static async Task<int> VerificarOCorregirTextoRiesgosAsync(
