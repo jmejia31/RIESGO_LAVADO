@@ -92,12 +92,12 @@ public sealed class DbPaginationRegressionGuardTests
         var empleados = source[empleadosStart..source.IndexOf("public Task<List<CoincidenciaEmpleadoDto>>", empleadosStart, StringComparison.Ordinal)];
 
         Assert.Contains("CrearRespuestaJuridicaFastPath", juridicas, StringComparison.Ordinal);
-        Assert.Contains("ObtenerJuridicasPaginadasCacheadaAsync", juridicas, StringComparison.Ordinal);
-        Assert.Contains("CrearClavePaginaJuridicas", source, StringComparison.Ordinal);
+        Assert.Contains("ObtenerMonitoreoPaginadoCacheadoAsync", juridicas, StringComparison.Ordinal);
+        Assert.Contains("ObtenerMonitoreoPaginadoCacheadoAsync", naturales, StringComparison.Ordinal);
+        Assert.Contains("ObtenerMonitoreoPaginadoCacheadoAsync", empleados, StringComparison.Ordinal);
+        Assert.Contains("CrearClavePaginaMonitoreo", source, StringComparison.Ordinal);
         Assert.Contains("ApplicationCacheScopes.MonitoreoMetadata", source, StringComparison.Ordinal);
-        Assert.Contains("MonitoringJuridicasPage cacheHit=", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("ObtenerJuridicasPaginadasCacheadaAsync(", naturales, StringComparison.Ordinal);
-        Assert.DoesNotContain("ObtenerJuridicasPaginadasCacheadaAsync(", empleados, StringComparison.Ordinal);
+        Assert.Contains("MonitoringPage cacheHit=", source, StringComparison.Ordinal);
         Assert.DoesNotContain("CrearRespuestaJuridicaFastPath", naturales, StringComparison.Ordinal);
         Assert.DoesNotContain("CrearRespuestaJuridicaFastPath", empleados, StringComparison.Ordinal);
         Assert.Contains("WHERE ROWNUM <= :filaLimite", source, StringComparison.Ordinal);

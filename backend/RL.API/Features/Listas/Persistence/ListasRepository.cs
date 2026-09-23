@@ -58,21 +58,21 @@ namespace RL.API.Features.Listas.Persistence
                         EsManual = Entero(reader, "ES_MANUAL") == 1
                     }, cancellationToken, CrearRespuestaJuridicaFastPath);
 
-            return ObtenerJuridicasPaginadasCacheadaAsync(
+            return ObtenerMonitoreoPaginadoCacheadoAsync(
                 consulta, baseSql, Factory, cancellationToken);
         }
 
-        private async Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>> ObtenerJuridicasPaginadasCacheadaAsync(
+        private async Task<MonitoreoPaginadoDto<T>> ObtenerMonitoreoPaginadoCacheadoAsync<T>(
             ConsultaMonitoreoPaginadaDto consulta,
             string baseSql,
-            Func<Task<MonitoreoPaginadoDto<CoincidenciaJuridicaDto>>> factory,
+            Func<Task<MonitoreoPaginadoDto<T>>> factory,
             CancellationToken cancellationToken)
         {
             var lookupStopwatch = System.Diagnostics.Stopwatch.StartNew();
             var factoryExecuted = false;
             var result = await _cache.GetOrCreateAsync(
                 ApplicationCacheScopes.MonitoreoMetadata,
-                CrearClavePaginaJuridicas(baseSql, consulta),
+                CrearClavePaginaMonitoreo(baseSql, consulta),
                 _cacheSettings.MonitoreoMetadataTtl,
                 async () =>
                 {
@@ -83,8 +83,8 @@ namespace RL.API.Features.Listas.Persistence
             lookupStopwatch.Stop();
 
             Serilog.Log.Information(
-                "MonitoringJuridicasPage cacheHit={CacheHit} cacheLookupMs={CacheLookupMs} page={Page} pageSize={PageSize}",
-                !factoryExecuted, lookupStopwatch.ElapsedMilliseconds,
+                "MonitoringPage cacheHit={CacheHit} type={MonitoringType} cacheLookupMs={CacheLookupMs} page={Page} pageSize={PageSize}",
+                !factoryExecuted, ResolveMonitoringType(baseSql), lookupStopwatch.ElapsedMilliseconds,
                 Math.Max(1, consulta.Pagina), Math.Clamp(consulta.TamanoPagina, 1, 200));
 
             return result;
@@ -99,9 +99,13 @@ namespace RL.API.Features.Listas.Persistence
             });
 
         public Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> ObtenerNaturalesPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
-            => ObtenerMonitoreoPaginadoAsync(
+        {
+            var baseSql = ConstruirConsultaMonitoreoNaturales();
+
+            Task<MonitoreoPaginadoDto<CoincidenciaNaturalDto>> Factory() =>
+                ObtenerMonitoreoPaginadoAsync(
                 consulta,
-                ConstruirConsultaMonitoreoNaturales(),
+                baseSql,
                 "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC",
                 reader => new CoincidenciaNaturalDto
                 {
@@ -116,6 +120,10 @@ namespace RL.API.Features.Listas.Persistence
                     EsManual = Entero(reader, "ES_MANUAL") == 1
                 }, cancellationToken);
 
+            return ObtenerMonitoreoPaginadoCacheadoAsync(
+                consulta, baseSql, Factory, cancellationToken);
+        }
+
         public Task<List<CoincidenciaNaturalDto>> ObtenerNaturalesParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoNaturales(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, NUMERO_IDENTIFICACION ASC", reader => new CoincidenciaNaturalDto
             {
@@ -124,9 +132,13 @@ namespace RL.API.Features.Listas.Persistence
             });
 
         public Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> ObtenerEmpleadosPaginadasAsync(ConsultaMonitoreoPaginadaDto consulta, CancellationToken cancellationToken = default)
-            => ObtenerMonitoreoPaginadoAsync(
+        {
+            var baseSql = ConstruirConsultaMonitoreoEmpleados();
+
+            Task<MonitoreoPaginadoDto<CoincidenciaEmpleadoDto>> Factory() =>
+                ObtenerMonitoreoPaginadoAsync(
                 consulta,
-                ConstruirConsultaMonitoreoEmpleados(),
+                baseSql,
                 "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC",
                 reader => new CoincidenciaEmpleadoDto
                 {
@@ -140,6 +152,10 @@ namespace RL.API.Features.Listas.Persistence
                     TieneMotivo = Entero(reader, "TIENE_MOTIVO") == 1,
                     EsManual = Entero(reader, "ES_MANUAL") == 1
                 }, cancellationToken);
+
+            return ObtenerMonitoreoPaginadoCacheadoAsync(
+                consulta, baseSql, Factory, cancellationToken);
+        }
 
         public Task<List<CoincidenciaEmpleadoDto>> ObtenerEmpleadosParaExportarAsync(ConsultaMonitoreoPaginadaDto consulta)
             => ObtenerMonitoreoCompletoAsync(consulta, ConstruirConsultaMonitoreoEmpleados(), "TOTAL_REPETIDOS DESC, NOMBRE ASC, IDENTIDAD ASC", reader => new CoincidenciaEmpleadoDto
@@ -1333,7 +1349,7 @@ namespace RL.API.Features.Listas.Persistence
             return filteredSql;
         }
 
-        private static string CrearClavePaginaJuridicas(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
+        private static string CrearClavePaginaMonitoreo(string baseSql, ConsultaMonitoreoPaginadaDto consulta)
             => string.Join("|", "page", CrearClaveMetadataMonitoreo(baseSql, consulta),
                 Math.Max(1, consulta.Pagina), Math.Clamp(consulta.TamanoPagina, 1, 200));
 
