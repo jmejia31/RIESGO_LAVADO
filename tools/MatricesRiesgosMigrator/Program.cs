@@ -29,6 +29,7 @@ public static class Program
         bool enrichExisting = args.Any(a => string.Equals(a, "--enrich-existing", StringComparison.OrdinalIgnoreCase));
         bool inspectSourceRiskText = args.Any(a => string.Equals(a, "--inspect-source-risk-text", StringComparison.OrdinalIgnoreCase));
         bool repairRiskText = args.Any(a => string.Equals(a, "--repair-risk-text", StringComparison.OrdinalIgnoreCase));
+        bool repairRiskNames = args.Any(a => string.Equals(a, "--repair-risk-names", StringComparison.OrdinalIgnoreCase));
         bool verifyRiskText = args.Any(a => string.Equals(a, "--verify-risk-text", StringComparison.OrdinalIgnoreCase));
         string? inspectRiskCode = args
             .FirstOrDefault(a => a.StartsWith("--inspect-risk-code=", StringComparison.OrdinalIgnoreCase))
@@ -54,9 +55,11 @@ public static class Program
                 ? "INSPECCION TEXTO FUENTE"
                 : verifyRiskText
                 ? "VERIFICACION TEXTO MAESTRO ORACLE"
-                : repairRiskText
-                    ? (executeMigration ? "REPARACION TEXTO MAESTRO ORACLE" : "REPARACION TEXTO MAESTRO DRY-RUN")
-                    : enrichExisting
+                : repairRiskNames
+                    ? (executeMigration ? "REPARACION NOMBRES MAESTROS ORACLE" : "REPARACION NOMBRES MAESTROS DRY-RUN")
+                    : repairRiskText
+                        ? (executeMigration ? "REPARACION TEXTO MAESTRO ORACLE" : "REPARACION TEXTO MAESTRO DRY-RUN")
+                        : enrichExisting
                         ? (executeMigration ? "ENRICH_EXISTING TRANSACCIONAL" : "ENRICH_EXISTING DRY-RUN")
                         : (executeMigration ? "MIGRACIÓN TRANSACCIONAL Y PRUEBA DE IDEMPOTENCIA" : "DRY-RUN DE CERTIFICACIÓN");
 
@@ -100,7 +103,7 @@ public static class Program
             return 2;
         }
 
-        bool requiereOracle = executeMigration || enrichExisting || repairRiskText || verifyRiskText || !string.IsNullOrWhiteSpace(inspectRiskCode);
+        bool requiereOracle = executeMigration || enrichExisting || repairRiskText || repairRiskNames || verifyRiskText || !string.IsNullOrWhiteSpace(inspectRiskCode);
         if (!requiereOracle)
         {
             Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
@@ -136,6 +139,15 @@ public static class Program
         if (!string.IsNullOrWhiteSpace(inspectRiskCode))
         {
             return await InspeccionarUnicodeRiesgoAsync(connection, sourceRisks, inspectRiskCode);
+        }
+
+        if (repairRiskNames)
+        {
+            return await CorregirNombresRiesgosAsync(
+                connection,
+                sourceRisks,
+                executeMigration,
+                repoRoot);
         }
 
         if (repairRiskText || verifyRiskText)
@@ -295,6 +307,208 @@ public static class Program
         }
 
         return string.Join(' ', parts);
+    }
+
+    private static async Task<int> CorregirNombresRiesgosAsync(
+        OracleConnection connection,
+        IReadOnlyCollection<SourceRiskRow> sourceRisks,
+        bool ejecutarCorreccion,
+        string repoRoot)
+    {
+        if (sourceRisks.Count != 59 || sourceRisks.Any(r => ContieneMojibake(r.Titulo)))
+        {
+            Console.WriteLine("RISK_NAME_SYNC_STATUS=FAIL_SOURCE");
+            Console.WriteLine("ERROR: La fuente canónica de nombres no tiene exactamente 59 filas sanas. No se tocará Oracle.");
+            return 11;
+        }
+
+        var sourceByCode = sourceRisks.ToDictionary(r => r.Code, StringComparer.OrdinalIgnoreCase);
+        var dbRows = new Dictionary<string, RiskTextDbRow>(StringComparer.OrdinalIgnoreCase);
+        var duplicateCodes = new List<string>();
+
+        const string sqlSelect = @"
+            SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_DESCRIPCION
+              FROM RL_MR_RIESGOS
+             ORDER BY RIE_CODIGO";
+
+        await using (var cmd = new OracleCommand(sqlSelect, connection) { BindByName = true })
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                var row = new RiskTextDbRow(
+                    reader.GetInt64(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.IsDBNull(3) ? null : reader.GetString(3));
+
+                if (!dbRows.TryAdd(row.Code, row))
+                {
+                    duplicateCodes.Add(row.Code);
+                }
+            }
+        }
+
+        string[] missingCodes = sourceByCode.Keys
+            .Where(code => !dbRows.ContainsKey(code))
+            .OrderBy(code => code, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var cambios = new List<RiskNameSyncItem>();
+
+        foreach (SourceRiskRow source in sourceRisks.OrderBy(r => r.RowNumber))
+        {
+            if (!dbRows.TryGetValue(source.Code, out RiskTextDbRow? current)) continue;
+
+            string canonicalName = Truncar(source.Titulo, 250);
+            if (!string.Equals(current.Name, canonicalName, StringComparison.Ordinal))
+            {
+                cambios.Add(new RiskNameSyncItem(
+                    current.Id,
+                    source.Code,
+                    current.Name,
+                    canonicalName));
+            }
+        }
+
+        Console.WriteLine($"RISK_NAME_SYNC_SOURCE_ROWS={sourceRisks.Count}");
+        Console.WriteLine($"RISK_NAME_SYNC_DB_ROWS={dbRows.Count}");
+        Console.WriteLine($"RISK_NAME_SYNC_MATCHED_CODES={sourceRisks.Count - missingCodes.Length}");
+        Console.WriteLine($"RISK_NAME_SYNC_MISSING_CODES={missingCodes.Length}");
+        Console.WriteLine($"RISK_NAME_SYNC_DUPLICATE_CODES={duplicateCodes.Count}");
+        Console.WriteLine($"RISK_NAME_SYNC_DIFFS={cambios.Count}");
+        Console.WriteLine($"RISK_NAME_SYNC_MODE={(ejecutarCorreccion ? "EXECUTE" : "DRY_RUN")}");
+
+        foreach (string code in missingCodes)
+        {
+            Console.WriteLine($"RISK_NAME_SYNC_MISSING|{code}");
+        }
+
+        foreach (string code in duplicateCodes.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"RISK_NAME_SYNC_DUPLICATE|{code}");
+        }
+
+        foreach (RiskNameSyncItem cambio in cambios)
+        {
+            Console.WriteLine(
+                $"RISK_NAME_SYNC_CHANGE|{cambio.Code}|{cambio.CurrentName.Replace("|", "/", StringComparison.Ordinal)}|=>|{cambio.CanonicalName.Replace("|", "/", StringComparison.Ordinal)}");
+        }
+
+        if (missingCodes.Length > 0 || duplicateCodes.Count > 0)
+        {
+            Console.WriteLine("RISK_NAME_SYNC_STATUS=FAIL_INVENTORY");
+            Console.WriteLine("ERROR: El inventario Oracle no coincide con la fuente. No se aplicarán cambios parciales.");
+            return 12;
+        }
+
+        if (!ejecutarCorreccion)
+        {
+            Console.WriteLine($"RISK_NAME_SYNC_STATUS={(cambios.Count == 0 ? "PASS" : "NEEDS_SYNC")}");
+            return cambios.Count == 0 ? 0 : 13;
+        }
+
+        if (cambios.Count == 0)
+        {
+            Console.WriteLine("RISK_NAME_SYNC_UPDATED_ROWS=0");
+            Console.WriteLine("RISK_NAME_SYNC_POST_DIFFS=0");
+            Console.WriteLine("RISK_NAME_SYNC_STATUS=PASS");
+            return 0;
+        }
+
+        string backupDir = Path.Combine(repoRoot, "artifacts", "oracle");
+        Directory.CreateDirectory(backupDir);
+        string backupPath = Path.Combine(
+            backupDir,
+            $"risk-name-backup-{DateTime.UtcNow:yyyyMMdd_HHmmss}.json");
+
+        var backupPayload = new
+        {
+            GeneratedUtc = DateTime.UtcNow,
+            Table = "RL_MR_RIESGOS",
+            Scope = "RIE_NOMBRE",
+            Rows = cambios.Select(c => new
+            {
+                c.Id,
+                c.Code,
+                c.CurrentName,
+                c.CanonicalName
+            }).ToArray()
+        };
+
+        await File.WriteAllTextAsync(
+            backupPath,
+            JsonSerializer.Serialize(backupPayload, new JsonSerializerOptions { WriteIndented = true }),
+            new UTF8Encoding(false));
+
+        Console.WriteLine($"RISK_NAME_SYNC_BACKUP={backupPath}");
+
+        await using var transaction = connection.BeginTransaction();
+        int updatedRows = 0;
+
+        try
+        {
+            const string sqlUpdate = @"
+                UPDATE RL_MR_RIESGOS
+                   SET RIE_NOMBRE = :nombre
+                 WHERE RIE_ID = :id
+                   AND RIE_CODIGO = :codigo";
+
+            foreach (RiskNameSyncItem cambio in cambios)
+            {
+                await using var cmd = new OracleCommand(sqlUpdate, connection)
+                {
+                    BindByName = true,
+                    Transaction = transaction
+                };
+
+                cmd.Parameters.Add(new OracleParameter("nombre", cambio.CanonicalName));
+                cmd.Parameters.Add(new OracleParameter("id", cambio.Id));
+                cmd.Parameters.Add(new OracleParameter("codigo", cambio.Code));
+
+                int affected = await cmd.ExecuteNonQueryAsync();
+                if (affected != 1)
+                {
+                    throw new InvalidOperationException(
+                        $"Se esperaba actualizar exactamente una fila para {cambio.Code}; Oracle reportó {affected}.");
+                }
+
+                updatedRows += affected;
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
+        int postDiffs = 0;
+
+        await using (var cmd = new OracleCommand(sqlSelect, connection) { BindByName = true })
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                string code = reader.GetString(1);
+                if (!sourceByCode.TryGetValue(code, out SourceRiskRow? source)) continue;
+
+                string name = reader.GetString(2);
+                string canonicalName = Truncar(source.Titulo, 250);
+                if (!string.Equals(name, canonicalName, StringComparison.Ordinal))
+                {
+                    postDiffs++;
+                    Console.WriteLine($"RISK_NAME_SYNC_POST_DIFF|{code}|{name.Replace("|", "/", StringComparison.Ordinal)}");
+                }
+            }
+        }
+
+        Console.WriteLine($"RISK_NAME_SYNC_UPDATED_ROWS={updatedRows}");
+        Console.WriteLine($"RISK_NAME_SYNC_POST_DIFFS={postDiffs}");
+        Console.WriteLine($"RISK_NAME_SYNC_STATUS={(postDiffs == 0 ? "PASS" : "FAIL_POSTCHECK")}");
+
+        return postDiffs == 0 ? 0 : 14;
     }
 
     private static async Task<int> VerificarOCorregirTextoRiesgosAsync(
@@ -1420,6 +1634,13 @@ public static class Program
         return await cmd.ExecuteScalarAsync();
     }
 }
+
+public sealed record RiskNameSyncItem(
+    long Id,
+    string Code,
+    string CurrentName,
+    string CanonicalName
+);
 
 public sealed record RiskTextDbRow(
     long Id,
