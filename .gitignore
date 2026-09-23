@@ -85,3 +85,6 @@ appsettings.Development.local.json
 # OS files
 .DS_Store
 Thumbs.db
+
+# Backups locales generados por correctivos Oracle controlados
+artifacts/oracle/risk-text-backup-*.json
