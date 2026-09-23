@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Mvc;
 using RL.API.Features.Auditoria.Persistence;
