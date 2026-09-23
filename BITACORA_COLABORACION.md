@@ -7345,3 +7345,16 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - No se tocó `main`, Oracle, restore, `DNP_IHSS`, `MMATAMOROS` ni índices externos.
 - Punto exacto de continuación: obtener decisiones/evidencia institucional para issue #22 y sólo entonces actualizar los estados productivos correspondientes.
 
+## Registro CIERRE-VALORES-TEST-DATA-Y-RESPONSABLE-ADMINISTRABLE
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT`; rama `desarrollo`; SHA inicial `e929092261eeb1fc7a35370f5c7ec0642f1b0abc`; SHA funcional con código y regresión `5883d1953ef1ce3afdb9d6e4eb40841fa492de93`.
+- Objetivo: cerrar como no bloqueantes los valores `TEST_DATA_ONLY` y conservar el requisito del cliente de captura manual del responsable/área, agregando una opción administrable sin convertirla en lista cerrada.
+- Skills/protocolo aplicados: gobierno transversal, `riesgo-lavado-continuidad`, `riesgo-lavado-matrices-riesgo`, `riesgo-lavado-backend-aspnet`, `riesgo-lavado-frontend-angular`, `riesgo-lavado-ui-ux-ihss`, `riesgo-lavado-testing-regresion`, `riesgo-lavado-documentacion` y `riesgo-lavado-quality-gates`.
+- Decisión: `ROTR-ALMACENBIENE-23.dueno_riesgo=GTIC` y `RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR` continúan exclusivamente como datos de prueba. `PRODUCTION_TEST_PLACEHOLDERS_BLOCKING=0`; no se promueven a seeds de producción.
+- Implementación: nuevo tipo `texto-sugerido` para entrada manual con `datalist` de sugerencias; backend valida string libre y sólo exige que el catálogo referenciado exista. El Form Builder permite administrar el catálogo.
+- Template de nuevas versiones: etiqueta `Responsable o dueño del riesgo (área responsable)`, tipo `texto-sugerido`, catálogo `MR_AREA_RESPONSABLE` inicialmente vacío.
+- Históricos: V1/V2 y las evaluaciones existentes no se mutan; no se ejecuta Oracle ni se altera el hash de versiones persistidas.
+- Impacto: `INTERFACES_CAMBIAN=NO` para REST; `DATOS_CAMBIAN=NO`; `SEGURIDAD_CAMBIA=NO`; `MAPA_ARQUITECTURA=NO_APLICA`.
+- Pruebas agregadas: renderer Angular verifica texto libre + sugerencias; normalizador reconoce el décimo tipo; backend verifica publicación del contrato y aceptación de un área manual fuera del catálogo.
+- Pruebas locales no ejecutadas por CHAT: el entorno de contenedor no resolvió `github.com` y no dispone del checkout; la evidencia ejecutable se obtiene del workflow Quality Gates del SHA remoto final.
+- Pendientes posteriores: RTO/RPO, capacitación institucional y despliegue productivo.
