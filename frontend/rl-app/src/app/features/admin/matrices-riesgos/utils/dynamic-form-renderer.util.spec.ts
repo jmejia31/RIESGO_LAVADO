@@ -9,9 +9,10 @@ import {
 } from './dynamic-form-renderer.util';
 
 describe('Renderer dinámico — normalización defensiva', () => {
-  it('normaliza los nueve tipos canónicos y sus aliases operativos', () => {
+  it('normaliza los diez tipos canónicos y sus aliases operativos', () => {
     const casos: Array<[string, string]> = [
       ['texto', 'texto'],
+      ['texto-con-sugerencias', 'texto-sugerido'],
       ['number', 'numero'],
       ['date', 'fecha'],
       ['textarea', 'texto-largo'],
