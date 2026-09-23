@@ -187,7 +187,7 @@ public static class Program
     private static int InspeccionarTextoRiesgosFuente(IReadOnlyCollection<SourceRiskRow> sourceRisks)
     {
         int sospechosos = 0;
-        foreach (SourceRiskRow riesgo in sourceRisks.OrderBy(r => r.RowIndex))
+        foreach (SourceRiskRow riesgo in sourceRisks.OrderBy(r => r.RowNumber))
         {
             bool corrupto = ContieneMojibake(riesgo.Titulo) || ContieneMojibake(riesgo.Descripcion);
             if (corrupto) sospechosos++;
