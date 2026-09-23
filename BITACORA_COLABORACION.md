@@ -7405,3 +7405,9 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Seguridad de datos:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`.
 - **Git/publicación:** se preservan los untracked preexistentes (`.vscode/`, `agosto_rest.txt`, `artifacts/` y PDF); no se tocará `main`. El SHA final y confirmación de `origin/desarrollo` se añadirán en el cierre de esta intervención.
 - **Punto de continuación:** revisar diff, ejecutar gates restantes si son reproducibles, documentar SHA final, commit y `git push origin desarrollo`; después Javier ejecuta 31→32→33→34 y usa 35 solo si requiere restauración.
+
+## Cierre de intervención COD
+
+- **Commit técnico/documental:** `ff12bb6eb596528ae908122d4a300ab3e92f3439`, rama `desarrollo`; publicación remota pendiente al momento de redactar este registro.
+- **Estado de cierre:** `CODE_FIX=PASS`, `SQL_SCRIPTS_READY=PASS`, `ORACLE_DML_EXECUTED_BY_CODEX=NO`, `MANUAL_DB_EXECUTION_REQUIRED=YES`, `MANUAL_EXECUTION_PENDING=YES`.
+- **Pendiente externo:** resolver los tres timeouts del quality gate global frontend y ejecutar manualmente en Oracle 31→32→33→34; no declarar la base corregida antes de un postcheck real.
