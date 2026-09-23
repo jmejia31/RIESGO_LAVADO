@@ -44,9 +44,19 @@ public static class Program
         string excelPath = Path.Combine(repoRoot, "Matrices de Riesgos.xlsx");
         string schemaPath = Path.Combine(repoRoot, "database", "19_matrices_riesgos", "fase11", "formulario_matriz_riesgos_laft_v1.json");
 
+        string modo = inspectSourceRiskText
+            ? "INSPECCION TEXTO FUENTE"
+            : verifyRiskText
+                ? "VERIFICACION TEXTO MAESTRO ORACLE"
+                : repairRiskText
+                    ? (executeMigration ? "REPARACION TEXTO MAESTRO ORACLE" : "REPARACION TEXTO MAESTRO DRY-RUN")
+                    : enrichExisting
+                        ? (executeMigration ? "ENRICH_EXISTING TRANSACCIONAL" : "ENRICH_EXISTING DRY-RUN")
+                        : (executeMigration ? "MIGRACIÓN TRANSACCIONAL Y PRUEBA DE IDEMPOTENCIA" : "DRY-RUN DE CERTIFICACIÓN");
+
         Console.WriteLine("================================================================================");
         Console.WriteLine("HERRAMIENTA TRANSACCIONAL DE MIGRACIÓN, ENRIQUECIMIENTO Y CONCILIACIÓN");
-        Console.WriteLine($"MODO: {(enrichExisting ? (executeMigration ? "ENRICH_EXISTING TRANSACCIONAL" : "ENRICH_EXISTING DRY-RUN") : (executeMigration ? "MIGRACIÓN TRANSACCIONAL Y PRUEBA DE IDEMPOTENCIA" : "DRY-RUN DE CERTIFICACIÓN"))}");
+        Console.WriteLine($"MODO: {modo}");
         Console.WriteLine($"EXCEL ORIGEN: {excelPath}");
         Console.WriteLine($"SCHEMA CONTRATO: {schemaPath}");
         Console.WriteLine("================================================================================");
