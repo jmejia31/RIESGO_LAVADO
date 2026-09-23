@@ -41,16 +41,42 @@ El criterio funcional queda definido para los **dos campos de Identificación de
 - `respuesta_riesgo` no forma parte de esta mejora. `RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR` continúa únicamente como dato de prueba no bloqueante y el contrato vigente del campo de respuesta no se altera.
 - V1/V2 históricas no se mutan retroactivamente ni cambian sus hashes. La mejora aplica a nuevos borradores/versiones administrables.
 
-## 2. RTO/RPO institucionales
+## 2. RTO institucional — PROPUESTA DOCUMENTADA / FIRMA PENDIENTE
+
+Se documentó la propuesta institucional de continuidad en:
+
+- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md`
+
+Estado vigente:
+
+```text
+RTO_PROPOSED=4 horas
+INCIDENT_RESPONSE_TARGET=0 minutos
+CATASTROPHIC_EXCEPTION=TRUE
+RTO_DEFINED=FALSE
+RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE
+```
+
+Criterio: toda indisponibilidad no planificada activa atención, diagnóstico y escalamiento desde el minuto 0. El objetivo de recuperación propuesto es de cuatro (4) horas bajo condiciones normales y con dependencias técnicas disponibles. El valor de 0 minutos es únicamente el objetivo de inicio de atención; no constituye un RTO de 0 minutos ni una garantía de recuperación instantánea.
+
+La continuidad es responsabilidad institucional compartida. La superación del RTO no determina por sí sola responsabilidad personal del encargado del sistema ni de Desarrollo/GTIC; la evaluación debe considerar causa raíz, control efectivo, accesos, infraestructura, Oracle/DBA, seguridad, telecomunicaciones, terceros, autorizaciones, recursos y evidencia objetiva. Las contingencias catastróficas o dependencias externas permiten el tiempo técnicamente necesario para una recuperación segura, con trazabilidad y escalamiento.
+
+El cierre de este punto requiere la aprobación, firma y archivo institucional de la versión adoptada. Sólo entonces corresponde registrar:
+
+```text
+RTO_DEFINED=TRUE
+RTO_VALUE=4 horas
+```
+
+## 2.1. RPO institucional — PENDIENTE
 
 Estado:
 
 ```text
-RTO_DEFINED=FALSE
 RPO_DEFINED=FALSE
 ```
 
-Deben ser definidos y aprobados por DBA/Infraestructura/Negocio. El registro de cierre debe incluir unidades y valor exacto, por ejemplo minutos u horas, sin inferirlos de la arquitectura ni de tiempos de restore de pruebas.
+El RPO debe ser definido y aprobado institucionalmente por DBA/Infraestructura/Negocio. Debe registrar una pérdida máxima tolerable de datos con unidad y valor exactos, sin inferirla de tiempos de restore o de la arquitectura existente.
 
 ## 3. Capacitación institucional
 
