@@ -7351,11 +7351,11 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Objetivo: cerrar como no bloqueantes los valores `TEST_DATA_ONLY` y conservar el requisito del cliente de captura manual del responsable/área, agregando una opción administrable sin convertirla en lista cerrada.
 - Skills/protocolo aplicados: gobierno transversal, `riesgo-lavado-continuidad`, `riesgo-lavado-matrices-riesgo`, `riesgo-lavado-backend-aspnet`, `riesgo-lavado-frontend-angular`, `riesgo-lavado-ui-ux-ihss`, `riesgo-lavado-testing-regresion`, `riesgo-lavado-documentacion` y `riesgo-lavado-quality-gates`.
 - Decisión: `ROTR-ALMACENBIENE-23.dueno_riesgo=GTIC` y `RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR` continúan exclusivamente como datos de prueba. `PRODUCTION_TEST_PLACEHOLDERS_BLOCKING=0`; no se promueven a seeds de producción.
-- Implementación: `texto-sugerido` se presenta como lista desplegable real con opción `Otro / Escribir manualmente…`; backend acepta texto libre y conserva referencia al catálogo administrable.
+- Implementación: `selector-catalogo` con `permiteValorManual=true` se presenta como lista desplegable real con opción `Otro / Escribir manualmente…`; backend acepta texto libre y conserva referencia al catálogo administrable.
 - Catálogos independientes: `MR_AREA_RESPONSABLE` para responsable/área y `MR_RESPUESTA_RIESGO` para respuesta al riesgo. El primero nace vacío; el segundo conserva sus opciones base.
-- Al clonar una versión existente, el nuevo borrador adapta automáticamente ambos campos al patrón flexible sin mutar la versión origen.
+- Al clonar una versión existente, el nuevo borrador adapta automáticamente ambos campos al patrón flexible de selector administrable + valor manual sin mutar la versión origen.
 - Históricos: V1/V2 y las evaluaciones existentes no se mutan; no se ejecuta Oracle ni se altera el hash de versiones persistidas.
 - Impacto: `INTERFACES_CAMBIAN=NO` para REST; `DATOS_CAMBIAN=NO`; `SEGURIDAD_CAMBIA=NO`; `MAPA_ARQUITECTURA=NO_APLICA`.
-- Pruebas agregadas: renderer Angular verifica texto libre + sugerencias; normalizador reconoce el décimo tipo; backend verifica publicación del contrato y aceptación de un área manual fuera del catálogo.
+- Pruebas agregadas: renderer Angular verifica texto libre + sugerencias; normalizador reconoce el tipo nuevo; backend verifica publicación del contrato y aceptación de un área manual fuera del catálogo.
 - Pruebas locales no ejecutadas por CHAT: el entorno de contenedor no resolvió `github.com` y no dispone del checkout; la evidencia ejecutable se obtiene del workflow Quality Gates del SHA remoto final.
 - Pendientes posteriores: RTO/RPO, capacitación institucional y despliegue productivo.
