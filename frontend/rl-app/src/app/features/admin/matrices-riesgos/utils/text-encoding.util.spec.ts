@@ -1,4 +1,4 @@
-import { contieneMojibakeVisible, normalizarTextoVisibleUtf8 } from './text-encoding.util';
+import { contieneMojibakeVisible, normalizarMojibakeVisibleUtf8, normalizarTextoVisibleUtf8 } from './text-encoding.util';
 
 describe('Integridad de texto visible UTF-8', () => {
   it('repara mojibake UTF-8/Windows-1252 común', () => {
@@ -32,6 +32,10 @@ describe('Integridad de texto visible UTF-8', () => {
       .toBe('Definición sin garantías adecuadas de ejecución');
     expect(normalizarTextoVisibleUtf8(`t${bad}rminos de referencia de una licitaci${bad}n p${bad}blica`))
       .toBe('términos de referencia de una licitación pública');
+  });
+
+  it('el normalizador de mojibake preserva texto limpio aunque tenga ortografía histórica', () => {
+    expect(normalizarMojibakeVisibleUtf8('Version del Area responsable')).toBe('Version del Area responsable');
   });
 
   it('corrige términos visibles sin tilde sin alterar identificadores técnicos ajenos al helper', () => {
