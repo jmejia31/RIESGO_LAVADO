@@ -1445,3 +1445,16 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `MAPA_ARQUITECTURA=NO_APLICA`: no cambia la relación entre componentes ni el ownership de datos.
 - Validación focalizada añadida en frontend y backend; la certificación ejecutable de esta intervención se obtiene del Quality Gate remoto del SHA publicado.
 - Punto de continuación institucional: RTO/RPO, capacitación y despliegue productivo. El pendiente de valores productivos queda cerrado.
+
+## Estado vigente - INTEGRIDAD UTF-8 DE TEXTO VISIBLE CORREGIDA
+
+- Fecha: `2026-09-23`; autor `CHAT`; rama `desarrollo`.
+- Captura UAT confirmó mojibake en metadatos visibles del formulario dinámico (`Identificación`, `Área`, `Dueño`, `estratégico`, `Régimen`, `interrelación`, `Valoración`).
+- Corrección sistémica: normalizador compartido `text-encoding.util.ts` aplicado al renderer y al Form Builder, incluyendo títulos, etiquetas, ayudas, placeholders y catálogos. Claves/códigos técnicos se preservan.
+- Nuevo gate CI `Validate UTF-8 text integrity`: `PASS`, `MOJIBAKE_FINDINGS=0` en fuentes ejecutables/activas.
+- Se limpiaron hallazgos ejecutables en tests/E2E y se reemplazaron literales mojibake del postcheck Oracle por `UNISTR`.
+- No hubo DML/DDL Oracle, no se mutaron V1/V2/hashes, no se tocó `main`, `DNP_IHSS` ni `MMATAMOROS`.
+- Quality Gates #1574 sobre `d3363352a5f6a23e745c005669156732d8505d9b`: `SUCCESS`; backend `640/640`, frontend `791/791`, E2E `36/36`, contenedores/non-root `PASS`.
+- `MAPA_ARQUITECTURA=NO_APLICA`: no cambian dependencias, ownership de datos ni contratos REST.
+- Siguiente verificación funcional: actualizar `C:\RIESGO_LAVADO` a `origin/desarrollo` y confirmar visualmente que la vista previa ya no presenta caracteres corruptos.
+

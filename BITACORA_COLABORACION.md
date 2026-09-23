@@ -7360,3 +7360,18 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Pruebas agregadas: renderer Angular verifica texto libre + sugerencias; normalizador reconoce el tipo nuevo; backend verifica publicación del contrato y aceptación de un área manual fuera del catálogo.
 - Pruebas locales no ejecutadas por CHAT: el entorno de contenedor no resolvió `github.com` y no dispone del checkout; la evidencia ejecutable se obtiene del workflow Quality Gates del SHA remoto final.
 - Pendientes posteriores: RTO/RPO, capacitación institucional y despliegue productivo.
+
+## Registro CORRECCION-INTEGRIDAD-UTF8-TEXTO-VISIBLE
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT`; rama `desarrollo`; baseline funcional `c9866cc2eba078447806d83d9c607df72e22956d`; SHA técnico certificado `d3363352a5f6a23e745c005669156732d8505d9b`.
+- Objetivo: eliminar mojibake/errores de codificación visibles como `Identificaciï¿½n`, `ï¿½rea`, `Dueï¿½o`, `estratï¿½gico`, `Rï¿½gimen` e `interrelaciï¿½n` sin mutar históricos Oracle ni alterar claves técnicas.
+- Diagnóstico: los JSON/SQL canónicos versionados contienen ortografía correcta; la captura UAT evidencia metadatos dinámicos persistidos o transportados con pérdida/reinterpretación de codificación. El renderer tenía una normalización parcial, pero no cubría el Form Builder, catálogos ni secuencias de reemplazo `U+FFFD` / `ï¿½`.
+- Implementación: se creó `text-encoding.util.ts` como normalizador compartido de texto visible; se integró en el renderer dinámico y en la normalización bidireccional del Form Builder para títulos, etiquetas, descripción, ayuda, placeholder, nombres/valores de catálogos y opciones visibles. Los códigos, claves e identificadores técnicos no se normalizan.
+- Protección histórica: no se ejecutó DML/DDL Oracle y no se mutaron V1/V2 ni hashes históricos. Evidencias/documentación histórica con texto capturado se preservan por trazabilidad.
+- Higiene de repositorio: se corrigió mojibake ejecutable detectado en E2E/specs y el postcheck Oracle usa `UNISTR` para buscar bytes/caracteres sospechosos sin contener mojibake literal.
+- Prevención: nuevo `tools/validate_text_encoding.ps1` y step `Validate UTF-8 text integrity` en Quality Gates. El gate inspecciona frontend runtime/E2E, backend, pruebas, SQL activo, tools/scripts y workflows; excluye evidencia documental histórica inmutable.
+- Impacto: `INTERFACES_CAMBIAN=NO`; `DATOS_CAMBIAN=NO`; `TENANCY_CAMBIA=NO`; `SEGURIDAD_CAMBIA=NO`; `JOBS_EVENTOS_CAMBIAN=NO`; `CACHE_SESION_CAMBIA=NO`; `MAPA_ARQUITECTURA=NO_APLICA`.
+- Quality Gates #1574, run `35900216899`, SHA `d3363352a5f6a23e745c005669156732d8505d9b`: `SUCCESS`.
+- Evidencia fresca: `TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`; backend `640/640 PASS`; frontend `791/791 PASS` en `79/79` archivos; E2E `36/36 PASS`; cobertura backend líneas `33.54%`, ramas `37.79%`; frontend statements `61.37%`, branches `54.40%`, functions `57.38%`, lines `62.10%`; build Release, validadores, compose, contenedores y usuarios non-root `PASS`.
+- Punto de continuación: validar visualmente el Builder/evaluación después de actualizar el checkout principal `C:\RIESGO_LAVADO`. Si un DRAFT persistido se guarda desde el Builder, el texto visible normalizado se serializa corregido; no intervenir versiones históricas publicadas.
+
