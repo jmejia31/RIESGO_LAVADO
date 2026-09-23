@@ -1414,9 +1414,9 @@ namespace RL.API.Features.Listas.Persistence
                 GROUP BY LSP_NO_DOCUMENTO
             ), Coincidencias AS (
                 SELECT /*+
-                          LEADING(R P DE)
-                          USE_NL(P DE)
-                          INDEX(R IX_RCOINC_MON_TIPO_PATRONO)
+                          LEADING(R DE P)
+                          USE_NL(DE P)
+                          FULL(R)
                        */
                        P.RTN,
                        P.NOMBRE,
@@ -1433,8 +1433,8 @@ namespace RL.API.Features.Listas.Persistence
                        DE.ES_PROVEEDOR_IHSS,
                        GREATEST(NVL(pp.TIENE_MOTIVO, 0), NVL(pr.TIENE_MOTIVO, 0)) AS TIENE_MOTIVO
                 FROM DNP_IHSS.REPORTE_COINCIDENCIAS R
-                INNER JOIN MMATAMOROS.PATRONOS P ON P.NUMEPATRO = R.NUMERO_PATRONO
-                INNER JOIN DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = P.NUMEPATRO
+                INNER JOIN DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = R.NUMERO_PATRONO
+                INNER JOIN MMATAMOROS.PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL
                 LEFT JOIN POSITIVOS_AGG pp ON pp.LSP_NO_DOCUMENTO = P.NUMEPATRO
                 LEFT JOIN POSITIVOS_AGG pr ON pr.LSP_NO_DOCUMENTO = P.RTN
                 WHERE R.TIPO_CALIFICACION_ID = 1

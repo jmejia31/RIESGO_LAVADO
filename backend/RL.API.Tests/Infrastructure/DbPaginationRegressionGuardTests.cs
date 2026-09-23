@@ -188,15 +188,18 @@ public sealed class DbPaginationRegressionGuardTests
 
         Assert.DoesNotContain("DNP_IHSS.V_DATOS_EMPRESA", juridicasSql, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("DNP_IHSS.REPORTE_COINCIDENCIAS R", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("MMATAMOROS.PATRONOS P ON P.NUMEPATRO = R.NUMERO_PATRONO", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = P.NUMEPATRO", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = R.NUMERO_PATRONO", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("MMATAMOROS.PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL", coincidencias, StringComparison.Ordinal);
         Assert.Contains("R.TIPO_CALIFICACION_ID = 1", coincidencias, StringComparison.Ordinal);
         Assert.Contains("R.NUMERO_PATRONO IS NOT NULL", coincidencias, StringComparison.Ordinal);
         Assert.Contains("DE.TIPO_EMPRESA_ID = 1", coincidencias, StringComparison.Ordinal);
 
-        Assert.Contains("LEADING(R P DE)", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("USE_NL(P DE)", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("INDEX(R IX_RCOINC_MON_TIPO_PATRONO)", coincidencias, StringComparison.Ordinal);
+        // El hot path debe ser reproducible en producción aun cuando no exista el índice
+        // experimental de DNP_IHSS usado en desarrollo.
+        Assert.Contains("LEADING(R DE P)", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("USE_NL(DE P)", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("FULL(R)", coincidencias, StringComparison.Ordinal);
+        Assert.DoesNotContain("IX_RCOINC_MON_TIPO_PATRONO", juridicasSql, StringComparison.OrdinalIgnoreCase);
 
         foreach (var requiredFunctionalRelation in new[]
                  {
