@@ -7449,3 +7449,22 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Estado real: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. Sólo una aprobación/firma/archivo institucional permite cambiar a `RTO_DEFINED=TRUE`, `RTO_VALUE=4 horas`.
 - `RPO_DEFINED=FALSE`; capacitación y despliegue productivo continúan pendientes.
 - No hubo cambio funcional ni DML/DDL; `main` no fue modificado.
+
+
+## Registro RTO-INSTITUCIONAL-PROPUESTA-Y-EVIDENCIA-FISICA
+
+- Fecha local: `2026-09-23` (UTC-6); autor `CHAT / CHATGPT`; rama `desarrollo`.
+- Objetivo: dejar versionada la propuesta institucional de RTO y su copia física firmable, sin declarar una aprobación inexistente.
+- Documentos incorporados:
+  - `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md` — fuente canónica editable.
+  - `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/Acta_RTO_Institucional_SGRLA_IHSS_v1_1.pdf` — copia física imprimible/firmable.
+  - `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/README.md` — índice y estado de cierre.
+- Propuesta: `RTO_PROPOSED=4 horas`; atención inmediata `INCIDENT_RESPONSE_TARGET=0 minutos`; `CATASTROPHIC_EXCEPTION=TRUE`.
+- Gobierno: el valor de 0 minutos significa inicio inmediato de atención, no resolución instantánea. El RTO de cuatro horas aplica como objetivo de recuperación bajo condiciones normales y dependencias disponibles.
+- Protección operativa: la continuidad se establece como responsabilidad institucional compartida. El tiempo total de indisponibilidad y los tiempos atribuibles a Infraestructura, DBA/Oracle, Seguridad, telecomunicaciones, proveedores, autorizaciones y otras dependencias deben diferenciarse. La superación del RTO no presume por sí sola negligencia ni responsabilidad personal de Desarrollo/GTIC o del encargado del sistema.
+- Contingencia: en evento catastrófico o dependencia externa crítica se reconoce el tiempo técnicamente necesario para diagnóstico, contención, recuperación y validación segura, sujeto a trazabilidad y escalamiento.
+- Evidencia requerida: cronología, ticket/logs, comunicaciones, escalamiento, causa raíz cuando sea determinable, acciones, responsables, recuperación y validación.
+- Estado real antes de firmas: `RTO_DEFINED=FALSE`; `RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE`. No se cambia a `RTO_DEFINED=TRUE` hasta aprobación, firma y archivo institucional.
+- `RPO_DEFINED=FALSE`; capacitación y despliegue productivo permanecen pendientes.
+- Issue #22 actualizado para separar la aprobación/firma de RTO de la definición de RPO.
+- Impacto técnico: `INTERFACES_CAMBIAN=NO`; `DATOS_CAMBIAN=NO`; `SEGURIDAD_CAMBIA=NO`; `MAPA_ARQUITECTURA=NO_APLICA`. No hubo DML/DDL Oracle ni modificación de `main`.
