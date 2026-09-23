@@ -177,9 +177,11 @@ public sealed class MatricesRiesgosFormularioRoundTripTests
         JsonArray secciones = root["secciones"]!.AsArray();
         JsonObject dueno = secciones[0]!["campos"]![0]!.AsObject();
         JsonObject respuesta = secciones[1]!["campos"]![0]!.AsObject();
-        Assert.Equal("texto-sugerido", dueno["tipo"]!.GetValue<string>());
+        Assert.Equal("selector-catalogo", dueno["tipo"]!.GetValue<string>());
+        Assert.True(dueno["permiteValorManual"]!.GetValue<bool>());
         Assert.Equal("MR_AREA_RESPONSABLE", dueno["codigoCatalogo"]!.GetValue<string>());
-        Assert.Equal("texto-sugerido", respuesta["tipo"]!.GetValue<string>());
+        Assert.Equal("selector-catalogo", respuesta["tipo"]!.GetValue<string>());
+        Assert.True(respuesta["permiteValorManual"]!.GetValue<bool>());
         Assert.Equal("MR_RESPUESTA_RIESGO", respuesta["codigoCatalogo"]!.GetValue<string>());
 
         JsonArray catalogos = root["catalogos"]!.AsArray();
