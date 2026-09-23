@@ -76,7 +76,7 @@ export function contieneMojibakeVisible(valor: string): boolean {
     || valor.includes('\u00F0\u0178');
 }
 
-export function normalizarTextoVisibleUtf8(valor: string): string {
+export function normalizarMojibakeVisibleUtf8(valor: string): string {
   if (!valor) return valor;
 
   let resultado = valor;
@@ -88,6 +88,12 @@ export function normalizarTextoVisibleUtf8(valor: string): string {
   for (const [patron, reemplazo] of REPARACIONES_CONTEXTO) {
     resultado = resultado.replace(patron, reemplazo);
   }
+
+  return resultado;
+}
+
+export function normalizarTextoVisibleUtf8(valor: string): string {
+  let resultado = normalizarMojibakeVisibleUtf8(valor);
 
   for (const [patron, reemplazo] of REPARACIONES_ORTOGRAFICAS) {
     resultado = resultado.replace(patron, reemplazo);
