@@ -28,6 +28,8 @@ public static class Program
         bool executeMigration = args.Any(a => string.Equals(a, "--migrate", StringComparison.OrdinalIgnoreCase));
         bool enrichExisting = args.Any(a => string.Equals(a, "--enrich-existing", StringComparison.OrdinalIgnoreCase));
         bool inspectSourceRiskText = args.Any(a => string.Equals(a, "--inspect-source-risk-text", StringComparison.OrdinalIgnoreCase));
+        bool repairRiskText = args.Any(a => string.Equals(a, "--repair-risk-text", StringComparison.OrdinalIgnoreCase));
+        bool verifyRiskText = args.Any(a => string.Equals(a, "--verify-risk-text", StringComparison.OrdinalIgnoreCase));
         string repoRoot = Directory.GetCurrentDirectory();
         while (!string.IsNullOrEmpty(repoRoot) && !File.Exists(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx")))
         {
@@ -82,16 +84,14 @@ public static class Program
             return 2;
         }
 
-        if (!executeMigration)
+        bool requiereOracle = executeMigration || enrichExisting || repairRiskText || verifyRiskText;
+        if (!requiereOracle)
         {
-            if (!enrichExisting)
-            {
-                Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
-                return 0;
-            }
+            Console.WriteLine("\nDry-Run completado exitosamente con 59/59 aprobados. Para ejecutar la migración transaccional, use --migrate.");
+            return 0;
         }
 
-        // 3. Ejecutar Migración en Oracle
+        // 3. Ejecutar Migración / verificación en Oracle
         string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
         var config = new ConfigurationBuilder().AddJsonFile(appSettingsPath).Build();
         string connectionString = config.GetConnectionString("OracleDB")
@@ -106,6 +106,16 @@ public static class Program
         await connection.OpenAsync();
 
         Console.WriteLine("\n--- Conexión Oracle establecida ---");
+
+        if (repairRiskText || verifyRiskText)
+        {
+            bool ejecutarCorreccion = repairRiskText && executeMigration;
+            return await VerificarOCorregirTextoRiesgosAsync(
+                connection,
+                sourceRisks,
+                ejecutarCorreccion,
+                repoRoot);
+        }
 
         // Validar que la familia y versión oficial existan y estén vigentes
         long familiaId = Convert.ToInt64(await ScalarAsync(connection, null,
@@ -173,7 +183,7 @@ public static class Program
             if (corrupto) sospechosos++;
 
             Console.WriteLine(
-                $"SOURCE_RISK_TEXT|{riesgo.RowIndex}|{riesgo.Code}|{riesgo.Titulo.Replace("|", "/", StringComparison.Ordinal)}");
+                $"SOURCE_RISK_TEXT|{riesgo.RowNumber}|{riesgo.Code}|{riesgo.Titulo.Replace("|", "/", StringComparison.Ordinal)}");
         }
 
         Console.WriteLine($"SOURCE_RISK_TEXT_ROWS={sourceRisks.Count}");
@@ -193,6 +203,227 @@ public static class Program
             || value.Contains('Â')
             || value.Contains("â€", StringComparison.Ordinal)
             || value.Contains("ðŸ", StringComparison.Ordinal);
+    }
+
+    private static async Task<int> VerificarOCorregirTextoRiesgosAsync(
+        OracleConnection connection,
+        IReadOnlyCollection<SourceRiskRow> sourceRisks,
+        bool ejecutarCorreccion,
+        string repoRoot)
+    {
+        if (sourceRisks.Count != 59 || sourceRisks.Any(r => ContieneMojibake(r.Titulo) || ContieneMojibake(r.Descripcion)))
+        {
+            Console.WriteLine("RISK_TEXT_STATUS=FAIL_SOURCE");
+            Console.WriteLine("ERROR: La fuente canónica no tiene exactamente 59 filas sanas. No se tocará Oracle.");
+            return 6;
+        }
+
+        var sourceByCode = sourceRisks.ToDictionary(r => r.Code, StringComparer.OrdinalIgnoreCase);
+        var dbRows = new Dictionary<string, RiskTextDbRow>(StringComparer.OrdinalIgnoreCase);
+        var duplicateCodes = new List<string>();
+
+        const string sqlSelect = @"
+            SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, RIE_DESCRIPCION
+              FROM RL_MR_RIESGOS
+             ORDER BY RIE_CODIGO";
+
+        await using (var cmd = new OracleCommand(sqlSelect, connection) { BindByName = true })
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                var row = new RiskTextDbRow(
+                    reader.GetInt64(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.IsDBNull(3) ? null : reader.GetString(3));
+
+                if (!dbRows.TryAdd(row.Code, row))
+                {
+                    duplicateCodes.Add(row.Code);
+                }
+            }
+        }
+
+        string[] missingCodes = sourceByCode.Keys
+            .Where(code => !dbRows.ContainsKey(code))
+            .OrderBy(code => code, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var repairs = new List<RiskTextRepairItem>();
+        int cleanMismatches = 0;
+
+        foreach (SourceRiskRow source in sourceRisks.OrderBy(r => r.RowNumber))
+        {
+            if (!dbRows.TryGetValue(source.Code, out RiskTextDbRow? current)) continue;
+
+            string canonicalName = Truncar(source.Titulo, 250);
+            string canonicalDescription = Truncar(source.Descripcion, 2000);
+            bool nameDiffers = !string.Equals(current.Name, canonicalName, StringComparison.Ordinal);
+            bool descriptionDiffers = !string.Equals(current.Description ?? string.Empty, canonicalDescription, StringComparison.Ordinal);
+            bool corrupted = ContieneMojibake(current.Name) || ContieneMojibake(current.Description);
+
+            if (corrupted)
+            {
+                repairs.Add(new RiskTextRepairItem(
+                    current.Id,
+                    source.Code,
+                    current.Name,
+                    current.Description,
+                    canonicalName,
+                    canonicalDescription));
+            }
+            else if (nameDiffers || descriptionDiffers)
+            {
+                cleanMismatches++;
+            }
+        }
+
+        Console.WriteLine($"RISK_TEXT_SOURCE_ROWS={sourceRisks.Count}");
+        Console.WriteLine($"RISK_TEXT_DB_ROWS={dbRows.Count}");
+        Console.WriteLine($"RISK_TEXT_MATCHED_CODES={sourceRisks.Count - missingCodes.Length}");
+        Console.WriteLine($"RISK_TEXT_MISSING_CODES={missingCodes.Length}");
+        Console.WriteLine($"RISK_TEXT_DUPLICATE_CODES={duplicateCodes.Count}");
+        Console.WriteLine($"RISK_TEXT_CORRUPTED_ROWS={repairs.Count}");
+        Console.WriteLine($"RISK_TEXT_CLEAN_MISMATCHES={cleanMismatches}");
+        Console.WriteLine($"RISK_TEXT_MODE={(ejecutarCorreccion ? "EXECUTE" : "DRY_RUN")}");
+
+        foreach (string code in missingCodes)
+        {
+            Console.WriteLine($"RISK_TEXT_MISSING|{code}");
+        }
+
+        foreach (string code in duplicateCodes.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"RISK_TEXT_DUPLICATE|{code}");
+        }
+
+        foreach (RiskTextRepairItem repair in repairs)
+        {
+            Console.WriteLine(
+                $"RISK_TEXT_REPAIR|{repair.Code}|{repair.CurrentName.Replace("|", "/", StringComparison.Ordinal)}|=>|{repair.CanonicalName.Replace("|", "/", StringComparison.Ordinal)}");
+        }
+
+        if (missingCodes.Length > 0 || duplicateCodes.Count > 0)
+        {
+            Console.WriteLine("RISK_TEXT_STATUS=FAIL_INVENTORY");
+            Console.WriteLine("ERROR: El inventario Oracle no coincide con la fuente. No se aplicarán cambios parciales.");
+            return 7;
+        }
+
+        if (!ejecutarCorreccion)
+        {
+            Console.WriteLine($"RISK_TEXT_STATUS={(repairs.Count == 0 ? "PASS" : "NEEDS_REPAIR")}");
+            if (repairs.Count > 0)
+            {
+                Console.WriteLine("Para corregir únicamente filas con mojibake use: --repair-risk-text --migrate");
+            }
+            return repairs.Count == 0 ? 0 : 8;
+        }
+
+        if (repairs.Count == 0)
+        {
+            Console.WriteLine("RISK_TEXT_UPDATED_ROWS=0");
+            Console.WriteLine("RISK_TEXT_POST_MOJIBAKE=0");
+            Console.WriteLine("RISK_TEXT_STATUS=PASS");
+            return 0;
+        }
+
+        string backupDir = Path.Combine(repoRoot, "artifacts", "oracle");
+        Directory.CreateDirectory(backupDir);
+        string backupPath = Path.Combine(
+            backupDir,
+            $"risk-text-backup-{DateTime.UtcNow:yyyyMMdd_HHmmss}.json");
+
+        var backupPayload = new
+        {
+            GeneratedUtc = DateTime.UtcNow,
+            Table = "RL_MR_RIESGOS",
+            Scope = "RIE_NOMBRE,RIE_DESCRIPCION",
+            Rows = repairs.Select(r => new
+            {
+                r.Id,
+                r.Code,
+                r.CurrentName,
+                r.CurrentDescription,
+                r.CanonicalName,
+                r.CanonicalDescription
+            }).ToArray()
+        };
+
+        await File.WriteAllTextAsync(
+            backupPath,
+            JsonSerializer.Serialize(backupPayload, new JsonSerializerOptions { WriteIndented = true }),
+            new UTF8Encoding(false));
+
+        Console.WriteLine($"RISK_TEXT_BACKUP={backupPath}");
+
+        await using var transaction = connection.BeginTransaction();
+        int updatedRows = 0;
+
+        try
+        {
+            const string sqlUpdate = @"
+                UPDATE RL_MR_RIESGOS
+                   SET RIE_NOMBRE = :nombre,
+                       RIE_DESCRIPCION = :descripcion
+                 WHERE RIE_ID = :id
+                   AND RIE_CODIGO = :codigo";
+
+            foreach (RiskTextRepairItem repair in repairs)
+            {
+                await using var cmd = new OracleCommand(sqlUpdate, connection)
+                {
+                    BindByName = true,
+                    Transaction = transaction
+                };
+                cmd.Parameters.Add(new OracleParameter("nombre", repair.CanonicalName));
+                cmd.Parameters.Add(new OracleParameter("descripcion", repair.CanonicalDescription));
+                cmd.Parameters.Add(new OracleParameter("id", repair.Id));
+                cmd.Parameters.Add(new OracleParameter("codigo", repair.Code));
+
+                int affected = await cmd.ExecuteNonQueryAsync();
+                if (affected != 1)
+                {
+                    throw new InvalidOperationException(
+                        $"Se esperaba actualizar exactamente una fila para {repair.Code}; Oracle reportó {affected}.");
+                }
+
+                updatedRows += affected;
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+
+        int postMojibake = 0;
+        await using (var cmd = new OracleCommand(sqlSelect, connection) { BindByName = true })
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                string code = reader.GetString(1);
+                if (!sourceByCode.ContainsKey(code)) continue;
+
+                string name = reader.GetString(2);
+                string? description = reader.IsDBNull(3) ? null : reader.GetString(3);
+                if (ContieneMojibake(name) || ContieneMojibake(description))
+                {
+                    postMojibake++;
+                    Console.WriteLine($"RISK_TEXT_POST_BAD|{code}|{name.Replace("|", "/", StringComparison.Ordinal)}");
+                }
+            }
+        }
+
+        Console.WriteLine($"RISK_TEXT_UPDATED_ROWS={updatedRows}");
+        Console.WriteLine($"RISK_TEXT_POST_MOJIBAKE={postMojibake}");
+        Console.WriteLine($"RISK_TEXT_STATUS={(postMojibake == 0 ? "PASS" : "FAIL_POSTCHECK")}");
+
+        return postMojibake == 0 ? 0 : 9;
     }
 
     private static List<SourceRiskRow> ParseSourceWorkbook(string excelPath)
@@ -1075,6 +1306,22 @@ public static class Program
         return await cmd.ExecuteScalarAsync();
     }
 }
+
+public sealed record RiskTextDbRow(
+    long Id,
+    string Code,
+    string Name,
+    string? Description
+);
+
+public sealed record RiskTextRepairItem(
+    long Id,
+    string Code,
+    string CurrentName,
+    string? CurrentDescription,
+    string CanonicalName,
+    string CanonicalDescription
+);
 
 public sealed record SourceRiskRow(
     int RowNumber,
