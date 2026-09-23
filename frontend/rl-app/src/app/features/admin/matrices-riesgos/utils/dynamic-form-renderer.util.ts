@@ -8,6 +8,7 @@ import {
 
 export type TipoCampoRenderer =
   | 'texto'
+  | 'texto-sugerido'
   | 'numero'
   | 'fecha'
   | 'texto-largo'
@@ -25,6 +26,9 @@ export interface TipoCampoNormalizado {
 
 const ALIASES_TIPO: Record<string, Exclude<TipoCampoRenderer, 'desconocido'>> = {
   texto: 'texto',
+  'texto-sugerido': 'texto-sugerido',
+  'texto-con-sugerencias': 'texto-sugerido',
+  'texto-catalogo-sugerido': 'texto-sugerido',
   text: 'texto',
   string: 'texto',
   cadena: 'texto',
