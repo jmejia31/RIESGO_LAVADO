@@ -108,7 +108,7 @@ export class FormBuilderInspectorComponent {
 
   get soportaPlaceholder(): boolean {
     if (!this.campoActivo) return false;
-    return ['texto', 'numero', 'texto-largo'].includes(this.campoActivo.tipo);
+    return ['texto', 'texto-sugerido', 'numero', 'texto-largo'].includes(this.campoActivo.tipo);
   }
 
   alCambiarTipo(nuevoTipo: TipoControlBuilder): void {
