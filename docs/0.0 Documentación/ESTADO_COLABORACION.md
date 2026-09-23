@@ -1458,3 +1458,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `MAPA_ARQUITECTURA=NO_APLICA`: no cambian dependencias, ownership de datos ni contratos REST.
 - Siguiente verificación funcional: actualizar `C:\RIESGO_LAVADO` a `origin/desarrollo` y confirmar visualmente que la vista previa ya no presenta caracteres corruptos.
 
+## Estado vigente - CATALOGO MAESTRO DE RIESGOS UTF-8 PROTEGIDO / REPARACION ORACLE PENDIENTE
+
+- Fecha: `2026-09-23`; autor `CHAT`; rama `desarrollo`; SHA funcional certificado `4a1600ac0899d5ead4ad2e330a444b60b077590d`.
+- La captura UAT del selector de riesgo confirmó un problema separado del Form Builder: los textos visibles proceden del catálogo maestro `RL_MR_RIESGOS`.
+- Fuente institucional sana: `Matrices de Riesgos.xlsx` fue leída en CI con `59` filas, `SOURCE_RISK_TEXT_MOJIBAKE=0`, `SOURCE_RISK_TEXT_STATUS=PASS`; `RCUMP-COMPRAS-24` contiene `Registro de proveedores con información inconsistente`.
+- Backend y Angular ya reparan mojibake en lectura sin modificar códigos/IDs y sin aplicar correcciones ortográficas a texto maestro sano. El backend rechaza persistencia nueva con marcadores de codificación inválida.
+- Correctivo físico preparado: `MatricesRiesgosMigrator --verify-risk-text` / `--repair-risk-text --migrate`, backup previo, transacción, rollback, postcheck, match por `RIE_CODIGO` y actualización exclusiva del campo corrupto. Validador Oracle read-only: `transicion/30_validar_codificacion_riesgos_maestros_solo_lectura.sql`.
+- `RISK_TEXT_DB_REPAIR=PENDING_EXTERNAL_EXECUTION`: no se ejecutó DML/DDL Oracle en esta intervención. No afirmar que la base física quedó corregida hasta obtener pre/postcheck reales.
+- Quality Gates #1601: `SUCCESS`; backend `643/643`, frontend `794/794`, E2E `36/36`, integridad UTF-8 y fuente Excel `PASS`.
+- `MAPA_ARQUITECTURA=NO_APLICA`; REST, seguridad, tenancy, V1/V2, hashes e históricos no cambian.
+- Continuación exacta: actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`, ejecutar verificación/correctivo/postverificación Oracle autorizados y volver a validar visualmente el selector.
+
