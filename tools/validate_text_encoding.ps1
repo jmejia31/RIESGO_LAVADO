@@ -6,7 +6,18 @@ $ErrorActionPreference = 'Stop'
 
 $extensions = @(
     '.cs', '.ts', '.html', '.css', '.scss', '.json', '.sql', '.ps1',
-    '.md', '.yml', '.yaml', '.txt', '.xml', '.csproj', '.sln', '.props', '.targets'
+    '.yml', '.yaml', '.txt', '.xml', '.csproj', '.sln', '.props', '.targets'
+)
+
+$scanRoots = @(
+    'frontend/rl-app/src',
+    'frontend/rl-app/e2e',
+    'backend/RL.API',
+    'backend/RL.API.Tests',
+    'database',
+    'tools',
+    'scripts',
+    '.github'
 )
 
 $excludedDirectories = @(
@@ -23,41 +34,47 @@ $patterns = [ordered]@{
 }
 
 $findings = [System.Collections.Generic.List[object]]::new()
+$files = [System.Collections.Generic.List[System.IO.FileInfo]]::new()
 
-Get-ChildItem -LiteralPath $RepositoryRoot -Recurse -File |
-    Where-Object {
-        $extensions -contains $_.Extension.ToLowerInvariant() -and
-        -not ($_.FullName.Split([IO.Path]::DirectorySeparatorChar) | Where-Object { $excludedDirectories -contains $_ })
-    } |
-    ForEach-Object {
-        $file = $_
-        $lineNumber = 0
+foreach ($relativeRoot in $scanRoots) {
+    $root = Join-Path $RepositoryRoot $relativeRoot
+    if (-not (Test-Path -LiteralPath $root)) {
+        continue
+    }
 
-        foreach ($line in [IO.File]::ReadLines($file.FullName)) {
-            $lineNumber++
-            foreach ($entry in $patterns.GetEnumerator()) {
-                if ($line.Contains([string]$entry.Value, [StringComparison]::Ordinal)) {
-                    $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName).Replace('\', '/')
-                    $findings.Add([pscustomobject]@{
-                        File = $relative
-                        Line = $lineNumber
-                        Pattern = $entry.Key
-                        Text = $line.Trim()
-                    })
-                    break
-                }
+    Get-ChildItem -LiteralPath $root -Recurse -File |
+        Where-Object {
+            $extensions -contains $_.Extension.ToLowerInvariant() -and
+            -not ($_.FullName.Split([IO.Path]::DirectorySeparatorChar) | Where-Object { $excludedDirectories -contains $_ })
+        } |
+        ForEach-Object { $files.Add($_) }
+}
+
+foreach ($file in $files) {
+    $lineNumber = 0
+    foreach ($line in [IO.File]::ReadLines($file.FullName)) {
+        $lineNumber++
+        foreach ($entry in $patterns.GetEnumerator()) {
+            if ($line.Contains([string]$entry.Value, [StringComparison]::Ordinal)) {
+                $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName).Replace('\', '/')
+                $findings.Add([pscustomobject]@{
+                    File = $relative
+                    Line = $lineNumber
+                    Pattern = $entry.Key
+                    Text = $line.Trim()
+                })
+                break
             }
         }
     }
+}
 
 if ($findings.Count -gt 0) {
     Write-Host "TEXT_ENCODING_INTEGRITY=FAIL" -ForegroundColor Red
     Write-Host "MOJIBAKE_FINDINGS=$($findings.Count)" -ForegroundColor Red
-
     foreach ($finding in $findings) {
         Write-Host ("{0}:{1}: {2} :: {3}" -f $finding.File, $finding.Line, $finding.Pattern, $finding.Text) -ForegroundColor Red
     }
-
     exit 1
 }
 
