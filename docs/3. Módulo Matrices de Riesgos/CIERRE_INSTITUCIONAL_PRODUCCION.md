@@ -45,7 +45,7 @@ El criterio funcional queda definido para los **dos campos de Identificación de
 
 Se documentó la propuesta institucional de continuidad en:
 
-- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md`
+- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md` (fuente canónica editable)\n- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/Acta_RTO_Institucional_SGRLA_IHSS_v1_1.pdf` (copia física imprimible y firmable)
 
 Estado vigente:
 
