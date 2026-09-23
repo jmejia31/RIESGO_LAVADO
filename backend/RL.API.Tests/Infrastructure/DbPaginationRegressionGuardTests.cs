@@ -187,17 +187,20 @@ public sealed class DbPaginationRegressionGuardTests
         var coincidencias = juridicasSql[coincidenciasStart..coincidenciasEnd];
 
         Assert.DoesNotContain("DNP_IHSS.V_DATOS_EMPRESA", juridicasSql, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("DNP_IHSS.REPORTE_COINCIDENCIAS R", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE ON DE.NUMERO_PATRONAL = R.NUMERO_PATRONO", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.DATOS_EMPRESA DE", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("DNP_IHSS.REPORTE_COINCIDENCIAS R ON R.NUMERO_PATRONO = DE.NUMERO_PATRONAL", coincidencias, StringComparison.Ordinal);
         Assert.Contains("MMATAMOROS.PATRONOS P ON P.NUMEPATRO = DE.NUMERO_PATRONAL", coincidencias, StringComparison.Ordinal);
         Assert.Contains("R.TIPO_CALIFICACION_ID = 1", coincidencias, StringComparison.Ordinal);
         Assert.Contains("R.NUMERO_PATRONO IS NOT NULL", coincidencias, StringComparison.Ordinal);
         Assert.Contains("DE.TIPO_EMPRESA_ID = 1", coincidencias, StringComparison.Ordinal);
 
-        // El hot path debe ser reproducible en producción aun cuando no exista el índice
-        // experimental de DNP_IHSS usado en desarrollo.
-        Assert.Contains("LEADING(R DE P)", coincidencias, StringComparison.Ordinal);
-        Assert.Contains("USE_NL(DE P)", coincidencias, StringComparison.Ordinal);
+        // Se filtra primero la fuente empresarial pequeña, se hace un único full scan estable
+        // de REPORTE_COINCIDENCIAS y PATRONOS queda al final del join. No se nombra ningún
+        // índice experimental de DNP_IHSS, por lo que el SQL sigue siendo ejecutable en producción.
+        Assert.Contains("LEADING(DE R P)", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("USE_HASH(R)", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("USE_NL(P)", coincidencias, StringComparison.Ordinal);
+        Assert.Contains("FULL(DE)", coincidencias, StringComparison.Ordinal);
         Assert.Contains("FULL(R)", coincidencias, StringComparison.Ordinal);
         Assert.DoesNotContain("IX_RCOINC_MON_TIPO_PATRONO", juridicasSql, StringComparison.OrdinalIgnoreCase);
 
