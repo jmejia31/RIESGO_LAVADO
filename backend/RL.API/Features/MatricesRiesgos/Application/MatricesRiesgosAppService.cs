@@ -156,14 +156,16 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
                 if (string.Equals(clave, "dueno_riesgo", StringComparison.OrdinalIgnoreCase))
                 {
-                    campo["tipo"] = "texto-sugerido";
+                    campo["tipo"] = "selector-catalogo";
                     campo["codigoCatalogo"] = "MR_AREA_RESPONSABLE";
+                    campo["permiteValorManual"] = true;
                     encontroDueno = true;
                 }
                 else if (string.Equals(clave, "respuesta_riesgo", StringComparison.OrdinalIgnoreCase))
                 {
-                    campo["tipo"] = "texto-sugerido";
+                    campo["tipo"] = "selector-catalogo";
                     campo["codigoCatalogo"] = "MR_RESPUESTA_RIESGO";
+                    campo["permiteValorManual"] = true;
                     encontroRespuesta = true;
                 }
             }
