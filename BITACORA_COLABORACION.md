@@ -7422,3 +7422,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Protección de datos:** backup independiente sin sobrescritura; actualización exclusiva de `RIE_DESCRIPCION`; rollback por `RIE_ID + RIE_CODIGO`; Oracle no fue contactado para DML/DDL.
 - **Pruebas ejecutadas:** backend focal `16/16 PASS`; frontend focal `3/3 PASS`; validador Oracle PASS; `git diff --check` PASS. Suites completas, E2E y Oracle permanecen con sus estados/pedientes documentados.
 - **Estado:** `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.
+
+## Registro de intervención — COD — Auditoría final de scripts y flujo completo
+
+- **Fecha y hora local:** 2026-09-23 15:05 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `968966719044bc6806ad1440da9acc930707d1b0`.
+- **Objetivo:** revisar cada script 31–40 y cerrar brechas de seguridad y compatibilidad antes de la ejecución manual de Javier.
+- **Correcciones Oracle:** 33 valida backup, 59 filas, 59 códigos esperados, coincidencias, faltantes y duplicados; 34 verifica los 59 nombres exactos y `RCUMP-COMPRAS-24` con U+00F3/U+00BF; 32/37 validan inventario antes del backup; 35/40 validan correspondencias, claves únicas, cantidades y diferencias null-safe; 38 exige backup y no sustituye U+FFFD sin contexto.
+- **Corrección del migrador:** `--repair-risk-text --migrate` queda bloqueado porque Excel no está aprobado como fuente semántica de `RIE_DESCRIPCION`; la reparación física contextual se realiza únicamente por scripts 36–40.
+- **Backend completo:** mitigación ahora rechaza corrupción contextual en descripciones de controles, planes, actividades, responsables y comentarios; las lecturas normalizan texto visible sin tocar identificadores.
+- **Gate corregido:** `tools/validate_text_encoding.ps1` usa `IndexOf` compatible con Windows PowerShell; resultado fresco `TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`.
+- **Pruebas ejecutadas:** backend focal actualizado `32/32 PASS`; backend completo `657/657 PASS`; frontend completo `79/79 archivos, 791/791 PASS`; migrador Release build PASS; validadores Oracle/documentación PASS; encoding gate PASS; diff check PASS. Oracle no fue conectado ni modificado.
+- **Estado:** `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.

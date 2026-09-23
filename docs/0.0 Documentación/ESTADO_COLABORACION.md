@@ -1489,3 +1489,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Validación fresca: backend focal `16/16 PASS`, frontend focal `3/3 PASS`, validador de base de datos PASS, diff check PASS. No se ejecutó Oracle DML/DDL; la ejecución manual y la verificación visual permanecen pendientes.
 - `CODE_FIX=PASS`; `SQL_SCRIPTS_READY=PASS`; `ORACLE_DML_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`.
 - **Continuación exacta:** actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`; ejecutar 31→32→33→34 para nombres y 36→37→38→39 para descripciones; usar 35 o 40 únicamente si se requiere restauración; confirmar `RCUMP-COMPRAS-24` visualmente.
+
+# Estado vigente — Auditoría final scripts 31–40 y protección backend completa (COD)
+
+- **Fecha:** 2026-09-23 (UTC-6). **Rama:** `desarrollo`. **SHA inicial:** `968966719044bc6806ad1440da9acc930707d1b0`.
+- Scripts 31–40 revisados: prechecks read-only; backups que no sobrescriben y validan 59 filas; correctivos limitados a `RIE_NOMBRE` o `RIE_DESCRIPCION`; postchecks completos; rollback con match `RIE_ID + RIE_CODIGO`, claves únicas, cantidades y comparaciones null-safe.
+- 33/34 contienen la lista vigente de los 59 códigos/nombres de `Matrices de Riesgos.xlsx`; 33 actualiza solo los 43 nombres que difieren según la auditoría y recalcula `EXPECTED_UPDATES`.
+- Se mantiene la separación semántica: no se sobrescribe `RIE_DESCRIPCION` desde Excel. 36–40 reparan únicamente secuencias de encoding contextualizadas y dejan U+FFFD sin contexto bloqueado para revisión.
+- Migrador: `--repair-risk-text --migrate` bloqueado para impedir una sincronización de descripciones no autorizada; `--generate-risk-name-sql` continúa siendo revisión-only.
+- Backend: controles, planes, actividades y comentarios rechazan nueva corrupción y normalizan lecturas visibles. Frontend conserva reparación defensiva contextual y signos españoles válidos.
+- Validación: encoding gate `PASS` con `MOJIBAKE_FINDINGS=0`; backend focal actualizado `32/32 PASS`; backend completo `657/657 PASS`; frontend completo `79/79 archivos, 791/791 PASS`; migrador Release build, validador de base de datos, documentación y diff check `PASS`.
+- `ORACLE_DML_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`. No se tocaron archivos untracked ajenos.
+- **Continuación exacta:** publicar el cierre en `origin/desarrollo`; Javier ejecuta manualmente 31→32→33→34 y 36→37→38→39; usa 35/40 solo para restaurar; luego valida la pantalla con Ctrl+F5.

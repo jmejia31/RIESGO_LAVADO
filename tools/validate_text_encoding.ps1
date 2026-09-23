@@ -55,7 +55,7 @@ foreach ($file in $files) {
     foreach ($line in [IO.File]::ReadLines($file.FullName)) {
         $lineNumber++
         foreach ($entry in $patterns.GetEnumerator()) {
-            if ($line.Contains([string]$entry.Value, [StringComparison]::Ordinal)) {
+            if ($line.IndexOf([string]$entry.Value, [StringComparison]::Ordinal) -ge 0) {
                 $relative = [IO.Path]::GetRelativePath($RepositoryRoot, $file.FullName).Replace('\', '/')
                 $findings.Add([pscustomobject]@{
                     File = $relative

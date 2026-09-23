@@ -5,6 +5,15 @@ DECLARE
   v_exists NUMBER;
   v_rows NUMBER;
 BEGIN
+  SELECT COUNT(*) INTO v_rows FROM RL_MR_RIESGOS;
+  IF v_rows <> 59 THEN
+    RAISE_APPLICATION_ERROR(-20930, 'Backup abortado: RL_MR_RIESGOS tiene ' || v_rows || ' filas; se esperaban 59.');
+  END IF;
+  SELECT COUNT(*) INTO v_rows FROM
+   (SELECT RIE_CODIGO FROM RL_MR_RIESGOS GROUP BY RIE_CODIGO HAVING COUNT(*) > 1);
+  IF v_rows <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20934, 'Backup abortado: existen ' || v_rows || ' códigos duplicados.');
+  END IF;
   SELECT COUNT(*) INTO v_exists FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIESGOS_NOMBRES_BKP_20260923';
   IF v_exists > 0 THEN
     RAISE_APPLICATION_ERROR(-20931, 'El backup RL_MR_RIESGOS_NOMBRES_BKP_20260923 ya existe; no se sobrescribirá.');

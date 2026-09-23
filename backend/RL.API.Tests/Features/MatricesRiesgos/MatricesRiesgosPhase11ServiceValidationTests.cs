@@ -119,6 +119,17 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     }
 
     [Fact]
+    public async Task Mitigacion_RechazaCorrupcionContextualEnTextosVisibles()
+    {
+        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+
+        Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(descripcion: "informaci\u00BFn"), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(descripcion: "Descripci\u00BFn"), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearActividadAsync(ValidoActividad(descripcion: "Due\u00C3\u00B1o"), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.RegistrarEvaluacionControlAsync(1, ValidoEvaluacionControl(comentario: "evaluaci\u00BFn"), UsuarioId, Ip)).StatusCode);
+    }
+
+    [Fact]
     public async Task Mitigacion_EvaluacionControl_CubreValidacionesExitoYCatch()
     {
         var repo = new MitigacionRepoFake();

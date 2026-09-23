@@ -6,10 +6,14 @@ DECLARE
   expected_updates NUMBER := 0;
   actual_updates NUMBER := 0;
   v_fixed VARCHAR2(32767);
+  backup_table NUMBER;
+  backup_rows NUMBER;
   FUNCTION fix_description(p_text VARCHAR2) RETURN VARCHAR2 IS
     v VARCHAR2(32767) := p_text;
   BEGIN
     IF v IS NULL THEN RETURN NULL; END IF;
+    v := REPLACE(v, UNISTR('\00EF\00BF\00BD'), UNISTR('\00BF'));
+    v := REPLACE(v, UNISTR('\00EF\00BFo'), UNISTR('\00F1o'));
     v := REPLACE(v, UNISTR('Descripci\00BFn'), UNISTR('Descripci\00F3n'));
     v := REPLACE(v, UNISTR('descripci\00BFn'), UNISTR('descripci\00F3n'));
     v := REPLACE(v, UNISTR('informaci\00BFn'), UNISTR('informaci\00F3n'));
@@ -27,6 +31,13 @@ DECLARE
     v := REPLACE(v, UNISTR('aprobaci\00BFn'), UNISTR('aprobaci\00F3n'));
     v := REPLACE(v, UNISTR('adjudicaci\00BFn'), UNISTR('adjudicaci\00F3n'));
     v := REPLACE(v, UNISTR('contrataci\00BFn'), UNISTR('contrataci\00F3n'));
+    v := REPLACE(v, UNISTR('licitaci\00BFn'), UNISTR('licitaci\00F3n'));
+    v := REPLACE(v, UNISTR('pensi\00BFn'), UNISTR('pensi\00F3n'));
+    v := REPLACE(v, UNISTR('prestaci\00BFn'), UNISTR('prestaci\00F3n'));
+    v := REPLACE(v, UNISTR('definici\00BFn'), UNISTR('definici\00F3n'));
+    v := REPLACE(v, UNISTR('ejecuci\00BFn'), UNISTR('ejecuci\00F3n'));
+    v := REPLACE(v, UNISTR('supervisi\00BFn'), UNISTR('supervisi\00F3n'));
+    v := REPLACE(v, UNISTR('prevenci\00BFn'), UNISTR('prevenci\00F3n'));
     v := REPLACE(v, UNISTR('documentaci\00BFn'), UNISTR('documentaci\00F3n'));
     v := REPLACE(v, UNISTR('capacitaci\00BFn'), UNISTR('capacitaci\00F3n'));
     v := REPLACE(v, UNISTR('operaci\00BFn'), UNISTR('operaci\00F3n'));
@@ -45,20 +56,33 @@ DECLARE
     v := REPLACE(v, UNISTR('Due\00BFo'), UNISTR('Due\00F1o'));
     v := REPLACE(v, UNISTR('due\00BFo'), UNISTR('due\00F1o'));
     v := REPLACE(v, UNISTR('v\00BFnculo'), UNISTR('v\00EDnculo'));
-    v := REPLACE(v, UNISTR('\00EF\00BF\00BD'), UNISTR('\00BF'));
-    v := REPLACE(v, UNISTR('\00EF\00BFo'), UNISTR('\00F1o'));
     -- U+FFFD no se sustituye a ciegas: sin contexto se desconoce el carácter original.
     RETURN v;
   END;
 BEGIN
-  SELECT COUNT(*) INTO expected_updates
-    FROM RL_MR_RIESGOS r
-   WHERE fix_description(r.RIE_DESCRIPCION) <> r.RIE_DESCRIPCION;
+  SELECT COUNT(*) INTO backup_table FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIESGOS_DESC_BKP_20260923';
+  IF backup_table = 0 THEN
+    RAISE_APPLICATION_ERROR(-20947, 'Corrección bloqueada: ejecutar primero 37_backup_rl_mr_riesgos_descripciones.sql.');
+  END IF;
+  SELECT COUNT(*) INTO backup_rows FROM RL_MR_RIESGOS_DESC_BKP_20260923;
+  IF backup_rows <> 59 THEN
+    RAISE_APPLICATION_ERROR(-20948, 'Corrección bloqueada: backup incompleto; filas=' || backup_rows || ', esperado=59.');
+  END IF;
+  FOR r IN (SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS) LOOP
+    v_fixed := fix_description(r.RIE_DESCRIPCION);
+    IF v_fixed <> r.RIE_DESCRIPCION
+       OR (v_fixed IS NULL AND r.RIE_DESCRIPCION IS NOT NULL)
+       OR (v_fixed IS NOT NULL AND r.RIE_DESCRIPCION IS NULL) THEN
+      expected_updates := expected_updates + 1;
+    END IF;
+  END LOOP;
   DBMS_OUTPUT.PUT_LINE('EXPECTED_DESCRIPTION_UPDATES=' || expected_updates);
   SAVEPOINT risk_description_encoding;
   FOR r IN (SELECT RIE_ID, RIE_CODIGO, RIE_DESCRIPCION FROM RL_MR_RIESGOS FOR UPDATE) LOOP
     v_fixed := fix_description(r.RIE_DESCRIPCION);
-    IF v_fixed <> r.RIE_DESCRIPCION THEN
+    IF v_fixed <> r.RIE_DESCRIPCION
+       OR (v_fixed IS NULL AND r.RIE_DESCRIPCION IS NOT NULL)
+       OR (v_fixed IS NOT NULL AND r.RIE_DESCRIPCION IS NULL) THEN
       UPDATE RL_MR_RIESGOS
          SET RIE_DESCRIPCION = v_fixed
        WHERE RIE_ID = r.RIE_ID AND RIE_CODIGO = r.RIE_CODIGO;

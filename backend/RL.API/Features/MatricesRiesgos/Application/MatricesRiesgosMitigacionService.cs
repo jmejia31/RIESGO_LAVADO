@@ -1,4 +1,5 @@
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
 using RL.API.Shared.Results;
 
@@ -68,6 +69,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (controlId <= 0) return ServiceResult<long>.BadRequest("El control es obligatorio.");
         if (dto.EcoEfectividad is < 0 or > 100) return ServiceResult<long>.BadRequest("La efectividad debe estar entre 0 y 100.");
         if ((dto.EcoComentario?.Length ?? 0) > 500) return ServiceResult<long>.BadRequest("El comentario no puede exceder 500 caracteres.");
+        if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.EcoComentario)) return ServiceResult<long>.BadRequest("El comentario contiene caracteres de codificación inválidos.");
         try { return ServiceResult<long>.Ok(await _repo.RegistrarEvaluacionControlAsync(controlId, dto, usuarioId, ip), "Evaluación de control registrada."); }
         catch (InvalidOperationException ex) { return ServiceResult<long>.BadRequest(ex.Message); }
     }
@@ -132,6 +134,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (!TiposControl.Contains(dto.ConTipo?.Trim() ?? string.Empty)) return "Tipo de control inválido.";
         if (!Automatizaciones.Contains(dto.ConAutomatizacion?.Trim() ?? string.Empty)) return "Automatización de control inválida.";
         if (string.IsNullOrWhiteSpace(dto.ConDescripcion) || dto.ConDescripcion.Trim().Length > 500) return "La descripción del control es obligatoria y no puede exceder 500 caracteres.";
+        if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConDescripcion)) return "La descripción del control contiene caracteres de codificación inválidos.";
         if (string.IsNullOrWhiteSpace(dto.ConEstado) || dto.ConEstado.Trim().Length > 20) return "El estado del control es obligatorio y no puede exceder 20 caracteres.";
         return null;
     }
@@ -140,6 +143,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     {
         if (dto.PlaEvaluacionId <= 0) return "La evaluación es obligatoria.";
         if (string.IsNullOrWhiteSpace(dto.PlaDescripcion) || dto.PlaDescripcion.Trim().Length > 500) return "La descripción del plan es obligatoria y no puede exceder 500 caracteres.";
+        if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.PlaDescripcion)) return "La descripción del plan contiene caracteres de codificación inválidos.";
         if (dto.PlaAvance is < 0 or > 100) return "El avance del plan debe estar entre 0 y 100.";
         if (dto.PlaPresupuesto < 0) return "El presupuesto no puede ser negativo.";
         if (dto.PlaFechaFin < dto.PlaFechaInicio) return "La fecha final no puede ser anterior a la fecha inicial.";
@@ -151,6 +155,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     {
         if (dto.ActPlanId <= 0) return "El plan es obligatorio.";
         if (string.IsNullOrWhiteSpace(dto.ActDescripcion) || dto.ActDescripcion.Trim().Length > 500) return "La descripción de la actividad es obligatoria y no puede exceder 500 caracteres.";
+        if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ActDescripcion) || TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ActResponsable)) return "La actividad contiene caracteres de codificación inválidos.";
         if (string.IsNullOrWhiteSpace(dto.ActResponsable) || dto.ActResponsable.Trim().Length > 150) return "El responsable es obligatorio y no puede exceder 150 caracteres.";
         if (dto.ActAvance is < 0 or > 100) return "El avance de la actividad debe estar entre 0 y 100.";
         if (dto.ActFechaFin < dto.ActFechaInicio) return "La fecha final no puede ser anterior a la fecha inicial.";

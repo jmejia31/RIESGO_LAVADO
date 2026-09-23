@@ -1,14 +1,81 @@
--- Oracle 11g / MANUAL. Ejecutar despuÃ©s de 31 y 32.
+-- Oracle 11g / MANUAL. Ejecutar después de 31 y 32.
 -- Alcance exclusivo: RL_MR_RIESGOS.RIE_NOMBRE, emparejado por RIE_CODIGO.
 -- No modifica RIE_ID, RIE_DESCRIPCION, evaluaciones, proyecciones, formularios, V1/V2 ni hashes.
 SET SERVEROUTPUT ON SIZE UNLIMITED
 DECLARE
   TYPE t_item IS RECORD (code VARCHAR2(30), name VARCHAR2(250));
   TYPE t_items IS TABLE OF t_item INDEX BY PLS_INTEGER;
+  TYPE t_code IS RECORD (code VARCHAR2(30));
+  TYPE t_codes IS TABLE OF t_code INDEX BY PLS_INTEGER;
   items t_items;
+  all_codes t_codes;
+  db_rows NUMBER;
+  matched_codes NUMBER := 0;
+  missing_codes NUMBER := 0;
+  duplicate_codes NUMBER := 0;
+  backup_table NUMBER;
+  backup_rows NUMBER;
+  source_rows NUMBER;
+  code_rows NUMBER;
   expected_updates NUMBER := 0;
   actual_updates NUMBER := 0;
 BEGIN
+  SELECT COUNT(*) INTO backup_table FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIESGOS_NOMBRES_BKP_20260923';
+  IF backup_table = 0 THEN
+    RAISE_APPLICATION_ERROR(-20936, 'Corrección bloqueada: ejecutar primero 32_backup_rl_mr_riesgos_nombres.sql.');
+  END IF;
+  SELECT COUNT(*) INTO backup_rows FROM RL_MR_RIESGOS_NOMBRES_BKP_20260923;
+  IF backup_rows <> 59 THEN
+    RAISE_APPLICATION_ERROR(-20937, 'Corrección bloqueada: backup incompleto; filas=' || backup_rows || ', esperado=59.');
+  END IF;
+  all_codes(1).code := 'ROTR-AFIL-1'; all_codes(2).code := 'ROTR-AFIL-2';
+  all_codes(3).code := 'ROTR-PENS-3'; all_codes(4).code := 'ROTR-PENS-4';
+  all_codes(5).code := 'ROTR-SUBS-5'; all_codes(6).code := 'ROTR-SUBS-6';
+  all_codes(7).code := 'ROTR-COMPRAS-7'; all_codes(8).code := 'ROTR-RRHH-8';
+  all_codes(9).code := 'ROTR-TESO-9'; all_codes(10).code := 'ROTR-PENS-10';
+  all_codes(11).code := 'ROTR-TESO-11'; all_codes(12).code := 'ROTR-PATRONAL-12';
+  all_codes(13).code := 'ROTR-IVM-13'; all_codes(14).code := 'ROTR-RRHH-14';
+  all_codes(15).code := 'ROTR-RRHH-15'; all_codes(16).code := 'ROTR-RRHH-16';
+  all_codes(17).code := 'ROTR-PATRONALCOMP-17'; all_codes(18).code := 'ROTR-COMPRAS-18';
+  all_codes(19).code := 'ROTR-RRHHTESORERI-19'; all_codes(20).code := 'ROTR-COMPRASTESOR-20';
+  all_codes(21).code := 'ROTR-COMPRASGAYF-21'; all_codes(22).code := 'ROTR-USIGTICTRANS-22';
+  all_codes(23).code := 'ROTR-ALMACENBIENE-23'; all_codes(24).code := 'RCUMP-COMPRAS-24';
+  all_codes(25).code := 'RCUMP-COMPRAS-25'; all_codes(26).code := 'RCUMP-COMPRASRRHH-26';
+  all_codes(27).code := 'RCUMP-COMPRAS-27'; all_codes(28).code := 'RCUMP-COMPRAS-28';
+  all_codes(29).code := 'RCUMP-COMPRAS-29'; all_codes(30).code := 'RCUMP-COMPRAS-30';
+  all_codes(31).code := 'RCUMP-COMPRAS-31'; all_codes(32).code := 'RCUMP-COMPRAS-32';
+  all_codes(33).code := 'RCUMP-COMPRAS-33'; all_codes(34).code := 'RCUMP-COMPRAS-34';
+  all_codes(35).code := 'RCUMP-COMPRAS-35'; all_codes(36).code := 'RCUMP-COMPRAS-36';
+  all_codes(37).code := 'RCUMP-COMPRAS-37'; all_codes(38).code := 'RCUMP-COMPRAS-38';
+  all_codes(39).code := 'RCUMP-COMPRASGTIC-39'; all_codes(40).code := 'RCUMP-COMPRAS-40';
+  all_codes(41).code := 'RCUMP-COMPRAS-41'; all_codes(42).code := 'RCUMP-COMPRAS-42';
+  all_codes(43).code := 'RCUMP-COMPRAS-43'; all_codes(44).code := 'RCUMP-COMPRASCONTR-44';
+  all_codes(45).code := 'RCUMP-CONTROLPATRO-45'; all_codes(46).code := 'RCUMP-CONTROLPATRO-46';
+  all_codes(47).code := 'RCUMP-CONTROLPATRO-47'; all_codes(48).code := 'RCUMP-CONTROLPATRO-48';
+  all_codes(49).code := 'ROP-CUMP-49'; all_codes(50).code := 'ROP-CUMP-50';
+  all_codes(51).code := 'ROP-CUMP-51'; all_codes(52).code := 'ROP-CUMP-52';
+  all_codes(53).code := 'ROP-CUMP-53'; all_codes(54).code := 'ROP-CUMP-54';
+  all_codes(55).code := 'ROP-CUMP-55'; all_codes(56).code := 'ROP-CUMP-56';
+  all_codes(57).code := 'ROP-CUMP-57'; all_codes(58).code := 'ROP-CUMP-58';
+  all_codes(59).code := 'ROP-CUMP-59';
+  source_rows := all_codes.COUNT;
+  SELECT COUNT(*) INTO db_rows FROM RL_MR_RIESGOS;
+  SELECT COUNT(*) INTO duplicate_codes FROM
+   (SELECT RIE_CODIGO FROM RL_MR_RIESGOS GROUP BY RIE_CODIGO HAVING COUNT(*) > 1);
+  FOR i IN 1..all_codes.COUNT LOOP
+    SELECT COUNT(*) INTO code_rows FROM RL_MR_RIESGOS WHERE RIE_CODIGO = all_codes(i).code;
+    IF code_rows = 1 THEN matched_codes := matched_codes + 1;
+    ELSIF code_rows = 0 THEN missing_codes := missing_codes + 1;
+    END IF;
+  END LOOP;
+  DBMS_OUTPUT.PUT_LINE('SOURCE_ROWS=' || source_rows);
+  DBMS_OUTPUT.PUT_LINE('DB_ROWS=' || db_rows);
+  DBMS_OUTPUT.PUT_LINE('MATCHED_CODES=' || matched_codes);
+  DBMS_OUTPUT.PUT_LINE('MISSING_CODES=' || missing_codes);
+  DBMS_OUTPUT.PUT_LINE('DUPLICATE_CODES=' || duplicate_codes);
+  IF db_rows <> 59 OR source_rows <> 59 OR matched_codes <> 59 OR missing_codes <> 0 OR duplicate_codes <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20935, 'Inventario bloqueado: la fuente y RL_MR_RIESGOS no coinciden exactamente.');
+  END IF;
   items(1).code := 'ROTR-AFIL-1'; items(1).name := UNISTR('Creaci\00F3n y activaci\00F3n de registros en el sistema correspondientes a identidades falsas, suplantadas o personas que no cumplen criterios normativos, contractuales o internos para su afiliacion.');
   items(2).code := 'ROTR-AFIL-2'; items(2).name := UNISTR('Emisi\00F3n de autorizaci\00F3n o prestaci\00F3n efectiva de un servicio de salud a una persona que, no figura como afiliado al sistema o tiene afiliacion suspendida');
   items(3).code := 'ROTR-PENS-3'; items(3).name := UNISTR('Aprobaci\00F3n y reconocimiento de una prestaci\00F3n pensional a una persona que no cumple los requisitos legales');
@@ -55,7 +122,8 @@ BEGIN
   FOR i IN 1..items.COUNT LOOP
     SELECT expected_updates + COUNT(*) INTO expected_updates
       FROM RL_MR_RIESGOS
-     WHERE RIE_CODIGO = items(i).code AND RIE_NOMBRE <> items(i).name;
+     WHERE RIE_CODIGO = items(i).code
+       AND (RIE_NOMBRE <> items(i).name OR RIE_NOMBRE IS NULL);
   END LOOP;
   DBMS_OUTPUT.PUT_LINE('EXPECTED_UPDATES=' || expected_updates);
   SAVEPOINT risk_name_sync;
@@ -63,7 +131,7 @@ BEGIN
     UPDATE RL_MR_RIESGOS
        SET RIE_NOMBRE = items(i).name
      WHERE RIE_CODIGO = items(i).code
-       AND RIE_NOMBRE <> items(i).name;
+       AND (RIE_NOMBRE <> items(i).name OR RIE_NOMBRE IS NULL);
     actual_updates := actual_updates + SQL%ROWCOUNT;
   END LOOP;
   DBMS_OUTPUT.PUT_LINE('ACTUAL_UPDATES=' || actual_updates);
@@ -78,4 +146,3 @@ EXCEPTION WHEN OTHERS THEN
   RAISE;
 END;
 /
-

@@ -167,6 +167,12 @@ public static class Program
 
         if (repairRiskText || verifyRiskText)
         {
+            if (repairRiskText && executeMigration)
+            {
+                Console.WriteLine("RISK_TEXT_STATUS=BLOCKED_DESCRIPTION_SOURCE");
+                Console.WriteLine("ERROR: No se permite sincronizar RIE_DESCRIPCION desde Excel sin una fuente canónica institucional aprobada. Use los scripts manuales 36-40 para reparación contextual de encoding.");
+                return 15;
+            }
             bool ejecutarCorreccion = repairRiskText && executeMigration;
             return await VerificarOCorregirTextoRiesgosAsync(
                 connection,

@@ -2,6 +2,7 @@ using System.Text.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
@@ -53,7 +54,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                 ConId = reader.GetInt64(0),
                 ConEvaluacionId = reader.GetInt64(1),
                 ConTipo = reader.GetString(2),
-                ConDescripcion = reader.GetString(3),
+                ConDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
                 ConAutomatizacion = reader.GetString(4),
                 ConEstado = reader.GetString(5)
             });
@@ -140,7 +141,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                 EcoId = reader.GetInt64(0),
                 EcoControlId = reader.GetInt64(1),
                 EcoEfectividad = reader.GetDecimal(2),
-                EcoComentario = reader.IsDBNull(3) ? null : reader.GetString(3)
+                EcoComentario = reader.IsDBNull(3) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3))
             });
         }
         return lista;
@@ -189,7 +190,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         {
             lista.Add(new PlanMitigacionDto
             {
-                PlaId = reader.GetInt64(0), PlaEvaluacionId = reader.GetInt64(1), PlaDescripcion = reader.GetString(2),
+                PlaId = reader.GetInt64(0), PlaEvaluacionId = reader.GetInt64(1), PlaDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
                 PlaAvance = reader.GetDecimal(3), PlaPresupuesto = reader.GetDecimal(4), PlaFechaInicio = reader.GetDateTime(5),
                 PlaFechaFin = reader.GetDateTime(6), PlaEstado = reader.GetString(7)
             });
@@ -261,8 +262,8 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         {
             lista.Add(new ActividadPlanDto
             {
-                ActId = reader.GetInt64(0), ActPlanId = reader.GetInt64(1), ActDescripcion = reader.GetString(2),
-                ActResponsable = reader.GetString(3), ActAvance = reader.GetDecimal(4), ActFechaInicio = reader.GetDateTime(5),
+                ActId = reader.GetInt64(0), ActPlanId = reader.GetInt64(1), ActDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
+                ActResponsable = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)), ActAvance = reader.GetDecimal(4), ActFechaInicio = reader.GetDateTime(5),
                 ActFechaFin = reader.GetDateTime(6), ActEstado = reader.GetString(7)
             });
         }
