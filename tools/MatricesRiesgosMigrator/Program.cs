@@ -27,6 +27,7 @@ public static class Program
 
         bool executeMigration = args.Any(a => string.Equals(a, "--migrate", StringComparison.OrdinalIgnoreCase));
         bool enrichExisting = args.Any(a => string.Equals(a, "--enrich-existing", StringComparison.OrdinalIgnoreCase));
+        bool inspectSourceRiskText = args.Any(a => string.Equals(a, "--inspect-source-risk-text", StringComparison.OrdinalIgnoreCase));
         string repoRoot = Directory.GetCurrentDirectory();
         while (!string.IsNullOrEmpty(repoRoot) && !File.Exists(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx")))
         {
@@ -65,6 +66,11 @@ public static class Program
         // 1. Parsear y Validar las 59 filas del Excel
         var sourceRisks = ParseSourceWorkbook(excelPath);
         Console.WriteLine($"Filas leídas de Matriz Consolidada: {sourceRisks.Count}");
+
+        if (inspectSourceRiskText)
+        {
+            return InspeccionarTextoRiesgosFuente(sourceRisks);
+        }
 
         // 2. Ejecutar Dry-Run de validación contractual
         var dryRunResult = await ExecuteDryRunAsync(sourceRisks, schemaJson);
@@ -156,6 +162,37 @@ public static class Program
         Console.WriteLine("MIGRACIÓN Y CERTIFICACIÓN TRANSACCIONAL 59/59 COMPLETADA CON ÉXITO");
         Console.WriteLine("================================================================================");
         return 0;
+    }
+
+    private static int InspeccionarTextoRiesgosFuente(IReadOnlyCollection<SourceRiskRow> sourceRisks)
+    {
+        int sospechosos = 0;
+        foreach (SourceRiskRow riesgo in sourceRisks.OrderBy(r => r.RowIndex))
+        {
+            bool corrupto = ContieneMojibake(riesgo.Titulo) || ContieneMojibake(riesgo.Descripcion);
+            if (corrupto) sospechosos++;
+
+            Console.WriteLine(
+                $"SOURCE_RISK_TEXT|{riesgo.RowIndex}|{riesgo.Code}|{riesgo.Titulo.Replace("|", "/", StringComparison.Ordinal)}");
+        }
+
+        Console.WriteLine($"SOURCE_RISK_TEXT_ROWS={sourceRisks.Count}");
+        Console.WriteLine($"SOURCE_RISK_TEXT_MOJIBAKE={sospechosos}");
+        Console.WriteLine($"SOURCE_RISK_TEXT_STATUS={(sourceRisks.Count == 59 && sospechosos == 0 ? "PASS" : "FAIL")}");
+
+        return sourceRisks.Count == 59 && sospechosos == 0 ? 0 : 5;
+    }
+
+    private static bool ContieneMojibake(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return false;
+
+        return value.Contains('�')
+            || value.Contains("ï¿½", StringComparison.Ordinal)
+            || value.Contains('Ã')
+            || value.Contains('Â')
+            || value.Contains("â€", StringComparison.Ordinal)
+            || value.Contains("ðŸ", StringComparison.Ordinal);
     }
 
     private static List<SourceRiskRow> ParseSourceWorkbook(string excelPath)
