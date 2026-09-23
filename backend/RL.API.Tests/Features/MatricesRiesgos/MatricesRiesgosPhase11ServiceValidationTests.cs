@@ -42,6 +42,10 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.Equal(400, (await service.CrearRiesgoAsync(ValidoRiesgo(nombre: ""), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearRiesgoAsync(ValidoRiesgo(nombre: new string('N', 251)), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearRiesgoAsync(ValidoRiesgo(descripcion: new string('D', 2001)), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearRiesgoAsync(
+            ValidoRiesgo(nombre: "Informaci\u00EF\u00BF\u00BDn inconsistente"),
+            UsuarioId,
+            Ip)).StatusCode);
     }
 
     [Fact]
