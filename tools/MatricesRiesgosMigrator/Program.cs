@@ -103,9 +103,19 @@ public static class Program
 
         // 3. Ejecutar Migración / verificación en Oracle
         string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
-        var config = new ConfigurationBuilder().AddJsonFile(appSettingsPath).Build();
-        string connectionString = config.GetConnectionString("OracleDB")
-            ?? throw new InvalidOperationException("No se encontró la cadena de conexión OracleDB.");
+        var config = new ConfigurationBuilder().AddJsonFile(appSettingsPath, optional: true).Build();
+        string? connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__OracleDB");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            connectionString = config.GetConnectionString("OracleDB");
+        }
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "No se encontró la cadena OracleDB. Defina ConnectionStrings__OracleDB en el entorno o configure backend/RL.API/appsettings.json.");
+        }
 
         await using var connection = new OracleConnection(connectionString);
         connection.ConnectionString = new OracleConnectionStringBuilder(connectionString)
