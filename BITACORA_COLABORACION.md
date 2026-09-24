@@ -7468,3 +7468,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - `RPO_DEFINED=FALSE`; capacitación y despliegue productivo permanecen pendientes.
 - Issue #22 actualizado para separar la aprobación/firma de RTO de la definición de RPO.
 - Impacto técnico: `INTERFACES_CAMBIAN=NO`; `DATOS_CAMBIAN=NO`; `SEGURIDAD_CAMBIA=NO`; `MAPA_ARQUITECTURA=NO_APLICA`. No hubo DML/DDL Oracle ni modificación de `main`.
+
+
+## 2026-09-24 — CHAT — Cierre institucional RTO/RPO por autorización del propietario
+
+- Rama: `desarrollo`.
+- Decisión: cierre de RTO y RPO bajo autorización expresa de Javier Mejía, propietario del proyecto.
+- RTO aprobado: máximo normal `4 horas`, atención/escalamiento `0 minutos`, excepción catastrófica documentada.
+- RPO aprobado: objetivo `15 minutos`, máximo tolerable `60 minutos`.
+- Documento v2.0 y PDF formal incorporados; control de producción y estado colaborativo actualizados.
+- `RTO_DEFINED=TRUE`; `RPO_DEFINED=TRUE`; `RTO_RPO_PENDING_ITEMS=0`.
+- Sin cambios de código, Oracle, datos, V1/V2, seguridad, contratos REST ni `main`.
