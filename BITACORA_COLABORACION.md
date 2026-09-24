@@ -7542,3 +7542,4 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Código:** reportes, Excel/PDF, monitoreo, gestión, mitigación, ciclo integral, familias y superficies dinámicas normalizan textos visibles; códigos e IDs técnicos no se transforman.
 - **Gates locales:** validador database PASS con `FULL_MODULE_TOKEN_INVENTORY=PASS`, `BACKUP_COVERAGE=PASS`, `PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT`, `BACKEND_ALL_TEXT_OUTPUTS=PASS`, `FRONTEND_ALL_TEXT_SURFACES=PASS`; backend focalizado `16/16`; frontend focalizado `36/36`.
 - **Oracle:** no se ejecutó Oracle, no se ejecutó DML/DDL y no se declara limpieza física; el inventario real y sus conteos sólo existirán después de ejecutar manualmente 41. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Cierre Git:** SHA final `6de7e8a7656181e4596c22e5d204e9b0750c2ff0`, publicado en `origin/desarrollo`.

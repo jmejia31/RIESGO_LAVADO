@@ -1602,3 +1602,4 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - 44 compara paridad JSON por las siete claves contractuales, no por coincidencia libre de valores.
 - Backend y frontend cubren reportes API/Excel/PDF, gestión, evaluaciones, consolidado, mitigación, monitoreo, familias, modales y Form Builder.
 - El estado PASS de las gates es estático/local; no representa resultado Oracle. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- SHA final publicado: `6de7e8a7656181e4596c22e5d204e9b0750c2ff0` en `origin/desarrollo`.
