@@ -1181,7 +1181,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.obtenerConsolidadoPaginado(filtro).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaConsolidado) return;
-        this.consolidado.set(resultado.items);
+        this.consolidado.set(resultado.items.map(fila => this.normalizarFilaReporte(fila)));
         this.totalRegistrosConsolidado.set(resultado.totalRegistros);
         this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
         this.totalesConsolidado.set(resultado.totales);
@@ -1196,6 +1196,18 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.cargandoConsolidado.set(false);
       }
     });
+  }
+
+  private normalizarFilaReporte(fila: RiesgoReporteFila): RiesgoReporteFila {
+    return {
+      ...fila,
+      areaPrincipal: normalizarMojibakeVisibleUtf8(fila.areaPrincipal),
+      duenoRiesgo: normalizarMojibakeVisibleUtf8(fila.duenoRiesgo),
+      nivelInherente: normalizarMojibakeVisibleUtf8(fila.nivelInherente),
+      nivelResidual: normalizarMojibakeVisibleUtf8(fila.nivelResidual),
+      respuestaRiesgo: normalizarMojibakeVisibleUtf8(fila.respuestaRiesgo),
+      estadoEvaluacion: normalizarMojibakeVisibleUtf8(fila.estadoEvaluacion)
+    };
   }
 
   cargarFamiliaPredeterminada(): void {

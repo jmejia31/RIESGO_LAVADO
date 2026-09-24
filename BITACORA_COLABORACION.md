@@ -7523,3 +7523,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Validador:** `validate_database_scripts.ps1` ahora lee la evidencia completa, verifica ocurrencias, deduplicación, mappings, ambigüedades y unmapped; también conserva la detección de sustituciones globales prohibidas.
 - **Pruebas verificadas:** validador de base PASS con los cinco conteos Unicode; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; backend `657/657`; frontend `79 archivos/791 pruebas`; E2E final `36/36 PASS` (una ejecución integral previa tuvo un timeout aislado y fue reproducido PASS de forma aislada).
 - **Publicación:** se registra el SHA final después del commit y push a `origin/desarrollo`; los untracked ajenos fueron preservados y excluidos.
+
+## Registro de intervención — COD — Auditoría integral Unicode del módulo Matrices de Riesgos
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `00693f51c76d92b3fcacb6bad387ed3aefc30458`.
+- **Alcance:** auditoría defensiva del módulo completo sobre las 25 tablas RL_MR y todas sus columnas textuales; se agregaron los scripts manuales Oracle 11g 41–45, sin DDL sobre el esquema institucional.
+- **Scripts:** 41 precheck read-only; 42 backup fail-closed `RL_MR_UNI_BKP_20260924`; 43 corrección contextual idempotente; 44 postcheck de residuos, integridad, huérfanos, restricciones y paridad JSON; 45 rollback dinámico fail-closed. Los identificadores cumplen <=30 caracteres y el validador detecta CREATE TABLE dinámico con referencia estática peligrosa.
+- **Aplicación:** normalizador backend/frontend con reparaciones contextuales explícitas, preservación de U+FFFD no demostrado y normalización de filas de consolidado/reportes; no se alteran códigos, IDs ni claves técnicas.
+- **Pruebas verificadas:** normalizador backend `16/16`; frontend focalizado `13/13`; suite backend `657/657`; frontend `79 archivos / 791 pruebas`; E2E `36/36`; cobertura frontend statements `61.34%`, branches `54.44%`, functions `57.29%`, lines `62.05%`; estructura, documentación, encoding y validador de base PASS.
+- **Estado Oracle:** `TEXT_TABLES_SCANNED=25` queda preparado para salida manual del precheck; los hallazgos del módulo completo permanecen pendientes hasta ejecutar 41. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Archivos ajenos:** `.vscode/`, `agosto_rest.txt`, `artifacts/` y PDF local fueron preservados y excluidos del commit.

@@ -340,14 +340,20 @@ $riskTextTransitionFiles = @(
     '37_backup_rl_mr_riesgos_descripciones.sql',
     '38_corregir_descripciones_encoding.sql',
     '39_postcheck_descripciones_riesgos.sql',
-    '40_rollback_descripciones_riesgos.sql'
+    '40_rollback_descripciones_riesgos.sql',
+    '41_precheck_unicode_modulo_matrices_completo.sql',
+    '42_backup_unicode_modulo_matrices_completo.sql',
+    '43_corregir_unicode_modulo_matrices_completo.sql',
+    '44_postcheck_unicode_modulo_matrices_completo.sql',
+    '45_rollback_unicode_modulo_matrices_completo.sql'
 )
 $riskNameBackup = 'RL_MR_RIES_NOM_BKP_20260924'
 $riskDescriptionBackup = 'RL_MR_RIES_DESC_BKP_20260924'
+$unicodeModuleBackup = 'RL_MR_UNI_BKP_20260924'
 $legacyRiskNameBackup = 'RL_MR_RIESGOS_NOMBRES_BKP_20260923'
 $legacyRiskDescriptionBackup = 'RL_MR_RIESGOS_DESC_BKP_20260923'
 
-foreach ($identifier in @($riskNameBackup, $riskDescriptionBackup)) {
+foreach ($identifier in @($riskNameBackup, $riskDescriptionBackup, $unicodeModuleBackup)) {
     if ($identifier.Length -gt 30) {
         $errors.Add("Identificador Oracle 11g de respaldo supera 30 caracteres: $identifier ($($identifier.Length))")
     }
@@ -365,6 +371,52 @@ foreach ($fileName in $riskTextTransitionFiles) {
     $riskTextContents[$fileName] = $content
     if ($content.Contains($legacyRiskNameBackup) -or $content.Contains($legacyRiskDescriptionBackup)) {
         $errors.Add("Script de transición conserva un identificador de backup Oracle 11g inválido: $fileName")
+    }
+}
+
+foreach ($fileName in @(
+    '41_precheck_unicode_modulo_matrices_completo.sql',
+    '44_postcheck_unicode_modulo_matrices_completo.sql'
+)) {
+    if ($riskTextContents.ContainsKey($fileName)) {
+        $readOnlySql = Get-ExecutableSql (Join-Path $riskTextTransitionRoot $fileName)
+        if ($readOnlySql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b') {
+            $errors.Add("$fileName debe ser READ ONLY.")
+        }
+    }
+}
+$unicodeBackupPattern = [regex]::Escape($unicodeModuleBackup)
+if ($riskTextContents.ContainsKey('42_backup_unicode_modulo_matrices_completo.sql') -and
+    $riskTextContents['42_backup_unicode_modulo_matrices_completo.sql'] -notmatch $unicodeBackupPattern) {
+    $errors.Add("42 no usa el backup $unicodeModuleBackup.")
+}
+foreach ($fileName in @(
+    '43_corregir_unicode_modulo_matrices_completo.sql',
+    '45_rollback_unicode_modulo_matrices_completo.sql'
+)) {
+    if ($riskTextContents.ContainsKey($fileName) -and
+        $riskTextContents[$fileName] -notmatch $unicodeBackupPattern) {
+        $errors.Add("$fileName no usa el backup $unicodeModuleBackup.")
+    }
+}
+foreach ($fileName in $riskTextTransitionFiles) {
+    if (-not $riskTextContents.ContainsKey($fileName)) { continue }
+    $executableSql = Get-ExecutableSql (Join-Path $riskTextTransitionRoot $fileName)
+    if ($executableSql -match '(?is)EXECUTE\s+IMMEDIATE\s+.*?CREATE\s+TABLE\s+' + $unicodeBackupPattern) {
+        $staticSql = Remove-SqlStringLiterals $executableSql
+        if ($staticSql -match "(?i)\b$unicodeBackupPattern\b") {
+            $errors.Add("Patrón Oracle 11g inválido en \${fileName}: backup Unicode creado dinámicamente y referenciado estáticamente.")
+        }
+    }
+}
+if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.sql')) {
+    $unicodeCorrectionSql = $riskTextContents['43_corregir_unicode_modulo_matrices_completo.sql']
+    if ($unicodeCorrectionSql -match "REPLACE\s*\(\s*[^,]+,\s*UNISTR\('\00BF'\)") {
+        $errors.Add('43 contiene una sustitución global prohibida de U+00BF.')
+    }
+    if ($unicodeCorrectionSql -notmatch 'SAVEPOINT\s+MATRICES_UNICODE_CORRECTION' -or
+        $unicodeCorrectionSql -notmatch 'ROLLBACK TO MATRICES_UNICODE_CORRECTION') {
+        $errors.Add('43 no tiene rollback fail-closed.')
     }
 }
 

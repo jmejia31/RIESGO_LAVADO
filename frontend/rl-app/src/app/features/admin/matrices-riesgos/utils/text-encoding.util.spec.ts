@@ -3,7 +3,7 @@ import { contieneMojibakeVisible, normalizarMojibakeVisibleUtf8, normalizarTexto
 describe('Integridad de texto visible UTF-8', () => {
   it('repara corrupción contextual y secuencias UTF-8 mal interpretadas', () => {
     expect(normalizarTextoVisibleUtf8('informaci\u00BFn')).toBe('información');
-    expect(normalizarTextoVisibleUtf8('informaci\uFFFDn')).toBe('información');
+    expect(normalizarTextoVisibleUtf8('informaci\uFFFDn')).toBe('informaci\uFFFDn');
     expect(normalizarTextoVisibleUtf8('Informaci\u00C3\u00B3n t\u00C3\u00A9cnica')).toBe('Información técnica');
     expect(normalizarTextoVisibleUtf8('Due\u00C3\u00B1o')).toBe('Dueño');
     expect(normalizarTextoVisibleUtf8('Due\u00EF\u00BFo')).toBe('Dueño');
@@ -14,6 +14,8 @@ describe('Integridad de texto visible UTF-8', () => {
   it('preserva caracteres españoles y signos de pregunta legítimos', () => {
     expect(normalizarTextoVisibleUtf8('¿Qué información necesita?')).toBe('¿Qué información necesita?');
     expect(normalizarTextoVisibleUtf8('áéíóú ÁÉÍÓÚ ñÑ üÜ ¡! ¿?')).toBe('áéíóú ÁÉÍÓÚ ñÑ üÜ ¡! ¿?');
+    expect(normalizarTextoVisibleUtf8('Secci\u00BFn de Cumplimiento')).toBe('Sección de Cumplimiento');
+    expect(normalizarTextoVisibleUtf8('Afiliaci\u00BFn/Control Patronal')).toBe('Afiliación/Control Patronal');
   });
 
   it('detecta corrupción sin marcar texto sano', () => {

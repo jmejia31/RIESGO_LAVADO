@@ -1584,3 +1584,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** ejecutar las gates del repositorio, confirmar el commit publicado y luego Javier ejecuta manualmente sólo 38 y 39 sobre la base ya respaldada.
 - **Gates verificadas:** database PASS con `385/180/180/0/0`; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `791/791`; E2E final `36/36 PASS`. Una ejecución E2E previa presentó un timeout aislado y la prueba fue reproducida PASS individualmente antes de repetir la suite completa.
+
+# Estado vigente — Auditoría integral Unicode del módulo Matrices de Riesgos (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `00693f51c76d92b3fcacb6bad387ed3aefc30458`.
+- Se prepararon 41–45 para Oracle 11g sobre las 25 tablas RL_MR y columnas textuales, con backup `RL_MR_UNI_BKP_20260924`, SQL dinámico donde corresponde, rollback fail-closed y sin DDL sobre tablas institucionales.
+- Backend y frontend aplican normalización contextual en campos visibles y consolidado/reportes; se preservan U+FFFD no demostrado, signos `¿?¡!`, códigos, IDs y claves técnicas.
+- Gates verificadas: backend `657/657`, frontend `79/791`, E2E `36/36`; focalizadas backend `16/16` y frontend `13/13`; estructura, documentación, encoding y validador de base PASS.
+- El precheck 41 imprimirá el inventario y hallazgos reales del módulo; no se afirma limpieza física hasta su ejecución manual. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier debe actualizar el checkout, ejecutar 41; si PASS, 42; revisar backup y salida; ejecutar 43; ejecutar 44; utilizar 45 sólo para restaurar. No ejecutar desde Codex ni modificar `main`.

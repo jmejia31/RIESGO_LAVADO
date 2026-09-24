@@ -9,7 +9,7 @@ public sealed class TextoVisibleUtf8NormalizerTests
     [InlineData("informaci\u00BFn", "información")]
     [InlineData("evaluaci\u00BFn", "evaluación")]
     [InlineData("gesti\u00BFn", "gestión")]
-    [InlineData("informaci\uFFFDn", "información")]
+    [InlineData("informaci\uFFFDn", "informaci\uFFFDn")]
     [InlineData("Due\u00EF\u00BFo", "Dueño")]
     [InlineData("Due\u00C3\u00B1o", "Dueño")]
     [InlineData("Informaci\u00C3\u00B3n t\u00C3\u00A9cnica", "Información técnica")]
@@ -23,6 +23,8 @@ public sealed class TextoVisibleUtf8NormalizerTests
         Assert.Equal("¿Qué información necesita?", TextoVisibleUtf8Normalizer.Normalizar("¿Qué información necesita?"));
         Assert.Equal("Dueño", TextoVisibleUtf8Normalizer.Normalizar("Dueño"));
         Assert.Equal("áéíóú ÁÉÍÓÚ ñÑ üÜ ¡! ¿?", TextoVisibleUtf8Normalizer.Normalizar("áéíóú ÁÉÍÓÚ ñÑ üÜ ¡! ¿?"));
+        Assert.Equal("Sección de Cumplimiento", TextoVisibleUtf8Normalizer.Normalizar("Secci\u00BFn de Cumplimiento"));
+        Assert.Equal("Afiliación/Control Patronal", TextoVisibleUtf8Normalizer.Normalizar("Afiliaci\u00BFn/Control Patronal"));
     }
 
     [Theory]
