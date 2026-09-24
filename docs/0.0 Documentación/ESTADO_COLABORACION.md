@@ -1542,3 +1542,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `RTO_RPO_PENDING_ITEMS=0`; `RTO_RPO_PROJECT_BLOCKERS=0`.
 - La propuesta RTO v1.1 permanece únicamente como antecedente histórico. Firmas administrativas posteriores pueden archivarse sin reabrir estos dos puntos, salvo decisión institucional expresa de modificar valores.
 - Pendientes institucionales restantes del issue #22: capacitación institucional y despliegue productivo. No reabrir Fase 5.3/6/7 ni rendimiento de Monitoreo.
+
+# Estado vigente — Corrección Oracle 11g de scripts 31–40 (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6). **Rama:** `desarrollo`. **SHA inicial:** `51c6c48`.
+- Respaldos Oracle compatibles con el límite de 30 caracteres: `RL_MR_RIES_NOM_BKP_20260924` (27) y `RL_MR_RIES_DESC_BKP_20260924` (28). Las referencias de 32/33/35 y 37/38/40 son idénticas.
+- `30_fuente_canonica_nombres_riesgos.sql` es la única fuente esperada de los 59 nombres. 33 ejecuta `CORRECT`; 34 ejecuta `POSTCHECK` read-only. `ROTR-COMPRAS-7` y `ROTR-RRHH-8` aplican explícitamente `SUBSTR(...,1,250)` por el límite de `RIE_NOMBRE VARCHAR2(250)`.
+- Los correctivos quedan bloqueados si fallan precheck, inventario, backup, correspondencia o cantidades; rollback valida claves `RIE_ID + RIE_CODIGO` antes de modificar. No se modificó el esquema ni se ejecutó Oracle desde Codex.
+- Validación fresca: database PASS; estructura PASS (`118` rutas, `967` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); quality gates PASS (backend `657/657`, frontend `79/791`, E2E `36/36`).
+- `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`.
+- **Continuación exacta:** actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`; ejecutar 31→32→33→34 y, para descripciones, 36→37→38→39. Usar 35/40 solo si se requiere restauración. Confirmar postchecks y verificar `RCUMP-COMPRAS-24` en la UI.

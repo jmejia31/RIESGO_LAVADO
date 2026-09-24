@@ -7479,3 +7479,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Documento v2.0 y PDF formal incorporados; control de producción y estado colaborativo actualizados.
 - `RTO_DEFINED=TRUE`; `RPO_DEFINED=TRUE`; `RTO_RPO_PENDING_ITEMS=0`.
 - Sin cambios de código, Oracle, datos, V1/V2, seguridad, contratos REST ni `main`.
+
+## Registro de intervención — COD — Corrección Oracle 11g de scripts 31–40
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `51c6c48`.
+- **Objetivo:** corregir compatibilidad Oracle 11g sin modificar el esquema de `RL_MR_RIESGOS` ni ejecutar DML/DDL institucional desde Codex.
+- **Correcciones:** respaldos renombrados a `RL_MR_RIES_NOM_BKP_20260924` (27 caracteres) y `RL_MR_RIES_DESC_BKP_20260924` (28 caracteres), con referencias coherentes en 32/33/35 y 37/38/40.
+- **Fuente única:** se creó `30_fuente_canonica_nombres_riesgos.sql`; 33 y 34 la invocan en modos `CORRECT` y `POSTCHECK`. `RIE_NOMBRE VARCHAR2(250)` se respeta mediante `canonical_name` y `SUBSTR(...,1,250)` explícito para `ROTR-COMPRAS-7` (fuente 261 caracteres) y `ROTR-RRHH-8` (fuente 295 caracteres).
+- **Seguridad:** 33 bloquea antes del UPDATE si fallan inventario, 59 códigos, duplicados o backup; 38 valida backup, filas, filas destino y duplicados; 35/40 validan correspondencia exacta antes de restaurar. No se amplió `RIE_NOMBRE` ni se sincronizaron descripciones semánticas desde Excel.
+- **Validaciones ejecutadas:** `validate_database_scripts.ps1` PASS; estructura PASS (`118` rutas, `967` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; quality gates PASS con backend `657/657`, frontend `79 archivos/791 pruebas`, E2E `36/36`.
+- **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Git/publicación:** los archivos untracked preexistentes (`.vscode/`, `agosto_rest.txt`, `artifacts/` y PDF) fueron preservados y excluidos. El SHA final se confirma en el commit de cierre de esta intervención; `main` permanece intacta.

@@ -1,6 +1,7 @@
 -- Oracle 11g / MANUAL. Ejecutar después de 36 y 37.
 -- Alcance exclusivo: RL_MR_RIESGOS.RIE_DESCRIPCION.
 -- Es una reparación determinista de codificación; NO sincroniza descripciones desde Excel.
+-- Requiere RL_MR_RIES_DESC_BKP_20260924 antes de cualquier UPDATE.
 SET SERVEROUTPUT ON SIZE UNLIMITED
 DECLARE
   expected_updates NUMBER := 0;
@@ -8,6 +9,8 @@ DECLARE
   v_fixed VARCHAR2(32767);
   backup_table NUMBER;
   backup_rows NUMBER;
+  db_rows NUMBER;
+  duplicate_codes NUMBER;
   FUNCTION fix_description(p_text VARCHAR2) RETURN VARCHAR2 IS
     v VARCHAR2(32767) := p_text;
   BEGIN
@@ -60,13 +63,19 @@ DECLARE
     RETURN v;
   END;
 BEGIN
-  SELECT COUNT(*) INTO backup_table FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIESGOS_DESC_BKP_20260923';
+  SELECT COUNT(*) INTO backup_table FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIES_DESC_BKP_20260924';
   IF backup_table = 0 THEN
     RAISE_APPLICATION_ERROR(-20947, 'Corrección bloqueada: ejecutar primero 37_backup_rl_mr_riesgos_descripciones.sql.');
   END IF;
-  SELECT COUNT(*) INTO backup_rows FROM RL_MR_RIESGOS_DESC_BKP_20260923;
+  SELECT COUNT(*) INTO backup_rows FROM RL_MR_RIES_DESC_BKP_20260924;
   IF backup_rows <> 59 THEN
     RAISE_APPLICATION_ERROR(-20948, 'Corrección bloqueada: backup incompleto; filas=' || backup_rows || ', esperado=59.');
+  END IF;
+  SELECT COUNT(*) INTO db_rows FROM RL_MR_RIESGOS;
+  SELECT COUNT(*) INTO duplicate_codes FROM
+   (SELECT RIE_CODIGO FROM RL_MR_RIESGOS GROUP BY RIE_CODIGO HAVING COUNT(*) > 1);
+  IF db_rows <> 59 OR duplicate_codes <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20949, 'Corrección bloqueada: destino inválido; filas=' || db_rows || ', duplicados=' || duplicate_codes || '.');
   END IF;
   FOR r IN (SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS) LOOP
     v_fixed := fix_description(r.RIE_DESCRIPCION);

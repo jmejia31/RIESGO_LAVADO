@@ -314,6 +314,95 @@ foreach ($directory in $packageDirectories) {
     }
 }
 
+$riskTextTransitionRoot = Join-Path $databaseRoot '19_matrices_riesgos/transicion'
+$riskTextTransitionFiles = @(
+    '30_fuente_canonica_nombres_riesgos.sql',
+    '31_precheck_sincronizacion_nombres_riesgos.sql',
+    '32_backup_rl_mr_riesgos_nombres.sql',
+    '33_corregir_nombres_riesgos_desde_fuente_canonica.sql',
+    '34_postcheck_nombres_riesgos.sql',
+    '35_rollback_nombres_riesgos.sql',
+    '36_precheck_descripciones_riesgos.sql',
+    '37_backup_rl_mr_riesgos_descripciones.sql',
+    '38_corregir_descripciones_encoding.sql',
+    '39_postcheck_descripciones_riesgos.sql',
+    '40_rollback_descripciones_riesgos.sql'
+)
+$riskNameBackup = 'RL_MR_RIES_NOM_BKP_20260924'
+$riskDescriptionBackup = 'RL_MR_RIES_DESC_BKP_20260924'
+$legacyRiskNameBackup = 'RL_MR_RIESGOS_NOMBRES_BKP_20260923'
+$legacyRiskDescriptionBackup = 'RL_MR_RIESGOS_DESC_BKP_20260923'
+
+foreach ($identifier in @($riskNameBackup, $riskDescriptionBackup)) {
+    if ($identifier.Length -gt 30) {
+        $errors.Add("Identificador Oracle 11g de respaldo supera 30 caracteres: $identifier ($($identifier.Length))")
+    }
+}
+
+$riskTextContents = @{}
+foreach ($fileName in $riskTextTransitionFiles) {
+    $filePath = Join-Path $riskTextTransitionRoot $fileName
+    if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) {
+        $errors.Add("Script de transición de textos inexistente: 19_matrices_riesgos/transicion/$fileName")
+        continue
+    }
+
+    $content = Get-Content -LiteralPath $filePath -Raw
+    $riskTextContents[$fileName] = $content
+    if ($content.Contains($legacyRiskNameBackup) -or $content.Contains($legacyRiskDescriptionBackup)) {
+        $errors.Add("Script de transición conserva un identificador de backup Oracle 11g inválido: $fileName")
+    }
+}
+
+if ($riskTextContents.ContainsKey('30_fuente_canonica_nombres_riesgos.sql')) {
+    $canonicalSource = $riskTextContents['30_fuente_canonica_nombres_riesgos.sql']
+    $sourceCodeCount = ([regex]::Matches($canonicalSource, 'items\(\d+\)\.code')).Count
+    if ($sourceCodeCount -ne 59) {
+        $errors.Add("Fuente canónica de nombres incompleta: códigos esperados=59, encontrados=$sourceCodeCount")
+    }
+    if (-not $canonicalSource.Contains('TYPE t_item IS RECORD (code VARCHAR2(30), name VARCHAR2(250))')) {
+        $errors.Add('Fuente canónica no respeta los buffers PL/SQL de RIE_CODIGO/RIE_NOMBRE.')
+    }
+    if (-not $canonicalSource.Contains('RETURN SUBSTR(p_name, 1, 250)')) {
+        $errors.Add('Fuente canónica no documenta/aplica el truncamiento VARCHAR2(250).')
+    }
+    if (-not $canonicalSource.Contains("items(7).name := canonical_name") -or -not $canonicalSource.Contains("items(8).name := canonical_name")) {
+        $errors.Add('ROTR-COMPRAS-7 y ROTR-RRHH-8 no comparten la regla canónica de 250 caracteres.')
+    }
+}
+
+if ($riskTextContents.ContainsKey('33_corregir_nombres_riesgos_desde_fuente_canonica.sql') -and
+    $riskTextContents['33_corregir_nombres_riesgos_desde_fuente_canonica.sql'] -notmatch '@@30_fuente_canonica_nombres_riesgos\.sql\s+CORRECT') {
+    $errors.Add('33 no invoca la fuente canónica compartida en modo CORRECT.')
+}
+if ($riskTextContents.ContainsKey('34_postcheck_nombres_riesgos.sql') -and
+    $riskTextContents['34_postcheck_nombres_riesgos.sql'] -notmatch '@@30_fuente_canonica_nombres_riesgos\.sql\s+POSTCHECK') {
+    $errors.Add('34 no invoca la fuente canónica compartida en modo POSTCHECK.')
+}
+if ($riskTextContents.ContainsKey('32_backup_rl_mr_riesgos_nombres.sql') -and
+    $riskTextContents['32_backup_rl_mr_riesgos_nombres.sql'] -notmatch [regex]::Escape($riskNameBackup)) {
+    $errors.Add("32 no usa el backup de nombres $riskNameBackup.")
+}
+if ($riskTextContents.ContainsKey('35_rollback_nombres_riesgos.sql') -and
+    $riskTextContents['35_rollback_nombres_riesgos.sql'] -notmatch [regex]::Escape($riskNameBackup)) {
+    $errors.Add("35 no usa el backup de nombres $riskNameBackup.")
+}
+if ($riskTextContents.ContainsKey('37_backup_rl_mr_riesgos_descripciones.sql') -and
+    $riskTextContents['37_backup_rl_mr_riesgos_descripciones.sql'] -notmatch [regex]::Escape($riskDescriptionBackup)) {
+    $errors.Add("37 no usa el backup de descripciones $riskDescriptionBackup.")
+}
+foreach ($fileName in @('38_corregir_descripciones_encoding.sql', '40_rollback_descripciones_riesgos.sql')) {
+    if ($riskTextContents.ContainsKey($fileName) -and $riskTextContents[$fileName] -notmatch [regex]::Escape($riskDescriptionBackup)) {
+        $errors.Add("$fileName no usa el backup de descripciones $riskDescriptionBackup.")
+    }
+}
+if ($riskTextContents.ContainsKey('34_postcheck_nombres_riesgos.sql')) {
+    $postcheckSql = Get-ExecutableSql (Join-Path $riskTextTransitionRoot '34_postcheck_nombres_riesgos.sql')
+    if ($postcheckSql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b') {
+        $errors.Add('34_postcheck_nombres_riesgos.sql dejó de ser de solo lectura.')
+    }
+}
+
 if ($PassThru) {
     foreach ($errorMessage in $errors) {
         Write-Output $errorMessage
