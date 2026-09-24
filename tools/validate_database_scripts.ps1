@@ -7,6 +7,11 @@ $ErrorActionPreference = 'Stop'
 $databaseRoot = [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot 'database'))
 $databasePrefix = $databaseRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
 $errors = [System.Collections.Generic.List[string]]::new()
+$unicodeDiagnosticTotalOccurrences = 0
+$unicodeDiagnosticUniqueTokens = 0
+$unicodeDiagnosticDeterministicMappings = 0
+$unicodeDiagnosticAmbiguousTokens = 0
+$unicodeDiagnosticUnmappedTokens = 0
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -429,29 +434,52 @@ foreach ($fileName in @('38_corregir_descripciones_encoding.sql', '40_rollback_d
 }
 if ($riskTextContents.ContainsKey('38_corregir_descripciones_encoding.sql')) {
     $descriptionRepairSql = $riskTextContents['38_corregir_descripciones_encoding.sql']
-    $observedDescriptionRepairs = @(
-        @{ Bad = 'Pol\00BFticamente'; Good = 'Pol\00EDticamente' },
-        @{ Bad = 'actualizaci\00BFn'; Good = 'actualizaci\00F3n' },
-        @{ Bad = 'tecnol\00BFgicas'; Good = 'tecnol\00F3gicas' },
-        @{ Bad = 'dise\00BFo'; Good = 'dise\00F1o' },
-        @{ Bad = 'auditor\00BFa'; Good = 'auditor\00EDa' },
-        @{ Bad = 'corrupci\00BFn'; Good = 'corrupci\00F3n' },
-        @{ Bad = 'p\00BFrdida'; Good = 'p\00E9rdida' },
-        @{ Bad = 'c\00BFnyuge'; Good = 'c\00F3nyuge' },
-        @{ Bad = 'uni\00BFn'; Good = 'uni\00F3n' },
-        @{ Bad = 'inter\00BFs'; Good = 'inter\00E9s' },
-        @{ Bad = 'da\00BFo'; Good = 'da\00F1o' },
-        @{ Bad = '\00BFtica'; Good = '\00E9tica' },
-        @{ Bad = '\00BFreas'; Good = '\00E1reas' },
-        @{ Bad = 'm\00BFdicos'; Good = 'm\00E9dicos' },
-        @{ Bad = 'n\00BFmina'; Good = 'n\00F3mina' },
-        @{ Bad = 'se\00BFalamientos'; Good = 'se\00F1alamientos' }
-    )
-    foreach ($repair in $observedDescriptionRepairs) {
-        $badPattern = "UNISTR\('$([regex]::Escape($repair.Bad))'\)"
-        $goodPattern = "UNISTR\('$([regex]::Escape($repair.Good))'\)"
-        if ($descriptionRepairSql -notmatch $badPattern -or $descriptionRepairSql -notmatch $goodPattern) {
-            $errors.Add("38 no contiene el reemplazo contextual observado $($repair.Bad) -> $($repair.Good).")
+    $unicodeEvidencePath = Join-Path $riskTextTransitionRoot 'evidencia/diagnostico_unicode_descripciones_residual_20260924.txt'
+    if (-not (Test-Path -LiteralPath $unicodeEvidencePath -PathType Leaf)) {
+        $errors.Add('No existe la evidencia completa de tokens Unicode residuales.')
+    }
+    else {
+        $unicodeEvidence = Get-Content -LiteralPath $unicodeEvidencePath -Raw
+        $totalMatch = [regex]::Match($unicodeEvidence, '(?m)^TOTAL_TOKEN_OCCURRENCES=(\d+)\s*$')
+        $uniqueMatch = [regex]::Match($unicodeEvidence, '(?m)^UNIQUE_BAD_TOKENS=(\d+)\s*$')
+        if (-not $totalMatch.Success -or -not $uniqueMatch.Success) {
+            $errors.Add('La evidencia Unicode no contiene sus totales declarados.')
+        }
+        else {
+            $unicodeDiagnosticTotalOccurrences = [int]$totalMatch.Groups[1].Value
+            $unicodeDiagnosticUniqueTokens = [int]$uniqueMatch.Groups[1].Value
+            $tokenSection = ($unicodeEvidence -split '\[UNIQUE_BAD_TOKENS\]', 2)[1]
+            $tokenMatches = [regex]::Matches($tokenSection, '(?m)^(?<token>.+?) \| occurrences=(?<occurrences>\d+)$')
+            $observedTokens = @($tokenMatches | ForEach-Object {
+                [pscustomobject]@{ Token = $_.Groups['token'].Value; Occurrences = [int]$_.Groups['occurrences'].Value }
+            })
+            if ($observedTokens.Count -ne $unicodeDiagnosticUniqueTokens) {
+                $errors.Add("La evidencia lista $($observedTokens.Count) tokens, pero declara $unicodeDiagnosticUniqueTokens.")
+            }
+            if (($observedTokens | Measure-Object -Property Occurrences -Sum).Sum -ne $unicodeDiagnosticTotalOccurrences) {
+                $errors.Add('La suma de ocurrencias de la evidencia no coincide con su total declarado.')
+            }
+            $mappingMatches = [regex]::Matches($descriptionRepairSql, "v\s*:=\s*REPLACE\s*\(\s*v\s*,\s*UNISTR\('(?<bad>[^']*)'\)\s*,\s*UNISTR\('(?<good>[^']*)'\)\s*\)")
+            $mappingsByBad = @{}
+            foreach ($mappingMatch in $mappingMatches) {
+                $bad = $mappingMatch.Groups['bad'].Value
+                $good = $mappingMatch.Groups['good'].Value
+                if (-not $mappingsByBad.ContainsKey($bad)) { $mappingsByBad[$bad] = @() }
+                $mappingsByBad[$bad] = @($mappingsByBad[$bad]) + $good
+            }
+            $ambiguousTokens = [System.Collections.Generic.List[string]]::new()
+            $unmappedTokens = [System.Collections.Generic.List[string]]::new()
+            foreach ($observed in $observedTokens) {
+                $expectedBad = $observed.Token.Replace('?', '\00BF')
+                if (-not $mappingsByBad.ContainsKey($expectedBad)) { $unmappedTokens.Add($observed.Token); continue }
+                $distinctGoods = @($mappingsByBad[$expectedBad] | Sort-Object -Unique)
+                if ($distinctGoods.Count -ne 1 -or $distinctGoods[0] -eq $expectedBad) { $ambiguousTokens.Add($observed.Token) }
+            }
+            $unicodeDiagnosticAmbiguousTokens = $ambiguousTokens.Count
+            $unicodeDiagnosticUnmappedTokens = $unmappedTokens.Count
+            $unicodeDiagnosticDeterministicMappings = $unicodeDiagnosticUniqueTokens - $unicodeDiagnosticAmbiguousTokens - $unicodeDiagnosticUnmappedTokens
+            foreach ($token in $ambiguousTokens) { $errors.Add("38 tiene un mapeo ambiguo para '$token'.") }
+            foreach ($token in $unmappedTokens) { $errors.Add("38 no contiene mapeo para '$token'.") }
         }
     }
     if ($descriptionRepairSql -match "REPLACE\s*\(\s*v\s*,\s*UNISTR\('\00BF'\)") {
@@ -494,6 +522,11 @@ if ($errors.Count -gt 0) {
 }
 
 Write-Host 'Validacion de base de datos correcta.' -ForegroundColor Green
+Write-Host "UNICODE_DIAGNOSTIC_TOTAL_TOKEN_OCCURRENCES=$unicodeDiagnosticTotalOccurrences"
+Write-Host "UNICODE_DIAGNOSTIC_UNIQUE_BAD_TOKENS=$unicodeDiagnosticUniqueTokens"
+Write-Host "UNICODE_DIAGNOSTIC_DETERMINISTIC_MAPPINGS=$unicodeDiagnosticDeterministicMappings"
+Write-Host "UNICODE_DIAGNOSTIC_AMBIGUOUS_TOKENS=$unicodeDiagnosticAmbiguousTokens"
+Write-Host "UNICODE_DIAGNOSTIC_UNMAPPED_TOKENS=$unicodeDiagnosticUnmappedTokens"
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
 Write-Host "Scripts alcanzables desde actualizacion segura: $($safeClosure.Count)"
 Write-Host 'Matrices de Riesgos: fuera de maestros, punto de entrada bloqueado y transicion 06 manual.'

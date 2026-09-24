@@ -1,0 +1,25 @@
+RIESGO_LAVADO - CIERRE UNICODE RIE_DESCRIPCION
+
+Fuente obligatoria:
+database/19_matrices_riesgos/transicion/evidencia/diagnostico_unicode_descripciones_residual_20260924.txt
+
+Datos verificados de la evidencia:
+TOTAL_TOKEN_OCCURRENCES=385
+UNIQUE_BAD_TOKENS=180
+AFFECTED_RISK_CODES=52
+
+Continuar desde commit 62de14141041357de84776911811905e1f392986.
+
+REQUERIDO:
+1. Leer TODAS las líneas [OBSERVATIONS] y [UNIQUE_BAD_TOKENS].
+2. Construir mapping explícito bad -> good para los 180 tokens observados.
+3. No hacer reemplazo global de U+00BF.
+4. No inventar correcciones ambiguas; reportarlas separadamente.
+5. Mantener 38 idempotente y preservar RL_MR_RIES_DESC_BKP_20260924.
+6. No ejecutar 37 ni Oracle.
+7. Ampliar validate_database_scripts.ps1 para cubrir el conjunto completo.
+8. Antes de publicar exigir:
+   UNMAPPED_TOKENS=0
+   o, si existe ambigüedad real, listar AMBIGUOUS_TOKENS explícitamente.
+9. Publicar nuevo SHA en desarrollo.
+10. Reportar TOTAL_TOKENS_OBSERVED, UNIQUE_BAD_TOKENS, DETERMINISTIC_MAPPINGS, AMBIGUOUS_TOKENS y UNMAPPED_TOKENS.

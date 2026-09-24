@@ -1573,3 +1573,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Pruebas frescas: database/structure/documentation/encoding PASS; backend `657/657`; frontend `791/791`; E2E `36/36`; quality gates PASS.
 - `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier ejecuta únicamente 38 sobre el backup existente y luego 39; no ejecutar 37 nuevamente. Si `RESIDUAL_SUSPICIOUS` no es cero, conservar la salida completa y ampliar el catálogo contextual antes de repetir 38.
+
+# Estado vigente — Catálogo completo Unicode de descripciones (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `62de14141041357de84776911811905e1f392986`.
+- La fuente exclusiva local fue `database/19_matrices_riesgos/transicion/evidencia/diagnostico_unicode_descripciones_residual_20260924.txt`, con instrucción asociada en la misma carpeta.
+- Conteos verificados por el validador: `TOTAL_TOKEN_OCCURRENCES=385`, `UNIQUE_BAD_TOKENS=180`, `AFFECTED_RISK_CODES=52`, `DETERMINISTIC_MAPPINGS=180`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`.
+- 38 contiene todos los mappings contextuales explícitos observados. No usa sustitución global de U+00BF, no modifica el backup existente y es idempotente sobre las 58 filas parcialmente corregidas. No ejecutar 37 nuevamente.
+- 39 sigue exigiendo `DB_ROWS=59`, `DUPLICATES=0`, `NULL_ROWS=0`, `RESIDUAL_SUSPICIOUS=0` y acento U+00F3 en `RCUMP-COMPRAS-24`.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** ejecutar las gates del repositorio, confirmar el commit publicado y luego Javier ejecuta manualmente sólo 38 y 39 sobre la base ya respaldada.
+- **Gates verificadas:** database PASS con `385/180/180/0/0`; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `791/791`; E2E final `36/36 PASS`. Una ejecución E2E previa presentó un timeout aislado y la prueba fue reproducida PASS individualmente antes de repetir la suite completa.

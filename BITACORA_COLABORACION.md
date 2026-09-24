@@ -7512,3 +7512,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Validador:** `validate_database_scripts.ps1` comprueba la presencia de cada pareja de reparación reportada explícitamente y rechaza sustituciones globales de U+00BF o U+FFFD sin contexto. El listado completo de ~180 tokens no fue adjuntado ni encontrado en el checkout; la ejecución manual de 39 continúa siendo la evidencia final para cualquier token adicional.
 - **Pruebas:** validador de base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `79/79 archivos, 791/791`; E2E `36/36`; quality gates PASS.
 - **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+
+## Registro de intervención — COD — Catálogo completo Unicode desde evidencia read-only
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `62de14141041357de84776911811905e1f392986`.
+- **Fuente exclusiva procesada:** `database/19_matrices_riesgos/transicion/evidencia/diagnostico_unicode_descripciones_residual_20260924.txt`; instrucción operativa: `INSTRUCCION_CODEX_CIERRE_UNICODE.txt`.
+- **Resultado del catálogo:** `TOTAL_TOKEN_OCCURRENCES=385`, `UNIQUE_BAD_TOKENS=180`, `AFFECTED_RISK_CODES=52`, `DETERMINISTIC_MAPPINGS=180`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`.
+- **Corrección:** 38 contiene mapeos explícitos bad→good para los 180 tokens observados, con `UNISTR`, variantes de mayúsculas/minúsculas y sin reemplazo global de U+00BF. Es idempotente y no sincroniza semánticamente desde Excel.
+- **Restricciones:** no se ejecutó Oracle, no se ejecutó 37 y no se modificó ni recreó `RL_MR_RIES_DESC_BKP_20260924`. 39 continúa siendo el postcheck final.
+- **Validador:** `validate_database_scripts.ps1` ahora lee la evidencia completa, verifica ocurrencias, deduplicación, mappings, ambigüedades y unmapped; también conserva la detección de sustituciones globales prohibidas.
+- **Pruebas verificadas:** validador de base PASS con los cinco conteos Unicode; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; backend `657/657`; frontend `79 archivos/791 pruebas`; E2E final `36/36 PASS` (una ejecución integral previa tuvo un timeout aislado y fue reproducido PASS de forma aislada).
+- **Publicación:** se registra el SHA final después del commit y push a `origin/desarrollo`; los untracked ajenos fueron preservados y excluidos.
