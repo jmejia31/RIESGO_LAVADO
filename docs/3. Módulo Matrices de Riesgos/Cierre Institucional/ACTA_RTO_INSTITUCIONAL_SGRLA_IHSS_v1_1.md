@@ -1,3 +1,5 @@
+> **DOCUMENTO HISTÓRICO / SUPERSEDIDO.** La versión vigente y aprobada para cierre es `ACTA_RTO_RPO_INSTITUCIONAL_SGRLA_IHSS_v2_0.md` del 24/09/2026. Este archivo v1.1 se conserva únicamente como antecedente de la propuesta previa y sus estados `RTO_DEFINED=FALSE` ya no representan el estado vigente del proyecto.
+
 # ACTA INSTITUCIONAL DE DEFINICIÓN DEL RTO Y CONTINUIDAD OPERATIVA DEL SGRLA-IHSS
 
 **Sistema:** SGRLA-IHSS  
