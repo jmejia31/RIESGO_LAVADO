@@ -67,7 +67,8 @@ BEGIN
   IF backup_table = 0 THEN
     RAISE_APPLICATION_ERROR(-20947, 'Corrección bloqueada: ejecutar primero 37_backup_rl_mr_riesgos_descripciones.sql.');
   END IF;
-  SELECT COUNT(*) INTO backup_rows FROM RL_MR_RIES_DESC_BKP_20260924;
+  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_RIES_DESC_BKP_20260924'
+    INTO backup_rows;
   IF backup_rows <> 59 THEN
     RAISE_APPLICATION_ERROR(-20948, 'Corrección bloqueada: backup incompleto; filas=' || backup_rows || ', esperado=59.');
   END IF;

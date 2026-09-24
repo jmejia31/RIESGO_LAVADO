@@ -1552,3 +1552,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Validación fresca: database PASS; estructura PASS (`118` rutas, `967` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); quality gates PASS (backend `657/657`, frontend `79/791`, E2E `36/36`).
 - `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; `MAIN_INTACTA=TRUE`.
 - **Continuación exacta:** actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo`; ejecutar 31→32→33→34 y, para descripciones, 36→37→38→39. Usar 35/40 solo si se requiere restauración. Confirmar postchecks y verificar `RCUMP-COMPRAS-24` en la UI.
+
+# Estado vigente — Corrección definitiva ORA-00942 en scripts Oracle 11g (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6). **Rama:** `desarrollo`. **SHA inicial:** `bd6b3736889d5e2d728b626fdeb03f554965519b`.
+- 32/37 ya no usan `INSERT` estático hacia tablas creadas dinámicamente: ejecutan CTAS dinámico con las 59 filas y verifican el conteo mediante SQL dinámico. 30/38 usan conteo dinámico; 35/40 usan SQL dinámico para todas las referencias a backups y fallan de forma controlada si faltan.
+- El validador detecta el patrón Oracle 11g peligroso `CREATE TABLE` dinámico + referencia estática al mismo objeto. Resultado actual: `STATIC_BACKUP_REFS=0` para 30, 32, 35, 37, 38 y 40.
+- Se conservan los backups `RL_MR_RIES_NOM_BKP_20260924` y `RL_MR_RIES_DESC_BKP_20260924`, el límite `RIE_NOMBRE VARCHAR2(250)`, la fuente compartida 30 y el rollback fail-closed. No hay DDL sobre `RL_MR_RIESGOS`.
+- Verificación fresca: base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `79/79 archivos, 791/791`; E2E `36/36`; quality gates PASS.
+- `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; Oracle institucional aún requiere ejecución manual de Javier.
+- **Continuación exacta:** actualizar el checkout, ejecutar manualmente 31→32→33→34 para nombres; 36→37→38→39 para descripciones si corresponde; usar 35/40 solo para restauración; confirmar los postchecks y `RCUMP-COMPRAS-24`.

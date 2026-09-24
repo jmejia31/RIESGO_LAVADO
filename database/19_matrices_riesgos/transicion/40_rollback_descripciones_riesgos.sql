@@ -1,7 +1,8 @@
 -- Oracle 11g / MANUAL. Restauración desde RL_MR_RIES_DESC_BKP_20260924.
+-- Todas las referencias al backup son SQL dinámico por compatibilidad Oracle 11g.
 SET SERVEROUTPUT ON SIZE UNLIMITED
 DECLARE
-  v_backup NUMBER;
+  v_backup_exists NUMBER;
   v_db_rows NUMBER;
   v_expected NUMBER;
   v_target_matches NUMBER;
@@ -9,33 +10,53 @@ DECLARE
   v_diffs NUMBER;
   v_backup_duplicates NUMBER;
 BEGIN
-  SELECT COUNT(*) INTO v_backup FROM USER_TABLES WHERE TABLE_NAME = 'RL_MR_RIES_DESC_BKP_20260924';
-  IF v_backup = 0 THEN RAISE_APPLICATION_ERROR(-20940, 'No existe RL_MR_RIES_DESC_BKP_20260924.'); END IF;
-  SELECT COUNT(*) INTO v_expected FROM RL_MR_RIES_DESC_BKP_20260924;
-  IF v_expected <> 59 THEN RAISE_APPLICATION_ERROR(-20941, 'Backup inválido: filas=' || v_expected || ', esperado=59.'); END IF;
+  SELECT COUNT(*) INTO v_backup_exists
+    FROM USER_TABLES
+   WHERE TABLE_NAME = 'RL_MR_RIES_DESC_BKP_20260924';
+  IF v_backup_exists = 0 THEN
+    RAISE_APPLICATION_ERROR(-20940, 'Rollback bloqueado: no existe RL_MR_RIES_DESC_BKP_20260924.');
+  END IF;
+  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_RIES_DESC_BKP_20260924'
+    INTO v_expected;
+  IF v_expected <> 59 THEN
+    RAISE_APPLICATION_ERROR(-20941, 'Backup inválido: filas=' || v_expected || ', esperado=59.');
+  END IF;
   SELECT COUNT(*) INTO v_db_rows FROM RL_MR_RIESGOS;
-  IF v_db_rows <> 59 THEN RAISE_APPLICATION_ERROR(-20945, 'Restauración bloqueada: filas destino=' || v_db_rows || ', esperado=59.'); END IF;
-  SELECT COUNT(*) INTO v_backup_duplicates FROM
-   (SELECT RIE_ID, RIE_CODIGO FROM RL_MR_RIES_DESC_BKP_20260924 GROUP BY RIE_ID, RIE_CODIGO HAVING COUNT(*) > 1);
-  IF v_backup_duplicates <> 0 THEN RAISE_APPLICATION_ERROR(-20946, 'Backup inválido: claves duplicadas=' || v_backup_duplicates || '.'); END IF;
-  SELECT COUNT(*) INTO v_target_matches FROM RL_MR_RIESGOS r
-   WHERE EXISTS (SELECT 1 FROM RL_MR_RIES_DESC_BKP_20260924 b
-                  WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO);
+  IF v_db_rows <> 59 THEN
+    RAISE_APPLICATION_ERROR(-20945, 'Restauración bloqueada: filas destino=' || v_db_rows || ', esperado=59.');
+  END IF;
+  EXECUTE IMMEDIATE q'~SELECT COUNT(*) FROM
+    (SELECT RIE_ID, RIE_CODIGO
+       FROM RL_MR_RIES_DESC_BKP_20260924
+      GROUP BY RIE_ID, RIE_CODIGO
+     HAVING COUNT(*) > 1)~'
+    INTO v_backup_duplicates;
+  IF v_backup_duplicates <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20946, 'Backup inválido: claves duplicadas=' || v_backup_duplicates || '.');
+  END IF;
+  EXECUTE IMMEDIATE q'~SELECT COUNT(*) FROM RL_MR_RIESGOS r
+      WHERE EXISTS (SELECT 1 FROM RL_MR_RIES_DESC_BKP_20260924 b
+                     WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO)~'
+    INTO v_target_matches;
   IF v_target_matches <> v_expected THEN
     RAISE_APPLICATION_ERROR(-20947, 'Restauración bloqueada: correspondencia RIE_ID + RIE_CODIGO incompleta.');
   END IF;
+
   SAVEPOINT risk_description_restore;
-  UPDATE RL_MR_RIESGOS r SET RIE_DESCRIPCION =
-    (SELECT b.RIE_DESCRIPCION FROM RL_MR_RIES_DESC_BKP_20260924 b
-      WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO)
-   WHERE EXISTS (SELECT 1 FROM RL_MR_RIES_DESC_BKP_20260924 b
-      WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO);
+  EXECUTE IMMEDIATE q'~UPDATE RL_MR_RIESGOS r
+       SET RIE_DESCRIPCION = (SELECT b.RIE_DESCRIPCION
+                                FROM RL_MR_RIES_DESC_BKP_20260924 b
+                               WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO)
+     WHERE EXISTS (SELECT 1 FROM RL_MR_RIES_DESC_BKP_20260924 b
+                    WHERE b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO)~';
   v_restored := SQL%ROWCOUNT;
-  SELECT COUNT(*) INTO v_diffs FROM RL_MR_RIESGOS r JOIN RL_MR_RIES_DESC_BKP_20260924 b
-    ON b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO
-   WHERE r.RIE_DESCRIPCION <> b.RIE_DESCRIPCION
-      OR (r.RIE_DESCRIPCION IS NULL AND b.RIE_DESCRIPCION IS NOT NULL)
-      OR (r.RIE_DESCRIPCION IS NOT NULL AND b.RIE_DESCRIPCION IS NULL);
+  EXECUTE IMMEDIATE q'~SELECT COUNT(*) FROM RL_MR_RIESGOS r
+       JOIN RL_MR_RIES_DESC_BKP_20260924 b
+         ON b.RIE_ID = r.RIE_ID AND b.RIE_CODIGO = r.RIE_CODIGO
+      WHERE r.RIE_DESCRIPCION <> b.RIE_DESCRIPCION
+         OR (r.RIE_DESCRIPCION IS NULL AND b.RIE_DESCRIPCION IS NOT NULL)
+         OR (r.RIE_DESCRIPCION IS NOT NULL AND b.RIE_DESCRIPCION IS NULL)~'
+    INTO v_diffs;
   DBMS_OUTPUT.PUT_LINE('EXPECTED_DESCRIPTION_RESTORE=' || v_expected);
   DBMS_OUTPUT.PUT_LINE('ACTUAL_DESCRIPTION_RESTORE=' || v_restored);
   DBMS_OUTPUT.PUT_LINE('DESCRIPTION_RESTORE_DIFFS=' || v_diffs);
@@ -45,6 +66,8 @@ BEGIN
   END IF;
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('RISK_DESCRIPTION_ROLLBACK_STATUS=PASS');
-EXCEPTION WHEN OTHERS THEN ROLLBACK; RAISE;
+EXCEPTION WHEN OTHERS THEN
+  ROLLBACK;
+  RAISE;
 END;
 /

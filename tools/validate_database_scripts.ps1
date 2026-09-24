@@ -114,6 +114,15 @@ function Get-ExecutableSql {
     return ($executableLines -join "`n")
 }
 
+function Remove-SqlStringLiterals {
+    param([string]$Sql)
+
+    # Static references must be distinguished from table names inside
+    # EXECUTE IMMEDIATE strings. This is intentionally a lightweight gate,
+    # not a SQL parser: Oracle identifiers in this transition are unquoted.
+    return [System.Text.RegularExpressions.Regex]::Replace($Sql, "'(?:''|[^'])*'", "''")
+}
+
 $firstInstallOrder = @(
     '01_create_tables.sql',
     '02_seed_data.sql',
@@ -351,6 +360,28 @@ foreach ($fileName in $riskTextTransitionFiles) {
     $riskTextContents[$fileName] = $content
     if ($content.Contains($legacyRiskNameBackup) -or $content.Contains($legacyRiskDescriptionBackup)) {
         $errors.Add("Script de transición conserva un identificador de backup Oracle 11g inválido: $fileName")
+    }
+}
+
+# Oracle 11g resolves static SQL references at PL/SQL compile time. A table
+# created with EXECUTE IMMEDIATE therefore cannot be referenced statically in
+# the same unit; detect that failure-prone pattern before publication.
+foreach ($fileName in $riskTextTransitionFiles) {
+    $filePath = Join-Path $riskTextTransitionRoot $fileName
+    if (-not (Test-Path -LiteralPath $filePath -PathType Leaf)) {
+        continue
+    }
+
+    $executableSql = Get-ExecutableSql $filePath
+    foreach ($identifier in @($riskNameBackup, $riskDescriptionBackup)) {
+        $identifierPattern = [regex]::Escape($identifier)
+        $createsBackupDynamically = $executableSql -match "(?is)EXECUTE\s+IMMEDIATE\s+.*?CREATE\s+TABLE\s+$identifierPattern\b"
+        if ($createsBackupDynamically) {
+            $staticSql = Remove-SqlStringLiterals $executableSql
+            if ($staticSql -match "(?i)\b$identifierPattern\b") {
+                $errors.Add("Patrón Oracle 11g inválido en ${fileName}: CREATE TABLE dinámico y referencia estática al mismo backup $identifier.")
+            }
+        }
     }
 }
 

@@ -7490,3 +7490,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Validaciones ejecutadas:** `validate_database_scripts.ps1` PASS; estructura PASS (`118` rutas, `967` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; quality gates PASS con backend `657/657`, frontend `79 archivos/791 pruebas`, E2E `36/36`.
 - **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Git/publicación:** los archivos untracked preexistentes (`.vscode/`, `agosto_rest.txt`, `artifacts/` y PDF) fueron preservados y excluidos. El SHA final se confirma en el commit de cierre de esta intervención; `main` permanece intacta.
+
+## Registro de intervención — COD — Corrección definitiva ORA-00942 en backups Oracle 11g
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `bd6b3736889d5e2d728b626fdeb03f554965519b`.
+- **Causa confirmada:** 32/37 creaban tablas de backup con `EXECUTE IMMEDIATE` y luego las referenciaban mediante SQL estático en la misma unidad PL/SQL; 30/38/35/40 conservaban referencias estáticas que podían producir ORA-00942 durante compilación.
+- **Corrección:** 32 y 37 ahora hacen CTAS dinámico con las filas existentes y verifican el conteo mediante `EXECUTE IMMEDIATE`; 30 y 38 leen el backup dinámicamente; 35 y 40 convierten todas las lecturas, correspondencias, UPDATE y postvalidaciones del backup a SQL dinámico con existencia controlada y rollback fail-closed.
+- **Gate preventivo:** `tools/validate_database_scripts.ps1` detecta `CREATE TABLE` dinámico más referencia estática al mismo backup dentro del script. Auditoría ejecutable: `STATIC_BACKUP_REFS=0` en 30, 32, 35, 37, 38 y 40.
+- **Restricciones preservadas:** no se hizo DDL sobre `RL_MR_RIESGOS`, no se amplió `RIE_NOMBRE`, se conservaron los nombres `RL_MR_RIES_NOM_BKP_20260924` y `RL_MR_RIES_DESC_BKP_20260924`, y se mantuvo la fuente canónica compartida 30 con truncamiento explícito a 250.
+- **Pruebas ejecutadas:** validador de base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; backend `657/657 PASS`; frontend `79/79 archivos, 791/791 PASS`; E2E `36/36 PASS`; quality gates PASS.
+- **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`. La corrección física de Oracle no se declara ejecutada.
+- **Cierre:** commit y SHA final se confirman después de publicar en `origin/desarrollo`; `main` permanece intacta y los untracked preexistentes fueron preservados.
