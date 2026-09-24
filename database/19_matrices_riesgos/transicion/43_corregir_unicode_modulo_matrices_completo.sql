@@ -304,6 +304,13 @@ BEGIN
       apply_mapping(UNISTR('utilizaci\00BFn'), UNISTR('utilizaci\00F3n'));
       apply_mapping(UNISTR('Vinculaci\00BFn'), UNISTR('Vinculaci\00F3n'));
       apply_mapping(UNISTR('violaci\00BFn'), UNISTR('violaci\00F3n'));
+  l_current_cells := count_current_cells;
+  IF l_current_cells <> 0 THEN
+    DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS='||l_current_cells);
+    ROLLBACK TO MATRICES_UNICODE_CORRECTION;
+    RAISE_APPLICATION_ERROR(-20747, 'UNMAPPED_TOKENS no es cero después del catálogo; corrección revertida.');
+  END IF;
+  DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS=0');
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_CORRECTION_UPDATES=' || l_updates);
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_CORRECTION_STATUS=PASS');
