@@ -41,42 +41,32 @@ El criterio funcional queda definido para los **dos campos de Identificación de
 - `respuesta_riesgo` no forma parte de esta mejora. `RCUMP-COMPRAS-37.respuesta_riesgo=MITIGAR` continúa únicamente como dato de prueba no bloqueante y el contrato vigente del campo de respuesta no se altera.
 - V1/V2 históricas no se mutan retroactivamente ni cambian sus hashes. La mejora aplica a nuevos borradores/versiones administrables.
 
-## 2. RTO institucional — PROPUESTA DOCUMENTADA / FIRMA PENDIENTE
+## 2. RTO y RPO institucionales — CERRADOS
 
-Se documentó la propuesta institucional de continuidad en:
+Decisión expresa del propietario del proyecto, **2026-09-24**:
 
-- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_INSTITUCIONAL_SGRLA_IHSS_v1_1.md` (fuente canónica editable)\n- `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/Acta_RTO_Institucional_SGRLA_IHSS_v1_1.pdf` (copia física imprimible y firmable)
-
-Estado vigente:
-
-```text
-RTO_PROPOSED=4 horas
-INCIDENT_RESPONSE_TARGET=0 minutos
-CATASTROPHIC_EXCEPTION=TRUE
-RTO_DEFINED=FALSE
-RTO_PENDING_INSTITUTIONAL_SIGNATURE=TRUE
-```
-
-Criterio: toda indisponibilidad no planificada activa atención, diagnóstico y escalamiento desde el minuto 0. El objetivo de recuperación propuesto es de cuatro (4) horas bajo condiciones normales y con dependencias técnicas disponibles. El valor de 0 minutos es únicamente el objetivo de inicio de atención; no constituye un RTO de 0 minutos ni una garantía de recuperación instantánea.
-
-La continuidad es responsabilidad institucional compartida. La superación del RTO no determina por sí sola responsabilidad personal del encargado del sistema ni de Desarrollo/GTIC; la evaluación debe considerar causa raíz, control efectivo, accesos, infraestructura, Oracle/DBA, seguridad, telecomunicaciones, terceros, autorizaciones, recursos y evidencia objetiva. Las contingencias catastróficas o dependencias externas permiten el tiempo técnicamente necesario para una recuperación segura, con trazabilidad y escalamiento.
-
-El cierre de este punto requiere la aprobación, firma y archivo institucional de la versión adoptada. Sólo entonces corresponde registrar:
+- Documento canónico aprobado: `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_RPO_INSTITUCIONAL_SGRLA_IHSS_v2_0.md`.
+- Copia física: `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/Acta_RTO_RPO_Institucional_SGRLA_IHSS_v2_0.pdf`.
+- La propuesta RTO v1.1 se conserva como antecedente histórico.
 
 ```text
 RTO_DEFINED=TRUE
 RTO_VALUE=4 horas
+RTO_MAXIMUM_TOLERABLE=4 horas
+INCIDENT_RESPONSE_TARGET=0 minutos
+RTO_STATUS=CLOSED
+
+RPO_DEFINED=TRUE
+RPO_VALUE=15 minutos
+RPO_TARGET=15 minutos
+RPO_MAXIMUM_TOLERABLE=60 minutos
+RPO_STATUS=CLOSED
+
+RTO_RPO_PENDING_ITEMS=0
+RTO_RPO_PROJECT_BLOCKERS=0
 ```
 
-## 2.1. RPO institucional — PENDIENTE
-
-Estado:
-
-```text
-RPO_DEFINED=FALSE
-```
-
-El RPO debe ser definido y aprobado institucionalmente por DBA/Infraestructura/Negocio. Debe registrar una pérdida máxima tolerable de datos con unidad y valor exactos, sin inferirla de tiempos de restore o de la arquitectura existente.
+El eventual archivo posterior de firmas administrativas no constituye bloqueo ni pendiente de proyecto para estos dos puntos, salvo que una autoridad institucional decida formalmente modificar los valores.
 
 ## 3. Capacitación institucional
 
