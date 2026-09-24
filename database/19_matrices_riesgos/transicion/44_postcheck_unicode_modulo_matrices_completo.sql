@@ -17,6 +17,7 @@ DECLARE
   l_total NUMBER := 0; l_bad_cols NUMBER := 0; l_bad_rows NUMBER := 0;
   l_fail NUMBER := 0; l_rows NUMBER; l_suspicious NUMBER;
   l_evaluations NUMBER; l_projections NUMBER; l_parity NUMBER;
+  l_evaluations_with_flow NUMBER := 0; l_historical_without_flow NUMBER := 0; l_state_mismatches NUMBER := 0;
   l_duplicates NUMBER; l_orphan_evaluations NUMBER; l_orphan_projections NUMBER;
   l_invalid_objects NUMBER; l_disabled_constraints NUMBER; l_null_risk NUMBER;
   l_tables_found NUMBER;
@@ -90,7 +91,7 @@ BEGIN
                    p.PROY_AREA_PRINCIPAL,
                    p.PROY_DUENO_RIESGO, p.PROY_RESPUESTA_RIESGO,
                    p.PROY_NIVEL_INHERENTE, p.PROY_NIVEL_RESIDUAL,
-                   p.PROY_ESTADO_EVALUACION, NVL(f.FLU_ESTADO,'BORRADOR') AS FLUJO_ESTADO
+                   p.PROY_ESTADO_EVALUACION, f.FLU_EVALUACION_ID, f.FLU_ESTADO AS FLUJO_ESTADO
               FROM RL_MR_EVALUACIONES_RIESGO e
               JOIN RL_MR_RIESGOS r ON r.RIE_ID=e.EVA_RIESGO_ID
               JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID=e.EVA_ID
@@ -98,19 +99,30 @@ BEGIN
                 (SELECT FLU_EVALUACION_ID, FLU_ESTADO,
                         ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_FECHA DESC, FLU_ID DESC) rn
                    FROM RL_MR_FLUJOS_EVALUACION) WHERE rn=1) f ON f.FLU_EVALUACION_ID=e.EVA_ID) LOOP
+    IF x.FLU_EVALUACION_ID IS NULL THEN
+      l_historical_without_flow := l_historical_without_flow + 1;
+      IF x.PROY_ESTADO_EVALUACION IS NULL THEN l_state_mismatches := l_state_mismatches + 1; END IF;
+    ELSE
+      l_evaluations_with_flow := l_evaluations_with_flow + 1;
+      IF NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0)) THEN l_state_mismatches := l_state_mismatches + 1; END IF;
+    END IF;
     IF NVL(x.PROY_CODIGO_RIESGO,CHR(0))<>NVL(x.RIE_CODIGO,CHR(0)) OR
        json_has(x.EVA_DATOS_JSON,'area_principal',x.PROY_AREA_PRINCIPAL)=0 OR
        json_has(x.EVA_DATOS_JSON,'dueno_riesgo',x.PROY_DUENO_RIESGO)=0 OR
        json_has(x.EVA_DATOS_JSON,'respuesta_riesgo',x.PROY_RESPUESTA_RIESGO)=0 OR
        json_has(x.EVA_DATOS_JSON,'nivel_inherente',x.PROY_NIVEL_INHERENTE)=0 OR
        json_has(x.EVA_DATOS_JSON,'nivel_residual',x.PROY_NIVEL_RESIDUAL)=0 OR
-       NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0)) THEN
+       x.PROY_ESTADO_EVALUACION IS NULL OR
+       (x.FLU_EVALUACION_ID IS NOT NULL AND NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0))) THEN
       l_parity := l_parity + 1;
     END IF;
   END LOOP;
   DBMS_OUTPUT.PUT_LINE('RISK_ROWS='||l_rows);
   DBMS_OUTPUT.PUT_LINE('EVALUATION_ROWS='||l_evaluations);
   DBMS_OUTPUT.PUT_LINE('PROJECTION_ROWS='||l_projections);
+  DBMS_OUTPUT.PUT_LINE('EVALUATIONS_WITH_FLOW='||l_evaluations_with_flow);
+  DBMS_OUTPUT.PUT_LINE('HISTORICAL_EVALUATIONS_WITHOUT_FLOW='||l_historical_without_flow);
+  DBMS_OUTPUT.PUT_LINE('STATE_PARITY_MISMATCHES='||l_state_mismatches);
   DBMS_OUTPUT.PUT_LINE('RISK_DUPLICATES='||l_duplicates);
   DBMS_OUTPUT.PUT_LINE('ORPHAN_EVALUATIONS='||l_orphan_evaluations);
   DBMS_OUTPUT.PUT_LINE('ORPHAN_PROJECTIONS='||l_orphan_projections);
@@ -122,7 +134,7 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_POSTCHECK_STATUS='||
     CASE WHEN l_fail=0 AND l_tables_found=25 AND l_rows=59 AND l_evaluations=59 AND l_projections=59 AND
       l_bad_cols=0 AND l_bad_rows=0 AND l_parity=0 AND l_duplicates=0 AND
-      l_orphan_evaluations=0 AND l_orphan_projections=0 AND l_null_risk=0 AND
+      l_orphan_evaluations=0 AND l_orphan_projections=0 AND l_null_risk=0 AND l_state_mismatches=0 AND
       l_invalid_objects=0 AND l_disabled_constraints=0 THEN 'PASS' ELSE 'FAIL' END);
   DBMS_OUTPUT.PUT_LINE('FULL_MODULE_TOKEN_INVENTORY='||CASE WHEN l_tables_found=25 AND l_fail=0 THEN 'PASS' ELSE 'FAIL' END);
   DBMS_OUTPUT.PUT_LINE('PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT');

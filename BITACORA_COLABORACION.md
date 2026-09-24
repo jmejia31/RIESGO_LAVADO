@@ -7555,3 +7555,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Pruebas verificadas:** backend `657/657`; frontend build PASS; lint PASS; E2E `36/36`; pruebas frontend específicas de paginación `9/9`; validador database PASS; estructura PASS (`118` rutas, `975` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS. El gate global de cobertura frontend tuvo 2 timeouts fijos de 5s durante recolección (`789/791` completadas); ambas pasaron aisladas con `9/9`.
 - **Restricciones:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; no se ejecutó Oracle ni 37; `MANUAL_EXECUTION_PENDING=YES`.
 - **Publicación:** documentación de cierre publicada en `origin/desarrollo`; los untracked ajenos fueron preservados y excluidos.
+
+## Registro de intervención — COD — Corrección posterior al precheck real 41
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX. **Rama:** `desarrollo`. **SHA inicial:** `6b73d33f78aaaf2daacac55189934ff7aa1aa0b3`.
+- **Evidencia real recibida:** `41_precheck_unicode_modulo_completo_20260924.log`; `REQUIRED_RL_MR_TABLES_FOUND=25`, `MATRICES_TEXT_COLUMNS_SCANNED=88`, `FULL_MODULE_TOKEN_OCCURRENCES=539`, `UNIQUE_BAD_TOKENS=90`, `UNMAPPED_TOKENS=57`, `AMBIGUOUS_TOKENS=0`.
+- **Catálogo:** se incorporaron los 57 casos observados con secuencias Unicode explícitas; las formas dobles se distinguen de U+00BF simple y `1???5` se vincula al guion U+2013 `1–5` del JSON canónico.
+- **41:** las ocurrencias se deduplican por `TABLE_NAME`, `COLUMN_NAME`, `ROWID`, `POSITION` y `TOKEN_BAD`; el conteo final representa hallazgos físicos únicos.
+- **44:** el estado ahora separa `EVALUATIONS_WITH_FLOW`, `HISTORICAL_EVALUATIONS_WITHOUT_FLOW` y `STATE_PARITY_MISMATCHES`; no inventa `BORRADOR` para evaluaciones históricas sin flujo.
+- **Validador:** exige `OBSERVED_UNIQUE_BAD_TOKENS=90`, `OBSERVED_MAPPED_TOKENS=90`, `OBSERVED_UNMAPPED_TOKENS=0` y `OBSERVED_AMBIGUOUS_TOKENS=0`, sin confundirlos con el tamaño total del catálogo.
+- **Pruebas verificadas:** backend `657/657`; frontend `791/791`; build PASS; lint PASS; E2E `36/36`; database validator PASS; encoding PASS; estructura PASS; documentación PASS; `git diff --check` PASS.
+- **Restricciones:** no se ejecutó Oracle, no se ejecutaron 42/43/44, no se ejecutó 37 y no se modificó ningún backup Oracle. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.

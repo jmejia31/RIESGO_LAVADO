@@ -1613,3 +1613,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Gates estáticos: database PASS, encoding PASS, estructura PASS, documentación PASS, backend `657/657`, build/lint frontend PASS, E2E `36/36`. Dos pruebas globales de cobertura frontend agotaron el timeout fijo de 5s; las mismas pruebas aisladas pasaron `9/9`.
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier puede revisar y ejecutar manualmente 41→42→43→44. No ejecutar desde Codex, no ejecutar 37, no tocar `RL_MR_UNI_BKP_20260924` fuera del flujo documentado y no modificar `main`.
+
+# Estado vigente — Corrección posterior al precheck real 41 (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `6b73d33f78aaaf2daacac55189934ff7aa1aa0b3`.
+- El log real reporta 25 tablas, 88 columnas textuales, 539 emisiones, 90 tokens únicos, 57 no mapeados y 0 ambiguos.
+- El catálogo compartido ahora cubre los 90 tokens observados; el validador deriva `OBSERVED_MAPPED_TOKENS=90` y `OBSERVED_UNMAPPED_TOKENS=0` desde el log y los mappings explícitos.
+- 41 deduplica hallazgos físicos; 44 valida el estado mediante último flujo cuando existe y conserva el snapshot histórico cuando no existe.
+- Verificación local: backend `657/657`, frontend `791/791`, build/lint PASS, E2E `36/36`, database/encoding/estructura/documentación PASS.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Bloqueo operativo:** todavía no ejecutar ni solicitar 42/43/44. Javier debe ejecutar únicamente 41 con el nuevo SHA y confirmar `REQUIRED_RL_MR_TABLES_FOUND=25`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`.

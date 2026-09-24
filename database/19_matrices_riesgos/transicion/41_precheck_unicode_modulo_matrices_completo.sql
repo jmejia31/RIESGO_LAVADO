@@ -24,6 +24,7 @@ DECLARE
   l_tables_found NUMBER := 0; l_columns NUMBER := 0; l_cells NUMBER := 0;
   l_occurrences NUMBER := 0; l_errors NUMBER := 0;
   l_unique_tokens SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
+  l_seen_occurrences SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
   l_unmapped_tokens SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
   l_ambiguous_tokens SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
   l_rowid VARCHAR2(30); l_value CLOB; l_ctx VARCHAR2(240); l_rc SYS_REFCURSOR;
@@ -51,9 +52,15 @@ DECLARE
     l_token VARCHAR2(4000); l_good VARCHAR2(4000); l_mappings NUMBER; l_pos NUMBER;
   BEGIN
     l_token:=REGEXP_SUBSTR(p_value,p_pattern,1,p_occurrence); IF l_token IS NULL THEN RETURN; END IF;
+    l_pos:=REGEXP_INSTR(p_value,p_pattern,1,p_occurrence);
+    FOR i IN 1..l_seen_occurrences.COUNT LOOP
+      IF l_seen_occurrences(i)=p_table||CHR(1)||p_column||CHR(1)||p_rowid||CHR(1)||l_pos||CHR(1)||l_token THEN RETURN; END IF;
+    END LOOP;
+    l_seen_occurrences.EXTEND;
+    l_seen_occurrences(l_seen_occurrences.COUNT):=p_table||CHR(1)||p_column||CHR(1)||p_rowid||CHR(1)||l_pos||CHR(1)||l_token;
     add_unique(l_unique_tokens,l_token); l_mappings:=mapping_count(l_token,l_good);
     IF l_mappings=0 THEN add_unique(l_unmapped_tokens,l_token); ELSIF l_mappings>1 THEN add_unique(l_ambiguous_tokens,l_token); END IF;
-    l_pos:=REGEXP_INSTR(p_value,p_pattern,1,p_occurrence); l_ctx:=DBMS_LOB.SUBSTR(p_value,220,GREATEST(l_pos-90,1));
+    l_ctx:=DBMS_LOB.SUBSTR(p_value,220,GREATEST(l_pos-90,1));
     DBMS_OUTPUT.PUT_LINE('TABLE_NAME='||p_table||' COLUMN_NAME='||p_column||' ROWID='||p_rowid||
       ' TOKEN_BAD='||l_token||' OCCURRENCES='||p_occurrence||' POSITION='||l_pos||' CONTEXT='||REPLACE(REPLACE(l_ctx,CHR(10),' '),CHR(13),' '));
     l_occurrences:=l_occurrences+1;
@@ -62,6 +69,7 @@ DECLARE
     l_pattern VARCHAR2(4000); l_count NUMBER;
   BEGIN
     IF p_contextual THEN l_pattern:='[[:alpha:]][[:alpha:]]*'||p_marker||'[[:alpha:]][[:alpha:]]*';
+    ELSIF p_marker=UNISTR('\00E2\20AC') THEN l_pattern:='[[:alpha:][:digit:]]*'||p_marker||UNISTR('\201C')||'[[:alpha:][:digit:]]*';
     ELSE l_pattern:='[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'||p_marker||'[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'; END IF;
     l_count:=REGEXP_COUNT(p_value,l_pattern); FOR i IN 1..l_count LOOP emit_token(p_table,p_column,p_rowid,p_value,l_pattern,i); END LOOP;
   END;

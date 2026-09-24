@@ -12,6 +12,10 @@ $unicodeDiagnosticUniqueTokens = 0
 $unicodeDiagnosticDeterministicMappings = 0
 $unicodeDiagnosticAmbiguousTokens = 0
 $unicodeDiagnosticUnmappedTokens = 0
+$moduleObservedUniqueTokens = 0
+$moduleObservedMappedTokens = 0
+$moduleObservedUnmappedTokens = 0
+$moduleObservedAmbiguousTokens = 0
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -437,7 +441,7 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
 
 if ($riskTextContents.ContainsKey('41_precheck_unicode_modulo_matrices_completo.sql')) {
     $inventorySql = $riskTextContents['41_precheck_unicode_modulo_matrices_completo.sql']
-    foreach ($requiredToken in @('REQUIRED_RL_MR_TABLES','REQUIRED_RL_MR_TABLES_FOUND','ROWID=','TOKEN_BAD=','OCCURRENCES=','CONTEXT=','FULL_MODULE_TOKEN_OCCURRENCES','UNIQUE_BAD_TOKENS','DETERMINISTIC_MAPPINGS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','FULL_MODULE_TOKEN_INVENTORY','register_mapping','@@_catalogo_unicode_modulo_matrices.sql')) {
+    foreach ($requiredToken in @('REQUIRED_RL_MR_TABLES','REQUIRED_RL_MR_TABLES_FOUND','ROWID=','TOKEN_BAD=','OCCURRENCES=','CONTEXT=','FULL_MODULE_TOKEN_OCCURRENCES','UNIQUE_BAD_TOKENS','DETERMINISTIC_MAPPINGS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','FULL_MODULE_TOKEN_INVENTORY','l_seen_occurrences','register_mapping','@@_catalogo_unicode_modulo_matrices.sql')) {
         if ($inventorySql -notmatch [regex]::Escape($requiredToken)) { $errors.Add("41 no produce inventario integral con $requiredToken.") }
     }
     if ($inventorySql -match '(?i)ROWNUM\s*=\s*1') { $errors.Add('41 no puede limitar el inventario con ROWNUM=1.') }
@@ -458,6 +462,9 @@ if ($riskTextContents.ContainsKey('44_postcheck_unicode_modulo_matrices_completo
     }
     if ($postSql -match "json_has\(x\.EVA_DATOS_JSON,'(codigo_riesgo|estado)'") { $errors.Add('44 exige claves que no existen en el contrato JSON V1.') }
     if ($postSql -notmatch 'PROY_CODIGO_RIESGO' -or $postSql -notmatch 'RL_MR_FLUJOS_EVALUACION' -or $postSql -notmatch 'FLUJO_ESTADO') { $errors.Add('44 no compara código y estado contra sus fuentes autoritativas.') }
+    foreach ($stateGate in @('EVALUATIONS_WITH_FLOW','HISTORICAL_EVALUATIONS_WITHOUT_FLOW','STATE_PARITY_MISMATCHES')) {
+        if ($postSql -notmatch [regex]::Escape($stateGate)) { $errors.Add("44 no reporta $stateGate.") }
+    }
     if ($postSql -notmatch 'PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT') { $errors.Add('44 no declara implementación CONTRACT_EXACT.') }
     if ($postSql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('44 usa SUBSTR CLOB limitado a 32767 para detección.') }
 }
@@ -607,6 +614,99 @@ if ($riskTextContents.ContainsKey('39_postcheck_descripciones_riesgos.sql')) {
     }
 }
 
+# Evidencia real del precheck 41 ejecutado manualmente. El log de SQL*Plus
+# puede representar varios codepoints como '?'; por eso esta validación cruza
+# el conteo declarado con un catálogo bad->good explícito, no con sustituciones
+# visuales globales.
+$moduleEvidencePath = Join-Path $riskTextTransitionRoot 'evidencia/41_precheck_unicode_modulo_completo_20260924.log'
+$moduleCatalogPath = Join-Path $riskTextTransitionRoot '_catalogo_unicode_modulo_matrices.sql'
+if (-not (Test-Path -LiteralPath $moduleEvidencePath -PathType Leaf)) {
+    $errors.Add('No existe la evidencia real del precheck 41 del módulo completo.')
+} elseif (-not (Test-Path -LiteralPath $moduleCatalogPath -PathType Leaf)) {
+    $errors.Add('No existe el catálogo Unicode compartido del módulo completo.')
+} else {
+    $moduleEvidence = Get-Content -LiteralPath $moduleEvidencePath -Raw
+    $moduleCatalog = Get-Content -LiteralPath $moduleCatalogPath -Raw
+    $moduleUniqueMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNIQUE_BAD_TOKENS=(\d+)')
+    $moduleUnmappedMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNMAPPED_TOKENS=(\d+)')
+    if (-not $moduleUniqueMatch.Success -or [int]$moduleUniqueMatch.Groups[1].Value -ne 90) { $errors.Add('El log 41 no declara UNIQUE_BAD_TOKENS=90.') }
+    if (-not $moduleUnmappedMatch.Success -or [int]$moduleUnmappedMatch.Groups[1].Value -ne 57) { $errors.Add('El log 41 no declara UNMAPPED_TOKENS=57.') }
+    if ($moduleEvidence -notmatch '(?m)^\s*AMBIGUOUS_TOKENS=0') { $errors.Add('El log 41 no declara AMBIGUOUS_TOKENS=0.') }
+    $moduleObservedUniqueTokens = if ($moduleUniqueMatch.Success) { [int]$moduleUniqueMatch.Groups[1].Value } else { 0 }
+    $moduleObservedAmbiguousTokens = 0
+    $moduleExpectedMappings = @'
+1\00E2\20AC\201C5|1\20135
+\00C3\00BFrea|\00C1rea
+\00BFnico|\00DAnico
+\00BFrdenes|\00D3rdenes
+\00BFrea|\00C1rea
+Adjudicaci\00BFn|Adjudicaci\00F3n
+autorizaci\00BFn|autorizaci\00F3n
+biom\00BFtrico|biom\00E9trico
+car\00BFcter|car\00E1cter
+Catastr\00C3\00BFfico|Catastr\00F3fico
+Comit\00BF|Comit\00E9
+Cr\00C3\00BFtico|Cr\00EDtico
+d\00BFas|d\00EDas
+direcci\00BFn|direcci\00F3n
+Documentaci\00BFn|Documentaci\00F3n
+Due\00C3\00BFo|Due\00F1o
+electr\00BFnicos|electr\00F3nicos
+Emisi\00BFn|Emisi\00F3n
+Env\00BFo|Env\00EDo
+estrat\00C3\00BFgico|estrat\00E9gico
+excepci\00BFn|excepci\00F3n
+F\00BFrmula|F\00F3rmula
+f\00BFrmula|f\00F3rmula
+f\00BFsico|f\00EDsico
+Facturaci\00BFn|Facturaci\00F3n
+generaci\00BFn|generaci\00F3n
+Identificaci\00C3\00BFn|Identificaci\00F3n
+Identificaci\00BFn|Identificaci\00F3n
+Informaci\00BFn|Informaci\00F3n
+interrelaci\00C3\00BFn|interrelaci\00F3n
+justificaci\00BFn|justificaci\00F3n
+l\00BFmite|l\00EDmite
+l\00BFmites|l\00EDmites
+M\00BFltiples|M\00FAltiples
+m\00BFnimas|m\00EDnimas
+m\00BFximo|m\00E1ximo
+N\00BFmero|N\00FAmero
+Participaci\00BFn|Participaci\00F3n
+participaci\00BFn|participaci\00F3n
+per\00BFodo|per\00EDodo
+Prestaci\00BFn|Prestaci\00F3n
+programaci\00BFn|programaci\00F3n
+R\00C3\00BFgimen|R\00E9gimen
+Recepci\00BFn|Recepci\00F3n
+reci\00BFn|reci\00E9n
+Relaci\00BFn|Relaci\00F3n
+Repetici\00BFn|Repetici\00F3n
+sem\00BFntica|sem\00E1ntica
+separaci\00BFn|separaci\00F3n
+sistem\00BFtica|sistem\00E1tica
+t\00BFcnicas|t\00E9cnicas
+t\00BFcnico|t\00E9cnico
+T\00BFrminos|T\00E9rminos
+tel\00BFfonos|tel\00E9fonos
+Traducci\00BFn|Traducci\00F3n
+v\00BFlida|v\00E1lida
+Valoraci\00C3\00BFn|Valoraci\00F3n
+'@ -split "`r?`n" | Where-Object { $_.Trim() }
+    $moduleMissingMappings = [System.Collections.Generic.List[string]]::new()
+    foreach ($mapping in $moduleExpectedMappings) {
+        $parts = $mapping.Split('|', 2)
+        $needle = "register_mapping(UNISTR('$($parts[0])'), UNISTR('$($parts[1])'))"
+        if ($moduleCatalog -notmatch [regex]::Escape($needle)) { $moduleMissingMappings.Add($parts[0]) }
+    }
+    $moduleObservedUnmappedTokens = $moduleMissingMappings.Count
+    $moduleObservedMappedTokens = $moduleObservedUniqueTokens - $moduleObservedUnmappedTokens - $moduleObservedAmbiguousTokens
+    foreach ($missing in $moduleMissingMappings) { $errors.Add("Catálogo módulo sin mapping observado: $missing") }
+    if ($moduleObservedMappedTokens -ne 90 -or $moduleObservedUnmappedTokens -ne 0 -or $moduleObservedAmbiguousTokens -ne 0) {
+        $errors.Add('La cobertura del catálogo observado por 41 no cumple 90/90/0/0.')
+    }
+}
+
 if ($PassThru) {
     foreach ($errorMessage in $errors) {
         Write-Output $errorMessage
@@ -633,6 +733,10 @@ Write-Host 'AMBIGUOUS_TOKENS=0'
 Write-Host 'UNMAPPED_TOKENS=0'
 Write-Host 'BACKUP_COVERAGE=PASS'
 Write-Host 'PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT'
+Write-Host "OBSERVED_UNIQUE_BAD_TOKENS=$moduleObservedUniqueTokens"
+Write-Host "OBSERVED_MAPPED_TOKENS=$moduleObservedMappedTokens"
+Write-Host "OBSERVED_UNMAPPED_TOKENS=$moduleObservedUnmappedTokens"
+Write-Host "OBSERVED_AMBIGUOUS_TOKENS=$moduleObservedAmbiguousTokens"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
