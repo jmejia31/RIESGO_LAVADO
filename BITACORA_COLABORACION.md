@@ -7501,3 +7501,14 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Pruebas ejecutadas:** validador de base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS; backend `657/657 PASS`; frontend `79/79 archivos, 791/791 PASS`; E2E `36/36 PASS`; quality gates PASS.
 - **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_DB_EXECUTION_REQUIRED=YES`; `MANUAL_EXECUTION_PENDING=YES`. La corrección física de Oracle no se declara ejecutada.
 - **Cierre:** commit y SHA final se confirman después de publicar en `origin/desarrollo`; `main` permanece intacta y los untracked preexistentes fueron preservados.
+
+## Registro de intervención — COD — Ampliación contextual de reparación de descripciones
+
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX; cliente CLI. **Rama:** `desarrollo`. **SHA inicial:** `14dadb41fad03b88a751734076157140af085ce0`.
+- **Evidencia institucional reportada:** 38/39 ejecutados manualmente produjeron backup de 59 filas, `EXPECTED_DESCRIPTION_UPDATES=58`, `ACTUAL_DESCRIPTION_UPDATES=58`, pero 52 riesgos con residuos sospechosos y 385 apariciones.
+- **Corrección:** 38 incorpora reparaciones literales contextualizadas para los tokens reportados (`Pol¿ticamente`, `actualización`, `tecnológicas`, `diseño`, `auditoría`, `corrupción`, `pérdida`, `cónyuge`, `unión`, `interés`, `daño`, `ética`, `áreas`, `médicos`, `nómina` y `señalamientos`), con variantes de capitalización cuando aplica. No se reemplaza U+00BF globalmente.
+- **Seguridad:** se eliminó la conversión sin contexto de la secuencia mojibake U+FFFD a U+00BF; los U+FFFD sin contexto permanecen visibles para que 39 los bloquee. No se recrea ni modifica `RL_MR_RIES_DESC_BKP_20260924` y no se ejecutó 37.
+- **Postcheck:** 39 sigue siendo read-only y ahora `STATUS=PASS` exige filas, duplicados, NULL, residuos y acento U+00F3 en `RCUMP-COMPRAS-24`.
+- **Validador:** `validate_database_scripts.ps1` comprueba la presencia de cada pareja de reparación reportada explícitamente y rechaza sustituciones globales de U+00BF o U+FFFD sin contexto. El listado completo de ~180 tokens no fue adjuntado ni encontrado en el checkout; la ejecución manual de 39 continúa siendo la evidencia final para cualquier token adicional.
+- **Pruebas:** validador de base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `79/79 archivos, 791/791`; E2E `36/36`; quality gates PASS.
+- **Oracle:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.

@@ -1562,3 +1562,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificación fresca: base PASS; estructura PASS (`118` rutas, `968` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS; backend `657/657`; frontend `79/79 archivos, 791/791`; E2E `36/36`; quality gates PASS.
 - `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`; Oracle institucional aún requiere ejecución manual de Javier.
 - **Continuación exacta:** actualizar el checkout, ejecutar manualmente 31→32→33→34 para nombres; 36→37→38→39 para descripciones si corresponde; usar 35/40 solo para restauración; confirmar los postchecks y `RCUMP-COMPRAS-24`.
+
+# Estado vigente — Ampliación contextual de reparación RIE_DESCRIPCION (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6). **Rama:** `desarrollo`. **SHA inicial:** `14dadb41fad03b88a751734076157140af085ce0`.
+- Evidencia manual: backup de descripciones `59` filas; correctivo previo `58/58`; postcheck posterior con `52` riesgos y `385` apariciones residuales.
+- 38 incorpora el catálogo literal de los tokens corruptos explícitamente reportados, con variantes de capitalización y sin sustitución global de U+00BF. La secuencia U+FFFD/mojibake sin contexto ya no se transforma artificialmente a U+00BF.
+- 39 exige en `STATUS=PASS`: `DB_ROWS=59`, `DUPLICATES=0`, `NULL_ROWS=0`, `RESIDUAL_SUSPICIOUS=0` y `RCUMP_24_HAS_ACCENT=YES`.
+- El validador cubre todas las parejas explícitas entregadas en la evidencia. El dump completo de ~180 tokens distintos no está disponible en el checkout; si 39 aún reporta residuos, esos tokens deben incorporarse desde la salida real antes de declarar PASS físico.
+- Pruebas frescas: database/structure/documentation/encoding PASS; backend `657/657`; frontend `791/791`; E2E `36/36`; quality gates PASS.
+- `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier ejecuta únicamente 38 sobre el backup existente y luego 39; no ejecutar 37 nuevamente. Si `RESIDUAL_SUSPICIOUS` no es cero, conservar la salida completa y ampliar el catálogo contextual antes de repetir 38.

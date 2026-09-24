@@ -427,10 +427,54 @@ foreach ($fileName in @('38_corregir_descripciones_encoding.sql', '40_rollback_d
         $errors.Add("$fileName no usa el backup de descripciones $riskDescriptionBackup.")
     }
 }
+if ($riskTextContents.ContainsKey('38_corregir_descripciones_encoding.sql')) {
+    $descriptionRepairSql = $riskTextContents['38_corregir_descripciones_encoding.sql']
+    $observedDescriptionRepairs = @(
+        @{ Bad = 'Pol\00BFticamente'; Good = 'Pol\00EDticamente' },
+        @{ Bad = 'actualizaci\00BFn'; Good = 'actualizaci\00F3n' },
+        @{ Bad = 'tecnol\00BFgicas'; Good = 'tecnol\00F3gicas' },
+        @{ Bad = 'dise\00BFo'; Good = 'dise\00F1o' },
+        @{ Bad = 'auditor\00BFa'; Good = 'auditor\00EDa' },
+        @{ Bad = 'corrupci\00BFn'; Good = 'corrupci\00F3n' },
+        @{ Bad = 'p\00BFrdida'; Good = 'p\00E9rdida' },
+        @{ Bad = 'c\00BFnyuge'; Good = 'c\00F3nyuge' },
+        @{ Bad = 'uni\00BFn'; Good = 'uni\00F3n' },
+        @{ Bad = 'inter\00BFs'; Good = 'inter\00E9s' },
+        @{ Bad = 'da\00BFo'; Good = 'da\00F1o' },
+        @{ Bad = '\00BFtica'; Good = '\00E9tica' },
+        @{ Bad = '\00BFreas'; Good = '\00E1reas' },
+        @{ Bad = 'm\00BFdicos'; Good = 'm\00E9dicos' },
+        @{ Bad = 'n\00BFmina'; Good = 'n\00F3mina' },
+        @{ Bad = 'se\00BFalamientos'; Good = 'se\00F1alamientos' }
+    )
+    foreach ($repair in $observedDescriptionRepairs) {
+        $badPattern = "UNISTR\('$([regex]::Escape($repair.Bad))'\)"
+        $goodPattern = "UNISTR\('$([regex]::Escape($repair.Good))'\)"
+        if ($descriptionRepairSql -notmatch $badPattern -or $descriptionRepairSql -notmatch $goodPattern) {
+            $errors.Add("38 no contiene el reemplazo contextual observado $($repair.Bad) -> $($repair.Good).")
+        }
+    }
+    if ($descriptionRepairSql -match "REPLACE\s*\(\s*v\s*,\s*UNISTR\('\00BF'\)") {
+        $errors.Add('38 contiene una sustitución global prohibida de U+00BF.')
+    }
+    if ($descriptionRepairSql -match "REPLACE\s*\(\s*v\s*,\s*UNISTR\('\00EF\00BF\00BD'") {
+        $errors.Add('38 convierte U+FFFD/mojibake sin contexto y podría ocultar corrupción residual.')
+    }
+}
 if ($riskTextContents.ContainsKey('34_postcheck_nombres_riesgos.sql')) {
     $postcheckSql = Get-ExecutableSql (Join-Path $riskTextTransitionRoot '34_postcheck_nombres_riesgos.sql')
     if ($postcheckSql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b') {
         $errors.Add('34_postcheck_nombres_riesgos.sql dejó de ser de solo lectura.')
+    }
+}
+if ($riskTextContents.ContainsKey('39_postcheck_descripciones_riesgos.sql')) {
+    $descriptionPostcheckSql = $riskTextContents['39_postcheck_descripciones_riesgos.sql']
+    if ($descriptionPostcheckSql -notmatch "RIE_DESCRIPCION\s+IS\s+NULL\)\s*=\s*0") {
+        $errors.Add('39 no exige filas NULL de descripción igual a cero en STATUS.')
+    }
+    if (-not $descriptionPostcheckSql.Contains("RIE_CODIGO = 'RCUMP-COMPRAS-24'") -or
+        -not $descriptionPostcheckSql.Contains("UNISTR('\00F3')")) {
+        $errors.Add('39 no exige acento U+00F3 en RCUMP-COMPRAS-24 en STATUS.')
     }
 }
 
