@@ -415,34 +415,51 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
         $errors.Add('43 contiene una sustitución global prohibida de U+00BF.')
     }
     if ($unicodeCorrectionSql -notmatch 'SAVEPOINT\s+MATRICES_UNICODE_CORRECTION' -or
-        $unicodeCorrectionSql -notmatch 'ROLLBACK TO MATRICES_UNICODE_CORRECTION') {
+        $unicodeCorrectionSql -notmatch 'l_savepoint_created\s+BOOLEAN' -or
+        $unicodeCorrectionSql -notmatch 'IF\s+l_savepoint_created\s+THEN[\s\S]*?ROLLBACK TO MATRICES_UNICODE_CORRECTION') {
         $errors.Add('43 no tiene rollback fail-closed.')
     }
-    if ($unicodeCorrectionSql -notmatch "Afiliaci\\00BFn.*Afiliaci\\00F3n") {
+    $savepointIndex = $unicodeCorrectionSql.IndexOf('SAVEPOINT MATRICES_UNICODE_CORRECTION', [System.StringComparison]::OrdinalIgnoreCase)
+    $rollbackToIndex = $unicodeCorrectionSql.IndexOf('ROLLBACK TO MATRICES_UNICODE_CORRECTION', [System.StringComparison]::OrdinalIgnoreCase)
+    if ($savepointIndex -lt 0 -or $rollbackToIndex -lt $savepointIndex) { $errors.Add('43 contiene ROLLBACK TO antes de un SAVEPOINT válido.') }
+    $unicodeCatalogPath = Join-Path $riskTextTransitionRoot '_catalogo_unicode_modulo_matrices.sql'
+    $unicodeCatalog = if (Test-Path -LiteralPath $unicodeCatalogPath) { Get-Content -LiteralPath $unicodeCatalogPath -Raw } else { '' }
+    if ($unicodeCorrectionSql -notmatch '@@_catalogo_unicode_modulo_matrices\.sql' -or $unicodeCatalog -notmatch "Afiliaci\\00BFn.*Afiliaci\\00F3n") {
         $errors.Add('43 no contiene el mapping exacto Afiliaci¿n -> Afiliación.')
     }
-    foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS')) {
+    foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','coverage_mismatches','UBK_TABLE_NAME','UBK_COLUMN_NAME','UBK_ROWID_TEXT')) {
         if ($unicodeCorrectionSql -notmatch [regex]::Escape($gate)) { $errors.Add("43 no implementa gate $gate.") }
     }
+    if ($unicodeCorrectionSql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('43 usa SUBSTR CLOB limitado a 32767 para detección.') }
+    if ($unicodeCorrectionSql -notmatch '@@_catalogo_unicode_modulo_matrices\.sql') { $errors.Add('43 no consume el catálogo compartido de mappings.') }
+    if ($unicodeCorrectionSql -match "AMBIGUOUS_TOKENS=0|UNMAPPED_TOKENS=0") { $errors.Add('43 hardcodea un gate de tokens; debe derivarlo.') }
 }
 
 if ($riskTextContents.ContainsKey('41_precheck_unicode_modulo_matrices_completo.sql')) {
     $inventorySql = $riskTextContents['41_precheck_unicode_modulo_matrices_completo.sql']
-    foreach ($requiredToken in @('REQUIRED_RL_MR_TABLES','REQUIRED_RL_MR_TABLES_FOUND','ROWID=','TOKEN_BAD=','OCCURRENCES=','CONTEXT=','FULL_MODULE_TOKEN_OCCURRENCES','UNIQUE_BAD_TOKENS','FULL_MODULE_TOKEN_INVENTORY')) {
+    foreach ($requiredToken in @('REQUIRED_RL_MR_TABLES','REQUIRED_RL_MR_TABLES_FOUND','ROWID=','TOKEN_BAD=','OCCURRENCES=','CONTEXT=','FULL_MODULE_TOKEN_OCCURRENCES','UNIQUE_BAD_TOKENS','DETERMINISTIC_MAPPINGS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','FULL_MODULE_TOKEN_INVENTORY','register_mapping','@@_catalogo_unicode_modulo_matrices.sql')) {
         if ($inventorySql -notmatch [regex]::Escape($requiredToken)) { $errors.Add("41 no produce inventario integral con $requiredToken.") }
     }
     if ($inventorySql -match '(?i)ROWNUM\s*=\s*1') { $errors.Add('41 no puede limitar el inventario con ROWNUM=1.') }
+    if ($inventorySql -match 'DBMS_LOB\.GETLENGTH\s*\(\s*p_marker') { $errors.Add('41 usa GETLENGTH sobre VARCHAR2.') }
+    if ($inventorySql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('41 usa SUBSTR CLOB limitado a 32767 para detección.') }
+    if ($inventorySql -match "AMBIGUOUS_TOKENS=0|UNMAPPED_TOKENS=0") { $errors.Add('41 hardcodea un gate de tokens; debe derivarlo.') }
 }
 if ($riskTextContents.ContainsKey('42_backup_unicode_modulo_matrices_completo.sql') -and
     $riskTextContents['42_backup_unicode_modulo_matrices_completo.sql'] -notmatch 'BACKUP_CLEANUP|DROP TABLE RL_MR_UNI_BKP_20260924') {
     $errors.Add('42 no limpia el backup dinámico si falla después del CREATE TABLE.')
 }
+if ($riskTextContents.ContainsKey('42_backup_unicode_modulo_matrices_completo.sql') -and
+    $riskTextContents['42_backup_unicode_modulo_matrices_completo.sql'] -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('42 usa SUBSTR CLOB limitado a 32767 para detección.') }
 if ($riskTextContents.ContainsKey('44_postcheck_unicode_modulo_matrices_completo.sql')) {
     $postSql = $riskTextContents['44_postcheck_unicode_modulo_matrices_completo.sql']
-    foreach ($key in @('codigo_riesgo','area_principal','dueno_riesgo','respuesta_riesgo','nivel_inherente','nivel_residual','estado')) {
+    foreach ($key in @('area_principal','dueno_riesgo','respuesta_riesgo','nivel_inherente','nivel_residual')) {
         if ($postSql -notmatch [regex]::Escape("json_has(x.EVA_DATOS_JSON,'$key'")) { $errors.Add("44 no compara la clave JSON contractual $key.") }
     }
-    if ($postSql -notmatch 'PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT') { $errors.Add('44 no declara implementación exacta de paridad JSON.') }
+    if ($postSql -match "json_has\(x\.EVA_DATOS_JSON,'(codigo_riesgo|estado)'") { $errors.Add('44 exige claves que no existen en el contrato JSON V1.') }
+    if ($postSql -notmatch 'PROY_CODIGO_RIESGO' -or $postSql -notmatch 'RL_MR_FLUJOS_EVALUACION' -or $postSql -notmatch 'FLUJO_ESTADO') { $errors.Add('44 no compara código y estado contra sus fuentes autoritativas.') }
+    if ($postSql -notmatch 'PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT') { $errors.Add('44 no declara implementación CONTRACT_EXACT.') }
+    if ($postSql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('44 usa SUBSTR CLOB limitado a 32767 para detección.') }
 }
 
 $backendRepositoryPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
@@ -615,7 +632,7 @@ Write-Host 'FULL_MODULE_TOKEN_INVENTORY=PASS'
 Write-Host 'AMBIGUOUS_TOKENS=0'
 Write-Host 'UNMAPPED_TOKENS=0'
 Write-Host 'BACKUP_COVERAGE=PASS'
-Write-Host 'PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT'
+Write-Host 'PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT'
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"

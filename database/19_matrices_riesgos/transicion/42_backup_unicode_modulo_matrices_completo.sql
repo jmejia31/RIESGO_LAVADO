@@ -47,7 +47,7 @@ BEGIN
                 l_expr || 'UNISTR(''\00C2'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00E2\20AC'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00F0\0178'')) > 0 OR ' ||
-                'REGEXP_LIKE(DBMS_LOB.SUBSTR(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),32767,1),' ||
+                'REGEXP_LIKE(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),' ||
                 ' ''[[:alpha:]]'' || UNISTR(''\00BF'') || ''[[:alpha:]]'')';
       l_sql := 'INSERT INTO RL_MR_UNI_BKP_20260924 ' ||
         '(UBK_TABLE_NAME,UBK_COLUMN_NAME,UBK_ROWID_TEXT,UBK_OLD_VALUE,UBK_BACKUP_DATE) ' ||
