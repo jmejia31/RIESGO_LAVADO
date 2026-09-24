@@ -7546,7 +7546,7 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervención — COD — Corrección quirúrgica de bloqueadores Oracle 11g 41→44
 
-- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX. **Rama:** `desarrollo`. **SHA inicial:** `3f7c9b901e31367abed254f263345798be4f9d18`; corrección técnica: `4c5fbee`.
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX. **Rama:** `desarrollo`. **SHA inicial:** `3f7c9b901e31367abed254f263345798be4f9d18`; corrección técnica: `4c5fbee`; **SHA final publicado:** `9dbbb4187e389a4adce54685aec4f744f90f50cf`.
 - **41:** eliminada la llamada `DBMS_LOB.GETLENGTH` sobre `VARCHAR2`; el inventario ahora extrae tokens contextuales reales, deduplica esos tokens, carga el catálogo compartido y calcula `AMBIGUOUS_TOKENS`/`UNMAPPED_TOKENS`.
 - **CLOB:** 41, 42 y 43 usan detección sobre el CLOB completo; no se usa `DBMS_LOB.SUBSTR(...,32767,1)` para detectar Unicode. 41 conserva `SUBSTR` sólo para contexto.
 - **42/43:** 43 carga el catálogo sin DML para validarlo antes del savepoint, exige cobertura exacta por tabla/columna/ROWID, y aplica rollback condicional fail-closed. No se recrea ni modifica ningún backup existente.
@@ -7554,4 +7554,4 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Validador:** detecta GETLENGTH sobre VARCHAR2, truncamiento CLOB de 32767, gates hardcodeados, claves JSON inexistentes y rollback TO sin savepoint previo.
 - **Pruebas verificadas:** backend `657/657`; frontend build PASS; lint PASS; E2E `36/36`; pruebas frontend específicas de paginación `9/9`; validador database PASS; estructura PASS (`118` rutas, `975` archivos, `3` maestros); documentación PASS (`161` documentos, `184` enlaces); encoding PASS (`MOJIBAKE_FINDINGS=0`); `git diff --check` PASS. El gate global de cobertura frontend tuvo 2 timeouts fijos de 5s durante recolección (`789/791` completadas); ambas pasaron aisladas con `9/9`.
 - **Restricciones:** `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; no se ejecutó Oracle ni 37; `MANUAL_EXECUTION_PENDING=YES`.
-- **Publicación:** se agregará la documentación de cierre en el commit siguiente y se publicará todo en `origin/desarrollo`; los untracked ajenos fueron preservados y excluidos.
+- **Publicación:** documentación de cierre publicada en `origin/desarrollo`; los untracked ajenos fueron preservados y excluidos.
