@@ -1530,3 +1530,15 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - RPO continúa pendiente: `RPO_DEFINED=FALSE`.
 - No se modificaron código, Oracle, datos, V1/V2, hashes, `main`, `DNP_IHSS` ni `MMATAMOROS`. `MAPA_ARQUITECTURA=NO_APLICA`.
 - Seguimiento institucional actualizado en issue #22.
+
+
+## Estado vigente - RTO Y RPO INSTITUCIONALES CERRADOS
+
+- Fecha local: `2026-09-24` (UTC-6); autor `CHAT`; rama `desarrollo`.
+- Autorización expresa del propietario del proyecto: RTO y RPO quedan adoptados y cerrados para efectos del proyecto.
+- Documento canónico: `docs/3. Módulo Matrices de Riesgos/Cierre Institucional/ACTA_RTO_RPO_INSTITUCIONAL_SGRLA_IHSS_v2_0.md`; PDF físico equivalente en la misma carpeta.
+- `RTO_DEFINED=TRUE`; `RTO_VALUE=4 horas`; `RTO_MAXIMUM_TOLERABLE=4 horas`; `INCIDENT_RESPONSE_TARGET=0 minutos`; `RTO_STATUS=CLOSED`.
+- `RPO_DEFINED=TRUE`; `RPO_VALUE=15 minutos`; `RPO_MAXIMUM_TOLERABLE=60 minutos`; `RPO_STATUS=CLOSED`.
+- `RTO_RPO_PENDING_ITEMS=0`; `RTO_RPO_PROJECT_BLOCKERS=0`.
+- La propuesta RTO v1.1 permanece únicamente como antecedente histórico. Firmas administrativas posteriores pueden archivarse sin reabrir estos dos puntos, salvo decisión institucional expresa de modificar valores.
+- Pendientes institucionales restantes del issue #22: capacitación institucional y despliegue productivo. No reabrir Fase 5.3/6/7 ni rendimiento de Monitoreo.
