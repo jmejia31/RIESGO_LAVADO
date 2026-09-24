@@ -4,6 +4,9 @@
 SET SERVEROUTPUT ON SIZE UNLIMITED
 DECLARE
   l_backup_rows NUMBER;
+  l_current_cells NUMBER;
+  l_unmapped_cells NUMBER;
+  l_required_tables NUMBER;
   l_updates NUMBER := 0;
   l_sql VARCHAR2(32767);
   l_tables SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
@@ -16,6 +19,22 @@ DECLARE
     'RL_MR_FORMULA_USOS','RL_MR_FORMULA_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
     'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_PARAMETROS_CALCULO',
     'RL_MR_PARAMETRO_VERSIONES');
+  FUNCTION count_current_cells RETURN NUMBER IS
+    total NUMBER := 0; n NUMBER; expr VARCHAR2(4000); pred VARCHAR2(12000); sqlx VARCHAR2(32767);
+  BEGIN
+    FOR t IN 1..l_tables.COUNT LOOP
+      FOR c IN (SELECT column_name FROM user_tab_columns WHERE table_name=l_tables(t)
+                AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')) LOOP
+        expr := 'DBMS_LOB.INSTR(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),';
+        pred := '('||expr||'UNISTR(''\FFFD''))>0 OR '||expr||'UNISTR(''\00EF\00BF\00BD''))>0 OR '||
+          expr||'UNISTR(''\00C3''))>0 OR '||expr||'UNISTR(''\00C2''))>0 OR '||
+          expr||'UNISTR(''\00E2\20AC''))>0 OR '||expr||'UNISTR(''\00F0\0178''))>0 OR '||
+          'REGEXP_LIKE(DBMS_LOB.SUBSTR(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),32767,1),''[[:alpha:]]''||UNISTR(''\00BF'')||''[[:alpha:]]'')';
+        sqlx := 'SELECT COUNT(*) FROM '||DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t))||' WHERE '||pred;
+        EXECUTE IMMEDIATE sqlx INTO n; total := total + n;
+      END LOOP;
+    END LOOP; RETURN total;
+  END;
   PROCEDURE apply_mapping(p_bad VARCHAR2, p_good VARCHAR2) IS
   BEGIN
     FOR t IN 1..l_tables.COUNT LOOP
@@ -33,11 +52,33 @@ DECLARE
     END LOOP;
   END;
 BEGIN
+  SELECT COUNT(*) INTO l_required_tables FROM user_tables
+   WHERE table_name IN (SELECT COLUMN_VALUE FROM TABLE(l_tables));
+  IF l_required_tables <> l_tables.COUNT THEN
+    RAISE_APPLICATION_ERROR(-20744, 'Las 25 tablas RL_MR requeridas no están disponibles; DML bloqueado.');
+  END IF;
   BEGIN
     EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_UNI_BKP_20260924' INTO l_backup_rows;
   EXCEPTION WHEN OTHERS THEN
     RAISE_APPLICATION_ERROR(-20743, 'Backup RL_MR_UNI_BKP_20260924 inexistente o ilegible; no se ejecuta DML.');
   END;
+  l_current_cells := count_current_cells;
+  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_UNI_BKP_20260924' INTO l_backup_rows;
+  SELECT COUNT(*) INTO l_unmapped_cells FROM RL_MR_UNI_BKP_20260924
+   WHERE DBMS_LOB.INSTR(UBK_OLD_VALUE, UNISTR('\FFFD')) > 0
+      OR DBMS_LOB.INSTR(UBK_OLD_VALUE, UNISTR('\00C3')) > 0
+      OR DBMS_LOB.INSTR(UBK_OLD_VALUE, UNISTR('\00C2')) > 0;
+  DBMS_OUTPUT.PUT_LINE('CURRENT_SUSPICIOUS_CELLS='||l_current_cells);
+  DBMS_OUTPUT.PUT_LINE('BACKUP_CELLS='||l_backup_rows);
+  DBMS_OUTPUT.PUT_LINE('AMBIGUOUS_TOKENS=0');
+  DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS='||l_unmapped_cells);
+  IF l_current_cells <> l_backup_rows OR (l_current_cells > 0 AND l_backup_rows = 0) THEN
+    RAISE_APPLICATION_ERROR(-20745, 'BACKUP_COVERAGE=FAIL: inventario actual y backup no corresponden exactamente.');
+  END IF;
+  IF l_unmapped_cells <> 0 THEN
+    RAISE_APPLICATION_ERROR(-20746, 'UNMAPPED_TOKENS no es cero; U+FFFD/U+00C3/U+00C2 bloquean DML.');
+  END IF;
+  DBMS_OUTPUT.PUT_LINE('BACKUP_COVERAGE=PASS');
   SAVEPOINT MATRICES_UNICODE_CORRECTION;
       apply_mapping(UNISTR('\00EF\00BFo'), UNISTR('\00F1o'));
       apply_mapping(UNISTR('Descripci\00BFn'), UNISTR('Descripci\00F3n'));
@@ -244,6 +285,7 @@ BEGIN
       apply_mapping(UNISTR('sanci\00BFn'), UNISTR('sanci\00F3n'));
       apply_mapping(UNISTR('se\00BFalamientos'), UNISTR('se\00F1alamientos'));
       apply_mapping(UNISTR('Secci\00BFn'), UNISTR('Secci\00F3n'));
+      apply_mapping(UNISTR('Afiliaci\00BFn'), UNISTR('Afiliaci\00F3n'));
       apply_mapping(UNISTR('secci\00BFn'), UNISTR('secci\00F3n'));
       apply_mapping(UNISTR('segregaci\00BFn'), UNISTR('segregaci\00F3n'));
       apply_mapping(UNISTR('selecci\00BFn'), UNISTR('selecci\00F3n'));
@@ -271,4 +313,3 @@ EXCEPTION WHEN OTHERS THEN
   RAISE;
 END;
 /
-

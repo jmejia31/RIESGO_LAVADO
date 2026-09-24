@@ -7,6 +7,8 @@ DECLARE
   l_sql VARCHAR2(32767);
   l_expr VARCHAR2(4000);
   l_pred VARCHAR2(12000);
+  l_created BOOLEAN := FALSE;
+  l_required NUMBER;
   l_tables SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
     'RL_MR_FAMILIAS_FORMULARIO','RL_MR_VERSIONES_FORMULARIO','RL_MR_CATALOGOS',
     'RL_MR_ELEMENTOS_CATALOGO','RL_MR_REGLAS_CALCULO','RL_MR_RIESGOS',
@@ -18,6 +20,11 @@ DECLARE
     'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_PARAMETROS_CALCULO',
     'RL_MR_PARAMETRO_VERSIONES');
 BEGIN
+  SELECT COUNT(*) INTO l_required FROM user_tables
+   WHERE table_name IN (SELECT COLUMN_VALUE FROM TABLE(l_tables));
+  IF l_required <> l_tables.COUNT THEN
+    RAISE_APPLICATION_ERROR(-20742, 'No están disponibles las 25 tablas RL_MR requeridas; no se crea backup.');
+  END IF;
   SELECT COUNT(*) INTO l_exists FROM user_tables WHERE table_name = 'RL_MR_UNI_BKP_20260924';
   IF l_exists <> 0 THEN
     RAISE_APPLICATION_ERROR(-20741, 'RL_MR_UNI_BKP_20260924 ya existe; no se sobrescribe.');
@@ -27,24 +34,21 @@ BEGIN
     'UBK_ROWID_TEXT VARCHAR2(30) NOT NULL, UBK_OLD_VALUE CLOB,' ||
     'UBK_BACKUP_DATE DATE NOT NULL, CONSTRAINT PK_RL_MR_UNI_BKP_20260924 ' ||
     'PRIMARY KEY (UBK_TABLE_NAME, UBK_COLUMN_NAME, UBK_ROWID_TEXT))';
+  l_created := TRUE;
   FOR t IN 1..l_tables.COUNT LOOP
     FOR c IN (SELECT column_name, data_type FROM user_tab_columns
                WHERE table_name = l_tables(t)
                  AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')
                ORDER BY column_id) LOOP
-      IF c.data_type = 'CLOB' THEN
-        l_expr := 'DBMS_LOB.INSTR(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || ',';
-      ELSE
-        l_expr := 'INSTR(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || ',';
-      END IF;
+      l_expr := 'DBMS_LOB.INSTR(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),';
       l_pred := '(' || l_expr || 'UNISTR(''\FFFD'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00EF\00BF\00BD'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00C3'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00C2'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00E2\20AC'')) > 0 OR ' ||
                 l_expr || 'UNISTR(''\00F0\0178'')) > 0 OR ' ||
-                'REGEXP_LIKE(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) ||
-                ', ''[[:alpha:]]'' || UNISTR(''\00BF'') || ''[[:alpha:]]'')';
+                'REGEXP_LIKE(DBMS_LOB.SUBSTR(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),32767,1),' ||
+                ' ''[[:alpha:]]'' || UNISTR(''\00BF'') || ''[[:alpha:]]'')';
       l_sql := 'INSERT INTO RL_MR_UNI_BKP_20260924 ' ||
         '(UBK_TABLE_NAME,UBK_COLUMN_NAME,UBK_ROWID_TEXT,UBK_OLD_VALUE,UBK_BACKUP_DATE) ' ||
         'SELECT :1,:2,ROWIDTOCHAR(ROWID),TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) ||
@@ -54,15 +58,20 @@ BEGIN
     END LOOP;
   END LOOP;
   EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_UNI_BKP_20260924' INTO l_rows;
-  IF l_rows = 0 THEN
-    COMMIT;
-  ELSE
-    COMMIT;
-  END IF;
+  COMMIT;
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_BACKUP_ROWS=' || l_rows);
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_BACKUP_STATUS=PASS');
 EXCEPTION WHEN OTHERS THEN
   ROLLBACK;
+  IF l_created THEN
+    BEGIN
+      EXECUTE IMMEDIATE 'DROP TABLE RL_MR_UNI_BKP_20260924 PURGE';
+      COMMIT;
+      DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_BACKUP_CLEANUP=DROPPED');
+    EXCEPTION WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_BACKUP_CLEANUP=FAIL '||SQLERRM);
+    END;
+  END IF;
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_BACKUP_STATUS=FAIL ' || SQLERRM);
   RAISE;
 END;

@@ -1818,14 +1818,14 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         EvaluacionId = reader.GetInt64(1),
         VersionFormularioId = reader.GetInt64(2),
         CodigoRiesgo = reader.GetString(3),
-        AreaPrincipal = reader.GetString(4),
-        DuenoRiesgo = reader.GetString(5),
+        AreaPrincipal = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
+        DuenoRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(5)),
         Vri = reader.GetInt32(6),
-        NivelInherente = reader.GetString(7),
+        NivelInherente = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(7)),
         Vrr = reader.GetInt32(8),
-        NivelResidual = reader.GetString(9),
-        RespuestaRiesgo = reader.GetString(10),
-        EstadoEvaluacion = reader.GetString(11),
+        NivelResidual = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(9)),
+        RespuestaRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(10)),
+        EstadoEvaluacion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(11)),
         FechaEvaluacion = reader.GetDateTime(12)
     };
 

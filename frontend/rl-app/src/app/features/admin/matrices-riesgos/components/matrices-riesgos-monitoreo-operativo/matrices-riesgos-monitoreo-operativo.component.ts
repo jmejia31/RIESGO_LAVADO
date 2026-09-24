@@ -12,6 +12,7 @@ import {
 } from '../../models/matrices-riesgos-fase11.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
@@ -54,7 +55,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
 
   cargarResumen(): void {
     this.service.obtenerResumenOperativo().subscribe({
-      next: resumen => this.resumen.set(resumen),
+      next: resumen => this.resumen.set(this.normalizarResumen(resumen)),
       error: error => this.error.set(this.mensajeError(error, 'No se pudo cargar el resumen operativo.'))
     });
   }
@@ -73,10 +74,10 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.cargando.set(true);
     this.service.listarAlertas(this.evaluacionId).subscribe({
       next: alertas => {
-        this.alertas.set(alertas);
+        this.alertas.set(alertas.map(alerta => ({ ...alerta, aleIndicador: normalizarMojibakeVisibleUtf8(alerta.aleIndicador) })));
         this.service.listarAutomonitoreo(this.evaluacionId).subscribe({
           next: automonitoreos => {
-            this.automonitoreos.set(automonitoreos);
+            this.automonitoreos.set(automonitoreos.map(item => ({ ...item, monEstadoRiesgo: normalizarMojibakeVisibleUtf8(item.monEstadoRiesgo), monEstadoContr: normalizarMojibakeVisibleUtf8(item.monEstadoContr), monResultado: normalizarMojibakeVisibleUtf8(item.monResultado) })));
             this.cargando.set(false);
           },
           error: error => this.finalizarError(error, 'No se pudo cargar el automonitoreo.')
@@ -84,6 +85,10 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
       },
       error: error => this.finalizarError(error, 'No se pudieron cargar las señales de alerta.')
     });
+  }
+
+  private normalizarResumen(resumen: ResumenMatricesOperativoDto): ResumenMatricesOperativoDto {
+    return { ...resumen };
   }
 
   crearAlerta(): void {

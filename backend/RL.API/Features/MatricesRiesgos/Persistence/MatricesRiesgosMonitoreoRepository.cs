@@ -2,6 +2,7 @@ using System.Text.Json;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Infrastructure.Database;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
@@ -48,8 +49,8 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
                 AleId = reader.GetInt64(0),
                 AleEvaluacionId = reader.GetInt64(1),
                 AleCodigo = reader.GetString(2),
-                AleIndicador = reader.GetString(3),
-                AleEstado = reader.GetString(4),
+                AleIndicador = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
+                AleEstado = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
                 AleFechaDisparo = reader.IsDBNull(5) ? null : reader.GetDateTime(5)
             });
         }
@@ -158,8 +159,10 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
             lista.Add(new AutomonitoreoDto
             {
                 MonId = reader.GetInt64(0), MonEvaluacionId = reader.GetInt64(1),
-                MonEstadoRiesgo = reader.GetString(2), MonEstadoContr = reader.GetString(3),
-                MonResultado = reader.GetString(4), MonUsrId = reader.GetInt64(5), MonFecha = reader.GetDateTime(6)
+                MonEstadoRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
+                MonEstadoContr = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
+                MonResultado = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
+                MonUsrId = reader.GetInt64(5), MonFecha = reader.GetDateTime(6)
             });
         }
         return lista;

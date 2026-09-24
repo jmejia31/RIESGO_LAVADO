@@ -6,6 +6,7 @@ import { MatricesRiesgosMitigacionComponent } from '../../components/matrices-ri
 import { MatricesRiesgosMonitoreoOperativoComponent } from '../../components/matrices-riesgos-monitoreo-operativo/matrices-riesgos-monitoreo-operativo.component';
 import { MatricesRiesgosComponent } from '../matrices-riesgos/matrices-riesgos.component';
 import { ConfiguracionCalculoComponent } from '../configuracion-calculo/configuracion-calculo.component';
+import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 
 type VistaCiclo = 'matriz' | 'riesgos' | 'mitigacion' | 'monitoreo' | 'configuracion';
 
@@ -45,7 +46,12 @@ export class MatricesRiesgosCicloIntegralComponent {
   private cargarEvaluacionesOperativas(): void {
     this.service.listarEvaluaciones({ pagina: 1, registrosPorPagina: 200 }).subscribe({
       next: paginado => {
-        this.evaluaciones.set(Array.isArray(paginado?.items) ? paginado.items : []);
+        const items = Array.isArray(paginado?.items) ? paginado.items : [];
+        this.evaluaciones.set(items.map(item => ({
+          ...item,
+          riesgoNombre: normalizarMojibakeVisibleUtf8(item.riesgoNombre),
+          estado: normalizarMojibakeVisibleUtf8(item.estado)
+        })));
         this.error.set(null);
       },
       error: error => {

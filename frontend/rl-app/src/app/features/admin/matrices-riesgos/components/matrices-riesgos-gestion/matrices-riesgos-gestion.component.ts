@@ -8,6 +8,7 @@ import { RiesgoDto, RiesgoGuardarDto } from '../../models/matrices-riesgos-fase1
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
 import { PageSizeSelectorComponent } from '../../../../../shared/components/page-size-selector/page-size-selector.component';
+import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 
 @Component({
   selector: 'app-matrices-riesgos-gestion',
@@ -47,7 +48,11 @@ export class MatricesRiesgosGestionComponent implements OnInit {
     this.service.listarRiesgosPaginados(true, this.pagina(), this.tamanoPagina()).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCarga) return;
-        this.riesgos.set(resultado.items);
+        this.riesgos.set(resultado.items.map(item => ({
+          ...item,
+          rieNombre: normalizarMojibakeVisibleUtf8(item.rieNombre),
+          rieDescripcion: item.rieDescripcion ? normalizarMojibakeVisibleUtf8(item.rieDescripcion) : item.rieDescripcion
+        })));
         this.totalRegistros.set(resultado.totalRegistros);
         this.pagina.set(resultado.pagina);
         this.cargando.set(false);

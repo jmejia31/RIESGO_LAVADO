@@ -427,7 +427,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
-        this.familias.set(resultado.items);
+        this.familias.set(resultado.items.map(familia => ({
+          ...familia,
+          famNombre: normalizarMojibakeVisibleUtf8(familia.famNombre),
+          famDescripcion: familia.famDescripcion ? normalizarMojibakeVisibleUtf8(familia.famDescripcion) : familia.famDescripcion
+        })));
         this.paginaFamilias.set(resultado.pagina);
         this.totalRegistrosFamilias.set(resultado.totalRegistros);
         this.totalPaginasFamiliasServidor.set(resultado.totalPaginas);

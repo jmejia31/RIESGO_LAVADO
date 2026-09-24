@@ -7533,3 +7533,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Pruebas verificadas:** normalizador backend `16/16`; frontend focalizado `13/13`; suite backend `657/657`; frontend `79 archivos / 791 pruebas`; E2E `36/36`; cobertura frontend statements `61.34%`, branches `54.44%`, functions `57.29%`, lines `62.05%`; estructura, documentación, encoding y validador de base PASS.
 - **Estado Oracle:** `TEXT_TABLES_SCANNED=25` queda preparado para salida manual del precheck; los hallazgos del módulo completo permanecen pendientes hasta ejecutar 41. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Archivos ajenos:** `.vscode/`, `agosto_rest.txt`, `artifacts/` y PDF local fueron preservados y excluidos del commit.
+
+## Registro de intervención — COD — Revisión integral posterior a 956601c
+
+- **Fecha:** 2026-09-24 (UTC-6). **SHA inicial:** `956601c8268121600f43b7d4c0fc50d7091ed156`; rama `desarrollo`.
+- **Correcciones:** 43 incorpora `Afiliaci\00BFn -> Afiliaci\00F3n`; 41 inventaría todas las celdas y ocurrencias sin `ROWNUM`, con tabla, columna, ROWID, token, posición y contexto CLOB; 42 elimina el backup dinámico si falla después del CREATE; 43 exige cobertura exacta actual/backup y bloquea U+FFFD/U+00C3/U+00C2 no reparados.
+- **Paridad:** 44 verifica por clave JSON contractual (`codigo_riesgo`, `area_principal`, `dueno_riesgo`, `respuesta_riesgo`, `nivel_inherente`, `nivel_residual`, `estado`) con escape JSON compatible con Oracle 11g; no usa búsqueda libre de valores.
+- **Código:** reportes, Excel/PDF, monitoreo, gestión, mitigación, ciclo integral, familias y superficies dinámicas normalizan textos visibles; códigos e IDs técnicos no se transforman.
+- **Gates locales:** validador database PASS con `FULL_MODULE_TOKEN_INVENTORY=PASS`, `BACKUP_COVERAGE=PASS`, `PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT`, `BACKEND_ALL_TEXT_OUTPUTS=PASS`, `FRONTEND_ALL_TEXT_SURFACES=PASS`; backend focalizado `16/16`; frontend focalizado `36/36`.
+- **Oracle:** no se ejecutó Oracle, no se ejecutó DML/DDL y no se declara limpieza física; el inventario real y sus conteos sólo existirán después de ejecutar manualmente 41. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.

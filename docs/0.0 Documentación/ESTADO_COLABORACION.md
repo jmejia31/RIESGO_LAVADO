@@ -1593,3 +1593,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Gates verificadas: backend `657/657`, frontend `79/791`, E2E `36/36`; focalizadas backend `16/16` y frontend `13/13`; estructura, documentación, encoding y validador de base PASS.
 - El precheck 41 imprimirá el inventario y hallazgos reales del módulo; no se afirma limpieza física hasta su ejecución manual. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier debe actualizar el checkout, ejecutar 41; si PASS, 42; revisar backup y salida; ejecutar 43; ejecutar 44; utilizar 45 sólo para restaurar. No ejecutar desde Codex ni modificar `main`.
+
+# Estado vigente — Revisión integral posterior a 956601c (COD)
+
+- 41 ahora produce inventario completo por celda/ocurrencia con `TABLE_NAME`, `COLUMN_NAME`, `ROWID`, `TOKEN_BAD`, `OCCURRENCES`, posición y contexto CLOB; valida realmente las 25 tablas requeridas.
+- 42 es fail-closed frente al commit implícito de `CREATE TABLE`: limpia `RL_MR_UNI_BKP_20260924` si la carga falla.
+- 43 exige `CURRENT_SUSPICIOUS_CELLS == BACKUP_CELLS`, emite `AMBIGUOUS_TOKENS`/`UNMAPPED_TOKENS` y bloquea DML ante U+FFFD/U+00C3/U+00C2 no resueltos. Incluye `Afiliaci¿n -> Afiliación`.
+- 44 compara paridad JSON por las siete claves contractuales, no por coincidencia libre de valores.
+- Backend y frontend cubren reportes API/Excel/PDF, gestión, evaluaciones, consolidado, mitigación, monitoreo, familias, modales y Form Builder.
+- El estado PASS de las gates es estático/local; no representa resultado Oracle. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.

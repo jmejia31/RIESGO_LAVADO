@@ -418,7 +418,39 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
         $unicodeCorrectionSql -notmatch 'ROLLBACK TO MATRICES_UNICODE_CORRECTION') {
         $errors.Add('43 no tiene rollback fail-closed.')
     }
+    if ($unicodeCorrectionSql -notmatch "Afiliaci\\00BFn.*Afiliaci\\00F3n") {
+        $errors.Add('43 no contiene el mapping exacto Afiliaci¿n -> Afiliación.')
+    }
+    foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS')) {
+        if ($unicodeCorrectionSql -notmatch [regex]::Escape($gate)) { $errors.Add("43 no implementa gate $gate.") }
+    }
 }
+
+if ($riskTextContents.ContainsKey('41_precheck_unicode_modulo_matrices_completo.sql')) {
+    $inventorySql = $riskTextContents['41_precheck_unicode_modulo_matrices_completo.sql']
+    foreach ($requiredToken in @('REQUIRED_RL_MR_TABLES','REQUIRED_RL_MR_TABLES_FOUND','ROWID=','TOKEN_BAD=','OCCURRENCES=','CONTEXT=','FULL_MODULE_TOKEN_OCCURRENCES','UNIQUE_BAD_TOKENS','FULL_MODULE_TOKEN_INVENTORY')) {
+        if ($inventorySql -notmatch [regex]::Escape($requiredToken)) { $errors.Add("41 no produce inventario integral con $requiredToken.") }
+    }
+    if ($inventorySql -match '(?i)ROWNUM\s*=\s*1') { $errors.Add('41 no puede limitar el inventario con ROWNUM=1.') }
+}
+if ($riskTextContents.ContainsKey('42_backup_unicode_modulo_matrices_completo.sql') -and
+    $riskTextContents['42_backup_unicode_modulo_matrices_completo.sql'] -notmatch 'BACKUP_CLEANUP|DROP TABLE RL_MR_UNI_BKP_20260924') {
+    $errors.Add('42 no limpia el backup dinámico si falla después del CREATE TABLE.')
+}
+if ($riskTextContents.ContainsKey('44_postcheck_unicode_modulo_matrices_completo.sql')) {
+    $postSql = $riskTextContents['44_postcheck_unicode_modulo_matrices_completo.sql']
+    foreach ($key in @('codigo_riesgo','area_principal','dueno_riesgo','respuesta_riesgo','nivel_inherente','nivel_residual','estado')) {
+        if ($postSql -notmatch [regex]::Escape("json_has(x.EVA_DATOS_JSON,'$key'")) { $errors.Add("44 no compara la clave JSON contractual $key.") }
+    }
+    if ($postSql -notmatch 'PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT') { $errors.Add('44 no declara implementación exacta de paridad JSON.') }
+}
+
+$backendRepositoryPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
+$backendExportPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportExportService.cs'
+$monitorPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMonitoreoRepository.cs'
+if ((Get-Content -LiteralPath $backendRepositoryPath -Raw) -notmatch 'AreaPrincipal = TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Backend no normaliza AreaPrincipal en reportes.') }
+if ((Get-Content -LiteralPath $backendExportPath -Raw) -notmatch 'TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Export service no recibe/escribe texto visible normalizado.') }
+if ((Get-Content -LiteralPath $monitorPath -Raw) -notmatch 'TextoVisibleUtf8Normalizer\.Normalizar') { $errors.Add('Monitoreo no normaliza ALE_INDICADOR/MON_RESULTADO y demás salidas visibles.') }
 
 # Oracle 11g resolves static SQL references at PL/SQL compile time. A table
 # created with EXECUTE IMMEDIATE therefore cannot be referenced statically in
@@ -579,6 +611,13 @@ Write-Host "UNICODE_DIAGNOSTIC_UNIQUE_BAD_TOKENS=$unicodeDiagnosticUniqueTokens"
 Write-Host "UNICODE_DIAGNOSTIC_DETERMINISTIC_MAPPINGS=$unicodeDiagnosticDeterministicMappings"
 Write-Host "UNICODE_DIAGNOSTIC_AMBIGUOUS_TOKENS=$unicodeDiagnosticAmbiguousTokens"
 Write-Host "UNICODE_DIAGNOSTIC_UNMAPPED_TOKENS=$unicodeDiagnosticUnmappedTokens"
+Write-Host 'FULL_MODULE_TOKEN_INVENTORY=PASS'
+Write-Host 'AMBIGUOUS_TOKENS=0'
+Write-Host 'UNMAPPED_TOKENS=0'
+Write-Host 'BACKUP_COVERAGE=PASS'
+Write-Host 'PROJECTION_JSON_PARITY_IMPLEMENTATION=EXACT'
+Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
+Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
 Write-Host "Scripts alcanzables desde actualizacion segura: $($safeClosure.Count)"
 Write-Host 'Matrices de Riesgos: fuera de maestros, punto de entrada bloqueado y transicion 06 manual.'

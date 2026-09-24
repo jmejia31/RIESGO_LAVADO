@@ -1,5 +1,6 @@
 using System.Globalization;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Infrastructure.Reporting;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
@@ -76,14 +77,14 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         fila.EvaluacionId,
         fila.VersionFormularioId,
         fila.CodigoRiesgo,
-        fila.AreaPrincipal,
-        fila.DuenoRiesgo,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
         fila.Vri,
-        fila.NivelInherente,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelInherente),
         fila.Vrr,
-        fila.NivelResidual,
-        fila.RespuestaRiesgo,
-        fila.EstadoEvaluacion,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelResidual),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.RespuestaRiesgo),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
         fila.FechaEvaluacion
     };
 
@@ -93,14 +94,14 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         fila.EvaluacionId.ToString(CultureInfo.InvariantCulture),
         fila.VersionFormularioId.ToString(CultureInfo.InvariantCulture),
         fila.CodigoRiesgo,
-        fila.AreaPrincipal,
-        fila.DuenoRiesgo,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
         fila.Vri.ToString(CultureInfo.InvariantCulture),
-        fila.NivelInherente,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelInherente),
         fila.Vrr.ToString(CultureInfo.InvariantCulture),
-        fila.NivelResidual,
-        fila.RespuestaRiesgo,
-        fila.EstadoEvaluacion,
+        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelResidual),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.RespuestaRiesgo),
+        TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
         fila.FechaEvaluacion.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)
     };
 }

@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
+import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
 import {
   ActividadPlanDto,
@@ -152,7 +153,10 @@ export class MatricesRiesgosMitigacionComponent {
   cargarEvaluacionesControl(controlId: number): void {
     this.controlSeleccionadoId = controlId;
     this.service.listarEvaluacionesControl(controlId).subscribe({
-      next: items => this.evaluacionesControl.set(items),
+      next: items => this.evaluacionesControl.set(items.map(item => ({
+        ...item,
+        ecoComentario: item.ecoComentario ? normalizarMojibakeVisibleUtf8(item.ecoComentario) : item.ecoComentario
+      }))),
       error: (error: unknown) => this.error.set(this.mensajeError(error, 'No se pudo cargar la efectividad del control.'))
     });
   }
