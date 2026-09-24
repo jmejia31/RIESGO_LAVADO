@@ -1603,3 +1603,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Backend y frontend cubren reportes API/Excel/PDF, gestión, evaluaciones, consolidado, mitigación, monitoreo, familias, modales y Form Builder.
 - El estado PASS de las gates es estático/local; no representa resultado Oracle. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - SHA final publicado: `6de7e8a7656181e4596c22e5d204e9b0750c2ff0` en `origin/desarrollo`.
+
+# Estado vigente — Cierre de bloqueadores Oracle 11g 41→44 (COD)
+
+- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `3f7c9b901e31367abed254f263345798be4f9d18`; corrección técnica `4c5fbee`.
+- 41 ya no usa `DBMS_LOB.GETLENGTH` sobre VARCHAR2 ni inventaría sólo U+00BF: produce tokens contextuales completos y sus conteos derivados contra el catálogo compartido.
+- 41/42/43 detectan CLOB completos, incluyendo posiciones mayores a 32767. 43 valida cobertura exacta por `TABLE_NAME`, `COLUMN_NAME` y `ROWID`, valida el catálogo antes del DML y es fail-closed.
+- 44 implementa la paridad contractual real: cinco claves JSON históricas, código por `PROY_CODIGO_RIESGO` frente a `RIE_CODIGO` y estado desde `RL_MR_FLUJOS_EVALUACION`.
+- Gates estáticos: database PASS, encoding PASS, estructura PASS, documentación PASS, backend `657/657`, build/lint frontend PASS, E2E `36/36`. Dos pruebas globales de cobertura frontend agotaron el timeout fijo de 5s; las mismas pruebas aisladas pasaron `9/9`.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier puede revisar y ejecutar manualmente 41→42→43→44. No ejecutar desde Codex, no ejecutar 37, no tocar `RL_MR_UNI_BKP_20260924` fuera del flujo documentado y no modificar `main`.
