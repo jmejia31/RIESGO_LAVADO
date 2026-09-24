@@ -7546,7 +7546,7 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervención — COD — Corrección quirúrgica de bloqueadores Oracle 11g 41→44
 
-- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX. **Rama:** `desarrollo`. **SHA inicial:** `3f7c9b901e31367abed254f263345798be4f9d18`; corrección técnica: `4c5fbee`; **SHA final publicado:** `9dbbb4187e389a4adce54685aec4f744f90f50cf`.
+- **Fecha y hora local:** 2026-09-24 (UTC-6). **Autor:** COD / CODEX. **Rama:** `desarrollo`. **SHA inicial:** `3f7c9b901e31367abed254f263345798be4f9d18`; **SHA del código Oracle/validador:** `4c5fbee`; documentación publicada posteriormente.
 - **41:** eliminada la llamada `DBMS_LOB.GETLENGTH` sobre `VARCHAR2`; el inventario ahora extrae tokens contextuales reales, deduplica esos tokens, carga el catálogo compartido y calcula `AMBIGUOUS_TOKENS`/`UNMAPPED_TOKENS`.
 - **CLOB:** 41, 42 y 43 usan detección sobre el CLOB completo; no se usa `DBMS_LOB.SUBSTR(...,32767,1)` para detectar Unicode. 41 conserva `SUBSTR` sólo para contexto.
 - **42/43:** 43 carga el catálogo sin DML para validarlo antes del savepoint, exige cobertura exacta por tabla/columna/ROWID, y aplica rollback condicional fail-closed. No se recrea ni modifica ningún backup existente.

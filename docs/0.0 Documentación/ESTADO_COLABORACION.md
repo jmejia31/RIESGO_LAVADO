@@ -1606,7 +1606,7 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 
 # Estado vigente — Cierre de bloqueadores Oracle 11g 41→44 (COD)
 
-- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `3f7c9b901e31367abed254f263345798be4f9d18`; corrección técnica `4c5fbee`; **SHA final publicado:** `9dbbb4187e389a4adce54685aec4f744f90f50cf`.
+- **Fecha:** 2026-09-24 (UTC-6); **rama:** `desarrollo`; **base:** `3f7c9b901e31367abed254f263345798be4f9d18`; **SHA del código Oracle/validador:** `4c5fbee`; documentación publicada posteriormente.
 - 41 ya no usa `DBMS_LOB.GETLENGTH` sobre VARCHAR2 ni inventaría sólo U+00BF: produce tokens contextuales completos y sus conteos derivados contra el catálogo compartido.
 - 41/42/43 detectan CLOB completos, incluyendo posiciones mayores a 32767. 43 valida cobertura exacta por `TABLE_NAME`, `COLUMN_NAME` y `ROWID`, valida el catálogo antes del DML y es fail-closed.
 - 44 implementa la paridad contractual real: cinco claves JSON históricas, código por `PROY_CODIGO_RIESGO` frente a `RIE_CODIGO` y estado desde `RL_MR_FLUJOS_EVALUACION`.
