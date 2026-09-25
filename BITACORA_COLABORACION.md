@@ -1,5 +1,42 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Eliminación de Falso Gate de Tokens y Aislamiento Cell-Level en Script 43
+
+- **Fecha y hora**: 2026-09-25 12:45 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `005e4877f74ed7bec7e7cc6efacec4cd17e7c1f2`.
+- **Objetivo y alcance**:
+  - Eliminar del pre-DML de `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` el falso gate `l_unmapped_cells` que contaba ocurrencias de marcadores U+FFFD, U+00C3 y U+00C2 en `UBK_OLD_VALUE` interpretándolas erróneamente como tokens no mapeados y lanzaba error -20746.
+  - Separar estrictamente la semántica de responsabilidades: Script 41 es el inventario token-level exhaustivo (certificó `AMBIGUOUS_TOKENS=0` y `UNMAPPED_TOKENS=0`), mientras que Script 43 es la corrección cell-level transaccional que valida pre-DML celdas sospechosas contra backup y post-DML `CURRENT_SUSPICIOUS_CELLS_POST=0` antes del COMMIT.
+  - Reforzar `tools/validate_database_scripts.ps1` con la verificación `STALE_UNMAPPED_MARKER_GATE=ABSENT`, `POSTCHECK_BEFORE_COMMIT=PASS` y la regresión estructural para evitar la reintroducción del falso gate de tokens en backup.
+  - Preservar íntegramente `TARGET_ROWID_CORRELATION`, `UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`, `UPDATE_SCOPE_BACKUP_ONLY`, `UNBACKED_MAPPING_TARGETS_GATE`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID`, `BACKUP_TABLE_PRESERVED=YES`, `ROLLBACK_ON_RESIDUAL`, el catálogo de 281 mappings y cero interacción con Oracle.
+- **Archivos modificados**:
+  - `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql`
+  - `tools/validate_database_scripts.ps1`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Cambios funcionales y técnicos**:
+  - `ELIMINACIÓN DE FALSO GATE PRE-DML`: Se removió la variable `l_unmapped_cells`, la consulta sobre `UBK_OLD_VALUE` buscando marcadores FFFD/C3/C2, la emisión de `UNMAPPED_TOKENS` pre-DML y el `RAISE_APPLICATION_ERROR(-20746, ...)` asociado. Se limpiaron también emisiones residuales de `UNMAPPED_TOKENS` post-DML.
+  - `SEMÁNTICA CELL-LEVEL`: Script 43 emite pre-DML `REQUIRED_RL_MR_TABLES_FOUND=25`, `CURRENT_SUSPICIOUS_CELLS`, `BACKUP_CELLS`, `BACKUP_COVERAGE=PASS`, `AMBIGUOUS_TOKENS=0`, `UNBACKED_MAPPING_TARGETS=0`; y post-DML `CURRENT_SUSPICIOUS_CELLS_POST=0` como condición obligatoria previa al COMMIT.
+  - `VALIDADOR ROBUSTO`: `tools/validate_database_scripts.ps1` valida `STALE_UNMAPPED_MARKER_GATE=ABSENT`, `POSTCHECK_BEFORE_COMMIT=PASS`, e incorpora regresión estructural para impedir la reintroducción de conteos de marcadores en backup como gate de tokens.
+- **Pruebas y Verificaciones Ejecutadas**:
+  - `validate_database_scripts.ps1`: PASS (`STALE_UNMAPPED_MARKER_GATE=ABSENT`, `TARGET_ROWID_CORRELATION=PASS`, `UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`, `UPDATE_SCOPE_BACKUP_ONLY=PASS`, `UNBACKED_MAPPING_TARGETS_GATE=PASS`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=PASS`, `BACKUP_TABLE_PRESERVED=YES`, `ROLLBACK_ON_RESIDUAL=PASS`, `POSTCHECK_BEFORE_COMMIT=PASS`).
+  - `validate_text_encoding.ps1`: PASS (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`).
+  - `validate_repository_structure.ps1`: PASS (118 rutas obligatorias, 977 archivos rastreados).
+  - `validate_documentation_links.ps1`: PASS (161 docs Markdown, 184 enlaces locales).
+  - `git diff --check`: PASS.
+  - Backend Tests: `657/657 PASS` (`dotnet test --configuration Release --no-build`).
+  - Frontend Lint: PASS (`npm run lint`, 0 errores).
+  - Frontend Build: PASS (`npm run build`).
+  - Frontend Unit Tests: `791/791 PASS` (79 archivos).
+  - Frontend E2E Tests: `36/36 PASS` (Playwright Chromium headless).
+- **Pruebas No Ejecutadas / Restricciones Externas**:
+  - Pruebas físicas Oracle no ejecutadas por restricción institucional obligatoria (cero Oracle en esta sesión).
+  - Python local con alias Microsoft Store (H-04 preexistente fuera de alcance).
+- **Estado de Git y Próximo Paso**:
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`.
+  - Próximo paso manual: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle una vez aprobado.
+
 ## Registro de Intervención — Correlación Inequívoca ROWID Target en Script 43 (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-09-25 11:55 (UTC-6).

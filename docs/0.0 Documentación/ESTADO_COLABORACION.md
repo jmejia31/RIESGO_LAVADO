@@ -1,5 +1,30 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Eliminación de Falso Gate de Tokens y Aislamiento Cell-Level en Script 43
+
+- Fecha/hora local: `2026-09-25 12:45` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `005e4877f74ed7bec7e7cc6efacec4cd17e7c1f2`.
+- Alcance ejecutado: Eliminación del falso gate pre-DML de `UNMAPPED_TOKENS` en `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` y robustecimiento de `tools/validate_database_scripts.ps1`.
+- Cambios técnicos implementados:
+  - Eliminación de la variable `l_unmapped_cells`, la consulta de conteo sobre `UBK_OLD_VALUE` con marcadores U+FFFD/U+00C3/U+00C2 y la excepción ORA-20746.
+  - Separación de responsabilidades: Script 41 gobierna el inventario token-level (`AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`); Script 43 gobierna la transacción cell-level (`CURRENT_SUSPICIOUS_CELLS` pre-DML vs backup y `CURRENT_SUSPICIOUS_CELLS_POST=0` post-DML).
+  - Validaciones reforzadas en `validate_database_scripts.ps1`: `STALE_UNMAPPED_MARKER_GATE=ABSENT`, `POSTCHECK_BEFORE_COMMIT=PASS` y regresión estructural.
+  - Protecciones preservadas: `TARGET_ROWID_CORRELATION`, `UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`, `UPDATE_SCOPE_BACKUP_ONLY`, `UNBACKED_MAPPING_TARGETS_GATE`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID`, `BACKUP_TABLE_PRESERVED=YES`, `ROLLBACK_ON_RESIDUAL`, 281 mappings de catálogo.
+- Evidencia fresca:
+  - `validate_database_scripts.ps1`: PASS.
+  - `validate_text_encoding.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `validate_documentation_links.ps1`: PASS.
+  - `git diff --check`: PASS.
+  - Backend tests: `657/657 PASS`.
+  - Frontend lint: PASS.
+  - Frontend build: PASS.
+  - Frontend unit tests: `791/791 PASS`.
+  - Frontend E2E tests: `36/36 PASS`.
+- Restricciones y exclusiones:
+  - Sin ejecución en base de datos Oracle institucional (cero Oracle en esta sesión).
+  - H-02 mitigado vía `--configuration Release`; H-03, H-04, H-05 no modificados.
+- Punto de continuidad: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle.
+
 ## Estado vigente — Correlación Inequívoca ROWID Target en Script 43 (Matrices de Riesgos)
 
 - Fecha/hora local: `2026-09-25 11:55` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `de3ed4eba3d6aa76899aef1d94f603b531d8418c`.

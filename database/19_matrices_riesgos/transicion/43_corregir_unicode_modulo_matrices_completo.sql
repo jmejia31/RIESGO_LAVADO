@@ -5,7 +5,6 @@ SET SERVEROUTPUT ON SIZE UNLIMITED
 DECLARE
   l_backup_rows NUMBER;
   l_current_cells NUMBER;
-  l_unmapped_cells NUMBER;
   l_unbacked_targets NUMBER;
   l_required_tables NUMBER;
   l_savepoint_created BOOLEAN := FALSE;
@@ -131,11 +130,6 @@ BEGIN
   IF l_unbacked_targets <> 0 THEN
     RAISE_APPLICATION_ERROR(-20749, 'UNBACKED_MAPPING_TARGETS no es cero; DML bloqueado.');
   END IF;
-  EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_UNI_BKP_20260924 WHERE DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\FFFD''))>0 OR DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\00C3''))>0 OR DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\00C2''))>0' INTO l_unmapped_cells;
-  DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS='||l_unmapped_cells);
-  IF l_unmapped_cells <> 0 THEN
-    RAISE_APPLICATION_ERROR(-20746, 'UNMAPPED_TOKENS no es cero; U+FFFD/U+00C3/U+00C2 bloquean DML.');
-  END IF;
   SAVEPOINT MATRICES_UNICODE_CORRECTION;
   l_savepoint_created := TRUE;
   l_validate_catalog := FALSE;
@@ -143,11 +137,9 @@ BEGIN
   l_current_cells := count_current_cells;
   DBMS_OUTPUT.PUT_LINE('CURRENT_SUSPICIOUS_CELLS_POST='||l_current_cells);
   IF l_current_cells <> 0 THEN
-    DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS='||l_current_cells);
     ROLLBACK TO MATRICES_UNICODE_CORRECTION;
     RAISE_APPLICATION_ERROR(-20747, 'CURRENT_SUSPICIOUS_CELLS_POST no es cero después del catálogo; corrección revertida.');
   END IF;
-  DBMS_OUTPUT.PUT_LINE('UNMAPPED_TOKENS='||l_current_cells);
   COMMIT;
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_CORRECTION_UPDATES=' || l_updates);
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_CORRECTION_STATUS=PASS');

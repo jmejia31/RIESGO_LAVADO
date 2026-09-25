@@ -529,9 +529,16 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
     if ($unicodeCorrectionSql -notmatch '@@_catalogo_unicode_modulo_matrices\.sql' -or $unicodeCatalog -notmatch "Afiliaci\\00BFn.*Afiliaci\\00F3n") {
         $errors.Add('43 no contiene el mapping exacto Afiliaci¿n -> Afiliación.')
     }
-    foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','coverage_mismatches','UBK_TABLE_NAME','UBK_COLUMN_NAME','UBK_ROWID_TEXT')) {
+    foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','coverage_mismatches','UBK_TABLE_NAME','UBK_COLUMN_NAME','UBK_ROWID_TEXT')) {
         if ($unicodeCorrectionSql -notmatch [regex]::Escape($gate)) { $errors.Add("43 no implementa gate $gate.") }
     }
+    $hasStaleUnmappedMarkerGate = $unicodeCorrectionSql -match "(?is)SELECT\s+COUNT\(\*\)[\s\S]*?FROM\s+RL_MR_UNI_BKP_20260924[\s\S]*?UBK_OLD_VALUE[\s\S]*?\\FFFD[\s\S]*?\\00C3[\s\S]*?\\00C2" -or
+        $unicodeCorrectionSql -match "(?is)RAISE_APPLICATION_ERROR\s*\(\s*-20746" -or
+        $unicodeCorrectionSql -match "(?is)UNMAPPED_TOKENS[\s\S]*?U\+FFFD/U\+00C3/U\+00C2"
+    if ($hasStaleUnmappedMarkerGate) {
+        $errors.Add('43 conserva el falso gate pre-DML de UNMAPPED_TOKENS basado en presencia de marcadores FFFD/C3/C2 en backup.')
+    }
+    $staleUnmappedMarkerGate = if ($hasStaleUnmappedMarkerGate) { 'PRESENT' } else { 'ABSENT' }
     $hasUnqualifiedRowidInSubquery = $unicodeCorrectionSql -match "(?is)PROCEDURE\s+apply_mapping[\s\S]*?UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)"
     if ($hasUnqualifiedRowidInSubquery) {
         $errors.Add('43 contiene una correlación ambigua con ROWID no calificado en el subquery de backup de apply_mapping.')
@@ -558,11 +565,25 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
         $unicodeCorrectionSql -match 'RAISE_APPLICATION_ERROR\(-20749'
     if (-not $updateScopeBackupOnly) { $errors.Add('43 no restringe cada UPDATE al backup exacto ni bloquea UNBACKED_MAPPING_TARGETS.') }
     $unbackedMappingTargetsGate = $unicodeCorrectionSql -match 'UNBACKED_MAPPING_TARGETS' -and
-        $unicodeCorrectionSql -match 'IF\s+(?:l_unbacked_targets|l_unmapped_cells)\s*<>\s*0\s*THEN[\s\S]*?RAISE_APPLICATION_ERROR\(-20749'
+        $unicodeCorrectionSql -match 'IF\s+l_unbacked_targets\s*<>\s*0\s*THEN[\s\S]*?RAISE_APPLICATION_ERROR\(-20749'
     if (-not $unbackedMappingTargetsGate) { $errors.Add('43 no ejecuta el gate UNBACKED_MAPPING_TARGETS antes del SAVEPOINT.') }
     $rollbackOnResidual = $unicodeCorrectionSql -match 'CURRENT_SUSPICIOUS_CELLS_POST' -and
         $unicodeCorrectionSql -match 'ROLLBACK TO MATRICES_UNICODE_CORRECTION'
     if (-not $rollbackOnResidual) { $errors.Add('43 no conserva rollback ante residuos posteriores al DML.') }
+    $postcheckIndex = $unicodeCorrectionSql.IndexOf('CURRENT_SUSPICIOUS_CELLS_POST', [System.StringComparison]::OrdinalIgnoreCase)
+    $commitIndex = $unicodeCorrectionSql.IndexOf('COMMIT;', [System.StringComparison]::OrdinalIgnoreCase)
+    $postcheckBlocksCommit = ($postcheckIndex -gt 0 -and $commitIndex -gt $postcheckIndex -and
+        $unicodeCorrectionSql -match "(?is)CURRENT_SUSPICIOUS_CELLS_POST[\s\S]*?IF\s+l_current_cells\s*<>\s*0\s*THEN[\s\S]*?ROLLBACK TO MATRICES_UNICODE_CORRECTION[\s\S]*?RAISE_APPLICATION_ERROR\(-20747[\s\S]*?COMMIT")
+    if (-not $postcheckBlocksCommit) {
+        $errors.Add('43 no valida CURRENT_SUSPICIOUS_CELLS_POST antes del COMMIT o no bloquea con ROLLBACK TO.')
+    }
+    $postcheckBeforeCommit = if ($postcheckBlocksCommit) { 'PASS' } else { 'FAIL' }
+    # Regresión obligatoria: impedir reintroducción del falso gate pre-DML de UNMAPPED_TOKENS en UBK_OLD_VALUE
+    $sampleStaleSnippet = "EXECUTE IMMEDIATE 'SELECT COUNT(*) FROM RL_MR_UNI_BKP_20260924 WHERE DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\FFFD''))>0 OR DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\00C3''))>0 OR DBMS_LOB.INSTR(UBK_OLD_VALUE,UNISTR(''\00C2''))>0' INTO l_unmapped_cells; IF l_unmapped_cells <> 0 THEN RAISE_APPLICATION_ERROR(-20746, 'UNMAPPED_TOKENS no es cero; U+FFFD/U+00C3/U+00C2 bloquean DML.'); END IF;"
+    $isStaleDetected = ($sampleStaleSnippet -match "SELECT\s+COUNT\(\*\)[\s\S]*?FROM\s+RL_MR_UNI_BKP_20260924[\s\S]*?UBK_OLD_VALUE[\s\S]*?-20746")
+    if (-not $isStaleDetected) {
+        $errors.Add('La regresión estructural de detección del falso gate UNMAPPED_TOKENS falló.')
+    }
     # Regresión obligatoria: diferenciación de correlación target vs ROWID no calificado
     $sampleBadSnippet = "UPDATE RL_MR_RIESGOS SET RIE_NOMBRE = REPLACE(RIE_NOMBRE,:bad,:good) WHERE INSTR(RIE_NOMBRE,:probe)>0 AND EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:table_name AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID))"
     $sampleGoodSnippet = "UPDATE RL_MR_RIESGOS SET RIE_NOMBRE = REPLACE(RIE_NOMBRE,:bad,:good) WHERE INSTR(RIE_NOMBRE,:probe)>0 AND EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:table_name AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT = ROWIDTOCHAR(RL_MR_RIESGOS.ROWID))"
@@ -904,6 +925,7 @@ Write-Host "TRIPLE_BF_DETECTION=$(if ($tripleBfDetection) { 'PASS' } else { 'FAI
 Write-Host "NESTED_DOUBLE_BF_SUPPRESSION=$(if ($nestedDoubleBfSuppression) { 'PASS' } else { 'FAIL' })"
 Write-Host "REAL_DOUBLE_BF_DETECTION=$(if ($realDoubleBfDetection) { 'PASS' } else { 'FAIL' })"
 Write-Host "SHARED_SUSPICIOUS_CELL_SEMANTICS=$(if ($sharedSuspiciousCellSemantics) { 'PASS' } else { 'FAIL' })"
+Write-Host "STALE_UNMAPPED_MARKER_GATE=$staleUnmappedMarkerGate"
 Write-Host "TARGET_ROWID_CORRELATION=$(if ($targetRowidCorrelation) { 'PASS' } else { 'FAIL' })"
 Write-Host "UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=$(if ($hasUnqualifiedRowidInSubquery) { 'PRESENT' } else { 'ABSENT' })"
 Write-Host "UPDATE_SCOPE_BACKUP_ONLY=$(if ($updateScopeBackupOnly) { 'PASS' } else { 'FAIL' })"
@@ -911,6 +933,7 @@ Write-Host "UNBACKED_MAPPING_TARGETS_GATE=$(if ($unbackedMappingTargetsGate) { '
 Write-Host "BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=$(if ($backupExactKeyTableColumnRowid) { 'PASS' } else { 'FAIL' })"
 Write-Host "BACKUP_TABLE_PRESERVED=$(if ($backupTablePreserved) { 'YES' } else { 'NO' })"
 Write-Host "ROLLBACK_ON_RESIDUAL=$(if ($rollbackOnResidual) { 'PASS' } else { 'FAIL' })"
+Write-Host "POSTCHECK_BEFORE_COMMIT=$postcheckBeforeCommit"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
