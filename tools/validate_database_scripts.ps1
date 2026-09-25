@@ -23,6 +23,8 @@ $predicate44Balanced = $false
 $doubleBfDetection = $false
 $tripleBfDetection = $false
 $sharedSuspiciousCellSemantics = $false
+$nestedDoubleBfSuppression = $false
+$realDoubleBfDetection = $false
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -448,6 +450,20 @@ if (-not (Test-Path -LiteralPath $unicodePredicatePath -PathType Leaf)) {
             '44' { $predicate44Balanced = $true }
         }
     }
+    $inventory41 = $riskTextContents['41_precheck_unicode_modulo_matrices_completo.sql']
+    $suppressionContract = $inventory41 -match [regex]::Escape("p_marker=UNISTR('\00BF\00BF')") -and
+        $inventory41 -match 'l_marker_pos' -and
+        ([regex]::Matches($inventory41, 'DBMS_LOB\.SUBSTR\(p_value,1,l_marker_pos')).Count -ge 2 -and
+        $inventory41 -match 'RETURN;'
+    $bf = [char]0x00BF
+    $simulatedTriple = "1${bf}${bf}${bf}5"
+    $simulatedDouble = "Due${bf}${bf}o"
+    $nestedMatches = [regex]::Matches($simulatedTriple, '(?<!\u00BF)\u00BF{2}(?!\u00BF)')
+    $realMatches = [regex]::Matches($simulatedDouble, '(?<!\u00BF)\u00BF{2}(?!\u00BF)')
+    $nestedDoubleBfSuppression = $suppressionContract -and $nestedMatches.Count -eq 0
+    $realDoubleBfDetection = $suppressionContract -and $realMatches.Count -eq 1
+    if (-not $nestedDoubleBfSuppression) { $errors.Add('41 no suprime el doble BF anidado dentro de BF/BF/BF.') }
+    if (-not $realDoubleBfDetection) { $errors.Add('41 no conserva la detección de un doble BF real.') }
     $doubleBfDetection = $unicodePredicate.Contains('\00BF\00BF')
     $tripleBfDetection = $unicodePredicate.Contains('\00BF\00BF\00BF')
     $sharedSuspiciousCellSemantics = $predicate42Balanced -and $predicate43Balanced -and $predicate44Balanced -and $doubleBfDetection -and $tripleBfDetection
@@ -831,6 +847,8 @@ Write-Host "PREDICATE_43_BALANCED=$(if ($predicate43Balanced) { 'PASS' } else { 
 Write-Host "PREDICATE_44_BALANCED=$(if ($predicate44Balanced) { 'PASS' } else { 'FAIL' })"
 Write-Host "DOUBLE_BF_DETECTION=$(if ($doubleBfDetection) { 'PASS' } else { 'FAIL' })"
 Write-Host "TRIPLE_BF_DETECTION=$(if ($tripleBfDetection) { 'PASS' } else { 'FAIL' })"
+Write-Host "NESTED_DOUBLE_BF_SUPPRESSION=$(if ($nestedDoubleBfSuppression) { 'PASS' } else { 'FAIL' })"
+Write-Host "REAL_DOUBLE_BF_DETECTION=$(if ($realDoubleBfDetection) { 'PASS' } else { 'FAIL' })"
 Write-Host "SHARED_SUSPICIOUS_CELL_SEMANTICS=$(if ($sharedSuspiciousCellSemantics) { 'PASS' } else { 'FAIL' })"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'

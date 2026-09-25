@@ -1646,3 +1646,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Se preservan los 281 mappings correctos, sin DDL funcional, sin reemplazo global de U+00BF y sin ejecución de Oracle por Codex.
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier debe ejecutar nuevamente solo 41. Si confirma `FULL_MODULE_TOKEN_INVENTORY=PASS`, entonces podrá ejecutar 42, revisar backup PASS y continuar 43→44. No ejecutar 43/44 sobre el backup eliminado por el fallo anterior.
+
+# Estado vigente — Supresión de doble BF anidado en inventario 41 (COD)
+
+- **Fecha:** 2026-09-25 (UTC-6); **rama:** `desarrollo`; **base:** `3b35743235ede246e495b3cfeb17776f021ce4e6`.
+- El 41 manual produjo un falso `TOKEN_BAD=1¿¿` porque el marcador doble capturaba el prefijo de `1¿¿¿5`; la celda física y el token triple son válidos para el inventario.
+- 41 ahora conserva BF/BF y BF/BF/BF en la detección compartida de celdas, pero suprime un doble si está adyacente a BF. No se agregó mapping y el catálogo mantiene `281`.
+- Regresión automática: `1¿¿¿5` produce un token triple y cero dobles anidados; `Due¿¿o` produce un doble real. `NESTED_DOUBLE_BF_SUPPRESSION=PASS`; `REAL_DOUBLE_BF_DETECTION=PASS`.
+- Gates adicionales: `TRIPLE_BF_DETECTION=PASS`; `PREDICATE_42_BALANCED=PASS`; `PREDICATE_43_BALANCED=PASS`; `PREDICATE_44_BALANCED=PASS`; `SHARED_SUSPICIOUS_CELL_SEMANTICS=PASS`.
+- Quality gates: backend `657/657`, frontend `79/791`, E2E `36/36`, build/lint, database, encoding, estructura, documentación y `git diff --check` PASS.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier debe ejecutar únicamente 41 con el nuevo SHA. Si el inventario confirma `UNIQUE_BAD_TOKENS=90`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`, podrá continuar con 42→44.

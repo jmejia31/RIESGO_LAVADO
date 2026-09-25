@@ -49,11 +49,18 @@ DECLARE
     FOR i IN 1..p_list.COUNT LOOP IF p_list(i)=p_value THEN RETURN; END IF; END LOOP;
     p_list.EXTEND; p_list(p_list.COUNT):=p_value;
   END;
-  PROCEDURE emit_token(p_table VARCHAR2,p_column VARCHAR2,p_rowid VARCHAR2,p_value CLOB,p_pattern VARCHAR2,p_occurrence NUMBER) IS
-    l_token VARCHAR2(4000); l_good VARCHAR2(4000); l_mappings NUMBER; l_pos NUMBER;
+  PROCEDURE emit_token(p_table VARCHAR2,p_column VARCHAR2,p_rowid VARCHAR2,p_value CLOB,p_pattern VARCHAR2,p_marker VARCHAR2,p_occurrence NUMBER) IS
+    l_token VARCHAR2(4000); l_good VARCHAR2(4000); l_mappings NUMBER; l_pos NUMBER; l_marker_pos NUMBER;
   BEGIN
     l_token:=REGEXP_SUBSTR(p_value,p_pattern,1,p_occurrence); IF l_token IS NULL THEN RETURN; END IF;
     l_pos:=REGEXP_INSTR(p_value,p_pattern,1,p_occurrence);
+    IF p_marker=UNISTR('\00BF\00BF') THEN
+      l_marker_pos:=l_pos+INSTR(l_token,p_marker)-1;
+      IF (l_marker_pos>1 AND DBMS_LOB.SUBSTR(p_value,1,l_marker_pos-1)=UNISTR('\00BF')) OR
+         DBMS_LOB.SUBSTR(p_value,1,l_marker_pos+LENGTH(p_marker))=UNISTR('\00BF') THEN
+        RETURN;
+      END IF;
+    END IF;
     FOR i IN 1..l_seen_occurrences.COUNT LOOP
       IF l_seen_occurrences(i)=p_table||CHR(1)||p_column||CHR(1)||p_rowid||CHR(1)||l_pos||CHR(1)||l_token THEN RETURN; END IF;
     END LOOP;
@@ -72,7 +79,7 @@ DECLARE
     IF p_contextual THEN l_pattern:='[[:alpha:]][[:alpha:]]*'||p_marker||'[[:alpha:]][[:alpha:]]*';
     ELSIF p_marker=UNISTR('\00BF\00BF\00BF') OR p_marker=UNISTR('\00BF\00BF') THEN l_pattern:='[[:alpha:][:digit:]]*'||p_marker||'[[:alpha:][:digit:]]*';
     ELSE l_pattern:='[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'||p_marker||'[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'; END IF;
-    l_count:=REGEXP_COUNT(p_value,l_pattern); FOR i IN 1..l_count LOOP emit_token(p_table,p_column,p_rowid,p_value,l_pattern,i); END LOOP;
+    l_count:=REGEXP_COUNT(p_value,l_pattern); FOR i IN 1..l_count LOOP emit_token(p_table,p_column,p_rowid,p_value,l_pattern,p_marker,i); END LOOP;
   END;
   @@_predicado_unicode_sospechoso.sql
 BEGIN
