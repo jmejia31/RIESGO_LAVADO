@@ -19,6 +19,7 @@ DECLARE
     'RL_MR_FORMULA_USOS','RL_MR_FORMULA_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
     'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_PARAMETROS_CALCULO',
     'RL_MR_PARAMETRO_VERSIONES');
+  @@_predicado_unicode_sospechoso.sql
 BEGIN
   SELECT COUNT(*) INTO l_required FROM user_tables
    WHERE table_name IN (SELECT COLUMN_VALUE FROM TABLE(l_tables));
@@ -40,15 +41,7 @@ BEGIN
                WHERE table_name = l_tables(t)
                  AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')
                ORDER BY column_id) LOOP
-      l_expr := 'DBMS_LOB.INSTR(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),';
-      l_pred := '(' || l_expr || 'UNISTR(''\FFFD'')) > 0 OR ' ||
-                l_expr || 'UNISTR(''\00EF\00BF\00BD'')) > 0 OR ' ||
-                l_expr || 'UNISTR(''\00C3'')) > 0 OR ' ||
-                l_expr || 'UNISTR(''\00C2'')) > 0 OR ' ||
-                l_expr || 'UNISTR(''\00E2\20AC'')) > 0 OR ' ||
-                l_expr || 'UNISTR(''\00F0\0178'')) > 0 OR ' ||
-                'REGEXP_LIKE(TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || '),' ||
-                ' ''[[:alpha:]]'' || UNISTR(''\00BF'') || ''[[:alpha:]]'')';
+      l_pred := suspicious_predicate(c.column_name);
       l_sql := 'INSERT INTO RL_MR_UNI_BKP_20260924 ' ||
         '(UBK_TABLE_NAME,UBK_COLUMN_NAME,UBK_ROWID_TEXT,UBK_OLD_VALUE,UBK_BACKUP_DATE) ' ||
         'SELECT :1,:2,ROWIDTOCHAR(ROWID),TO_CLOB(' || DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) ||

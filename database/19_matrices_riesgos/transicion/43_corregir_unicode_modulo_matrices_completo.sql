@@ -24,32 +24,18 @@ DECLARE
     'RL_MR_FORMULA_USOS','RL_MR_FORMULA_VERSIONES','RL_MR_FUNCION_ARGUMENTOS',
     'RL_MR_FUNCIONES','RL_MR_FUNCION_VERSIONES','RL_MR_PARAMETROS_CALCULO',
     'RL_MR_PARAMETRO_VERSIONES');
+  @@_predicado_unicode_sospechoso.sql
   FUNCTION count_current_cells RETURN NUMBER IS
     total NUMBER := 0; n NUMBER; expr VARCHAR2(4000); pred VARCHAR2(12000); sqlx VARCHAR2(32767);
   BEGIN
     FOR t IN 1..l_tables.COUNT LOOP
       FOR c IN (SELECT column_name FROM user_tab_columns WHERE table_name=l_tables(t)
                 AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')) LOOP
-        expr := 'DBMS_LOB.INSTR(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),';
-        pred := '('||expr||'UNISTR(''\FFFD''))>0 OR '||expr||'UNISTR(''\00EF\00BF\00BD''))>0 OR '||
-          expr||'UNISTR(''\00C3''))>0 OR '||expr||'UNISTR(''\00C2''))>0 OR '||
-          expr||'UNISTR(''\00E2\20AC''))>0 OR '||expr||'UNISTR(''\00F0\0178''))>0 OR '||
-          'REGEXP_LIKE(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),''[[:alpha:]]''||UNISTR(''\00BF'')||''[[:alpha:]]'')';
+        pred := suspicious_predicate(c.column_name);
         sqlx := 'SELECT COUNT(*) FROM '||DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t))||' WHERE '||pred;
         EXECUTE IMMEDIATE sqlx INTO n; total := total + n;
       END LOOP;
     END LOOP; RETURN total;
-  END;
-  FUNCTION suspicious_pred(p_column VARCHAR2) RETURN VARCHAR2 IS
-    n VARCHAR2(30) := DBMS_ASSERT.SIMPLE_SQL_NAME(p_column);
-  BEGIN
-    RETURN '(DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\FFFD''))>0 OR '||
-      'DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\00EF\00BF\00BD''))>0 OR '||
-      'DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\00C3''))>0 OR '||
-      'DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\00C2''))>0 OR '||
-      'DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\00E2\20AC''))>0 OR '||
-      'DBMS_LOB.INSTR(TO_CLOB('||n||'),UNISTR(''\00F0\0178''))>0 OR '||
-      'REGEXP_LIKE(TO_CLOB('||n||'),''[[:alpha:]][[:alpha:]]*''||UNISTR(''\00BF'')||''[[:alpha:]][[:alpha:]]*''))';
   END;
   FUNCTION coverage_mismatches RETURN NUMBER IS
     n NUMBER := 0; x NUMBER; q VARCHAR2(32767); p VARCHAR2(12000);
@@ -57,7 +43,7 @@ DECLARE
     FOR t IN 1..l_tables.COUNT LOOP
       FOR c IN (SELECT column_name FROM user_tab_columns WHERE table_name=l_tables(t)
                 AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')) LOOP
-        p:=suspicious_pred(c.column_name);
+        p:=suspicious_predicate(c.column_name, 'x');
         q:='SELECT COUNT(*) FROM '||DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t))||' x WHERE '||p||
            ' AND NOT EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:1 AND b.UBK_COLUMN_NAME=:2 AND b.UBK_ROWID_TEXT=ROWIDTOCHAR(x.ROWID))';
         EXECUTE IMMEDIATE q INTO x USING l_tables(t),c.column_name; n:=n+x;

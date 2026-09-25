@@ -1635,3 +1635,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Publicación:** SHA final publicado en `origin/desarrollo`: `f003553`. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier debe actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo` y ejecutar únicamente 41. Autorizar 42→44 solo si el nuevo 41 confirma `REQUIRED_RL_MR_TABLES_FOUND=25`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`.
+
+# Estado vigente — Corrección ORA-00907 en detección Unicode compartida (COD)
+
+- **Fecha:** 2026-09-25 (UTC-6); **rama:** `desarrollo`; **base:** `c5305fbcf20b5ef05af0375550e76d2d79a0ed28`.
+- Evidencia manual: 41 PASS con 25 tablas, 88 columnas, 278 ocurrencias físicas, 90 tokens únicos, 281 mappings deterministas, 0 ambiguos, 0 unmapped. 42 falló por ORA-00907 y eliminó su backup incompleto; no hubo DML funcional.
+- Se corrigió el paréntesis exterior del predicado y se eliminó la duplicación defectuosa: 41, 42, 43 y 44 incluyen `_predicado_unicode_sospechoso.sql`, que detecta todos los markers físicos requeridos y U+00BF contextual sin reemplazo global.
+- Gates del predicado: `PREDICATE_42_BALANCED=PASS`; `PREDICATE_43_BALANCED=PASS`; `PREDICATE_44_BALANCED=PASS`; `DOUBLE_BF_DETECTION=PASS`; `TRIPLE_BF_DETECTION=PASS`; `SHARED_SUSPICIOUS_CELL_SEMANTICS=PASS`.
+- Validación completa: backend `657/657`, frontend `79/791`, build/lint PASS, E2E `36/36`, database/encoding/estructura/documentación y `git diff --check` PASS.
+- Se preservan los 281 mappings correctos, sin DDL funcional, sin reemplazo global de U+00BF y sin ejecución de Oracle por Codex.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier debe ejecutar nuevamente solo 41. Si confirma `FULL_MODULE_TOKEN_INVENTORY=PASS`, entonces podrá ejecutar 42, revisar backup PASS y continuar 43→44. No ejecutar 43/44 sobre el backup eliminado por el fallo anterior.

@@ -33,6 +33,7 @@ DECLARE
   BEGIN
     RETURN CASE WHEN DBMS_LOB.INSTR(p_json, '"'||p_key||'":'||json_scalar(p_value)) > 0 THEN 1 ELSE 0 END;
   END;
+  @@_predicado_unicode_sospechoso.sql
 BEGIN
   FOR t IN 1..l_tables.COUNT LOOP
     FOR c IN (SELECT column_name, data_type FROM user_tab_columns
@@ -40,16 +41,7 @@ BEGIN
                  AND data_type IN ('VARCHAR2','CHAR','NVARCHAR2','NCHAR','CLOB')
                ORDER BY column_id) LOOP
       l_total := l_total + 1;
-      IF c.data_type='CLOB' THEN l_expr := 'DBMS_LOB.INSTR('||c.column_name||',';
-      ELSE l_expr := 'INSTR('||c.column_name||',');
-      END IF;
-      l_pred := '('||l_expr||'UNISTR(''\FFFD''))>0 OR '||
-        l_expr||'UNISTR(''\00EF\00BF\00BD''))>0 OR '||
-        l_expr||'UNISTR(''\00C3''))>0 OR '||
-        l_expr||'UNISTR(''\00C2''))>0 OR '||
-        l_expr||'UNISTR(''\00E2\20AC''))>0 OR '||
-        l_expr||'UNISTR(''\00F0\0178''))>0 OR REGEXP_LIKE('||
-        c.column_name||',''[[:alpha:]]''||UNISTR(''\00BF'')||''[[:alpha:]]'')';
+      l_pred := suspicious_predicate(c.column_name);
       BEGIN
         l_sql := 'SELECT COUNT(*) FROM '||l_tables(t)||' WHERE '||l_pred;
         EXECUTE IMMEDIATE l_sql INTO l_suspicious;

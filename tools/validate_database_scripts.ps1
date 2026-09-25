@@ -17,6 +17,12 @@ $moduleObservedMappedTokens = 0
 $moduleObservedUnmappedTokens = 0
 $moduleObservedAmbiguousTokens = 0
 $moduleCatalogMappings = 0
+$predicate42Balanced = $false
+$predicate43Balanced = $false
+$predicate44Balanced = $false
+$doubleBfDetection = $false
+$tripleBfDetection = $false
+$sharedSuspiciousCellSemantics = $false
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -377,6 +383,76 @@ foreach ($fileName in $riskTextTransitionFiles) {
     if ($content.Contains($legacyRiskNameBackup) -or $content.Contains($legacyRiskDescriptionBackup)) {
         $errors.Add("Script de transición conserva un identificador de backup Oracle 11g inválido: $fileName")
     }
+}
+
+# 41/42/43/44 must consume one shared predicate builder. This is a structural
+# regression gate for the ORA-00907 failure: no entrypoint may keep an inline
+# l_pred expression with an unmatched outer parenthesis.
+$unicodePredicatePath = Join-Path $riskTextTransitionRoot '_predicado_unicode_sospechoso.sql'
+if (-not (Test-Path -LiteralPath $unicodePredicatePath -PathType Leaf)) {
+    $errors.Add('Falta el predicado Unicode compartido de 41/42/43/44.')
+} else {
+    $unicodePredicate = Get-Content -LiteralPath $unicodePredicatePath -Raw
+    $requiredPredicateMarkers = @(
+        '\FFFD', '\00EF\00BF\00BD', '\00C3', '\00C2', '\00E2\20AC',
+        '\00F0\0178', '\00BF\00BF', '\00BF\00BF\00BF')
+    foreach ($marker in $requiredPredicateMarkers) {
+        if ($unicodePredicate -notmatch [regex]::Escape($marker)) {
+            $errors.Add("Predicado Unicode compartido sin marcador físico/contextual: $marker")
+        }
+    }
+    $functionCount = ([regex]::Matches($unicodePredicate, '(?im)^\s*FUNCTION\s+suspicious_predicate\s*\(')).Count
+    $outerOpenCount = ([regex]::Matches($unicodePredicate, "RETURN\s+'\('\s*\|\|")).Count
+    $outerCloseCount = ([regex]::Matches($unicodePredicate, "^\s*'\)'\s*;\s*$", [System.Text.RegularExpressions.RegexOptions]::Multiline)).Count
+    if ($functionCount -ne 1 -or $outerOpenCount -ne 1 -or $outerCloseCount -ne 1) {
+        $errors.Add('Predicado Unicode compartido no tiene una única apertura/cierre exterior balanceada.')
+    }
+    # Build the same predicate contract used by the shared PL/SQL function and
+    # parse parentheses outside SQL string literals. This catches a missing
+    # outer close, not merely the presence of marker text.
+    $predicateSample = "(DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\FFFD'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00EF\\00BF\\00BD'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00C3'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00C2'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00E2\\20AC'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00F0\\0178'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00BF\\00BF'))>0 OR DBMS_LOB.INSTR(TO_CLOB(C),UNISTR('\\00BF\\00BF\\00BF'))>0 OR REGEXP_LIKE(TO_CLOB(C),'[[:alpha:]][[:alpha:]]*'||UNISTR('\\00BF')||'[[:alpha:]][[:alpha:]]*') OR REGEXP_LIKE(TO_CLOB(C),'[[:alpha:]]'||UNISTR('\\00BF')||'[[:alpha:]]'))"
+    $depth = 0; $inString = $false; $balancedSample = $true
+    for ($i = 0; $i -lt $predicateSample.Length; $i++) {
+        $char = $predicateSample[$i]
+        if ($char -eq "'") {
+            if ($inString -and $i + 1 -lt $predicateSample.Length -and $predicateSample[$i + 1] -eq "'") { $i++; continue }
+            $inString = -not $inString; continue
+        }
+        if ($inString) { continue }
+        if ($char -eq '(') { $depth++ }
+        elseif ($char -eq ')') { $depth--; if ($depth -lt 0) { $balancedSample = $false; break } }
+    }
+    if ($inString -or $depth -ne 0 -or -not $balancedSample) {
+        $errors.Add('La plantilla ejecutable del predicado Unicode no balancea paréntesis.')
+    }
+    $predicateFiles = @{
+        '41' = '41_precheck_unicode_modulo_matrices_completo.sql'
+        '42' = '42_backup_unicode_modulo_matrices_completo.sql'
+        '43' = '43_corregir_unicode_modulo_matrices_completo.sql'
+        '44' = '44_postcheck_unicode_modulo_matrices_completo.sql'
+    }
+    foreach ($number in $predicateFiles.Keys) {
+        $fileName = $predicateFiles[$number]
+        $sql = $riskTextContents[$fileName]
+        if ($sql -notmatch '@@_predicado_unicode_sospechoso\.sql' -or $sql -notmatch '(?i)suspicious_predicate\s*\(') {
+            $errors.Add("$number no consume el predicado Unicode compartido.")
+            continue
+        }
+        if ($sql -match "(?i)(?:l_pred|pred)\s*:=\s*'\('\s*\|\|" -or $sql -match "(?i)RETURN\s+'\(DBMS_LOB") {
+            $errors.Add("$number conserva un predicado Unicode inline susceptible a ORA-00907.")
+            continue
+        }
+        switch ($number) {
+            '42' { $predicate42Balanced = $true }
+            '43' { $predicate43Balanced = $true }
+            '44' { $predicate44Balanced = $true }
+        }
+    }
+    $doubleBfDetection = $unicodePredicate.Contains('\00BF\00BF')
+    $tripleBfDetection = $unicodePredicate.Contains('\00BF\00BF\00BF')
+    $sharedSuspiciousCellSemantics = $predicate42Balanced -and $predicate43Balanced -and $predicate44Balanced -and $doubleBfDetection -and $tripleBfDetection
+    if (-not $doubleBfDetection) { $errors.Add('Falta detección explícita BF/BF.') }
+    if (-not $tripleBfDetection) { $errors.Add('Falta detección explícita BF/BF/BF.') }
 }
 
 foreach ($fileName in @(
@@ -750,6 +826,12 @@ Write-Host "OBSERVED_MAPPED_TOKENS=$moduleObservedMappedTokens"
 Write-Host "OBSERVED_UNMAPPED_TOKENS=$moduleObservedUnmappedTokens"
 Write-Host "OBSERVED_AMBIGUOUS_TOKENS=$moduleObservedAmbiguousTokens"
 Write-Host "CATALOG_MAPPINGS=$moduleCatalogMappings"
+Write-Host "PREDICATE_42_BALANCED=$(if ($predicate42Balanced) { 'PASS' } else { 'FAIL' })"
+Write-Host "PREDICATE_43_BALANCED=$(if ($predicate43Balanced) { 'PASS' } else { 'FAIL' })"
+Write-Host "PREDICATE_44_BALANCED=$(if ($predicate44Balanced) { 'PASS' } else { 'FAIL' })"
+Write-Host "DOUBLE_BF_DETECTION=$(if ($doubleBfDetection) { 'PASS' } else { 'FAIL' })"
+Write-Host "TRIPLE_BF_DETECTION=$(if ($tripleBfDetection) { 'PASS' } else { 'FAIL' })"
+Write-Host "SHARED_SUSPICIOUS_CELL_SEMANTICS=$(if ($sharedSuspiciousCellSemantics) { 'PASS' } else { 'FAIL' })"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
