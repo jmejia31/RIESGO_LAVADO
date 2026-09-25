@@ -1633,4 +1633,5 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Se preservan 41 read-only, 42 fail-closed, 43 contextual, 44 integral, sin DDL institucional, sin ejecución de 37 y sin modificación de backups. No solicitar 42→44 todavía.
 - **Validación:** backend `657/657`, frontend `79/791`, build/lint, database, encoding, estructura y documentación PASS. E2E independiente `36/36 PASS`; el gate integral tuvo `35/36` por timeout de navegación de `bitacora.spec.ts`, y el reintento aislado no pudo arrancar sin servidor. El gate integral queda pendiente, no se declara PASS.
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Publicación:** SHA final publicado en `origin/desarrollo`: `f003553`. `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier debe actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo` y ejecutar únicamente 41. Autorizar 42→44 solo si el nuevo 41 confirma `REQUIRED_RL_MR_TABLES_FOUND=25`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`.
