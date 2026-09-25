@@ -532,12 +532,23 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
     foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','coverage_mismatches','UBK_TABLE_NAME','UBK_COLUMN_NAME','UBK_ROWID_TEXT')) {
         if ($unicodeCorrectionSql -notmatch [regex]::Escape($gate)) { $errors.Add("43 no implementa gate $gate.") }
     }
-    $applyMappingBackupScope = $unicodeCorrectionSql -match "(?is)PROCEDURE\s+apply_mapping.*?RL_MR_UNI_BKP_20260924.*?UBK_TABLE_NAME.*?UBK_COLUMN_NAME.*?UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)"
-    $backupExactKeyTableColumnRowid = $unicodeCorrectionSql -match 'UBK_TABLE_NAME' -and
-        $unicodeCorrectionSql -match 'UBK_COLUMN_NAME' -and
-        $unicodeCorrectionSql -match 'UBK_ROWID_TEXT' -and
-        $unicodeCorrectionSql -match 'ROWIDTOCHAR\s*\(\s*ROWID\s*\)'
-    if (-not $backupExactKeyTableColumnRowid) { $errors.Add('43 no valida la clave exacta UBK_TABLE_NAME, UBK_COLUMN_NAME, UBK_ROWID_TEXT contra ROWIDTOCHAR(ROWID).') }
+    $hasUnqualifiedRowidInSubquery = $unicodeCorrectionSql -match "(?is)PROCEDURE\s+apply_mapping[\s\S]*?UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)"
+    if ($hasUnqualifiedRowidInSubquery) {
+        $errors.Add('43 contiene una correlación ambigua con ROWID no calificado en el subquery de backup de apply_mapping.')
+    }
+    $targetRowidCorrelation = $unicodeCorrectionSql -match "(?is)PROCEDURE\s+apply_mapping[\s\S]*?UPDATE\s*'\s*\|\|\s*DBMS_ASSERT\.SQL_OBJECT_NAME\s*\(\s*l_tables\(t\)\s*\)[\s\S]*?UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*'\s*\|\|\s*DBMS_ASSERT\.SQL_OBJECT_NAME\s*\(\s*l_tables\(t\)\s*\)\s*\|\|\s*'\.ROWID\s*\)" -and (-not $hasUnqualifiedRowidInSubquery)
+    if (-not $targetRowidCorrelation) {
+        $errors.Add('43 no correlaciona inequívocamente UBK_ROWID_TEXT con el ROWID de la tabla target validada con DBMS_ASSERT.')
+    }
+    $applyMappingBackupScope = $targetRowidCorrelation -and
+        ($unicodeCorrectionSql -match 'RL_MR_UNI_BKP_20260924') -and
+        ($unicodeCorrectionSql -match 'UBK_TABLE_NAME') -and
+        ($unicodeCorrectionSql -match 'UBK_COLUMN_NAME')
+    $backupExactKeyTableColumnRowid = $targetRowidCorrelation -and
+        ($unicodeCorrectionSql -match 'UBK_TABLE_NAME') -and
+        ($unicodeCorrectionSql -match 'UBK_COLUMN_NAME') -and
+        ($unicodeCorrectionSql -match 'UBK_ROWID_TEXT')
+    if (-not $backupExactKeyTableColumnRowid) { $errors.Add('43 no valida la clave exacta UBK_TABLE_NAME, UBK_COLUMN_NAME, UBK_ROWID_TEXT contra el ROWID calificado de la tabla target.') }
     $backupTablePreserved = -not ($unicodeCorrectionSql -match '(?i)DROP\s+TABLE\s+RL_MR_UNI_BKP_20260924' -or $unicodeCorrectionSql -match '(?i)TRUNCATE\s+TABLE\s+RL_MR_UNI_BKP_20260924')
     if (-not $backupTablePreserved) { $errors.Add('43 no preserva la tabla de backup RL_MR_UNI_BKP_20260924.') }
     $updateScopeBackupOnly = $applyMappingBackupScope -and
@@ -552,6 +563,16 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
     $rollbackOnResidual = $unicodeCorrectionSql -match 'CURRENT_SUSPICIOUS_CELLS_POST' -and
         $unicodeCorrectionSql -match 'ROLLBACK TO MATRICES_UNICODE_CORRECTION'
     if (-not $rollbackOnResidual) { $errors.Add('43 no conserva rollback ante residuos posteriores al DML.') }
+    # Regresión obligatoria: diferenciación de correlación target vs ROWID no calificado
+    $sampleBadSnippet = "UPDATE RL_MR_RIESGOS SET RIE_NOMBRE = REPLACE(RIE_NOMBRE,:bad,:good) WHERE INSTR(RIE_NOMBRE,:probe)>0 AND EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:table_name AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID))"
+    $sampleGoodSnippet = "UPDATE RL_MR_RIESGOS SET RIE_NOMBRE = REPLACE(RIE_NOMBRE,:bad,:good) WHERE INSTR(RIE_NOMBRE,:probe)>0 AND EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:table_name AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT = ROWIDTOCHAR(RL_MR_RIESGOS.ROWID))"
+    $isBadRejected = ($sampleBadSnippet -match 'UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)')
+    $isGoodTargetQualified = ($sampleGoodSnippet -match 'UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*([A-Za-z0-9_]+)\.ROWID\s*\)')
+    $goodTargetMatches = if ($isGoodTargetQualified) { $Matches[1] } else { '' }
+    $isGoodAccepted = ($isGoodTargetQualified -and $goodTargetMatches -eq 'RL_MR_RIESGOS' -and -not ($sampleGoodSnippet -match 'UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)'))
+    if (-not ($isBadRejected -and $isGoodAccepted)) {
+        $errors.Add('La regresión estructural de correlación ROWID target falló.')
+    }
     # Regresiones obligatorias de alcance de backup (Casos A, B y C)
     $catalogHasBaMapping = $unicodeCatalog -match [regex]::Escape("register_mapping(UNISTR('p\00BAblica'), UNISTR('p\00FAblica'))")
     $simBackup = [System.Collections.Generic.HashSet[string]]::new()
@@ -883,6 +904,8 @@ Write-Host "TRIPLE_BF_DETECTION=$(if ($tripleBfDetection) { 'PASS' } else { 'FAI
 Write-Host "NESTED_DOUBLE_BF_SUPPRESSION=$(if ($nestedDoubleBfSuppression) { 'PASS' } else { 'FAIL' })"
 Write-Host "REAL_DOUBLE_BF_DETECTION=$(if ($realDoubleBfDetection) { 'PASS' } else { 'FAIL' })"
 Write-Host "SHARED_SUSPICIOUS_CELL_SEMANTICS=$(if ($sharedSuspiciousCellSemantics) { 'PASS' } else { 'FAIL' })"
+Write-Host "TARGET_ROWID_CORRELATION=$(if ($targetRowidCorrelation) { 'PASS' } else { 'FAIL' })"
+Write-Host "UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=$(if ($hasUnqualifiedRowidInSubquery) { 'PRESENT' } else { 'ABSENT' })"
 Write-Host "UPDATE_SCOPE_BACKUP_ONLY=$(if ($updateScopeBackupOnly) { 'PASS' } else { 'FAIL' })"
 Write-Host "UNBACKED_MAPPING_TARGETS_GATE=$(if ($unbackedMappingTargetsGate) { 'PASS' } else { 'FAIL' })"
 Write-Host "BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=$(if ($backupExactKeyTableColumnRowid) { 'PASS' } else { 'FAIL' })"

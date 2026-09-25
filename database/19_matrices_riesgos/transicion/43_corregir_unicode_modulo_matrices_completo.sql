@@ -83,7 +83,8 @@ DECLARE
           DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || ', :bad, :good) WHERE INSTR(' ||
           DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name) || ', :probe) > 0 AND EXISTS (' ||
           'SELECT 1 FROM RL_MR_UNI_BKP_20260924 b WHERE b.UBK_TABLE_NAME=:table_name '||
-          'AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID))';
+          'AND b.UBK_COLUMN_NAME=:column_name AND b.UBK_ROWID_TEXT = ROWIDTOCHAR(' ||
+          DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t)) || '.ROWID))';
         EXECUTE IMMEDIATE l_sql USING p_bad, p_good, p_bad, l_tables(t), c.column_name;
         l_updates := l_updates + SQL%ROWCOUNT;
       END LOOP;

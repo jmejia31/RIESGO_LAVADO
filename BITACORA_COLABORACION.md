@@ -1,5 +1,42 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Correlación Inequívoca ROWID Target en Script 43 (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-09-25 11:55 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `de3ed4eba3d6aa76899aef1d94f603b531d8418c`.
+- **Objetivo y alcance**:
+  - Eliminar ambigüedad en la correlación de ROWID en el subquery de backup de `apply_mapping` en `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql`.
+  - Correlacionar inequívocamente `b.UBK_ROWID_TEXT = ROWIDTOCHAR(<TARGET_TABLE>.ROWID)` utilizando `DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t))`.
+  - Prohibir explícitamente en `tools/validate_database_scripts.ps1` la presencia de `UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID)` no calificado dentro del subquery de backup.
+  - Implementar en el validador la regresión estructural obligatoria diferenciando código incorrecto vs código calificado contra la tabla target de la actualización.
+  - Preservar todas las protecciones anteriores: `UNBACKED_MAPPING_TARGETS`, `BACKUP_COVERAGE`, `UPDATE_SCOPE_BACKUP_ONLY`, `CURRENT_SUSPICIOUS_CELLS_POST`, rollback fail-closed, 281 mappings de catálogo y cero interacción con Oracle.
+- **Archivos modificados**:
+  - `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql`
+  - `tools/validate_database_scripts.ps1`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Cambios funcionales y técnicos**:
+  - `TARGET_ROWID_CORRELATION`: En `apply_mapping`, se reemplazó la correlación no calificada `b.UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID)` por `b.UBK_ROWID_TEXT = ROWIDTOCHAR(' || DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t)) || '.ROWID))`, vinculando el ROWID evaluado al registro exterior target de la tabla `RL_MR_%` que se está actualizando.
+  - `VALIDADOR Y REGRESIÓN ESTRUCTURAL`: `tools/validate_database_scripts.ps1` valida `UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`, `TARGET_ROWID_CORRELATION=PASS`, e incorpora la prueba de regresión estructural que rechaza la construcción no calificada y valida la referencia contra la tabla target.
+- **Pruebas y Verificaciones Ejecutadas**:
+  - `validate_database_scripts.ps1`: PASS (`TARGET_ROWID_CORRELATION=PASS`, `UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`, `UPDATE_SCOPE_BACKUP_ONLY=PASS`, `UNBACKED_MAPPING_TARGETS_GATE=PASS`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=PASS`, `BACKUP_TABLE_PRESERVED=YES`, `ROLLBACK_ON_RESIDUAL=PASS`).
+  - `validate_text_encoding.ps1`: PASS (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`).
+  - `validate_repository_structure.ps1`: PASS (118 rutas obligatorias, 977 archivos rastreados).
+  - `validate_documentation_links.ps1`: PASS (161 docs Markdown, 184 enlaces locales).
+  - `git diff --check`: PASS.
+  - Backend Tests: `657/657 PASS` (`dotnet test --configuration Release --no-build`).
+  - Frontend Lint: PASS (`npm run lint`, 0 errores).
+  - Frontend Build: PASS (`npm run build`).
+  - Frontend Unit Tests: `791/791 PASS` (79 archivos).
+  - Frontend E2E Tests: `36/36 PASS` (Playwright Chromium headless).
+- **Pruebas No Ejecutadas / Restricciones Externas**:
+  - Pruebas físicas Oracle no ejecutadas por restricción institucional obligatoria (cero Oracle en esta sesión).
+  - `tools/validate_agent_skills.py` no ejecutado por H-04 preexistente (alias de Python de Microsoft Store en máquina local; fuera de alcance de esta tarea, no se modificaron archivos en `.agents/skills/`).
+- **Estado de Git y Próximo Paso**:
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`.
+  - Próximo paso manual: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle una vez aprobado.
+
 ## Registro de Intervención — Corrección Fail-Closed y Backup-Bounded DML en Script 43 (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-09-25 11:30 (UTC-6).

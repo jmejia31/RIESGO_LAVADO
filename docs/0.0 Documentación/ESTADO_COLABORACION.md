@@ -1,5 +1,29 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Correlación Inequívoca ROWID Target en Script 43 (Matrices de Riesgos)
+
+- Fecha/hora local: `2026-09-25 11:55` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `de3ed4eba3d6aa76899aef1d94f603b531d8418c`.
+- Alcance ejecutado: Corrección de correlación ROWID en subquery de backup de `apply_mapping` en `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` y reforzamiento del validador `tools/validate_database_scripts.ps1`.
+- Cambios técnicos implementados:
+  - `TARGET_ROWID_CORRELATION`: Correlación `b.UBK_ROWID_TEXT = ROWIDTOCHAR(' || DBMS_ASSERT.SQL_OBJECT_NAME(l_tables(t)) || '.ROWID))` en `apply_mapping`, garantizando que el ROWID se evalúa respecto a la fila target exterior y no a la tabla de backup `b`.
+  - `VALIDADOR Y REGRESIÓN ESTRUCTURAL`: `validate_database_scripts.ps1` prohíbe `UBK_ROWID_TEXT=ROWIDTOCHAR(ROWID)` no calificado (`UNQUALIFIED_ROWID_IN_BACKUP_SUBQUERY=ABSENT`), exige `TARGET_ROWID_CORRELATION=PASS` y ejecuta regresión estructural validando la correspondencia con la tabla target.
+  - Protecciones preservadas: `UNBACKED_MAPPING_TARGETS`, `BACKUP_COVERAGE`, `UPDATE_SCOPE_BACKUP_ONLY`, `CURRENT_SUSPICIOUS_CELLS_POST`, `ROLLBACK TO MATRICES_UNICODE_CORRECTION`, 281 mappings de catálogo.
+- Evidencia fresca:
+  - `validate_database_scripts.ps1`: PASS.
+  - `validate_text_encoding.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `validate_documentation_links.ps1`: PASS.
+  - `git diff --check`: PASS.
+  - Backend tests: `657/657 PASS`.
+  - Frontend lint: PASS.
+  - Frontend build: PASS.
+  - Frontend unit tests: `791/791 PASS`.
+  - Frontend E2E tests: `36/36 PASS`.
+- Restricciones y exclusiones:
+  - Sin ejecución en base de datos Oracle institucional (cero Oracle en esta sesión).
+  - H-02 mitigado vía `--configuration Release`; H-03, H-04, H-05 no modificados.
+- Punto de continuidad: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle.
+
 ## Estado vigente — Backup-Bounded DML y Refuerzo Fail-Closed Script 43 (Matrices de Riesgos)
 
 - Fecha/hora local: `2026-09-25 11:30` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `73104569b181c7fef88983f57aaa90bbb6a5bc5c`.
