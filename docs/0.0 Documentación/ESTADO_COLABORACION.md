@@ -1,5 +1,32 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Backup-Bounded DML y Refuerzo Fail-Closed Script 43 (Matrices de Riesgos)
+
+- Fecha/hora local: `2026-09-25 11:30` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `73104569b181c7fef88983f57aaa90bbb6a5bc5c`.
+- Alcance ejecutado: Corrección fail-closed del script de transición `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` y robustecimiento del validador `tools/validate_database_scripts.ps1`.
+- Cambios técnicos implementados:
+  - `UPDATE_SCOPE_BACKUP_ONLY`: Clausula `WHERE INSTR(...) > 0 AND EXISTS (SELECT 1 FROM RL_MR_UNI_BKP_20260924 ...)` por clave exacta `(table_name, column_name, ROWIDTOCHAR(ROWID))` con `DBMS_ASSERT`.
+  - `UNBACKED_MAPPING_TARGETS`: Función `unbacked_mapping_targets RETURN NUMBER` con gate pre-DML estricto que aborta con `RAISE_APPLICATION_ERROR(-20749)` antes del savepoint.
+  - `PRE-DML GATES`: 25 tablas `RL_MR_%`, `CURRENT_SUSPICIOUS_CELLS`, `BACKUP_CELLS`, `BACKUP_COVERAGE=PASS`, `AMBIGUOUS_TOKENS=0`, `UNBACKED_MAPPING_TARGETS=0`, `UNMAPPED_TOKENS=0`.
+  - `POST-DML FAIL-CLOSED`: Verificación `CURRENT_SUSPICIOUS_CELLS_POST=0` con `ROLLBACK TO MATRICES_UNICODE_CORRECTION` y excepción ante cualquier residuo.
+  - `VALIDADOR ESTRUCTURAL`: Validaciones agregadas en `tools/validate_database_scripts.ps1` (`UPDATE_SCOPE_BACKUP_ONLY`, `UNBACKED_MAPPING_TARGETS_GATE`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID`, `BACKUP_TABLE_PRESERVED`, `ROLLBACK_ON_RESIDUAL`, regresión estática Casos A/B/C).
+- Evidencia fresca:
+  - `validate_database_scripts.ps1`: PASS.
+  - `validate_text_encoding.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `validate_documentation_links.ps1`: PASS.
+  - `git diff --check`: PASS.
+  - Backend tests: `657/657 PASS`.
+  - Frontend lint: PASS.
+  - Frontend build: PASS.
+  - Frontend unit tests: `791/791 PASS`.
+  - Frontend E2E tests: `36/36 PASS`.
+- Restricciones y exclusiones:
+  - Sin ejecución en base de datos Oracle institucional (cero Oracle en esta sesión).
+  - Preservación estricta de trabajo local preexistente de Codex (`PREEXISTING_WORKTREE_CHANGES=YES`, `PREEXISTING_CHANGES_DISCARDED=NO`).
+  - H-02 (bloqueo DLL en Debug por dotnet run persistente) mitigado vía `--configuration Release`; H-03, H-04, H-05 no modificados.
+- Punto de continuidad: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle para aplicar la corrección de 169 celdas respaldadas.
+
 ## Estado vigente - FASE 5.1 Integracion funcional completa
 
 - Fecha/hora local: `2026-09-07 15:14` (UTC-06). Autor: `COD` / `CODEX`; rama `desarrollo`; baseline inicial `fd4190c174fb84151f2ffcc4133a99f641237e1c`.

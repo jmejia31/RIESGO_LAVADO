@@ -1,5 +1,45 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Corrección Fail-Closed y Backup-Bounded DML en Script 43 (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-09-25 11:30 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `73104569b181c7fef88983f57aaa90bbb6a5bc5c`.
+- **Objetivo y alcance**:
+  - Corregir brecha fail-closed en el script de transición `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` transformando la lógica DML en Backup-Bounded DML.
+  - Reforzar el validador en `tools/validate_database_scripts.ps1` con chequeos estructurales y estáticos de regresión de Casos A, B y C.
+  - Preservar estrictamente el worktree local preexistente dejado por Codex (`PREEXISTING_WORKTREE_CHANGES=YES`, `PREEXISTING_CHANGES_REVIEWED=YES`, `PREEXISTING_CHANGES_DISCARDED=NO`).
+  - Prohibición absoluta de Oracle: no conectarse a Oracle, no alterar `RL_MR_UNI_BKP_20260924`, no ejecutar scripts 41, 42, 43 ni 44.
+- **Archivos modificados**:
+  - `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql`
+  - `tools/validate_database_scripts.ps1`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Cambios funcionales y técnicos**:
+  - `UPDATE_SCOPE_BACKUP_ONLY`: Restricción de cada `UPDATE` en `apply_mapping` para exigir simultáneamente coincidencia de token (`INSTR(col, :probe) > 0`) y pertenencia estricta a la tabla de respaldo físico `RL_MR_UNI_BKP_20260924` mediante clave exacta `(table_name, column_name, ROWIDTOCHAR(ROWID))` validando nombres de tabla y columna con `DBMS_ASSERT`.
+  - `UNBACKED_MAPPING_TARGETS`: Función pre-DML `unbacked_mapping_targets RETURN NUMBER` que audita celdas con tokens del catálogo; si detecta alguna celda objetivo sin fila correspondiente en el backup, aborta la ejecución con `RAISE_APPLICATION_ERROR(-20749, ...)` antes de abrir el `SAVEPOINT`.
+  - `PRE-DML GATES`: Secuencia estricta previa al `SAVEPOINT`: comprobación de 25 tablas `RL_MR_%`, `CURRENT_SUSPICIOUS_CELLS`, `BACKUP_CELLS`, paridad de celdas (`BACKUP_COVERAGE=PASS`), `AMBIGUOUS_TOKENS=0`, `UNBACKED_MAPPING_TARGETS=0`, `UNMAPPED_TOKENS=0`.
+  - `POST-DML FAIL-CLOSED`: Verificación posterior al DML `CURRENT_SUSPICIOUS_CELLS_POST=0`. Si quedan residuos, ejecuta `ROLLBACK TO MATRICES_UNICODE_CORRECTION` y lanza excepción -20752. Rollback defensivo ante cualquier excepción PL/SQL.
+  - `CATALOGO PRESERVADO`: Catálogo de 281 mappings intacto (incluyendo `p\00BAblica -> p\00FAblica`), scripts 41, 42, 44 y predicados preservados.
+  - `VALIDADOR ROBUSTO`: Verificación estructural de cláusulas WHERE en updates, pre-DML gate de targets sin respaldo, integridad de claves de backup, tabla preservada y rollback por residuos.
+- **Pruebas y Verificaciones Ejecutadas**:
+  - `validate_database_scripts.ps1`: PASS (`UPDATE_SCOPE_BACKUP_ONLY=PASS`, `UNBACKED_MAPPING_TARGETS_GATE=PASS`, `BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=PASS`, `BACKUP_TABLE_PRESERVED=YES`, `ROLLBACK_ON_RESIDUAL=PASS`).
+  - `validate_text_encoding.ps1`: PASS (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`).
+  - `validate_repository_structure.ps1`: PASS (118 rutas obligatorias, 977 archivos rastreados).
+  - `validate_documentation_links.ps1`: PASS (161 docs Markdown, 184 enlaces locales).
+  - `git diff --check`: PASS.
+  - Backend Tests: `657/657 PASS` (`dotnet test --configuration Release --no-build`).
+  - Frontend Lint: PASS (`npm run lint`, 0 errores).
+  - Frontend Build: PASS (`npm run build`).
+  - Frontend Unit Tests: `791/791 PASS` (79 archivos).
+  - Frontend E2E Tests: `36/36 PASS` (Playwright Chromium headless).
+- **Pruebas No Ejecutadas / Restricciones Externas**:
+  - Pruebas físicas Oracle no ejecutadas por restricción institucional obligatoria (cero Oracle en esta sesión).
+  - `tools/validate_agent_skills.py` no ejecutado por H-04 preexistente (alias de Python de Microsoft Store en máquina local; fuera de alcance de esta tarea, no se modificaron archivos en `.agents/skills/`).
+- **Estado de Git y Próximo Paso**:
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`.
+  - Próximo paso manual: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/43_corregir_unicode_modulo_matrices_completo.sql` en Oracle una vez aprobado.
+
 ## Registro de Cierre Formal y Definitivo — Fase 5.3 Migración y Conciliación Institucional 59 Riesgos
 
 - **Fecha y hora**: 2026-09-17 14:48 (UTC-6).

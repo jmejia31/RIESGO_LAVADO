@@ -25,6 +25,11 @@ $tripleBfDetection = $false
 $sharedSuspiciousCellSemantics = $false
 $nestedDoubleBfSuppression = $false
 $realDoubleBfDetection = $false
+$updateScopeBackupOnly = $false
+$unbackedMappingTargetsGate = $false
+$rollbackOnResidual = $false
+$backupExactKeyTableColumnRowid = $false
+$backupTablePreserved = $true
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -527,6 +532,34 @@ if ($riskTextContents.ContainsKey('43_corregir_unicode_modulo_matrices_completo.
     foreach ($gate in @('CURRENT_SUSPICIOUS_CELLS','BACKUP_CELLS','BACKUP_COVERAGE=PASS','AMBIGUOUS_TOKENS','UNMAPPED_TOKENS','coverage_mismatches','UBK_TABLE_NAME','UBK_COLUMN_NAME','UBK_ROWID_TEXT')) {
         if ($unicodeCorrectionSql -notmatch [regex]::Escape($gate)) { $errors.Add("43 no implementa gate $gate.") }
     }
+    $applyMappingBackupScope = $unicodeCorrectionSql -match "(?is)PROCEDURE\s+apply_mapping.*?RL_MR_UNI_BKP_20260924.*?UBK_TABLE_NAME.*?UBK_COLUMN_NAME.*?UBK_ROWID_TEXT\s*=\s*ROWIDTOCHAR\s*\(\s*ROWID\s*\)"
+    $backupExactKeyTableColumnRowid = $unicodeCorrectionSql -match 'UBK_TABLE_NAME' -and
+        $unicodeCorrectionSql -match 'UBK_COLUMN_NAME' -and
+        $unicodeCorrectionSql -match 'UBK_ROWID_TEXT' -and
+        $unicodeCorrectionSql -match 'ROWIDTOCHAR\s*\(\s*ROWID\s*\)'
+    if (-not $backupExactKeyTableColumnRowid) { $errors.Add('43 no valida la clave exacta UBK_TABLE_NAME, UBK_COLUMN_NAME, UBK_ROWID_TEXT contra ROWIDTOCHAR(ROWID).') }
+    $backupTablePreserved = -not ($unicodeCorrectionSql -match '(?i)DROP\s+TABLE\s+RL_MR_UNI_BKP_20260924' -or $unicodeCorrectionSql -match '(?i)TRUNCATE\s+TABLE\s+RL_MR_UNI_BKP_20260924')
+    if (-not $backupTablePreserved) { $errors.Add('43 no preserva la tabla de backup RL_MR_UNI_BKP_20260924.') }
+    $updateScopeBackupOnly = $applyMappingBackupScope -and
+        $backupExactKeyTableColumnRowid -and
+        $unicodeCorrectionSql -match 'UNBACKED_MAPPING_TARGETS' -and
+        $unicodeCorrectionSql -match 'unbacked_mapping_targets\s+RETURN\s+NUMBER' -and
+        $unicodeCorrectionSql -match 'RAISE_APPLICATION_ERROR\(-20749'
+    if (-not $updateScopeBackupOnly) { $errors.Add('43 no restringe cada UPDATE al backup exacto ni bloquea UNBACKED_MAPPING_TARGETS.') }
+    $unbackedMappingTargetsGate = $unicodeCorrectionSql -match 'UNBACKED_MAPPING_TARGETS' -and
+        $unicodeCorrectionSql -match 'IF\s+(?:l_unbacked_targets|l_unmapped_cells)\s*<>\s*0\s*THEN[\s\S]*?RAISE_APPLICATION_ERROR\(-20749'
+    if (-not $unbackedMappingTargetsGate) { $errors.Add('43 no ejecuta el gate UNBACKED_MAPPING_TARGETS antes del SAVEPOINT.') }
+    $rollbackOnResidual = $unicodeCorrectionSql -match 'CURRENT_SUSPICIOUS_CELLS_POST' -and
+        $unicodeCorrectionSql -match 'ROLLBACK TO MATRICES_UNICODE_CORRECTION'
+    if (-not $rollbackOnResidual) { $errors.Add('43 no conserva rollback ante residuos posteriores al DML.') }
+    # Regresiones obligatorias de alcance de backup (Casos A, B y C)
+    $catalogHasBaMapping = $unicodeCatalog -match [regex]::Escape("register_mapping(UNISTR('p\00BAblica'), UNISTR('p\00FAblica'))")
+    $simBackup = [System.Collections.Generic.HashSet[string]]::new()
+    [void]$simBackup.Add('RL_MR_RIESGOS|RIE_NOMBRE|ROW-A')
+    $caseA_UnbackedDetected = if ($catalogHasBaMapping -and -not $simBackup.Contains('RL_MR_RIESGOS|RIE_NOMBRE|ROW-B')) { 1 } else { 0 }
+    $caseB_BackedEligible = if ($catalogHasBaMapping -and $simBackup.Contains('RL_MR_RIESGOS|RIE_NOMBRE|ROW-A')) { 1 } else { 0 }
+    $caseC_BoundaryPass = ($caseB_BackedEligible -eq 1 -and $caseA_UnbackedDetected -eq 1)
+    if (-not $caseC_BoundaryPass) { $errors.Add('Regresiones de alcance de backup (Casos A, B, C) no pasaron.') }
     if ($unicodeCorrectionSql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('43 usa SUBSTR CLOB limitado a 32767 para detección.') }
     if ($unicodeCorrectionSql -notmatch '@@_catalogo_unicode_modulo_matrices\.sql') { $errors.Add('43 no consume el catálogo compartido de mappings.') }
     if ($unicodeCorrectionSql -match "AMBIGUOUS_TOKENS=0|UNMAPPED_TOKENS=0") { $errors.Add('43 hardcodea un gate de tokens; debe derivarlo.') }
@@ -850,6 +883,11 @@ Write-Host "TRIPLE_BF_DETECTION=$(if ($tripleBfDetection) { 'PASS' } else { 'FAI
 Write-Host "NESTED_DOUBLE_BF_SUPPRESSION=$(if ($nestedDoubleBfSuppression) { 'PASS' } else { 'FAIL' })"
 Write-Host "REAL_DOUBLE_BF_DETECTION=$(if ($realDoubleBfDetection) { 'PASS' } else { 'FAIL' })"
 Write-Host "SHARED_SUSPICIOUS_CELL_SEMANTICS=$(if ($sharedSuspiciousCellSemantics) { 'PASS' } else { 'FAIL' })"
+Write-Host "UPDATE_SCOPE_BACKUP_ONLY=$(if ($updateScopeBackupOnly) { 'PASS' } else { 'FAIL' })"
+Write-Host "UNBACKED_MAPPING_TARGETS_GATE=$(if ($unbackedMappingTargetsGate) { 'PASS' } else { 'FAIL' })"
+Write-Host "BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=$(if ($backupExactKeyTableColumnRowid) { 'PASS' } else { 'FAIL' })"
+Write-Host "BACKUP_TABLE_PRESERVED=$(if ($backupTablePreserved) { 'YES' } else { 'NO' })"
+Write-Host "ROLLBACK_ON_RESIDUAL=$(if ($rollbackOnResidual) { 'PASS' } else { 'FAIL' })"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"
