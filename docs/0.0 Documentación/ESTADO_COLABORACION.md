@@ -1,5 +1,31 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Soporte de Unicode Escape en Paridad JSON y Diagnóstico de Campos en Script 44 (Matrices de Riesgos)
+
+- Fecha/hora local: `2026-09-25 14:05` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `4f7df7983958aab1cea5b51ad34b8fd7327ef18a`.
+- Alcance ejecutado: Normalización de representaciones escalares JSON (`\uXXXX` vs literal Unicode) en el postcheck read-only `database/19_matrices_riesgos/transicion/44_postcheck_unicode_modulo_matrices_completo.sql`, incorporación de 7 contadores diagnósticos de paridad y reforzamiento de `tools/validate_database_scripts.ps1`.
+- Cambios técnicos implementados:
+  - Implementación de `json_scalar_escaped(p_value VARCHAR2) RETURN VARCHAR2` mediante `ASCIISTR(ch)` y formateo `\uXXXX` 11g-compatible.
+  - Soporte en `json_has(p_json, p_key, p_value)` de coincidencia exacta con valor literal, escapado mayúsculas y escapado minúsculas, rechazando diferencias semánticas.
+  - Contadores de diagnóstico READ-ONLY agregados a 44: `PARITY_BAD_ROWS`, `PARITY_BAD_CODIGO`, `PARITY_BAD_AREA`, `PARITY_BAD_DUENO`, `PARITY_BAD_RESPUESTA`, `PARITY_BAD_INHERENTE`, `PARITY_BAD_RESIDUAL`.
+  - Regresiones deterministas Casos 1 a 5 en `tools/validate_database_scripts.ps1` con comprobación de READ-ONLY (`POSTCHECK_44_READ_ONLY=PASS`).
+  - Preservación estricta: scripts 41, 42, 43 y 45 sin modificaciones, catálogo y predicados intactos, sin DDL/DML, cero conexión Oracle.
+- Evidencia fresca:
+  - `validate_database_scripts.ps1`: PASS (`JSON_UNICODE_ESCAPE_EQUIVALENCE=PASS`, `JSON_SEMANTIC_DIFFERENCE_REJECTED=PASS`, `PARITY_FIELD_DIAGNOSTICS=PASS`, `POSTCHECK_44_READ_ONLY=PASS`).
+  - `validate_text_encoding.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `validate_documentation_links.ps1`: PASS.
+  - `git diff --check`: PASS.
+  - Backend tests: `657/657 PASS`.
+  - Frontend lint: PASS.
+  - Frontend build: PASS.
+  - Frontend unit tests: `791/791 PASS`.
+  - Frontend E2E tests: `36/36 PASS`.
+- Restricciones y exclusiones:
+  - Sin ejecución en base de datos Oracle institucional (cero Oracle en esta sesión).
+  - H-02 mitigado vía `--configuration Release`; H-03, H-04, H-05 no modificados.
+- Punto de continuidad: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/44_postcheck_unicode_modulo_matrices_completo.sql` en Oracle para verificar `PROJECTION_JSON_PARITY=PASS`.
+
 ## Estado vigente — Eliminación de Falso Gate de Tokens y Aislamiento Cell-Level en Script 43
 
 - Fecha/hora local: `2026-09-25 12:45` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `005e4877f74ed7bec7e7cc6efacec4cd17e7c1f2`.

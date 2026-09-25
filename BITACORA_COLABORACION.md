@@ -1,5 +1,51 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Soporte de Unicode Escape en Paridad JSON y Diagnóstico de Campos en Script 44 (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-09-25 14:05 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `4f7df7983958aab1cea5b51ad34b8fd7327ef18a`.
+- **Objetivo y alcance**:
+  - Resolver el falso fallo `PROJECTION_JSON_PARITY=FAIL` en el postcheck de solo lectura `database/19_matrices_riesgos/transicion/44_postcheck_unicode_modulo_matrices_completo.sql`.
+  - Normalizar la comparación escalar de `json_has` para reconocer la equivalencia semántica entre caracteres Unicode literales (almacenados en `RL_MR_PROYECCIONES_EVALUACION`) y caracteres Unicode serializados mediante escape JSON `\uXXXX` (producidos en `EVA_DATOS_JSON` de `RL_MR_EVALUACIONES`).
+  - Implementar una función determinista `json_scalar_escaped(p_value VARCHAR2) RETURN VARCHAR2` compatible con Oracle 11g sin usar `JSON_VALUE` ni APIs exclusivas de Oracle 12c+.
+  - Agregar 7 contadores de diagnóstico READ-ONLY en el postcheck para desglosar discrepancias a nivel de campo: `PARITY_BAD_ROWS`, `PARITY_BAD_CODIGO`, `PARITY_BAD_AREA`, `PARITY_BAD_DUENO`, `PARITY_BAD_RESPUESTA`, `PARITY_BAD_INHERENTE`, `PARITY_BAD_RESIDUAL`.
+  - Reforzar `tools/validate_database_scripts.ps1` con la verificación de equivalencia JSON Unicode, rechazo de diferencias semánticas reales (Casos 1 a 5), contadores de paridad y gate `POSTCHECK_44_READ_ONLY=PASS`.
+  - Preservar estrictamente el carácter READ-ONLY de 44 (sin DDL ni DML), los restantes gates de 44 intactos, y no modificar 41, 42, 43, 45, catálogo ni predicado compartido.
+- **Archivos modificados**:
+  - `database/19_matrices_riesgos/transicion/44_postcheck_unicode_modulo_matrices_completo.sql`
+  - `tools/validate_database_scripts.ps1`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Cambios funcionales y técnicos**:
+  - `FUNCIÓN json_scalar_escaped`: Rutina PL/SQL en 44 que procesa carácter por carácter con `ASCIISTR(ch)` convirtiendo `\XXXX` en `\uXXXX` (con padding de 4 dígitos hexadecimales en mayúsculas), manejando caracteres de control ASCII (`\b`, `\t`, `\n`, `\f`, `\r`, comillas `\"` y contrabarra `\\`) y pares subrogados.
+  - `COMPARACIÓN MULTI-REPRESENTACIÓN EN json_has`: `json_has` ahora valida la clave y busca el valor completo como literal (`json_scalar`), como escape en mayúsculas (`json_scalar_escaped`) o en minúsculas. Si cualquiera coincide exactamente con la clave asociada, retorna TRUE. Si los valores difieren semánticamente (e.g. `Comite` vs `Comit\u00E9`), no hay coincidencia, impidiendo falsos positivos.
+  - `CONTADORES READ-ONLY DE PARIDAD`: Se agregaron y acumularon contadores para auditar qué campos fallan en caso de discrepancia: `PARITY_BAD_ROWS`, `PARITY_BAD_CODIGO`, `PARITY_BAD_AREA`, `PARITY_BAD_DUENO`, `PARITY_BAD_RESPUESTA`, `PARITY_BAD_INHERENTE`, `PARITY_BAD_RESIDUAL`.
+  - `VALIDADOR DE BASE DE DATOS Y REGRESIONES OBLIGATORIAS`: `tools/validate_database_scripts.ps1` incluye la función `Test-JsonScalarMatch` y ejecuta las 5 pruebas de regresión requeridas:
+    - Caso 1: `Comité` vs `{"dueno_riesgo":"Comit\u00E9"}` -> MATCH=YES
+    - Caso 2: `Área` vs `{"area_principal":"\u00C1rea"}` -> MATCH=YES
+    - Caso 3: `Sección de Cumplimiento` vs `{"area_principal":"Secci\u00F3n de Cumplimiento"}` -> MATCH=YES
+    - Caso 4: `Dueño` vs `{"dueno_riesgo":"Due\u00F1o"}` -> MATCH=YES
+    - Caso 5: `Comite` vs `{"dueno_riesgo":"Comit\u00E9"}` -> MATCH=NO (diferencia semántica rechazada)
+    - Emisión de gates: `JSON_UNICODE_ESCAPE_EQUIVALENCE=PASS`, `JSON_SEMANTIC_DIFFERENCE_REJECTED=PASS`, `PARITY_FIELD_DIAGNOSTICS=PASS`, `POSTCHECK_44_READ_ONLY=PASS`.
+- **Pruebas y Verificaciones Ejecutadas**:
+  - `validate_database_scripts.ps1`: PASS (`JSON_UNICODE_ESCAPE_EQUIVALENCE=PASS`, `JSON_SEMANTIC_DIFFERENCE_REJECTED=PASS`, `PARITY_FIELD_DIAGNOSTICS=PASS`, `POSTCHECK_44_READ_ONLY=PASS`).
+  - `validate_text_encoding.ps1`: PASS (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`).
+  - `validate_repository_structure.ps1`: PASS (118 rutas obligatorias, 977 archivos rastreados).
+  - `validate_documentation_links.ps1`: PASS (161 docs Markdown, 184 enlaces locales).
+  - `git diff --check`: PASS.
+  - Backend Tests: `657/657 PASS` (`dotnet test --configuration Release --no-build`).
+  - Frontend Lint: PASS (`npm run lint`, 0 errores).
+  - Frontend Build: PASS (`npm run build`).
+  - Frontend Unit Tests: `791/791 PASS` (79 archivos).
+  - Frontend E2E Tests: `36/36 PASS` (Playwright Chromium headless).
+- **Pruebas No Ejecutadas / Restricciones Externas**:
+  - Pruebas físicas Oracle no ejecutadas por restricción institucional obligatoria (cero Oracle en esta sesión).
+  - Python local con alias Microsoft Store (H-04 preexistente fuera de alcance).
+- **Estado de Git y Próximo Paso**:
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`.
+  - Próximo paso manual: Javier Mejía ejecutará `database/19_matrices_riesgos/transicion/44_postcheck_unicode_modulo_matrices_completo.sql` en Oracle para verificar el estado final de transición (`PROJECTION_JSON_PARITY=PASS`).
+
 ## Registro de Intervención — Eliminación de Falso Gate de Tokens y Aislamiento Cell-Level en Script 43
 
 - **Fecha y hora**: 2026-09-25 12:45 (UTC-6).

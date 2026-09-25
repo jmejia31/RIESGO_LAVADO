@@ -476,14 +476,19 @@ if (-not (Test-Path -LiteralPath $unicodePredicatePath -PathType Leaf)) {
     if (-not $tripleBfDetection) { $errors.Add('Falta detección explícita BF/BF/BF.') }
 }
 
+$postcheck44ReadOnly = $false
 foreach ($fileName in @(
     '41_precheck_unicode_modulo_matrices_completo.sql',
     '44_postcheck_unicode_modulo_matrices_completo.sql'
 )) {
     if ($riskTextContents.ContainsKey($fileName)) {
         $readOnlySql = Get-ExecutableSql (Join-Path $riskTextTransitionRoot $fileName)
-        if ($readOnlySql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b') {
+        $isReadOnly = (-not ($readOnlySql -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b'))
+        if (-not $isReadOnly) {
             $errors.Add("$fileName debe ser READ ONLY.")
+        }
+        if ($fileName -eq '44_postcheck_unicode_modulo_matrices_completo.sql') {
+            $postcheck44ReadOnly = $isReadOnly
         }
     }
 }
@@ -635,6 +640,53 @@ if ($riskTextContents.ContainsKey('44_postcheck_unicode_modulo_matrices_completo
     }
     if ($postSql -notmatch 'PROJECTION_JSON_PARITY_IMPLEMENTATION=CONTRACT_EXACT') { $errors.Add('44 no declara implementación CONTRACT_EXACT.') }
     if ($postSql -match "DBMS_LOB\.SUBSTR\([^,]+,\s*32767") { $errors.Add('44 usa SUBSTR CLOB limitado a 32767 para detección.') }
+    $jsonEscapeHelperImplemented = ($postSql -match '(?is)FUNCTION\s+json_scalar_escaped[\s\S]*?ASCIISTR' -and
+        $postSql -match '(?is)FUNCTION\s+json_has[\s\S]*?json_scalar[\s\S]*?json_scalar_escaped')
+    if (-not $jsonEscapeHelperImplemented) {
+        $errors.Add('44 no implementa json_scalar_escaped con ASCIISTR ni json_has admitiendo representacion escapada.')
+    }
+    $parityFieldDiagnosticsImplemented = $true
+    foreach ($diag in @('PARITY_BAD_ROWS','PARITY_BAD_CODIGO','PARITY_BAD_AREA','PARITY_BAD_DUENO','PARITY_BAD_RESPUESTA','PARITY_BAD_INHERENTE','PARITY_BAD_RESIDUAL')) {
+        if ($postSql -notmatch "$diag=") {
+            $errors.Add("44 no emite diagnóstico de campo de paridad: $diag")
+            $parityFieldDiagnosticsImplemented = $false
+        }
+    }
+    function Test-JsonScalarMatch([string]$json, [string]$key, [string]$value) {
+        $lit = '"' + $key + '":"' + $value.Replace('\', '\\').Replace('"', '\"') + '"'
+        if ($json.Contains($lit)) { return $true }
+        $sb = [System.Text.StringBuilder]::new()
+        foreach ($ch in $value.ToCharArray()) {
+            if ($ch -eq '\') { [void]$sb.Append('\\') }
+            elseif ($ch -eq '"') { [void]$sb.Append('\"') }
+            elseif ([int]$ch -gt 127) {
+                [void]$sb.AppendFormat('\u{0:X4}', [int]$ch)
+            } else {
+                [void]$sb.Append($ch)
+            }
+        }
+        $escUpper = '"' + $key + '":"' + $sb.ToString() + '"'
+        if ($json.Contains($escUpper)) { return $true }
+        $escLower = '"' + $key + '":"' + [regex]::Replace($sb.ToString(), '\\u([0-9A-Fa-f]{4})', { param($m) '\u' + $m.Groups[1].Value.ToLower() }) + '"'
+        if ($json.Contains($escLower)) { return $true }
+        return $false
+    }
+    $valComite = "Comit$([char]0x00E9)"
+    $valArea = "$([char]0x00C1)rea"
+    $valSeccion = "Secci$([char]0x00F3)n de Cumplimiento"
+    $valDueno = "Due$([char]0x00F1)o"
+    $valComiteSinTilde = "Comite"
+
+    $c1 = Test-JsonScalarMatch '{"dueno_riesgo":"Comit\u00E9"}' 'dueno_riesgo' $valComite
+    $c2 = Test-JsonScalarMatch '{"area_principal":"\u00C1rea"}' 'area_principal' $valArea
+    $c3 = Test-JsonScalarMatch '{"area_principal":"Secci\u00F3n de Cumplimiento"}' 'area_principal' $valSeccion
+    $c4 = Test-JsonScalarMatch '{"dueno_riesgo":"Due\u00F1o"}' 'dueno_riesgo' $valDueno
+    $c5 = Test-JsonScalarMatch '{"dueno_riesgo":"Comit\u00E9"}' 'dueno_riesgo' $valComiteSinTilde
+
+    $jsonUnicodeEscapeEquivalence = ($c1 -and $c2 -and $c3 -and $c4)
+    $jsonSemanticDifferenceRejected = (-not $c5)
+    if (-not $jsonUnicodeEscapeEquivalence) { $errors.Add('Regresión obligatoria de equivalencia JSON Unicode escape falló.') }
+    if (-not $jsonSemanticDifferenceRejected) { $errors.Add('Regresión obligatoria de rechazo de diferencia semántica JSON falló.') }
 }
 
 $backendRepositoryPath = Join-Path $RepositoryRoot 'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosRepository.cs'
@@ -934,6 +986,10 @@ Write-Host "BACKUP_EXACT_KEY_TABLE_COLUMN_ROWID=$(if ($backupExactKeyTableColumn
 Write-Host "BACKUP_TABLE_PRESERVED=$(if ($backupTablePreserved) { 'YES' } else { 'NO' })"
 Write-Host "ROLLBACK_ON_RESIDUAL=$(if ($rollbackOnResidual) { 'PASS' } else { 'FAIL' })"
 Write-Host "POSTCHECK_BEFORE_COMMIT=$postcheckBeforeCommit"
+Write-Host "JSON_UNICODE_ESCAPE_EQUIVALENCE=$(if ($jsonUnicodeEscapeEquivalence) { 'PASS' } else { 'FAIL' })"
+Write-Host "JSON_SEMANTIC_DIFFERENCE_REJECTED=$(if ($jsonSemanticDifferenceRejected) { 'PASS' } else { 'FAIL' })"
+Write-Host "PARITY_FIELD_DIAGNOSTICS=$(if ($parityFieldDiagnosticsImplemented) { 'PASS' } else { 'FAIL' })"
+Write-Host "POSTCHECK_44_READ_ONLY=$(if ($postcheck44ReadOnly) { 'PASS' } else { 'FAIL' })"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"

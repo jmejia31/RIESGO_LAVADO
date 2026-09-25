@@ -17,6 +17,10 @@ DECLARE
   l_total NUMBER := 0; l_bad_cols NUMBER := 0; l_bad_rows NUMBER := 0;
   l_fail NUMBER := 0; l_rows NUMBER; l_suspicious NUMBER;
   l_evaluations NUMBER; l_projections NUMBER; l_parity NUMBER;
+  l_parity_bad_rows NUMBER := 0; l_parity_bad_codigo NUMBER := 0;
+  l_parity_bad_area NUMBER := 0; l_parity_bad_dueno NUMBER := 0;
+  l_parity_bad_respuesta NUMBER := 0; l_parity_bad_inherente NUMBER := 0;
+  l_parity_bad_residual NUMBER := 0;
   l_evaluations_with_flow NUMBER := 0; l_historical_without_flow NUMBER := 0; l_state_mismatches NUMBER := 0;
   l_duplicates NUMBER; l_orphan_evaluations NUMBER; l_orphan_projections NUMBER;
   l_invalid_objects NUMBER; l_disabled_constraints NUMBER; l_null_risk NUMBER;
@@ -25,13 +29,79 @@ DECLARE
     v VARCHAR2(32767) := p_value;
   BEGIN
     IF p_value IS NULL THEN RETURN 'null'; END IF;
-    v := REPLACE(v, '\', '\\'); v := REPLACE(v, '"', '\"');
-    v := REPLACE(v, CHR(13), '\r'); v := REPLACE(v, CHR(10), '\n');
-    RETURN '"'||v||'"';
+    v := REPLACE(v, '\', '\\');
+    v := REPLACE(v, '"', '\"');
+    v := REPLACE(v, CHR(13), '\r');
+    v := REPLACE(v, CHR(10), '\n');
+    RETURN '"' || v || '"';
+  END;
+  FUNCTION json_scalar_escaped(p_value VARCHAR2) RETURN VARCHAR2 IS
+    v_res VARCHAR2(32767) := '';
+    ch VARCHAR2(10);
+    asch VARCHAR2(30);
+    len NUMBER;
+  BEGIN
+    IF p_value IS NULL THEN RETURN 'null'; END IF;
+    len := LENGTH(p_value);
+    FOR i IN 1..len LOOP
+      ch := SUBSTR(p_value, i, 1);
+      IF ch = '\' THEN
+        v_res := v_res || '\\';
+      ELSIF ch = '"' THEN
+        v_res := v_res || '\"';
+      ELSIF ch = CHR(13) THEN
+        v_res := v_res || '\r';
+      ELSIF ch = CHR(10) THEN
+        v_res := v_res || '\n';
+      ELSIF ch = CHR(9) THEN
+        v_res := v_res || '\t';
+      ELSIF ASCII(ch) < 32 THEN
+        asch := TRIM(TO_CHAR(ASCII(ch), '0XXX'));
+        v_res := v_res || '\u' || LPAD(asch, 4, '0');
+      ELSE
+        asch := ASCIISTR(ch);
+        IF SUBSTR(asch, 1, 1) = '\' THEN
+          v_res := v_res || REPLACE(asch, '\', '\u');
+        ELSE
+          v_res := v_res || ch;
+        END IF;
+      END IF;
+    END LOOP;
+    RETURN '"' || v_res || '"';
   END;
   FUNCTION json_has(p_json CLOB, p_key VARCHAR2, p_value VARCHAR2) RETURN NUMBER IS
+    v_lit VARCHAR2(32767);
+    v_esc VARCHAR2(32767);
+    v_esc_low VARCHAR2(32767);
+    pos NUMBER;
+    hex_part VARCHAR2(4);
   BEGIN
-    RETURN CASE WHEN DBMS_LOB.INSTR(p_json, '"'||p_key||'":'||json_scalar(p_value)) > 0 THEN 1 ELSE 0 END;
+    IF p_value IS NULL THEN
+      RETURN CASE WHEN DBMS_LOB.INSTR(p_json, '"' || p_key || '":null') > 0 THEN 1 ELSE 0 END;
+    END IF;
+    v_lit := json_scalar(p_value);
+    IF DBMS_LOB.INSTR(p_json, '"' || p_key || '":' || v_lit) > 0 THEN
+      RETURN 1;
+    END IF;
+    v_esc := json_scalar_escaped(p_value);
+    IF v_esc <> v_lit THEN
+      IF DBMS_LOB.INSTR(p_json, '"' || p_key || '":' || v_esc) > 0 THEN
+        RETURN 1;
+      END IF;
+      v_esc_low := v_esc;
+      pos := 1;
+      LOOP
+        pos := INSTR(v_esc_low, '\u', pos);
+        EXIT WHEN pos = 0;
+        hex_part := SUBSTR(v_esc_low, pos + 2, 4);
+        v_esc_low := SUBSTR(v_esc_low, 1, pos + 1) || LOWER(hex_part) || SUBSTR(v_esc_low, pos + 6);
+        pos := pos + 6;
+      END LOOP;
+      IF v_esc_low <> v_esc AND DBMS_LOB.INSTR(p_json, '"' || p_key || '":' || v_esc_low) > 0 THEN
+        RETURN 1;
+      END IF;
+    END IF;
+    RETURN 0;
   END;
   @@_predicado_unicode_sospechoso.sql
 BEGIN
@@ -98,16 +168,42 @@ BEGIN
       l_evaluations_with_flow := l_evaluations_with_flow + 1;
       IF NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0)) THEN l_state_mismatches := l_state_mismatches + 1; END IF;
     END IF;
-    IF NVL(x.PROY_CODIGO_RIESGO,CHR(0))<>NVL(x.RIE_CODIGO,CHR(0)) OR
-       json_has(x.EVA_DATOS_JSON,'area_principal',x.PROY_AREA_PRINCIPAL)=0 OR
-       json_has(x.EVA_DATOS_JSON,'dueno_riesgo',x.PROY_DUENO_RIESGO)=0 OR
-       json_has(x.EVA_DATOS_JSON,'respuesta_riesgo',x.PROY_RESPUESTA_RIESGO)=0 OR
-       json_has(x.EVA_DATOS_JSON,'nivel_inherente',x.PROY_NIVEL_INHERENTE)=0 OR
-       json_has(x.EVA_DATOS_JSON,'nivel_residual',x.PROY_NIVEL_RESIDUAL)=0 OR
-       x.PROY_ESTADO_EVALUACION IS NULL OR
-       (x.FLU_EVALUACION_ID IS NOT NULL AND NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0))) THEN
-      l_parity := l_parity + 1;
-    END IF;
+    DECLARE
+      v_row_bad BOOLEAN := FALSE;
+    BEGIN
+      IF NVL(x.PROY_CODIGO_RIESGO,CHR(0))<>NVL(x.RIE_CODIGO,CHR(0)) THEN
+        l_parity_bad_codigo := l_parity_bad_codigo + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF json_has(x.EVA_DATOS_JSON,'area_principal',x.PROY_AREA_PRINCIPAL)=0 THEN
+        l_parity_bad_area := l_parity_bad_area + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF json_has(x.EVA_DATOS_JSON,'dueno_riesgo',x.PROY_DUENO_RIESGO)=0 THEN
+        l_parity_bad_dueno := l_parity_bad_dueno + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF json_has(x.EVA_DATOS_JSON,'respuesta_riesgo',x.PROY_RESPUESTA_RIESGO)=0 THEN
+        l_parity_bad_respuesta := l_parity_bad_respuesta + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF json_has(x.EVA_DATOS_JSON,'nivel_inherente',x.PROY_NIVEL_INHERENTE)=0 THEN
+        l_parity_bad_inherente := l_parity_bad_inherente + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF json_has(x.EVA_DATOS_JSON,'nivel_residual',x.PROY_NIVEL_RESIDUAL)=0 THEN
+        l_parity_bad_residual := l_parity_bad_residual + 1;
+        v_row_bad := TRUE;
+      END IF;
+      IF x.PROY_ESTADO_EVALUACION IS NULL OR
+         (x.FLU_EVALUACION_ID IS NOT NULL AND NVL(x.PROY_ESTADO_EVALUACION,CHR(0))<>NVL(x.FLUJO_ESTADO,CHR(0))) THEN
+        v_row_bad := TRUE;
+      END IF;
+      IF v_row_bad THEN
+        l_parity_bad_rows := l_parity_bad_rows + 1;
+        l_parity := l_parity + 1;
+      END IF;
+    END;
   END LOOP;
   DBMS_OUTPUT.PUT_LINE('RISK_ROWS='||l_rows);
   DBMS_OUTPUT.PUT_LINE('EVALUATION_ROWS='||l_evaluations);
@@ -121,6 +217,13 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('NULL_UNEXPECTED_ROWS='||l_null_risk);
   DBMS_OUTPUT.PUT_LINE('INVALID_OBJECTS='||l_invalid_objects);
   DBMS_OUTPUT.PUT_LINE('DISABLED_CONSTRAINTS='||l_disabled_constraints);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_ROWS='||l_parity_bad_rows);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_CODIGO='||l_parity_bad_codigo);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_AREA='||l_parity_bad_area);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_DUENO='||l_parity_bad_dueno);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_RESPUESTA='||l_parity_bad_respuesta);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_INHERENTE='||l_parity_bad_inherente);
+  DBMS_OUTPUT.PUT_LINE('PARITY_BAD_RESIDUAL='||l_parity_bad_residual);
   DBMS_OUTPUT.PUT_LINE('PROJECTION_JSON_PARITY='||CASE WHEN l_parity=0 THEN 'PASS' ELSE 'FAIL' END);
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_RESIDUAL='||l_bad_rows);
   DBMS_OUTPUT.PUT_LINE('MATRICES_UNICODE_POSTCHECK_STATUS='||
