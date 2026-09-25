@@ -15,6 +15,7 @@ Seguimiento: [GitHub issue #22](https://github.com/jmejia31/RIESGO_LAVADO/issues
 - `COLD_ORIGIN_LATENCY=ACCEPTED_KNOWN_RESTRICTION`.
 - No se autorizan ni requieren cambios físicos adicionales sobre `DNP_IHSS` o `MMATAMOROS`.
 - `main` no se modifica por este cierre institucional.
+- Reparación física Unicode Oracle: CERRADA (`ORACLE_UNICODE_PHYSICAL_REPAIR=PASS`, `FULL_MATRICES_UNICODE_DATABASE_REPAIR=PASS`, `PROJECTION_JSON_PARITY=PASS`, `MATRICES_UNICODE_RESIDUAL=0`).
 
 ## 1. Valores de prueba y contrato del responsable — CERRADO
 
@@ -67,6 +68,47 @@ RTO_RPO_PROJECT_BLOCKERS=0
 ```
 
 El eventual archivo posterior de firmas administrativas no constituye bloqueo ni pendiente de proyecto para estos dos puntos, salvo que una autoridad institucional decida formalmente modificar los valores.
+
+## Reparación Unicode Oracle — CERRADA
+
+Fecha de cierre técnico y ejecución física: **2026-09-25**
+Ejecución: manual sobre base de datos Oracle institucional por propietario (`jmejia31`)
+
+```text
+ORACLE_UNICODE_PHYSICAL_REPAIR=PASS
+FULL_MATRICES_UNICODE_DATABASE_REPAIR=PASS
+UNICODE_PRECHECK_41=PASS
+UNICODE_BACKUP_42=PASS
+UNICODE_CORRECTION_43=PASS
+UNICODE_POSTCHECK_44=PASS
+UNICODE_BACKUP_ROWS=169
+UNICODE_CORRECTION_UPDATES=275
+MATRICES_SUSPICIOUS_COLUMNS=0
+MATRICES_SUSPICIOUS_ROWS=0
+MATRICES_UNICODE_RESIDUAL=0
+PROJECTION_JSON_PARITY=PASS
+DATA_INTEGRITY=PASS
+MANUAL_UNICODE_EXECUTION_PENDING=NO
+UNICODE_ROLLBACK_REQUIRED=NO
+```
+
+Detalle de ejecución y cierre:
+
+- **Script 41 (Precheck)**: ejecutado con éxito (`FULL_MODULE_TOKEN_INVENTORY=PASS`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`).
+- **Script 42 (Backup)**: ejecutado con éxito (`BACKUP_TABLE=RL_MR_UNI_BKP_20260924`, `MATRICES_UNICODE_BACKUP_ROWS=169`, `MATRICES_UNICODE_BACKUP_STATUS=PASS`). La tabla física de respaldo `RL_MR_UNI_BKP_20260924` se conserva intacta en el esquema institucional.
+- **Script 43 (Corrección DML)**: ejecutado con éxito bajo transacción atómica bounded por backup (`CURRENT_SUSPICIOUS_CELLS=169`, `BACKUP_CELLS=169`, `BACKUP_COVERAGE=PASS`, `AMBIGUOUS_TOKENS=0`, `UNBACKED_MAPPING_TARGETS=0`, `CURRENT_SUSPICIOUS_CELLS_POST=0`, `MATRICES_UNICODE_CORRECTION_UPDATES=275`, `MATRICES_UNICODE_CORRECTION_STATUS=PASS`).
+- **Script 44 (Postcheck final)**: ejecutado con éxito con paridad completa de campos (`PARITY_BAD_ROWS=0`, `PARITY_BAD_CODIGO=0`, `PARITY_BAD_AREA=0`, `PARITY_BAD_DUENO=0`, `PARITY_BAD_RESPUESTA=0`, `PARITY_BAD_INHERENTE=0`, `PARITY_BAD_RESIDUAL=0`, `PROJECTION_JSON_PARITY=PASS`, `MATRICES_UNICODE_RESIDUAL=0`, `MATRICES_UNICODE_POSTCHECK_STATUS=PASS`).
+- **Script 45 (Rollback)**: script de contingencia disponible; **NO fue requerido** al no registrarse residuos ni fallos de integridad.
+- **Instrucción operacional**: no volver a ejecutar 41, 42 ni 43. El saneamiento físico Oracle del módulo Matrices de Riesgos queda formal y técnicamente **CERRADO**.
+
+Pendientes institucionales que continúan separados:
+
+```text
+TRAINING_MATERIAL=PASS
+INSTITUTIONAL_TRAINING_EXECUTED=FALSE
+RELEASE_READINESS=PASS
+PRODUCTION_DEPLOYED=FALSE
+```
 
 ## 3. Capacitación institucional
 

@@ -1,5 +1,43 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Cierre Definitivo de Reparación Unicode Oracle y Congelación de Release (Matrices de Riesgos)
+
+- Fecha/hora local: `2026-09-25 15:00` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `dbe4caae29beca96e24a27d7d8e5ce3a7703d898`.
+- Alcance ejecutado: Registro documental y consolidación del cierre REAL de la reparación física Unicode en Oracle del módulo Matrices de Riesgos, cierre de transición Unicode y preparación para congelación de SHA de release.
+- Evidencia Oracle institucional certificada (ejecutada manualmente por Javier Mejía `jmejia31`):
+  - `41 Precheck`: `FULL_MODULE_TOKEN_INVENTORY=PASS`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`.
+  - `42 Backup`: `BACKUP_TABLE=RL_MR_UNI_BKP_20260924`, `MATRICES_UNICODE_BACKUP_ROWS=169`, `MATRICES_UNICODE_BACKUP_STATUS=PASS`.
+  - `43 Corrección`: `CURRENT_SUSPICIOUS_CELLS=169`, `BACKUP_CELLS=169`, `BACKUP_COVERAGE=PASS`, `AMBIGUOUS_TOKENS=0`, `UNBACKED_MAPPING_TARGETS=0`, `CURRENT_SUSPICIOUS_CELLS_POST=0`, `MATRICES_UNICODE_CORRECTION_UPDATES=275`, `MATRICES_UNICODE_CORRECTION_STATUS=PASS`.
+  - `44 Postcheck`: `MATRICES_TEXT_COLUMNS_SCANNED=88`, `REQUIRED_RL_MR_TABLES_FOUND=25`, `MATRICES_SUSPICIOUS_COLUMNS=0`, `MATRICES_SUSPICIOUS_ROWS=0`, `RISK_ROWS=59`, `EVALUATION_ROWS=59`, `PROJECTION_ROWS=59`, `PARITY_BAD_ROWS=0`, `PARITY_BAD_CODIGO=0`, `PARITY_BAD_AREA=0`, `PARITY_BAD_DUENO=0`, `PARITY_BAD_RESPUESTA=0`, `PARITY_BAD_INHERENTE=0`, `PARITY_BAD_RESIDUAL=0`, `PROJECTION_JSON_PARITY=PASS`, `MATRICES_UNICODE_RESIDUAL=0`, `MATRICES_UNICODE_POSTCHECK_STATUS=PASS`.
+  - `45 Rollback`: NO REQUERIDO.
+- Estado consolidado de reparación de base de datos:
+  - `ORACLE_UNICODE_PHYSICAL_REPAIR=PASS`
+  - `FULL_MATRICES_UNICODE_DATABASE_REPAIR=PASS`
+  - `UNICODE_PRECHECK_41=PASS`
+  - `UNICODE_BACKUP_42=PASS`
+  - `UNICODE_CORRECTION_43=PASS`
+  - `UNICODE_POSTCHECK_44=PASS`
+  - `UNICODE_BACKUP_ROWS=169`
+  - `UNICODE_CORRECTION_UPDATES=275`
+  - `MATRICES_SUSPICIOUS_COLUMNS=0`
+  - `MATRICES_SUSPICIOUS_ROWS=0`
+  - `MATRICES_UNICODE_RESIDUAL=0`
+  - `PROJECTION_JSON_PARITY=PASS`
+  - `DATA_INTEGRITY=PASS`
+  - `ORACLE_UNICODE_DML_EXECUTED_MANUALLY=YES`
+  - `MANUAL_UNICODE_EXECUTION_PENDING=NO`
+  - `UNICODE_ROLLBACK_REQUIRED=NO`
+- Validaciones estáticas y de gobierno:
+  - `validate_text_encoding.ps1`: PASS.
+  - `validate_documentation_links.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `git diff --check`: PASS.
+- Estado institucional y pendientes reales (Issue #22 permanece ABIERTO):
+  - `TRAINING_MATERIAL=PASS`
+  - `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`
+  - `PRODUCTION_DEPLOYED=FALSE`
+- Punto de continuidad: El SHA resultante de esta intervención se somete a validación remota en Quality Gates; una vez concluido en SUCCESS, queda congelado externamente como `PRODUCTION_SHA`. Próximos pasos operativos: capacitación institucional y despliegue productivo.
+
 ## Estado vigente — Soporte de Unicode Escape en Paridad JSON y Diagnóstico de Campos en Script 44 (Matrices de Riesgos)
 
 - Fecha/hora local: `2026-09-25 14:05` (UTC-06). Autor: `ANTIG` / `ANTIGRAVITY`; rama `desarrollo`; baseline inicial `4f7df7983958aab1cea5b51ad34b8fd7327ef18a`.

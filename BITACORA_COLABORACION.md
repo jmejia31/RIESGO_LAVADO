@@ -1,5 +1,40 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Cierre Definitivo de Reparación Unicode Oracle y Congelación de Release (Matrices de Riesgos)
+
+- **Fecha y hora**: 2026-09-25 15:00 (UTC-6).
+- **Colaborador**: ANTIG (Antigravity).
+- **Rama / SHA base**: `desarrollo` / `dbe4caae29beca96e24a27d7d8e5ce3a7703d898`.
+- **Objetivo y alcance**:
+  - Registrar formal y documentalmente el cierre REAL de la reparación física Unicode en base de datos Oracle para el módulo Matrices de Riesgos tras la ejecución exitosa de los scripts 41, 42, 43 y 44 por parte del propietario Javier Mejía (`jmejia31`).
+  - Consolidar los estados oficiales: `ORACLE_UNICODE_PHYSICAL_REPAIR=PASS`, `FULL_MATRICES_UNICODE_DATABASE_REPAIR=PASS`, `UNICODE_PRECHECK_41=PASS`, `UNICODE_BACKUP_42=PASS`, `UNICODE_CORRECTION_43=PASS`, `UNICODE_POSTCHECK_44=PASS`, `UNICODE_BACKUP_ROWS=169`, `UNICODE_CORRECTION_UPDATES=275`, `MATRICES_SUSPICIOUS_COLUMNS=0`, `MATRICES_SUSPICIOUS_ROWS=0`, `MATRICES_UNICODE_RESIDUAL=0`, `PROJECTION_JSON_PARITY=PASS`, `DATA_INTEGRITY=PASS`, `ORACLE_UNICODE_DML_EXECUTED_MANUALLY=YES`, `MANUAL_UNICODE_EXECUTION_PENDING=NO`, `UNICODE_ROLLBACK_REQUIRED=NO`.
+  - Preservar la separación estricta de pendientes institucionales no ejecutados: `TRAINING_MATERIAL=PASS`, `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`, `PRODUCTION_DEPLOYED=FALSE`, manteniendo el Issue #22 ABIERTO.
+  - Generar el commit exclusivamente documental en `desarrollo`, publicarlo, verificar los Quality Gates sobre el SHA exacto publicado y congelarlo como `PRODUCTION_SHA` sin realizar commits posteriores.
+- **Archivos modificados**:
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+  - `BITACORA_COLABORACION.md`
+  - `docs/3. Módulo Matrices de Riesgos/CIERRE_INSTITUCIONAL_PRODUCCION.md`
+- **Cambios funcionales y técnicos**:
+  - Intervención 100% documental. Cero modificaciones a código fuente (.cs, .ts, .html, .scss), scripts SQL, validadores .ps1 ni workflows CI/CD.
+  - Registro de resultados físicos reales de la transición Oracle:
+    - 41: `FULL_MODULE_TOKEN_INVENTORY=PASS`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0`.
+    - 42: `RL_MR_UNI_BKP_20260924` creado con 169 filas respaldadas.
+    - 43: Corrección atómica ejecutada con 275 updates, 0 residuos sospechosos post-DML y cobertura exacta de backup.
+    - 44: Postcheck final exitoso con paridad JSON 100% (`PARITY_BAD_*=0`, `PROJECTION_JSON_PARITY=PASS`, `MATRICES_UNICODE_RESIDUAL=0`).
+    - 45: Rollback no requerido.
+  - Actualización de `CIERRE_INSTITUCIONAL_PRODUCCION.md` con la sección `## Reparación Unicode Oracle — CERRADA`.
+- **Pruebas y Verificaciones Ejecutadas**:
+  - `validate_text_encoding.ps1`: PASS (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`).
+  - `validate_documentation_links.ps1`: PASS.
+  - `validate_repository_structure.ps1`: PASS.
+  - `git diff --check`: PASS.
+- **Pruebas No Ejecutadas / Restricciones Externas**:
+  - Cero conexión local a Oracle institucional por parte de Antigravity (la ejecución de scripts fue realizada directamente por Javier Mejía en el entorno de base de datos).
+  - Capacitación institucional (`INSTITUTIONAL_TRAINING_EXECUTED=FALSE`) y despliegue productivo (`PRODUCTION_DEPLOYED=FALSE`) pendientes de agenda y autorización institucional.
+- **Estado de Git y Próximo Paso**:
+  - Rama: `desarrollo`. `NO_MAIN=TRUE`.
+  - SHA exacto de este commit será verificado en GitHub Actions (Quality Gate) y congelado como `PRODUCTION_SHA` sin commits posteriores.
+
 ## Registro de Intervención — Soporte de Unicode Escape en Paridad JSON y Diagnóstico de Campos en Script 44 (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-09-25 14:05 (UTC-6).
