@@ -17,7 +17,7 @@ DECLARE
     'RL_MR_PARAMETRO_VERSIONES');
   l_markers SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST(
     UNISTR('\FFFD'), UNISTR('\00EF\00BF\00BD'), UNISTR('\00C3'),
-    UNISTR('\00C2'), UNISTR('\00E2\20AC'), UNISTR('\00F0\0178'));
+    UNISTR('\00C2'), UNISTR('\00E2\20AC'), UNISTR('\00F0\0178'), UNISTR('\00BF\00BF\00BF'));
   l_bad_catalog SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
   l_good_catalog SYS.ODCIVARCHAR2LIST := SYS.ODCIVARCHAR2LIST();
   l_sql VARCHAR2(32767); l_pred VARCHAR2(16000); l_expr VARCHAR2(4000);
@@ -69,7 +69,7 @@ DECLARE
     l_pattern VARCHAR2(4000); l_count NUMBER;
   BEGIN
     IF p_contextual THEN l_pattern:='[[:alpha:]][[:alpha:]]*'||p_marker||'[[:alpha:]][[:alpha:]]*';
-    ELSIF p_marker=UNISTR('\00E2\20AC') THEN l_pattern:='[[:alpha:][:digit:]]*'||p_marker||UNISTR('\201C')||'[[:alpha:][:digit:]]*';
+    ELSIF p_marker=UNISTR('\00BF\00BF\00BF') THEN l_pattern:='[[:alpha:][:digit:]]*'||p_marker||'[[:alpha:][:digit:]]*';
     ELSE l_pattern:='[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'||p_marker||'[[:alpha:][:digit:]¿'||UNISTR('\FFFD\00C3\00C2\00EF')||']*'; END IF;
     l_count:=REGEXP_COUNT(p_value,l_pattern); FOR i IN 1..l_count LOOP emit_token(p_table,p_column,p_rowid,p_value,l_pattern,i); END LOOP;
   END;
@@ -82,7 +82,7 @@ BEGIN
       l_columns:=l_columns+1; l_expr:='DBMS_LOB.INSTR(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),'; l_pred:='(';
       FOR m IN 1..l_markers.COUNT LOOP
         IF m>1 THEN l_pred:=l_pred||' OR '; END IF;
-        l_pred:=l_pred||l_expr||'UNISTR('''||CASE m WHEN 1 THEN '\FFFD' WHEN 2 THEN '\00EF\00BF\00BD' WHEN 3 THEN '\00C3' WHEN 4 THEN '\00C2' WHEN 5 THEN '\00E2\20AC' ELSE '\00F0\0178' END||'''))>0';
+        l_pred:=l_pred||l_expr||'UNISTR('''||CASE m WHEN 1 THEN '\FFFD' WHEN 2 THEN '\00EF\00BF\00BD' WHEN 3 THEN '\00C3' WHEN 4 THEN '\00C2' WHEN 5 THEN '\00E2\20AC' WHEN 6 THEN '\00F0\0178' ELSE '\00BF\00BF\00BF' END||'''))>0';
       END LOOP;
       l_pred:=l_pred||' OR REGEXP_LIKE(TO_CLOB('||DBMS_ASSERT.SIMPLE_SQL_NAME(c.column_name)||'),''[[:alpha:]][[:alpha:]]*''||UNISTR(''\00BF'')||''[[:alpha:]][[:alpha:]]*''))';
       BEGIN

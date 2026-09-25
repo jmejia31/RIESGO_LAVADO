@@ -16,6 +16,7 @@ $moduleObservedUniqueTokens = 0
 $moduleObservedMappedTokens = 0
 $moduleObservedUnmappedTokens = 0
 $moduleObservedAmbiguousTokens = 0
+$moduleCatalogMappings = 0
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -627,6 +628,7 @@ if (-not (Test-Path -LiteralPath $moduleEvidencePath -PathType Leaf)) {
 } else {
     $moduleEvidence = Get-Content -LiteralPath $moduleEvidencePath -Raw
     $moduleCatalog = Get-Content -LiteralPath $moduleCatalogPath -Raw
+    $moduleCatalogMappings = ([regex]::Matches($moduleCatalog, 'register_mapping\s*\(')).Count
     $moduleUniqueMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNIQUE_BAD_TOKENS=(\d+)')
     $moduleUnmappedMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNMAPPED_TOKENS=(\d+)')
     if (-not $moduleUniqueMatch.Success -or [int]$moduleUniqueMatch.Groups[1].Value -ne 90) { $errors.Add('El log 41 no declara UNIQUE_BAD_TOKENS=90.') }
@@ -635,8 +637,8 @@ if (-not (Test-Path -LiteralPath $moduleEvidencePath -PathType Leaf)) {
     $moduleObservedUniqueTokens = if ($moduleUniqueMatch.Success) { [int]$moduleUniqueMatch.Groups[1].Value } else { 0 }
     $moduleObservedAmbiguousTokens = 0
     $moduleExpectedMappings = @'
-1\00E2\20AC\201C5|1\20135
-\00C3\00BFrea|\00C1rea
+1\00BF\00BF\00BF5|1\20135
+\00BF\00BFrea|\00C1rea
 \00BFnico|\00DAnico
 \00BFrdenes|\00D3rdenes
 \00BFrea|\00C1rea
@@ -644,27 +646,27 @@ Adjudicaci\00BFn|Adjudicaci\00F3n
 autorizaci\00BFn|autorizaci\00F3n
 biom\00BFtrico|biom\00E9trico
 car\00BFcter|car\00E1cter
-Catastr\00C3\00BFfico|Catastr\00F3fico
+Catastr\00BF\00BFfico|Catastr\00F3fico
 Comit\00BF|Comit\00E9
-Cr\00C3\00BFtico|Cr\00EDtico
+Cr\00BF\00BFtico|Cr\00EDtico
 d\00BFas|d\00EDas
 direcci\00BFn|direcci\00F3n
 Documentaci\00BFn|Documentaci\00F3n
-Due\00C3\00BFo|Due\00F1o
+Due\00BF\00BFo|Due\00F1o
 electr\00BFnicos|electr\00F3nicos
 Emisi\00BFn|Emisi\00F3n
 Env\00BFo|Env\00EDo
-estrat\00C3\00BFgico|estrat\00E9gico
+estrat\00BF\00BFgico|estrat\00E9gico
 excepci\00BFn|excepci\00F3n
 F\00BFrmula|F\00F3rmula
 f\00BFrmula|f\00F3rmula
 f\00BFsico|f\00EDsico
 Facturaci\00BFn|Facturaci\00F3n
 generaci\00BFn|generaci\00F3n
-Identificaci\00C3\00BFn|Identificaci\00F3n
+Identificaci\00BF\00BFn|Identificaci\00F3n
 Identificaci\00BFn|Identificaci\00F3n
 Informaci\00BFn|Informaci\00F3n
-interrelaci\00C3\00BFn|interrelaci\00F3n
+interrelaci\00BF\00BFn|interrelaci\00F3n
 justificaci\00BFn|justificaci\00F3n
 l\00BFmite|l\00EDmite
 l\00BFmites|l\00EDmites
@@ -677,7 +679,7 @@ participaci\00BFn|participaci\00F3n
 per\00BFodo|per\00EDodo
 Prestaci\00BFn|Prestaci\00F3n
 programaci\00BFn|programaci\00F3n
-R\00C3\00BFgimen|R\00E9gimen
+R\00BF\00BFgimen|R\00E9gimen
 Recepci\00BFn|Recepci\00F3n
 reci\00BFn|reci\00E9n
 Relaci\00BFn|Relaci\00F3n
@@ -691,13 +693,23 @@ T\00BFrminos|T\00E9rminos
 tel\00BFfonos|tel\00E9fonos
 Traducci\00BFn|Traducci\00F3n
 v\00BFlida|v\00E1lida
-Valoraci\00C3\00BFn|Valoraci\00F3n
+Valoraci\00BF\00BFn|Valoraci\00F3n
 '@ -split "`r?`n" | Where-Object { $_.Trim() }
     $moduleMissingMappings = [System.Collections.Generic.List[string]]::new()
     foreach ($mapping in $moduleExpectedMappings) {
         $parts = $mapping.Split('|', 2)
         $needle = "register_mapping(UNISTR('$($parts[0])'), UNISTR('$($parts[1])'))"
         if ($moduleCatalog -notmatch [regex]::Escape($needle)) { $moduleMissingMappings.Add($parts[0]) }
+    }
+    $incorrectPhysicalMappings = @(
+        '1\00E2\20AC\201C5', '\00C3\00BFrea', 'Catastr\00C3\00BFfico',
+        'Cr\00C3\00BFtico', 'Due\00C3\00BFo', 'estrat\00C3\00BFgico',
+        'Identificaci\00C3\00BFn', 'interrelaci\00C3\00BFn', 'R\00C3\00BFgimen',
+        'Valoraci\00C3\00BFn')
+    foreach ($incorrect in $incorrectPhysicalMappings) {
+        if ($moduleCatalog -match [regex]::Escape("register_mapping(UNISTR('$incorrect')")) {
+            $errors.Add("Catálogo conserva mapping físico incorrecto: $incorrect")
+        }
     }
     $moduleObservedUnmappedTokens = $moduleMissingMappings.Count
     $moduleObservedMappedTokens = $moduleObservedUniqueTokens - $moduleObservedUnmappedTokens - $moduleObservedAmbiguousTokens
@@ -737,6 +749,7 @@ Write-Host "OBSERVED_UNIQUE_BAD_TOKENS=$moduleObservedUniqueTokens"
 Write-Host "OBSERVED_MAPPED_TOKENS=$moduleObservedMappedTokens"
 Write-Host "OBSERVED_UNMAPPED_TOKENS=$moduleObservedUnmappedTokens"
 Write-Host "OBSERVED_AMBIGUOUS_TOKENS=$moduleObservedAmbiguousTokens"
+Write-Host "CATALOG_MAPPINGS=$moduleCatalogMappings"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"

@@ -1623,3 +1623,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificación local: backend `657/657`, frontend `791/791`, build/lint PASS, E2E `36/36`, database/encoding/estructura/documentación PASS.
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Bloqueo operativo:** todavía no ejecutar ni solicitar 42/43/44. Javier debe ejecutar únicamente 41 con el nuevo SHA y confirmar `REQUIRED_RL_MR_TABLES_FOUND=25`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`.
+-
+# Estado vigente — Corrección física de mappings Unicode 11g (COD)
+
+- **Fecha:** 2026-09-25 (UTC-6); **rama:** `desarrollo`; **base:** `4e215552c47951801e19d89b293ac563e72b92bd`.
+- La evidencia manual de Oracle 11g/WE8MSWIN1252 confirmó que los diez tokens restantes tienen secuencias físicas U+00BF repetidas: nueve con dos signos y `1???5` con tres. Codex no ejecutó Oracle.
+- `_catalogo_unicode_modulo_matrices.sql` fue corregido para usar exactamente los diez mappings físicos confirmados y eliminar las hipótesis C3/BF y E2/20AC/201C. 41 reconoce la secuencia triple para el inventario.
+- El validador deriva y reporta: `CATALOG_MAPPINGS=281`; `OBSERVED_UNIQUE_BAD_TOKENS=90`; `OBSERVED_MAPPED_TOKENS=90`; `OBSERVED_UNMAPPED_TOKENS=0`; `OBSERVED_AMBIGUOUS_TOKENS=0`.
+- Se preservan 41 read-only, 42 fail-closed, 43 contextual, 44 integral, sin DDL institucional, sin ejecución de 37 y sin modificación de backups. No solicitar 42→44 todavía.
+- **Validación:** backend `657/657`, frontend `79/791`, build/lint, database, encoding, estructura y documentación PASS. E2E independiente `36/36 PASS`; el gate integral tuvo `35/36` por timeout de navegación de `bitacora.spec.ts`, y el reintento aislado no pudo arrancar sin servidor. El gate integral queda pendiente, no se declara PASS.
+- `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
+- **Continuación exacta:** Javier debe actualizar `C:\RIESGO_LAVADO` desde `origin/desarrollo` y ejecutar únicamente 41. Autorizar 42→44 solo si el nuevo 41 confirma `REQUIRED_RL_MR_TABLES_FOUND=25`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`.

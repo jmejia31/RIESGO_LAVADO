@@ -225,10 +225,10 @@
       register_mapping(UNISTR('violaci\00BFn'), UNISTR('violaci\00F3n'));
 
       -- Tokens adicionales observados por el precheck real 41 del 2026-09-24.
-      -- Las secuencias de dos signos representan la pareja mojibake observada
-      -- U+00C3/U+00BF; 1???5 corresponde al guion U+2013 del JSON canonico.
-      register_mapping(UNISTR('1\00E2\20AC\201C5'), UNISTR('1\20135'));
-      register_mapping(UNISTR('\00C3\00BFrea'), UNISTR('\00C1rea'));
+      -- Las secuencias fueron confirmadas físicamente por ASCIISTR/DUMP:
+      -- U+00BF repetido; 1???5 corresponde al guion U+2013 canónico.
+      register_mapping(UNISTR('1\00BF\00BF\00BF5'), UNISTR('1\20135'));
+      register_mapping(UNISTR('\00BF\00BFrea'), UNISTR('\00C1rea'));
       register_mapping(UNISTR('\00BFnico'), UNISTR('\00DAnico'));
       register_mapping(UNISTR('\00BFrdenes'), UNISTR('\00D3rdenes'));
       register_mapping(UNISTR('\00BFrea'), UNISTR('\00C1rea'));
@@ -236,27 +236,27 @@
       register_mapping(UNISTR('autorizaci\00BFn'), UNISTR('autorizaci\00F3n'));
       register_mapping(UNISTR('biom\00BFtrico'), UNISTR('biom\00E9trico'));
       register_mapping(UNISTR('car\00BFcter'), UNISTR('car\00E1cter'));
-      register_mapping(UNISTR('Catastr\00C3\00BFfico'), UNISTR('Catastr\00F3fico'));
+      register_mapping(UNISTR('Catastr\00BF\00BFfico'), UNISTR('Catastr\00F3fico'));
       register_mapping(UNISTR('Comit\00BF'), UNISTR('Comit\00E9'));
-      register_mapping(UNISTR('Cr\00C3\00BFtico'), UNISTR('Cr\00EDtico'));
+      register_mapping(UNISTR('Cr\00BF\00BFtico'), UNISTR('Cr\00EDtico'));
       register_mapping(UNISTR('d\00BFas'), UNISTR('d\00EDas'));
       register_mapping(UNISTR('direcci\00BFn'), UNISTR('direcci\00F3n'));
       register_mapping(UNISTR('Documentaci\00BFn'), UNISTR('Documentaci\00F3n'));
-      register_mapping(UNISTR('Due\00C3\00BFo'), UNISTR('Due\00F1o'));
+      register_mapping(UNISTR('Due\00BF\00BFo'), UNISTR('Due\00F1o'));
       register_mapping(UNISTR('electr\00BFnicos'), UNISTR('electr\00F3nicos'));
       register_mapping(UNISTR('Emisi\00BFn'), UNISTR('Emisi\00F3n'));
       register_mapping(UNISTR('Env\00BFo'), UNISTR('Env\00EDo'));
-      register_mapping(UNISTR('estrat\00C3\00BFgico'), UNISTR('estrat\00E9gico'));
+      register_mapping(UNISTR('estrat\00BF\00BFgico'), UNISTR('estrat\00E9gico'));
       register_mapping(UNISTR('excepci\00BFn'), UNISTR('excepci\00F3n'));
       register_mapping(UNISTR('F\00BFrmula'), UNISTR('F\00F3rmula'));
       register_mapping(UNISTR('f\00BFrmula'), UNISTR('f\00F3rmula'));
       register_mapping(UNISTR('f\00BFsico'), UNISTR('f\00EDsico'));
       register_mapping(UNISTR('Facturaci\00BFn'), UNISTR('Facturaci\00F3n'));
       register_mapping(UNISTR('generaci\00BFn'), UNISTR('generaci\00F3n'));
-      register_mapping(UNISTR('Identificaci\00C3\00BFn'), UNISTR('Identificaci\00F3n'));
+      register_mapping(UNISTR('Identificaci\00BF\00BFn'), UNISTR('Identificaci\00F3n'));
       register_mapping(UNISTR('Identificaci\00BFn'), UNISTR('Identificaci\00F3n'));
       register_mapping(UNISTR('Informaci\00BFn'), UNISTR('Informaci\00F3n'));
-      register_mapping(UNISTR('interrelaci\00C3\00BFn'), UNISTR('interrelaci\00F3n'));
+      register_mapping(UNISTR('interrelaci\00BF\00BFn'), UNISTR('interrelaci\00F3n'));
       register_mapping(UNISTR('justificaci\00BFn'), UNISTR('justificaci\00F3n'));
       register_mapping(UNISTR('l\00BFmite'), UNISTR('l\00EDmite'));
       register_mapping(UNISTR('l\00BFmites'), UNISTR('l\00EDmites'));
@@ -269,7 +269,7 @@
       register_mapping(UNISTR('per\00BFodo'), UNISTR('per\00EDodo'));
       register_mapping(UNISTR('Prestaci\00BFn'), UNISTR('Prestaci\00F3n'));
       register_mapping(UNISTR('programaci\00BFn'), UNISTR('programaci\00F3n'));
-      register_mapping(UNISTR('R\00C3\00BFgimen'), UNISTR('R\00E9gimen'));
+      register_mapping(UNISTR('R\00BF\00BFgimen'), UNISTR('R\00E9gimen'));
       register_mapping(UNISTR('Recepci\00BFn'), UNISTR('Recepci\00F3n'));
       register_mapping(UNISTR('reci\00BFn'), UNISTR('reci\00E9n'));
       register_mapping(UNISTR('Relaci\00BFn'), UNISTR('Relaci\00F3n'));
@@ -283,4 +283,4 @@
       register_mapping(UNISTR('tel\00BFfonos'), UNISTR('tel\00E9fonos'));
       register_mapping(UNISTR('Traducci\00BFn'), UNISTR('Traducci\00F3n'));
       register_mapping(UNISTR('v\00BFlida'), UNISTR('v\00E1lida'));
-      register_mapping(UNISTR('Valoraci\00C3\00BFn'), UNISTR('Valoraci\00F3n'));
+      register_mapping(UNISTR('Valoraci\00BF\00BFn'), UNISTR('Valoraci\00F3n'));
