@@ -7821,3 +7821,10 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Estado:** `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_IMPLEMENTED=PARTIAL_BLOCKED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`. No declarar los gates de Bloque 2 completos.
 - **Pruebas reproducidas:** backend `657/657`; frontend `80 archivos / 798 pruebas`; lint PASS; build PASS; E2E `37/37`; validadores dynamic DDL, autorización, Phase 13 UAT, database, encoding, estructura y documentación PASS; `git diff --check` PASS. Chromium E2E verificó desktop y 390 px sin overflow horizontal. No se afirma validación visual manual ni se ejecutó Quality Gate remoto.
 - **Git/continuidad:** sin commit ni push todavía al momento de esta bitácora. Los archivos untracked preexistentes del usuario fueron preservados. Continuación exacta: resolver contrato read-only autorizado para snapshots por versión y confirmar unidades históricas con evidencia de fuente; después completar selectores/persistencia y pruebas F03–F09 sin modificar Oracle ni V1.
+
+### Cierre de publicación y CI
+
+- Commit funcional publicado: `6fed10df4b19737a0ac51e1ef852c4343a95dd49` (`feat(matrices): add controls block 2 shell`) en `origin/desarrollo`; `MAIN_TOUCHED=NO`.
+- Quality Gates remoto: run `36461075629`, `HEAD_SHA=6fed10df4b19737a0ac51e1ef852c4343a95dd49`, `STATUS=completed`, `CONCLUSION=success`.
+- Verificado localmente: backend `657/657`; frontend `798/798`; lint/build PASS; E2E `37/37`; validadores dinámico DDL, autorización, Phase 13, database, encoding, estructura y documentación PASS; `git diff --check=PASS`.
+- El éxito del CI certifica el commit/herramientas, no remueve los bloqueos funcionales documentados: no cerrar Bloque 2 ni iniciar Bloque 3.
