@@ -42,8 +42,9 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
-type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
+type TabMatrices = 'evaluaciones' | 'consolidado' | 'matriz-completa' | 'plantillas';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
@@ -78,6 +79,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private detalleEnContexto = false;
   private secuenciaVersionNuevaEvaluacion = 0;
   private secuenciaContextoPredeterminado = 0;
+  private secuenciaCargaMatrizCompleta = 0;
 
   readonly opcionesRegistrosPorPagina = [10, 20, 50] as const;
   private suscripcionEvaluaciones: Subscription | null = null;
@@ -195,6 +197,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
+  readonly matrizCompletaEnCarga = signal(false);
+  readonly matrizCompletaError = signal<string | null>(null);
+  readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
   readonly totalRegistrosConsolidado = signal(0);
@@ -378,7 +383,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   onKeydownTab(event: KeyboardEvent, tabActual: TabMatrices): void {
-    const tabs: TabMatrices[] = ['evaluaciones', 'consolidado', 'plantillas'];
+    const tabs: TabMatrices[] = ['evaluaciones', 'consolidado', 'matriz-completa', 'plantillas'];
     const indexActual = tabs.indexOf(tabActual);
 
     if (indexActual === -1) return;
@@ -1532,6 +1537,115 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.mostrarError(this.obtenerMensajeError(error, 'No se pudo obtener el detalle de la evaluación.'));
       }
     });
+  }
+
+  abrirMatrizCompleta(resumen: EvaluacionRiesgoResumenDto): void {
+    const solicitudId = ++this.secuenciaCargaMatrizCompleta;
+    this.evaluacionResumenSeleccionada.set(resumen);
+    this.evaluacionSeleccionada.set(null);
+    this.riesgoMaestroMatriz.set(null);
+    this.matrizCompletaError.set(null);
+    this.matrizCompletaEnCarga.set(true);
+    this.seleccionarTab('matriz-completa');
+
+    this.service.obtenerEvaluacion(resumen.evaId).subscribe({
+      next: detalle => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.evaluacionSeleccionada.set(detalle);
+        this.riesgoId.set(detalle.evaRiesgoId);
+        this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
+        forkJoin({
+          riesgo: this.service.obtenerRiesgo(detalle.evaRiesgoId),
+          version: this.service.obtenerVersionFormulario(detalle.evaVersionId)
+        }).subscribe({
+          next: ({ riesgo, version }) => {
+            if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+            this.riesgoMaestroMatriz.set(riesgo);
+            this.evaluacionResumenSeleccionada.update(actual => actual
+              ? { ...actual, versionCodigo: version.verCodigo, versionNumero: version.verVersion, evaVersionId: version.verId }
+              : actual);
+            this.matrizCompletaEnCarga.set(false);
+          },
+          error: error => {
+            if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+            this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo recuperar el riesgo maestro vinculado a la evaluación.'));
+            this.matrizCompletaEnCarga.set(false);
+          }
+        });
+      },
+      error: error => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.matrizCompletaError.set(this.obtenerMensajeError(error, 'No se pudo obtener la evaluación seleccionada.'));
+        this.matrizCompletaEnCarga.set(false);
+      }
+    });
+  }
+
+  valorCampoMatriz(field: MatrixFieldContract): string {
+    const evaluacion = this.evaluacionSeleccionada();
+    const resumen = this.evaluacionResumenSeleccionada();
+    if (!evaluacion || !resumen) return '—';
+
+    if (field.ordinal === 1) {
+      const numeroPresentacion = this.numeroPresentacionEvaluacion(resumen.evaId);
+      return numeroPresentacion === null ? '—' : String(numeroPresentacion);
+    }
+    if (field.ordinal === 2) return this.riesgoMaestroMatriz()?.rieCodigo || '—';
+    if (field.ordinal === 8) return this.riesgoMaestroMatriz()?.rieNombre || '—';
+    if (field.ordinal === 9) return this.riesgoMaestroMatriz()?.rieDescripcion || '—';
+    if (field.ordinal === 12) return evaluacion.evaVri === null || evaluacion.evaVri === undefined ? '—' : String(evaluacion.evaVri);
+    if (field.ordinal === 13) {
+      const calculados = this.parsearRespuestas(evaluacion.evaDataCalcJson ?? '{}');
+      const nivel = calculados['nivel_riesgo_inherente'];
+      return nivel === null || nivel === undefined || nivel === '' ? '—' : Array.isArray(nivel) ? nivel.join(', ') : String(nivel);
+    }
+
+    if (!field.key) return '—';
+    const value = this.respuestas()[field.key];
+    if (value === null || value === undefined || value === '') {
+      return resumen.versionNumero === 1 && field.ordinal !== 3 && field.ordinal !== 10 && field.ordinal !== 11 && field.ordinal !== 14
+        ? 'No disponible en esta versión'
+        : '—';
+    }
+    return Array.isArray(value) ? value.join(', ') : String(value);
+  }
+
+  readonly camposMatrizCompleta = MATRIX_BLOCK_1_FIELDS;
+  readonly bloquesMatrizPendientes = [2, 3, 4, 5, 6] as const;
+  readonly etiquetaBloquePendiente = (block: 2 | 3 | 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
+  camposMetadataBloque(block: 2 | 3 | 4 | 5 | 6): readonly MatrixFieldContract[] {
+    return MATRIX_FIELDS.filter(field => field.block === block);
+  }
+
+  abrirMatrizCompletaDesdeConsolidado(fila: RiesgoReporteFila): void {
+    this.abrirMatrizCompleta({
+      evaId: fila.evaluacionId,
+      evaRiesgoId: fila.riesgoId,
+      riesgoCodigo: fila.codigoRiesgo,
+      riesgoNombre: fila.codigoRiesgo,
+      evaVersionId: fila.versionFormularioId,
+      versionCodigo: `VERSION_${fila.versionFormularioId}`,
+      versionNumero: 0,
+      estado: fila.estadoEvaluacion,
+      evaEstado: fila.estadoEvaluacion,
+      vri: fila.vri,
+      vrr: fila.vrr,
+      nivelResidual: fila.nivelResidual,
+      fechaEval: fila.fechaEvaluacion,
+      evaFechaEval: fila.fechaEvaluacion
+    });
+  }
+
+  readonly totalCamposContratoMatriz = MATRIX_FIELDS.length;
+
+  private numeroPresentacionEvaluacion(evaluacionId: number): number | null {
+    const indexListado = this.evaluaciones().findIndex(item => item.evaId === evaluacionId);
+    if (indexListado >= 0) return (this.pagina() - 1) * this.registrosPorPagina() + indexListado + 1;
+
+    const indexConsolidado = this.consolidado().findIndex(item => item.evaluacionId === evaluacionId);
+    return indexConsolidado >= 0
+      ? (this.paginaConsolidado() - 1) * this.registrosPorPaginaConsolidado() + indexConsolidado + 1
+      : null;
   }
 
   abrirModalVerDesdeConsolidado(fila: RiesgoReporteFila): void {

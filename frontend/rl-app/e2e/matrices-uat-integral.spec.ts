@@ -16,7 +16,9 @@ const version = {
   verHash: 'uat-hash', verEstado: 'PUBLISHED', verVigente: true, verFechaCreacion: '2026-08-07T12:00:00Z', verUsrCreacion: 1
 };
 const evaluacion = {
-  evaId: 20, evaRiesgoId: 7, evaVersionId: 10, evaEstado: 'BORRADOR', evaDataJson: '{}', evaDataCalcJson: '{}',
+  evaId: 20, evaRiesgoId: 7, evaVersionId: 10, evaEstado: 'BORRADOR',
+  evaDataJson: JSON.stringify({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable UAT' }),
+  evaDataCalcJson: JSON.stringify({ nivel_riesgo_inherente: 'Riesgo Moderado' }),
   evaVri: 7, evaVrr: 4, evaFechaEval: '2026-08-07T12:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
 };
 const riesgo = { rieId: 7, rieCodigo: 'R-007', rieNombre: 'Riesgo UAT', rieDescripcion: 'Base UAT', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T12:00:00Z' };
@@ -54,8 +56,10 @@ async function preparar(page: Page): Promise<void> {
     let datos: unknown = [];
 
     if (path.endsWith('/formulario/version-vigente')) datos = version;
+    else if (path.endsWith('/formularios/10')) datos = version;
     else if (path.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: version.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (path.endsWith('/formularios/historial')) datos = [version];
+    else if (path.endsWith('/evaluaciones/20') && method === 'GET') datos = evaluacion;
     else if (path.endsWith('/evaluaciones') && method === 'GET') datos = {
       items: [{
         evaId: 20,
@@ -76,6 +80,7 @@ async function preparar(page: Page): Promise<void> {
       totalRegistros: 1,
       totalPaginas: 1
     };
+    else if (path.endsWith('/riesgos/7') && method === 'GET') datos = riesgo;
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
     else if (path.endsWith('/consolidado/paginado')) datos = { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } };
     else if (path.endsWith('/consolidado')) datos = [];
@@ -91,6 +96,7 @@ async function preparar(page: Page): Promise<void> {
   });
   await page.route('**/api/matrices-riesgos*', route => {
     const path = new URL(route.request().url()).pathname;
+    if (!path.endsWith('/evaluaciones')) return route.fallback();
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
       success: true,
       datos: {
@@ -118,6 +124,42 @@ async function preparar(page: Page): Promise<void> {
 }
 
 test.beforeEach(async ({ page }) => preparar(page));
+
+test('UAT abre Matriz completa desde una evaluación y conserva la navegación histórica', async ({ page }) => {
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Plantillas', exact: true })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  const view = page.locator('[data-matrix-view="complete"]');
+  await expect(view.getByRole('heading', { name: '1. Identificación y Riesgo Inherente' })).toBeVisible();
+  const fields = view.locator('[data-matrix-field]');
+  await expect(fields).toHaveCount(19);
+  await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
+    Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0'))
+  );
+  await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
+  await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
+  await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
+  await expect(fields.nth(17)).toContainText('Vulnerabilidades (Solo para riesgos de GTIC)');
+  await expect(fields.nth(18)).toContainText('Activos de Información (Solo para riesgos de GTIC)');
+  await expect(fields.nth(3)).toContainText('No disponible en esta versión');
+
+  const matrixView = page.locator('[data-matrix-view="complete"]');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(fields).toHaveCount(19);
+  expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
+  await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ver Matriz completa' }).first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Matriz Consolidada' })).toBeVisible();
+});
 
 test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
   let payload: any;

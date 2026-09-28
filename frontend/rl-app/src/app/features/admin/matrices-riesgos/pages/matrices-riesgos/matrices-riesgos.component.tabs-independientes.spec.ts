@@ -279,4 +279,59 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(kpis()[0].textContent).toContain('Total familias');
     expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
   });
+
+  it('14. conserva las cuatro pestañas y muestra el estado vacío de Matriz completa', () => {
+    component.seleccionarTab('matriz-completa');
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const tabs = Array.from(root.querySelectorAll('[role="tab"]')).map(tab => tab.textContent?.trim());
+    expect(tabs).toEqual(['Evaluaciones', 'Consolidado', 'Matriz completa', 'Plantillas']);
+    expect(root.querySelector('#panel-matriz-completa[role="tabpanel"]')).not.toBeNull();
+    expect(root.querySelector('[data-matrix-empty]')?.textContent).toContain('Seleccione una evaluación para visualizar la Matriz completa.');
+  });
+
+  it('15. renderiza campos 01–19 en orden, conserva los GTIC y no inventa valores históricos V1', () => {
+    component.evaluacionResumenSeleccionada.set(mockPaginado.items[0]);
+    component.evaluacionSeleccionada.set({
+      evaId: 101,
+      evaRiesgoId: 5,
+      evaVersionId: 10,
+      evaEstado: 'BORRADOR',
+      evaDataJson: '{"area_principal":"Área de Cumplimiento","frecuencia_inherente":"3","impacto_inherente":"3","dueno_riesgo":"Responsable"}',
+      evaDataCalcJson: '{"nivel_riesgo_inherente":"RIESGO_MEDIO"}',
+      evaVri: 5,
+      evaFechaEval: '2026-08-17T00:00:00',
+      evaUsrEval: 1,
+      evaVersionRow: 1,
+      evaActivo: true
+    });
+    component.respuestas.set({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable' });
+    component.riesgoMaestroMatriz.set({ rieId: 5, rieCodigo: 'RIE-005', rieNombre: 'Riesgo maestro', rieDescripcion: 'Descripción maestra', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-01' });
+    component.seleccionarTab('matriz-completa');
+    expect(component.valorCampoMatriz(component.camposMatrizCompleta[2])).toBe('Área de Cumplimiento');
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const fields = Array.from(root.querySelectorAll('[data-matrix-view="complete"] [data-matrix-field]'));
+    expect(fields).toHaveLength(19);
+    expect(fields.map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0')));
+    expect(fields.slice(16).map(field => field.getAttribute('data-matrix-field'))).toEqual(['17', '18', '19']);
+    const visibleLabels = fields.map(field => field.querySelector('dt span:nth-child(2)')?.textContent?.trim());
+    expect(visibleLabels).toEqual([
+      'No.', 'Código de Riesgo', 'Área', 'Área Consolidada', 'Tipo de Riesgo', 'Procedimiento',
+      'Objetivo(s) Estratégico(s)', 'Riesgo Inherente', 'Evaluación', 'Frecuencia', 'Impacto',
+      'Valor del Riesgo Inherente', 'Nivel de Riesgo Inherente', 'Responsable o dueño del riesgo',
+      'Régimen afectado', 'Transversalidad o Interrelación con otros Riesgos',
+      'Amenazas (Solo para riesgos de GTIC)', 'Vulnerabilidades (Solo para riesgos de GTIC)',
+      'Activos de Información (Solo para riesgos de GTIC)'
+    ]);
+    expect(fields[0].getAttribute('data-matrix-field')).toBe('01');
+    expect(fields[0].textContent).not.toContain('101');
+    expect(fields[3].textContent).toContain('No disponible en esta versión');
+    expect(fields[11].textContent).toContain('Calculado automáticamente');
+    expect(fields[12].textContent).toContain('Calculado automáticamente');
+    expect(fields[11].querySelector('[aria-readonly="true"]')).not.toBeNull();
+    expect(fields[12].querySelector('[aria-readonly="true"]')).not.toBeNull();
+    expect(root.querySelectorAll('[data-matrix-block="2"] .text-amber-800')).toHaveLength(1);
+  });
 });

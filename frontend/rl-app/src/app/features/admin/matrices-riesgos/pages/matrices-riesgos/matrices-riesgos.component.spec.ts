@@ -397,12 +397,12 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     const evDown = new KeyboardEvent('keydown', { key: 'ArrowDown' });
     vi.spyOn(evDown, 'preventDefault');
     component.onKeydownTab(evDown, 'consolidado');
-    expect(component.tab()).toBe('plantillas');
+    expect(component.tab()).toBe('matriz-completa');
 
     const evLeft = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
     vi.spyOn(evLeft, 'preventDefault');
     component.onKeydownTab(evLeft, 'plantillas');
-    expect(component.tab()).toBe('consolidado');
+    expect(component.tab()).toBe('matriz-completa');
 
     const evUp = new KeyboardEvent('keydown', { key: 'ArrowUp' });
     vi.spyOn(evUp, 'preventDefault');

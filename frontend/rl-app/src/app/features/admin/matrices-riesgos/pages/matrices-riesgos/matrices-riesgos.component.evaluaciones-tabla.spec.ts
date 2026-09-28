@@ -182,11 +182,11 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(filas[0].textContent).toContain('17/08/2026');
     expect(filas[0].querySelector('td:nth-child(2) div[title]')?.getAttribute('title'))
       .toBe('Riesgo institucional cinco');
-    expect(filas[0].querySelectorAll('td:nth-child(9) button')).toHaveLength(3);
+    expect(filas[0].querySelectorAll('td:nth-child(9) button')).toHaveLength(4);
 
     expect(filas[1].textContent).toContain('#102');
     expect(filas[1].textContent).toContain('RIE-006');
-    expect(filas[1].querySelectorAll('td:nth-child(9) button')).toHaveLength(2);
+    expect(filas[1].querySelectorAll('td:nth-child(9) button')).toHaveLength(3);
   });
 
   it('cubre los seis estados institucionales y restringe Editar a BORRADOR', () => {
@@ -209,12 +209,13 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       expect(fila.querySelector('td:nth-child(4)')?.textContent).toContain(estado);
       expect(etiquetas).toContain('Ver evaluación');
       expect(etiquetas).toContain('Seguimiento de evaluación');
+      expect(etiquetas).toContain('Ver Matriz completa');
       if (estado === 'BORRADOR') {
         expect(etiquetas).toContain('Editar evaluación');
-        expect(acciones).toHaveLength(3);
+        expect(acciones).toHaveLength(4);
       } else {
         expect(etiquetas).not.toContain('Editar evaluación');
-        expect(acciones).toHaveLength(2);
+        expect(acciones).toHaveLength(3);
       }
     });
   });

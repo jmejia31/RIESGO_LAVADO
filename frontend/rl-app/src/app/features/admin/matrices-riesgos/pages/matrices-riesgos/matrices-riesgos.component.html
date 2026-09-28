@@ -40,6 +40,7 @@
     </div>
   }
   <!-- KPIs contextuales de la pestaña activa -->
+  @if (tab() !== 'matriz-completa') {
   <div class="matrices-kpi-strip grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" data-ui-kpis-context>
     @if (tab() === 'evaluaciones') {
       <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total evaluaciones</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalRegistros() }}</p><p class="text-xs text-gray-500">Total según la consulta actual</p></article>
@@ -51,13 +52,14 @@
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Activas</p><p class="mt-2 text-3xl font-bold text-emerald-700" data-ui-fam-kpi="activas">{{ totalFamiliasActivas() }}</p><p class="text-xs text-emerald-700/80">Disponibles para uso</p></article>
       <article class="rounded-xl border border-rose-100 bg-rose-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-rose-700">Inactivas</p><p class="mt-2 text-3xl font-bold text-rose-700" data-ui-fam-kpi="inactivas">{{ totalFamiliasInactivas() }}</p><p class="text-xs text-rose-700/80">Fuera de uso</p></article>
       <article class="rounded-xl border border-violet-100 bg-violet-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-violet-700">Total versiones</p><p class="mt-2 text-3xl font-bold text-violet-700" data-ui-fam-kpi="versiones">{{ totalVersionesFamilias() }}</p><p class="text-xs text-violet-700/80">Versiones disponibles</p></article>
-    } @else {
+    } @else if (tab() === 'consolidado') {
       <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total registros</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalesConsolidado().totalRiesgos }}</p><p class="text-xs text-gray-500">Proyección consolidada</p></article>
       <article class="rounded-xl border border-blue-100 bg-blue-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-blue-700">Con evaluación</p><p class="mt-2 text-3xl font-bold text-blue-700">{{ totalesConsolidado().totalConEvaluacionOficial }}</p><p class="text-xs text-blue-700/80">Registros con estado</p></article>
       <article class="rounded-xl border border-amber-100 bg-amber-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-amber-700">Nivel alto/crítico</p><p class="mt-2 text-3xl font-bold text-amber-700">{{ totalesConsolidado().totalAltoCritico }}</p><p class="text-xs text-amber-700/80">Según nivel residual</p></article>
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
   </div>
+  }
 
   @if (error(); as errorTexto) {
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
@@ -84,6 +86,7 @@
       @for (opcion of [
         { id: 'evaluaciones', texto: 'Evaluaciones' },
         { id: 'consolidado', texto: 'Consolidado' },
+        { id: 'matriz-completa', texto: 'Matriz completa' },
         { id: 'plantillas', texto: 'Plantillas' }
       ]; track opcion.id) {
             <button type="button" data-ui-control="navigation"
@@ -197,6 +200,15 @@
                       <app-action-icon action="view"></app-action-icon>
                     </button>
 
+                    <button type="button"
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                            title="Ver Matriz completa"
+                            aria-label="Ver Matriz completa"
+                            data-matrix-open="complete"
+                            (click)="abrirMatrizCompleta(evaluacion)">
+                      <app-action-icon action="view"></app-action-icon>
+                    </button>
+
                     @if (evaluacion.estado === 'BORRADOR') {
                       <button type="button"
                               class="inline-flex items-center justify-center p-1.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors border border-amber-200"
@@ -292,6 +304,8 @@
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
                 <td class="px-6 py-4"><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-900 hover:bg-ihss-50" title="Ver detalle del consolidado" aria-label="Ver detalle del consolidado" (click)="abrirModalVerDesdeConsolidado(fila)">
             <app-action-icon action="view"></app-action-icon>
+          </button><button type="button" class="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-900 hover:bg-ihss-50" title="Ver Matriz completa" aria-label="Ver Matriz completa" data-matrix-open="complete" (click)="abrirMatrizCompletaDesdeConsolidado(fila)">
+            <app-action-icon action="view"></app-action-icon>
           </button></td>
               </tr>
             } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
@@ -299,6 +313,62 @@
         </table>
       </div>
       <app-data-pagination [page]="paginaConsolidado()" [pageSize]="registrosPorPaginaConsolidado()" [totalRecords]="totalRegistrosConsolidado()" itemLabel="registros" [disabled]="cargandoConsolidado()" (pageChange)="cambiarPaginaConsolidado($event)" />
+    </section>
+  }
+
+  @if (tab() === 'matriz-completa') {
+    <section id="panel-matriz-completa" role="tabpanel" aria-labelledby="tab-matriz-completa" class="matrices-panel space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm" data-matrix-view="complete">
+      <header class="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.14em] text-ihss-700">Matriz de Riesgos</p>
+          <h2 class="mt-1 text-xl font-bold text-gray-900">Matriz completa</h2>
+          <p class="mt-1 text-sm text-gray-500">Vista institucional de campos en el orden original de la matriz.</p>
+        </div>
+        @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
+          <dl class="grid grid-cols-2 gap-x-5 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs sm:min-w-[22rem]">
+            <div><dt class="font-semibold text-gray-500">Código</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
+            <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
+            <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
+            <div><dt class="font-semibold text-gray-500">Fecha evaluación</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.fechaEval | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+          </dl>
+        }
+      </header>
+
+      @if (matrizCompletaEnCarga()) {
+        <div class="rounded-xl border border-gray-100 bg-slate-50 p-8 text-center text-sm font-semibold text-gray-600" role="status" aria-live="polite">Cargando la evaluación y su riesgo maestro…</div>
+      } @else if (matrizCompletaError(); as errorMatriz) {
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{{ errorMatriz }}</div>
+      } @else if (!evaluacionSeleccionada()) {
+        <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center text-sm font-medium text-gray-600" role="status" data-matrix-empty>
+          Seleccione una evaluación para visualizar la Matriz completa.
+        </div>
+      } @else {
+        <section class="space-y-4" data-matrix-block="1" aria-labelledby="matrix-block-1-title">
+          <div>
+            <h3 id="matrix-block-1-title" class="text-base font-bold text-ihss-900">1. Identificación y Riesgo Inherente</h3>
+            <p class="mt-1 text-xs text-gray-500">Los campos calculados y los datos del riesgo maestro son de solo lectura.</p>
+          </div>
+          <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
+            @for (field of camposMatrizCompleta; track field.ordinal) {
+              <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
+                <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
+                <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" [attr.aria-describedby]="field.mode === 'COMPUTED' ? 'matrix-computed-' + field.ordinal : null" aria-readonly="true">{{ valorCampoMatriz(field) }}</dd>
+                @if (field.mode === 'COMPUTED') {
+                  <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal">Calculado automáticamente</span>
+                }
+              </div>
+            }
+          </dl>
+        </section>
+
+        @for (block of bloquesMatrizPendientes; track block) {
+          <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
+            <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>
+            <p class="mt-1 text-xs font-semibold text-amber-800">Bloque pendiente de implementación</p>
+            <span class="sr-only">{{ camposMetadataBloque(block).length }} campos del contrato institucional reservados.</span>
+          </section>
+        }
+      }
     </section>
   }
 

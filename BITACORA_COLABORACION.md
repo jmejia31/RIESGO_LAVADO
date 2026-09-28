@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Matriz institucional completa, Bloque 1 (campos 01–19)
+
+- **Fecha y hora local**: 2026-09-28 10:07 (UTC-06).
+- **Colaborador**: COD (CODEX).
+- **Rama / SHA base**: `desarrollo` / `2519ff04d190bb7bee549bdd6cc6fcf9ed9275e9`; HEAD esperado confirmado tras `git pull --ff-only origin desarrollo`.
+- **Objetivo y alcance**: iniciar la evolución funcional de Matriz completa con metadata canónica 01–82 y comportamiento de consulta únicamente para Bloque 1, campos 01–19. V1, formularios publicados, edición/creación previas, cálculos y bloques 2–6 quedan sin alteración funcional.
+- **Archivos modificados**:
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/models/matriz-institucional.contract.ts` (nuevo) y `.spec.ts` (nuevo).
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`, `.html`, `.spec.ts`, `.tabs-independientes.spec.ts`, `.evaluaciones-tabla.spec.ts`.
+  - `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`.
+  - `docs/3. Módulo Matrices de Riesgos/MATRIZ_COMPLETA_BLOQUE_1.md` (nuevo).
+  - Este archivo y `docs/0.0 Documentación/ESTADO_COLABORACION.md`.
+- **Cambios funcionales/técnicos**: agregado tab accesible «Matriz completa», accesos desde evaluación y consolidado, estado vacío, metadata, campos 01–19 exactos y en orden estable, fuente maestra para Código/Riesgo/Evaluación, resultados calculados solo lectura, placeholders 2–6 y metadata tipada de 82 posiciones. GTIC 17–19 siempre visibles; activación no inferida porque falta fuente estructurada. Los valores históricos ausentes no se inventan.
+- **Versionado/base de datos**: `V1_IMMUTABLE=PASS`; hash V1 sin cambio. `DRAFT_STRATEGY=NO_ORACLE_DRAFT_CHANGE_REQUIRED`: la entrega añade una vista read-only; el V2 DRAFT permanece sin publicar ni modificar. No se cambió esquema ni datos y no se conectó a Oracle.
+- **Validaciones ejecutadas en esta intervención**: frontend focal 38/38 PASS; frontend completa 796/796 PASS; lint PASS; build PASS (warnings preexistentes de budget/CommonJS); backend 657/657 PASS; E2E completo 37/37 PASS; `validate_database_scripts.ps1` PASS; `validate_text_encoding.ps1` PASS; `validate_repository_structure.ps1` PASS; `validate_documentation_links.ps1` PASS; `git diff --check` PASS después del diff documental y E2E final.
+- **Limitaciones y pendientes**: `GTIC_ACTIVATION_CRITERION=MISSING_CONTROLLED_SOURCE`; los campos 04 y 17–19 no se hacen editables en esta vista read-only y solo podrán persistirse cuando una futura versión de formulario los declare. No se obtuvo lectura visual del Excel binario porque estaba bloqueado por otro proceso; las etiquetas 01–19 corresponden literalmente al contrato especificado en el requerimiento. `FULL_MATRIX_82=PENDING_BLOCKS_2_6`.
+- **Estado Git/publicación**: commit final de la intervención y aceptación de `git push origin desarrollo` se consignan en el handoff al concluir. Solo se agregarán archivos de alcance; los untracked previos del usuario se preservan. `MAIN_TOUCHED=NO`.
+- **Estado institucional**: `PRODUCTION_DEPLOYED=FALSE`, `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`, Issue #22 permanece abierto; no se define nuevo `PRODUCTION_SHA`.
+- **Punto exacto de continuación**: siguiente prompt autorizado, Bloque 2 — Controles, campos 20–33. No iniciado en esta intervención.
+
 ## Registro de Intervención — Cierre Definitivo de Reparación Unicode Oracle y Congelación de Release (Matrices de Riesgos)
 
 - **Fecha y hora**: 2026-09-25 15:00 (UTC-6).
