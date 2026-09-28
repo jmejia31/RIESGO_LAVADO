@@ -1,5 +1,16 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Diagnóstico forense 2C de Bloque 2 (COD)
+
+- Fecha `2026-09-28 13:53` (America/Tegucigalpa); rama `desarrollo`; base `3c2e8594ed95c3470767f30f276840e2b0f53629` verificada exacta.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=PARTIAL_BLOCKED`; `BLOCK_3_IMPLEMENTED=NO`.
+- Fuente Excel resuelta en OpenXML: `Matriz Consolidada` es `rId2`/`sheet2.xml`; lookup completo `t_efectividad` (`Listas!A29:C35`) entrega los seis pares nivel/ratio. Valores: Inexistente `0/0`, Inefectivo `1/0`, Razonable `2/0.3`, Parcialmente Efectivo `3/0.5`, Moderado `4/0.85`, Alta Efectividad `5/0.9`. Formato `0%` confirma ratio 0..1 mostrado como porcentaje. No hay validación de lista en U/Y/AC. Las seis claves coinciden con las escalas observadas; no hay conflictos.
+- Hay externalLinks históricos dentro del XLSX, pero los lookups de efectividad apuntan al rango/tabla interna. No se abrió ni usó contenido externo.
+- Gap de ejecución: evaluación carga el `VerJson` de la versión y llama `FormulaEngine.Evaluate` de 2 argumentos con `DefaultRegistry`; no inyecta `FormulaRuntimeOptions`. Solo ejecuta fórmulas inline de fields. V1/V2 DRAFT no expresan F03–F09 inline; sin expresiones, se utiliza el calculador legado. `InstitutionalFormulaDataset`, `DbDrivenCalculationRuntimeFactory`, `CatalogCalculationLookup`, `CalculationPinning`, formula usages y `PublicationGate` no están conectados al camino productivo de evaluación/publicación.
+- F09 no recibe señales de existencia desde `RL_MR_CONTROLES_RIESGO`; la mutación de controles no invalida/recalcula `EVA_CALCULOS_JSON` o proyección. Crear y actualizar control confirman su propia transacción. Recalcular separado implica riesgo de inconsistencia; una remediación deberá resolver atomicidad.
+- El repo declara `CAT_EFECTIVIDAD_CONTROL` sin seed de elementos, y no siembra `CAT_EFECTIVIDAD_NIVEL/PORCENTAJE/ESCALA`. V2 DRAFT no contiene catálogos ni claves de escala, sí declara los mismos pesos 70/15/15 que la parametrización SQL: duplicidad semántica pendiente de decisión.
+- Evidencia completa: [Diagnóstico forense 2C](../3.%20Módulo%20Matrices%20de%20Riesgos/MATRIZ_COMPLETA_BLOQUE_2_DIAGNOSTICO_2C.md). Sin cambios productivos ni Oracle; no se ejecutó suite backend porque solo cambió documentación. No iniciar Bloque 3. `NEXT_ACTION=BLOCK_2_RUNTIME_REMEDIATION`.
+
 ## Estado vigente — Cierre 2B de Bloque 2 (COD, fail-closed)
 
 - Fecha/hora local: `2026-09-28 12:51` (America/Tegucigalpa). Rama `desarrollo`; SHA base `e86bf340c8c85fabf1ffe3b4ee19e8d979205f11`; commit de implementación `ef03146e872adff1eaf5f497c6c6b423ea4a52d2`, Quality Gates `36467582882` completed/success para ese SHA exacto. El commit final del handoff documental se confirmará tras publicarse.
