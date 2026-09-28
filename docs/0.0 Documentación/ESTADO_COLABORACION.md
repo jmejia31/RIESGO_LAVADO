@@ -9,7 +9,7 @@
 - `BLOCKS_2_6_IMPLEMENTED=NO`; `FULL_MATRIX_82=PENDING_BLOCKS_2_6`; `FORM_VERSION_PUBLICATION=NOT_EXECUTED`; `DRAFT_STRATEGY=NO_ORACLE_DRAFT_CHANGE_REQUIRED`. El V2 DRAFT permanece intacto; no hubo Oracle, DDL ni DML.
 - Evidencia local de esta intervención: backend `657/657`; frontend `796/796`; lint PASS; build PASS; E2E `37/37` (incluye prueba móvil de 390px); validadores de scripts DB, encoding, estructura y enlaces PASS; `git diff --check=PASS`. La nueva vista conserva los flujos antiguos; claves nuevas solo podrán persistirse cuando una futura versión las declare. El Excel binario no pudo leerse porque otro proceso lo mantenía bloqueado; 01–19 fueron contrastados literalmente contra el contrato del requerimiento.
 - Conservados sin modificación: `PRODUCTION_DEPLOYED=FALSE`, `INSTITUTIONAL_TRAINING_EXECUTED=FALSE`; Issue #22 abierto; el SHA productivo certificado previo no se reemplaza ni se congela un nuevo SHA.
-- Commit y publicación: se completarán y verificarán en el cierre de esta intervención; `MAIN_TOUCHED=NO`. Riesgo/pendiente: fuente controlada institucional para aplicabilidad GTIC; metadata de Bloques 2–6 no implica funcionalidad.
+- `BLOCK_1_SHA=61c6f76` (`feat(matrices): implement canonical matrix block 1`); publicación en `origin/desarrollo` y HEAD remoto pendientes de la verificación final de este handoff; `MAIN_TOUCHED=NO`. Riesgo/pendiente: fuente controlada institucional para aplicabilidad GTIC; metadata de Bloques 2–6 no implica funcionalidad.
 - Punto de continuidad: siguiente trabajo autorizado, Bloque 2 — Controles, campos 20–33. No iniciar automáticamente.
 
 ## Estado vigente — Cierre Definitivo de Reparación Unicode Oracle y Congelación de Release (Matrices de Riesgos)
