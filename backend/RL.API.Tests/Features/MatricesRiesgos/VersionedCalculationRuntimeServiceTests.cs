@@ -83,6 +83,29 @@ public sealed class VersionedCalculationRuntimeServiceTests
     }
 
     [Fact]
+    public async Task Calculate_FailsClosedWhenVersionedEffectivenessCatalogCodesDiverge()
+    {
+        CatalogSnapshot labels = EffectivenessCatalog("CAT_EFECTIVIDAD_ESCALA", includeNumericValues: null);
+        CatalogSnapshot levels = EffectivenessCatalog("CAT_EFECTIVIDAD_NIVEL", includeNumericValues: true);
+        CatalogSnapshot percentageSource = EffectivenessCatalog("CAT_EFECTIVIDAD_PORCENTAJE", includeNumericValues: false);
+        CatalogSnapshot percentages = percentageSource with
+        {
+            Elements = percentageSource.Elements.Select(element => element.Codigo == "Razonable"
+                ? new CatalogElement(element.Id, "Razonable v2", element.Valor, element.Orden, element.Activo)
+                : element).ToArray()
+        };
+        CatalogSnapshot[] catalogs = [labels, levels, percentages];
+        ICalculoConfiguracionRepository repository = InterfaceStub.Create<ICalculoConfiguracionRepository>(out InterfaceStub stub);
+        stub.On(nameof(ICalculoConfiguracionRepository.ListarFormulaBindingsPorVersionFormularioAsync), _ =>
+            Task.FromResult<IReadOnlyList<FormulaBindingDto>>(EffectivenessBindings()));
+        stub.On(nameof(ICalculoConfiguracionRepository.ObtenerSnapshotRuntimeAsync), _ => Task.FromResult(FullEffectivenessSnapshot()));
+        var service = new VersionedCalculationRuntimeService(repository, new DbDrivenCalculationRuntimeFactory(repository));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CalculateAsync(63,
+            EffectivenessDefinition(catalogs), "{}"));
+    }
+
+    [Fact]
     public void GovernedControlRecalculation_PreservesExistingCalculationMetadata()
     {
         string merged = MatricesRiesgosMitigacionService.MergeCalculatedJson(

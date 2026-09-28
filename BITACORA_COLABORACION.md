@@ -7869,4 +7869,13 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - **Restricciones:** V1 y V2 sin cambios previstos; Unicode 31–45 intacto; `MAIN_TOUCHED=NO`; `ORACLE_CONNECTION_ATTEMPTED_BY_CODEX=NO`; DDL/DML Oracle no ejecutados. Atomicidad revisada/cubierta a nivel del contrato de código; no se ejecutó contra Oracle.
 - **Estado final:** `BLOCK_2_STATUS=PARTIAL_BLOCKED`; el runtime está cableado, pero no se afirman los gates de atomicidad transaccional (los tests revisan el contrato fuente; no simulan rollback/concurrencia real) ni el validador local de codificación. Oracle está prohibido, por lo que no se usó como sustituto de prueba.
 - **Commit/publicación:** implementación publicada en `desarrollo`, SHA `7e9d0be1fba64c5b6127b0f69473bea0fd8329aa`; Quality Gates run `36484610926`, mismo SHA, `completed/success`. Los artefactos locales untracked quedaron fuera del commit.
-- **Continuación exacta:** añadir pruebas de atomicidad con una estrategia de repositorio transaccional que no conecte a Oracle y ejecutar el validador de codificación con PowerShell compatible; solo entonces evaluar cierre de Bloque 2. No empezar Bloque 3.
+- **Continuación exacta:** añadir pruebas de atomicidad con una estrategia de repositorio transaccional que no conecte a Oracle; solo entonces evaluar cierre de Bloque 2. No empezar Bloque 3.
+
+### Ajuste fail-closed de paridad de catálogos — 2026-09-28 15:21 -06:00
+
+- Tras el primer Quality Gate se detectó que la construcción versionada verificaba presencia/hash individual de catálogos, pero no rechazaba paridad divergente entre las tres tablas de efectividad.
+- Se añadió validación en `VersionedCalculationRuntimeService` para exigir presencia conjunta, mismo orden/conjunto de códigos, niveles enteros y proporciones 0..1. Publication usa la misma preparación. Se agregó test negativo para divergencia de claves.
+- Archivos adicionales: `backend/RL.API/Features/MatricesRiesgos/Application/VersionedCalculationRuntimeService.cs`, `backend/RL.API.Tests/Features/MatricesRiesgos/VersionedCalculationRuntimeServiceTests.cs` y documentación de Bloque 2.
+- Verificación reproducida: backend `681/681`; gates dynamic DDL, autorización, Phase 13, database, encoding (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`), estructura, documentación y `git diff --check` PASS. Frontend sin cambios; regresión previa `801/801`, lint/build PASS, E2E `37/37`.
+- Sigue `BLOCK_2_STATUS=PARTIAL_BLOCKED`: atomicidad create/update/concurrencia está implementada como transacción única y el test inspecciona el contrato fuente, pero no se ejecuta fault-injection de rollback/concurrencia; Oracle permanece prohibido. No iniciar Bloque 3.
+- Commit/push y Quality Gate exacto pendientes para este ajuste.

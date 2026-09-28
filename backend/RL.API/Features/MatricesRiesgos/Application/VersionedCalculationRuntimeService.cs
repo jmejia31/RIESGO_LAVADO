@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Globalization;
 using RL.API.Features.Catalogos.Contracts;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
@@ -107,6 +108,7 @@ public sealed class VersionedCalculationRuntimeService
         }
 
         (Dictionary<string, int> functions, Dictionary<string, int> parameters, IReadOnlyList<CatalogSnapshot> catalogs) = ReadRuntimePins(definitionJson);
+        ValidateEffectivenessCatalogParity(catalogs);
         var formulaVersions = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (IGrouping<string, GovernedFormulaBinding> group in formulas.GroupBy(binding => binding.FormulaCode, StringComparer.OrdinalIgnoreCase))
         {
@@ -119,6 +121,39 @@ public sealed class VersionedCalculationRuntimeService
             published: true, formulaVersions: formulaVersions);
         FormulaRuntimeOptions runtime = await _factory.CreatePublishedAsync(pinning, catalogs);
         return (formulas, runtime, targets);
+    }
+
+    private static void ValidateEffectivenessCatalogParity(IReadOnlyList<CatalogSnapshot> catalogs)
+    {
+        string[] codes = ["CAT_EFECTIVIDAD_ESCALA", "CAT_EFECTIVIDAD_NIVEL", "CAT_EFECTIVIDAD_PORCENTAJE"];
+        Dictionary<string, CatalogSnapshot> byCode = catalogs.ToDictionary(catalog => catalog.Code, StringComparer.OrdinalIgnoreCase);
+        CatalogSnapshot[] present = codes.Where(byCode.ContainsKey).Select(code => byCode[code]).ToArray();
+        if (present.Length == 0) return;
+        if (present.Length != codes.Length)
+            throw new InvalidOperationException("Los tres catálogos de efectividad deben estar presentes como un conjunto versionado.");
+
+        CatalogElement[] scale = Ordered(present[0]);
+        CatalogElement[] levels = Ordered(present[1]);
+        CatalogElement[] percentages = Ordered(present[2]);
+        if (scale.Length == 0 || levels.Length != scale.Length || percentages.Length != scale.Length)
+            throw new InvalidOperationException("Los catálogos de efectividad deben tener la misma cantidad de elementos.");
+
+        for (int index = 0; index < scale.Length; index++)
+        {
+            if (!scale[index].Activo || !levels[index].Activo || !percentages[index].Activo
+                || !scale[index].Codigo.Equals(levels[index].Codigo, StringComparison.Ordinal)
+                || !scale[index].Codigo.Equals(percentages[index].Codigo, StringComparison.Ordinal))
+                throw new InvalidOperationException("Los catálogos de efectividad deben conservar exactamente el mismo conjunto y orden de códigos activos.");
+            if (!int.TryParse(levels[index].Valor, NumberStyles.Integer, CultureInfo.InvariantCulture, out _)
+                || !double.TryParse(percentages[index].Valor, NumberStyles.Float, CultureInfo.InvariantCulture, out double ratio)
+                || !double.IsFinite(ratio) || ratio is < 0d or > 1d)
+                throw new InvalidOperationException("Los niveles deben ser enteros y los porcentajes de efectividad deben ser proporciones entre 0 y 1.");
+        }
+
+        static CatalogElement[] Ordered(CatalogSnapshot catalog) => catalog.Elements
+            .OrderBy(element => element.Orden)
+            .ThenBy(element => element.Codigo, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static Dictionary<string, string> ReadFieldKeys(string json)
