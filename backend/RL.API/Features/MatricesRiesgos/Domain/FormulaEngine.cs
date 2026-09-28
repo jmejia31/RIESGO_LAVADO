@@ -19,7 +19,7 @@ public sealed class FormulaEvaluationResult
     public bool Success => Errors.Count == 0;
 }
 
-public sealed record FormulaExpressionAnalysis(IReadOnlySet<string> ReferencedNames, IReadOnlySet<string> ReferencedFunctions);
+public sealed record FormulaExpressionAnalysis(IReadOnlySet<string> ReferencedNames, IReadOnlySet<string> ReferencedFunctions, IReadOnlySet<string>? ReferencedCatalogs = null);
 
 /// <summary>Único parser, AST y evaluador seguro del DSL de matrices de riesgos.</summary>
 public sealed class FormulaEngine
@@ -49,7 +49,8 @@ public sealed class FormulaEngine
                 {
                     Node ast = Parse(field.Expression!, options.Registry.FunctionCodes);
                     formulas[field.Key] = (field.Expression!, ast);
-                    ValidateReferences(ast, fields.Keys, field.Key, errors);
+                    ValidateReferences(ast, fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
+                        .Concat(InstitutionalCalculationContextKeys.Reserved), field.Key, errors);
                 }
                 catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, field.Key, ex.Message)); }
             }
@@ -59,13 +60,67 @@ public sealed class FormulaEngine
         return errors;
     }
 
+    public IReadOnlyList<FormulaDiagnostic> ValidateGovernedDefinition(
+        string json,
+        IReadOnlyList<GovernedFormulaBinding> bindings,
+        FormulaRuntimeOptions options)
+    {
+        var errors = new List<FormulaDiagnostic>();
+        try
+        {
+            using JsonDocument document = JsonDocument.Parse(json);
+            JsonElement root = document.RootElement;
+            if (root.TryGetProperty("definicionFormulario", out JsonElement nested)) root = nested;
+            Dictionary<string, Field> fields = ReadFields(root, errors);
+            var formulas = new Dictionary<string, (string Expression, Node Ast)>(StringComparer.OrdinalIgnoreCase);
+            foreach (Field field in fields.Values.Where(field => !string.IsNullOrWhiteSpace(field.Expression)))
+            {
+                Node ast = Parse(field.Expression!, options.Registry.FunctionCodes);
+                formulas.Add(field.Key, (field.Expression!, ast));
+            }
+            var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (GovernedFormulaBinding binding in bindings)
+            {
+                string target = binding.TargetField.Trim();
+                if (!fields.ContainsKey(target))
+                {
+                    errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, target, "El target no está declarado en el formulario."));
+                    continue;
+                }
+                if (!targets.Add(target) || formulas.ContainsKey(target))
+                {
+                    errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, target, "Existe ambigüedad de fuente de fórmula para el mismo target."));
+                    continue;
+                }
+                Node ast = Parse(binding.Expression, options.Registry.FunctionCodes);
+                formulas.Add(target, (binding.Expression, ast));
+            }
+            foreach (KeyValuePair<string, (string Expression, Node Ast)> entry in formulas)
+            {
+                ValidateReferences(entry.Value.Ast, fields.Keys.Concat(options.Parameters?.Keys ?? Array.Empty<string>())
+                    .Concat(InstitutionalCalculationContextKeys.Reserved), entry.Key, errors);
+                ValidateExpressionNode(entry.Value.Ast, options, errors);
+                FormulaExpressionAnalysis analysis = AnalyzeExpression(entry.Value.Expression, options.Registry);
+                if (analysis.ReferencedCatalogs is { } referencedCatalogs)
+                    foreach (string catalogCode in referencedCatalogs)
+                        if (options.Pinning?.CatalogSnapshots.ContainsKey(catalogCode) != true || options.Lookup is null)
+                            errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, entry.Key, $"El catalogo '{catalogCode}' no esta pinneado o no tiene resolver versionado."));
+            }
+            DetectCycles(formulas, errors);
+        }
+        catch (JsonException ex) { errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message)); }
+        catch (FormulaRuntimeException ex) { errors.Add(new(ex.Code, "formula", ex.Message)); }
+        return errors;
+    }
+
     public FormulaExpressionAnalysis AnalyzeExpression(string expression, IFunctionRegistry? registry = null)
     {
         Node ast = Parse(expression, (registry ?? DefaultRegistry).FunctionCodes);
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var functions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        Collect(ast, names, functions);
-        return new(names, functions);
+        var catalogs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        Collect(ast, names, functions, catalogs);
+        return new(names, functions, catalogs);
     }
 
     public IReadOnlyList<FormulaDiagnostic> ValidateExpression(string expression, FormulaRuntimeOptions options)
@@ -125,14 +180,81 @@ public sealed class FormulaEngine
         return result;
     }
 
-    private static void Collect(Node node, HashSet<string> names, HashSet<string> functions)
+    public FormulaEvaluationResult EvaluateGoverned(
+        string definitionJson,
+        string responsesJson,
+        IReadOnlyList<GovernedFormulaBinding> bindings,
+        FormulaRuntimeOptions options,
+        IReadOnlyDictionary<string, FormulaValue>? supplementalContext = null)
+    {
+        var result = new FormulaEvaluationResult();
+        try
+        {
+            using JsonDocument definition = JsonDocument.Parse(definitionJson);
+            using JsonDocument responses = JsonDocument.Parse(string.IsNullOrWhiteSpace(responsesJson) ? "{}" : responsesJson);
+            JsonElement root = definition.RootElement;
+            if (root.TryGetProperty("definicionFormulario", out JsonElement nested)) root = nested;
+            Dictionary<string, Field> fields = ReadFields(root, result.Errors);
+            if (result.Errors.Count > 0) return result;
+
+            var formulas = new Dictionary<string, Node>(StringComparer.OrdinalIgnoreCase);
+            foreach (Field field in fields.Values.Where(field => !string.IsNullOrWhiteSpace(field.Expression)))
+            {
+                try { formulas.Add(field.Key, Parse(field.Expression!, options.Registry.FunctionCodes)); }
+                catch (FormulaRuntimeException ex) { result.Errors.Add(new(ex.Code, field.Key, ex.Message)); }
+            }
+
+            var seenTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (GovernedFormulaBinding binding in bindings)
+            {
+                string target = binding.TargetField.Trim();
+                if (string.IsNullOrWhiteSpace(target) || !fields.ContainsKey(target))
+                {
+                    result.Errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, target, "El target de fórmula no está declarado en la versión del formulario."));
+                    continue;
+                }
+                if (!seenTargets.Add(target) || formulas.ContainsKey(target))
+                {
+                    result.Errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, target, "Existe más de una fuente de fórmula para el mismo target."));
+                    continue;
+                }
+                try { formulas.Add(target, Parse(binding.Expression, options.Registry.FunctionCodes)); }
+                catch (FormulaRuntimeException ex) { result.Errors.Add(new(ex.Code, target, ex.Message)); }
+            }
+            if (result.Errors.Count > 0) return result;
+
+            var values = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase);
+            if (responses.RootElement.ValueKind == JsonValueKind.Object)
+                foreach (JsonProperty property in responses.RootElement.EnumerateObject())
+                    values[property.Name] = FormulaValue.FromJson(property.Value);
+            if (supplementalContext is not null)
+                foreach ((string key, FormulaValue value) in supplementalContext)
+                    values[key] = value;
+
+            var state = new EvaluationState(options, formulas);
+            foreach (string key in formulas.Keys)
+            {
+                try { result.Values[key] = state.EvaluateField(key, values).ToObject(); }
+                catch (FormulaRuntimeException ex) { result.Errors.Add(new(ex.Code, key, ex.Message)); }
+            }
+        }
+        catch (JsonException ex) { result.Errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message)); }
+        return result;
+    }
+
+    private static void Collect(Node node, HashSet<string> names, HashSet<string> functions, HashSet<string> catalogs)
     {
         switch (node)
         {
             case ReferenceNode reference: names.Add(reference.Name); break;
-            case CallNode call: functions.Add(call.Name); foreach (Node argument in call.Arguments) Collect(argument, names, functions); break;
-            case UnaryNode unary: Collect(unary.Operand, names, functions); break;
-            case BinaryNode binary: Collect(binary.Left, names, functions); Collect(binary.Right, names, functions); break;
+            case CallNode call:
+                functions.Add(call.Name);
+                if (call.Name.Equals("LOOKUP", StringComparison.OrdinalIgnoreCase) && call.Arguments.FirstOrDefault() is StringNode catalog)
+                    catalogs.Add(catalog.Text);
+                foreach (Node argument in call.Arguments) Collect(argument, names, functions, catalogs);
+                break;
+            case UnaryNode unary: Collect(unary.Operand, names, functions, catalogs); break;
+            case BinaryNode binary: Collect(binary.Left, names, functions, catalogs); Collect(binary.Right, names, functions, catalogs); break;
         }
     }
 
@@ -176,6 +298,9 @@ public sealed class FormulaEngine
         {
             FunctionArgumentDefinition? argument = definition.Arguments.FirstOrDefault(a => a.Position == index + 1) ?? definition.Arguments.LastOrDefault(a => a.Variadic);
             if (argument is null) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "Argumento no declarado en la firma de la función.");
+            if (arguments[index] is StringNode { Text.Length: 0 }
+                && argument.Code is "FALLBACK" or "TRUE_VALUE" or "FALSE_VALUE")
+                continue;
             FormulaValueType? actual = StaticType(arguments[index]);
             if (!actual.HasValue || argument.Type.Equals("VALUE", StringComparison.OrdinalIgnoreCase)) continue;
             bool valid = argument.Type.ToUpperInvariant() switch
@@ -333,7 +458,7 @@ public sealed class FormulaEngine
             if (definition.HandlerKey?.Equals("IFERROR_V1", StringComparison.OrdinalIgnoreCase) == true)
             {
                 try { return EvaluateNode(call.Arguments[0], values); }
-                catch (FormulaRuntimeException ex) when (ex.Code is FormulaErrorCode.FORMULA_DIVISION_BY_ZERO or FormulaErrorCode.FORMULA_TYPE_MISMATCH or FormulaErrorCode.FORMULA_ARGUMENT_INVALID) { return EvaluateNode(call.Arguments[1], values); }
+                catch (FormulaRuntimeException ex) when (ex.Code is FormulaErrorCode.FORMULA_DIVISION_BY_ZERO or FormulaErrorCode.FORMULA_TYPE_MISMATCH or FormulaErrorCode.FORMULA_ARGUMENT_INVALID or FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN) { return EvaluateNode(call.Arguments[1], values); }
             }
             FormulaValue[] args = call.Arguments.Select(argument => EvaluateNode(argument, values)).ToArray();
             ValidateArgumentTypes(definition, args);
@@ -411,7 +536,7 @@ public sealed class FormulaEngine
                 if (!valid) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_TYPE_MISMATCH, $"El argumento '{argument.Code}' no coincide con el tipo declarado.");
             }
         }
-        private static FormulaExpressionAnalysis Analyze(Node ast) { var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase); var calls = new HashSet<string>(StringComparer.OrdinalIgnoreCase); Collect(ast, names, calls); return new(names, calls); }
+        private static FormulaExpressionAnalysis Analyze(Node ast) { var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase); var calls = new HashSet<string>(StringComparer.OrdinalIgnoreCase); var catalogs = new HashSet<string>(StringComparer.OrdinalIgnoreCase); Collect(ast, names, calls, catalogs); return new(names, calls, catalogs); }
         private static FormulaValue RoundDown(IReadOnlyList<FormulaValue> args) { int digits = ToDigits(args[1]); double factor = Math.Pow(10, digits); return FormulaValue.NumberValue(Math.Truncate(args[0].AsNumber() * factor) / factor); }
         private static FormulaValue Mod(IReadOnlyList<FormulaValue> args) { double value = args[0].AsNumber(), divisor = args[1].AsNumber(); if (divisor == 0) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_DIVISION_BY_ZERO, "MOD no acepta divisor cero."); return FormulaValue.NumberValue(value - divisor * Math.Floor(value / divisor)); }
         private static int ToDigits(FormulaValue value) { double digits = value.AsNumber(); if (digits is < -15 or > 15 || digits != Math.Truncate(digits)) throw new FormulaRuntimeException(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "La precisión debe ser un entero entre -15 y 15."); return (int)digits; }

@@ -27,17 +27,23 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     private readonly IFormularioValidador _validador;
     private readonly IMatricesRiesgoService _calculador;
     private readonly IAuditoriaRepository _auditoriaRepo;
+    private readonly VersionedCalculationRuntimeService? _versionedRuntime;
+    private readonly IMatricesRiesgosMitigacionRepository? _controlsRepository;
 
     public MatricesRiesgosAppService(
         IMatricesRiesgosRepository repo,
         IFormularioValidador validador,
         IMatricesRiesgoService calculador,
-        IAuditoriaRepository auditoriaRepo)
+        IAuditoriaRepository auditoriaRepo,
+        VersionedCalculationRuntimeService? versionedRuntime = null,
+        IMatricesRiesgosMitigacionRepository? controlsRepository = null)
     {
         _repo = repo;
         _validador = validador;
         _calculador = calculador;
         _auditoriaRepo = auditoriaRepo;
+        _versionedRuntime = versionedRuntime;
+        _controlsRepository = controlsRepository;
     }
 
     public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo)
@@ -170,6 +176,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         {
             return ServiceResult.BadRequest(
                 $"La definición no puede publicarse porque no cumple el contrato del formulario: {string.Join("; ", definicion.Errores.ConvertAll(e => e.Mensaje))}");
+        }
+
+        if (_versionedRuntime is not null)
+        {
+            IReadOnlyList<FormulaDiagnostic> runtimeErrors = await _versionedRuntime.ValidateForPublicationAsync(versionId, version.VerJson);
+            if (runtimeErrors.Count > 0)
+                return ServiceResult.BadRequest("La versión no puede publicarse porque el runtime gobernado está incompleto: " +
+                    string.Join("; ", runtimeErrors.Select(error => $"{error.Field}: {error.Code}")));
         }
 
         bool publicado = await _repo.PublicarVersionFormularioAsync(
@@ -403,7 +417,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult<long>.BadRequest("La evaluación debe originarse en una versión publicada y vigente.");
         }
 
-        ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson);
+        ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(
+            dto, version.VerJson, version.VerId, CrearContextoPresenciaControles(Array.Empty<ControlRiesgoDto>()));
         if (validacion is not null)
         {
             return new ServiceResult<long>(false, null, validacion.Message, validacion.StatusCode);
@@ -451,7 +466,10 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest($"La versión de formulario ID {evaluacionPersistida.EvaVersionId} asociada a la evaluación no existe.");
         }
 
-        ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson);
+        IReadOnlyDictionary<string, bool>? controlPresence = _controlsRepository is null
+            ? null
+            : CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
+        ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson, version.VerId, controlPresence);
         if (validacion is not null)
         {
             return validacion;
@@ -743,7 +761,9 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
 
     private async Task<ServiceResult?> ValidarYCalcularEvaluacionAsync(
         EvaluacionRiesgoDto dto,
-        string definicionFormulario)
+        string definicionFormulario,
+        long versionFormularioId,
+        IReadOnlyDictionary<string, bool>? controlPresence = null)
     {
         var validacion = await _validador.ValidarRespuestasAsync(dto.EvaDataJson, definicionFormulario);
         if (!validacion.Valido)
@@ -756,7 +776,35 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Error de validación de respuestas:\n" + string.Join("\n", errores));
         }
 
-        // El motor DSL es autoritativo para definiciones que contienen fórmulas.
+        if (_versionedRuntime is not null)
+        {
+            try
+            {
+                GovernedCalculationResult governed = await _versionedRuntime.CalculateAsync(
+                    versionFormularioId, definicionFormulario, dto.EvaDataJson, controlPresence);
+                if (governed.IsGoverned)
+                {
+                    FormulaEvaluationResult calculation = governed.Evaluation!;
+                    if (!calculation.Success)
+                        return ServiceResult.BadRequest("Error de cálculo gobernado: " + string.Join("; ", calculation.Errors.Select(error => error.Code.ToString())));
+                    dto.EvaDataCalcJson = JsonSerializer.Serialize(calculation.Values);
+                    dto.EvaVri = ObtenerEnteroCalculado(calculation.Values, "valor_riesgo_inherente", "vri", "vri_calculado");
+                    dto.EvaEtp = ObtenerDecimalCalculado(calculation.Values, "efectividad_total_ponderada", "etp", "etp_calculado");
+                    dto.EvaVrr = ObtenerEnteroCalculado(calculation.Values, "valor_riesgo_residual", "vrr", "vrr_calculado");
+                    return null;
+                }
+            }
+            catch (FormulaRuntimeException ex)
+            {
+                return ServiceResult.BadRequest("Runtime gobernado inválido: " + ex.Code);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return ServiceResult.BadRequest("Runtime gobernado inválido: " + ex.Message);
+            }
+        }
+
+        // El motor DSL es autoritativo para definiciones inline históricas sin formula usages.
         // El payload de cálculos recibido del cliente nunca participa en este flujo.
         var motor = new FormulaEngine();
         FormulaEvaluationResult evaluacionFormula = motor.Evaluate(definicionFormulario, dto.EvaDataJson);
@@ -798,6 +846,14 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         dto.EvaDataCalcJson = JsonSerializer.Serialize(calculo.Data);
         return null;
     }
+
+    private static IReadOnlyDictionary<string, bool> CrearContextoPresenciaControles(IReadOnlyList<ControlRiesgoDto> controls) =>
+        new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase)
+        {
+            [InstitutionalCalculationContextKeys.PreventiveControl] = controls.Any(control => control.ConTipo.Equals("PREVENTIVO", StringComparison.OrdinalIgnoreCase)),
+            [InstitutionalCalculationContextKeys.DetectiveControl] = controls.Any(control => control.ConTipo.Equals("DETECTIVO", StringComparison.OrdinalIgnoreCase)),
+            [InstitutionalCalculationContextKeys.CorrectiveControl] = controls.Any(control => control.ConTipo.Equals("CORRECTIVO", StringComparison.OrdinalIgnoreCase))
+        };
 
     private static int? ObtenerEnteroCalculado(IReadOnlyDictionary<string, object?> valores, params string[] claves)
     {

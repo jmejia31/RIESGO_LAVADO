@@ -51,3 +51,37 @@ El runtime declara F03–F08 como `LOOKUP` en `CAT_EFECTIVIDAD_NIVEL` y `CAT_EFE
 ## Verificación
 
 La intervención local debe registrar conteos reales de frontend/backend, lint/build/E2E y validadores en BITACORA_COLABORACION.md. `BLOCK_2_IMPLEMENTED=PARTIAL_BLOCKED` y los gates que dependen de escala/unidad permanecen pendientes; no declarar cierre de Bloque 2.
+
+## Remediación runtime 2D — wiring implementado, certificación pendiente
+
+Esta evolución conecta las versiones que declaran `RL_MR_FORMULA_USOS` al mismo `FormulaEngine`, conservando el flujo histórico cuando una versión no tiene bindings. Un error en una versión gobernada no cae en `LegacyCalculator`.
+
+- `ListarFormulaBindingsPorVersionFormularioAsync` obtiene por un JOIN la versión exacta de cada fórmula y sus estados/hash. El `CalculationPinning.FormulaVersions` se arma desde `FUS_FORMULA_VERSION_ID`; nunca selecciona la última fórmula.
+- `runtimeCalculo` queda como contrato de versiones futuras dentro de `VER_JSON`: fija funciones, parámetros y hashes de catálogos. El servicio resuelve `runtimeCalculo`, `catalogos` y fórmula-usos usando el `EVA_VERSION_ID` de la evaluación. `DbDrivenCalculationRuntimeFactory` valida versiones publicadas, parámetros exactos y SHA-256 canónico de los snapshots antes de crear `FormulaRuntimeOptions`/`CatalogCalculationLookup`.
+- `PublicationGate` existente valida los bindings gobernados al publicar formularios: targets, duplicados, estados/hash de fórmulas, pins de fórmula, referencias, funciones/params y catálogos requeridos. No se creó un segundo gate.
+- F03–F09 ejecutan expresiones almacenadas por fórmula-uso con el runtime DB-driven. El contexto `control_preventivo`, `control_detectivo` y `control_correctivo` se deriva de `RL_MR_CONTROLES_RIESGO`; no se persiste en `EVA_DATOS_JSON` ni se mezcla con `controles_preventivo`/`ECO_EFECTIVIDAD`. El target nuevo ETP es `efectividad_total_ponderada`; se conserva lectura de alias históricos.
+- Crear/actualizar controles gobernados vuelve a calcular con el conjunto hipotético de controles y persiste mutación, `EVA_CALCULOS_JSON`, incremento de `EVA_VERSION_ROW` y auditoría en una sola transacción. La escritura verifica versión optimista y estado actual `BORRADOR`, prohíbe re-parenting y conserva metadatos anteriores del JSON de cálculo. El cambio de estado y la mutación usan el mismo bloqueo de fila de evaluación. V1 sigue el CRUD histórico sin reinterpretación.
+- La validación estática acepta `""` como retorno vacío únicamente en argumentos condicionales `FALLBACK`, `TRUE_VALUE` y `FALSE_VALUE`, que son usados por las expresiones institucionales. No se alteraron las expresiones F03–F09 ni las fórmulas de V1.
+- Pruebas de servicio ejecutan las seis escalas contra snapshots versionados y parámetros pinneados 70/15/15; cubren F03–F09, resultado mixto 0.715, ausencia de controles (blank), control presente con escala inefectiva (0%), hash manipulado, override de resultado y spoofing de contexto. También se comprueba que el ETP previo se conserva al fusionar resultados.
+
+Contrato versionado futuro:
+
+```json
+{
+  "runtimeCalculo": {
+    "funciones": { "LOOKUP": 1, "IFERROR": 1, "IF": 1, "AND": 1 },
+    "parametros": { "PESO_PREVENTIVO": 1, "PESO_DETECTIVO": 1, "PESO_CORRECTIVO": 1 },
+    "catalogos": {
+      "CAT_EFECTIVIDAD_ESCALA": "<SHA-256>",
+      "CAT_EFECTIVIDAD_NIVEL": "<SHA-256>",
+      "CAT_EFECTIVIDAD_PORCENTAJE": "<SHA-256>"
+    }
+  }
+}
+```
+
+El snapshot contiene el conjunto en el orden de `t_efectividad`: `Inexistente`, `Inefectivo`, `Razonable`, `Parcialmente Efectivo`, `Moderado`, `Alta Efectividad`; nivel 0–5 y proporción 0, 0, 0.30, 0.50, 0.85, 0.90. Los pesos se obtienen de `RL_MR_PARAMETRO_VERSIONES` usando sus pins, no de `reglas[].parametros`.
+
+La implementación y los tests no modifican V1, el V2 DRAFT, los 59 registros ni Oracle. El snapshot final se incorporará a la futura definición completa; `V2_ORACLE_SYNC=DEFERRED_UNTIL_82_FIELD_CONTRACT_COMPLETE`. La atomicidad está verificada en el código de repositorio y su contrato; no se simuló una transacción Oracle real, conforme a la prohibición de conexión.
+
+Estado de cierre se actualiza únicamente al registrar conteos de todas las suites, validadores, revisión del diff y Quality Gate remoto del SHA exacto. Hasta entonces no se debe interpretar esta sección como cierre certificado ni comenzar Bloque 3.

@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Data;
+using System.Globalization;
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.Auditoria.Persistence;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -10,8 +12,11 @@ namespace RL.API.Features.MatricesRiesgos.Persistence;
 public interface IMatricesRiesgosMitigacionRepository
 {
     Task<IReadOnlyList<ControlRiesgoDto>> ListarControlesAsync(long evaluacionId);
+    Task<ControlRiesgoDto?> ObtenerControlAsync(long controlId);
     Task<long> CrearControlAsync(ControlRiesgoGuardarDto dto, long usuarioId, string? ip);
     Task<bool> ActualizarControlAsync(long controlId, ControlRiesgoGuardarDto dto, long usuarioId, string? ip);
+    Task<long> CrearControlGobernadoAtomicoAsync(ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip);
+    Task<bool> ActualizarControlGobernadoAtomicoAsync(long controlId, ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip);
     Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId);
     Task<long> RegistrarEvaluacionControlAsync(long controlId, EvaluacionControlGuardarDto dto, long usuarioId, string? ip);
     Task<IReadOnlyList<PlanMitigacionDto>> ListarPlanesAsync(long evaluacionId);
@@ -60,6 +65,23 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             });
         }
         return lista;
+    }
+
+    public async Task<ControlRiesgoDto?> ObtenerControlAsync(long controlId)
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+        const string sql = @"SELECT CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO
+                               FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID=:id";
+        await using var command = Comando(sql, connection);
+        command.Parameters.Add(new OracleParameter("id", controlId));
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) return null;
+        return new ControlRiesgoDto
+        {
+            ConId=reader.GetInt64(0), ConEvaluacionId=reader.GetInt64(1), ConTipo=reader.GetString(2),
+            ConDescripcion=TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)), ConAutomatizacion=reader.GetString(4), ConEstado=reader.GetString(5)
+        };
     }
 
     public async Task<long> CrearControlAsync(ControlRiesgoGuardarDto dto, long usuarioId, string? ip)
@@ -119,6 +141,117 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             return true;
         }
         catch { await tx.RollbackAsync(); throw; }
+    }
+
+    public async Task<long> CrearControlGobernadoAtomicoAsync(ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip)
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        try
+        {
+            await LockGovernedDraftEvaluationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow);
+            long id = await SiguienteAsync(connection, transaction, "SEQ_RL_MR_CONTROLES");
+            const string insert = @"INSERT INTO RL_MR_CONTROLES_RIESGO
+                (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO)
+                VALUES(:id,:evaluationId,:type,:description,:automation,:state)";
+            await using (var command = Comando(insert, connection, transaction))
+            {
+                command.Parameters.Add(new OracleParameter("id", id));
+                AddControlParameters(command, dto);
+                await command.ExecuteNonQueryAsync();
+            }
+            await UpdateGovernedCalculationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow, calculatedJson);
+            await AuditarAsync(connection, transaction, "RL_MR_CONTROLES_RIESGO", id, "INSERT", dto, usuarioId, ip);
+            await AuditarAsync(connection, transaction, "RL_MR_EVALUACIONES_RIESGO", dto.ConEvaluacionId, "UPDATE", new { calculatedJson }, usuarioId, ip);
+            await transaction.CommitAsync();
+            return id;
+        }
+        catch { await transaction.RollbackAsync(); throw; }
+    }
+
+    public async Task<bool> ActualizarControlGobernadoAtomicoAsync(long controlId, ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip)
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+        await using var transaction = connection.BeginTransaction();
+        try
+        {
+            await LockGovernedDraftEvaluationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow);
+            const string selectControl = "SELECT CON_EVALUACION_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID=:id FOR UPDATE";
+            long existingEvaluationId;
+            await using (var read = Comando(selectControl, connection, transaction))
+            {
+                read.Parameters.Add(new OracleParameter("id", controlId));
+                object? value = await read.ExecuteScalarAsync();
+                if (value is null || value == DBNull.Value) { await transaction.RollbackAsync(); return false; }
+                existingEvaluationId = Convert.ToInt64(value, CultureInfo.InvariantCulture);
+            }
+            if (existingEvaluationId != dto.ConEvaluacionId)
+                throw new InvalidOperationException("No se permite cambiar el padre de un control gobernado.");
+            const string update = @"UPDATE RL_MR_CONTROLES_RIESGO
+                SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state
+                WHERE CON_ID=:id AND CON_EVALUACION_ID=:evaluationId";
+            await using (var command = Comando(update, connection, transaction))
+            {
+                command.Parameters.Add(new OracleParameter("id", controlId));
+                AddControlParameters(command, dto);
+                if (await command.ExecuteNonQueryAsync() != 1) { await transaction.RollbackAsync(); return false; }
+            }
+            await UpdateGovernedCalculationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow, calculatedJson);
+            await AuditarAsync(connection, transaction, "RL_MR_CONTROLES_RIESGO", controlId, "UPDATE", dto, usuarioId, ip);
+            await AuditarAsync(connection, transaction, "RL_MR_EVALUACIONES_RIESGO", dto.ConEvaluacionId, "UPDATE", new { calculatedJson }, usuarioId, ip);
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch { await transaction.RollbackAsync(); throw; }
+    }
+
+    private static async Task LockGovernedDraftEvaluationAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, int expectedVersionRow)
+    {
+        const string sql = "SELECT EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id AND EVA_ACTIVO=1 FOR UPDATE";
+        await using var command = Comando(sql, connection, transaction);
+        command.Parameters.Add(new OracleParameter("id", evaluationId));
+        await using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) throw new KeyNotFoundException("La evaluación no existe.");
+        if (reader.GetInt32(0) != expectedVersionRow) throw new DBConcurrencyException("La evaluación cambió durante la mutación del control. Recargue e intente nuevamente.");
+        await reader.DisposeAsync();
+        string state = await ObtenerEstadoActualAsync(connection, transaction, evaluationId);
+        if (!state.Equals("BORRADOR", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Los controles de una evaluación gobernada solo se pueden modificar en estado BORRADOR.");
+    }
+
+    private static async Task<string> ObtenerEstadoActualAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId)
+    {
+        const string sql = @"SELECT FLU_ESTADO FROM (
+                                  SELECT FLU_ESTADO FROM RL_MR_FLUJOS_EVALUACION
+                                   WHERE FLU_EVALUACION_ID=:id ORDER BY FLU_FECHA DESC,FLU_ID DESC
+                              ) WHERE ROWNUM=1";
+        await using var command = Comando(sql, connection, transaction);
+        command.Parameters.Add(new OracleParameter("id", evaluationId));
+        object? result = await command.ExecuteScalarAsync();
+        return result is null || result == DBNull.Value ? "BORRADOR" : Convert.ToString(result, CultureInfo.InvariantCulture) ?? "BORRADOR";
+    }
+
+    private static async Task UpdateGovernedCalculationAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, int expectedVersionRow, string calculatedJson)
+    {
+        const string sql = @"UPDATE RL_MR_EVALUACIONES_RIESGO
+                                SET EVA_CALCULOS_JSON=:calculation,EVA_VERSION_ROW=EVA_VERSION_ROW+1
+                              WHERE EVA_ID=:id AND EVA_ACTIVO=1 AND EVA_VERSION_ROW=:expected";
+        await using var command = Comando(sql, connection, transaction);
+        command.Parameters.Add(new OracleParameter("calculation", OracleDbType.Clob) { Value = calculatedJson });
+        command.Parameters.Add(new OracleParameter("id", evaluationId));
+        command.Parameters.Add(new OracleParameter("expected", expectedVersionRow));
+        if (await command.ExecuteNonQueryAsync() != 1) throw new DBConcurrencyException("No fue posible actualizar el cálculo por concurrencia o cambio de estado.");
+    }
+
+    private static void AddControlParameters(OracleCommand command, ControlRiesgoGuardarDto dto)
+    {
+        command.Parameters.Add(new OracleParameter("evaluationId", dto.ConEvaluacionId));
+        command.Parameters.Add(new OracleParameter("type", dto.ConTipo.Trim().ToUpperInvariant()));
+        command.Parameters.Add(new OracleParameter("description", dto.ConDescripcion.Trim()));
+        command.Parameters.Add(new OracleParameter("automation", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
+        command.Parameters.Add(new OracleParameter("state", dto.ConEstado.Trim().ToUpperInvariant()));
     }
 
     public async Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId)

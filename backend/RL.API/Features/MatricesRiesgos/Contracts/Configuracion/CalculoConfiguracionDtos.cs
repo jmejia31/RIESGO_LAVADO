@@ -38,6 +38,29 @@ public sealed class FormulaUsageDto
     public string FormulaCodigo { get; set; } = string.Empty;
 }
 
+public sealed class FormulaBindingDto
+{
+    public long VersionFormularioId { get; set; }
+    public string CampoClave { get; set; } = string.Empty;
+    public long FormulaVersionId { get; set; }
+    public string FormulaCodigo { get; set; } = string.Empty;
+    public int FormulaVersion { get; set; }
+    public string Expresion { get; set; } = string.Empty;
+    public string TipoResultado { get; set; } = string.Empty;
+    public string EstadoVersion { get; set; } = string.Empty;
+    public string EstadoFormula { get; set; } = string.Empty;
+    public string Hash { get; set; } = string.Empty;
+}
+
+public sealed class CalculationConfigurationSnapshotDto
+{
+    public IReadOnlyList<FuncionDto> Funciones { get; init; } = Array.Empty<FuncionDto>();
+    public IReadOnlyList<FuncionVersionDto> VersionesFuncion { get; init; } = Array.Empty<FuncionVersionDto>();
+    public IReadOnlyList<FuncionArgumentoDto> ArgumentosFuncion { get; init; } = Array.Empty<FuncionArgumentoDto>();
+    public IReadOnlyList<ParametroDto> Parametros { get; init; } = Array.Empty<ParametroDto>();
+    public IReadOnlyList<ParametroVersionDto> VersionesParametro { get; init; } = Array.Empty<ParametroVersionDto>();
+}
+
 public sealed class CrearFormulaDto
 {
     [Required, StringLength(80)] public string Codigo { get; set; } = string.Empty;

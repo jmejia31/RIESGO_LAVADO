@@ -2,6 +2,7 @@ using RL.API.Features.Catalogos.Contracts;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
+using System.Text.RegularExpressions;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
 
@@ -21,31 +22,25 @@ public sealed class DbDrivenCalculationRuntimeFactory
     {
         if (!pinning.Published) throw new InvalidOperationException("Published runtime requires a published pinning snapshot.");
 
-        IReadOnlyList<FuncionDto> functions = await _configuration.ListarFuncionesAsync(false);
-        var versions = new List<FuncionVersionDto>();
-        var arguments = new List<FuncionArgumentoDto>();
-        foreach (FuncionDto function in functions)
-        {
-            IReadOnlyList<FuncionVersionDto> functionVersions = await _configuration.ListarFuncionVersionesAsync(function.Id);
-            versions.AddRange(functionVersions);
-            foreach (FuncionVersionDto version in functionVersions)
-                arguments.AddRange(await _configuration.ListarFuncionArgumentosAsync(version.Id));
-        }
-
-        var registry = new DbDrivenFunctionRegistry(functions, versions, arguments);
-        IReadOnlyList<ParametroDto> parameters = await _configuration.ListarParametrosAsync(false);
-        var parameterVersions = new List<ParametroVersionDto>();
-        foreach (ParametroDto parameter in parameters)
-            parameterVersions.AddRange(await _configuration.ListarParametroVersionesAsync(parameter.Id));
-
-        var parameterResolver = new DbDrivenParameterResolver(parameters, parameterVersions);
+        CalculationConfigurationSnapshotDto snapshot = await _configuration.ObtenerSnapshotRuntimeAsync();
+        var registry = new DbDrivenFunctionRegistry(snapshot.Funciones, snapshot.VersionesFuncion, snapshot.ArgumentosFuncion);
+        foreach ((string code, int version) in pinning.FunctionVersions)
+            _ = registry.Resolve(code, version, requirePinned: true);
+        var parameterResolver = new DbDrivenParameterResolver(snapshot.Parametros, snapshot.VersionesParametro);
         var values = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase);
         foreach (string code in pinning.ParameterVersions.Keys)
             values[code] = parameterResolver.Resolve(code, pinning);
 
         var snapshots = catalogSnapshots.ToDictionary(snapshot => snapshot.Code, StringComparer.OrdinalIgnoreCase);
         foreach (string code in pinning.CatalogSnapshots.Keys)
-            if (!snapshots.ContainsKey(code)) throw new InvalidOperationException($"Catalog snapshot '{code}' is not available.");
+        {
+            if (!snapshots.TryGetValue(code, out CatalogSnapshot? catalog))
+                throw new InvalidOperationException($"Catalog snapshot '{code}' is not available.");
+            string expectedHash = pinning.CatalogSnapshots[code];
+            if (!Regex.IsMatch(expectedHash, "^[0-9A-Fa-f]{64}$", RegexOptions.CultureInvariant)
+                || !CatalogSnapshotHasher.Compute(catalog).Equals(expectedHash, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Catalog snapshot '{code}' does not match its pinned SHA-256 hash.");
+        }
 
         return new FormulaRuntimeOptions(
             registry,

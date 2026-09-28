@@ -281,6 +281,69 @@ public sealed class CalculationRuntimeTests
     }
 
     [Fact]
+    public void GovernedFormulaBindings_UsePinnedCatalogsParametersAndRelationalContext()
+    {
+        CatalogSnapshot levels = new("CAT_EFECTIVIDAD_NIVEL", true,
+        [new CatalogElement(1, "Razonable", "2", 1, true)]);
+        CatalogSnapshot percentages = new("CAT_EFECTIVIDAD_PORCENTAJE", true,
+        [new CatalogElement(2, "Razonable", "0.3", 1, true)]);
+        var functionPins = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        { ["LOOKUP"] = 1, ["IF"] = 1, ["IFERROR"] = 1, ["AND"] = 1 };
+        var parameterPins = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        { ["PESO_PREVENTIVO"] = 1, ["PESO_DETECTIVO"] = 1, ["PESO_CORRECTIVO"] = 1 };
+        var catalogPins = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        { [levels.Code] = CatalogSnapshotHasher.Compute(levels), [percentages.Code] = CatalogSnapshotHasher.Compute(percentages) };
+        var pinning = new CalculationPinning(functionPins, parameterPins, catalogPins, published: true);
+        var parameters = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["PESO_PREVENTIVO"] = FormulaValue.NumberValue(0.70),
+            ["PESO_DETECTIVO"] = FormulaValue.NumberValue(0.15),
+            ["PESO_CORRECTIVO"] = FormulaValue.NumberValue(0.15)
+        };
+        var options = new FormulaRuntimeOptions(new InMemoryFunctionRegistry(NativeFunctionCatalog.CreateDefaultDefinitions()), parameters,
+            new CatalogCalculationLookup([levels, percentages]), pinning);
+        string definition = """{"secciones":[{"campos":[{"clave":"escala_preventivo"},{"clave":"escala_detectivo"},{"clave":"escala_correctivo"},{"clave":"nivel_control_preventivo"},{"clave":"porcentaje_control_preventivo"},{"clave":"porcentaje_control_detectivo"},{"clave":"porcentaje_control_correctivo"},{"clave":"efectividad_total_ponderada"}]}]}""";
+        var bindings = new[]
+        {
+            new GovernedFormulaBinding("nivel_control_preventivo", "F03", 1, "LOOKUP(\"CAT_EFECTIVIDAD_NIVEL\",escala_preventivo,\"NUMBER\")", "DECIMAL", "PUBLISHED", "ACTIVE", Hash()),
+            new GovernedFormulaBinding("porcentaje_control_preventivo", "F04", 1, "IFERROR(LOOKUP(\"CAT_EFECTIVIDAD_PORCENTAJE\",escala_preventivo,\"NUMBER\"),\"\")", "DECIMAL", "PUBLISHED", "ACTIVE", Hash()),
+            new GovernedFormulaBinding("porcentaje_control_detectivo", "F06", 1, "IFERROR(LOOKUP(\"CAT_EFECTIVIDAD_PORCENTAJE\",escala_detectivo,\"NUMBER\"),\"\")", "DECIMAL", "PUBLISHED", "ACTIVE", Hash()),
+            new GovernedFormulaBinding("porcentaje_control_correctivo", "F08", 1, "IFERROR(LOOKUP(\"CAT_EFECTIVIDAD_PORCENTAJE\",escala_correctivo,\"NUMBER\"),\"\")", "DECIMAL", "PUBLISHED", "ACTIVE", Hash()),
+            new GovernedFormulaBinding("efectividad_total_ponderada", "F09", 1,
+                "IF(AND(control_preventivo=\"\",control_detectivo=\"\",control_correctivo=\"\"),\"\",PESO_PREVENTIVO*IF(porcentaje_control_preventivo=\"\",0,porcentaje_control_preventivo)+PESO_DETECTIVO*IF(porcentaje_control_detectivo=\"\",0,porcentaje_control_detectivo)+PESO_CORRECTIVO*IF(porcentaje_control_correctivo=\"\",0,porcentaje_control_correctivo))",
+                "DECIMAL", "PUBLISHED", "ACTIVE", Hash())
+        };
+
+        FormulaEvaluationResult result = new FormulaEngine().EvaluateGoverned(definition,
+            """{"escala_preventivo":"Razonable","escala_detectivo":"","escala_correctivo":""}""", bindings, options,
+            new Dictionary<string, FormulaValue>
+            {
+                ["control_preventivo"] = FormulaValue.TextValue("1"),
+                ["control_detectivo"] = FormulaValue.TextValue(string.Empty),
+                ["control_correctivo"] = FormulaValue.TextValue(string.Empty)
+            });
+
+        Assert.True(result.Success, string.Join("; ", result.Errors.Select(error => error.Message)));
+        Assert.Equal(2d, result.Values["nivel_control_preventivo"]);
+        Assert.Equal(0.3d, result.Values["porcentaje_control_preventivo"]);
+        Assert.Equal(0.21d, result.Values["efectividad_total_ponderada"]);
+    }
+
+    [Fact]
+    public void CatalogSnapshotHasher_IsOrderIndependentAndDetectsTampering()
+    {
+        CatalogSnapshot original = new("cat", true,
+        [new CatalogElement(1, "A", "0.3", 2, true), new CatalogElement(2, "B", "0.5", 1, true)]);
+        CatalogSnapshot reordered = new("CAT", true,
+        [new CatalogElement(8, "B", "0.5", 1, true), new CatalogElement(9, "A", "0.3", 2, true)]);
+        CatalogSnapshot altered = new("CAT", true,
+        [new CatalogElement(8, "B", "0.4", 1, true), new CatalogElement(9, "A", "0.3", 2, true)]);
+
+        Assert.Equal(CatalogSnapshotHasher.Compute(original), CatalogSnapshotHasher.Compute(reordered));
+        Assert.NotEqual(CatalogSnapshotHasher.Compute(original), CatalogSnapshotHasher.Compute(altered));
+    }
+
+    [Fact]
     public void PublicationGate_RejectsUnpinnedPublicationAndInvalidArity()
     {
         var registry = Registry(Native("MIN", "MIN_V1", 1, null, "PUBLISHED", Arg(1, "VALUES", variadic: true)));

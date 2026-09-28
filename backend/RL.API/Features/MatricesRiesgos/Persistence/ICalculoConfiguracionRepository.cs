@@ -13,6 +13,8 @@ public interface ICalculoConfiguracionRepository
     Task<bool> ReemplazarFormulaUsosAsync(long versionFormularioId, IReadOnlyList<CrearFormulaUsoDto> usos, long usuarioId, string? ip);
     Task<IReadOnlyList<FormulaVersionDto>> ListarFormulaVersionesAsync(long formulaId);
     Task<IReadOnlyList<FormulaUsageDto>> ListarFormulaUsagesAsync(long formulaId);
+    Task<IReadOnlyList<FormulaBindingDto>> ListarFormulaBindingsPorVersionFormularioAsync(long versionFormularioId);
+    Task<CalculationConfigurationSnapshotDto> ObtenerSnapshotRuntimeAsync();
     Task<bool> CambiarEstadoFormulaAsync(long formulaId, string estado, int versionRow, long usuarioId, string? ip);
 
     Task<IReadOnlyList<FuncionDto>> ListarFuncionesAsync(bool incluirInactivas);

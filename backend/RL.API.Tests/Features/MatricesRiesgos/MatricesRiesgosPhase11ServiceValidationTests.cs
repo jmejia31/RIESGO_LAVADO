@@ -378,8 +378,11 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public bool UpdateActividadResult { get; set; } = true;
 
         public Task<IReadOnlyList<ControlRiesgoDto>> ListarControlesAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<ControlRiesgoDto>>(Array.Empty<ControlRiesgoDto>());
+        public Task<ControlRiesgoDto?> ObtenerControlAsync(long controlId) => Task.FromResult<ControlRiesgoDto?>(null);
         public Task<long> CrearControlAsync(ControlRiesgoGuardarDto dto, long usuarioId, string? ip) => LongResult(10);
+        public Task<long> CrearControlGobernadoAtomicoAsync(ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip) => LongResult(10);
         public Task<bool> ActualizarControlAsync(long controlId, ControlRiesgoGuardarDto dto, long usuarioId, string? ip) => BoolResult(UpdateControlResult);
+        public Task<bool> ActualizarControlGobernadoAtomicoAsync(long controlId, ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip) => BoolResult(UpdateControlResult);
         public Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId) => Task.FromResult<IReadOnlyList<EvaluacionControlDto>>(Array.Empty<EvaluacionControlDto>());
         public Task<long> RegistrarEvaluacionControlAsync(long controlId, EvaluacionControlGuardarDto dto, long usuarioId, string? ip) => LongResult(11);
         public Task<IReadOnlyList<PlanMitigacionDto>> ListarPlanesAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<PlanMitigacionDto>>(Array.Empty<PlanMitigacionDto>());

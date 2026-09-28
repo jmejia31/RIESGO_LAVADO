@@ -160,6 +160,65 @@ public sealed class CalculoConfiguracionRepository : ICalculoConfiguracionReposi
         await using var cmd = Command(sql, c); cmd.Parameters.Add(new OracleParameter("id", formulaId)); var result = new List<FormulaUsageDto>(); await using var r = await cmd.ExecuteReaderAsync(); while (await r.ReadAsync()) result.Add(new FormulaUsageDto { Id=r.GetInt64(0), VersionFormularioId=r.GetInt64(1), CampoClave=r.GetString(2), FormulaVersionId=r.GetInt64(3), FormulaVersion=r.GetInt32(4), FormulaCodigo=r.GetString(5) }); return result;
     }
 
+    public async Task<IReadOnlyList<FormulaBindingDto>> ListarFormulaBindingsPorVersionFormularioAsync(long versionFormularioId)
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+        const string sql = @"SELECT u.FUS_VERSION_FORMULARIO_ID,u.FUS_CAMPO_CLAVE,u.FUS_FORMULA_VERSION_ID,
+                                    f.FOR_CODIGO,v.FOV_VERSION,v.FOV_EXPRESION,v.FOV_TIPO_RESULTADO,
+                                    v.FOV_ESTADO,f.FOR_ESTADO,v.FOV_HASH
+                               FROM RL_MR_FORMULA_USOS u
+                               JOIN RL_MR_FORMULA_VERSIONES v ON v.FOV_ID=u.FUS_FORMULA_VERSION_ID
+                               JOIN RL_MR_FORMULAS f ON f.FOR_ID=v.FOV_FORMULA_ID
+                              WHERE u.FUS_VERSION_FORMULARIO_ID=:versionId
+                              ORDER BY u.FUS_CAMPO_CLAVE";
+        await using var command = Command(sql, connection);
+        command.Parameters.Add(P("versionId", versionFormularioId));
+        var bindings = new List<FormulaBindingDto>();
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+            bindings.Add(new FormulaBindingDto
+            {
+                VersionFormularioId = reader.GetInt64(0), CampoClave = reader.GetString(1), FormulaVersionId = reader.GetInt64(2),
+                FormulaCodigo = reader.GetString(3), FormulaVersion = reader.GetInt32(4), Expresion = reader.GetString(5),
+                TipoResultado = reader.GetString(6), EstadoVersion = reader.GetString(7), EstadoFormula = reader.GetString(8), Hash = reader.GetString(9)
+            });
+        return bindings;
+    }
+
+    public async Task<CalculationConfigurationSnapshotDto> ObtenerSnapshotRuntimeAsync()
+    {
+        await using var connection = _db.CreateConnection();
+        await connection.OpenAsync();
+
+        var functions = new List<FuncionDto>();
+        await using (var command = Command("SELECT FUN_ID,FUN_CODIGO,FUN_NOMBRE,FUN_DESCRIPCION,FUN_CATEGORIA,FUN_ESTADO,FUN_VERSION_ROW FROM RL_MR_FUNCIONES WHERE FUN_ESTADO='ACTIVE' ORDER BY FUN_CODIGO", connection))
+        await using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) functions.Add(new FuncionDto { Id=reader.GetInt64(0), Codigo=reader.GetString(1), Nombre=reader.GetString(2), Descripcion=NullString(reader,3), Categoria=reader.GetString(4), Estado=reader.GetString(5), VersionRow=reader.GetInt32(6) });
+
+        var functionVersions = new List<FuncionVersionDto>();
+        await using (var command = Command("SELECT v.FUV_ID,v.FUV_FUNCION_ID,v.FUV_VERSION,v.FUV_TIPO,v.FUV_TIPO_RESULTADO,v.FUV_SIGNATURE_JSON,v.FUV_DEFINICION_DSL,v.FUV_HANDLER_KEY,v.FUV_MIN_ARITY,v.FUV_MAX_ARITY,v.FUV_ESTADO,v.FUV_HASH,v.FUV_VERSION_ROW FROM RL_MR_FUNCION_VERSIONES v JOIN RL_MR_FUNCIONES f ON f.FUN_ID=v.FUV_FUNCION_ID WHERE f.FUN_ESTADO='ACTIVE' ORDER BY f.FUN_CODIGO,v.FUV_VERSION", connection))
+        await using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) functionVersions.Add(ReadFunctionVersion(reader));
+
+        var functionArguments = new List<FuncionArgumentoDto>();
+        await using (var command = Command("SELECT a.FUA_ID,a.FUA_FUNCION_VERSION_ID,a.FUA_POSICION,a.FUA_CODIGO,a.FUA_NOMBRE,a.FUA_TIPO,a.FUA_REQUERIDO,a.FUA_VARIADIC,a.FUA_DEFAULT_JSON,a.FUA_DESCRIPCION FROM RL_MR_FUNCION_ARGUMENTOS a JOIN RL_MR_FUNCION_VERSIONES v ON v.FUV_ID=a.FUA_FUNCION_VERSION_ID JOIN RL_MR_FUNCIONES f ON f.FUN_ID=v.FUV_FUNCION_ID WHERE f.FUN_ESTADO='ACTIVE' ORDER BY a.FUA_FUNCION_VERSION_ID,a.FUA_POSICION", connection))
+        await using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) functionArguments.Add(new FuncionArgumentoDto { Id=reader.GetInt64(0), FuncionVersionId=reader.GetInt64(1), Posicion=reader.GetInt32(2), Codigo=reader.GetString(3), Nombre=reader.GetString(4), Tipo=reader.GetString(5), Requerido=reader.GetInt32(6)==1, Variadic=reader.GetInt32(7)==1, ValorDefaultJson=NullString(reader,8), Descripcion=NullString(reader,9) });
+
+        var parameters = new List<ParametroDto>();
+        await using (var command = Command("SELECT PAC_ID,PAC_CODIGO,PAC_NOMBRE,PAC_DESCRIPCION,PAC_TIPO,PAC_ESTADO,PAC_VERSION_ROW FROM RL_MR_PARAMETROS_CALCULO WHERE PAC_ESTADO='ACTIVE' ORDER BY PAC_CODIGO", connection))
+        await using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) parameters.Add(new ParametroDto { Id=reader.GetInt64(0), Codigo=reader.GetString(1), Nombre=reader.GetString(2), Descripcion=NullString(reader,3), Tipo=reader.GetString(4), Estado=reader.GetString(5), VersionRow=reader.GetInt32(6) });
+
+        var parameterVersions = new List<ParametroVersionDto>();
+        await using (var command = Command("SELECT v.PAV_ID,v.PAV_PARAMETRO_ID,v.PAV_VERSION,v.PAV_TIPO,v.PAV_VALOR_ENTERO,v.PAV_VALOR_DECIMAL,v.PAV_VALOR_BOOLEANO,v.PAV_VALOR_TEXTO,v.PAV_VALOR_FECHA,v.PAV_ESTADO,v.PAV_HASH,v.PAV_VERSION_ROW FROM RL_MR_PARAMETRO_VERSIONES v JOIN RL_MR_PARAMETROS_CALCULO p ON p.PAC_ID=v.PAV_PARAMETRO_ID WHERE p.PAC_ESTADO='ACTIVE' ORDER BY p.PAC_CODIGO,v.PAV_VERSION", connection))
+        await using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync()) parameterVersions.Add(new ParametroVersionDto { Id=reader.GetInt64(0), ParametroId=reader.GetInt64(1), Version=reader.GetInt32(2), Tipo=reader.GetString(3), ValorEntero=NullableInt(reader,4), ValorDecimal=NullableDecimal(reader,5), ValorBooleano=NullableBool(reader,6), ValorTexto=NullString(reader,7), ValorFecha=NullableDate(reader,8), Estado=reader.GetString(9), Hash=reader.GetString(10), VersionRow=reader.GetInt32(11) });
+
+        return new CalculationConfigurationSnapshotDto { Funciones=functions, VersionesFuncion=functionVersions, ArgumentosFuncion=functionArguments, Parametros=parameters, VersionesParametro=parameterVersions };
+    }
+
     public async Task<bool> CambiarEstadoFormulaAsync(long formulaId, string estado, int versionRow, long usuarioId, string? ip)
     {
         await using var c = _db.CreateConnection(); await c.OpenAsync(); await using var tx = c.BeginTransaction();

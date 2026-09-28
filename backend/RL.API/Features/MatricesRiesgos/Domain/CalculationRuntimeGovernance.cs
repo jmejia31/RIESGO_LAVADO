@@ -147,4 +147,29 @@ public sealed class PublicationGate
             errors.Add(new(FormulaErrorCode.FORMULA_LIMIT_EXCEEDED, "limits", "Los límites runtime deben ser positivos."));
         return new(errors.Count == 0, errors, errors.Count == 0 ? pinning : null);
     }
+
+    public PublicationValidationResult ValidatePublishedRuntimeBindings(
+        IReadOnlyList<GovernedFormulaBinding> bindings,
+        CalculationPinning pinning,
+        IReadOnlyList<FormulaDiagnostic> runtimeDiagnostics)
+    {
+        var errors = new List<FormulaDiagnostic>(runtimeDiagnostics);
+        if (!pinning.Published)
+            errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "pinning", "La publicacion de formulario requiere un runtime pinneado."));
+        var targets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (GovernedFormulaBinding binding in bindings)
+        {
+            if (string.IsNullOrWhiteSpace(binding.TargetField) || !targets.Add(binding.TargetField.Trim()))
+                errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, binding.TargetField, "El target de formula usage esta vacio o duplicado."));
+            if (!binding.FormulaMasterState.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase)
+                || !binding.FormulaState.Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase)
+                || !System.Text.RegularExpressions.Regex.IsMatch(binding.Hash ?? string.Empty, "^[0-9A-Fa-f]{64}$"))
+                errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, binding.FormulaCode, "El binding debe referir una formula activa, publicada y con hash SHA-256."));
+            if (pinning.FormulaVersion(binding.FormulaCode) != binding.FormulaVersion)
+                errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, binding.FormulaCode, "La version de formula del binding no coincide con el pinning."));
+        }
+        if (pinning.FormulaVersions.Count != bindings.Select(binding => binding.FormulaCode).Distinct(StringComparer.OrdinalIgnoreCase).Count())
+            errors.Add(new(FormulaErrorCode.FORMULA_ARGUMENT_INVALID, "pinning", "El snapshot de fórmulas contiene pins faltantes o ajenos a los bindings."));
+        return new(errors.Count == 0, errors, errors.Count == 0 ? pinning : null);
+    }
 }

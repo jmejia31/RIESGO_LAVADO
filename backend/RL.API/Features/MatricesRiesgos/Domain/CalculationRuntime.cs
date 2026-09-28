@@ -115,6 +115,53 @@ public sealed record FormulaVersionDefinition(
 
 public sealed record CatalogSnapshot(string Code, bool Active, IReadOnlyList<CatalogElement> Elements);
 
+public static class CatalogSnapshotHasher
+{
+    public static string Compute(CatalogSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        var canonical = new
+        {
+            Code = snapshot.Code.Trim().ToUpperInvariant(),
+            snapshot.Active,
+            Elements = snapshot.Elements
+                .OrderBy(element => element.Orden)
+                .ThenBy(element => element.Codigo, StringComparer.OrdinalIgnoreCase)
+                .Select(element => new
+                {
+                    Codigo = element.Codigo.Trim(),
+                    Valor = element.Valor.Trim(),
+                    element.Orden,
+                    element.Activo
+                })
+                .ToArray()
+        };
+        byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(canonical);
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(bytes)).ToLowerInvariant();
+    }
+}
+
+public sealed record GovernedFormulaBinding(
+    string TargetField,
+    string FormulaCode,
+    int FormulaVersion,
+    string Expression,
+    string ResultType,
+    string FormulaState,
+    string FormulaMasterState,
+    string Hash);
+
+public static class InstitutionalCalculationContextKeys
+{
+    public const string PreventiveControl = "control_preventivo";
+    public const string DetectiveControl = "control_detectivo";
+    public const string CorrectiveControl = "control_correctivo";
+    public static IReadOnlySet<string> Reserved { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        PreventiveControl, DetectiveControl, CorrectiveControl
+    };
+}
+
 public interface ICalculationLookup
 {
     FormulaValue Lookup(string catalogCode, FormulaValue input, string? resultField = null);

@@ -1843,3 +1843,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Verificado en esta intervención: backend `657/657`, frontend `80 archivos / 798 pruebas`, lint/build PASS, E2E `37/37`, validadores dynamic DDL/autorización/Phase 13/database/encoding/estructura/documentación PASS y diff check PASS. E2E Chromium comprobó desktop y 390 px; Quality Gate remoto pendiente.
 - **Continuidad:** no iniciar Bloque 3. Completar primero fuentes versionadas de escala/unidad, luego cerrar gates remotos del SHA de Bloque 2.
 - Commit del avance parcial publicado: `6fed10df4b19737a0ac51e1ef852c4343a95dd49`, solo `desarrollo`; Quality Gates exacto run `36461075629` finalizó `completed/success` para ese SHA. Bloque 2 sigue `PARTIAL_BLOCKED`, no cerrado.
+
+# Estado vigente — Remediación runtime versionado Bloque 2 (COD, ejecución en curso)
+
+- **Fecha/hora local:** 2026-09-28 15:12:19 -06:00 (America/Tegucigalpa). **Rama:** `desarrollo`. **Base:** `e83417d0cfa3701a48fb46f4c242983f6b784ed4`.
+- Wiring implementado para FUS por versión, bindings tipados, runtimeCalculo futuro, pinning exacto de fórmula/función/parámetro/catálogo, hash de snapshot, lookup versionado, F03–F09 y presencia relacional de controles. No hay fallback legacy si una versión gobernada falla; una versión sin usos conserva el camino histórico.
+- Create/update gobernados componen cálculo con controles hipotéticos y persisten control, cálculo, incremento optimista y auditoría dentro de una transacción. Solo BORRADOR; no re-parenting. V1 usa el flujo histórico.
+- Verificado en esta intervención: backend `680/680 PASS`; frontend `801/801`; lint/build PASS; E2E `37/37`; dynamic DDL, autorización, Phase 13, database, estructura, documentación y `git diff --check` PASS. No hubo cambios de frontend; la suite y E2E son regresión.
+- Pendiente: encoding validator no ejecutable con Windows PowerShell 5.1 (`Path.GetRelativePath` ausente; no hay `pwsh`). Falta commit/push y Quality Gate exacto. No se declara Bloque 2 cerrado antes de resolver ambos.
+- No se modificaron V1/V2, datos históricos, Oracle ni scripts Unicode. `BLOCK_3_IMPLEMENTED=NO`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`; Production SHA certificado anterior permanece intacto.
+- **Continuación exacta:** completar/reintentar encoding en un host PowerShell compatible, revisar diff, publicar solo archivos propios en `origin/desarrollo`, y esperar gate remoto del SHA exacto; detenerse sin iniciar Bloque 3.
