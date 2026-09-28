@@ -28,7 +28,7 @@ const SEEDS: readonly MatrixFieldSeed[] = [
   { label: 'Evaluación', mode: 'MASTER', editable: false, key: null, source: 'RL_MR_RIESGOS.RIE_DESCRIPCION' },
   { label: 'Frecuencia', mode: 'INPUT', editable: true, key: 'frecuencia_inherente', source: 'EVA_DATOS_JSON.frecuencia_inherente / MR_FRECUENCIA_1_5' },
   { label: 'Impacto', mode: 'INPUT', editable: true, key: 'impacto_inherente', source: 'EVA_DATOS_JSON.impacto_inherente / MR_IMPACTO_1_5' },
-  { label: 'Valor del Riesgo Inherente', mode: 'COMPUTED', editable: false, key: 'valor_riesgo_inherente', source: 'Backend F01 / EVA_VRI / PROY_VRI' },
+  { label: 'Valor del Riesgo Inherente', mode: 'COMPUTED', editable: false, key: 'valor_riesgo_inherente', source: 'Backend F01 / EVA_CALCULOS_JSON / PROY_VRI' },
   { label: 'Nivel de Riesgo Inherente', mode: 'COMPUTED', editable: false, key: 'nivel_riesgo_inherente', source: 'Backend F02 / EVA_CALCULOS_JSON / catálogo institucional' },
   { label: 'Responsable o dueño del riesgo', mode: 'INPUT', editable: true, key: 'dueno_riesgo', source: 'EVA_DATOS_JSON.dueno_riesgo / PROY_DUENO_RIESGO' },
   { label: 'Régimen afectado', mode: 'INPUT', editable: true, key: 'regimen_afectado', source: 'EVA_DATOS_JSON.regimen_afectado; solo versiones que lo declaren' },
