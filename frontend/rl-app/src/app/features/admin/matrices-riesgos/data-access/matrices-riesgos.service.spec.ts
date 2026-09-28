@@ -48,6 +48,16 @@ describe('MatricesRiesgosService', () => {
     expect(resultado).toHaveBeenCalledWith({ configurada: false, tieneVersionVigente: false });
   });
 
+  it('consulta metodología por el ID exacto de versión de la evaluación', () => {
+    const resultado = vi.fn();
+    const metodologia = { versionFormularioId: 63, codigo: 'FORM_63', version: 1, secciones: [], catalogos: [], reglas: [] };
+    service.metodologiaPorVersion(63).subscribe(resultado);
+    const request = http.expectOne(`${apiUrl}/metodologia/version/63`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: metodologia });
+    expect(resultado).toHaveBeenCalledWith(metodologia);
+  });
+
   it('establece una familia predeterminada con PUT y confirmacion institucional', () => {
     const resultado = vi.fn();
     service.establecerFamiliaPredeterminada(22).subscribe(resultado);

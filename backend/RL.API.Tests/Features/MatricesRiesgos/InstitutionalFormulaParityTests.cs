@@ -10,6 +10,25 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 
 public sealed class InstitutionalFormulaParityTests
 {
+    [Theory]
+    [InlineData(0.90, 90)]
+    [InlineData(0.50, 50)]
+    [InlineData(1.00, 100)]
+    [InlineData(90, 90)]
+    [InlineData(85, 85)]
+    [InlineData(50, 50)]
+    [InlineData(30, 30)]
+    public void LegacyMigrator_PercentageContractRemainsPercentagePoints(double input, decimal expected) =>
+        Assert.Equal(expected, LegacyControlEffectiveness.ParsePercent0To100(input, null));
+
+    [Theory]
+    [InlineData("Alta Efectividad", 90)]
+    [InlineData("Moderado", 85)]
+    [InlineData("Parcialmente efectivo", 50)]
+    [InlineData("Razonable", 30)]
+    public void LegacyMigrator_UsesExistingScaleFallback(string scale, decimal expected) =>
+        Assert.Equal(expected, LegacyControlEffectiveness.ParsePercent0To100(null, scale));
+
     [Fact]
     public void InstitutionalDataset_HasThirtyFourTraceableSemanticFormulas()
     {

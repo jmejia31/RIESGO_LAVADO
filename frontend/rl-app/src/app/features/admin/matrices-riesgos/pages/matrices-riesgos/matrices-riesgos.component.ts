@@ -197,6 +197,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly evaluacionSeleccionada = signal<EvaluacionRiesgoDto | null>(null);
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
+  readonly metodologiaMatrizCompleta = signal<MetodologiaFormulario | null>(null);
+  readonly metodologiaMatrizCompletaEnCarga = signal(false);
+  readonly metodologiaMatrizCompletaError = signal<string | null>(null);
   readonly matrizCompletaEnCarga = signal(false);
   readonly matrizCompletaError = signal<string | null>(null);
   readonly controlesMatrizCompleta = signal<ControlRiesgoDto[]>([]);
@@ -1546,6 +1549,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     const solicitudId = ++this.secuenciaCargaMatrizCompleta;
     this.evaluacionResumenSeleccionada.set(resumen);
     this.evaluacionSeleccionada.set(null);
+    this.metodologiaMatrizCompleta.set(null);
+    this.metodologiaMatrizCompletaEnCarga.set(false);
+    this.metodologiaMatrizCompletaError.set(null);
     this.riesgoMaestroMatriz.set(null);
     this.matrizCompletaError.set(null);
     this.controlesMatrizCompleta.set([]);
@@ -1561,6 +1567,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
         this.cargarControlesMatrizCompleta(detalle.evaId, solicitudId);
+        this.cargarMetodologiaMatrizCompleta(detalle.evaVersionId, solicitudId);
         forkJoin({
           riesgo: this.service.obtenerRiesgo(detalle.evaRiesgoId),
           version: this.service.obtenerVersionFormulario(detalle.evaVersionId)
@@ -1632,23 +1639,66 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   valorCampoControl(field: MatrixFieldContract): string {
     const key = field.key;
     if (!key) return '—';
+    const versionNumero = this.evaluacionResumenSeleccionada()?.versionNumero;
+    const esV1 = versionNumero === 1;
+    if ([21, 22, 25, 26, 29, 30].includes(field.ordinal)
+      && (esV1 || !this.catalogoEscalaEfectividad())) return 'No disponible en esta versión';
     if (field.ordinal === 23 || field.ordinal === 27 || field.ordinal === 31) {
-      // The legacy JSON uses inconsistent units in repository fixtures; never guess or reinterpret it.
-      const calculation = this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}')[key];
-      return this.formatearPorcentajeRuntime(calculation);
+      const source = esV1
+        ? this.respuestas()[field.ordinal === 23 ? 'controles_preventivo' : field.ordinal === 27 ? 'controles_detectivo' : 'controles_correctivo']
+        : this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}')[key];
+      return esV1 ? this.formatearPorcentajeHistorico0A100(source) : this.formatearPorcentajeRuntime0A1(source);
     }
     if (field.ordinal === 21 || field.ordinal === 25 || field.ordinal === 29) {
       const scale = this.respuestas()[key];
-      return scale === null || scale === undefined || scale === '' ? 'No disponible en esta versión' : String(scale);
+      const selected = this.catalogoEscalaEfectividad()?.elementos.find(option => option.codigo === String(scale));
+      return selected?.valor ?? '—';
     }
-    const value = this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}')[key];
-    return value === null || value === undefined || value === '' ? '—' : String(value);
+    const calculos = this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}');
+    const value = esV1 && field.ordinal === 33 ? calculos['etp'] : calculos[key];
+    if (value === null || value === undefined || value === '') return '—';
+    if (field.ordinal === 33) return esV1 ? this.formatearPorcentajeHistorico0A100(value) : this.formatearPorcentajeRuntime0A1(value);
+    return String(value);
   }
 
-  formatearPorcentajeRuntime(value: unknown): string {
-    const proportion = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : Number.NaN;
-    if (!Number.isFinite(proportion) || proportion < 0 || proportion > 1) return '—';
-    return `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(proportion * 100)}%`;
+  catalogoEscalaEfectividad(): MetodologiaFormulario['catalogos'][number] | undefined {
+    return (this.metodologiaMatrizCompleta()?.catalogos ?? []).find(catalog => catalog.codigo === 'CAT_EFECTIVIDAD_ESCALA');
+  }
+
+  formatearPorcentajeHistorico0A100(value: unknown): string {
+    const percentagePoints = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : Number.NaN;
+    if (!Number.isFinite(percentagePoints) || percentagePoints < 0 || percentagePoints > 100) return '—';
+    return `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(percentagePoints)}%`;
+  }
+
+  formatearPorcentajeRuntime0A1(value: unknown): string {
+    const ratio = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : Number.NaN;
+    if (!Number.isFinite(ratio) || ratio < 0 || ratio > 1) return '—';
+    return `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(ratio * 100)}%`;
+  }
+
+  reintentarCargaMetodologiaMatriz(): void {
+    const detalle = this.evaluacionSeleccionada();
+    if (detalle) this.cargarMetodologiaMatrizCompleta(detalle.evaVersionId, this.secuenciaCargaMatrizCompleta);
+  }
+
+  private cargarMetodologiaMatrizCompleta(versionId: number, solicitudId: number): void {
+    this.metodologiaMatrizCompletaEnCarga.set(true);
+    this.metodologiaMatrizCompletaError.set(null);
+    this.service.metodologiaPorVersion(versionId).subscribe({
+      next: metodologia => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta
+          || (metodologia.versionFormularioId !== undefined && metodologia.versionFormularioId !== versionId)) return;
+        this.metodologiaMatrizCompleta.set(metodologia);
+        this.metodologiaMatrizCompletaEnCarga.set(false);
+      },
+      error: error => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.metodologiaMatrizCompleta.set(null);
+        this.metodologiaMatrizCompletaError.set(this.obtenerMensajeError(error, `No se pudo cargar la metodología de la versión ${versionId}.`));
+        this.metodologiaMatrizCompletaEnCarga.set(false);
+      }
+    });
   }
 
   reintentarCargaControlesMatriz(): void {

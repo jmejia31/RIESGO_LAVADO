@@ -416,7 +416,16 @@
               </div>
             }
           </dl>
-          <p class="text-xs text-gray-500">Las escalas iniciales requieren el snapshot institucional versionado. Su selector no se sustituye con la evaluación posterior de efectividad del control.</p>
+          @if (metodologiaMatrizCompletaEnCarga()) {
+            <p class="text-xs text-gray-500" role="status" aria-live="polite">Cargando metodología de la versión de esta evaluación…</p>
+          } @else if (metodologiaMatrizCompletaError(); as errorMetodologia) {
+            <div class="flex items-center gap-2 text-xs text-red-700" role="alert">
+              <span>{{ errorMetodologia }}</span>
+              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2" title="Reintentar metodología de esta versión" aria-label="Reintentar metodología de esta versión" (click)="reintentarCargaMetodologiaMatriz()"><app-action-icon action="retry"></app-action-icon></button>
+            </div>
+          } @else if (!catalogoEscalaEfectividad()) {
+            <p class="text-xs text-gray-500">Las escalas iniciales no están disponibles en la metodología versionada de esta evaluación. No se usan catálogos de otras versiones ni la evaluación posterior del control.</p>
+          }
         </section>
 
         @for (block of bloquesMatrizPendientes; track block) {

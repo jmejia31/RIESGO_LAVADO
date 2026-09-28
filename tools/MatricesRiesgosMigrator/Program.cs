@@ -31,6 +31,7 @@ public static class Program
         bool executeMigration = args.Any(a => string.Equals(a, "--migrate", StringComparison.OrdinalIgnoreCase));
         bool enrichExisting = args.Any(a => string.Equals(a, "--enrich-existing", StringComparison.OrdinalIgnoreCase));
         bool inspectSourceRiskText = args.Any(a => string.Equals(a, "--inspect-source-risk-text", StringComparison.OrdinalIgnoreCase));
+        bool inspectControlEffectiveness = args.Any(a => string.Equals(a, "--inspect-control-effectiveness-contract", StringComparison.OrdinalIgnoreCase));
         bool repairRiskText = args.Any(a => string.Equals(a, "--repair-risk-text", StringComparison.OrdinalIgnoreCase));
         bool repairRiskNames = args.Any(a => string.Equals(a, "--repair-risk-names", StringComparison.OrdinalIgnoreCase));
         bool verifyRiskText = args.Any(a => string.Equals(a, "--verify-risk-text", StringComparison.OrdinalIgnoreCase));
@@ -60,6 +61,8 @@ public static class Program
             ? $"INSPECCION UNICODE RIESGO {inspectRiskCode}"
             : inspectSourceRiskText
                 ? "INSPECCION TEXTO FUENTE"
+                : inspectControlEffectiveness
+                    ? "INSPECCION EFECTIVIDAD CONTROLES READ-ONLY"
                 : verifyRiskText
                 ? "VERIFICACION TEXTO MAESTRO ORACLE"
                 : repairRiskNames
@@ -98,6 +101,11 @@ public static class Program
         if (inspectSourceRiskText)
         {
             return InspeccionarTextoRiesgosFuente(sourceRisks);
+        }
+
+        if (inspectControlEffectiveness)
+        {
+            return InspeccionarContratoEfectividadControles(excelPath);
         }
 
         if (generateRiskNameSql)
@@ -1005,22 +1013,82 @@ public static class Program
         return (fres, ires);
     }
 
-    private static decimal ParsePorcentajeControl(object? pctVal, object? escVal)
+    private static decimal ParsePorcentajeControl(object? pctVal, object? escVal) =>
+        LegacyControlEffectiveness.ParsePercent0To100(pctVal, escVal);
+
+    private static int InspeccionarContratoEfectividadControles(string excelPath)
     {
-        if (pctVal is not null && double.TryParse(Convert.ToString(pctVal, CultureInfo.InvariantCulture), NumberStyles.Any, CultureInfo.InvariantCulture, out double p))
+        var tuples = new List<(string Type, string Scale, string Level, string Percent)>();
+        int sourceRows = 0;
+        int invalidPercentages = 0;
+        int emptyScaleWithPercent = 0;
+        int emptyPercentWithScale = 0;
+        using (var stream = File.Open(excelPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
         {
-            return p <= 1.0 ? (decimal)Math.Round(p * 100.0) : (decimal)Math.Round(p);
+            using var reader = ExcelReaderFactory.CreateReader(stream);
+            while (reader.Name != "Matriz Consolidada" && reader.NextResult()) { }
+            if (reader.Name != "Matriz Consolidada")
+                throw new InvalidOperationException("No se encontró la hoja 'Matriz Consolidada' en el libro.");
+
+            int row = 0;
+            while (reader.Read())
+            {
+                row++;
+                if (row is < 2 or > 60) continue;
+                sourceRows++;
+                Add("PREVENTIVO", reader.GetValue(20), reader.GetValue(21), reader.GetValue(22));
+                Add("DETECTIVO", reader.GetValue(24), reader.GetValue(25), reader.GetValue(26));
+                Add("CORRECTIVO", reader.GetValue(28), reader.GetValue(29), reader.GetValue(30));
+            }
         }
 
-        string esc = Convert.ToString(escVal, CultureInfo.InvariantCulture)?.Trim().ToLowerInvariant() ?? string.Empty;
-        return esc switch
+        static string Cell(object? value) => Convert.ToString(value, CultureInfo.InvariantCulture)?.Trim() ?? string.Empty;
+        void Add(string type, object? scaleValue, object? levelValue, object? percentValue)
         {
-            "alta efectividad" => 90m,
-            "moderado" => 85m,
-            "parcialmente efectivo" => 50m,
-            "razonable" => 30m,
-            _ => 0m
-        };
+            string scale = Cell(scaleValue);
+            string level = Cell(levelValue);
+            string percent = Cell(percentValue);
+            if (percent.Length > 0 && (!decimal.TryParse(percent, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal numeric) || numeric is < 0 or > 100))
+                invalidPercentages++;
+            if (scale.Length == 0 && percent.Length > 0) emptyScaleWithPercent++;
+            if (scale.Length > 0 && percent.Length == 0) emptyPercentWithScale++;
+            if (scale.Length > 0 || level.Length > 0 || percent.Length > 0)
+                tuples.Add((type, scale, level, percent));
+        }
+
+        Console.WriteLine($"CONTROL_EFFECTIVENESS_SOURCE_ROWS={sourceRows}");
+        foreach (string type in new[] { "PREVENTIVO", "DETECTIVO", "CORRECTIVO" })
+        {
+            var distinct = tuples.Where(item => item.Type == type).Distinct().OrderBy(item => item.Scale, StringComparer.Ordinal).ThenBy(item => item.Level, StringComparer.Ordinal).ThenBy(item => item.Percent, StringComparer.Ordinal).ToArray();
+            Console.WriteLine($"{type}_DISTINCT_TUPLES={distinct.Length}");
+            foreach (var item in distinct)
+                Console.WriteLine($"CONTROL_EFFECTIVENESS|TYPE={item.Type}|SCALE={Safe(item.Scale)}|LEVEL={Safe(item.Level)}|PERCENT_SOURCE={Safe(item.Percent)}");
+        }
+
+        var scales = tuples.Select(item => item.Scale).Where(scale => scale.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(scale => scale, StringComparer.OrdinalIgnoreCase).ToArray();
+        var groupedByScale = tuples.Where(item => item.Scale.Length > 0)
+            .GroupBy(item => item.Scale, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var conflicts = groupedByScale
+            .Where(group => group.Where(item => item.Level.Length > 0).Select(item => item.Level).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1
+                || group.Where(item => item.Percent.Length > 0).Select(item => item.Percent).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1)
+            .ToArray();
+        var crossTypeConflicts = conflicts.Where(group => group.Select(item => item.Type).Distinct(StringComparer.Ordinal).Count() > 1).ToArray();
+        int incompleteScaleMappings = groupedByScale.Count(group =>
+            !group.Any(item => item.Level.Length > 0) || !group.Any(item => item.Percent.Length > 0));
+        Console.WriteLine($"DISTINCT_SCALES={string.Join(";", scales.Select(Safe))}");
+        Console.WriteLine($"CROSS_TYPE_CONFLICTS={crossTypeConflicts.Length}");
+        Console.WriteLine($"SCALE_TUPLE_CONFLICTS={conflicts.Length}");
+        foreach (var conflict in conflicts)
+            Console.WriteLine($"CONTROL_SCALE_SOURCE_CONFLICT|SCALE={Safe(conflict.Key)}|VALUES={string.Join(";", conflict.Select(item => $"{item.Type}:{Safe(item.Level)}:{Safe(item.Percent)}").Distinct())}");
+        Console.WriteLine($"INVALID_PERCENTAGES={invalidPercentages}");
+        Console.WriteLine($"INCOMPLETE_SCALE_MAPPINGS={incompleteScaleMappings}");
+        Console.WriteLine($"EMPTY_SCALE_WITH_PERCENT={emptyScaleWithPercent}");
+        Console.WriteLine($"EMPTY_PERCENT_WITH_SCALE={emptyPercentWithScale}");
+        Console.WriteLine($"CONTROL_SCALE_SOURCE_CONFLICT={(sourceRows == 59 && conflicts.Length == 0 && invalidPercentages == 0 ? "PASS" : "FAIL")}");
+        return sourceRows == 59 && conflicts.Length == 0 && invalidPercentages == 0 ? 0 : 16;
+
+        static string Safe(string value) => value.Replace('|', '/').Replace('\r', ' ').Replace('\n', ' ');
     }
 
     private static string MapearRespuestaRiesgo(string raw)

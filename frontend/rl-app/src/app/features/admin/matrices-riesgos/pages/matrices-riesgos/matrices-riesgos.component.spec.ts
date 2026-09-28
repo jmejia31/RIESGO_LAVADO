@@ -6,6 +6,7 @@ import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
+import { MATRIX_BLOCK_2_FIELDS } from '../../models/matriz-institucional.contract';
 
 describe('MatricesRiesgosComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -223,6 +224,52 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.controlesMatrizCompleta().map(control => control.conEvaluacionId)).toEqual([21]);
     expect(component.controlesPorTipo('DETECTIVO')).toHaveLength(1);
     expect(component.controlesPorTipo('PREVENTIVO')).toHaveLength(0);
+  });
+
+  it('vincula metodología a la versión de cada evaluación y descarta respuestas tardías', () => {
+    const methodologyA = new Subject<{ versionFormularioId: number; codigo: string; version: number; secciones: never[]; catalogos: { codigo: string; nombre: string; elementos: { codigo: string; valor: string; orden: number }[] }[]; reglas: never[] }>();
+    const methodologyB = new Subject<typeof methodologyA extends Subject<infer T> ? T : never>();
+    service.obtenerEvaluacion.mockImplementation((id: number) => of({
+      evaId: id, evaRiesgoId: 5, evaVersionId: id === 20 ? 10 : 11, evaEstado: 'BORRADOR',
+      evaDataJson: '{"escala_preventivo":"ESCALA_B"}', evaDataCalcJson: '{}', evaFechaEval: '', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
+    }));
+    service.metodologiaPorVersion.mockImplementation((versionId: number) => versionId === 10 ? methodologyA : methodologyB);
+    const resumen = (evaId: number, evaVersionId: number): EvaluacionRiesgoResumenDto => ({
+      evaId, evaRiesgoId: 5, riesgoCodigo: 'R-005', riesgoNombre: 'Riesgo', evaVersionId,
+      versionCodigo: 'FORM', versionNumero: evaVersionId, estado: 'BORRADOR', fechaEval: ''
+    });
+
+    component.abrirMatrizCompleta(resumen(20, 10));
+    component.abrirMatrizCompleta(resumen(21, 11));
+    methodologyB.next({ versionFormularioId: 11, codigo: 'FORM_B', version: 11, secciones: [], catalogos: [{
+      codigo: 'CAT_EFECTIVIDAD_ESCALA', nombre: 'Escalas B', elementos: [{ codigo: 'ESCALA_B', valor: 'Etiqueta B', orden: 1 }]
+    }], reglas: [] });
+    methodologyA.next({ versionFormularioId: 10, codigo: 'FORM_A', version: 10, secciones: [], catalogos: [{
+      codigo: 'CAT_EFECTIVIDAD_ESCALA', nombre: 'Escalas A', elementos: [{ codigo: 'ESCALA_A', valor: 'Etiqueta A', orden: 1 }]
+    }], reglas: [] });
+
+    expect(service.metodologiaPorVersion).toHaveBeenCalledWith(10);
+    expect(service.metodologiaPorVersion).toHaveBeenCalledWith(11);
+    expect(component.metodologiaMatrizCompleta()?.versionFormularioId).toBe(11);
+    expect(component.catalogoEscalaEfectividad()?.elementos[0].valor).toBe('Etiqueta B');
+    expect(component.valorCampoControl(MATRIX_BLOCK_2_FIELDS.find(field => field.ordinal === 21)!)).toBe('Etiqueta B');
+  });
+
+  it('presenta porcentajes históricos V1 y ratios runtime con unidad explícita, sin inferencia', () => {
+    const field = (ordinal: number) => MATRIX_BLOCK_2_FIELDS.find(item => item.ordinal === ordinal)!;
+    component.evaluacionResumenSeleccionada.set({ evaId: 20, evaRiesgoId: 5, riesgoCodigo: 'R-005', riesgoNombre: 'Riesgo', evaVersionId: 10, versionCodigo: 'V1', versionNumero: 1, estado: 'CERRADA', fechaEval: '' });
+    component.evaluacionSeleccionada.set({ evaId: 20, evaRiesgoId: 5, evaVersionId: 10, evaEstado: 'CERRADA', evaDataJson: '{"controles_preventivo":90,"controles_detectivo":50,"controles_correctivo":0}', evaDataCalcJson: '{"etp":90}', evaFechaEval: '', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true });
+    component.respuestas.set({ controles_preventivo: 90, controles_detectivo: 50, controles_correctivo: 0 });
+
+    expect(component.valorCampoControl(field(21))).toBe('No disponible en esta versión');
+    expect(component.valorCampoControl(field(22))).toBe('No disponible en esta versión');
+    expect(component.valorCampoControl(field(23))).toBe('90%');
+    expect(component.valorCampoControl(field(27))).toBe('50%');
+    expect(component.valorCampoControl(field(31))).toBe('0%');
+    expect(component.valorCampoControl(field(33))).toBe('90%');
+    expect(component.formatearPorcentajeRuntime0A1(0.9)).toBe('90%');
+    expect(component.formatearPorcentajeRuntime0A1(null)).toBe('—');
+    expect(component.formatearPorcentajeRuntime0A1('')).toBe('—');
   });
 
   it('normaliza mojibake del catálogo maestro de riesgos antes de renderizarlo', () => {

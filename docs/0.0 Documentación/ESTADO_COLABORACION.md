@@ -1,5 +1,17 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Cierre 2B de Bloque 2 (COD, fail-closed)
+
+- Fecha/hora local: `2026-09-28 12:45` (America/Tegucigalpa). Rama `desarrollo`; SHA base `e86bf340c8c85fabf1ffe3b4ee19e8d979205f11`. SHA final y Quality Gate exacto se reportan al terminar publicación.
+- `BLOCK_1_STATUS=CLOSED`; regresión Bloque 1 PASS. `BLOCK_2_STATUS=PARTIAL_BLOCKED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`; Bloques 3–6 no iniciados.
+- Diagnóstico corregido: existe `GET /api/matrices-riesgos/metodologia/version/{versionId}`. Matriz completa carga `metodologiaPorVersion(detalle.evaVersionId)`; prueba frontend de solicitud tardía protege la metodología de la evaluación actual. No hay fallback a metodología vigente.
+- V2 DRAFT del repositorio carece de `CAT_EFECTIVIDAD_ESCALA`, `CAT_EFECTIVIDAD_NIVEL` y `CAT_EFECTIVIDAD_PORCENTAJE`. Excel read-only: 59 filas; 6 escalas; tuplas distintas preventivo/detectivo/correctivo `7/5/6`; conflictos cruzados `0`; porcentajes inválidos `0`; cinco escalas carecen de mapeo numérico completo y 36 tuplas tienen escala sin porcentaje fuente. El snapshot no es completo.
+- El writer histórico V1 produce porcentaje 0..100; la lógica se probó sin alterar semántica. La vista V1 usa claves históricas de JSON solo en 23/27/31 y no infiere escalas/niveles; porcentajes runtime nuevos usan ratio 0..1 según versión, no heurística.
+- Bloqueo productivo: `ValidarYCalcularEvaluacionAsync` no proporciona opciones runtime; `DbDrivenCalculationRuntimeFactory` no está conectado. No se confirma LOOKUP versionado para F03–F08/F09. F09 no deriva sus referencias de presencia desde controles relacionales y las mutaciones de controles no recalculan la evaluación: `CONTROL_MUTATION_RECALCULATION_GAP=YES`.
+- Verificación reproducida: backend `668/668`; frontend `801/801`; focalizadas `39/39`; lint/build PASS; E2E `37/37` con chromium responsive; dynamic DDL/autorización/Phase13/database/encoding/estructura/documentación y `git diff --check` PASS. Build mantiene warnings previos de SCSS/CommonJS.
+- Sin conexión Oracle, DDL/DML ni ejecución de scripts; V1, hash V1, V2 DRAFT y script histórico 02 permanecen intactos; sin modificaciones de los 59 datos históricos ni publicación de formularios. `V2_ORACLE_SYNC=DEFERRED_UNTIL_82_FIELD_CONTRACT_COMPLETE`; `MAIN_TOUCHED=NO`.
+- Publicación pendiente de registrar SHA/Quality Gate final. Se preservan los untracked ajenos del checkout. No iniciar Bloque 3: completar snapshots de catálogo por versión, wiring seguro de FormulaEngine/pinning, presencia de controles para F09 y recálculo de mutaciones.
+
 ## Estado vigente — Evolución de Matriz institucional completa, Bloque 1 (01–19)
 
 - Fecha/hora local: `2026-09-28 10:07` (UTC-06). Autor: `COD` / `CODEX`. Rama `desarrollo`; SHA inicial `2519ff04d190bb7bee549bdd6cc6fcf9ed9275e9` (HEAD esperado confirmado y sincronizado al inicio).
