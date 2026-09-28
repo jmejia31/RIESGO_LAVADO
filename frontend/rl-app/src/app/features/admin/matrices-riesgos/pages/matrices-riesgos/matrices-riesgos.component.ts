@@ -24,7 +24,7 @@ import {
 } from '../../models/matrices-riesgos.models';
 import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
 import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
-import { RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { ControlRiesgoDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
@@ -42,7 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'matriz-completa' | 'plantillas';
 
@@ -199,6 +199,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly evaluacionResumenSeleccionada = signal<EvaluacionRiesgoResumenDto | null>(null);
   readonly matrizCompletaEnCarga = signal(false);
   readonly matrizCompletaError = signal<string | null>(null);
+  readonly controlesMatrizCompleta = signal<ControlRiesgoDto[]>([]);
+  readonly controlesMatrizEnCarga = signal(false);
+  readonly controlesMatrizError = signal<string | null>(null);
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
@@ -1545,6 +1548,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.evaluacionSeleccionada.set(null);
     this.riesgoMaestroMatriz.set(null);
     this.matrizCompletaError.set(null);
+    this.controlesMatrizCompleta.set([]);
+    this.controlesMatrizError.set(null);
+    this.controlesMatrizEnCarga.set(false);
     this.matrizCompletaEnCarga.set(true);
     this.seleccionarTab('matriz-completa');
 
@@ -1554,6 +1560,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.evaluacionSeleccionada.set(detalle);
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
+        this.cargarControlesMatrizCompleta(detalle.evaId, solicitudId);
         forkJoin({
           riesgo: this.service.obtenerRiesgo(detalle.evaRiesgoId),
           version: this.service.obtenerVersionFormulario(detalle.evaVersionId)
@@ -1611,10 +1618,60 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   readonly camposMatrizCompleta = MATRIX_BLOCK_1_FIELDS;
-  readonly bloquesMatrizPendientes = [2, 3, 4, 5, 6] as const;
-  readonly etiquetaBloquePendiente = (block: 2 | 3 | 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
-  camposMetadataBloque(block: 2 | 3 | 4 | 5 | 6): readonly MatrixFieldContract[] {
+  readonly camposControlesMatriz = MATRIX_BLOCK_2_FIELDS;
+  readonly bloquesMatrizPendientes = [3, 4, 5, 6] as const;
+  readonly etiquetaBloquePendiente = (block: 3 | 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
+  camposMetadataBloque(block: 3 | 4 | 5 | 6): readonly MatrixFieldContract[] {
     return MATRIX_FIELDS.filter(field => field.block === block);
+  }
+
+  controlesPorTipo(tipo: ControlRiesgoDto['conTipo']): ControlRiesgoDto[] {
+    return this.controlesMatrizCompleta().filter(control => control.conTipo === tipo);
+  }
+
+  valorCampoControl(field: MatrixFieldContract): string {
+    const key = field.key;
+    if (!key) return '—';
+    if (field.ordinal === 23 || field.ordinal === 27 || field.ordinal === 31) {
+      // The legacy JSON uses inconsistent units in repository fixtures; never guess or reinterpret it.
+      const calculation = this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}')[key];
+      return this.formatearPorcentajeRuntime(calculation);
+    }
+    if (field.ordinal === 21 || field.ordinal === 25 || field.ordinal === 29) {
+      const scale = this.respuestas()[key];
+      return scale === null || scale === undefined || scale === '' ? 'No disponible en esta versión' : String(scale);
+    }
+    const value = this.parsearRespuestas(this.evaluacionSeleccionada()?.evaDataCalcJson ?? '{}')[key];
+    return value === null || value === undefined || value === '' ? '—' : String(value);
+  }
+
+  formatearPorcentajeRuntime(value: unknown): string {
+    const proportion = typeof value === 'number' ? value : typeof value === 'string' && value.trim() !== '' ? Number(value) : Number.NaN;
+    if (!Number.isFinite(proportion) || proportion < 0 || proportion > 1) return '—';
+    return `${new Intl.NumberFormat('es-HN', { maximumFractionDigits: 2 }).format(proportion * 100)}%`;
+  }
+
+  reintentarCargaControlesMatriz(): void {
+    const evaluacionId = this.evaluacionSeleccionada()?.evaId;
+    if (evaluacionId) this.cargarControlesMatrizCompleta(evaluacionId, this.secuenciaCargaMatrizCompleta);
+  }
+
+  private cargarControlesMatrizCompleta(evaluacionId: number, solicitudId: number): void {
+    this.controlesMatrizEnCarga.set(true);
+    this.controlesMatrizError.set(null);
+    this.service.listarControles(evaluacionId).subscribe({
+      next: controles => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.controlesMatrizCompleta.set(controles);
+        this.controlesMatrizEnCarga.set(false);
+      },
+      error: error => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.controlesMatrizCompleta.set([]);
+        this.controlesMatrizError.set(this.obtenerMensajeError(error, 'No se pudieron cargar los controles asociados.'));
+        this.controlesMatrizEnCarga.set(false);
+      }
+    });
   }
 
   abrirMatrizCompletaDesdeConsolidado(fila: RiesgoReporteFila): void {

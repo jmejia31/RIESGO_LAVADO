@@ -136,11 +136,27 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
   const view = page.locator('[data-matrix-view="complete"]');
   await expect(view.getByRole('heading', { name: '1. Identificación y Riesgo Inherente' })).toBeVisible();
+  await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(19);
+  await expect(fields).toHaveCount(33);
   await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 33 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
+  const block2Labels = [
+    'Descripción de Control(es) Preventivo(s)', 'Escala de efectividad de control(es) preventivo(s)',
+    'Nivel de efectividad de control(es) preventivo(s)', '% efectividad de control(es) preventivo(s)',
+    'Descripción de Control(es) Detectivo(s)', 'Escala de efectividad de control(es) detectivo(s)',
+    'Nivel de efectividad de control(es) detectivo(s)', '% efectividad de control detectivo',
+    'Descripción de Control(es) Correctivo(s)', 'Escala de efectividad de control(es) correctivo(s)',
+    'Nivel de efectividad de control(es) correctivo(s)', '% efectividad de control correctivo',
+    'Nivel de Automatización de los Controles', 'Efectividad Total Ponderada de los Controles'
+  ];
+  for (let index = 0; index < block2Labels.length; index++) await expect(fields.nth(index + 19)).toContainText(block2Labels[index]);
+  for (const index of [21, 22, 25, 26, 29, 30, 32]) await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
+  await expect(fields.nth(19)).toContainText('Sin controles preventivos registrados.');
+  await expect(fields.nth(23)).toContainText('Sin controles detectivos registrados.');
+  await expect(fields.nth(27)).toContainText('Sin controles correctivos registrados.');
+  await expect(view.locator('[data-matrix-block="3"]')).toContainText('Bloque pendiente de implementación');
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
@@ -150,7 +166,7 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
 
   const matrixView = page.locator('[data-matrix-view="complete"]');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(fields).toHaveCount(19);
+  await expect(fields).toHaveCount(33);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
   await page.setViewportSize({ width: 1280, height: 900 });
 

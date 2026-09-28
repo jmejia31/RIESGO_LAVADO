@@ -1809,3 +1809,13 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - Quality gates: backend `657/657`, frontend `79/791`, E2E `36/36`, build/lint, database, encoding, estructura, documentación y `git diff --check` PASS.
 - `ORACLE_DML_EXECUTED_BY_CODEX=NO`; `ORACLE_DDL_EXECUTED_BY_CODEX=NO`; `MANUAL_EXECUTION_PENDING=YES`.
 - **Continuación exacta:** Javier debe ejecutar únicamente 41 con el nuevo SHA. Si el inventario confirma `UNIQUE_BAD_TOKENS=90`, `AMBIGUOUS_TOKENS=0`, `UNMAPPED_TOKENS=0` y `FULL_MODULE_TOKEN_INVENTORY=PASS`, podrá continuar con 42→44.
+
+# Estado vigente — Matriz institucional Bloque 2 (COD, parcial/fail-closed)
+
+- **Fecha:** 2026-09-28 (America/Tegucigalpa). **Rama:** `desarrollo`. **Base de intervención:** `b0e9408ff49e0a1eab518a7ec924a48521da04d2`.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_IMPLEMENTED=PARTIAL_BLOCKED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`.
+- La Matriz completa presenta 20–33 en orden y carga descripciones/automatización normalizadas con `listarControles`, separando errores de controles de la visualización del Bloque 1. La Mitigación operacional sigue intacta.
+- F03–F09 están definidos en el runtime existente; sus pesos parametrizados son 70/15/15. `ECO_EFECTIVIDAD` no se usa para la valoración inicial.
+- Pendientes fail-closed: exponer el snapshot de escalas efectivamente fijado por versión, sin duplicar catálogo; confirmar unidad histórica V1. Fixtures locales discrepan (`0.25` frente a `70`), por lo que no se convierten ni se reconstruyen escalas. No se mutó V1/V2 y no se usó Oracle.
+- Verificado en esta intervención: backend `657/657`, frontend `80 archivos / 798 pruebas`, lint/build PASS, E2E `37/37`, validadores dynamic DDL/autorización/Phase 13/database/encoding/estructura/documentación PASS y diff check PASS. E2E Chromium comprobó desktop y 390 px; Quality Gate remoto pendiente.
+- **Continuidad:** no iniciar Bloque 3. Completar primero fuentes versionadas de escala/unidad, luego cerrar gates remotos del SHA de Bloque 2.

@@ -1,4 +1,4 @@
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
 
 describe('contrato canónico de la Matriz institucional', () => {
   it('define las 82 posiciones una sola vez con ordinales y columnas continuas', () => {
@@ -40,5 +40,36 @@ describe('contrato canónico de la Matriz institucional', () => {
     expect(MATRIX_FIELDS[11]).toMatchObject({ ordinal: 12, mode: 'COMPUTED', editable: false });
     expect(MATRIX_FIELDS[12]).toMatchObject({ ordinal: 13, mode: 'COMPUTED', editable: false });
     expect(MATRIX_BLOCK_1_FIELDS.slice(16).map(field => field.ordinal)).toEqual([17, 18, 19]);
+  });
+
+  it('define el contrato literal 20–33 sin filtrar evaluación de monitoreo a la valoración inicial', () => {
+    expect(MATRIX_BLOCK_2_FIELDS).toHaveLength(14);
+    expect(MATRIX_BLOCK_2_FIELDS.map(field => field.ordinal)).toEqual(Array.from({ length: 14 }, (_, index) => index + 20));
+    expect(MATRIX_BLOCK_2_FIELDS.map(field => field.excelColumn)).toEqual(['T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG']);
+    expect(MATRIX_BLOCK_2_FIELDS.map(field => field.label)).toEqual([
+      'Descripción de Control(es) Preventivo(s)',
+      'Escala de efectividad de control(es) preventivo(s)',
+      'Nivel de efectividad de control(es) preventivo(s)',
+      '% efectividad de control(es) preventivo(s)',
+      'Descripción de Control(es) Detectivo(s)',
+      'Escala de efectividad de control(es) detectivo(s)',
+      'Nivel de efectividad de control(es) detectivo(s)',
+      '% efectividad de control detectivo',
+      'Descripción de Control(es) Correctivo(s)',
+      'Escala de efectividad de control(es) correctivo(s)',
+      'Nivel de efectividad de control(es) correctivo(s)',
+      '% efectividad de control correctivo',
+      'Nivel de Automatización de los Controles',
+      'Efectividad Total Ponderada de los Controles'
+    ]);
+    expect(MATRIX_BLOCK_2_FIELDS.map(field => [field.mode, field.editable])).toEqual([
+      ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
+      ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
+      ['REPEATER', true], ['INPUT', true], ['COMPUTED', false], ['COMPUTED', false],
+      ['REPEATER', true], ['COMPUTED', false]
+    ]);
+    for (const field of [MATRIX_BLOCK_2_FIELDS[1], MATRIX_BLOCK_2_FIELDS[2], MATRIX_BLOCK_2_FIELDS[3], MATRIX_BLOCK_2_FIELDS[5], MATRIX_BLOCK_2_FIELDS[6], MATRIX_BLOCK_2_FIELDS[7], MATRIX_BLOCK_2_FIELDS[9], MATRIX_BLOCK_2_FIELDS[10], MATRIX_BLOCK_2_FIELDS[11]]) {
+      expect(field.source).not.toContain('RL_MR_EVALUACIONES_CONTROL');
+    }
   });
 });

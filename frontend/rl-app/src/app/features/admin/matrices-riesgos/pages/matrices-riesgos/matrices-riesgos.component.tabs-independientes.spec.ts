@@ -313,10 +313,11 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
 
     const root = fixture.nativeElement as HTMLElement;
     const fields = Array.from(root.querySelectorAll('[data-matrix-view="complete"] [data-matrix-field]'));
-    expect(fields).toHaveLength(19);
-    expect(fields.map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0')));
-    expect(fields.slice(16).map(field => field.getAttribute('data-matrix-field'))).toEqual(['17', '18', '19']);
-    const visibleLabels = fields.map(field => field.querySelector('dt span:nth-child(2)')?.textContent?.trim());
+    expect(fields).toHaveLength(33);
+    expect(fields.slice(0, 19).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0')));
+    expect(fields.slice(19).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 14 }, (_, index) => String(index + 20).padStart(2, '0')));
+    expect(fields.slice(16, 19).map(field => field.getAttribute('data-matrix-field'))).toEqual(['17', '18', '19']);
+    const visibleLabels = fields.slice(0, 19).map(field => field.querySelector('dt span:nth-child(2)')?.textContent?.trim());
     expect(visibleLabels).toEqual([
       'No.', 'Código de Riesgo', 'Área', 'Área Consolidada', 'Tipo de Riesgo', 'Procedimiento',
       'Objetivo(s) Estratégico(s)', 'Riesgo Inherente', 'Evaluación', 'Frecuencia', 'Impacto',
@@ -332,6 +333,8 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(fields[12].textContent).toContain('Calculado automáticamente');
     expect(fields[11].querySelector('[aria-readonly="true"]')).not.toBeNull();
     expect(fields[12].querySelector('[aria-readonly="true"]')).not.toBeNull();
-    expect(root.querySelectorAll('[data-matrix-block="2"] .text-amber-800')).toHaveLength(1);
+    expect(root.querySelector('[data-matrix-block="2"] h3')?.textContent).toContain('2. Controles');
+    expect(root.querySelectorAll('[data-matrix-block="2"] [data-matrix-field]')).toHaveLength(14);
+    expect(root.querySelectorAll('[data-matrix-block="3"] .text-amber-800')).toHaveLength(1);
   });
 });

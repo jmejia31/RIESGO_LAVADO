@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
@@ -15,6 +16,8 @@ describe('MatricesRiesgosComponent', () => {
     metodologiaVigente: ReturnType<typeof vi.fn>;
     metodologiaPorVersion: ReturnType<typeof vi.fn>;
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
+    obtenerRiesgo: ReturnType<typeof vi.fn>;
+    listarControles: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
     listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
@@ -123,6 +126,8 @@ describe('MatricesRiesgosComponent', () => {
         evaVersionRow: 1,
         evaActivo: true
       })),
+      obtenerRiesgo: vi.fn().mockReturnValue(of({ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo institucional', rieDescripcion: 'Evaluación', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T08:00:00' })),
+      listarControles: vi.fn().mockReturnValue(of([])),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',
@@ -198,6 +203,26 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(false, 1, 200);
     expect(component.versionVigente()?.verId).toBe(10);
     expect(component.riesgos()[0].rieCodigo).toBe('R-005');
+  });
+
+  it('carga controles de forma aislada y protege la Matriz completa ante respuestas tardías', () => {
+    const responseA = new Subject<ControlRiesgoDto[]>();
+    const responseB = new Subject<ControlRiesgoDto[]>();
+    service.listarControles.mockReturnValueOnce(responseA).mockReturnValueOnce(responseB);
+    const evaluacion = (evaId: number): EvaluacionRiesgoResumenDto => ({
+      evaId, evaRiesgoId: 5, riesgoCodigo: 'R-005', riesgoNombre: 'Riesgo institucional', evaVersionId: 10,
+      versionCodigo: 'FORM_A', versionNumero: 2, estado: 'BORRADOR', evaEstado: 'BORRADOR',
+      fechaEval: '2026-08-14T00:00:00'
+    });
+
+    component.abrirMatrizCompleta(evaluacion(20));
+    component.abrirMatrizCompleta(evaluacion(21));
+    responseB.next([{ conId: 2, conEvaluacionId: 21, conTipo: 'DETECTIVO', conDescripcion: 'B', conAutomatizacion: 'SEMIAUTOMATICO', conEstado: 'ACTIVO' }]);
+    responseA.next([{ conId: 1, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'A', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' }]);
+
+    expect(component.controlesMatrizCompleta().map(control => control.conEvaluacionId)).toEqual([21]);
+    expect(component.controlesPorTipo('DETECTIVO')).toHaveLength(1);
+    expect(component.controlesPorTipo('PREVENTIVO')).toHaveLength(0);
   });
 
   it('normaliza mojibake del catálogo maestro de riesgos antes de renderizarlo', () => {

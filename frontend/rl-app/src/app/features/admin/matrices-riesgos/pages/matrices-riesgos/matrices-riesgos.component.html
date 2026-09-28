@@ -361,6 +361,64 @@
           </dl>
         </section>
 
+        <section class="space-y-4" data-matrix-block="2" aria-labelledby="matrix-block-2-title">
+          <div>
+            <h3 id="matrix-block-2-title" class="text-base font-bold text-ihss-900">2. Controles</h3>
+            <p class="mt-1 text-xs text-gray-500">Valoración institucional inicial de controles preventivos, detectivos y correctivos.</p>
+          </div>
+          @if (controlesMatrizEnCarga()) {
+            <p class="rounded-lg bg-slate-50 p-3 text-sm text-gray-600" role="status" aria-live="polite">Cargando controles asociados…</p>
+          } @else if (controlesMatrizError(); as errorControles) {
+            <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+              <p>{{ errorControles }}</p>
+              <button type="button" class="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" title="Reintentar carga de controles" aria-label="Reintentar carga de controles" (click)="reintentarCargaControlesMatriz()"><app-action-icon action="retry"></app-action-icon></button>
+            </div>
+          }
+          <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
+            @for (field of camposControlesMatriz; track field.ordinal) {
+              <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
+                <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
+                <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" aria-readonly="true">
+                  @if (field.ordinal === 20 || field.ordinal === 24 || field.ordinal === 28) {
+                    @let tipo = field.ordinal === 20 ? 'PREVENTIVO' : field.ordinal === 24 ? 'DETECTIVO' : 'CORRECTIVO';
+                    @let controles = controlesPorTipo(tipo);
+                    @if (controles.length) {
+                      <ol class="space-y-2">
+                        @for (control of controles; track control.conId; let index = $index) {
+                          <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
+                            <span class="block text-xs font-semibold text-gray-600">Control {{ tipo.toLowerCase() }} {{ index + 1 }}</span>
+                            <span>{{ control.conDescripcion }}</span>
+                          </li>
+                        }
+                      </ol>
+                    } @else {
+                      <span>{{ field.ordinal === 20 ? 'Sin controles preventivos registrados.' : field.ordinal === 24 ? 'Sin controles detectivos registrados.' : 'Sin controles correctivos registrados.' }}</span>
+                    }
+                  } @else if (field.ordinal === 32) {
+                    @if (controlesMatrizCompleta().length) {
+                      <ul class="space-y-1">
+                        @for (control of controlesMatrizCompleta(); track control.conId; let index = $index) {
+                          <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
+                            Control {{ control.conTipo.toLowerCase() }} {{ index + 1 }} — {{ control.conAutomatizacion === 'SEMIAUTOMATICO' ? 'Semiautomático' : control.conAutomatizacion === 'AUTOMATICO' ? 'Automático' : 'Manual' }}
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <span>Sin automatización registrada porque no existen controles.</span>
+                    }
+                  } @else {
+                    {{ valorCampoControl(field) }}
+                  }
+                </dd>
+                @if (field.mode === 'COMPUTED') {
+                  <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal" [attr.aria-describedby]="'matrix-label-' + field.ordinal">Calculado automáticamente</span>
+                }
+              </div>
+            }
+          </dl>
+          <p class="text-xs text-gray-500">Las escalas iniciales requieren el snapshot institucional versionado. Su selector no se sustituye con la evaluación posterior de efectividad del control.</p>
+        </section>
+
         @for (block of bloquesMatrizPendientes; track block) {
           <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
             <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>
