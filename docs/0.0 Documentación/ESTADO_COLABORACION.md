@@ -2,7 +2,7 @@
 
 ## Estado vigente — Cierre 2B de Bloque 2 (COD, fail-closed)
 
-- Fecha/hora local: `2026-09-28 12:45` (America/Tegucigalpa). Rama `desarrollo`; SHA base `e86bf340c8c85fabf1ffe3b4ee19e8d979205f11`. SHA final y Quality Gate exacto se reportan al terminar publicación.
+- Fecha/hora local: `2026-09-28 12:51` (America/Tegucigalpa). Rama `desarrollo`; SHA base `e86bf340c8c85fabf1ffe3b4ee19e8d979205f11`; commit de implementación `ef03146e872adff1eaf5f497c6c6b423ea4a52d2`, Quality Gates `36467582882` completed/success para ese SHA exacto. El commit final del handoff documental se confirmará tras publicarse.
 - `BLOCK_1_STATUS=CLOSED`; regresión Bloque 1 PASS. `BLOCK_2_STATUS=PARTIAL_BLOCKED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`; Bloques 3–6 no iniciados.
 - Diagnóstico corregido: existe `GET /api/matrices-riesgos/metodologia/version/{versionId}`. Matriz completa carga `metodologiaPorVersion(detalle.evaVersionId)`; prueba frontend de solicitud tardía protege la metodología de la evaluación actual. No hay fallback a metodología vigente.
 - V2 DRAFT del repositorio carece de `CAT_EFECTIVIDAD_ESCALA`, `CAT_EFECTIVIDAD_NIVEL` y `CAT_EFECTIVIDAD_PORCENTAJE`. Excel read-only: 59 filas; 6 escalas; tuplas distintas preventivo/detectivo/correctivo `7/5/6`; conflictos cruzados `0`; porcentajes inválidos `0`; cinco escalas carecen de mapeo numérico completo y 36 tuplas tienen escala sin porcentaje fuente. El snapshot no es completo.
