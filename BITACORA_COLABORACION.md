@@ -7878,4 +7878,5 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - Archivos adicionales: `backend/RL.API/Features/MatricesRiesgos/Application/VersionedCalculationRuntimeService.cs`, `backend/RL.API.Tests/Features/MatricesRiesgos/VersionedCalculationRuntimeServiceTests.cs` y documentación de Bloque 2.
 - Verificación reproducida: backend `681/681`; gates dynamic DDL, autorización, Phase 13, database, encoding (`TEXT_ENCODING_INTEGRITY=PASS`, `MOJIBAKE_FINDINGS=0`), estructura, documentación y `git diff --check` PASS. Frontend sin cambios; regresión previa `801/801`, lint/build PASS, E2E `37/37`.
 - Sigue `BLOCK_2_STATUS=PARTIAL_BLOCKED`: atomicidad create/update/concurrencia está implementada como transacción única y el test inspecciona el contrato fuente, pero no se ejecuta fault-injection de rollback/concurrencia; Oracle permanece prohibido. No iniciar Bloque 3.
-- Commit/push y Quality Gate exacto pendientes para este ajuste.
+- Commit/push: `1da9added59c56149dbe1a95bd59da5b0d97c652` publicado en `origin/desarrollo`; Quality Gates run `36486781595`, SHA exacto `1da9added59c56149dbe1a95bd59da5b0d97c652`, `completed/success`.
+- Resultado sigue `BLOCK_2_STATUS=PARTIAL_BLOCKED`: el remote gate pasó, pero faltan pruebas ejecutadas de fault-injection para atomicidad/rollback/concurrencia. No iniciar Bloque 3.
