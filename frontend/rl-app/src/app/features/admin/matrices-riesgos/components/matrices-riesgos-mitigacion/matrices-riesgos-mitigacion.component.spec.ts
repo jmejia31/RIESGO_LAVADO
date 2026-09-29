@@ -137,11 +137,14 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Guardar nuevo control');
     expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Guardar nuevo plan');
 
-    component.editarControl(control);
-    component.editarPlan(plan);
+    const editarControl = root.querySelector('button[aria-label="Editar y evaluar control"]') as HTMLButtonElement;
+    editarControl.click();
     fixture.detectChanges();
-
     expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Actualizar control');
+
+    const editarPlan = root.querySelector('button[aria-label="Editar plan y actividades"]') as HTMLButtonElement;
+    editarPlan.click();
+    fixture.detectChanges();
     expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Actualizar plan');
     expect(root.querySelector('[data-ui-action="new-control"]')?.className).toContain('bg-blue-50');
     expect(root.querySelector('[data-ui-action="new-plan"]')?.className).toContain('bg-blue-50');

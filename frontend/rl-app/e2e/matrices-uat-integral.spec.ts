@@ -336,7 +336,7 @@ test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => 
   await page.getByLabel('Código', { exact: true }).fill('R-008');
   await page.getByLabel('Nombre', { exact: true }).fill('Riesgo integral UAT');
   await page.getByLabel('Descripción', { exact: true }).fill('Creado por prueba UAT');
-  await page.getByRole('button', { name: 'Crear riesgo' }).click();
+  await page.getByRole('button', { name: 'Guardar nuevo riesgo', exact: true }).click();
   await expect.poll(() => payload?.rieCodigo).toBe('R-008');
   await expect(page.getByText('Riesgo creado correctamente.')).toBeVisible();
 });
@@ -442,7 +442,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await expect(page.locator('#control-estado')).toHaveValue('ACTIVO');
   await expect(page.locator('#control-estado option')).toHaveCount(2);
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
-  await page.getByRole('button', { name: 'Crear control' }).click();
+  await page.getByRole('button', { name: 'Guardar nuevo control', exact: true }).click();
   await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
   await expect(page.getByText('Control creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar y evaluar control' }).click();
@@ -452,9 +452,10 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await expect(page.getByText('Efectividad del control registrada correctamente.')).toBeVisible();
 
   await expect(page.locator('#plan-estado')).toHaveValue('PENDIENTE');
-  await expect(page.locator('#plan-estado option')).toHaveCount(4);
+  await expect(page.locator('#plan-estado option')).toHaveCount(5);
+  await expect(page.locator('#plan-estado option')).toHaveText(['Pendiente', 'En proceso', 'Cerrado', 'Vencido', 'Inactivo']);
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
-  await page.getByRole('button', { name: 'Crear plan' }).click();
+  await page.getByRole('button', { name: 'Guardar nuevo plan', exact: true }).click();
   await expect.poll(() => recibidos['plan']?.plaEvaluacionId).toBe(20);
   await expect.poll(() => recibidos['plan']?.plaEstado).toBe('PENDIENTE');
   await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
@@ -465,7 +466,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await expect(seccionActividades.getByLabel('Descripción', { exact: true })).toHaveValue('Actividad UAT');
   await seccionActividades.getByLabel('Responsable', { exact: true }).fill('Responsable UAT');
   await expect(seccionActividades.getByLabel('Responsable', { exact: true })).toHaveValue('Responsable UAT');
-  await seccionActividades.getByRole('button', { name: 'Crear actividad' }).click();
+  await seccionActividades.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
   await expect.poll(() => recibidos['actividad']?.actPlanId).toBe(41);
   await expect(page.getByText('Actividad creada correctamente.')).toBeVisible();
 });
