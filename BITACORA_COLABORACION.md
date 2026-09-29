@@ -1,5 +1,21 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Selectores operativos acotados y filtro estándar de Riesgos
+
+- **Fecha/hora local:** 2026-09-29 10:37 (America/Tegucigalpa).
+- **Colaborador:** ChatGPT.
+- **Rama / baseline / HEAD funcional:** `desarrollo` / `54421e0b272cda9c3ed1433f155663734b75bd00` / `16814e15126891b8418e9c9122a45e04d48a86d8`.
+- **Objetivo:** corregir los dos selectores extensos de Evaluación en Mitigación/Monitoreo y completar el filtro/paginación de Gestión de riesgos conforme a la referencia visual de Evaluaciones.
+- **Cambios UI:** nuevo componente compartido `app-bounded-select`: panel siempre debajo del control, en flujo normal, lista acotada a `min(14rem, 28dvh)`, scroll interno, búsqueda para listas extensas, contador y cierre por Escape/click externo. Sustituye los `<select>` nativos de Mitigación y Monitoreo para evitar apertura hacia arriba y paneles visualmente interminables.
+- **Corrección de paginación:** `app-page-size-selector` pasó de `[value]` a binding controlado con `ngModel` standalone. Se elimina la discrepancia observada donde el selector mostraba 10 mientras el componente Riesgos consultaba 25.
+- **Gestión de riesgos:** página inicial real = 10; filtro completo Buscar + Estado (Todos/Activos/Inactivos) + Limpiar + Mostrar + paginación. Búsqueda con debounce 300 ms, reinicio de página y respuesta de servidor autoritativa.
+- **Backend:** `ConsultaRiesgosPaginadaDto` incorpora `Activo: bool?`; el repositorio filtra `RIE_ACTIVO = :activo` cuando se especifica, preservando el contrato anterior de `IncluirInactivos`.
+- **Pruebas añadidas/actualizadas:** unitarias del selector acotado y page-size; regresiones del filtro de Riesgos; prueba backend de propagación del criterio `Activo`; E2E para panel hacia abajo/acotado/con scroll y para asegurar `tamanoPagina=10` y exactamente 10 filas iniciales.
+- **Estándar documentado:** `docs/0.0 Documentación/ESTANDAR_FILTROS_SELECTORES_UI.md` define tres patrones: filtro completo, selector acotado de lista extensa y paginación compacta.
+- **Commits funcionales:** `10849f6f16c88dd39e80cd4071d4012b6f70a8d2`, `f1cceb63897059987f8ac2c3e4ce1e838513a3a2`, `9f0890d567b16136721de0165b0836810821ac98`, `16814e15126891b8418e9c9122a45e04d48a86d8`.
+- **Quality Gate remoto:** run `36598983818` (run #1664) para el HEAD funcional terminó `completed/failure` exclusivamente en «Verify npm security audit and reproducible installation», con las mismas 10 vulnerabilidades preexistentes (2 moderate, 8 high; entre ellas `ip-address`). Lint/build/unit/E2E no llegaron a ejecutarse. No se declara PASS fresco sin evidencia.
+- **Alcance preservado:** sin cambios en fórmulas, Matriz completa, V1/V2, DDL/DML Oracle ni Bloque 3. `MAIN_TOUCHED=NO`.
+
 ## Registro de intervención — Ajuste UX post-cierre: Matriz completa en modal workspace y acciones alineadas
 
 - **Fecha/hora local:** 2026-09-29 09:59 (America/Tegucigalpa).

@@ -1,5 +1,16 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Estándar de filtros y selectores operativos
+
+- Fecha/hora local: `2026-09-29 10:37` (America/Tegucigalpa). Rama `desarrollo`; baseline `54421e0b272cda9c3ed1433f155663734b75bd00`; HEAD funcional `16814e15126891b8418e9c9122a45e04d48a86d8`.
+- `MITIGACION_EVALUATION_SELECTOR=BOUNDED_DOWNWARD`; `MONITOREO_EVALUATION_SELECTOR=BOUNDED_DOWNWARD`. Ambos usan `app-bounded-select`, scroll interno y panel acotado `min(14rem, 28dvh)`, sin overlay sobre el pie.
+- `RISK_FILTER_STANDARD=FULL`: Buscar + Estado + Limpiar + tamaño + paginación; página inicial real `10`; criterios y totales resueltos por servidor.
+- `PAGE_SIZE_VISIBLE_VALUE=AUTHORITATIVE`: corregido el binding compartido para impedir que «Mostrar 10» conviva con una consulta real de 25.
+- Backend Riesgos admite `Activo=true/false` opcional y conserva `IncluirInactivos` para compatibilidad.
+- Estándares institucionales definidos en `ESTANDAR_FILTROS_SELECTORES_UI.md`: FULL, BOUNDED_SELECT y COMPACT_PAGING.
+- Cobertura añadida en unit/backend/E2E, pero el Quality Gate del SHA funcional (run `36598983818`, #1664) se detuvo antes de ejecutar suites por el `npm audit` preexistente de 10 vulnerabilidades (2 moderate, 8 high). `FRESH_TEST_EXECUTION=BLOCKED_BY_REPOSITORY_NPM_AUDIT`.
+- Sin cambios de Oracle, V1/V2, fórmulas ni Bloque 3. Siguiente acción técnica recomendada: resolver el gate npm como intervención separada y luego ejecutar validación fresca de lint/build/unit/E2E, incluyendo los nuevos controles visuales.
+
 ## Estado vigente — Ajuste UX post-cierre de Matriz completa (modal workspace)
 
 - Fecha/hora local: `2026-09-29 09:59` (America/Tegucigalpa). Rama `desarrollo`; base `9aa09ad0f6f057eebf8d4178f2b4690fe602c030`; commit técnico `23bd17b81990f665e3ab1a52c30e56043040ab1b`.
