@@ -445,16 +445,22 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
-        this.familias.set((resultado?.items ?? []).map(familia => ({
+        const items = Array.isArray(resultado?.items) ? resultado.items : [];
+        this.familias.set(items.map(familia => ({
           ...familia,
           famNombre: normalizarMojibakeVisibleUtf8(familia.famNombre),
           famDescripcion: familia.famDescripcion ? normalizarMojibakeVisibleUtf8(familia.famDescripcion) : familia.famDescripcion
         })));
-        this.paginaFamilias.set(resultado.pagina);
-        this.totalRegistrosFamilias.set(resultado.totalRegistros);
-        this.totalPaginasFamiliasServidor.set(resultado.totalPaginas);
-        this.totalesFamiliasServidor.set(resultado.totales);
-        if (this.familiaSeleccionada() && !resultado.items.some(f => f.famCodigo === this.familiaSeleccionada())) {
+        this.paginaFamilias.set(resultado?.pagina ?? 1);
+        this.totalRegistrosFamilias.set(resultado?.totalRegistros ?? 0);
+        this.totalPaginasFamiliasServidor.set(resultado?.totalPaginas ?? 0);
+        this.totalesFamiliasServidor.set(resultado?.totales ?? {
+          totalFamilias: 0,
+          activas: 0,
+          inactivas: 0,
+          totalVersiones: 0
+        });
+        if (this.familiaSeleccionada() && !items.some(f => f.famCodigo === this.familiaSeleccionada())) {
           this.familiaSeleccionada.set('');
         }
         this.cargandoFamilias.set(false);
@@ -1041,13 +1047,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cargarRiesgos(): void {
     this.service.listarRiesgosPaginados(false, 1, 200).subscribe({
-      next: respuesta => this.riesgos.set(
-        (respuesta?.items ?? []).map(riesgo => ({
+      next: respuesta => {
+        const items = Array.isArray(respuesta?.items) ? respuesta.items : [];
+        this.riesgos.set(items.map(riesgo => ({
           ...riesgo,
           rieNombre: normalizarMojibakeVisibleUtf8(riesgo.rieNombre),
           rieDescripcion: riesgo.rieDescripcion ? normalizarMojibakeVisibleUtf8(riesgo.rieDescripcion) : riesgo.rieDescripcion
-        }))
-      ),
+        })));
+      },
       error: () => this.riesgos.set([])
     });
   }
@@ -1203,12 +1210,21 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.obtenerConsolidadoPaginado(filtro).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaConsolidado) return;
-        this.consolidado.set((resultado?.items ?? []).map(fila => this.normalizarFilaReporte(fila)));
-        this.totalRegistrosConsolidado.set(resultado.totalRegistros);
-        this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
-        this.totalesConsolidado.set(resultado.totales);
-        this.paginaConsolidado.set(resultado.pagina);
-        this.registrosPorPaginaConsolidado.set(resultado.tamanoPagina as 10 | 20 | 50);
+        const items = Array.isArray(resultado?.items) ? resultado.items : [];
+        this.consolidado.set(items.map(fila => this.normalizarFilaReporte(fila)));
+        this.totalRegistrosConsolidado.set(resultado?.totalRegistros ?? 0);
+        this.totalPaginasServidorConsolidado.set(resultado?.totalPaginas ?? 0);
+        this.totalesConsolidado.set(resultado?.totales ?? {
+          totalRiesgos: 0,
+          totalConEvaluacionOficial: 0,
+          totalSinEvaluacionOficial: 0,
+          totalAltoCritico: 0
+        });
+        this.paginaConsolidado.set(resultado?.pagina ?? 1);
+        const tamanoPagina = resultado?.tamanoPagina;
+        if (tamanoPagina === 10 || tamanoPagina === 20 || tamanoPagina === 50) {
+          this.registrosPorPaginaConsolidado.set(tamanoPagina);
+        }
         this.cargandoConsolidado.set(false);
       },
       error: error => {

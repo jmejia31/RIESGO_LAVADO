@@ -267,6 +267,22 @@ describe('MatricesRiesgosComponent — F6.5.FAM.2 + UI-FAM.QA Gestor de Familias
     expect(component.errorFamilias()).toBeNull();
   });
 
+  it('11b. normaliza items nulos del paginado sin romper selección, KPIs ni loading', () => {
+    component.familiaSeleccionada.set('EMPLEADOS');
+    vi.mocked(service.listarFamiliasFormularioPaginadas).mockReturnValueOnce(of({
+      ...paginadoFamilias([]),
+      items: null as never
+    }));
+
+    expect(() => component.cargarFamilias()).not.toThrow();
+
+    expect(component.familias()).toEqual([]);
+    expect(component.familiaSeleccionada()).toBe('');
+    expect(component.cargandoFamilias()).toBe(false);
+    expect(component.errorFamilias()).toBeNull();
+    expect(component.totalRegistrosFamilias()).toBe(0);
+  });
+
   it('12. UI-FAM.QA calcula correctamente los cuatro KPI del gestor', () => {
     mostrarGestorPrincipal();
 

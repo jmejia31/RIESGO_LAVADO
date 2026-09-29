@@ -209,6 +209,38 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.cargandoConsolidado()).toBe(false);
   });
 
+  it('normaliza payloads paginados malformados de riesgos y consolidado sin romper la UI', () => {
+    service['listarRiesgosPaginados'].mockReturnValue(of({
+      items: { invalid: true },
+      pagina: 1,
+      tamanoPagina: 200,
+      totalRegistros: 0,
+      totalPaginas: 0
+    }));
+    expect(() => component.cargarRiesgos()).not.toThrow();
+    expect(component.riesgos()).toEqual([]);
+
+    service['obtenerConsolidadoPaginado'].mockReturnValue(of({
+      items: { invalid: true },
+      pagina: 1,
+      tamanoPagina: 25,
+      totalRegistros: 0,
+      totalPaginas: 0,
+      totales: null
+    }));
+    expect(() => component.cargarConsolidado()).not.toThrow();
+    expect(component.consolidado()).toEqual([]);
+    expect(component.totalRegistrosConsolidado()).toBe(0);
+    expect(component.totalPaginasServidorConsolidado()).toBe(0);
+    expect(component.totalesConsolidado()).toEqual({
+      totalRiesgos: 0,
+      totalConEvaluacionOficial: 0,
+      totalSinEvaluacionOficial: 0,
+      totalAltoCritico: 0
+    });
+    expect(component.registrosPorPaginaConsolidado()).toBe(10);
+  });
+
   it('ordena catalogos, protege versiones vigentes de edicion y bloquea la eliminacion activa', () => {
     const opciones = component.opcionesCatalogo({ clave: 'area', etiqueta: 'Area', tipo: 'selector-catalogo', obligatorio: false, soloLectura: false, codigoCatalogo: 'AREAS' });
     expect(opciones.map(opcion => opcion.codigo)).toEqual(['A', 'B']);
