@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
   template: `
     <label class="inline-flex items-center gap-2 text-xs font-semibold text-gray-500" [attr.for]="selectId">
       <span>{{ label }}</span>
-      <select [id]="selectId" class="h-8 w-auto min-w-14 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-500/20" [ngModel]="value" [attr.aria-label]="ariaLabel" (ngModelChange)="emitValue($event)">
+      <select [id]="selectId" class="h-8 w-auto min-w-14 rounded-lg border border-gray-200 bg-white px-2 text-xs font-semibold text-gray-700 focus:border-ihss-500 focus:outline-none focus:ring-2 focus:ring-ihss-500/20" [ngModel]="value" [ngModelOptions]="{ standalone: true }" [attr.aria-label]="ariaLabel" (ngModelChange)="emitValue($event)">
         @for (option of options; track option) { <option [value]="option">{{ option }}</option> }
       </select>
     </label>

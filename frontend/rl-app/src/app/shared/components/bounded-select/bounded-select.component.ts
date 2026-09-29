@@ -124,7 +124,7 @@ export interface BoundedSelectOption {
     }
 
     .bounded-select__options {
-      max-height: min(16rem, 32dvh);
+      max-height: min(14rem, 28dvh);
       overflow-y: auto;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
