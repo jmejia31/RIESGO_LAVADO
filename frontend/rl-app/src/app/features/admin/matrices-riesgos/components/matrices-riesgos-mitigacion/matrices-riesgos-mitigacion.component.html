@@ -32,7 +32,15 @@
           <div><label for="control-tipo" class="block text-sm font-medium">Tipo</label><select id="control-tipo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlTipo"><option value="PREVENTIVO">Preventivo</option><option value="DETECTIVO">Detectivo</option><option value="CORRECTIVO">Correctivo</option></select></div>
           <div><label for="control-automatizacion" class="block text-sm font-medium">Automatización</label><select id="control-automatizacion" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlAutomatizacion"><option value="MANUAL">Manual</option><option value="SEMIAUTOMATICO">Semiautomático</option><option value="AUTOMATICO">Automático</option></select></div>
           <div class="md:col-span-2"><label for="control-descripcion" class="block text-sm font-medium">Descripción</label><textarea id="control-descripcion" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlDescripcion" maxlength="500"></textarea></div>
-          <div><label for="control-estado" class="block text-sm font-medium">Estado</label><input id="control-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="controlEstado" maxlength="20"></div>
+          <div>
+            <label for="control-estado" class="block text-sm font-medium">Estado</label>
+            <select id="control-estado" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" [(ngModel)]="controlEstado" aria-describedby="control-estado-ayuda">
+              @for (estado of estadosControl; track estado.valor) {
+                <option [value]="estado.valor">{{ estado.texto }}</option>
+              }
+            </select>
+            <p id="control-estado-ayuda" class="mt-1 text-xs text-slate-500">Estado operativo controlado; no admite texto libre.</p>
+          </div>
         </div>
         <button type="button" title="{{ controlEditandoId > 0 ? 'Actualizar control' : 'Crear control' }}" aria-label="{{ controlEditandoId > 0 ? 'Actualizar control' : 'Crear control' }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()" (click)="guardarControl()">
             <app-action-icon action="refresh"></app-action-icon>
@@ -63,7 +71,18 @@
           <div><label for="plan-presupuesto" class="block text-sm">Presupuesto</label><input id="plan-presupuesto" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planPresupuesto"></div>
           <div><label for="plan-fecha-inicio" class="block text-sm">Inicio</label><input id="plan-fecha-inicio" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaInicio"></div>
           <div><label for="plan-fecha-fin" class="block text-sm">Fin</label><input id="plan-fecha-fin" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaFin"></div>
-          <div><label for="plan-estado" class="block text-sm">Estado</label><input id="plan-estado" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planEstado" maxlength="30"></div>
+          <div>
+            <label for="plan-estado" class="block text-sm">Estado</label>
+            <select id="plan-estado" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" [(ngModel)]="planEstado" aria-describedby="plan-estado-ayuda">
+              @if (planEstado === 'INACTIVO') {
+                <option value="INACTIVO">Inactivo</option>
+              }
+              @for (estado of estadosPlan; track estado.valor) {
+                <option [value]="estado.valor">{{ estado.texto }}</option>
+              }
+            </select>
+            <p id="plan-estado-ayuda" class="mt-1 text-xs text-slate-500">Flujo institucional del plan; no admite estados escritos manualmente.</p>
+          </div>
         </div>
         <button type="button" title="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Crear plan' }}" aria-label="{{ planEditandoId > 0 ? 'Actualizar plan' : 'Crear plan' }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white" [disabled]="guardando()" (click)="guardarPlan()">
             <app-action-icon action="refresh"></app-action-icon>

@@ -31,6 +31,14 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     private static readonly HashSet<string> Automatizaciones = new(StringComparer.OrdinalIgnoreCase)
     { "MANUAL", "SEMIAUTOMATICO", "AUTOMATICO" };
 
+    private static readonly HashSet<string> EstadosControl = new(StringComparer.OrdinalIgnoreCase)
+    { "ACTIVO", "INACTIVO" };
+
+    // Contrato histórico Fase 10: PENDIENTE, EN_PROCESO, CERRADO, VENCIDO
+    // e INACTIVO como estado de ciclo de vida. No se aceptan estados arbitrarios.
+    private static readonly HashSet<string> EstadosPlan = new(StringComparer.OrdinalIgnoreCase)
+    { "PENDIENTE", "EN_PROCESO", "CERRADO", "VENCIDO", "INACTIVO" };
+
     private readonly IMatricesRiesgosMitigacionRepository _repo;
 
     private readonly IMatricesRiesgosRepository _evaluations;
@@ -267,7 +275,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (!Automatizaciones.Contains(dto.ConAutomatizacion?.Trim() ?? string.Empty)) return "Automatización de control inválida.";
         if (string.IsNullOrWhiteSpace(dto.ConDescripcion) || dto.ConDescripcion.Trim().Length > 500) return "La descripción del control es obligatoria y no puede exceder 500 caracteres.";
         if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConDescripcion)) return "La descripción del control contiene caracteres de codificación inválidos.";
-        if (string.IsNullOrWhiteSpace(dto.ConEstado) || dto.ConEstado.Trim().Length > 20) return "El estado del control es obligatorio y no puede exceder 20 caracteres.";
+        if (!EstadosControl.Contains(dto.ConEstado?.Trim() ?? string.Empty)) return "El estado del control debe ser ACTIVO o INACTIVO.";
         return null;
     }
 
@@ -279,7 +287,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (dto.PlaAvance is < 0 or > 100) return "El avance del plan debe estar entre 0 y 100.";
         if (dto.PlaPresupuesto < 0) return "El presupuesto no puede ser negativo.";
         if (dto.PlaFechaFin < dto.PlaFechaInicio) return "La fecha final no puede ser anterior a la fecha inicial.";
-        if (string.IsNullOrWhiteSpace(dto.PlaEstado) || dto.PlaEstado.Trim().Length > 30) return "El estado del plan es obligatorio y no puede exceder 30 caracteres.";
+        if (!EstadosPlan.Contains(dto.PlaEstado?.Trim() ?? string.Empty)) return "El estado del plan debe ser PENDIENTE, EN_PROCESO, CERRADO, VENCIDO o INACTIVO.";
         return null;
     }
 

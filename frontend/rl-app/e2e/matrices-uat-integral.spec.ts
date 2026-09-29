@@ -419,7 +419,7 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
     }
     if (req.method() === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/planes')) {
       const datos = planCreado
-        ? [{ plaId: 41, plaEvaluacionId: 20, plaDescripcion: 'Plan UAT', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-08-08T00:00:00Z', plaEstado: 'ABIERTO' }]
+        ? [{ plaId: 41, plaEvaluacionId: 20, plaDescripcion: 'Plan UAT', plaAvance: 0, plaPresupuesto: 0, plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-08-08T00:00:00Z', plaEstado: 'PENDIENTE' }]
         : [];
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
     }
@@ -438,6 +438,8 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   const selectorEvaluacionMitigacion = page.getByRole('combobox', { name: 'Evaluación', exact: true });
   await selectorEvaluacionMitigacion.click();
   await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await expect(page.locator('#control-estado')).toHaveValue('ACTIVO');
+  await expect(page.locator('#control-estado option')).toHaveCount(2);
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
   await page.getByRole('button', { name: 'Crear control' }).click();
   await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
@@ -448,9 +450,12 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
   await expect.poll(() => recibidos['efectividad']?.ecoEfectividad).toBe(85);
   await expect(page.getByText('Efectividad del control registrada correctamente.')).toBeVisible();
 
+  await expect(page.locator('#plan-estado')).toHaveValue('PENDIENTE');
+  await expect(page.locator('#plan-estado option')).toHaveCount(4);
   await page.getByLabel('Descripción', { exact: true }).nth(1).fill('Plan UAT');
   await page.getByRole('button', { name: 'Crear plan' }).click();
   await expect.poll(() => recibidos['plan']?.plaEvaluacionId).toBe(20);
+  await expect.poll(() => recibidos['plan']?.plaEstado).toBe('PENDIENTE');
   await expect(page.getByText('Plan creado correctamente.')).toBeVisible();
   await page.getByRole('button', { name: 'Editar plan y actividades' }).click();
   await expect(page.getByRole('heading', { name: 'Actividades del plan' })).toBeVisible();

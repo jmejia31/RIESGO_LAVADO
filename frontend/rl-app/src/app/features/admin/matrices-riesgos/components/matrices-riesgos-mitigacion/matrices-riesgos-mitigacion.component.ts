@@ -69,6 +69,17 @@ export class MatricesRiesgosMitigacionComponent {
   controlTipo: ControlRiesgoGuardarDto['conTipo'] = 'PREVENTIVO';
   controlDescripcion = '';
   controlAutomatizacion: ControlRiesgoGuardarDto['conAutomatizacion'] = 'MANUAL';
+  readonly estadosControl = [
+    { valor: 'ACTIVO', texto: 'Activo' },
+    { valor: 'INACTIVO', texto: 'Inactivo' }
+  ] as const;
+  readonly estadosPlan = [
+    { valor: 'PENDIENTE', texto: 'Pendiente' },
+    { valor: 'EN_PROCESO', texto: 'En proceso' },
+    { valor: 'CERRADO', texto: 'Cerrado' },
+    { valor: 'VENCIDO', texto: 'Vencido' }
+  ] as const;
+
   controlEstado = 'ACTIVO';
   efectividad = 0;
   comentarioEfectividad = '';
@@ -79,7 +90,7 @@ export class MatricesRiesgosMitigacionComponent {
   planPresupuesto = 0;
   planFechaInicio = this.hoy();
   planFechaFin = this.hoy();
-  planEstado = 'ABIERTO';
+  planEstado = 'PENDIENTE';
 
   actividadEditandoId = 0;
   actividadDescripcion = '';
@@ -218,7 +229,7 @@ export class MatricesRiesgosMitigacionComponent {
     this.planPresupuesto = 0;
     this.planFechaInicio = this.hoy();
     this.planFechaFin = this.hoy();
-    this.planEstado = 'ABIERTO';
+    this.planEstado = 'PENDIENTE';
   }
 
   guardarPlan(): void {
@@ -237,7 +248,7 @@ export class MatricesRiesgosMitigacionComponent {
       plaPresupuesto: Number(this.planPresupuesto),
       plaFechaInicio: this.fechaIso(this.planFechaInicio),
       plaFechaFin: this.fechaIso(this.planFechaFin),
-      plaEstado: this.planEstado.trim() || 'ABIERTO'
+      plaEstado: this.planEstado.trim() || 'PENDIENTE'
     };
     this.guardando.set(true);
     const solicitud: Observable<unknown> = this.planEditandoId > 0

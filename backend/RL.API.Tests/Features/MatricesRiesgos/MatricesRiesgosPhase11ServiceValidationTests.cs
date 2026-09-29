@@ -112,6 +112,8 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(descripcion: new string('D', 501)), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(estado: ""), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(estado: new string('E', 21)), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(estado: "ESCRITO_POR_USUARIO"), UsuarioId, Ip)).StatusCode);
+        Assert.True((await service.CrearControlAsync(ValidoControl(estado: "INACTIVO"), UsuarioId, Ip)).Success);
     }
 
     [Fact]
@@ -170,6 +172,9 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(finAnterior: true), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(estado: ""), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(estado: new string('E', 31)), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(estado: "ABIERTO"), UsuarioId, Ip)).StatusCode);
+        Assert.True((await service.CrearPlanAsync(ValidoPlan(estado: "EN_PROCESO"), UsuarioId, Ip)).Success);
+        Assert.True((await service.CrearPlanAsync(ValidoPlan(estado: "VENCIDO"), UsuarioId, Ip)).Success);
     }
 
     [Fact]
@@ -313,7 +318,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         EcoComentario = comentario
     };
 
-    private static PlanMitigacionGuardarDto ValidoPlan(long evaluacionId = 1, string descripcion = "Plan", decimal avance = 10, decimal presupuesto = 100, bool finAnterior = false, string estado = "ABIERTO")
+    private static PlanMitigacionGuardarDto ValidoPlan(long evaluacionId = 1, string descripcion = "Plan", decimal avance = 10, decimal presupuesto = 100, bool finAnterior = false, string estado = "PENDIENTE")
     {
         DateTime inicio = new(2026, 8, 7);
         return new PlanMitigacionGuardarDto

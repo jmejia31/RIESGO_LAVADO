@@ -25,7 +25,7 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     plaPresupuesto: 100,
     plaFechaInicio: '2026-08-07T00:00:00Z',
     plaFechaFin: '2026-08-08T00:00:00Z',
-    plaEstado: 'ABIERTO'
+    plaEstado: 'PENDIENTE'
   };
 
   const actividad = {
@@ -111,6 +111,20 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.seleccionarEvaluacion(20);
     expect(component.error()).toBe('Error planes');
     expect(component.cargando()).toBe(false);
+  });
+
+  it('renderiza estados de control y plan como selectores controlados, no como texto libre', () => {
+    component.seleccionarEvaluacion(20);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const controlEstado = element.querySelector('#control-estado') as HTMLSelectElement | null;
+    const planEstado = element.querySelector('#plan-estado') as HTMLSelectElement | null;
+
+    expect(controlEstado?.tagName).toBe('SELECT');
+    expect([...controlEstado!.options].map(option => option.value)).toEqual(['ACTIVO', 'INACTIVO']);
+    expect(planEstado?.tagName).toBe('SELECT');
+    expect([...planEstado!.options].map(option => option.value)).toEqual(['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO']);
+    expect(component.planEstado).toBe('PENDIENTE');
   });
 
   it('crea un control válido y resetea el formulario', () => {
