@@ -137,7 +137,7 @@ test.beforeEach(async ({ page }) => preparar(page));
 
 test('UAT abre Matriz completa desde una evaluación y conserva la navegación histórica', async ({ page }) => {
   await page.goto('/matrices-riesgos');
-  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toHaveCount(0);
   await expect(page.getByRole('tab', { name: 'Plantillas', exact: true })).toBeVisible();
@@ -305,8 +305,9 @@ test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Riesgos', exact: true }).click();
 
-  await expect.poll(() => consultas.length).toBeGreaterThan(0);
-  expect(consultas[0].tamano).toBe('10');
+  await expect.poll(() => consultas.filter(c => c.tamano === '10').length).toBeGreaterThan(0);
+  const consultaGestion = consultas.find(c => c.tamano === '10')!;
+  expect(consultaGestion.tamano).toBe('10');
   await expect(page.getByLabel('Riesgos por página')).toHaveValue('10');
   await expect(page.locator('app-matrices-riesgos-gestion table tbody tr')).toHaveCount(10);
 

@@ -1,5 +1,29 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Certificación integral Bloque 2 y remediación de selectores / suites E2E (H5-B)
+
+- Fecha/hora local: `2026-09-29 11:50` (America/Tegucigalpa). Rama `desarrollo`; baseline `840af797e7a2494fb934a3c7aad651e0b33f0251`.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=CLOSED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`.
+- **H1–H5 & H5-B Certificados al 100%:**
+  - H1: Fail-fast constructores en AppService y MitigacionService, DI completo en Program.cs, Legacy selection por contrato de versión sin fórmulas.
+  - H2/H3: Atomicidad y rollback conductual en mutaciones de control CREATE/UPDATE ante fallos inyectados en recálculo, auditoría de control y evaluación.
+  - H4: Concurrencia optimista EVA_VERSION_ROW con HTTP 409 Conflict, protección TOCTOU y congelamiento en aprobadas.
+  - H5: Verificación visual desktop 1280px y mobile 390px inspeccionada y sin desbordamiento horizontal.
+  - H5-B: `VIEW_EVALUATION_NO_HARDCODED_FAMILY_ID=PASS`, `VIEW_EVALUATION_HIDDEN_HTTP_ERROR=ABSENT`, `MATRICES_MODULE_FUNCTIONAL_SMOKE=PASS`. Eliminada consulta innecesaria a `/familias/1`, protegidos mapeos de `.items`, resueltas vulnerabilidades npm (`0 vulnerabilities`), consola y páginas limpias (`CONSOLE_ERRORS=0`, `PAGE_ERRORS=0`, `HTTP_4XX_5XX_UNEXPECTED=0`).
+  - Remediación TS2347 / OnPush en componentes y selectores (`bounded-select`, `page-size-selector`, `mitigacion`, `monitoreo-operativo`).
+- **Validación ejecutada y demostrada en esta intervención:**
+  - Backend: `702 / 702 PASS` (100%).
+  - Frontend Unit & Cobertura: `82 / 82 suites PASS`, `812 / 812 tests PASS` (100%).
+  - Frontend Lint: `0 errors`.
+  - Frontend Build: `0 errors`.
+  - E2E Playwright: `40 / 40 PASS` (100%).
+  - Validadores: Repository structure (118/118 PASS), Database scripts (PASS), Documentación links (185/185 PASS), Quality Gates (PASS).
+- **Límites estrictos de gobernanza:**
+  - Sin conexión Oracle institucional (`ORACLE_CONNECTION_ATTEMPTED_BY_ANTIG=NO`, `ORACLE_DML_EXECUTED_BY_ANTIG=NO`, `ORACLE_DDL_EXECUTED_BY_ANTIG=NO`).
+  - `MAIN_TOUCHED=NO`. V1 y V2 DRAFT inmutables.
+  - Bloque 3 no iniciado (`BLOCK_3_IMPLEMENTED=NO`).
+- **Punto de continuación:** Bloque 2 cerrado definitivamente. Siguiente bloque autorizado: `NEXT_BLOCK=BLOCK_3_RIESGO_RESIDUAL_FIELDS_34_39` (no iniciado).
+
 ## Estado vigente — Estándar de filtros y selectores operativos
 
 - Fecha/hora local: `2026-09-29 10:37` (America/Tegucigalpa). Rama `desarrollo`; baseline `54421e0b272cda9c3ed1433f155663734b75bd00`; HEAD funcional `16814e15126891b8418e9c9122a45e04d48a86d8`.

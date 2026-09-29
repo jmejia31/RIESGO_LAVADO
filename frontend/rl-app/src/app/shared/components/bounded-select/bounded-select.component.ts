@@ -133,7 +133,7 @@ export interface BoundedSelectOption {
 })
 export class BoundedSelectComponent {
   private static nextId = 0;
-  private readonly host = inject(ElementRef<HTMLElement>);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   @Input() value: string | number | null = null;
   @Input() options: readonly BoundedSelectOption[] = [];

@@ -1,5 +1,26 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Certificación integral Bloque 2 y remediación de selectores / suites E2E (H5-B)
+
+- **Fecha/hora local:** 2026-09-29 11:50 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / SHA base / HEAD:** `desarrollo` / `840af797e7a2494fb934a3c7aad651e0b33f0251`.
+- **Objetivo:** Subsanar bloqueo de Quality Gate TS2347 en `bounded-select`, alinear tests unitarios y de integración para selectores acotados / page-size-selector en OnPush, corregir expectativa de query en E2E y certificar la totalidad de pruebas frontend/backend.
+- **Cambios implementados:**
+  - `bounded-select.component.ts`: Inyección tipada `inject<ElementRef<HTMLElement>>(ElementRef)` y typecast de `querySelector` para eliminar error del compilador `TS2347: Untyped function calls may not accept type arguments`.
+  - `page-size-selector.component.ts`: Inyección de `ChangeDetectorRef` con getter/setter en `value` invocando `cdr.markForCheck()`, garantizando sincronización DOM inmediata en componentes OnPush.
+  - `matrices-riesgos-mitigacion.component.ts` y `matrices-riesgos-monitoreo-operativo.component.ts`: Inyección de `ChangeDetectorRef` y llamada a `cdr.markForCheck()` en `seleccionarEvaluacion()` y cargas asíncronas para reflejar selección en OnPush.
+  - `ux-action-icon-only.regression.spec.ts`: Reconocimiento explícito de `bounded-select.component.ts#inline-template` y roles `combobox`/`option` como controles de selección de formulario (no botones de acción icon-only).
+  - `e2e/matrices-uat-integral.spec.ts`: Alineada consulta de `tamanoPagina=10` en pestaña Riesgos evitando colisión con la precarga de riesgos del componente padre; timeout prudente en carga inicial.
+- **Pruebas ejecutadas:**
+  - Backend: `dotnet test RIESGO_LAVADO.sln --configuration Release` -> 702/702 PASS (100%).
+  - Frontend Unit: `npm test` y `npm run test:coverage` -> 82/82 suites PASS, 812/812 tests PASS (100%).
+  - Frontend Lint: `npm run lint` -> 0 errores.
+  - Frontend Build: `npm run build` -> 0 errores (bundle generado exitosamente).
+  - Frontend E2E: `npm run e2e` -> 40/40 tests PASS (100%).
+  - Validadores: Estructura (118/118 PASS), Database scripts (PASS), Documentación links (185/185 PASS), `run_quality_gates.ps1` (PASS).
+- **Punto de continuación:** Publicar commit único en `origin/desarrollo` y verificar Quality Gate remoto de GitHub Actions.
+
 ## Registro de intervención — Selectores operativos acotados y filtro estándar de Riesgos
 
 - **Fecha/hora local:** 2026-09-29 10:37 (America/Tegucigalpa).

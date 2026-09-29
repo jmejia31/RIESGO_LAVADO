@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
@@ -24,6 +24,7 @@ import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 })
 export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private readonly service = inject(MatricesRiesgosService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
 
@@ -82,6 +83,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.automonitoreos.set([]);
     this.error.set(null);
     this.mensaje.set(null);
+    this.cdr.markForCheck();
     if (this.evaluacionId > 0) this.cargarSeguimiento();
   }
 
@@ -95,6 +97,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
           next: automonitoreos => {
             this.automonitoreos.set(automonitoreos.map(item => ({ ...item, monEstadoRiesgo: normalizarMojibakeVisibleUtf8(item.monEstadoRiesgo), monEstadoContr: normalizarMojibakeVisibleUtf8(item.monEstadoContr), monResultado: normalizarMojibakeVisibleUtf8(item.monResultado) })));
             this.cargando.set(false);
+            this.cdr.markForCheck();
           },
           error: error => this.finalizarError(error, 'No se pudo cargar el automonitoreo.')
         });

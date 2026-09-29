@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -28,6 +28,7 @@ import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shar
 })
 export class MatricesRiesgosMitigacionComponent {
   private readonly service = inject(MatricesRiesgosService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
 
@@ -110,6 +111,7 @@ export class MatricesRiesgosMitigacionComponent {
     this.actividades.set([]);
     this.error.set(null);
     this.mensaje.set(null);
+    this.cdr.markForCheck();
     if (this.evaluacionId > 0) this.cargarMitigacion();
   }
 
@@ -123,6 +125,7 @@ export class MatricesRiesgosMitigacionComponent {
           next: planes => {
             this.planes.set(planes);
             this.cargando.set(false);
+            this.cdr.markForCheck();
           },
           error: (error: unknown) => this.finalizarError(error, 'No se pudieron cargar los planes de mitigación.')
         });
