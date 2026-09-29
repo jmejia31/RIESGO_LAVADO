@@ -9,14 +9,17 @@
 
   <div class="max-w-xl">
     <label for="evaluacion-mitigacion" class="block text-sm font-semibold text-slate-700">Evaluación</label>
-    <select id="evaluacion-mitigacion" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium shadow-sm truncate focus:border-blue-500 focus:outline-none" [ngModel]="evaluacionId" (ngModelChange)="seleccionarEvaluacion($event)">
-      <option value="0" class="text-sm">Seleccione una evaluación</option>
-      @for (evaluacion of evaluaciones; track evaluacion.evaId) {
-        <option [value]="evaluacion.evaId" [title]="'#' + evaluacion.evaId + ' · Riesgo ' + evaluacion.evaRiesgoId + ' · ' + obtenerEstadoEvaluacion(evaluacion)" class="text-sm">
-          #{{ evaluacion.evaId }} · Riesgo {{ evaluacion.evaRiesgoId }} · {{ obtenerEstadoEvaluacion(evaluacion) }}
-        </option>
-      }
-    </select>
+    <div class="mt-1">
+      <app-bounded-select
+        inputId="evaluacion-mitigacion"
+        ariaLabel="Evaluación"
+        placeholder="Seleccione una evaluación"
+        searchPlaceholder="Buscar por evaluación, riesgo o estado"
+        [emptyValue]="0"
+        [value]="evaluacionId"
+        [options]="opcionesEvaluacion"
+        (valueChange)="seleccionarEvaluacion($event ?? 0)" />
+    </div>
   </div>
 
   @if (evaluacionId > 0) {

@@ -17,11 +17,12 @@ import {
 } from '../../models/matrices-riesgos-fase11.models';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
+import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
   standalone: true,
-  imports: [ActionIconComponent, CommonModule, FormsModule],
+  imports: [ActionIconComponent, BoundedSelectComponent, CommonModule, FormsModule],
   templateUrl: './matrices-riesgos-mitigacion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -45,6 +46,21 @@ export class MatricesRiesgosMitigacionComponent {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
     if ('estado' in evaluacion && evaluacion.estado) return evaluacion.estado;
     return '';
+  }
+
+  get opcionesEvaluacion(): BoundedSelectOption[] {
+    return this.evaluaciones.map(evaluacion => ({
+      value: evaluacion.evaId,
+      label: `#${evaluacion.evaId} · Riesgo ${evaluacion.evaRiesgoId} · ${this.obtenerEstadoEvaluacion(evaluacion)}`,
+      searchText: this.textoBusquedaEvaluacion(evaluacion)
+    }));
+  }
+
+  private textoBusquedaEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
+    if ('riesgoCodigo' in evaluacion) {
+      return `${evaluacion.riesgoCodigo} ${evaluacion.riesgoNombre} ${this.obtenerEstadoEvaluacion(evaluacion)}`;
+    }
+    return `${evaluacion.evaRiesgoId} ${this.obtenerEstadoEvaluacion(evaluacion)}`;
   }
   controlSeleccionadoId = 0;
   planSeleccionadoId = 0;
