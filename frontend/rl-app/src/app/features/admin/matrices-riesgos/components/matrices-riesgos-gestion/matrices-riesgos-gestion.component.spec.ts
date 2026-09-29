@@ -216,6 +216,17 @@ describe('MatricesRiesgosGestionComponent', () => {
     expect(component.guardando()).toBe(false);
   });
 
+  it('distingue visual y semánticamente Nuevo de Guardar/Actualizar riesgo', () => {
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    expect(root.querySelector('[data-ui-action="new-risk"]')?.getAttribute('aria-label')).toBe('Nuevo riesgo');
+    expect(root.querySelector('[data-ui-action="save-risk"]')?.getAttribute('aria-label')).toBe('Guardar nuevo riesgo');
+
+    component.editar(riesgoActivo);
+    fixture.detectChanges();
+    expect(root.querySelector('[data-ui-action="save-risk"]')?.getAttribute('aria-label')).toBe('Actualizar riesgo');
+  });
+
   it('renderiza la lista de riesgos en el DOM y permite accionar el botón de editar', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;

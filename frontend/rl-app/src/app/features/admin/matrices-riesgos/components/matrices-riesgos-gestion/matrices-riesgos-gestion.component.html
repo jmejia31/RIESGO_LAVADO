@@ -4,9 +4,14 @@
       <h2 id="titulo-gestion-riesgos" class="text-lg font-bold text-slate-900">Gestión de riesgos</h2>
       <p class="text-sm text-slate-600">Administre la identidad permanente del riesgo antes de sus evaluaciones.</p>
     </div>
-    <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300" title="Crear nuevo riesgo" aria-label="Crear nuevo riesgo" (click)="nuevo()">
-            <app-action-icon action="create"></app-action-icon>
-          </button>
+    <button type="button"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-blue-200 bg-blue-50 text-blue-700 shadow-sm transition-colors hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            title="Nuevo riesgo"
+            aria-label="Nuevo riesgo"
+            data-ui-action="new-risk"
+            (click)="nuevo()">
+      <app-action-icon action="create"></app-action-icon>
+    </button>
   </div>
 
   @if (error()) { <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{{ error() }}</div> }
@@ -33,9 +38,14 @@
        @if (editandoId() > 0) { <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300" title="Cancelar edición del riesgo" aria-label="Cancelar edición del riesgo" (click)="nuevo()">
             <app-action-icon action="cancel"></app-action-icon>
           </button> }
-       <button type="submit" title="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}" aria-label="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Crear riesgo' }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" [disabled]="guardando()">
-            <app-action-icon [action]="editandoId() > 0 ? 'refresh' : 'create'"></app-action-icon>
-          </button>
+       <button type="submit"
+               title="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Guardar nuevo riesgo' }}"
+               aria-label="{{ editandoId() > 0 ? 'Actualizar riesgo' : 'Guardar nuevo riesgo' }}"
+               class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500/30 disabled:opacity-50"
+               data-ui-action="save-risk"
+               [disabled]="guardando()">
+         <app-action-icon [action]="editandoId() > 0 ? 'refresh' : 'save'"></app-action-icon>
+       </button>
     </div>
   </form>
 

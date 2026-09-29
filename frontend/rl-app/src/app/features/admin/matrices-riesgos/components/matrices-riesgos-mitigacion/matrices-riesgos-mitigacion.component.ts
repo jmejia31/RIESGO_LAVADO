@@ -78,7 +78,8 @@ export class MatricesRiesgosMitigacionComponent {
     { valor: 'PENDIENTE', texto: 'Pendiente' },
     { valor: 'EN_PROCESO', texto: 'En proceso' },
     { valor: 'CERRADO', texto: 'Cerrado' },
-    { valor: 'VENCIDO', texto: 'Vencido' }
+    { valor: 'VENCIDO', texto: 'Vencido' },
+    { valor: 'INACTIVO', texto: 'Inactivo' }
   ] as const;
 
   controlEstado = 'ACTIVO';

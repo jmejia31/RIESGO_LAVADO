@@ -123,8 +123,28 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     expect(controlEstado?.tagName).toBe('SELECT');
     expect([...controlEstado!.options].map(option => option.value)).toEqual(['ACTIVO', 'INACTIVO']);
     expect(planEstado?.tagName).toBe('SELECT');
-    expect([...planEstado!.options].map(option => option.value)).toEqual(['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO']);
+    expect([...planEstado!.options].map(option => option.value)).toEqual(['PENDIENTE', 'EN_PROCESO', 'CERRADO', 'VENCIDO', 'INACTIVO']);
     expect(component.planEstado).toBe('PENDIENTE');
+  });
+
+  it('distingue Nuevo de Guardar/Actualizar y usa botones de creación con formato estándar visible', () => {
+    component.seleccionarEvaluacion(20);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('[data-ui-action="new-control"]')?.getAttribute('aria-label')).toBe('Nuevo control');
+    expect(root.querySelector('[data-ui-action="new-plan"]')?.getAttribute('aria-label')).toBe('Nuevo plan de mitigación');
+    expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Guardar nuevo control');
+    expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Guardar nuevo plan');
+
+    component.editarControl(control);
+    component.editarPlan(plan);
+    fixture.detectChanges();
+
+    expect(root.querySelector('[data-ui-action="save-control"]')?.getAttribute('aria-label')).toBe('Actualizar control');
+    expect(root.querySelector('[data-ui-action="save-plan"]')?.getAttribute('aria-label')).toBe('Actualizar plan');
+    expect(root.querySelector('[data-ui-action="new-control"]')?.className).toContain('bg-blue-50');
+    expect(root.querySelector('[data-ui-action="new-plan"]')?.className).toContain('bg-blue-50');
   });
 
   it('crea un control válido y resetea el formulario', () => {
