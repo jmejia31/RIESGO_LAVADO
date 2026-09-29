@@ -16,6 +16,12 @@
 | **H4** | Concurrencia optimista (`EVA_VERSION_ROW`) | **PASS** | Protección de concurrencia optimista (409 Conflict ante stale version writes), congelamiento en evaluaciones aprobadas, rechazo de re-parenting y protección TOCTOU pre-cálculo. |
 | **H5** | Certificación visual real (Desktop 1280px y Mobile 390px) | **PASS** | Playwright/Chromium real ejecutado (`37/37` PASS). `HORIZONTAL_OVERFLOW=NO` comprobado programáticamente (`scrollWidth <= clientWidth`). Screenshots `block-2-closure-desktop-1280x900.png` y `block-2-closure-mobile-390x844.png` inspeccionados y validados. |
 
+### Ajuste UX post-cierre — presentación de Matriz completa
+
+Desde el commit técnico `23bd17b81990f665e3ab1a52c30e56043040ab1b`, «Matriz completa» **ya no es una pestaña ni un panel plano**. Los accesos de Evaluaciones y Consolidado abren el mismo contenido institucional en el modal canónico máximo `modal-size-workspace`, con header/body/footer, Escape y retorno de foco. Las acciones de Consolidado y Evaluaciones se mantienen en una sola fila horizontal. También se eliminó la consulta residual hardcodeada `/familias/1` del flujo «Ver evaluación», que provocaba 404 aun cuando el modal abría.
+
+La prueba E2E fue adaptada para el nuevo contrato (modal, 33 campos, 1280px, 390px y overflow), pero el Quality Gate remoto del SHA técnico `23bd17b...` (run `36594358249`) fue detenido antes de ejecutar lint/build/tests/E2E por un `npm audit` de dependencias del repositorio. El baseline inmediato `9aa09ad...` ya fallaba por el mismo inventario de 10 vulnerabilidades en run `36591604383`. Por ello, la certificación visual H5 listada arriba corresponde a la evidencia histórica previa; la **revalidación visual post-UX queda pendiente de una ejecución fresca** y no se declara un PASS nuevo sin evidencia.
+
 Se habilitó la estructura visual institucional para los ordinales 20–33, agrupación de controles por tipo y lectura de descripciones/automatización desde `RL_MR_CONTROLES_RIESGO`. El bloque consulta `listarControles(evaluacionId)` y sus errores/reintentos son locales al Bloque 2; la secuencia de solicitud evita que una respuesta antigua reemplace controles de otra evaluación.
 
 | No. | Campo Excel | Clave / origen | Modo | Persistencia / observación |

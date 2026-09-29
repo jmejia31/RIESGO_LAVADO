@@ -1,5 +1,17 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Ajuste UX post-cierre de Matriz completa (modal workspace)
+
+- Fecha/hora local: `2026-09-29 09:59` (America/Tegucigalpa). Rama `desarrollo`; base `9aa09ad0f6f057eebf8d4178f2b4690fe602c030`; commit técnico `23bd17b81990f665e3ab1a52c30e56043040ab1b`.
+- `MATRIX_COMPLETE_TAB=REMOVED`; `MATRIX_COMPLETE_PRESENTATION=MODAL_WORKSPACE`; la vista completa se abre desde los accesos de Evaluaciones y Consolidado y utiliza el modal institucional máximo `modal-size-workspace`.
+- `EVALUATION_ACTIONS_SINGLE_ROW=YES`; `CONSOLIDATED_ACTIONS_SINGLE_ROW=YES`. Los botones de acción conservan sus handlers y semántica accesible, pero ya no se apilan verticalmente.
+- `VIEW_EVALUATION_HARDCODED_FAMILY_ID=REMOVED`: `abrirModalVer` dejó de solicitar `/familias/1`; esa consulta no aportaba datos al modal y era la causa reproducible del 404 observado manualmente.
+- Se actualizaron pruebas Angular y E2E para el contrato nuevo: tres pestañas, Matriz completa solo modal, tamaño workspace, cierre/retorno a Evaluaciones, layout horizontal de Consolidado y no invocación de familia ID 1.
+- Quality Gate del SHA técnico: run `36594358249` = `completed/failure`, detenido antes de lint/build/tests/E2E por `npm audit` (10 vulnerabilidades: 2 moderate, 8 high). El baseline inmediato `9aa09ad...` ya presentaba exactamente el mismo bloqueo en run `36591604383`; no se considera regresión causada por esta UI.
+- `FRESH_FRONTEND_TEST_EXECUTION=BLOCKED_BY_REPOSITORY_NPM_AUDIT`; no se declara PASS nuevo de unit/lint/build/E2E mientras ese gate impida ejecutarlos. La evidencia 702/702, 801/801 y 37/37 del cierre anterior permanece como evidencia histórica, no como ejecución de este SHA.
+- Sin cambios de backend/Oracle/V1/V2/Bloque 3. El contenido funcional de Bloque 2 y sus campos 20–33 no fue modificado.
+- Punto de continuidad: resolver el gate npm en una intervención separada o ejecutar las suites frescas en un entorno autorizado; después certificar visualmente el modal 1280px/390px. No iniciar Bloque 3 antes de esa revalidación post-UX.
+
 ## Estado vigente — Cierre Final Bloque 2: Corrección y Certificación H1–H5 (ANTIG, Prompt #2E-ANTIG)
 
 - Fecha `2026-09-29 09:35` (America/Tegucigalpa); rama `desarrollo`; SHA base `7b965b5187d2f18a5fda9338999a1e6e91eef059`.

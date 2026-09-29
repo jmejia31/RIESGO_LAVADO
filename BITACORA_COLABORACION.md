@@ -1,5 +1,25 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Ajuste UX post-cierre: Matriz completa en modal workspace y acciones alineadas
+
+- **Fecha/hora local:** 2026-09-29 09:59 (America/Tegucigalpa).
+- **Colaborador:** ChatGPT.
+- **Rama / SHA base / SHA técnico:** `desarrollo` / `9aa09ad0f6f057eebf8d4178f2b4690fe602c030` / `23bd17b81990f665e3ab1a52c30e56043040ab1b`.
+- **Objetivo:** corregir la presentación de acciones de Evaluaciones/Consolidado y mover «Matriz completa» desde una pestaña/pantalla plana a un modal institucional de tamaño máximo, sin alterar los contratos de campos 01–33, fórmulas, persistencia, V1/V2 ni backend.
+- **Cambios implementados:**
+  - Se eliminó por completo la pestaña `Matriz completa`; permanecen únicamente `Evaluaciones`, `Consolidado` y `Plantillas`.
+  - `Ver Matriz completa` desde Evaluaciones y Consolidado abre ahora `modal-backdrop-overlay > modal-container-card.modal-size-workspace`, reutilizando el sistema canónico de modales, con header/body/footer institucionales, cierre superior/inferior, Escape, foco inicial y retorno de foco.
+  - El contenido institucional de Matriz completa conserva los 33 campos actualmente implementados, orden, data attributes y comportamiento versionado; solo cambia su superficie de presentación.
+  - Las acciones de Consolidado ahora usan el mismo patrón horizontal y espaciado que Evaluaciones (`inline-flex flex-nowrap`), evitando que los dos iconos de visualización se apilen verticalmente.
+  - Las acciones de Evaluaciones quedan también protegidas contra wrap para mantener todos los iconos en una sola fila.
+  - Se eliminó de `abrirModalVer(...)` la consulta residual/hardcodeada `obtenerFamiliaFormularioPorId(1)`, cuya respuesta no se utilizaba y que generaba `GET /api/matrices-riesgos/familias/1 404` al abrir «Ver evaluación».
+- **Regresiones añadidas/actualizadas:** navegación de tres pestañas, ausencia de tab/panel plano de Matriz completa, presencia del modal `modal-size-workspace`, orden horizontal de acciones en Consolidado, ausencia de consulta a familia ID 1 al ver evaluación y E2E preparado para validar el modal en 1280px/390px y su cierre preservando la pestaña activa.
+- **Archivos funcionales modificados:** `matrices-riesgos.component.ts`, `matrices-riesgos.component.html`, tres specs Angular del componente y `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`.
+- **Quality Gate remoto del SHA técnico:** run `36594358249`, SHA exacto `23bd17b81990f665e3ab1a52c30e56043040ab1b`, `completed/failure`. El workflow se detuvo **antes de lint/build/tests/E2E** en «Verify npm security audit and reproducible installation» por `npm audit`: 10 vulnerabilidades (2 moderate, 8 high), incluyendo `fast-uri` e `ip-address`.
+- **Bloqueo preexistente comprobado:** el run inmediatamente anterior del propio baseline `9aa09ad0f6f057eebf8d4178f2b4690fe602c030` (`36591604383`) falló en el mismo gate y con el mismo inventario de 10 vulnerabilidades. Por tanto, esta intervención **no atribuye** ese fallo al cambio de UI y **no inventa PASS** de suites que el workflow no alcanzó a ejecutar.
+- **Alcance preservado:** sin cambios de backend, Oracle, SQL, V1, V2 DRAFT, fórmulas, catálogos ni Bloque 3. `MAIN_TOUCHED=NO`.
+- **Continuidad:** la corrección UX está publicada en `desarrollo`. Antes de usar este SHA como nueva certificación de cierre se requiere evidencia fresca de lint/build/unit/E2E; el gate global está actualmente bloqueado por el hallazgo de dependencias npm, cuya remediación debe tratarse como intervención separada para no introducir upgrades forzados/breaking fuera de alcance.
+
 ## Registro de Intervención — Cierre Final Bloque 2: Corrección y Certificación de Hallazgos H1–H5 (ANTIG, Prompt #2E-ANTIG)
 
 - **Fecha y hora local:** 2026-09-29 09:35 (America/Tegucigalpa).
