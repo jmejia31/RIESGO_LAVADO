@@ -162,7 +162,7 @@ public sealed class CachedMatricesRiesgosAppServiceCoverageTests
         IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out _);
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-        return new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        return MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
     }
 
     private static void ConfigurarMutacionesExitosas(InterfaceStub repo)
@@ -603,6 +603,6 @@ public sealed class MatricesRiesgosAppServiceBoundaryCoverageTests
         IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out _);
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-        return new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        return MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
     }
 }

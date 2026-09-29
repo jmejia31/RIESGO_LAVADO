@@ -1,5 +1,19 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Cierre Final Bloque 2: Corrección y Certificación H1–H5 (ANTIG, Prompt #2E-ANTIG)
+
+- Fecha `2026-09-29 09:35` (America/Tegucigalpa); rama `desarrollo`; SHA base `7b965b5187d2f18a5fda9338999a1e6e91eef059`.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=CLOSED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`.
+- **Certificación de los 5 hallazgos de cierre (H1–H5):**
+  - **H1:** `OPTIONAL_RUNTIME_DEPENDENCIES=ABSENT`; `GOVERNED_RUNTIME_DI_COMPLETE=PASS`; `LEGACY_SELECTION_BY_VERSION_CONTRACT=PASS`. Dependencias requeridas garantizadas con `ArgumentNullException.ThrowIfNull`.
+  - **H2:** `CREATE_CONTROL_ATOMICITY=PASS`; `CREATE_CONTROL_COMMIT=PASS`. Atomicidad conductual probada con preservación de `CommittedState` intacto ante fallos inyectados en cálculo, auditoría de control y auditoría de evaluación.
+  - **H3:** `UPDATE_CONTROL_ATOMICITY=PASS`; `UPDATE_CONTROL_COMMIT=PASS`. Rollback conductual verificado ante fallos en recálculo y auditorías.
+  - **H4:** `CONTROL_MUTATION_CONCURRENCY=PASS`; `CREATE_STALE_VERSION_CONFLICT=PASS`; `UPDATE_STALE_VERSION_CONFLICT=PASS`; `CONCURRENCY_HTTP_SEMANTICS=409`; `OPTIMISTIC_AND_PESSIMISTIC_GUARDS=PASS`; `PRECALCULATION_STALE_WRITE_PROTECTED=PASS`; `GOVERNED_INITIAL_CONTROL_FREEZE=PASS`; `CONTROL_REPARENTING_GOVERNED=REJECTED`; `AUDIT_PARTIAL_COMMIT=ABSENT`.
+  - **H5:** `VISUAL_DESKTOP=PASS`; `VISUAL_MOBILE_390=PASS`; `HORIZONTAL_OVERFLOW=NO`. Capturas Chromium reales en 1280px y 390px inspeccionadas y validadas sin desbordamiento.
+- **Evidencia verificada:** Backend 702/702 PASS, Frontend Unit 801/801 PASS, Frontend Lint PASS, Frontend Build PASS, E2E Playwright 37/37 PASS, Validadores dynamic DDL, autorización, Phase 13, database, encoding, estructura y documentación PASS, `git diff --check` PASS.
+- **Límites de alcance:** Sin conexión Oracle institucional (`ORACLE_CONNECTION_ATTEMPTED_BY_ANTIG=NO`, `ORACLE_DML_EXECUTED_BY_ANTIG=NO`, `ORACLE_DDL_EXECUTED_BY_ANTIG=NO`). V1 inmutable, V2 DRAFT inmutable. Bloque 3 no iniciado (`BLOCK_3_IMPLEMENTED=NO`).
+- **Punto de continuidad:** Bloque 2 cerrado definitivamente. Siguiente bloque autorizado: `NEXT_BLOCK=BLOCK_3_RIESGO_RESIDUAL_FIELDS_34_39` (no iniciado).
+
 ## Estado vigente — Diagnóstico forense 2C de Bloque 2 (COD)
 
 - Fecha `2026-09-28 13:53` (America/Tegucigalpa); rama `desarrollo`; base `3c2e8594ed95c3470767f30f276840e2b0f53629` verificada exacta.

@@ -562,7 +562,7 @@ public sealed class MatricesRiesgosApplicationCoverageTests
         IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out calculadorStub);
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-        return new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        return MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
     }
 
     private static void LimpiarEvidenciasDePrueba()

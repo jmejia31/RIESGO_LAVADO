@@ -27,23 +27,23 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
     private readonly IFormularioValidador _validador;
     private readonly IMatricesRiesgoService _calculador;
     private readonly IAuditoriaRepository _auditoriaRepo;
-    private readonly VersionedCalculationRuntimeService? _versionedRuntime;
-    private readonly IMatricesRiesgosMitigacionRepository? _controlsRepository;
+    private readonly VersionedCalculationRuntimeService _versionedRuntime;
+    private readonly IMatricesRiesgosMitigacionRepository _controlsRepository;
 
     public MatricesRiesgosAppService(
         IMatricesRiesgosRepository repo,
         IFormularioValidador validador,
         IMatricesRiesgoService calculador,
         IAuditoriaRepository auditoriaRepo,
-        VersionedCalculationRuntimeService? versionedRuntime = null,
-        IMatricesRiesgosMitigacionRepository? controlsRepository = null)
+        VersionedCalculationRuntimeService versionedRuntime,
+        IMatricesRiesgosMitigacionRepository controlsRepository)
     {
-        _repo = repo;
-        _validador = validador;
-        _calculador = calculador;
-        _auditoriaRepo = auditoriaRepo;
-        _versionedRuntime = versionedRuntime;
-        _controlsRepository = controlsRepository;
+        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _validador = validador ?? throw new ArgumentNullException(nameof(validador));
+        _calculador = calculador ?? throw new ArgumentNullException(nameof(calculador));
+        _auditoriaRepo = auditoriaRepo ?? throw new ArgumentNullException(nameof(auditoriaRepo));
+        _versionedRuntime = versionedRuntime ?? throw new ArgumentNullException(nameof(versionedRuntime));
+        _controlsRepository = controlsRepository ?? throw new ArgumentNullException(nameof(controlsRepository));
     }
 
     public async Task<ServiceResult<VersionFormularioDto>> ObtenerVersionVigenteFormularioAsync(string? familiaCodigo)
@@ -178,7 +178,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                 $"La definición no puede publicarse porque no cumple el contrato del formulario: {string.Join("; ", definicion.Errores.ConvertAll(e => e.Mensaje))}");
         }
 
-        if (_versionedRuntime is not null)
         {
             IReadOnlyList<FormulaDiagnostic> runtimeErrors = await _versionedRuntime.ValidateForPublicationAsync(versionId, version.VerJson);
             if (runtimeErrors.Count > 0)
@@ -466,9 +465,8 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest($"La versión de formulario ID {evaluacionPersistida.EvaVersionId} asociada a la evaluación no existe.");
         }
 
-        IReadOnlyDictionary<string, bool>? controlPresence = _controlsRepository is null
-            ? null
-            : CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
+        IReadOnlyDictionary<string, bool> controlPresence =
+            CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
         ServiceResult? validacion = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson, version.VerId, controlPresence);
         if (validacion is not null)
         {
@@ -776,7 +774,6 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             return ServiceResult.BadRequest("Error de validación de respuestas:\n" + string.Join("\n", errores));
         }
 
-        if (_versionedRuntime is not null)
         {
             try
             {

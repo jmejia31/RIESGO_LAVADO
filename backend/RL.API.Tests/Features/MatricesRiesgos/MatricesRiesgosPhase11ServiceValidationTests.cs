@@ -76,7 +76,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_Listados_CubrenIdsInvalidosYExito()
     {
-        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
 
         Assert.Equal(400, (await service.ListarControlesAsync(0)).StatusCode);
         Assert.True((await service.ListarControlesAsync(1)).Success);
@@ -91,7 +91,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_Control_RechazaTodosLosDominiosInvalidos()
     {
-        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
 
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(evaluacionId: 0), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(tipo: "OTRO"), UsuarioId, Ip)).StatusCode);
@@ -106,7 +106,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     public async Task Mitigacion_Control_CubreExitoNotFoundYCatch()
     {
         var repo = new MitigacionRepoFake { UpdateControlResult = true };
-        var service = new MatricesRiesgosMitigacionService(repo);
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
 
         Assert.True((await service.CrearControlAsync(ValidoControl(), UsuarioId, Ip)).Success);
         Assert.Equal(400, (await service.ActualizarControlAsync(0, ValidoControl(), UsuarioId, Ip)).StatusCode);
@@ -121,7 +121,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_RechazaCorrupcionContextualEnTextosVisibles()
     {
-        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
 
         Assert.Equal(400, (await service.CrearControlAsync(ValidoControl(descripcion: "informaci\u00BFn"), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(descripcion: "Descripci\u00BFn"), UsuarioId, Ip)).StatusCode);
@@ -133,7 +133,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     public async Task Mitigacion_EvaluacionControl_CubreValidacionesExitoYCatch()
     {
         var repo = new MitigacionRepoFake();
-        var service = new MatricesRiesgosMitigacionService(repo);
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
 
         Assert.Equal(400, (await service.RegistrarEvaluacionControlAsync(0, ValidoEvaluacionControl(), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.RegistrarEvaluacionControlAsync(1, ValidoEvaluacionControl(-1), UsuarioId, Ip)).StatusCode);
@@ -147,7 +147,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_Plan_RechazaTodasLasInvariantes()
     {
-        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
 
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(evaluacionId: 0), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(descripcion: ""), UsuarioId, Ip)).StatusCode);
@@ -164,7 +164,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     public async Task Mitigacion_Plan_CubreExitoNotFoundYCatch()
     {
         var repo = new MitigacionRepoFake { UpdatePlanResult = true };
-        var service = new MatricesRiesgosMitigacionService(repo);
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
 
         Assert.True((await service.CrearPlanAsync(ValidoPlan(), UsuarioId, Ip)).Success);
         Assert.Equal(400, (await service.ActualizarPlanAsync(0, ValidoPlan(), UsuarioId, Ip)).StatusCode);
@@ -179,7 +179,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_Actividad_RechazaTodasLasInvariantes()
     {
-        var service = new MatricesRiesgosMitigacionService(new MitigacionRepoFake());
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
 
         Assert.Equal(400, (await service.CrearActividadAsync(ValidoActividad(planId: 0), UsuarioId, Ip)).StatusCode);
         Assert.Equal(400, (await service.CrearActividadAsync(ValidoActividad(descripcion: ""), UsuarioId, Ip)).StatusCode);
@@ -197,7 +197,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     public async Task Mitigacion_Actividad_CubreExitoNotFoundYCatch()
     {
         var repo = new MitigacionRepoFake { UpdateActividadResult = true };
-        var service = new MatricesRiesgosMitigacionService(repo);
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
 
         Assert.True((await service.CrearActividadAsync(ValidoActividad(), UsuarioId, Ip)).Success);
         Assert.Equal(400, (await service.ActualizarActividadAsync(0, ValidoActividad(), UsuarioId, Ip)).StatusCode);

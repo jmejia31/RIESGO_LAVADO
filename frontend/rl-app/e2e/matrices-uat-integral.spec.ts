@@ -17,11 +17,17 @@ const version = {
 };
 const evaluacion = {
   evaId: 20, evaRiesgoId: 7, evaVersionId: 10, evaEstado: 'BORRADOR',
-  evaDataJson: JSON.stringify({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable UAT' }),
+  evaDataJson: JSON.stringify({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable UAT', controles_preventivo: 90, controles_detectivo: 50, controles_correctivo: 30 }),
   evaDataCalcJson: JSON.stringify({ nivel_riesgo_inherente: 'Riesgo Moderado' }),
   evaVri: 7, evaVrr: 4, evaFechaEval: '2026-08-07T12:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
 };
 const riesgo = { rieId: 7, rieCodigo: 'R-007', rieNombre: 'Riesgo UAT', rieDescripcion: 'Base UAT', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T12:00:00Z' };
+const controles = [
+  { conId: 31, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'Control preventivo UAT', conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' },
+  { conId: 32, conEvaluacionId: 20, conTipo: 'PREVENTIVO', conDescripcion: 'Segundo control preventivo UAT', conAutomatizacion: 'AUTOMATICO', conEstado: 'ACTIVO' },
+  { conId: 33, conEvaluacionId: 20, conTipo: 'DETECTIVO', conDescripcion: 'Control detectivo UAT', conAutomatizacion: 'SEMIAUTOMATICO', conEstado: 'ACTIVO' },
+  { conId: 34, conEvaluacionId: 20, conTipo: 'CORRECTIVO', conDescripcion: 'Control correctivo UAT', conAutomatizacion: 'AUTOMATICO', conEstado: 'ACTIVO' }
+];
 const pdfFixture = '%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [] /Count 0 >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF';
 
 async function preparar(page: Page): Promise<void> {
@@ -84,7 +90,7 @@ async function preparar(page: Page): Promise<void> {
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
     else if (path.endsWith('/consolidado/paginado')) datos = { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } };
     else if (path.endsWith('/consolidado')) datos = [];
-    else if (path.endsWith('/mitigacion/evaluaciones/20/controles')) datos = [];
+    else if (path.endsWith('/mitigacion/evaluaciones/20/controles')) datos = controles;
     else if (path.endsWith('/mitigacion/evaluaciones/20/planes')) datos = [];
     else if (path.endsWith('/mitigacion/controles/31/evaluaciones')) datos = [];
     else if (path.endsWith('/mitigacion/planes/41/actividades')) datos = [];
@@ -153,9 +159,13 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   ];
   for (let index = 0; index < block2Labels.length; index++) await expect(fields.nth(index + 19)).toContainText(block2Labels[index]);
   for (const index of [21, 22, 25, 26, 29, 30, 32]) await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
-  await expect(fields.nth(19)).toContainText('Sin controles preventivos registrados.');
-  await expect(fields.nth(23)).toContainText('Sin controles detectivos registrados.');
-  await expect(fields.nth(27)).toContainText('Sin controles correctivos registrados.');
+  await expect(fields.nth(19)).toContainText('Control preventivo UAT');
+  await expect(fields.nth(19)).toContainText('Segundo control preventivo UAT');
+  await expect(fields.nth(23)).toContainText('Control detectivo UAT');
+  await expect(fields.nth(27)).toContainText('Control correctivo UAT');
+  await expect(fields.nth(31)).toContainText('Manual');
+  await expect(fields.nth(31)).toContainText('Semiautomático');
+  await expect(fields.nth(31)).toContainText('Automático');
   await expect(view.locator('[data-matrix-block="3"]')).toContainText('Bloque pendiente de implementación');
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
@@ -163,11 +173,31 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(fields.nth(17)).toContainText('Vulnerabilidades (Solo para riesgos de GTIC)');
   await expect(fields.nth(18)).toContainText('Activos de Información (Solo para riesgos de GTIC)');
   await expect(fields.nth(3)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(20)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(21)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(22)).toContainText('90%');
+  await expect(fields.nth(24)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(25)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(26)).toContainText('50%');
+  await expect(fields.nth(28)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(29)).toContainText('No disponible en esta versión');
+  await expect(fields.nth(30)).toContainText('30%');
 
   const matrixView = page.locator('[data-matrix-view="complete"]');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await fields.nth(19).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-2-closure-desktop-1280x900.png' });
   await page.setViewportSize({ width: 390, height: 844 });
+  const backdrop = page.locator('button[aria-label="Cerrar menú lateral"]');
+  if (await backdrop.count() > 0) {
+    await backdrop.dispatchEvent('click');
+    await page.waitForTimeout(300);
+  }
   await expect(fields).toHaveCount(33);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+  await fields.nth(19).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-2-closure-mobile-390x844.png' });
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();

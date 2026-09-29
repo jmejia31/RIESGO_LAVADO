@@ -83,7 +83,7 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
 
-        var service = new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        var service = MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
 
         // Crear un archivo temporal real en el directorio de pruebas para que File.Exists sea true
         // Use an isolated test directory: other evidence tests clean App_Data/Evidencias concurrently.
@@ -128,7 +128,7 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
 
-        var service = new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        var service = MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
 
         repoStub.On(nameof(IMatricesRiesgosRepository.ObtenerEvidenciaFisicaAsync), _ =>
             Task.FromResult<EvidenciaDto?>(new EvidenciaDto
@@ -164,7 +164,7 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
 
-        var inner = new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        var inner = MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
         IApplicationCache cache = InterfaceStub.Create<IApplicationCache>(out _);
         var settings = new ApplicationCacheSettings();
         var cached = new CachedMatricesRiesgosAppService(inner, cache, settings);

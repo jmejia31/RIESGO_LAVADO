@@ -1,5 +1,39 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de Intervención — Cierre Final Bloque 2: Corrección y Certificación de Hallazgos H1–H5 (ANTIG, Prompt #2E-ANTIG)
+
+- **Fecha y hora local:** 2026-09-29 09:35 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / SHA base:** `desarrollo` / `7b965b5187d2f18a5fda9338999a1e6e91eef059`.
+- **Objetivo:** Ejecución de cierre definitivo del Bloque 2 — Controles (campos 20–33) certificando los cinco hallazgos restantes (H1–H5) con evidencia demostrada y sin suposiciones.
+- **Hallazgos remediados y certificados:**
+  - **H1 (Fail-Fast DI & Dependencias Obligatorias):** Eliminadas dependencias opcionales (`= null`) en constructores de `MatricesRiesgosAppService` y `MatricesRiesgosMitigacionService`. Aplicado fail-fast estricto (`ArgumentNullException.ThrowIfNull`). Demostrado que el estado LEGACY depende exclusivamente de la ausencia contractual de formula usages en la versión (`IsGoverned == false`) y nunca de dependencias nulas. `Program.cs` verificado con DI completo.
+  - **H2 (Atomicidad / Rollback CREATE control):** Implementada seam transaccional interna (`GovernedControlMutationExecutor`, `IGovernedControlMutationStore`, `IGovernedControlMutationSession`) desacoplada de Oracle físico. Probada conductualmente la preservación del estado comprometido (`CommittedState`) intacto ante fallos inyectados en recálculo, auditoría de control y auditoría de evaluación.
+  - **H3 (Atomicidad / Rollback UPDATE control):** Demostrado conductualmente el rollback integral de modificaciones en WorkingState ante fallos en recálculo y auditorías, conservando el valor committed original sin residuos ni escrituras parciales.
+  - **H4 (Concurrencia optimista EVA_VERSION_ROW):** Demostrado conductualmente el rechazo como stale write con semántica HTTP 409 Conflict ante colisiones en CREATE y UPDATE, preservación de mutación autoritativa previa, congelamiento de controles en evaluaciones aprobadas, rechazo de re-parenting entre evaluaciones y protección TOCTOU ante cambios de `EVA_VERSION_ROW` entre precálculo y persistencia.
+  - **H5 (Certificación visual real en Chromium):** Suite E2E completa ejecutada contra frontend real (37/37 PASS). Viewport desktop 1280px y mobile 390px inspeccionados mediante screenshots generados (`block-2-closure-desktop-1280x900.png` y `block-2-closure-mobile-390x844.png`). Comprobación programática `scrollWidth <= clientWidth` (`HORIZONTAL_OVERFLOW=NO`) exitosa. V1 histórico verificado con campos computados no disponibles.
+- **Archivos creados o modificados:**
+  - `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`
+  - `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosMitigacionService.cs`
+  - `backend/RL.API/Features/MatricesRiesgos/Persistence/GovernedControlMutation.cs`
+  - `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMitigacionRepository.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/GovernedControlMutationExecutorTests.cs`
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosTestFactory.cs`
+  - Suites de tests adaptadas con dobles válidos requeridos.
+  - `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`
+  - `docs/3. Módulo Matrices de Riesgos/MATRIZ_COMPLETA_BLOQUE_2.md`
+  - `BITACORA_COLABORACION.md`
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
+- **Verificaciones y conteos reales:**
+  - Backend: `702/702` PASS (`0` fallidos, `0` ignorados).
+  - Frontend Unit: `801/801` PASS (`80` suites).
+  - Frontend Lint: PASS (`0` errores).
+  - Frontend Build: PASS (`0` errores).
+  - E2E Playwright: `37/37` PASS.
+  - Validadores: `validate_matrices_dynamic_ddl_alignment.ps1` PASS, `validate_matrices_authorization_contract.ps1` PASS, `validate_matrices_phase13_uat_contract.ps1` PASS, `validate_database_scripts.ps1` PASS, `validate_text_encoding.ps1` PASS, `validate_repository_structure.ps1` PASS, `validate_documentation_links.ps1` PASS, `git diff --check` PASS.
+- **Oracle institucional:** `ORACLE_CONNECTION_ATTEMPTED_BY_ANTIG=NO`, `ORACLE_DML_EXECUTED_BY_ANTIG=NO`, `ORACLE_DDL_EXECUTED_BY_ANTIG=NO`.
+- **Estado final:** `BLOCK_1_STATUS=CLOSED`, `BLOCK_2_STATUS=CLOSED`. `FULL_MATRIX_82=PENDING_BLOCKS_3_6`. `NEXT_BLOCK=BLOCK_3_RIESGO_RESIDUAL_FIELDS_34_39` (no iniciado).
+
 ## Diagnóstico forense 2C — Bloque 2 (COD, solo lectura)
 
 - **Fecha/hora local:** 2026-09-28 13:53 (America/Tegucigalpa). **Rama:** `desarrollo`. **Base/HEAD:** `3c2e8594ed95c3470767f30f276840e2b0f53629`, coincidió con el esperado y `origin/desarrollo` estaba sincronizada.

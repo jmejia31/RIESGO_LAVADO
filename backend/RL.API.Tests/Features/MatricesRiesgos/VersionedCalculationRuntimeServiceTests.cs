@@ -123,18 +123,16 @@ public sealed class VersionedCalculationRuntimeServiceTests
     public void GovernedControlRepository_UsesOneOptimisticDraftTransactionForMutationAndCalculation()
     {
         string repository = ReadRepositorySource("MatricesRiesgosMitigacionRepository.cs");
-        string create = MethodBody(repository, "public async Task<long> CrearControlGobernadoAtomicoAsync", "public async Task<bool> ActualizarControlGobernadoAtomicoAsync");
-        string update = MethodBody(repository, "public async Task<bool> ActualizarControlGobernadoAtomicoAsync", "private static async Task LockGovernedDraftEvaluationAsync");
-
-        foreach (string method in new[] { create, update })
-        {
-            Assert.Contains("BeginTransaction()", method, StringComparison.Ordinal);
-            Assert.Contains("LockGovernedDraftEvaluationAsync", method, StringComparison.Ordinal);
-            Assert.Contains("UpdateGovernedCalculationAsync", method, StringComparison.Ordinal);
-            Assert.Contains("await transaction.CommitAsync()", method, StringComparison.Ordinal);
-            Assert.Contains("await transaction.RollbackAsync()", method, StringComparison.Ordinal);
-            Assert.Contains("await AuditarAsync", method, StringComparison.Ordinal);
-        }
+        Assert.Contains("_governedMutations.CreateAsync", repository, StringComparison.Ordinal);
+        Assert.Contains("_governedMutations.UpdateAsync", repository, StringComparison.Ordinal);
+        Assert.Contains("OracleGovernedControlMutationSession", repository, StringComparison.Ordinal);
+        Assert.Contains("connection.BeginTransaction()", repository, StringComparison.Ordinal);
+        Assert.Contains("LockGovernedDraftEvaluationAsync", repository, StringComparison.Ordinal);
+        Assert.Contains("UpdateGovernedCalculationAsync", repository, StringComparison.Ordinal);
+        Assert.Contains("public Task CommitAsync() => _transaction.CommitAsync()", repository, StringComparison.Ordinal);
+        Assert.Contains("public Task RollbackAsync() => _transaction.RollbackAsync()", repository, StringComparison.Ordinal);
+        Assert.Contains("RL_MR_CONTROLES_RIESGO", repository, StringComparison.Ordinal);
+        Assert.Contains("RL_MR_EVALUACIONES_RIESGO", repository, StringComparison.Ordinal);
         Assert.Contains("EVA_VERSION_ROW=EVA_VERSION_ROW+1", repository, StringComparison.Ordinal);
         Assert.Contains("expectedVersionRow", repository, StringComparison.Ordinal);
         Assert.Contains("RL_MR_FLUJOS_EVALUACION", repository, StringComparison.Ordinal);

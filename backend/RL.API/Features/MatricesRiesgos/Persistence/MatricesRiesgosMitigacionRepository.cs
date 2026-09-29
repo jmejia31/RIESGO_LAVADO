@@ -27,11 +27,12 @@ public interface IMatricesRiesgosMitigacionRepository
     Task<bool> ActualizarActividadAsync(long actividadId, ActividadPlanGuardarDto dto, long usuarioId, string? ip);
 }
 
-public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitigacionRepository
+public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitigacionRepository, IGovernedControlMutationStore
 {
     private const string Modulo = "MatricesRiesgos";
     private readonly OracleDbContext _db;
     private readonly IAuditoriaRepository _auditoria;
+    private readonly GovernedControlMutationExecutor _governedMutations = new();
 
     public MatricesRiesgosMitigacionRepository(OracleDbContext db, IAuditoriaRepository auditoria)
     {
@@ -144,67 +145,97 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
     }
 
     public async Task<long> CrearControlGobernadoAtomicoAsync(ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip)
-    {
-        await using var connection = _db.CreateConnection();
-        await connection.OpenAsync();
-        await using var transaction = connection.BeginTransaction();
-        try
-        {
-            await LockGovernedDraftEvaluationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow);
-            long id = await SiguienteAsync(connection, transaction, "SEQ_RL_MR_CONTROLES");
-            const string insert = @"INSERT INTO RL_MR_CONTROLES_RIESGO
-                (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO)
-                VALUES(:id,:evaluationId,:type,:description,:automation,:state)";
-            await using (var command = Comando(insert, connection, transaction))
-            {
-                command.Parameters.Add(new OracleParameter("id", id));
-                AddControlParameters(command, dto);
-                await command.ExecuteNonQueryAsync();
-            }
-            await UpdateGovernedCalculationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow, calculatedJson);
-            await AuditarAsync(connection, transaction, "RL_MR_CONTROLES_RIESGO", id, "INSERT", dto, usuarioId, ip);
-            await AuditarAsync(connection, transaction, "RL_MR_EVALUACIONES_RIESGO", dto.ConEvaluacionId, "UPDATE", new { calculatedJson }, usuarioId, ip);
-            await transaction.CommitAsync();
-            return id;
-        }
-        catch { await transaction.RollbackAsync(); throw; }
-    }
+        => await _governedMutations.CreateAsync(this, dto, expectedEvaVersionRow, calculatedJson, usuarioId, ip);
 
     public async Task<bool> ActualizarControlGobernadoAtomicoAsync(long controlId, ControlRiesgoGuardarDto dto, int expectedEvaVersionRow, string calculatedJson, long usuarioId, string? ip)
+        => await _governedMutations.UpdateAsync(this, controlId, dto, expectedEvaVersionRow, calculatedJson, usuarioId, ip);
+
+    async Task<IGovernedControlMutationSession> IGovernedControlMutationStore.BeginAsync() =>
+        await OracleGovernedControlMutationSession.CreateAsync(_db, _auditoria);
+
+    private sealed class OracleGovernedControlMutationSession : IGovernedControlMutationSession
     {
-        await using var connection = _db.CreateConnection();
-        await connection.OpenAsync();
-        await using var transaction = connection.BeginTransaction();
-        try
+        private readonly OracleConnection _connection;
+        private readonly OracleTransaction _transaction;
+        private readonly IAuditoriaRepository _auditoria;
+
+        private OracleGovernedControlMutationSession(OracleConnection connection, OracleTransaction transaction, IAuditoriaRepository auditoria)
         {
-            await LockGovernedDraftEvaluationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow);
-            const string selectControl = "SELECT CON_EVALUACION_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID=:id FOR UPDATE";
-            long existingEvaluationId;
-            await using (var read = Comando(selectControl, connection, transaction))
+            _connection = connection;
+            _transaction = transaction;
+            _auditoria = auditoria;
+        }
+
+        public static async Task<OracleGovernedControlMutationSession> CreateAsync(OracleDbContext database, IAuditoriaRepository auditoria)
+        {
+            OracleConnection connection = database.CreateConnection();
+            try
             {
-                read.Parameters.Add(new OracleParameter("id", controlId));
-                object? value = await read.ExecuteScalarAsync();
-                if (value is null || value == DBNull.Value) { await transaction.RollbackAsync(); return false; }
-                existingEvaluationId = Convert.ToInt64(value, CultureInfo.InvariantCulture);
+                await connection.OpenAsync();
+                return new OracleGovernedControlMutationSession(connection, connection.BeginTransaction(), auditoria);
             }
-            if (existingEvaluationId != dto.ConEvaluacionId)
-                throw new InvalidOperationException("No se permite cambiar el padre de un control gobernado.");
-            const string update = @"UPDATE RL_MR_CONTROLES_RIESGO
+            catch
+            {
+                await connection.DisposeAsync();
+                throw;
+            }
+        }
+
+        public Task LockDraftEvaluationAsync(long evaluationId, int expectedVersionRow) =>
+            LockGovernedDraftEvaluationAsync(_connection, _transaction, evaluationId, expectedVersionRow);
+
+        public async Task<long> InsertControlAsync(ControlRiesgoGuardarDto control)
+        {
+            long id = await SiguienteAsync(_connection, _transaction, "SEQ_RL_MR_CONTROLES");
+            const string sql = @"INSERT INTO RL_MR_CONTROLES_RIESGO
+                (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO)
+                VALUES(:id,:evaluationId,:type,:description,:automation,:state)";
+            await using OracleCommand command = Comando(sql, _connection, _transaction);
+            command.Parameters.Add(new OracleParameter("id", id));
+            AddControlParameters(command, control);
+            await command.ExecuteNonQueryAsync();
+            return id;
+        }
+
+        public async Task<long?> LockControlParentAsync(long controlId)
+        {
+            const string sql = "SELECT CON_EVALUACION_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID=:id FOR UPDATE";
+            await using OracleCommand command = Comando(sql, _connection, _transaction);
+            command.Parameters.Add(new OracleParameter("id", controlId));
+            object? value = await command.ExecuteScalarAsync();
+            return value is null || value == DBNull.Value ? null : Convert.ToInt64(value, CultureInfo.InvariantCulture);
+        }
+
+        public async Task<bool> UpdateControlAsync(long controlId, ControlRiesgoGuardarDto control)
+        {
+            const string sql = @"UPDATE RL_MR_CONTROLES_RIESGO
                 SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state
                 WHERE CON_ID=:id AND CON_EVALUACION_ID=:evaluationId";
-            await using (var command = Comando(update, connection, transaction))
-            {
-                command.Parameters.Add(new OracleParameter("id", controlId));
-                AddControlParameters(command, dto);
-                if (await command.ExecuteNonQueryAsync() != 1) { await transaction.RollbackAsync(); return false; }
-            }
-            await UpdateGovernedCalculationAsync(connection, transaction, dto.ConEvaluacionId, expectedEvaVersionRow, calculatedJson);
-            await AuditarAsync(connection, transaction, "RL_MR_CONTROLES_RIESGO", controlId, "UPDATE", dto, usuarioId, ip);
-            await AuditarAsync(connection, transaction, "RL_MR_EVALUACIONES_RIESGO", dto.ConEvaluacionId, "UPDATE", new { calculatedJson }, usuarioId, ip);
-            await transaction.CommitAsync();
-            return true;
+            await using OracleCommand command = Comando(sql, _connection, _transaction);
+            command.Parameters.Add(new OracleParameter("id", controlId));
+            AddControlParameters(command, control);
+            return await command.ExecuteNonQueryAsync() == 1;
         }
-        catch { await transaction.RollbackAsync(); throw; }
+
+        public Task UpdateCalculationAsync(long evaluationId, int expectedVersionRow, string calculatedJson) =>
+            UpdateGovernedCalculationAsync(_connection, _transaction, evaluationId, expectedVersionRow, calculatedJson);
+
+        public Task AuditControlAsync(long controlId, string action, ControlRiesgoGuardarDto control, long usuarioId, string? ip) =>
+            _auditoria.RegistrarAsync(_connection, _transaction, "RL_MR_CONTROLES_RIESGO", controlId.ToString(), action,
+                null, JsonSerializer.Serialize(control), usuarioId, null, ip, Modulo);
+
+        public Task AuditEvaluationAsync(long evaluationId, string calculatedJson, long usuarioId, string? ip) =>
+            _auditoria.RegistrarAsync(_connection, _transaction, "RL_MR_EVALUACIONES_RIESGO", evaluationId.ToString(), "UPDATE",
+                null, JsonSerializer.Serialize(new { calculatedJson }), usuarioId, null, ip, Modulo);
+
+        public Task CommitAsync() => _transaction.CommitAsync();
+        public Task RollbackAsync() => _transaction.RollbackAsync();
+
+        public async ValueTask DisposeAsync()
+        {
+            await _transaction.DisposeAsync();
+            await _connection.DisposeAsync();
+        }
     }
 
     private static async Task LockGovernedDraftEvaluationAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, int expectedVersionRow)

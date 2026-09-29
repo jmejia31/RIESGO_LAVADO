@@ -25,7 +25,7 @@ public sealed class MatricesRiesgosPhase07BackendCoverageTests
         IMatricesRiesgoService calculador = InterfaceStub.Create<IMatricesRiesgoService>(out _);
         IAuditoriaRepository auditoria = InterfaceStub.Create<IAuditoriaRepository>(out InterfaceStub auditoriaStub);
         auditoriaStub.On("RegistrarAsync", _ => Task.CompletedTask);
-        return new MatricesRiesgosAppService(repo, validador, calculador, auditoria);
+        return MatricesRiesgosTestFactory.CreateAppService(repo, validador, calculador, auditoria);
     }
 
     [Fact]

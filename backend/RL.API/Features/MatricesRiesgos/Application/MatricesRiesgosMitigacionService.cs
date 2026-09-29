@@ -33,17 +33,17 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
 
     private readonly IMatricesRiesgosMitigacionRepository _repo;
 
-    private readonly IMatricesRiesgosRepository? _evaluations;
-    private readonly VersionedCalculationRuntimeService? _runtime;
+    private readonly IMatricesRiesgosRepository _evaluations;
+    private readonly VersionedCalculationRuntimeService _runtime;
 
     public MatricesRiesgosMitigacionService(
         IMatricesRiesgosMitigacionRepository repo,
-        IMatricesRiesgosRepository? evaluations = null,
-        VersionedCalculationRuntimeService? runtime = null)
+        IMatricesRiesgosRepository evaluations,
+        VersionedCalculationRuntimeService runtime)
     {
-        _repo = repo;
-        _evaluations = evaluations;
-        _runtime = runtime;
+        _repo = repo ?? throw new ArgumentNullException(nameof(repo));
+        _evaluations = evaluations ?? throw new ArgumentNullException(nameof(evaluations));
+        _runtime = runtime ?? throw new ArgumentNullException(nameof(runtime));
     }
 
     public async Task<ServiceResult<IReadOnlyList<ControlRiesgoDto>>> ListarControlesAsync(long evaluacionId) =>
@@ -88,7 +88,6 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
 
     private async Task<long?> CrearControlGobernadoAsync(ControlRiesgoGuardarDto requested, long userId, string? ip)
     {
-        if (_evaluations is null || _runtime is null) return null;
         EvaluacionRiesgoDto? evaluation = await _evaluations.ObtenerEvaluacionAsync(requested.ConEvaluacionId);
         if (evaluation is null) throw new InvalidOperationException("La evaluación asociada al control no existe.");
         IReadOnlyList<ControlRiesgoDto> current = await _repo.ListarControlesAsync(requested.ConEvaluacionId);
@@ -103,26 +102,37 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
 
     private async Task<bool?> ActualizarControlGobernadoAsync(long controlId, ControlRiesgoGuardarDto requested, long userId, string? ip)
     {
-        if (_evaluations is null || _runtime is null) return null;
+        EvaluacionRiesgoDto? evaluation = await _evaluations.ObtenerEvaluacionAsync(requested.ConEvaluacionId);
+        if (evaluation is null) throw new InvalidOperationException("La evaluación asociada al control no existe.");
+
+        string targetDefinition = await GetDefinitionAsync(evaluation.EvaVersionId);
+        GovernedCalculationResult targetCalc = await _runtime.CalculateAsync(evaluation.EvaVersionId, targetDefinition, evaluation.EvaDataJson);
+
         ControlRiesgoDto? existing = await _repo.ObtenerControlAsync(controlId);
-        if (existing is null) return false;
-        if (existing.ConEvaluacionId != requested.ConEvaluacionId)
+        bool existingIsGoverned = false;
+        if (existing is not null && existing.ConEvaluacionId != requested.ConEvaluacionId)
         {
             EvaluacionRiesgoDto? oldEvaluation = await _evaluations.ObtenerEvaluacionAsync(existing.ConEvaluacionId);
-            EvaluacionRiesgoDto? newEvaluation = await _evaluations.ObtenerEvaluacionAsync(requested.ConEvaluacionId);
-            if (oldEvaluation is not null && (await _runtime.CalculateAsync(oldEvaluation.EvaVersionId, await GetDefinitionAsync(oldEvaluation.EvaVersionId), oldEvaluation.EvaDataJson)).IsGoverned
-                || newEvaluation is not null && (await _runtime.CalculateAsync(newEvaluation.EvaVersionId, await GetDefinitionAsync(newEvaluation.EvaVersionId), newEvaluation.EvaDataJson)).IsGoverned)
-                throw new InvalidOperationException("No se permite cambiar el padre de un control gobernado.");
+            if (oldEvaluation is not null)
+            {
+                string oldDefinition = await GetDefinitionAsync(oldEvaluation.EvaVersionId);
+                existingIsGoverned = (await _runtime.CalculateAsync(oldEvaluation.EvaVersionId, oldDefinition, oldEvaluation.EvaDataJson)).IsGoverned;
+            }
+        }
+
+        if (!targetCalc.IsGoverned && !existingIsGoverned)
+        {
             return null;
         }
 
-        EvaluacionRiesgoDto? evaluation = await _evaluations.ObtenerEvaluacionAsync(requested.ConEvaluacionId);
-        if (evaluation is null) throw new InvalidOperationException("La evaluación asociada al control no existe.");
+        if (existing is null) return false;
+        if (existing.ConEvaluacionId != requested.ConEvaluacionId)
+            throw new InvalidOperationException("No se permite cambiar el padre de un control gobernado.");
+
         IReadOnlyList<ControlRiesgoDto> current = await _repo.ListarControlesAsync(requested.ConEvaluacionId);
         if (!current.Any(control => control.ConId == controlId)) return false;
         List<ControlRiesgoDto> hypothetical = current.Select(control => control.ConId == controlId ? ToControl(requested, controlId) : control).ToList();
-        string definition = await GetDefinitionAsync(evaluation.EvaVersionId);
-        GovernedCalculationResult result = await _runtime.CalculateAsync(evaluation.EvaVersionId, definition, evaluation.EvaDataJson, Presence(hypothetical));
+        GovernedCalculationResult result = await _runtime.CalculateAsync(evaluation.EvaVersionId, targetDefinition, evaluation.EvaDataJson, Presence(hypothetical));
         if (!result.IsGoverned) return null;
         EnsureCalculationSuccess(result);
         return await _repo.ActualizarControlGobernadoAtomicoAsync(controlId, requested, evaluation.EvaVersionRow,
@@ -132,7 +142,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     private async Task<string> GetDefinitionAsync(long versionId)
     {
         // Las versiones de evaluación son inmutables; la definición se recupera por el ID ligado a la evaluación.
-        VersionFormularioDto? version = await _evaluations!.ObtenerVersionFormularioAsync(versionId);
+        VersionFormularioDto? version = await _evaluations.ObtenerVersionFormularioAsync(versionId);
         return version is null || string.IsNullOrWhiteSpace(version.VerJson)
             ? throw new InvalidOperationException("No se encontró la definición de la versión asociada para recalcular controles.")
             : version.VerJson;

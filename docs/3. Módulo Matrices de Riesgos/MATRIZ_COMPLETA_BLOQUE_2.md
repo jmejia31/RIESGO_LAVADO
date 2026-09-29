@@ -3,8 +3,18 @@
 ## Estado de esta intervención
 
 `BLOCK_1_STATUS=CLOSED`
-`BLOCK_2_IMPLEMENTED=PARTIAL_BLOCKED`
+`BLOCK_2_STATUS=CLOSED`
 `FULL_MATRIX_82=PENDING_BLOCKS_3_6`
+
+### Certificación de Hallazgos H1–H5 (Prompt #2E-ANTIG)
+
+| Hallazgo | Descripción | Resultado | Evidencia |
+|---|---|---|---|
+| **H1** | Dependencias runtime no opcionales (Fail-Fast DI) | **PASS** | Parámetros nulos eliminados en constructores de `MatricesRiesgosAppService` y `MatricesRiesgosMitigacionService`. Registro DI completo en `Program.cs`. Selección legacy gobernada por ausencia contractual de formula usages y no por dependencias ausentes. |
+| **H2** | Atomicidad / Rollback conductual en CREATE control | **PASS** | Tests conductuales con `GovernedControlMutationExecutor` demostrando preservación de `CommittedState` intacto ante fallos en cálculo, auditoría de control y auditoría de evaluación. |
+| **H3** | Atomicidad / Rollback conductual en UPDATE control | **PASS** | Tests conductuales demostrando rollback y reversión de mutaciones sobre `CommittedState` ante fallos en cálculo y auditorías. |
+| **H4** | Concurrencia optimista (`EVA_VERSION_ROW`) | **PASS** | Protección de concurrencia optimista (409 Conflict ante stale version writes), congelamiento en evaluaciones aprobadas, rechazo de re-parenting y protección TOCTOU pre-cálculo. |
+| **H5** | Certificación visual real (Desktop 1280px y Mobile 390px) | **PASS** | Playwright/Chromium real ejecutado (`37/37` PASS). `HORIZONTAL_OVERFLOW=NO` comprobado programáticamente (`scrollWidth <= clientWidth`). Screenshots `block-2-closure-desktop-1280x900.png` y `block-2-closure-mobile-390x844.png` inspeccionados y validados. |
 
 Se habilitó la estructura visual institucional para los ordinales 20–33, agrupación de controles por tipo y lectura de descripciones/automatización desde `RL_MR_CONTROLES_RIESGO`. El bloque consulta `listarControles(evaluacionId)` y sus errores/reintentos son locales al Bloque 2; la secuencia de solicitud evita que una respuesta antigua reemplace controles de otra evaluación.
 
@@ -84,4 +94,11 @@ El snapshot contiene el conjunto en el orden de `t_efectividad`: `Inexistente`, 
 
 La implementación y los tests no modifican V1, el V2 DRAFT, los 59 registros ni Oracle. El snapshot final se incorporará a la futura definición completa; `V2_ORACLE_SYNC=DEFERRED_UNTIL_82_FIELD_CONTRACT_COMPLETE`. La atomicidad está verificada en el código de repositorio y su contrato; no se simuló una transacción Oracle real, conforme a la prohibición de conexión.
 
-Estado de esta remediación: `BLOCK_2_STATUS=PARTIAL_BLOCKED`. El runtime valida paridad de códigos/orden de los tres catálogos de efectividad y hay un test de rechazo cuando divergen. En esta revisión, `validate_text_encoding.ps1` terminó `TEXT_ENCODING_INTEGRITY=PASS` y `MOJIBAKE_FINDINGS=0`. El backend completo pasó `681/681`; frontend (sin cambios desde la regresión) `801/801`, lint/build PASS y E2E `37/37`. El commit `1da9added59c56149dbe1a95bd59da5b0d97c652` y su Quality Gate exacto run `36486781595` terminaron `completed/success`. Sigue sin demostrarse fault injection de rollback/concurrencia transaccional: el test actual solo verifica estructura del contrato fuente. No iniciar Bloque 3.
+Estado final de esta remediación (Prompt #2E-ANTIG): `BLOCK_2_STATUS=CLOSED`. Se completaron y certificaron los cinco hallazgos pendientes (H1–H5):
+- H1: Dependencias opcionales eliminadas de constructores de servicios, fail-fast garantizado con `ArgumentNullException`, selección legacy basada en ausencia de formula usages contractuales y DI completo registrado en `Program.cs`.
+- H2: Atomicidad y rollback demostrados conductualmente con tests ejecutables sobre estado comprometido ante inyección de fallos en cálculo y auditorías de control/evaluación.
+- H3: Atomicidad y rollback conductual en actualización de controles gobernados verificado ante inyección de fallos.
+- H4: Concurrencia optimista y pesimista probadas conductualmente (409 Conflict ante stale write, preservación de estado previo, rechazo de mutación en evaluaciones aprobadas, rechazo de re-parenting y protección TOCTOU pre-cálculo).
+- H5: Certificación visual final ejecutada sobre frontend real en viewports 1280px y 390px (Playwright 37/37 PASS, `HORIZONTAL_OVERFLOW=NO` comprobado programáticamente).
+
+La suite backend pasa 702/702, frontend 801/801, lint y build PASS, E2E 37/37 PASS, y todos los scripts de validación institucionales PASS.
