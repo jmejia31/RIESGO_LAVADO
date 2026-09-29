@@ -87,6 +87,7 @@ async function preparar(page: Page): Promise<void> {
       totalPaginas: 1
     };
     else if (path.endsWith('/riesgos/7') && method === 'GET') datos = riesgo;
+    else if (path.endsWith('/riesgos/paginado') && method === 'GET') datos = { items: [riesgo], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1 };
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
     else if (path.endsWith('/consolidado/paginado')) datos = { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } };
     else if (path.endsWith('/consolidado')) datos = [];
@@ -214,6 +215,107 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(page.getByRole('heading', { name: 'Matriz Consolidada' })).toBeVisible();
 });
 
+test('selectores de evaluación operativa abren hacia abajo, quedan acotados y usan scroll interno', async ({ page }) => {
+  const items = Array.from({ length: 80 }, (_, index) => ({
+    evaId: index + 1,
+    evaRiesgoId: 100 + index,
+    riesgoCodigo: 'R-' + String(index + 1).padStart(3, '0'),
+    riesgoNombre: 'Riesgo operativo ' + (index + 1),
+    evaVersionId: 10,
+    versionCodigo: 'MATRIZ_RIESGOS_LAFT_V1',
+    versionNumero: 1,
+    estado: 'BORRADOR',
+    vri: 7,
+    vrr: 4,
+    nivelResidual: 'MEDIO',
+    fechaEval: '2026-08-07T12:00:00Z'
+  }));
+
+  await page.route('**/api/matrices-riesgos/evaluaciones**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      success: true,
+      datos: { items, pagina: 1, registrosPorPagina: 200, totalRegistros: items.length, totalPaginas: 1 }
+    })
+  }));
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+
+  for (const vista of ['Mitigación', 'Monitoreo']) {
+    await page.getByRole('button', { name: vista, exact: true }).click();
+    const combo = page.getByRole('combobox', { name: 'Evaluación', exact: true });
+    await combo.click();
+
+    const panel = page.locator('[data-ui-bounded-select-panel]');
+    const scroll = panel.locator('[data-ui-bounded-select-scroll]');
+    await expect(panel).toBeVisible();
+
+    const comboBox = await combo.boundingBox();
+    const panelBox = await panel.boundingBox();
+    expect(comboBox).not.toBeNull();
+    expect(panelBox).not.toBeNull();
+    if (!comboBox || !panelBox) throw new Error('No se pudo medir el selector operativo.');
+
+    expect(panelBox.y).toBeGreaterThanOrEqual(comboBox.y + comboBox.height - 1);
+    expect(panelBox.y + panelBox.height).toBeLessThanOrEqual(892);
+    expect(await panel.evaluate(element => getComputedStyle(element).position)).toBe('relative');
+    expect(await scroll.evaluate(element => element.scrollHeight > element.clientHeight)).toBe(true);
+
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+  }
+});
+
+test('Riesgos usa filtro estándar completo y pagina exactamente 10 registros al inicio', async ({ page }) => {
+  const consultas: Array<{ tamano: string | null; buscar: string | null; activo: string | null }> = [];
+
+  await page.route('**/api/matrices-riesgos/riesgos/paginado**', route => {
+    const url = new URL(route.request().url());
+    const tamano = Number(url.searchParams.get('tamanoPagina') || '10');
+    const pagina = Number(url.searchParams.get('pagina') || '1');
+    consultas.push({
+      tamano: url.searchParams.get('tamanoPagina'),
+      buscar: url.searchParams.get('buscar'),
+      activo: url.searchParams.get('activo')
+    });
+    const items = Array.from({ length: Math.min(tamano, 37) }, (_, index) => ({
+      rieId: index + 1,
+      rieCodigo: 'RIESGO-' + String(index + 1).padStart(2, '0'),
+      rieNombre: 'Riesgo ' + (index + 1),
+      rieDescripcion: 'Registro paginado UAT',
+      rieActivo: url.searchParams.get('activo') !== 'false',
+      rieUsrCreacion: 1,
+      rieFechaCreacion: '2026-08-07T12:00:00Z'
+    }));
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        success: true,
+        datos: { items, pagina, tamanoPagina: tamano, totalRegistros: 37, totalPaginas: Math.ceil(37 / tamano) }
+      })
+    });
+  });
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Riesgos', exact: true }).click();
+
+  await expect.poll(() => consultas.length).toBeGreaterThan(0);
+  expect(consultas[0].tamano).toBe('10');
+  await expect(page.getByLabel('Riesgos por página')).toHaveValue('10');
+  await expect(page.locator('app-matrices-riesgos-gestion table tbody tr')).toHaveCount(10);
+
+  const filtros = page.locator('[data-ui-filter-block="riesgos"]');
+  await expect(filtros).toHaveAttribute('data-ui-filter-standard', 'full');
+  await filtros.getByLabel('Buscar', { exact: true }).fill('proveedor');
+  await filtros.getByLabel('Estado', { exact: true }).selectOption('INACTIVOS');
+
+  await expect.poll(() => consultas.at(-1)?.activo).toBe('false');
+  expect(consultas.at(-1)?.buscar).toBe('proveedor');
+});
+
 test('UAT administra un riesgo desde la interfaz integral', async ({ page }) => {
   let payload: any;
   await page.route('**/api/matrices-riesgos/riesgos', async route => {
@@ -330,7 +432,9 @@ test('UAT registra control, efectividad, plan y actividad', async ({ page }) => 
 
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
-  await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
+  const selectorEvaluacionMitigacion = page.getByRole('combobox', { name: 'Evaluación', exact: true });
+  await selectorEvaluacionMitigacion.click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
   await page.getByLabel('Descripción', { exact: true }).first().fill('Control preventivo UAT');
   await page.getByRole('button', { name: 'Crear control' }).click();
   await expect.poll(() => recibidos['control']?.conEvaluacionId).toBe(20);
@@ -369,7 +473,9 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
 
   await page.goto('/matrices-riesgos');
   await page.getByRole('button', { name: 'Monitoreo', exact: true }).click();
-  await page.getByLabel('Evaluación', { exact: true }).selectOption('20');
+  const selectorEvaluacionMonitoreo = page.getByRole('combobox', { name: 'Evaluación', exact: true });
+  await selectorEvaluacionMonitoreo.click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
   await page.getByLabel('Código', { exact: true }).fill('ALE-UAT');
   await page.getByLabel('Indicador', { exact: true }).fill('Umbral operativo UAT');
   await page.getByRole('button', { name: 'Registrar alerta' }).click();
