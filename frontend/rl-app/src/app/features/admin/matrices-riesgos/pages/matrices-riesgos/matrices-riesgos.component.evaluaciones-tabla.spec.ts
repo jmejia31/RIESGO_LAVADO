@@ -414,4 +414,29 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.modalEditarAbierto()).toBe(false);
     expect(component.error()).toContain('No se pudo recuperar la metodología histórica para la versión ID 99.');
   });
+  it('VIEW_EVALUATION_NO_HARDCODED_FAMILY_ID: abrirModalVer abre evaluacion con version historica sin consultar familia 1 hardcodeada', () => {
+    const resumenTest = crearEvaluacion(87, 'BORRADOR', null);
+    resumenTest.evaVersionId = 57;
+
+    serviceMock.obtenerEvaluacion.mockReturnValue(of({
+      evaId: 87,
+      evaRiesgoId: 10,
+      evaVersionId: 57,
+      evaDataJson: '{"campo1": "val1"}'
+    }));
+    serviceMock.metodologiaPorVersion.mockReturnValue(of({
+      version: 1,
+      codigo: 'VER-57',
+      secciones: []
+    }));
+
+    component.abrirModalVer(resumenTest);
+
+    expect(serviceMock.obtenerEvaluacion).toHaveBeenCalledWith(87);
+    expect(serviceMock.metodologiaPorVersion).toHaveBeenCalledWith(57);
+    expect(serviceMock.obtenerFamiliaFormularioPorId).not.toHaveBeenCalled();
+    expect(component.modalVerAbierto()).toBe(true);
+    expect(component.evaluacionSeleccionada()?.evaId).toBe(87);
+    expect(component.metodologiaHistorica()?.codigo).toBe('VER-57');
+  });
 });

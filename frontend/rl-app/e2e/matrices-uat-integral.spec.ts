@@ -39,6 +39,7 @@ async function preparar(page: Page): Promise<void> {
 
   await page.route('**/api/configuracion/sistema', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', colorPrimario: '#1e3a8a', colorSecundario: '#1d4ed8', timeoutSesion: 30 } }) }));
   await page.route('**/api/configuracion/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
 
   await page.route('**/api/matrices-riesgos/**', async route => {
     const req = route.request();
@@ -63,7 +64,7 @@ async function preparar(page: Page): Promise<void> {
 
     if (path.endsWith('/formulario/version-vigente')) datos = version;
     else if (path.endsWith('/formularios/10')) datos = version;
-    else if (path.endsWith('/metodologia/vigente')) datos = { versionFormularioId: 10, codigo: version.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
+    else if (path.endsWith('/metodologia/vigente') || path.includes('/metodologia/version/')) datos = { versionFormularioId: 10, codigo: version.verCodigo, version: 1, secciones: [], catalogos: [], reglas: [] };
     else if (path.endsWith('/formularios/historial')) datos = [version];
     else if (path.endsWith('/evaluaciones/20') && method === 'GET') datos = evaluacion;
     else if (path.endsWith('/evaluaciones') && method === 'GET') datos = {
@@ -86,6 +87,8 @@ async function preparar(page: Page): Promise<void> {
       totalRegistros: 1,
       totalPaginas: 1
     };
+    else if (path.endsWith('/familias/paginado')) datos = { items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalFamilias: 0, activas: 0, inactivas: 0, totalVersiones: 0 } };
+    else if (path.endsWith('/riesgos/paginado')) datos = { items: [riesgo], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1 };
     else if (path.endsWith('/riesgos/7') && method === 'GET') datos = riesgo;
     else if (path.endsWith('/riesgos/paginado') && method === 'GET') datos = { items: [riesgo], pagina: 1, tamanoPagina: 10, totalRegistros: 1, totalPaginas: 1 };
     else if (path.endsWith('/riesgos') && method === 'GET') datos = [riesgo];
@@ -486,4 +489,44 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.getByLabel('Resultado').fill('Seguimiento conforme');
   await page.getByRole('button', { name: 'Guardar monitoreo' }).click();
   await expect.poll(() => recibidos['monitoreo']?.monResultado).toBe('Seguimiento conforme');
+});
+
+test('H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y con consola limpia', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  const requestedUrls: string[] = [];
+  const failedResponses: string[] = [];
+
+  page.on('console', msg => {
+    if (msg.type() === 'error') consoleErrors.push(msg.text());
+  });
+  page.on('pageerror', err => pageErrors.push(err.message));
+  page.on('request', req => requestedUrls.push(req.url()));
+  page.on('response', resp => {
+    if (resp.status() >= 400) failedResponses.push(`${resp.status()} ${resp.url()}`);
+  });
+
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible();
+
+  // Abrir Ver evaluación para evaluación existente (evaId 20)
+  const botonVer = page.getByTitle('Ver evaluación').first();
+  await expect(botonVer).toBeVisible();
+  await botonVer.click();
+
+  // Modal Ver debe abrirse correctamente
+  const modalVer = page.locator('dialog.modal-backdrop-overlay');
+  await expect(modalVer).toBeVisible();
+  await expect(page.locator('#titulo-modal-ver')).toContainText('Evaluación #20');
+
+  // Cerrar modal
+  await page.getByRole('button', { name: 'Cerrar vista', exact: true }).click();
+  await expect(modalVer).not.toBeVisible();
+
+  // Comprobar que NUNCA se solicitó /api/matrices-riesgos/familias/1 ni existieron 404
+  const familias1Requests = requestedUrls.filter(u => u.includes('/familias/1'));
+  expect(familias1Requests).toHaveLength(0);
+  expect(failedResponses).toHaveLength(0);
+  expect(consoleErrors).toHaveLength(0);
+  expect(pageErrors).toHaveLength(0);
 });

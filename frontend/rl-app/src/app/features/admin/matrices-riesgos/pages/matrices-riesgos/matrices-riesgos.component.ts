@@ -445,7 +445,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaFamilias) return;
-        this.familias.set(resultado.items.map(familia => ({
+        this.familias.set((resultado?.items ?? []).map(familia => ({
           ...familia,
           famNombre: normalizarMojibakeVisibleUtf8(familia.famNombre),
           famDescripcion: familia.famDescripcion ? normalizarMojibakeVisibleUtf8(familia.famDescripcion) : familia.famDescripcion
@@ -1042,7 +1042,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cargarRiesgos(): void {
     this.service.listarRiesgosPaginados(false, 1, 200).subscribe({
       next: respuesta => this.riesgos.set(
-        respuesta.items.map(riesgo => ({
+        (respuesta?.items ?? []).map(riesgo => ({
           ...riesgo,
           rieNombre: normalizarMojibakeVisibleUtf8(riesgo.rieNombre),
           rieDescripcion: riesgo.rieDescripcion ? normalizarMojibakeVisibleUtf8(riesgo.rieDescripcion) : riesgo.rieDescripcion
@@ -1203,7 +1203,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.service.obtenerConsolidadoPaginado(filtro).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCargaConsolidado) return;
-        this.consolidado.set(resultado.items.map(fila => this.normalizarFilaReporte(fila)));
+        this.consolidado.set((resultado?.items ?? []).map(fila => this.normalizarFilaReporte(fila)));
         this.totalRegistrosConsolidado.set(resultado.totalRegistros);
         this.totalPaginasServidorConsolidado.set(resultado.totalPaginas);
         this.totalesConsolidado.set(resultado.totales);

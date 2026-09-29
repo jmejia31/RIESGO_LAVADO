@@ -47,7 +47,13 @@
   - **H2 (Atomicidad / Rollback CREATE control):** Implementada seam transaccional interna (`GovernedControlMutationExecutor`, `IGovernedControlMutationStore`, `IGovernedControlMutationSession`) desacoplada de Oracle físico. Probada conductualmente la preservación del estado comprometido (`CommittedState`) intacto ante fallos inyectados en recálculo, auditoría de control y auditoría de evaluación.
   - **H3 (Atomicidad / Rollback UPDATE control):** Demostrado conductualmente el rollback integral de modificaciones en WorkingState ante fallos en recálculo y auditorías, conservando el valor committed original sin residuos ni escrituras parciales.
   - **H4 (Concurrencia optimista EVA_VERSION_ROW):** Demostrado conductualmente el rechazo como stale write con semántica HTTP 409 Conflict ante colisiones en CREATE y UPDATE, preservación de mutación autoritativa previa, congelamiento de controles en evaluaciones aprobadas, rechazo de re-parenting entre evaluaciones y protección TOCTOU ante cambios de `EVA_VERSION_ROW` entre precálculo y persistencia.
-  - **H5 (Certificación visual real en Chromium):** Suite E2E completa ejecutada contra frontend real (37/37 PASS). Viewport desktop 1280px y mobile 390px inspeccionados mediante screenshots generados (`block-2-closure-desktop-1280x900.png` y `block-2-closure-mobile-390x844.png`). Comprobación programática `scrollWidth <= clientWidth` (`HORIZONTAL_OVERFLOW=NO`) exitosa. V1 histórico verificado con campos computados no disponibles.
+  - **H5 (Certificación visual real en Chromium):** Suite E2E completa ejecutada contra frontend real. Viewport desktop 1280px y mobile 390px inspeccionados mediante screenshots generados (`block-2-closure-desktop-1280x900.png` y `block-2-closure-mobile-390x844.png`). Comprobación programática `scrollWidth <= clientWidth` (`HORIZONTAL_OVERFLOW=NO`) exitosa. V1 histórico verificado con campos computados no disponibles.
+  - **H5-B (Regresión funcional integral & Consola limpia):**
+    - Identificada y eliminada la consulta innecesaria a `obtenerFamiliaFormularioPorId(1)` hardcodeada en `abrirModalVer()`, eliminando el 404 subyacente y el patrón de ignorar errores.
+    - Se protegieron accesos a `.items.map` ante payloads vacíos en `cargarFamilias`, `cargarRiesgos` y `cargarConsolidado`.
+    - Resueltas vulnerabilidades de seguridad transitivas en `package.json` / `package-lock.json` (`fast-uri` 3.1.8, `ip-address` 10.7.2), logrando `found 0 vulnerabilities` en `npm audit`.
+    - Agregada prueba unitaria `VIEW_EVALUATION_NO_HARDCODED_FAMILY_ID` en `evaluaciones-tabla.spec.ts` demostrando que `abrirModalVer` resuelve la versión histórica sin consultar familias.
+    - Agregada prueba E2E `H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y con consola limpia` verificando `HTTP_4XX_5XX_UNEXPECTED=0`, `CONSOLE_ERRORS=0`, `PAGE_ERRORS=0` y ausencia total de peticiones a `familias/1`.
 - **Archivos creados o modificados:**
   - `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosAppService.cs`
   - `backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosMitigacionService.cs`
@@ -55,17 +61,21 @@
   - `backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMitigacionRepository.cs`
   - `backend/RL.API.Tests/Features/MatricesRiesgos/GovernedControlMutationExecutorTests.cs`
   - `backend/RL.API.Tests/Features/MatricesRiesgos/MatricesRiesgosTestFactory.cs`
-  - Suites de tests adaptadas con dobles válidos requeridos.
+  - Suites de tests backend adaptadas con dobles válidos requeridos.
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.ts`
+  - `frontend/rl-app/src/app/features/admin/matrices-riesgos/pages/matrices-riesgos/matrices-riesgos.component.evaluaciones-tabla.spec.ts`
+  - `frontend/rl-app/package.json`
+  - `frontend/rl-app/package-lock.json`
   - `frontend/rl-app/e2e/matrices-uat-integral.spec.ts`
   - `docs/3. Módulo Matrices de Riesgos/MATRIZ_COMPLETA_BLOQUE_2.md`
   - `BITACORA_COLABORACION.md`
   - `docs/0.0 Documentación/ESTADO_COLABORACION.md`
 - **Verificaciones y conteos reales:**
   - Backend: `702/702` PASS (`0` fallidos, `0` ignorados).
-  - Frontend Unit: `801/801` PASS (`80` suites).
+  - Frontend Unit: `802/802` PASS (`80` suites).
   - Frontend Lint: PASS (`0` errores).
   - Frontend Build: PASS (`0` errores).
-  - E2E Playwright: `37/37` PASS.
+  - E2E Playwright: `38/38` PASS.
   - Validadores: `validate_matrices_dynamic_ddl_alignment.ps1` PASS, `validate_matrices_authorization_contract.ps1` PASS, `validate_matrices_phase13_uat_contract.ps1` PASS, `validate_database_scripts.ps1` PASS, `validate_text_encoding.ps1` PASS, `validate_repository_structure.ps1` PASS, `validate_documentation_links.ps1` PASS, `git diff --check` PASS.
 - **Oracle institucional:** `ORACLE_CONNECTION_ATTEMPTED_BY_ANTIG=NO`, `ORACLE_DML_EXECUTED_BY_ANTIG=NO`, `ORACLE_DDL_EXECUTED_BY_ANTIG=NO`.
 - **Estado final:** `BLOCK_1_STATUS=CLOSED`, `BLOCK_2_STATUS=CLOSED`. `FULL_MATRIX_82=PENDING_BLOCKS_3_6`. `NEXT_BLOCK=BLOCK_3_RIESGO_RESIDUAL_FIELDS_34_39` (no iniciado).
