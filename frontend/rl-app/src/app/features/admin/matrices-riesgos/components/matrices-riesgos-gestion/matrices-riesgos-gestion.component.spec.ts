@@ -36,7 +36,7 @@ describe('MatricesRiesgosGestionComponent', () => {
   beforeEach(async () => {
     service = {
       listarRiesgos: vi.fn().mockReturnValue(of([riesgoActivo, riesgoInactivo])),
-      listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [riesgoActivo, riesgoInactivo], pagina: 1, tamanoPagina: 25, totalRegistros: 2, totalPaginas: 1 })),
+      listarRiesgosPaginados: vi.fn().mockImplementation((_incluirInactivos: boolean, pagina: number, tamanoPagina: number) => of({ items: [riesgoActivo, riesgoInactivo], pagina, tamanoPagina, totalRegistros: 2, totalPaginas: 1 })),
       crearRiesgo: vi.fn().mockReturnValue(of(8)),
       actualizarRiesgo: vi.fn().mockReturnValue(of({ success: true }))
     };
@@ -50,10 +50,46 @@ describe('MatricesRiesgosGestionComponent', () => {
   });
 
   it('carga riesgos activos e inactivos al inicializar', () => {
-    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(true, 1, 25);
+    expect(service.listarRiesgosPaginados).toHaveBeenCalledWith(true, 1, 10, '', undefined);
     expect(component.riesgos()).toHaveLength(2);
     expect(component.cargando()).toBe(false);
     expect(component.error()).toBeNull();
+  });
+
+  it('aplica el filtro estándar por búsqueda, estado y limpieza con paginación de servidor', () => {
+    vi.useFakeTimers();
+    service.listarRiesgosPaginados.mockClear();
+
+    component.cambiarBuscar('proveedor');
+    vi.advanceTimersByTime(300);
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', undefined);
+
+    component.cambiarEstadoFiltro('INACTIVOS');
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, 'proveedor', false);
+
+    component.limpiarFiltros();
+    expect(component.filtroBuscar()).toBe('');
+    expect(component.filtroEstado()).toBe('TODOS');
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 10, '', undefined);
+    vi.useRealTimers();
+  });
+
+  it('sincroniza el tamaño mostrado con el tamaño realmente solicitado al servidor', () => {
+    service.listarRiesgosPaginados.mockClear();
+    component.cambiarTamanoPagina(25);
+
+    expect(service.listarRiesgosPaginados).toHaveBeenLastCalledWith(true, 1, 25, '', undefined);
+    expect(component.tamanoPagina()).toBe(25);
+  });
+
+  it('renderiza la superficie de filtro completa y no un selector de tamaño aislado', () => {
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+    const filtros = root.querySelector('[data-ui-filter-block="riesgos"]');
+    expect(filtros?.getAttribute('data-ui-filter-standard')).toBe('full');
+    expect(filtros?.querySelector('#riesgos-buscar')).not.toBeNull();
+    expect(filtros?.querySelector('#riesgos-estado')).not.toBeNull();
+    expect(filtros?.querySelector('[aria-label="Limpiar filtros de riesgos"]')).not.toBeNull();
   });
 
   it('maneja error al listar riesgos y propaga mensaje por defecto si no viene del backend', () => {

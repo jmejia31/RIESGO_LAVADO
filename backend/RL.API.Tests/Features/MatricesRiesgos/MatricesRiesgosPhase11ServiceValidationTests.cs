@@ -19,12 +19,24 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
             Riesgo = new RiesgoDto { RieId = 9, RieCodigo = "R-009", RieNombre = "Riesgo" }
         };
         var service = new MatricesRiesgosGestionService(repo);
+        var consulta = new ConsultaRiesgosPaginadaDto
+        {
+            Pagina = 2,
+            TamanoPagina = 10,
+            Buscar = "proveedor",
+            IncluirInactivos = true,
+            Activo = false
+        };
+        var listado = await service.ListarRiesgosPaginadosAsync(consulta);
 
         var invalido = await service.ObtenerRiesgoAsync(0);
         var encontrado = await service.ObtenerRiesgoAsync(9);
         repo.Riesgo = null;
         var inexistente = await service.ObtenerRiesgoAsync(99);
 
+        Assert.True(listado.Success);
+        Assert.Same(consulta, repo.UltimaConsulta);
+        Assert.False(repo.UltimaConsulta!.Activo);
         Assert.Equal(400, invalido.StatusCode);
         Assert.True(encontrado.Success);
         Assert.Equal(9, encontrado.Data!.RieId);
@@ -354,8 +366,12 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public long CreateId { get; set; } = 1;
         public bool UpdateResult { get; set; } = true;
         public bool ThrowInvalidOperation { get; set; }
+        public ConsultaRiesgosPaginadaDto? UltimaConsulta { get; private set; }
 
-        public Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta) => Task.FromResult(new RiesgosPaginadosDto
+        public Task<RiesgosPaginadosDto> ListarRiesgosPaginadosAsync(ConsultaRiesgosPaginadaDto consulta)
+        {
+            UltimaConsulta = consulta;
+            return Task.FromResult(new RiesgosPaginadosDto
         {
             Items = Riesgos,
             Pagina = 1,
@@ -363,6 +379,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
             TotalRegistros = Riesgos.Count,
             TotalPaginas = Riesgos.Count == 0 ? 0 : 1
         });
+        }
         public Task<RiesgoDto?> ObtenerRiesgoAsync(long riesgoId) => Task.FromResult(Riesgo);
         public Task<long> CrearRiesgoAsync(RiesgoGuardarDto dto, long usuarioId, string? ip) =>
             ThrowInvalidOperation ? Task.FromException<long>(new InvalidOperationException("Fallo controlado")) : Task.FromResult(CreateId);

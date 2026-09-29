@@ -39,8 +39,25 @@
     </div>
   </form>
 
-  <div class="flex justify-end">
-    <app-page-size-selector [value]="tamanoPagina()" [options]="[10, 25, 50]" ariaLabel="Riesgos por página" (valueChange)="cambiarTamanoPagina($event)" />
+  <div class="matrices-filter-surface flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4 sm:flex-row sm:items-end" data-ui-filter-block="riesgos" data-ui-filter-standard="full">
+    <div class="min-w-[220px] flex-1">
+      <label for="riesgos-buscar" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Buscar</label>
+      <input id="riesgos-buscar" type="search" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" placeholder="Buscar por código o nombre..." [ngModel]="filtroBuscar()" (ngModelChange)="cambiarBuscar($event)">
+    </div>
+    <div class="w-full sm:w-48">
+      <label for="riesgos-estado" class="mb-1 block text-xs font-bold uppercase tracking-wider text-slate-500">Estado</label>
+      <select id="riesgos-estado" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20" [ngModel]="filtroEstado()" (ngModelChange)="cambiarEstadoFiltro($event)">
+        <option value="TODOS">Todos los estados</option>
+        <option value="ACTIVOS">Activos</option>
+        <option value="INACTIVOS">Inactivos</option>
+      </select>
+    </div>
+    <div class="w-full sm:w-auto">
+      <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-colors hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-40" title="Limpiar filtros de riesgos" aria-label="Limpiar filtros de riesgos" [disabled]="!filtroBuscar().trim() && filtroEstado() === 'TODOS'" (click)="limpiarFiltros()">
+        <app-action-icon action="clear-filters"></app-action-icon>
+      </button>
+    </div>
+    <app-page-size-selector [value]="tamanoPagina()" [options]="opcionesTamanoPagina" ariaLabel="Riesgos por página" (valueChange)="cambiarTamanoPagina($event)" />
   </div>
   <div class="overflow-x-auto rounded-xl border border-slate-200">
     <table class="min-w-[760px] w-full divide-y divide-slate-200 text-sm">

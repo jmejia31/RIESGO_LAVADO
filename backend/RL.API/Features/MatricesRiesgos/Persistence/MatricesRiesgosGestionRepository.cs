@@ -36,7 +36,10 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
                    RIE_ACTIVO, RIE_USR_CREACION, RIE_FECHA_CREACION
               FROM RL_MR_RIESGOS
              WHERE 1 = 1";
-        if (!consulta.IncluirInactivos) sql += " AND RIE_ACTIVO = 1";
+        if (consulta.Activo.HasValue)
+            sql += " AND RIE_ACTIVO = :activo";
+        else if (!consulta.IncluirInactivos)
+            sql += " AND RIE_ACTIVO = 1";
         if (!string.IsNullOrWhiteSpace(consulta.Buscar))
             sql += " AND (UPPER(RIE_CODIGO) LIKE '%' || UPPER(:buscar) || '%' OR UPPER(RIE_NOMBRE) LIKE '%' || UPPER(:buscar) || '%')";
 
@@ -85,6 +88,8 @@ public sealed class MatricesRiesgosGestionRepository : IMatricesRiesgosGestionRe
 
     private static void AddRiesgoSearchParameter(OracleCommand command, ConsultaRiesgosPaginadaDto consulta)
     {
+        if (consulta.Activo.HasValue)
+            command.Parameters.Add(new OracleParameter("activo", consulta.Activo.Value ? 1 : 0));
         if (!string.IsNullOrWhiteSpace(consulta.Buscar))
             command.Parameters.Add(new OracleParameter("buscar", consulta.Buscar.Trim()));
     }

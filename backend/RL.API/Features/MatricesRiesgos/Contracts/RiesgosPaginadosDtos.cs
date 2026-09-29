@@ -8,6 +8,7 @@ public sealed class ConsultaRiesgosPaginadaDto
     public int TamanoPagina { get; set; } = 25;
     public string? Buscar { get; set; }
     public bool IncluirInactivos { get; set; }
+    public bool? Activo { get; set; }
 }
 
 public sealed class RiesgosPaginadosDto : PaginadoDto<RiesgoDto>

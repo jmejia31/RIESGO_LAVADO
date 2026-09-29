@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -17,7 +17,7 @@ import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
   templateUrl: './matrices-riesgos-gestion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MatricesRiesgosGestionComponent implements OnInit {
+export class MatricesRiesgosGestionComponent implements OnInit, OnDestroy {
   private readonly service = inject(MatricesRiesgosService);
 
   readonly riesgos = signal<RiesgoDto[]>([]);
@@ -28,9 +28,13 @@ export class MatricesRiesgosGestionComponent implements OnInit {
   readonly editandoId = signal(0);
   readonly Math = Math;
   readonly pagina = signal(1);
-  readonly tamanoPagina = signal(25);
+  readonly tamanoPagina = signal(10);
   readonly totalRegistros = signal(0);
+  readonly filtroBuscar = signal('');
+  readonly filtroEstado = signal<'TODOS' | 'ACTIVOS' | 'INACTIVOS'>('TODOS');
+  readonly opcionesTamanoPagina = [10, 25, 50] as const;
   private secuenciaCarga = 0;
+  private temporizadorBusqueda: ReturnType<typeof setTimeout> | null = null;
   readonly totalPaginas = computed(() => this.totalRegistros() === 0 ? 0 : Math.ceil(this.totalRegistros() / this.tamanoPagina()));
   codigo = '';
   nombre = '';
@@ -41,11 +45,25 @@ export class MatricesRiesgosGestionComponent implements OnInit {
     this.cargar();
   }
 
+  ngOnDestroy(): void {
+    this.cancelarBusquedaPendiente();
+    this.secuenciaCarga++;
+  }
+
   cargar(): void {
     const solicitudId = ++this.secuenciaCarga;
     this.cargando.set(true);
     this.error.set(null);
-    this.service.listarRiesgosPaginados(true, this.pagina(), this.tamanoPagina()).subscribe({
+    const estado = this.filtroEstado();
+    const activo = estado === 'ACTIVOS' ? true : estado === 'INACTIVOS' ? false : undefined;
+    const incluirInactivos = estado !== 'ACTIVOS';
+    this.service.listarRiesgosPaginados(
+      incluirInactivos,
+      this.pagina(),
+      this.tamanoPagina(),
+      this.filtroBuscar(),
+      activo
+    ).subscribe({
       next: resultado => {
         if (solicitudId !== this.secuenciaCarga) return;
         this.riesgos.set(resultado.items.map(item => ({
@@ -55,6 +73,7 @@ export class MatricesRiesgosGestionComponent implements OnInit {
         })));
         this.totalRegistros.set(resultado.totalRegistros);
         this.pagina.set(resultado.pagina);
+        this.tamanoPagina.set(resultado.tamanoPagina);
         this.cargando.set(false);
       },
       error: (error: unknown) => { if (solicitudId === this.secuenciaCarga) this.finalizarError(error, 'No se pudieron cargar los riesgos.'); }
@@ -63,15 +82,53 @@ export class MatricesRiesgosGestionComponent implements OnInit {
 
   cambiarPagina(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPaginas() || pagina === this.pagina()) return;
+    this.cancelarBusquedaPendiente();
     this.pagina.set(pagina);
     this.cargar();
   }
 
   cambiarTamanoPagina(tamano: number): void {
-    if (![10, 25, 50].includes(Number(tamano))) return;
-    this.tamanoPagina.set(Number(tamano));
+    const normalizado = Number(tamano);
+    if (!this.opcionesTamanoPagina.includes(normalizado as 10 | 25 | 50)) return;
+    this.cancelarBusquedaPendiente();
+    this.tamanoPagina.set(normalizado);
     this.pagina.set(1);
     this.cargar();
+  }
+
+  cambiarBuscar(valor: string): void {
+    this.filtroBuscar.set(valor ?? '');
+    this.pagina.set(1);
+    this.cancelarBusquedaPendiente();
+    this.temporizadorBusqueda = setTimeout(() => {
+      this.temporizadorBusqueda = null;
+      this.cargar();
+    }, 300);
+  }
+
+  cambiarEstadoFiltro(valor: string): void {
+    const estado = valor === 'ACTIVOS' || valor === 'INACTIVOS' ? valor : 'TODOS';
+    if (estado === this.filtroEstado()) return;
+    this.cancelarBusquedaPendiente();
+    this.filtroEstado.set(estado);
+    this.pagina.set(1);
+    this.cargar();
+  }
+
+  limpiarFiltros(): void {
+    if (!this.filtroBuscar().trim() && this.filtroEstado() === 'TODOS') return;
+    this.cancelarBusquedaPendiente();
+    this.filtroBuscar.set('');
+    this.filtroEstado.set('TODOS');
+    this.pagina.set(1);
+    this.cargar();
+  }
+
+  private cancelarBusquedaPendiente(): void {
+    if (this.temporizadorBusqueda !== null) {
+      clearTimeout(this.temporizadorBusqueda);
+      this.temporizadorBusqueda = null;
+    }
   }
 
   nuevo(limpiarMensajes = true): void {

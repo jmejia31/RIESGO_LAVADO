@@ -220,12 +220,19 @@ export class MatricesRiesgosService {
     );
   }
 
-  listarRiesgosPaginados(incluirInactivos = false, pagina = 1, tamanoPagina = 25, buscar = ''): Observable<RiesgosPaginadosDto> {
+  listarRiesgosPaginados(
+    incluirInactivos = false,
+    pagina = 1,
+    tamanoPagina = 25,
+    buscar = '',
+    activo?: boolean
+  ): Observable<RiesgosPaginadosDto> {
     let params = new HttpParams()
       .set('incluirInactivos', String(incluirInactivos))
       .set('pagina', String(pagina))
       .set('tamanoPagina', String(tamanoPagina));
     if (buscar.trim()) params = params.set('buscar', buscar.trim());
+    if (activo !== undefined) params = params.set('activo', String(activo));
     return this.http
       .get<ApiResponse<RiesgosPaginadosDto>>(`${this.apiUrl}/riesgos/paginado`, { params })
       .pipe(map(response => response.datos));
