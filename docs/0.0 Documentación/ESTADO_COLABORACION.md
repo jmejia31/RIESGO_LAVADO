@@ -1,5 +1,21 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Auditoría post-ANTIG y recertificación limpia de Bloque 2
+
+- Fecha: `2026-09-29`. Rama `desarrollo`. SHA funcional certificado: `0e5fea6595ae6316e60936f630b5af6e9f34b4a1`.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=CLOSED`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`.
+- Quality Gate autoritativo del hardening: run `36613506733` (#1672) = `completed/success` para el SHA exacto.
+- Evidencia fresca: backend `702/702 PASS`; frontend `82/82` archivos y `817/817 PASS`; E2E Chromium `40/40 PASS` limpio, sin `flaky`; `npm audit` = `0 vulnerabilities`; build, lint/validadores, compose, imágenes multistage y verificación non-root PASS.
+- H1–H5/H5-B permanecen cerrados. La auditoría independiente confirma el wiring gobernado, atomicidad conductual CREATE/UPDATE, `EVA_VERSION_ROW`/409, rechazo de re-parenting, freeze fuera de BORRADOR, eliminación de `/familias/1` y cobertura E2E de Matriz completa.
+- Se corrigió el hardening residual de payloads paginados: Familias, Riesgos y Consolidado normalizan `items` nulos/no-array y mantienen defaults seguros de metadatos/totales. Dos regresiones nuevas elevan el total frontend de 815 a 817.
+- Corrección de trazabilidad histórica: el run ANTIG `36609368915` del SHA `0c8259d...` fue exitoso, pero su evidencia remota exacta fue frontend `813/813` y Playwright `1 flaky + 39 passed` (el caso pasó en retry), no un 40/40 remoto limpio. La recertificación posterior `36612036100` ya produjo `40/40` limpio y el run vigente `36613506733` lo confirma nuevamente.
+- La atomicidad de H2/H3 fue validada conductualmente y está implementada con transacción Oracle real en código; no se ejecutó conexión/transacción contra Oracle institucional durante estas intervenciones.
+- Cobertura del run vigente: backend líneas `37.06%`, ramas `40.28%`; frontend sentencias `62.21%`, ramas `55.33%`, funciones `58.60%`, líneas `63.07%`. “100%” aplica al cumplimiento de gates/casos ejecutados, no a cobertura total del código.
+- `MAIN_TOUCHED=NO`; sin Oracle DDL/DML/conexión; V1/V2 y Bloque 3 no fueron modificados por esta auditoría/hardening.
+- Evidencia detallada: [Auditoría post-ANTIG de Bloque 2](../3.%20Módulo%20Matrices%20de%20Riesgos/MATRIZ_COMPLETA_BLOQUE_2_AUDITORIA_POST_ANTIG.md).
+- Punto de continuidad autorizado: `NEXT_BLOCK=BLOCK_3_RIESGO_RESIDUAL_FIELDS_34_39` cuando se decida iniciar; no es parte de esta intervención.
+
+
 ## Estado vigente — Certificación integral Bloque 2 y remediación de selectores / suites E2E (H5-B)
 
 - Fecha/hora local: `2026-09-29 11:50` (America/Tegucigalpa). Rama `desarrollo`; baseline `840af797e7a2494fb934a3c7aad651e0b33f0251`.

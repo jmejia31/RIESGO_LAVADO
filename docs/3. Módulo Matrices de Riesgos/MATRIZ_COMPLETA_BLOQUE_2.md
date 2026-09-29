@@ -6,6 +6,16 @@
 `BLOCK_2_STATUS=CLOSED`
 `FULL_MATRIX_82=PENDING_BLOCKS_3_6`
 
+### Recertificación vigente post-ANTIG
+
+La referencia técnica limpia para Bloque 2 es el SHA funcional `0e5fea6595ae6316e60936f630b5af6e9f34b4a1` con Quality Gate `36613506733` (#1672), `completed/success`: backend `702/702`, frontend `817/817` en 82 archivos, E2E Chromium `40/40` sin flaky y `npm audit` con `0 vulnerabilities`. El hardening de este SHA normaliza payloads paginados malformados de Familias, Riesgos y Consolidado y agrega dos regresiones específicas.
+
+La auditoría independiente conserva los registros históricos de ANTIG, pero distingue evidencia local de evidencia remota: el run `36609368915` del SHA `0c8259d...` tuvo frontend `813/813` y Playwright `1 flaky + 39 passed` con retry exitoso. La primera evidencia remota posterior 40/40 limpia fue `36612036100`, y el run vigente `36613506733` vuelve a confirmar 40/40 limpio. H2/H3 se certifican como atomicidad conductual más implementación Oracle transaccional en código; no hubo conexión a Oracle institucional.
+
+Cobertura del gate vigente: backend líneas `37.06%`, ramas `40.28%`; frontend sentencias `62.21%`, ramas `55.33%`, funciones `58.60%`, líneas `63.07%`. El cierre “100%” significa gates y casos ejecutados aprobados, no cobertura total de código.
+
+Detalle y reconciliación: [MATRIZ_COMPLETA_BLOQUE_2_AUDITORIA_POST_ANTIG.md](MATRIZ_COMPLETA_BLOQUE_2_AUDITORIA_POST_ANTIG.md).
+
 ### Certificación de Hallazgos H1–H5 (Prompt #2E-ANTIG)
 
 | Hallazgo | Descripción | Resultado | Evidencia |
