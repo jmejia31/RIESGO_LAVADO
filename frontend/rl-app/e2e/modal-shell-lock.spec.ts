@@ -121,6 +121,47 @@ test('bloquea el shell y conserva el foco dentro del Form Builder modal', async 
   await expect.poll(() => aside.evaluate(el => (el as HTMLElement).inert)).toBe(false);
 });
 
+test('el maestro visual de modales muestra una X de cierre legible y consistente', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('tab', { name: 'Plantillas' }).click();
+  await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+
+  const modal = page.locator('[data-ui-fam-detail="modal"]');
+  await expect(modal).toBeVisible();
+  const cerrar = modal.getByRole('button', { name: 'Cerrar detalle de familia' });
+  await expect(cerrar).toBeVisible();
+
+  const caja = await cerrar.boundingBox();
+  expect(caja).not.toBeNull();
+  if (!caja) throw new Error('No se pudo medir el control maestro de cierre.');
+  expect(caja.width).toBeGreaterThanOrEqual(43);
+  expect(caja.height).toBeGreaterThanOrEqual(43);
+
+  const estilos = await cerrar.evaluate(element => {
+    const css = getComputedStyle(element);
+    const icono = element.querySelector('app-action-icon[action="close"]') as HTMLElement | null;
+    const iconCss = icono ? getComputedStyle(icono) : null;
+    return {
+      backgroundColor: css.backgroundColor,
+      borderColor: css.borderColor,
+      color: css.color,
+      iconWidth: iconCss?.width ?? '0px',
+      iconHeight: iconCss?.height ?? '0px'
+    };
+  });
+
+  expect(estilos.backgroundColor).toBe('rgb(248, 250, 252)');
+  expect(estilos.borderColor).toBe('rgb(203, 213, 225)');
+  expect(estilos.color).toBe('rgb(51, 65, 85)');
+  expect(Number.parseFloat(estilos.iconWidth)).toBeGreaterThanOrEqual(20);
+  expect(Number.parseFloat(estilos.iconHeight)).toBeGreaterThanOrEqual(20);
+
+  await cerrar.hover();
+  await expect.poll(async () => cerrar.evaluate(element => getComputedStyle(element).backgroundColor))
+    .toBe('rgb(226, 232, 240)');
+});
+
 test('captura el estado editable del constructor a 1536x1024', async ({ page }) => {
   await page.setViewportSize({ width: 1536, height: 1024 });
   await page.goto('/matrices-riesgos');

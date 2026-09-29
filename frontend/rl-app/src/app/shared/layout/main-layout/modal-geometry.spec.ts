@@ -183,4 +183,19 @@ describe('Estandarización Visual Global de Modales (Contrato CSS y Geometría)'
     expect(source).toContain('report-preview-document');
     expect(source).not.toMatch(/h-\[[0-9]+px\]/);
   });
+  it('7. el maestro global hace visible y consistente la X de cierre sin tocar alertas internas', () => {
+    const styles = readFileSync(join(cwd(), 'src', 'styles.css'), 'utf8');
+
+    expect(styles).toContain('--modal-close-control-size: 2.75rem');
+    expect(styles).toContain('--modal-close-icon-size: 1.25rem');
+    expect(styles).toMatch(/\.modal-container-card\s*>\s*\.modal-header-institutional/);
+    expect(styles).toMatch(/\.modal-container-card\s*>\s*header/);
+    expect(styles).toMatch(/\.modal-container-card\s*>\s*\.modal-footer-institutional/);
+    expect(styles).toContain('.modal-container-card .form-builder-toolbar__top-actions');
+    expect(styles).toContain('button[aria-label*="cerrar" i]');
+    expect(styles).toContain('app-action-icon[action="close"]');
+    expect(styles).toContain('stroke-width: 2.4 !important');
+    expect(styles).not.toMatch(/\.modal-body-scrollable[^\{]*button\[aria-label\*="cerrar"/);
+  });
+
 });

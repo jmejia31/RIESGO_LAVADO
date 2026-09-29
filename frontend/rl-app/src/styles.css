@@ -4,6 +4,14 @@
   --ihss-primary-rgb: 30 58 138;   /* #1e3a8a */
   --ihss-accent-rgb:  29 78 216;   /* #1d4ed8 */
   --modal-viewport-gap: 1.5rem;   /* Separación institucional uniforme respecto al viewport */
+  --modal-close-control-size: 2.75rem;
+  --modal-close-icon-size: 1.25rem;
+  --modal-close-bg: #f8fafc;
+  --modal-close-bg-hover: #e2e8f0;
+  --modal-close-border: #cbd5e1;
+  --modal-close-border-hover: #94a3b8;
+  --modal-close-color: #334155;
+  --modal-close-color-hover: #0f172a;
 }
 
 @media (max-width: 640px) {
@@ -139,6 +147,92 @@
     gap: 0.625rem;
     border-top: 1px solid rgb(226 232 240);
     flex-shrink: 0;
+  }
+
+  /*
+   * CONTROL DE CIERRE INSTITUCIONAL
+   * Maestro único de las X de cierre del shell modal. No altera los cierres
+   * de alertas o mensajes que viven dentro del cuerpo del modal.
+   */
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i] {
+    display: inline-flex !important;
+    width: var(--modal-close-control-size) !important;
+    height: var(--modal-close-control-size) !important;
+    min-width: var(--modal-close-control-size) !important;
+    min-height: var(--modal-close-control-size) !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    border: 1px solid var(--modal-close-border) !important;
+    border-radius: 0.75rem !important;
+    background-color: var(--modal-close-bg) !important;
+    color: var(--modal-close-color) !important;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08) !important;
+    font-size: var(--modal-close-icon-size) !important;
+    line-height: 1 !important;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease, transform 150ms ease !important;
+  }
+
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i]:hover:not(:disabled) {
+    background-color: var(--modal-close-bg-hover) !important;
+    border-color: var(--modal-close-border-hover) !important;
+    color: var(--modal-close-color-hover) !important;
+    box-shadow: 0 4px 10px rgb(15 23 42 / 0.12) !important;
+    transform: translateY(-1px);
+  }
+
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i]:focus-visible {
+    outline: 3px solid rgb(var(--ihss-accent-rgb) / 0.28) !important;
+    outline-offset: 2px !important;
+    border-color: rgb(var(--ihss-accent-rgb)) !important;
+    color: var(--modal-close-color-hover) !important;
+  }
+
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i] app-action-icon[action="close"] {
+    width: var(--modal-close-icon-size) !important;
+    height: var(--modal-close-icon-size) !important;
+    font-size: var(--modal-close-icon-size) !important;
+  }
+
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i] app-action-icon[action="close"] svg {
+    stroke-width: 2.4 !important;
+  }
+
+  :where(
+    .modal-container-card > .modal-header-institutional,
+    .modal-container-card > header,
+    .modal-container-card > .modal-footer-institutional,
+    .modal-container-card .form-builder-toolbar__top-actions
+  ) button[aria-label*="cerrar" i]:disabled {
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
   }
 }
 
