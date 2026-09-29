@@ -176,7 +176,7 @@ export class BoundedSelectComponent {
     this.abierto.set(true);
     if (this.showSearch && this.options.length >= this.searchThreshold) {
       setTimeout(() => {
-        this.host.nativeElement.querySelector<HTMLInputElement>('[data-ui-bounded-select-search]')?.focus();
+        (this.host.nativeElement.querySelector('[data-ui-bounded-select-search]') as HTMLInputElement | null)?.focus();
       }, 0);
     }
   }
@@ -192,7 +192,7 @@ export class BoundedSelectComponent {
     this.consulta.set('');
     if (devolverFoco) {
       setTimeout(() => {
-        this.host.nativeElement.querySelector<HTMLButtonElement>('[data-ui-bounded-select-trigger]')?.focus();
+        (this.host.nativeElement.querySelector('[data-ui-bounded-select-trigger]') as HTMLButtonElement | null)?.focus();
       }, 0);
     }
   }
