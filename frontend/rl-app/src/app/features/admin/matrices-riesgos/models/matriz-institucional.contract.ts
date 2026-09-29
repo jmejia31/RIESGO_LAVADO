@@ -50,11 +50,11 @@ const SEEDS: readonly MatrixFieldSeed[] = [
   { label: '% efectividad de control correctivo', mode: 'COMPUTED', editable: false, key: 'porcentaje_control_correctivo', source: 'Backend F08 / CAT_EFECTIVIDAD_PORCENTAJE; proporción 0..1' },
   { label: 'Nivel de Automatización de los Controles', mode: 'REPEATER', editable: true, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION por control' },
   { label: 'Efectividad Total Ponderada de los Controles', mode: 'COMPUTED', editable: false, key: 'efectividad_total_ponderada', source: 'Runtime institucional' },
-  { label: 'Riesgo Residual', mode: 'MASTER', editable: false, key: null, source: 'RL_MR_RIESGOS.RIE_NOMBRE' },
-  { label: 'Frecuencia Residual', mode: 'INPUT', editable: true, key: 'frecuencia_residual', source: 'Contrato de evaluación / MR_FRECUENCIA_1_5' },
-  { label: 'Impacto Residual', mode: 'INPUT', editable: true, key: 'impacto_residual', source: 'Contrato de evaluación / MR_IMPACTO_1_5' },
-  { label: 'Valor del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'valor_riesgo_residual', source: 'Runtime institucional / PROY_VRR' },
-  { label: 'Nivel del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'nivel_riesgo_residual', source: 'Runtime institucional / catálogo institucional' },
+  { label: 'Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'riesgo_residual_descripcion', source: 'Backend F10 / Runtime institucional' },
+  { label: 'Frecuencia Residual', mode: 'COMPUTED', editable: false, key: 'frecuencia_residual', source: 'Backend F11 / Runtime institucional' },
+  { label: 'Impacto Residual', mode: 'COMPUTED', editable: false, key: 'impacto_residual', source: 'Backend F12 / Runtime institucional' },
+  { label: 'Valor del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'valor_riesgo_residual', source: 'Backend F13 / PROY_VRR' },
+  { label: 'Nivel del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'nivel_riesgo_residual', source: 'Backend F14 / catálogo institucional' },
   { label: 'Respuesta al riesgo', mode: 'INPUT', editable: true, key: 'respuesta_riesgo', source: 'Contrato de evaluación / MR_RESPUESTA_RIESGO' },
   { label: 'Plan de Mitigación/Acciones Correctivas', mode: 'REPEATER', editable: true, key: null, source: 'RL_MR_PLANES.PLA_DESCRIPCION' },
   { label: 'No. Acciones de Mitigación', mode: 'COMPUTED', editable: false, key: null, source: 'Conteo de acciones persistidas' },
@@ -125,7 +125,7 @@ export const MATRIX_FIELDS: readonly MatrixFieldContract[] = Object.freeze(
       ordinal,
       block: blockForOrdinal(ordinal),
       excelColumn: excelColumnForOrdinal(ordinal),
-      implemented: ordinal <= 19
+      implemented: ordinal <= 39
     });
   })
 );
@@ -141,3 +141,7 @@ export const MATRIX_BLOCK_TITLES: Readonly<Record<MatrixFieldContract['block'], 
 
 export const MATRIX_BLOCK_1_FIELDS = MATRIX_FIELDS.filter(field => field.block === 1);
 export const MATRIX_BLOCK_2_FIELDS = MATRIX_FIELDS.filter(field => field.block === 2);
+export const MATRIX_BLOCK_3_FIELDS = MATRIX_FIELDS.filter(field => field.block === 3);
+
+export const CATALOGO_RESPUESTA_RIESGO = ['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR'] as const;
+export type RespuestaRiesgoCanonica = typeof CATALOGO_RESPUESTA_RIESGO[number];

@@ -42,7 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -1656,10 +1656,64 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   readonly camposMatrizCompleta = MATRIX_BLOCK_1_FIELDS;
   readonly camposControlesMatriz = MATRIX_BLOCK_2_FIELDS;
-  readonly bloquesMatrizPendientes = [3, 4, 5, 6] as const;
-  readonly etiquetaBloquePendiente = (block: 3 | 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
-  camposMetadataBloque(block: 3 | 4 | 5 | 6): readonly MatrixFieldContract[] {
+  readonly camposResidualMatriz = MATRIX_BLOCK_3_FIELDS;
+  readonly bloquesMatrizPendientes = [4, 5, 6] as const;
+  readonly etiquetaBloquePendiente = (block: 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
+  camposMetadataBloque(block: 4 | 5 | 6): readonly MatrixFieldContract[] {
     return MATRIX_FIELDS.filter(field => field.block === block);
+  }
+
+  valorCampoResidual(field: MatrixFieldContract): string {
+    const evaluacion = this.evaluacionSeleccionada();
+    const resumen = this.evaluacionResumenSeleccionada();
+    if (!evaluacion || !resumen) return '—';
+
+    const calculados = this.parsearRespuestas(evaluacion.evaDataCalcJson ?? '{}');
+
+    if (field.ordinal === 34) {
+      const desc = calculados['riesgo_residual_descripcion'];
+      if (desc !== null && desc !== undefined && desc !== '') return String(desc);
+      return this.riesgoMaestroMatriz()?.rieNombre || this.riesgoMaestroMatriz()?.rieDescripcion || '—';
+    }
+
+    if (field.ordinal === 35) {
+      const fRes = calculados['frecuencia_residual'];
+      if (fRes !== null && fRes !== undefined && fRes !== '') return String(fRes);
+      if (resumen.versionNumero === 1 && this.respuestas()['frecuencia_residual']) {
+        return String(this.respuestas()['frecuencia_residual']);
+      }
+      return '—';
+    }
+
+    if (field.ordinal === 36) {
+      const iRes = calculados['impacto_residual'];
+      if (iRes !== null && iRes !== undefined && iRes !== '') return String(iRes);
+      if (resumen.versionNumero === 1 && this.respuestas()['impacto_residual']) {
+        return String(this.respuestas()['impacto_residual']);
+      }
+      return '—';
+    }
+
+    if (field.ordinal === 37) {
+      const vrr = evaluacion.evaVrr ?? calculados['valor_riesgo_residual'] ?? calculados['vrr'];
+      if (vrr !== null && vrr !== undefined && vrr !== '') return String(vrr);
+      return '—';
+    }
+
+    if (field.ordinal === 38) {
+      const nivel = calculados['nivel_riesgo_residual'] ?? calculados['nivel_residual'] ?? resumen.nivelResidual;
+      if (nivel !== null && nivel !== undefined && nivel !== '') return String(nivel);
+      return '—';
+    }
+
+    if (field.ordinal === 39) {
+      const respuestas = this.respuestas();
+      const respuesta = respuestas['respuesta_riesgo'] || respuestas['respuestaRiesgo'];
+      if (respuesta !== null && respuesta !== undefined && respuesta !== '') return String(respuesta);
+      return '—';
+    }
+
+    return '—';
   }
 
   controlesPorTipo(tipo: ControlRiesgoDto['conTipo']): ControlRiesgoDto[] {

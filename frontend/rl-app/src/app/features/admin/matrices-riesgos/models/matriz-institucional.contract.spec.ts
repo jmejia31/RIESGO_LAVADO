@@ -1,4 +1,4 @@
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
+import { CATALOGO_RESPUESTA_RIESGO, MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
 
 describe('contrato canónico de la Matriz institucional', () => {
   it('define las 82 posiciones una sola vez con ordinales y columnas continuas', () => {
@@ -71,5 +71,30 @@ describe('contrato canónico de la Matriz institucional', () => {
     for (const field of [MATRIX_BLOCK_2_FIELDS[1], MATRIX_BLOCK_2_FIELDS[2], MATRIX_BLOCK_2_FIELDS[3], MATRIX_BLOCK_2_FIELDS[5], MATRIX_BLOCK_2_FIELDS[6], MATRIX_BLOCK_2_FIELDS[7], MATRIX_BLOCK_2_FIELDS[9], MATRIX_BLOCK_2_FIELDS[10], MATRIX_BLOCK_2_FIELDS[11]]) {
       expect(field.source).not.toContain('RL_MR_EVALUACIONES_CONTROL');
     }
+  });
+
+  it('define el contrato literal 34–39 de Riesgo Residual y Respuesta', () => {
+    expect(MATRIX_BLOCK_3_FIELDS).toHaveLength(6);
+    expect(MATRIX_BLOCK_3_FIELDS.map(field => field.ordinal)).toEqual([34, 35, 36, 37, 38, 39]);
+    expect(MATRIX_BLOCK_3_FIELDS.map(field => field.excelColumn)).toEqual(['AH', 'AI', 'AJ', 'AK', 'AL', 'AM']);
+    expect(MATRIX_BLOCK_3_FIELDS.map(field => field.label)).toEqual([
+      'Riesgo Residual',
+      'Frecuencia Residual',
+      'Impacto Residual',
+      'Valor del Riesgo Residual',
+      'Nivel del Riesgo Residual',
+      'Respuesta al riesgo'
+    ]);
+    expect(MATRIX_BLOCK_3_FIELDS.map(field => [field.mode, field.editable])).toEqual([
+      ['COMPUTED', false],
+      ['COMPUTED', false],
+      ['COMPUTED', false],
+      ['COMPUTED', false],
+      ['COMPUTED', false],
+      ['INPUT', true]
+    ]);
+    expect(MATRIX_BLOCK_3_FIELDS.every(field => field.implemented)).toBe(true);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(39);
+    expect(CATALOGO_RESPUESTA_RIESGO).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
   });
 });

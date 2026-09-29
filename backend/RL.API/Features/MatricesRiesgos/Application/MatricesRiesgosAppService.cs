@@ -763,6 +763,12 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         long versionFormularioId,
         IReadOnlyDictionary<string, bool>? controlPresence = null)
     {
+        ServiceResult? validacionRespuesta = ValidarRespuestaRiesgo(dto.EvaDataJson);
+        if (validacionRespuesta is not null)
+        {
+            return validacionRespuesta;
+        }
+
         var validacion = await _validador.ValidarRespuestasAsync(dto.EvaDataJson, definicionFormulario);
         if (!validacion.Valido)
         {
@@ -851,6 +857,58 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             [InstitutionalCalculationContextKeys.DetectiveControl] = controls.Any(control => control.ConTipo.Equals("DETECTIVO", StringComparison.OrdinalIgnoreCase)),
             [InstitutionalCalculationContextKeys.CorrectiveControl] = controls.Any(control => control.ConTipo.Equals("CORRECTIVO", StringComparison.OrdinalIgnoreCase))
         };
+
+    private static readonly HashSet<string> OpcionesRespuestaRiesgoValidas = new(StringComparer.Ordinal)
+    {
+        "EVITAR",
+        "MITIGAR",
+        "TRANSFERIR",
+        "ACEPTAR"
+    };
+
+    private static ServiceResult? ValidarRespuestaRiesgo(string evaDataJson)
+    {
+        if (string.IsNullOrWhiteSpace(evaDataJson)) return null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(evaDataJson);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
+
+            foreach (string propName in new[] { "respuesta_riesgo", "respuestaRiesgo" })
+            {
+                if (doc.RootElement.TryGetProperty(propName, out JsonElement prop))
+                {
+                    if (prop.ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+
+                    if (prop.ValueKind != JsonValueKind.String)
+                    {
+                        return ServiceResult.BadRequest($"El campo '{propName}' debe ser una cadena de texto.");
+                    }
+
+                    string valor = prop.GetString() ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(valor))
+                    {
+                        return ServiceResult.BadRequest($"El campo '{propName}' no puede ser vacío. Valores válidos: EVITAR, MITIGAR, TRANSFERIR, ACEPTAR.");
+                    }
+
+                    if (!OpcionesRespuestaRiesgoValidas.Contains(valor))
+                    {
+                        return ServiceResult.BadRequest($"El valor '{valor}' para '{propName}' no es válido. Los valores canónicos permitidos son: EVITAR, MITIGAR, TRANSFERIR, ACEPTAR.");
+                    }
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            return ServiceResult.BadRequest("El JSON de respuestas de evaluación no es válido.");
+        }
+
+        return null;
+    }
 
     private static int? ObtenerEnteroCalculado(IReadOnlyDictionary<string, object?> valores, params string[] claves)
     {

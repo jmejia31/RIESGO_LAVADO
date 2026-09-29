@@ -449,6 +449,24 @@
                 }
               </section>
 
+              <section class="space-y-4" data-matrix-block="3" aria-labelledby="matrix-block-3-title">
+                <div>
+                  <h3 id="matrix-block-3-title" class="text-base font-bold text-ihss-900">3. Riesgo Residual y Respuesta</h3>
+                  <p class="mt-1 text-xs text-gray-500">Valoración del riesgo residual calculada por el backend y respuesta institucional al riesgo.</p>
+                </div>
+                <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
+                  @for (field of camposResidualMatriz; track field.ordinal) {
+                    <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
+                      <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
+                      <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" [attr.aria-describedby]="field.mode === 'COMPUTED' ? 'matrix-computed-' + field.ordinal : null" aria-readonly="true">{{ valorCampoResidual(field) }}</dd>
+                      @if (field.mode === 'COMPUTED') {
+                        <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal">Calculado automáticamente</span>
+                      }
+                    </div>
+                  }
+                </dl>
+              </section>
+
               @for (block of bloquesMatrizPendientes; track block) {
                 <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
                   <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>

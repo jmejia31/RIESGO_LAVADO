@@ -1,5 +1,40 @@
 # Estado de colaboración y punto de continuidad
 
+## Estado vigente — Certificación técnica Bloque 3: Riesgo Residual y Respuesta (Campos 34–39)
+
+- Fecha: `2026-09-29`. Rama `desarrollo`. Colaborador: ANTIG (Antigravity). BASE_SHA: `7a685d124fe02853687660a2d0d5fc7419919264`.
+- `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=CLOSED`; `BLOCK_3_STATUS=CLOSED`; `FULL_MATRIX_82=PENDING_BLOCKS_4_6`.
+- `FULL_MATRIX_IMPLEMENTED_FIELDS=39/82`; `FULL_MATRIX_PENDING_FIELDS=43`.
+- **Fórmulas F10–F14 certificadas e implementadas autoritativamente:**
+  - F10 (`riesgo_residual_descripcion`): `Matriz Consolidada!AH2`, `IF(riesgo_inherente_descripcion="","",riesgo_inherente_descripcion)`.
+  - F11 (`frecuencia_residual`): `Matriz Consolidada!AI2`, `IFERROR(IF(OR(frecuencia="",impacto="",valor_riesgo_inherente="",valor_riesgo_residual=""),"",IF(valor_riesgo_inherente=valor_riesgo_residual,frecuencia,MIN(tope_f,f_base+incremento_f_aux))),"")`.
+  - F12 (`impacto_residual`): `Matriz Consolidada!AJ2`, `IFERROR(IF(OR(frecuencia="",impacto="",valor_riesgo_inherente="",valor_riesgo_residual=""),"",IF(valor_riesgo_inherente=valor_riesgo_residual,impacto,MIN(tope_i,i_base+incremento_i_aux))),"")`.
+  - F13 (`valor_riesgo_residual` / VRR): `Matriz Consolidada!AK2`, `IFERROR(ROUND(MAX(1,valor_riesgo_inherente*(1-efectividad_total_ponderada)),0),"")`.
+  - F14 (`nivel_riesgo_residual`): `Matriz Consolidada!AL2`, `IFERROR(LOOKUP("CAT_NIVEL_RIESGO",valor_riesgo_residual),"")`.
+- **Autoridad del servidor y anti-tampering:**
+  - `RESIDUAL_SERVER_AUTHORITATIVE=PASS`: Angular no calcula fórmulas; el backend es la única fuente oficial.
+  - `RESIDUAL_CLIENT_TAMPERING=REJECTED_OR_RECALCULATED`: cualquier cálculo forjado enviado por el cliente es ignorado y recalculado por el servidor.
+  - `CALCULATED_FIELDS_NOT_CLIENT_AUTHORITATIVE=PASS`: DTO de lectura separado de DTO de escritura.
+  - `RESIDUAL_VERSION_AWARE=PASS`: evaluaciones históricas evalúan contra su versión asociada histórica.
+- **Catálogo de respuesta al riesgo:**
+  - `RESPONSE_CATALOG=PASS`: catálogo canónico institucional strictly `EVITAR`, `MITIGAR`, `TRANSFERIR`, `ACEPTAR`.
+  - `INVALID_RESPONSE_VALUE_CONTROLLED_4XX=PASS`: valores no canónicos o vacíos son rechazados con 400 controlado.
+  - No existe inferencia automática no autorizada; la respuesta es una selección institucional persistida.
+- **Evidencia técnica ejecutada y demostrada:**
+  - Backend: `740/740 PASS` (0 errores, 0 omitidos).
+  - Frontend unit tests: `819/819 PASS` (82/82 archivos).
+  - Frontend lint: `0 errores`.
+  - Frontend build: exitoso (`dist/rl-app`).
+  - E2E Playwright: `40/40 PASS` (0 flaky). Verificación en 1280x900 y 390x844 (`BLOCK_3_HORIZONTAL_OVERFLOW=0`).
+  - npm audit: `0 vulnerabilities`.
+  - Validadores: Estructura (118/118 PASS), Database scripts (PASS), Documentación links (188/188 PASS), Quality gates script (PASS).
+  - Cobertura reportada: Backend líneas `37.19%`, ramas `40.46%`; Frontend sentencias `62.38%`, ramas `55.79%`, funciones `58.59%`, líneas `63.25%`.
+- **Límites de gobernanza:**
+  - `MAIN_TOUCHED=NO`.
+  - `ORACLE_CONNECTION_ATTEMPTED=NO`; `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`.
+  - `BLOCK_4_STARTED=NO`.
+- **Punto de continuidad:** Bloque 3 cerrado definitivamente. Próximo bloque autorizado: `NEXT_BLOCK=BLOCK_4_PLAN_MITIGACION_CAMPOS_40_48` (no iniciado).
+
 ## Estado vigente — Auditoría post-ANTIG y recertificación limpia de Bloque 2
 
 - Fecha: `2026-09-29`. Rama `desarrollo`. SHA funcional certificado: `0e5fea6595ae6316e60936f630b5af6e9f34b4a1`.

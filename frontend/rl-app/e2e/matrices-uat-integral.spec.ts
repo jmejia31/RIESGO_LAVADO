@@ -150,10 +150,11 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   const view = modalMatriz.locator('[data-matrix-view="complete"]');
   await expect(view.getByRole('heading', { name: '1. Identificación y Riesgo Inherente' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
+  await expect(view.getByRole('heading', { name: '3. Riesgo Residual y Respuesta' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(33);
+  await expect(fields).toHaveCount(39);
   await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 33 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 39 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
   const block2Labels = [
     'Descripción de Control(es) Preventivo(s)', 'Escala de efectividad de control(es) preventivo(s)',
@@ -173,7 +174,23 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(fields.nth(31)).toContainText('Manual');
   await expect(fields.nth(31)).toContainText('Semiautomático');
   await expect(fields.nth(31)).toContainText('Automático');
-  await expect(view.locator('[data-matrix-block="3"]')).toContainText('Bloque pendiente de implementación');
+
+  const block3Labels = [
+    'Riesgo Residual',
+    'Frecuencia Residual',
+    'Impacto Residual',
+    'Valor del Riesgo Residual',
+    'Nivel del Riesgo Residual',
+    'Respuesta al riesgo'
+  ];
+  for (let index = 0; index < block3Labels.length; index++) {
+    await expect(fields.nth(index + 33)).toContainText(block3Labels[index]);
+  }
+  for (const index of [33, 34, 35, 36, 37]) {
+    await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
+  }
+
+  await expect(view.locator('[data-matrix-block="4"]')).toContainText('Bloque pendiente de implementación');
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
@@ -192,19 +209,19 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
 
   const matrixView = page.locator('[data-matrix-view="complete"]');
   await page.setViewportSize({ width: 1280, height: 900 });
-  await fields.nth(19).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-2-closure-desktop-1280x900.png' });
+  await fields.nth(33).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-3-closure-desktop-1280x900.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   const backdrop = page.locator('button[aria-label="Cerrar menú lateral"]');
   if (await backdrop.count() > 0) {
     await backdrop.dispatchEvent('click');
     await page.waitForTimeout(300);
   }
-  await expect(fields).toHaveCount(33);
+  await expect(fields).toHaveCount(39);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
-  await fields.nth(19).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-2-closure-mobile-390x844.png' });
+  await fields.nth(33).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-3-closure-mobile-390x844.png' });
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();

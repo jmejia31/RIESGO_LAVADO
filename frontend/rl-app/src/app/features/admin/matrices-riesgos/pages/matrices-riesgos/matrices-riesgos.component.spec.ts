@@ -6,7 +6,7 @@ import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
-import { MATRIX_BLOCK_2_FIELDS } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS } from '../../models/matriz-institucional.contract';
 
 describe('MatricesRiesgosComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -620,5 +620,93 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.alCambiarFiltroEstado('APROBADA');
     expect(component.filtroEstado()).toBe('APROBADA');
     vi.useRealTimers();
+  });
+
+  it('proyecta y formatea con autoridad de servidor el Bloque 3 (Riesgo Residual y Respuesta, 34–39)', () => {
+    expect(component.camposResidualMatriz).toHaveLength(6);
+    expect(component.camposResidualMatriz.map(field => field.ordinal)).toEqual([34, 35, 36, 37, 38, 39]);
+    expect(component.camposResidualMatriz.map(field => field.label)).toEqual([
+      'Riesgo Residual',
+      'Frecuencia Residual',
+      'Impacto Residual',
+      'Valor del Riesgo Residual',
+      'Nivel del Riesgo Residual',
+      'Respuesta al riesgo'
+    ]);
+    expect(component.bloquesMatrizPendientes).toEqual([4, 5, 6]);
+
+    const field = (ordinal: number) => MATRIX_BLOCK_3_FIELDS.find(item => item.ordinal === ordinal)!;
+
+    // Estado sin evaluación seleccionada -> '—'
+    component.evaluacionSeleccionada.set(null);
+    component.evaluacionResumenSeleccionada.set(null);
+    expect(component.valorCampoResidual(field(34))).toBe('—');
+    expect(component.valorCampoResidual(field(35))).toBe('—');
+    expect(component.valorCampoResidual(field(36))).toBe('—');
+    expect(component.valorCampoResidual(field(37))).toBe('—');
+    expect(component.valorCampoResidual(field(38))).toBe('—');
+    expect(component.valorCampoResidual(field(39))).toBe('—');
+
+    // Evaluación con cálculos autoritativos de backend
+    component.evaluacionResumenSeleccionada.set({
+      evaId: 50,
+      evaRiesgoId: 10,
+      riesgoCodigo: 'R-010',
+      riesgoNombre: 'Riesgo de prueba',
+      evaVersionId: 2,
+      versionCodigo: 'V2',
+      versionNumero: 2,
+      estado: 'BORRADOR',
+      fechaEval: '',
+      nivelResidual: 'BAJO'
+    });
+    component.evaluacionSeleccionada.set({
+      evaId: 50,
+      evaRiesgoId: 10,
+      evaVersionId: 2,
+      evaEstado: 'BORRADOR',
+      evaDataJson: '{"respuesta_riesgo":"MITIGAR"}',
+      evaDataCalcJson: JSON.stringify({
+        riesgo_residual_descripcion: 'Descripción residual calculada por F10',
+        frecuencia_residual: 2,
+        impacto_residual: 1,
+        valor_riesgo_residual: 2,
+        nivel_riesgo_residual: 'BAJO'
+      }),
+      evaVri: 6,
+      evaVrr: 2,
+      evaFechaEval: '',
+      evaUsrEval: 1,
+      evaVersionRow: 1,
+      evaActivo: true
+    });
+    component.respuestas.set({ respuesta_riesgo: 'MITIGAR' });
+
+    expect(component.valorCampoResidual(field(34))).toBe('Descripción residual calculada por F10');
+    expect(component.valorCampoResidual(field(35))).toBe('2');
+    expect(component.valorCampoResidual(field(36))).toBe('1');
+    expect(component.valorCampoResidual(field(37))).toBe('2');
+    expect(component.valorCampoResidual(field(38))).toBe('BAJO');
+    expect(component.valorCampoResidual(field(39))).toBe('MITIGAR');
+
+    // Fallback de riesgo residual cuando no viene F10
+    component.evaluacionSeleccionada.update(e => e ? { ...e, evaDataCalcJson: '{}' } : null);
+    component.riesgoMaestroMatriz.set({
+      rieId: 10,
+      rieCodigo: 'R-010',
+      rieNombre: 'Nombre del riesgo maestro',
+      rieDescripcion: 'Descripción del riesgo maestro',
+      rieActivo: true,
+      rieUsrCreacion: 1,
+      rieFechaCreacion: ''
+    });
+    expect(component.valorCampoResidual(field(34))).toBe('Nombre del riesgo maestro');
+
+    // Fallback de versión 1 histórica para frecuencia/impacto si no vienen en calculados
+    component.evaluacionResumenSeleccionada.update(r => r ? { ...r, versionNumero: 1 } : null);
+    component.respuestas.set({ frecuencia_residual: 3, impacto_residual: 2, respuesta_riesgo: 'ACEPTAR' });
+    expect(component.valorCampoResidual(field(35))).toBe('3');
+    expect(component.valorCampoResidual(field(36))).toBe('2');
+    expect(component.valorCampoResidual(field(39))).toBe('ACEPTAR');
   });
 });

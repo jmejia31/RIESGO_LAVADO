@@ -1,5 +1,35 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Implementación, regresión y certificación técnica Bloque 3: Riesgo Residual y Respuesta (Campos 34–39)
+
+- **Fecha/hora local:** 2026-09-29 14:24 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / BASE_SHA:** `desarrollo` / `7a685d124fe02853687660a2d0d5fc7419919264`.
+- **Objetivo único:** Implementar, integrar, probar y certificar exclusivamente el **BLOQUE 3 — RIESGO RESIDUAL Y RESPUESTA (CAMPOS 34–39)** en el módulo Matrices de Riesgos, garantizando paridad institucional, fórmulas exactas F10–F14, servidor autoritativo, validación canónica de respuesta, preservación inmutable de Bloques 1–2 (campos 01–33), y cobertura E2E responsive.
+- **Implementación funcional:**
+  - `matriz-institucional.contract.ts`: Campos 34–39 definidos con etiquetas exactas Excel y columnas AH–AM (`Riesgo Residual`, `Frecuencia Residual`, `Impacto Residual`, `Valor del Riesgo Residual`, `Nivel del Riesgo Residual`, `Respuesta al riesgo`). Total de campos implementados actualizado a exactamente **39/82** (`FULL_MATRIX_IMPLEMENTED_FIELDS=39/82`). Catálogo de respuesta canónico exportado: `['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']`.
+  - `matrices-riesgos.component.ts` & `matrices-riesgos.component.html`: Incorporado bloque `3. Riesgo Residual y Respuesta` con exactamente 6 campos en orden inmutable 34–39. Campos 34–38 de solo lectura (`aria-readonly="true"`), proyectando autoritativamente cálculos del backend (`evaDataCalcJson`, `evaVrr` y catálogo). Campo 39 proyecta la respuesta persistida en el modal de consulta de Matriz Completa sin convertirlo en editor. Bloques pendientes actualizados a 4, 5 y 6.
+  - `MatricesRiesgosAppService.cs`: Validación backend obligatoria del catálogo canónico de `respuesta_riesgo` (`EVITAR`, `MITIGAR`, `TRANSFERIR`, `ACEPTAR`), rechazando valores no autorizados o vacíos con HTTP 400 controlado (`INVALID_RESPONSE_VALUE_CONTROLLED_4XX=PASS`). Se protege contra falsificación de cálculos desde el cliente ignorando y recalculando los valores autoritativos (`RESIDUAL_CLIENT_TAMPERING=REJECTED_OR_RECALCULATED`).
+- **Pruebas y certificación:**
+  - `MatricesRiesgosBlock3ResidualCertificacionTests.cs`: Nueva suite técnica certificando F10, F11, F12, F13 (VRR), F14 (Nivel de riesgo por catálogo institucional), límites inferior y superior, identidad cuando VRI==VRR, validación canónica de respuestas con casos positivos/negativos, rechazo de tampering de VRR/cálculos por cliente, evaluación version-aware para versiones históricas, inmutabilidad de evaluaciones fuera de BORRADOR y concurrencia optimista (409 Conflict).
+  - Backend: `740/740 tests superados` (0 errores, 0 omitidos).
+  - Frontend unit tests: `819/819 tests superados` en 82 archivos (0 fallos).
+  - Frontend lint: `0 errores` (`eslint src e2e scripts`).
+  - Frontend build: exitoso (`dist/rl-app`).
+  - E2E Playwright: `40/40 tests superados` (0 flaky). Verificación en 1280x900 y 390x844 sin desbordamiento horizontal (`BLOCK_3_HORIZONTAL_OVERFLOW=0`).
+  - npm audit: `0 vulnerabilities`.
+  - Validadores: Estructura (118/118 PASS), Database scripts (PASS), Documentación links (188/188 PASS), Quality gates (`run_quality_gates.ps1` PASS).
+  - Cobertura: Backend líneas `37.19%`, ramas `40.46%`; Frontend sentencias `62.38%`, ramas `55.79%`, funciones `58.59%`, líneas `63.25%`.
+- **Gobernanza:**
+  - `BLOCK_3_STATUS=CLOSED`
+  - `FULL_MATRIX_82=PENDING_BLOCKS_4_6`
+  - `MAIN_TOUCHED=NO`
+  - `ORACLE_CONNECTION_ATTEMPTED=NO`
+  - `ORACLE_DML_EXECUTED=NO`
+  - `ORACLE_DDL_EXECUTED=NO`
+  - `BLOCK_4_STARTED=NO`
+- **Punto de continuación:** Publicar commit único en `origin/desarrollo` y verificar Quality Gate remoto de GitHub Actions.
+
 ## Registro de intervención — Auditoría post-ANTIG, hardening residual y recertificación limpia de Bloque 2
 
 - **Fecha:** 2026-09-29. **Colaborador:** ChatGPT. **Rama:** `desarrollo`.
