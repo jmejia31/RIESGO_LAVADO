@@ -135,12 +135,15 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible();
   await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Matriz completa', exact: true })).toHaveCount(0);
   await expect(page.getByRole('tab', { name: 'Plantillas', exact: true })).toBeVisible();
   await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
-  const view = page.locator('[data-matrix-view="complete"]');
+  const modalMatriz = page.locator('[data-matrix-modal="complete"]');
+  await expect(modalMatriz).toBeVisible();
+  await expect(modalMatriz.locator('.modal-size-workspace')).toBeVisible();
+  const view = modalMatriz.locator('[data-matrix-view="complete"]');
   await expect(view.getByRole('heading', { name: '1. Identificación y Riesgo Inherente' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
@@ -199,6 +202,10 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await fields.nth(19).scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'test-results/block-2-closure-mobile-390x844.png' });
   await page.setViewportSize({ width: 1280, height: 900 });
+
+  await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  await expect(modalMatriz).toBeHidden();
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toHaveAttribute('aria-selected', 'true');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
   await expect(page.getByRole('columnheader', { name: 'EVALUACIÓN' })).toBeVisible();

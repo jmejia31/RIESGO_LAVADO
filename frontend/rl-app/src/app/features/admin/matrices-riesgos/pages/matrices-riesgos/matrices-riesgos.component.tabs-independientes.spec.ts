@@ -280,14 +280,14 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(kpis()[0].textContent).not.toContain('Total evaluaciones');
   });
 
-  it('14. conserva las cuatro pestañas y muestra el estado vacío de Matriz completa', () => {
-    component.seleccionarTab('matriz-completa');
+  it('14. conserva tres pestañas y reserva Matriz completa exclusivamente como modal', () => {
     fixture.detectChanges();
     const root = fixture.nativeElement as HTMLElement;
     const tabs = Array.from(root.querySelectorAll('[role="tab"]')).map(tab => tab.textContent?.trim());
-    expect(tabs).toEqual(['Evaluaciones', 'Consolidado', 'Matriz completa', 'Plantillas']);
-    expect(root.querySelector('#panel-matriz-completa[role="tabpanel"]')).not.toBeNull();
-    expect(root.querySelector('[data-matrix-empty]')?.textContent).toContain('Seleccione una evaluación para visualizar la Matriz completa.');
+    expect(tabs).toEqual(['Evaluaciones', 'Consolidado', 'Plantillas']);
+    expect(root.querySelector('#tab-matriz-completa')).toBeNull();
+    expect(root.querySelector('#panel-matriz-completa')).toBeNull();
+    expect(root.querySelector('[data-matrix-modal="complete"]')).toBeNull();
   });
 
   it('15. renderiza campos 01–19 en orden, conserva los GTIC y no inventa valores históricos V1', () => {
@@ -307,7 +307,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     });
     component.respuestas.set({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable' });
     component.riesgoMaestroMatriz.set({ rieId: 5, rieCodigo: 'RIE-005', rieNombre: 'Riesgo maestro', rieDescripcion: 'Descripción maestra', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-01' });
-    component.seleccionarTab('matriz-completa');
+    component.modalMatrizCompletaAbierto.set(true);
     expect(component.valorCampoMatriz(component.camposMatrizCompleta[2])).toBe('Área de Cumplimiento');
     fixture.detectChanges();
 
@@ -336,5 +336,34 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelector('[data-matrix-block="2"] h3')?.textContent).toContain('2. Controles');
     expect(root.querySelectorAll('[data-matrix-block="2"] [data-matrix-field]')).toHaveLength(14);
     expect(root.querySelectorAll('[data-matrix-block="3"] .text-amber-800')).toHaveLength(1);
+    expect(root.querySelector('[data-matrix-modal="complete"] .modal-size-workspace')).not.toBeNull();
+  });
+
+  it('16. alinea las acciones del Consolidado como grupo horizontal y conserva su orden', () => {
+    component.consolidado.set([{
+      riesgoId: 5,
+      evaluacionId: 101,
+      codigoRiesgo: 'RIE-005',
+      areaPrincipal: 'Cumplimiento',
+      duenoRiesgo: 'Responsable',
+      vri: 5,
+      nivelInherente: 'MEDIO',
+      vrr: 2,
+      nivelResidual: 'BAJO',
+      respuestaRiesgo: 'ACEPTAR',
+      estadoEvaluacion: 'APROBADA',
+      versionFormularioId: 10,
+      fechaEvaluacion: '2026-08-17T00:00:00'
+    } as never]);
+    component.totalRegistrosConsolidado.set(1);
+    component.tab.set('consolidado');
+    fixture.detectChanges();
+
+    const root = fixture.nativeElement as HTMLElement;
+    const acciones = root.querySelector('[data-consolidado-actions]') as HTMLElement | null;
+    expect(acciones).not.toBeNull();
+    expect(acciones?.classList.contains('flex-nowrap')).toBe(true);
+    const etiquetas = Array.from(acciones?.querySelectorAll('button') ?? []).map(button => button.getAttribute('aria-label'));
+    expect(etiquetas).toEqual(['Ver detalle del consolidado', 'Ver Matriz completa']);
   });
 });

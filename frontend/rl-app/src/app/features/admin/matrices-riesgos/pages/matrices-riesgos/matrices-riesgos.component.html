@@ -40,7 +40,6 @@
     </div>
   }
   <!-- KPIs contextuales de la pestaña activa -->
-  @if (tab() !== 'matriz-completa') {
   <div class="matrices-kpi-strip grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3" data-ui-kpis-context>
     @if (tab() === 'evaluaciones') {
       <article class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-gray-400">Total evaluaciones</p><p class="mt-2 text-3xl font-bold text-gray-900">{{ totalRegistros() }}</p><p class="text-xs text-gray-500">Total según la consulta actual</p></article>
@@ -59,7 +58,6 @@
       <article class="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm"><p class="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Estados disponibles</p><p class="mt-2 text-3xl font-bold text-emerald-700">{{ estadosConsolidado().length }}</p><p class="text-xs text-emerald-700/80">En la consulta actual</p></article>
     }
   </div>
-  }
 
   @if (error(); as errorTexto) {
     <div class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-sm animate-fade-in" role="alert" aria-live="assertive">
@@ -86,7 +84,6 @@
       @for (opcion of [
         { id: 'evaluaciones', texto: 'Evaluaciones' },
         { id: 'consolidado', texto: 'Consolidado' },
-        { id: 'matriz-completa', texto: 'Matriz completa' },
         { id: 'plantillas', texto: 'Plantillas' }
       ]; track opcion.id) {
             <button type="button" data-ui-control="navigation"
@@ -190,8 +187,8 @@
                   {{ evaluacion.nivelResidual ?? '-' }}
                 </td>
                 <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.fechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
-                <td class="px-6 py-4 text-center">
-                  <div class="inline-flex items-center justify-center gap-1.5">
+                <td class="px-6 py-4 text-center whitespace-nowrap">
+                  <div class="inline-flex flex-nowrap items-center justify-center gap-1.5">
                     <button type="button"
                             class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
                             title="Ver evaluación"
@@ -302,11 +299,25 @@
                 <td class="px-6 py-4">{{ fila.respuestaRiesgo }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
-                <td class="px-6 py-4"><button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-900 hover:bg-ihss-50" title="Ver detalle del consolidado" aria-label="Ver detalle del consolidado" (click)="abrirModalVerDesdeConsolidado(fila)">
-            <app-action-icon action="view"></app-action-icon>
-          </button><button type="button" class="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-ihss-900 hover:bg-ihss-50" title="Ver Matriz completa" aria-label="Ver Matriz completa" data-matrix-open="complete" (click)="abrirMatrizCompletaDesdeConsolidado(fila)">
-            <app-action-icon action="view"></app-action-icon>
-          </button></td>
+                <td class="px-6 py-4 text-center whitespace-nowrap">
+                  <div class="inline-flex flex-nowrap items-center justify-center gap-1.5" data-consolidado-actions>
+                    <button type="button"
+                            class="inline-flex items-center justify-center p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                            title="Ver detalle del consolidado"
+                            aria-label="Ver detalle del consolidado"
+                            (click)="abrirModalVerDesdeConsolidado(fila)">
+                      <app-action-icon action="view"></app-action-icon>
+                    </button>
+                    <button type="button"
+                            class="inline-flex items-center justify-center p-1.5 text-ihss-900 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                            title="Ver Matriz completa"
+                            aria-label="Ver Matriz completa"
+                            data-matrix-open="complete"
+                            (click)="abrirMatrizCompletaDesdeConsolidado(fila)">
+                      <app-action-icon action="view"></app-action-icon>
+                    </button>
+                  </div>
+                </td>
               </tr>
             } @empty { <tr><td colspan="11" class="px-6 py-12 text-center text-gray-400 text-sm">Sin proyecciones acumuladas.</td></tr> }
           </tbody>
@@ -316,127 +327,146 @@
     </section>
   }
 
-  @if (tab() === 'matriz-completa') {
-    <section id="panel-matriz-completa" role="tabpanel" aria-labelledby="tab-matriz-completa" class="matrices-panel space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm" data-matrix-view="complete">
-      <header class="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p class="text-xs font-bold uppercase tracking-[0.14em] text-ihss-700">Matriz de Riesgos</p>
-          <h2 class="mt-1 text-xl font-bold text-gray-900">Matriz completa</h2>
-          <p class="mt-1 text-sm text-gray-500">Vista institucional de campos en el orden original de la matriz.</p>
-        </div>
-        @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
-          <dl class="grid grid-cols-2 gap-x-5 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs sm:min-w-[22rem]">
-            <div><dt class="font-semibold text-gray-500">Código</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
-            <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
-            <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
-            <div><dt class="font-semibold text-gray-500">Fecha evaluación</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.fechaEval | date:'dd/MM/yyyy HH:mm' }}</dd></div>
-          </dl>
-        }
-      </header>
-
-      @if (matrizCompletaEnCarga()) {
-        <div class="rounded-xl border border-gray-100 bg-slate-50 p-8 text-center text-sm font-semibold text-gray-600" role="status" aria-live="polite">Cargando la evaluación y su riesgo maestro…</div>
-      } @else if (matrizCompletaError(); as errorMatriz) {
-        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{{ errorMatriz }}</div>
-      } @else if (!evaluacionSeleccionada()) {
-        <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center text-sm font-medium text-gray-600" role="status" data-matrix-empty>
-          Seleccione una evaluación para visualizar la Matriz completa.
-        </div>
-      } @else {
-        <section class="space-y-4" data-matrix-block="1" aria-labelledby="matrix-block-1-title">
-          <div>
-            <h3 id="matrix-block-1-title" class="text-base font-bold text-ihss-900">1. Identificación y Riesgo Inherente</h3>
-            <p class="mt-1 text-xs text-gray-500">Los campos calculados y los datos del riesgo maestro son de solo lectura.</p>
+  @if (modalMatrizCompletaAbierto()) {
+    <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-matriz-completa" aria-describedby="descripcion-modal-matriz-completa" data-matrix-modal="complete">
+      <div class="modal-container-card modal-size-workspace">
+        <div class="modal-header-institutional">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.14em] text-ihss-700">Matriz de Riesgos</p>
+            <h3 id="titulo-modal-matriz-completa" class="mt-1 text-base sm:text-lg font-bold text-gray-900">Matriz completa</h3>
+            <p id="descripcion-modal-matriz-completa" class="mt-1 text-xs text-gray-500">Vista institucional de campos en el orden original de la matriz.</p>
           </div>
-          <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
-            @for (field of camposMatrizCompleta; track field.ordinal) {
-              <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
-                <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
-                <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" [attr.aria-describedby]="field.mode === 'COMPUTED' ? 'matrix-computed-' + field.ordinal : null" aria-readonly="true">{{ valorCampoMatriz(field) }}</dd>
-                @if (field.mode === 'COMPUTED') {
-                  <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal">Calculado automáticamente</span>
-                }
-              </div>
-            }
-          </dl>
-        </section>
+          <button type="button" autofocus class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-600/30" aria-label="Cerrar Matriz completa" title="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
+        </div>
 
-        <section class="space-y-4" data-matrix-block="2" aria-labelledby="matrix-block-2-title">
-          <div>
-            <h3 id="matrix-block-2-title" class="text-base font-bold text-ihss-900">2. Controles</h3>
-            <p class="mt-1 text-xs text-gray-500">Valoración institucional inicial de controles preventivos, detectivos y correctivos.</p>
-          </div>
-          @if (controlesMatrizEnCarga()) {
-            <p class="rounded-lg bg-slate-50 p-3 text-sm text-gray-600" role="status" aria-live="polite">Cargando controles asociados…</p>
-          } @else if (controlesMatrizError(); as errorControles) {
-            <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
-              <p>{{ errorControles }}</p>
-              <button type="button" class="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" title="Reintentar carga de controles" aria-label="Reintentar carga de controles" (click)="reintentarCargaControlesMatriz()"><app-action-icon action="retry"></app-action-icon></button>
+        <div class="modal-body-scrollable">
+          <section class="space-y-5" data-matrix-view="complete">
+            <div class="flex justify-end border-b border-gray-100 pb-4">
+              @if (evaluacionResumenSeleccionada(); as resumenMatriz) {
+                <dl class="grid grid-cols-2 gap-x-5 gap-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-xs sm:min-w-[22rem]">
+                  <div><dt class="font-semibold text-gray-500">Código</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.riesgoCodigo }}</dd></div>
+                  <div><dt class="font-semibold text-gray-500">Estado workflow</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.estado }}</dd></div>
+                  <div><dt class="font-semibold text-gray-500">Versión</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.versionCodigo }} · v{{ resumenMatriz.versionNumero }}</dd></div>
+                  <div><dt class="font-semibold text-gray-500">Fecha evaluación</dt><dd class="mt-0.5 font-bold text-gray-900">{{ resumenMatriz.fechaEval | date:'dd/MM/yyyy HH:mm' }}</dd></div>
+                </dl>
+              }
+
             </div>
-          }
-          <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
-            @for (field of camposControlesMatriz; track field.ordinal) {
-              <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
-                <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
-                <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" aria-readonly="true">
-                  @if (field.ordinal === 20 || field.ordinal === 24 || field.ordinal === 28) {
-                    @let tipo = field.ordinal === 20 ? 'PREVENTIVO' : field.ordinal === 24 ? 'DETECTIVO' : 'CORRECTIVO';
-                    @let controles = controlesPorTipo(tipo);
-                    @if (controles.length) {
-                      <ol class="space-y-2">
-                        @for (control of controles; track control.conId; let index = $index) {
-                          <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
-                            <span class="block text-xs font-semibold text-gray-600">Control {{ tipo.toLowerCase() }} {{ index + 1 }}</span>
-                            <span>{{ control.conDescripcion }}</span>
-                          </li>
-                        }
-                      </ol>
-                    } @else {
-                      <span>{{ field.ordinal === 20 ? 'Sin controles preventivos registrados.' : field.ordinal === 24 ? 'Sin controles detectivos registrados.' : 'Sin controles correctivos registrados.' }}</span>
-                    }
-                  } @else if (field.ordinal === 32) {
-                    @if (controlesMatrizCompleta().length) {
-                      <ul class="space-y-1">
-                        @for (control of controlesMatrizCompleta(); track control.conId; let index = $index) {
-                          <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
-                            Control {{ control.conTipo.toLowerCase() }} {{ index + 1 }} — {{ control.conAutomatizacion === 'SEMIAUTOMATICO' ? 'Semiautomático' : control.conAutomatizacion === 'AUTOMATICO' ? 'Automático' : 'Manual' }}
-                          </li>
-                        }
-                      </ul>
-                    } @else {
-                      <span>Sin automatización registrada porque no existen controles.</span>
-                    }
-                  } @else {
-                    {{ valorCampoControl(field) }}
+
+            @if (matrizCompletaEnCarga()) {
+              <div class="rounded-xl border border-gray-100 bg-slate-50 p-8 text-center text-sm font-semibold text-gray-600" role="status" aria-live="polite">Cargando la evaluación y su riesgo maestro…</div>
+            } @else if (matrizCompletaError(); as errorMatriz) {
+              <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{{ errorMatriz }}</div>
+            } @else if (!evaluacionSeleccionada()) {
+              <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-10 text-center text-sm font-medium text-gray-600" role="status" data-matrix-empty>
+                Seleccione una evaluación para visualizar la Matriz completa.
+              </div>
+            } @else {
+              <section class="space-y-4" data-matrix-block="1" aria-labelledby="matrix-block-1-title">
+                <div>
+                  <h3 id="matrix-block-1-title" class="text-base font-bold text-ihss-900">1. Identificación y Riesgo Inherente</h3>
+                  <p class="mt-1 text-xs text-gray-500">Los campos calculados y los datos del riesgo maestro son de solo lectura.</p>
+                </div>
+                <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
+                  @for (field of camposMatrizCompleta; track field.ordinal) {
+                    <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
+                      <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
+                      <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" [attr.aria-describedby]="field.mode === 'COMPUTED' ? 'matrix-computed-' + field.ordinal : null" aria-readonly="true">{{ valorCampoMatriz(field) }}</dd>
+                      @if (field.mode === 'COMPUTED') {
+                        <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal">Calculado automáticamente</span>
+                      }
+                    </div>
                   }
-                </dd>
-                @if (field.mode === 'COMPUTED') {
-                  <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal" [attr.aria-describedby]="'matrix-label-' + field.ordinal">Calculado automáticamente</span>
-                }
-              </div>
-            }
-          </dl>
-          @if (metodologiaMatrizCompletaEnCarga()) {
-            <p class="text-xs text-gray-500" role="status" aria-live="polite">Cargando metodología de la versión de esta evaluación…</p>
-          } @else if (metodologiaMatrizCompletaError(); as errorMetodologia) {
-            <div class="flex items-center gap-2 text-xs text-red-700" role="alert">
-              <span>{{ errorMetodologia }}</span>
-              <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2" title="Reintentar metodología de esta versión" aria-label="Reintentar metodología de esta versión" (click)="reintentarCargaMetodologiaMatriz()"><app-action-icon action="retry"></app-action-icon></button>
-            </div>
-          } @else if (!catalogoEscalaEfectividad()) {
-            <p class="text-xs text-gray-500">Las escalas iniciales no están disponibles en la metodología versionada de esta evaluación. No se usan catálogos de otras versiones ni la evaluación posterior del control.</p>
-          }
-        </section>
+                </dl>
+              </section>
 
-        @for (block of bloquesMatrizPendientes; track block) {
-          <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
-            <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>
-            <p class="mt-1 text-xs font-semibold text-amber-800">Bloque pendiente de implementación</p>
-            <span class="sr-only">{{ camposMetadataBloque(block).length }} campos del contrato institucional reservados.</span>
+              <section class="space-y-4" data-matrix-block="2" aria-labelledby="matrix-block-2-title">
+                <div>
+                  <h3 id="matrix-block-2-title" class="text-base font-bold text-ihss-900">2. Controles</h3>
+                  <p class="mt-1 text-xs text-gray-500">Valoración institucional inicial de controles preventivos, detectivos y correctivos.</p>
+                </div>
+                @if (controlesMatrizEnCarga()) {
+                  <p class="rounded-lg bg-slate-50 p-3 text-sm text-gray-600" role="status" aria-live="polite">Cargando controles asociados…</p>
+                } @else if (controlesMatrizError(); as errorControles) {
+                  <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">
+                    <p>{{ errorControles }}</p>
+                    <button type="button" class="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" title="Reintentar carga de controles" aria-label="Reintentar carga de controles" (click)="reintentarCargaControlesMatriz()"><app-action-icon action="retry"></app-action-icon></button>
+                  </div>
+                }
+                <dl class="matrix-field-list grid grid-cols-1 gap-3 md:grid-cols-2">
+                  @for (field of camposControlesMatriz; track field.ordinal) {
+                    <div class="min-w-0 rounded-xl border border-gray-200 bg-white p-3.5" [attr.data-matrix-field]="field.ordinal.toString().padStart(2, '0')" [attr.data-matrix-key]="field.key" [attr.data-matrix-mode]="field.mode.toLowerCase()">
+                      <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal.toString().padStart(2, '0') }} ·</span> <span>{{ field.label }}</span></dt>
+                      <dd class="mt-1.5 whitespace-pre-wrap break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" aria-readonly="true">
+                        @if (field.ordinal === 20 || field.ordinal === 24 || field.ordinal === 28) {
+                          @let tipo = field.ordinal === 20 ? 'PREVENTIVO' : field.ordinal === 24 ? 'DETECTIVO' : 'CORRECTIVO';
+                          @let controles = controlesPorTipo(tipo);
+                          @if (controles.length) {
+                            <ol class="space-y-2">
+                              @for (control of controles; track control.conId; let index = $index) {
+                                <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
+                                  <span class="block text-xs font-semibold text-gray-600">Control {{ tipo.toLowerCase() }} {{ index + 1 }}</span>
+                                  <span>{{ control.conDescripcion }}</span>
+                                </li>
+                              }
+                            </ol>
+                          } @else {
+                            <span>{{ field.ordinal === 20 ? 'Sin controles preventivos registrados.' : field.ordinal === 24 ? 'Sin controles detectivos registrados.' : 'Sin controles correctivos registrados.' }}</span>
+                          }
+                        } @else if (field.ordinal === 32) {
+                          @if (controlesMatrizCompleta().length) {
+                            <ul class="space-y-1">
+                              @for (control of controlesMatrizCompleta(); track control.conId; let index = $index) {
+                                <li class="rounded-lg bg-slate-50 p-2" [attr.data-control-type]="control.conTipo">
+                                  Control {{ control.conTipo.toLowerCase() }} {{ index + 1 }} — {{ control.conAutomatizacion === 'SEMIAUTOMATICO' ? 'Semiautomático' : control.conAutomatizacion === 'AUTOMATICO' ? 'Automático' : 'Manual' }}
+                                </li>
+                              }
+                            </ul>
+                          } @else {
+                            <span>Sin automatización registrada porque no existen controles.</span>
+                          }
+                        } @else {
+                          {{ valorCampoControl(field) }}
+                        }
+                      </dd>
+                      @if (field.mode === 'COMPUTED') {
+                        <span class="mt-1 block text-[11px] font-medium text-gray-500" [attr.id]="'matrix-computed-' + field.ordinal" [attr.aria-describedby]="'matrix-label-' + field.ordinal">Calculado automáticamente</span>
+                      }
+                    </div>
+                  }
+                </dl>
+                @if (metodologiaMatrizCompletaEnCarga()) {
+                  <p class="text-xs text-gray-500" role="status" aria-live="polite">Cargando metodología de la versión de esta evaluación…</p>
+                } @else if (metodologiaMatrizCompletaError(); as errorMetodologia) {
+                  <div class="flex items-center gap-2 text-xs text-red-700" role="alert">
+                    <span>{{ errorMetodologia }}</span>
+                    <button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-300 focus-visible:outline focus-visible:outline-2" title="Reintentar metodología de esta versión" aria-label="Reintentar metodología de esta versión" (click)="reintentarCargaMetodologiaMatriz()"><app-action-icon action="retry"></app-action-icon></button>
+                  </div>
+                } @else if (!catalogoEscalaEfectividad()) {
+                  <p class="text-xs text-gray-500">Las escalas iniciales no están disponibles en la metodología versionada de esta evaluación. No se usan catálogos de otras versiones ni la evaluación posterior del control.</p>
+                }
+              </section>
+
+              @for (block of bloquesMatrizPendientes; track block) {
+                <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
+                  <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>
+                  <p class="mt-1 text-xs font-semibold text-amber-800">Bloque pendiente de implementación</p>
+                  <span class="sr-only">{{ camposMetadataBloque(block).length }} campos del contrato institucional reservados.</span>
+                </section>
+              }
+            }
           </section>
-        }
-      }
-    </section>
+        </div>
+
+        <div class="modal-footer-institutional">
+          <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-ihss-600/30" title="Cerrar Matriz completa" aria-label="Cerrar Matriz completa" (click)="cerrarMatrizCompleta()">
+            <app-action-icon action="close"></app-action-icon>
+          </button>
+        </div>
+      </div>
+    </dialog>
   }
 
   @if (tab() === 'plantillas') {

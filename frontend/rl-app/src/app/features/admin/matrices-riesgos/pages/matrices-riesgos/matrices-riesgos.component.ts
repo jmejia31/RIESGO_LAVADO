@@ -44,7 +44,7 @@ import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-sema
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
 import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
-type TabMatrices = 'evaluaciones' | 'consolidado' | 'matriz-completa' | 'plantillas';
+type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { DataPaginationComponent } from '../../../../../shared/components/data-pagination/data-pagination.component';
@@ -76,6 +76,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   private autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
   private focoRetornoEditarFamilia: HTMLElement | null = null;
   private focoRetornoPredeterminada: HTMLElement | null = null;
+  private focoRetornoMatrizCompleta: HTMLElement | null = null;
   private detalleEnContexto = false;
   private secuenciaVersionNuevaEvaluacion = 0;
   private secuenciaContextoPredeterminado = 0;
@@ -202,6 +203,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly metodologiaMatrizCompletaError = signal<string | null>(null);
   readonly matrizCompletaEnCarga = signal(false);
   readonly matrizCompletaError = signal<string | null>(null);
+  readonly modalMatrizCompletaAbierto = signal(false);
   readonly controlesMatrizCompleta = signal<ControlRiesgoDto[]>([]);
   readonly controlesMatrizEnCarga = signal(false);
   readonly controlesMatrizError = signal<string | null>(null);
@@ -337,6 +339,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     } else if (this.detalleFamiliaDinamicoAbierto()) {
       event.preventDefault();
       this.cerrarModalVerFamilia();
+    } else if (this.modalMatrizCompletaAbierto()) {
+      event.preventDefault();
+      this.cerrarMatrizCompleta();
     } else if (this.modalVerAbierto()) {
       event.preventDefault();
       this.cerrarModalVer();
@@ -372,6 +377,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.cerrarModalCrearFamilia();
     this.cerrarModalEditarFamilia();
     this.cerrarModalVerFamilia();
+    this.secuenciaCargaMatrizCompleta++;
+    this.modalMatrizCompletaAbierto.set(false);
     this.limpiarAutoDismiss();
     this.cancelarDebounceBuscarPendiente();
   }
@@ -389,7 +396,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   onKeydownTab(event: KeyboardEvent, tabActual: TabMatrices): void {
-    const tabs: TabMatrices[] = ['evaluaciones', 'consolidado', 'matriz-completa', 'plantillas'];
+    const tabs: TabMatrices[] = ['evaluaciones', 'consolidado', 'plantillas'];
     const indexActual = tabs.indexOf(tabActual);
 
     if (indexActual === -1) return;
@@ -1521,16 +1528,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.service.metodologiaPorVersion(detalle.evaVersionId).subscribe({
           next: met => {
             this.metodologiaHistorica.set(met);
-            this.service.obtenerFamiliaFormularioPorId(1).subscribe({
-              next: () => {
-                this.cargando.set(false);
-                this.modalVerAbierto.set(true);
-              },
-              error: () => {
-                this.cargando.set(false);
-                this.modalVerAbierto.set(true);
-              }
-            });
+            this.cargando.set(false);
+            this.modalVerAbierto.set(true);
           },
           error: error => {
             this.cargando.set(false);
@@ -1547,6 +1546,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   abrirMatrizCompleta(resumen: EvaluacionRiesgoResumenDto): void {
     const solicitudId = ++this.secuenciaCargaMatrizCompleta;
+    this.limpiarAlertas();
+    this.focoRetornoMatrizCompleta = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.evaluacionResumenSeleccionada.set(resumen);
     this.evaluacionSeleccionada.set(null);
     this.metodologiaMatrizCompleta.set(null);
@@ -1558,7 +1559,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.controlesMatrizError.set(null);
     this.controlesMatrizEnCarga.set(false);
     this.matrizCompletaEnCarga.set(true);
-    this.seleccionarTab('matriz-completa');
+    this.modalMatrizCompletaAbierto.set(true);
 
     this.service.obtenerEvaluacion(resumen.evaId).subscribe({
       next: detalle => {
@@ -1593,6 +1594,19 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.matrizCompletaEnCarga.set(false);
       }
     });
+  }
+
+  cerrarMatrizCompleta(): void {
+    ++this.secuenciaCargaMatrizCompleta;
+    this.modalMatrizCompletaAbierto.set(false);
+    this.matrizCompletaEnCarga.set(false);
+    this.metodologiaMatrizCompletaEnCarga.set(false);
+    this.controlesMatrizEnCarga.set(false);
+    this.globalState.limpiarError();
+
+    const foco = this.focoRetornoMatrizCompleta;
+    this.focoRetornoMatrizCompleta = null;
+    if (foco?.isConnected) setTimeout(() => foco.focus(), 0);
   }
 
   valorCampoMatriz(field: MatrixFieldContract): string {

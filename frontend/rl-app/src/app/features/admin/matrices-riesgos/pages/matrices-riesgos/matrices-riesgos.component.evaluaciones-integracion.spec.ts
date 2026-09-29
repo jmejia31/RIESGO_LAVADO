@@ -362,6 +362,7 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     component.abrirModalVer(evalBorrador);
     expect(component.modalVerAbierto()).toBe(true);
     expect(component.evaluacionSeleccionada()?.evaId).toBe(12);
+    expect(serviceMock.obtenerFamiliaFormularioPorId).not.toHaveBeenCalled();
     component.cerrarModalVer();
     expect(component.modalVerAbierto()).toBe(false);
 
