@@ -96,6 +96,7 @@ async function preparar(page: Page): Promise<void> {
     else if (path.endsWith('/consolidado')) datos = [];
     else if (path.endsWith('/mitigacion/evaluaciones/20/controles')) datos = controles;
     else if (path.endsWith('/mitigacion/evaluaciones/20/planes')) datos = [];
+    else if (path.endsWith('/mitigacion/evaluaciones/20/bloque4')) datos = { cantidadAcciones: 0, planes: [] };
     else if (path.endsWith('/mitigacion/controles/31/evaluaciones')) datos = [];
     else if (path.endsWith('/mitigacion/planes/41/actividades')) datos = [];
     else if (path.endsWith('/monitoreo/evaluaciones/20/alertas')) datos = [];
@@ -152,9 +153,9 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '3. Riesgo Residual y Respuesta' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(39);
+  await expect(fields).toHaveCount(49);
   await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 39 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
   const block2Labels = [
     'Descripción de Control(es) Preventivo(s)', 'Escala de efectividad de control(es) preventivo(s)',
@@ -190,7 +191,11 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
     await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
   }
 
-  await expect(view.locator('[data-matrix-block="4"]')).toContainText('Bloque pendiente de implementación');
+  await expect(view.getByRole('heading', { name: '4. Plan de Mitigación / Acciones Correctivas' })).toBeVisible();
+  await expect(fields.nth(39)).toContainText('Plan de Mitigación/Acciones Correctivas');
+  await expect(fields.nth(40)).toContainText('No. Acciones de Mitigación');
+  await expect(fields.nth(40)).toContainText('0');
+  await expect(view.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
@@ -217,7 +222,7 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
     await backdrop.dispatchEvent('click');
     await page.waitForTimeout(300);
   }
-  await expect(fields).toHaveCount(39);
+  await expect(fields).toHaveCount(49);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
   await fields.nth(33).scrollIntoViewIfNeeded();
@@ -555,6 +560,169 @@ test('H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y
   expect(pageErrors).toHaveLength(0);
 });
 
+test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupados en Matriz completa', async ({ page }) => {
+  const serverPlans: Record<string, any>[] = [];
+  const serverActivities: Record<string, any>[] = [];
+  const requests: string[] = [];
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  const failedRequests: string[] = [];
+  const httpErrors: string[] = [];
+  let nextPlanId = 201;
+  let nextActivityId = 301;
+  page.on('request', request => requests.push(request.url()));
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('requestfailed', request => failedRequests.push(request.url()));
+  page.on('response', response => { if (response.status() >= 400) httpErrors.push(`${response.status()} ${response.url()}`); });
+
+  await page.route('**/api/matrices-riesgos/mitigacion/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const method = request.method();
+    if (method === 'POST' && path.endsWith('/mitigacion/planes')) {
+      const plan = { ...request.postDataJSON(), plaId: nextPlanId++ };
+      serverPlans.push(plan);
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: plan.plaId }) });
+    }
+    if (method === 'PUT' && /\/mitigacion\/planes\/\d+$/.test(path)) {
+      const planId = Number(path.split('/').at(-1));
+      const index = serverPlans.findIndex(plan => plan.plaId === planId);
+      if (index >= 0) serverPlans[index] = { ...request.postDataJSON(), plaId: planId };
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, mensaje: 'Plan actualizado' }) });
+    }
+    if (method === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/planes')) {
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: serverPlans }) });
+    }
+    if (method === 'POST' && path.endsWith('/mitigacion/actividades')) {
+      const activity = { ...request.postDataJSON(), actId: nextActivityId++ };
+      serverActivities.push(activity);
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: activity.actId }) });
+    }
+    if (method === 'GET' && /\/mitigacion\/planes\/\d+\/actividades$/.test(path)) {
+      const planId = Number(path.split('/').at(-2));
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: serverActivities.filter(activity => activity.actPlanId === planId) }) });
+    }
+    if (method === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/bloque4')) {
+      const planes = serverPlans.map(plan => {
+        const actividades = serverActivities.filter(activity => activity.actPlanId === plan.plaId);
+        return { ...plan, cantidadActividades: actividades.length, actividades };
+      });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { cantidadAcciones: planes.length, planes } }) });
+    }
+    return route.fallback();
+  });
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
+  const evaluationPicker = page.getByRole('combobox', { name: 'Evaluación', exact: true });
+  await evaluationPicker.click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+
+  const savePlan = async (description: string, monitoring: string, managers: string, resources: string, budget: string, start: string, end: string): Promise<void> => {
+    await page.locator('#plan-descripcion').fill(description);
+    await page.locator('#plan-avance').fill('35');
+    await page.locator('#plan-estado').selectOption('EN_PROCESO');
+    await page.locator('#plan-fecha-inicio').fill(start);
+    await page.locator('#plan-fecha-fin').fill(end);
+    await page.locator('#plan-presupuesto').fill(budget);
+    await page.locator('#plan-monitoreo-seguimiento').fill(monitoring);
+    await page.locator('#plan-responsables').fill(managers);
+    await page.locator('#plan-recursos').fill(resources);
+    await page.getByRole('button', { name: 'Guardar nuevo plan', exact: true }).click();
+  };
+  await savePlan('Plan correctivo de revisión reforzada', 'Seguimiento mensual por la unidad responsable', 'Unidad de Cumplimiento y Jefatura Operativa', 'Personal especializado y herramienta de monitoreo', '12500.50', '2026-08-07', '2026-09-07');
+  await expect.poll(() => serverPlans.length).toBe(1);
+  await page.getByRole('button', { name: 'Editar plan y actividades' }).first().click();
+
+  const addActivity = async (description: string, responsible: string): Promise<void> => {
+    await page.locator('#actividad-descripcion').fill(description);
+    await page.locator('#actividad-responsable').fill(responsible);
+    await page.locator('#actividad-fecha-inicio').fill('2026-08-08');
+    await page.locator('#actividad-fecha-fin').fill('2026-08-28');
+    await page.locator('#actividad-estado').fill('EN_PROCESO');
+    await page.getByRole('button', { name: 'Guardar nueva actividad', exact: true }).click();
+  };
+  await addActivity('Revisar controles documentales', 'Analista de Cumplimiento');
+  await expect.poll(() => serverActivities.length).toBe(1);
+  await page.getByRole('button', { name: 'Nueva actividad', exact: true }).click();
+  await addActivity('Actualizar expediente de seguimiento', 'Jefatura Operativa');
+  await expect.poll(() => serverActivities.length).toBe(2);
+
+  await page.getByRole('button', { name: 'Nuevo plan de mitigación', exact: true }).click();
+  await savePlan('Plan complementario de supervisión', 'Seguimiento quincenal', 'Gerencia Operativa', 'Equipo interno de supervisión', '5000.00', '2026-08-10', '2026-09-10');
+  await expect.poll(() => serverPlans.length).toBe(2);
+  await page.getByRole('button', { name: 'Editar plan y actividades' }).nth(1).click();
+  await addActivity('Verificar cierre de hallazgos', 'Supervisor Operativo');
+  await expect.poll(() => serverActivities.length).toBe(3);
+  expect(serverActivities.map(activity => activity.actPlanId)).toEqual([201, 201, 202]);
+
+  await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
+  await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
+  await evaluationPicker.click();
+  await page.getByRole('option', { name: /#20 · Riesgo 7 · BORRADOR/ }).click();
+  await page.getByRole('button', { name: 'Editar plan y actividades' }).first().click();
+  await expect(page.locator('#plan-recursos')).toHaveValue('Personal especializado y herramienta de monitoreo');
+  await expect(page.locator('#plan-responsables')).toHaveValue('Unidad de Cumplimiento y Jefatura Operativa');
+  await expect(page.locator('#plan-monitoreo-seguimiento')).toHaveValue('Seguimiento mensual por la unidad responsable');
+  await page.locator('#plan-recursos').fill('Personal especializado, monitoreo y análisis');
+  await page.getByRole('button', { name: 'Actualizar plan', exact: true }).click();
+  await expect.poll(() => serverPlans[0].plaRecursos).toBe('Personal especializado, monitoreo y análisis');
+
+  await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  const matrix = page.locator('[data-matrix-view="complete"]');
+  const fields = matrix.locator('[data-matrix-field]');
+  await expect(fields).toHaveCount(49);
+  await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
+    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(2, '0'))
+  );
+  const block4 = matrix.locator('[data-matrix-block="4"]');
+  await expect(block4.getByRole('heading', { name: '4. Plan de Mitigación / Acciones Correctivas' })).toBeVisible();
+  const definitions = block4.locator('[data-matrix-field-definition]');
+  await expect(definitions).toHaveCount(10);
+  await expect(definitions.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field-definition')))).resolves.toEqual(
+    ['40', '41', '42', '43', '44', '45', '46', '47', '48', '49']
+  );
+  const block4Labels = [
+    'Plan de Mitigación/Acciones Correctivas', 'No. Acciones de Mitigación', 'Actividades',
+    'Cantidad de Actividades', 'Monitoreo/ Seguimiento', 'Responsables', 'Fecha inicio',
+    'Fecha final', 'Recursos', 'Presupuesto'
+  ];
+  for (let index = 0; index < block4Labels.length; index++) await expect(definitions.nth(index)).toContainText(block4Labels[index]);
+  await expect(block4.locator('[data-matrix-field="41"]')).toContainText('2');
+  await expect(block4.locator('[data-matrix-plan]')).toHaveCount(2);
+  await expect(block4.locator('[data-plan-index="1"] [data-matrix-plan-field-instance="43"]')).toContainText('2');
+  await expect(block4.locator('[data-plan-index="2"] [data-matrix-plan-field-instance="43"]')).toContainText('1');
+  await expect(block4).toContainText('Personal especializado, monitoreo y análisis');
+  await expect(block4).toContainText('Unidad de Cumplimiento y Jefatura Operativa');
+  await expect(block4).toContainText('Analista de Cumplimiento');
+  await expect(block4).toContainText('Seguimiento mensual por la unidad responsable');
+  await expect(matrix.locator('[data-ui-action]')).toHaveCount(0);
+  await expect(matrix.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
+  const closeButtons = page.locator('[data-matrix-modal="complete"] button[aria-label="Cerrar Matriz completa"]');
+  await expect(closeButtons).toHaveCount(2);
+  await expect(closeButtons.first()).toBeVisible();
+  await expect(closeButtons.nth(1)).toBeVisible();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await block4.scrollIntoViewIfNeeded();
+  expect(await matrix.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+  await page.screenshot({ path: 'test-results/block-4-multiple-plans-desktop-1280x900.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await block4.scrollIntoViewIfNeeded();
+  expect(await matrix.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
+  await page.screenshot({ path: 'test-results/block-4-multiple-plans-mobile-390x844.png' });
+  expect(requests.filter(url => url.includes('/familias/1'))).toHaveLength(0);
+  expect(requests.filter(url => url.includes('/monitoreo/evaluaciones/20/automonitoreo'))).toHaveLength(0);
+  expect(requests.filter(url => url.includes('/mitigacion/evaluaciones/20/bloque4'))).toHaveLength(1);
+  expect(consoleErrors).toHaveLength(0);
+  expect(pageErrors).toHaveLength(0);
+  expect(failedRequests).toHaveLength(0);
+  expect(httpErrors).toHaveLength(0);
+});
+
 test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabrir', async ({ page }) => {
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
@@ -776,9 +944,9 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
     await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
   }
 
-  // Q. Confirmar que Matriz completa continúa teniendo exactamente 39 campos implementados
-  await expect(fields).toHaveCount(39);
-  await expect(view.locator('[data-matrix-block="4"]')).toContainText('Bloque pendiente de implementación');
+  // Q. Confirmar que Matriz completa continúa teniendo exactamente 49 campos implementados
+  await expect(fields).toHaveCount(49);
+  await expect(view.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
 
   // Cerrar Matriz completa
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();

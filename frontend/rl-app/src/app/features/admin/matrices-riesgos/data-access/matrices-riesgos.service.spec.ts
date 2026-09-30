@@ -190,12 +190,25 @@ describe('MatricesRiesgosService', () => {
       plaPresupuesto: 1000,
       plaFechaInicio: '2026-08-07',
       plaFechaFin: '2026-09-07',
-      plaEstado: 'ABIERTO'
+      plaEstado: 'EN_PROCESO',
+      plaMonitoreoSeguimiento: 'Seguimiento mensual',
+      plaResponsables: 'Unidad responsable',
+      plaRecursos: 'Equipo especializado'
     }).subscribe();
     const plan = http.expectOne(`${apiUrl}/mitigacion/planes`);
     expect(plan.request.method).toBe('POST');
     expect(plan.request.headers.get(CONFIRMACION_CAMBIOS_HEADER)).toBe('1');
+    expect(plan.request.body.plaRecursos).toBe('Equipo especializado');
     plan.flush({ success: true, datos: 4 });
+  });
+
+  it('consulta la proyección agrupada del Bloque 4 en una sola solicitud de lectura', () => {
+    let resultado: unknown;
+    service.obtenerMitigacionBloque4(15).subscribe(value => resultado = value);
+    const request = http.expectOne(`${apiUrl}/mitigacion/evaluaciones/15/bloque4`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, datos: { cantidadAcciones: 0, planes: [] } });
+    expect(resultado).toEqual({ cantidadAcciones: 0, planes: [] });
   });
 
   it('opera alertas y automonitoreo por endpoints del Bloque 5', () => {

@@ -45,6 +45,9 @@ public sealed class MatricesRiesgosMitigacionController : ControllerBase
     [HttpGet("evaluaciones/{evaluacionId:long}/planes")]
     public async Task<IActionResult> ListarPlanes(long evaluacionId) => Responder(await _service.ListarPlanesAsync(evaluacionId));
 
+    [HttpGet("evaluaciones/{evaluacionId:long}/bloque4")]
+    public async Task<IActionResult> ObtenerBloque4(long evaluacionId) => Responder(await _service.ObtenerBloque4Async(evaluacionId));
+
     [HttpPost("planes")]
     [AuditRequired("Creación de plan de mitigación")]
     public async Task<IActionResult> CrearPlan([FromBody] PlanMitigacionGuardarDto dto) =>

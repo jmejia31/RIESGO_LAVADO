@@ -56,16 +56,16 @@ const SEEDS: readonly MatrixFieldSeed[] = [
   { label: 'Valor del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'valor_riesgo_residual', source: 'Backend F13 / PROY_VRR' },
   { label: 'Nivel del Riesgo Residual', mode: 'COMPUTED', editable: false, key: 'nivel_riesgo_residual', source: 'Backend F14 / catálogo institucional' },
   { label: 'Respuesta al riesgo', mode: 'INPUT', editable: true, key: 'respuesta_riesgo', source: 'Contrato de evaluación / MR_RESPUESTA_RIESGO' },
-  { label: 'Plan de Mitigación/Acciones Correctivas', mode: 'REPEATER', editable: true, key: null, source: 'RL_MR_PLANES.PLA_DESCRIPCION' },
-  { label: 'No. Acciones de Mitigación', mode: 'COMPUTED', editable: false, key: null, source: 'Conteo de acciones persistidas' },
-  { label: 'Actividades', mode: 'REPEATER', editable: true, key: null, source: 'RL_MR_ACTIVIDADES.ACT_DESCRIPCION' },
-  { label: 'Cantidad de Actividades', mode: 'COMPUTED', editable: false, key: null, source: 'Conteo de actividades persistidas' },
-  { label: 'Monitoreo/Seguimiento', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_AUTOMONITOREO; bloque pendiente' },
-  { label: 'Responsables', mode: 'REPEATER', editable: true, key: null, source: 'Responsables de actividades' },
-  { label: 'Fecha inicio', mode: 'INPUT', editable: true, key: null, source: 'Fecha de plan/actividad; bloque pendiente' },
-  { label: 'Fecha final', mode: 'INPUT', editable: true, key: null, source: 'Fecha de plan/actividad; bloque pendiente' },
-  { label: 'Recursos', mode: 'INPUT', editable: true, key: null, source: 'Plan de mitigación; bloque pendiente' },
-  { label: 'Presupuesto', mode: 'INPUT', editable: true, key: null, source: 'RL_MR_PLANES.PLA_PRESUPUESTO; bloque pendiente' },
+  { label: 'Plan de Mitigación/Acciones Correctivas', mode: 'REPEATER', editable: false, key: null, source: 'RL_MR_PLANES.PLA_DESCRIPCION' },
+  { label: 'No. Acciones de Mitigación', mode: 'COMPUTED', editable: false, key: null, source: 'COUNT RL_MR_PLANES por evaluación' },
+  { label: 'Actividades', mode: 'REPEATER', editable: false, key: null, source: 'RL_MR_ACTIVIDADES.ACT_DESCRIPCION; ACT_PLAN_ID → PLA_ID' },
+  { label: 'Cantidad de Actividades', mode: 'COMPUTED', editable: false, key: null, source: 'COUNT RL_MR_ACTIVIDADES por plan' },
+  { label: 'Monitoreo/ Seguimiento', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_MONITOREO_SEGUIMIENTO' },
+  { label: 'Responsables', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_RESPONSABLES' },
+  { label: 'Fecha inicio', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_FECHA_INICIO' },
+  { label: 'Fecha final', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_FECHA_FIN' },
+  { label: 'Recursos', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_RECURSOS' },
+  { label: 'Presupuesto', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_PLANES.PLA_PRESUPUESTO' },
   { label: 'Frecuencia Residual (AUX)', mode: 'COMPUTED', editable: false, key: 'frecuencia_residual_aux', source: 'Runtime institucional' },
   { label: 'Impacto Residual (AUX)', mode: 'COMPUTED', editable: false, key: 'impacto_residual_aux', source: 'Runtime institucional' },
   { label: 'Suma Residual redondeada (AUX)', mode: 'COMPUTED', editable: false, key: 'suma_residual_redondeada_aux', source: 'Runtime institucional' },
@@ -125,7 +125,7 @@ export const MATRIX_FIELDS: readonly MatrixFieldContract[] = Object.freeze(
       ordinal,
       block: blockForOrdinal(ordinal),
       excelColumn: excelColumnForOrdinal(ordinal),
-      implemented: ordinal <= 39
+      implemented: ordinal <= 49
     });
   })
 );
@@ -142,6 +142,7 @@ export const MATRIX_BLOCK_TITLES: Readonly<Record<MatrixFieldContract['block'], 
 export const MATRIX_BLOCK_1_FIELDS = MATRIX_FIELDS.filter(field => field.block === 1);
 export const MATRIX_BLOCK_2_FIELDS = MATRIX_FIELDS.filter(field => field.block === 2);
 export const MATRIX_BLOCK_3_FIELDS = MATRIX_FIELDS.filter(field => field.block === 3);
+export const MATRIX_BLOCK_4_FIELDS = MATRIX_FIELDS.filter(field => field.block === 4);
 
 export const CATALOGO_RESPUESTA_RIESGO = ['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR'] as const;
 export type RespuestaRiesgoCanonica = typeof CATALOGO_RESPUESTA_RIESGO[number];

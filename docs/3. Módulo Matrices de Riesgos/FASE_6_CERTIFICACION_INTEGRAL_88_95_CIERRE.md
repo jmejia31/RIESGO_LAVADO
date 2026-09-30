@@ -275,3 +275,7 @@ El código, pruebas y evidencia de aplicación quedan preparados para commit/pus
 `FINAL_SHA=2fcc597785c5a68ca373b9c441efa37c11423522`; `QUALITY_GATE_RUN=35387051265`; `QUALITY_GATE_SHA=2fcc597785c5a68ca373b9c441efa37c11423522`; `QUALITY_GATE_STATUS=completed`; `QUALITY_GATE_CONCLUSION=success`. El gate remoto ejecutó analyzers bloqueantes, lint, validadores de base/UI/documentación, build Release, quality gates locales, E2E, contenedores backend/frontend y verificación non-root.
 
 Con las decisiones funcionales autorizadas, V2 DRAFT creada, ciclo real controlado limpio, paridad 59/59/59, seguridad corregida, performance sin timeout/error, concurrencia sin duplicación/transacción parcial, regresión verde y gate remoto exacto verde, `FASE_6=CERRADA` y `FINAL_MODULE_PROGRESS=95%`. Las restricciones externas documentadas (Python ausente y suite OracleIntegration heredada ODP.NET/harness con expectativa histórica B10_) no se presentan como PASS ni alteran los invariantes Oracle actuales certificados por SQL*Plus/API.
+
+## Nota de continuidad posterior — Bloque 4 actual
+
+Una decisión funcional posterior del Bloque 4 reactiva formalmente MR-44, MR-45, MR-46, MR-47, MR-48 y MR-49 bajo el contrato vigente de campos 40–49. La clasificación histórica de Fase 6 se conserva como evidencia de aquella fase y no se reescribe. Para esta intervención, `BLOCK_4_CURRENT_CONTRACT_SUPERSEDES_LEGACY_DESCOPE=YES`; las nuevas decisiones y su trazabilidad se documentan en `MATRIZ_COMPLETA_BLOQUE_4.md`.

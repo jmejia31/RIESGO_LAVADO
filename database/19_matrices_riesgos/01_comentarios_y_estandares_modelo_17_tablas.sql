@@ -134,6 +134,9 @@ COMMENT ON COLUMN RL_MR_PLANES.PLA_PRESUPUESTO IS 'Presupuesto financiero asigna
 COMMENT ON COLUMN RL_MR_PLANES.PLA_FECHA_INICIO IS 'Fecha programada de inicio del plan.';
 COMMENT ON COLUMN RL_MR_PLANES.PLA_FECHA_FIN IS 'Fecha programada de finalización del plan.';
 COMMENT ON COLUMN RL_MR_PLANES.PLA_ESTADO IS 'Estado del plan (PLANIFICADO, EN_EJECUCION, COMPLETADO, CANCELADO).';
+COMMENT ON COLUMN RL_MR_PLANES.PLA_MONITOREO_SEGUIMIENTO IS 'Monitoreo y seguimiento institucional del plan.';
+COMMENT ON COLUMN RL_MR_PLANES.PLA_RESPONSABLES IS 'Responsable(s) institucional(es) del plan.';
+COMMENT ON COLUMN RL_MR_PLANES.PLA_RECURSOS IS 'Recursos requeridos o asociados al plan de mitigación.';
 
 -- 13. RL_MR_ACTIVIDADES
 COMMENT ON COLUMN RL_MR_ACTIVIDADES.ACT_ID IS 'Identificador único de la actividad.';

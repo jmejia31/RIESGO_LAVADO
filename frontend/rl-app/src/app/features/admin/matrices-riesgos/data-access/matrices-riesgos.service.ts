@@ -32,6 +32,7 @@ import {
   ControlRiesgoGuardarDto,
   EvaluacionControlDto,
   EvaluacionControlGuardarDto,
+  MitigacionBloque4Dto,
   PlanMitigacionDto,
   PlanMitigacionGuardarDto,
   ResumenMatricesOperativoDto,
@@ -340,6 +341,12 @@ export class MatricesRiesgosService {
   listarPlanes(evaluacionId: number): Observable<PlanMitigacionDto[]> {
     return this.http
       .get<ApiResponse<PlanMitigacionDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/planes`)
+      .pipe(map(response => response.datos));
+  }
+
+  obtenerMitigacionBloque4(evaluacionId: number): Observable<MitigacionBloque4Dto> {
+    return this.http
+      .get<ApiResponse<MitigacionBloque4Dto>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/bloque4`)
       .pipe(map(response => response.datos));
   }
 

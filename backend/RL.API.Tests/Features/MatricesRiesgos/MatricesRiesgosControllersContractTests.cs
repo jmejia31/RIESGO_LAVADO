@@ -183,6 +183,7 @@ public sealed class MatricesRiesgosControllersContractTests
     {
         IMatricesRiesgosMitigacionService service = InterfaceStub.Create<IMatricesRiesgosMitigacionService>(out InterfaceStub stub);
         stub.On(nameof(IMatricesRiesgosMitigacionService.ListarPlanesAsync), _ => Task.FromResult(ServiceResult<IReadOnlyList<PlanMitigacionDto>>.Ok(new List<PlanMitigacionDto>())));
+        stub.On(nameof(IMatricesRiesgosMitigacionService.ObtenerBloque4Async), _ => Task.FromResult(ServiceResult<MitigacionBloque4Dto>.Ok(new MitigacionBloque4Dto())));
         stub.On(nameof(IMatricesRiesgosMitigacionService.CrearPlanAsync), _ => Task.FromResult(ServiceResult<long>.Ok(21L, "Plan creado")));
         stub.On(nameof(IMatricesRiesgosMitigacionService.ActualizarPlanAsync), _ => Task.FromResult(ServiceResult.Ok("Plan actualizado")));
 
@@ -194,6 +195,7 @@ public sealed class MatricesRiesgosControllersContractTests
         ConfigurarContextoHttp(controller);
 
         IActionResult listPlanes = await controller.ListarPlanes(1);
+        IActionResult block4 = await controller.ObtenerBloque4(1);
         IActionResult createPlan = await controller.CrearPlan(new PlanMitigacionGuardarDto { PlaDescripcion = "Plan 1" });
         IActionResult updatePlan = await controller.ActualizarPlan(21, new PlanMitigacionGuardarDto { PlaDescripcion = "Plan 1 Mod" });
 
@@ -202,6 +204,7 @@ public sealed class MatricesRiesgosControllersContractTests
         IActionResult updateAct = await controller.ActualizarActividad(31, new ActividadPlanGuardarDto { ActDescripcion = "Act 1 Mod" });
 
         Assert.IsType<OkObjectResult>(listPlanes);
+        Assert.IsType<OkObjectResult>(block4);
         Assert.IsType<OkObjectResult>(createPlan);
         Assert.IsType<OkObjectResult>(updatePlan);
         Assert.IsType<OkObjectResult>(listActs);

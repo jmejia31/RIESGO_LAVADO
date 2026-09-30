@@ -26,6 +26,18 @@ BEGIN
            'CURRENT_SCHEMA debe ser RIESGO_LAVADO.');
 
     SELECT COUNT(*) INTO v_count
+      FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'RL_MR_PLANES'
+       AND COLUMN_NAME IN ('PLA_MONITOREO_SEGUIMIENTO','PLA_RESPONSABLES','PLA_RECURSOS')
+       AND DATA_TYPE = 'VARCHAR2' AND CHAR_LENGTH = 1000 AND CHAR_USED = 'C' AND NULLABLE = 'Y';
+    exigir(v_count = 3, -20511, 'Las columnas textuales opcionales de Bloque 4 no cumplen el esquema aprobado.');
+
+    SELECT COUNT(*) INTO v_count FROM USER_TAB_COLUMNS
+     WHERE TABLE_NAME = 'RL_MR_PLANES' AND COLUMN_NAME = 'PLA_PRESUPUESTO'
+       AND DATA_TYPE = 'NUMBER' AND DATA_PRECISION = 15 AND DATA_SCALE = 2 AND NULLABLE = 'N';
+    exigir(v_count = 1, -20512, 'PLA_PRESUPUESTO no conserva NUMBER(15,2) NOT NULL.');
+
+    SELECT COUNT(*) INTO v_count
       FROM RL_MR_CONTROLES_RIESGO c
       LEFT JOIN RL_MR_EVALUACIONES_RIESGO e ON e.EVA_ID = c.CON_EVALUACION_ID
      WHERE e.EVA_ID IS NULL;
@@ -51,6 +63,13 @@ BEGIN
         OR p.PLA_PRESUPUESTO < 0
         OR p.PLA_FECHA_FIN < p.PLA_FECHA_INICIO;
     exigir(v_count = 0, -20505, 'Existen planes inválidos o huérfanos.');
+
+    SELECT COUNT(*) INTO v_count
+      FROM RL_MR_PLANES
+     WHERE LENGTH(PLA_MONITOREO_SEGUIMIENTO) > 1000
+        OR LENGTH(PLA_RESPONSABLES) > 1000
+        OR LENGTH(PLA_RECURSOS) > 1000;
+    exigir(v_count = 0, -20513, 'Existen valores de Bloque 4 que exceden el contrato textual.');
 
     SELECT COUNT(*) INTO v_count
       FROM RL_MR_ACTIVIDADES a

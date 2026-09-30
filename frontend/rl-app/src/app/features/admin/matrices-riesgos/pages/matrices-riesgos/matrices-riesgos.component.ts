@@ -24,7 +24,7 @@ import {
 } from '../../models/matrices-riesgos.models';
 import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
 import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
-import { ControlRiesgoDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { ControlRiesgoDto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
@@ -42,7 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -207,6 +207,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly controlesMatrizCompleta = signal<ControlRiesgoDto[]>([]);
   readonly controlesMatrizEnCarga = signal(false);
   readonly controlesMatrizError = signal<string | null>(null);
+  readonly bloque4Matriz = signal<MitigacionBloque4Dto | null>(null);
+  readonly bloque4MatrizEnCarga = signal(false);
+  readonly bloque4MatrizError = signal<string | null>(null);
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
@@ -1574,6 +1577,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.controlesMatrizCompleta.set([]);
     this.controlesMatrizError.set(null);
     this.controlesMatrizEnCarga.set(false);
+    this.bloque4Matriz.set(null);
+    this.bloque4MatrizError.set(null);
+    this.bloque4MatrizEnCarga.set(false);
     this.matrizCompletaEnCarga.set(true);
     this.modalMatrizCompletaAbierto.set(true);
 
@@ -1584,6 +1590,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.riesgoId.set(detalle.evaRiesgoId);
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
         this.cargarControlesMatrizCompleta(detalle.evaId, solicitudId);
+        this.cargarBloque4Matriz(detalle.evaId, solicitudId);
         this.cargarMetodologiaMatrizCompleta(detalle.evaVersionId, solicitudId);
         forkJoin({
           riesgo: this.service.obtenerRiesgo(detalle.evaRiesgoId),
@@ -1618,6 +1625,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.matrizCompletaEnCarga.set(false);
     this.metodologiaMatrizCompletaEnCarga.set(false);
     this.controlesMatrizEnCarga.set(false);
+    this.bloque4MatrizEnCarga.set(false);
     this.globalState.limpiarError();
 
     const foco = this.focoRetornoMatrizCompleta;
@@ -1657,7 +1665,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly camposMatrizCompleta = MATRIX_BLOCK_1_FIELDS;
   readonly camposControlesMatriz = MATRIX_BLOCK_2_FIELDS;
   readonly camposResidualMatriz = MATRIX_BLOCK_3_FIELDS;
-  readonly bloquesMatrizPendientes = [4, 5, 6] as const;
+  readonly camposBloque4Matriz = MATRIX_BLOCK_4_FIELDS;
+  readonly camposMatrizPlan = MATRIX_BLOCK_4_FIELDS.slice(2);
+  readonly bloquesMatrizPendientes = [5, 6] as const;
   readonly etiquetaBloquePendiente = (block: 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
   camposMetadataBloque(block: 4 | 5 | 6): readonly MatrixFieldContract[] {
     return MATRIX_FIELDS.filter(field => field.block === block);
@@ -1714,6 +1724,65 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     return '—';
+  }
+
+  valorCampoBloque4(field: MatrixFieldContract, plan: PlanMitigacionDto): string {
+    switch (field.ordinal) {
+      case 43: return Number.isInteger(plan.cantidadActividades) && (plan.cantidadActividades ?? -1) >= 0 ? String(plan.cantidadActividades) : '—';
+      case 44: return this.textoMatriz(plan.plaMonitoreoSeguimiento);
+      case 45: return this.textoMatriz(plan.plaResponsables);
+      case 46: return this.fechaMatrizPublica(plan.plaFechaInicio);
+      case 47: return this.fechaMatrizPublica(plan.plaFechaFin);
+      case 48: return this.textoMatriz(plan.plaRecursos);
+      case 49: return this.presupuestoMatriz(plan.plaPresupuesto);
+      default: return '—';
+    }
+  }
+
+  private textoMatriz(value: string | null | undefined): string {
+    return typeof value === 'string' && value.trim() ? normalizarMojibakeVisibleUtf8(value.trim()) : '—';
+  }
+
+  fechaMatrizPublica(value: string | null | undefined): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-HN', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(date);
+  }
+
+  private presupuestoMatriz(value: number | null | undefined): string {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return '—';
+    return new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
+  reintentarCargaBloque4Matriz(): void {
+    const evaluacionId = this.evaluacionSeleccionada()?.evaId;
+    if (evaluacionId) this.cargarBloque4Matriz(evaluacionId, this.secuenciaCargaMatrizCompleta);
+  }
+
+  private cargarBloque4Matriz(evaluacionId: number, solicitudId: number): void {
+    this.bloque4MatrizEnCarga.set(true);
+    this.bloque4MatrizError.set(null);
+    this.service.obtenerMitigacionBloque4(evaluacionId).subscribe({
+      next: response => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        if (!response || !Array.isArray(response.planes) || !Number.isInteger(response.cantidadAcciones)
+          || response.cantidadAcciones < 0 || response.cantidadAcciones !== response.planes.length
+          || response.planes.some(plan => !Number.isSafeInteger(plan.plaId) || !Array.isArray(plan.actividades)
+            || !Number.isInteger(plan.cantidadActividades) || plan.cantidadActividades !== plan.actividades.length)) {
+          this.bloque4Matriz.set(null);
+          this.bloque4MatrizError.set('La proyección de planes y actividades no tiene un contrato válido.');
+        } else {
+          this.bloque4Matriz.set(response);
+        }
+        this.bloque4MatrizEnCarga.set(false);
+      },
+      error: error => {
+        if (solicitudId !== this.secuenciaCargaMatrizCompleta) return;
+        this.bloque4Matriz.set(null);
+        this.bloque4MatrizError.set(this.obtenerMensajeError(error, 'No se pudo cargar el plan de mitigación de la evaluación.'));
+        this.bloque4MatrizEnCarga.set(false);
+      }
+    });
   }
 
   controlesPorTipo(tipo: ControlRiesgoDto['conTipo']): ControlRiesgoDto[] {

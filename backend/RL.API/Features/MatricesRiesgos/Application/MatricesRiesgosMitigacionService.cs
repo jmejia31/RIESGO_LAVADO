@@ -16,6 +16,7 @@ public interface IMatricesRiesgosMitigacionService
     Task<ServiceResult<IReadOnlyList<EvaluacionControlDto>>> ListarEvaluacionesControlAsync(long controlId);
     Task<ServiceResult<long>> RegistrarEvaluacionControlAsync(long controlId, EvaluacionControlGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<IReadOnlyList<PlanMitigacionDto>>> ListarPlanesAsync(long evaluacionId);
+    Task<ServiceResult<MitigacionBloque4Dto>> ObtenerBloque4Async(long evaluacionId);
     Task<ServiceResult<long>> CrearPlanAsync(PlanMitigacionGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult> ActualizarPlanAsync(long planId, PlanMitigacionGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<IReadOnlyList<ActividadPlanDto>>> ListarActividadesAsync(long planId);
@@ -219,6 +220,15 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
             ? ServiceResult<IReadOnlyList<PlanMitigacionDto>>.BadRequest("La evaluación es obligatoria.")
             : ServiceResult<IReadOnlyList<PlanMitigacionDto>>.Ok(await _repo.ListarPlanesAsync(evaluacionId));
 
+    public async Task<ServiceResult<MitigacionBloque4Dto>> ObtenerBloque4Async(long evaluacionId)
+    {
+        if (evaluacionId <= 0) return ServiceResult<MitigacionBloque4Dto>.BadRequest("La evaluación es obligatoria.");
+        var bloque = await _repo.ObtenerBloque4Async(evaluacionId);
+        return bloque is null
+            ? ServiceResult<MitigacionBloque4Dto>.NotFound("La evaluación no existe.")
+            : ServiceResult<MitigacionBloque4Dto>.Ok(bloque);
+    }
+
     public async Task<ServiceResult<long>> CrearPlanAsync(PlanMitigacionGuardarDto dto, long usuarioId, string? ip)
     {
         string? error = ValidarPlan(dto);
@@ -284,12 +294,19 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (dto.PlaEvaluacionId <= 0) return "La evaluación es obligatoria.";
         if (string.IsNullOrWhiteSpace(dto.PlaDescripcion) || dto.PlaDescripcion.Trim().Length > 500) return "La descripción del plan es obligatoria y no puede exceder 500 caracteres.";
         if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.PlaDescripcion)) return "La descripción del plan contiene caracteres de codificación inválidos.";
+        if (!TextoPlanOpcionalValido(dto.PlaMonitoreoSeguimiento)
+            || !TextoPlanOpcionalValido(dto.PlaResponsables)
+            || !TextoPlanOpcionalValido(dto.PlaRecursos)) return "Los datos del plan exceden 1000 caracteres o contienen codificación inválida.";
         if (dto.PlaAvance is < 0 or > 100) return "El avance del plan debe estar entre 0 y 100.";
         if (dto.PlaPresupuesto < 0) return "El presupuesto no puede ser negativo.";
         if (dto.PlaFechaFin < dto.PlaFechaInicio) return "La fecha final no puede ser anterior a la fecha inicial.";
         if (!EstadosPlan.Contains(dto.PlaEstado?.Trim() ?? string.Empty)) return "El estado del plan debe ser PENDIENTE, EN_PROCESO, CERRADO, VENCIDO o INACTIVO.";
         return null;
     }
+
+    private static bool TextoPlanOpcionalValido(string? valor) =>
+        string.IsNullOrWhiteSpace(valor)
+        || (valor.Trim().Length <= 1000 && !TextoVisibleUtf8Normalizer.ContieneMojibake(valor));
 
     private static string? ValidarActividad(ActividadPlanGuardarDto dto)
     {

@@ -55,9 +55,19 @@ export interface PlanMitigacionDto {
   plaFechaInicio: string;
   plaFechaFin: string;
   plaEstado: string;
+  plaMonitoreoSeguimiento?: string | null;
+  plaResponsables?: string | null;
+  plaRecursos?: string | null;
+  cantidadActividades?: number;
+  actividades?: ActividadPlanDto[];
 }
 
-export type PlanMitigacionGuardarDto = Omit<PlanMitigacionDto, 'plaId'>;
+export type PlanMitigacionGuardarDto = Omit<PlanMitigacionDto, 'plaId' | 'cantidadActividades' | 'actividades'>;
+
+export interface MitigacionBloque4Dto {
+  cantidadAcciones: number;
+  planes: PlanMitigacionDto[];
+}
 
 export interface ActividadPlanDto {
   actId: number;

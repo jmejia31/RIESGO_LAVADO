@@ -25,7 +25,10 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     plaPresupuesto: 100,
     plaFechaInicio: '2026-08-07T00:00:00Z',
     plaFechaFin: '2026-08-08T00:00:00Z',
-    plaEstado: 'PENDIENTE'
+    plaEstado: 'PENDIENTE',
+    plaMonitoreoSeguimiento: 'Seguimiento mensual',
+    plaResponsables: 'Unidad responsable',
+    plaRecursos: 'Equipo especializado'
   };
 
   const actividad = {
@@ -226,6 +229,9 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.planFechaInicio = '2026-08-01';
     component.planFechaFin = '2026-08-15';
     component.planEstado = 'EN_PROCESO';
+    component.planMonitoreoSeguimiento = 'Seguimiento mensual';
+    component.planResponsables = 'Unidad responsable';
+    component.planRecursos = 'Equipo especializado';
     component.guardarPlan();
 
     expect(service['crearPlan']).toHaveBeenCalledWith({
@@ -235,7 +241,10 @@ describe('MatricesRiesgosMitigacionComponent', () => {
       plaPresupuesto: 5000,
       plaFechaInicio: '2026-08-01T00:00:00.000Z',
       plaFechaFin: '2026-08-15T00:00:00.000Z',
-      plaEstado: 'EN_PROCESO'
+      plaEstado: 'EN_PROCESO',
+      plaMonitoreoSeguimiento: 'Seguimiento mensual',
+      plaResponsables: 'Unidad responsable',
+      plaRecursos: 'Equipo especializado'
     });
     expect(component.mensaje()).toBe('Plan creado correctamente.');
   });
@@ -245,12 +254,21 @@ describe('MatricesRiesgosMitigacionComponent', () => {
     component.editarPlan(plan);
     expect(component.planEditandoId).toBe(4);
     expect(component.planDescripcion).toBe('Plan UAT');
+    expect(component.planMonitoreoSeguimiento).toBe('Seguimiento mensual');
+    expect(component.planResponsables).toBe('Unidad responsable');
+    expect(component.planRecursos).toBe('Equipo especializado');
 
     component.planDescripcion = 'Plan corregido';
+    component.planMonitoreoSeguimiento = 'Seguimiento quincenal';
+    component.planResponsables = 'Gerencia Operativa';
+    component.planRecursos = 'Equipo actualizado';
     component.guardarPlan();
 
     expect(service['actualizarPlan']).toHaveBeenCalledWith(4, expect.objectContaining({
-      plaDescripcion: 'Plan corregido'
+      plaDescripcion: 'Plan corregido',
+      plaMonitoreoSeguimiento: 'Seguimiento quincenal',
+      plaResponsables: 'Gerencia Operativa',
+      plaRecursos: 'Equipo actualizado'
     }));
     expect(component.mensaje()).toBe('Plan actualizado correctamente.');
   });

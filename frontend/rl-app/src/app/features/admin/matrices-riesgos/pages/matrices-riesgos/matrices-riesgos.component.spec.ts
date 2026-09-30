@@ -6,7 +6,7 @@ import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
-import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS } from '../../models/matriz-institucional.contract';
 
 describe('MatricesRiesgosComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -19,6 +19,7 @@ describe('MatricesRiesgosComponent', () => {
     obtenerEvaluacion: ReturnType<typeof vi.fn>;
     obtenerRiesgo: ReturnType<typeof vi.fn>;
     listarControles: ReturnType<typeof vi.fn>;
+    obtenerMitigacionBloque4: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
     listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
@@ -129,6 +130,7 @@ describe('MatricesRiesgosComponent', () => {
       })),
       obtenerRiesgo: vi.fn().mockReturnValue(of({ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo institucional', rieDescripcion: 'Evaluación', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T08:00:00' })),
       listarControles: vi.fn().mockReturnValue(of([])),
+      obtenerMitigacionBloque4: vi.fn().mockReturnValue(of({ cantidadAcciones: 0, planes: [] })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',
@@ -633,7 +635,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       'Nivel del Riesgo Residual',
       'Respuesta al riesgo'
     ]);
-    expect(component.bloquesMatrizPendientes).toEqual([4, 5, 6]);
+    expect(component.bloquesMatrizPendientes).toEqual([5, 6]);
 
     const field = (ordinal: number) => MATRIX_BLOCK_3_FIELDS.find(item => item.ordinal === ordinal)!;
 
@@ -708,5 +710,30 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.valorCampoResidual(field(35))).toBe('3');
     expect(component.valorCampoResidual(field(36))).toBe('2');
     expect(component.valorCampoResidual(field(39))).toBe('ACEPTAR');
+  });
+
+  it('proyecta campos plan-level 40–49 con conteos, textos, fechas y presupuesto seguros', () => {
+    expect(MATRIX_BLOCK_4_FIELDS.map(item => item.ordinal)).toEqual([40, 41, 42, 43, 44, 45, 46, 47, 48, 49]);
+    expect(MATRIX_BLOCK_4_FIELDS.map(item => item.label)).toEqual([
+      'Plan de Mitigación/Acciones Correctivas', 'No. Acciones de Mitigación', 'Actividades',
+      'Cantidad de Actividades', 'Monitoreo/ Seguimiento', 'Responsables', 'Fecha inicio', 'Fecha final',
+      'Recursos', 'Presupuesto'
+    ]);
+    const plan = {
+      plaId: 7, plaEvaluacionId: 20, plaDescripcion: 'Plan repetible', plaAvance: 35, plaPresupuesto: 12500.5,
+      plaFechaInicio: '2026-08-07T00:00:00Z', plaFechaFin: '2026-09-07T00:00:00Z', plaEstado: 'EN_PROCESO',
+      plaMonitoreoSeguimiento: 'Seguimiento mensual', plaResponsables: 'Unidad responsable', plaRecursos: 'Equipo especializado',
+      cantidadActividades: 2, actividades: []
+    };
+    const field = (ordinal: number) => MATRIX_BLOCK_4_FIELDS.find(item => item.ordinal === ordinal)!;
+    expect(component.valorCampoBloque4(field(43), plan)).toBe('2');
+    expect(component.valorCampoBloque4(field(44), plan)).toBe('Seguimiento mensual');
+    expect(component.valorCampoBloque4(field(45), plan)).toBe('Unidad responsable');
+    expect(component.valorCampoBloque4(field(46), plan)).not.toBe('—');
+    expect(component.valorCampoBloque4(field(47), plan)).not.toBe('—');
+    expect(component.valorCampoBloque4(field(48), plan)).toBe('Equipo especializado');
+    expect(component.valorCampoBloque4(field(49), plan)).not.toBe('—');
+    expect(component.valorCampoBloque4(field(44), { ...plan, plaMonitoreoSeguimiento: '   ' })).toBe('—');
+    expect(component.fechaMatrizPublica('fecha-invalida')).toBe('—');
   });
 });

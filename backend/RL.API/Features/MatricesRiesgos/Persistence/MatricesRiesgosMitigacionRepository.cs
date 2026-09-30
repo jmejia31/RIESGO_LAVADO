@@ -20,6 +20,7 @@ public interface IMatricesRiesgosMitigacionRepository
     Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId);
     Task<long> RegistrarEvaluacionControlAsync(long controlId, EvaluacionControlGuardarDto dto, long usuarioId, string? ip);
     Task<IReadOnlyList<PlanMitigacionDto>> ListarPlanesAsync(long evaluacionId);
+    Task<MitigacionBloque4Dto?> ObtenerBloque4Async(long evaluacionId);
     Task<long> CrearPlanAsync(PlanMitigacionGuardarDto dto, long usuarioId, string? ip);
     Task<bool> ActualizarPlanAsync(long planId, PlanMitigacionGuardarDto dto, long usuarioId, string? ip);
     Task<IReadOnlyList<ActividadPlanDto>> ListarActividadesAsync(long planId);
@@ -342,7 +343,8 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         await conn.OpenAsync();
         const string sql = @"
             SELECT PLA_ID, PLA_EVALUACION_ID, PLA_DESCRIPCION, PLA_AVANCE, PLA_PRESUPUESTO,
-                   PLA_FECHA_INICIO, PLA_FECHA_FIN, PLA_ESTADO
+                   PLA_FECHA_INICIO, PLA_FECHA_FIN, PLA_ESTADO,
+                   PLA_MONITOREO_SEGUIMIENTO, PLA_RESPONSABLES, PLA_RECURSOS
               FROM RL_MR_PLANES
              WHERE PLA_EVALUACION_ID = :evaluacionId
              ORDER BY PLA_ID DESC";
@@ -356,10 +358,85 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             {
                 PlaId = reader.GetInt64(0), PlaEvaluacionId = reader.GetInt64(1), PlaDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
                 PlaAvance = reader.GetDecimal(3), PlaPresupuesto = reader.GetDecimal(4), PlaFechaInicio = reader.GetDateTime(5),
-                PlaFechaFin = reader.GetDateTime(6), PlaEstado = reader.GetString(7)
+                PlaFechaFin = reader.GetDateTime(6), PlaEstado = reader.GetString(7),
+                PlaMonitoreoSeguimiento = TextoNullable(reader, 8), PlaResponsables = TextoNullable(reader, 9), PlaRecursos = TextoNullable(reader, 10)
             });
         }
         return lista;
+    }
+
+    public async Task<MitigacionBloque4Dto?> ObtenerBloque4Async(long evaluacionId)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        const string sql = @"
+            SELECT e.EVA_ID,
+                   p.PLA_ID, p.PLA_EVALUACION_ID, p.PLA_DESCRIPCION, p.PLA_AVANCE, p.PLA_PRESUPUESTO,
+                   p.PLA_FECHA_INICIO, p.PLA_FECHA_FIN, p.PLA_ESTADO,
+                   p.PLA_MONITOREO_SEGUIMIENTO, p.PLA_RESPONSABLES, p.PLA_RECURSOS,
+                   a.ACT_ID, a.ACT_PLAN_ID, a.ACT_DESCRIPCION, a.ACT_RESPONSABLE, a.ACT_AVANCE,
+                   a.ACT_FECHA_INICIO, a.ACT_FECHA_FIN, a.ACT_ESTADO
+              FROM RL_MR_EVALUACIONES_RIESGO e
+              LEFT JOIN RL_MR_PLANES p ON p.PLA_EVALUACION_ID = e.EVA_ID
+              LEFT JOIN RL_MR_ACTIVIDADES a ON a.ACT_PLAN_ID = p.PLA_ID
+             WHERE e.EVA_ID = :evaluacionId
+             ORDER BY p.PLA_ID DESC, a.ACT_ID";
+        await using var cmd = Comando(sql, conn);
+        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+
+        var planes = new List<PlanMitigacionDto>();
+        var porId = new Dictionary<long, PlanMitigacionDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) return null;
+
+        do
+        {
+            if (reader.IsDBNull(1)) continue;
+            long planId = reader.GetInt64(1);
+            if (!porId.TryGetValue(planId, out var plan))
+            {
+                plan = new PlanMitigacionDto
+                {
+                    PlaId = planId,
+                    PlaEvaluacionId = reader.GetInt64(2),
+                    PlaDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
+                    PlaAvance = reader.GetDecimal(4),
+                    PlaPresupuesto = reader.GetDecimal(5),
+                    PlaFechaInicio = reader.GetDateTime(6),
+                    PlaFechaFin = reader.GetDateTime(7),
+                    PlaEstado = reader.GetString(8),
+                    PlaMonitoreoSeguimiento = TextoNullable(reader, 9),
+                    PlaResponsables = TextoNullable(reader, 10),
+                    PlaRecursos = TextoNullable(reader, 11)
+                };
+                porId.Add(planId, plan);
+                planes.Add(plan);
+            }
+
+            if (!reader.IsDBNull(12))
+            {
+                var actividades = plan.Actividades as List<ActividadPlanDto>;
+                if (actividades is null)
+                {
+                    actividades = [];
+                    plan.Actividades = actividades;
+                }
+                actividades.Add(new ActividadPlanDto
+                {
+                    ActId = reader.GetInt64(12),
+                    ActPlanId = reader.GetInt64(13),
+                    ActDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(14)),
+                    ActResponsable = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(15)),
+                    ActAvance = reader.GetDecimal(16),
+                    ActFechaInicio = reader.GetDateTime(17),
+                    ActFechaFin = reader.GetDateTime(18),
+                    ActEstado = reader.GetString(19)
+                });
+                plan.CantidadActividades++;
+            }
+        } while (await reader.ReadAsync());
+
+        return new MitigacionBloque4Dto { CantidadAcciones = planes.Count, Planes = planes };
     }
 
     public async Task<long> CrearPlanAsync(PlanMitigacionGuardarDto dto, long usuarioId, string? ip)
@@ -373,8 +450,10 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             long id = await SiguienteAsync(conn, tx, "SEQ_RL_MR_PLANES");
             const string sql = @"
                 INSERT INTO RL_MR_PLANES
-                    (PLA_ID, PLA_EVALUACION_ID, PLA_DESCRIPCION, PLA_AVANCE, PLA_PRESUPUESTO, PLA_FECHA_INICIO, PLA_FECHA_FIN, PLA_ESTADO)
-                VALUES (:id, :evaluacionId, :descripcion, :avance, :presupuesto, :inicio, :fin, :estado)";
+                    (PLA_ID, PLA_EVALUACION_ID, PLA_DESCRIPCION, PLA_AVANCE, PLA_PRESUPUESTO, PLA_FECHA_INICIO, PLA_FECHA_FIN, PLA_ESTADO,
+                     PLA_MONITOREO_SEGUIMIENTO, PLA_RESPONSABLES, PLA_RECURSOS)
+                VALUES (:id, :evaluacionId, :descripcion, :avance, :presupuesto, :inicio, :fin, :estado,
+                        :monitoreo, :responsables, :recursos)";
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosPlan(cmd, id, dto);
             await cmd.ExecuteNonQueryAsync();
@@ -393,16 +472,19 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         try
         {
             await ExigirEvaluacionAsync(conn, tx, dto.PlaEvaluacionId);
+            var anterior = await ObtenerPlanParaAuditoriaAsync(conn, tx, planId);
+            if (anterior is null) { await tx.RollbackAsync(); return false; }
+            if (anterior.PlaEvaluacionId != dto.PlaEvaluacionId) throw new InvalidOperationException("No se permite cambiar la evaluación padre de un plan.");
             const string sql = @"
                 UPDATE RL_MR_PLANES
-                   SET PLA_EVALUACION_ID = :evaluacionId, PLA_DESCRIPCION = :descripcion,
-                       PLA_AVANCE = :avance, PLA_PRESUPUESTO = :presupuesto,
-                       PLA_FECHA_INICIO = :inicio, PLA_FECHA_FIN = :fin, PLA_ESTADO = :estado
-                 WHERE PLA_ID = :id";
+                   SET PLA_DESCRIPCION = :descripcion, PLA_AVANCE = :avance, PLA_PRESUPUESTO = :presupuesto,
+                       PLA_FECHA_INICIO = :inicio, PLA_FECHA_FIN = :fin, PLA_ESTADO = :estado,
+                       PLA_MONITOREO_SEGUIMIENTO = :monitoreo, PLA_RESPONSABLES = :responsables, PLA_RECURSOS = :recursos
+                 WHERE PLA_ID = :id AND PLA_EVALUACION_ID = :evaluacionId";
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosPlan(cmd, planId, dto);
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
-            await AuditarAsync(conn, tx, "RL_MR_PLANES", planId, "UPDATE", dto, usuarioId, ip);
+            await AuditarAntesDespuesAsync(conn, tx, "RL_MR_PLANES", planId, anterior, dto, usuarioId, ip);
             await tx.CommitAsync();
             return true;
         }
@@ -464,12 +546,14 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         await using var tx = conn.BeginTransaction();
         try
         {
-            await ExigirExisteAsync(conn, tx, "RL_MR_PLANES", "PLA_ID", dto.ActPlanId, "El plan no existe.");
+            long? planActual = await ObtenerPlanPadreActividadAsync(conn, tx, actividadId);
+            if (planActual is null) { await tx.RollbackAsync(); return false; }
+            if (planActual.Value != dto.ActPlanId) throw new InvalidOperationException("No se permite cambiar el plan padre de una actividad.");
             const string sql = @"
                 UPDATE RL_MR_ACTIVIDADES
-                   SET ACT_PLAN_ID = :planId, ACT_DESCRIPCION = :descripcion, ACT_RESPONSABLE = :responsable,
+                   SET ACT_DESCRIPCION = :descripcion, ACT_RESPONSABLE = :responsable,
                        ACT_AVANCE = :avance, ACT_FECHA_INICIO = :inicio, ACT_FECHA_FIN = :fin, ACT_ESTADO = :estado
-                 WHERE ACT_ID = :id";
+                 WHERE ACT_ID = :id AND ACT_PLAN_ID = :planId";
             await using var cmd = Comando(sql, conn, tx);
             AgregarParametrosActividad(cmd, actividadId, dto);
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
@@ -489,7 +573,45 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         cmd.Parameters.Add(new OracleParameter("inicio", dto.PlaFechaInicio));
         cmd.Parameters.Add(new OracleParameter("fin", dto.PlaFechaFin));
         cmd.Parameters.Add(new OracleParameter("estado", dto.PlaEstado.Trim().ToUpperInvariant()));
+        cmd.Parameters.Add(new OracleParameter("monitoreo", (object?)NormalizarTextoPlan(dto.PlaMonitoreoSeguimiento) ?? DBNull.Value));
+        cmd.Parameters.Add(new OracleParameter("responsables", (object?)NormalizarTextoPlan(dto.PlaResponsables) ?? DBNull.Value));
+        cmd.Parameters.Add(new OracleParameter("recursos", (object?)NormalizarTextoPlan(dto.PlaRecursos) ?? DBNull.Value));
         cmd.Parameters.Add(new OracleParameter("id", id));
+    }
+
+    private static string? NormalizarTextoPlan(string? valor) =>
+        string.IsNullOrWhiteSpace(valor) ? null : TextoVisibleUtf8Normalizer.Normalizar(valor.Trim());
+
+    private static string? TextoNullable(OracleDataReader reader, int ordinal) =>
+        reader.IsDBNull(ordinal) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(ordinal));
+
+    private static async Task<PlanMitigacionDto?> ObtenerPlanParaAuditoriaAsync(OracleConnection conn, OracleTransaction tx, long planId)
+    {
+        const string sql = @"SELECT PLA_ID, PLA_EVALUACION_ID, PLA_DESCRIPCION, PLA_AVANCE, PLA_PRESUPUESTO,
+                                    PLA_FECHA_INICIO, PLA_FECHA_FIN, PLA_ESTADO,
+                                    PLA_MONITOREO_SEGUIMIENTO, PLA_RESPONSABLES, PLA_RECURSOS
+                               FROM RL_MR_PLANES WHERE PLA_ID = :id FOR UPDATE";
+        await using var cmd = Comando(sql, conn, tx);
+        cmd.Parameters.Add(new OracleParameter("id", planId));
+        await using var reader = await cmd.ExecuteReaderAsync(CommandBehavior.SingleRow);
+        if (!await reader.ReadAsync()) return null;
+        return new PlanMitigacionDto
+        {
+            PlaId = reader.GetInt64(0), PlaEvaluacionId = reader.GetInt64(1),
+            PlaDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
+            PlaAvance = reader.GetDecimal(3), PlaPresupuesto = reader.GetDecimal(4),
+            PlaFechaInicio = reader.GetDateTime(5), PlaFechaFin = reader.GetDateTime(6), PlaEstado = reader.GetString(7),
+            PlaMonitoreoSeguimiento = TextoNullable(reader, 8), PlaResponsables = TextoNullable(reader, 9), PlaRecursos = TextoNullable(reader, 10)
+        };
+    }
+
+    private static async Task<long?> ObtenerPlanPadreActividadAsync(OracleConnection conn, OracleTransaction tx, long actividadId)
+    {
+        const string sql = "SELECT ACT_PLAN_ID FROM RL_MR_ACTIVIDADES WHERE ACT_ID = :id FOR UPDATE";
+        await using var cmd = Comando(sql, conn, tx);
+        cmd.Parameters.Add(new OracleParameter("id", actividadId));
+        object? value = await cmd.ExecuteScalarAsync();
+        return value is null or DBNull ? null : Convert.ToInt64(value);
     }
 
     private static void AgregarParametrosActividad(OracleCommand cmd, long id, ActividadPlanGuardarDto dto)
@@ -506,6 +628,9 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
 
     private async Task AuditarAsync(OracleConnection conn, OracleTransaction tx, string tabla, long id, string accion, object datos, long usuarioId, string? ip) =>
         await _auditoria.RegistrarAsync(conn, tx, tabla, id.ToString(), accion, null, JsonSerializer.Serialize(datos), usuarioId, null, ip, Modulo);
+
+    private async Task AuditarAntesDespuesAsync(OracleConnection conn, OracleTransaction tx, string tabla, long id, object anteriores, object nuevos, long usuarioId, string? ip) =>
+        await _auditoria.RegistrarAsync(conn, tx, tabla, id.ToString(), "UPDATE", JsonSerializer.Serialize(anteriores), JsonSerializer.Serialize(nuevos), usuarioId, null, ip, Modulo);
 
     private static async Task ExigirEvaluacionAsync(OracleConnection conn, OracleTransaction tx, long evaluacionId) =>
         await ExigirExisteAsync(conn, tx, "RL_MR_EVALUACIONES_RIESGO", "EVA_ID", evaluacionId, "La evaluación no existe.");

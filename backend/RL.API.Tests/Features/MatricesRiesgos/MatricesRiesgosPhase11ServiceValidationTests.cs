@@ -88,7 +88,8 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
     [Fact]
     public async Task Mitigacion_Listados_CubrenIdsInvalidosYExito()
     {
-        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
+        var repo = new MitigacionRepoFake();
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
 
         Assert.Equal(400, (await service.ListarControlesAsync(0)).StatusCode);
         Assert.True((await service.ListarControlesAsync(1)).Success);
@@ -96,6 +97,10 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.True((await service.ListarEvaluacionesControlAsync(1)).Success);
         Assert.Equal(400, (await service.ListarPlanesAsync(0)).StatusCode);
         Assert.True((await service.ListarPlanesAsync(1)).Success);
+        Assert.Equal(400, (await service.ObtenerBloque4Async(0)).StatusCode);
+        Assert.True((await service.ObtenerBloque4Async(1)).Success);
+        repo.Bloque4 = null;
+        Assert.Equal(404, (await service.ObtenerBloque4Async(1)).StatusCode);
         Assert.Equal(400, (await service.ListarActividadesAsync(0)).StatusCode);
         Assert.True((await service.ListarActividadesAsync(1)).Success);
     }
@@ -175,6 +180,24 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.Equal(400, (await service.CrearPlanAsync(ValidoPlan(estado: "ABIERTO"), UsuarioId, Ip)).StatusCode);
         Assert.True((await service.CrearPlanAsync(ValidoPlan(estado: "EN_PROCESO"), UsuarioId, Ip)).Success);
         Assert.True((await service.CrearPlanAsync(ValidoPlan(estado: "VENCIDO"), UsuarioId, Ip)).Success);
+    }
+
+    [Fact]
+    public async Task Mitigacion_Plan_ValidaNuevasPropiedadesTextualesOpcionales()
+    {
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(new MitigacionRepoFake());
+
+        Assert.True((await service.CrearPlanAsync(ValidoPlan(), UsuarioId, Ip)).Success);
+        var whitespace = ValidoPlan(); whitespace.PlaRecursos = "   ";
+        var monitoringLong = ValidoPlan(); monitoringLong.PlaMonitoreoSeguimiento = new string('M', 1001);
+        var responsibleLong = ValidoPlan(); responsibleLong.PlaResponsables = new string('R', 1001);
+        var resourcesLong = ValidoPlan(); resourcesLong.PlaRecursos = new string('X', 1001);
+        var mojibake = ValidoPlan(); mojibake.PlaMonitoreoSeguimiento = "Seguimiento informaci\u00BFn";
+        Assert.True((await service.CrearPlanAsync(whitespace, UsuarioId, Ip)).Success);
+        Assert.Equal(400, (await service.CrearPlanAsync(monitoringLong, UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearPlanAsync(responsibleLong, UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearPlanAsync(resourcesLong, UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.CrearPlanAsync(mojibake, UsuarioId, Ip)).StatusCode);
     }
 
     [Fact]
@@ -398,6 +421,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public bool UpdateControlResult { get; set; } = true;
         public bool UpdatePlanResult { get; set; } = true;
         public bool UpdateActividadResult { get; set; } = true;
+        public MitigacionBloque4Dto? Bloque4 { get; set; } = new();
 
         public Task<IReadOnlyList<ControlRiesgoDto>> ListarControlesAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<ControlRiesgoDto>>(Array.Empty<ControlRiesgoDto>());
         public Task<ControlRiesgoDto?> ObtenerControlAsync(long controlId) => Task.FromResult<ControlRiesgoDto?>(null);
@@ -408,6 +432,7 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId) => Task.FromResult<IReadOnlyList<EvaluacionControlDto>>(Array.Empty<EvaluacionControlDto>());
         public Task<long> RegistrarEvaluacionControlAsync(long controlId, EvaluacionControlGuardarDto dto, long usuarioId, string? ip) => LongResult(11);
         public Task<IReadOnlyList<PlanMitigacionDto>> ListarPlanesAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<PlanMitigacionDto>>(Array.Empty<PlanMitigacionDto>());
+        public Task<MitigacionBloque4Dto?> ObtenerBloque4Async(long evaluacionId) => Task.FromResult(Bloque4);
         public Task<long> CrearPlanAsync(PlanMitigacionGuardarDto dto, long usuarioId, string? ip) => LongResult(12);
         public Task<bool> ActualizarPlanAsync(long planId, PlanMitigacionGuardarDto dto, long usuarioId, string? ip) => BoolResult(UpdatePlanResult);
         public Task<IReadOnlyList<ActividadPlanDto>> ListarActividadesAsync(long planId) => Task.FromResult<IReadOnlyList<ActividadPlanDto>>(Array.Empty<ActividadPlanDto>());

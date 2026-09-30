@@ -43,6 +43,17 @@ public sealed class PlanMitigacionDto
     public DateTime PlaFechaInicio { get; set; }
     public DateTime PlaFechaFin { get; set; }
     public string PlaEstado { get; set; } = string.Empty;
+    public string? PlaMonitoreoSeguimiento { get; set; }
+    public string? PlaResponsables { get; set; }
+    public string? PlaRecursos { get; set; }
+    public int CantidadActividades { get; set; }
+    public IReadOnlyList<ActividadPlanDto> Actividades { get; set; } = Array.Empty<ActividadPlanDto>();
+}
+
+public sealed class MitigacionBloque4Dto
+{
+    public int CantidadAcciones { get; set; }
+    public IReadOnlyList<PlanMitigacionDto> Planes { get; set; } = Array.Empty<PlanMitigacionDto>();
 }
 
 public sealed class PlanMitigacionGuardarDto
@@ -54,6 +65,9 @@ public sealed class PlanMitigacionGuardarDto
     public DateTime PlaFechaInicio { get; set; }
     public DateTime PlaFechaFin { get; set; }
     public string PlaEstado { get; set; } = string.Empty;
+    public string? PlaMonitoreoSeguimiento { get; set; }
+    public string? PlaResponsables { get; set; }
+    public string? PlaRecursos { get; set; }
 }
 
 public sealed class ActividadPlanDto

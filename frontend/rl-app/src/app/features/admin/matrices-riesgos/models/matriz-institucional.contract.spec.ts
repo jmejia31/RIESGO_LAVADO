@@ -1,4 +1,4 @@
-import { CATALOGO_RESPUESTA_RIESGO, MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
+import { CATALOGO_RESPUESTA_RIESGO, MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
 
 describe('contrato canónico de la Matriz institucional', () => {
   it('define las 82 posiciones una sola vez con ordinales y columnas continuas', () => {
@@ -94,7 +94,32 @@ describe('contrato canónico de la Matriz institucional', () => {
       ['INPUT', true]
     ]);
     expect(MATRIX_BLOCK_3_FIELDS.every(field => field.implemented)).toBe(true);
-    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(39);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(49);
     expect(CATALOGO_RESPUESTA_RIESGO).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
+  });
+
+  it('define exactamente los diez campos 40–49 con labels, orden y mapeos institucionales', () => {
+    expect(MATRIX_BLOCK_4_FIELDS).toHaveLength(10);
+    expect(MATRIX_BLOCK_4_FIELDS.map(field => field.ordinal)).toEqual([40, 41, 42, 43, 44, 45, 46, 47, 48, 49]);
+    expect(MATRIX_BLOCK_4_FIELDS.map(field => field.label)).toEqual([
+      'Plan de Mitigación/Acciones Correctivas',
+      'No. Acciones de Mitigación',
+      'Actividades',
+      'Cantidad de Actividades',
+      'Monitoreo/ Seguimiento',
+      'Responsables',
+      'Fecha inicio',
+      'Fecha final',
+      'Recursos',
+      'Presupuesto'
+    ]);
+    expect(MATRIX_BLOCK_4_FIELDS.map(field => field.excelColumn)).toEqual(['AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW']);
+    expect(MATRIX_BLOCK_4_FIELDS.every(field => field.implemented && !field.editable)).toBe(true);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(49);
+    expect(MATRIX_BLOCK_4_FIELDS[0].source).toBe('RL_MR_PLANES.PLA_DESCRIPCION');
+    expect(MATRIX_BLOCK_4_FIELDS[2].source).toContain('ACT_PLAN_ID → PLA_ID');
+    expect(MATRIX_BLOCK_4_FIELDS[4].source).toBe('RL_MR_PLANES.PLA_MONITOREO_SEGUIMIENTO');
+    expect(MATRIX_BLOCK_4_FIELDS[5].source).toBe('RL_MR_PLANES.PLA_RESPONSABLES');
+    expect(MATRIX_BLOCK_4_FIELDS[8].source).toBe('RL_MR_PLANES.PLA_RECURSOS');
   });
 });

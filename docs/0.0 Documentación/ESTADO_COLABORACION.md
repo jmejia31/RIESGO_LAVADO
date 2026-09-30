@@ -1,3 +1,16 @@
+# Estado vigente — Continuación autorizada Bloque 4 (campos 40–49)
+
+- Fecha/hora local: 2026-09-29 20:16:29 (America/Tegucigalpa). Rama desarrollo. Base: 484257a6b2b33cc9f7310e492c1687948e90be18; SHA final pendiente de commit.
+- Estado técnico local: implementación del contrato 40–49 completa; BLOCK_4_STATUS=PENDING_REMOTE_QUALITY_GATE. Bloques 1–3 conservados; no iniciar Bloque 5.
+- Contrato: 40 PLA_DESCRIPCION; 41 conteo del servidor de planes por evaluación; 42 ACT_DESCRIPCION dentro de cada plan; 43 conteo del servidor por plan; 44 PLA_MONITOREO_SEGUIMIENTO; 45 PLA_RESPONSABLES; 46/47 fechas del plan existentes; 48 PLA_RECURSOS; 49 PLA_PRESUPUESTO. MON_RESULTADO no es equivalente ni reutilizado; ACT_RESPONSABLE permanece independiente. Las tres columnas nuevas son nullable VARCHAR2(1000 CHAR), sin backfill ni tabla nueva.
+- BLOCK_4_CURRENT_CONTRACT_SUPERSEDES_LEGACY_DESCOPE=YES. La historia de Fase 6 se conserva y lleva nota posterior de reactivación funcional.
+- Calidad local ejecutada: backend 747/747; frontend 82/82 archivos y 823/823; E2E 43/43; lint/build PASS; npm audit 0; validador SQL, estructura y enlaces PASS; tools/run_quality_gates.ps1 PASS. Cobertura: backend 37.00% líneas/40.33% ramas; frontend 62.44% sentencias/55.87% ramas/58.68% funciones/63.36% líneas. La cobertura backend bajó levemente frente al baseline 37.19%/40.46%; se reporta esa diferencia.
+- Visual/E2E: repetición stateful de 2 planes y 3 actividades (2/1), round-trip tras nuevo GET, read-model agrupado con una petición, matriz read-only. Desktop 1280x900 y mobile 390x844 inspeccionados, overflow horizontal 0; errores de consola/red/HTTP inesperados 0.
+- Esquema: scripts 46_precheck_bloque4_plan_campos.sql a 49_rollback_bloque4_plan_campos.sql; fresh-install actualizado y Fase 11 read-only ampliada. Validación estática PASS. Oracle institucional no conectado y no se ejecutó DDL/DML.
+- Gobernanza: MAIN_TOUCHED=NO; PRODUCTION_TOUCHED=NO; BLOCK_5_STARTED=NO; ORACLE_CONNECTION_ATTEMPTED=NO; ORACLE_DML_EXECUTED=NO; ORACLE_DDL_EXECUTED=NO.
+- Pendiente: commits quirúrgicos, push solo a origin/desarrollo, verificar SHA y esperar Quality Gate remoto del SHA exacto. Después registrar run remoto; solo si completed/success, BLOCK_4_STATUS=CLOSED.
+
+---
 # Estado de colaboración y punto de continuidad
 
 ## Estado vigente — Remediación final y recertificación estricta Bloque 3: Riesgo Residual y Respuesta (Campos 34–39)

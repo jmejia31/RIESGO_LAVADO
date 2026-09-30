@@ -93,6 +93,9 @@ export class MatricesRiesgosMitigacionComponent {
   planFechaInicio = this.hoy();
   planFechaFin = this.hoy();
   planEstado = 'PENDIENTE';
+  planMonitoreoSeguimiento = '';
+  planResponsables = '';
+  planRecursos = '';
 
   actividadEditandoId = 0;
   actividadDescripcion = '';
@@ -223,6 +226,9 @@ export class MatricesRiesgosMitigacionComponent {
     this.planFechaInicio = this.fechaInput(plan.plaFechaInicio);
     this.planFechaFin = this.fechaInput(plan.plaFechaFin);
     this.planEstado = plan.plaEstado;
+    this.planMonitoreoSeguimiento = plan.plaMonitoreoSeguimiento ?? '';
+    this.planResponsables = plan.plaResponsables ?? '';
+    this.planRecursos = plan.plaRecursos ?? '';
     this.cargarActividades(plan.plaId);
   }
 
@@ -234,6 +240,9 @@ export class MatricesRiesgosMitigacionComponent {
     this.planFechaInicio = this.hoy();
     this.planFechaFin = this.hoy();
     this.planEstado = 'PENDIENTE';
+    this.planMonitoreoSeguimiento = '';
+    this.planResponsables = '';
+    this.planRecursos = '';
   }
 
   guardarPlan(): void {
@@ -252,7 +261,10 @@ export class MatricesRiesgosMitigacionComponent {
       plaPresupuesto: Number(this.planPresupuesto),
       plaFechaInicio: this.fechaIso(this.planFechaInicio),
       plaFechaFin: this.fechaIso(this.planFechaFin),
-      plaEstado: this.planEstado.trim() || 'PENDIENTE'
+      plaEstado: this.planEstado.trim() || 'PENDIENTE',
+      plaMonitoreoSeguimiento: this.planMonitoreoSeguimiento.trim() || null,
+      plaResponsables: this.planResponsables.trim() || null,
+      plaRecursos: this.planRecursos.trim() || null
     };
     this.guardando.set(true);
     const solicitud: Observable<unknown> = this.planEditandoId > 0

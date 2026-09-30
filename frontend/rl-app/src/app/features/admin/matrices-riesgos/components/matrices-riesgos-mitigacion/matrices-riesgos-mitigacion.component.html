@@ -71,6 +71,9 @@
           <div><label for="plan-presupuesto" class="block text-sm">Presupuesto</label><input id="plan-presupuesto" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planPresupuesto"></div>
           <div><label for="plan-fecha-inicio" class="block text-sm">Inicio</label><input id="plan-fecha-inicio" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaInicio"></div>
           <div><label for="plan-fecha-fin" class="block text-sm">Fin</label><input id="plan-fecha-fin" type="date" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planFechaFin"></div>
+          <div class="md:col-span-2"><label for="plan-monitoreo-seguimiento" class="block text-sm font-medium">Monitoreo/ Seguimiento</label><textarea id="plan-monitoreo-seguimiento" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planMonitoreoSeguimiento" maxlength="1000"></textarea></div>
+          <div class="md:col-span-2"><label for="plan-responsables" class="block text-sm font-medium">Responsables</label><textarea id="plan-responsables" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planResponsables" maxlength="1000"></textarea></div>
+          <div class="md:col-span-2"><label for="plan-recursos" class="block text-sm font-medium">Recursos</label><textarea id="plan-recursos" class="mt-1 min-h-16 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="planRecursos" maxlength="1000"></textarea></div>
           <div>
             <label for="plan-estado" class="block text-sm">Estado</label>
             <select id="plan-estado" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" [(ngModel)]="planEstado" aria-describedby="plan-estado-ayuda">
