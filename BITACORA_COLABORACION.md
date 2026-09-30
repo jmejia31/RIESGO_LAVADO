@@ -8060,7 +8060,7 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 
 ## Registro de intervención — COD — Implementación Bloque 4, campos 40–49
 
-- Fecha y hora local: 2026-09-29 20:16:29 (America/Tegucigalpa). Autor: COD / CODEX. Rama: desarrollo. SHA base: 484257a6b2b33cc9f7310e492c1687948e90be18. SHA final: pendiente de commits/publicación.
+- Fecha y hora local: 2026-09-29 20:16:29 (America/Tegucigalpa). Autor: COD / CODEX. Rama: desarrollo. SHA base: 484257a6b2b33cc9f7310e492c1687948e90be18. SHA implementación: 981a854a34eff5ed055e71787ef6bc0693abd3f8.
 - Objetivo: implementar exclusivamente el Bloque 4 de Matriz completa y persistencia operacional de mitigación, campos 40–49. Se mantuvieron sin cambios los contratos 01–39, las fórmulas F01–F14, Bloque 5, main y producción.
 - Decisiones funcionales aplicadas: BLOCK_4_CURRENT_CONTRACT_SUPERSEDES_LEGACY_DESCOPE=YES; FIELD_41_DECISION=PLAN_COUNT_PER_EVALUATION; FIELD_43_DECISION=ACTIVITY_COUNT_PER_PLAN; FIELD_44_DECISION=PLAN_LEVEL_PERSISTENCE; FIELD_45_DECISION=PLAN_LEVEL_PERSISTENCE; FIELD_48_DECISION=PLAN_LEVEL_PERSISTENCE. MON_RESULTADO_EQUIVALENT=NO; ACT_RESPONSABLE_PRESERVED=YES.
 - Implementación: RL_MR_PLANES persiste PLA_MONITOREO_SEGUIMIENTO, PLA_RESPONSABLES y PLA_RECURSOS como columnas nullable VARCHAR2(1000 CHAR). No se creó tabla nueva ni se hizo backfill. Presupuesto y fechas existentes se reutilizan. El read-model agrupado obtiene evaluación → planes → actividades con conteos derivados en el servidor; Matriz completa permanece de solo lectura y Mitigación conserva la administración operacional.
@@ -8070,12 +8070,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - E2E visual/red: escenario stateful con 2 planes, actividades 2/1, reapertura vía GET, actualización de recursos, monitoreo y responsables plan-level independientes; proyección read-only con diez definiciones 40–49. Desktop 1280x900 y mobile 390x844 inspeccionados; overflow horizontal 0; consola/página/requests/HTTP inesperados 0; endpoint agrupado solicitado una vez.
 - Archivos: backend de mitigación/DTO/controlador/repositorio y pruebas de contrato/validación; frontend de modelos, servicio, pantalla Mitigación y proyección Matriz completa; E2E integral; scripts SQL de transición, reconstrucción/comentarios y validador read-only; documentación MATRIZ_COMPLETA_BLOQUE_4.md y nota de continuidad en certificación histórica.
 - Gobernanza: MAIN_TOUCHED=NO; PRODUCTION_TOUCHED=NO; BLOCK_5_STARTED=NO; ORACLE_CONNECTION_ATTEMPTED=NO; ORACLE_DML_EXECUTED=NO; ORACLE_DDL_EXECUTED=NO.
-- Publicación: commit ccbb09219ff0c8fe02ba66e6f86a6658ab733b24 publicado en origin/desarrollo. Quality Gate run 36659193828 (#1677) falló en Validate UTF-8 text integrity por un literal de diagnóstico mojibake dentro del test; los pasos posteriores quedaron cancelados. Se corrigió el literal; falta publicar la corrección y obtener gate success para el SHA exacto.
-- Punto de continuación: stagear exclusivamente archivos de esta intervención, crear commits quirúrgicos, publicar solo en origin/desarrollo, verificar igualdad SHA, esperar Quality Gate exacto y registrar su evidencia.
+- Publicación: commits ccbb092 y 981a854 publicados en origin/desarrollo. Quality Gate inicial #1677 detectó un literal de diagnóstico mojibake; se corrigió. Quality Gate 36659335704 (#1678) terminó completed/success para el SHA exacto 981a854a34eff5ed055e71787ef6bc0693abd3f8. El commit documental posterior requiere su propio run remoto antes del cierre final.
+- Punto de continuación: publicar el ajuste documental únicamente en origin/desarrollo, verificar HEAD==origin/desarrollo y esperar el Quality Gate exacto del nuevo SHA; cerrar solo tras completed/success.
 
 ### Corrección de codificación detectada en el Quality Gate #1677
 
 - Run 36659193828 verificó el SHA ccbb09219ff0c8fe02ba66e6f86a6658ab733b24 y falló en Validate UTF-8 text integrity.
 - El archivo del test de contrato contenía “encontrÃ³” en un mensaje de aserción; se corrigió a “encontró”. No afectaba datos ni lógica del producto.
 - En esta estación, pwsh no está instalado y validate_text_encoding.ps1 no se puede ejecutar localmente. El paso debe pasar en la siguiente ejecución remota.
-- Bloque 4 continúa pendiente del Quality Gate remoto exitoso del SHA de corrección.
+- Quality Gate 36659335704 (#1678) certifica el SHA de implementación 981a854a34eff5ed055e71787ef6bc0693abd3f8. Backend 747/747; frontend 82 archivos/823 pruebas; E2E 43; npm audit 0. Cobertura backend 37.00%/40.33%; frontend 62.42%/55.87%/58.68%/63.33%. Este ajuste documental queda sujeto al gate exacto de su propio SHA.

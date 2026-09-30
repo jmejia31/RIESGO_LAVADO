@@ -39,10 +39,12 @@ La reconstrucción para instalación limpia y los comentarios institucionales in
 
 ## Estado de certificación
 
-El bloque solo se declara cerrado después de pruebas backend/frontend/E2E completas, validadores, publicación en `desarrollo` y Quality Gate remoto exitoso sobre el SHA final exacto. Registrar abajo la evidencia reproducida en la intervención:
+El bloque solo se declara cerrado después de pruebas backend/frontend/E2E completas, validadores, publicación en `desarrollo` y Quality Gate remoto exitoso sobre el SHA final exacto. El gate exitoso de implementación corresponde a SHA `981a854a34eff5ed055e71787ef6bc0693abd3f8`; el commit documental que registra estos resultados tendrá un gate propio para certificar el SHA final.
 
 - `BASE_SHA=484257a6b2b33cc9f7310e492c1687948e90be18` (confirmado antes de editar).
-- `FINAL_SHA=PENDIENTE_DE_COMMIT`.
-- `REMOTE_QUALITY_GATE=PENDIENTE`.
+- `IMPLEMENTATION_SHA=981a854a34eff5ed055e71787ef6bc0693abd3f8`.
+- `REMOTE_QUALITY_GATE_RUN_ID=36659335704`; `RUN_NUMBER=1678`; `HEAD_SHA=981a854a34eff5ed055e71787ef6bc0693abd3f8`; `STATUS=completed`; `CONCLUSION=success`.
+- `BACKEND_TESTS=747`; `FRONTEND_TEST_FILES=82`; `FRONTEND_TESTS=823`; `E2E_PASSED=43`; `NPM_AUDIT_VULNERABILITIES=0`.
+- Cobertura backend: líneas 37.00%, ramas 40.33%. Cobertura frontend: sentencias 62.42%, ramas 55.87%, funciones 58.68%, líneas 63.33%.
 - `ORACLE_CONNECTION_ATTEMPTED=NO`; `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`.
 - `MAIN_TOUCHED=NO`; `BLOCK_5_STARTED=NO`.
