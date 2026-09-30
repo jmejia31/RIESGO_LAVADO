@@ -100,7 +100,7 @@ public sealed class MatricesRiesgosBlock4SqlContractTests
         while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "RIESGO_LAVADO.sln"))) directory = directory.Parent;
         Assert.NotNull(directory);
         string path = Path.Combine(directory!.FullName, Path.Combine(parts));
-        Assert.True(File.Exists(path), $"No se encontrÃ³ {path}.");
+        Assert.True(File.Exists(path), $"No se encontró {path}.");
         return File.ReadAllText(path);
     }
 }

@@ -8070,5 +8070,12 @@ El análisis SonarCloud remoto posterior queda pendiente para confirmar la desap
 - E2E visual/red: escenario stateful con 2 planes, actividades 2/1, reapertura vía GET, actualización de recursos, monitoreo y responsables plan-level independientes; proyección read-only con diez definiciones 40–49. Desktop 1280x900 y mobile 390x844 inspeccionados; overflow horizontal 0; consola/página/requests/HTTP inesperados 0; endpoint agrupado solicitado una vez.
 - Archivos: backend de mitigación/DTO/controlador/repositorio y pruebas de contrato/validación; frontend de modelos, servicio, pantalla Mitigación y proyección Matriz completa; E2E integral; scripts SQL de transición, reconstrucción/comentarios y validador read-only; documentación MATRIZ_COMPLETA_BLOQUE_4.md y nota de continuidad en certificación histórica.
 - Gobernanza: MAIN_TOUCHED=NO; PRODUCTION_TOUCHED=NO; BLOCK_5_STARTED=NO; ORACLE_CONNECTION_ATTEMPTED=NO; ORACLE_DML_EXECUTED=NO; ORACLE_DDL_EXECUTED=NO.
-- Publicación pendiente: no hay commit ni push aún. Quality Gate remoto del SHA final pendiente; no se declara Bloque 4 cerrado hasta completed/success del SHA publicado.
+- Publicación: commit ccbb09219ff0c8fe02ba66e6f86a6658ab733b24 publicado en origin/desarrollo. Quality Gate run 36659193828 (#1677) falló en Validate UTF-8 text integrity por un literal de diagnóstico mojibake dentro del test; los pasos posteriores quedaron cancelados. Se corrigió el literal; falta publicar la corrección y obtener gate success para el SHA exacto.
 - Punto de continuación: stagear exclusivamente archivos de esta intervención, crear commits quirúrgicos, publicar solo en origin/desarrollo, verificar igualdad SHA, esperar Quality Gate exacto y registrar su evidencia.
+
+### Corrección de codificación detectada en el Quality Gate #1677
+
+- Run 36659193828 verificó el SHA ccbb09219ff0c8fe02ba66e6f86a6658ab733b24 y falló en Validate UTF-8 text integrity.
+- El archivo del test de contrato contenía “encontrÃ³” en un mensaje de aserción; se corrigió a “encontró”. No afectaba datos ni lógica del producto.
+- En esta estación, pwsh no está instalado y validate_text_encoding.ps1 no se puede ejecutar localmente. El paso debe pasar en la siguiente ejecución remota.
+- Bloque 4 continúa pendiente del Quality Gate remoto exitoso del SHA de corrección.
