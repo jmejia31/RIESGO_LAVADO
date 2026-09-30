@@ -84,4 +84,15 @@ Las pruebas contractuales cruzan los 34 targets contra `MATRIX_FIELDS`, exigen u
 
 No se requiere cambio de esquema. No se modificaron scripts SQL, fórmula DML ni datos de fórmula. No se intentó conectar a Oracle institucional ni ejecutar DML/DDL. No se tocaron `main`, producción ni los campos 70–82. La matriz completa conserva 69 campos implementados y Bloque 6 como único bloque pendiente.
 
-La ejecución de esta intervención y los datos de commit/Quality Gate se documentan en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md) y [`ESTADO_COLABORACION.md`](../0.0%20Documentación/ESTADO_COLABORACION.md) una vez finalizados los gates completos.
+## Evidencia de certificación
+
+- `BASE_SHA=5f607c079b2f75b4552553b33a35f365c490af54`.
+- `IMPLEMENTATION_SHA=22ca4f0f24f6b04ebfa366b2bab7532bcee639ce` (`feat(matrices): implement block 5 and formula traceability`).
+- Quality Gate remoto de implementación: `RUN_ID=36735618174`, `RUN_NUMBER=1680`, `HEAD_SHA=22ca4f0f24f6b04ebfa366b2bab7532bcee639ce`, `STATUS=completed`, `CONCLUSION=success`.
+- Evidencia remota: backend 750/750, 0 fallidos, 0 omitidos; frontend 83/83 archivos, 828/828; E2E 44/44, sin fallos ni reintentos; `npm audit=0`.
+- Cobertura remota: backend 37.07% líneas, 40.35% ramas; frontend 62.56% sentencias, 56.05% ramas, 58.96% funciones, 63.49% líneas.
+- Quality gates locales reproducidos en una copia temporal limpia: backend 750/750; frontend 83/83 y 828/828; E2E 44/44; build de producción, lint, auditoría y `tools/run_quality_gates.ps1` PASS. Los validadores de repositorio, base de datos, enlaces y UTF-8/mojibake también pasaron.
+- `git diff --check=PASS`; instalación limpia (`npm ci`) y auditoría sin vulnerabilidades en la copia temporal. En el checkout compartido `npm ci` encontró `EPERM` al reemplazar esbuild, bloqueado por un `ng serve -o` preexistente; no se detuvo ese proceso. `main`, producción, Bloque 6 y Oracle institucional no fueron tocados.
+- `SCHEMA_CHANGE_REQUIRED=NO`; los únicos cambios de dependencia son actualizaciones compatibles de pins/lockfile para restablecer `npm audit=0` sin `--force`.
+
+La bitácora y el estado colaborativo de esta intervención están en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md) y [`ESTADO_COLABORACION.md`](../0.0%20Documentación/ESTADO_COLABORACION.md). El Quality Gate del commit documental final se registra en el reporte de cierre para conservar la comprobación sobre su SHA exacto.

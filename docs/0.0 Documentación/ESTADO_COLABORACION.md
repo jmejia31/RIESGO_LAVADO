@@ -1986,3 +1986,14 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - No se modificaron V1/V2, datos históricos, Oracle ni scripts Unicode. `BLOCK_3_IMPLEMENTED=NO`; `FULL_MATRIX_82=PENDING_BLOCKS_3_6`; Production SHA certificado anterior permanece intacto.
 - **Estado:** `BLOCK_2_STATUS=PARTIAL_BLOCKED`; commit `1da9added59c56149dbe1a95bd59da5b0d97c652` publicado en `origin/desarrollo`; Quality Gates run `36486781595`, el mismo SHA, `completed/success`. No iniciar Bloque 3.
 - **Continuación exacta:** añadir prueba ejecutada de rollback/concurrencia transaccional sin conexión Oracle para evaluar cierre. Los archivos untracked preexistentes fueron preservados.
+
+# Estado vigente — Bloque 5, campos 50–69 y referencias F01–F34 (COD)
+
+- **Fecha/hora local:** 2026-09-30 09:26 -06:00 (America/Tegucigalpa). **Rama:** `desarrollo`. **Base:** `5f607c079b2f75b4552553b33a35f365c490af54`.
+- **Implementación:** commit `22ca4f0f24f6b04ebfa366b2bab7532bcee639ce`, publicado. Campos 50–69 aparecen como 20 definiciones de solo lectura, inicialmente colapsadas y alimentadas solo desde `evaDataCalcJson`. Bloque 6 sigue pendiente; hay 69 campos implementados y 13 pendientes.
+- **Fórmulas:** metadata read-only F01–F34 se deriva de `InstitutionalFormulaDataset`; los labels/ordinales/columnas se cruzan con `MATRIX_FIELDS`. 34 mappings verificados; no se cambió el dataset, el motor, fórmulas ni el DML institucional.
+- **Verificación:** campos 64/66 aprueban solo con cero numérico exacto; 67–69 aceptan valores no negativos; un valor ausente nunca produce PASS. Matriz completa permanece de solo lectura.
+- **Gates locales ejecutados:** backend 750/750; frontend 83 archivos/828 pruebas; lint, producción, E2E 44/44, audit 0, validadores y `git diff --check` PASS. Quality runner: backend 37.07%/40.35%, frontend 62.51%/56.05%/58.82%/63.43%. Inspección responsive a 1280×900 y 390×844 PASS.
+- **Quality Gate remoto exacto del código:** `36735618174` (#1680), SHA `22ca4f0f24f6b04ebfa366b2bab7532bcee639ce`, `completed/success`; backend 750, frontend 828 en 83 archivos, E2E 44, npm audit 0; coberturas backend 37.07%/40.35% y frontend 62.56%/56.05%/58.96%/63.49%.
+- **Esquema/gobernanza:** `SCHEMA_CHANGE_REQUIRED=NO`; no se conectó Oracle ni se ejecutó DML/DDL. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `BLOCK_6_STARTED=NO`.
+- **Pendiente exacto:** publicar la actualización de bitácora/estado y del documento de Bloque 5, y esperar un Quality Gate exitoso del SHA documental final. El commit de implementación ya está certificado; no iniciar Bloque 6.
