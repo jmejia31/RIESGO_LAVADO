@@ -294,6 +294,233 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
     [Fact]
     [Trait("Category", "OracleIntegration")]
+    public async Task Bloques4y6_ColumnasNuevasPersistenYSeProyectanDesdeOracle()
+    {
+        if (!await ValidarEntornoEjecucionAsync())
+        {
+            return;
+        }
+
+        (long UsuarioId, long RolId) identidad = await CrearUsuarioIntegracionAsync();
+        DatosCiclo? datos = null;
+        DatosCiclo? datosOtraEvaluacion = null;
+        var evidenciaExtraIds = new List<long>();
+        try
+        {
+            datos = await CrearCicloConfirmadoAsync("BLOQUE4_BLOQUE6_DB_ROUNDTRIP", identidad.UsuarioId);
+            datosOtraEvaluacion = await CrearCicloConfirmadoAsync("BLOQUE6_ALERT_ISOLATION", identidad.UsuarioId);
+            var db = new OracleDbContext(_connectionString!);
+            var auditoria = new AuditoriaRepository(db, new HttpContextAccessor());
+            var mitigacion = new MatricesRiesgosMitigacionRepository(db, auditoria);
+            var monitoreo = new MatricesRiesgosMonitoreoRepository(db, auditoria);
+            var matriz = new MatricesRiesgosRepository(db, auditoria);
+
+            var planDto = new PlanMitigacionGuardarDto
+            {
+                PlaEvaluacionId = datos.EvaluacionId,
+                PlaDescripcion = "Plan Oracle de certificación",
+                PlaAvance = 10,
+                PlaPresupuesto = 12500.50m,
+                PlaFechaInicio = DateTime.Today,
+                PlaFechaFin = DateTime.Today.AddDays(30),
+                PlaEstado = "PENDIENTE",
+                PlaMonitoreoSeguimiento = "Seguimiento inicial",
+                PlaResponsables = "Unidad QA",
+                PlaRecursos = "Recursos de integración"
+            };
+            long planId = await mitigacion.CrearPlanAsync(planDto, datos.UsuarioId, "127.0.0.1");
+            var planCreado = Assert.Single((await mitigacion.ObtenerBloque4Async(datos.EvaluacionId))!.Planes);
+            Assert.Equal("Recursos de integración", planCreado.PlaRecursos);
+            Assert.Equal("Unidad QA", planCreado.PlaResponsables);
+            Assert.Equal("Seguimiento inicial", planCreado.PlaMonitoreoSeguimiento);
+
+            planDto.PlaRecursos = "Recursos actualizados";
+            planDto.PlaResponsables = "Unidad QA y Operaciones";
+            planDto.PlaMonitoreoSeguimiento = "Seguimiento posterior";
+            Assert.True(await mitigacion.ActualizarPlanAsync(planId, planDto, datos.UsuarioId, "127.0.0.1"));
+            var planActualizado = Assert.Single((await mitigacion.ObtenerBloque4Async(datos.EvaluacionId))!.Planes);
+            Assert.Equal("Recursos actualizados", planActualizado.PlaRecursos);
+            Assert.Equal("Unidad QA y Operaciones", planActualizado.PlaResponsables);
+            Assert.Equal("Seguimiento posterior", planActualizado.PlaMonitoreoSeguimiento);
+            Assert.Equal(12500.50m, planActualizado.PlaPresupuesto);
+
+            var controlesEsperados = new[]
+            {
+                new { Tipo = "PREVENTIVO", Estado = "EN_SEGUIMIENTO", Efectividad = 80m, Base = 75m },
+                new { Tipo = "DETECTIVO", Estado = "REVISADO", Efectividad = 70m, Base = 65m },
+                new { Tipo = "CORRECTIVO", Estado = "FINALIZADO", Efectividad = 60m, Base = 55m }
+            };
+            var controlPorTipo = new Dictionary<string, long>(StringComparer.Ordinal);
+            for (int index = 0; index < controlesEsperados.Length; index++)
+            {
+                var esperado = controlesEsperados[index];
+                long controlId = await mitigacion.CrearControlAsync(new ControlRiesgoGuardarDto
+                {
+                    ConEvaluacionId = datos.EvaluacionId,
+                    ConTipo = esperado.Tipo,
+                    ConDescripcion = "Control " + esperado.Tipo + " Oracle",
+                    ConAutomatizacion = "MANUAL",
+                    ConEstado = "ACTIVO",
+                    ConEstadoMonitoreo = esperado.Estado,
+                    ConEfectividadMonitoreo = esperado.Efectividad
+                }, datos.UsuarioId, "127.0.0.1");
+                controlPorTipo.Add(esperado.Tipo, controlId);
+                await mitigacion.RegistrarEvaluacionControlAsync(controlId,
+                    new EvaluacionControlGuardarDto { EcoEfectividad = esperado.Base, EcoComentario = "Efectividad base" },
+                    datos.UsuarioId, "127.0.0.1");
+            }
+
+            long evidenciaPreventivaExtraId = await CrearEvidenciaExtraAsync(datos.UsuarioId, "preventiva");
+            long evidenciaDetectivaId = await CrearEvidenciaExtraAsync(datos.UsuarioId, "detectiva");
+            long evidenciaDetectivaExtraId = await CrearEvidenciaExtraAsync(datos.UsuarioId, "detectiva");
+            long evidenciaCorrectivaId = await CrearEvidenciaExtraAsync(datos.UsuarioId, "correctiva");
+            long evidenciaCorrectivaExtraId = await CrearEvidenciaExtraAsync(datos.UsuarioId, "correctiva");
+            evidenciaExtraIds.AddRange(new[]
+            {
+                evidenciaPreventivaExtraId,
+                evidenciaDetectivaId,
+                evidenciaDetectivaExtraId,
+                evidenciaCorrectivaId,
+                evidenciaCorrectivaExtraId
+            });
+
+            var evidenciasPorTipo = new Dictionary<string, long[]>(StringComparer.Ordinal)
+            {
+                ["PREVENTIVO"] = new[] { datos.EvidenciaId, evidenciaPreventivaExtraId },
+                ["DETECTIVO"] = new[] { evidenciaDetectivaId, evidenciaDetectivaExtraId },
+                ["CORRECTIVO"] = new[] { evidenciaCorrectivaId, evidenciaCorrectivaExtraId }
+            };
+            foreach ((string tipo, long[] evidenciaIds) in evidenciasPorTipo)
+            {
+                foreach (long evidenciaId in evidenciaIds)
+                {
+                    Assert.True(await matriz.VincularEvidenciaAsync(new VincularEvidenciaDto
+                    {
+                        EvidenciaId = evidenciaId,
+                        TipoEntidad = TipoEntidadEvidencia.Control,
+                        EntidadId = controlPorTipo[tipo]
+                    }, datos.UsuarioId, "127.0.0.1"));
+                }
+            }
+
+            string sufijo = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            await monitoreo.CrearAlertaAsync(new SenalAlertaGuardarDto
+            {
+                AleEvaluacionId = datos.EvaluacionId,
+                AleCodigo = "ORACLE_" + sufijo + "_A",
+                AleIndicador = "Alerta de integración A",
+                AleEstado = "ACTIVO"
+            }, datos.UsuarioId, "127.0.0.1");
+            await monitoreo.CrearAlertaAsync(new SenalAlertaGuardarDto
+            {
+                AleEvaluacionId = datos.EvaluacionId,
+                AleCodigo = "ORACLE_" + sufijo + "_B",
+                AleIndicador = "Alerta de integración B",
+                AleEstado = "INACTIVO"
+            }, datos.UsuarioId, "127.0.0.1");
+            await monitoreo.CrearAlertaAsync(new SenalAlertaGuardarDto
+            {
+                AleEvaluacionId = datosOtraEvaluacion.EvaluacionId,
+                AleCodigo = "ORACLE_" + sufijo + "_OTHER_EVALUATION",
+                AleIndicador = "Alerta de otra evaluación",
+                AleEstado = "ACTIVO"
+            }, datos.UsuarioId, "127.0.0.1");
+            await monitoreo.RegistrarAutomonitoreoAsync(new AutomonitoreoGuardarDto
+            {
+                MonEvaluacionId = datos.EvaluacionId,
+                MonEstadoRiesgo = "ALTO",
+                MonEstadoContr = "EN_SEGUIMIENTO",
+                MonResultado = "Evento de integración"
+            }, datos.UsuarioId, "127.0.0.1");
+
+            await AsignarCapacidadesIntegracionAsync(datos.UsuarioId, false, false);
+            var sinPermisos = await monitoreo.ObtenerBloque6Async(datos.EvaluacionId, datos.UsuarioId);
+            Assert.False(sinPermisos.PuedeEditarObservacionesArea);
+            Assert.False(sinPermisos.PuedeEditarObservacionesUgr);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => monitoreo.ActualizarObservacionAsync(
+                datos.EvaluacionId, true, "Debe denegarse", datos.UsuarioId, "127.0.0.1"));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => monitoreo.ActualizarObservacionAsync(
+                datos.EvaluacionId, false, "Debe denegarse", datos.UsuarioId, "127.0.0.1"));
+
+            await AsignarCapacidadesIntegracionAsync(datos.UsuarioId, true, false);
+            Assert.True(await monitoreo.ActualizarObservacionAsync(datos.EvaluacionId, true,
+                "Observación Área intermedia", datos.UsuarioId, "127.0.0.1"));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => monitoreo.ActualizarObservacionAsync(
+                datos.EvaluacionId, false, "Intento Área hacia UGR", datos.UsuarioId, "127.0.0.1"));
+            var soloArea = await monitoreo.ObtenerBloque6Async(datos.EvaluacionId, datos.UsuarioId);
+            Assert.Equal("Observación Área intermedia", soloArea.ObservacionesArea);
+            Assert.Null(soloArea.ObservacionesUgr);
+
+            await AsignarCapacidadesIntegracionAsync(datos.UsuarioId, false, true);
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => monitoreo.ActualizarObservacionAsync(
+                datos.EvaluacionId, true, "Intento UGR hacia Área", datos.UsuarioId, "127.0.0.1"));
+            Assert.True(await monitoreo.ActualizarObservacionAsync(datos.EvaluacionId, false,
+                "Observación UGR intermedia", datos.UsuarioId, "127.0.0.1"));
+            var soloUgr = await monitoreo.ObtenerBloque6Async(datos.EvaluacionId, datos.UsuarioId);
+            Assert.Equal("Observación Área intermedia", soloUgr.ObservacionesArea);
+            Assert.Equal("Observación UGR intermedia", soloUgr.ObservacionesUgr);
+
+            await AsignarCapacidadesIntegracionAsync(datos.UsuarioId, true, true);
+            Assert.True(await monitoreo.ActualizarObservacionAsync(datos.EvaluacionId, true,
+                "Observación Área Oracle", datos.UsuarioId, "127.0.0.1"));
+            Assert.True(await monitoreo.ActualizarObservacionAsync(datos.EvaluacionId, false,
+                "Observación UGR Oracle", datos.UsuarioId, "127.0.0.1"));
+
+            var bloque6 = await monitoreo.ObtenerBloque6Async(datos.EvaluacionId, datos.UsuarioId);
+            Assert.Equal("ALTO", bloque6.EstadoRiesgo);
+            Assert.Equal("Observación Área Oracle", bloque6.ObservacionesArea);
+            Assert.Equal("Observación UGR Oracle", bloque6.ObservacionesUgr);
+            Assert.True(bloque6.PuedeEditarObservacionesArea);
+            Assert.True(bloque6.PuedeEditarObservacionesUgr);
+            Assert.Equal(2, bloque6.SenalesAlerta.Count);
+            Assert.DoesNotContain(bloque6.SenalesAlerta, alerta => alerta.AleIndicador == "Alerta de otra evaluación");
+            Assert.Equal(3, bloque6.Controles.Count);
+            foreach (var esperado in controlesEsperados)
+            {
+                var control = Assert.Single(bloque6.Controles.Where(item => item.Tipo == esperado.Tipo));
+                Assert.Equal(esperado.Estado, control.EstadoMonitoreo);
+                Assert.Equal(esperado.Efectividad, control.EfectividadMonitoreo);
+                long[] evidenciaEsperada = evidenciasPorTipo[esperado.Tipo];
+                Assert.Equal(2, control.Evidencias.Count);
+                Assert.Equal(evidenciaEsperada.OrderBy(id => id), control.Evidencias.Select(evidencia => evidencia.Id).OrderBy(id => id));
+                Assert.DoesNotContain(control.Evidencias,
+                    evidencia => evidenciasPorTipo.Where(pair => pair.Key != esperado.Tipo)
+                        .SelectMany(pair => pair.Value).Contains(evidencia.Id));
+            }
+
+            foreach (var esperado in controlesEsperados)
+            {
+                var controlLeido = await mitigacion.ObtenerControlAsync(controlPorTipo[esperado.Tipo]);
+                Assert.NotNull(controlLeido);
+                Assert.Equal("ACTIVO", controlLeido.ConEstado);
+                Assert.Equal(esperado.Base, Assert.Single(await mitigacion.ListarEvaluacionesControlAsync(controlPorTipo[esperado.Tipo])).EcoEfectividad);
+            }
+
+            await UsarNuevaSesionAsync();
+            var bloque6Releido = await monitoreo.ObtenerBloque6Async(datos.EvaluacionId, datos.UsuarioId);
+            Assert.Equal("Observación Área Oracle", bloque6Releido.ObservacionesArea);
+            Assert.Equal("Observación UGR Oracle", bloque6Releido.ObservacionesUgr);
+            Assert.Equal("Recursos actualizados",
+                Assert.Single((await mitigacion.ObtenerBloque4Async(datos.EvaluacionId))!.Planes).PlaRecursos);
+        }
+        finally
+        {
+            if (datos is not null)
+            {
+                await LimpiarDatosBloque4y6Async(datos, evidenciaExtraIds);
+                await LimpiarCicloAsync(datos);
+            }
+            if (datosOtraEvaluacion is not null)
+            {
+                await LimpiarDatosBloque4y6Async(datosOtraEvaluacion, Array.Empty<long>());
+                await LimpiarCicloAsync(datosOtraEvaluacion);
+            }
+            await EliminarUsuarioIntegracionAsync(identidad.UsuarioId, identidad.RolId);
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "OracleIntegration")]
     public async Task VinculoGenericoYAuditoria_FalloPosteriorAInsertarAuditoria_RevierteAmbosRegistros()
     {
         if (!await ValidarEntornoEjecucionAsync())
@@ -438,7 +665,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         }
     }
 
-    private async Task<DatosCiclo> CrearCicloConfirmadoAsync(string escenario)
+    private async Task<DatosCiclo> CrearCicloConfirmadoAsync(string escenario, long? usuarioId = null)
     {
         await using OracleConnection conn = CrearConexion();
         await conn.OpenAsync();
@@ -446,7 +673,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
 
         try
         {
-            DatosCiclo datos = await InsertarCicloAsync(conn, transaction, escenario);
+            DatosCiclo datos = await InsertarCicloAsync(conn, transaction, escenario, usuarioId);
             await transaction.CommitAsync();
             return datos;
         }
@@ -460,9 +687,10 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
     private static async Task<DatosCiclo> InsertarCicloAsync(
         OracleConnection conn,
         OracleTransaction transaction,
-        string escenario)
+        string escenario,
+        long? usuarioId = null)
     {
-        long usuarioId = await ObtenerUsuarioValidoAsync(conn, transaction);
+        long usuarioFixtureId = usuarioId ?? await ObtenerUsuarioValidoAsync(conn, transaction);
         long familiaId = await SiguienteSecuenciaAsync(conn, transaction, "SEQ_RL_MR_FAMILIAS");
         long versionId = await SiguienteSecuenciaAsync(conn, transaction, "SEQ_RL_MR_VERSIONES");
         long riesgoId = await SiguienteSecuenciaAsync(conn, transaction, "SEQ_RL_MR_RIESGOS");
@@ -501,7 +729,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             new OracleParameter("codigo", "V_" + sufijo),
             CrearClob("json", "{\"sections\":[]}"),
             new OracleParameter("hash", sufijo.PadRight(64, '0')),
-            new OracleParameter("usuarioId", usuarioId));
+            new OracleParameter("usuarioId", usuarioFixtureId));
 
         await EjecutarAsync(
             conn,
@@ -516,7 +744,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             new OracleParameter("codigo", "R_" + sufijo),
             new OracleParameter("nombre", "Riesgo certificación " + escenario),
             new OracleParameter("descripcion", "Riesgo aislado para validar el modelo de 17 tablas"),
-            new OracleParameter("usuarioId", usuarioId));
+            new OracleParameter("usuarioId", usuarioFixtureId));
 
         await EjecutarAsync(
             conn,
@@ -533,7 +761,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             new OracleParameter("versionId", versionId),
             CrearClob("datosJson", "{\"area\":\"PRUEBAS\",\"dueno\":\"CERTIFICACION\"}"),
             CrearClob("calculosJson", "{\"reglaCodigo\":\"CALCULO_VRI_VRR\",\"reglaVersion\":\"1.0\",\"algoritmoId\":\"MATRICES_VRI_ADITIVO_1_9\",\"vri\":7,\"vrr\":4}"),
-            new OracleParameter("usuarioId", usuarioId));
+            new OracleParameter("usuarioId", usuarioFixtureId));
 
         await EjecutarAsync(
             conn,
@@ -592,7 +820,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             proyeccionId,
             flujoId,
             evidenciaId,
-            usuarioId);
+            usuarioFixtureId);
     }
 
     private async Task LimpiarCicloAsync(DatosCiclo datos)
@@ -667,6 +895,176 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             await transaction.RollbackAsync();
             _output.WriteLine($"[ADVERTENCIA] Limpieza Oracle incompleta: {ex.Message}");
         }
+    }
+
+    private async Task<(long UsuarioId, long RolId)> CrearUsuarioIntegracionAsync()
+    {
+        await using OracleConnection conn = CrearConexion();
+        await conn.OpenAsync();
+        await using OracleTransaction transaction = conn.BeginTransaction();
+        string sufijo = Guid.NewGuid().ToString("N")[..12];
+        long rolId;
+        long usuarioId;
+        await using (var role = new OracleCommand(
+            "INSERT INTO RL_ROLES (ROL_ID, ROL_NOMBRE, ROL_DESCRIPCION, ROL_ACTIVO) VALUES (SEQ_RL_ROLES.NEXTVAL, :nombre, :descripcion, 1) RETURNING ROL_ID INTO :id",
+            conn)
+        {
+            BindByName = true,
+            Transaction = transaction
+        })
+        {
+            role.Parameters.Add(new OracleParameter("nombre", "IT_B6_" + sufijo));
+            role.Parameters.Add(new OracleParameter("descripcion", "Usuario temporal de integración Oracle"));
+            var id = new OracleParameter("id", OracleDbType.Int64) { Direction = System.Data.ParameterDirection.Output };
+            role.Parameters.Add(id);
+            await role.ExecuteNonQueryAsync();
+            rolId = Convert.ToInt64(id.Value.ToString());
+        }
+
+        await using (var user = new OracleCommand(@"
+            INSERT INTO RL_USUARIOS (
+                USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH,
+                USR_PASSWORD_SALT, USR_ROL_ID, USR_ACTIVO, ES_USUARIO_DOMINIO
+            ) VALUES (SEQ_RL_USUARIOS.NEXTVAL, 'Integración', 'Bloque 6', :email,
+                      'TEST_ONLY', 'TEST_ONLY', :rolId, 1, 0)
+            RETURNING USR_ID INTO :id", conn)
+        {
+            BindByName = true,
+            Transaction = transaction
+        })
+        {
+            user.Parameters.Add(new OracleParameter("email", $"oracle-b6-{sufijo}@example.invalid"));
+            user.Parameters.Add(new OracleParameter("rolId", rolId));
+            var id = new OracleParameter("id", OracleDbType.Int64) { Direction = System.Data.ParameterDirection.Output };
+            user.Parameters.Add(id);
+            await user.ExecuteNonQueryAsync();
+            usuarioId = Convert.ToInt64(id.Value.ToString());
+        }
+
+        await transaction.CommitAsync();
+        return (usuarioId, rolId);
+    }
+
+    private async Task AsignarCapacidadesIntegracionAsync(long usuarioId, bool area, bool ugr)
+    {
+        await using OracleConnection conn = CrearConexion();
+        await conn.OpenAsync();
+        await using OracleTransaction transaction = conn.BeginTransaction();
+        await EjecutarAsync(conn, transaction,
+            "DELETE FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID = :id",
+            new OracleParameter("id", usuarioId));
+        if (area)
+        {
+            await EjecutarAsync(conn, transaction, @"
+                INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID, UCP_CAPACIDAD, UCP_ACTIVO)
+                VALUES (:id, 'MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR', 1)",
+                new OracleParameter("id", usuarioId));
+        }
+        if (ugr)
+        {
+            await EjecutarAsync(conn, transaction, @"
+                INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID, UCP_CAPACIDAD, UCP_ACTIVO)
+                VALUES (:id, 'MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR', 1)",
+                new OracleParameter("id", usuarioId));
+        }
+        await transaction.CommitAsync();
+    }
+
+    private async Task<long> CrearEvidenciaExtraAsync(long usuarioId, string tipo)
+    {
+        await using OracleConnection conn = CrearConexion();
+        await conn.OpenAsync();
+        await using OracleTransaction transaction = conn.BeginTransaction();
+        long evidenciaId = await SiguienteSecuenciaAsync(conn, transaction, "SEQ_RL_MR_EVIDENCIAS");
+        string sufijo = Guid.NewGuid().ToString("N");
+        await EjecutarAsync(conn, transaction, @"
+            INSERT INTO RL_MR_EVIDENCIAS (
+                EVI_ID, EVI_NOMBRE_ARCHIVO, EVI_EXTENSION, EVI_TAMANO,
+                EVI_HASH, EVI_RUTA, EVI_USR_CREACION
+            ) VALUES (
+                :id, :nombre, 'txt', 1, :hash, :ruta, :usuarioId
+            )",
+            new OracleParameter("id", evidenciaId),
+            new OracleParameter("nombre", "bloque6-" + tipo + "-" + sufijo + ".txt"),
+            new OracleParameter("hash", sufijo.PadRight(64, '0')),
+            new OracleParameter("ruta", "/certificacion-oracle/bloque6/" + tipo + "/" + sufijo),
+            new OracleParameter("usuarioId", usuarioId));
+        await transaction.CommitAsync();
+
+        return evidenciaId;
+    }
+
+    private async Task LimpiarDatosBloque4y6Async(DatosCiclo datos, IReadOnlyCollection<long> evidenciaExtraIds)
+    {
+        await using OracleConnection conn = CrearConexion();
+        await conn.OpenAsync();
+        await using OracleTransaction transaction = conn.BeginTransaction();
+        try
+        {
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_AUDITORIA WHERE AUD_USR_ID = :id",
+                new OracleParameter("id", datos.UsuarioId));
+            await EjecutarAsync(conn, transaction, @"
+                DELETE FROM RL_MR_EVIDENCIAS_VINCULOS
+                 WHERE EVV_TIPO_ENTIDAD = 'CONTROL'
+                   AND EVV_ENTIDAD_ID IN (SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :id)",
+                new OracleParameter("id", datos.EvaluacionId));
+            foreach (long evidenciaId in evidenciaExtraIds)
+            {
+                await EjecutarAsync(conn, transaction, "DELETE FROM RL_MR_EVIDENCIAS WHERE EVI_ID = :id",
+                    new OracleParameter("id", evidenciaId));
+            }
+            await EjecutarAsync(conn, transaction, @"
+                DELETE FROM RL_MR_EVALUACIONES_CONTROL
+                 WHERE ECO_CONTROL_ID IN (SELECT CON_ID FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :id)",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, @"
+                DELETE FROM RL_MR_ACTIVIDADES
+                 WHERE ACT_PLAN_ID IN (SELECT PLA_ID FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID = :id)",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_MR_PLANES WHERE PLA_EVALUACION_ID = :id",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID = :id",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID = :id",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :id",
+                new OracleParameter("id", datos.EvaluacionId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID = :id",
+                new OracleParameter("id", datos.UsuarioId));
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private async Task EliminarUsuarioIntegracionAsync(long usuarioId, long rolId)
+    {
+        if (string.IsNullOrWhiteSpace(_connectionString)) return;
+        await using OracleConnection conn = CrearConexion();
+        await conn.OpenAsync();
+        await using OracleTransaction transaction = conn.BeginTransaction();
+        try
+        {
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_USUARIOS WHERE USR_ID = :id",
+                new OracleParameter("id", usuarioId));
+            await EjecutarAsync(conn, transaction, "DELETE FROM RL_ROLES WHERE ROL_ID = :id",
+                new OracleParameter("id", rolId));
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private static Task UsarNuevaSesionAsync()
+    {
+        OracleConnection.ClearAllPools();
+        return Task.CompletedTask;
     }
 
     private static async Task<string[]> ObtenerNombresAsync(OracleConnection conn, string sql)

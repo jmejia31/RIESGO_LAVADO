@@ -1,3 +1,25 @@
+# Estado vigente — round-trip Oracle desechable Bloques 4/6 (2026-09-30)
+
+- Rama `desarrollo`; base `9424ea7293c110fd7cec27670f6a9aaa593767fc`. Código B6 se conserva; no se tocaron `main` ni producción.
+- Oracle XE 11.2.0.2 efímero en Docker/loopback. Transiciones 46-48 y 50-52 aplicadas entre pre/postchecks PASS. Rollback 53 ejecutado y validado; 50-52 reaplicadas para dejar schema de test migrado. DDL/DML únicamente en ese schema desechable.
+- Integración real de repositorios Oracle: 1/1. Probó planes, tres tipos de control, dos evidencias por tipo, dos alertas, observaciones, capabilities persistidas, lectura desde conexiones nuevas, independencia de observaciones y denegación sin permiso. Fixtures limpiados.
+- Gates locales finales: backend Release build PASS, 0 warnings/errores; backend 758/758 (0 failed/skip), cobertura 36.85%/40.21%. Frontend lint/build PASS, 83 archivos/829 pruebas, cobertura 63.18%/57.80%/59.36%/63.93%. E2E 45/45 serial, 0 failed/flaky; npm audit 0. Validadores SQL/estructura/enlaces y diff-check PASS. Build frontend tiene dos avisos no bloqueantes (SCSS budget y CommonJS `exceljs`).
+- El E2E de navegador del proyecto usa mocks HTTP; no se presenta como navegador conectado a Oracle. La prueba real cubre repositorios con nuevas conexiones. Oracle XE demuestra compatibilidad con 11g, no igualdad de parche/edición institucional.
+- Hallazgo aparte: bootstrap `00_EJECUCION_PRIMERA_VEZ.sql` pasa 01 y seed 02 falla con `ORA-00904 SFS_MAX_INTENTOS` en `RL_CONFIG_SISTEMA`; seed sin cambios. Schema de certificación preparado con 01, modelo pre-B6 recuperado de Git y transiciones.
+- Un timeout E2E ocurrió una vez con workers paralelos y no se repitió en las corridas seriales. El contenedor, password y logs temporales no se versionan.
+- Pendiente: revisión final, commit/push solo `origin/desarrollo`, Quality Gate remoto exacto del SHA final y verificación de sincronización. Capacidades productivas no asignadas; producción no consultada ni modificada.
+
+---
+
+# Estado vigente — certificación Oracle no productiva Bloques 4/6
+
+- Fecha local: 2026-09-30. Rama `desarrollo`. Base: `9424ea7293c110fd7cec27670f6a9aaa593767fc`.
+- Oracle XE 11.2.0.2 efímero en Docker/loopback. Transiciones 46–48 y 50–52 ejecutadas en schema de prueba: prechecks y postchecks PASS; columnas de Bloque 4/6 y tabla/capacidad física confirmadas.
+- Prueba Oracle opt-in repositorio real 1/1; backend Release tests 758/758, 0 fallidos, 0 omitidos. Persistencia probada con conexiones nuevas para los campos Bloque 4/6 en el schema desechable. No se declara E2E browser conectado a Oracle.
+- Ajustes de migración: crear/reutilizar tabla de capacidades sin colisión con fresh install; rollback preserva tabla/índice compartidos; eliminado índice de email duplicado respecto al UNIQUE. Se agregaron tests de contrato y el validador SQL quedó alineado. DDL/DML fueron únicamente locales de prueba.
+- Hallazgo independiente: el flujo maestro 00 falla después de 01 por `ORA-00904 SFS_MAX_INTENTOS` en seed 02. No se modificó el seed. El modelo usado se preparó mediante 01, rebuild de matrices y transiciones versionadas.
+- Frontend/Playwright, Quality Gate remoto exacto y métricas finales todavía pendientes. No tocar producción/main; asignaciones productivas de capabilities no creadas. Preservados los untracked preexistentes.
+- Punto de continuación: ejecutar suites/validadores restantes, revisar el diff, documentar métricas verificadas, publicar sólo `desarrollo` y esperar Quality Gate del SHA final.
 # Estado vigente — Continuación autorizada Bloque 4 (campos 40–49)
 
 - Fecha/hora local: 2026-09-29 20:16:29 (America/Tegucigalpa). Rama desarrollo. Base: 484257a6b2b33cc9f7310e492c1687948e90be18; implementación y corrección de codificación publicadas en 981a854a34eff5ed055e71787ef6bc0693abd3f8.

@@ -976,9 +976,11 @@ if ($block6Scripts['51_ddl_bloque6.sql'] -match '(?im)\b(?:INSERT|UPDATE|MERGE|D
     $block6Scripts['51_ddl_bloque6.sql'] -match '(?im)\b(?:GRANT|REVOKE)\b') {
     $errors.Add('La migración Bloque 6 no puede insertar datos ni conceder capacidades productivas.')
 }
-if ($block6Scripts['51_ddl_bloque6.sql'] -notmatch 'RL_USUARIO_CAPACIDADES' -or
-    $block6Scripts['53_rollback_bloque6.sql'] -notmatch 'RL_USUARIO_CAPACIDADES') {
-    $errors.Add('La capacidad explícita de Bloque 6 debe incluir creación y rollback.')
+if ($block6Scripts['51_ddl_bloque6.sql'] -notmatch 'CREATE TABLE RL_USUARIO_CAPACIDADES' -or
+    $block6Scripts['51_ddl_bloque6.sql'] -notmatch 'IF v_table_count = 0 THEN' -or
+    $block6Scripts['53_rollback_bloque6.sql'] -match '(?im)\bDROP\s+(?:TABLE\s+)?RL_USUARIO_CAPACIDADES\b' -or
+    $block6Scripts['53_rollback_bloque6.sql'] -match '(?im)\bDROP\s+INDEX\s+IDX_RL_UCP_CAP\b') {
+    $errors.Add('Bloque 6 debe crear/reutilizar la capacidad explícita y preservar tabla e índice compartidos durante rollback.')
 }
 if ($freshInstallBlock6 -notmatch 'CK_RL_MR_CON_MON_EF' -or
     $freshInstallBlock6 -notmatch 'MON_OBSERVACIONES_AREA' -or
