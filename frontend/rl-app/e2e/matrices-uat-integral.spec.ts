@@ -399,7 +399,10 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
   await expect(area).toHaveValue('Área inicial');
   await area.fill('Área persistida por capability');
   const guardarArea = modal.getByRole('button', { name: 'Guardar Observaciones del Área' });
+  const areaReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarArea.click();
+  await areaReload;
+  await expect(guardarArea).toBeEnabled();
   await expect(area).toHaveValue('Área persistida por capability');
   await expect(modal.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR inicial');
 
@@ -407,7 +410,10 @@ test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET 
   await ugr.fill('UGR persistida por capability');
   const guardarUgr = modal.getByRole('button', { name: 'Guardar Observaciones UGR' });
   await expect(guardarUgr).toBeEnabled();
+  const ugrReload = page.waitForResponse(response => response.url().includes('/bloque6') && response.request().method() === 'GET');
   await guardarUgr.click();
+  await ugrReload;
+  await expect(guardarUgr).toBeEnabled();
   await expect(ugr).toHaveValue('UGR persistida por capability');
   await expect(modal.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
   expect(writes.map(write => write.path.split('/').at(-1))).toEqual(['area', 'ugr']);
