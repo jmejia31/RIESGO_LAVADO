@@ -7,7 +7,7 @@
 - El E2E de navegador del proyecto usa mocks HTTP; no se presenta como navegador conectado a Oracle. La prueba real cubre repositorios con nuevas conexiones. Oracle XE demuestra compatibilidad con 11g, no igualdad de parche/edición institucional.
 - Hallazgo aparte: bootstrap `00_EJECUCION_PRIMERA_VEZ.sql` pasa 01 y seed 02 falla con `ORA-00904 SFS_MAX_INTENTOS` en `RL_CONFIG_SISTEMA`; seed sin cambios. Schema de certificación preparado con 01, modelo pre-B6 recuperado de Git y transiciones.
 - Un timeout E2E ocurrió una vez con workers paralelos y no se repitió en las corridas seriales. El contenedor, password y logs temporales no se versionan.
-- Pendiente: revisión final, commit/push solo `origin/desarrollo`, Quality Gate remoto exacto del SHA final y verificación de sincronización. Capacidades productivas no asignadas; producción no consultada ni modificada.
+- Commit de certificación publicado: `f51b41f0f358e9f291ca31cad627b45c5a0dc338`, run #1687 / `36777987531`, `completed/success` y exacto al SHA. CI reportó backend 758/758, frontend 83/829, E2E 45/45/0 flaky, audit 0; coberturas backend 36.85%/40.21% y frontend 63.19%/57.77%/59.41%/63.95%. Resta publicar esta actualización documental y verificar el gate del commit documental final. Capacidades productivas no asignadas; producción no consultada ni modificada.
 
 ---
 
