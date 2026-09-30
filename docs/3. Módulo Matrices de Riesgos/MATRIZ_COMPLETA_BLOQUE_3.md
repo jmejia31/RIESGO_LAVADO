@@ -16,6 +16,10 @@ RESPONSE_CATALOG=PASS
 RESPONSE_OPTIONS=EVITAR|MITIGAR|TRANSFERIR|ACEPTAR
 INVALID_RESPONSE_VALUE_CONTROLLED_4XX=PASS
 RESPONSE_PERSISTENCE=PASS
+BLOCK_3_RESPONSE_ROUNDTRIP_E2E=PASS
+RESPONSE_SAVE_PAYLOAD=PASS
+RESPONSE_REHYDRATION_AFTER_REOPEN=PASS
+MATRIX_FIELD_39_PERSISTED_PROJECTION=PASS
 BLOCK_3_DESKTOP_VISUAL=PASS
 BLOCK_3_MOBILE_VISUAL=PASS
 BLOCK_3_HORIZONTAL_OVERFLOW=0
@@ -75,16 +79,46 @@ El bloque `3. Riesgo Residual y Respuesta` consta de exactamente seis campos, en
 
 ---
 
-## 4. Evidencia de Calidad y Pruebas
+## 4. Remediación E2E y Round-Trip del Campo 39
 
-- **Backend tests:** 740/740 tests superados (0 errores, 0 omitidos).
-  - Cobertura backend: líneas `37.19%`, ramas `40.46%`.
-- **Frontend unit tests:** 819/819 tests superados en 82 archivos (0 errores).
-  - Cobertura frontend: sentencias `62.38%`, ramas `55.79%`, funciones `58.59%`, líneas `63.25%`.
-- **Frontend lint:** `0` errores (`eslint src e2e scripts`).
-- **Frontend build:** Generado exitosamente en `dist/rl-app`.
-- **Playwright E2E:** 40/40 tests superados (0 flaky, 0 fallos).
-  - Incluye verificación de Matriz completa con 39 campos, etiquetas exactas, orden 01–39, `aria-readonly="true"` en 34–38, proyección de respuesta 39, responsive 1280x900 y 390x844 sin horizontal overflow (`BLOCK_3_HORIZONTAL_OVERFLOW=0`).
-- **npm audit:** `0 vulnerabilities`.
-- **Validadores de repositorio:** Estructura (118 rutas PASS), Database scripts (PASS), Documentation links (188 enlaces PASS).
-- **Puertas de calidad:** `tools/run_quality_gates.ps1` -> PASS.
+La intervención inicial implementó correctamente las fórmulas F10–F14, los modelos, el backend autoritativo y los componentes visuales del Bloque 3. Una auditoría independiente identificó la necesidad de cerrar la evidencia conductual del round-trip completo del campo 39:
+
+1. **Flujo E2E implementado y certificado (`BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabrir`):**
+   - Carga de `/matrices-riesgos`.
+   - Apertura del flujo real de edición de una evaluación en estado `BORRADOR` (#20).
+   - Localización del selector `Respuesta al riesgo` (`#campo-edit-respuesta_riesgo`).
+   - Verificación de las cuatro opciones canónicas institucionales (`EVITAR`, `MITIGAR`, `TRANSFERIR`, `ACEPTAR`) con sus textos visibles correspondientes.
+   - Selección de la opción canónica `MITIGAR`.
+   - Guardado mediante el botón real de la interfaz.
+   - Captura y verificación del payload PUT real enviado al backend: `evaDataJson` contiene `respuesta_riesgo = "MITIGAR"`.
+   - Simulación con mock stateful que incrementa `evaVersionRow` y almacena el estado persistido del servidor.
+   - Cierre del modal de edición tras confirmación exitosa de persistencia.
+   - Reapertura de la misma evaluación desde la interfaz: rehidratación fresca desde el API confirmando que el selector presenta `MITIGAR`.
+   - Cierre del editor y apertura de `Ver Matriz completa` de esa misma evaluación.
+   - Verificación de `[data-matrix-field="39"]`: etiqueta `Respuesta al riesgo` y proyección visible de `MITIGAR`.
+   - Verificación de que campos 34–38 continúan en modo solo lectura (`aria-readonly="true"`).
+   - Verificación de que la Matriz completa mantiene exactamente 39 campos implementados y Bloque 4 permanece marcado como pendiente.
+   - Validación de consola y red: 0 errores de consola, 0 errores de página, 0 respuestas HTTP 4xx/5xx inesperadas y 0 peticiones a `/familias/1`.
+
+---
+
+## 5. Evidencia de Calidad y Pruebas
+
+- **Línea base previa (Run remoto 36626072573, SHA `9ddfca41ea704cd8690d04bcb15c0ff4d9d3ea8f`):**
+  - Backend tests: 740/740 PASS.
+  - Frontend unit tests: 820/820 PASS en 82 archivos.
+  - Playwright E2E: 41/41 PASS (0 flaky).
+  - Cobertura remota exacta: Backend líneas `37.19%`, ramas `40.46%`; Frontend sentencias `62.40%`, ramas `55.79%`, funciones `58.68%`, líneas `63.26%`.
+  - npm audit: `0 vulnerabilities`.
+
+- **Evidencia con remediación final (Suite completa local verificada):**
+  - **Backend tests:** 740/740 tests superados (0 errores, 0 omitidos).
+  - **Frontend unit tests:** 820/820 tests superados en 82 archivos (0 errores).
+  - **Frontend lint:** `0` errores (`eslint src e2e scripts`).
+  - **Frontend build:** Generado exitosamente en `dist/rl-app` (producción).
+  - **Playwright E2E:** 42/42 tests superados (0 flaky, 0 fallos).
+    - Incorpora el test conductual de round-trip de persistencia del campo 39.
+    - Preserva la prueba de Matriz completa con 39 campos, etiquetas exactas, orden 01–39, `aria-readonly="true"` en 34–38, proyección de respuesta 39, responsive 1280x900 y 390x844 sin horizontal overflow (`BLOCK_3_HORIZONTAL_OVERFLOW=0`).
+  - **npm audit:** `0 vulnerabilities`.
+  - **Validadores de repositorio:** Estructura (118 rutas PASS), Database scripts (PASS), Documentation links (188 enlaces PASS).
+  - **Puertas de calidad:** `tools/run_quality_gates.ps1` -> PASS (`Puertas de calidad correctas`).

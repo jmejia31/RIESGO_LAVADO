@@ -554,3 +554,240 @@ test('H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y
   expect(consoleErrors).toHaveLength(0);
   expect(pageErrors).toHaveLength(0);
 });
+
+test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabrir', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  const requestedUrls: string[] = [];
+  const unexpectedHttpErrors: string[] = [];
+
+  page.on('console', msg => {
+    if (msg.type() === 'error') consoleErrors.push(msg.text());
+  });
+  page.on('pageerror', err => pageErrors.push(err.message));
+  page.on('request', req => requestedUrls.push(req.url()));
+  page.on('response', resp => {
+    if (resp.status() >= 400) unexpectedHttpErrors.push(`${resp.status()} ${resp.url()}`);
+  });
+
+  // Stateful server representation
+  let updatePayloadReceived: any = null;
+  let serverEvaVersionRow = 1;
+  let serverEvaDataJson = JSON.stringify({
+    area_principal: 'Área de Cumplimiento',
+    frecuencia_inherente: '3',
+    impacto_inherente: '3',
+    dueno_riesgo: 'Responsable UAT',
+    controles_preventivo: 90,
+    controles_detectivo: 50,
+    controles_correctivo: 30
+  });
+
+  const metodologiaConRespuesta = {
+    versionFormularioId: 10,
+    codigo: 'MATRIZ_RIESGOS_LAFT_V1',
+    version: 1,
+    secciones: [
+      {
+        clave: 'riesgo_residual_seccion',
+        titulo: '3. Riesgo Residual y Respuesta',
+        columnasPorFila: 2,
+        orden: 1,
+        campos: [
+          {
+            clave: 'respuesta_riesgo',
+            etiqueta: 'Respuesta al riesgo',
+            tipo: 'selector-catalogo',
+            codigoCatalogo: 'MR_RESPUESTA_RIESGO',
+            obligatorio: false,
+            soloLectura: false,
+            orden: 1
+          }
+        ]
+      }
+    ],
+    catalogos: [
+      {
+        codigo: 'MR_RESPUESTA_RIESGO',
+        nombre: 'Respuesta al riesgo',
+        elementos: [
+          { codigo: 'EVITAR', valor: 'Evitar', orden: 1 },
+          { codigo: 'MITIGAR', valor: 'Mitigar', orden: 2 },
+          { codigo: 'TRANSFERIR', valor: 'Transferir', orden: 3 },
+          { codigo: 'ACEPTAR', valor: 'Aceptar', orden: 4 }
+        ]
+      }
+    ],
+    reglas: []
+  };
+
+  await page.route('**/api/matrices-riesgos/**', async route => {
+    const req = route.request();
+    const path = new URL(req.url()).pathname;
+    const method = req.method();
+
+    if (path.endsWith('/metodologia/vigente') || path.includes('/metodologia/version/')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: metodologiaConRespuesta })
+      });
+    }
+
+    if (path.endsWith('/evaluaciones/20') && method === 'GET') {
+      const data = {
+        evaId: 20,
+        evaRiesgoId: 7,
+        evaVersionId: 10,
+        evaEstado: 'BORRADOR',
+        evaDataJson: serverEvaDataJson,
+        evaDataCalcJson: JSON.stringify({
+          nivel_riesgo_inherente: 'Riesgo Moderado',
+          riesgo_residual_descripcion: 'Riesgo residual derivado de controles',
+          frecuencia_residual: 2,
+          impacto_residual: 1,
+          valor_riesgo_residual: 2,
+          nivel_riesgo_residual: 'BAJO'
+        }),
+        evaVri: 7,
+        evaVrr: 2,
+        evaFechaEval: '2026-08-07T12:00:00Z',
+        evaUsrEval: 1,
+        evaVersionRow: serverEvaVersionRow,
+        evaActivo: true
+      };
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: data })
+      });
+    }
+
+    if (path.endsWith('/evaluaciones/20') && method === 'PUT') {
+      updatePayloadReceived = req.postDataJSON();
+      serverEvaVersionRow++;
+      serverEvaDataJson = updatePayloadReceived.evaDataJson;
+      const data = {
+        evaId: 20,
+        evaRiesgoId: 7,
+        evaVersionId: 10,
+        evaEstado: 'BORRADOR',
+        evaDataJson: serverEvaDataJson,
+        evaDataCalcJson: updatePayloadReceived.evaDataCalcJson,
+        evaVri: 7,
+        evaVrr: 2,
+        evaFechaEval: '2026-08-07T12:00:00Z',
+        evaUsrEval: 1,
+        evaVersionRow: serverEvaVersionRow,
+        evaActivo: true
+      };
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: data })
+      });
+    }
+
+    return route.fallback();
+  });
+
+  // A. Cargar /matrices-riesgos
+  await page.goto('/matrices-riesgos');
+  await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible({ timeout: 15000 });
+
+  // B. Entrar al flujo real de edición de una evaluación BORRADOR
+  const botonEditar = page.getByRole('button', { name: 'Editar evaluación' }).first();
+  await expect(botonEditar).toBeVisible();
+  await botonEditar.click();
+
+  const modalEditar = page.locator('dialog.modal-backdrop-overlay');
+  await expect(modalEditar).toBeVisible();
+  await expect(page.locator('#titulo-modal-editar')).toContainText('Editar Evaluación #20');
+
+  // C. Localizar el campo/selector “Respuesta al riesgo”
+  const selectorRespuesta = page.locator('#campo-edit-respuesta_riesgo');
+  await expect(selectorRespuesta).toBeVisible();
+
+  // D. Verificar que el catálogo disponible corresponde a las cuatro respuestas canónicas
+  const options = selectorRespuesta.locator('option');
+  const optionValues = await options.evaluateAll(opts =>
+    opts.map(o => (o as HTMLOptionElement).value).filter(v => v !== '')
+  );
+  expect(optionValues).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
+
+  const optionTexts = await options.evaluateAll(opts =>
+    opts.map(o => o.textContent?.trim()).filter(t => t && !t.includes('Seleccione'))
+  );
+  expect(optionTexts).toEqual(['Evitar', 'Mitigar', 'Transferir', 'Aceptar']);
+
+  // E. Seleccionar al menos una opción: MITIGAR
+  await selectorRespuesta.selectOption('MITIGAR');
+  await expect(selectorRespuesta).toHaveValue('MITIGAR');
+
+  // F. Guardar la evaluación mediante la UI real
+  const botonGuardar = page.getByRole('button', { name: 'Guardar cambios de evaluación' });
+  await expect(botonGuardar).toBeEnabled();
+  await botonGuardar.click();
+
+  const feedbackExito = page.locator('[data-uat="feedback-edicion-exito"]');
+  await expect(feedbackExito).toBeVisible();
+  await expect(feedbackExito).toContainText('guardados y verificados correctamente');
+
+  // G. Capturar/verificar la petición de actualización real
+  expect(updatePayloadReceived).not.toBeNull();
+  const parsedEvaData = JSON.parse(updatePayloadReceived.evaDataJson);
+  expect(parsedEvaData.respuesta_riesgo).toBe('MITIGAR');
+
+  // J. Después de guardar: cerrar el editor/modal según la UX real
+  await page.getByLabel('Cerrar edición').click();
+  await expect(page.locator('#titulo-modal-editar')).toHaveCount(0);
+
+  // K. Volver a abrir LA MISMA evaluación desde la UI (rehidratación desde el API stateful)
+  await botonEditar.click();
+  await expect(page.locator('#titulo-modal-editar')).toContainText('Editar Evaluación #20');
+
+  // L. Verificar que el selector muestra la respuesta persistida: MITIGAR
+  const selectorReabierto = page.locator('#campo-edit-respuesta_riesgo');
+  await expect(selectorReabierto).toBeVisible();
+  await expect(selectorReabierto).toHaveValue('MITIGAR');
+
+  // M. Cerrar el editor
+  await page.getByLabel('Cerrar edición').click();
+  await expect(page.locator('#titulo-modal-editar')).toHaveCount(0);
+
+  // N. Abrir “Ver Matriz completa” de esa misma evaluación
+  const botonMatriz = page.getByRole('button', { name: 'Ver Matriz completa' }).first();
+  await expect(botonMatriz).toBeVisible();
+  await botonMatriz.click();
+
+  const modalMatriz = page.locator('[data-matrix-modal="complete"]');
+  await expect(modalMatriz).toBeVisible();
+  const view = modalMatriz.locator('[data-matrix-view="complete"]');
+
+  // O. Localizar [data-matrix-field="39"] y verificar label y valor proyectado MITIGAR
+  const field39 = view.locator('[data-matrix-field="39"]');
+  await expect(field39).toBeVisible();
+  await expect(field39).toContainText('Respuesta al riesgo');
+  await expect(field39).toContainText('MITIGAR');
+
+  // P. Confirmar que campos 34–38 siguen read-only
+  const fields = view.locator('[data-matrix-field]');
+  for (const index of [33, 34, 35, 36, 37]) {
+    await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
+  }
+
+  // Q. Confirmar que Matriz completa continúa teniendo exactamente 39 campos implementados
+  await expect(fields).toHaveCount(39);
+  await expect(view.locator('[data-matrix-block="4"]')).toContainText('Bloque pendiente de implementación');
+
+  // Cerrar Matriz completa
+  await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  await expect(modalMatriz).toBeHidden();
+
+  // Consola / Network limpias
+  const familias1Requests = requestedUrls.filter(u => u.includes('/familias/1'));
+  expect(familias1Requests).toHaveLength(0);
+  expect(unexpectedHttpErrors).toHaveLength(0);
+  expect(consoleErrors).toHaveLength(0);
+  expect(pageErrors).toHaveLength(0);
+});

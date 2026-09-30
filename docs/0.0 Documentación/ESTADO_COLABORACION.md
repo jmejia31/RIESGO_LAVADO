@@ -1,8 +1,8 @@
 # Estado de colaboración y punto de continuidad
 
-## Estado vigente — Certificación técnica Bloque 3: Riesgo Residual y Respuesta (Campos 34–39)
+## Estado vigente — Remediación final y recertificación estricta Bloque 3: Riesgo Residual y Respuesta (Campos 34–39)
 
-- Fecha: `2026-09-29`. Rama `desarrollo`. Colaborador: ANTIG (Antigravity). BASE_SHA: `7a685d124fe02853687660a2d0d5fc7419919264`.
+- Fecha: `2026-09-29`. Rama `desarrollo`. Colaborador: ANTIG (Antigravity). BASE_SHA: `9ddfca41ea704cd8690d04bcb15c0ff4d9d3ea8f`.
 - `BLOCK_1_STATUS=CLOSED`; `BLOCK_2_STATUS=CLOSED`; `BLOCK_3_STATUS=CLOSED`; `FULL_MATRIX_82=PENDING_BLOCKS_4_6`.
 - `FULL_MATRIX_IMPLEMENTED_FIELDS=39/82`; `FULL_MATRIX_PENDING_FIELDS=43`.
 - **Fórmulas F10–F14 certificadas e implementadas autoritativamente:**
@@ -16,24 +16,30 @@
   - `RESIDUAL_CLIENT_TAMPERING=REJECTED_OR_RECALCULATED`: cualquier cálculo forjado enviado por el cliente es ignorado y recalculado por el servidor.
   - `CALCULATED_FIELDS_NOT_CLIENT_AUTHORITATIVE=PASS`: DTO de lectura separado de DTO de escritura.
   - `RESIDUAL_VERSION_AWARE=PASS`: evaluaciones históricas evalúan contra su versión asociada histórica.
-- **Catálogo de respuesta al riesgo:**
+- **Catálogo y persistencia de respuesta al riesgo (Campo 39):**
   - `RESPONSE_CATALOG=PASS`: catálogo canónico institucional strictly `EVITAR`, `MITIGAR`, `TRANSFERIR`, `ACEPTAR`.
   - `INVALID_RESPONSE_VALUE_CONTROLLED_4XX=PASS`: valores no canónicos o vacíos son rechazados con 400 controlado.
-  - No existe inferencia automática no autorizada; la respuesta es una selección institucional persistida.
-- **Evidencia técnica ejecutada y demostrada:**
+  - `BLOCK_3_RESPONSE_ROUNDTRIP_E2E=PASS`: prueba conductual real que valida edición en BORRADOR -> selección de MITIGAR -> guardado UI -> API PUT `respuesta_riesgo = "MITIGAR"` -> cierre -> reapertura UI -> rehidratación desde servidor persistido con MITIGAR -> Matriz completa proyectando MITIGAR en campo 39.
+  - `RESPONSE_SAVE_PAYLOAD=PASS`: payload verificado en contrato real API.
+  - `RESPONSE_REHYDRATION_AFTER_REOPEN=PASS`: rehidratación fresh desde el servidor demostrada.
+  - `MATRIX_FIELD_39_PERSISTED_PROJECTION=PASS`: campo 39 proyecta el valor persistido.
+  - `MATRIX_COMPLETE_READONLY=PASS`: Matriz completa estrictamente de solo lectura; campos 34–38 `aria-readonly="true"`.
+- **Evidencia técnica ejecutada y demostrada (Remediación final):**
   - Backend: `740/740 PASS` (0 errores, 0 omitidos).
-  - Frontend unit tests: `819/819 PASS` (82/82 archivos).
+  - Frontend unit tests: `820/820 PASS` (82/82 archivos).
   - Frontend lint: `0 errores`.
   - Frontend build: exitoso (`dist/rl-app`).
-  - E2E Playwright: `40/40 PASS` (0 flaky). Verificación en 1280x900 y 390x844 (`BLOCK_3_HORIZONTAL_OVERFLOW=0`).
+  - E2E Playwright: `42/42 PASS` (0 flaky, 0 fallos).
   - npm audit: `0 vulnerabilities`.
-  - Validadores: Estructura (118/118 PASS), Database scripts (PASS), Documentación links (188/188 PASS), Quality gates script (PASS).
-  - Cobertura reportada: Backend líneas `37.19%`, ramas `40.46%`; Frontend sentencias `62.38%`, ramas `55.79%`, funciones `58.59%`, líneas `63.25%`.
+  - Validadores: Estructura (118/118 PASS), Database scripts (PASS), Documentación links (188/188 PASS), Quality gates script (`run_quality_gates.ps1` PASS).
+  - Cobertura: Backend líneas `37.19%`, ramas `40.46%`; Frontend sentencias `62.38%`, ramas `55.79%`, funciones `58.59%`, líneas `63.25%`.
+- **Trazabilidad de la línea base previa (Run 36626072573, SHA `9ddfca41ea704cd8690d04bcb15c0ff4d9d3ea8f`):**
+  - Backend `740/740`, Frontend `820/820`, E2E `41/41`, npm audit `0 vulnerabilities`. Cobertura: Backend 37.19% / 40.46%; Frontend 62.40% / 55.79% / 58.68% / 63.26%.
 - **Límites de gobernanza:**
   - `MAIN_TOUCHED=NO`.
   - `ORACLE_CONNECTION_ATTEMPTED=NO`; `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`.
   - `BLOCK_4_STARTED=NO`.
-- **Punto de continuidad:** Bloque 3 cerrado definitivamente. Próximo bloque autorizado: `NEXT_BLOCK=BLOCK_4_PLAN_MITIGACION_CAMPOS_40_48` (no iniciado).
+- **Punto de continuidad:** Bloque 3 cerrado y recertificado con evidencia round-trip completa. Próximo bloque autorizado: `NEXT_BLOCK=BLOCK_4_PLAN_MITIGACION_CAMPOS_40_48` (no iniciado).
 
 ## Estado vigente — Auditoría post-ANTIG y recertificación limpia de Bloque 2
 
