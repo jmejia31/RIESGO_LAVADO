@@ -8,6 +8,8 @@ public sealed class ControlRiesgoDto
     public string ConDescripcion { get; set; } = string.Empty;
     public string ConAutomatizacion { get; set; } = string.Empty;
     public string ConEstado { get; set; } = string.Empty;
+    public string? ConEstadoMonitoreo { get; set; }
+    public decimal? ConEfectividadMonitoreo { get; set; }
 }
 
 public sealed class ControlRiesgoGuardarDto
@@ -17,6 +19,8 @@ public sealed class ControlRiesgoGuardarDto
     public string ConDescripcion { get; set; } = string.Empty;
     public string ConAutomatizacion { get; set; } = string.Empty;
     public string ConEstado { get; set; } = string.Empty;
+    public string? ConEstadoMonitoreo { get; set; }
+    public decimal? ConEfectividadMonitoreo { get; set; }
 }
 
 public sealed class EvaluacionControlDto

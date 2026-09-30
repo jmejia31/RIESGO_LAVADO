@@ -41,6 +41,18 @@ Esta carpeta contiene el paquete controlado para la transición física del Mód
 
 ## Correctivo controlado de codificación del catálogo maestro
 
+## Extensión aditiva de Bloque 6 — Matriz completa (70–82)
+
+La transición versionada `50`–`53` amplía el estado de monitoreo por control, agrega observaciones independientes Área/UGR al agregado de automonitoreo y crea capacidades explícitas por usuario sin asignaciones iniciales. No altera `CON_ESTADO`, `ECO_EFECTIVIDAD`, el workflow de evaluación ni los registros históricos. Las columnas de datos nuevos admiten `NULL` y no hay backfill.
+
+Ejecutar la secuencia solamente en un ambiente Oracle de pruebas y tras los controles de autorización separados descritos en este README:
+
+1. [`50_precheck_bloque6_solo_lectura.sql`](50_precheck_bloque6_solo_lectura.sql)
+2. [`51_ddl_bloque6.sql`](51_ddl_bloque6.sql)
+3. [`52_postcheck_bloque6_solo_lectura.sql`](52_postcheck_bloque6_solo_lectura.sql)
+
+`53_rollback_bloque6.sql` es recuperación manual para retirar únicamente estas columnas/tabla si la migración debe revertirse. Ningún script agrega permisos a usuarios. La reconstrucción limpia replica columnas de matrices en `06_reconstruir_modelo_17_tablas.sql` y la tabla de capacidades global está en `database/01_create_tables.sql`.
+
 Cuando `RL_MR_RIESGOS.RIE_NOMBRE` o `RIE_DESCRIPCION` presente mojibake, no se debe corregir texto a mano ni por sustituciones globales.
 
 Fuente canónica: `Matrices de Riesgos.xlsx`, hoja `Matriz Consolidada`, filas 2 a 60.

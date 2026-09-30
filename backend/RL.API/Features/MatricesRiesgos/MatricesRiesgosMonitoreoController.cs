@@ -37,6 +37,20 @@ public sealed class MatricesRiesgosMonitoreoController : ControllerBase
     public async Task<IActionResult> ListarAutomonitoreo(long evaluacionId) =>
         Responder(await _service.ListarAutomonitoreoAsync(evaluacionId));
 
+    [HttpGet("evaluaciones/{evaluacionId:long}/bloque6")]
+    public async Task<IActionResult> ObtenerBloque6(long evaluacionId) =>
+        Responder(await _service.ObtenerBloque6Async(evaluacionId, UsuarioId()));
+
+    [HttpPut("evaluaciones/{evaluacionId:long}/observaciones/area")]
+    [AuditRequired("Actualización de Observaciones del Área")]
+    public async Task<IActionResult> ActualizarObservacionArea(long evaluacionId, [FromBody] ObservacionMonitoreoGuardarDto dto) =>
+        Responder(await _service.ActualizarObservacionAsync(evaluacionId, true, dto, UsuarioId(), Ip()));
+
+    [HttpPut("evaluaciones/{evaluacionId:long}/observaciones/ugr")]
+    [AuditRequired("Actualización de Observaciones UGR")]
+    public async Task<IActionResult> ActualizarObservacionUgr(long evaluacionId, [FromBody] ObservacionMonitoreoGuardarDto dto) =>
+        Responder(await _service.ActualizarObservacionAsync(evaluacionId, false, dto, UsuarioId(), Ip()));
+
     [HttpPost("automonitoreo")]
     [AuditRequired("Registro de automonitoreo de evaluación")]
     public async Task<IActionResult> RegistrarAutomonitoreo([FromBody] AutomonitoreoGuardarDto dto) =>

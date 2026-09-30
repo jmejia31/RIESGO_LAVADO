@@ -1997,3 +1997,12 @@ UAT real en navegador ejecutada y **CERTIFICADA** en `localhost` con el usuario 
 - **Quality Gate remoto exacto del código:** `36735618174` (#1680), SHA `22ca4f0f24f6b04ebfa366b2bab7532bcee639ce`, `completed/success`; backend 750, frontend 828 en 83 archivos, E2E 44, npm audit 0; coberturas backend 37.07%/40.35% y frontend 62.56%/56.05%/58.96%/63.49%.
 - **Esquema/gobernanza:** `SCHEMA_CHANGE_REQUIRED=NO`; no se conectó Oracle ni se ejecutó DML/DDL. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `BLOCK_6_STARTED=NO`.
 - **Pendiente exacto:** publicar la actualización de bitácora/estado y del documento de Bloque 5, y esperar un Quality Gate exitoso del SHA documental final. El commit de implementación ya está certificado; no iniciar Bloque 6.
+
+# Estado vigente — Bloque 6, campos 70–82 (COD, certificación en curso)
+
+- **Fecha/hora local:** 2026-09-30 11:52 -06:00 (America/Tegucigalpa). **Rama:** `desarrollo`. **Base:** `ea030a46bdfcd7e3256ba73a8b90f8f75a544be7`.
+- Implementación de los trece campos y persistencia/capacidades aditivas en curso. Campos 01–69 no forman parte del diff funcional; no se inició otro bloque.
+- Verificación local: backend Release build y 753/753 PASS (0 omitidos); frontend aislado 83 archivos/829 pruebas PASS, lint/build PASS, audit 0; E2E 45/45 PASS; validadores SQL/estructura/documentación y diff check PASS. Cobertura backend 36.85%/40.21%; frontend 62.39%/55.92%/58.49%/63.37%.
+- El runner oficial local se detuvo al iniciar frontend porque `npm ci` en el checkout compartido encontró `EPERM` en el ejecutable esbuild bloqueado por `ng serve`; se conservó ese proceso y se completaron los gates frontend/E2E en copia aislada. No se aplicó la migración a Oracle. No se crean grants productivos para las capacidades nuevas.
+- **Estado:** `BLOCK_6_STATUS=OPEN` hasta que el commit publicado obtenga Quality Gate remoto exacto y se complete handoff documental. No hay commit final ni push aún.
+- **Continuación:** revisar/stagear sólo archivos de esta intervención, publicar únicamente `desarrollo`, esperar el Quality Gate del SHA final y registrar sus resultados. `MAIN_TOUCHED=NO`; `PRODUCTION_TOUCHED=NO`; `ORACLE_CONNECTION_ATTEMPTED=NO`; `ORACLE_DML_EXECUTED=NO`; `ORACLE_DDL_EXECUTED=NO`.

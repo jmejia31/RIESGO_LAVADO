@@ -318,6 +318,73 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         Assert.Equal(400, (await service.RegistrarAutomonitoreoAsync(ValidoAutomonitoreo(), UsuarioId, Ip)).StatusCode);
     }
 
+    [Fact]
+    public async Task Bloque6_ObservacionesValidanTamanoYPermisoPorCampo()
+    {
+        var repo = new MonitoreoRepoFake();
+        var service = new MatricesRiesgosMonitoreoService(repo);
+        Assert.Equal(400, (await service.ActualizarObservacionAsync(0, true, new ObservacionMonitoreoGuardarDto(), UsuarioId, Ip)).StatusCode);
+        Assert.Equal(400, (await service.ActualizarObservacionAsync(1, true, new ObservacionMonitoreoGuardarDto { Texto = new string('x', 2001) }, UsuarioId, Ip)).StatusCode);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, true, new ObservacionMonitoreoGuardarDto { Texto = "Área" }, UsuarioId, Ip)).StatusCode);
+        repo.PuedeEditarArea = true;
+        Assert.True((await service.ActualizarObservacionAsync(1, true, new ObservacionMonitoreoGuardarDto { Texto = " Área " }, UsuarioId, Ip)).Success);
+        Assert.Equal("Área", repo.UltimoTexto);
+        Assert.True(repo.UltimaEsArea);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, false, new ObservacionMonitoreoGuardarDto { Texto = "UGR" }, UsuarioId, Ip)).StatusCode);
+        repo.PuedeEditarUgr = true;
+        Assert.True((await service.ActualizarObservacionAsync(1, false, new ObservacionMonitoreoGuardarDto { Texto = "UGR" }, UsuarioId, Ip)).Success);
+        Assert.False(repo.UltimaEsArea);
+    }
+
+    [Fact]
+    public async Task Bloque6_CapacidadesPorUsuarioSonIndependientesYDenyByDefault()
+    {
+        var repo = new MonitoreoRepoFake();
+        repo.Capacidades.Add((11, true));
+        repo.Capacidades.Add((12, false));
+        repo.Capacidades.Add((13, true));
+        repo.Capacidades.Add((13, false));
+        var service = new MatricesRiesgosMonitoreoService(repo);
+        var dto = new ObservacionMonitoreoGuardarDto { Texto = "fixture" };
+
+        Assert.True((await service.ActualizarObservacionAsync(1, true, dto, 11, Ip)).Success);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, false, dto, 11, Ip)).StatusCode);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, true, dto, 12, Ip)).StatusCode);
+        Assert.True((await service.ActualizarObservacionAsync(1, false, dto, 12, Ip)).Success);
+        Assert.True((await service.ActualizarObservacionAsync(1, true, dto, 13, Ip)).Success);
+        Assert.True((await service.ActualizarObservacionAsync(1, false, dto, 13, Ip)).Success);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, true, dto, 14, Ip)).StatusCode);
+        Assert.Equal(403, (await service.ActualizarObservacionAsync(1, false, dto, 14, Ip)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Bloque6_MonitoreoControlValidaCamposNuevosSinMezclarEfectividadBase()
+    {
+        var repo = new MitigacionRepoFake();
+        var service = MatricesRiesgosTestFactory.CreateMitigationService(repo);
+
+        var invalidoEstado = ValidoControl();
+        invalidoEstado.ConEstadoMonitoreo = new string('x', 31);
+        Assert.Equal(400, (await service.CrearControlAsync(invalidoEstado, UsuarioId, Ip)).StatusCode);
+
+        var invalidaEfectividadAlta = ValidoControl();
+        invalidaEfectividadAlta.ConEfectividadMonitoreo = 100.01m;
+        Assert.Equal(400, (await service.CrearControlAsync(invalidaEfectividadAlta, UsuarioId, Ip)).StatusCode);
+
+        var invalidaEfectividadBaja = ValidoControl();
+        invalidaEfectividadBaja.ConEfectividadMonitoreo = -0.01m;
+        Assert.Equal(400, (await service.ActualizarControlAsync(1, invalidaEfectividadBaja, UsuarioId, Ip)).StatusCode);
+
+        var valido = ValidoControl();
+        valido.ConEstadoMonitoreo = "En seguimiento";
+        valido.ConEfectividadMonitoreo = 82.5m;
+        Assert.True((await service.CrearControlAsync(valido, UsuarioId, Ip)).Success);
+
+        valido.ConEstadoMonitoreo = "Revisado";
+        valido.ConEfectividadMonitoreo = 0m;
+        Assert.True((await service.ActualizarControlAsync(1, valido, UsuarioId, Ip)).Success);
+    }
+
     private static RiesgoGuardarDto ValidoRiesgo(string codigo = "R-001", string nombre = "Riesgo institucional", string? descripcion = "Descripción") => new()
     {
         RieCodigo = codigo,
@@ -453,11 +520,25 @@ public sealed class MatricesRiesgosPhase11ServiceValidationTests
         public bool UpdateAlertaResult { get; set; } = true;
         public long CreateAlertaId { get; set; } = 1;
         public long CreateAutomonitoreoId { get; set; } = 2;
+        public bool PuedeEditarArea { get; set; }
+        public bool PuedeEditarUgr { get; set; }
+        public HashSet<(long UsuarioId, bool EsArea)> Capacidades { get; } = [];
+        public bool UltimaEsArea { get; private set; }
+        public string? UltimoTexto { get; private set; }
 
         public Task<IReadOnlyList<SenalAlertaDto>> ListarAlertasAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<SenalAlertaDto>>(Array.Empty<SenalAlertaDto>());
         public Task<long> CrearAlertaAsync(SenalAlertaGuardarDto dto, long usuarioId, string? ip) => LongResult(CreateAlertaId);
         public Task<bool> CambiarEstadoAlertaAsync(long alertaId, string estado, long usuarioId, string? ip) => Task.FromResult(UpdateAlertaResult);
         public Task<IReadOnlyList<AutomonitoreoDto>> ListarAutomonitoreoAsync(long evaluacionId) => Task.FromResult<IReadOnlyList<AutomonitoreoDto>>(Array.Empty<AutomonitoreoDto>());
+        public Task<MatrizBloque6Dto> ObtenerBloque6Async(long evaluacionId, long usuarioId) => Task.FromResult(new MatrizBloque6Dto());
+        public Task<bool> ActualizarObservacionAsync(long evaluacionId, bool esArea, string? texto, long usuarioId, string? ip)
+        {
+            bool permitido = Capacidades.Count > 0 ? Capacidades.Contains((usuarioId, esArea)) : esArea ? PuedeEditarArea : PuedeEditarUgr;
+            if (!permitido) return Task.FromException<bool>(new UnauthorizedAccessException("denied"));
+            UltimaEsArea = esArea;
+            UltimoTexto = texto;
+            return Task.FromResult(true);
+        }
         public Task<long> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip) => LongResult(CreateAutomonitoreoId);
         public Task<ResumenMatricesOperativoDto> ObtenerResumenOperativoAsync() => Task.FromResult(new ResumenMatricesOperativoDto());
 

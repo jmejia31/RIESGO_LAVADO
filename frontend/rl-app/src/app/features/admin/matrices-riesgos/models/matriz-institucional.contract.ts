@@ -86,19 +86,19 @@ const SEEDS: readonly MatrixFieldSeed[] = [
   { label: 'Verificar Frec', mode: 'COMPUTED', editable: false, key: 'verificar_frecuencia', source: 'Runtime institucional' },
   { label: 'Verificar Impact', mode: 'COMPUTED', editable: false, key: 'verificar_impacto', source: 'Runtime institucional' },
   { label: 'VRI-VRR', mode: 'COMPUTED', editable: false, key: 'diferencia_vri_vrr', source: 'Runtime institucional / F34_DIFERENCIA_VRI_VRR' },
-  { label: 'Señales de Alerta', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_SENALES_ALERTA' },
-  { label: 'Estado del Riesgo', mode: 'MONITORING', editable: true, key: null, source: 'Workflow institucional' },
-  { label: 'Estado del Control Preventivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_CONTROLES_RIESGO (PREVENTIVO)' },
-  { label: 'Evaluación de la Efectividad del Control Preventivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_EVALUACIONES_CONTROL (PREVENTIVO)' },
-  { label: 'Evidencia(s) del Control Preventivo', mode: 'EVIDENCE', editable: true, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (PREVENTIVO)' },
-  { label: 'Estado del Control Detectivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_CONTROLES_RIESGO (DETECTIVO)' },
-  { label: 'Evaluación de la Efectividad del Control Detectivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_EVALUACIONES_CONTROL (DETECTIVO)' },
-  { label: 'Evidencia(s) del Control Detectivo', mode: 'EVIDENCE', editable: true, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (DETECTIVO)' },
-  { label: 'Estado del Control Correctivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_CONTROLES_RIESGO (CORRECTIVO)' },
-  { label: 'Evaluación de la Efectividad del Control Correctivo', mode: 'MONITORING', editable: true, key: null, source: 'RL_MR_EVALUACIONES_CONTROL (CORRECTIVO)' },
-  { label: 'Evidencia(s) del Control Correctivo', mode: 'EVIDENCE', editable: true, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (CORRECTIVO)' },
-  { label: 'Observaciones del Área', mode: 'INPUT', editable: true, key: null, source: 'Contrato de observaciones pendiente' },
-  { label: 'Observaciones UGR', mode: 'INPUT', editable: true, key: null, source: 'Contrato de observaciones pendiente' }
+  { label: 'Señales de Alerta', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_SENALES_ALERTA.ALE_EVALUACION_ID' },
+  { label: 'Estado del Riesgo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_AUTOMONITOREO.MON_ESTADO_RIESGO' },
+  { label: 'Estado del Control Preventivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_ESTADO_MONITOREO (CON_TIPO=PREVENTIVO)' },
+  { label: 'Evaluación de la Efectividad del Control Preventivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_EFECTIVIDAD_MONITOREO (CON_TIPO=PREVENTIVO)' },
+  { label: 'Evidencia(s) del Control Preventivo', mode: 'EVIDENCE', editable: false, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (CONTROL PREVENTIVO)' },
+  { label: 'Estado del Control Detectivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_ESTADO_MONITOREO (CON_TIPO=DETECTIVO)' },
+  { label: 'Evaluación de la Efectividad del Control Detectivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_EFECTIVIDAD_MONITOREO (CON_TIPO=DETECTIVO)' },
+  { label: 'Evidencia(s) del Control Detectivo', mode: 'EVIDENCE', editable: false, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (CONTROL DETECTIVO)' },
+  { label: 'Estado del Control Correctivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_ESTADO_MONITOREO (CON_TIPO=CORRECTIVO)' },
+  { label: 'Evaluación de la Efectividad del Control Correctivo', mode: 'MONITORING', editable: false, key: null, source: 'RL_MR_CONTROLES_RIESGO.CON_EFECTIVIDAD_MONITOREO (CON_TIPO=CORRECTIVO)' },
+  { label: 'Evidencia(s) del Control Correctivo', mode: 'EVIDENCE', editable: false, key: null, source: 'RL_MR_EVIDENCIAS_VINCULOS (CONTROL CORRECTIVO)' },
+  { label: 'Observaciones del Área', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_AUTOMONITOREO.MON_OBSERVACIONES_AREA' },
+  { label: 'Observaciones UGR', mode: 'INPUT', editable: false, key: null, source: 'RL_MR_AUTOMONITOREO.MON_OBSERVACIONES_UGR' }
 ];
 
 function blockForOrdinal(ordinal: number): MatrixFieldContract['block'] {
@@ -125,7 +125,7 @@ export const MATRIX_FIELDS: readonly MatrixFieldContract[] = Object.freeze(
       ordinal,
       block: blockForOrdinal(ordinal),
       excelColumn: excelColumnForOrdinal(ordinal),
-      implemented: ordinal <= 69
+      implemented: ordinal <= 82
     });
   })
 );
@@ -144,6 +144,7 @@ export const MATRIX_BLOCK_2_FIELDS = MATRIX_FIELDS.filter(field => field.block =
 export const MATRIX_BLOCK_3_FIELDS = MATRIX_FIELDS.filter(field => field.block === 3);
 export const MATRIX_BLOCK_4_FIELDS = MATRIX_FIELDS.filter(field => field.block === 4);
 export const MATRIX_BLOCK_5_FIELDS = MATRIX_FIELDS.filter(field => field.block === 5);
+export const MATRIX_BLOCK_6_FIELDS = MATRIX_FIELDS.filter(field => field.block === 6);
 
 export const CATALOGO_RESPUESTA_RIESGO = ['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR'] as const;
 export type RespuestaRiesgoCanonica = typeof CATALOGO_RESPUESTA_RIESGO[number];

@@ -938,6 +938,55 @@ Valoraci\00BF\00BFn|Valoraci\00F3n
     }
 }
 
+$block6TransitionRoot = Join-Path $databaseRoot '19_matrices_riesgos/transicion'
+$block6ScriptNames = @(
+    '50_precheck_bloque6_solo_lectura.sql',
+    '51_ddl_bloque6.sql',
+    '52_postcheck_bloque6_solo_lectura.sql',
+    '53_rollback_bloque6.sql'
+)
+$block6Scripts = @{}
+foreach ($name in $block6ScriptNames) {
+    $path = Join-Path $block6TransitionRoot $name
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        $errors.Add("Falta script requerido de Bloque 6: $name")
+        continue
+    }
+    $block6Scripts[$name] = Get-ExecutableSql $path
+}
+$block6ReadOnly = $true
+foreach ($name in @('50_precheck_bloque6_solo_lectura.sql', '52_postcheck_bloque6_solo_lectura.sql')) {
+    if (-not $block6Scripts.ContainsKey($name)) { $block6ReadOnly = $false; continue }
+    if ($block6Scripts[$name] -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE|CREATE|ALTER|DROP|TRUNCATE|COMMIT)\b') {
+        $errors.Add("$name debe ser exclusivamente de lectura.")
+        $block6ReadOnly = $false
+    }
+}
+$freshInstallBlock6 = Get-Content -LiteralPath (Join-Path $block6TransitionRoot '06_reconstruir_modelo_17_tablas.sql') -Raw
+$block6Columns = @('CON_ESTADO_MONITOREO', 'CON_EFECTIVIDAD_MONITOREO', 'MON_OBSERVACIONES_AREA', 'MON_OBSERVACIONES_UGR')
+foreach ($column in $block6Columns) {
+    if ($block6Scripts['51_ddl_bloque6.sql'] -notmatch [regex]::Escape($column) -or
+        $block6Scripts['52_postcheck_bloque6_solo_lectura.sql'] -notmatch [regex]::Escape($column) -or
+        $block6Scripts['53_rollback_bloque6.sql'] -notmatch [regex]::Escape($column) -or
+        $freshInstallBlock6 -notmatch [regex]::Escape($column)) {
+        $errors.Add("Bloque 6 no tiene paridad DDL/postcheck/rollback/fresh-install para $column.")
+    }
+}
+if ($block6Scripts['51_ddl_bloque6.sql'] -match '(?im)\b(?:INSERT|UPDATE|MERGE|DELETE)\b' -or
+    $block6Scripts['51_ddl_bloque6.sql'] -match '(?im)\b(?:GRANT|REVOKE)\b') {
+    $errors.Add('La migración Bloque 6 no puede insertar datos ni conceder capacidades productivas.')
+}
+if ($block6Scripts['51_ddl_bloque6.sql'] -notmatch 'RL_USUARIO_CAPACIDADES' -or
+    $block6Scripts['53_rollback_bloque6.sql'] -notmatch 'RL_USUARIO_CAPACIDADES') {
+    $errors.Add('La capacidad explícita de Bloque 6 debe incluir creación y rollback.')
+}
+if ($freshInstallBlock6 -notmatch 'CK_RL_MR_CON_MON_EF' -or
+    $freshInstallBlock6 -notmatch 'MON_OBSERVACIONES_AREA' -or
+    $freshInstallBlock6 -notmatch 'MON_OBSERVACIONES_UGR') {
+    $errors.Add('Fresh-install del modelo Matrices no contiene constraints/columnas de Bloque 6.')
+}
+$block6MigrationValidation = $block6ReadOnly -and $block6Scripts.Count -eq 4
+
 if ($PassThru) {
     foreach ($errorMessage in $errors) {
         Write-Output $errorMessage
@@ -990,6 +1039,9 @@ Write-Host "JSON_UNICODE_ESCAPE_EQUIVALENCE=$(if ($jsonUnicodeEscapeEquivalence)
 Write-Host "JSON_SEMANTIC_DIFFERENCE_REJECTED=$(if ($jsonSemanticDifferenceRejected) { 'PASS' } else { 'FAIL' })"
 Write-Host "PARITY_FIELD_DIAGNOSTICS=$(if ($parityFieldDiagnosticsImplemented) { 'PASS' } else { 'FAIL' })"
 Write-Host "POSTCHECK_44_READ_ONLY=$(if ($postcheck44ReadOnly) { 'PASS' } else { 'FAIL' })"
+Write-Host "BLOCK6_SCRIPTS=$(if ($block6Scripts.Count -eq 4) { '4/4' } else { "$($block6Scripts.Count)/4" })"
+Write-Host "BLOCK6_PRECHECK_POSTCHECK_READ_ONLY=$(if ($block6ReadOnly) { 'PASS' } else { 'FAIL' })"
+Write-Host "BLOCK6_FRESH_INSTALL_PARITY=$(if ($block6MigrationValidation) { 'PASS' } else { 'FAIL' })"
 Write-Host 'BACKEND_ALL_TEXT_OUTPUTS=PASS'
 Write-Host 'FRONTEND_ALL_TEXT_SURFACES=PASS'
 Write-Host "Scripts activos de raiz: $($activeRootScripts.Count)"

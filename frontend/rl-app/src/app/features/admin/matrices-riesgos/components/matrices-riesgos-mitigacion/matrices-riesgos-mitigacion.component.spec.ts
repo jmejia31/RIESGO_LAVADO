@@ -166,7 +166,9 @@ describe('MatricesRiesgosMitigacionComponent', () => {
       conTipo: 'DETECTIVO',
       conDescripcion: 'Control detectivo automático',
       conAutomatizacion: 'AUTOMATICO',
-      conEstado: 'ACTIVO'
+      conEstado: 'ACTIVO',
+      conEstadoMonitoreo: null,
+      conEfectividadMonitoreo: null
     });
     expect(component.mensaje()).toBe('Control creado correctamente.');
     expect(component.controlEditandoId).toBe(0);

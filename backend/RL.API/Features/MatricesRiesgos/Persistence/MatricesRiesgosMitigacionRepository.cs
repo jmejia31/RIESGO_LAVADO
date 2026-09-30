@@ -46,7 +46,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         await using var conn = _db.CreateConnection();
         await conn.OpenAsync();
         const string sql = @"
-            SELECT CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO
+            SELECT CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO, CON_ESTADO_MONITOREO, CON_EFECTIVIDAD_MONITOREO
               FROM RL_MR_CONTROLES_RIESGO
              WHERE CON_EVALUACION_ID = :evaluacionId
              ORDER BY CON_ID";
@@ -63,7 +63,9 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                 ConTipo = reader.GetString(2),
                 ConDescripcion = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
                 ConAutomatizacion = reader.GetString(4),
-                ConEstado = reader.GetString(5)
+                ConEstado = reader.GetString(5),
+                ConEstadoMonitoreo = reader.IsDBNull(6) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(6)),
+                ConEfectividadMonitoreo = reader.IsDBNull(7) ? null : reader.GetDecimal(7)
             });
         }
         return lista;
@@ -73,7 +75,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
     {
         await using var connection = _db.CreateConnection();
         await connection.OpenAsync();
-        const string sql = @"SELECT CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO
+        const string sql = @"SELECT CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO,CON_ESTADO_MONITOREO,CON_EFECTIVIDAD_MONITOREO
                                FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID=:id";
         await using var command = Comando(sql, connection);
         command.Parameters.Add(new OracleParameter("id", controlId));
@@ -82,7 +84,9 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         return new ControlRiesgoDto
         {
             ConId=reader.GetInt64(0), ConEvaluacionId=reader.GetInt64(1), ConTipo=reader.GetString(2),
-            ConDescripcion=TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)), ConAutomatizacion=reader.GetString(4), ConEstado=reader.GetString(5)
+            ConDescripcion=TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)), ConAutomatizacion=reader.GetString(4), ConEstado=reader.GetString(5),
+            ConEstadoMonitoreo=reader.IsDBNull(6) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(6)),
+            ConEfectividadMonitoreo=reader.IsDBNull(7) ? null : reader.GetDecimal(7)
         };
     }
 
@@ -97,8 +101,8 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             long id = await SiguienteAsync(conn, tx, "SEQ_RL_MR_CONTROLES");
             const string sql = @"
                 INSERT INTO RL_MR_CONTROLES_RIESGO
-                    (CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO)
-                VALUES (:id, :evaluacionId, :tipo, :descripcion, :automatizacion, :estado)";
+                    (CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO, CON_ESTADO_MONITOREO, CON_EFECTIVIDAD_MONITOREO)
+                VALUES (:id, :evaluacionId, :tipo, :descripcion, :automatizacion, :estado, :estadoMonitoreo, :efectividadMonitoreo)";
             await using var cmd = Comando(sql, conn, tx);
             cmd.Parameters.Add(new OracleParameter("id", id));
             cmd.Parameters.Add(new OracleParameter("evaluacionId", dto.ConEvaluacionId));
@@ -106,6 +110,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("descripcion", dto.ConDescripcion.Trim()));
             cmd.Parameters.Add(new OracleParameter("automatizacion", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
             cmd.Parameters.Add(new OracleParameter("estado", dto.ConEstado.Trim().ToUpperInvariant()));
+            AddControlMonitoringParameters(cmd, dto);
             await cmd.ExecuteNonQueryAsync();
             await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", id, "INSERT", dto, usuarioId, ip);
             await tx.CommitAsync();
@@ -128,7 +133,9 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                        CON_TIPO = :tipo,
                        CON_DESCRIPCION = :descripcion,
                        CON_AUTOMATIZACION = :automatizacion,
-                       CON_ESTADO = :estado
+                       CON_ESTADO = :estado,
+                       CON_ESTADO_MONITOREO = :estadoMonitoreo,
+                       CON_EFECTIVIDAD_MONITOREO = :efectividadMonitoreo
                  WHERE CON_ID = :id";
             await using var cmd = Comando(sql, conn, tx);
             cmd.Parameters.Add(new OracleParameter("evaluacionId", dto.ConEvaluacionId));
@@ -136,6 +143,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("descripcion", dto.ConDescripcion.Trim()));
             cmd.Parameters.Add(new OracleParameter("automatizacion", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
             cmd.Parameters.Add(new OracleParameter("estado", dto.ConEstado.Trim().ToUpperInvariant()));
+            AddControlMonitoringParameters(cmd, dto);
             cmd.Parameters.Add(new OracleParameter("id", controlId));
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
             await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", controlId, "UPDATE", dto, usuarioId, ip);
@@ -189,8 +197,8 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         {
             long id = await SiguienteAsync(_connection, _transaction, "SEQ_RL_MR_CONTROLES");
             const string sql = @"INSERT INTO RL_MR_CONTROLES_RIESGO
-                (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO)
-                VALUES(:id,:evaluationId,:type,:description,:automation,:state)";
+                (CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO,CON_ESTADO_MONITOREO,CON_EFECTIVIDAD_MONITOREO)
+                VALUES(:id,:evaluationId,:type,:description,:automation,:state,:estadoMonitoreo,:efectividadMonitoreo)";
             await using OracleCommand command = Comando(sql, _connection, _transaction);
             command.Parameters.Add(new OracleParameter("id", id));
             AddControlParameters(command, control);
@@ -210,7 +218,8 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         public async Task<bool> UpdateControlAsync(long controlId, ControlRiesgoGuardarDto control)
         {
             const string sql = @"UPDATE RL_MR_CONTROLES_RIESGO
-                SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state
+                SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state,
+                    CON_ESTADO_MONITOREO=:estadoMonitoreo,CON_EFECTIVIDAD_MONITOREO=:efectividadMonitoreo
                 WHERE CON_ID=:id AND CON_EVALUACION_ID=:evaluationId";
             await using OracleCommand command = Comando(sql, _connection, _transaction);
             command.Parameters.Add(new OracleParameter("id", controlId));
@@ -284,6 +293,14 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         command.Parameters.Add(new OracleParameter("description", dto.ConDescripcion.Trim()));
         command.Parameters.Add(new OracleParameter("automation", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
         command.Parameters.Add(new OracleParameter("state", dto.ConEstado.Trim().ToUpperInvariant()));
+        command.Parameters.Add(new OracleParameter("estadoMonitoreo", string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) ? DBNull.Value : TextoVisibleUtf8Normalizer.Normalizar(dto.ConEstadoMonitoreo.Trim())));
+        command.Parameters.Add(new OracleParameter("efectividadMonitoreo", dto.ConEfectividadMonitoreo.HasValue ? dto.ConEfectividadMonitoreo.Value : DBNull.Value));
+    }
+
+    private static void AddControlMonitoringParameters(OracleCommand command, ControlRiesgoGuardarDto dto)
+    {
+        command.Parameters.Add(new OracleParameter("estadoMonitoreo", string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) ? DBNull.Value : TextoVisibleUtf8Normalizer.Normalizar(dto.ConEstadoMonitoreo.Trim())));
+        command.Parameters.Add(new OracleParameter("efectividadMonitoreo", dto.ConEfectividadMonitoreo.HasValue ? dto.ConEfectividadMonitoreo.Value : DBNull.Value));
     }
 
     public async Task<IReadOnlyList<EvaluacionControlDto>> ListarEvaluacionesControlAsync(long controlId)

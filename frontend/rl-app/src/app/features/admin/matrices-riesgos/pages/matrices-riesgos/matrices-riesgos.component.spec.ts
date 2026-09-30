@@ -20,6 +20,7 @@ describe('MatricesRiesgosComponent', () => {
     obtenerRiesgo: ReturnType<typeof vi.fn>;
     listarControles: ReturnType<typeof vi.fn>;
     obtenerMitigacionBloque4: ReturnType<typeof vi.fn>;
+    obtenerBloque6: ReturnType<typeof vi.fn>;
     listarRiesgos: ReturnType<typeof vi.fn>;
     listarRiesgosPaginados: ReturnType<typeof vi.fn>;
     listarEvaluaciones: ReturnType<typeof vi.fn>;
@@ -131,6 +132,7 @@ describe('MatricesRiesgosComponent', () => {
       obtenerRiesgo: vi.fn().mockReturnValue(of({ rieId: 5, rieCodigo: 'R-005', rieNombre: 'Riesgo institucional', rieDescripcion: 'Evaluación', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T08:00:00' })),
       listarControles: vi.fn().mockReturnValue(of([])),
       obtenerMitigacionBloque4: vi.fn().mockReturnValue(of({ cantidadAcciones: 0, planes: [] })),
+      obtenerBloque6: vi.fn().mockReturnValue(of({ senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({
         versionFormularioId: 10,
         codigo: 'FORM_A',
@@ -635,7 +637,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       'Nivel del Riesgo Residual',
       'Respuesta al riesgo'
     ]);
-    expect(component.bloquesMatrizPendientes).toEqual([6]);
+    expect(component.bloquesMatrizPendientes).toEqual([]);
 
     const field = (ordinal: number) => MATRIX_BLOCK_3_FIELDS.find(item => item.ordinal === ordinal)!;
 

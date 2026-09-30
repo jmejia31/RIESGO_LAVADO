@@ -13,6 +13,8 @@ public interface IMatricesRiesgosMonitoreoRepository
     Task<long> CrearAlertaAsync(SenalAlertaGuardarDto dto, long usuarioId, string? ip);
     Task<bool> CambiarEstadoAlertaAsync(long alertaId, string estado, long usuarioId, string? ip);
     Task<IReadOnlyList<AutomonitoreoDto>> ListarAutomonitoreoAsync(long evaluacionId);
+    Task<MatrizBloque6Dto> ObtenerBloque6Async(long evaluacionId, long usuarioId);
+    Task<bool> ActualizarObservacionAsync(long evaluacionId, bool esArea, string? texto, long usuarioId, string? ip);
     Task<long> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip);
     Task<ResumenMatricesOperativoDto> ObtenerResumenOperativoAsync();
 }
@@ -146,7 +148,8 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
         await conn.OpenAsync();
         const string sql = @"
             SELECT MON_ID, MON_EVALUACION_ID, MON_ESTADO_RIESGO, MON_ESTADO_CONTR,
-                   MON_RESULTADO, MON_USR_ID, MON_FECHA
+                   MON_RESULTADO, MON_USR_ID, MON_FECHA,
+                   MON_OBSERVACIONES_AREA, MON_OBSERVACIONES_UGR
               FROM RL_MR_AUTOMONITOREO
              WHERE MON_EVALUACION_ID = :evaluacionId
              ORDER BY MON_FECHA DESC, MON_ID DESC";
@@ -162,10 +165,115 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
                 MonEstadoRiesgo = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
                 MonEstadoContr = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
                 MonResultado = TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(4)),
-                MonUsrId = reader.GetInt64(5), MonFecha = reader.GetDateTime(6)
+                MonUsrId = reader.GetInt64(5), MonFecha = reader.GetDateTime(6),
+                MonObservacionesArea = reader.IsDBNull(7) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(7)),
+                MonObservacionesUgr = reader.IsDBNull(8) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(8))
             });
         }
         return lista;
+    }
+
+    public async Task<MatrizBloque6Dto> ObtenerBloque6Async(long evaluacionId, long usuarioId)
+    {
+        var alertas = await ListarAlertasAsync(evaluacionId);
+        var automonitoreos = await ListarAutomonitoreoAsync(evaluacionId);
+        var ultimo = automonitoreos.FirstOrDefault();
+        var controles = new Dictionary<long, (string tipo, string descripcion, string? estado, decimal? efectividad, List<EvidenciaMatrizDto> evidencias)>();
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        const string sql = @"
+            SELECT c.CON_ID, c.CON_TIPO, c.CON_DESCRIPCION, c.CON_ESTADO_MONITOREO,
+                   c.CON_EFECTIVIDAD_MONITOREO, e.EVI_ID, e.EVI_NOMBRE_ARCHIVO
+              FROM RL_MR_CONTROLES_RIESGO c
+              LEFT JOIN RL_MR_EVIDENCIAS_VINCULOS v
+                ON v.EVV_TIPO_ENTIDAD = 'CONTROL' AND v.EVV_ENTIDAD_ID = c.CON_ID
+              LEFT JOIN RL_MR_EVIDENCIAS e ON e.EVI_ID = v.EVV_EVIDENCIA_ID
+             WHERE c.CON_EVALUACION_ID = :evaluacionId
+             ORDER BY c.CON_TIPO, c.CON_ID, v.EVV_ID";
+        await using (var cmd = Comando(sql, conn))
+        {
+            cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                long id = reader.GetInt64(0);
+                if (!controles.TryGetValue(id, out var control))
+                {
+                    control = (TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(1)),
+                        TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(2)),
+                        reader.IsDBNull(3) ? null : TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(3)),
+                        reader.IsDBNull(4) ? null : reader.GetDecimal(4), new List<EvidenciaMatrizDto>());
+                    controles.Add(id, control);
+                }
+                if (!reader.IsDBNull(5)) control.evidencias.Add(new EvidenciaMatrizDto(reader.GetInt64(5), TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(6))));
+            }
+        }
+
+        var capacidades = new HashSet<string>(StringComparer.Ordinal);
+        await using (var cmd = Comando(@"SELECT UCP_CAPACIDAD FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID=:usuarioId AND UCP_ACTIVO=1", conn))
+        {
+            cmd.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+            await using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync()) capacidades.Add(reader.GetString(0));
+        }
+        return new MatrizBloque6Dto
+        {
+            SenalesAlerta = alertas,
+            EstadoRiesgo = ultimo?.MonEstadoRiesgo,
+            ObservacionesArea = ultimo?.MonObservacionesArea,
+            ObservacionesUgr = ultimo?.MonObservacionesUgr,
+            PuedeEditarObservacionesArea = capacidades.Contains("MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR"),
+            PuedeEditarObservacionesUgr = capacidades.Contains("MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR"),
+            Controles = controles.Select(x => new ControlMonitoreoMatrizDto
+            {
+                ControlId = x.Key, Tipo = x.Value.tipo, Descripcion = x.Value.descripcion,
+                EstadoMonitoreo = x.Value.estado, EfectividadMonitoreo = x.Value.efectividad,
+                Evidencias = x.Value.evidencias.DistinctBy(evidencia => evidencia.Id).ToArray()
+            }).ToArray()
+        };
+    }
+
+    public async Task<bool> ActualizarObservacionAsync(long evaluacionId, bool esArea, string? texto, long usuarioId, string? ip)
+    {
+        string columna = esArea ? "MON_OBSERVACIONES_AREA" : "MON_OBSERVACIONES_UGR";
+        string capacidad = esArea ? "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR" : "MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR";
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var tx = conn.BeginTransaction();
+        try
+        {
+            await using (var permiso = Comando(@"SELECT COUNT(*) FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID=:usuarioId AND UCP_CAPACIDAD=:capacidad AND UCP_ACTIVO=1", conn, tx))
+            {
+                permiso.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
+                permiso.Parameters.Add(new OracleParameter("capacidad", capacidad));
+                if (Convert.ToInt32(await permiso.ExecuteScalarAsync()) != 1) throw new UnauthorizedAccessException("El usuario no posee la capacidad requerida.");
+            }
+
+            long monitoreoId;
+            string? anterior;
+            await using (var anteriorCmd = Comando($@"SELECT MON_ID, {columna} FROM RL_MR_AUTOMONITOREO
+                WHERE MON_ID=(SELECT MON_ID FROM (SELECT MON_ID FROM RL_MR_AUTOMONITOREO
+                    WHERE MON_EVALUACION_ID=:evaluacionId ORDER BY MON_FECHA DESC, MON_ID DESC) WHERE ROWNUM=1) FOR UPDATE", conn, tx))
+            {
+                anteriorCmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+                await using var reader = await anteriorCmd.ExecuteReaderAsync();
+                if (!await reader.ReadAsync()) { await tx.RollbackAsync(); return false; }
+                monitoreoId = reader.GetInt64(0);
+                anterior = reader.IsDBNull(1) ? null : reader.GetString(1);
+            }
+            await using (var update = Comando($"UPDATE RL_MR_AUTOMONITOREO SET {columna}=:texto WHERE MON_ID=:id", conn, tx))
+            {
+                update.Parameters.Add(new OracleParameter("texto", string.IsNullOrWhiteSpace(texto) ? DBNull.Value : texto.Trim()));
+                update.Parameters.Add(new OracleParameter("id", monitoreoId));
+                await update.ExecuteNonQueryAsync();
+            }
+            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_AUTOMONITOREO", monitoreoId.ToString(), "UPDATE",
+                JsonSerializer.Serialize(new { Campo = columna, Observacion = anterior }), JsonSerializer.Serialize(new { Campo = columna, Observacion = texto?.Trim() }),
+                usuarioId, null, ip, Modulo);
+            await tx.CommitAsync();
+            return true;
+        }
+        catch { await tx.RollbackAsync(); throw; }
     }
 
     public async Task<long> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip)

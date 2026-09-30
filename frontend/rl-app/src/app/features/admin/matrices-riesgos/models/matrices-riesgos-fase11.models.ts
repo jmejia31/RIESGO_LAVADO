@@ -30,6 +30,8 @@ export interface ControlRiesgoDto {
   conDescripcion: string;
   conAutomatizacion: 'MANUAL' | 'SEMIAUTOMATICO' | 'AUTOMATICO';
   conEstado: string;
+  conEstadoMonitoreo?: string | null;
+  conEfectividadMonitoreo?: number | null;
 }
 
 export type ControlRiesgoGuardarDto = Omit<ControlRiesgoDto, 'conId'>;
@@ -106,6 +108,27 @@ export interface AutomonitoreoDto {
   monResultado: string;
   monUsrId: number;
   monFecha: string;
+  monObservacionesArea?: string | null;
+  monObservacionesUgr?: string | null;
+}
+
+export interface ControlMonitoreoMatrizDto {
+  controlId: number;
+  tipo: 'PREVENTIVO' | 'DETECTIVO' | 'CORRECTIVO';
+  descripcion: string;
+  estadoMonitoreo: string | null;
+  efectividadMonitoreo: number | null;
+  evidencias: { id: number; nombreArchivo: string }[];
+}
+
+export interface MatrizBloque6Dto {
+  senalesAlerta: SenalAlertaDto[];
+  estadoRiesgo: string | null;
+  controles: ControlMonitoreoMatrizDto[];
+  observacionesArea: string | null;
+  observacionesUgr: string | null;
+  puedeEditarObservacionesArea: boolean;
+  puedeEditarObservacionesUgr: boolean;
 }
 
 export interface AutomonitoreoGuardarDto {

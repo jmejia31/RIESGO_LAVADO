@@ -32,7 +32,37 @@ public sealed class AutomonitoreoDto
     public string MonResultado { get; set; } = string.Empty;
     public long MonUsrId { get; set; }
     public DateTime MonFecha { get; set; }
+    public string? MonObservacionesArea { get; set; }
+    public string? MonObservacionesUgr { get; set; }
 }
+
+public sealed class MatrizBloque6Dto
+{
+    public IReadOnlyList<SenalAlertaDto> SenalesAlerta { get; init; } = Array.Empty<SenalAlertaDto>();
+    public string? EstadoRiesgo { get; init; }
+    public IReadOnlyList<ControlMonitoreoMatrizDto> Controles { get; init; } = Array.Empty<ControlMonitoreoMatrizDto>();
+    public string? ObservacionesArea { get; init; }
+    public string? ObservacionesUgr { get; init; }
+    public bool PuedeEditarObservacionesArea { get; init; }
+    public bool PuedeEditarObservacionesUgr { get; init; }
+}
+
+public sealed class ObservacionMonitoreoGuardarDto
+{
+    public string? Texto { get; set; }
+}
+
+public sealed class ControlMonitoreoMatrizDto
+{
+    public long ControlId { get; init; }
+    public string Tipo { get; init; } = string.Empty;
+    public string Descripcion { get; init; } = string.Empty;
+    public string? EstadoMonitoreo { get; init; }
+    public decimal? EfectividadMonitoreo { get; init; }
+    public IReadOnlyList<EvidenciaMatrizDto> Evidencias { get; init; } = Array.Empty<EvidenciaMatrizDto>();
+}
+
+public sealed record EvidenciaMatrizDto(long Id, string NombreArchivo);
 
 public sealed class AutomonitoreoGuardarDto
 {

@@ -118,6 +118,8 @@ COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_TIPO IS 'Tipo de control (PREVENTIV
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_DESCRIPCION IS 'Descripción detallada del mecanismo de control.';
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION IS 'Nivel de automatización (MANUAL, SEMIAUTOMÁTICO, AUTOMÁTICO).';
 COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_ESTADO IS 'Estado operativo del control (ACTIVO, INACTIVO, EN_REVISION).';
+COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_ESTADO_MONITOREO IS 'Estado posterior del control en el seguimiento de la evaluación; independiente de CON_ESTADO.';
+COMMENT ON COLUMN RL_MR_CONTROLES_RIESGO.CON_EFECTIVIDAD_MONITOREO IS 'Efectividad posterior del control (0 a 100); independiente de ECO_EFECTIVIDAD.';
 
 -- 11. RL_MR_EVALUACIONES_CONTROL
 COMMENT ON COLUMN RL_MR_EVALUACIONES_CONTROL.ECO_ID IS 'Identificador único de la evaluación del control.';
@@ -182,3 +184,5 @@ COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_ESTADO_CONTR IS 'Estado de los control
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_RESULTADO IS 'Resultado, hallazgos u observaciones del automonitoreo.';
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_USR_ID IS 'Usuario que realizó la sesión de automonitoreo.';
 COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_FECHA IS 'Fecha y hora del registro de automonitoreo.';
+COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_OBSERVACIONES_AREA IS 'Observaciones del área registradas durante el automonitoreo.';
+COMMENT ON COLUMN RL_MR_AUTOMONITOREO.MON_OBSERVACIONES_UGR IS 'Observaciones UGR registradas durante el automonitoreo.';

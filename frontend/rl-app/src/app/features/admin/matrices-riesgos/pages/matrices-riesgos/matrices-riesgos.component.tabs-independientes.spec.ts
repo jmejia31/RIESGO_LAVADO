@@ -101,6 +101,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
       listarEvaluacionesRiesgoPaginadas: vi.fn().mockReturnValue(of(mockPaginado)),
       listarEvaluaciones: vi.fn().mockReturnValue(of(mockPaginado)),
       obtenerMitigacionBloque4: vi.fn().mockReturnValue(of({ cantidadAcciones: 0, planes: [] })),
+      obtenerBloque6: vi.fn().mockReturnValue(of({ senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false })),
       obtenerConsolidadoReporte: vi.fn().mockReturnValue(of([])),
       obtenerConsolidadoPaginado: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 10, totalRegistros: 0, totalPaginas: 0, totales: { totalRiesgos: 0, totalConEvaluacionOficial: 0, totalSinEvaluacionOficial: 0, totalAltoCritico: 0 } })),
       obtenerConsolidado: vi.fn().mockReturnValue(of([]))
@@ -310,16 +311,18 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     component.riesgoMaestroMatriz.set({ rieId: 5, rieCodigo: 'RIE-005', rieNombre: 'Riesgo maestro', rieDescripcion: 'Descripción maestra', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-01' });
     component.modalMatrizCompletaAbierto.set(true);
     component.bloque4Matriz.set({ cantidadAcciones: 0, planes: [] });
+    component.bloque6Matriz.set({ senalesAlerta: [], estadoRiesgo: null, controles: [], observacionesArea: null, observacionesUgr: null, puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false });
     expect(component.valorCampoMatriz(component.camposMatrizCompleta[2])).toBe('Área de Cumplimiento');
     fixture.detectChanges();
 
     const root = fixture.nativeElement as HTMLElement;
     const fields = Array.from(root.querySelectorAll('[data-matrix-view="complete"] [data-matrix-field]'));
-    expect(fields).toHaveLength(69);
+    expect(fields).toHaveLength(82);
     expect(fields.slice(0, 19).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 19 }, (_, index) => String(index + 1).padStart(2, '0')));
     expect(fields.slice(19, 33).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 14 }, (_, index) => String(index + 20).padStart(2, '0')));
     expect(fields.slice(33, 49).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 16 }, (_, index) => String(index + 34).padStart(2, '0')));
-    expect(fields.slice(49).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 20 }, (_, index) => String(index + 50)));
+    expect(fields.slice(49, 69).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 20 }, (_, index) => String(index + 50)));
+    expect(fields.slice(69).map(field => field.getAttribute('data-matrix-field'))).toEqual(Array.from({ length: 13 }, (_, index) => String(index + 70)));
     expect(fields.slice(16, 19).map(field => field.getAttribute('data-matrix-field'))).toEqual(['17', '18', '19']);
     const visibleLabels = fields.slice(0, 19).map(field => field.querySelector('dt span:nth-child(2)')?.textContent?.trim());
     expect(visibleLabels).toEqual([
@@ -341,7 +344,7 @@ describe('MatricesRiesgosComponent — pestañas y cargas independientes', () =>
     expect(root.querySelectorAll('[data-matrix-block="3"] [data-matrix-field]')).toHaveLength(6);
     expect(root.querySelectorAll('[data-matrix-block="4"] .text-amber-800')).toHaveLength(0);
     expect(root.querySelectorAll('[data-matrix-block="5"] .text-amber-800')).toHaveLength(0);
-    expect(root.querySelectorAll('[data-matrix-block="6"] .text-amber-800')).toHaveLength(1);
+    expect(root.querySelectorAll('[data-matrix-block="6"] .text-amber-800')).toHaveLength(0);
     expect(root.querySelector('[data-matrix-modal="complete"] .modal-size-workspace')).not.toBeNull();
   });
 

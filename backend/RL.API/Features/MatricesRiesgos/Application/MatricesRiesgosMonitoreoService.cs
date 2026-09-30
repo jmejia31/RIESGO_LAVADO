@@ -1,5 +1,6 @@
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Features.MatricesRiesgos.Persistence;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Shared.Results;
 
 namespace RL.API.Features.MatricesRiesgos.Application;
@@ -10,6 +11,8 @@ public interface IMatricesRiesgosMonitoreoService
     Task<ServiceResult<long>> CrearAlertaAsync(SenalAlertaGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult> CambiarEstadoAlertaAsync(long alertaId, SenalAlertaEstadoDto dto, long usuarioId, string? ip);
     Task<ServiceResult<IReadOnlyList<AutomonitoreoDto>>> ListarAutomonitoreoAsync(long evaluacionId);
+    Task<ServiceResult<MatrizBloque6Dto>> ObtenerBloque6Async(long evaluacionId, long usuarioId);
+    Task<ServiceResult> ActualizarObservacionAsync(long evaluacionId, bool esArea, ObservacionMonitoreoGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<long>> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<ResumenMatricesOperativoDto>> ObtenerResumenOperativoAsync();
 }
@@ -47,6 +50,27 @@ public sealed class MatricesRiesgosMonitoreoService : IMatricesRiesgosMonitoreoS
         evaluacionId <= 0
             ? ServiceResult<IReadOnlyList<AutomonitoreoDto>>.BadRequest("La evaluación es obligatoria.")
             : ServiceResult<IReadOnlyList<AutomonitoreoDto>>.Ok(await _repo.ListarAutomonitoreoAsync(evaluacionId));
+
+    public async Task<ServiceResult<MatrizBloque6Dto>> ObtenerBloque6Async(long evaluacionId, long usuarioId) =>
+        evaluacionId <= 0 || usuarioId <= 0
+            ? ServiceResult<MatrizBloque6Dto>.BadRequest("La evaluación y el usuario son obligatorios.")
+            : ServiceResult<MatrizBloque6Dto>.Ok(await _repo.ObtenerBloque6Async(evaluacionId, usuarioId));
+
+    public async Task<ServiceResult> ActualizarObservacionAsync(long evaluacionId, bool esArea, ObservacionMonitoreoGuardarDto dto, long usuarioId, string? ip)
+    {
+        if (evaluacionId <= 0) return ServiceResult.BadRequest("La evaluación es obligatoria.");
+        if (dto is null) return ServiceResult.BadRequest("El contenido de la observación es obligatorio.");
+        if (dto.Texto?.Length > 2000) return ServiceResult.BadRequest("La observación no puede exceder 2000 caracteres.");
+        if (dto.Texto is not null && TextoVisibleUtf8Normalizer.ContieneMojibake(dto.Texto)) return ServiceResult.BadRequest("La observación contiene caracteres de codificación inválidos.");
+        string? texto = string.IsNullOrWhiteSpace(dto.Texto) ? null : TextoVisibleUtf8Normalizer.Normalizar(dto.Texto.Trim());
+        if (!string.IsNullOrWhiteSpace(texto) && texto.Length > 2000) return ServiceResult.BadRequest("La observación no puede exceder 2000 caracteres.");
+        try
+        {
+            bool actualizado = await _repo.ActualizarObservacionAsync(evaluacionId, esArea, texto, usuarioId, ip);
+            return actualizado ? ServiceResult.Ok("Observación actualizada.") : ServiceResult.NotFound("No existe un registro de automonitoreo para la evaluación.");
+        }
+        catch (UnauthorizedAccessException ex) { return ServiceResult.Forbidden(ex.Message); }
+    }
 
     public async Task<ServiceResult<long>> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip)
     {

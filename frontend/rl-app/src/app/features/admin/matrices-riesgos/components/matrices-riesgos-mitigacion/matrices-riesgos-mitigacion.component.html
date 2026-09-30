@@ -41,6 +41,8 @@
             </select>
             <p id="control-estado-ayuda" class="mt-1 text-xs text-slate-500">Estado operativo controlado; no admite texto libre.</p>
           </div>
+          <div><label for="control-estado-monitoreo" class="block text-sm font-medium">Estado de monitoreo</label><input id="control-estado-monitoreo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="estadoMonitoreoControl" maxlength="30" aria-describedby="control-monitoreo-ayuda"><p id="control-monitoreo-ayuda" class="mt-1 text-xs text-slate-500">Estado de seguimiento separado del estado operativo.</p></div>
+          <div><label for="control-efectividad-monitoreo" class="block text-sm font-medium">Evaluación de efectividad (0–100)</label><input id="control-efectividad-monitoreo" type="number" min="0" max="100" step="0.01" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="efectividadMonitoreoControl"></div>
         </div>
         <button type="button" title="{{ controlEditandoId > 0 ? 'Actualizar control' : 'Guardar nuevo control' }}" aria-label="{{ controlEditandoId > 0 ? 'Actualizar control' : 'Guardar nuevo control' }}" class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500/30 disabled:opacity-50" data-ui-action="save-control" [disabled]="guardando()" (click)="guardarControl()">
             <app-action-icon [action]="controlEditandoId > 0 ? 'refresh' : 'save'"></app-action-icon>

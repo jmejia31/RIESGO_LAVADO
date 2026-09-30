@@ -110,6 +110,7 @@ async function preparar(page: Page): Promise<void> {
     else if (path.endsWith('/mitigacion/planes/41/actividades')) datos = [];
     else if (path.endsWith('/monitoreo/evaluaciones/20/alertas')) datos = [];
     else if (path.endsWith('/monitoreo/evaluaciones/20/automonitoreo')) datos = [];
+    else if (path.endsWith('/monitoreo/evaluaciones/20/bloque6')) datos = { senalesAlerta: [{ aleId: 501, aleCodigo: 'AL-01', aleIndicador: 'Alerta UAT 1', aleEstado: 'ACTIVO' }, { aleId: 502, aleCodigo: 'AL-02', aleIndicador: 'Alerta UAT 2', aleEstado: 'ACTIVO' }], estadoRiesgo: 'ALTO', controles: [{ controlId: 31, tipo: 'PREVENTIVO', descripcion: 'Control preventivo UAT', estadoMonitoreo: 'En seguimiento', efectividadMonitoreo: 80, evidencias: [{ id: 601, nombreArchivo: 'P1.pdf' }, { id: 602, nombreArchivo: 'P2.pdf' }] }, { controlId: 33, tipo: 'DETECTIVO', descripcion: 'Control detectivo UAT', estadoMonitoreo: 'Revisado', efectividadMonitoreo: 70, evidencias: [{ id: 603, nombreArchivo: 'D1.pdf' }, { id: 604, nombreArchivo: 'D2.pdf' }] }, { controlId: 34, tipo: 'CORRECTIVO', descripcion: 'Control correctivo UAT', estadoMonitoreo: 'En seguimiento', efectividadMonitoreo: 60, evidencias: [{ id: 605, nombreArchivo: 'C1.pdf' }, { id: 606, nombreArchivo: 'C2.pdf' }] }], observacionesArea: 'Área fixture', observacionesUgr: 'UGR fixture', puedeEditarObservacionesArea: false, puedeEditarObservacionesUgr: false };
     else if (path.endsWith('/monitoreo/resumen')) datos = { fechaGeneracion: '2026-08-07T12:00:00Z', riesgosActivos: 1, evaluacionesActivas: 1, evaluacionesAprobadas: 0, riesgosAltoCritico: 0, alertasActivas: 0, planesAbiertos: 0, actividadesVencidas: 0, automonitoreosUltimos30Dias: 0 };
 
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
@@ -172,7 +173,7 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '3. Riesgo Residual y Respuesta' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(69);
+  await expect(fields).toHaveCount(82);
   const block2Labels = [
     'Descripción de Control(es) Preventivo(s)', 'Escala de efectividad de control(es) preventivo(s)',
     'Nivel de efectividad de control(es) preventivo(s)', '% efectividad de control(es) preventivo(s)',
@@ -239,9 +240,31 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(block5Fields.nth(17)).not.toContainText('Revisar');
   await expect(block5Fields.nth(18)).not.toContainText('Revisar');
   await expect(block5Fields.nth(19)).not.toContainText('Revisar');
-  await expect(view.locator('[data-matrix-block="6"]')).toContainText('Bloque pendiente de implementación');
+  await expect(view.locator('[data-matrix-block="6"]')).toContainText('6. Monitoreo, Efectividad y Observaciones');
+  await expect(view.locator('[data-matrix-block="6"] [data-matrix-field-definition]')).toHaveCount(13);
+  const block6Fields = view.locator('[data-matrix-block="6"] [data-matrix-field-definition]');
+  await expect(block6Fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field-definition')))).resolves.toEqual(
+    Array.from({ length: 13 }, (_, index) => String(index + 70))
+  );
+  await expect(block6Fields.nth(0)).toContainText('Señales de Alerta');
+  await expect(block6Fields.nth(0).locator('[data-alert-id]')).toHaveCount(2);
+  await expect(block6Fields.nth(1)).toContainText('ALTO');
+  await expect(block6Fields.nth(1)).not.toContainText('BORRADOR');
+  await expect(block6Fields.nth(2)).toContainText('En seguimiento');
+  await expect(block6Fields.nth(3)).toContainText('80');
+  await expect(block6Fields.nth(4)).toContainText('P1.pdf');
+  await expect(block6Fields.nth(4)).toContainText('P2.pdf');
+  await expect(block6Fields.nth(4)).not.toContainText('D1.pdf');
+  await expect(block6Fields.nth(5)).toContainText('Revisado');
+  await expect(block6Fields.nth(7)).toContainText('D1.pdf');
+  await expect(block6Fields.nth(7)).not.toContainText('P1.pdf');
+  await expect(block6Fields.nth(8)).toContainText('En seguimiento');
+  await expect(block6Fields.nth(10)).toContainText('C1.pdf');
+  await expect(block6Fields.nth(10)).not.toContainText('D1.pdf');
+  await expect(block6Fields.nth(11)).toContainText('Área fixture');
+  await expect(block6Fields.nth(12)).toContainText('UGR fixture');
   await expect(fields.evaluateAll(items => items.filter(item => item.getClientRects().length > 0).map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 69 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 82 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
@@ -261,19 +284,23 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
 
   const matrixView = page.locator('[data-matrix-view="complete"]');
   await page.setViewportSize({ width: 1280, height: 900 });
-  await block5Fields.last().scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-5-closure-desktop-1280x900.png' });
+  await block6Fields.first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-6-controls-desktop-1280x900.png' });
+  await block6Fields.last().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-6-observations-desktop-1280x900.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   const backdrop = page.locator('button[aria-label="Cerrar menú lateral"]');
   if (await backdrop.count() > 0) {
     await backdrop.dispatchEvent('click');
     await page.waitForTimeout(300);
   }
-  await expect(fields).toHaveCount(69);
+  await expect(fields).toHaveCount(82);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
-  await block5Fields.last().scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-5-closure-mobile-390x844.png' });
+  await block6Fields.first().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-6-controls-mobile-390x844.png' });
+  await block6Fields.last().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-6-observations-mobile-390x844.png' });
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
@@ -338,6 +365,56 @@ test('Configuración de cálculo muestra referencias institucionales F01, F15 y 
   expect(mutations).toHaveLength(0);
   expect(consoleErrors).toHaveLength(0);
   expect(pageErrors).toHaveLength(0);
+});
+
+test('Bloque 6 guarda observaciones por capability y las rehidrata desde el GET posterior', async ({ page }) => {
+  const serverBlock = {
+    senalesAlerta: [], estadoRiesgo: 'ALTO', controles: [],
+    observacionesArea: 'Área inicial', observacionesUgr: 'UGR inicial',
+    puedeEditarObservacionesArea: true, puedeEditarObservacionesUgr: true
+  };
+  const writes: { path: string; texto: string }[] = [];
+  let reads = 0;
+  await page.route('**/api/matrices-riesgos/monitoreo/evaluaciones/20/bloque6', async route => {
+    if (route.request().method() === 'GET') {
+      reads++;
+      await route.fulfill({ json: { success: true, datos: { ...serverBlock } } });
+      return;
+    }
+    await route.fallback();
+  });
+  await page.route('**/api/matrices-riesgos/monitoreo/evaluaciones/20/observaciones/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    const payload = route.request().postDataJSON() as { texto: string };
+    writes.push({ path, texto: payload.texto });
+    if (path.endsWith('/area')) serverBlock.observacionesArea = payload.texto;
+    if (path.endsWith('/ugr')) serverBlock.observacionesUgr = payload.texto;
+    await route.fulfill({ json: { success: true, mensaje: 'Observación actualizada.' } });
+  });
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  const modal = page.locator('[data-matrix-modal="complete"]');
+  const area = modal.getByRole('textbox', { name: 'Observaciones del Área' });
+  await expect(area).toHaveValue('Área inicial');
+  await area.fill('Área persistida por capability');
+  await modal.getByRole('button', { name: 'Guardar Observaciones del Área' }).click();
+  await expect(area).toHaveValue('Área persistida por capability');
+  await expect(modal.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR inicial');
+
+  const ugr = modal.getByRole('textbox', { name: 'Observaciones UGR' });
+  await ugr.fill('UGR persistida por capability');
+  await modal.getByRole('button', { name: 'Guardar Observaciones UGR' }).click();
+  await expect(ugr).toHaveValue('UGR persistida por capability');
+  await expect(modal.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
+  expect(writes.map(write => write.path.split('/').at(-1))).toEqual(['area', 'ugr']);
+  expect(reads).toBeGreaterThanOrEqual(3);
+
+  await modal.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  await expect(page.getByRole('textbox', { name: 'Observaciones del Área' })).toHaveValue('Área persistida por capability');
+  await expect(page.getByRole('textbox', { name: 'Observaciones UGR' })).toHaveValue('UGR persistida por capability');
 });
 
 test('selectores de evaluación operativa abren hacia abajo, quedan acotados y usan scroll interno', async ({ page }) => {
@@ -774,9 +851,9 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
   const matrix = page.locator('[data-matrix-view="complete"]');
   const fields = matrix.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(69);
+  await expect(fields).toHaveCount(82);
   await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 69 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 82 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
   const block4 = matrix.locator('[data-matrix-block="4"]');
   await expect(block4.getByRole('heading', { name: '4. Plan de Mitigación / Acciones Correctivas' })).toBeVisible();
@@ -1047,10 +1124,11 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
     await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
   }
 
-  // Q. Bloque 5 está disponible, colapsado y con los 69 campos institucionales.
-  await expect(fields).toHaveCount(69);
+  // Q. Bloques 5 y 6 quedan disponibles y sus campos contractuales se proyectan.
+  await expect(fields).toHaveCount(82);
   await expect(view.locator('[data-matrix-block="5"]')).toContainText('20 campos · Calculados automáticamente');
-  await expect(view.locator('[data-matrix-block="6"]')).toContainText('Bloque pendiente de implementación');
+  await expect(view.locator('[data-matrix-block="6"]')).toContainText('6. Monitoreo, Efectividad y Observaciones');
+  await expect(view.locator('[data-matrix-block="6"] [data-matrix-field-definition]')).toHaveCount(13);
 
   // Cerrar Matriz completa
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();

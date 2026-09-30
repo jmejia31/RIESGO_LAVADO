@@ -83,6 +83,8 @@ export class MatricesRiesgosMitigacionComponent {
   ] as const;
 
   controlEstado = 'ACTIVO';
+  estadoMonitoreoControl = '';
+  efectividadMonitoreoControl: number | null = null;
   efectividad = 0;
   comentarioEfectividad = '';
 
@@ -145,6 +147,8 @@ export class MatricesRiesgosMitigacionComponent {
     this.controlDescripcion = control.conDescripcion;
     this.controlAutomatizacion = control.conAutomatizacion;
     this.controlEstado = control.conEstado;
+    this.estadoMonitoreoControl = control.conEstadoMonitoreo ?? '';
+    this.efectividadMonitoreoControl = control.conEfectividadMonitoreo ?? null;
     this.cargarEvaluacionesControl(control.conId);
   }
 
@@ -154,6 +158,8 @@ export class MatricesRiesgosMitigacionComponent {
     this.controlDescripcion = '';
     this.controlAutomatizacion = 'MANUAL';
     this.controlEstado = 'ACTIVO';
+    this.estadoMonitoreoControl = '';
+    this.efectividadMonitoreoControl = null;
   }
 
   guardarControl(): void {
@@ -167,7 +173,9 @@ export class MatricesRiesgosMitigacionComponent {
       conTipo: this.controlTipo,
       conDescripcion: this.controlDescripcion.trim(),
       conAutomatizacion: this.controlAutomatizacion,
-      conEstado: this.controlEstado.trim() || 'ACTIVO'
+      conEstado: this.controlEstado.trim() || 'ACTIVO',
+      conEstadoMonitoreo: this.estadoMonitoreoControl.trim() || null,
+      conEfectividadMonitoreo: this.efectividadMonitoreoControl
     };
     this.guardando.set(true);
     const solicitud: Observable<unknown> = this.controlEditandoId > 0

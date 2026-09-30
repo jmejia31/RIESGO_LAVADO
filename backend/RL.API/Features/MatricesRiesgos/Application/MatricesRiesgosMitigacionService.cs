@@ -169,6 +169,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     {
         ConId=id, ConEvaluacionId=source.ConEvaluacionId, ConTipo=source.ConTipo, ConDescripcion=source.ConDescripcion,
         ConAutomatizacion=source.ConAutomatizacion, ConEstado=source.ConEstado
+        ,ConEstadoMonitoreo=source.ConEstadoMonitoreo, ConEfectividadMonitoreo=source.ConEfectividadMonitoreo
     };
 
     private static void EnsureCalculationSuccess(GovernedCalculationResult result)
@@ -286,6 +287,8 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (string.IsNullOrWhiteSpace(dto.ConDescripcion) || dto.ConDescripcion.Trim().Length > 500) return "La descripción del control es obligatoria y no puede exceder 500 caracteres.";
         if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConDescripcion)) return "La descripción del control contiene caracteres de codificación inválidos.";
         if (!EstadosControl.Contains(dto.ConEstado?.Trim() ?? string.Empty)) return "El estado del control debe ser ACTIVO o INACTIVO.";
+        if (!string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) && (dto.ConEstadoMonitoreo.Trim().Length > 30 || TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConEstadoMonitoreo))) return "El estado de monitoreo debe contener hasta 30 caracteres válidos.";
+        if (dto.ConEfectividadMonitoreo is < 0 or > 100) return "La efectividad de monitoreo debe estar entre 0 y 100.";
         return null;
     }
 

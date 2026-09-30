@@ -24,7 +24,7 @@ import {
 } from '../../models/matrices-riesgos.models';
 import { CrearFormulaUsoDto, FormulaVersionSelectorOption } from '../../models/calculo-configuracion.models';
 import { normalizarJsonABuilderModel } from '../../models/form-builder.models';
-import { ControlRiesgoDto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
+import { ControlRiesgoDto, MatrizBloque6Dto, MitigacionBloque4Dto, PlanMitigacionDto, RiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { GlobalHttpStateService } from '../../../../../core/services/global-http-state.service';
 
 import { FormBuilderComponent } from '../../components/form-builder/form-builder.component';
@@ -42,7 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_6_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -210,6 +210,11 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly bloque4Matriz = signal<MitigacionBloque4Dto | null>(null);
   readonly bloque4MatrizEnCarga = signal(false);
   readonly bloque4MatrizError = signal<string | null>(null);
+  readonly bloque6Matriz = signal<MatrizBloque6Dto | null>(null);
+  readonly bloque6MatrizError = signal<string | null>(null);
+  observacionesAreaDraft = '';
+  observacionesUgrDraft = '';
+  readonly guardandoObservacion = signal(false);
   readonly bloque5DetalleExpandido = signal(false);
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
@@ -1582,6 +1587,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.bloque4Matriz.set(null);
     this.bloque4MatrizError.set(null);
     this.bloque4MatrizEnCarga.set(false);
+    this.bloque6Matriz.set(null);
+    this.bloque6MatrizError.set(null);
     this.matrizCompletaEnCarga.set(true);
     this.modalMatrizCompletaAbierto.set(true);
 
@@ -1593,6 +1600,29 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
         this.respuestas.set(this.parsearRespuestas(detalle.evaDataJson));
         this.cargarControlesMatrizCompleta(detalle.evaId, solicitudId);
         this.cargarBloque4Matriz(detalle.evaId, solicitudId);
+        this.service.obtenerBloque6(detalle.evaId).subscribe({
+          next: response => {
+            if (solicitudId === this.secuenciaCargaMatrizCompleta) {
+              const safe = {
+                ...response,
+                senalesAlerta: Array.isArray(response?.senalesAlerta) ? response.senalesAlerta : [],
+                controles: Array.isArray(response?.controles) ? response.controles : [],
+                estadoRiesgo: typeof response?.estadoRiesgo === 'string' ? response.estadoRiesgo : null,
+                observacionesArea: typeof response?.observacionesArea === 'string' ? response.observacionesArea : null,
+                observacionesUgr: typeof response?.observacionesUgr === 'string' ? response.observacionesUgr : null,
+                puedeEditarObservacionesArea: response?.puedeEditarObservacionesArea === true,
+                puedeEditarObservacionesUgr: response?.puedeEditarObservacionesUgr === true
+              } as MatrizBloque6Dto;
+              this.bloque6Matriz.set(safe);
+              this.observacionesAreaDraft = safe.observacionesArea ?? '';
+              this.observacionesUgrDraft = safe.observacionesUgr ?? '';
+            }
+          },
+          error: error => {
+            if (solicitudId === this.secuenciaCargaMatrizCompleta)
+              this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo cargar el monitoreo y las observaciones.'));
+          }
+        });
         this.cargarMetodologiaMatrizCompleta(detalle.evaVersionId, solicitudId);
         forkJoin({
           riesgo: this.service.obtenerRiesgo(detalle.evaRiesgoId),
@@ -1629,6 +1659,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     this.metodologiaMatrizCompletaEnCarga.set(false);
     this.controlesMatrizEnCarga.set(false);
     this.bloque4MatrizEnCarga.set(false);
+    this.bloque6Matriz.set(null);
+    this.bloque6MatrizError.set(null);
     this.globalState.limpiarError();
 
     const foco = this.focoRetornoMatrizCompleta;
@@ -1671,7 +1703,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly camposBloque4Matriz = MATRIX_BLOCK_4_FIELDS;
   readonly camposMatrizPlan = MATRIX_BLOCK_4_FIELDS.slice(2);
   readonly camposBloque5Matriz = MATRIX_BLOCK_5_FIELDS;
-  readonly bloquesMatrizPendientes = [6] as const;
+  readonly camposBloque6Matriz = MATRIX_BLOCK_6_FIELDS;
+  readonly bloquesMatrizPendientes = [] as const;
   readonly etiquetaBloquePendiente = (block: 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
   camposMetadataBloque(block: 4 | 5 | 6): readonly MatrixFieldContract[] {
     return MATRIX_FIELDS.filter(field => field.block === block);
@@ -1728,6 +1761,26 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     return '—';
+  }
+
+  guardarObservacionBloque6(tipo: 'area' | 'ugr'): void {
+    const evaluacionId = this.evaluacionSeleccionada()?.evaId;
+    const data = this.bloque6Matriz();
+    if (!evaluacionId || !data || this.guardandoObservacion()) return;
+    const permitido = tipo === 'area' ? data.puedeEditarObservacionesArea : data.puedeEditarObservacionesUgr;
+    if (!permitido) return;
+    this.guardandoObservacion.set(true);
+    const texto = tipo === 'area' ? this.observacionesAreaDraft : this.observacionesUgrDraft;
+    const request = tipo === 'area'
+      ? this.service.actualizarObservacionArea(evaluacionId, texto)
+      : this.service.actualizarObservacionUgr(evaluacionId, texto);
+    request.subscribe({
+      next: () => this.service.obtenerBloque6(evaluacionId).subscribe({
+        next: response => { this.bloque6Matriz.set(response); this.observacionesAreaDraft = response.observacionesArea ?? ''; this.observacionesUgrDraft = response.observacionesUgr ?? ''; this.guardandoObservacion.set(false); },
+        error: error => { this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo confirmar la observación guardada.')); this.guardandoObservacion.set(false); }
+      }),
+      error: error => { this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo guardar la observación.')); this.guardandoObservacion.set(false); }
+    });
   }
 
   valorCampoBloque4(field: MatrixFieldContract, plan: PlanMitigacionDto): string {

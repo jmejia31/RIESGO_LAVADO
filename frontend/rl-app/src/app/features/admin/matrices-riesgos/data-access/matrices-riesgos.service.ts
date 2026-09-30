@@ -28,6 +28,7 @@ import {
   ActividadPlanGuardarDto,
   AutomonitoreoDto,
   AutomonitoreoGuardarDto,
+  MatrizBloque6Dto,
   ControlRiesgoDto,
   ControlRiesgoGuardarDto,
   EvaluacionControlDto,
@@ -400,6 +401,20 @@ export class MatricesRiesgosService {
     return this.http
       .get<ApiResponse<AutomonitoreoDto[]>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/automonitoreo`)
       .pipe(map(response => response.datos));
+  }
+
+  obtenerBloque6(evaluacionId: number): Observable<MatrizBloque6Dto> {
+    return this.http
+      .get<ApiResponse<MatrizBloque6Dto>>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/bloque6`)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarObservacionArea(evaluacionId: number, texto: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/observaciones/area`, { texto }, this.confirmado);
+  }
+
+  actualizarObservacionUgr(evaluacionId: number, texto: string): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/observaciones/ugr`, { texto }, this.confirmado);
   }
 
   registrarAutomonitoreo(dto: AutomonitoreoGuardarDto): Observable<number> {
