@@ -42,7 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
 
@@ -210,6 +210,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly bloque4Matriz = signal<MitigacionBloque4Dto | null>(null);
   readonly bloque4MatrizEnCarga = signal(false);
   readonly bloque4MatrizError = signal<string | null>(null);
+  readonly bloque5DetalleExpandido = signal(false);
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
   readonly consolidado = signal<RiesgoReporteFila[]>([]);
@@ -1565,6 +1566,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   abrirMatrizCompleta(resumen: EvaluacionRiesgoResumenDto): void {
     const solicitudId = ++this.secuenciaCargaMatrizCompleta;
+    this.bloque5DetalleExpandido.set(false);
     this.limpiarAlertas();
     this.focoRetornoMatrizCompleta = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     this.evaluacionResumenSeleccionada.set(resumen);
@@ -1621,6 +1623,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   cerrarMatrizCompleta(): void {
     ++this.secuenciaCargaMatrizCompleta;
+    this.bloque5DetalleExpandido.set(false);
     this.modalMatrizCompletaAbierto.set(false);
     this.matrizCompletaEnCarga.set(false);
     this.metodologiaMatrizCompletaEnCarga.set(false);
@@ -1667,7 +1670,8 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly camposResidualMatriz = MATRIX_BLOCK_3_FIELDS;
   readonly camposBloque4Matriz = MATRIX_BLOCK_4_FIELDS;
   readonly camposMatrizPlan = MATRIX_BLOCK_4_FIELDS.slice(2);
-  readonly bloquesMatrizPendientes = [5, 6] as const;
+  readonly camposBloque5Matriz = MATRIX_BLOCK_5_FIELDS;
+  readonly bloquesMatrizPendientes = [6] as const;
   readonly etiquetaBloquePendiente = (block: 4 | 5 | 6): string => MATRIX_BLOCK_TITLES[block];
   camposMetadataBloque(block: 4 | 5 | 6): readonly MatrixFieldContract[] {
     return MATRIX_FIELDS.filter(field => field.block === block);
@@ -1737,6 +1741,34 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       case 49: return this.presupuestoMatriz(plan.plaPresupuesto);
       default: return '—';
     }
+  }
+
+  valorCampoBloque5(field: MatrixFieldContract): string {
+    const evaluacion = this.evaluacionSeleccionada();
+    if (!evaluacion || !field.key) return '—';
+    const value = this.parsearRespuestas(evaluacion.evaDataCalcJson ?? '{}')[field.key];
+    if (value === null || value === undefined || value === '') return '—';
+    if (Array.isArray(value)) return value.join(', ');
+    if (typeof value === 'object') return '—';
+    return String(value);
+  }
+
+  estadoVerificacionBloque5(field: MatrixFieldContract): 'PASS' | 'Esperado' | 'Revisar' | 'Sin dato' {
+    if (![64, 66, 67, 68, 69].includes(field.ordinal)) return 'Sin dato';
+    const evaluacion = this.evaluacionSeleccionada();
+    if (!evaluacion || !field.key) return 'Sin dato';
+    const value = this.parsearRespuestas(evaluacion.evaDataCalcJson ?? '{}')[field.key];
+    const numero = this.numeroCalculadoEstricto(value);
+    if (numero === null) return 'Sin dato';
+    if (field.ordinal === 64 || field.ordinal === 66) return numero === 0 ? 'PASS' : 'Revisar';
+    return numero >= 0 ? 'Esperado' : 'Revisar';
+  }
+
+  private numeroCalculadoEstricto(value: unknown): number | null {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+    if (typeof value !== 'string' || value.trim() === '') return null;
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private textoMatriz(value: string | null | undefined): string {

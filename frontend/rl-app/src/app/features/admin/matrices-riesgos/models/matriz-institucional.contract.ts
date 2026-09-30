@@ -125,7 +125,7 @@ export const MATRIX_FIELDS: readonly MatrixFieldContract[] = Object.freeze(
       ordinal,
       block: blockForOrdinal(ordinal),
       excelColumn: excelColumnForOrdinal(ordinal),
-      implemented: ordinal <= 49
+      implemented: ordinal <= 69
     });
   })
 );
@@ -143,6 +143,7 @@ export const MATRIX_BLOCK_1_FIELDS = MATRIX_FIELDS.filter(field => field.block =
 export const MATRIX_BLOCK_2_FIELDS = MATRIX_FIELDS.filter(field => field.block === 2);
 export const MATRIX_BLOCK_3_FIELDS = MATRIX_FIELDS.filter(field => field.block === 3);
 export const MATRIX_BLOCK_4_FIELDS = MATRIX_FIELDS.filter(field => field.block === 4);
+export const MATRIX_BLOCK_5_FIELDS = MATRIX_FIELDS.filter(field => field.block === 5);
 
 export const CATALOGO_RESPUESTA_RIESGO = ['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR'] as const;
 export type RespuestaRiesgoCanonica = typeof CATALOGO_RESPUESTA_RIESGO[number];

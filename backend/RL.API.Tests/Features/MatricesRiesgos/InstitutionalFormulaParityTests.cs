@@ -213,6 +213,9 @@ public sealed class InstitutionalFormulaParityTests
         Assert.Equal(0d, Number(result.Values["resto_aux"]));
         Assert.Equal(1d, Number(result.Values["valor_riesgo_residual_aux"]));
         Assert.Equal(0d, Number(result.Values["verificacion"]));
+        Assert.Equal(0d, Number(result.Values["verificar_vrr_2"]));
+        Assert.Equal(2d, Number(result.Values["verificar_frecuencia"]));
+        Assert.Equal(4d, Number(result.Values["verificar_impacto"]));
         Assert.Equal(6d, Number(result.Values["diferencia_vri_vrr"]));
     }
 

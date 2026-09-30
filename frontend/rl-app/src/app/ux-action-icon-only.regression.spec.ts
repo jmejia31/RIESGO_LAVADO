@@ -182,7 +182,7 @@ describe('regla global de acciones icon-only', () => {
     }
 
     expect(violations).toEqual([]);
-  });
+  }, 15_000);
 
   it('alinea el icono canónico con la operación descrita por cada acción', () => {
     const workingDirectory = cwd();

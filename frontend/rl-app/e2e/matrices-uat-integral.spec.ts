@@ -15,10 +15,19 @@ const version = {
   verJson: JSON.stringify({ codigoFormulario: 'MATRIZ_RIESGOS_LAFT_V1', nombreFormulario: 'Matriz', secciones: [] }),
   verHash: 'uat-hash', verEstado: 'PUBLISHED', verVigente: true, verFechaCreacion: '2026-08-07T12:00:00Z', verUsrCreacion: 1
 };
+const calculosAuxiliares = {
+  riesgo_residual_descripcion: 'Riesgo UAT', frecuencia_residual: 1, impacto_residual: 1,
+  valor_riesgo_residual: 1, nivel_riesgo_residual: 'Riesgo no significativo',
+  frecuencia_residual_aux: 0.3, impacto_residual_aux: 0.5, suma_residual_redondeada_aux: 2,
+  f_base: 1, i_base: 1, tope_f: 3, tope_i: 5, capacidad_f_aux: 2, capacidad_i_aux: 4,
+  resto_aux: 0, prefiere_i_aux: 1, incremento_i_aux: 0, incremento_f_aux: 0,
+  valor_riesgo_residual_aux: 1, verificacion: 0, vrr_2: 1, verificar_vrr_2: 0,
+  verificar_frecuencia: 2, verificar_impacto: 4, diferencia_vri_vrr: 6
+};
 const evaluacion = {
   evaId: 20, evaRiesgoId: 7, evaVersionId: 10, evaEstado: 'BORRADOR',
-  evaDataJson: JSON.stringify({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '3', impacto_inherente: '3', dueno_riesgo: 'Responsable UAT', controles_preventivo: 90, controles_detectivo: 50, controles_correctivo: 30 }),
-  evaDataCalcJson: JSON.stringify({ nivel_riesgo_inherente: 'Riesgo Moderado' }),
+  evaDataJson: JSON.stringify({ area_principal: 'Área de Cumplimiento', frecuencia_inherente: '5', impacto_inherente: '5', dueno_riesgo: 'Responsable UAT', controles_preventivo: 90, controles_detectivo: 50, controles_correctivo: 30, frecuencia_residual_aux: 999, verificacion: 999 }),
+  evaDataCalcJson: JSON.stringify({ nivel_riesgo_inherente: 'Riesgo Moderado', ...calculosAuxiliares }),
   evaVri: 7, evaVrr: 4, evaFechaEval: '2026-08-07T12:00:00Z', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
 };
 const riesgo = { rieId: 7, rieCodigo: 'R-007', rieNombre: 'Riesgo UAT', rieDescripcion: 'Base UAT', rieActivo: true, rieUsrCreacion: 1, rieFechaCreacion: '2026-08-07T12:00:00Z' };
@@ -137,6 +146,16 @@ async function preparar(page: Page): Promise<void> {
 test.beforeEach(async ({ page }) => preparar(page));
 
 test('UAT abre Matriz completa desde una evaluación y conserva la navegación histórica', async ({ page }) => {
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  const requestFailures: string[] = [];
+  const familiaUnoRequests: string[] = [];
+  const unexpectedHttpErrors: string[] = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('requestfailed', request => requestFailures.push(request.url()));
+  page.on('request', request => { if (/\/familias\/1(?:\?|$)/.test(new URL(request.url()).pathname + new URL(request.url()).search)) familiaUnoRequests.push(request.url()); });
+  page.on('response', response => { if (response.status() >= 400) unexpectedHttpErrors.push(`${response.status()} ${response.url()}`); });
   await page.goto('/matrices-riesgos');
   await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole('tab', { name: 'Consolidado', exact: true })).toBeVisible();
@@ -153,10 +172,7 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(view.getByRole('heading', { name: '2. Controles' })).toBeVisible();
   await expect(view.getByRole('heading', { name: '3. Riesgo Residual y Respuesta' })).toBeVisible();
   const fields = view.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(49);
-  await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(2, '0'))
-  );
+  await expect(fields).toHaveCount(69);
   const block2Labels = [
     'Descripción de Control(es) Preventivo(s)', 'Escala de efectividad de control(es) preventivo(s)',
     'Nivel de efectividad de control(es) preventivo(s)', '% efectividad de control(es) preventivo(s)',
@@ -195,7 +211,38 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(fields.nth(39)).toContainText('Plan de Mitigación/Acciones Correctivas');
   await expect(fields.nth(40)).toContainText('No. Acciones de Mitigación');
   await expect(fields.nth(40)).toContainText('0');
-  await expect(view.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
+  const block5 = view.locator('[data-matrix-block="5"]');
+  await expect(block5.getByRole('heading', { name: '5. Cálculos Auxiliares y Verificaciones' })).toBeVisible();
+  await expect(block5).toContainText('20 campos · Calculados automáticamente');
+  const detailToggle = block5.getByRole('button', { name: 'Mostrar detalle' });
+  await expect(detailToggle).toHaveAttribute('aria-expanded', 'false');
+  const block5Fields = block5.locator('[data-matrix-field]');
+  await expect(block5Fields).toHaveCount(20);
+  await expect(block5Fields.first()).toBeHidden();
+  await expect(block5Fields.last()).toBeHidden();
+  await detailToggle.click();
+  await expect(block5.getByRole('button', { name: 'Ocultar detalle' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(block5Fields).toHaveCount(20);
+  await expect(block5Fields.first()).toBeVisible();
+  await expect(block5Fields.last()).toBeVisible();
+  await expect(block5Fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
+    Array.from({ length: 20 }, (_, index) => String(index + 50))
+  );
+  for (const item of await block5Fields.all()) await expect(item.locator('[aria-readonly="true"]')).toBeVisible();
+  await expect(block5.locator('#matrix-block-5-details input, #matrix-block-5-details textarea, #matrix-block-5-details select, #matrix-block-5-details button')).toHaveCount(0);
+  const expectedAuxiliaryValues = ['0.3', '0.5', '2', '1', '1', '3', '5', '2', '4', '0', '1', '0', '0', '1', '0', '1', '0', '2', '4', '6'];
+  for (let index = 0; index < expectedAuxiliaryValues.length; index++) {
+    await expect(block5Fields.nth(index).locator('[aria-readonly="true"]')).toHaveText(expectedAuxiliaryValues[index]);
+  }
+  await expect(block5Fields.nth(14)).toContainText('PASS');
+  await expect(block5Fields.nth(16)).toContainText('PASS');
+  await expect(block5Fields.nth(17)).not.toContainText('Revisar');
+  await expect(block5Fields.nth(18)).not.toContainText('Revisar');
+  await expect(block5Fields.nth(19)).not.toContainText('Revisar');
+  await expect(view.locator('[data-matrix-block="6"]')).toContainText('Bloque pendiente de implementación');
+  await expect(fields.evaluateAll(items => items.filter(item => item.getClientRects().length > 0).map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
+    Array.from({ length: 69 }, (_, index) => String(index + 1).padStart(2, '0'))
+  );
   await expect(fields.nth(11).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(12).locator('[aria-readonly="true"]')).toBeVisible();
   await expect(fields.nth(16)).toContainText('Amenazas (Solo para riesgos de GTIC)');
@@ -214,23 +261,32 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
 
   const matrixView = page.locator('[data-matrix-view="complete"]');
   await page.setViewportSize({ width: 1280, height: 900 });
-  await fields.nth(33).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-3-closure-desktop-1280x900.png' });
+  await block5Fields.last().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-5-closure-desktop-1280x900.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   const backdrop = page.locator('button[aria-label="Cerrar menú lateral"]');
   if (await backdrop.count() > 0) {
     await backdrop.dispatchEvent('click');
     await page.waitForTimeout(300);
   }
-  await expect(fields).toHaveCount(49);
+  await expect(fields).toHaveCount(69);
   expect(await matrixView.evaluate(element => element.scrollWidth <= element.clientWidth)).toBeTruthy();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBeTruthy();
-  await fields.nth(33).scrollIntoViewIfNeeded();
-  await page.screenshot({ path: 'test-results/block-3-closure-mobile-390x844.png' });
+  await block5Fields.last().scrollIntoViewIfNeeded();
+  await page.screenshot({ path: 'test-results/block-5-closure-mobile-390x844.png' });
   await page.setViewportSize({ width: 1280, height: 900 });
 
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
   await expect(modalMatriz).toBeHidden();
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
+  await expect(modalMatriz.locator('[data-matrix-block="5"] button[aria-controls="matrix-block-5-details"]')).toHaveAttribute('aria-expanded', 'false');
+  await expect(modalMatriz.locator('#matrix-block-5-details')).toBeHidden();
+  await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+  expect(consoleErrors).toHaveLength(0);
+  expect(pageErrors).toHaveLength(0);
+  expect(requestFailures).toHaveLength(0);
+  expect(unexpectedHttpErrors).toHaveLength(0);
+  expect(familiaUnoRequests).toHaveLength(0);
   await expect(page.getByRole('tab', { name: 'Evaluaciones', exact: true })).toHaveAttribute('aria-selected', 'true');
 
   await page.getByRole('tab', { name: 'Evaluaciones', exact: true }).click();
@@ -238,6 +294,50 @@ test('UAT abre Matriz completa desde una evaluación y conserva la navegación h
   await expect(page.getByRole('button', { name: 'Ver Matriz completa' }).first()).toBeVisible();
   await page.getByRole('tab', { name: 'Consolidado', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Matriz Consolidada' })).toBeVisible();
+});
+
+test('Configuración de cálculo muestra referencias institucionales F01, F15 y F34 desde el API en modo lectura', async ({ page }) => {
+  const formulas = [
+    { id: 1, codigo: 'F01_VALOR_RIESGO_INHERENTE', nombre: 'F01_VALOR_RIESGO_INHERENTE', estado: 'ACTIVE', versionRow: 1, referenciaInstitucional: { numero: 1, targetField: 'valor_riesgo_inherente', sourceCell: 'Matriz Consolidada!L2', excelColumn: 'L' } },
+    { id: 15, codigo: 'F15_FRECUENCIA_RESIDUAL_AUX', nombre: 'F15_FRECUENCIA_RESIDUAL_AUX', estado: 'ACTIVE', versionRow: 1, referenciaInstitucional: { numero: 15, targetField: 'frecuencia_residual_aux', sourceCell: 'Matriz Consolidada!AX2', excelColumn: 'AX' } },
+    { id: 34, codigo: 'F34_DIFERENCIA_VRI_VRR', nombre: 'F34_DIFERENCIA_VRI_VRR', estado: 'ACTIVE', versionRow: 1, referenciaInstitucional: { numero: 34, targetField: 'diferencia_vri_vrr', sourceCell: 'Matriz Consolidada!BQ2', excelColumn: 'BQ' } }
+  ];
+  const mutations: string[] = [];
+  await page.route('**/api/matrices-riesgos/configuracion-calculo/**', async route => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    if (request.method() !== 'GET') mutations.push(`${request.method()} ${path}`);
+    let datos: unknown = [];
+    if (path.endsWith('/formulas')) datos = formulas;
+    else if (path.endsWith('/funciones') || path.endsWith('/parametros')) datos = [];
+    else if (/\/formulas\/\d+\/(versiones|usos)$/.test(path)) datos = [];
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos }) });
+  });
+  const consoleErrors: string[] = [];
+  const pageErrors: string[] = [];
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', error => pageErrors.push(error.message));
+
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Configuración de cálculo' }).click();
+  await expect(page.getByRole('heading', { name: 'Configuración de cálculo' })).toBeVisible();
+  for (const expected of [
+    { code: formulas[0].codigo, label: 'Valor del Riesgo Inherente', column: 'L', number: '01' },
+    { code: formulas[1].codigo, label: 'Frecuencia Residual (AUX)', column: 'AX', number: '15' },
+    { code: formulas[2].codigo, label: 'VRI-VRR', column: 'BQ', number: '34' }
+  ]) {
+    await page.getByRole('button', { name: new RegExp(expected.code) }).click();
+    const reference = page.locator('[data-institutional-formula-reference]');
+    await expect(reference).toBeVisible();
+    await expect(reference).toContainText(expected.label);
+    await expect(reference).toContainText(`Columna ${expected.column}`);
+    await expect(reference).toContainText(`Matriz Consolidada!${expected.column}2`);
+    await expect(reference).toContainText(expected.number);
+    await expect(reference.locator('input, textarea, select')).toHaveCount(0);
+  }
+  expect(mutations).toHaveLength(0);
+  expect(consoleErrors).toHaveLength(0);
+  expect(pageErrors).toHaveLength(0);
 });
 
 test('selectores de evaluación operativa abren hacia abajo, quedan acotados y usan scroll interno', async ({ page }) => {
@@ -561,6 +661,7 @@ test('H5-B: Ver evaluación abre sin consultar familias/1 hardcodeado, sin 404 y
 });
 
 test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupados en Matriz completa', async ({ page }) => {
+  test.setTimeout(90_000);
   const serverPlans: Record<string, any>[] = [];
   const serverActivities: Record<string, any>[] = [];
   const requests: string[] = [];
@@ -673,9 +774,9 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
   const matrix = page.locator('[data-matrix-view="complete"]');
   const fields = matrix.locator('[data-matrix-field]');
-  await expect(fields).toHaveCount(49);
+  await expect(fields).toHaveCount(69);
   await expect(fields.evaluateAll(items => items.map(item => item.getAttribute('data-matrix-field')))).resolves.toEqual(
-    Array.from({ length: 49 }, (_, index) => String(index + 1).padStart(2, '0'))
+    Array.from({ length: 69 }, (_, index) => String(index + 1).padStart(2, '0'))
   );
   const block4 = matrix.locator('[data-matrix-block="4"]');
   await expect(block4.getByRole('heading', { name: '4. Plan de Mitigación / Acciones Correctivas' })).toBeVisible();
@@ -699,7 +800,9 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await expect(block4).toContainText('Analista de Cumplimiento');
   await expect(block4).toContainText('Seguimiento mensual por la unidad responsable');
   await expect(matrix.locator('[data-ui-action]')).toHaveCount(0);
-  await expect(matrix.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
+  const block5 = matrix.locator('[data-matrix-block="5"]');
+  await expect(block5).toContainText('20 campos · Calculados automáticamente');
+  await expect(block5.getByRole('button', { name: 'Mostrar detalle' })).toHaveAttribute('aria-expanded', 'false');
   const closeButtons = page.locator('[data-matrix-modal="complete"] button[aria-label="Cerrar Matriz completa"]');
   await expect(closeButtons).toHaveCount(2);
   await expect(closeButtons.first()).toBeVisible();
@@ -944,9 +1047,10 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
     await expect(fields.nth(index).locator('[aria-readonly="true"]')).toBeVisible();
   }
 
-  // Q. Confirmar que Matriz completa continúa teniendo exactamente 49 campos implementados
-  await expect(fields).toHaveCount(49);
-  await expect(view.locator('[data-matrix-block="5"]')).toContainText('Bloque pendiente de implementación');
+  // Q. Bloque 5 está disponible, colapsado y con los 69 campos institucionales.
+  await expect(fields).toHaveCount(69);
+  await expect(view.locator('[data-matrix-block="5"]')).toContainText('20 campos · Calculados automáticamente');
+  await expect(view.locator('[data-matrix-block="6"]')).toContainText('Bloque pendiente de implementación');
 
   // Cerrar Matriz completa
   await modalMatriz.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();

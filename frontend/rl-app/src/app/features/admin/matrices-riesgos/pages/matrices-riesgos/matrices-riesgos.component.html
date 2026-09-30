@@ -551,6 +551,32 @@
                 }
               </section>
 
+              <section class="rounded-xl border border-gray-200 bg-white p-4" data-matrix-block="5" aria-labelledby="matrix-block-5-title">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 id="matrix-block-5-title" class="text-base font-bold text-ihss-900">5. Cálculos Auxiliares y Verificaciones</h3>
+                    <p class="mt-1 text-xs text-gray-500">20 campos · Calculados automáticamente</p>
+                  </div>
+                  <button type="button" data-ui-control="navigation" class="inline-flex min-h-10 items-center justify-center rounded-lg border border-ihss-700 px-3 py-2 text-sm font-semibold text-ihss-800 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2" aria-controls="matrix-block-5-details" [attr.aria-expanded]="bloque5DetalleExpandido()" (click)="bloque5DetalleExpandido.update(expandido => !expandido)">
+                    {{ bloque5DetalleExpandido() ? 'Ocultar detalle' : 'Mostrar detalle' }}
+                  </button>
+                </div>
+                  <dl id="matrix-block-5-details" class="matrix-field-list mt-4 grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2" [hidden]="!bloque5DetalleExpandido()" [style.display]="bloque5DetalleExpandido() ? 'grid' : 'none'" aria-labelledby="matrix-block-5-title">
+                    @for (field of camposBloque5Matriz; track field.ordinal) {
+                      <div class="min-w-0 rounded-xl border border-gray-200 bg-slate-50 p-3.5" [attr.data-matrix-field]="field.ordinal.toString()" [attr.data-matrix-field-definition]="field.ordinal.toString()" [attr.data-matrix-key]="field.key" data-matrix-mode="computed">
+                        <dt class="text-xs font-bold leading-5 text-gray-700" [attr.id]="'matrix-label-' + field.ordinal"><span class="mr-1 font-mono text-ihss-700">{{ field.ordinal }} ·</span> <span>{{ field.label }}</span></dt>
+                        <dd class="mt-1.5 break-words text-sm text-gray-900" [attr.aria-labelledby]="'matrix-label-' + field.ordinal" aria-readonly="true">{{ valorCampoBloque5(field) }}</dd>
+                        @if (field.ordinal === 64 || field.ordinal === 66 || field.ordinal === 67 || field.ordinal === 68 || field.ordinal === 69) {
+                          <p class="mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-bold" [class.bg-emerald-100]="estadoVerificacionBloque5(field) === 'PASS' || estadoVerificacionBloque5(field) === 'Esperado'" [class.text-emerald-800]="estadoVerificacionBloque5(field) === 'PASS' || estadoVerificacionBloque5(field) === 'Esperado'" [class.bg-amber-100]="estadoVerificacionBloque5(field) === 'Revisar'" [class.text-amber-900]="estadoVerificacionBloque5(field) === 'Revisar'" [class.bg-slate-100]="estadoVerificacionBloque5(field) === 'Sin dato'" [class.text-slate-700]="estadoVerificacionBloque5(field) === 'Sin dato'" [attr.data-matrix-verification-status]="field.ordinal">
+                            {{ estadoVerificacionBloque5(field) }}
+                          </p>
+                        }
+                        <span class="mt-1 block text-[11px] font-medium text-gray-500">F{{ (field.ordinal - 35).toString().padStart(2, '0') }} · Calculado automáticamente</span>
+                      </div>
+                    }
+                  </dl>
+              </section>
+
               @for (block of bloquesMatrizPendientes; track block) {
                 <section class="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-4" [attr.data-matrix-block]="block" [attr.aria-labelledby]="'matrix-block-' + block + '-title'">
                   <h3 class="text-sm font-bold text-gray-700" [attr.id]="'matrix-block-' + block + '-title'">{{ etiquetaBloquePendiente(block) }}</h3>

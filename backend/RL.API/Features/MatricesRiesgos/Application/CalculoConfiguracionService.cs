@@ -19,12 +19,20 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
-    public async Task<ServiceResult<IReadOnlyList<FormulaDto>>> ListarFormulasAsync(bool incluirInactivas) =>
-        ServiceResult<IReadOnlyList<FormulaDto>>.Ok(await _repository.ListarFormulasAsync(incluirInactivas));
+    public async Task<ServiceResult<IReadOnlyList<FormulaDto>>> ListarFormulasAsync(bool incluirInactivas)
+    {
+        var formulas = await _repository.ListarFormulasAsync(incluirInactivas);
+        return ServiceResult<IReadOnlyList<FormulaDto>>.Ok(formulas.Select(InstitutionalFormulaTraceabilityMapper.Enrich).ToArray());
+    }
 
-    public async Task<ServiceResult<FormulaDto>> ObtenerFormulaAsync(long id) => id <= 0
-        ? ServiceResult<FormulaDto>.BadRequest("El ID de fórmula es inválido.")
-        : await Found(_repository.ObtenerFormulaAsync(id), "No se encontró la fórmula.");
+    public async Task<ServiceResult<FormulaDto>> ObtenerFormulaAsync(long id)
+    {
+        if (id <= 0) return ServiceResult<FormulaDto>.BadRequest("El ID de fórmula es inválido.");
+        var formula = await _repository.ObtenerFormulaAsync(id);
+        return formula is null
+            ? ServiceResult<FormulaDto>.NotFound("No se encontró la fórmula.")
+            : ServiceResult<FormulaDto>.Ok(InstitutionalFormulaTraceabilityMapper.Enrich(formula));
+    }
 
     public async Task<ServiceResult<long>> CrearFormulaAsync(CrearFormulaDto dto, long usuarioId, string? ip)
     {
@@ -191,4 +199,32 @@ public sealed class CalculoConfiguracionService : ICalculoConfiguracionService
         DBConcurrencyException => ServiceResult<T>.Conflict("El recurso fue modificado por otra operación."),
         _ => throw ex
     };
+}
+
+public static class InstitutionalFormulaTraceabilityMapper
+{
+    public static FormulaDto Enrich(FormulaDto formula)
+    {
+        ArgumentNullException.ThrowIfNull(formula);
+        var definition = InstitutionalFormulaDataset.All.SingleOrDefault(item =>
+            string.Equals(item.Code, formula.Codigo, StringComparison.OrdinalIgnoreCase));
+        formula.ReferenciaInstitucional = definition is null ? null : new ReferenciaFormulaInstitucionalDto
+        {
+            Numero = definition.Number,
+            TargetField = definition.TargetField,
+            SourceCell = definition.SourceCell,
+            ExcelColumn = ExtractExcelColumn(definition.SourceCell)
+        };
+        return formula;
+    }
+
+    private static string ExtractExcelColumn(string sourceCell)
+    {
+        var separator = sourceCell.LastIndexOf('!');
+        var address = separator >= 0 ? sourceCell[(separator + 1)..] : string.Empty;
+        var column = new string(address.TakeWhile(char.IsLetter).ToArray());
+        if (column.Length == 0 || !address.AsSpan(column.Length).ToString().All(char.IsDigit))
+            throw new InvalidOperationException($"La celda fuente institucional '{sourceCell}' no tiene formato válido.");
+        return column;
+    }
 }

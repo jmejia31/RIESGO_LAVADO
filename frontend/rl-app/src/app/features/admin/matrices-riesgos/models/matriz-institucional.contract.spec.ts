@@ -1,4 +1,4 @@
-import { CATALOGO_RESPUESTA_RIESGO, MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
+import { CATALOGO_RESPUESTA_RIESGO, MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_FIELDS } from './matriz-institucional.contract';
 
 describe('contrato canónico de la Matriz institucional', () => {
   it('define las 82 posiciones una sola vez con ordinales y columnas continuas', () => {
@@ -94,7 +94,7 @@ describe('contrato canónico de la Matriz institucional', () => {
       ['INPUT', true]
     ]);
     expect(MATRIX_BLOCK_3_FIELDS.every(field => field.implemented)).toBe(true);
-    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(49);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(69);
     expect(CATALOGO_RESPUESTA_RIESGO).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
   });
 
@@ -115,11 +115,29 @@ describe('contrato canónico de la Matriz institucional', () => {
     ]);
     expect(MATRIX_BLOCK_4_FIELDS.map(field => field.excelColumn)).toEqual(['AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW']);
     expect(MATRIX_BLOCK_4_FIELDS.every(field => field.implemented && !field.editable)).toBe(true);
-    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(49);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(69);
     expect(MATRIX_BLOCK_4_FIELDS[0].source).toBe('RL_MR_PLANES.PLA_DESCRIPCION');
     expect(MATRIX_BLOCK_4_FIELDS[2].source).toContain('ACT_PLAN_ID → PLA_ID');
     expect(MATRIX_BLOCK_4_FIELDS[4].source).toBe('RL_MR_PLANES.PLA_MONITOREO_SEGUIMIENTO');
     expect(MATRIX_BLOCK_4_FIELDS[5].source).toBe('RL_MR_PLANES.PLA_RESPONSABLES');
     expect(MATRIX_BLOCK_4_FIELDS[8].source).toBe('RL_MR_PLANES.PLA_RECURSOS');
+  });
+
+  it('define exactamente los veinte campos computados y de solo lectura 50–69', () => {
+    expect(MATRIX_BLOCK_5_FIELDS).toHaveLength(20);
+    expect(MATRIX_BLOCK_5_FIELDS.map(field => field.ordinal)).toEqual(Array.from({ length: 20 }, (_, index) => index + 50));
+    expect(MATRIX_BLOCK_5_FIELDS.map(field => field.label)).toEqual([
+      'Frecuencia Residual (AUX)', 'Impacto Residual (AUX)', 'Suma Residual redondeada (AUX)',
+      'F_base (AUX)', 'I_base (AUX)', 'Tope F (AUX)', 'Tope I (AUX)', 'Capacidad F (AUX)',
+      'Capacidad I (AUX)', 'Resto (AUX)', 'Prefiere I (AUX)', 'Inc_I (AUX)', 'Inc_F (AUX)',
+      'Valor del Riesgo Residual (AUX)', 'Verificación', 'VRR 2', 'Verificar VRR 2',
+      'Verificar Frec', 'Verificar Impact', 'VRI-VRR'
+    ]);
+    expect(MATRIX_BLOCK_5_FIELDS.map(field => field.excelColumn)).toEqual([
+      'AX', 'AY', 'AZ', 'BA', 'BB', 'BC', 'BD', 'BE', 'BF', 'BG', 'BH', 'BI', 'BJ', 'BK', 'BL', 'BM', 'BN', 'BO', 'BP', 'BQ'
+    ]);
+    expect(MATRIX_BLOCK_5_FIELDS.every(field => field.mode === 'COMPUTED' && !field.editable && field.implemented)).toBe(true);
+    expect(MATRIX_FIELDS.filter(field => field.implemented)).toHaveLength(69);
+    expect(MATRIX_FIELDS.slice(69).every(field => !field.implemented)).toBe(true);
   });
 });

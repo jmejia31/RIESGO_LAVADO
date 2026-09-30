@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Subject, of } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
-import { EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
+import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto, VersionFormularioDto } from '../../models/matrices-riesgos.models';
 import { ControlRiesgoDto } from '../../models/matrices-riesgos-fase11.models';
 import { MatricesRiesgosComponent } from './matrices-riesgos.component';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CalculoConfiguracionService } from '../../data-access/calculo-configuracion.service';
-import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS } from '../../models/matriz-institucional.contract';
+import { MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS } from '../../models/matriz-institucional.contract';
 
 describe('MatricesRiesgosComponent', () => {
   let fixture: ComponentFixture<MatricesRiesgosComponent>;
@@ -635,7 +635,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       'Nivel del Riesgo Residual',
       'Respuesta al riesgo'
     ]);
-    expect(component.bloquesMatrizPendientes).toEqual([5, 6]);
+    expect(component.bloquesMatrizPendientes).toEqual([6]);
 
     const field = (ordinal: number) => MATRIX_BLOCK_3_FIELDS.find(item => item.ordinal === ordinal)!;
 
@@ -735,5 +735,61 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.valorCampoBloque4(field(49), plan)).not.toBe('—');
     expect(component.valorCampoBloque4(field(44), { ...plan, plaMonitoreoSeguimiento: '   ' })).toBe('—');
     expect(component.fechaMatrizPublica('fecha-invalida')).toBe('—');
+  });
+
+  it('proyecta F15–F34 solo desde evaDataCalcJson y aplica estados de verificación estrictos', () => {
+    const calculated = {
+      frecuencia_residual_aux: 0.3,
+      impacto_residual_aux: 0.5,
+      suma_residual_redondeada_aux: 2,
+      f_base: 1,
+      i_base: 1,
+      tope_f: 3,
+      tope_i: 5,
+      capacidad_f_aux: 2,
+      capacidad_i_aux: 4,
+      resto_aux: 0,
+      prefiere_i_aux: 1,
+      incremento_i_aux: 0,
+      incremento_f_aux: 0,
+      valor_riesgo_residual_aux: 1,
+      verificacion: 0,
+      vrr_2: 1,
+      verificar_vrr_2: 0,
+      verificar_frecuencia: 2,
+      verificar_impacto: 4,
+      diferencia_vri_vrr: 6
+    };
+    component.evaluacionSeleccionada.set({
+      evaId: 50, evaRiesgoId: 10, evaVersionId: 2, evaEstado: 'BORRADOR',
+      evaDataJson: JSON.stringify({ frecuencia_residual_aux: 999, verificacion: 0 }),
+      evaDataCalcJson: JSON.stringify(calculated), evaVri: 7, evaVrr: 1,
+      evaFechaEval: '', evaUsrEval: 1, evaVersionRow: 1, evaActivo: true
+    } satisfies EvaluacionRiesgoDto);
+
+    expect(MATRIX_BLOCK_5_FIELDS).toHaveLength(20);
+    expect(MATRIX_BLOCK_5_FIELDS.map(field => component.valorCampoBloque5(field))).toEqual([
+      '0.3', '0.5', '2', '1', '1', '3', '5', '2', '4', '0', '1', '0', '0', '1', '0', '1', '0', '2', '4', '6'
+    ]);
+    expect(component.valorCampoBloque5(MATRIX_BLOCK_5_FIELDS[0])).toBe('0.3');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[14])).toBe('PASS');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[16])).toBe('PASS');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[17])).toBe('Esperado');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[18])).toBe('Esperado');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[19])).toBe('Esperado');
+
+    component.evaluacionSeleccionada.update(e => e ? { ...e, evaDataCalcJson: JSON.stringify({
+      verificacion: 1, verificar_vrr_2: -1, verificar_frecuencia: -1, verificar_impacto: -1, diferencia_vri_vrr: -1
+    }) } : null);
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[14])).toBe('Revisar');
+    expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[16])).toBe('Revisar');
+    for (const index of [17, 18, 19]) expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[index])).toBe('Revisar');
+
+    for (const absent of [null, '', undefined]) {
+      component.evaluacionSeleccionada.update(e => e ? { ...e, evaDataCalcJson: JSON.stringify({ verificacion: absent }) } : null);
+      expect(component.valorCampoBloque5(MATRIX_BLOCK_5_FIELDS[14])).toBe('—');
+      expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[14])).toBe('Sin dato');
+      expect(component.estadoVerificacionBloque5(MATRIX_BLOCK_5_FIELDS[16])).toBe('Sin dato');
+    }
   });
 });

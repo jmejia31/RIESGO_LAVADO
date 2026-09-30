@@ -27,6 +27,7 @@ import {
   ParametroVersionDto
 } from '../../models/calculo-configuracion.models';
 import { CatalogoMatrices, MetodologiaFormulario } from '../../models/matrices-riesgos.models';
+import { MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type ConfigTab = 'formulas' | 'funciones' | 'parametros' | 'reglas' | 'catalogos';
 
@@ -144,6 +145,17 @@ export class ConfiguracionCalculoComponent implements OnInit {
   cambiarInactivas(): void { this.cargar(); }
 
   formulasFiltradas(): FormulaDto[] { return this.filtrar(this.formulas()); }
+  referenciaInstitucionalFormula(item: FormulaDto): { field: MatrixFieldContract; referencia: NonNullable<FormulaDto['referenciaInstitucional']> } | null {
+    const referencia = item.referenciaInstitucional;
+    if (!referencia) return null;
+    const candidates = MATRIX_FIELDS.filter(field => field.key === referencia.targetField);
+    if (candidates.length !== 1 || candidates[0].excelColumn !== referencia.excelColumn) return null;
+    return { field: candidates[0], referencia };
+  }
+  referenciaInstitucionalSeleccionada(): ReturnType<ConfiguracionCalculoComponent['referenciaInstitucionalFormula']> {
+    const selected = this.formulaSeleccionada();
+    return selected ? this.referenciaInstitucionalFormula(selected) : null;
+  }
   funcionesFiltradas(): FuncionDto[] { return this.filtrar(this.funciones()); }
   parametrosFiltrados(): ParametroDto[] { return this.filtrar(this.parametros()); }
 

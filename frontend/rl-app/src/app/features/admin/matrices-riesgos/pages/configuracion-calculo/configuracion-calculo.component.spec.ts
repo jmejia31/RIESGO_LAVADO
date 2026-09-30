@@ -64,6 +64,50 @@ describe('ConfiguracionCalculoComponent', () => {
     expect(layout().classList.contains('has-selection')).toBe(true);
   });
 
+  it('muestra trazabilidad institucional de solo lectura en detalle y al preparar una versión', () => {
+    const formula = {
+      id: 1,
+      codigo: 'F01_VALOR_RIESGO_INHERENTE',
+      nombre: 'F01_VALOR_RIESGO_INHERENTE',
+      estado: 'ACTIVE',
+      versionRow: 1,
+      referenciaInstitucional: {
+        numero: 1,
+        targetField: 'valor_riesgo_inherente',
+        sourceCell: 'Matriz Consolidada!L2',
+        excelColumn: 'L'
+      }
+    };
+    component.formulas.set([formula]);
+    component.seleccionarFormula(formula);
+    fixture.detectChanges();
+
+    let reference = fixture.nativeElement.querySelector('[data-institutional-formula-reference]') as HTMLElement;
+    expect(reference.textContent).toContain('Campo matriz');
+    expect(reference.textContent).toContain('Valor del Riesgo Inherente');
+    expect(reference.textContent).toContain('Columna L');
+    expect(reference.textContent).toContain('Matriz Consolidada!L2');
+    expect(reference.textContent).toContain('Fórmula institucional');
+    expect(reference.textContent).toContain('01');
+    expect(reference.querySelector('input, textarea, select')).toBeNull();
+
+    component.prepararVersionFormula();
+    fixture.detectChanges();
+    reference = fixture.nativeElement.querySelector('[data-institutional-formula-reference]') as HTMLElement;
+    expect(reference).not.toBeNull();
+    expect(reference.textContent).toContain('Columna L');
+  });
+
+  it('no inventa referencia institucional para fórmulas administrables personalizadas', () => {
+    const formula = { id: 3, codigo: 'CUSTOM_RULE', nombre: 'Regla personalizada', estado: 'ACTIVE', versionRow: 1 };
+    component.formulas.set([formula]);
+    component.seleccionarFormula(formula);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-institutional-formula-reference]')).toBeNull();
+    expect(component.referenciaInstitucionalFormula(formula)).toBeNull();
+  });
+
   it('muestra resultados sin selección y oculta la navegación contextual', () => {
     expect(component.formulaPosicion()).toBe('1 resultados');
     const navigation = fixture.nativeElement.querySelector('.config-record-navigation') as HTMLElement;

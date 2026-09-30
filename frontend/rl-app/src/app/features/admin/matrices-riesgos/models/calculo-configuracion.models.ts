@@ -9,6 +9,14 @@ export interface FormulaDto {
   estado: string;
   fechaCreacion?: string;
   versionRow: number;
+  referenciaInstitucional?: ReferenciaFormulaInstitucionalDto | null;
+}
+
+export interface ReferenciaFormulaInstitucionalDto {
+  numero: number;
+  targetField: string;
+  sourceCell: string;
+  excelColumn: string;
 }
 
 export interface FormulaVersionDto {

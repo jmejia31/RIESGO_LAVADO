@@ -11,6 +11,15 @@ public sealed class FormulaDto
     public string Estado { get; set; } = string.Empty;
     public DateTime FechaCreacion { get; set; }
     public int VersionRow { get; set; }
+    public ReferenciaFormulaInstitucionalDto? ReferenciaInstitucional { get; set; }
+}
+
+public sealed class ReferenciaFormulaInstitucionalDto
+{
+    public int Numero { get; set; }
+    public string TargetField { get; set; } = string.Empty;
+    public string SourceCell { get; set; } = string.Empty;
+    public string ExcelColumn { get; set; } = string.Empty;
 }
 
 public sealed class FormulaVersionDto
