@@ -774,7 +774,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
     }
     if (method === 'PUT' && /\/mitigacion\/planes\/\d+$/.test(path)) {
       const planId = Number(path.split('/').at(-1));
-      const index = serverPlans.findIndex(plan => plan.plaId === planId);
+      const index = serverPlans.findIndex(plan => plan['plaId'] === planId);
       if (index >= 0) serverPlans[index] = { ...request.postDataJSON(), plaId: planId };
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, mensaje: 'Plan actualizado' }) });
     }
@@ -788,11 +788,11 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
     }
     if (method === 'GET' && /\/mitigacion\/planes\/\d+\/actividades$/.test(path)) {
       const planId = Number(path.split('/').at(-2));
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: serverActivities.filter(activity => activity.actPlanId === planId) }) });
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: serverActivities.filter(activity => activity['actPlanId'] === planId) }) });
     }
     if (method === 'GET' && path.endsWith('/mitigacion/evaluaciones/20/bloque4')) {
       const planes = serverPlans.map(plan => {
-        const actividades = serverActivities.filter(activity => activity.actPlanId === plan.plaId);
+        const actividades = serverActivities.filter(activity => activity['actPlanId'] === plan['plaId']);
         return { ...plan, cantidadActividades: actividades.length, actividades };
       });
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { cantidadAcciones: planes.length, planes } }) });
@@ -842,7 +842,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await page.getByRole('button', { name: 'Editar plan y actividades' }).nth(1).click();
   await addActivity('Verificar cierre de hallazgos', 'Supervisor Operativo');
   await expect.poll(() => serverActivities.length).toBe(3);
-  expect(serverActivities.map(activity => activity.actPlanId)).toEqual([201, 201, 202]);
+  expect(serverActivities.map(activity => activity['actPlanId'])).toEqual([201, 201, 202]);
 
   await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Mitigación', exact: true }).click();
@@ -854,7 +854,7 @@ test('UAT Bloque 4 persiste dos planes y tres actividades y los proyecta agrupad
   await expect(page.locator('#plan-monitoreo-seguimiento')).toHaveValue('Seguimiento mensual por la unidad responsable');
   await page.locator('#plan-recursos').fill('Personal especializado, monitoreo y análisis');
   await page.getByRole('button', { name: 'Actualizar plan', exact: true }).click();
-  await expect.poll(() => serverPlans[0].plaRecursos).toBe('Personal especializado, monitoreo y análisis');
+  await expect.poll(() => serverPlans[0]['plaRecursos']).toBe('Personal especializado, monitoreo y análisis');
 
   await page.getByRole('button', { name: 'Matriz y evaluaciones', exact: true }).click();
   await page.getByRole('button', { name: 'Ver Matriz completa' }).first().click();
