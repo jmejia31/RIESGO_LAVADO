@@ -131,6 +131,17 @@ builder.Services.AddSingleton(
 
 // Proceso de integración frontend-backend: limita los orígenes permitidos según configuración.
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? new[] { "http://localhost:4200" };
+if (builder.Environment.IsDevelopment())
+{
+    var devOrigins = new HashSet<string>(allowedOrigins, StringComparer.OrdinalIgnoreCase)
+    {
+        "http://localhost:4200",
+        "http://localhost:4201",
+        "http://127.0.0.1:4200",
+        "http://127.0.0.1:4201"
+    };
+    allowedOrigins = devOrigins.ToArray();
+}
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("RLPolicy", policy =>
@@ -143,8 +154,16 @@ builder.Services.AddCors(options =>
 });
 
 // Proceso de infraestructura: registra la conexión Oracle usada por repositorios y servicios.
+var oracleConnectionString = builder.Configuration.GetConnectionString("OracleDB") ?? string.Empty;
+if (builder.Environment.IsDevelopment())
+{
+    oracleConnectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(
+        oracleConnectionString,
+        builder.Configuration);
+}
+
 builder.Services.AddSingleton<OracleDbContext>(sp =>
-    new OracleDbContext(builder.Configuration.GetConnectionString("OracleDB")!));
+    new OracleDbContext(oracleConnectionString));
 
 // BE-03: registra readiness con timeout acotado. /healthz no depende de Oracle;
 // /readyz usa una consulta mínima de solo lectura y devuelve únicamente estado agregado.
