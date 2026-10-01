@@ -1,3 +1,21 @@
+# Estado vigente — Cierre definitivo y certificación integral Incidente P0 (2026-10-01)
+
+- Rama: `desarrollo`. Baseline SHA: `e4675a575159692eca072a304c8e0310327eeb9b`.
+- FIX_COMMIT_SHA: `73679737034886214c4a85ba7082454398e1a2f1`.
+- Colaborador: ANTIG (Antigravity).
+- Incidente P0 Matrices de Riesgos: **CERRADO EN RUNTIME LOCAL / DESARROLLO**.
+- Hardening Runtime: `DatabaseEnvironmentGuard` implementa política positiva estricta en `Development`. Solo se autorizan conexiones hacia hosts loopback (`localhost`, `127.0.0.1`, `::1`) con servicio `XE`. Cualquier host remoto o producción es rechazado en startup de forma inmediata (`FailFast`). 11/11 pruebas unitarias del guard superadas.
+- Seguridad y Secretos: Secretos locales rotados de forma segura. Secretos gestionados exclusivamente en `dotnet user-secrets`. Escaneo de archivos tracked y diffs limpio (`LOCAL_SECRET_ROTATION=PASS`, `TRACKED_SECRET_SCAN=PASS`, `PRODUCTION_SECRET_REEXPOSED=NO`). Rotación de credenciales productivas expuestas en diagnósticos previos queda registrada como `EXPOSED_PRODUCTION_SECRET_ROTATION=PENDING_OWNER_ACTION`.
+- Bootstrap Oracle Local Reproducible: Se implementó `tools/setup_local_oracle.ps1` con comprobación de estado de instancia `OPEN` y `docs/0.0 Documentación/DESARROLLO_LOCAL_ORACLE.md`, eliminando la dependencia de `docker commit`.
+- Auditoría de Esquema Oracle XE: Verificada la presencia de todas las columnas y tablas requeridas por HEAD (`PLA_RECURSOS`, `CON_EFECTIVIDAD_MONITOREO`, `CON_ESTADO_MONITOREO`, `MON_OBSERVACIONES_AREA`, `MON_OBSERVACIONES_UGR`, `RL_USUARIO_CAPACIDADES`). Postchecks 48 y 52 superados. DDLs 47 y 51 marcados como `LOCAL_MIGRATIONS_SKIPPED_ALREADY_APPLIED`.
+- Cold Start Completo: Verificado el apagado y arranque limpio de toda la pila (Oracle XE Docker -> backend RL.API Debug -> frontend Angular). Conexiones de backend hacia Oracle remoto: 0 (`BACKEND_REMOTE_ORACLE_CONNECTIONS=0`).
+- Suite E2E Final: **45 / 45 PASS** (`TOTAL_TESTS=45, PASSED=45, FAILED=0, SKIPPED=0`) ejecutada en frío post-commit y post-cold-start. Cero errores ORA-00904. Persistencia validada tras segundo reinicio.
+- Matriz Completa 82/82: 82 campos renderizados en orden estricto, Bloque 6 con etiquetas institucionales y separación nítida entre estado de riesgo y estado de workflow.
+- Producción Intacta: `PRODUCTION_ACCESS_DURING_THIS_TASK=NO`, `PRODUCTION_DDL_EXECUTED=NO`, `PRODUCTION_DML_EXECUTED=NO`, `PRODUCTION_DATA_MUTATION=NO`. Se generó el catálogo de DDLs candidatos y prechecks para intervención independiente de DBA.
+- Gobernanza: `MATRICES_RIESGOS_MODULE_STATUS=CLOSED`, `PRODUCTION_SCHEMA_COMPATIBILITY=PENDING`, `RELEASE_TO_PRODUCTION_STATUS=NOT_CERTIFIED`. Rama `main` no tocada.
+
+---
+
 # Estado vigente — round-trip Oracle desechable Bloques 4/6 (2026-09-30)
 
 - Rama `desarrollo`; base `9424ea7293c110fd7cec27670f6a9aaa593767fc`. Código B6 se conserva; no se tocaron `main` ni producción.

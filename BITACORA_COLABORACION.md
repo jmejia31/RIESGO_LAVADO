@@ -1,5 +1,44 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Cierre definitivo y certificación integral Incidente P0: Hardening de Runtime Oracle Local, Bootstrap Reproducible y E2E (Matrices de Riesgos)
+
+- **Fecha/hora local:** 2026-10-01 11:00 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / BASE_SHA:** `desarrollo` / `e4675a575159692eca072a304c8e0310327eeb9b`.
+- **FIX_COMMIT_SHA:** `73679737034886214c4a85ba7082454398e1a2f1` (`fix(matrices): harden Development Oracle runtime and local bootstrap`).
+- **Objetivo único:** Cierre definitivo del incidente P0 en Matrices de Riesgos: reconciliar y endurecer el runtime de desarrollo para aislar de forma estricta contra base de datos local (loopback/XE) eliminando cualquier posibilidad de conexión remota o herencia productiva; rotar credenciales locales sin imprimir secretos; eliminar la dependencia de `docker commit` proveyendo bootstrap canónico reproducible (`tools/setup_local_oracle.ps1` y `docs/0.0 Documentación/DESARROLLO_LOCAL_ORACLE.md`); auditar esquema local confirmando presencia de columnas Bloque 4/6 (`PLA_RECURSOS`, `CON_EFECTIVIDAD_MONITOREO`, `MON_OBSERVACIONES_UGR`, etc.) y documentando el no requerimiento de reejecución de DDLs 47 y 51 en el XE local; certificar build Debug/Development, pruebas unitarias del guard, cold start de la pila completa, suite Playwright 45/45 limpia, persistencia tras reinicio y preservación total de producción con plan de DDL para DBA.
+- **Implementación técnica y hardening:**
+  - `DatabaseEnvironmentGuard.cs`: Implementada política positiva estricta en entorno `Development`. Solo se autoriza conexión si el host es loopback (`localhost`, `127.0.0.1`, `::1`) y el servicio es `XE`. Cualquier host remoto, IP privada externa, IP pública o servicio ajeno detiene el arranque de la API inmediatamente (`FailFast`).
+  - `DatabaseEnvironmentGuardTests.cs`: 11 casos de prueba exhaustivos cubriendo combinaciones válidas (localhost+XE, 127.0.0.1+XE) y negativas (host remoto, IP privada remota, IP pública, cadena vacía, ConnectionString ausente, malformada, service name ajeno, target productivo histórico, etc.). 11/11 tests superados.
+  - `Program.cs`: Integrado `DatabaseEnvironmentGuard.EnforceDatabaseEnvironment(builder)` al arranque. Hardening de CORS en `Development` para aceptar explícitamente orígenes loopback (`localhost:4200`, `127.0.0.1:4200`, `localhost:4201`, `127.0.0.1:4201`) aislando el runner de tests E2E.
+  - `tools/setup_local_oracle.ps1`: Script PowerShell de bootstrap canónico para levantar contenedor Docker `rl-oracle-xe-local` (`oraclelinux:7-slim` o imagen base oficial), configurar variables de entorno, esperar estado `OPEN` en `V$INSTANCE`, crear tablespace y usuario `RIESGO_LAVADO`, y aplicar scripts base en orden estricto.
+  - `backend/RL.API/appsettings.Development.example.json` & `UserSecretsId`: Configuración documentada sin secretos. Secretos gestionados exclusivamente mediante `dotnet user-secrets`.
+- **Auditoría de Esquema Oracle XE Local:**
+  - Verificados campos críticos: `PLA_RECURSOS` (`RL_MR_PLANES`), `CON_EFECTIVIDAD_MONITOREO` y `CON_ESTADO_MONITOREO` (`RL_MR_CONTROLES_RIESGO`), `MON_OBSERVACIONES_AREA` y `MON_OBSERVACIONES_UGR` (`RL_MR_AUTOMONITOREO`), tabla `RL_USUARIO_CAPACIDADES`.
+  - Auditoría de scripts DDL: Confirmado que los scripts 47 y 51 ya fueron aplicados previamente en el contenedor local (`48_postcheck_bloque4_plan_campos.sql` PASS, `52_postcheck_bloque6_solo_lectura.sql` PASS). Dictamen: `LOCAL_MIGRATIONS_SKIPPED_ALREADY_APPLIED` (no se reejecutan para evitar errores de idempotencia o sobreescritura de metadatos).
+- **Pruebas y Verificación Integral:**
+  - Build Backend Debug: Exitoso (`RL.API.dll`).
+  - Build Frontend Angular: Exitoso (`dist/rl-app`).
+  - Tests Unitarios Guard: 11/11 PASS (`DATABASE_ENVIRONMENT_GUARD_TESTS=PASS`).
+  - E2E Pre-commit (`matrices-uat-integral.spec.ts`): 12/12 PASS.
+  - Cold Start Completo: Parada total de contenedores y procesos, verificación de puertos libres (1521, 5043, 4200), arranque reproducible de Oracle XE, espera de estado `OPEN`, arranque de `RL.API` contra loopback y arranque de frontend.
+  - Conexiones de red backend: 0 conexiones remotas (`BACKEND_REMOTE_ORACLE_CONNECTIONS=0`), comunicación confinada exclusivamente a `127.0.0.1:1521`.
+  - CRUD & Persistencia Post-Cold-Start: Verificación de creación de evaluación, lectura, edición, guardado de borrador, persistencia tras recarga de navegador, mitigación, controles, planes con recursos, automonitoreo y observaciones independientes Área/UGR sin errores ORA-00904.
+  - Matriz Completa 82/82: 82 campos renderizados en orden, Bloque 6 (campos 70–82) visible con etiquetas institucionales Excel, separación de estados RIESGO_ESTADO vs WORKFLOW_ESTADO.
+  - Suite Completa Playwright Post-Cold-Start y Post-Commit (`npm run e2e -- --workers 1`): **45/45 PASS** (0 fallos, 0 omitidos, 0 flaky, 0 errores ORA-00904).
+  - Persistencia tras segundo reinicio: Registro creado preservado intacto.
+- **Gobernanza y Producción:**
+  - `PRODUCTION_ACCESS_DURING_THIS_TASK=NO`
+  - `PRODUCTION_DDL_EXECUTED=NO`
+  - `PRODUCTION_DML_EXECUTED=NO`
+  - `PRODUCTION_DATA_MUTATION=NO`
+  - `PRODUCTION_SCHEMA_MUTATION=NO`
+  - Generado plan detallado y prechecks/postchecks para el DBA de producción.
+  - `MAIN_TOUCHED=NO`.
+  - `MATRICES_RIESGOS_MODULE_STATUS=CLOSED` (entorno local / runtime).
+  - `PRODUCTION_SCHEMA_COMPATIBILITY=PENDING` (pendiente intervención autorizada de DBA).
+  - `RELEASE_TO_PRODUCTION_STATUS=NOT_CERTIFIED`.
+
 ## Registro de intervención — Remediación final y recertificación estricta Bloque 3: Campo 39 round-trip E2E real y trazabilidad
 
 - **Fecha/hora local:** 2026-09-29 18:10 (America/Tegucigalpa).
