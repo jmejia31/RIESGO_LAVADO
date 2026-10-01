@@ -30,6 +30,7 @@ $unbackedMappingTargetsGate = $false
 $rollbackOnResidual = $false
 $backupExactKeyTableColumnRowid = $false
 $backupTablePreserved = $true
+$initialSeedBaseSchemaParity = $true
 
 function Get-DatabaseRelativePath {
     param([string]$Path)
@@ -172,6 +173,28 @@ $safeUpdateOrder = $firstInstallOrder | Where-Object {
 
 Assert-IncludeOrder '00_EJECUCION_PRIMERA_VEZ.sql' $firstInstallOrder
 Assert-IncludeOrder '00_EJECUCION_ACTUALIZACIONES_SEGURAS.sql' $safeUpdateOrder
+
+$initialSchemaSql = Get-ExecutableSql (Join-Path $databaseRoot '01_create_tables.sql')
+$initialSeedSql = Get-ExecutableSql (Join-Path $databaseRoot '02_seed_data.sql')
+$seedInsertPattern = '(?is)\bINSERT\s+INTO\s+(?<table>[A-Z0-9_]+)\s*\((?<columns>[^)]*)\)\s*VALUES\s*\('
+foreach ($insert in [System.Text.RegularExpressions.Regex]::Matches($initialSeedSql, $seedInsertPattern)) {
+    $tableName = $insert.Groups['table'].Value.ToUpperInvariant()
+    $tablePattern = '(?is)\bCREATE\s+TABLE\s+' + [System.Text.RegularExpressions.Regex]::Escape($tableName) + '\s*\((?<body>.*?)\r?\n\);'
+    $tableMatch = [System.Text.RegularExpressions.Regex]::Match($initialSchemaSql, $tablePattern)
+    if (-not $tableMatch.Success) {
+        $errors.Add("La semilla inicial inserta en una tabla ausente del esquema base: $tableName")
+        $initialSeedBaseSchemaParity = $false
+        continue
+    }
+
+    foreach ($columnName in ($insert.Groups['columns'].Value -split ',' | ForEach-Object { $_.Trim().ToUpperInvariant() })) {
+        $columnPattern = '(?im)^\s*' + [System.Text.RegularExpressions.Regex]::Escape($columnName) + '\s+'
+        if (-not [System.Text.RegularExpressions.Regex]::IsMatch($tableMatch.Groups['body'].Value, $columnPattern)) {
+            $errors.Add("La semilla inicial usa una columna ausente del esquema base: $tableName.$columnName")
+            $initialSeedBaseSchemaParity = $false
+        }
+    }
+}
 
 $rootEntrypoints = @(
     '00_EJECUCION_PRIMERA_VEZ.sql',
@@ -1005,6 +1028,7 @@ if ($errors.Count -gt 0) {
 }
 
 Write-Host 'Validacion de base de datos correcta.' -ForegroundColor Green
+Write-Host "INITIAL_SEED_BASE_SCHEMA_PARITY=$(if ($initialSeedBaseSchemaParity) { 'PASS' } else { 'FAIL' })"
 Write-Host "UNICODE_DIAGNOSTIC_TOTAL_TOKEN_OCCURRENCES=$unicodeDiagnosticTotalOccurrences"
 Write-Host "UNICODE_DIAGNOSTIC_UNIQUE_BAD_TOKENS=$unicodeDiagnosticUniqueTokens"
 Write-Host "UNICODE_DIAGNOSTIC_DETERMINISTIC_MAPPINGS=$unicodeDiagnosticDeterministicMappings"
