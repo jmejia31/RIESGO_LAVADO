@@ -8,10 +8,9 @@
 -- no debe mezclarse con actualizaciones seguras de ambientes existentes.
 --
 -- MATRICES DE RIESGOS:
--- El paquete 19 permanece excluido durante la preparacion y certificacion
--- Oracle del modelo reducido de 17 tablas. No debe instalarse automaticamente
--- hasta completar la transicion manual, la certificacion fisica y la
--- autorizacion expresa correspondiente.
+-- El esquema del paquete 19 permanece excluido de esta instalacion base.
+-- Se registra su entrada de navegacion para completar el catalogo de modulos;
+-- las tablas y transiciones del modulo se aplican por separado.
 -- ============================================================
 
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -35,6 +34,7 @@ PROMPT ============================================================
 @@12_register_coincidencias_patrono_module.sql
 @@13_create_calificaciones_coincidencias.sql
 @@14_register_coincidencias_empleado_module.sql
+@@19_matrices_riesgos/02_register_modulo_matrices_riesgos.sql
 @@15_update_detalle_evidencia_soft_delete.sql
 @@16_alter_lista_positivos_origen_registro.sql
 @@18_add_missing_comments.sql

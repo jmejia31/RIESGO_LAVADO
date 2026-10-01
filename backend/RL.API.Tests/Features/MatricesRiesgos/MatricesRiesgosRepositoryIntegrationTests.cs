@@ -191,8 +191,8 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         _output = output;
 
         IConfiguration configuration = new ConfigurationBuilder()
-            .AddEnvironmentVariables()
             .AddUserSecrets<MatricesRiesgosRepositoryIntegrationTests>(optional: true)
+            .AddEnvironmentVariables()
             .Build();
 
         _connectionString = configuration.GetConnectionString("OracleDB")
@@ -794,7 +794,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             new OracleParameter("id", flujoId),
             new OracleParameter("evaluacionId", evaluacionId),
             new OracleParameter("motivo", "Captura inicial de certificación"),
-            new OracleParameter("usuarioId", usuarioId));
+            new OracleParameter("usuarioId", usuarioFixtureId));
 
         await EjecutarAsync(
             conn,
@@ -810,7 +810,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
             new OracleParameter("nombre", codigoBase + ".txt"),
             new OracleParameter("hash", (escenario + sufijo).PadRight(64, '0')[..64]),
             new OracleParameter("ruta", "/certificacion-oracle/" + codigoBase),
-            new OracleParameter("usuarioId", usuarioId));
+            new OracleParameter("usuarioId", usuarioFixtureId));
 
         return new DatosCiclo(
             familiaId,
@@ -903,10 +903,10 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         await conn.OpenAsync();
         await using OracleTransaction transaction = conn.BeginTransaction();
         string sufijo = Guid.NewGuid().ToString("N")[..12];
-        long rolId;
-        long usuarioId;
+        long rolId = await SiguienteIdentidadAsync(conn, transaction, "RL_ROLES", "ROL_ID");
+        long usuarioId = await SiguienteIdentidadAsync(conn, transaction, "RL_USUARIOS", "USR_ID");
         await using (var role = new OracleCommand(
-            "INSERT INTO RL_ROLES (ROL_ID, ROL_NOMBRE, ROL_DESCRIPCION, ROL_ACTIVO) VALUES (SEQ_RL_ROLES.NEXTVAL, :nombre, :descripcion, 1) RETURNING ROL_ID INTO :id",
+            "INSERT INTO RL_ROLES (ROL_ID, ROL_NOMBRE, ROL_DESCRIPCION, ROL_ACTIVO) VALUES (:id, :nombre, :descripcion, 1)",
             conn)
         {
             BindByName = true,
@@ -915,19 +915,16 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         {
             role.Parameters.Add(new OracleParameter("nombre", "IT_B6_" + sufijo));
             role.Parameters.Add(new OracleParameter("descripcion", "Usuario temporal de integración Oracle"));
-            var id = new OracleParameter("id", OracleDbType.Int64) { Direction = System.Data.ParameterDirection.Output };
-            role.Parameters.Add(id);
+            role.Parameters.Add(new OracleParameter("id", rolId));
             await role.ExecuteNonQueryAsync();
-            rolId = Convert.ToInt64(id.Value.ToString());
         }
 
         await using (var user = new OracleCommand(@"
             INSERT INTO RL_USUARIOS (
                 USR_ID, USR_NOMBRE, USR_APELLIDO, USR_EMAIL, USR_PASSWORD_HASH,
                 USR_PASSWORD_SALT, USR_ROL_ID, USR_ACTIVO, ES_USUARIO_DOMINIO
-            ) VALUES (SEQ_RL_USUARIOS.NEXTVAL, 'Integración', 'Bloque 6', :email,
-                      'TEST_ONLY', 'TEST_ONLY', :rolId, 1, 0)
-            RETURNING USR_ID INTO :id", conn)
+            ) VALUES (:id, 'Integración', 'Bloque 6', :email,
+                      'TEST_ONLY', 'TEST_ONLY', :rolId, 1, 0)", conn)
         {
             BindByName = true,
             Transaction = transaction
@@ -935,14 +932,29 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
         {
             user.Parameters.Add(new OracleParameter("email", $"oracle-b6-{sufijo}@example.invalid"));
             user.Parameters.Add(new OracleParameter("rolId", rolId));
-            var id = new OracleParameter("id", OracleDbType.Int64) { Direction = System.Data.ParameterDirection.Output };
-            user.Parameters.Add(id);
+            user.Parameters.Add(new OracleParameter("id", usuarioId));
             await user.ExecuteNonQueryAsync();
-            usuarioId = Convert.ToInt64(id.Value.ToString());
         }
 
         await transaction.CommitAsync();
         return (usuarioId, rolId);
+    }
+
+    private static async Task<long> SiguienteIdentidadAsync(
+        OracleConnection conn,
+        OracleTransaction transaction,
+        string tableName,
+        string columnName)
+    {
+        await using var command = new OracleCommand(
+            $"SELECT NVL(MAX({columnName}), 0) + 1 FROM {tableName}",
+            conn)
+        {
+            BindByName = true,
+            Transaction = transaction
+        };
+
+        return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 
     private async Task AsignarCapacidadesIntegracionAsync(long usuarioId, bool area, bool ugr)
@@ -1235,7 +1247,7 @@ public sealed class MatricesRiesgosRepositoryIntegrationTests
     {
         var builder = new OracleConnectionStringBuilder(_connectionString!)
         {
-            ConnectionTimeout = 5
+            ConnectionTimeout = 30
         };
         return new OracleConnection(builder.ConnectionString);
     }

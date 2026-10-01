@@ -64,11 +64,8 @@ BEGIN
     'CREATE SEQUENCE SEQ_RL_CALIFICACIONES START WITH 1 INCREMENT BY 1 NOCACHE'
   );
 
-  create_index_if_missing(
-    'IDX_RL_CAL_REPORTE',
-    'CREATE INDEX IDX_RL_CAL_REPORTE ON RL_CALIF_COINCIDENCIAS(CAL_REPORTE_COINCIDENCIA_ID)'
-  );
-
+  -- UQ_RL_CAL_REPORTE ya crea un índice para la misma columna; no crear un
+  -- segundo índice redundante que Oracle rechaza con ORA-01408.
   create_index_if_missing(
     'IDX_RL_CAL_USUARIO',
     'CREATE INDEX IDX_RL_CAL_USUARIO ON RL_CALIF_COINCIDENCIAS(CAL_USUARIO_ID)'

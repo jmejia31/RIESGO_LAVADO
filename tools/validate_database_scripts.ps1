@@ -161,6 +161,7 @@ $firstInstallOrder = @(
     '12_register_coincidencias_patrono_module.sql',
     '13_create_calificaciones_coincidencias.sql',
     '14_register_coincidencias_empleado_module.sql',
+    '19_matrices_riesgos/02_register_modulo_matrices_riesgos.sql',
     '15_update_detalle_evidencia_soft_delete.sql',
     '16_alter_lista_positivos_origen_registro.sql',
     '18_add_missing_comments.sql',
@@ -168,7 +169,11 @@ $firstInstallOrder = @(
 )
 
 $safeUpdateOrder = $firstInstallOrder | Where-Object {
-    $_ -notin @('01_create_tables.sql', '02_seed_data.sql')
+    $_ -notin @(
+        '01_create_tables.sql',
+        '02_seed_data.sql',
+        '19_matrices_riesgos/02_register_modulo_matrices_riesgos.sql'
+    )
 }
 
 Assert-IncludeOrder '00_EJECUCION_PRIMERA_VEZ.sql' $firstInstallOrder

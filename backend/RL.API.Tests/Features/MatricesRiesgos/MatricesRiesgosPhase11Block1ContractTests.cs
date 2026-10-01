@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RL.API.Features.MatricesRiesgos.Domain;
 using Xunit;
@@ -126,7 +127,17 @@ public sealed class MatricesRiesgosPhase11Block1ContractTests
 
         Assert.Equal(HashEsperado, hash);
         Assert.Contains(HashEsperado, script, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(definicion, script, StringComparison.Ordinal);
+        Match jsonEmbebido = Regex.Match(
+            script,
+            @"v_json\s+CLOB\s*:=\s*TO_CLOB\(q'~(?<fragmento1>.*?)~'\)\s*\|\|\s*q'~(?<fragmento2>.*?)~'\s*\|\|\s*q'~(?<fragmento3>.*?)~'\s*\|\|\s*q'~(?<fragmento4>.*?)~';",
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        Assert.True(jsonEmbebido.Success, "El JSON debe estar dividido para respetar el límite de entrada de SQL*Plus Oracle 11g.");
+        string contenidoEmbebido = string.Concat(
+            jsonEmbebido.Groups["fragmento1"].Value,
+            jsonEmbebido.Groups["fragmento2"].Value,
+            jsonEmbebido.Groups["fragmento3"].Value,
+            jsonEmbebido.Groups["fragmento4"].Value);
+        Assert.Equal(definicion, contenidoEmbebido);
         Assert.DoesNotContain("DROP TABLE", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("TRUNCATE", script, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("DELETE FROM", script, StringComparison.OrdinalIgnoreCase);
