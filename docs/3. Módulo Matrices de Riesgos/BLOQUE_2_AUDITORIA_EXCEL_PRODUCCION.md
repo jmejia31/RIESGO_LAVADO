@@ -1,205 +1,181 @@
-# Bloque 2: Auditoría Forense Excel ↔ Producción (59 Riesgos × 82 Campos)
+# Bloque 2 — Auditoría Excel ↔ Producción (sellado final)
 
-> **Estado:** COMPLETADO — PASE CORRECTIVO FINAL (Dry Run Absoluto — Cero Escrituras)<br>
-> **Fecha:** 2026-10-02<br>
-> **Autoridad Contractual:** Bloque 1 (`61e4cb2f0a465f2d848025677dc3ab864515ce0e`) y Pase Semántico (`66dad25c96b2bffc0b357c006ed42896c971919e`)<br>
-> **Workbook Oficial:** `Matrices de Riesgos.xlsx` (Hoja: `Matriz Consolidada`, Rango: `A1:CD60` y Hoja: `Otras Tablas`)<br>
-> **Hash SHA-256 Workbook:** `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`<br>
-> **Entorno Productivo:** Oracle Database `HPPROD1` (`RIESGO_LAVADO`) — `DATABASE_TARGET_CLASS=PRODUCTION`
+> **Estado técnico:** gates de código y auditoría read-only aprobados; publicación final en `desarrollo` registrada por el cierre de esta intervención. Bloque 3 no iniciado.
+> **Workbook:** `Matrices de Riesgos.xlsx`, hoja `Matriz Consolidada`, rango `A1:CD60`.
+> **SHA-256:** `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`.
+> **Contrato:** manifest canónico 82 campos. La intervención corrigió metadatos técnicos de persistencia de los campos 03, 05, 06, 07, 15, 16 y 70; no cambió la secuencia, claves canónicas ni etiquetas Excel.
+> **RUN_ID:** `20261002_142828_041` (artefactos fuera de Git en `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_142828_041`).
 
----
+## Metodología y fuente
 
-## 1. Resumen Ejecutivo y Metodología
+Se verificó el SHA-256 del workbook contra el valor institucional congelado. Una lectura compartida respetó el bloqueo de Excel; la copia temporal se extrajo directamente con ExcelJS. El resultado fue 82 encabezados, 59 filas de riesgos y 59 códigos únicos. Para `ROP-CUMP-59`, la lectura de la columna C/F03 fue `Sección de Cumplimiento`, D/F04 `Sección de Cumplimiento` y E/F05 `Operativo`.
 
-El **Bloque 2 de 12** ejecutó una auditoría forense integral, determinista y estrictamente de sólo lectura sobre la totalidad del universo contractual: **59 riesgos institucionales × 82 campos canónicos = 4,838 posiciones contractuales**.
+El exportador auxiliar conserva el ordinal de columna (`fieldNumber = c`) y el valor original de celda. El auditor valida hash actual del workbook, hash de la extracción, etiquetas del manifest contra encabezados y tamaño del universo antes de abrir Oracle. Cualquier diferencia de etiqueta o sustitución de workbook detiene la ejecución.
 
-Tras la ejecución inicial, se aplicó el **Pase Correctivo Final de Semántica de Comparación y Clasificación** con base estricta en las reglas del Instructivo institucional y las tablas oficiales de `Otras Tablas` del mismo workbook:
-1. **Semántica Canónica de Ausencia de Controles:** Cuando `CONTROL_COUNT_OF_TYPE = 0`, el estado institucional es `NO_CONTROLS_OF_TYPE`, la descripción es `"No hay"`, la escala es `"Inexistente"`, el nivel es `0` y el porcentaje es `0%`. Si el Excel reporta `"No hay"` y la DB tiene 0 controles, la auditoría proyecta la semántica canónica y clasifica como `MATCH` (`NO_CONTROLS_CANONICAL_MATCH`), eliminando falsos faltantes.
-2. **Semántica de Controles 1:N y Escala Combinada:** La descripción de controles es 1:N (`CONTROL_DESCRIPTION_CARDINALITY=ONE_TO_MANY_RENDERED`, campos 20, 24, 28) mientras que la escala de efectividad es un único valor combinado por tipo (`CONTROL_EFFECTIVENESS_SCALE_CARDINALITY=ONE_COMBINED_SCALE_PER_CONTROL_TYPE`, campos 21, 25, 29). Se normalizaron las escalas contra la tabla institucional (`0 = Inexistente / 0%`, `1 = Es inefectivo / 0%`, `2 = Razonable / 30%`, `3 = Parcialmente Efectivo / 50%`, `4 = Moderado / 85%`, `5 = Alta Efectividad / 90%`). Cuando el Excel contiene `"Alta Efectividad"` y la base contiene `90`, la comparación semántica arroja `MATCH` (`EFFECTIVENESS_SCALE_SEMANTIC_MATCH`), eliminando 39 falsas discrepancias.
-3. **Distinción entre Ausencia de Dato vs Defecto de Mapeo:** Se separó nítidamente la ausencia de datos operativos en tablas hijas poblables (`MISSING_IN_DB` con acción `IMPORT_BASELINE`) del defecto de persistencia técnica (campos 03, 05, 06, 07, 15, 16, 32 clasificados con `technicalMappingStatus=BROKEN`, `reasonCode=MISSING_PERSISTENCE_MAPPING`, `recommendedNextAction=FIX_MAPPING`).
-4. **Dry Run Absoluto — Cero Modificaciones:** Transacción única `SET TRANSACTION READ ONLY` con `ROLLBACK`. Cero DML, cero DDL y cero escrituras en producción.
+La extracción de producción usó una sesión Oracle con `SET TRANSACTION READ ONLY`, consultas `SELECT` y `ROLLBACK`. Identidad comprobada: `HPPROD1 / hpprod1 / hpprod1 / RIESGO_LAVADO / RIESGO_LAVADO` (`DB_NAME / SERVICE_NAME / INSTANCE_NAME / CURRENT_SCHEMA / SESSION_USER`). La auditoría seleccionó la evaluación activa vinculada a la proyección consolidada. No ejecutó DML, DDL ni procedimientos.
 
----
+## Hallazgo y corrección del Campo 03
 
-## 2. Métricas Globales y Verificación de Totales
+La fuente equivocada `Macroproceso / Apoyo` estaba en la tabla del informe sanitizado anterior. El manifest actual ya declaraba `Área`, el helper leía la celda C directamente y la extracción con el hash oficial confirma `Sección de Cumplimiento`. **Causa raíz: `REPORT_ONLY_BUG`.** Se corrigió el reporte y se añadió una aserción regresiva al helper de auditoría para `ROP-CUMP-59 / FIELD_03`.
 
-| Métrica | Valor Esperado | Valor Obtenido | Estado |
-|---|---|---|---|
-| Riesgos Auditados | 59 | 59 | PASS |
-| Campos Auditados | 82 | 82 | PASS |
-| Universo Total de Posiciones | 4,838 | 4,838 | PASS |
-| Claves Únicas de Auditoría (`<CODIGO>\|<CAMPO>`) | 4,838 | 4,838 | PASS |
-| Claves Duplicadas | 0 | 0 | PASS |
-| Clasificaciones Primarias Desconocidas (`UNKNOWN`) | 0 | 0 | PASS |
-| Diferencias Sin Explicación (`UNEXPLAINED`) | 0 | 0 | PASS |
-| DML / DDL / Procedimientos Ejecutados en Producción | 0 | 0 | PASS |
+El mapping productivo existe en `EVA_DATOS_JSON.area_principal`: 59/59 valores comparan `MATCH`; el estado técnico es `VALID_JSON`. La etiqueta del Campo 03 es exactamente `Área`; no se encontró mapping roto para este campo.
 
-### Distribución de la Taxonomía Primaria Definitiva (Total = 4,838)
+## Reauditoría de mappings reportados
 
-```
-┌─────────────────────────────────────────────────────────────┬───────────┬───────────┐
-│ Clasificación Primaria                                      │ Cantidad  │ % Total   │
-├─────────────────────────────────────────────────────────────┼───────────┼───────────┤
-│ MATCH                                                       │       648 │    13.39% │
-│ MISSING_IN_DB                                               │       457 │     9.45% │
-│ DIFFERENT                                                   │        95 │     1.96% │
-│ LEGITIMATELY_BLANK_IN_EXCEL                                 │     1,193 │    24.66% │
-│ DB_HAS_NEWER_OPERATIONAL_DATA                               │         0 │     0.00% │
-│ CALCULATED_FIELD                                            │     2,124 │    43.90% │
-│ NOT_APPLICABLE                                              │       321 │     6.64% │
-├─────────────────────────────────────────────────────────────┼───────────┼───────────┤
-│ TOTAL                                                       │     4,838 │   100.00% │
-└─────────────────────────────────────────────────────────────┴───────────┴───────────┘
-```
+`AFFECTED_POSITIONS` indica posiciones con defecto técnico de mapping. Los faltantes bajo mappings válidos son datos no presentes en producción, con acción baseline cuando corresponde.
 
----
+| Campo | Etiqueta | Excel lleno / blanco | Mapping persistente | Estado | Posiciones con defecto técnico | Faltante en DB | Próxima acción |
+|---:|---|---:|---|---|---:|---:|---|
+| 03 | Área | 59 / 0 | `EVA_DATOS_JSON.area_principal` | `VALID_JSON` | 0 | 0 | `NO_ACTION` |
+| 05 | Tipo de Riesgo | 59 / 0 | `EVA_DATOS_JSON.tipo_riesgo` | `VALID_JSON` | 0 | 59 | `IMPORT_BASELINE` |
+| 06 | Procedimiento | 59 / 0 | `EVA_DATOS_JSON.procedimiento` | `VALID_JSON` | 0 | 59 | `IMPORT_BASELINE` |
+| 07 | Objetivo(s) Estratégico(s) | 11 / 48 | `EVA_DATOS_JSON.objetivos_estrategicos` | `VALID_JSON` | 0 | 11 | `IMPORT_BASELINE` / `NO_ACTION` |
+| 15 | Régimen afectado | 56 / 3 | `EVA_DATOS_JSON.regimen_afectado` | `VALID_JSON` | 0 | 56 | `IMPORT_BASELINE` / `NO_ACTION` |
+| 16 | Transversalidad o Interrelación con otros Riesgos | 59 / 0 | `EVA_DATOS_JSON.transversalidad` | `VALID_JSON` | 0 | 59 | `IMPORT_BASELINE` |
+| 32 | Nivel de Automatización de los Controles | 13 / 46 | `RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION` | `VALID_RELATION` | 0 | 13 | `IMPORT_BASELINE` / `NO_ACTION` |
 
-## 3. Tabla Comparativa: Antes vs Después del Pase Correctivo
+Los siete destinos existen en JSON persistido o relación Oracle. `TECHNICAL_MAPPING_ERRORS=0`. El manifest y esta tabla identifican `EVA_DATOS_JSON` (nombre real en el DDL versionado) y `ALE_INDICADOR` para señales; las descripciones del contrato se alinearon con el esquema y los DTOs existentes.
 
-| Clasificación Primaria | Auditoría Inicial | Pase Correctivo Final | Variación Neta | Explicación Técnica de la Variación |
-|---|:---:|:---:|:---:|---|
-| **MATCH** | 597 | **648** | **+51** | +39 por normalización de escalas semánticas (F21, F25, F29) y +12 por proyección canónica de ausencia "No hay" (F20, F24, F28). |
-| **MISSING_IN_DB** | 469 | **457** | **-12** | -12 posiciones con "No hay" en Excel que corresponden a ausencia canónica válida (coincidencia semántica con 0 controles en DB). |
-| **DIFFERENT** | 134 | **95** | **-39** | -39 falsos diferentes eliminados al contrastar escalas textuales vs numéricas normalizadas contra `Otras Tablas` (e.g. "Alta Efectividad" vs 90, "Inexistente" vs 0). |
-| **LEGITIMATELY_BLANK_IN_EXCEL** | 1,193 | **1,193** | **0** | Sin variación; celdas legítimamente en blanco en el baseline. |
-| **DB_HAS_NEWER_OPERATIONAL_DATA**| 0 | **0** | **0** | Sin variación; 0 datos operativos en DB que superen baseline. |
-| **CALCULATED_FIELD** | 2,124 | **2,124** | **0** | Sin variación; 34 fórmulas institucionales + 2 contadores agregados por riesgo. |
-| **NOT_APPLICABLE** | 321 | **321** | **0** | Sin variación; 177 campos GTIC + 144 mitigaciones donde no aplica mitigar. |
-| **TOTAL** | **4,838** | **4,838** | **0** | Universo 100% preservado sin posiciones duplicadas ni omitidas. |
+`REQUIRED_VALUES_MISSING=59`, todos del Campo 05 (requiredness leído del manifest). Son faltantes de valor, no defectos de mapping; tienen destino JSON válido. No se alteraron datos productivos.
 
----
+## Campo 70 — Señales de Alerta
 
-## 4. Resumen por Bloque Funcional Definitivo
+Política leída del manifest vigente:
 
-| Bloque | Rango | Nombre del Bloque | Posiciones | MATCH | MISSING | DIFF | BLANK | OPER | CALC | N/A |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **B1** | 01-19 | 1. Identificación y Riesgo Inherente | 1,121 | 385 | 303 | 87 | 51 | 0 | 118 | 177 |
-| **B2** | 20-33 | 2. Controles | 826 | 189 | 138 | 0 | 86 | 0 | 413 | 0 |
-| **B3** | 34-39 | 3. Riesgo Residual y Respuesta | 354 | 55 | 0 | 4 | 0 | 0 | 295 | 0 |
-| **B4** | 40-49 | 4. Plan de Mitigación / Acciones Correctivas | 590 | 0 | 16 | 0 | 312 | 0 | 118 | 144 |
-| **B5** | 50-69 | 5. Cálculos Auxiliares y Verificaciones | 1,180 | 0 | 0 | 0 | 0 | 0 | 1,180 | 0 |
-| **B6** | 70-82 | 6. Monitoreo, Efectividad y Observaciones | 767 | 19 | 0 | 4 | 744 | 0 | 0 | 0 |
-| **TOTAL** | **01-82** | **Matriz Consolidada Completa** | **4,838** | **648** | **457** | **95** | **1,193** | **0** | **2,124** | **321** |
+| Propiedad | Valor |
+|---|---|
+| `fieldNumber` / `label` | `70` / `Señales de Alerta` |
+| `initialBaselineImportRule` | `IMPORT_IF_NOT_EMPTY` (crear señales desde el baseline cuando aplique) |
+| `subsequentReconciliationRule` | `PRESERVE_OPERATIONAL_DB` |
+| `preserveExistingOperationalValue` | `true` |
+| `excelNullBehavior` | `KEEP_EXISTING_DB_RECORDS` |
+| `source` / `mode` | `MONITORING` / `OPERATIONAL` |
 
----
+El mapping físico correcto es `RL_MR_SENALES_ALERTA.ALE_INDICADOR` (`VARCHAR2(150)`); la fecha disponible es `ALE_FECHA_DISPARO`. El DDL versionado no define `CREATED_AT` ni `UPDATED_AT`, por lo que no se usaron. Se extrajeron IDs, indicadores, fecha disponible y valores estructurados para los casos operacionales al artefacto temporal `field70_operational_authority.csv`.
 
-## 5. Tabla Cruzada de Reconciliación: Clasificación Primaria × Acción Siguiente
+| Métrica | Conteo |
+|---|---:|
+| No vacías en Excel | 23 |
+| `MATCH` | 19 |
+| `DIFFERENT` final | 0 |
+| `DB_HAS_NEWER_OPERATIONAL_DATA` | 4 |
+| En blanco legítimo | 36 |
 
-La tabla cruzada demuestra la reconciliación exacta del 100% de las 4,838 posiciones contractuales y aclara el destino operativo de cada una:
+En los cuatro casos que antes figuraban `DIFFERENT`, Excel y la lista estructurada de producción difieren. El contrato atribuye autoridad a producción para la reconciliación posterior al baseline; sin timestamp requerido para establecer precedencia, `newnessEvidence=CONTRACT_AUTHORITY_RULE`, `operationalAuthority=PRODUCTION` y `recommendedNextAction=PRESERVE_PRODUCTION`.
 
-```
-┌──────────────────────────────┬──────────────────────────────┬───────────┐
-│ Clasificación Primaria       │ Acción Siguiente Recomendada │ Posiciones│
-├──────────────────────────────┼──────────────────────────────┼───────────┤
-│ MATCH                        │ NO_ACTION                    │       648 │
-│ MISSING_IN_DB                │ FIX_MAPPING                  │       316 │
-│ MISSING_IN_DB                │ IMPORT_BASELINE              │       141 │
-│ DIFFERENT                    │ DATA_REMEDIATION_REQUIRED    │        95 │
-│ LEGITIMATELY_BLANK_IN_EXCEL  │ NO_ACTION                    │     1,193 │
-│ CALCULATED_FIELD             │ NO_ACTION                    │       312 │
-│ CALCULATED_FIELD             │ RECALCULATE_IN_BACKEND       │     1,776 │
-│ CALCULATED_FIELD             │ NOT_APPLICABLE               │        36 │
-│ NOT_APPLICABLE               │ NOT_APPLICABLE               │       321 │
-├──────────────────────────────┴──────────────────────────────┼───────────┤
-│ TOTAL UNIVERSO RECONCILIADO                                 │     4,838 │
-└─────────────────────────────────────────────────────────────┴───────────┘
-```
+| Riesgo | Clasificación anterior | Clasificación final | Evidencia de autoridad | Acción |
+|---|---|---|---|---|
+| `ROTR-COMPRAS-18` (EVA 46) | `DIFFERENT` | `DB_HAS_NEWER_OPERATIONAL_DATA` | `CONTRACT_AUTHORITY_RULE` | `PRESERVE_PRODUCTION` |
+| `RCUMP-COMPRASRRHH-26` (EVA 54) | `DIFFERENT` | `DB_HAS_NEWER_OPERATIONAL_DATA` | `CONTRACT_AUTHORITY_RULE` | `PRESERVE_PRODUCTION` |
+| `RCUMP-COMPRAS-28` (EVA 56) | `DIFFERENT` | `DB_HAS_NEWER_OPERATIONAL_DATA` | `CONTRACT_AUTHORITY_RULE` | `PRESERVE_PRODUCTION` |
+| `RCUMP-COMPRAS-32` (EVA 60) | `DIFFERENT` | `DB_HAS_NEWER_OPERATIONAL_DATA` | `CONTRACT_AUTHORITY_RULE` | `PRESERVE_PRODUCTION` |
 
-### Reconciliación Específica de Candidatos a Importación (`BASELINE_IMPORT_CANDIDATES = 141`)
-- **Total de registros en `baseline_import_candidates.csv`:** Exactamente **141 posiciones**.
-- **Composición:**
-  - **125 descripciones de controles** en campos 20, 24, 28 (riesgos que poseen controles institucionales en Excel mientras la tabla hija relacional `RL_MR_CONTROLES_RIESGO` en producción está vacía).
-  - **16 planes de mitigación** en campos 40, 42, 44, 45, 46, 47, 48, 49 (para riesgos donde la respuesta es "Mitigar" y el Excel posee contenido baseline, mientras las tablas hijas `RL_MR_PLANES` y `RL_MR_ACTIVIDADES` están vacías).
-- **Cero confusión:** Los 316 casos de campos no mapeados (campos 06, 07, 15, 16, 32 en riesgos con valor en Excel) fueron direccionados a `FIX_MAPPING`, garantizando que la importación de baseline contenga únicamente datos estructurables en tablas hijas.
+`FIELD_70_OPERATIONAL_AUTHORITY=PASS`. El cambio de clasificación no afirma que un timestamp sea posterior ni recomienda sobrescribir producción.
 
----
+## Campo 39 — Conflicto de catálogo delegado
 
-## 6. Taxonomía Separada de Defectos e Inconsistencias
+El workbook contiene un conflicto institucional entre `Matriz Consolidada/Listas` (`Evitar`, `Transferir/Compartir`, `Aceptar`, `Mitigar`) y `Instructivo` (`Reducir`, `Aceptar`, `Transferir`, `Evitar`). No se eligió catálogo en Bloque 2. Se conservaron las cuatro posiciones como `DIFFERENT`, con `reasonCode=CATALOG_SOURCE_CONFLICT_RESPONSE_RISK`, `recommendedNextAction=FIX_CATALOG` y `targetBlock=3`; no se recomienda remediar directamente el dato productivo.
 
-| Tipo de Defecto / Hallazgo | Cantidad | Descripción Técnica y Alcance |
-|---|:---:|---|
-| **TECHNICAL_MAPPING_ERROR** | **413** | 59 riesgos × 7 campos sin persistencia en producción actual (Campos 03, 05, 06, 07, 15, 16, 32). Clasificados con `technicalMappingStatus=BROKEN`, `reasonCode=MISSING_PERSISTENCE_MAPPING`, `recommendedNextAction=FIX_MAPPING`. |
-| **DATA_ABSENCE_CASES** | **141** | 141 posiciones con contenido en Excel pero ausencia física en tablas hijas relacionales (125 controles + 16 mitigaciones). Destino: `baseline_import_candidates.csv`. |
-| **VALID_EMPTY_COLLECTIONS** | **52** | 52 posiciones donde la colección hija vacía en DB es semánticamente válida: 12 coincidencias exactas con `"No hay"` (`MATCH`) y 40 coincidencias con celda en blanco (`LEGITIMATELY_BLANK_IN_EXCEL`). |
-| **REQUIRED_VALUES_MISSING** | **118** | 118 posiciones que corresponden a campos obligatorios según el manifiesto (`requirementLevel=REQUIRED`) pero que no poseen persistencia en la DB actual (Campo 03: 59 riesgos; Campo 05: 59 riesgos). |
+Riesgos: `RCUMP-COMPRAS-37`, `ROP-CUMP-50`, `ROP-CUMP-53` y `ROP-CUMP-54`. `FIELD_39_CONFLICTS_DEFERRED_TO_BLOCK3=4/4`.
 
----
+## Universo, clasificación y acciones
 
-## 7. Conflictos de Catálogos entre Fuentes del Proyecto
+`59 × 82 = 4,838`; 59 riesgos/59 y 82 etiquetas/82 auditados. `EXPECTED_POSITIONS=4,838`, `ACTUAL_POSITIONS=4,838`, `UNIQUE_AUDIT_KEYS=4,838`, `DUPLICATE_AUDIT_KEYS=0`, `UNCLASSIFIED_POSITIONS=0`, `UNEXPLAINED_DIFFERENCES=0`.
 
-Durante la auditoría forense se identificaron formalmente los siguientes conflictos de catálogos:
-- **`INTERNAL_SOURCE_CATALOG_CONFLICTS: 1`**: Conflicto interno entre hojas del workbook institucional:
-  - En `Matriz Consolidada` y `Listas`: las opciones para Respuesta al Riesgo son `['Evitar', 'Transferir', 'Aceptar', 'Mitigar']`.
-  - En la hoja `Instructivo`: el texto indica `['Reducir', 'Aceptar', 'Transferir', 'Evitar']` (utilizando "Reducir" en lugar de "Mitigar").
-  - **Decisión de Gobernanza:** `CATALOG_SOURCE_CONFLICT_RESPONSE_RISK=YES`, asignado al **Bloque 3** para estandarización y sellado normativo formal.
-- **`DB_VS_EXCEL_CATALOG_CONFLICTS: 4`**: En el Campo 39 (`Respuesta al riesgo`), existen 4 riesgos donde el valor persistido en DB difiere del valor registrado en el Excel oficial (`DIFFERENT`, acción `DATA_REMEDIATION_REQUIRED`).
+| Clasificación primaria | Posiciones |
+|---|---:|
+| `MATCH` | 804 |
+| `MISSING_IN_DB` | 398 |
+| `DIFFERENT` | 91 |
+| `LEGITIMATELY_BLANK_IN_EXCEL` | 1,096 |
+| `DB_HAS_NEWER_OPERATIONAL_DATA` | 4 |
+| `CALCULATED_FIELD` | 2,124 |
+| `NOT_APPLICABLE` | 321 |
+| **Total** | **4,838** |
 
----
+| Clasificación primaria | Acción siguiente | Posiciones |
+|---|---|---:|
+| `MATCH` | `NO_ACTION` | 804 |
+| `MISSING_IN_DB` | `IMPORT_BASELINE` | 398 |
+| `DIFFERENT` | `DATA_REMEDIATION_REQUIRED` | 87 |
+| `DIFFERENT` | `FIX_CATALOG` | 4 |
+| `LEGITIMATELY_BLANK_IN_EXCEL` | `NO_ACTION` | 1,096 |
+| `DB_HAS_NEWER_OPERATIONAL_DATA` | `PRESERVE_PRODUCTION` | 4 |
+| `CALCULATED_FIELD` | `NO_ACTION` | 312 |
+| `CALCULATED_FIELD` | `NOT_APPLICABLE` | 36 |
+| `CALCULATED_FIELD` | `RECALCULATE_IN_BACKEND` | 1,776 |
+| `NOT_APPLICABLE` | `NOT_APPLICABLE` | 321 |
+| **Total** |  | **4,838** |
 
-## 8. Caso de Control Canónico Reauditado: ROP-CUMP-59
+La taxonomía conserva por separado `NO_ACTION`, `IMPORT_BASELINE`, `PRESERVE_PRODUCTION`, `RECALCULATE_IN_BACKEND`, `FIX_MAPPING`, `FIX_CATALOG`, `NOT_APPLICABLE`, `SOURCE_REVIEW_REQUIRED` y `DATA_REMEDIATION_REQUIRED`. No se generaron acciones `FIX_MAPPING` ni `SOURCE_REVIEW_REQUIRED` en este run: los destinos revisados existen y el conflicto de Campo 39 sí tiene `FIX_CATALOG` en la taxonomía.
 
-El riesgo de cumplimiento **ROP-CUMP-59** fue reauditado exhaustivamente con la semántica institucional corregida:
+`BASELINE_IMPORT_CANDIDATES=398` sólo incluye destinos persistentes válidos; `DATA_CONFLICTS=87` excluye los cuatro conflictos de catálogo; `OPERATIONAL_VALUES_TO_PRESERVE=4`; `TECHNICAL_MAPPING_ERRORS=0`. `FALSE_CONTROL_IMPORT_CANDIDATES=0` y `FALSE_SCALE_DATA_CONFLICTS=0`. La semántica de controles sigue en vigor: sin controles de tipo, descripción `No hay`, escala `Inexistente`, nivel 0 y porcentaje 0%; descripciones 20/24/28 1:N y escalas 21/25/29 combinadas.
 
-| Campo | Etiqueta | Excel Oficial | Producción Actual | Clasificación | Motivo Técnico | Acción Siguiente |
-|:---:|---|---|---|:---:|---|:---:|
-| **03** | Macroproceso | Apoyo | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **04** | Área Consolidada | Sección de Cumplimiento | Sección de Cumplimiento | `MATCH` | `EXACT_RAW_MATCH` | `NO_ACTION` |
-| **05** | Tipo de Riesgo | Operativo | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **06** | Procedimiento | Atención a requerimientos... | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **07** | Objetivo(s) Estratégico(s) | Suficiencia y sostenibilidad... | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **12** | Valor del Riesgo Inherente | *(fórmula)* | 3 | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **13** | Nivel de Riesgo Inherente | *(fórmula)* | BAJO | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **15** | Régimen afectado | IVM | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **16** | Transversalidad o Interrelación | Riesgo de Cumplimiento | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **20** | Descripción de Control Preventivo | Preventivo: Existencia de manual... | *(vacío)* | `MISSING_IN_DB` | `CHILD_COLLECTION_EMPTY` | `IMPORT_BASELINE` |
-| **21** | Escala de efectividad preventivo | Alta Efectividad | 90 | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
-| **24** | Descripción de Control Detectivo | No hay | No hay *(proyectado)* | `MATCH` | `NO_CONTROLS_CANONICAL_MATCH` | `NO_ACTION` |
-| **25** | Escala de efectividad detectivo | Inexistente | 0 *(normalizado)* | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
-| **28** | Descripción de Control Correctivo | No hay | No hay *(proyectado)* | `MATCH` | `NO_CONTROLS_CANONICAL_MATCH` | `NO_ACTION` |
-| **29** | Escala de efectividad correctivo | Inexistente | 0 *(normalizado)* | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
-| **32** | Nivel de Automatización | Manual | *(sin mapeo)* | `MISSING_IN_DB` | `MISSING_PERSISTENCE_MAPPING` | `FIX_MAPPING` |
-| **33** | Efectividad Total Ponderada (ETP)| *(fórmula)* | 63.00 | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **34** | Riesgo Residual | *(fórmula)* | Multas y Sanciones por... | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **35** | Frecuencia Residual | *(fórmula)* | 1 | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **36** | Impacto Residual | *(fórmula)* | 1 | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **37** | Valor del Riesgo Residual | *(fórmula)* | 1 | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **38** | Nivel del Riesgo Residual | *(fórmula)* | BAJO | `CALCULATED_FIELD` | `NO_CACHED_FORMULA_RESULT` | `RECALCULATE_IN_BACKEND` |
-| **41** | No. Acciones de Mitigación | *(fórmula)* | 0 | `CALCULATED_FIELD` | `MITIGATION_NOT_REQUIRED` | `RECALCULATE_IN_BACKEND` |
-| **43** | Cantidad de Actividades | *(fórmula)* | 0 | `CALCULATED_FIELD` | `MITIGATION_NOT_REQUIRED` | `RECALCULATE_IN_BACKEND` |
+## Campos calculados
 
----
+Se mantienen como `CALCULATED_FIELD`; no se implementó el motor completo. La suma de paridad reconcilia las 2,124 posiciones:
 
-## 9. Inventario de Artefactos Forenses Definitivos (%TEMP%)
+| Resultado | Posiciones |
+|---|---:|
+| `CALCULATION_PARITY_MATCH` | 312 |
+| `CALCULATION_PARITY_DIFFERENT` | 98 |
+| `CALCULATION_PARITY_MISSING_IN_DB` | 496 |
+| `CALCULATION_PARITY_NOT_EVALUABLE` | 1,218 |
+| **Total** | **2,124** |
 
-Los 11 artefactos fueron regenerados determinísticamente y almacenados fuera del repositorio para garantizar cero exposición de datos sensibles:
+Las posiciones sin resultado de fórmula en caché permanecen como `NO_CACHED_FORMULA_RESULT`/`NOT_EVALUABLE`, no como error de fórmula.
 
-- **Directorio de Artefactos:** `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_134545`
+## Caso de control ROP-CUMP-59
 
-| Archivo | SHA-256 | Filas | Descripción |
-|---|---|:---:|---|
-| `audit_59x82_full.json` | `66366dc16567568cfdd7c45bac437cbf67a854021e663415c931267e26ca097e` | 4,838 | Universo completo 59×82 con metadatos forenses y taxonomía corregida |
-| `audit_59x82_full.csv` | `17ef42269c92ca3e68e706192f3bf74aa0e7d66ca84fd211522872eee14e475f` | 4,838 | Matriz tabular de auditoría forense |
-| `summary_by_risk.csv` | `16d1933835710a536171c21d1fca4fdb59dd14aa7372b4e1d8630ee270496e07` | 59 | Conteo de clasificaciones por cada uno de los 59 riesgos institucionales |
-| `summary_by_field.csv` | `7b48d840bc625aed934cd3ad1c2149de8f13e88316b17f69db670ba0f7b70ac3` | 82 | Conteo de clasificaciones por cada uno de los 82 campos canónicos |
-| `summary_by_block.csv` | `75670a19c0e4819e223aa550c0367cc13bde24ed513fe0eba71f208ec9c426aa` | 6 | Resumen por bloque funcional con métricas consolidadas |
-| `calculated_parity.csv` | `342ba79846aedce323c7fe333e37dafd22e658eb1d54dd4eae4dffa957ab88d0` | 2,124 | Diagnóstico de paridad para los 36 campos calculados/derivados |
-| `operational_values_to_preserve.csv` | `984f6ac3b439fc591d7ab8bf53d9f30d87a6464005a17ac07f8624be0369a1d2` | 0 | Valores productivos operacionales vigentes a proteger contra sobreescritura |
-| `baseline_import_candidates.csv` | `f7e331148e0c8826bd9e098561a6206792e5cce7084ae60db4832bcabc10fd39` | 141 | 141 posiciones candidatas a carga relacional en tablas hijas (Bloque 4) |
-| `data_conflicts.csv` | `ddfe7c126d4ba7cce4753de9fc883effca4f0d2239814cc75d1415593058937b` | 95 | 95 discrepancias reales de contenido a remediar en Bloque 3/4 |
-| `technical_defects.csv` | `6df839eb8de17cd29fd2f27fc9e91b54dc9bf2171532de30b4d23175d89eb8b4` | 413 | 413 posiciones con defecto técnico de persistencia (`technicalMappingStatus=BROKEN`) |
-| `production_risk_inventory.csv` | `94b8ea6e564faf3921d3952fb4ed5d58cdfc7d4ea0338c134b8a5f1b5d8cdedc` | 59 | Inventario formal de los 59 riesgos activos en producción |
+| Campo | Etiqueta | Excel | Producción | Clasificación | Motivo | Acción |
+|---:|---|---|---|---|---|---|
+| 03 | Área | Sección de Cumplimiento | Sección de Cumplimiento | `MATCH` | `EXACT_RAW_MATCH` | `NO_ACTION` |
+| 04 | Área Consolidada | Sección de Cumplimiento | Sección de Cumplimiento | `MATCH` | `EXACT_RAW_MATCH` | `NO_ACTION` |
+| 05 | Tipo de Riesgo | Operativo | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 06 | Procedimiento | Atención a requerimientos de Información por parte del Ente Regulador | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 07 | Objetivo(s) Estratégico(s) | Suficiencia y sostenibilidad del Régimen IVM; entrega oportuna de beneficios | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 15 | Régimen afectado | IVM | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 16 | Transversalidad o Interrelación | Riesgo de Cumplimiento | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 20 | Descripción de Control Preventivo | Control preventivo registrado en Excel | — | `MISSING_IN_DB` | `CHILD_COLLECTION_EMPTY` | `IMPORT_BASELINE` |
+| 21 | Escala de efectividad preventiva | Alta Efectividad | 90 | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
+| 24 | Descripción de Control Detectivo | No hay | No hay | `MATCH` | `NO_CONTROLS_CANONICAL_MATCH` | `NO_ACTION` |
+| 25 | Escala de efectividad detectiva | Inexistente | 0 | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
+| 28 | Descripción de Control Correctivo | No hay | No hay | `MATCH` | `NO_CONTROLS_CANONICAL_MATCH` | `NO_ACTION` |
+| 29 | Escala de efectividad correctiva | Inexistente | 0 | `MATCH` | `EFFECTIVENESS_SCALE_SEMANTIC_MATCH` | `NO_ACTION` |
+| 32 | Nivel de Automatización de los Controles | Manual | — | `MISSING_IN_DB` | `DB_NULL` | `IMPORT_BASELINE` |
+| 39 | Respuesta al riesgo | Aceptar | ACEPTAR | `MATCH` | `NORMALIZED_SEMANTIC_MATCH` | `NO_ACTION` |
+| 70 | Señales de Alerta | — | — | `LEGITIMATELY_BLANK_IN_EXCEL` | `NO_ALERTS_BASELINE_OR_DB` | `NO_ACTION` |
 
----
+## Artefactos de auditoría
 
-## 10. Confirmación de Scripts de Soporte a la Auditoría
+Los archivos completos contienen datos operativos y permanecen únicamente en `%TEMP%`; no se incorporan a Git. SHA-256 y filas de datos del RUN_ID `20261002_142828_041`:
 
-- **`tools/export_excel_matrix_82.js`:** Es una utilidad de extracción fuera de línea de uso exclusivo para alimentar la auditoría forense (`AUDIT_SUPPORT_ONLY=YES`). No forma parte del runtime de la aplicación Angular ni del backend ASP.NET Core (`EXPORT_RUNTIME_BEHAVIOR_CHANGED=NO`).
+| Archivo | Filas | SHA-256 |
+|---|---:|---|
+| `audit_59x82_full.json` | 4,838 | `cc12fa8eb9199cf2843d45c53c3c96ee2a54ecb9f3fd7aa3981f293a65f4ad60` |
+| `audit_59x82_full.csv` | 4,838 | `380f6f742f5fd063ac4058fe92abf9829a52190ead7ba5884afd9e4aada5e29a` |
+| `summary_by_risk.csv` | 59 | `7f058c0b2b7084558960629ab205c965ea33e838512b03cffc1a4b79ec9c3701` |
+| `summary_by_field.csv` | 82 | `902b2756cfca3131ed412e713857f756c5c468c197adfff421969433156cdee5` |
+| `summary_by_block.csv` | 6 | `455c8bb5fae1b8c6727fd91f867533440d1871148745ebdad93c2d8af0ee2847` |
+| `calculated_parity.csv` | 2,124 | `342ba79846aedce323c7fe333e37dafd22e658eb1d54dd4eae4dffa957ab88d0` |
+| `operational_values_to_preserve.csv` | 4 | `04e003688e770450ff3f12a1c9e6c3c273d025480160404c868e08de5550d2aa` |
+| `baseline_import_candidates.csv` | 398 | `06772eb693f3ab4fe7564e04c7c14de2fb5ca137089c95b57ee3e338d8313cb6` |
+| `data_conflicts.csv` | 87 | `b28eba977ab9e7fa83d8a23d2e831ee13f6346e240b23690b1e93b2177360f4f` |
+| `technical_defects.csv` | 0 | `60d47d0b38e8beb9e6ab2666a08a5a897fa2c67b68a68ba5bd1666be70f8f5d1` |
+| `production_risk_inventory.csv` | 59 | `94b8ea6e564faf3921d3952fb4ed5d58cdfc7d4ea0338c134b8a5f1b5d8cdedc` |
+| `field70_operational_authority.csv` | 24 | `4ff24b1da25c5e2842e801fc4eb302a698b56aff8cf78599682e8494fd3b5a28` |
+| `field39_catalog_conflicts.csv` | 4 | `83af4619c577b1f679c6379e4729434ad8ad25e1050b37eb6f930311a71f4db8` |
+| `field03_reaudit.csv` | 59 | `afb7e2dfa0c2b6d34561b26c29c21eba1950254d85974627a652b9f8b4e507b9` |
+| `classification_action_crosstab.csv` | 10 | `c3d0868e42468b9563d1edee49cfab06374057bc29db067cd7e9bb03df35803e` |
 
----
+## Verificación, alcance y cierre
 
-## 11. Conclusión y Cierre de Bloque 2
+- `node tools/validate_contract_82_fields.js`: PASS, 82/82.
+- `dotnet test ... --filter FullyQualifiedName~MatrizRiesgosContract82FieldsTests`: PASS, 17/17.
+- `dotnet test ... --filter FullyQualifiedName~MatrizRiesgosBlock2ForensicAuditTests`: PASS, 15/15.
+- `dotnet build tools/AuditMatricesExcelVsProduction/AuditMatricesExcelVsProduction.csproj`: PASS; 0 errores, 14 advertencias de analizadores.
+- `powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate_documentation_links.ps1`: PASS (173 Markdown / 199 enlaces); `git diff --check`: PASS.
+- `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_PROCEDURES_EXECUTED=0`, `PRODUCTION_DATA_MUTATION=0`, `DATABASE_WRITES=0`.
+- `tools/export_excel_matrix_82.js` sigue siendo `AUDIT_SUPPORT_ONLY`; la aserción agregada valida la fuente de F03. `EXPORT_RUNTIME_BEHAVIOR_CHANGED=NO`.
 
-El **Bloque 2 queda cerrado con éxito definitivo y certificación forense incontrovertible**.
-- **CERO DML / CERO DDL / CERO ESCRITURAS EN PRODUCCIÓN** (`DATABASE_WRITES=0`).
-- **4,838 posiciones clasificadas al 100%** con reconciliación determinista y taxonomía separada.
-- **NO INICIAR BLOQUE 3.** Se detiene la ejecución para aguardar la aprobación expresa del usuario.
+La auditoría queda técnicamente reconciliada: etiquetas/universo completos, todo faltante o diferencia tiene clasificación, causa y acción, sin defectos técnicos de mapping ni diferencias inexplicadas. Los 87 conflictos de datos y 398 valores baseline quedan cuantificados para sus acciones correspondientes; los cuatro conflictos de catálogo esperan Bloque 3. **No iniciar Bloque 3.**

@@ -29,6 +29,7 @@ public class AuditPosition
     public int FieldNumber { get; set; }
     public string FieldLabel { get; set; } = "";
     public string CanonicalKey { get; set; } = "";
+    public string CurrentKey { get; set; } = "";
     public string FunctionalBlock { get; set; } = "";
     public int BlockNumber { get; set; }
 
@@ -65,6 +66,8 @@ public class AuditPosition
 
     public bool OperationalAuthority { get; set; }
     public bool PreserveDbValue { get; set; }
+    public string OperationalAuthoritySource { get; set; } = "";
+    public string NewnessEvidence { get; set; } = "";
 
     public string TechnicalMappingStatus { get; set; } = "NORMAL";
     public string RecommendedNextAction { get; set; } = "";
@@ -74,6 +77,7 @@ public class AuditPosition
 
 public static class Program
 {
+    private const string ExpectedWorkbookSha256 = "5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385";
     private static readonly Regex ProhibitedSqlRegex = new(
         @"(?i)\b(INSERT|UPDATE|MERGE|DELETE|TRUNCATE|CREATE|ALTER|DROP|COMMENT|GRANT|REVOKE|CALL|EXEC|EXECUTE|LOCK\s+TABLE|FOR\s+UPDATE)\b",
         RegexOptions.Compiled);
@@ -91,7 +95,7 @@ public static class Program
         }
 
         string manifestPath = Path.Combine(repoRoot, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json");
-        string excelJsonPath = Path.Combine(repoRoot, "scratch_excel_59x82.json");
+        string excelJsonPath = GetOption(args, "--excel-json") ?? Path.Combine(repoRoot, "scratch_excel_59x82.json");
         string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
 
         if (!File.Exists(manifestPath))
@@ -128,6 +132,33 @@ public static class Program
         var excelDoc = JsonDocument.Parse(File.ReadAllText(excelJsonPath));
         string workbookSha256 = excelDoc.RootElement.GetProperty("sourceHash").GetString()!;
         var excelRows = excelDoc.RootElement.GetProperty("matrix").EnumerateArray().ToList();
+        var excelHeaders = excelDoc.RootElement.GetProperty("headers").EnumerateArray().Select(h => h.GetString() ?? "").ToList();
+
+        if (!File.Exists(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx")))
+            throw new InvalidDataException("No se encontró el workbook institucional en la raíz del repositorio.");
+        using (var workbookStream = new FileStream(Path.Combine(repoRoot, "Matrices de Riesgos.xlsx"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        using (var sha = SHA256.Create())
+        {
+            string actualWorkbookSha = BitConverter.ToString(sha.ComputeHash(workbookStream)).Replace("-", "").ToLowerInvariant();
+            if (!actualWorkbookSha.Equals(ExpectedWorkbookSha256, StringComparison.OrdinalIgnoreCase) ||
+                !actualWorkbookSha.Equals(workbookSha256, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidDataException($"El workbook o el JSON extraído no corresponde a la fuente oficial. workbook={actualWorkbookSha}; export={workbookSha256}");
+        }
+
+        if (manifestFields.Count != 82 || excelHeaders.Count != 82 || excelRows.Count != 59)
+            throw new InvalidDataException($"Universo fuente inválido: manifest={manifestFields.Count}, headers={excelHeaders.Count}, riesgos={excelRows.Count}.");
+
+        var labelsMatchManifest = manifestFields.Select(f => f.GetProperty("label").GetString() ?? "").SequenceEqual(excelHeaders, StringComparer.Ordinal);
+        if (!labelsMatchManifest)
+            throw new InvalidDataException("Los encabezados del workbook no coinciden exactamente con las 82 etiquetas del manifest canónico.");
+        if (!string.Equals(manifestFields[2].GetProperty("label").GetString(), "Área", StringComparison.Ordinal))
+            throw new InvalidDataException("El manifest canónico debe identificar el Campo 03 exactamente como Área.");
+
+        Console.WriteLine("AUDIT_FIELD_COUNT=82");
+        Console.WriteLine("AUDIT_FIELD_LABELS_VS_MANIFEST=82/82");
+        Console.WriteLine("AUDIT_FIELD_LABELS_VS_XLSX=82/82");
+        Console.WriteLine("FIELD_03_LABEL_EXACT=Área");
+        Console.WriteLine("ROP_CUMP_59_FIELD_03_EXCEL=" + excelRows.Single(r => r.GetProperty("riskCode").GetString() == "ROP-CUMP-59").GetProperty("cells")[2].GetProperty("textValue").GetString());
 
         // Configuración de base de datos
         var config = new ConfigurationBuilder()
@@ -193,6 +224,19 @@ public static class Program
             }
         }
 
+        bool productionIdentityMatches = dbName.Equals("HPPROD1", StringComparison.OrdinalIgnoreCase) &&
+            serviceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+            instanceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+            currentSchema.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase) &&
+            sessionUser.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase);
+        if (!productionIdentityMatches)
+        {
+            await using var rollbackUnexpectedTarget = new OracleCommand("ROLLBACK", conn);
+            await rollbackUnexpectedTarget.ExecuteNonQueryAsync();
+            Console.Error.WriteLine($"FATAL: Identidad Oracle no autorizada para la auditoría. DB_NAME={dbName}; SERVICE_NAME={serviceName}; INSTANCE_NAME={instanceName}; CURRENT_SCHEMA={currentSchema}; SESSION_USER={sessionUser}. Transacción read-only cerrada con ROLLBACK.");
+            return 3;
+        }
+
         // 3. Extracción de riesgos, evaluaciones y proyecciones
         var dbRisks = new Dictionary<string, (long id, string code, string name, string desc)>(StringComparer.OrdinalIgnoreCase);
         await using (var cmd = new OracleCommand("SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, NVL(RIE_DESCRIPCION, '') FROM RL_MR_RIESGOS", conn))
@@ -251,26 +295,28 @@ public static class Program
         }
 
         // Extracción de señales de alerta vinculadas por evaluación
-        var dbAlertsByEva = new Dictionary<long, List<string>>();
-        await using (var cmd = new OracleCommand("SELECT ALE_EVALUACION_ID, ALE_INDICADOR FROM RL_MR_SENALES_ALERTA ORDER BY ALE_EVALUACION_ID, ALE_ID", conn))
+        var dbAlertsByEva = new Dictionary<long, List<(long id, string indicator, DateTime? firedAt)>>();
+        await using (var cmd = new OracleCommand("SELECT ALE_ID, ALE_EVALUACION_ID, ALE_INDICADOR, ALE_FECHA_DISPARO FROM RL_MR_SENALES_ALERTA ORDER BY ALE_EVALUACION_ID, ALE_ID", conn))
         await using (var r = await cmd.ExecuteReaderAsync())
         {
             while (await r.ReadAsync())
             {
-                long eId = r.GetInt64(0);
-                string ind = r.GetString(1).Trim();
+                long alertId = r.GetInt64(0);
+                long eId = r.GetInt64(1);
+                string ind = r.GetString(2).Trim();
+                DateTime? firedAt = r.IsDBNull(3) ? null : r.GetDateTime(3);
                 if (!dbAlertsByEva.TryGetValue(eId, out var list))
                 {
-                    list = new List<string>();
+                    list = new List<(long, string, DateTime?)>();
                     dbAlertsByEva[eId] = list;
                 }
-                list.Add(ind);
+                list.Add((alertId, ind, firedAt));
             }
         }
 
         // Extracción de controles (esperado 0)
-        var dbControlsByEva = new Dictionary<long, List<(string tipo, string desc, decimal efectividad, string estado)>>();
-        await using (var cmd = new OracleCommand("SELECT CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, NVL(CON_EFECTIVIDAD_MONITOREO, 0), NVL(CON_ESTADO_MONITOREO, '') FROM RL_MR_CONTROLES_RIESGO ORDER BY CON_EVALUACION_ID, CON_ID", conn))
+        var dbControlsByEva = new Dictionary<long, List<(string tipo, string desc, decimal efectividad, string estado, string automatizacion)>>();
+        await using (var cmd = new OracleCommand("SELECT CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, NVL(CON_EFECTIVIDAD_MONITOREO, 0), NVL(CON_ESTADO_MONITOREO, ''), NVL(CON_AUTOMATIZACION, '') FROM RL_MR_CONTROLES_RIESGO ORDER BY CON_EVALUACION_ID, CON_ID", conn))
         await using (var r = await cmd.ExecuteReaderAsync())
         {
             while (await r.ReadAsync())
@@ -280,12 +326,13 @@ public static class Program
                 string desc = r.GetString(2).Trim();
                 decimal ef = r.GetDecimal(3);
                 string est = r.GetString(4).Trim();
+                string auto = r.GetString(5).Trim();
                 if (!dbControlsByEva.TryGetValue(eId, out var list))
                 {
-                    list = new List<(string, string, decimal, string)>();
+                    list = new List<(string, string, decimal, string, string)>();
                     dbControlsByEva[eId] = list;
                 }
-                list.Add((tipo, desc, ef, est));
+                list.Add((tipo, desc, ef, est, auto));
             }
         }
 
@@ -371,6 +418,7 @@ public static class Program
 
                 string label = manifestField.GetProperty("label").GetString()!;
                 string canonicalKey = manifestField.GetProperty("canonicalKey").GetString()!;
+                string currentKey = manifestField.TryGetProperty("currentKey", out var currentKeyElement) ? currentKeyElement.GetString() ?? "" : "";
                 string functionalBlock = manifestField.GetProperty("functionalBlock").GetString()!;
                 int blockNumber = manifestField.GetProperty("bloqueNum").GetInt32();
                 string source = manifestField.GetProperty("source").GetString()!;
@@ -398,6 +446,7 @@ public static class Program
                     FieldNumber = f,
                     FieldLabel = label,
                     CanonicalKey = canonicalKey,
+                    CurrentKey = currentKey,
                     FunctionalBlock = functionalBlock,
                     BlockNumber = blockNumber,
                     Source = source,
@@ -407,8 +456,8 @@ public static class Program
                     ExcelRaw = excelRaw,
                     ExcelFormula = excelFormula,
                     ExcelCachedResult = excelCachedResult,
-                    OperationalAuthority = (f >= 70 && f <= 82),
-                    PreserveDbValue = (f >= 70 && f <= 82)
+                    OperationalAuthority = manifestField.TryGetProperty("preserveExistingOperationalValue", out var preserveElement) && preserveElement.ValueKind == JsonValueKind.True,
+                    PreserveDbValue = manifestField.TryGetProperty("preserveExistingOperationalValue", out var preserveExistingElement) && preserveExistingElement.ValueKind == JsonValueKind.True
                 };
 
                 // Normalización de texto Excel
@@ -449,40 +498,35 @@ public static class Program
                         pos.SemanticEqual = pos.NormalizedEqual;
                         break;
 
-                    case 3: // Proceso / Área
+                    case 3: // Área (Excel Col C; manifest currentKey)
                     case 5: // Tipo de Riesgo
                     case 6: // Procedimiento
                     case 7: // Objetivo(s) Estratégico(s)
                     case 15: // Régimen afectado
                     case 16: // Transversalidad
                     case 32: // Nivel de Automatización de los Controles
-                        pos.DbSource = "RL_MR_RIESGOS (COLUMNA_NO_IMPLEMENTADA_EN_SCHEMA)";
-                        pos.DbRaw = "";
-                        pos.DbNormalized = "";
-                        pos.DbRecordCount = 0;
-                        pos.Applies = true;
-                        pos.ApplicabilityReason = "METADATO_DESCRIPTIVO_INSTITUCIONAL";
-                        pos.TechnicalMappingStatus = "BROKEN";
-                        pos.SecondaryFlags.Add("MISSING_PERSISTENCE_MAPPING");
-                        pos.SecondaryFlags.Add("SCHEMA_DRIFT");
-
-                        if (!string.IsNullOrWhiteSpace(pos.ExcelNormalized))
+                        pos.DbSource = f == 32 ? "RL_MR_CONTROLES_RIESGO.CON_AUTOMATIZACION" : $"EVA_DATOS_JSON.{currentKey}";
+                        if (f == 32)
                         {
-                            pos.PrimaryClassification = "MISSING_IN_DB";
-                            pos.ReasonCode = "MISSING_PERSISTENCE_MAPPING";
-                            pos.RecommendedNextAction = "FIX_MAPPING";
-                            pos.Severity = "ERROR";
+                            var automationValues = hasDbEva && dbControlsByEva.TryGetValue(dbEva.evaId, out var controlsForAutomation)
+                                ? controlsForAutomation.Select(c => NormalizarTexto(c.automatizacion)).Where(v => v.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(v => v, StringComparer.OrdinalIgnoreCase).ToList()
+                                : new List<string>();
+                            pos.StructuredDbItems = automationValues;
+                            pos.DbRaw = string.Join("\n", automationValues);
+                            pos.DbRecordCount = automationValues.Count;
                         }
                         else
                         {
-                            pos.PrimaryClassification = "LEGITIMATELY_BLANK_IN_EXCEL";
-                            pos.ReasonCode = "BASELINE_BLANK_AND_UNMAPPED";
-                            pos.RecommendedNextAction = "NO_ACTION";
-                            pos.Severity = "INFO";
+                            JsonElement mappedValue = default;
+                            bool hasMappedValue = hasDbEva && !string.IsNullOrWhiteSpace(currentKey) && dbEva.datosJson.TryGetProperty(currentKey, out mappedValue) && mappedValue.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined;
+                            pos.DbRaw = hasMappedValue ? mappedValue.ToString() : "";
+                            pos.DbRecordCount = hasMappedValue ? 1 : 0;
                         }
-                        pos.RawEqual = false;
-                        pos.NormalizedEqual = false;
-                        pos.SemanticEqual = false;
+                        pos.DbNormalized = NormalizarTexto(pos.DbRaw);
+                        pos.Applies = true;
+                        pos.ApplicabilityReason = f == 32 ? "CONTROL_AUTOMATION_RELATION" : "PERSISTED_EVALUATION_JSON_KEY";
+                        pos.TechnicalMappingStatus = f == 32 ? "VALID_RELATION" : "VALID_JSON";
+                        EvaluarCoincidenciaTexto(pos);
                         break;
 
                     case 4: // Área Consolidada
@@ -740,6 +784,12 @@ public static class Program
                         pos.Applies = true;
                         pos.ApplicabilityReason = "ESTRATEGIA_INSTITUCIONAL_RESPUESTA";
                         EvaluarCoincidenciaTexto(pos);
+                        if (pos.PrimaryClassification == "DIFFERENT")
+                        {
+                            pos.ReasonCode = "CATALOG_SOURCE_CONFLICT_RESPONSE_RISK";
+                            pos.RecommendedNextAction = "FIX_CATALOG";
+                            pos.EvidenceReference = "Matriz Consolidada/Listas vs Instructivo; targetBlock=3";
+                        }
                         break;
 
                     // BLOQUE 4: MITIGACIÓN (40-49)
@@ -849,9 +899,17 @@ public static class Program
                         pos.DbSource = "RL_MR_SENALES_ALERTA (ALE_INDICADOR)";
                         pos.Applies = true;
                         pos.ApplicabilityReason = "SENALES_ALERTA_MONITOREO";
-                        var alerts = hasDbEva ? dbAlertsByEva.GetValueOrDefault(dbEva.evaId) ?? new List<string>() : new List<string>();
+                        var alertRecords = hasDbEva ? dbAlertsByEva.GetValueOrDefault(dbEva.evaId) ?? new List<(long id, string indicator, DateTime? firedAt)>() : new List<(long id, string indicator, DateTime? firedAt)>();
+                        var alerts = alertRecords.Select(a => a.indicator).ToList();
                         pos.DbRecordCount = alerts.Count;
                         pos.StructuredDbItems = alerts;
+                        string initialBaselineRule = manifestField.GetProperty("initialBaselineImportRule").GetString() ?? "";
+                        string subsequentReconciliationRule = manifestField.GetProperty("subsequentReconciliationRule").GetString() ?? "";
+                        string excelNullBehavior = manifestField.GetProperty("excelNullBehavior").GetString() ?? "";
+                        bool preserveOperationalAlerts = pos.OperationalAuthority && subsequentReconciliationRule.Contains("PRESERVE_OPERATIONAL_DB", StringComparison.OrdinalIgnoreCase);
+                        bool keepOperationalAlertsForExcelNull = excelNullBehavior.Contains("KEEP_EXISTING_DB_RECORDS", StringComparison.OrdinalIgnoreCase);
+                        pos.OperationalAuthoritySource = preserveOperationalAlerts ? "PRODUCTION" : "";
+                        pos.NewnessEvidence = preserveOperationalAlerts ? "CONTRACT_AUTHORITY_RULE" : "";
 
                         // Parsear ítems del Excel (lista enumerada)
                         var excelAlertItems = ParseEnumeratedList(pos.ExcelRaw);
@@ -872,10 +930,10 @@ public static class Program
                         }
                         else if (alerts.Count > 0 && excelAlertItems.Count == 0)
                         {
-                            pos.PrimaryClassification = "DB_HAS_NEWER_OPERATIONAL_DATA";
-                            pos.ReasonCode = "OPERATIONAL_ALERTS_REGISTERED_IN_DB";
-                            pos.RecommendedNextAction = "PRESERVE_PRODUCTION";
-                            pos.Severity = "WARNING";
+                            pos.PrimaryClassification = preserveOperationalAlerts && keepOperationalAlertsForExcelNull ? "DB_HAS_NEWER_OPERATIONAL_DATA" : "DIFFERENT";
+                            pos.ReasonCode = preserveOperationalAlerts && keepOperationalAlertsForExcelNull ? "OPERATIONAL_ALERTS_REGISTERED_IN_DB" : "OPERATIONAL_ALERTS_CONFLICT_WITH_EXCEL_NULL_POLICY";
+                            pos.RecommendedNextAction = preserveOperationalAlerts && keepOperationalAlertsForExcelNull ? "PRESERVE_PRODUCTION" : "DATA_REMEDIATION_REQUIRED";
+                            pos.Severity = preserveOperationalAlerts && keepOperationalAlertsForExcelNull ? "WARNING" : "ERROR";
                             pos.RawEqual = false;
                             pos.NormalizedEqual = false;
                             pos.SemanticEqual = false;
@@ -884,8 +942,9 @@ public static class Program
                         {
                             pos.PrimaryClassification = "MISSING_IN_DB";
                             pos.ReasonCode = "EXCEL_ALERTS_NOT_IN_DB";
-                            pos.RecommendedNextAction = "IMPORT_BASELINE";
-                            pos.Severity = "ERROR";
+                            bool baselineCanImport = initialBaselineRule.StartsWith("IMPORT_IF_NOT_EMPTY", StringComparison.OrdinalIgnoreCase);
+                            pos.RecommendedNextAction = baselineCanImport ? "IMPORT_BASELINE" : "FIX_MAPPING";
+                            pos.Severity = baselineCanImport ? "ERROR" : "CRITICAL";
                             pos.RawEqual = false;
                             pos.NormalizedEqual = false;
                             pos.SemanticEqual = false;
@@ -906,10 +965,10 @@ public static class Program
                             }
                             else
                             {
-                                pos.PrimaryClassification = "DIFFERENT";
-                                pos.ReasonCode = "ALERT_ITEMS_DIFFER";
-                                pos.RecommendedNextAction = "DATA_REMEDIATION_REQUIRED";
-                                pos.Severity = "ERROR";
+                                pos.PrimaryClassification = preserveOperationalAlerts ? "DB_HAS_NEWER_OPERATIONAL_DATA" : "DIFFERENT";
+                                pos.ReasonCode = preserveOperationalAlerts ? "OPERATIONAL_ALERTS_PRESERVED_BY_CONTRACT" : "ALERT_ITEMS_DIFFER";
+                                pos.RecommendedNextAction = preserveOperationalAlerts ? "PRESERVE_PRODUCTION" : "DATA_REMEDIATION_REQUIRED";
+                                pos.Severity = preserveOperationalAlerts ? "WARNING" : "ERROR";
                                 pos.SemanticEqual = false;
                                 pos.NormalizedEqual = false;
                                 pos.RawEqual = false;
@@ -1024,6 +1083,9 @@ public static class Program
         int actualPositions = auditPositions.Count;
         int uniqueKeys = auditPositions.Select(p => p.AuditKey).Distinct().Count();
         int duplicateKeys = actualPositions - uniqueKeys;
+        int unclassifiedPositions = auditPositions.Count(p => string.IsNullOrWhiteSpace(p.PrimaryClassification));
+        int unexplainedPositions = auditPositions.Count(p => p.PrimaryClassification != "MATCH" &&
+            (string.IsNullOrWhiteSpace(p.ReasonCode) || string.IsNullOrWhiteSpace(p.RecommendedNextAction)));
 
         // SUMATORIAS GLOBALES
         int matchCount = auditPositions.Count(p => p.PrimaryClassification == "MATCH");
@@ -1041,9 +1103,10 @@ public static class Program
         int calcDiff = auditPositions.Where(p => p.PrimaryClassification == "CALCULATED_FIELD").Count(p => p.CalculationParity == "DIFFERENT");
         int calcMissing = auditPositions.Where(p => p.PrimaryClassification == "CALCULATED_FIELD").Count(p => p.CalculationParity == "MISSING_IN_DB");
         int calcNotEval = auditPositions.Where(p => p.PrimaryClassification == "CALCULATED_FIELD").Count(p => p.CalculationParity == "NOT_EVALUABLE");
+        int calcParityTotal = calcMatch + calcDiff + calcMissing + calcNotEval;
 
         // GENERACIÓN DE ARTEFACTOS LOCALES EN %TEMP%
-        string runId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string runId = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff");
         string tempDir = Path.Combine(Path.GetTempPath(), $"RIESGO_LAVADO_BLOCK2_AUDIT_{runId}");
         Directory.CreateDirectory(tempDir);
 
@@ -1058,6 +1121,10 @@ public static class Program
         string conflictsPath = Path.Combine(tempDir, "data_conflicts.csv");
         string defectsPath = Path.Combine(tempDir, "technical_defects.csv");
         string riskInventoryPath = Path.Combine(tempDir, "production_risk_inventory.csv");
+        string field70AuthorityPath = Path.Combine(tempDir, "field70_operational_authority.csv");
+        string field39CatalogPath = Path.Combine(tempDir, "field39_catalog_conflicts.csv");
+        string field03ReauditPath = Path.Combine(tempDir, "field03_reaudit.csv");
+        string crosstabPath = Path.Combine(tempDir, "classification_action_crosstab.csv");
 
         // Guardar full json
         File.WriteAllText(fullJsonPath, JsonSerializer.Serialize(auditPositions, new JsonSerializerOptions { WriteIndented = true }));
@@ -1134,7 +1201,7 @@ public static class Program
 
         // Operational Values to Preserve CSV
         var opLines = new List<string> { "RISK_CODE,FIELD_NUMBER,FIELD_LABEL,EXCEL_VALUE,PRODUCTION_VALUE,AUTHORITY_REASON,PRESERVE_DB" };
-        foreach (var p in auditPositions.Where(p => p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA" || p.OperationalAuthority).OrderBy(p => p.FieldNumber).ThenBy(p => p.RiskNo))
+        foreach (var p in auditPositions.Where(p => p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA" && p.OperationalAuthority).OrderBy(p => p.FieldNumber).ThenBy(p => p.RiskNo))
         {
             opLines.Add($"\"{p.RiskCode}\",{p.FieldNumber},\"{EscapeCsv(p.FieldLabel)}\",\"{EscapeCsv(p.ExcelNormalized)}\",\"{EscapeCsv(p.DbNormalized)}\",\"{p.ReasonCode}\",true");
         }
@@ -1150,7 +1217,7 @@ public static class Program
 
         // Data Conflicts CSV
         var conflictLines = new List<string> { "RISK_CODE,FIELD_NUMBER,FIELD_LABEL,EXCEL_VALUE,DB_VALUE,REASON_CODE,RECOMMENDED_ACTION" };
-        foreach (var p in auditPositions.Where(p => p.PrimaryClassification == "DIFFERENT").OrderBy(p => p.FieldNumber).ThenBy(p => p.RiskNo))
+        foreach (var p in auditPositions.Where(p => p.PrimaryClassification == "DIFFERENT" && p.RecommendedNextAction == "DATA_REMEDIATION_REQUIRED").OrderBy(p => p.FieldNumber).ThenBy(p => p.RiskNo))
         {
             conflictLines.Add($"\"{p.RiskCode}\",{p.FieldNumber},\"{EscapeCsv(p.FieldLabel)}\",\"{EscapeCsv(p.ExcelNormalized)}\",\"{EscapeCsv(p.DbNormalized)}\",\"{p.ReasonCode}\",\"{p.RecommendedNextAction}\"");
         }
@@ -1174,8 +1241,35 @@ public static class Program
         }
         File.WriteAllLines(riskInventoryPath, invLines, Encoding.UTF8);
 
+        var field70Lines = new List<string> { "RISK_CODE,SELECTED_EVALUATION_ID,CLASS_BEFORE,CLASS_AFTER,EXCEL_STRUCTURED_ITEMS,DB_STRUCTURED_ITEMS,ALE_ID,ALE_INDICADOR,ALE_FECHA_DISPARO,AUTHORITY_REASON,NEXT_ACTION" };
+        foreach (var p in auditPositions.Where(p => p.FieldNumber == 70 && p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA").OrderBy(p => p.RiskCode, StringComparer.Ordinal))
+        {
+            var records = dbAlertsByEva.GetValueOrDefault(p.SelectedEvaluationId) ?? new List<(long id, string indicator, DateTime? firedAt)>();
+            string classBefore = p.StructuredExcelItems.Count > 0 && !CompareStringLists(p.StructuredExcelItems, p.StructuredDbItems)
+                ? "DIFFERENT"
+                : "DB_HAS_NEWER_OPERATIONAL_DATA";
+            foreach (var alert in records)
+                field70Lines.Add($"\"{p.RiskCode}\",{p.SelectedEvaluationId},\"{classBefore}\",\"{p.PrimaryClassification}\",\"{EscapeCsv(string.Join(" | ", p.StructuredExcelItems))}\",\"{EscapeCsv(string.Join(" | ", p.StructuredDbItems))}\",{alert.id},\"{EscapeCsv(alert.indicator)}\",\"{alert.firedAt?.ToString("O", CultureInfo.InvariantCulture) ?? ""}\",\"CONTRACT_AUTHORITY_RULE\",\"{p.RecommendedNextAction}\"");
+        }
+        File.WriteAllLines(field70AuthorityPath, field70Lines, Encoding.UTF8);
+
+        var field39Lines = new List<string> { "RISK_CODE,FIELD_NUMBER,FIELD_LABEL,EXCEL_VALUE,PRODUCTION_VALUE,CLASSIFICATION,REASON_CODE,NEXT_ACTION,TARGET_BLOCK" };
+        foreach (var p in auditPositions.Where(p => p.FieldNumber == 39 && p.ReasonCode == "CATALOG_SOURCE_CONFLICT_RESPONSE_RISK").OrderBy(p => p.RiskCode, StringComparer.Ordinal))
+            field39Lines.Add($"\"{p.RiskCode}\",39,\"{EscapeCsv(p.FieldLabel)}\",\"{EscapeCsv(p.ExcelRaw)}\",\"{EscapeCsv(p.DbRaw)}\",\"{p.PrimaryClassification}\",\"{p.ReasonCode}\",\"{p.RecommendedNextAction}\",3");
+        File.WriteAllLines(field39CatalogPath, field39Lines, Encoding.UTF8);
+
+        var field03Lines = new List<string> { "RISK_CODE,FIELD_NUMBER,FIELD_LABEL,EXCEL_RAW,PRODUCTION_VALUE,CLASSIFICATION,TECHNICAL_MAPPING_STATUS,REASON_CODE,NEXT_ACTION" };
+        foreach (var p in auditPositions.Where(p => p.FieldNumber == 3).OrderBy(p => p.RiskNo))
+            field03Lines.Add($"\"{p.RiskCode}\",03,\"{EscapeCsv(p.FieldLabel)}\",\"{EscapeCsv(p.ExcelRaw)}\",\"{EscapeCsv(p.DbRaw)}\",\"{p.PrimaryClassification}\",\"{p.TechnicalMappingStatus}\",\"{p.ReasonCode}\",\"{p.RecommendedNextAction}\"");
+        File.WriteAllLines(field03ReauditPath, field03Lines, Encoding.UTF8);
+
+        var crosstabLines = new List<string> { "PRIMARY_CLASSIFICATION,RECOMMENDED_NEXT_ACTION,POSITION_COUNT" };
+        foreach (var group in auditPositions.GroupBy(p => new { p.PrimaryClassification, p.RecommendedNextAction }).OrderBy(g => g.Key.PrimaryClassification).ThenBy(g => g.Key.RecommendedNextAction))
+            crosstabLines.Add($"\"{group.Key.PrimaryClassification}\",\"{group.Key.RecommendedNextAction}\",{group.Count()}");
+        File.WriteAllLines(crosstabPath, crosstabLines, Encoding.UTF8);
+
         // Calcular hashes de todos los artefactos
-        var filesToHash = new[] { fullJsonPath, fullCsvPath, summaryRiskPath, summaryFieldPath, summaryBlockPath, calcParityPath, opPreservePath, baselineImportPath, conflictsPath, defectsPath, riskInventoryPath };
+        var filesToHash = new[] { fullJsonPath, fullCsvPath, summaryRiskPath, summaryFieldPath, summaryBlockPath, calcParityPath, opPreservePath, baselineImportPath, conflictsPath, defectsPath, riskInventoryPath, field70AuthorityPath, field39CatalogPath, field03ReauditPath, crosstabPath };
         var hashes = new Dictionary<string, string>();
         foreach (var fPath in filesToHash)
         {
@@ -1192,10 +1286,10 @@ public static class Program
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("A. IDENTIDAD");
         Console.WriteLine("----------------------------------------------------------------");
-        Console.WriteLine("BRANCH=desarrollo");
-        Console.WriteLine("STARTING_SHA=61e4cb2f0a465f2d848025677dc3ab864515ce0e");
-        Console.WriteLine("ENDING_SHA=61e4cb2f0a465f2d848025677dc3ab864515ce0e");
-        Console.WriteLine("ORIGIN_DESARROLLO_SHA=61e4cb2f0a465f2d848025677dc3ab864515ce0e");
+        Console.WriteLine("BRANCH=" + (Environment.GetEnvironmentVariable("GIT_BRANCH") ?? "desarrollo"));
+        Console.WriteLine("STARTING_SHA=" + (Environment.GetEnvironmentVariable("GIT_STARTING_SHA") ?? "UNSET"));
+        Console.WriteLine("ENDING_SHA=" + (Environment.GetEnvironmentVariable("GIT_ENDING_SHA") ?? "UNSET"));
+        Console.WriteLine("ORIGIN_DESARROLLO_SHA=" + (Environment.GetEnvironmentVariable("GIT_ORIGIN_SHA") ?? "UNSET"));
         Console.WriteLine("BLOCK1_CONTRACT_SHA=61e4cb2f0a465f2d848025677dc3ab864515ce0e");
 
         Console.WriteLine("\n----------------------------------------------------------------");
@@ -1210,6 +1304,17 @@ public static class Program
         Console.WriteLine("EXCEL_RISK_COUNT=59");
         Console.WriteLine("EXCEL_UNIQUE_CODES=59");
         Console.WriteLine("EXCEL_DUPLICATE_CODES=0");
+        Console.WriteLine("FIELD_03_WRONG_VALUE_SOURCE=REPORT_ONLY_BUG");
+        Console.WriteLine("FIELD_03_SOURCE_CORRECTED=PASS");
+        Console.WriteLine("FIELD_03_TECHNICAL_MAPPING_STATUS=VALID_JSON");
+        Console.WriteLine("FIELD_03_MATCH=" + auditPositions.Count(p => p.FieldNumber == 3 && p.PrimaryClassification == "MATCH"));
+        Console.WriteLine("FIELD_03_MISSING=" + auditPositions.Count(p => p.FieldNumber == 3 && p.PrimaryClassification == "MISSING_IN_DB"));
+        Console.WriteLine("FIELD_03_DIFFERENT=" + auditPositions.Count(p => p.FieldNumber == 3 && p.PrimaryClassification == "DIFFERENT"));
+        Console.WriteLine("FIELD_03_OTHER=" + auditPositions.Count(p => p.FieldNumber == 3 && p.PrimaryClassification is not "MATCH" and not "MISSING_IN_DB" and not "DIFFERENT"));
+        Console.WriteLine("AUDIT_FIELD_COUNT=82");
+        Console.WriteLine("AUDIT_FIELD_LABELS_VS_MANIFEST=82/82");
+        Console.WriteLine("AUDIT_FIELD_LABELS_VS_XLSX=82/82");
+        Console.WriteLine("FIELD_03_LABEL_EXACT=Área");
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("C. PRODUCCIÓN");
@@ -1262,6 +1367,8 @@ public static class Program
         Console.WriteLine($"CALCULATED_FIELD={calculatedCount}");
         Console.WriteLine($"NOT_APPLICABLE={notApplicableCount}");
         Console.WriteLine($"CLASSIFICATION_TOTAL={classificationTotal}");
+        Console.WriteLine($"UNCLASSIFIED_POSITIONS={unclassifiedPositions}");
+        Console.WriteLine($"UNEXPLAINED_DIFFERENCES={unexplainedPositions}");
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("H. CAMPOS CALCULADOS");
@@ -1271,6 +1378,8 @@ public static class Program
         Console.WriteLine($"CALCULATION_PARITY_DIFFERENT={calcDiff}");
         Console.WriteLine($"CALCULATION_PARITY_MISSING_IN_DB={calcMissing}");
         Console.WriteLine($"CALCULATION_PARITY_NOT_EVALUABLE={calcNotEval}");
+        Console.WriteLine($"CALCULATION_PARITY_TOTAL={calcParityTotal}");
+        Console.WriteLine($"CALCULATION_PARITY_RECONCILED={(calcParityTotal == calculatedCount ? "PASS" : "FAIL")}");
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("I. DEFECTOS Y TAXONOMÍA");
@@ -1280,6 +1389,15 @@ public static class Program
         int implDrift = auditPositions.Count(p => p.SecondaryFlags.Contains("CONTRACT_IMPLEMENTATION_DRIFT"));
         int dataAbsence = auditPositions.Count(p => p.ReasonCode == "CHILD_COLLECTION_EMPTY");
         int validEmpty = auditPositions.Count(p => p.ReasonCode == "NO_CONTROLS_CANONICAL_MATCH" || p.ReasonCode == "NO_CONTROLS_BASELINE_OR_DB");
+        int falseControlImports = auditPositions.Count(p => (p.FieldNumber is 20 or 24 or 28) &&
+            NormalizarTexto(p.ExcelRaw).Equals("No hay", StringComparison.OrdinalIgnoreCase) && p.RecommendedNextAction == "IMPORT_BASELINE");
+        int falseScaleConflicts = auditPositions.Count(p => (p.FieldNumber is 21 or 25 or 29) &&
+            p.PrimaryClassification == "DIFFERENT" && p.SemanticEqual);
+        bool field70AuthorityPass = auditPositions.Where(p => p.FieldNumber == 70).All(p => p.OperationalAuthority) &&
+            auditPositions.Where(p => p.FieldNumber == 70 && p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA")
+                .All(p => p.RecommendedNextAction == "PRESERVE_PRODUCTION" && p.OperationalAuthoritySource == "PRODUCTION" && p.NewnessEvidence == "CONTRACT_AUTHORITY_RULE");
+        bool field39DeferredPass = auditPositions.Where(p => p.FieldNumber == 39 && p.ReasonCode == "CATALOG_SOURCE_CONFLICT_RESPONSE_RISK")
+            .All(p => p.PrimaryClassification == "DIFFERENT" && p.RecommendedNextAction == "FIX_CATALOG" && p.EvidenceReference.Contains("targetBlock=3", StringComparison.Ordinal));
 
         var reqByField = auditPositions
             .Where(p => p.SecondaryFlags.Contains("REQUIRED_VALUE_MISSING"))
@@ -1288,18 +1406,44 @@ public static class Program
             .ToList();
 
         Console.WriteLine($"TECHNICAL_MAPPING_ERRORS={techMapping}");
+        Console.WriteLine("TECHNICAL_MAPPING_STATUS_BY_FIELD:");
+        foreach (int fieldNo in new[] { 3, 5, 6, 7, 15, 16, 32 })
+        {
+            var fieldPositions = auditPositions.Where(p => p.FieldNumber == fieldNo).ToList();
+            Console.WriteLine($"FIELD={fieldNo:D2};LABEL={fieldPositions[0].FieldLabel};EXCEL_FILLED_COUNT={fieldPositions.Count(p => !string.IsNullOrWhiteSpace(p.ExcelRaw))};EXCEL_BLANK_COUNT={fieldPositions.Count(p => string.IsNullOrWhiteSpace(p.ExcelRaw))};PERSISTENCE_MAPPING={fieldPositions[0].DbSource};TECHNICAL_MAPPING_STATUS={fieldPositions[0].TechnicalMappingStatus};AFFECTED_POSITIONS={fieldPositions.Count(p => p.TechnicalMappingStatus == "BROKEN")};MISSING_POSITION_COUNT={fieldPositions.Count(p => p.PrimaryClassification == "MISSING_IN_DB")};NEXT_ACTION={string.Join("|", fieldPositions.Select(p => p.RecommendedNextAction).Distinct().OrderBy(a => a, StringComparer.Ordinal))}");
+        }
         Console.WriteLine($"DATA_ABSENCE_CASES={dataAbsence}");
         Console.WriteLine($"VALID_EMPTY_COLLECTIONS={validEmpty}");
         Console.WriteLine($"REQUIRED_VALUES_MISSING={reqMissing}");
         Console.WriteLine($"REQUIRED_VALUES_MISSING_BY_FIELD={string.Join(", ", reqByField)}");
-        Console.WriteLine("REQUIREDNESS_DEMONSTRATION=Fields 03 & 05 are REQUIRED (59+59=118 missing in DB); Fields 06, 07, 15, 16, 32 are OPTIONAL");
+        Console.WriteLine($"FALSE_CONTROL_IMPORT_CANDIDATES={falseControlImports}");
+        Console.WriteLine($"FALSE_SCALE_DATA_CONFLICTS={falseScaleConflicts}");
+        Console.WriteLine("REQUIREDNESS_SOURCE=CANONICAL_MANIFEST");
         Console.WriteLine($"CONTRACT_IMPLEMENTATION_DRIFT={implDrift}");
         Console.WriteLine("INVALID_JSON_COUNT=0");
         Console.WriteLine("CATALOG_SOURCE_CONFLICT_RESPONSE_RISK=YES");
         Console.WriteLine("TARGET_BLOCK=3");
         Console.WriteLine("INTERNAL_SOURCE_CATALOG_CONFLICTS=1 (Matriz Consolidada/Listas vs Instructivo: Evitar/Transferir/Aceptar/Mitigar vs Reducir/Aceptar/Transferir/Evitar)");
-        Console.WriteLine($"DB_VS_EXCEL_CATALOG_CONFLICTS=4 (Campo 39 Respuesta al riesgo)");
-        Console.WriteLine($"DATA_CONFLICTS={differentCount}");
+        int field39Conflicts = auditPositions.Count(p => p.FieldNumber == 39 && p.PrimaryClassification == "DIFFERENT" && p.ReasonCode == "CATALOG_SOURCE_CONFLICT_RESPONSE_RISK");
+        Console.WriteLine($"DB_VS_EXCEL_CATALOG_CONFLICTS={field39Conflicts} (Campo 39 Respuesta al riesgo)");
+        Console.WriteLine($"FIELD_39_CONFLICTS_DEFERRED_TO_BLOCK3={(field39DeferredPass ? $"{field39Conflicts}/{field39Conflicts}" : "FAIL")}");
+        int dataConflictsCount = auditPositions.Count(p => p.PrimaryClassification == "DIFFERENT" && p.RecommendedNextAction == "DATA_REMEDIATION_REQUIRED");
+        Console.WriteLine($"DATA_CONFLICTS={dataConflictsCount}");
+        Console.WriteLine($"FIELD_70_OPERATIONAL_AUTHORITY={(field70AuthorityPass ? "PASS" : "FAIL")}");
+        Console.WriteLine($"FIELD_70_NON_EMPTY_EXCEL_ROWS={auditPositions.Count(p => p.FieldNumber == 70 && !string.IsNullOrWhiteSpace(p.ExcelRaw))}");
+        Console.WriteLine($"FIELD_70_MATCH={auditPositions.Count(p => p.FieldNumber == 70 && p.PrimaryClassification == "MATCH")}");
+        Console.WriteLine($"FIELD_70_DIFFERENT={auditPositions.Count(p => p.FieldNumber == 70 && p.PrimaryClassification == "DIFFERENT")}");
+        Console.WriteLine($"FIELD_70_OPERATIONAL={auditPositions.Count(p => p.FieldNumber == 70 && p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA")}");
+        Console.WriteLine($"FIELD_70_BLANK={auditPositions.Count(p => p.FieldNumber == 70 && p.PrimaryClassification == "LEGITIMATELY_BLANK_IN_EXCEL")}");
+        var field70Manifest = manifestFields[69];
+        Console.WriteLine("FIELD_70_LABEL=" + field70Manifest.GetProperty("label").GetString());
+        Console.WriteLine("FIELD_70_INITIAL_BASELINE_RULE=" + field70Manifest.GetProperty("initialBaselineImportRule").GetString());
+        Console.WriteLine("FIELD_70_SUBSEQUENT_RECONCILIATION_RULE=" + field70Manifest.GetProperty("subsequentReconciliationRule").GetString());
+        Console.WriteLine("FIELD_70_PRESERVE_EXISTING_OPERATIONAL_VALUE=" + field70Manifest.GetProperty("preserveExistingOperationalValue").GetBoolean());
+        Console.WriteLine("FIELD_70_EXCEL_NULL_BEHAVIOR=" + field70Manifest.GetProperty("excelNullBehavior").GetString());
+        Console.WriteLine("FIELD_70_SOURCE=" + field70Manifest.GetProperty("source").GetString());
+        Console.WriteLine("FIELD_70_MODE=" + field70Manifest.GetProperty("mode").GetString());
+        Console.WriteLine("FIELD_70_OPERATIONAL_AUTHORITY=" + (field70AuthorityPass ? "PASS" : "FAIL"));
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("J. PRESERVACIÓN Y RECONCILIACIÓN DE ACCIONES");
@@ -1307,7 +1451,7 @@ public static class Program
         int baselineImportCandidates = auditPositions.Count(p => p.RecommendedNextAction == "IMPORT_BASELINE");
         Console.WriteLine($"OPERATIONAL_VALUES_TO_PRESERVE={auditPositions.Count(p => p.PrimaryClassification == "DB_HAS_NEWER_OPERATIONAL_DATA")}");
         Console.WriteLine($"BASELINE_IMPORT_CANDIDATES={baselineImportCandidates}");
-        Console.WriteLine($"DATA_REMEDIATION_CANDIDATES={differentCount}");
+        Console.WriteLine($"DATA_REMEDIATION_CANDIDATES={dataConflictsCount}");
 
         Console.WriteLine("\nMATRIZ CRUZADA: PRIMARY_CLASSIFICATION × RECOMMENDED_NEXT_ACTION");
         Console.WriteLine("| PRIMARY_CLASSIFICATION | RECOMMENDED_NEXT_ACTION | CONTEO |");
@@ -1363,6 +1507,10 @@ public static class Program
         Console.WriteLine("CLASSIFICATION_ACTION_CROSSTAB=PASS");
         Console.WriteLine("BASELINE_IMPORT_CANDIDATE_COUNT_RECONCILED=PASS");
         Console.WriteLine("CATALOG_SOURCE_CONFLICTS_RECORDED=PASS");
+        Console.WriteLine($"FIELD_03_POSITIONS_REAUDITED={auditPositions.Count(p => p.FieldNumber == 3)}/59");
+        Console.WriteLine($"FALSE_CONTROL_IMPORT_CANDIDATES={falseControlImports}");
+        Console.WriteLine($"FALSE_SCALE_DATA_CONFLICTS={falseScaleConflicts}");
+        Console.WriteLine($"FIELD_DIFFS_CLASSIFIED={(unclassifiedPositions == 0 && unexplainedPositions == 0 ? "100%" : "FAIL")}");
         Console.WriteLine("EXPORT_TOOL_SCOPE_CHECK=PASS");
         Console.WriteLine("READ_ONLY_SQL_POLICY_TEST=PASS");
         Console.WriteLine("PRODUCTION_DML_EXECUTED=0");
@@ -1372,21 +1520,20 @@ public static class Program
         Console.WriteLine("DATABASE_WRITES=0");
 
         Console.WriteLine("\n----------------------------------------------------------------");
-        Console.WriteLine("M. INFORME COMPARATIVO BEFORE / AFTER");
+        Console.WriteLine("M. RESUMEN FINAL DE ESTA EJECUCIÓN");
         Console.WriteLine("----------------------------------------------------------------");
-        Console.WriteLine("| METRIC                         | BEFORE | AFTER | DELTA | EXPLICACIÓN |");
-        Console.WriteLine("|--------------------------------|--------|-------|-------|-------------|");
-        Console.WriteLine($"| MATCH                          |    597 | {matchCount,5} | +{matchCount - 597,2} | +39 normalización escalas (F21: 12, F25: 14, F29: 13) + 12 ausencia canónica \"No hay\" (F20: 2, F24: 6, F28: 4) |");
-        Console.WriteLine($"| MISSING_IN_DB                  |    469 | {missingDbCount,5} |  {missingDbCount - 469,2} | -12 casos \"No hay\" en Excel ahora evalúan como MATCH canónico contra ausencia DB |");
-        Console.WriteLine($"| DIFFERENT                      |    134 | {differentCount,5} |  {differentCount - 134,2} | -39 falsos positivos de escala eliminados por normalización contra Otras Tablas |");
-        Console.WriteLine($"| LEGITIMATELY_BLANK_IN_EXCEL    |   1193 | {legitBlankCount,5} |     0 | Sin cambio; celdas legítimamente en blanco en baseline institucional |");
-        Console.WriteLine($"| DB_HAS_NEWER_OPERATIONAL_DATA  |      0 | {newerOpCount,5} |     0 | Sin cambio; no hay ciclos de monitoreo operativos posteriores en DB |");
-        Console.WriteLine($"| CALCULATED_FIELD               |   2124 | {calculatedCount,5} |     0 | Sin cambio; universo de 36 fórmulas/contadores derivados por riesgo |");
-        Console.WriteLine($"| NOT_APPLICABLE                 |    321 | {notApplicableCount,5} |     0 | Sin cambio; 177 GTIC + 144 mitigación no requerida |");
-        Console.WriteLine($"| TECHNICAL_MAPPING_ERRORS       |    413 | {techMapping,5} |     0 | 59 riesgos × 7 campos sin columna de persistencia ni slot JSON |");
-        Console.WriteLine($"| DATA_CONFLICTS                 |    134 | {differentCount,5} |  {differentCount - 134,3} | Reducción exacta por normalización semántica de escalas institucionales |");
-        Console.WriteLine($"| BASELINE_IMPORT_CANDIDATES     |    471 | {baselineImportCandidates,5} | -330 | Separación de FIX_MAPPING (316) y recálculo fórmulas (2) de importación directa (141) |");
-        Console.WriteLine($"| DATA_REMEDIATION_CANDIDATES    |    134 | {differentCount,5} |  {differentCount - 134,3} | Reconciliado con DATA_CONFLICTS reales |");
+        Console.WriteLine($"MATCH={matchCount}");
+        Console.WriteLine($"MISSING_IN_DB={missingDbCount}");
+        Console.WriteLine($"DIFFERENT={differentCount}");
+        Console.WriteLine($"LEGITIMATELY_BLANK_IN_EXCEL={legitBlankCount}");
+        Console.WriteLine($"DB_HAS_NEWER_OPERATIONAL_DATA={newerOpCount}");
+        Console.WriteLine($"CALCULATED_FIELD={calculatedCount}");
+        Console.WriteLine($"NOT_APPLICABLE={notApplicableCount}");
+        Console.WriteLine($"CLASSIFICATION_TOTAL={classificationTotal}");
+        Console.WriteLine($"TECHNICAL_MAPPING_ERRORS={techMapping}");
+        Console.WriteLine($"REQUIRED_VALUES_MISSING={reqMissing}");
+        Console.WriteLine($"BASELINE_IMPORT_CANDIDATES={baselineImportCandidates}");
+        Console.WriteLine($"DATA_CONFLICTS={dataConflictsCount}");
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("N. ARTEFACTOS");
@@ -1405,6 +1552,10 @@ public static class Program
         Console.WriteLine($"DATA_CONFLICTS=data_conflicts.csv ({hashes["data_conflicts.csv"]})");
         Console.WriteLine($"TECHNICAL_DEFECTS=technical_defects.csv ({hashes["technical_defects.csv"]})");
         Console.WriteLine($"PRODUCTION_RISK_INVENTORY=production_risk_inventory.csv ({hashes["production_risk_inventory.csv"]})");
+        Console.WriteLine($"FIELD_70_OPERATIONAL_AUTHORITY_ARTIFACT=field70_operational_authority.csv ({hashes["field70_operational_authority.csv"]})");
+        Console.WriteLine($"FIELD_39_CATALOG_CONFLICTS_ARTIFACT=field39_catalog_conflicts.csv ({hashes["field39_catalog_conflicts.csv"]})");
+        Console.WriteLine($"FIELD_03_REAUDIT_ARTIFACT=field03_reaudit.csv ({hashes["field03_reaudit.csv"]})");
+        Console.WriteLine($"CLASSIFICATION_ACTION_CROSSTAB_ARTIFACT=classification_action_crosstab.csv ({hashes["classification_action_crosstab.csv"]})");
 
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("O. GIT");
@@ -1418,7 +1569,7 @@ public static class Program
         Console.WriteLine("\n----------------------------------------------------------------");
         Console.WriteLine("P. ESTADO FINAL");
         Console.WriteLine("----------------------------------------------------------------");
-        Console.WriteLine("BLOCK2_STATUS=CLOSED");
+        Console.WriteLine("BLOCK2_STATUS=PENDING_FINAL_GATES");
         Console.WriteLine("NEXT_ACTION=STOP (NO INICIAR BLOQUE 3)");
 
         return 0;
@@ -1476,6 +1627,16 @@ public static class Program
             pos.NormalizedEqual = false;
             pos.SemanticEqual = false;
         }
+    }
+
+    private static string? GetOption(string[] args, string name)
+    {
+        for (int i = 0; i < args.Length - 1; i++)
+        {
+            if (args[i].Equals(name, StringComparison.OrdinalIgnoreCase))
+                return args[i + 1];
+        }
+        return null;
     }
 
     private static void EvaluarCoincidenciaNumerica(AuditPosition pos)

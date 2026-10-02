@@ -1,3 +1,15 @@
+# Estado vigente — Sellado final Bloque 2 (COD) — 2026-10-02
+
+- **Rama/base:** `desarrollo`, inicio `4223d38365aac5d8400a64d6ea3851b2a7545a96`, igual a `origin/desarrollo` al iniciar. Bloque 1 `61e4cb2f0a465f2d848025677dc3ab864515ce0e` y bloque previo `4223d38` alcanzables.
+- **Resultado read-only:** workbook oficial hash verificado; `Matriz Consolidada!A1:CD60`, 59 códigos únicos y 82 etiquetas exactas. Oracle `HPPROD1/hpprod1/hpprod1/RIESGO_LAVADO/RIESGO_LAVADO`; transacción `SET TRANSACTION READ ONLY` + `ROLLBACK`; escrituras 0.
+- **Resultado final:** universo 4,838/4,838, claves duplicadas 0, posiciones inexplicadas 0. Clasificación MATCH 804; MISSING 398; DIFFERENT 91 (87 datos/4 catálogo); blanks 1,096; operacional 4; calculado 2,124; N/A 321. Field 03 `Área`, `Sección de Cumplimiento`, 59/59 MATCH y `VALID_JSON`; mapeos técnicos reauditorados sin defectos (`TECHNICAL_MAPPING_ERRORS=0`). `REQUIRED_VALUES_MISSING=59` en Campo 05, manifest required, mapeo válido. `BASELINE_IMPORT_CANDIDATES=398`; falsos candidatos control/escala 0.
+- **Políticas:** Campo 70: 23 Excel no vacías, 19 MATCH, 4 de producción preservados conforme al manifest; 0 DIFFERENT. Campo 39: cuatro `DIFFERENT/FIX_CATALOG`, diferidos a Bloque 3 (`4/4`). Bloque 3 no iniciado.
+- **Artefactos:** RUN_ID `20261002_142828_041` fuera de Git. Evidencias sanitizadas, hashes, filas y tests en el informe del Bloque 2.
+- **Pruebas focalizadas:** contrato 17/17; auditoría forense 15/15; validador contractual 82/82; build auditor 0 errores/14 warnings. Auditoría Oracle final completa PASS read-only.
+- **Pendiente de cierre Git:** terminar validador de enlaces, `git diff --check`, revisar diff y stagear solo archivos de esta intervención; commit normal y push `origin/desarrollo`, verificar HEAD=origin. Cambios preexistentes ajenos preservados sin editar/stagear: `DatabaseEnvironmentGuard`/test, `frontend/rl-app/tsconfig.json`, scratch y untracked iniciales.
+- **Estado de fase:** técnicamente reconciliado; cierre formal condicionado al cierre Git/publicación de esta intervención. No iniciar Bloque 3.
+
+---
 # Estado vigente — Pase Correctivo Final Bloque 2: Semántica Institucional (2026-10-02)
 
 - Rama: `desarrollo`. Baseline SHA: `66dad25c96b2bffc0b357c006ed42896c971919e`.

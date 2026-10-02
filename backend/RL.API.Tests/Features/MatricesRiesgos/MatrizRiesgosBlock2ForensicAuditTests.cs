@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Text.Json;
 using Xunit;
 
 namespace RL.API.Tests.Features.MatricesRiesgos;
@@ -83,8 +84,8 @@ public class MatrizRiesgosBlock2ForensicAuditTests
         // ExecuteNonQueryAsync sólo puede usarse para control de sesión (SET TRANSACTION READ ONLY y ROLLBACK)
         var nonQueryMatches = Regex.Matches(code, @"\.ExecuteNonQueryAsync\s*\(\s*\)");
 
-        // Debe haber exactamente 2 (SET TRANSACTION READ ONLY y ROLLBACK)
-        Assert.Equal(2, nonQueryMatches.Count);
+        // Debe haber un SET READ ONLY y un ROLLBACK por salida normal o identidad inválida.
+        Assert.Equal(3, nonQueryMatches.Count);
     }
 
     [Fact]
@@ -133,7 +134,120 @@ public class MatrizRiesgosBlock2ForensicAuditTests
         Assert.Contains("pos.DbRaw = \"No hay\";", code, StringComparison.Ordinal);
         Assert.Contains("pos.ReasonCode = \"NO_CONTROLS_CANONICAL_MATCH\";", code, StringComparison.Ordinal);
         Assert.Contains("pos.ReasonCode = \"EFFECTIVENESS_SCALE_SEMANTIC_MATCH\";", code, StringComparison.Ordinal);
-        Assert.Contains("pos.ReasonCode = \"MISSING_PERSISTENCE_MAPPING\";", code, StringComparison.Ordinal);
-        Assert.Contains("pos.RecommendedNextAction = \"FIX_MAPPING\";", code, StringComparison.Ordinal);
+        Assert.Contains("EVA_DATOS_JSON.{currentKey}", code, StringComparison.Ordinal);
+        Assert.Contains("VALID_JSON", code, StringComparison.Ordinal);
+        Assert.Contains("VALID_RELATION", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Field03_LabelMustBeArea()
+    {
+        string root = FindRepoRoot();
+        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json")));
+        Assert.Equal("Área", manifest.RootElement[2].GetProperty("label").GetString());
+    }
+
+    [Fact]
+    public void RopCump59_Field03MustComeFromWorkbookColumnC()
+    {
+        string root = FindRepoRoot();
+        string exporter = File.ReadAllText(Path.Combine(root, "tools", "export_excel_matrix_82.js"));
+        Assert.Contains("fieldNumber: c", exporter, StringComparison.Ordinal);
+        Assert.Contains("row.getCell(c)", exporter, StringComparison.Ordinal);
+        Assert.Contains("const cell = row.getCell(c)", exporter, StringComparison.Ordinal);
+        Assert.Contains("const field03 = controlRisk?.cells.find(c => c.fieldNumber === 3)?.textValue", exporter, StringComparison.Ordinal);
+        Assert.Contains("field03 !== 'Sección de Cumplimiento'", exporter, StringComparison.Ordinal);
+        Assert.DoesNotContain("Macroproceso", exporter, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AuditLabelsMustExactlyMatchCanonicalManifest_82Of82()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("SequenceEqual(excelHeaders, StringComparer.Ordinal)", code, StringComparison.Ordinal);
+        Assert.Contains("manifestFields.Count != 82 || excelHeaders.Count != 82 || excelRows.Count != 59", code, StringComparison.Ordinal);
+        Assert.Contains("labelsMatchManifest", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AuditLabelsMustExactlyMatchWorkbookHeaders_82Of82()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("var excelHeaders = excelDoc.RootElement.GetProperty(\"headers\")", code, StringComparison.Ordinal);
+        Assert.Contains("SequenceEqual(excelHeaders, StringComparer.Ordinal)", code, StringComparison.Ordinal);
+        Assert.Contains("Los encabezados del workbook no coinciden exactamente", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void UnknownWorkbookFieldSubstitutionMustFail()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("Los encabezados del workbook no coinciden exactamente", code, StringComparison.Ordinal);
+        Assert.Contains("throw new InvalidDataException", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Field70DifferentOperationalValueMustFollowManifestPreservationPolicy()
+    {
+        string root = FindRepoRoot();
+        using var manifest = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json")));
+        JsonElement field70 = manifest.RootElement[69];
+        Assert.True(field70.GetProperty("preserveExistingOperationalValue").GetBoolean());
+        Assert.Contains("PRESERVE_OPERATIONAL_DB", field70.GetProperty("subsequentReconciliationRule").GetString(), StringComparison.Ordinal);
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("OPERATIONAL_ALERTS_PRESERVED_BY_CONTRACT", code, StringComparison.Ordinal);
+        Assert.Contains("preserveOperationalAlerts ? \"PRESERVE_PRODUCTION\"", code, StringComparison.Ordinal);
+        Assert.Contains("CONTRACT_AUTHORITY_RULE", code, StringComparison.Ordinal);
+        Assert.Contains("initialBaselineImportRule", code, StringComparison.Ordinal);
+        Assert.Contains("subsequentReconciliationRule", code, StringComparison.Ordinal);
+        Assert.Contains("excelNullBehavior", code, StringComparison.Ordinal);
+        Assert.Contains("p.PrimaryClassification == \"DB_HAS_NEWER_OPERATIONAL_DATA\" && p.OperationalAuthority", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Field39CatalogConflictMustNotRecommendDirectDataRemediationBeforeBlock3()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("CATALOG_SOURCE_CONFLICT_RESPONSE_RISK", code, StringComparison.Ordinal);
+        Assert.Contains("pos.RecommendedNextAction = \"FIX_CATALOG\"", code, StringComparison.Ordinal);
+        Assert.Contains("targetBlock=3", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadOnlyAuditMustRejectWriteSql()
+    {
+        Read_Only_Sql_Policy_Test_Must_Pass();
+    }
+
+    [Fact]
+    public void AuditUniverseMustContain4838UniquePositions()
+    {
+        Block2_Universes_And_Gates_Formulas_Must_Be_Valid();
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("int expectedPositions = 4838", code, StringComparison.Ordinal);
+        Assert.Contains("Distinct().Count()", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EveryPositionMustHavePrimaryClassification()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("string.IsNullOrWhiteSpace(p.PrimaryClassification)", code, StringComparison.Ordinal);
+        Assert.Contains("UNCLASSIFIED_POSITIONS", code, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EveryNonMatchIssueMustHaveReasonAndNextAction()
+    {
+        string root = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(root, "tools", "AuditMatricesExcelVsProduction", "Program.cs"));
+        Assert.Contains("string.IsNullOrWhiteSpace(p.ReasonCode) || string.IsNullOrWhiteSpace(p.RecommendedNextAction)", code, StringComparison.Ordinal);
+        Assert.Contains("UNEXPLAINED_DIFFERENCES", code, StringComparison.Ordinal);
     }
 }

@@ -88,6 +88,12 @@ async function exportExcel() {
     });
   }
 
+  const controlRisk = matrix.find(r => r.riskCode === 'ROP-CUMP-59');
+  const field03 = controlRisk?.cells.find(c => c.fieldNumber === 3)?.textValue;
+  if (field03 !== 'Sección de Cumplimiento') {
+    throw new Error(`ROP-CUMP-59 FIELD_03 must be read from workbook Column C as "Sección de Cumplimiento"; got "${field03 ?? ''}".`);
+  }
+
   const outputPath = path.join(repoRoot, 'scratch_excel_59x82.json');
   fs.writeFileSync(outputPath, JSON.stringify({
     sourceHash: actualHash,
@@ -98,6 +104,7 @@ async function exportExcel() {
     matrix: matrix
   }, null, 2), 'utf8');
 
+  console.log(`FIELD_03_SOURCE_CHECK=PASS (${field03})`);
   console.log(`EXPORT_SUCCESS: 59 risks x 82 fields saved to ${outputPath}`);
 }
 
