@@ -1,14 +1,17 @@
 # Estado vigente — Sellado final Bloque 2 (COD) — 2026-10-02
 
-- **Rama/base:** `desarrollo`, inicio `4223d38365aac5d8400a64d6ea3851b2a7545a96`, igual a `origin/desarrollo` al iniciar. Bloque 1 `61e4cb2f0a465f2d848025677dc3ab864515ce0e` y bloque previo `4223d38` alcanzables.
-- **Resultado read-only:** workbook oficial hash verificado; `Matriz Consolidada!A1:CD60`, 59 códigos únicos y 82 etiquetas exactas. Oracle `HPPROD1/hpprod1/hpprod1/RIESGO_LAVADO/RIESGO_LAVADO`; transacción `SET TRANSACTION READ ONLY` + `ROLLBACK`; escrituras 0.
-- **Resultado final:** universo 4,838/4,838, claves duplicadas 0, posiciones inexplicadas 0. Clasificación MATCH 804; MISSING 398; DIFFERENT 91 (87 datos/4 catálogo); blanks 1,096; operacional 4; calculado 2,124; N/A 321. Field 03 `Área`, `Sección de Cumplimiento`, 59/59 MATCH y `VALID_JSON`; mapeos técnicos reauditorados sin defectos (`TECHNICAL_MAPPING_ERRORS=0`). `REQUIRED_VALUES_MISSING=59` en Campo 05, manifest required, mapeo válido. `BASELINE_IMPORT_CANDIDATES=398`; falsos candidatos control/escala 0.
-- **Políticas:** Campo 70: 23 Excel no vacías, 19 MATCH, 4 de producción preservados conforme al manifest; 0 DIFFERENT. Campo 39: cuatro `DIFFERENT/FIX_CATALOG`, diferidos a Bloque 3 (`4/4`). Bloque 3 no iniciado.
-- **Artefactos:** RUN_ID `20261002_142828_041` fuera de Git. Evidencias sanitizadas, hashes, filas y tests en el informe del Bloque 2.
-- **Pruebas focalizadas:** contrato 17/17; auditoría forense 15/15; validador contractual 82/82; build auditor 0 errores/14 warnings. Auditoría Oracle final completa PASS read-only.
-- **Pendiente de cierre Git:** terminar validador de enlaces, `git diff --check`, revisar diff y stagear solo archivos de esta intervención; commit normal y push `origin/desarrollo`, verificar HEAD=origin. Cambios preexistentes ajenos preservados sin editar/stagear: `DatabaseEnvironmentGuard`/test, `frontend/rl-app/tsconfig.json`, scratch y untracked iniciales.
-- **Estado de fase:** técnicamente reconciliado; cierre formal condicionado al cierre Git/publicación de esta intervención. No iniciar Bloque 3.
-
+- **Rama:** `desarrollo`; SHA inicial `4223d38365aac5d8400a64d6ea3851b2a7545a96`; commit principal de sellado `4aecdf2894361866fd979960792f2f67d5f7ce14`, publicado en `origin/desarrollo`.
+- **Fuente:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; hoja `Matriz Consolidada`, `A1:CD60`, 82/82 encabezados, 59/59 riesgos/códigos únicos.
+- **Producción:** HPPROD1 / hpprod1 / hpprod1 / RIESGO_LAVADO / RIESGO_LAVADO; `SET TRANSACTION READ ONLY` y `ROLLBACK`; DML/DDL/procedimientos/escrituras = 0.
+- **Auditoría:** RUN_ID `20261002_142828_041`; 4,838/4,838 posiciones únicas, duplicadas 0, inexplicadas 0. MATCH 804; MISSING 398; DIFFERENT 91 (87 datos/4 catálogo); blanks 1,096; operacionales preservados 4; calculados 2,124; N/A 321.
+- **Campo 03:** etiqueta `Área`; ROP-CUMP-59 Excel `Sección de Cumplimiento`; `VALID_JSON`; 59/59 MATCH. Causa del dato equivocado previo: `REPORT_ONLY_BUG`.
+- **Mappings:** defectos técnicos 0; valores requeridos faltantes 59 en Field 05; importaciones baseline válidas 398; conflictos de datos 87; falsos positivos de control y escala 0.
+- **Políticas:** Field 70: 23 Excel no vacíos, 19 MATCH, 4 valores operativos preservados por el contrato, DIFFERENT 0. Field 39: 4/4 `FIX_CATALOG`, delegados al Bloque 3.
+- **Paridad calculada:** 312 MATCH, 98 DIFFERENT, 496 missing, 1,218 no evaluables; total 2,124.
+- **Pruebas:** contrato 17/17; forense 15/15; validator manifest 82/82; build auditor PASS (0 errores/14 warnings); links 173/199 PASS; `git diff --check` PASS. Validador de skills no ejecutado (Python 3 no disponible; no hubo cambios en skills; hook delega a CI).
+- **Artefactos:** RUN_ID y 15 SHA-256/filas documentados en `docs/3. Módulo Matrices de Riesgos/BLOQUE_2_AUDITORIA_EXCEL_PRODUCCION.md`; permanecen fuera de Git.
+- **Git/preservación:** commit principal publicado; los cambios ajenos preexistentes se mantienen intactos y fuera del commit. El commit documental de este cierre se publicará en `desarrollo`.
+- **Estado de fase:** `BLOCK2_STATUS=CLOSED`; `BLOCK_3_STARTED=NO`. No iniciar Bloque 3.
 ---
 # Estado vigente — Pase Correctivo Final Bloque 2: Semántica Institucional (2026-10-02)
 
