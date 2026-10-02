@@ -112,4 +112,28 @@ public class MatrizRiesgosBlock2ForensicAuditTests
         Assert.Equal(767, b6);
         Assert.Equal(4838, b1 + b2 + b3 + b4 + b5 + b6);
     }
+    [Fact]
+    public void AuditorSource_MustContainCanonicalScaleNormalizationAndNoHayProjection()
+    {
+        string repoRoot = FindRepoRoot();
+        string auditorSource = Path.Combine(repoRoot, "tools", "AuditMatricesExcelVsProduction", "Program.cs");
+        Assert.True(File.Exists(auditorSource));
+
+        string code = File.ReadAllText(auditorSource);
+
+        // Validar escalas de efectividad institucionales
+        Assert.Contains("\"ALTA_EFECTIVIDAD\"", code, StringComparison.Ordinal);
+        Assert.Contains("\"MODERADO\"", code, StringComparison.Ordinal);
+        Assert.Contains("\"PARCIALMENTE_EFECTIVO\"", code, StringComparison.Ordinal);
+        Assert.Contains("\"RAZONABLE\"", code, StringComparison.Ordinal);
+        Assert.Contains("\"INEFECTIVO\"", code, StringComparison.Ordinal);
+        Assert.Contains("\"INEXISTENTE\"", code, StringComparison.Ordinal);
+
+        // Validar proyección institucional ante ausencia de controles
+        Assert.Contains("pos.DbRaw = \"No hay\";", code, StringComparison.Ordinal);
+        Assert.Contains("pos.ReasonCode = \"NO_CONTROLS_CANONICAL_MATCH\";", code, StringComparison.Ordinal);
+        Assert.Contains("pos.ReasonCode = \"EFFECTIVENESS_SCALE_SEMANTIC_MATCH\";", code, StringComparison.Ordinal);
+        Assert.Contains("pos.ReasonCode = \"MISSING_PERSISTENCE_MAPPING\";", code, StringComparison.Ordinal);
+        Assert.Contains("pos.RecommendedNextAction = \"FIX_MAPPING\";", code, StringComparison.Ordinal);
+    }
 }

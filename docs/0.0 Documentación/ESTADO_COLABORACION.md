@@ -1,29 +1,47 @@
-# Estado vigente — Auditoría Forense Excel ↔ Producción Bloque 2 (2026-10-02)
+# Estado vigente — Pase Correctivo Final Bloque 2: Semántica Institucional (2026-10-02)
 
-- Rama: `desarrollo`. Baseline SHA: `61e4cb2f0a465f2d848025677dc3ab864515ce0e`.
+- Rama: `desarrollo`. Baseline SHA: `66dad25c96b2bffc0b357c006ed42896c971919e`.
 - Colaborador: ANTIG (Antigravity).
 - **BLOCK2_STATUS: CLOSED**.
 - **RISKS_AUDITED: 59/59** (100%).
 - **FIELDS_AUDITED: 82/82** (100%).
 - **TOTAL_POSITIONS: 4,838 / 4,838** (`UNIQUE_AUDIT_KEYS=4838`, `DUPLICATE_AUDIT_KEYS=0`).
 - **CLASSIFICATION_DISTRIBUTION (4,838):**
-  - `MATCH`: 597 (12.34%)
-  - `MISSING_IN_DB`: 469 (9.69%)
-  - `DIFFERENT`: 134 (2.77%)
-  - `LEGITIMATELY_BLANK_IN_EXCEL`: 1,193 (24.66%)
-  - `DB_HAS_NEWER_OPERATIONAL_DATA`: 0 (0.00%)
-  - `CALCULATED_FIELD`: 2,124 (43.90%)
-  - `NOT_APPLICABLE`: 321 (6.64%)
+  - `MATCH`: 648 (13.39%) [+51 vs inicial: +39 escalas normalizadas F21, 25, 29; +12 "No hay" F20, 24, 28]
+  - `MISSING_IN_DB`: 457 (9.45%) [-12 vs inicial: 12 "No hay" reclasificados a MATCH]
+  - `DIFFERENT`: 95 (1.96%) [-39 vs inicial: 39 falsos diferentes eliminados por normalización]
+  - `LEGITIMATELY_BLANK_IN_EXCEL`: 1,193 (24.66%) [0 variación]
+  - `DB_HAS_NEWER_OPERATIONAL_DATA`: 0 (0.00%) [0 variación]
+  - `CALCULATED_FIELD`: 2,124 (43.90%) [0 variación]
+  - `NOT_APPLICABLE`: 321 (6.64%) [0 variación]
   - `TOTAL`: 4,838 (100.00%)
-- **CALCULATED_PARITY (2,124):** `MATCH=312`, `DIFFERENT=98`, `MISSING_IN_DB=496`, `NOT_EVALUABLE=1218` (sin valores cacheados en Excel oficial, entrada directa a Bloque 5).
+- **RECONCILIATION_CROSSTAB (4,838):**
+  - `MATCH × NO_ACTION`: 648
+  - `MISSING_IN_DB × FIX_MAPPING`: 316
+  - `MISSING_IN_DB × IMPORT_BASELINE`: 141 (`BASELINE_IMPORT_CANDIDATES = 141`, reconciliación exacta)
+  - `DIFFERENT × DATA_REMEDIATION_REQUIRED`: 95
+  - `LEGITIMATELY_BLANK_IN_EXCEL × NO_ACTION`: 1,193
+  - `CALCULATED_FIELD × NO_ACTION`: 312
+  - `CALCULATED_FIELD × RECALCULATE_IN_BACKEND`: 1,776
+  - `CALCULATED_FIELD × NOT_APPLICABLE`: 36
+  - `NOT_APPLICABLE × NOT_APPLICABLE`: 321
+- **SEPARATED_DEFECT_TAXONOMY:**
+  - `TECHNICAL_MAPPING_ERROR`: 413 (59 riesgos × 7 campos sin persistencia: 03, 05, 06, 07, 15, 16, 32; `technicalMappingStatus=BROKEN`, `recommendedNextAction=FIX_MAPPING`)
+  - `DATA_ABSENCE_CASES`: 141 (125 controles + 16 mitigaciones; `recommendedNextAction=IMPORT_BASELINE`)
+  - `VALID_EMPTY_COLLECTIONS`: 52 (12 "No hay" matches + 40 legitimately blank matches)
+  - `REQUIRED_VALUES_MISSING`: 118 (Field 03: 59, Field 05: 59)
+- **CATALOG_CONFLICTS:**
+  - `INTERNAL_SOURCE_CATALOG_CONFLICTS`: 1 (Matriz Consolidada/Listas vs Instructivo: Evitar/Transferir/Aceptar/Mitigar vs Reducir/Aceptar/Transferir/Evitar)
+  - `DB_VS_EXCEL_CATALOG_CONFLICTS`: 4 (Campo 39)
+  - `CATALOG_SOURCE_CONFLICT_RESPONSE_RISK`: YES (Target: Bloque 3)
+- **SCRIPT_CONFIRMATION:** `tools/export_excel_matrix_82.js` es `AUDIT_SUPPORT_ONLY=YES`, `EXPORT_RUNTIME_BEHAVIOR_CHANGED=NO`.
 - **ZERO_WRITES_VERIFICATION: PASS** (`PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_PROCEDURES_EXECUTED=0`, `DATABASE_WRITES=0`).
 - **READ_ONLY_TRANSACTION: PASS** (`SET TRANSACTION READ ONLY` + `ROLLBACK` en Oracle `HPPROD1` / `RIESGO_LAVADO`).
-- **READ_ONLY_SQL_POLICY_TEST: PASS** (3/3 unit tests aprobados en `MatrizRiesgosBlock2ForensicAuditTests.cs`).
+- **READ_ONLY_SQL_POLICY_TEST: PASS** (4/4 unit tests aprobados en `MatrizRiesgosBlock2ForensicAuditTests.cs`).
 - **UNEXPLAINED_DIFFERENCES: 0**. Cero diferencias sin taxonomía ni justificación técnica.
-- **AMBIGUOUS_EVALUATION_SELECTIONS: 0**. 59/59 riesgos evaluados contra la evaluación activa aprobada canónica.
-- **ARTEFACTOS_GENERADOS:** 11 archivos de auditoría forense con SHA-256 en `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_103246`.
+- **ARTEFACTOS_GENERADOS:** 11 archivos de auditoría forense con SHA-256 en `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_134545`.
 - **DOCUMENTO_SANITIZADO:** `docs/3. Módulo Matrices de Riesgos/BLOQUE_2_AUDITORIA_EXCEL_PRODUCCION.md`.
-- **Gobernanza:** `BLOCK2_STATUS=CLOSED`. `NEXT_BLOCK=BLOQUE DE REMEDIACIÓN 3 — Catálogos y listas institucionales`.
+- **GOBERNANZA:** `BLOCK2_STATUS=CLOSED`. `BLOCK_3_STARTED=NO` (Detenido — Prohibido iniciar Bloque 3 sin autorización).
 - **Modificaciones ajenas preexistentes:** `DatabaseEnvironmentGuard.cs` y sus tests preservadas intactas en working tree.
 
 ---

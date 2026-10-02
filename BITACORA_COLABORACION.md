@@ -1,5 +1,63 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Pase Correctivo Final Bloque 2: Semántica de Comparación y Clasificación (59 Riesgos × 82 Campos)
+
+- **Fecha/hora local:** 2026-10-02 13:50 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / BASE_SHA:** `desarrollo` / `66dad25c96b2bffc0b357c006ed42896c971919e`.
+- **Objetivo único:** Ejecutar exclusivamente el PASE CORRECTIVO FINAL del Bloque 2: corregir la semántica de comparación y clasificación contra el Instructivo institucional y `Otras Tablas` del workbook oficial, regenerar las 4,838 posiciones y producir conteos definitivos. Cero DML, cero DDL, cero escrituras en producción (`DATABASE_WRITES=0`), cero carga de Excel. NO iniciar Bloque 3.
+- **Correcciones Semánticas Implementadas:**
+  1. **Ausencia Canónica de Controles:** Cuando `CONTROL_COUNT_OF_TYPE = 0` -> Estado=`NO_CONTROLS_OF_TYPE`, Descripción=`"No hay"`, Escala=`"Inexistente"`, Nivel=`0`, Porcentaje=`0%`. Si Excel contiene `"No hay"` y DB tiene 0 controles relacionales, se clasifica como `MATCH` (`NO_CONTROLS_CANONICAL_MATCH`), no como faltante.
+  2. **Escala Combinada de Efectividad:** Controles 1:N proyectados en multilínea (Campos 20, 24, 28) pero escala de efectividad única combinada (Campos 21, 25, 29). Normalización contra hoja `Otras Tablas` (`Inexistente=0/0%`, `Es inefectivo=1/0%`, `Razonable=2/30%`, `Parcialmente Efectivo=3/50%`, `Moderado=4/85%`, `Alta Efectividad=5/90%`). "Alta Efectividad" vs 90 -> `MATCH` (`EFFECTIVENESS_SCALE_SEMANTIC_MATCH`), eliminando 39 falsos diferentes.
+  3. **Distinción entre Ausencia de Dato vs Defecto de Mapeo:** Campos 03, 05, 06, 07, 15, 16, 32 clasificados con `technicalMappingStatus=BROKEN`, `reasonCode=MISSING_PERSISTENCE_MAPPING`, `recommendedNextAction=FIX_MAPPING` (no `IMPORT_BASELINE`).
+  4. **Taxonomía Separada de Defectos:** `TECHNICAL_MAPPING_ERROR=413` (59×7), `DATA_ABSENCE_CASES=141` (125 controles + 16 mitigaciones), `VALID_EMPTY_COLLECTIONS=52` (12 "No hay" matches + 40 legitimately blank matches), `REQUIRED_VALUES_MISSING=118` (F03: 59, F05: 59).
+  5. **Reconciliación 100% de Baseline:** `BASELINE_IMPORT_CANDIDATES=141` (reconciliado exactamente vía tabla cruzada: `MISSING_IN_DB × IMPORT_BASELINE = 141`).
+- **Resultados Forenses y Clasificación Global Definitiva (59 riesgos × 82 campos = 4,838 posiciones):**
+  - `MATCH`: 648 (13.39%) [+51 vs auditoría inicial: +39 escalas normalizadas en F21, 25, 29; +12 "No hay" en F20, 24, 28]
+  - `MISSING_IN_DB`: 457 (9.45%) [-12 vs auditoría inicial: 12 "No hay" reclasificados a MATCH]
+  - `DIFFERENT`: 95 (1.96%) [-39 vs auditoría inicial: 39 falsos diferentes eliminados por normalización de escalas]
+  - `LEGITIMATELY_BLANK_IN_EXCEL`: 1,193 (24.66%) [0 variación]
+  - `DB_HAS_NEWER_OPERATIONAL_DATA`: 0 (0.00%) [0 variación]
+  - `CALCULATED_FIELD`: 2,124 (43.90%) [0 variación]
+  - `NOT_APPLICABLE`: 321 (6.64%) [0 variación]
+  - `TOTAL`: 4,838 (100.00%)
+  - `UNEXPLAINED_DIFFERENCES`: 0
+- **Tabla Cruzada Clasificación Primaria × Acción Siguiente (4,838):**
+  - `MATCH × NO_ACTION`: 648
+  - `MISSING_IN_DB × FIX_MAPPING`: 316
+  - `MISSING_IN_DB × IMPORT_BASELINE`: 141
+  - `DIFFERENT × DATA_REMEDIATION_REQUIRED`: 95
+  - `LEGITIMATELY_BLANK_IN_EXCEL × NO_ACTION`: 1,193
+  - `CALCULATED_FIELD × NO_ACTION`: 312
+  - `CALCULATED_FIELD × RECALCULATE_IN_BACKEND`: 1,776
+  - `CALCULATED_FIELD × NOT_APPLICABLE`: 36
+  - `NOT_APPLICABLE × NOT_APPLICABLE`: 321
+- **Conflictos de Catálogos:**
+  - `INTERNAL_SOURCE_CATALOG_CONFLICTS`: 1 (Matriz Consolidada/Listas vs Instructivo: Evitar/Transferir/Aceptar/Mitigar vs Reducir/Aceptar/Transferir/Evitar)
+  - `DB_VS_EXCEL_CATALOG_CONFLICTS`: 4 (Campo 39)
+  - `CATALOG_SOURCE_CONFLICT_RESPONSE_RISK=YES` (Target: Bloque 3)
+- **Confirmación de Scripts:**
+  - `tools/export_excel_matrix_82.js` es `AUDIT_SUPPORT_ONLY` (extracción offline); `EXPORT_RUNTIME_BEHAVIOR_CHANGED=NO`.
+- **Cero Escrituras y Cerrojo Técnico:**
+  - `SET TRANSACTION READ ONLY` + `ROLLBACK` en Oracle `HPPROD1` / `RIESGO_LAVADO`.
+  - `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `DATABASE_WRITES=0`.
+- **Artefactos Forenses Regenerados (%TEMP%):**
+  - Directorio: `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_134545`
+  - `audit_59x82_full.json`: `66366dc16567568cfdd7c45bac437cbf67a854021e663415c931267e26ca097e`
+  - `audit_59x82_full.csv`: `17ef42269c92ca3e68e706192f3bf74aa0e7d66ca84fd211522872eee14e475f`
+  - `summary_by_risk.csv`: `16d1933835710a536171c21d1fca4fdb59dd14aa7372b4e1d8630ee270496e07`
+  - `summary_by_field.csv`: `7b48d840bc625aed934cd3ad1c2149de8f13e88316b17f69db670ba0f7b70ac3`
+  - `summary_by_block.csv`: `75670a19c0e4819e223aa550c0367cc13bde24ed513fe0eba71f208ec9c426aa`
+  - `calculated_parity.csv`: `342ba79846aedce323c7fe333e37dafd22e658eb1d54dd4eae4dffa957ab88d0`
+  - `operational_values_to_preserve.csv`: `984f6ac3b439fc591d7ab8bf53d9f30d87a6464005a17ac07f8624be0369a1d2`
+  - `baseline_import_candidates.csv`: `f7e331148e0c8826bd9e098561a6206792e5cce7084ae60db4832bcabc10fd39`
+  - `data_conflicts.csv`: `ddfe7c126d4ba7cce4753de9fc883effca4f0d2239814cc75d1415593058937b`
+  - `technical_defects.csv`: `6df839eb8de17cd29fd2f27fc9e91b54dc9bf2171532de30b4d23175d89eb8b4`
+  - `production_risk_inventory.csv`: `94b8ea6e564faf3921d3952fb4ed5d58cdfc7d4ea0338c134b8a5f1b5d8cdedc`
+- **Gobernanza:**
+  - `BLOCK2_STATUS=CLOSED`.
+  - `BLOCK_3_STARTED=NO` (Detenido — Prohibido iniciar Bloque 3 sin autorización).
+
 ## Registro de intervención — Bloque 2 de 12: Auditoría Forense Excel ↔ Producción (59 Riesgos × 82 Campos)
 
 - **Fecha/hora local:** 2026-10-02 10:45 (America/Tegucigalpa).
