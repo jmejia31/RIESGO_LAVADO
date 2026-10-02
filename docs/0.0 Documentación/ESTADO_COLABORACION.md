@@ -2200,3 +2200,13 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - **Artefactos:** `%TEMP%\RIESGO_LAVADO_BLOCK3_CATALOG_AUDIT_20261002_1548_785327`; hashes en `SHA256SUMS.json`. No versionar dumps.
 - **Publicaci?n:** pendiente revisi?n de diff, staging selectivo, pruebas finales, commit y push a `origin/desarrollo`. No amend/force push.
 - **Continuaci?n:** repetir suite frontend, revisar evidencia/crosstab/documentos, diff-check y secretos; stagear s?lo archivos de tarea; commit/push; verificar HEAD=origin. No iniciar Bloque 4.
+
+
+## Punto de continuidad — Bloque 3 publicado, CI pendiente (COD, 2026-10-02 16:12 -06:00)
+
+- Rama `desarrollo`; implementación Bloque 3: `b0518d041ac5239a02eb7d63b324728dbf19c2dc`, publicado y sincronizado al verificar.
+- La ejecución local reportada en el registro de cierre pasó: contrato 82/82; catálogo 14/14; pruebas backend focalizadas 93/93; build API; frontend 84 archivos/845 pruebas, TypeScript, lint y Angular build; validadores de estructura, base de datos y enlaces documentales; `git diff --check`.
+- Producción HPPROD1 fue consultada mediante transacción read-only terminada en rollback; DML=0, DDL=0, procedimientos=0, escrituras=0.
+- El GitHub Quality Gates run `37070685886`, SHA exacto `b0518d041ac5239a02eb7d63b324728dbf19c2dc`, falló en la validación integral por los mismos tres hallazgos reportados en el run del padre `37064635385`: referencias `EVA_VRI`/`EVA_VRR` en el contrato de campos y un fixture preexistente señalado como posible credencial en `DatabaseEnvironmentGuardTests.cs`. No se alteraron archivos fuera de alcance para evitar silenciar el control; el test y su implementación permanecen como cambios locales ajenos sin stagear.
+- Por el gate remoto obligatorio, el Bloque 3 queda `PENDING`, aunque la reconciliación técnica de catálogos está implementada. Reanudar resolviendo esos hallazgos en cambio autorizado y revalidar CI completo. No iniciar Bloque 4.
+- Los cambios no relacionados en `DatabaseEnvironmentGuard.cs`, su prueba, `frontend/rl-app/tsconfig.json` y archivos untracked continúan preservados fuera del commit.

@@ -8376,3 +8376,12 @@ La certificación de desarrollo no afirma que se aplicó la migración. El artef
 - **Artefactos:** `%TEMP%\RIESGO_LAVADO_BLOCK3_CATALOG_AUDIT_20261002_1548_785327`; hashes en `SHA256SUMS.json`. No versionar dumps.
 - **Publicaci?n:** pendiente revisi?n de diff, staging selectivo, pruebas finales, commit y push a `origin/desarrollo`. No amend/force push.
 - **Continuaci?n:** repetir suite frontend, revisar evidencia/crosstab/documentos, diff-check y secretos; stagear s?lo archivos de tarea; commit/push; verificar HEAD=origin. No iniciar Bloque 4.
+
+
+## Actualización final Bloque 3 y gate remoto (COD) — 2026-10-02 16:12 -06:00
+
+- **Publicación:** implementación publicada en `b0518d041ac5239a02eb7d63b324728dbf19c2dc` (`fix(matrices): close institutional catalog parity`); `HEAD` y `origin/desarrollo` coincidieron tras `git fetch`.
+- **CI del SHA exacto:** GitHub Actions run `37070685886` terminó `failure` en `Validate dynamic matrices, authorization and Phase 13 UAT contract`. Los tres hallazgos son iguales a los del run anterior `37064635385` sobre el commit padre `ab474c885a35ccac2d1d98c8b5397755d9f19c45`: el validador objeta referencias de mapeo persistente `EVA_VRI`/`EVA_VRR` en el contrato de 82 campos y clasifica un fixture de contraseña de `DatabaseEnvironmentGuardTests.cs` como posible credencial Oracle. Esos archivos/resultados preexistían al cambio; el archivo de pruebas está expresamente preservado y fuera de staging. No se modificaron para silenciar el gate.
+- **Otros gates del run:** restore, auditoría npm, GOV-02/03, UTF-8, workbook, analizadores .NET, ESLint y validaciones de autorización/UAT pasaron; los pasos posteriores se omitieron por el fallo anterior.
+- **Estado:** cambios técnicos del Bloque 3 publicados; `BLOCK3_STATUS=PENDING` por gate CI obligatorio preexistente, no por ambigüedad de catálogo. Producción permaneció read-only: DML=0, DDL=0, escrituras=0. Cambios ajenos locales preservados.
+- **Continuación exacta:** resolver los tres hallazgos del validador/gobierno en intervención autorizada separada, sin tocar los cambios locales ajenos; volver a ejecutar el workflow completo contra un SHA nuevo. No iniciar Bloque 4.
