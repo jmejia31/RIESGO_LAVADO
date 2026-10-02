@@ -1,3 +1,23 @@
+# Estado vigente — Micro-hardening y sellado final Bloque 1 (2026-10-02)
+
+- Rama: `desarrollo`. Baseline SHA: `8b50268ee5ecc7ae60c73aa35516269d8b3444f1`.
+- Colaborador: ANTIG (Antigravity).
+- **BLOCK1_STATUS: CLOSED**.
+- **FIELD_CONTRACT: 82/82**. Etiquetas exactas y orden canónico 01..82 verificados contra `Matriz Consolidada!A1:CD1` del Excel oficial (SHA256: `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`).
+- **FIELD_01_FAIL_CLOSED: PASS**. `ordinalSource=INSTITUTIONAL_CODE_TO_NO_MAP`, `ordinalPersistence=VIRTUAL_DERIVED`, `ordinalProjection=MAPEO_EXACTO_CODIGO_A_NO_1_59`, `ordinalFallback=FAIL_CLOSED` (`ORDINAL_UNRESOLVED` / `CONTRACT_VALIDATION_ERROR` ante códigos desconocidos sin generar ordinales sintéticos ni orden alfabético inventado).
+- **MITIGATION_APPLICABILITY_CATALOG_RULE: PASS**. Catálogo `MR_RESPUESTA_RIESGO` (`MITIGAR`) y separación explícita de A) respuesta al riesgo vs B) tolerancia residual (`PROY_NIVEL_RESIDUAL IN ('ALTO', 'CRITICO')`). Si aplica y no hay datos -> `EMPTY_VALUE` (`VALIDATION_PENDING`); si no aplica -> `NOT_APPLICABLE` (`"No aplica (Respuesta no requiere mitigación)"`).
+- **FIELD_45_PROJECTION: PASS**. `deduplicationRule=NO_DEDUPLICATION_PER_PLAN`, clave `PLAN_ORDINAL_INDEX`, orden `ORDER BY PLA_ORDEN ASC, PLA_ID ASC`, separador `\n`, exportación multilínea enumerada con wrapText.
+- **MONITORING_CONTROL_SEMANTICS_72_80: PASS**. Erradicación total de `MIN(CON_ID)`. Paridad estricta 1:N con campos 20/24/28 (`ALL_CONTROLS_OF_TYPE`, `MULTILINE_ENUMERATED_PER_CONTROL` en celdas planas/exportación y renderizado por tarjeta en UI `@for control of grupo`, `MAP_BY_ORDINAL_OR_REJECT_AMBIGUOUS` para importación fail closed).
+- **FIELD_71_DEFAULT_SEMANTICS: PASS**. Eliminado default arbitrario `Vigente` (sin DEFAULT en schema); semántica vacía es `OPERATIONAL_PENDING`.
+- **EVIDENCE_PROJECTION_74_77_80: PASS**. Proyección `NOMBRE_ARCHIVO_CON_EXTENSION` con wrapText en Excel y anexo estructurado en PDF.
+- **CONTRACT_VALIDATOR: PASS** (18/18 gates en `tools/validate_contract_82_fields.js`).
+- **CONTRACT_TESTS: PASS** (16/16 tests en `MatrizRiesgosContract82FieldsTests.cs` ejecutados con compilación limpia).
+- **GIT_DIFF_CHECK: PASS** (cero secretos, cero errores de espaciado).
+- **Gobernanza y Producción:** `PRODUCTION_ACCESS_DURING_THIS_TASK=NO`, `PRODUCTION_DDL_EXECUTED=NO`, `PRODUCTION_DML_EXECUTED=NO`, `EXCEL_DATA_RELOAD=NO`, `BLOCK_2_STARTED=NO`. Modificaciones ajenas preexistentes (`DatabaseEnvironmentGuard.cs` y sus tests) preservadas intactas.
+- **Próximo paso:** Detenerse. Esperar autorización explícita de Javier Mejía para iniciar Bloque 2.
+
+---
+
 # Estado vigente — Cierre definitivo y certificación integral Incidente P0 (2026-10-01)
 
 - Rama: `desarrollo`. Baseline SHA: `e4675a575159692eca072a304c8e0310327eeb9b`.

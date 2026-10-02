@@ -1,5 +1,36 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Sellado final absoluto y micro-hardening Bloque 1: Contrato Canónico Institucional de 82 Campos (Matrices de Riesgos)
+
+- **Fecha/hora local:** 2026-10-02 09:30 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / BASE_SHA:** `desarrollo` / `8b50268ee5ecc7ae60c73aa35516269d8b3444f1`.
+- **Objetivo único:** Sellado final absoluto del Bloque 1 (Contrato Canónico de 82 Campos de Matrices de Riesgos). Resolver de forma inequívoca y determinista las decisiones de negocio: (1) Campos 72-80: erradicar `MIN(CON_ID)` y congelar paridad 1:N con campos 20/24/28 (`ALL_CONTROLS_OF_TYPE`); (2) Campo 01: `FAIL_CLOSED` ante códigos sin ordinal institucional; (3) Campos 40-49: anclaje formal a catálogo institucional `MR_RESPUESTA_RIESGO` (`MITIGAR`) y separación explícita de respuesta vs tolerancia residual con `NOT_APPLICABLE` vs `EMPTY_VALUE`. Preservar producción, base local y código ajeno intactos.
+- **Decisiones congeladas e implementación:**
+  - **Campo 01 ("No.")**: `ordinalSource=INSTITUTIONAL_CODE_TO_NO_MAP`, `ordinalPersistence=VIRTUAL_DERIVED`, `ordinalProjection=MAPEO_EXACTO_CODIGO_A_NO_1_59`, `ordinalFallback=FAIL_CLOSED`. Se eliminó cualquier fallback alfabético o sintético. Códigos desconocidos emiten `ORDINAL_UNRESOLVED` / `CONTRACT_VALIDATION_ERROR`.
+  - **Bloque 4 (Campos 40-49)**: `catalogSource='RL_MR_CATALOGOS / MR_RESPUESTA_RIESGO'`, `catalogKey='MITIGAR'`, `catalogDisplayValue='Mitigar'`. Regla `mitigationApplicabilityRule`: A) por Respuesta al Riesgo (`PROY_RESPUESTA_RIESGO == 'MITIGAR'`); B) por política de tolerancia residual (`PROY_NIVEL_RESIDUAL IN ('ALTO', 'CRITICO')` y `PROY_RESPUESTA_RIESGO != 'ACEPTAR'`). Si aplica y faltan datos -> `EMPTY_VALUE` (`VALIDATION_PENDING`); si no aplica -> `NOT_APPLICABLE` (`"No aplica (Respuesta no requiere mitigación)"`).
+  - **Campo 45 ("Responsables")**: Regla sin ambigüedad `deduplicationRule=NO_DEDUPLICATION_PER_PLAN`, `deduplicationKey=PLAN_ORDINAL_INDEX`, `orderingRule=ORDER BY PLA_ORDEN ASC, PLA_ID ASC`, `displaySeparator=\n`, `excelSerialization` y `pdfSerialization` congeladas.
+  - **Campos 72-80 (Monitoreo de Controles 1:N)**: Erradicación total de `MIN(CON_ID)`. Paridad estricta 1:N con campos 20, 24, 28: `monitoringControlCardinality=ONE_TO_MANY_PER_CONTROL_TYPE`, `controlSelectionSemantics=ALL_CONTROLS_OF_TYPE`, `stateProjectionSemantics=MULTILINE_ENUMERATED_PER_CONTROL` (y renderizado individual por tarjeta en UI `@for control of grupo`), `effectivenessProjectionSemantics=MULTILINE_ENUMERATED_PER_CONTROL`, `evidenceProjectionSemantics=NOMBRE_ARCHIVO_CON_EXTENSION_PER_CONTROL`, `importTargetSemantics=MAP_BY_ORDINAL_OR_REJECT_AMBIGUOUS` (fail closed ante textos planos ambiguos con múltiples controles).
+  - **Campo 71 ("Estado del Riesgo")**: Eliminado default arbitrario `Vigente` (sin DEFAULT en schema); semántica vacía es `OPERATIONAL_PENDING`.
+  - **Campos 74, 77, 80 ("Evidencias")**: Proyección `NOMBRE_ARCHIVO_CON_EXTENSION`.
+- **Artefactos Canónicos Versionados y Validados:**
+  1. `backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_82_campos_manifest.json` (TRACKED=YES)
+  2. `docs/3. Módulo Matrices de Riesgos/MATRICES_RIESGOS_CONTRATO_82_CAMPOS.md` (TRACKED=YES)
+  3. `tools/validate_contract_82_fields.js` (TRACKED=YES)
+  4. `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosContract82FieldsTests.cs` (TRACKED=YES)
+- **Evidencia de Pruebas Ejecutadas:**
+  - `node tools/validate_contract_82_fields.js`: ALL 18 GATES PASSED (82/82).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter "FullyQualifiedName~MatrizRiesgosContract82FieldsTests"` (sin `--no-build`): 16/16 PASSED (0 errores, 0 fallidos, 0 omitidos).
+  - `git diff --check`: PASS (limpio, sin errores de formato ni espacios).
+- **Gobernanza y Producción:**
+  - `PRODUCTION_ACCESS_DURING_THIS_TASK=NO`
+  - `PRODUCTION_DDL_EXECUTED=NO`
+  - `PRODUCTION_DML_EXECUTED=NO`
+  - `EXCEL_DATA_RELOAD=NO`
+  - `BLOCK_2_STARTED=NO`
+  - Modificaciones ajenas preexistentes (`DatabaseEnvironmentGuard.cs` y sus tests) preservadas intactas en working tree.
+- **Estado de Bloque 1:** `BLOCK1_STATUS=CLOSED`.
+
 ## Registro de intervención — Cierre definitivo y certificación integral Incidente P0: Hardening de Runtime Oracle Local, Bootstrap Reproducible y E2E (Matrices de Riesgos)
 
 - **Fecha/hora local:** 2026-10-01 11:00 (America/Tegucigalpa).
