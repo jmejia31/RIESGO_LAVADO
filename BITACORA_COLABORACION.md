@@ -1,5 +1,46 @@
 # Bitácora de Colaboración Transversal
 
+## Registro de intervención — Bloque 2 de 12: Auditoría Forense Excel ↔ Producción (59 Riesgos × 82 Campos)
+
+- **Fecha/hora local:** 2026-10-02 10:45 (America/Tegucigalpa).
+- **Colaborador:** ANTIG (Antigravity).
+- **Rama / BASE_SHA:** `desarrollo` / `61e4cb2f0a465f2d848025677dc3ab864515ce0e`.
+- **Objetivo único:** Auditoría forense completa, determinista, reproducible y de sólo lectura de los 59 riesgos del Excel institucional contra su estado real en producción, utilizando como autoridad el contrato canónico de 82 campos sellado en Bloque 1 (`61e4cb2f0a465f2d848025677dc3ab864515ce0e`). Dry run absoluto: cero escrituras en producción.
+- **Resultados Forenses y Clasificación Global (59 riesgos × 82 campos = 4,838 posiciones):**
+  - `MATCH`: 597 (12.34%)
+  - `MISSING_IN_DB`: 469 (9.69%)
+  - `DIFFERENT`: 134 (2.77%)
+  - `LEGITIMATELY_BLANK_IN_EXCEL`: 1,193 (24.66%)
+  - `DB_HAS_NEWER_OPERATIONAL_DATA`: 0 (0.00%)
+  - `CALCULATED_FIELD`: 2,124 (43.90%)
+  - `NOT_APPLICABLE`: 321 (6.64%)
+  - `TOTAL`: 4,838 (100.00%)
+  - `UNEXPLAINED_DIFFERENCES`: 0
+- **Campos Calculados (2,124 posiciones evaluadas):**
+  - `CALCULATION_PARITY_MATCH`: 312
+  - `CALCULATION_PARITY_DIFFERENT`: 98
+  - `CALCULATION_PARITY_MISSING_IN_DB`: 496
+  - `CALCULATION_PARITY_NOT_EVALUABLE`: 1,218 (sin resultado en caché en Excel oficial, entrada directa a Bloque 5)
+- **Defectos y Hallazgos Principales:**
+  - `SCHEMA_DRIFT` / `MISSING_DB_MAPPING`: Campos 03, 05, 06, 07, 15, 16, 32 ausentes en persistencia de producción.
+  - `CHILD_COLLECTION_EMPTY`: Tablas `RL_MR_CONTROLES_RIESGO`, `RL_MR_PLANES`, `RL_MR_ACTIVIDADES` vacías (0 filas).
+  - `RL_MR_SENALES_ALERTA`: 148 señales activas en producción; columna institucional es `ALE_INDICADOR`.
+  - `EFFECTIVENESS_SCALE_MISMATCH`: Escalas textuales en Excel ("Alta Efectividad", "Inexistente") vs porcentajes base numéricos en DB (`90`, `0`).
+- **Verificación de Cero Escrituras y Cerrojo Técnico:**
+  - `DATABASE_PROFILE=PRODUCTION`, `DATABASE_TARGET_CLASS=PRODUCTION` (`HPPROD1` / `RIESGO_LAVADO`).
+  - `READ_ONLY_TRANSACTION=ESTABLISHED` (`SET TRANSACTION READ ONLY` + `ROLLBACK`).
+  - `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_PROCEDURES_EXECUTED=0`, `DATABASE_WRITES=0`.
+  - `READ_ONLY_SQL_POLICY_TEST=PASS` (3/3 tests unitarios aprobados).
+- **Artefactos Forenses Generados en %TEMP%:**
+  - 11 archivos generados y validados con hash SHA-256 (`audit_59x82_full.json`, `audit_59x82_full.csv`, resúmenes por riesgo, campo y bloque, candidatos de baseline, preservación operacional, defectos técnicos, conflictos de datos e inventario de producción).
+- **Documentación y Código:**
+  - `tools/AuditMatricesExcelVsProduction/` (auditor C# de sólo lectura).
+  - `docs/3. Módulo Matrices de Riesgos/BLOQUE_2_AUDITORIA_EXCEL_PRODUCCION.md` (informe sanitizado).
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosBlock2ForensicAuditTests.cs` (tests de pureza SQL read-only).
+- **Gobernanza:**
+  - `BLOCK2_STATUS=CLOSED`.
+  - Próximo bloque: BLOQUE DE REMEDIACIÓN 3 — Catálogos y listas institucionales.
+
 ## Registro de intervención — Sellado final absoluto y micro-hardening Bloque 1: Contrato Canónico Institucional de 82 Campos (Matrices de Riesgos)
 
 - **Fecha/hora local:** 2026-10-02 09:30 (America/Tegucigalpa).

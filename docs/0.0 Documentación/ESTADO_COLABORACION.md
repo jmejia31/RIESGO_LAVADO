@@ -1,3 +1,33 @@
+# Estado vigente — Auditoría Forense Excel ↔ Producción Bloque 2 (2026-10-02)
+
+- Rama: `desarrollo`. Baseline SHA: `61e4cb2f0a465f2d848025677dc3ab864515ce0e`.
+- Colaborador: ANTIG (Antigravity).
+- **BLOCK2_STATUS: CLOSED**.
+- **RISKS_AUDITED: 59/59** (100%).
+- **FIELDS_AUDITED: 82/82** (100%).
+- **TOTAL_POSITIONS: 4,838 / 4,838** (`UNIQUE_AUDIT_KEYS=4838`, `DUPLICATE_AUDIT_KEYS=0`).
+- **CLASSIFICATION_DISTRIBUTION (4,838):**
+  - `MATCH`: 597 (12.34%)
+  - `MISSING_IN_DB`: 469 (9.69%)
+  - `DIFFERENT`: 134 (2.77%)
+  - `LEGITIMATELY_BLANK_IN_EXCEL`: 1,193 (24.66%)
+  - `DB_HAS_NEWER_OPERATIONAL_DATA`: 0 (0.00%)
+  - `CALCULATED_FIELD`: 2,124 (43.90%)
+  - `NOT_APPLICABLE`: 321 (6.64%)
+  - `TOTAL`: 4,838 (100.00%)
+- **CALCULATED_PARITY (2,124):** `MATCH=312`, `DIFFERENT=98`, `MISSING_IN_DB=496`, `NOT_EVALUABLE=1218` (sin valores cacheados en Excel oficial, entrada directa a Bloque 5).
+- **ZERO_WRITES_VERIFICATION: PASS** (`PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_PROCEDURES_EXECUTED=0`, `DATABASE_WRITES=0`).
+- **READ_ONLY_TRANSACTION: PASS** (`SET TRANSACTION READ ONLY` + `ROLLBACK` en Oracle `HPPROD1` / `RIESGO_LAVADO`).
+- **READ_ONLY_SQL_POLICY_TEST: PASS** (3/3 unit tests aprobados en `MatrizRiesgosBlock2ForensicAuditTests.cs`).
+- **UNEXPLAINED_DIFFERENCES: 0**. Cero diferencias sin taxonomía ni justificación técnica.
+- **AMBIGUOUS_EVALUATION_SELECTIONS: 0**. 59/59 riesgos evaluados contra la evaluación activa aprobada canónica.
+- **ARTEFACTOS_GENERADOS:** 11 archivos de auditoría forense con SHA-256 en `%TEMP%\RIESGO_LAVADO_BLOCK2_AUDIT_20261002_103246`.
+- **DOCUMENTO_SANITIZADO:** `docs/3. Módulo Matrices de Riesgos/BLOQUE_2_AUDITORIA_EXCEL_PRODUCCION.md`.
+- **Gobernanza:** `BLOCK2_STATUS=CLOSED`. `NEXT_BLOCK=BLOQUE DE REMEDIACIÓN 3 — Catálogos y listas institucionales`.
+- **Modificaciones ajenas preexistentes:** `DatabaseEnvironmentGuard.cs` y sus tests preservadas intactas en working tree.
+
+---
+
 # Estado vigente — Micro-hardening y sellado final Bloque 1 (2026-10-02)
 
 - Rama: `desarrollo`. Baseline SHA: `8b50268ee5ecc7ae60c73aa35516269d8b3444f1`.
