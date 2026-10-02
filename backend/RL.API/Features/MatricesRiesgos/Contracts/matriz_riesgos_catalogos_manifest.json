@@ -1,0 +1,1432 @@
+{
+  "schemaVersion": 1,
+  "contractId": "MATRICES_RIESGOS_INSTITUTIONAL_CATALOGS",
+  "authority": "Matrices de Riesgos.xlsx; SHA-256 5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385",
+  "globalUnknownValueBehavior": "FAIL_CLOSED",
+  "normalizationPolicy": "Exact keys and explicitly listed aliases only. Surrounding whitespace may be trimmed where the source cell contains padding; no fuzzy matching, accent stripping, or general case folding.",
+  "catalogs": [
+    {
+      "catalogId": "RISK_TYPE",
+      "label": "Tipos de Riesgo",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "A1:B13",
+        "table": "t_tipos_riesgos"
+      },
+      "items": [
+        {
+          "key": "FyS",
+          "label": "Financiamiento y Solvencia",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "IoM",
+          "label": "Inversiones o Mercado",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "EST",
+          "label": "Estratégico",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "OP",
+          "label": "Operativo",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "ACT",
+          "label": "Actuarial",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "LIQ",
+          "label": "Liquidez",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "LEG",
+          "label": "Legal",
+          "sortOrder": 7,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "REP",
+          "label": "Reputacional",
+          "sortOrder": 8,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CUMP",
+          "label": "Cumplimiento",
+          "sortOrder": 9,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CRED",
+          "label": "Crédito",
+          "sortOrder": 10,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "TEC",
+          "label": "Tecnológico",
+          "sortOrder": 11,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "OTR",
+          "label": "Otros Riesgos",
+          "sortOrder": 12,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Tipos de Riesgo",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "A1:B13",
+      "namedRangeOrTable": "t_tipos_riesgos",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "NOT_CONFIRMED",
+      "backendDefinition": "Dynamic catalog service",
+      "frontendDefinition": "Dynamic catalog select",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "05"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "RISK_RESPONSE",
+      "label": "Respuesta al Riesgo",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "D1:D5",
+        "table": "t_resp_riesgo",
+        "field39DataValidation": "NONE"
+      },
+      "unknownValueBehavior": "FAIL_CLOSED",
+      "normalizationRule": "Exact key or explicitly registered alias; trim surrounding whitespace only.",
+      "items": [
+        {
+          "key": "EVITAR",
+          "label": "Evitar",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "EVITAR",
+          "dbLabel": "Evitar"
+        },
+        {
+          "key": "TRANSFERIR",
+          "label": "Transferir/Compartir",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [
+            "Transferir"
+          ],
+          "dbKey": "TRANSFERIR",
+          "dbLabel": "Transferir"
+        },
+        {
+          "key": "ACEPTAR",
+          "label": "Aceptar",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "ACEPTAR",
+          "dbLabel": "Aceptar"
+        },
+        {
+          "key": "MITIGAR",
+          "label": "Mitigar",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [
+            "Reducir"
+          ],
+          "dbKey": "MITIGAR",
+          "dbLabel": "Mitigar"
+        }
+      ],
+      "institutionalName": "Respuesta al Riesgo",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "D1:D5",
+      "namedRangeOrTable": "t_resp_riesgo",
+      "dataValidationReference": "NONE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "dbCatalogCode": "MR_RESPUESTA_RIESGO",
+      "backendDefinition": "MatricesRiesgosAppService: EVITAR/MITIGAR/TRANSFERIR/ACEPTAR",
+      "frontendDefinition": "matriz-institucional.contract.ts: CATALOGO_RESPUESTA_RIESGO",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "39"
+      ],
+      "calculationDependencies": [
+        "F39"
+      ],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "RISK_LEVEL",
+      "label": "Nivel de Riesgo 1?9",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "A16:B25",
+        "table": "t_nivel_riesgo"
+      },
+      "items": [
+        {
+          "key": "1",
+          "label": "Riesgo no significativo",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "numericValue": 1,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "2",
+          "label": "Riesgo no significativo",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "numericValue": 2,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "3",
+          "label": "Riesgo bajo",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "numericValue": 3,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "4",
+          "label": "Riesgo bajo",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "numericValue": 4,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "5",
+          "label": "Riesgo Medio",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "numericValue": 5,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "6",
+          "label": "Riesgo Alto",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "numericValue": 6,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "7",
+          "label": "Riesgo Alto",
+          "sortOrder": 7,
+          "active": true,
+          "aliases": [],
+          "numericValue": 7,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "8",
+          "label": "Riesgo Intolerable",
+          "sortOrder": 8,
+          "active": true,
+          "aliases": [],
+          "numericValue": 8,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "9",
+          "label": "Riesgo Intolerable",
+          "sortOrder": 9,
+          "active": true,
+          "aliases": [],
+          "numericValue": 9,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Nivel de Riesgo 1?9",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "A16:B25",
+      "namedRangeOrTable": "t_nivel_riesgo",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "MR_NIVEL_RIESGO (4-band; incompatible)",
+      "backendDefinition": "InstitutionalFormulaDataset F02/F14 lookup CAT_NIVEL_RIESGO",
+      "frontendDefinition": "Calculated field display",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "13",
+        "38"
+      ],
+      "calculationDependencies": [
+        "F02",
+        "F14"
+      ],
+      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
+      "driftEvidence": "Define numeric 1..9 projection and idempotent later migration; do not alter production in this block.",
+      "requiredRemediation": "Define numeric 1..9 projection and idempotent later migration; do not alter production in this block."
+    },
+    {
+      "catalogId": "FREQUENCY",
+      "label": "Frecuencia (dominio)",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "F1:F6",
+        "table": "t_valores_frec_imp"
+      },
+      "items": [
+        {
+          "key": "1",
+          "label": "1",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "numericValue": 1,
+          "dbKey": "1",
+          "dbLabel": "1 - Rara"
+        },
+        {
+          "key": "2",
+          "label": "2",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "numericValue": 2,
+          "dbKey": "2",
+          "dbLabel": "2 - Improbable"
+        },
+        {
+          "key": "3",
+          "label": "3",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "numericValue": 3,
+          "dbKey": "3",
+          "dbLabel": "3 - Posible"
+        },
+        {
+          "key": "4",
+          "label": "4",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "numericValue": 4,
+          "dbKey": "4",
+          "dbLabel": "4 - Probable"
+        },
+        {
+          "key": "5",
+          "label": "5",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "numericValue": 5,
+          "dbKey": "5",
+          "dbLabel": "5 - Casi segura"
+        }
+      ],
+      "institutionalName": "Frecuencia (dominio)",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "F1:F6",
+      "namedRangeOrTable": "t_valores_frec_imp",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "MR_FRECUENCIA_1_5 (labels absent from workbook)",
+      "backendDefinition": "Dynamic catalog and calculation parameters",
+      "frontendDefinition": "Dynamic catalog select",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "10",
+        "34"
+      ],
+      "calculationDependencies": [
+        "F01",
+        "F11"
+      ],
+      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
+      "driftEvidence": "Confirm storage contract and align only numeric domain 1..5.",
+      "requiredRemediation": "Confirm storage contract and align only numeric domain 1..5."
+    },
+    {
+      "catalogId": "IMPACT",
+      "label": "Impacto (dominio)",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "F1:F6",
+        "table": "t_valores_frec_imp"
+      },
+      "items": [
+        {
+          "key": "1",
+          "label": "1",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "numericValue": 1,
+          "dbKey": "1",
+          "dbLabel": "1 - Insignificante"
+        },
+        {
+          "key": "2",
+          "label": "2",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "numericValue": 2,
+          "dbKey": "2",
+          "dbLabel": "2 - Menor"
+        },
+        {
+          "key": "3",
+          "label": "3",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "numericValue": 3,
+          "dbKey": "3",
+          "dbLabel": "3 - Moderado"
+        },
+        {
+          "key": "4",
+          "label": "4",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "numericValue": 4,
+          "dbKey": "4",
+          "dbLabel": "4 - Mayor"
+        },
+        {
+          "key": "5",
+          "label": "5",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "numericValue": 5,
+          "dbKey": "5",
+          "dbLabel": "5 - Catastrofico"
+        }
+      ],
+      "institutionalName": "Impacto (dominio)",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "F1:F6",
+      "namedRangeOrTable": "t_valores_frec_imp",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "MR_IMPACTO_1_5 (labels absent from workbook)",
+      "backendDefinition": "Dynamic catalog and calculation parameters",
+      "frontendDefinition": "Dynamic catalog select",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "11",
+        "35"
+      ],
+      "calculationDependencies": [
+        "F03",
+        "F12"
+      ],
+      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
+      "driftEvidence": "Confirm storage contract and align only numeric domain 1..5.",
+      "requiredRemediation": "Confirm storage contract and align only numeric domain 1..5."
+    },
+    {
+      "catalogId": "AREA",
+      "label": "?reas organizacionales",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "H1:I23",
+        "table": "t_areas"
+      },
+      "items": [
+        {
+          "key": "G-IVM",
+          "label": "Gerencia del Régimen de Invalidez, Vejez y Muerte",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "PENSIONES",
+          "label": "Subgerencia Pensiones",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "AFILIACION",
+          "label": "Subgerencia Afiliación",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "SAUF",
+          "label": "Sección de Atención al Usuario Financiero",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "GAYF",
+          "label": "Gerencia Administrativa y Financiera",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "SGRH",
+          "label": "Sub Gerencia RRHH",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "RECAUDACION",
+          "label": "Sub Gerencia de Recaudación",
+          "sortOrder": 7,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "BIENES",
+          "label": "Departamento de Control de Bienes",
+          "sortOrder": 8,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "PRESUPUESTO",
+          "label": "Subgerencia de Presupuesto",
+          "sortOrder": 9,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CONTABILIDAD",
+          "label": "Subgerencia de Contabilidad",
+          "sortOrder": 10,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "COMPRAS",
+          "label": "Subgerencia de Suministros, Materiales y Compras",
+          "sortOrder": 11,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "GTIC",
+          "label": "Gerencia de Tecnologías de la Información y Comunicación",
+          "sortOrder": 12,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "USI",
+          "label": "Unidad de Seguridad de la Información",
+          "sortOrder": 13,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "UPEG",
+          "label": "Unidad de Planificación y Evaluación de la Gestión",
+          "sortOrder": 14,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "ACTUARIA",
+          "label": "Unidad de Actuaría",
+          "sortOrder": 15,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "LEGAL",
+          "label": "Unidad de Asesoría Legal",
+          "sortOrder": 16,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CYM",
+          "label": "Unidad de Comunicación y Marca",
+          "sortOrder": 17,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "UGI",
+          "label": "Unidad de Gestión de Inversiones",
+          "sortOrder": 18,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "UCR",
+          "label": "Unidad de Cumplimiento Regulatorio",
+          "sortOrder": 19,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CUMP",
+          "label": "Sección de Cumplimiento",
+          "sortOrder": 20,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "SECRETARIA",
+          "label": "Secretaría General",
+          "sortOrder": 21,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "TESORERIA",
+          "label": "Departamento de Tesorería",
+          "sortOrder": 22,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "?reas organizacionales",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "H1:I23",
+      "namedRangeOrTable": "t_areas",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "NOT_CONFIRMED",
+      "backendDefinition": "Risk evaluation area mapping",
+      "frontendDefinition": "Dynamic field input",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "03",
+        "04"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "UNRESOLVED",
+      "driftEvidence": "Obtain official Area to consolidated-area relation.",
+      "requiredRemediation": "Obtain official Area to consolidated-area relation."
+    },
+    {
+      "catalogId": "REGIME",
+      "label": "Reg?menes",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "A42:A49",
+        "table": "t_regimenes"
+      },
+      "items": [
+        {
+          "key": "IVM",
+          "label": "IVM",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "RP",
+          "label": "RP",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "EM",
+          "label": "EM",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "IVM-RP",
+          "label": "IVM-RP",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "IVM-EM",
+          "label": "IVM-EM",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "RP-EM",
+          "label": "RP-EM",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "Todos",
+          "label": "Todos",
+          "sortOrder": 7,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Reg?menes",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "A42:A49",
+      "namedRangeOrTable": "t_regimenes",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "NOT_CONFIRMED",
+      "backendDefinition": "Dynamic catalog service",
+      "frontendDefinition": "Dynamic catalog select",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "15"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "CONTROL_TYPE",
+      "label": "Tipo de Control",
+      "source": {
+        "workbookSheet": "Otras Tablas",
+        "workbookRange": "A2:B5"
+      },
+      "items": [
+        {
+          "key": "PREVENTIVO",
+          "label": "Preventivo",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "DETECTIVO",
+          "label": "Detectivo",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CORRECTIVO",
+          "label": "Correctivo",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Tipo de Control",
+      "sourceWorkbookSheet": "Otras Tablas",
+      "sourceWorkbookRange": "A2:B5",
+      "namedRangeOrTable": "NOT_APPLICABLE",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "CHECK constraint RL_MR_CONTROLES_RIESGO.CON_TIPO",
+      "backendDefinition": "Control type validation",
+      "frontendDefinition": "Control type form",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "20",
+        "24",
+        "28"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "CONTROL_WEIGHT",
+      "label": "Pesos por tipo de control",
+      "source": {
+        "workbookSheet": "Otras Tablas",
+        "workbookRange": "A2:B5"
+      },
+      "items": [
+        {
+          "key": "PREVENTIVO",
+          "label": "Preventivo",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "weight": 0.7,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "DETECTIVO",
+          "label": "Detectivo",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "weight": 0.15,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "CORRECTIVO",
+          "label": "Correctivo",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "weight": 0.15,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Pesos por tipo de control",
+      "sourceWorkbookSheet": "Otras Tablas",
+      "sourceWorkbookRange": "A2:B5",
+      "namedRangeOrTable": "NOT_APPLICABLE",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "NOT_CONFIRMED; formula parameter source not catalog rows",
+      "backendDefinition": "Risk calculation parameter weights",
+      "frontendDefinition": "NOT_APPLICABLE",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [],
+      "calculationDependencies": [
+        "VRI/VRR"
+      ],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "CONTROL_EFFECTIVENESS",
+      "label": "Escala can?nica de efectividad de controles",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "A29:C35",
+        "table": "t_efectividad",
+        "alsoUsedBy": "Matriz Consolidada formula lookups 22/23/26/27/30/31"
+      },
+      "items": [
+        {
+          "key": "INEXISTENTE",
+          "label": "Inexistente",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "level": 0,
+          "percentage": 0,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "INEFECTIVO",
+          "label": "Inefectivo",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [
+            "Es inefectivo"
+          ],
+          "level": 1,
+          "percentage": 0,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "RAZONABLE",
+          "label": "Razonable",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "level": 2,
+          "percentage": 0.3,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "PARCIALMENTE_EFECTIVO",
+          "label": "Parcialmente Efectivo",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "level": 3,
+          "percentage": 0.5,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "MODERADO",
+          "label": "Moderado",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "level": 4,
+          "percentage": 0.85,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "ALTA_EFECTIVIDAD",
+          "label": "Alta Efectividad",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "level": 5,
+          "percentage": 0.9,
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Escala can?nica de efectividad de controles",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "A29:C35",
+      "namedRangeOrTable": "t_efectividad",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "Numeric CON_EFECTIVIDAD_MONITOREO / formula parameters",
+      "backendDefinition": "Calculation and monitoring",
+      "frontendDefinition": "Control effectiveness selectors",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "21",
+        "25",
+        "29",
+        "22",
+        "26",
+        "30"
+      ],
+      "calculationDependencies": [
+        "ETP",
+        "VRR"
+      ],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "CONTROL_AUTOMATION",
+      "label": "Nivel de Automatizaci?n",
+      "source": {
+        "workbookSheet": "Listas",
+        "workbookRange": "A51:A54",
+        "table": "t_automatizacion",
+        "aliasEvidence": "Otras Tablas!D4 defines Semi-Automatizado; t_automatizacion contains Semiautomatizado."
+      },
+      "unknownValueBehavior": "FAIL_CLOSED",
+      "items": [
+        {
+          "key": "AUTOMATIZADO",
+          "label": "Automatizado",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "SEMIAUTOMATIZADO",
+          "label": "Semiautomatizado",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [
+            "Semi-Automatizado"
+          ],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "MANUAL",
+          "label": "Manual",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Nivel de Automatizaci?n",
+      "sourceWorkbookSheet": "Listas",
+      "sourceWorkbookRange": "A51:A54",
+      "namedRangeOrTable": "t_automatizacion",
+      "dataValidationReference": "NOT_APPLICABLE",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "CON_AUTOMATIZACION persisted technical values",
+      "backendDefinition": "Control persistence/validation",
+      "frontendDefinition": "Control automation selector",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "32"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Otras Tablas!D4 defines Semi-Automatizado; t_automatizacion contains Semiautomatizado.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "MONITORING_RISK_STATUS",
+      "label": "Estado del Riesgo (automonitoreo)",
+      "source": {
+        "workbookSheet": "Listas Automonitoreo",
+        "workbookRange": "A1:A4",
+        "visibility": "hidden",
+        "dataValidation": "Matriz Consolidada!BS2:BS60"
+      },
+      "items": [
+        {
+          "key": "VIGENTE",
+          "label": "Vigente",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "MITIGADO",
+          "label": "Mitigado",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "NUEVO",
+          "label": "Nuevo",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Estado del Riesgo (automonitoreo)",
+      "sourceWorkbookSheet": "Listas Automonitoreo",
+      "sourceWorkbookRange": "A1:A4",
+      "namedRangeOrTable": "NOT_APPLICABLE",
+      "dataValidationReference": "Matriz Consolidada!BS2:BS60",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "RL_MR_AUTOMONITOREO.MON_ESTADO_RIESGO",
+      "backendDefinition": "MatricesRiesgosMonitoreoRepository",
+      "frontendDefinition": "Monitoring projection",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "71"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "MONITORING_CONTROL_STATUS",
+      "label": "Estado del Control (automonitoreo)",
+      "source": {
+        "workbookSheet": "Listas Automonitoreo",
+        "workbookRange": "B1:B4",
+        "visibility": "hidden",
+        "dataValidation": "Matriz Consolidada!BT2:BT60,BW2:BW60,BZ2:BZ60"
+      },
+      "items": [
+        {
+          "key": "SE_MANTIENE",
+          "label": "Se mantiene",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "NO_SE_MANTIENE",
+          "label": "No se mantiene",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "REQUIERE_ACTUALIZACIÓN",
+          "label": "Requiere actualización",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Estado del Control (automonitoreo)",
+      "sourceWorkbookSheet": "Listas Automonitoreo",
+      "sourceWorkbookRange": "B1:B4",
+      "namedRangeOrTable": "NOT_APPLICABLE",
+      "dataValidationReference": "Matriz Consolidada!BT2:BT60,BW2:BW60,BZ2:BZ60",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "RL_MR_AUTOMONITOREO.MON_ESTADO_CONTR",
+      "backendDefinition": "MatricesRiesgosMonitoreoRepository",
+      "frontendDefinition": "Monitoring projection",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "72",
+        "76",
+        "79"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    },
+    {
+      "catalogId": "MONITORING_EFFECTIVENESS",
+      "label": "Evaluaci?n de Efectividad de Monitoreo",
+      "source": {
+        "workbookSheet": "Listas Automonitoreo",
+        "workbookRange": "C1:C7",
+        "visibility": "hidden",
+        "dataValidation": "Matriz Consolidada!BU2:BU60,BX2:BX60,CA2:CA60"
+      },
+      "items": [
+        {
+          "key": "INEXISTENTE",
+          "label": "Inexistente",
+          "sortOrder": 1,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "INEFECTIVO",
+          "label": "Inefectivo",
+          "sortOrder": 2,
+          "active": true,
+          "aliases": [
+            "Es inefectivo"
+          ],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "RAZONABLE",
+          "label": "Razonable",
+          "sortOrder": 3,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "PARCIALMENTE_EFECTIVO",
+          "label": "Parcialmente Efectivo",
+          "sortOrder": 4,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "MODERADO",
+          "label": "Moderado",
+          "sortOrder": 5,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        },
+        {
+          "key": "ALTA_EFECTIVIDAD",
+          "label": "Alta Efectividad",
+          "sortOrder": 6,
+          "active": true,
+          "aliases": [],
+          "dbKey": "NOT_CONFIRMED",
+          "dbLabel": "NOT_CONFIRMED"
+        }
+      ],
+      "institutionalName": "Evaluaci?n de Efectividad de Monitoreo",
+      "sourceWorkbookSheet": "Listas Automonitoreo",
+      "sourceWorkbookRange": "C1:C7",
+      "namedRangeOrTable": "NOT_APPLICABLE",
+      "dataValidationReference": "Matriz Consolidada!BU2:BU60,BX2:BX60,CA2:CA60",
+      "canonicalKey": "item.key",
+      "canonicalLabel": "item.label",
+      "sortOrder": "item.sortOrder",
+      "active": "item.active",
+      "numericValue": "item.numericValue ?? NOT_APPLICABLE",
+      "numericLevel": "item.level ?? NOT_APPLICABLE",
+      "percentageValue": "item.percentage ?? NOT_APPLICABLE",
+      "weightValue": "item.weight ?? NOT_APPLICABLE",
+      "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
+      "dbCatalogCode": "RL_MR_CONTROLES_RIESGO.CON_EFECTIVIDAD_MONITOREO",
+      "backendDefinition": "MatricesRiesgosMonitoreoRepository",
+      "frontendDefinition": "Monitoring projection",
+      "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
+      "exportBehavior": "Emit canonicalLabel from this manifest after consumer integration.",
+      "usedByFields": [
+        "73",
+        "77",
+        "80"
+      ],
+      "calculationDependencies": [],
+      "driftStatus": "PENDING_VERIFICATION",
+      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
+      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+    }
+  ],
+  "unresolvedSources": [
+    {
+      "catalogId": "AREA_TO_CONSOLIDATED_MAPPING",
+      "status": "UNRESOLVED",
+      "evidence": "Workbook t_areas H:I is named full area / short name for matrix; no separate consolidated-area hierarchy or explicit Area?ConsolidatedArea relation was found. Do not infer one."
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -100,12 +101,12 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
     [Theory]
     [InlineData(1, "Riesgo no significativo")]
     [InlineData(2, "Riesgo no significativo")]
-    [InlineData(3, "Riesgo Bajo")]
-    [InlineData(4, "Riesgo Medio")]
+    [InlineData(3, "Riesgo bajo")]
+    [InlineData(4, "Riesgo bajo")]
     [InlineData(5, "Riesgo Medio")]
     [InlineData(6, "Riesgo Alto")]
     [InlineData(7, "Riesgo Alto")]
-    [InlineData(8, "Riesgo Muy Alto")]
+    [InlineData(8, "Riesgo Intolerable")]
     [InlineData(9, "Riesgo Crítico")]
     public void F14_NivelRiesgoResidual_ClasificacionCatalogoInstitucional(int vrr, string nivelEsperado)
     {
@@ -121,12 +122,12 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
             [
                 new CatalogElement(1, "1", "Riesgo no significativo", 1, true),
                 new CatalogElement(2, "2", "Riesgo no significativo", 2, true),
-                new CatalogElement(3, "3", "Riesgo Bajo", 3, true),
-                new CatalogElement(4, "4", "Riesgo Medio", 4, true),
+                new CatalogElement(3, "3", "Riesgo bajo", 3, true),
+                new CatalogElement(4, "4", "Riesgo bajo", 4, true),
                 new CatalogElement(5, "5", "Riesgo Medio", 5, true),
                 new CatalogElement(6, "6", "Riesgo Alto", 6, true),
                 new CatalogElement(7, "7", "Riesgo Alto", 7, true),
-                new CatalogElement(8, "8", "Riesgo Muy Alto", 8, true),
+                new CatalogElement(8, "8", "Riesgo Intolerable", 8, true),
                 new CatalogElement(9, "9", "Riesgo Crítico", 9, true)
             ])
         ]);
@@ -150,6 +151,39 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
         FormulaEvaluationResult r = engine.Evaluate(definition, FormattableString.Invariant(@$"{{""valor_riesgo_residual"":{vrr}}}"), options);
         Assert.True(r.Success, string.Join("; ", r.Errors.Select(e => e.Message)));
         Assert.Equal(nivelEsperado, r.Values["nivel_riesgo_residual"]);
+    }
+
+    [Fact]
+    public void RopCump59_Vri3AndVrr1_UseWorkbookRiskLevelLabels()
+    {
+        string[] labels =
+        [
+            "Riesgo no significativo", "Riesgo no significativo", "Riesgo bajo", "Riesgo bajo",
+            "Riesgo Medio", "Riesgo Alto", "Riesgo Alto", "Riesgo Intolerable", "Riesgo Intolerable"
+        ];
+        var lookup = new CatalogCalculationLookup(
+        [
+            new CatalogSnapshot("CAT_NIVEL_RIESGO", true,
+                labels.Select((label, index) => new CatalogElement(index + 1, (index + 1).ToString(CultureInfo.InvariantCulture), label, index + 1, true)).ToArray())
+        ]);
+        var options = new FormulaRuntimeOptions(
+            new InMemoryFunctionRegistry(NativeFunctionCatalog.CreateDefaultDefinitions()), Lookup: lookup);
+        const string definition = """
+        {
+          "secciones": [{"clave":"s1","titulo":"S","campos":[
+            {"clave":"vri","etiqueta":"VRI","tipo":"numero"},
+            {"clave":"vrr","etiqueta":"VRR","tipo":"numero"},
+            {"clave":"nivel_inherente","etiqueta":"Nivel inherente","tipo":"formula","formula":"LOOKUP(\"CAT_NIVEL_RIESGO\",vri)"},
+            {"clave":"nivel_residual","etiqueta":"Nivel residual","tipo":"formula","formula":"LOOKUP(\"CAT_NIVEL_RIESGO\",vrr)"}
+          ]}]
+        }
+        """;
+
+        FormulaEvaluationResult result = new FormulaEngine().Evaluate(definition, "{\"vri\":3,\"vrr\":1}", options);
+
+        Assert.True(result.Success, string.Join("; ", result.Errors.Select(e => e.Message)));
+        Assert.Equal("Riesgo bajo", result.Values["nivel_inherente"]);
+        Assert.Equal("Riesgo no significativo", result.Values["nivel_residual"]);
     }
 
     [Theory]

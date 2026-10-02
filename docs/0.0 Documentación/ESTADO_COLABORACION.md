@@ -1,3 +1,16 @@
+## Registro de intervencion — Bloque 3: catalogo institucional (COD)
+
+- **Fecha/hora local:** 2026-10-02 15:01:48 (America/Tegucigalpa).
+- **Rama / SHA inicial:** desarrollo / c04ff2ddcd4d3eb3b43c11bf13cf8cbe97f0372a. El remoto coincidia al inicio; los commits base de Bloques 1 y 2 eran alcanzables.
+- **Objetivo:** auditar catalogos Excel/Oracle/backend/frontend/export; cero escrituras productivas.
+- **Archivos de esta intervencion:** tools/AuditMatricesExcelVsProduction/Program.cs (snapshot SELECT-only), tools/validate_matrices_catalogs.js, manifiesto matriz_riesgos_catalogos_manifest.json, test residual/catalogo, documento institucional y este handoff. Cambios ajenos preexistentes preservados.
+- **Fuentes ejecutadas:** workbook hash esperado; estructura XLSX y hojas/tablas/validaciones inspeccionadas; auditoria completa 59x82 READ ONLY; snapshot Oracle de catalogos con identidad HPPROD1 y ROLLBACK. Segundo intento para repetir los cuatro casos tuvo timeout antes de SELECT. DML/DDL/escrituras = 0.
+- **Hallazgos:** 14 catalogos/91 items en el manifiesto. Test F14 corregido a labels XLSX exactos 1–9; agregado control ROP-CUMP-59 VRI=3/VRR=1. Produccion MR_NIVEL_RIESGO tiene cuatro claves incompatibles con nivel 1–9. Campo 39 no tiene data validation; tres casos Transferir/Compartir ↔ TRANSFERIR equivalentes por alias de seed; RCUMP-COMPRAS-37 sigue vacio Excel / MITIGAR DB. No existe fuente workbook que defina Area → Area Consolidada.
+- **Pruebas:** validador catalogo (estructura PASS; completitud PENDING por fuente no resuelta); validador contrato 82/82 PASS; tests contrato 17/17; tests residual/catalogo 39/39; build RL.API PASS; build auditor PASS; git diff --check PASS. Primer intento paralelo del filtro de contrato tuvo colision de procesos y fallo de DLL; reejecutado secuencialmente, paso 17/17. Sin cambios frontend.
+- **Artefactos TEMP:** RUN_ID 20261002_1455_853203, 15 archivos sin PII; hashes/filas en %TEMP%/RIESGO_LAVADO_BLOCK3_CATALOG_AUDIT_20261002_1455_853203/SHA256SUMS.json.
+- **Estado:** BLOCK3_STATUS=PENDING; faltan evidencia/aprobacion para respuesta Campo 39, relacion Area→Area Consolidada, crosswalk para bandas DB vs catalogo XLSX 1–9, y paridad completa de consumidores de import/export. No se inicia Bloque 4. Commit/publicacion quedan sujetos a revision final de diff y gates.
+
+---
 # Estado vigente — Sellado final Bloque 2 (COD) — 2026-10-02
 
 - **Rama:** `desarrollo`; SHA inicial `4223d38365aac5d8400a64d6ea3851b2a7545a96`; commit principal de sellado `4aecdf2894361866fd979960792f2f67d5f7ce14`, publicado en `origin/desarrollo`.

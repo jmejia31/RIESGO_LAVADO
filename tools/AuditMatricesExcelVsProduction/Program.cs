@@ -237,6 +237,28 @@ public static class Program
             return 3;
         }
 
+        if (args.Any(a => a.Equals("--catalogs-only", StringComparison.OrdinalIgnoreCase)))
+        {
+            string catalogOutputPath = GetOption(args, "--catalogs-json-out")
+                ?? throw new ArgumentException("--catalogs-only requiere --catalogs-json-out <ruta TEMP>.");
+            try
+            {
+                var snapshot = await ReadProductionCatalogSnapshotAsync(conn, dbName, serviceName, instanceName, currentSchema, sessionUser);
+                File.WriteAllText(catalogOutputPath, JsonSerializer.Serialize(snapshot, new JsonSerializerOptions { WriteIndented = true }));
+                Console.WriteLine("CATALOG_SNAPSHOT_WRITTEN=" + catalogOutputPath);
+                Console.WriteLine("READ_ONLY_TRANSACTION=ESTABLISHED");
+                Console.WriteLine("PRODUCTION_DML_EXECUTED=0");
+                Console.WriteLine("PRODUCTION_DDL_EXECUTED=0");
+                Console.WriteLine("DATABASE_WRITES=0");
+                return 0;
+            }
+            finally
+            {
+                await using var rollbackCatalogSnapshot = new OracleCommand("ROLLBACK", conn);
+                await rollbackCatalogSnapshot.ExecuteNonQueryAsync();
+            }
+        }
+
         // 3. Extracción de riesgos, evaluaciones y proyecciones
         var dbRisks = new Dictionary<string, (long id, string code, string name, string desc)>(StringComparer.OrdinalIgnoreCase);
         await using (var cmd = new OracleCommand("SELECT RIE_ID, RIE_CODIGO, RIE_NOMBRE, NVL(RIE_DESCRIPCION, '') FROM RL_MR_RIESGOS", conn))
@@ -1637,6 +1659,77 @@ public static class Program
                 return args[i + 1];
         }
         return null;
+    }
+
+    private static async Task<Dictionary<string, object>> ReadProductionCatalogSnapshotAsync(
+        OracleConnection conn, string dbName, string serviceName, string instanceName, string currentSchema, string sessionUser)
+    {
+        static void EnsureReadOnlySelect(string sql)
+        {
+            if (!Regex.IsMatch(sql, @"^\s*SELECT\b", RegexOptions.IgnoreCase) || ProhibitedSqlRegex.IsMatch(sql))
+                throw new InvalidOperationException("La política de snapshot sólo permite SELECT sin cláusulas de escritura.");
+        }
+
+        const string catalogSql = @"SELECT c.CAT_CODIGO, c.CAT_NOMBRE, c.CAT_ACTIVO,
+                                           e.ELE_CODIGO, e.ELE_VALOR, e.ELE_ORDEN, e.ELE_ACTIVO
+                                      FROM RL_MR_CATALOGOS c
+                                      LEFT JOIN RL_MR_ELEMENTOS_CATALOGO e ON e.ELE_CATALOGO_ID = c.CAT_ID
+                                     ORDER BY c.CAT_CODIGO, e.ELE_ORDEN, e.ELE_CODIGO";
+        EnsureReadOnlySelect(catalogSql);
+        var catalogs = new List<Dictionary<string, object?>>();
+        await using (var cmd = new OracleCommand(catalogSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                catalogs.Add(new Dictionary<string, object?>
+                {
+                    ["catalogCode"] = reader.IsDBNull(0) ? null : reader.GetString(0),
+                    ["catalogName"] = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    ["catalogActive"] = reader.IsDBNull(2) ? null : reader.GetValue(2),
+                    ["itemCode"] = reader.IsDBNull(3) ? null : reader.GetString(3),
+                    ["itemLabel"] = reader.IsDBNull(4) ? null : reader.GetString(4),
+                    ["sortOrder"] = reader.IsDBNull(5) ? null : reader.GetValue(5),
+                    ["itemActive"] = reader.IsDBNull(6) ? null : reader.GetValue(6)
+                });
+            }
+        }
+
+        const string distinctSql = @"SELECT DISTINCT PROY_RESPUESTA_RIESGO, PROY_NIVEL_INHERENTE, PROY_NIVEL_RESIDUAL
+                                       FROM RL_MR_PROYECCIONES_EVALUACION
+                                      WHERE PROY_ESTADO_EVALUACION = 'APROBADA'
+                                      ORDER BY PROY_RESPUESTA_RIESGO, PROY_NIVEL_INHERENTE, PROY_NIVEL_RESIDUAL";
+        EnsureReadOnlySelect(distinctSql);
+        var projectionValues = new List<string[]>();
+        await using (var cmd = new OracleCommand(distinctSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+                projectionValues.Add(Enumerable.Range(0, reader.FieldCount).Select(i => reader.IsDBNull(i) ? "" : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "").ToArray());
+        }
+
+        const string responseCasesSql = @"SELECT r.RIE_CODIGO, p.PROY_RESPUESTA_RIESGO
+                                            FROM RL_MR_RIESGOS r
+                                            JOIN RL_MR_EVALUACIONES_RIESGO e ON e.EVA_RIESGO_ID = r.RIE_ID AND e.EVA_ACTIVO = 1
+                                            JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
+                                           WHERE r.RIE_CODIGO IN ('RCUMP-COMPRAS-37', 'ROP-CUMP-50', 'ROP-CUMP-53', 'ROP-CUMP-54')
+                                           ORDER BY r.RIE_CODIGO, e.EVA_ID DESC";
+        EnsureReadOnlySelect(responseCasesSql);
+        var responseCases = new List<string[]>();
+        await using (var cmd = new OracleCommand(responseCasesSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+                responseCases.Add([reader.IsDBNull(0) ? "" : reader.GetString(0), reader.IsDBNull(1) ? "" : reader.GetString(1)]);
+        }
+
+        return new Dictionary<string, object>
+        {
+            ["identity"] = new { dbName, serviceName, instanceName, currentSchema, sessionUser },
+            ["catalogRows"] = catalogs,
+            ["approvedProjectionDistinctValues"] = projectionValues,
+            ["field39Cases"] = responseCases
+        };
     }
 
     private static void EvaluarCoincidenciaNumerica(AuditPosition pos)
