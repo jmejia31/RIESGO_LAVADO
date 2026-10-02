@@ -70,12 +70,6 @@ public sealed class MatricesRiesgoService : IMatricesRiesgoService
 
     private static string DeterminarNivelResidual(int vrr)
     {
-        return vrr switch
-        {
-            <= 2 => "BAJO",
-            <= 4 => "MODERADO",
-            <= 6 => "ALTO",
-            _ => "CRÍTICO"
-        };
+        return MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(vrr);
     }
 }

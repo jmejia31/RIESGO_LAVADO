@@ -107,7 +107,7 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
     [InlineData(6, "Riesgo Alto")]
     [InlineData(7, "Riesgo Alto")]
     [InlineData(8, "Riesgo Intolerable")]
-    [InlineData(9, "Riesgo Crítico")]
+    [InlineData(9, "Riesgo Intolerable")]
     public void F14_NivelRiesgoResidual_ClasificacionCatalogoInstitucional(int vrr, string nivelEsperado)
     {
         InstitutionalFormulaDefinition f14 = InstitutionalFormulaDataset.All[13];
@@ -128,7 +128,7 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
                 new CatalogElement(6, "6", "Riesgo Alto", 6, true),
                 new CatalogElement(7, "7", "Riesgo Alto", 7, true),
                 new CatalogElement(8, "8", "Riesgo Intolerable", 8, true),
-                new CatalogElement(9, "9", "Riesgo Crítico", 9, true)
+                new CatalogElement(9, "9", "Riesgo Intolerable", 9, true)
             ])
         ]);
 
@@ -187,6 +187,38 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
     }
 
     [Theory]
+    [InlineData(1, "Riesgo no significativo")]
+    [InlineData(2, "Riesgo no significativo")]
+    [InlineData(3, "Riesgo bajo")]
+    [InlineData(4, "Riesgo bajo")]
+    [InlineData(5, "Riesgo Medio")]
+    [InlineData(6, "Riesgo Alto")]
+    [InlineData(7, "Riesgo Alto")]
+    [InlineData(8, "Riesgo Intolerable")]
+    [InlineData(9, "Riesgo Intolerable")]
+    public void RiskLevelManifest_ProvidesCanonicalLabelForAllNumericValues(int value, string expected) =>
+        Assert.Equal(expected, MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(value));
+
+    [Theory]
+    [InlineData("Transferir", "TRANSFERIR", "Transferir/Compartir")]
+    [InlineData("Reducir", "MITIGAR", "Mitigar")]
+    [InlineData("Es inefectivo", "INEFECTIVO", "Inefectivo")]
+    [InlineData("Semi-Automatizado", "SEMIAUTOMATIZADO", "Semiautomatizado")]
+    public void RiskResponseAliases_NormalizeFromCanonicalManifest(string alias, string key, string label)
+    {
+        string catalogId = alias == "Es inefectivo" ? "CONTROL_EFFECTIVENESS"
+            : alias == "Semi-Automatizado" ? "CONTROL_AUTOMATION" : "RISK_RESPONSE";
+        Assert.Equal(key, MatrizRiesgosCatalogoCanonico.NormalizarClave(catalogId, alias));
+        Assert.Equal(label, MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta(catalogId, alias));
+    }
+
+    [Fact]
+    public void UnknownCatalogValue_FailsClosed()
+    {
+        Assert.Throws<InvalidOperationException>(() => MatrizRiesgosCatalogoCanonico.NormalizarClave("RISK_RESPONSE", "Transferir ya"));
+    }
+
+    [Theory]
     [InlineData(3, 3, 5, 5, 3, 3)] // VRI == VRR => residual igual a inherente
     [InlineData(4, 2, 5, 5, 4, 2)] // VRI == VRR => residual igual a inherente
     [InlineData(2, 5, 6, 6, 2, 5)] // VRI == VRR => residual igual a inherente
@@ -228,6 +260,9 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
     [InlineData("MITIGAR", true)]
     [InlineData("TRANSFERIR", true)]
     [InlineData("ACEPTAR", true)]
+    [InlineData("Transferir", true)]
+    [InlineData("Transferir/Compartir", true)]
+    [InlineData("Reducir", true)]
     [InlineData("ELIMINAR", false)]
     [InlineData("MITIGACIÓN", false)]
     [InlineData("ACEPTADO", false)]
@@ -273,6 +308,9 @@ public sealed class MatricesRiesgosBlock3ResidualCertificacionTests
         if (esperadaValida)
         {
             Assert.True(resultado.Success, $"Respuesta válida '{respuestaRiesgo}' fue rechazada: {resultado.Message}");
+            using JsonDocument storedAnswers = JsonDocument.Parse(dto.EvaDataJson);
+            string expectedKey = respuestaRiesgo is "Transferir" or "Transferir/Compartir" ? "TRANSFERIR" : respuestaRiesgo == "Reducir" ? "MITIGAR" : respuestaRiesgo;
+            Assert.Equal(expectedKey, storedAnswers.RootElement.GetProperty("respuesta_riesgo").GetString());
         }
         else
         {

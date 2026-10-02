@@ -181,10 +181,10 @@
                 <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.vri ?? '-' }}</td>
                 <td class="px-6 py-4 font-mono font-bold text-gray-800">{{ evaluacion.vrr ?? '-' }}</td>
                 <td class="px-6 py-4 text-xs font-bold"
-                    [class.text-emerald-600]="evaluacion.nivelResidual === 'BAJO'"
-                    [class.text-amber-600]="evaluacion.nivelResidual === 'MEDIO'"
-                    [class.text-red-600]="evaluacion.nivelResidual === 'ALTO' || evaluacion.nivelResidual === 'CRITICO'">
-                  {{ evaluacion.nivelResidual ?? '-' }}
+                    [class.text-emerald-600]="evaluacion.vrr !== null && evaluacion.vrr !== undefined && evaluacion.vrr <= 4"
+                    [class.text-amber-600]="evaluacion.vrr === 5"
+                    [class.text-red-600]="evaluacion.vrr !== null && evaluacion.vrr !== undefined && evaluacion.vrr >= 6">
+                  {{ etiquetaNivelRiesgo(evaluacion.vrr) }}
                 </td>
                 <td class="px-6 py-4 text-xs text-gray-500">{{ evaluacion.fechaEval | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="px-6 py-4 text-center whitespace-nowrap">
@@ -293,10 +293,10 @@
                 <td class="px-6 py-4">{{ fila.areaPrincipal }}</td>
                 <td class="px-6 py-4">{{ fila.duenoRiesgo }}</td>
                 <td class="px-6 py-4 font-mono font-bold">{{ fila.vri }}</td>
-                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ fila.nivelInherente }}</span></td>
+                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ etiquetaNivelRiesgo(fila.vri) }}</span></td>
                 <td class="px-6 py-4 font-mono font-bold">{{ fila.vrr }}</td>
-                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ fila.nivelResidual }}</span></td>
-                <td class="px-6 py-4">{{ fila.respuestaRiesgo }}</td>
+                <td class="px-6 py-4"><span class="inline-flex px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">{{ etiquetaNivelRiesgo(fila.vrr) }}</span></td>
+                <td class="px-6 py-4">{{ etiquetaRespuestaRiesgo(fila.respuestaRiesgo) }}</td>
                 <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-50 text-blue-700">{{ fila.estadoEvaluacion }}</span></td>
                 <td class="px-6 py-4 font-mono">{{ fila.versionFormularioId }}</td>
                 <td class="px-6 py-4 text-center whitespace-nowrap">

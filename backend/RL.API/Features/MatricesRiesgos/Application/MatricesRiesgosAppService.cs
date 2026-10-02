@@ -763,7 +763,7 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         long versionFormularioId,
         IReadOnlyDictionary<string, bool>? controlPresence = null)
     {
-        ServiceResult? validacionRespuesta = ValidarRespuestaRiesgo(dto.EvaDataJson);
+        ServiceResult? validacionRespuesta = NormalizarRespuestaRiesgo(dto);
         if (validacionRespuesta is not null)
         {
             return validacionRespuesta;
@@ -858,26 +858,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
             [InstitutionalCalculationContextKeys.CorrectiveControl] = controls.Any(control => control.ConTipo.Equals("CORRECTIVO", StringComparison.OrdinalIgnoreCase))
         };
 
-    private static readonly HashSet<string> OpcionesRespuestaRiesgoValidas = new(StringComparer.Ordinal)
+    private static ServiceResult? NormalizarRespuestaRiesgo(EvaluacionRiesgoDto evaluacion)
     {
-        "EVITAR",
-        "MITIGAR",
-        "TRANSFERIR",
-        "ACEPTAR"
-    };
-
-    private static ServiceResult? ValidarRespuestaRiesgo(string evaDataJson)
-    {
-        if (string.IsNullOrWhiteSpace(evaDataJson)) return null;
+        if (string.IsNullOrWhiteSpace(evaluacion.EvaDataJson)) return null;
 
         try
         {
-            using var doc = JsonDocument.Parse(evaDataJson);
-            if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
+            using JsonDocument document = JsonDocument.Parse(evaluacion.EvaDataJson);
+            if (document.RootElement.ValueKind != JsonValueKind.Object) return null;
+            Dictionary<string, JsonElement> properties = document.RootElement.EnumerateObject()
+                .ToDictionary(property => property.Name, property => property.Value.Clone(), StringComparer.Ordinal);
 
             foreach (string propName in new[] { "respuesta_riesgo", "respuestaRiesgo" })
             {
-                if (doc.RootElement.TryGetProperty(propName, out JsonElement prop))
+                if (properties.TryGetValue(propName, out JsonElement prop))
                 {
                     if (prop.ValueKind == JsonValueKind.Null)
                     {
@@ -895,12 +889,20 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
                         return ServiceResult.BadRequest($"El campo '{propName}' no puede ser vacío. Valores válidos: EVITAR, MITIGAR, TRANSFERIR, ACEPTAR.");
                     }
 
-                    if (!OpcionesRespuestaRiesgoValidas.Contains(valor))
+                    string canonicalKey;
+                    try
+                    {
+                        canonicalKey = MatrizRiesgosCatalogoCanonico.NormalizarClave("RISK_RESPONSE", valor);
+                    }
+                    catch (InvalidOperationException)
                     {
                         return ServiceResult.BadRequest($"El valor '{valor}' para '{propName}' no es válido. Los valores canónicos permitidos son: EVITAR, MITIGAR, TRANSFERIR, ACEPTAR.");
                     }
+                    properties[propName] = JsonSerializer.Deserialize<JsonElement>(JsonSerializer.Serialize(canonicalKey));
                 }
             }
+
+            evaluacion.EvaDataJson = JsonSerializer.Serialize(properties);
         }
         catch (JsonException)
         {

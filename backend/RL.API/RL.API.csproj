@@ -11,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\matriz_riesgos_catalogos_manifest.json" />
+
     <!-- Oracle -->
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />
     <PackageReference Include="MailKit" Version="4.17.0" />

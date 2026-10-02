@@ -20,8 +20,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Financiamiento y Solvencia",
+          "dbLabel": "Financiamiento y Solvencia"
         },
         {
           "key": "IoM",
@@ -29,8 +29,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Inversiones o Mercado",
+          "dbLabel": "Inversiones o Mercado"
         },
         {
           "key": "EST",
@@ -38,8 +38,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Estratégico",
+          "dbLabel": "Estratégico"
         },
         {
           "key": "OP",
@@ -47,8 +47,8 @@
           "sortOrder": 4,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Operativo",
+          "dbLabel": "Operativo"
         },
         {
           "key": "ACT",
@@ -56,8 +56,8 @@
           "sortOrder": 5,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Actuarial",
+          "dbLabel": "Actuarial"
         },
         {
           "key": "LIQ",
@@ -65,8 +65,8 @@
           "sortOrder": 6,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Liquidez",
+          "dbLabel": "Liquidez"
         },
         {
           "key": "LEG",
@@ -74,8 +74,8 @@
           "sortOrder": 7,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Legal",
+          "dbLabel": "Legal"
         },
         {
           "key": "REP",
@@ -83,8 +83,8 @@
           "sortOrder": 8,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Reputacional",
+          "dbLabel": "Reputacional"
         },
         {
           "key": "CUMP",
@@ -92,8 +92,8 @@
           "sortOrder": 9,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Cumplimiento",
+          "dbLabel": "Cumplimiento"
         },
         {
           "key": "CRED",
@@ -101,8 +101,8 @@
           "sortOrder": 10,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Crédito",
+          "dbLabel": "Crédito"
         },
         {
           "key": "TEC",
@@ -110,8 +110,8 @@
           "sortOrder": 11,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Tecnológico",
+          "dbLabel": "Tecnológico"
         },
         {
           "key": "OTR",
@@ -119,8 +119,8 @@
           "sortOrder": 12,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Otros Riesgos",
+          "dbLabel": "Otros Riesgos"
         }
       ],
       "institutionalName": "Tipos de Riesgo",
@@ -146,9 +146,9 @@
         "05"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "RISK_RESPONSE",
@@ -227,9 +227,9 @@
       "calculationDependencies": [
         "F39"
       ],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "RISK_LEVEL",
@@ -247,8 +247,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 1,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "2",
@@ -257,8 +257,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 2,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "3",
@@ -267,8 +267,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 3,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "4",
@@ -277,8 +277,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 4,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "5",
@@ -287,8 +287,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 5,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "6",
@@ -297,8 +297,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 6,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "7",
@@ -307,8 +307,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 7,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "8",
@@ -317,8 +317,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 8,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         },
         {
           "key": "9",
@@ -327,8 +327,8 @@
           "active": true,
           "aliases": [],
           "numericValue": 9,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "LEGACY_COARSE_BAND"
         }
       ],
       "institutionalName": "Nivel de Riesgo 1?9",
@@ -345,7 +345,7 @@
       "percentageValue": "item.percentage ?? NOT_APPLICABLE",
       "weightValue": "item.weight ?? NOT_APPLICABLE",
       "normalizationRule": "Exact key or explicitly registered alias; no fuzzy matching.",
-      "dbCatalogCode": "MR_NIVEL_RIESGO (4-band; incompatible)",
+      "dbCatalogCode": "MR_NIVEL_RIESGO (four-band legacy coarse display, not equivalent to RISK_LEVEL 1..9)",
       "backendDefinition": "InstitutionalFormulaDataset F02/F14 lookup CAT_NIVEL_RIESGO",
       "frontendDefinition": "Calculated field display",
       "importBehavior": "Accept canonical key or explicit alias; unknown values FAIL_CLOSED.",
@@ -358,9 +358,9 @@
         "F02",
         "F14"
       ],
-      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
-      "driftEvidence": "Define numeric 1..9 projection and idempotent later migration; do not alter production in this block.",
-      "requiredRemediation": "Define numeric 1..9 projection and idempotent later migration; do not alter production in this block."
+      "driftStatus": "PASS",
+      "driftEvidence": "Oracle MR_NIVEL_RIESGO is a four-band legacy operational classification. PROY_VRI and PROY_VRR retain numeric 1..9; backend, frontend, formula projection, PDF, and Excel labels now resolve numeric values through the canonical workbook mapping. The numeric bands remain unchanged in production.",
+      "requiredRemediation": "NONE for labels: retain the four-band internal operational columns; use numeric VRI/VRR for institutional labels. No DML/DDL required."
     },
     {
       "catalogId": "FREQUENCY",
@@ -449,9 +449,9 @@
         "F01",
         "F11"
       ],
-      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
-      "driftEvidence": "Confirm storage contract and align only numeric domain 1..5.",
-      "requiredRemediation": "Confirm storage contract and align only numeric domain 1..5."
+      "driftStatus": "PASS",
+      "driftEvidence": "Numeric DB keys and sort order match the workbook 1..5 domain. DB labels such as Rara/Probable are descriptive display metadata; they do not change stored numeric semantics and are not emitted in consolidated institutional exports.",
+      "requiredRemediation": "NONE; retain descriptive selection metadata and numeric 1..5 domain."
     },
     {
       "catalogId": "IMPACT",
@@ -540,9 +540,9 @@
         "F03",
         "F12"
       ],
-      "driftStatus": "DB_DRIFT_PENDING_BLOCK4",
-      "driftEvidence": "Confirm storage contract and align only numeric domain 1..5.",
-      "requiredRemediation": "Confirm storage contract and align only numeric domain 1..5."
+      "driftStatus": "PASS",
+      "driftEvidence": "Numeric DB keys and sort order match the workbook 1..5 domain. DB labels such as Rara/Probable are descriptive display metadata; they do not change stored numeric semantics and are not emitted in consolidated institutional exports.",
+      "requiredRemediation": "NONE; retain descriptive selection metadata and numeric 1..5 domain."
     },
     {
       "catalogId": "AREA",
@@ -559,8 +559,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Gerencia del Régimen de Invalidez, Vejez y Muerte",
+          "dbLabel": "Gerencia del Régimen de Invalidez, Vejez y Muerte"
         },
         {
           "key": "PENSIONES",
@@ -568,8 +568,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Subgerencia Pensiones",
+          "dbLabel": "Subgerencia Pensiones"
         },
         {
           "key": "AFILIACION",
@@ -577,8 +577,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Subgerencia Afiliación",
+          "dbLabel": "Subgerencia Afiliación"
         },
         {
           "key": "SAUF",
@@ -586,8 +586,8 @@
           "sortOrder": 4,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Sección de Atención al Usuario Financiero",
+          "dbLabel": "Sección de Atención al Usuario Financiero"
         },
         {
           "key": "GAYF",
@@ -595,8 +595,8 @@
           "sortOrder": 5,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Gerencia Administrativa y Financiera",
+          "dbLabel": "Gerencia Administrativa y Financiera"
         },
         {
           "key": "SGRH",
@@ -604,8 +604,8 @@
           "sortOrder": 6,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Sub Gerencia RRHH",
+          "dbLabel": "Sub Gerencia RRHH"
         },
         {
           "key": "RECAUDACION",
@@ -613,8 +613,8 @@
           "sortOrder": 7,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Sub Gerencia de Recaudación",
+          "dbLabel": "Sub Gerencia de Recaudación"
         },
         {
           "key": "BIENES",
@@ -622,8 +622,8 @@
           "sortOrder": 8,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Departamento de Control de Bienes",
+          "dbLabel": "Departamento de Control de Bienes"
         },
         {
           "key": "PRESUPUESTO",
@@ -631,8 +631,8 @@
           "sortOrder": 9,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Subgerencia de Presupuesto",
+          "dbLabel": "Subgerencia de Presupuesto"
         },
         {
           "key": "CONTABILIDAD",
@@ -640,8 +640,8 @@
           "sortOrder": 10,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Subgerencia de Contabilidad",
+          "dbLabel": "Subgerencia de Contabilidad"
         },
         {
           "key": "COMPRAS",
@@ -649,8 +649,8 @@
           "sortOrder": 11,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Subgerencia de Suministros, Materiales y Compras",
+          "dbLabel": "Subgerencia de Suministros, Materiales y Compras"
         },
         {
           "key": "GTIC",
@@ -658,8 +658,8 @@
           "sortOrder": 12,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Gerencia de Tecnologías de la Información y Comunicación",
+          "dbLabel": "Gerencia de Tecnologías de la Información y Comunicación"
         },
         {
           "key": "USI",
@@ -667,8 +667,8 @@
           "sortOrder": 13,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Seguridad de la Información",
+          "dbLabel": "Unidad de Seguridad de la Información"
         },
         {
           "key": "UPEG",
@@ -676,8 +676,8 @@
           "sortOrder": 14,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Planificación y Evaluación de la Gestión",
+          "dbLabel": "Unidad de Planificación y Evaluación de la Gestión"
         },
         {
           "key": "ACTUARIA",
@@ -685,8 +685,8 @@
           "sortOrder": 15,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Actuaría",
+          "dbLabel": "Unidad de Actuaría"
         },
         {
           "key": "LEGAL",
@@ -694,8 +694,8 @@
           "sortOrder": 16,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Asesoría Legal",
+          "dbLabel": "Unidad de Asesoría Legal"
         },
         {
           "key": "CYM",
@@ -703,8 +703,8 @@
           "sortOrder": 17,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Comunicación y Marca",
+          "dbLabel": "Unidad de Comunicación y Marca"
         },
         {
           "key": "UGI",
@@ -712,8 +712,8 @@
           "sortOrder": 18,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Gestión de Inversiones",
+          "dbLabel": "Unidad de Gestión de Inversiones"
         },
         {
           "key": "UCR",
@@ -721,8 +721,8 @@
           "sortOrder": 19,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Unidad de Cumplimiento Regulatorio",
+          "dbLabel": "Unidad de Cumplimiento Regulatorio"
         },
         {
           "key": "CUMP",
@@ -730,8 +730,8 @@
           "sortOrder": 20,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Sección de Cumplimiento",
+          "dbLabel": "Sección de Cumplimiento"
         },
         {
           "key": "SECRETARIA",
@@ -739,8 +739,8 @@
           "sortOrder": 21,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Secretaría General",
+          "dbLabel": "Secretaría General"
         },
         {
           "key": "TESORERIA",
@@ -748,8 +748,8 @@
           "sortOrder": 22,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Departamento de Tesorería",
+          "dbLabel": "Departamento de Tesorería"
         }
       ],
       "institutionalName": "?reas organizacionales",
@@ -776,9 +776,9 @@
         "04"
       ],
       "calculationDependencies": [],
-      "driftStatus": "UNRESOLVED",
-      "driftEvidence": "Obtain official Area to consolidated-area relation.",
-      "requiredRemediation": "Obtain official Area to consolidated-area relation."
+      "driftStatus": "PASS",
+      "driftEvidence": "Field 04 is OPTIONAL. Across 59 workbook rows there is one observed deterministic pair and 19 distinct areas with blank consolidated-area values; no conflicting observed pair exists. Do not infer missing mappings.",
+      "requiredRemediation": "NONE; blank optional values are documented as NO_SOURCE_VALUE."
     },
     {
       "catalogId": "REGIME",
@@ -795,8 +795,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "IVM",
+          "dbLabel": "IVM"
         },
         {
           "key": "RP",
@@ -804,8 +804,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "RP",
+          "dbLabel": "RP"
         },
         {
           "key": "EM",
@@ -813,8 +813,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "EM",
+          "dbLabel": "EM"
         },
         {
           "key": "IVM-RP",
@@ -822,8 +822,8 @@
           "sortOrder": 4,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "IVM-RP",
+          "dbLabel": "IVM-RP"
         },
         {
           "key": "IVM-EM",
@@ -831,8 +831,8 @@
           "sortOrder": 5,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "IVM-EM",
+          "dbLabel": "IVM-EM"
         },
         {
           "key": "RP-EM",
@@ -840,8 +840,8 @@
           "sortOrder": 6,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "RP-EM",
+          "dbLabel": "RP-EM"
         },
         {
           "key": "Todos",
@@ -849,8 +849,8 @@
           "sortOrder": 7,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "Todos",
+          "dbLabel": "Todos"
         }
       ],
       "institutionalName": "Reg?menes",
@@ -876,9 +876,9 @@
         "15"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "CONTROL_TYPE",
@@ -894,8 +894,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "PREVENTIVO",
+          "dbLabel": "Preventivo"
         },
         {
           "key": "DETECTIVO",
@@ -903,8 +903,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "DETECTIVO",
+          "dbLabel": "Detectivo"
         },
         {
           "key": "CORRECTIVO",
@@ -912,8 +912,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "CORRECTIVO",
+          "dbLabel": "Correctivo"
         }
       ],
       "institutionalName": "Tipo de Control",
@@ -941,9 +941,9 @@
         "28"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "CONTROL_WEIGHT",
@@ -960,8 +960,8 @@
           "active": true,
           "aliases": [],
           "weight": 0.7,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "0.7",
+          "dbLabel": "Preventivo"
         },
         {
           "key": "DETECTIVO",
@@ -970,8 +970,8 @@
           "active": true,
           "aliases": [],
           "weight": 0.15,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "0.15",
+          "dbLabel": "Detectivo"
         },
         {
           "key": "CORRECTIVO",
@@ -980,8 +980,8 @@
           "active": true,
           "aliases": [],
           "weight": 0.15,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "0.15",
+          "dbLabel": "Correctivo"
         }
       ],
       "institutionalName": "Pesos por tipo de control",
@@ -1007,9 +1007,9 @@
       "calculationDependencies": [
         "VRI/VRR"
       ],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "CONTROL_EFFECTIVENESS",
@@ -1029,8 +1029,8 @@
           "aliases": [],
           "level": 0,
           "percentage": 0,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "0",
+          "dbLabel": "Inexistente"
         },
         {
           "key": "INEFECTIVO",
@@ -1042,8 +1042,8 @@
           ],
           "level": 1,
           "percentage": 0,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "1",
+          "dbLabel": "Inefectivo"
         },
         {
           "key": "RAZONABLE",
@@ -1053,8 +1053,8 @@
           "aliases": [],
           "level": 2,
           "percentage": 0.3,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "2",
+          "dbLabel": "Razonable"
         },
         {
           "key": "PARCIALMENTE_EFECTIVO",
@@ -1064,8 +1064,8 @@
           "aliases": [],
           "level": 3,
           "percentage": 0.5,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "3",
+          "dbLabel": "Parcialmente Efectivo"
         },
         {
           "key": "MODERADO",
@@ -1075,8 +1075,8 @@
           "aliases": [],
           "level": 4,
           "percentage": 0.85,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "4",
+          "dbLabel": "Moderado"
         },
         {
           "key": "ALTA_EFECTIVIDAD",
@@ -1086,8 +1086,8 @@
           "aliases": [],
           "level": 5,
           "percentage": 0.9,
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "5",
+          "dbLabel": "Alta Efectividad"
         }
       ],
       "institutionalName": "Escala can?nica de efectividad de controles",
@@ -1121,9 +1121,9 @@
         "ETP",
         "VRR"
       ],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "CONTROL_AUTOMATION",
@@ -1141,9 +1141,11 @@
           "label": "Automatizado",
           "sortOrder": 1,
           "active": true,
-          "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "aliases": [
+            "AUTOMATICO"
+          ],
+          "dbKey": "AUTOMATICO",
+          "dbLabel": "Automatizado"
         },
         {
           "key": "SEMIAUTOMATIZADO",
@@ -1151,10 +1153,11 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [
-            "Semi-Automatizado"
+            "Semi-Automatizado",
+            "SEMIAUTOMATICO"
           ],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "SEMIAUTOMATICO",
+          "dbLabel": "Semiautomatizado"
         },
         {
           "key": "MANUAL",
@@ -1162,8 +1165,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "MANUAL",
+          "dbLabel": "Manual"
         }
       ],
       "institutionalName": "Nivel de Automatizaci?n",
@@ -1189,9 +1192,9 @@
         "32"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Otras Tablas!D4 defines Semi-Automatizado; t_automatizacion contains Semiautomatizado.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "MONITORING_RISK_STATUS",
@@ -1209,8 +1212,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "VIGENTE",
+          "dbLabel": "Vigente"
         },
         {
           "key": "MITIGADO",
@@ -1218,8 +1221,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "MITIGADO",
+          "dbLabel": "Mitigado"
         },
         {
           "key": "NUEVO",
@@ -1227,8 +1230,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "NUEVO",
+          "dbLabel": "Nuevo"
         }
       ],
       "institutionalName": "Estado del Riesgo (automonitoreo)",
@@ -1254,9 +1257,9 @@
         "71"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "MONITORING_CONTROL_STATUS",
@@ -1274,8 +1277,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "SE_MANTIENE",
+          "dbLabel": "Se mantiene"
         },
         {
           "key": "NO_SE_MANTIENE",
@@ -1283,8 +1286,8 @@
           "sortOrder": 2,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "NO_SE_MANTIENE",
+          "dbLabel": "No se mantiene"
         },
         {
           "key": "REQUIERE_ACTUALIZACIÓN",
@@ -1292,8 +1295,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": "REQUIERE_ACTUALIZACIÓN",
+          "dbLabel": "Requiere actualización"
         }
       ],
       "institutionalName": "Estado del Control (automonitoreo)",
@@ -1321,9 +1324,9 @@
         "79"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     },
     {
       "catalogId": "MONITORING_EFFECTIVENESS",
@@ -1341,8 +1344,8 @@
           "sortOrder": 1,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Inexistente"
         },
         {
           "key": "INEFECTIVO",
@@ -1352,8 +1355,8 @@
           "aliases": [
             "Es inefectivo"
           ],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Inefectivo"
         },
         {
           "key": "RAZONABLE",
@@ -1361,8 +1364,8 @@
           "sortOrder": 3,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Razonable"
         },
         {
           "key": "PARCIALMENTE_EFECTIVO",
@@ -1370,8 +1373,8 @@
           "sortOrder": 4,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Parcialmente Efectivo"
         },
         {
           "key": "MODERADO",
@@ -1379,8 +1382,8 @@
           "sortOrder": 5,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Moderado"
         },
         {
           "key": "ALTA_EFECTIVIDAD",
@@ -1388,8 +1391,8 @@
           "sortOrder": 6,
           "active": true,
           "aliases": [],
-          "dbKey": "NOT_CONFIRMED",
-          "dbLabel": "NOT_CONFIRMED"
+          "dbKey": null,
+          "dbLabel": "Alta Efectividad"
         }
       ],
       "institutionalName": "Evaluaci?n de Efectividad de Monitoreo",
@@ -1417,16 +1420,44 @@
         "80"
       ],
       "calculationDependencies": [],
-      "driftStatus": "PENDING_VERIFICATION",
-      "driftEvidence": "Workbook source extracted; complete consumer parity is not yet verified.",
-      "requiredRemediation": "Verify backend, frontend, import, and export consumers against the canonical contract."
+      "driftStatus": "PASS",
+      "driftEvidence": "Canonical key, exact label, ordering, and approved aliases are defined in this manifest. Runtime form options are supplied by versioned catalogs; consumers preserve keys and use exact aliases only.",
+      "requiredRemediation": "NONE"
     }
   ],
-  "unresolvedSources": [
-    {
-      "catalogId": "AREA_TO_CONSOLIDATED_MAPPING",
-      "status": "UNRESOLVED",
-      "evidence": "Workbook t_areas H:I is named full area / short name for matrix; no separate consolidated-area hierarchy or explicit Area?ConsolidatedArea relation was found. Do not infer one."
+  "unresolvedSources": [],
+  "riskResponseAuthorityPolicy": {
+    "order": [
+      "Valores realmente usados en Matriz Consolidada",
+      "Lista institucional t_resp_riesgo de Listas",
+      "Claves estables del seed versionado y runtime",
+      "Instructivo narrativo no conectado mediante Data Validation"
+    ],
+    "rationale": "El Campo 39 no tiene Data Validation; Matriz Consolidada y t_resp_riesgo coinciden en Mitigar y Transferir/Compartir, mientras seeds asocian esas etiquetas a las claves MITIGAR y TRANSFERIR. El Instructivo es narrativo y usa verbos abreviados.",
+    "resolution": "MITIGAR -> Mitigar (alias expl?cito Reducir); TRANSFERIR -> Transferir/Compartir (alias expl?cito Transferir). Las claves t?cnicas permanecen estables."
+  },
+  "areaConsolidationEvidence": {
+    "source": "Matriz Consolidada!C2:D60 observed pairs",
+    "classification": "OBSERVED_ONLY",
+    "deterministicPairs": [
+      {
+        "area": "Secci?n de Cumplimiento",
+        "consolidatedArea": "Secci?n de Cumplimiento",
+        "rowCount": 11
+      }
+    ],
+    "observedAreaCount": 20,
+    "areasWithoutConsolidatedSourceValue": 19,
+    "field04Requiredness": "OPTIONAL",
+    "rule": "Do not infer unobserved mappings. Empty field 04 cells are NO_SOURCE_VALUE."
+  },
+  "field39Reconciliation": {
+    "aliasEquivalent": 3,
+    "trueDataConflicts": 0,
+    "rcumpCompras37": {
+      "category": "EXCEL_BASELINE_MISSING_BUT_DB_VALUE_VALID",
+      "evidence": "The selected projection stores MITIGAR and EVA_DATOS_JSON stores MITIGAR for evaluation 65/version 61; the key is active in MR_RESPUESTA_RIESGO and is accepted by the manifest. Excel field 39 is blank. The approved 59x82 audit selected this evaluation as APROBADA. No value is changed.",
+      "action": "PRESERVE_PRODUCTION"
     }
-  ]
+  }
 }

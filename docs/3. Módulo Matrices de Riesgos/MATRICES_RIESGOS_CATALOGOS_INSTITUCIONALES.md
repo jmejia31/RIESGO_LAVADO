@@ -1,66 +1,75 @@
-# Catálogos institucionales de Matrices de Riesgos
+# Cat?logos institucionales de Matrices de Riesgos
 
-## Resultado de auditoría — Bloque 3
+## Certificaci?n del Bloque 3
 
-**Estado: PENDING.** La fuente workbook permite congelar varios catálogos, pero la auditoría encontró divergencia real en producción para los niveles de riesgo y no encontró evidencia suficiente para cerrar el mapeo de Área Consolidada. No se ejecutó DML, DDL, carga de semillas ni corrección productiva. No se inicia el Bloque 4.
+**Estado t?cnico: CERRADO.** El contrato can?nico contiene 14 cat?logos y 91 ?tems. Se validaron los consumidores backend, frontend, importaci?n y exportaci?n con el manifiesto versionado y pruebas. No se ejecut? DML, DDL, seed ni procedimiento en producci?n. No se inicia Bloque 4.
 
-## Fuentes y método
+## Fuentes y m?todo
 
-- Workbook leído sin modificar: `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`.
-- Hojas inspeccionadas: `Matriz Consolidada`, `Listas`, `Otras Tablas`, `Listas Automonitoreo` (oculta) e `Instructivo`.
-- Tablas de Excel: `Matriz_Riesgos`, `t_tipos_riesgos`, `t_resp_riesgo`, `t_valores_frec_imp`, `t_nivel_riesgo`, `t_efectividad`, `t_pesos_controles`, `t_regimenes`, `t_automatizacion`, `t_areas`.
-- No hay named ranges definidos. `Matriz Consolidada` tiene validaciones conectadas a listas de automonitoreo (BS, BT/BW/BZ, BU/BX/CA); el campo 39 no tiene una regla de validación de datos. Sus valores y la tabla `t_resp_riesgo` comparten el dominio, pero esa coincidencia no demuestra una conexión de validación.
-- Oracle se consultó con `SET TRANSACTION READ ONLY`, validando HPPROD1 / hpprod1 / hpprod1 / RIESGO_LAVADO / RIESGO_LAVADO; finalizó con `ROLLBACK`.
+- Workbook institucional: `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`.
+- Hojas inspeccionadas: `Matriz Consolidada`, `Listas`, `Otras Tablas`, `Listas Automonitoreo` (oculta) e `Instructivo`. Se inspeccionaron tablas, f?rmulas y validaciones. No hay named ranges definidos; Campo 39 carece de Data Validation.
+- Contrato: [matriz_riesgos_catalogos_manifest.json](../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_catalogos_manifest.json). Contiene 14 cat?logos/91 ?tems. Backend carga el manifiesto embebido; el validator compara los datos generados del frontend con cada ?tem del manifest.
+- Producci?n se consult? en transacci?n Oracle READ ONLY y termin? con ROLLBACK. Identidad: HPPROD1 / hpprod1 / hpprod1 / RIESGO_LAVADO / RIESGO_LAVADO. DML=0, DDL=0, procedimientos=0, escrituras=0.
 
-La autoridad visible de los catálogos conectados a fórmulas y listas es el workbook. `Listas!A16:B25` alimenta F02/F14; `Listas!A29:C35` (`t_efectividad`) alimenta las escalas; los pesos salen de `Otras Tablas!A3:B5`. El manifiesto JSON conserva claves, etiquetas, orden, valores numéricos y aliases con alcance explícito.
+Cat?logos congelados: `RISK_TYPE`, `RISK_RESPONSE`, `RISK_LEVEL`, `FREQUENCY`, `IMPACT`, `AREA`, `REGIME`, `CONTROL_TYPE`, `CONTROL_WEIGHT`, `CONTROL_EFFECTIVENESS`, `CONTROL_AUTOMATION`, `MONITORING_RISK_STATUS`, `MONITORING_CONTROL_STATUS`, `MONITORING_EFFECTIVENESS`.
 
-## Contrato congelado desde XLSX
+## Nivel de riesgo
 
-La lista completa queda en [matriz_riesgos_catalogos_manifest.json](../../backend/RL.API/Features/MatricesRiesgos/Contracts/matriz_riesgos_catalogos_manifest.json). Incluye 14 catálogos y 91 ítems: `RISK_TYPE`, `RISK_RESPONSE`, `RISK_LEVEL`, `FREQUENCY`, `IMPACT`, `AREA`, `REGIME`, `CONTROL_TYPE`, `CONTROL_WEIGHT`, `CONTROL_EFFECTIVENESS`, `CONTROL_AUTOMATION`, `MONITORING_RISK_STATUS`, `MONITORING_CONTROL_STATUS` y `MONITORING_EFFECTIVENESS`.
+La fuente workbook `Listas!A16:B25` determina los labels exactos:
 
-Los niveles exactos del workbook son 1–2 `Riesgo no significativo`, 3–4 `Riesgo bajo`, 5 `Riesgo Medio`, 6–7 `Riesgo Alto`, y 8–9 `Riesgo Intolerable`. La prueba `F14_NivelRiesgoResidual_ClasificacionCatalogoInstitucional` se corrigió para no reintroducir valores contradictorios. Los valores 3 y 1 corresponden exactamente a `Riesgo bajo` y `Riesgo no significativo`.
+| Valor | Etiqueta |
+|---:|---|
+| 1 | Riesgo no significativo |
+| 2 | Riesgo no significativo |
+| 3 | Riesgo bajo |
+| 4 | Riesgo bajo |
+| 5 | Riesgo Medio |
+| 6 | Riesgo Alto |
+| 7 | Riesgo Alto |
+| 8 | Riesgo Intolerable |
+| 9 | Riesgo Intolerable |
 
-Los pesos Preventivo/Detectivo/Correctivo son 0.70/0.15/0.15 (suma 1.00). La escala única de efectividad tiene niveles 0–5 y porcentajes 0%, 0%, 30%, 50%, 85%, 90%. `Inefectivo` es la etiqueta de `t_efectividad` y `Es inefectivo` aparece en las tablas descriptivas por tipo con el mismo nivel y porcentaje; se registra como alias explícito. Automonitoreo enlaza listas ocultas para estado de riesgo, estado de control y efectividad.
+Producci?n tiene cuatro bandas hist?ricas (`BAJO`, `MODERADO`, `ALTO`, `CRITICO`) en `MR_NIVEL_RIESGO`. Los n?meros VRI/VRR 1..9 se conservan en las proyecciones. Por eso la salida se deriva del n?mero conservado y no se altera el cat?logo ni los datos de producci?n. Backend runtime/proyecci?n, UI y PDF/XLSX usan el lookup can?nico. ROP-CUMP-59: VRI=3 ? `Riesgo bajo`; VRR=1 ? `Riesgo no significativo`.
 
-## Respuesta al riesgo y sus variantes
+## Respuesta al riesgo
 
-`Listas!D1:D5` (`t_resp_riesgo`) contiene `Evitar`, `Transferir/Compartir`, `Aceptar`, `Mitigar` (las dos celdas indicadas tienen espacios finales en el XLSX). Los valores observados de Campo 39 pertenecen a esa lista. `Instructivo!E154` enumera `Reducir`, `Aceptar`, `Transferir`, `Evitar`, pero no hay validación conectada a Campo 39. Los seeds versionados emparejan `MITIGAR` con “Mitigar / Reducir” y `TRANSFERIR` con “Transferir / Compartir”; backend y frontend usan claves estables `EVITAR`, `MITIGAR`, `TRANSFERIR`, `ACEPTAR`. El manifiesto registra `Reducir` como alias de `MITIGAR` y `Transferir` como alias de `TRANSFERIR`; la presentación toma la etiqueta del workbook, quitando únicamente padding exterior de celda.
+Pol?tica de autoridad: (1) valores observados en Matriz Consolidada; (2) tabla `t_resp_riesgo` de Listas; (3) claves del seed/runtime; (4) texto narrativo del Instructivo. Campo 39 no tiene Data Validation, pero Matriz Consolidada, Listas y seeds sostienen una correspondencia inequ?voca de claves. `MITIGAR` presenta `Mitigar` y acepta alias exacto `Reducir`; `TRANSFERIR` presenta `Transferir/Compartir` y acepta alias exacto `Transferir`. `EVITAR` y `ACEPTAR` conservan su etiqueta.
 
-Casos del Bloque 2: `ROP-CUMP-50`, `ROP-CUMP-53` y `ROP-CUMP-54` tienen `Transferir/Compartir` en Excel y clave productiva `TRANSFERIR`; se consideran equivalentes por alias explícito. `RCUMP-COMPRAS-37` tiene Excel vacío y producción `MITIGAR`; el alias no resuelve una ausencia, así que queda como diferencia productiva para una decisión de datos posterior. No se cambió ninguno de los cuatro registros.
+`ROP-CUMP-50`, `ROP-CUMP-53`, `ROP-CUMP-54` son equivalentes por alias. `RCUMP-COMPRAS-37` tiene Excel vac?o y `MITIGAR` en la proyecci?n y JSON de la evaluaci?n 65/version 61; la clave est? activa y el audit seleccion? la evaluaci?n aprobada. Se clasifica `EXCEL_BASELINE_MISSING_BUT_DB_VALUE_VALID`, acci?n `PRESERVE_PRODUCTION`. No se modifica el registro. Resultado: 3 alias equivalentes, 0 conflictos de datos reales en Campo 39.
 
-Reconciliación semántica de los cuatro casos: **3 equivalentes por alias; 1 no equivalente (Excel vacío / DB `MITIGAR`)**. Por tanto, quedan **1 de los 4 conflictos de Campo 39** como candidato de revisión de datos. El conteo base de 87 conflictos del Bloque 2 queda en 87 más esta fila sin resolver = 88 diferencias reales potenciales; no se reinterpretan los 87 restantes en esta auditoría.
+## ?rea, frecuencia, impacto y r?gimen
 
-**Límite de evidencia:** sin una validación de Campo 39 ni aprobación documental/manual institucional que declare obsoleta una de las variantes, el orden canónico y la equivalencia institucional no quedan formalmente aprobados. El contrato preserva por ahora el dominio del XLSX y su evidencia histórica, pero no declara cerrado este gate.
+Las 59 filas muestran 20 ?reas. La ?nica relaci?n observada de ?rea ? ?rea Consolidada es `Secci?n de Cumplimiento ? Secci?n de Cumplimiento` (11 filas); hay 0 relaciones ambiguas y 19 celdas vac?as. Campo 04 es opcional seg?n el manifest: los vac?os son `NO_SOURCE_VALUE`; no se inventaron mappings.
 
-## Hallazgos de DB y consumidores
+Workbook define frecuencia e impacto como dominios num?ricos 1..5 sin labels descriptivos. Las etiquetas adicionales de DB se clasifican `DISPLAY_METADATA_ONLY`; no cambian la clave num?rica y no se usan como etiquetas institucionales del workbook.
 
-La consulta Oracle read-only encontró `MR_RESPUESTA_RIESGO` con las cuatro claves estables, con etiquetas `Evitar`, `Mitigar`, `Transferir`, `Aceptar`. Esto es compatible con las claves del backend y frontend, pero la etiqueta productiva de `TRANSFERIR` omite `/Compartir`.
+R?gimen tiene siete claves workbook: `IVM`, `RP`, `EM`, `IVM-RP`, `IVM-EM`, `RP-EM`, `Todos`. Se almacena como string `EVA_DATOS_JSON.regimen_afectado`; la instant?nea de proyecciones aprobadas no mostr? valores actuales contradictorios. No se crean opciones productivas.
 
-La misma consulta encontró `MR_NIVEL_RIESGO` con solo cuatro elementos: `BAJO/Bajo`, `MODERADO/Moderado`, `ALTO/Alto`, `CRITICO/Critico`. Los valores `PROY_NIVEL_INHERENTE` y `PROY_NIVEL_RESIDUAL` aprobados también muestran esas cuatro claves. No son el catálogo 1–9 del workbook y no pueden representarlo sin una nueva proyección/mapeo. Por eso la paridad `ROP-CUMP-59` con VRI=3/VRR=1 no puede certificarse para el valor actualmente materializado en DB.
+## Controles, automatizaci?n y monitoreo
 
-Frecuencia e impacto en XLSX definen el dominio numérico 1–5 sin etiquetas descriptivas. El DB incluye rótulos (“Rara”, “Improbable”, etc. y “Insignificante”, etc.) que no aparecen en esa lista de workbook; no se incorporan como etiquetas oficiales. Los consumidores existentes y los exports deben verificarse contra el contrato antes de declarar paridad integral. Las opciones de tipo de control están codificadas en DDL como `PREVENTIVO`, `DETECTIVO`, `CORRECTIVO`; automatización se persiste con valores técnicos distintos de las etiquetas del XLSX (`MANUAL`, `SEMIAUTOMATICO`, `AUTOMATICO`).
+- Tipos: PREVENTIVO/Preventivo, DETECTIVO/Detectivo, CORRECTIVO/Correctivo.
+- Pesos de `Otras Tablas`: Preventivo 0.70, Detectivo 0.15, Correctivo 0.15; suma 1.00.
+- Escala ?nica (`Listas!t_efectividad`): Inexistente 0/0%; Inefectivo 1/0%; Razonable 2/30%; Parcialmente Efectivo 3/50%; Moderado 4/85%; Alta Efectividad 5/90%. `Es inefectivo` es alias exacto de `Inefectivo`. Inexistente describe ausencia de controles; no crea un control f?sico.
+- Automatizaci?n: Automatizado, Semiautomatizado, Manual. `Semi-Automatizado` es alias expl?cito de `Semiautomatizado`. Se conservan claves t?cnicas `AUTOMATICO`, `SEMIAUTOMATICO`, `MANUAL`.
+- Monitoreo de riesgo: Vigente, Mitigado, Nuevo. Monitoreo de controles: Se mantiene, No se mantiene, Requiere actualizaci?n. Efectividad: Inexistente, Inefectivo, Razonable, Parcialmente Efectivo, Moderado, Alta Efectividad. Las pantallas usan selects del manifest y backend rechaza valores desconocidos. `Vigente` no es default; controles vac?os representan ciclo pendiente. Porcentaje en blanco significa sin evaluaci?n.
 
-`Listas!H2:I23` define 22 pares nombre completo/“nombre corto para la matriz”. No se halló fuente separada que defina jerarquía de áreas o relación institucional Área → Área Consolidada. El manifiesto no inventa ese mapeo; se registra como fuente pendiente.
+## Paridad de consumidores
 
-## Alias e importación/exportación
+Backend valida claves/aliases exactos, normaliza respuestas y automatizaci?n, proyecta estados de monitoreo can?nicos y devuelve exports PDF/XLSX con label de riesgo derivado de VRI/VRR y respuesta por clave. Frontend consume datos generados desde el manifest, muestra labels can?nicos, usa claves persistentes y opciones cerradas para control/monitoreo. Importaci?n futura acepta s?lo claves o aliases registrados; unknown ? `FAIL_CLOSED`. No hay fuzzy matching ni normalizaci?n general de may?sculas, acentos o puntuaci?n.
 
-La importación futura debe aceptar solo claves canónicas o aliases expresos del manifiesto y rechazar valores desconocidos (`FAIL_CLOSED`). No se permite fuzzy matching, eliminación general de acentos ni normalización general de puntuación/mayúsculas. UI y exportación deben mostrar `canonicalLabel`; DB debe persistir la clave estable cuando el modelo lo permita.
+El validator determinista est? en [validate_matrices_catalogs.js](../../tools/validate_matrices_catalogs.js). Las pruebas cubren niveles 1..9, ROP-CUMP-59, aliases, opciones y unknown fail-closed.
 
-| Catálogo | Excel | DB | Backend / frontend / export | Estado | Acción |
-|---|---|---|---|---|---|
-| Nivel de riesgo | 1–9 labels workbook | Cuatro claves y labels distintos | Lookup formula usa catálogo | `DB_DRIFT_PENDING_BLOCK4` | Definir mapeo numérico y preparar migración controlada |
-| Respuesta | Valores Listas; Campo 39 sin DV | Claves correctas; Transferir sin “/Compartir” | Keys estables en servicio y UI | `ALIAS_ONLY` parcial | Formalizar fuente/alias y resolver blank `RCUMP-COMPRAS-37` |
-| Frecuencia / impacto | Dominio 1–5 | Labels descriptivos adicionales | Contrato numérico debe gobernar validación | `DB_DRIFT_PENDING_BLOCK4` | Confirmar tipo de persistencia y no exportar labels no aprobados |
-| Área | 22 áreas con abreviatura | Sin catálogo área confirmado | Field 4 / área requiere mapping | `UNRESOLVED` | Obtener autoridad Área → Área Consolidada |
-| Control type / weight / scale | Workbook exacto | Tipos en CHECK; efectividad numérica | Cálculos y exports requieren prueba de paridad | `PASS` de fuente, paridad end-to-end pendiente | Ejecutar tests de consumidores |
-| Automatización | `Automatizado`, `Semiautomatizado`, `Manual` | claves persistidas distintas | Backend/FE keys estables | `ALIAS_ONLY` | Aplicar alias explícito solo en fronteras de entrada/salida |
-| Automonitoreo | Listas ocultas vinculadas por DV | Valores persisten como texto | Mapeo de repositorio existe; paridad completa pendiente | `PASS` workbook / pendiente consumidores | Verificar DTO, UI y exportación |
+## Producci?n y Bloque 2 handoff
 
-## Pendientes de cierre
+Las cuatro bandas se registran como `LEGACY_COARSE_BAND`; no requieren migraci?n para la paridad de salida, porque VRI/VRR num?rico se conserva y los consumidores proyectan el label can?nico. No se prepar? ni ejecut? DML. `BASELINE_IMPORT_CANDIDATES=398` sigue congelado; `DATA_CONFLICTS=87` no se altera; `OPERATIONAL_VALUES_TO_PRESERVE=4` quedan protegidos.
 
-1. Definir/ajustar la proyección productiva del nivel 1–9 y preparar en el bloque correspondiente una remediación idempotente con precheck/postcheck. Este bloque no la ejecuta.
-2. Obtener una fuente institucional que cierre Área → Área Consolidada.
-3. Resolver formalmente el conflicto de respuesta de Campo 39 y documentar si las formas del manual son aliases o términos distintos.
-4. Completar prueba de paridad backend, frontend, importación y exportación contra el manifiesto antes de declarar `CATALOG_DRIFT=0`.
+Artefactos forenses locales sanitizados: `%TEMP%\RIESGO_LAVADO_BLOCK3_CATALOG_AUDIT_20261002_1548_785327\`; hashes en `SHA256SUMS.json`. No se versionan dumps productivos.
 
-No se ejecutó DML/DDL, no se cargaron los 398 candidatos del Bloque 2 y no se modificaron los cuatro valores operativos del campo 70.
+## Verificaciones
+
+- Contrato workbook: 82/82 y SHA esperado.
+- Cat?logos: 14/14, 91 ?tems; unknown/unresolved=0.
+- Backend focal: 20/20; build API PASS.
+- Frontend TypeScript, lint y Angular build PASS; suite integral final: 84 archivos/845 pruebas PASS. Tres expectativas hist?ricas de labels fueron actualizadas a las etiquetas can?nicas.
+- Validadores estructura, scripts de base de datos y enlaces de documentaci?n: PASS.
+- Producci?n: DML=0, DDL=0, procedimientos=0, escrituras=0.

@@ -63,8 +63,8 @@
       <section class="space-y-4 rounded-xl border border-slate-200 p-4">
         <h3 class="font-bold">Automonitoreo</h3>
         <div class="grid gap-3 md:grid-cols-2">
-          <div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><input id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"></div>
-          <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><input id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"></div>
+          <div><label for="mon-estado-riesgo" class="block text-sm font-medium">Estado del riesgo</label><select id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"><option value="">Seleccione un estado</option>@for (estado of estadosRiesgo; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div>
+          <div><label for="mon-estado-controles" class="block text-sm font-medium">Estado de controles</label><select id="mon-estado-controles" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoControles"><option value="">Seleccione un estado</option>@for (estado of estadosControl; track estado.value) { <option [value]="estado.value">{{ estado.label }}</option> }</select></div>
           <div class="md:col-span-2"><label for="mon-resultado" class="block text-sm font-medium">Resultado</label><textarea id="mon-resultado" class="mt-1 min-h-20 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monResultado" maxlength="500"></textarea></div>
         </div>
         <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-slate-900 text-white disabled:opacity-50" title="Guardar monitoreo" aria-label="Guardar monitoreo" [disabled]="guardando()" (click)="registrarAutomonitoreo()">

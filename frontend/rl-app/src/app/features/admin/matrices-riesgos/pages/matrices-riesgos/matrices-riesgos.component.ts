@@ -42,6 +42,7 @@ import {
 } from '../../utils/dynamic-form-renderer.util';
 import { sonJsonSemanticamenteEquivalentes } from '../../utils/form-builder-semantic-comparator.util';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
+import { canonicalCatalogOptions, canonicalRiskLevelLabel, canonicalRiskResponseLabel } from '../../utils/matrices-riesgos-catalogos-canonicos';
 import { MATRIX_BLOCK_1_FIELDS, MATRIX_BLOCK_2_FIELDS, MATRIX_BLOCK_3_FIELDS, MATRIX_BLOCK_4_FIELDS, MATRIX_BLOCK_5_FIELDS, MATRIX_BLOCK_6_FIELDS, MATRIX_BLOCK_TITLES, MATRIX_FIELDS, MatrixFieldContract } from '../../models/matriz-institucional.contract';
 
 type TabMatrices = 'evaluaciones' | 'consolidado' | 'plantillas';
@@ -1390,6 +1391,9 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   opcionesCatalogo(campo: CampoFormulario): Array<{ codigo: string; valor: string }> {
     if (!campo.codigoCatalogo) return [];
+    if (campo.codigoCatalogo.toUpperCase() === 'MR_RESPUESTA_RIESGO') {
+      return canonicalCatalogOptions('RISK_RESPONSE').map(item => ({ codigo: item.codigo, valor: item.valor }));
+    }
 
     const version = this.modalVerAbierto() || this.modalEditarAbierto()
       ? this.versionHistorica()
@@ -1748,19 +1752,25 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
     }
 
     if (field.ordinal === 38) {
-      const nivel = calculados['nivel_riesgo_residual'] ?? calculados['nivel_residual'] ?? resumen.nivelResidual;
-      if (nivel !== null && nivel !== undefined && nivel !== '') return String(nivel);
-      return '—';
+      const vrr = evaluacion.evaVrr ?? calculados['valor_riesgo_residual'] ?? calculados['vrr'];
+      return canonicalRiskLevelLabel(vrr) ?? '—';
     }
 
     if (field.ordinal === 39) {
       const respuestas = this.respuestas();
       const respuesta = respuestas['respuesta_riesgo'] || respuestas['respuestaRiesgo'];
-      if (respuesta !== null && respuesta !== undefined && respuesta !== '') return String(respuesta);
-      return '—';
+      return canonicalRiskResponseLabel(respuesta) ?? '—';
     }
 
     return '—';
+  }
+
+  etiquetaNivelRiesgo(value: unknown): string {
+    return canonicalRiskLevelLabel(value) ?? '—';
+  }
+
+  etiquetaRespuestaRiesgo(value: unknown): string {
+    return canonicalRiskResponseLabel(value) ?? '—';
   }
 
   guardarObservacionBloque6(tipo: 'area' | 'ugr'): void {

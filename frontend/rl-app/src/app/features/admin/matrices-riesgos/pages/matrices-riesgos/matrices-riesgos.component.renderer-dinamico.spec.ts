@@ -145,6 +145,18 @@ describe('MatricesRiesgosComponent — integración del renderer dinámico', () 
     expect(fixture.nativeElement.querySelector('[data-evaluation-field="selector"]')).not.toBeNull();
   });
 
+  it('presenta las etiquetas canónicas para la lista de respuesta al riesgo', () => {
+    expect(component.opcionesCatalogo({
+      clave: 'respuesta_riesgo', etiqueta: 'Respuesta al riesgo', tipo: 'selector-catalogo',
+      obligatorio: true, soloLectura: false, codigoCatalogo: 'MR_RESPUESTA_RIESGO'
+    })).toEqual([
+      { codigo: 'EVITAR', valor: 'Evitar' },
+      { codigo: 'TRANSFERIR', valor: 'Transferir/Compartir' },
+      { codigo: 'ACEPTAR', valor: 'Aceptar' },
+      { codigo: 'MITIGAR', valor: 'Mitigar' }
+    ]);
+  });
+
   it('considera 0, false y una selección múltiple no vacía como respuestas presentes', () => {
     component.riesgoId.set(44);
     component.respuestas.set({

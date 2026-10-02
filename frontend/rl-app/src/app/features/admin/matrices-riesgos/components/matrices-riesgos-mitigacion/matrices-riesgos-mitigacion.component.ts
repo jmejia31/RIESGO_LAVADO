@@ -18,6 +18,7 @@ import {
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
+import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
@@ -42,6 +43,10 @@ export class MatricesRiesgosMitigacionComponent {
   readonly mensaje = signal<string | null>(null);
 
   evaluacionId = 0;
+  readonly tiposControlCatalogo = canonicalCatalogSelectOptions('CONTROL_TYPE');
+  readonly automatizacionesCatalogo = canonicalCatalogSelectOptions('CONTROL_AUTOMATION');
+  readonly estadosMonitoreoCatalogo = canonicalCatalogSelectOptions('MONITORING_CONTROL_STATUS');
+  readonly efectividadesMonitoreoCatalogo = canonicalMonitoringEffectivenessOptions();
 
   obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;

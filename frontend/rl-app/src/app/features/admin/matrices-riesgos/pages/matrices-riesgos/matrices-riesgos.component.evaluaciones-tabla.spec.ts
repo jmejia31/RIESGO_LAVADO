@@ -235,13 +235,13 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(filas[0].querySelector('td:nth-child(6)')?.textContent?.trim()).toBe('0');
     expect(filas[1].querySelector('td:nth-child(5)')?.textContent?.trim()).toBe('-');
     expect(filas[1].querySelector('td:nth-child(6)')?.textContent?.trim()).toBe('-');
-    expect(filas[1].querySelector('td:nth-child(7)')?.textContent?.trim()).toBe('-');
+    expect(filas[1].querySelector('td:nth-child(7)')?.textContent?.trim()).toBe('—');
   });
 
-  it('renderiza BAJO, MEDIO, ALTO, CRITICO y ausencia con semantica visual estable', () => {
-    const niveles: Array<string | null> = ['BAJO', 'MEDIO', 'ALTO', 'CRITICO', null];
+  it('renderiza las etiquetas canonicas de los niveles numericos y ausencia con semantica visual estable', () => {
+    const niveles = [1, 5, 6, 8, null];
     component.evaluaciones.set(niveles.map((nivel, indice) =>
-      crearEvaluacion(401 + indice, 'APROBADA', nivel)
+      crearEvaluacion(401 + indice, 'APROBADA', null, 3, nivel)
     ));
     fixture.detectChanges();
 
@@ -249,7 +249,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
       fixture.nativeElement.querySelectorAll('#panel-evaluaciones tbody tr td:nth-child(7)')
     ) as HTMLTableCellElement[];
 
-    expect(celdas.map(celda => celda.textContent?.trim())).toEqual(['BAJO', 'MEDIO', 'ALTO', 'CRITICO', '-']);
+    expect(celdas.map(celda => celda.textContent?.trim())).toEqual(['Riesgo no significativo', 'Riesgo Medio', 'Riesgo Alto', 'Riesgo Intolerable', '—']);
     expect(celdas[0].classList.contains('text-emerald-600')).toBe(true);
     expect(celdas[1].classList.contains('text-amber-600')).toBe(true);
     expect(celdas[2].classList.contains('text-red-600')).toBe(true);

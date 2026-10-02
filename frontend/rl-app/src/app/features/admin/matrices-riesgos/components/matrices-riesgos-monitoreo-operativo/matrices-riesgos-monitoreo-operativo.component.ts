@@ -14,6 +14,7 @@ import {
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
+import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
@@ -37,6 +38,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly mensaje = signal<string | null>(null);
 
   evaluacionId = 0;
+  readonly estadosRiesgo = canonicalCatalogSelectOptions('MONITORING_RISK_STATUS');
+  readonly estadosControl = canonicalCatalogSelectOptions('MONITORING_CONTROL_STATUS');
 
   obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;

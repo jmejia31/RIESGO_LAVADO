@@ -41,6 +41,9 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         Assert.Contains("fitToWidth=\"1\"", sheet, StringComparison.Ordinal);
         Assert.Contains("&amp;LSGRLA-IHSS", sheet, StringComparison.Ordinal);
         Assert.Contains("numFmtId=\"165\"", styles, StringComparison.Ordinal);
+        Assert.Contains("Riesgo Alto", sheet, StringComparison.Ordinal);
+        Assert.Contains("Riesgo bajo", sheet, StringComparison.Ordinal);
+        Assert.Contains("Mitigar", sheet, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -57,6 +60,9 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         Assert.Contains("INSTITUTO HONDUREÑO DE SEGURIDAD SOCIAL", texto, StringComparison.Ordinal);
         Assert.Contains("SGRLA-IHSS", texto, StringComparison.Ordinal);
         Assert.Contains("Página 1 de", texto, StringComparison.Ordinal);
+        Assert.Contains("Riesgo Alto", texto, StringComparison.Ordinal);
+        Assert.Contains("Riesgo bajo", texto, StringComparison.Ordinal);
+        Assert.Contains("Mitigar", texto, StringComparison.Ordinal);
         Assert.Contains("R-060", texto, StringComparison.Ordinal);
         Assert.EndsWith("%%EOF", texto, StringComparison.Ordinal);
     }
@@ -92,6 +98,30 @@ public sealed class MatricesRiesgosPhase11ReportExportTests
         Assert.Contains("FILTROS APLICADOS", pdfTexto, StringComparison.Ordinal);
         Assert.Contains("Estado=APROBADA", pdfTexto, StringComparison.Ordinal);
         Assert.Contains("Versión", pdfTexto, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Reportes_UsanLabelsCanonicosDesdeClavesYNumericos()
+    {
+        var fila = CrearFilas(1).Single();
+        fila.Vri = 3;
+        fila.NivelInherente = "MODERADO";
+        fila.Vrr = 1;
+        fila.NivelResidual = "BAJO";
+        fila.RespuestaRiesgo = "TRANSFERIR";
+
+        ArchivoReporteDto excel = _service.CrearExcelConsolidado([fila]);
+        ArchivoReporteDto pdf = _service.CrearPdfConsolidado([fila]);
+        using var stream = new MemoryStream(excel.Contenido);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+        string sheet = LeerEntrada(zip, "xl/worksheets/sheet1.xml");
+        string pdfText = Encoding.Latin1.GetString(pdf.Contenido);
+        Assert.Contains("Riesgo bajo", sheet, StringComparison.Ordinal);
+        Assert.Contains("Riesgo no significativo", sheet, StringComparison.Ordinal);
+        Assert.Contains("Transferir/Compartir", sheet, StringComparison.Ordinal);
+        Assert.DoesNotContain("MODERADO", sheet, StringComparison.Ordinal);
+        Assert.DoesNotContain("BAJO", sheet, StringComparison.Ordinal);
+        Assert.StartsWith("%PDF-1.4", pdfText, StringComparison.Ordinal);
     }
 
     [Fact]

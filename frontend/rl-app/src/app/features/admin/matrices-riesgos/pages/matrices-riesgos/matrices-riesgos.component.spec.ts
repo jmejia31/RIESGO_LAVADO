@@ -690,8 +690,8 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     expect(component.valorCampoResidual(field(35))).toBe('2');
     expect(component.valorCampoResidual(field(36))).toBe('1');
     expect(component.valorCampoResidual(field(37))).toBe('2');
-    expect(component.valorCampoResidual(field(38))).toBe('BAJO');
-    expect(component.valorCampoResidual(field(39))).toBe('MITIGAR');
+    expect(component.valorCampoResidual(field(38))).toBe('Riesgo no significativo');
+    expect(component.valorCampoResidual(field(39))).toBe('Mitigar');
 
     // Fallback de riesgo residual cuando no viene F10
     component.evaluacionSeleccionada.update(e => e ? { ...e, evaDataCalcJson: '{}' } : null);
@@ -711,7 +711,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.respuestas.set({ frecuencia_residual: 3, impacto_residual: 2, respuesta_riesgo: 'ACEPTAR' });
     expect(component.valorCampoResidual(field(35))).toBe('3');
     expect(component.valorCampoResidual(field(36))).toBe('2');
-    expect(component.valorCampoResidual(field(39))).toBe('ACEPTAR');
+    expect(component.valorCampoResidual(field(39))).toBe('Aceptar');
   });
 
   it('proyecta campos plan-level 40–49 con conteos, textos, fechas y presupuesto seguros', () => {

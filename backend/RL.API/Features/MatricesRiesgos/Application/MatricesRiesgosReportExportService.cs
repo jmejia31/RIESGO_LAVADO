@@ -80,10 +80,10 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
         TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
         fila.Vri,
-        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelInherente),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri),
         fila.Vrr,
-        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelResidual),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.RespuestaRiesgo),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
         TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
         fila.FechaEvaluacion
     };
@@ -97,10 +97,10 @@ public sealed class MatricesRiesgosReportExportService : IMatricesRiesgosReportE
         TextoVisibleUtf8Normalizer.Normalizar(fila.AreaPrincipal),
         TextoVisibleUtf8Normalizer.Normalizar(fila.DuenoRiesgo),
         fila.Vri.ToString(CultureInfo.InvariantCulture),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelInherente),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri),
         fila.Vrr.ToString(CultureInfo.InvariantCulture),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.NivelResidual),
-        TextoVisibleUtf8Normalizer.Normalizar(fila.RespuestaRiesgo),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr),
+        MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo),
         TextoVisibleUtf8Normalizer.Normalizar(fila.EstadoEvaluacion),
         fila.FechaEvaluacion.ToString(InstitutionalReportStandard.DateTimeFormat, CultureInfo.InvariantCulture)
     };

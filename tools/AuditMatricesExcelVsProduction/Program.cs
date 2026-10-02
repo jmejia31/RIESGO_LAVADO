@@ -1708,27 +1708,122 @@ public static class Program
                 projectionValues.Add(Enumerable.Range(0, reader.FieldCount).Select(i => reader.IsDBNull(i) ? "" : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "").ToArray());
         }
 
-        const string responseCasesSql = @"SELECT r.RIE_CODIGO, p.PROY_RESPUESTA_RIESGO
-                                            FROM RL_MR_RIESGOS r
-                                            JOIN RL_MR_EVALUACIONES_RIESGO e ON e.EVA_RIESGO_ID = r.RIE_ID AND e.EVA_ACTIVO = 1
-                                            JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
-                                           WHERE r.RIE_CODIGO IN ('RCUMP-COMPRAS-37', 'ROP-CUMP-50', 'ROP-CUMP-53', 'ROP-CUMP-54')
-                                           ORDER BY r.RIE_CODIGO, e.EVA_ID DESC";
+        const string responseCasesSql = @"SELECT r.RIE_CODIGO, e.EVA_ID, e.EVA_VERSION_ID, e.EVA_ACTIVO,
+                                                  e.EVA_VERSION_ROW, e.EVA_FECHA_REGISTRO,
+                                                  NVL(f.FLU_ESTADO, 'BORRADOR'), f.FLU_FECHA,
+                                                  p.PROY_VRI, p.PROY_VRR, p.PROY_NIVEL_INHERENTE,
+                                                  p.PROY_NIVEL_RESIDUAL, p.PROY_RESPUESTA_RIESGO,
+                                                  e.EVA_DATOS_JSON, e.EVA_CALCULOS_JSON
+                                             FROM RL_MR_RIESGOS r
+                                             JOIN RL_MR_EVALUACIONES_RIESGO e ON e.EVA_RIESGO_ID = r.RIE_ID
+                                             LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
+                                             LEFT JOIN (
+                                                 SELECT FLU_EVALUACION_ID, FLU_ESTADO, FLU_FECHA,
+                                                        ROW_NUMBER() OVER (PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_FECHA DESC, FLU_ID DESC) RN
+                                                   FROM RL_MR_FLUJOS_EVALUACION
+                                             ) f ON f.FLU_EVALUACION_ID = e.EVA_ID AND f.RN = 1
+                                            WHERE r.RIE_CODIGO IN ('RCUMP-COMPRAS-37', 'ROP-CUMP-50', 'ROP-CUMP-53', 'ROP-CUMP-54')
+                                            ORDER BY r.RIE_CODIGO, e.EVA_FECHA_REGISTRO DESC, e.EVA_ID DESC";
         EnsureReadOnlySelect(responseCasesSql);
-        var responseCases = new List<string[]>();
+        static string JsonScalar(string rawJson, params string[] names)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson)) return "";
+            using JsonDocument document = JsonDocument.Parse(rawJson);
+            foreach (string name in names)
+            {
+                if (!document.RootElement.TryGetProperty(name, out JsonElement value)) continue;
+                if (value.ValueKind == JsonValueKind.String) return value.GetString() ?? "";
+                if (value.ValueKind is JsonValueKind.Number or JsonValueKind.True or JsonValueKind.False) return value.ToString();
+            }
+            return "";
+        }
+
+        var responseCases = new List<Dictionary<string, object?>>();
         await using (var cmd = new OracleCommand(responseCasesSql, conn))
         await using (var reader = await cmd.ExecuteReaderAsync())
         {
             while (await reader.ReadAsync())
-                responseCases.Add([reader.IsDBNull(0) ? "" : reader.GetString(0), reader.IsDBNull(1) ? "" : reader.GetString(1)]);
+            {
+                string rawData = reader.IsDBNull(13) ? "" : reader.GetString(13);
+                string rawCalculations = reader.IsDBNull(14) ? "" : reader.GetString(14);
+                responseCases.Add(new Dictionary<string, object?>
+                {
+                    ["riskCode"] = reader.IsDBNull(0) ? "" : reader.GetString(0),
+                    ["evaluationId"] = reader.GetValue(1),
+                    ["versionId"] = reader.GetValue(2),
+                    ["active"] = reader.GetValue(3),
+                    ["versionRow"] = reader.GetValue(4),
+                    ["evaluationRegisteredAt"] = reader.IsDBNull(5) ? null : reader.GetDateTime(5),
+                    ["workflowStatus"] = reader.IsDBNull(6) ? "BORRADOR" : reader.GetString(6),
+                    ["workflowUpdatedAt"] = reader.IsDBNull(7) ? null : reader.GetDateTime(7),
+                    ["vri"] = reader.IsDBNull(8) ? null : reader.GetValue(8),
+                    ["vrr"] = reader.IsDBNull(9) ? null : reader.GetValue(9),
+                    ["inherentLegacyBand"] = reader.IsDBNull(10) ? "" : reader.GetString(10),
+                    ["residualLegacyBand"] = reader.IsDBNull(11) ? "" : reader.GetString(11),
+                    ["projectionResponse"] = reader.IsDBNull(12) ? "" : reader.GetString(12),
+                    ["evaluationJsonResponse"] = JsonScalar(rawData, "respuesta_riesgo", "respuestaRiesgo"),
+                    ["calculatedJsonResidualLabel"] = JsonScalar(rawCalculations, "nivel_riesgo_residual", "nivel_residual")
+                });
+            }
         }
+
+        const string riskBandSql = @"SELECT 'INHERENT' LEVEL_KIND, PROY_NIVEL_INHERENTE LEGACY_BAND,
+                                            COUNT(*) ROW_COUNT, MIN(PROY_VRI) MIN_NUMERIC, MAX(PROY_VRI) MAX_NUMERIC
+                                       FROM RL_MR_PROYECCIONES_EVALUACION GROUP BY PROY_NIVEL_INHERENTE
+                                     UNION ALL
+                                     SELECT 'RESIDUAL', PROY_NIVEL_RESIDUAL, COUNT(*), MIN(PROY_VRR), MAX(PROY_VRR)
+                                       FROM RL_MR_PROYECCIONES_EVALUACION GROUP BY PROY_NIVEL_RESIDUAL
+                                     ORDER BY 1, 2";
+        EnsureReadOnlySelect(riskBandSql);
+        var riskBands = new List<string[]>();
+        await using (var cmd = new OracleCommand(riskBandSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
+                riskBands.Add(Enumerable.Range(0, reader.FieldCount).Select(i => reader.IsDBNull(i) ? "" : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "").ToArray());
+
+        const string controlsSql = @"SELECT DISTINCT CON_TIPO, CON_AUTOMATIZACION, CON_ESTADO_MONITOREO
+                                       FROM RL_MR_CONTROLES_RIESGO ORDER BY CON_TIPO, CON_AUTOMATIZACION, CON_ESTADO_MONITOREO";
+        EnsureReadOnlySelect(controlsSql);
+        var controlValues = new List<string[]>();
+        await using (var cmd = new OracleCommand(controlsSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
+                controlValues.Add(Enumerable.Range(0, reader.FieldCount).Select(i => reader.IsDBNull(i) ? "" : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "").ToArray());
+
+        const string monitoringSql = @"SELECT DISTINCT MON_ESTADO_RIESGO, MON_ESTADO_CONTR
+                                        FROM RL_MR_AUTOMONITOREO ORDER BY MON_ESTADO_RIESGO, MON_ESTADO_CONTR";
+        EnsureReadOnlySelect(monitoringSql);
+        var monitoringValues = new List<string[]>();
+        await using (var cmd = new OracleCommand(monitoringSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
+                monitoringValues.Add(Enumerable.Range(0, reader.FieldCount).Select(i => reader.IsDBNull(i) ? "" : Convert.ToString(reader.GetValue(i), CultureInfo.InvariantCulture) ?? "").ToArray());
+
+        const string evaluationJsonSql = @"SELECT e.EVA_DATOS_JSON
+                                            FROM RL_MR_EVALUACIONES_RIESGO e
+                                            JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID = e.EVA_ID
+                                           WHERE e.EVA_ACTIVO = 1 AND p.PROY_ESTADO_EVALUACION = 'APROBADA'";
+        EnsureReadOnlySelect(evaluationJsonSql);
+        var regimeValues = new HashSet<string>(StringComparer.Ordinal);
+        await using (var cmd = new OracleCommand(evaluationJsonSql, conn))
+        await using (var reader = await cmd.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
+            {
+                string rawData = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                string regime = JsonScalar(rawData, "regimen_afectado", "regimenAfectado").Trim();
+                if (!string.IsNullOrEmpty(regime)) regimeValues.Add(regime);
+            }
 
         return new Dictionary<string, object>
         {
             ["identity"] = new { dbName, serviceName, instanceName, currentSchema, sessionUser },
             ["catalogRows"] = catalogs,
             ["approvedProjectionDistinctValues"] = projectionValues,
-            ["field39Cases"] = responseCases
+            ["field39HistorySanitized"] = responseCases,
+            ["riskBandNumericUsage"] = riskBands,
+            ["controlDistinctValues"] = controlValues,
+            ["monitoringDistinctValues"] = monitoringValues,
+            ["approvedRegimeValues"] = regimeValues.OrderBy(value => value, StringComparer.Ordinal).ToArray()
         };
     }
 

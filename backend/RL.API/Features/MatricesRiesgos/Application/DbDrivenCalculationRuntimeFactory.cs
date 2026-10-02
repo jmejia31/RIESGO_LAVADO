@@ -42,6 +42,12 @@ public sealed class DbDrivenCalculationRuntimeFactory
                 throw new InvalidOperationException($"Catalog snapshot '{code}' does not match its pinned SHA-256 hash.");
         }
 
+        // The workbook's 1..9 risk levels are the institutional display contract.
+        // Validate the pinned source above, then project those numeric keys through
+        // the canonical manifest instead of the legacy four-band display catalog.
+        if (snapshots.ContainsKey("CAT_NIVEL_RIESGO"))
+            snapshots["CAT_NIVEL_RIESGO"] = MatrizRiesgosCatalogoCanonico.CrearSnapshotNivelRiesgo();
+
         return new FormulaRuntimeOptions(
             registry,
             values,
