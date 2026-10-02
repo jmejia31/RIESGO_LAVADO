@@ -88,6 +88,12 @@ public class MatrizRiesgosContract82FieldsTests
         public string stateProjectionSemantics { get; set; } = string.Empty;
         public string effectivenessProjectionSemantics { get; set; } = string.Empty;
         public string evidenceProjectionSemantics { get; set; } = string.Empty;
+
+        // Control absence and combined scale semantics (20-31)
+        public string controlDescriptionCardinality { get; set; } = string.Empty;
+        public string controlEffectivenessScaleCardinality { get; set; } = string.Empty;
+        public string canonicalRepresentationWhenEmpty { get; set; } = string.Empty;
+        public string absenceSemanticState { get; set; } = string.Empty;
         public string projectionSemantics { get; set; } = string.Empty;
         public string importTargetSemantics { get; set; } = string.Empty;
 
@@ -353,6 +359,42 @@ public class MatrizRiesgosContract82FieldsTests
             Assert.False(string.IsNullOrWhiteSpace(mf.subsequentReconciliationRule));
             Assert.True(mf.preserveExistingOperationalValue);
             Assert.False(string.IsNullOrWhiteSpace(mf.excelNullBehavior));
+        }
+    }
+
+    [Fact]
+    public void Manifest_ControlAbsenceAndCombinedScaleSemantics_MustBeFrozen()
+    {
+        var fields = LoadManifest();
+
+        foreach (var n in new[] { 20, 24, 28 })
+        {
+            var f = fields.First(x => x.number == n);
+            Assert.Equal("ONE_TO_MANY_RENDERED", f.controlDescriptionCardinality);
+            Assert.Equal("No hay", f.canonicalRepresentationWhenEmpty);
+            Assert.Equal("NO_CONTROLS_OF_TYPE", f.absenceSemanticState);
+        }
+
+        foreach (var n in new[] { 21, 25, 29 })
+        {
+            var f = fields.First(x => x.number == n);
+            Assert.Equal("ONE_COMBINED_SCALE_PER_CONTROL_TYPE", f.controlEffectivenessScaleCardinality);
+            Assert.Equal("Inexistente", f.canonicalRepresentationWhenEmpty);
+            Assert.Equal("NO_CONTROLS_OF_TYPE", f.absenceSemanticState);
+        }
+
+        foreach (var n in new[] { 22, 26, 30 })
+        {
+            var f = fields.First(x => x.number == n);
+            Assert.Equal("0", f.canonicalRepresentationWhenEmpty);
+            Assert.Equal("NO_CONTROLS_OF_TYPE", f.absenceSemanticState);
+        }
+
+        foreach (var n in new[] { 23, 27, 31 })
+        {
+            var f = fields.First(x => x.number == n);
+            Assert.Equal("0%", f.canonicalRepresentationWhenEmpty);
+            Assert.Equal("NO_CONTROLS_OF_TYPE", f.absenceSemanticState);
         }
     }
 }

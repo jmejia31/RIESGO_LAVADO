@@ -78,6 +78,26 @@ Para los tres grupos (Preventivo 72-74, Detectivo 75-77, Correctivo 78-80), en c
   - **excelRepresentation**: Lista enumerada de nombres de archivo (`'1. archivo1.pdf\n2. archivo2.xlsx'`) con saltos de línea (`\r\n`) y `wrapText` en celda de Excel.
   - **pdfRepresentation**: Lista estructurada de nombres de archivo con hipervínculo institucional en anexo documental.
 
+### 2.7 Regla Canónica de Ausencia de Controles y Escala Combinada (Campos 20-31)
+Conforme a la sección *"REGISTRO DE CONTROLES POR TIPO"* del **Instructivo** institucional y a la hoja **"Otras Tablas"** del workbook oficial `Matrices de Riesgos.xlsx`:
+1. **Varios controles del mismo tipo**:
+   - `CONTROL_DESCRIPTION_CARDINALITY`: `ONE_TO_MANY_RENDERED` (Campos 20, 24, 28). Se describen todos los controles del tipo correspondiente en la columna respectiva.
+   - `CONTROL_EFFECTIVENESS_SCALE_CARDINALITY`: `ONE_COMBINED_SCALE_PER_CONTROL_TYPE` (Campos 21, 25, 29). Se selecciona un **único nivel de la escala que refleja el efecto combinado** del conjunto de controles del tipo sobre el riesgo.
+2. **Ausencia institucional de controles** (`CONTROL_COUNT_OF_TYPE = 0`):
+   - Estado semántico: `NO_CONTROLS_OF_TYPE`.
+   - Descripción institucional (20, 24, 28): `"No hay"` (representación plana canónica de la ausencia de controles; no constituye una entidad ficticia en base de datos).
+   - Escala combinada (21, 25, 29): `"Inexistente"`.
+   - Nivel de efectividad (22, 26, 30): `0`.
+   - % efectividad (23, 27, 31): `0` (o `0%`).
+   - Cuando una evaluación en base de datos tiene 0 controles de un tipo y el Excel oficial consigna `"No hay"` / `"Inexistente"`, la proyección institucional es idéntica y se clasifica como `MATCH` semántico.
+3. **Catálogo oficial de escalas de efectividad (Hoja 'Otras Tablas')**:
+   - `Inexistente` <-> Nivel `0` <-> Porcentaje `0%` (`0.00`)
+   - `Es inefectivo` <-> Nivel `1` <-> Porcentaje `0%` (`0.00`)
+   - `Razonable` <-> Nivel `2` <-> Porcentaje `30%` (`0.30`)
+   - `Parcialmente Efectivo` <-> Nivel `3` <-> Porcentaje `50%` (`0.50`)
+   - `Moderado` <-> Nivel `4` <-> Porcentaje `85%` (`0.85`)
+   - `Alta Efectividad` <-> Nivel `5` <-> Porcentaje `90%` (`0.90`)
+
 ---
 
 ## 3. Matriz Técnica Canónica 82/82

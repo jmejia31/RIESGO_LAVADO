@@ -263,6 +263,41 @@ async function validate() {
   }
   console.log('EVIDENCE_PROJECTION_74_77_80: PASS (NOMBRE_ARCHIVO_CON_EXTENSION frozen for Excel and PDF)');
 
+  // 19. Control Absence and Combined Scale Semantics (Fields 20-31)
+  for (const n of [20, 24, 28]) {
+    const f = fields[n - 1];
+    if (f.controlDescriptionCardinality !== 'ONE_TO_MANY_RENDERED' ||
+        f.canonicalRepresentationWhenEmpty !== 'No hay' ||
+        f.absenceSemanticState !== 'NO_CONTROLS_OF_TYPE') {
+      console.error(`FAIL: Control description field ${n} missing absence semantics 'No hay'`);
+      process.exit(1);
+    }
+  }
+  for (const n of [21, 25, 29]) {
+    const f = fields[n - 1];
+    if (f.controlEffectivenessScaleCardinality !== 'ONE_COMBINED_SCALE_PER_CONTROL_TYPE' ||
+        f.canonicalRepresentationWhenEmpty !== 'Inexistente' ||
+        f.absenceSemanticState !== 'NO_CONTROLS_OF_TYPE') {
+      console.error(`FAIL: Control scale field ${n} missing combined scale or 'Inexistente' semantics`);
+      process.exit(1);
+    }
+  }
+  for (const n of [22, 26, 30]) {
+    const f = fields[n - 1];
+    if (f.canonicalRepresentationWhenEmpty !== '0' || f.absenceSemanticState !== 'NO_CONTROLS_OF_TYPE') {
+      console.error(`FAIL: Control level field ${n} missing level 0 absence semantics`);
+      process.exit(1);
+    }
+  }
+  for (const n of [23, 27, 31]) {
+    const f = fields[n - 1];
+    if (f.canonicalRepresentationWhenEmpty !== '0%' || f.absenceSemanticState !== 'NO_CONTROLS_OF_TYPE') {
+      console.error(`FAIL: Control percentage field ${n} missing 0% absence semantics`);
+      process.exit(1);
+    }
+  }
+  console.log('CONTROL_ABSENCE_AND_COMBINED_SCALE_SEMANTICS: PASS (Fields 20-31 absence="No hay"/"Inexistente"/0/0% and combined scale frozen)');
+
   console.log('\n======================================================');
   console.log('CONTRACT VALIDATION RESULT: ALL GATES PASSED (82/82)');
   console.log('======================================================');
