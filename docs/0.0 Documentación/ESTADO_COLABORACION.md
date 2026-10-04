@@ -2210,3 +2210,12 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - El GitHub Quality Gates run `37070685886`, SHA exacto `b0518d041ac5239a02eb7d63b324728dbf19c2dc`, falló en la validación integral por los mismos tres hallazgos reportados en el run del padre `37064635385`: referencias `EVA_VRI`/`EVA_VRR` en el contrato de campos y un fixture preexistente señalado como posible credencial en `DatabaseEnvironmentGuardTests.cs`. No se alteraron archivos fuera de alcance para evitar silenciar el control; el test y su implementación permanecen como cambios locales ajenos sin stagear.
 - Por el gate remoto obligatorio, el Bloque 3 queda `PENDING`, aunque la reconciliación técnica de catálogos está implementada. Reanudar resolviendo esos hallazgos en cambio autorizado y revalidar CI completo. No iniciar Bloque 4.
 - Los cambios no relacionados en `DatabaseEnvironmentGuard.cs`, su prueba, `frontend/rl-app/tsconfig.json` y archivos untracked continúan preservados fuera del commit.
+
+
+## Bloque 3 - correccion del mapeo y blocker de seguridad (COD, 2026-10-04 17:29 -06:00)
+
+- Base local y remota: 0306bc323434f316371a8486a8a13f5427375653, rama desarrollo.
+- Se demostro por DDL versionado y consultas/repositorio que campos 12/37 se persisten en PROY_VRI/PROY_VRR y EVA_CALCULOS_JSON; se removio del manifest el mapping obsoleto. Se agrego prueba del contrato.
+- El gate de CI conserva un hallazgo de posible credencial en DatabaseEnvironmentGuardTests.cs. Tiene cambios locales ajenos expresamente protegidos; no se edito ni stageo. El escaneo sigue detectando cualquier valor que no sean las lineas sentinel exactamente acotadas. Requiere revision/reemplazo por responsable y decision de rotacion si aplica.
+- Pruebas de este seguimiento: contract validator 82/82, catalog validator 14/14 y contract tests 18/18 PASS. Validador integral local queda limitado por el test protegido modificado. La validacion Oracle read-only no se repitio; no se realizo acceso productivo en este seguimiento.
+- `BLOCK3_STATUS=PENDING` hasta resolver el hallazgo; no iniciar Bloque 4.

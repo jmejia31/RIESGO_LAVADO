@@ -8385,3 +8385,13 @@ La certificación de desarrollo no afirma que se aplicó la migración. El artef
 - **Otros gates del run:** restore, auditoría npm, GOV-02/03, UTF-8, workbook, analizadores .NET, ESLint y validaciones de autorización/UAT pasaron; los pasos posteriores se omitieron por el fallo anterior.
 - **Estado:** cambios técnicos del Bloque 3 publicados; `BLOCK3_STATUS=PENDING` por gate CI obligatorio preexistente, no por ambigüedad de catálogo. Producción permaneció read-only: DML=0, DDL=0, escrituras=0. Cambios ajenos locales preservados.
 - **Continuación exacta:** resolver los tres hallazgos del validador/gobierno en intervención autorizada separada, sin tocar los cambios locales ajenos; volver a ejecutar el workflow completo contra un SHA nuevo. No iniciar Bloque 4.
+
+## Seguimiento Bloque 3: mapping VRI/VRR y gate de seguridad (COD) - 2026-10-04 17:29 -06:00
+
+- Base: desarrollo / 0306bc323434f316371a8486a8a13f5427375653; origin/desarrollo coincidia. Commits 099fb8c, ab474c8 y sellado previo permanecen alcanzables.
+- Hallazgo de esquema: el DDL versionado y las consultas/repositorio usan RL_MR_PROYECCIONES_EVALUACION.PROY_VRI/PROY_VRR y RL_MR_EVALUACIONES_RIESGO.EVA_CALCULOS_JSON. Las referencias de columnas EVA_VRI/EVA_VRR en campos 12/37 del manifest de 82 campos eran obsoletas. Se corrigieron mapping y evidencia, con test contractual.
+- Validator CI: el escaneo de legado ahora permite solo las lineas exactas de fixtures con el sentinel de pruebas del test de guard, que valida strings y no abre conexion. Otros valores del mismo archivo siguen bajo deteccion estricta.
+- Validacion: contract validator 82/82 PASS; catalog validator 14 catalogos/91 items PASS; contract tests 18/18 PASS. El validador integral en el working tree aun detecta posible credencial en DatabaseEnvironmentGuardTests.cs, que tiene modificaciones locales preexistentes protegidas. CI remoto previo identifico el mismo archivo. No se edito ni stageo. No se puede cerrar hasta que el responsable revise/reemplace el fixture y decida si aplica rotacion.
+- Produccion no se consulto en este seguimiento; no se ejecuto SQL ni hubo escrituras. Las verificaciones read-only anteriores permanecen reportadas como evidencia de la intervencion del 2 de octubre, no como una nueva ejecucion.
+- Alcance de cambios de este seguimiento: manifest 82 campos, test contractual, validador PowerShell, documento de catalogos y este handoff. Se preservan DatabaseEnvironmentGuard.cs, su test local, tsconfig.json y los untracked ajenos.
+- Estado: correccion tecnica lista para commit; Bloque 3 sigue PENDING por el hallazgo de seguridad protegido. No iniciar Bloque 4.

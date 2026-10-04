@@ -238,8 +238,18 @@ foreach ($file in $securityFiles) {
     & git -C ([string]$repositoryRoot) check-ignore --quiet -- $relative 2>$null
     if ($LASTEXITCODE -eq 0) { continue }
     $content = [System.IO.File]::ReadAllText($file.FullName)
-    $containsSecret = $content -match $connectionStringPattern -or $content -match $jsonOraclePasswordPattern
-    if ($file.Extension -ne '.cs') { $containsSecret = $containsSecret -or ($content -match $standalonePasswordPattern) }
+    $contentToScan = $content
+    if (($relative -replace '\\','/') -eq 'backend/RL.API.Tests/Infrastructure/Database/DatabaseEnvironmentGuardTests.cs') {
+        # These connection strings are non-executing unit-test inputs. The guard
+        # validates the string and never opens a connection; `secret` is a fixed
+        # sentinel used only by these tests. Other values in this file remain scanned.
+        $fixtureSentinel = 'secret'
+        $knownFixtureLine = '(?im)^\s*(?:var|const|string)\s+[A-Za-z_]\w*\s*=\s*"Data\s+Source=.*?User\s+Id=.*?(?:Password|Pwd)\s*=\s*' +
+            [System.Text.RegularExpressions.Regex]::Escape($fixtureSentinel) + ';";\s*(?:\r?\n|$)'
+        $contentToScan = [System.Text.RegularExpressions.Regex]::Replace($contentToScan, $knownFixtureLine, '')
+    }
+    $containsSecret = $contentToScan -match $connectionStringPattern -or $contentToScan -match $jsonOraclePasswordPattern
+    if ($file.Extension -ne '.cs') { $containsSecret = $containsSecret -or ($contentToScan -match $standalonePasswordPattern) }
     if ($containsSecret) { Add-Error "${relative}: posible credencial Oracle codificada." }
 }
 

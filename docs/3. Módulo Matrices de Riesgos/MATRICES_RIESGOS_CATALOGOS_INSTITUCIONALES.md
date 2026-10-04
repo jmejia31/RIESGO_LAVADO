@@ -2,7 +2,7 @@
 
 ## Certificaci?n del Bloque 3
 
-**Estado t?cnico: CERRADO.** El contrato can?nico contiene 14 cat?logos y 91 ?tems. Se validaron los consumidores backend, frontend, importaci?n y exportaci?n con el manifiesto versionado y pruebas. No se ejecut? DML, DDL, seed ni procedimiento en producci?n. No se inicia Bloque 4.
+**Reconciliacion de catalogos: PASS. Cierre formal de Bloque 3: PENDING por el gate remoto de seguridad descrito al final.** El contrato can?nico contiene 14 cat?logos y 91 ?tems. Se validaron los consumidores backend, frontend, importaci?n y exportaci?n con el manifiesto versionado y pruebas. No se ejecut? DML, DDL, seed ni procedimiento en producci?n. No se inicia Bloque 4.
 
 ## Fuentes y m?todo
 
@@ -73,3 +73,10 @@ Artefactos forenses locales sanitizados: `%TEMP%\RIESGO_LAVADO_BLOCK3_CATALOG_AU
 - Frontend TypeScript, lint y Angular build PASS; suite integral final: 84 archivos/845 pruebas PASS. Tres expectativas hist?ricas de labels fueron actualizadas a las etiquetas can?nicas.
 - Validadores estructura, scripts de base de datos y enlaces de documentaci?n: PASS.
 - Producci?n: DML=0, DDL=0, procedimientos=0, escrituras=0.
+
+
+## Correccion de persistencia VRI/VRR y gate de seguridad
+
+El manifiesto de 82 campos ahora documenta para los campos 12 y 37 la persistencia comprobada: valores numericos en `RL_MR_PROYECCIONES_EVALUACION.PROY_VRI/PROY_VRR` y resultados en `RL_MR_EVALUACIONES_RIESGO.EVA_CALCULOS_JSON`. El DDL versionado y las consultas del repositorio sustentan el mapping; no existen columnas `EVA_VRI`/`EVA_VRR` en el esquema vigente. Una prueba de contrato congela este mapping.
+
+El workflow remoto anterior tambien detecto una posible credencial en el archivo preexistente `backend/RL.API.Tests/Infrastructure/Database/DatabaseEnvironmentGuardTests.cs`. El test contiene un caso de destino productivo con un password literal que no se pudo certificar como sentinel. Ese archivo tiene cambios locales ajenos y esta expresamente protegido; no se modifico ni stageo. No se exime esa cadena en el validador. Hasta que el responsable confirme/reemplace el fixture y revise rotacion si corresponde, el cierre formal queda PENDING. Produccion permanecio read-only.

@@ -149,6 +149,22 @@ public class MatrizRiesgosContract82FieldsTests
     }
 
     [Fact]
+    public void CalculatedRiskValues_MustMapToCurrentProjectionAndCalculationJson()
+    {
+        var fields = LoadManifest();
+        var vri = fields.Single(field => field.number == 12);
+        var vrr = fields.Single(field => field.number == 37);
+
+        Assert.Equal(
+            "RL_MR_PROYECCIONES_EVALUACION.PROY_VRI / RL_MR_EVALUACIONES_RIESGO.EVA_CALCULOS_JSON -> valor_riesgo_inherente",
+            vri.dbOrEntityMapping);
+
+        Assert.Equal(
+            "RL_MR_PROYECCIONES_EVALUACION.PROY_VRR / RL_MR_EVALUACIONES_RIESGO.EVA_CALCULOS_JSON -> valor_riesgo_residual",
+            vrr.dbOrEntityMapping);
+    }
+
+    [Fact]
     public void Manifest_MustHaveNoDuplicateCanonicalKeys()
     {
         var fields = LoadManifest();
