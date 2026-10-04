@@ -80,3 +80,8 @@ Artefactos forenses locales sanitizados: `%TEMP%\RIESGO_LAVADO_BLOCK3_CATALOG_AU
 El manifiesto de 82 campos ahora documenta para los campos 12 y 37 la persistencia comprobada: valores numericos en `RL_MR_PROYECCIONES_EVALUACION.PROY_VRI/PROY_VRR` y resultados en `RL_MR_EVALUACIONES_RIESGO.EVA_CALCULOS_JSON`. El DDL versionado y las consultas del repositorio sustentan el mapping; no existen columnas `EVA_VRI`/`EVA_VRR` en el esquema vigente. Una prueba de contrato congela este mapping.
 
 El workflow remoto anterior tambien detecto una posible credencial en el archivo preexistente `backend/RL.API.Tests/Infrastructure/Database/DatabaseEnvironmentGuardTests.cs`. El test contiene un caso de destino productivo con un password literal que no se pudo certificar como sentinel. Ese archivo tiene cambios locales ajenos y esta expresamente protegido; no se modifico ni stageo. No se exime esa cadena en el validador. Hasta que el responsable confirme/reemplace el fixture y revise rotacion si corresponde, el cierre formal queda PENDING. Produccion permanecio read-only.
+
+
+## Estado del workflow tras la correccion
+
+GitHub Actions run 37244277198, SHA fd6522e11ef4a4b97391dbc4dbe4ac91633d60c1, fallo en `Verify npm security audit and reproducible installation` antes de ejecutar los validadores de Matrices. El audit reporto 9 vulnerabilidades altas del arbol de dependencias del frontend. No se actualizo el lockfile en este alcance. El run no certifica el validador corregido; el validator de catalogos y contrato locales pasan. Cierre formal continua PENDING por gate remoto rojo y el hallazgo de seguridad en el fixture protegido. No iniciar Bloque 4.

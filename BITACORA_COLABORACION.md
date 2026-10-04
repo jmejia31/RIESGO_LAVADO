@@ -8395,3 +8395,11 @@ La certificación de desarrollo no afirma que se aplicó la migración. El artef
 - Produccion no se consulto en este seguimiento; no se ejecuto SQL ni hubo escrituras. Las verificaciones read-only anteriores permanecen reportadas como evidencia de la intervencion del 2 de octubre, no como una nueva ejecucion.
 - Alcance de cambios de este seguimiento: manifest 82 campos, test contractual, validador PowerShell, documento de catalogos y este handoff. Se preservan DatabaseEnvironmentGuard.cs, su test local, tsconfig.json y los untracked ajenos.
 - Estado: correccion tecnica lista para commit; Bloque 3 sigue PENDING por el hallazgo de seguridad protegido. No iniciar Bloque 4.
+
+## Seguimiento CI del SHA publicado (COD) - 2026-10-04 17:34 -06:00
+
+- Se publico la correccion de persistencia de los campos calculados 12/37 en commit fd6522e11ef4a4b97391dbc4dbe4ac91633d60c1. HEAD y origin/desarrollo coincidieron al verificar.
+- GitHub Actions run 37244277198 para ese SHA fallo en el paso npm audit antes de ejecutar validadores/build/tests posteriores: 9 vulnerabilidades altas en dependencias del frontend. No se modifico package.json/package-lock.json porque esta remediacion no pertenece al alcance de catalogos.
+- Localmente, contract validator 82/82, catalog validator 14 catalogos/91 items, contract tests 18/18 y documentation links 201/201 pasaron. El validador integral local aun reporta el test protegido DatabaseEnvironmentGuardTests.cs; el archivo permanece ajeno y no staged.
+- La auditoria Oracle no se repitio en este seguimiento; no se consulto ni modifico produccion. Los resultados read-only del 2-oct siguen separados como evidencia anterior.
+- `BLOCK3_STATUS=PENDING`: no se debe inferir cierre mientras el workflow esta rojo. Pendiente resolver el audit de dependencias y la posible credencial del fixture protegido. No iniciar Bloque 4.

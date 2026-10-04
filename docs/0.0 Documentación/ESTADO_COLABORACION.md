@@ -2219,3 +2219,11 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - El gate de CI conserva un hallazgo de posible credencial en DatabaseEnvironmentGuardTests.cs. Tiene cambios locales ajenos expresamente protegidos; no se edito ni stageo. El escaneo sigue detectando cualquier valor que no sean las lineas sentinel exactamente acotadas. Requiere revision/reemplazo por responsable y decision de rotacion si aplica.
 - Pruebas de este seguimiento: contract validator 82/82, catalog validator 14/14 y contract tests 18/18 PASS. Validador integral local queda limitado por el test protegido modificado. La validacion Oracle read-only no se repitio; no se realizo acceso productivo en este seguimiento.
 - `BLOCK3_STATUS=PENDING` hasta resolver el hallazgo; no iniciar Bloque 4.
+
+## Bloque 3 - estado CI del SHA fd6522e1 (COD, 2026-10-04 17:34 -06:00)
+
+- Commit de mapping publicado: fd6522e11ef4a4b97391dbc4dbe4ac91633d60c1; HEAD=origin/desarrollo al validar.
+- CI run 37244277198 fallo en npm audit (9 hallazgos altos en dependencias frontend), antes de validar Matrices. No cambiar dependencias fuera del alcance.
+- Contract validator 82/82, catalog validator 14/91, contract tests 18/18 y docs links 201/201 PASS. Validator integral local bloqueado por el archivo de test preexistente protegido; no se modifico ni stageo.
+- Se corrigio el mapping obsoleto de campos 12/37 con evidencia del DDL/consultas. Produccion no se consulto en este seguimiento.
+- `BLOCK3_STATUS=PENDING` hasta resolver los gates CI. No iniciar Bloque 4.
