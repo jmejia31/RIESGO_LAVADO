@@ -1,3 +1,42 @@
+# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (ANTIG) — 2026-10-05
+
+- **Rama:** `desarrollo`; SHA inicial `1a9e4b38e1f2008aca48b68f053e6a7577cc7963`.
+- **Estado General del Bloque 4:** `PREPARED + TESTED + DRY_RUN_CERTIFIED + PRODUCTION_APPLY_READY=YES`.
+- **Modo Operativo:** UPSERT Determinista por Código de Riesgo (`RIE_CODIGO`).
+- **Autorización Productiva:** `PRODUCTION_APPLY_AUTHORIZED=NO` (Detenido estrictamente antes del primer DML productivo).
+- **Fuente Oficial:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; 59 riesgos × 82 campos.
+- **Producción:** HPPROD1 / `SET TRANSACTION READ ONLY` + `ROLLBACK`; cero escrituras en producción (`DATABASE_WRITES=0`).
+- **Simulación Local en Oracle XE:** Contenedor Docker `rl-oracle-xe-local` (`127.0.0.1:1521/XE`), réplica exacta del estado previo. Transacción global completada exitosamente.
+- **Idempotencia Certificada:** Segundo dry-run sobre estado post-apply en XE ejecutado con `SECOND_APPLY_MUTATIONS = 0`.
+- **Métricas del Plan (4,838 posiciones evaluadas):**
+  - `NO_ACTION`: 1,929
+  - `INSERT_BASELINE`: 140 (125 controles relacionales + 14 planes mitigación + 1 actividad)
+  - `UPDATE_BASELINE`: 270 (257 campos JSON + 12 correcciones ortográficas F09 + 1 responsable F45)
+  - `PRESERVE_PRODUCTION`: 54 (4 alertas operacionales F70 + 48 áreas operacionales F04 + 1 dueño F14 + 1 respuesta F39)
+  - `RECALCULATE_BACKEND`: 2,124 (34 campos de fórmula delegados a Bloque 5)
+  - `NOT_APPLICABLE`: 321 (177 GTIC en F17-19 + 144 mitigaciones no aplicables F44-51)
+  - `TOTAL_MUTATIONS_PLANNED`: 410 (140 inserts + 270 updates)
+- **Invariantes Certificadas:**
+  - `ACCIDENTAL_NULL_OVERWRITES`: 0
+  - `NEW_DUPLICATES_EXPECTED`: 0
+  - `DELETE_OPERATIONS`: 0
+  - `DDL_OPERATIONS`: 0
+  - `OPERATIONAL_PRESERVATION_PLAN`: PASS (4/4 preservados: ROTR-COMPRAS-18, RCUMP-COMPRASRRHH-26, RCUMP-COMPRAS-28, RCUMP-COMPRAS-32)
+- **SHA-256 del Plan de Mutaciones Certificado:** `012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`.
+- **Artefactos Certificados Fuera de Git:** `%TEMP%\RIESGO_LAVADO_BLOCK4_RECONCILIATION_20261005_153256_641` (10 archivos con manifiestos, planes, guardias y resultados de simulación).
+- **Pruebas Automatizadas:**
+  - `node tools/validate_contract_82_fields.js`: PASS (82/82).
+  - `node tools/validate_matrices_catalogs.js`: PASS (14 catálogos, 91 items).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (14/14).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (838/838).
+  - `npm run build` (frontend): PASS.
+  - `npm test -- --watch=false` (frontend): PASS (84 archivos, 845 pruebas).
+  - `npm run e2e` (frontend): PASS (45 pruebas Playwright en Chromium).
+  - `powershell tools/run_quality_gates.ps1`: PASS.
+- **Condición de Parada:** Detenido en la compuerta única de autorización de producción (`PRODUCTION_APPLY_READY=YES`). Bloque 5 no iniciado.
+
+---
+
 ## Registro de intervencion — Bloque 3: catalogo institucional (COD)
 
 - **Fecha/hora local:** 2026-10-02 15:01:48 (America/Tegucigalpa).

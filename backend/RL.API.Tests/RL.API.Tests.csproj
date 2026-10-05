@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RL.API\RL.API.csproj" />
+    <ProjectReference Include="..\..\tools\ReconcileMatricesBaseline\ReconcileMatricesBaseline.csproj" />
   </ItemGroup>
 
 </Project>

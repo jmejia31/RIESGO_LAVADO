@@ -1,3 +1,75 @@
+## Registro de intervención — Bloque 4: Reconciliación y Recarga Controlada de Datos (ANTIG)
+
+- **Fecha/hora local:** 2026-10-05 09:48:00 -06:00 (America/Tegucigalpa).
+- **Autor:** ANTIG (Antigravity).
+- **Rama / SHA inicial:** `desarrollo` / `1a9e4b38e1f2008aca48b68f053e6a7577cc7963`.
+- **Objetivo y alcance:** Ejecución del Bloque de Remediación 4 de 12: Reconciliación y Recarga Controlada de Datos institucionales contra los 59 riesgos existentes en producción en Modo UPSERT Determinista por Código de Riesgo. Estado alcanzado: `PREPARED + TESTED + DRY_RUN_CERTIFIED + PRODUCTION_APPLY_READY=YES`. Cero escrituras a producción (`PRODUCTION_APPLY_AUTHORIZED=NO`). Bloque 5 no iniciado. Detención estricta ante la compuerta única de autorización previa a cualquier DML productivo.
+- **Archivos creados o modificados en esta intervención:**
+  - `tools/ReconcileMatricesBaseline/ReconcileMatricesBaseline.csproj`: herramienta C# .NET 10 de captura de preimagen, generación de plan de reconciliación determinista, verificación de invariantes, simulación transaccional en Oracle XE local e idempotencia en 2do dry-run.
+  - `tools/ReconcileMatricesBaseline/Program.cs`: motor completo de reconciliación determinista (1,763 líneas).
+  - `backend/RL.API.Tests/RL.API.Tests.csproj`: referencia a la herramienta de reconciliación para pruebas integradas.
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosBlock4ReconciliationTests.cs`: suite automatizada con 14 pruebas deterministas (Casos A a L + guardias de duplicados y sobreescrituras nulas).
+  - `BITACORA_COLABORACION.md`: actualización de bitácora transversal.
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`: actualización del estado consolidado.
+  - *Archivos preservados en working tree sin stagear*: `backend/RL.API/Infrastructure/Database/DatabaseEnvironmentGuard.cs`, `backend/RL.API.Tests/Infrastructure/Database/DatabaseEnvironmentGuardTests.cs`, `frontend/rl-app/tsconfig.json`.
+- **Cambios funcionales y técnicos:**
+  - **Captura de Preimagen:** Conexión de solo lectura contra producción (`HPPROD1`) bajo `SET TRANSACTION READ ONLY` y `ROLLBACK` inmediato. Cero escrituras productivas (`DATABASE_WRITES=0`).
+  - **Semilla en Oracle XE:** Réplica exacta del estado previo de producción en contenedor local Docker `rl-oracle-xe-local` (`127.0.0.1:1521/XE`).
+  - **Plan de Reconciliación:** Evaluación de 4,838 posiciones (59 riesgos × 82 campos):
+    - `POSITIONS_EVALUATED`: 4,838
+    - `NO_ACTION`: 1,929
+    - `INSERT_BASELINE`: 140 (125 controles + 14 planes de mitigación + 1 actividad)
+    - `UPDATE_BASELINE`: 270 (257 campos JSON + 12 correcciones ortográficas F09 + 1 responsable F45)
+    - `PRESERVE_PRODUCTION`: 54 (4 alertas operacionales F70 + 48 áreas operacionales F04 + 1 dueño F14 + 1 respuesta F39)
+    - `RECALCULATE_BACKEND`: 2,124 (34 campos de fórmula delegados a recálculo en Bloque 5)
+    - `NOT_APPLICABLE`: 321 (177 GTIC en F17-19 + 144 mitigaciones no aplicables F44-51)
+    - `TOTAL_MUTATIONS_PLANNED`: 410 (140 inserts + 270 updates)
+  - **Invariantes Certificadas:**
+    - `ACCIDENTAL_NULL_OVERWRITES`: 0
+    - `NEW_DUPLICATES_EXPECTED`: 0
+    - `DELETE_OPERATIONS`: 0
+    - `DDL_OPERATIONS`: 0
+    - `OPERATIONAL_PRESERVATION_PLAN`: PASS (4/4 preservados: ROTR-COMPRAS-18, RCUMP-COMPRASRRHH-26, RCUMP-COMPRAS-28, RCUMP-COMPRAS-32)
+  - **Simulación en Oracle XE:**
+    - `XE_FIRST_APPLY`: PASS (410 mutaciones aplicadas exitosamente dentro de transacción global).
+    - `XE_POSTCHECK`: PASS (59 riesgos coincidentes, 125 controles relacionales, 14 planes).
+    - `XE_SECOND_APPLY_MUTATIONS`: 0 (Idempotencia 100% certificada).
+  - **SHA-256 del Plan de Mutaciones:** `012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`.
+  - **Artefactos Certificados Fuera de Git:**
+    - Directorio: `C:\Users\francisco.perez\AppData\Local\Temp\RIESGO_LAVADO_BLOCK4_RECONCILIATION_20261005_153256_641`
+    - `reconciliation_plan_full.json` (SHA: `18c4f7a576fb8497f7f85228bff145b5fdcd5efc7f3f9e954507c3d91116d7dd`)
+    - `reconciliation_plan_mutations.csv` (SHA: `012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`)
+    - `preservation_set.csv` (SHA: `9f9040bbc0f2038f345fa09820198921487b6ca2018c9fe908fa793eba6dac54`)
+    - `null_overwrite_guard.csv` (SHA: `934ff125cd6ccb958f84cc46d15ed66e5a9d59c1c016872ed08c0cde89c1baef`)
+    - `duplicate_guard.csv` (SHA: `beb0496aeb897a5fe75427f33a03cb39b3b69eaa90535966ee9c81f9b7f32ee9`)
+    - `preimage_manifest.json` (SHA: `4d4ccbe3385dbbdad3fc7145084f8b1cc23c28ce76bcb185920f40560f643771`)
+    - `rollback_plan.json` (SHA: `4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945`)
+    - `catalog_normalization_log.csv` (SHA: `80f12cf4c0d3f7867efcdf9b35619dc95b0c160676968943dce240bed827ba00`)
+    - `xe_simulation_results.json` (SHA: `2c4b588a87fb9ec90ff385680f096221e2b1a187cee1e8ec14d9abd7094d39e2`)
+- **Pruebas ejecutadas con conteos reales:**
+  - `node tools/validate_contract_82_fields.js`: PASS (82/82 gates).
+  - `node tools/validate_matrices_catalogs.js`: PASS (14 catálogos, 91 items).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (14/14 tests pasando).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (838/838 tests pasando).
+  - `npm run build` (frontend): PASS (bundle generation complete).
+  - `npm test -- --watch=false` (frontend): PASS (84 test files, 845 tests pasando).
+  - `npm run e2e` (frontend): PASS (45 tests en Chromium pasando).
+  - `powershell tools/validate_repository_structure.ps1`: PASS (118 rutas, 1031 archivos, 3 maestros SQL).
+  - `powershell tools/validate_database_scripts.ps1`: PASS (validación completa de BD).
+  - `powershell tools/validate_documentation_links.ps1`: PASS (174 docs Markdown, 201 links locales).
+  - `powershell tools/run_quality_gates.ps1`: PASS (Quality Gates en verde; cobertura Backend 37.54% líneas / Frontend 64.09% líneas).
+  - `python tools/validate_agent_skills.py`: PENDIENTE (Python no instalado en el host local; no se modificaron archivos en `.agents/skills/`).
+- **Estado de Git:**
+  - Commits preparados y publicados en `origin/desarrollo`.
+- **Riesgos, restricciones y pendientes:**
+  - Alto impacto: Modificación controlada de 410 registros en producción.
+  - La aplicación en producción permanece estricta y conscientemente **BLOQUEADA** a la espera de autorización explícita (`PRODUCTION_APPLY_AUTHORIZED=YES`) por parte de Javier Mejía (`jmejia31`).
+  - Bloque 5 no iniciado.
+- **Punto de continuación:**
+  - Esperar autorización explícita para la aplicación productiva del Plan SHA `012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`.
+
+---
+
 ## Registro de intervencion — Bloque 3: catalogo institucional (COD)
 
 - **Fecha/hora local:** 2026-10-02 15:01:48 (America/Tegucigalpa).
