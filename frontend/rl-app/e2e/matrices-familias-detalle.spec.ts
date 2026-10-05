@@ -252,7 +252,7 @@ test('MCV.2 Constructor regresa al mismo Detalle y conserva Versiones', async ({
   await expect(detalle).toBeVisible();
   await expect(detalle.getByRole('heading', { name: 'Versiones del formulario' })).toBeVisible();
   await expect(detalle).toContainText('v2');
-  await expect(detalle.locator(':focus')).toHaveCount(1);
+  await expect(detalle.getByRole('button', { name: 'Cerrar detalle de familia' })).toBeFocused();
 });
 
 test('MCV.3 Editar definición de borrador abre el Constructor desde el Detalle', async ({ page }) => {

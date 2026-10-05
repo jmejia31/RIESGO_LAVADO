@@ -2245,3 +2245,8 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - Auditoría npm final: 0 vulnerabilidades. Frontend y backend pasan según la bitácora; gates de catálogos permanecen certificados (14 catálogos, 91 items, drift 0), sin cambios a sus decisiones.
 - Los cambios ajenos locales protegidos permanecen sin stage: DatabaseEnvironmentGuard.cs, diff restante de DatabaseEnvironmentGuardTests.cs, tsconfig.json y untracked preexistentes. Producción no fue consultada ni modificada; DML=0, DDL=0, escrituras=0.
 - HEAD y origin/desarrollo estaban sincronizados en d492b6ff7a7439ff3cc9cca4ad5f3d8acfbd8f07. Este handoff documental genera un SHA nuevo; mantener estado administrativo pendiente hasta que el Quality Gates del nuevo SHA termine success. No iniciar Bloque 4.
+## Estado vivo - Corrección de selector de foco E2E (COD, 2026-10-05 00:21:28 -06:00)
+
+- Run 37270866986 sobre SHA 7dbf5b8c6c3335adb84829d5d149d4c4d72e12ee falló sólo porque el pseudo selector :focus no identificó el control activo dentro del modal. El snapshot de Playwright sí mostró activo el botón "Cerrar detalle de familia".
+- El test ahora valida ese botón específico, sin cambiar código funcional. Verificado en worktree aislado con npm ci --ignore-scripts (0 vulnerabilidades), E2E focal PASS y suite E2E completa 45/45 PASS.
+- Próximo paso: commit y push selectivos de test/handoff; esperar Quality Gates del SHA actualizado antes de declarar cierre administrativo. No iniciar Bloque 4.
