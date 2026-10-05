@@ -2250,3 +2250,8 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - Run 37270866986 sobre SHA 7dbf5b8c6c3335adb84829d5d149d4c4d72e12ee falló sólo porque el pseudo selector :focus no identificó el control activo dentro del modal. El snapshot de Playwright sí mostró activo el botón "Cerrar detalle de familia".
 - El test ahora valida ese botón específico, sin cambiar código funcional. Verificado en worktree aislado con npm ci --ignore-scripts (0 vulnerabilidades), E2E focal PASS y suite E2E completa 45/45 PASS.
 - Próximo paso: commit y push selectivos de test/handoff; esperar Quality Gates del SHA actualizado antes de declarar cierre administrativo. No iniciar Bloque 4.
+## Estado vivo - Fix del foco tras cierre de Constructor (COD, 2026-10-05 00:45 -06:00)
+
+- La repetición del run 37272088646 confirmó que el control estaba realmente inactivo en CI. Diagnóstico local: `enfocarContexto` se ejecutaba antes de que terminara la transición de visibilidad del modal; no se cambió la aserción para ocultar el fallo.
+- Se corrigió el retorno de foco con reintentos acotados hasta que el botón esté visible y disponible. E2E focal 5/5; suite 45/45; TypeScript, lint y build PASS con instalación npm limpia y 0 vulnerabilidades.
+- Próximo paso: publicar sólo componente, manejador, test y handoff; esperar Quality Gates del SHA publicado. No iniciar Bloque 4.

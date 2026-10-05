@@ -173,9 +173,29 @@ export class FamiliaDetalleModalComponent implements OnChanges, AfterViewInit, O
   }
 
   enfocarContexto(): void {
-    const control = this.botonCerrar?.nativeElement
-      ?? this.host.nativeElement.querySelector('dialog');
-    control?.focus();
+    const intentarEnfocar = (framesRestantes = 30): void => {
+      const control = this.botonCerrar?.nativeElement
+        ?? this.host.nativeElement.querySelector('dialog') as HTMLElement | null;
+      if (!control?.isConnected) return;
+
+      const estilo = window.getComputedStyle(control);
+      const disponible = estilo.display !== 'none'
+        && estilo.visibility !== 'hidden'
+        && control.getClientRects().length > 0
+        && !control.closest('[inert], [aria-hidden="true"]');
+
+      if (!disponible) {
+        if (framesRestantes > 0) requestAnimationFrame(() => intentarEnfocar(framesRestantes - 1));
+        return;
+      }
+
+      control.focus({ preventScroll: true });
+      if (document.activeElement !== control && framesRestantes > 0) {
+        requestAnimationFrame(() => intentarEnfocar(framesRestantes - 1));
+      }
+    };
+
+    requestAnimationFrame(() => intentarEnfocar());
   }
 
   reintentarVersiones(): void {
