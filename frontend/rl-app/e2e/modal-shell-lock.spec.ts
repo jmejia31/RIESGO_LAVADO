@@ -30,6 +30,8 @@ async function preparar(page: Page): Promise<void> {
   }, token());
   await page.route('**/api/configuracion/sistema', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: { nombreSistema: 'SGRLA-IHSS', nombreInstitucion: 'IHSS', timeoutSesion: 30 } }) }));
   await page.route('**/api/configuracion/login', route => route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"datos":[]}' }));
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
+  await page.route('**/api/auditoria**', route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: true, datos: [] }) }));
   await page.route('**/api/matrices-riesgos/**', route => {
     const ruta = new URL(route.request().url()).pathname;
     let datos: unknown = [];

@@ -13,7 +13,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case01_Localhost_XE_Passes()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=RIESGO_LAVADO;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
         var result = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config);
         Assert.Equal(connStr, result);
     }
@@ -23,7 +23,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case02_127001_XE_Passes()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=RIESGO_LAVADO;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
         var result = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config);
         Assert.Equal(connStr, result);
     }
@@ -33,7 +33,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case03_RemoteHost_Refused()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=db-server.corp.ihss.hn)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=TEST;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=db-server.corp.ihss.hn)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
         var ex = Assert.Throws<InvalidOperationException>(() =>
             DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config));
         Assert.Contains("STARTUP_REFUSED", ex.Message);
@@ -44,7 +44,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case04_PrivateRemoteIP_Refused()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.100)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=TEST;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.1.100)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
         var ex = Assert.Throws<InvalidOperationException>(() =>
             DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config));
         Assert.Contains("STARTUP_REFUSED", ex.Message);
@@ -55,7 +55,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case05_PublicIP_Refused()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=200.50.10.5)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=TEST;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=200.50.10.5)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)))";
         var ex = Assert.Throws<InvalidOperationException>(() =>
             DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config));
         Assert.Contains("STARTUP_REFUSED", ex.Message);
@@ -100,7 +100,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case09_UnauthorizedService_Refused()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCL)));User Id=TEST;Password=secret;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCL)))";
         var ex = Assert.Throws<InvalidOperationException>(() =>
             DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config));
         Assert.Contains("STARTUP_REFUSED", ex.Message);
@@ -111,7 +111,7 @@ public class DatabaseEnvironmentGuardTests
     public void Case10_HistoricalProductionTarget_Refused()
     {
         var config = new ConfigurationBuilder().Build();
-        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.1.19.112)(PORT=1521))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=hpprod1)));User Id=RIESGO_LAVADO;Password=dummy_prod_pwd;";
+        var connStr = "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.1.19.112)(PORT=1521))(CONNECT_DATA=(SERVER=dedicated)(SERVICE_NAME=hpprod1)))";
         var ex = Assert.Throws<InvalidOperationException>(() =>
             DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(connStr, config));
         Assert.Contains("STARTUP_REFUSED", ex.Message);

@@ -54,14 +54,18 @@ if ($errors.Count -eq 0) {
 
     $jsonMatch = [System.Text.RegularExpressions.Regex]::Match(
         $seedContent,
-        "v_json\s+CLOB\s*:=\s*q'~(?<json>.*?)~';",
+        "v_json\s+CLOB\s*:=\s*TO_CLOB\(\s*q'~(?<json>.*?)~'\s*\)\s*(?:\|\|\s*q'~(?<json>.*?)~'\s*)*;",
         [System.Text.RegularExpressions.RegexOptions]::Singleline
     )
     if (-not $jsonMatch.Success) {
         $errors.Add('El script de semillas no contiene la definición JSON en v_json.')
     }
-    elseif ($jsonMatch.Groups['json'].Value -cne $jsonRaw) {
-        $errors.Add('El JSON embebido en el script no coincide byte a byte con la definición oficial.')
+    else {
+        $jsonParts = @($jsonMatch.Groups['json'].Captures | ForEach-Object { $_.Value })
+        $embeddedJson = [string]::Concat($jsonParts)
+        if ($embeddedJson -cne $jsonRaw) {
+            $errors.Add('El JSON embebido en el script no coincide byte a byte con la definición oficial.')
+        }
     }
 
     if ($null -ne $definition) {

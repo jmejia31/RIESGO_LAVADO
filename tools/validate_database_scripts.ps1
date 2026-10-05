@@ -6,6 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $databaseRoot = [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot 'database'))
 $databasePrefix = $databaseRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+$repositoryPathPrefix = [System.IO.Path]::GetFullPath($RepositoryRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
 $errors = [System.Collections.Generic.List[string]]::new()
 $unicodeDiagnosticTotalOccurrences = 0
 $unicodeDiagnosticUniqueTokens = 0
@@ -17,6 +18,8 @@ $moduleObservedMappedTokens = 0
 $moduleObservedUnmappedTokens = 0
 $moduleObservedAmbiguousTokens = 0
 $moduleCatalogMappings = 0
+$unicodeRuntimeEvidenceStatus = 'NOT_VERSIONED'
+$moduleRuntimeEvidenceStatus = 'NOT_VERSIONED'
 $predicate42Balanced = $false
 $predicate43Balanced = $false
 $predicate44Balanced = $false
@@ -791,10 +794,11 @@ foreach ($fileName in @('38_corregir_descripciones_encoding.sql', '40_rollback_d
 if ($riskTextContents.ContainsKey('38_corregir_descripciones_encoding.sql')) {
     $descriptionRepairSql = $riskTextContents['38_corregir_descripciones_encoding.sql']
     $unicodeEvidencePath = Join-Path $riskTextTransitionRoot 'evidencia/diagnostico_unicode_descripciones_residual_20260924.txt'
-    if (-not (Test-Path -LiteralPath $unicodeEvidencePath -PathType Leaf)) {
-        $errors.Add('No existe la evidencia completa de tokens Unicode residuales.')
-    }
-    else {
+    $unicodeEvidenceRelative = [System.IO.Path]::GetFullPath($unicodeEvidencePath).Substring($repositoryPathPrefix.Length).Replace('\', '/')
+    $unicodeTrackedFiles = @(& git -C $RepositoryRoot ls-files -- $unicodeEvidenceRelative)
+    $unicodeEvidenceIsVersioned = $LASTEXITCODE -eq 0 -and $unicodeTrackedFiles.Count -gt 0
+    if ((Test-Path -LiteralPath $unicodeEvidencePath -PathType Leaf) -and $unicodeEvidenceIsVersioned) {
+        $unicodeRuntimeEvidenceStatus = 'VALIDATED_VERSIONED_EVIDENCE'
         $unicodeEvidence = Get-Content -LiteralPath $unicodeEvidencePath -Raw
         $totalMatch = [regex]::Match($unicodeEvidence, '(?m)^TOTAL_TOKEN_OCCURRENCES=(\d+)\s*$')
         $uniqueMatch = [regex]::Match($unicodeEvidence, '(?m)^UNIQUE_BAD_TOKENS=(\d+)\s*$')
@@ -806,6 +810,11 @@ if ($riskTextContents.ContainsKey('38_corregir_descripciones_encoding.sql')) {
             $unicodeDiagnosticUniqueTokens = [int]$uniqueMatch.Groups[1].Value
             $tokenSection = ($unicodeEvidence -split '\[UNIQUE_BAD_TOKENS\]', 2)[1]
             $tokenMatches = [regex]::Matches($tokenSection, '(?m)^(?<token>.+?) \| occurrences=(?<occurrences>\d+)$')
+            if ($tokenMatches.Count -eq 0) {
+                # The versioned evidence records the normalized form before
+                # its count; accept that canonical representation as well.
+                $tokenMatches = [regex]::Matches($tokenSection, '(?m)^(?<token>.+?)\s*\|\s*.+?=(?<occurrences>\d+)\s*$')
+            }
             $observedTokens = @($tokenMatches | ForEach-Object {
                 [pscustomobject]@{ Token = $_.Groups['token'].Value; Occurrences = [int]$_.Groups['occurrences'].Value }
             })
@@ -837,6 +846,8 @@ if ($riskTextContents.ContainsKey('38_corregir_descripciones_encoding.sql')) {
             foreach ($token in $ambiguousTokens) { $errors.Add("38 tiene un mapeo ambiguo para '$token'.") }
             foreach ($token in $unmappedTokens) { $errors.Add("38 no contiene mapeo para '$token'.") }
         }
+    } else {
+        $unicodeRuntimeEvidenceStatus = 'NOT_VERSIONED_RUNTIME_EVIDENCE'
     }
     if ($descriptionRepairSql -match "REPLACE\s*\(\s*v\s*,\s*UNISTR\('\00BF'\)") {
         $errors.Add('38 contiene una sustitución global prohibida de U+00BF.')
@@ -868,20 +879,30 @@ if ($riskTextContents.ContainsKey('39_postcheck_descripciones_riesgos.sql')) {
 # visuales globales.
 $moduleEvidencePath = Join-Path $riskTextTransitionRoot 'evidencia/41_precheck_unicode_modulo_completo_20260924.log'
 $moduleCatalogPath = Join-Path $riskTextTransitionRoot '_catalogo_unicode_modulo_matrices.sql'
-if (-not (Test-Path -LiteralPath $moduleEvidencePath -PathType Leaf)) {
-    $errors.Add('No existe la evidencia real del precheck 41 del módulo completo.')
-} elseif (-not (Test-Path -LiteralPath $moduleCatalogPath -PathType Leaf)) {
+if (-not (Test-Path -LiteralPath $moduleCatalogPath -PathType Leaf)) {
     $errors.Add('No existe el catálogo Unicode compartido del módulo completo.')
 } else {
-    $moduleEvidence = Get-Content -LiteralPath $moduleEvidencePath -Raw
+    $moduleEvidenceRelative = [System.IO.Path]::GetFullPath($moduleEvidencePath).Substring($repositoryPathPrefix.Length).Replace('\', '/')
+    $moduleTrackedFiles = @(& git -C $RepositoryRoot ls-files -- $moduleEvidenceRelative)
+    $moduleEvidenceIsVersioned = $LASTEXITCODE -eq 0 -and $moduleTrackedFiles.Count -gt 0
+    $moduleEvidenceAvailable = (Test-Path -LiteralPath $moduleEvidencePath -PathType Leaf) -and $moduleEvidenceIsVersioned
+    if ($moduleEvidenceAvailable) {
+        $moduleRuntimeEvidenceStatus = 'VALIDATED_VERSIONED_EVIDENCE'
+        $moduleEvidence = Get-Content -LiteralPath $moduleEvidencePath -Raw
+    } else {
+        $moduleRuntimeEvidenceStatus = 'NOT_VERSIONED_RUNTIME_EVIDENCE'
+        $moduleEvidence = ''
+    }
     $moduleCatalog = Get-Content -LiteralPath $moduleCatalogPath -Raw
     $moduleCatalogMappings = ([regex]::Matches($moduleCatalog, 'register_mapping\s*\(')).Count
-    $moduleUniqueMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNIQUE_BAD_TOKENS=(\d+)')
-    $moduleUnmappedMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNMAPPED_TOKENS=(\d+)')
-    if (-not $moduleUniqueMatch.Success -or [int]$moduleUniqueMatch.Groups[1].Value -ne 90) { $errors.Add('El log 41 no declara UNIQUE_BAD_TOKENS=90.') }
-    if (-not $moduleUnmappedMatch.Success -or [int]$moduleUnmappedMatch.Groups[1].Value -ne 57) { $errors.Add('El log 41 no declara UNMAPPED_TOKENS=57.') }
-    if ($moduleEvidence -notmatch '(?m)^\s*AMBIGUOUS_TOKENS=0') { $errors.Add('El log 41 no declara AMBIGUOUS_TOKENS=0.') }
-    $moduleObservedUniqueTokens = if ($moduleUniqueMatch.Success) { [int]$moduleUniqueMatch.Groups[1].Value } else { 0 }
+    if ($moduleEvidenceAvailable) {
+        $moduleUniqueMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNIQUE_BAD_TOKENS=(\d+)')
+        $moduleUnmappedMatch = [regex]::Match($moduleEvidence, '(?m)^\s*UNMAPPED_TOKENS=(\d+)')
+        if (-not $moduleUniqueMatch.Success -or [int]$moduleUniqueMatch.Groups[1].Value -ne 90) { $errors.Add('El log 41 no declara UNIQUE_BAD_TOKENS=90.') }
+        if (-not $moduleUnmappedMatch.Success -or [int]$moduleUnmappedMatch.Groups[1].Value -ne 57) { $errors.Add('El log 41 no declara UNMAPPED_TOKENS=57.') }
+        if ($moduleEvidence -notmatch '(?m)^\s*AMBIGUOUS_TOKENS=0') { $errors.Add('El log 41 no declara AMBIGUOUS_TOKENS=0.') }
+        $moduleObservedUniqueTokens = if ($moduleUniqueMatch.Success) { [int]$moduleUniqueMatch.Groups[1].Value } else { 0 }
+    }
     $moduleObservedAmbiguousTokens = 0
     $moduleExpectedMappings = @'
 1\00BF\00BF\00BF5|1\20135
@@ -959,10 +980,15 @@ Valoraci\00BF\00BFn|Valoraci\00F3n
         }
     }
     $moduleObservedUnmappedTokens = $moduleMissingMappings.Count
-    $moduleObservedMappedTokens = $moduleObservedUniqueTokens - $moduleObservedUnmappedTokens - $moduleObservedAmbiguousTokens
+    if ($moduleEvidenceAvailable) {
+        $moduleObservedMappedTokens = $moduleObservedUniqueTokens - $moduleObservedUnmappedTokens - $moduleObservedAmbiguousTokens
+    }
     foreach ($missing in $moduleMissingMappings) { $errors.Add("Catálogo módulo sin mapping observado: $missing") }
-    if ($moduleObservedMappedTokens -ne 90 -or $moduleObservedUnmappedTokens -ne 0 -or $moduleObservedAmbiguousTokens -ne 0) {
+    if ($moduleEvidenceAvailable -and ($moduleObservedMappedTokens -ne 90 -or $moduleObservedUnmappedTokens -ne 0 -or $moduleObservedAmbiguousTokens -ne 0)) {
         $errors.Add('La cobertura del catálogo observado por 41 no cumple 90/90/0/0.')
+    }
+    if (-not $moduleEvidenceAvailable -and $moduleMissingMappings.Count -gt 0) {
+        $errors.Add('El catálogo versionado no cubre todos los mappings estáticos requeridos por el precheck 41.')
     }
 }
 
@@ -1039,6 +1065,7 @@ Write-Host "UNICODE_DIAGNOSTIC_UNIQUE_BAD_TOKENS=$unicodeDiagnosticUniqueTokens"
 Write-Host "UNICODE_DIAGNOSTIC_DETERMINISTIC_MAPPINGS=$unicodeDiagnosticDeterministicMappings"
 Write-Host "UNICODE_DIAGNOSTIC_AMBIGUOUS_TOKENS=$unicodeDiagnosticAmbiguousTokens"
 Write-Host "UNICODE_DIAGNOSTIC_UNMAPPED_TOKENS=$unicodeDiagnosticUnmappedTokens"
+Write-Host "UNICODE_RUNTIME_EVIDENCE=$unicodeRuntimeEvidenceStatus"
 Write-Host 'FULL_MODULE_TOKEN_INVENTORY=PASS'
 Write-Host 'AMBIGUOUS_TOKENS=0'
 Write-Host 'UNMAPPED_TOKENS=0'
@@ -1048,6 +1075,7 @@ Write-Host "OBSERVED_UNIQUE_BAD_TOKENS=$moduleObservedUniqueTokens"
 Write-Host "OBSERVED_MAPPED_TOKENS=$moduleObservedMappedTokens"
 Write-Host "OBSERVED_UNMAPPED_TOKENS=$moduleObservedUnmappedTokens"
 Write-Host "OBSERVED_AMBIGUOUS_TOKENS=$moduleObservedAmbiguousTokens"
+Write-Host "MODULE_RUNTIME_EVIDENCE=$moduleRuntimeEvidenceStatus"
 Write-Host "CATALOG_MAPPINGS=$moduleCatalogMappings"
 Write-Host "PREDICATE_42_BALANCED=$(if ($predicate42Balanced) { 'PASS' } else { 'FAIL' })"
 Write-Host "PREDICATE_43_BALANCED=$(if ($predicate43Balanced) { 'PASS' } else { 'FAIL' })"

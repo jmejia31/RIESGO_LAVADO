@@ -84,6 +84,18 @@ async function prepararSesion(page: Page): Promise<void> {
     contentType: 'application/json',
     body: JSON.stringify({ success: true, datos: [] })
   }));
+
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] })
+  }));
+
+  await page.route('**/api/auditoria**', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] })
+  }));
 }
 
 async function stubLecturasBase(page: Page): Promise<void> {

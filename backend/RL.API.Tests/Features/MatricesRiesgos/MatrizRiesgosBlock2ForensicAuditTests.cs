@@ -84,8 +84,9 @@ public class MatrizRiesgosBlock2ForensicAuditTests
         // ExecuteNonQueryAsync sólo puede usarse para control de sesión (SET TRANSACTION READ ONLY y ROLLBACK)
         var nonQueryMatches = Regex.Matches(code, @"\.ExecuteNonQueryAsync\s*\(\s*\)");
 
-        // Debe haber un SET READ ONLY y un ROLLBACK por salida normal o identidad inválida.
-        Assert.Equal(3, nonQueryMatches.Count);
+        // Una ejecución normal usa SET READ ONLY y ROLLBACK; la salida por
+        // identidad inválida y el snapshot de catálogos también cierran con ROLLBACK.
+        Assert.Equal(4, nonQueryMatches.Count);
     }
 
     [Fact]

@@ -220,7 +220,7 @@ $securityRoots = @(
     (Join-Path $repositoryRoot 'database'))
 $securityExtensions = @('.cs', '.json', '.config', '.xml', '.runsettings', '.ps1', '.yml', '.yaml', '.env', '.txt', '.sql')
 $excludedSegments = @('bin', 'obj', 'node_modules', 'dist', 'coverage', '.git', 'Historico', 'retiro_controlado')
-$secretPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
+$secretPattern = '(?im)(Data\s+Source|Server)\s*=[^\r\n]*(User\s+Id|UserId|Uid)\s*=[^\r\n]*(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|$))'
 
 foreach ($root in $securityRoots) {
     if (-not (Test-Path -LiteralPath $root)) {

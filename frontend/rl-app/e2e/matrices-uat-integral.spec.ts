@@ -699,8 +699,8 @@ test('UAT registra alerta y automonitoreo operativo', async ({ page }) => {
   await page.getByRole('button', { name: 'Registrar alerta' }).click();
   await expect.poll(() => recibidos['alerta']?.aleCodigo).toBe('ALE-UAT');
 
-  await page.getByLabel('Estado del riesgo').fill('CONTROLADO');
-  await page.getByLabel('Estado de controles').fill('EFECTIVO');
+  await page.getByLabel('Estado del riesgo').selectOption('VIGENTE');
+  await page.getByLabel('Estado de controles').selectOption('SE_MANTIENE');
   await page.getByLabel('Resultado').fill('Seguimiento conforme');
   await page.getByRole('button', { name: 'Guardar monitoreo' }).click();
   await expect.poll(() => recibidos['monitoreo']?.monResultado).toBe('Seguimiento conforme');
@@ -969,9 +969,9 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
         nombre: 'Respuesta al riesgo',
         elementos: [
           { codigo: 'EVITAR', valor: 'Evitar', orden: 1 },
-          { codigo: 'MITIGAR', valor: 'Mitigar', orden: 2 },
-          { codigo: 'TRANSFERIR', valor: 'Transferir', orden: 3 },
-          { codigo: 'ACEPTAR', valor: 'Aceptar', orden: 4 }
+          { codigo: 'TRANSFERIR', valor: 'Transferir/Compartir', orden: 2 },
+          { codigo: 'ACEPTAR', valor: 'Aceptar', orden: 3 },
+          { codigo: 'MITIGAR', valor: 'Mitigar', orden: 4 }
         ]
       }
     ],
@@ -1070,12 +1070,12 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   const optionValues = await options.evaluateAll(opts =>
     opts.map(o => (o as HTMLOptionElement).value).filter(v => v !== '')
   );
-  expect(optionValues).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
+  expect(optionValues).toEqual(['EVITAR', 'TRANSFERIR', 'ACEPTAR', 'MITIGAR']);
 
   const optionTexts = await options.evaluateAll(opts =>
     opts.map(o => o.textContent?.trim()).filter(t => t && !t.includes('Seleccione'))
   );
-  expect(optionTexts).toEqual(['Evitar', 'Mitigar', 'Transferir', 'Aceptar']);
+  expect(optionTexts).toEqual(['Evitar', 'Transferir/Compartir', 'Aceptar', 'Mitigar']);
 
   // E. Seleccionar al menos una opción: MITIGAR
   await selectorRespuesta.selectOption('MITIGAR');
@@ -1125,7 +1125,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   const field39 = view.locator('[data-matrix-field="39"]');
   await expect(field39).toBeVisible();
   await expect(field39).toContainText('Respuesta al riesgo');
-  await expect(field39).toContainText('MITIGAR');
+  await expect(field39).toContainText('Mitigar');
 
   // P. Confirmar que campos 34–38 siguen read-only
   const fields = view.locator('[data-matrix-field]');

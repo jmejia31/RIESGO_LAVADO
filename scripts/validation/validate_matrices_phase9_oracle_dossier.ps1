@@ -171,7 +171,7 @@ foreach ($documentationFile in @($dossierPath, $authorizationPath)) {
     }
 
     $content = Get-Content -LiteralPath $documentationFile -Raw
-    $secretPattern = '(?is)(Data\s+Source|Server)\s*=.+?(User\s+Id|UserId|Uid)\s*=.+?(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|PENDIENTE|$))'
+    $secretPattern = '(?im)(Data\s+Source|Server)\s*=[^\r\n]*(User\s+Id|UserId|Uid)\s*=[^\r\n]*(Password|Pwd)\s*=\s*(?!\s*(?:CHANGE_ME|REPLACE_ME|\$\{|<|__|PENDIENTE|$))'
     if ($content -match $secretPattern) {
         $errors.Add("Posible credencial Oracle codificada en: $documentationFile")
     }

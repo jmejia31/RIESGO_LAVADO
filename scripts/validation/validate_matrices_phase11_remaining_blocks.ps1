@@ -13,6 +13,8 @@ $requiredFiles = @(
     'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMitigacionRepository.cs',
     'backend/RL.API/Features/MatricesRiesgos/Persistence/MatricesRiesgosMonitoreoRepository.cs',
     'backend/RL.API/Features/MatricesRiesgos/Application/MatricesRiesgosReportExportService.cs',
+    'backend/RL.API/Infrastructure/Reporting/InstitutionalXlsxWorkbook.cs',
+    'backend/RL.API/Infrastructure/Reporting/InstitutionalPdfDocument.cs',
     'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosGestionController.cs',
     'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosMitigacionController.cs',
     'backend/RL.API/Features/MatricesRiesgos/MatricesRiesgosMonitoreoController.cs',
@@ -116,11 +118,17 @@ $export = Read-Utf8 'backend/RL.API/Features/MatricesRiesgos/Application/Matrice
 foreach ($token in @(
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/pdf',
-    'ZipArchive',
-    '%PDF-1.4'
+    'InstitutionalXlsxWorkbook',
+    'InstitutionalPdfDocument'
 )) {
     if (-not $export.Contains($token)) { $errors.Add("El exportador no contiene el control/formato esperado: $token") }
 }
+
+$xlsx = Read-Utf8 'backend/RL.API/Infrastructure/Reporting/InstitutionalXlsxWorkbook.cs'
+if (-not $xlsx.Contains('ZipArchive')) { $errors.Add('El generador XLSX compartido no utiliza contenedor ZIP Office Open XML.') }
+
+$pdf = Read-Utf8 'backend/RL.API/Infrastructure/Reporting/InstitutionalPdfDocument.cs'
+if (-not $pdf.Contains('%PDF-1.4')) { $errors.Add('El generador PDF compartido no declara el formato PDF institucional esperado.') }
 
 if ($errors.Count -gt 0) {
     Write-Host 'VALIDACION FASE 11 BLOQUES 2-6: INCORRECTA' -ForegroundColor Red

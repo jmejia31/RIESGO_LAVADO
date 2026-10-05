@@ -364,11 +364,11 @@ public sealed class MatricesRiesgosNewCodeCoverageP3P4Tests
                 CodigoRiesgo = "COD-MUY-LARGO-" + new string('X', 50),
                 AreaPrincipal = "Gerencia de Operaciones Institucionales y Seguridad Integral",
                 DuenoRiesgo = "Lic. María José Peña y Pérez de la Oña",
-                Vri = 16,
-                NivelInherente = "CRITICO",
+                Vri = 9,
+                NivelInherente = "Riesgo Intolerable",
                 Vrr = 4,
-                NivelResidual = "BAJO",
-                RespuestaRiesgo = "MITIGAR_INMEDIATAMENTE",
+                NivelResidual = "Riesgo bajo",
+                RespuestaRiesgo = "Mitigar",
                 EstadoEvaluacion = "APROBADA",
                 FechaEvaluacion = new DateTime(2026, 8, 14, 15, 0, 0, DateTimeKind.Utc)
             }

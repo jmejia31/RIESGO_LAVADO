@@ -196,6 +196,12 @@ function createUnsignedAccessToken() {
 }
 
 async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknown; metodologia?: unknown } = {}) {
+  await page.route('**/api/catalogos/modulos', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ success: true, datos: [] }),
+  }));
+
   const accessToken = createUnsignedAccessToken();
   await page.addInitScript(token => {
     localStorage.setItem('access_token', token);
@@ -394,6 +400,8 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
+  await expect(page).toHaveURL(/\/matrices-riesgos$/);
+  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
@@ -429,7 +437,7 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
   await expect(page.getByRole('heading', { name: 'Matriz consolidada' })).toBeVisible();
   await expect(page.getByText('R-501', { exact: true })).toBeVisible();
   await expect(page.getByText('Cumplimiento', { exact: true })).toBeVisible();
-  await expect(page.getByText('MODERADO', { exact: true })).toBeVisible();
+  await expect(page.getByText('Riesgo bajo', { exact: true })).toBeVisible();
 
   await page.screenshot({ path: 'test-results/evaluacion-modal-consolidado.png', fullPage: true });
 });

@@ -2554,10 +2554,12 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   cerrarDefinicion(): void {
     this.versionEditando.set(null);
     this.mostrarDetalleComoContexto();
-    // Restore focus immediately and after the builder DOM is removed. The
-    // second pass avoids losing focus to body during the conditional render.
-    this.detalleFamiliaRef?.instance.enfocarContexto();
-    setTimeout(() => this.detalleFamiliaRef?.instance.enfocarContexto(), 0);
+    // Wait until Angular removes the builder dialog before returning focus.
+    // Focusing synchronously can target an element behind the still-mounted
+    // dialog and leave focus on BODY when that dialog is removed.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      this.detalleFamiliaRef?.instance.enfocarContexto();
+    }));
   }
 
   crearNuevaVersionDesdeDetalle(familia: FamiliaFormularioDto): void {

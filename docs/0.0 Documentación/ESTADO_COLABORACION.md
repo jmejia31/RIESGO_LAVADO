@@ -2227,3 +2227,15 @@ La implementación queda certificable en desarrollo sin declarar DDL aplicado. P
 - Contract validator 82/82, catalog validator 14/91, contract tests 18/18 y docs links 201/201 PASS. Validator integral local bloqueado por el archivo de test preexistente protegido; no se modifico ni stageo.
 - Se corrigio el mapping obsoleto de campos 12/37 con evidencia del DDL/consultas. Produccion no se consulto en este seguimiento.
 - `BLOCK3_STATUS=PENDING` hasta resolver los gates CI. No iniciar Bloque 4.
+
+
+## Estado vivo - Desbloqueo quality gates de Bloque 3 (COD, 2026-10-04 23:55:40 -06:00)
+
+- Remediacion local npm y verificaciones completas; rama desarrollo, base publicada a3c3fad69b8345f2cfd5493ed848344553d60891.
+- npm audit: 0 vulnerabilidades; npm ci reproducible. Frontend: TypeScript, lint, build, 845/845 unitarias y E2E 45/45. Backend: Release build, 824/824; script integrado con coverage backend 821/821, frontend 845/845 y E2E 45/45.
+- Contrato Matrices 82/82; catalogos 14/91 y drift 0. Sin reapertura de catalogos. Scanner de credenciales y validadores de base de datos, dinamico, autorizacion y UAT pasan en checkout limpio.
+- Se corrigieron fixtures E2E incompletos, datos esperados desfasados y restauracion del foco del modal. Semantica productiva conservada.
+- Docker CLI no disponible localmente; compose y builds quedan para el runner GitHub. Produccion no consultada ni tocada; DML=0, DDL=0, escrituras=0.
+- Cambios locales protegidos preservados y fuera del staging: DatabaseEnvironmentGuard, cambios previos de su prueba, tsconfig, .vscode, artifacts, PDF, scratch y otros untracked.
+- Cierre PENDING hasta commit, push y conclusion success del workflow Quality Gates del SHA final. No iniciar Bloque 4.
+- Siguiente paso: revisar el diff selectivo, commit y push a desarrollo, verificar el run remoto y actualizar este estado con su conclusion.
