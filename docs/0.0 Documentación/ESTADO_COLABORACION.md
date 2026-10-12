@@ -1,4 +1,24 @@
-# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico #2 - ANTIG) — 2026-10-12
+# Estado vigente — Calificación de inputs de negocio del Bloque 4 (COD) — 2026-10-12
+
+- **Rama y punto de partida:** `desarrollo`; `HEAD=origin/desarrollo=5524e1b6e8fc7fbc3762ed39b2c037b4a48e1f61` antes de esta intervención.
+- **Objetivo/estado:** se corrigió y probó el parsing de controles, planes y actividades para determinar qué inputs realmente faltan. `BLOCK4_STATUS=PENDING_BUSINESS_INPUT`; `BUSINESS_INPUT_REQUEST_READY=YES`; `PRODUCTION_APPLY_READY=NO`; apply no ejecutado; Bloque 5 no iniciado.
+- **Workbook:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; 82 campos, 59 riesgos y 59 códigos únicos. Celdas pobladas F20=52/F24=43/F28=42, F40=17, F42=3, F45=2.
+- **Parser:** 137 celdas de controles → 461 items (198 preventivos, 131 detectivos, 132 correctivos); 17 celdas F40 →108 planes; 3 celdas F42 →37 actividades; F45 →9 items. Ambigüedades=0. Items numerados terminales vacíos=2 y quedan incompletos, no se transforman en valores.
+- **Qualification:** 34 controles existentes, 12 `No hay`, 18 DB-only preservados, 414 controles faltantes resolubles con fuente/regla aprobada y 1 descripción incompleta. F40: 89 faltantes con descripción más 1 incompleto; los 90 necesitan fechas de inicio/fin no disponibles. F42: 8 actividades aplicables requieren plan padre exacto, responsable y fechas; 29 items no aplican. F45: 1 mapeo responsable→plan por definir. Total calculado: 100 entidades, 215 atributos humanos (215 filas del request), 91 raíces y 9 dependencias derivadas; inexplicados=0.
+- **Reglas confirmadas:** flujo estándar UI→DTO→backend→repositorio: controles nuevos `ACTIVO`; automation inicial `MANUAL` sólo si F32 está vacío, y F32 explícito para 16 controles; plan y actividad nuevos `PENDIENTE`. DDL consultado en producción READ ONLY: defaults `PLA_AVANCE=0`, `PLA_PRESUPUESTO=0`, `ACT_AVANCE=0`; fechas/estados NOT NULL sin defaults. No se usan fechas actuales del formulario como fuente.
+- **Producción:** snapshot y DDL fueron consultados con transacción `SET TRANSACTION READ ONLY` + `ROLLBACK`; DML=0, DDL=0, escrituras=0, apply=NO. Universe del dry-run 4,838 posiciones; keysets históricos 398/398 y 87/87 preservados.
+- **Artefactos locales:** `%LOCALAPPDATA%\Temp\RIESGO_LAVADO_BLOCK4_BUSINESS_INPUT_20261012_185818_393`; archivos y SHA-256 están en `SHA256SUMS.json`. No se versionan dumps productivos ni archivos temporales.
+- **Archivos propios modificados:** `tools/ReconcileMatricesBaseline/Program.cs`; `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosBlock4ReconciliationTests.cs`; `BITACORA_COLABORACION.md`; este archivo. Se preservan los cambios ajenos en `DatabaseEnvironmentGuard.cs`, sus tests y `frontend/rl-app/tsconfig.json`, además de los untracked preexistentes.
+- **Pruebas:** foco Bloque 4 70/70; suite backend Release 894/894; build reconciliador PASS; contrato 82/82; catálogos 14/91 drift 0; validators docs/DB/estructura PASS. Frontend aislado: instalación limpia, audit 0, TSC/lint/build, tests 845/845 PASS. El script integrado `run_quality_gates.ps1` pasó backend y se detuvo en frontend porque el `node_modules` compartido no tiene el builder `@angular/build:unit-test`; no se alteró esa instalación. Sin cambios frontend.
+- **Siguiente paso:** revisar/stagear sólo los cuatro archivos propios, commitear y publicar en `desarrollo` si procede; verificar Quality Gates para el SHA final. Enviar a negocio sólo `block4_business_input_request.csv` en el directorio temporal referido. Rehacer dry-run tras recibir valores. No aplicar producción ni iniciar Bloque 5.
+
+## Estado histórico
+
+El estado previo se conserva debajo como registro de intervenciones anteriores.
+
+---
+
+# Estado histórico — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico #2 - ANTIG) — 2026-10-12
 
 - **Rama:** `desarrollo`; SHA inicial `0588b62259e3227017aea0c9879fb294d14f6a4b`.
 - **Estado General del Bloque 4:** `BLOCK4_STATUS=PENDING_CORRECTION` (`PRODUCTION_APPLY_READY=NO`, Razón: `16_ITEMS_BLOCKED_BY_PRECONDITION`).

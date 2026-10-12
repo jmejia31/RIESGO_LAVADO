@@ -348,6 +348,14 @@ public sealed class HistoricalDeltaSource
     public string SourceDirectory { get; init; } = "";
 }
 
+public sealed class SourceItemsParseResult
+{
+    public IReadOnlyList<string> Items { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<int?> ParentOrdinals { get; init; } = Array.Empty<int?>();
+    public string ParseRule { get; init; } = "";
+    public bool IsAmbiguous { get; init; }
+}
+
 public class PlanResult
 {
     public string RunId { get; set; } = "";
@@ -2230,7 +2238,13 @@ public static class Program
                         ? el.Where(c => c.Tipo == conTipo).ToList()
                         : new List<ControlPreimage>();
 
-                    var excelItems = ParseMultilineItems(rawExcel);
+                    SourceItemsParseResult parsedControls = ParseSourceItems(rawExcel);
+                    if (parsedControls.IsAmbiguous)
+                    {
+                        AddParserAmbiguity(plan, code, f, label, "RL_MR_CONTROLES_RIESGO", rawExcel);
+                        continue;
+                    }
+                    var excelItems = parsedControls.Items.ToList();
                     string dbControlsText = string.Join("\n", existingList.Select((c, idx) => $"{idx + 1}. {c.Descripcion}"));
 
                     if (excelItems.Count == 0 || (excelItems.Count == 1 && IsEmptyOrNoHay(excelItems[0])))
@@ -2256,6 +2270,18 @@ public static class Program
                     for (int i = 0; i < excelItems.Count; i++)
                     {
                         string targetDesc = excelItems[i].Trim();
+                        if (string.IsNullOrWhiteSpace(targetDesc))
+                        {
+                            plan.BlockedItems.Add(new BlockedItem
+                            {
+                                RiskCode = code, FieldNumber = f, FieldLabel = label, Entity = "RL_MR_CONTROLES_RIESGO",
+                                SourceValue = $"{i + 1}. <empty>", RequiredMissingValue = "CON_DESCRIPCION (NOT NULL; numbered source item has no description)",
+                                ReasonCode = "BLOCKED_REQUIRED_INPUT",
+                                RecommendedResolution = "Confirm whether this numbered source item is intentionally empty or provide its control description."
+                            });
+                            controlsBlockedForField++;
+                            continue;
+                        }
                         if (IsEmptyOrNoHay(targetDesc)) continue;
                         if (targetDesc.Length > 500)
                         {
@@ -2459,7 +2485,13 @@ public static class Program
                         .OrderBy(p => p.Id)
                         .ToList();
                     string dbPlansText = ProjectPlanValues(existingPlans.Select(p => p.Descripcion));
-                    var excelPlans = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    SourceItemsParseResult parsedPlans = ParseSourceItems(rawExcel);
+                    if (parsedPlans.IsAmbiguous)
+                    {
+                        AddParserAmbiguity(plan, code, f, label, "RL_MR_PLANES", rawExcel);
+                        continue;
+                    }
+                    var excelPlans = parsedPlans.Items.Select(NormalizeControlText).ToList();
                     if (excelPlans.Count == 0)
                     {
                         bool hasDbPlans = existingPlans.Count > 0;
@@ -2491,15 +2523,16 @@ public static class Program
 
                     string f46FIni = GetCellTextValue(r, 46);
                     string f47FFin = GetCellTextValue(r, 47);
-                    string missingInputs = string.Join(", ", new[]
-                    {
-                        string.IsNullOrWhiteSpace(f46FIni) ? "PLA_FECHA_INICIO" : "",
-                        string.IsNullOrWhiteSpace(f47FFin) ? "PLA_FECHA_FIN" : "",
-                        "PLA_ESTADO (NOT NULL; no baseline field or DB default)"
-                    }.Where(x => x.Length > 0));
                     string reason = "BLOCKED_REQUIRED_INPUT";
                     foreach (var missingPlan in unmatchedPlans)
                     {
+                        string missingInputs = string.Join(", ", new[]
+                        {
+                            string.IsNullOrWhiteSpace(missingPlan) ? "PLA_DESCRIPCION" : "",
+                            string.IsNullOrWhiteSpace(f46FIni) ? "PLA_FECHA_INICIO" : "",
+                        string.IsNullOrWhiteSpace(f47FFin) ? "PLA_FECHA_FIN" : "",
+                        "PLA_ESTADO (NOT NULL; no baseline field or DB default)"
+                    }.Where(x => x.Length > 0));
                         plan.BlockedItems.Add(new BlockedItem
                         {
                             RiskCode = code, FieldNumber = 40, FieldLabel = label, Entity = "RL_MR_PLANES",
@@ -2521,7 +2554,13 @@ public static class Program
                     var existingPlans = (existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>())
                         .OrderBy(p => p.Id)
                         .ToList();
-                    var excelActivities = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    SourceItemsParseResult parsedActivities = ParseSourceItems(rawExcel, allowHierarchicalNumbering: true);
+                    if (parsedActivities.IsAmbiguous)
+                    {
+                        AddParserAmbiguity(plan, code, f, label, "RL_MR_ACTIVIDADES", rawExcel);
+                        continue;
+                    }
+                    var excelActivities = parsedActivities.Items.Select(NormalizeControlText).ToList();
                     var allActivities = existingPlans
                         .SelectMany(p => existingActivitiesByPlan.TryGetValue(p.Id, out var acts) ? acts : new List<ActivityPreimage>())
                         .ToList();
@@ -2637,7 +2676,13 @@ public static class Program
                         continue;
                     }
 
-                    var excelResponsibles = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    SourceItemsParseResult parsedResponsibles = ParseSourceItems(rawExcel);
+                    if (parsedResponsibles.IsAmbiguous)
+                    {
+                        AddParserAmbiguity(plan, code, f, label, "RL_MR_PLANES.PLA_RESPONSABLES", rawExcel);
+                        continue;
+                    }
+                    var excelResponsibles = parsedResponsibles.Items.Select(NormalizeControlText).ToList();
                     if (excelResponsibles.Count != existingPlans.Count)
                     {
                         plan.RejectAmbiguousCount++;
@@ -4093,17 +4138,157 @@ public static class Program
         return "";
     }
 
-    private static List<string> ParseMultilineItems(string text)
+    public static SourceItemsParseResult ParseSourceItems(string text, bool allowHierarchicalNumbering = false)
     {
-        if (string.IsNullOrWhiteSpace(text)) return new List<string>();
-        return text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                   .Select(s => s.Trim())
-                   .Where(s => !string.IsNullOrWhiteSpace(s))
-                   .ToList();
+        if (string.IsNullOrWhiteSpace(text))
+            return new SourceItemsParseResult { ParseRule = "BLANK_SOURCE" };
+
+        string[] lines = text.Replace("\r\n", "\n", StringComparison.Ordinal)
+            .Replace('\r', '\n')
+            .Split('\n');
+        if (allowHierarchicalNumbering)
+        {
+            Regex hierarchicalItem = new("^\\s*(?<parent>\\d+)\\.(?<child>\\d+)\\s*(?:[.)-]\\s*)?(?<text>.*)$", RegexOptions.CultureInvariant);
+            var hierarchicalMarkers = new List<(int LineIndex, int Parent, int Child, string Text)>();
+            for (int index = 0; index < lines.Length; index++)
+            {
+                Match match = hierarchicalItem.Match(lines[index]);
+                if (match.Success
+                    && int.TryParse(match.Groups["parent"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int parent)
+                    && int.TryParse(match.Groups["child"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int child))
+                    hierarchicalMarkers.Add((index, parent, child, match.Groups["text"].Value.Trim()));
+            }
+
+            if (hierarchicalMarkers.Count > 0)
+            {
+                if (hierarchicalMarkers[0].Parent != 1
+                    || lines.Take(hierarchicalMarkers[0].LineIndex).Any(line => !string.IsNullOrWhiteSpace(line)))
+                    return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_TEXT_BEFORE_HIERARCHICAL_ITEMS", IsAmbiguous = true };
+
+                int priorParent = 0;
+                int priorChild = 0;
+                foreach (var marker in hierarchicalMarkers)
+                {
+                    if (marker.Parent < priorParent || marker.Parent > priorParent + 1
+                        || (marker.Parent == priorParent && marker.Child != priorChild + 1)
+                        || (marker.Parent > priorParent && marker.Child != 1))
+                        return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_HIERARCHICAL_NUMBERING", IsAmbiguous = true };
+                    priorChild = marker.Child;
+                    priorParent = marker.Parent;
+                }
+
+                var hierarchicalItems = new List<string>(hierarchicalMarkers.Count);
+                var parentOrdinals = new List<int?>(hierarchicalMarkers.Count);
+                for (int markerIndex = 0; markerIndex < hierarchicalMarkers.Count; markerIndex++)
+                {
+                    var marker = hierarchicalMarkers[markerIndex];
+                    int end = markerIndex + 1 < hierarchicalMarkers.Count ? hierarchicalMarkers[markerIndex + 1].LineIndex : lines.Length;
+                    var itemLines = new List<string>();
+                    if (marker.Text.Length > 0) itemLines.Add(marker.Text);
+                    for (int lineIndex = marker.LineIndex + 1; lineIndex < end; lineIndex++)
+                    {
+                        string continuation = lines[lineIndex].Trim();
+                        if (continuation.Length > 0) itemLines.Add(continuation);
+                    }
+                    string item = string.Join("\n", itemLines).Trim();
+                    if (item.Length == 0)
+                        return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_EMPTY_HIERARCHICAL_ITEM", IsAmbiguous = true };
+                    hierarchicalItems.Add(item);
+                    parentOrdinals.Add(marker.Parent);
+                }
+                return new SourceItemsParseResult
+                {
+                    Items = hierarchicalItems,
+                    ParentOrdinals = parentOrdinals,
+                    ParseRule = "HIERARCHICAL_NUMBERED_ITEMS_WITH_EXACT_PARENT_ORDINAL"
+                };
+            }
+        }
+        Regex numberedItem = new("^\\s*(?<ordinal>\\d+)\\s*(?:\\.\\s*(?:-\\s*)?|\\)\\s*|-\\s+)(?<text>.*)$", RegexOptions.CultureInvariant);
+        var markers = new List<(int LineIndex, int Ordinal, string Text)>();
+        for (int index = 0; index < lines.Length; index++)
+        {
+            Match match = numberedItem.Match(lines[index]);
+            if (match.Success && int.TryParse(match.Groups["ordinal"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out int ordinal))
+                markers.Add((index, ordinal, match.Groups["text"].Value.Trim()));
+        }
+
+        if (markers.Count == 0)
+        {
+            string[] nonBlankLines = lines.Select(line => line.Trim()).Where(line => line.Length > 0).ToArray();
+            return nonBlankLines.Length switch
+            {
+                0 => new SourceItemsParseResult { ParseRule = "BLANK_SOURCE" },
+                1 => new SourceItemsParseResult { Items = nonBlankLines, ParseRule = "SINGLE_UNNUMBERED_ITEM" },
+                _ => new SourceItemsParseResult { Items = new[] { string.Join("\n", nonBlankLines) }, ParseRule = "UNNUMBERED_MULTILINE_AS_SINGLE_PARAGRAPH" }
+            };
+        }
+
+        if (lines.Take(markers[0].LineIndex).Any(line => !string.IsNullOrWhiteSpace(line)))
+            return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_TEXT_BEFORE_NUMBERED_ITEMS", IsAmbiguous = true };
+
+        if (!markers.Select(marker => marker.Ordinal).SequenceEqual(Enumerable.Range(1, markers.Count)))
+            return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_NON_SEQUENTIAL_NUMBERING", IsAmbiguous = true };
+
+        var items = new List<string>(markers.Count);
+        for (int markerIndex = 0; markerIndex < markers.Count; markerIndex++)
+        {
+            var marker = markers[markerIndex];
+            int end = markerIndex + 1 < markers.Count ? markers[markerIndex + 1].LineIndex : lines.Length;
+            var itemLines = new List<string>();
+            if (marker.Text.Length > 0) itemLines.Add(marker.Text);
+            for (int lineIndex = marker.LineIndex + 1; lineIndex < end; lineIndex++)
+            {
+                string continuation = lines[lineIndex].Trim();
+                if (continuation.Length > 0) itemLines.Add(continuation);
+            }
+            string item = string.Join("\n", itemLines).Trim();
+            if (item.Length == 0 && markerIndex < markers.Count - 1)
+                return new SourceItemsParseResult { ParseRule = "AMBIGUOUS_EMPTY_NONTERMINAL_NUMBERED_ITEM", IsAmbiguous = true };
+            items.Add(item);
+        }
+
+        bool hasEmptyTerminalItem = items.Count > 0 && items[^1].Length == 0;
+        return new SourceItemsParseResult
+        {
+            Items = items,
+            ParentOrdinals = Enumerable.Repeat<int?>(null, items.Count).ToArray(),
+            ParseRule = hasEmptyTerminalItem ? "NUMBERED_ITEMS_WITH_EMPTY_TERMINAL_ITEM" : "NUMBERED_ITEMS_WITH_WRAPPED_CONTINUATIONS"
+        };
+    }
+
+    private static void AddParserAmbiguity(PlanResult plan, string riskCode, int fieldNumber, string fieldLabel, string entity, string rawValue)
+    {
+        plan.RejectAmbiguousCount++;
+        plan.BlockedItems.Add(new BlockedItem
+        {
+            RiskCode = riskCode,
+            FieldNumber = fieldNumber,
+            FieldLabel = fieldLabel,
+            Entity = entity,
+            SourceValue = rawValue,
+            RequiredMissingValue = "Unambiguous source item boundaries",
+            ReasonCode = "PARSER_AMBIGUOUS",
+            RecommendedResolution = "Resolve the workbook item boundaries from an authoritative source; do not split wrapped paragraphs or infer separate items."
+        });
+        plan.AllPositions.Add(new ReconciliationPosition
+        {
+            PositionKey = $"{riskCode}_F{fieldNumber:D2}",
+            RiskCode = riskCode,
+            FieldNumber = fieldNumber,
+            FieldLabel = fieldLabel,
+            Action = "REJECT_AMBIGUOUS",
+            ReasonCode = "PARSER_AMBIGUOUS",
+            ExcelValue = rawValue,
+            DbValue = "",
+            TargetValue = "",
+            Mutates = false
+        });
     }
 
     private static string NormalizeMultiline(string text) =>
-        string.Join("\n", ParseMultilineItems(text).Select(NormalizeControlText).Select(s => s.Trim()));
+        string.Join("\n", text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n')
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(NormalizeControlText).Select(s => s.Trim()));
 
     private static string ProjectPlanValues(IEnumerable<string?> values)
     {

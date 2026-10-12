@@ -15,6 +15,102 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 
 public class MatrizRiesgosBlock4ReconciliationTests
 {
+    [Fact]
+    public void MultilineControlParagraph_IsSingleControl()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("Validar expediente completo.\nEl responsable revisa los documentos.\nDejar constancia del resultado.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal("UNNUMBERED_MULTILINE_AS_SINGLE_PARAGRAPH", parsed.ParseRule);
+        Assert.Equal(new[] { "Validar expediente completo.\nEl responsable revisa los documentos.\nDejar constancia del resultado." }, parsed.Items);
+    }
+
+    [Fact]
+    public void NumberedControls_AreSeparateControls()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1. Validar expediente.\n2.- Ejecutar consulta secundaria.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal(new[] { "Validar expediente.", "Ejecutar consulta secundaria." }, parsed.Items);
+    }
+
+    [Fact]
+    public void BlankLines_DoNotCreateControls()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1. Control uno.\n\n\n2. Control dos.\n");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal(new[] { "Control uno.", "Control dos." }, parsed.Items);
+    }
+
+    [Fact]
+    public void WrappedNumberedControl_PreservesParagraph()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1. Validar expediente.\nEl responsable revisa los documentos.\n\nDejar constancia.\n2. Ejecutar consulta.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal(new[] { "Validar expediente.\nEl responsable revisa los documentos.\nDejar constancia.", "Ejecutar consulta." }, parsed.Items);
+    }
+
+    [Fact]
+    public void MultilinePlanParagraph_IsSinglePlan()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("Implementar controles de acceso.\nEl responsable documenta revisiones periódicas.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Single(parsed.Items);
+        Assert.Contains("\n", parsed.Items[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NumberedPlans_AreSeparatePlans()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1. Diseñar el procedimiento.\n2) Capacitar al personal.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal(new[] { "Diseñar el procedimiento.", "Capacitar al personal." }, parsed.Items);
+    }
+
+    [Fact]
+    public void ActivityParsing_PreservesWrappedDescription()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1.1 Revisar expedientes.\nRegistrar observaciones y hallazgos.\n1.2 Remitir informe.", allowHierarchicalNumbering: true);
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal("HIERARCHICAL_NUMBERED_ITEMS_WITH_EXACT_PARENT_ORDINAL", parsed.ParseRule);
+        Assert.Equal(new[] { "Revisar expedientes.\nRegistrar observaciones y hallazgos.", "Remitir informe." }, parsed.Items);
+        Assert.Equal(new int?[] { 1, 1 }, parsed.ParentOrdinals);
+    }
+
+    [Fact]
+    public void ActivityParsing_MapsItemsToExactPlanOrdinal()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1.1 Actividad uno.\n1.2 Actividad dos.\n2.1 Actividad del plan dos.", allowHierarchicalNumbering: true);
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal(new[] { "Actividad uno.", "Actividad dos.", "Actividad del plan dos." }, parsed.Items);
+        Assert.Equal(new int?[] { 1, 1, 2 }, parsed.ParentOrdinals);
+    }
+
+    [Fact]
+    public void ActivityParsing_NonSequentialHierarchy_FailsClosed()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1.1 Actividad uno.\n1.3 Actividad tres.", allowHierarchicalNumbering: true);
+
+        Assert.True(parsed.IsAmbiguous);
+        Assert.Equal("AMBIGUOUS_HIERARCHICAL_NUMBERING", parsed.ParseRule);
+    }
+
+    [Fact]
+    public void TrailingNumberedMarker_IsQualifiedAsEmptyRequiredItem_NotParserAmbiguity()
+    {
+        var parsed = BaselineReconciler.ParseSourceItems("1. Control informado.\n2.");
+
+        Assert.False(parsed.IsAmbiguous);
+        Assert.Equal("NUMBERED_ITEMS_WITH_EMPTY_TERMINAL_ITEM", parsed.ParseRule);
+        Assert.Equal(new[] { "Control informado.", "" }, parsed.Items);
+    }
+
     #region Tests de Caracterización A - L
 
     [Fact]
