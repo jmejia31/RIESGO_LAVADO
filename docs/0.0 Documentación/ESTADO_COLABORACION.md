@@ -1,6 +1,6 @@
 # Estado vigente — Calificación de inputs de negocio del Bloque 4 (COD) — 2026-10-12
 
-- **Rama y punto de partida:** `desarrollo`; `HEAD=origin/desarrollo=5524e1b6e8fc7fbc3762ed39b2c037b4a48e1f61` antes de esta intervención.
+- **Rama y punto de partida:** `desarrollo`; `HEAD=origin/desarrollo=5524e1b6e8fc7fbc3762ed39b2c037b4a48e1f61` antes de esta intervención. Commit funcional publicado: `9a38ceba83d7bb5117a220275a35554b9a44ccee`.
 - **Objetivo/estado:** se corrigió y probó el parsing de controles, planes y actividades para determinar qué inputs realmente faltan. `BLOCK4_STATUS=PENDING_BUSINESS_INPUT`; `BUSINESS_INPUT_REQUEST_READY=YES`; `PRODUCTION_APPLY_READY=NO`; apply no ejecutado; Bloque 5 no iniciado.
 - **Workbook:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; 82 campos, 59 riesgos y 59 códigos únicos. Celdas pobladas F20=52/F24=43/F28=42, F40=17, F42=3, F45=2.
 - **Parser:** 137 celdas de controles → 461 items (198 preventivos, 131 detectivos, 132 correctivos); 17 celdas F40 →108 planes; 3 celdas F42 →37 actividades; F45 →9 items. Ambigüedades=0. Items numerados terminales vacíos=2 y quedan incompletos, no se transforman en valores.
@@ -10,7 +10,8 @@
 - **Artefactos locales:** `%LOCALAPPDATA%\Temp\RIESGO_LAVADO_BLOCK4_BUSINESS_INPUT_20261012_185818_393`; archivos y SHA-256 están en `SHA256SUMS.json`. No se versionan dumps productivos ni archivos temporales.
 - **Archivos propios modificados:** `tools/ReconcileMatricesBaseline/Program.cs`; `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosBlock4ReconciliationTests.cs`; `BITACORA_COLABORACION.md`; este archivo. Se preservan los cambios ajenos en `DatabaseEnvironmentGuard.cs`, sus tests y `frontend/rl-app/tsconfig.json`, además de los untracked preexistentes.
 - **Pruebas:** foco Bloque 4 70/70; suite backend Release 894/894; build reconciliador PASS; contrato 82/82; catálogos 14/91 drift 0; validators docs/DB/estructura PASS. Frontend aislado: instalación limpia, audit 0, TSC/lint/build, tests 845/845 PASS. El script integrado `run_quality_gates.ps1` pasó backend y se detuvo en frontend porque el `node_modules` compartido no tiene el builder `@angular/build:unit-test`; no se alteró esa instalación. Sin cambios frontend.
-- **Siguiente paso:** revisar/stagear sólo los cuatro archivos propios, commitear y publicar en `desarrollo` si procede; verificar Quality Gates para el SHA final. Enviar a negocio sólo `block4_business_input_request.csv` en el directorio temporal referido. Rehacer dry-run tras recibir valores. No aplicar producción ni iniciar Bloque 5.
+- **Publicación/CI:** commit funcional `9a38ceba83d7bb5117a220275a35554b9a44ccee` (`fix(matrices): qualify block4 business inputs`) está publicado en `origin/desarrollo`. GitHub Actions Quality Gates run `38297022788` para ese SHA concluyó `success`; `HEAD=origin/desarrollo` coincidían antes de esta actualización documental. Los cambios ajenos permanecen sin stagear.
+- **Siguiente paso:** entregar a negocio únicamente `block4_business_input_request.csv` desde el directorio temporal referido. Tras recibir los valores autorizados, regenerar dry-run y seguir el proceso de aprobación de producción. No aplicar producción ni iniciar Bloque 5.
 
 ## Estado histórico
 
