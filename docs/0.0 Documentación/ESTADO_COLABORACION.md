@@ -1,39 +1,43 @@
-# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (ANTIG) — 2026-10-05
+# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico - ANTIG) — 2026-10-12
 
-- **Rama:** `desarrollo`; SHA inicial `1a9e4b38e1f2008aca48b68f053e6a7577cc7963`.
+- **Rama:** `desarrollo`; SHA inicial `e06545fe39b5f92050f1908107cc76a8fc2f3af3`.
 - **Estado General del Bloque 4:** `PREPARED + TESTED + DRY_RUN_CERTIFIED + PRODUCTION_APPLY_READY=YES`.
+- **Plan Anterior Invalidado:** El plan previo (`012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`) queda formalmente rechazado e invalidado por violaciones de invariantes de negocio.
+- **Nuevo SHA-256 del Plan de Mutaciones Certificado:** `08a4e17f8a8410ed92f4bd317685730a22a2d61d8387ab6a5f529a1a9c049611`.
 - **Modo Operativo:** UPSERT Determinista por Código de Riesgo (`RIE_CODIGO`).
-- **Autorización Productiva:** `PRODUCTION_APPLY_AUTHORIZED=NO` (Detenido estrictamente antes del primer DML productivo).
+- **Autorización Productiva:** `PRODUCTION_APPLY_AUTHORIZED=NO` (Detenido estrictamente antes del primer DML productivo). Cero escrituras en producción (`DATABASE_WRITES=0`).
 - **Fuente Oficial:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; 59 riesgos × 82 campos.
-- **Producción:** HPPROD1 / `SET TRANSACTION READ ONLY` + `ROLLBACK`; cero escrituras en producción (`DATABASE_WRITES=0`).
-- **Simulación Local en Oracle XE:** Contenedor Docker `rl-oracle-xe-local` (`127.0.0.1:1521/XE`), réplica exacta del estado previo. Transacción global completada exitosamente.
-- **Idempotencia Certificada:** Segundo dry-run sobre estado post-apply en XE ejecutado con `SECOND_APPLY_MUTATIONS = 0`.
+- **Producción:** HPPROD1 (servicio `hpprod1`, esquema `RIESGO_LAVADO`) bajo `SET TRANSACTION READ ONLY` + `ROLLBACK`; cero escrituras en producción (`DATABASE_WRITES=0`).
+- **Simulación Local en Oracle XE:** Contenedor local `127.0.0.1:1521/XE`, réplica exacta del estado previo (100% paridad). Transacción global completada exitosamente.
+- **Idempotencia Certificada:** Segundo dry-run sobre estado post-apply en XE ejecutado con `SECOND_APPLY_MUTATIONS = 0` (Idempotencia 100% PASS).
 - **Métricas del Plan (4,838 posiciones evaluadas):**
-  - `NO_ACTION`: 1,929
-  - `INSERT_BASELINE`: 140 (125 controles relacionales + 14 planes mitigación + 1 actividad)
-  - `UPDATE_BASELINE`: 270 (257 campos JSON + 12 correcciones ortográficas F09 + 1 responsable F45)
-  - `PRESERVE_PRODUCTION`: 54 (4 alertas operacionales F70 + 48 áreas operacionales F04 + 1 dueño F14 + 1 respuesta F39)
-  - `RECALCULATE_BACKEND`: 2,124 (34 campos de fórmula delegados a Bloque 5)
-  - `NOT_APPLICABLE`: 321 (177 GTIC en F17-19 + 144 mitigaciones no aplicables F44-51)
-  - `TOTAL_MUTATIONS_PLANNED`: 410 (140 inserts + 270 updates)
+  - `NO_ACTION`: 1,982
+  - `INSERT_BASELINE`: 0
+  - `UPDATE_BASELINE`: 0
+  - `PRESERVE_PRODUCTION`: 219 (Campos 4, 14, 39, 70 y 27 operacionales en F71-F82)
+  - `RECALCULATE_BACKEND`: 2,124 (34 campos de fórmula + 2 derivados delegados a Bloque 5)
+  - `NOT_APPLICABLE`: 513 (171 GTIC F17-19 en no-GTIC + 342 mitigaciones F44-51 sin MITIGAR)
+  - `TOTAL_MUTATIONS_PLANNED`: 0
 - **Invariantes Certificadas:**
   - `ACCIDENTAL_NULL_OVERWRITES`: 0
-  - `NEW_DUPLICATES_EXPECTED`: 0
-  - `DELETE_OPERATIONS`: 0
-  - `DDL_OPERATIONS`: 0
-  - `OPERATIONAL_PRESERVATION_PLAN`: PASS (4/4 preservados: ROTR-COMPRAS-18, RCUMP-COMPRASRRHH-26, RCUMP-COMPRAS-28, RCUMP-COMPRAS-32)
-- **SHA-256 del Plan de Mutaciones Certificado:** `012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`.
-- **Artefactos Certificados Fuera de Git:** `%TEMP%\RIESGO_LAVADO_BLOCK4_RECONCILIATION_20261005_153256_641` (10 archivos con manifiestos, planes, guardias y resultados de simulación).
+  - `PREEXISTING_DUPLICATES`: 0
+  - `NEW_DUPLICATES`: 0
+  - `SYNTHETIC_DEFAULTS`: 0 (Cero fechas inventadas; planes con fechas en blanco bloqueados como `ENTITY_INSERT_BLOCKED_REQUIRED_VALUE_MISSING`)
+  - `SILENT_TRUNCATIONS`: 0 (Cero truncamientos silenciosos; fail-closed en longitudes Oracle)
+  - `ROLLBACK_OPERATION_COUNT_MATCH`: PASS (0/0)
+  - `FIELDS71_82_DB_VALUES_AUDITED`: 708/708 (100% auditado y preservado)
+  - `OPERATIONAL_71_82_PRESERVATION`: PASS
+  - `HARDCODED_CREDENTIALS_CURRENT_TREE`: 0 (PASS)
+- **Artefactos Certificados Fuera de Git:** `%TEMP%\RIESGO_LAVADO_BLOCK4_RECONCILIATION_20261012_151634_247` (10 archivos con manifiestos, planes, guardias y resultados de simulación).
 - **Pruebas Automatizadas:**
   - `node tools/validate_contract_82_fields.js`: PASS (82/82).
   - `node tools/validate_matrices_catalogs.js`: PASS (14 catálogos, 91 items).
-  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (14/14).
-  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (838/838).
-  - `npm run build` (frontend): PASS.
-  - `npm test -- --watch=false` (frontend): PASS (84 archivos, 845 pruebas).
-  - `npm run e2e` (frontend): PASS (45 pruebas Playwright en Chromium).
-  - `powershell tools/run_quality_gates.ps1`: PASS.
-- **Condición de Parada:** Detenido en la compuerta única de autorización de producción (`PRODUCTION_APPLY_READY=YES`). Bloque 5 no iniciado.
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (29/29).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (853/853).
+  - `powershell tools/validate_repository_structure.ps1`: PASS.
+  - `powershell tools/validate_database_scripts.ps1`: PASS.
+  - `powershell tools/validate_documentation_links.ps1`: PASS.
+- **Condición de Parada:** Detenido estrictamente en la compuerta única de autorización de producción (`PRODUCTION_APPLY_READY=YES`, `PRODUCTION_APPLY_AUTHORIZED=NO`). Bloque 5 **NO INICIADO**.
 
 ---
 
