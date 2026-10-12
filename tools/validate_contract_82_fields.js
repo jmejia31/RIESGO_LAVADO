@@ -1,7 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const ExcelJS = require('C:/RIESGO_LAVADO/frontend/rl-app/node_modules/exceljs');
+let ExcelJS;
+try {
+  ExcelJS = require(path.join(__dirname, '..', 'frontend', 'rl-app', 'node_modules', 'exceljs'));
+} catch {
+  ExcelJS = require(path.join(__dirname, 'node_modules', 'exceljs'));
+}
 
 const EXPECTED_SHA256 = '5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385';
 

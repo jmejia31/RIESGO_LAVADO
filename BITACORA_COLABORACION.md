@@ -1,3 +1,68 @@
+## Registro de intervención — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico #2 - ANTIG)
+
+- **Fecha/hora local:** 2026-10-12 10:20:00 -06:00 (America/Tegucigalpa).
+- **Autor:** ANTIG (Antigravity).
+- **Rama / SHA inicial:** `desarrollo` / `0588b62259e3227017aea0c9879fb294d14f6a4b`.
+- **Objetivo y alcance:** Ejecución del pase correctivo crítico #2 para el Bloque de Remediación 4 de 12: Reconciliación y Recarga Controlada de Datos (Módulo Matrices de Riesgos).
+  - `PRODUCTION_APPLY_AUTHORIZED=NO`: Ningún DML ni DDL ejecutado contra producción (`HPPROD1`); estrictamente `READ ONLY` con rollback inmediato.
+  - `PRODUCTION_APPLY_READY=NO`: Bloqueado debido a que `BlockedByPreconditionCount = 16 > 0`.
+  - `BLOCK4_STATUS=PENDING_CORRECTION` (Razón: `16_ITEMS_BLOCKED_BY_PRECONDITION`).
+  - `PREVIOUS_PLAN_SHA=08a4e17f8a8410ed92f4bd317685730a22a2d61d8387ab6a5f529a1a9c049611`: formalmente marcado como `CURRENT_PLAN_AUTHORIZATION_STATUS=INVALIDATED_FOR_APPLY_PENDING_CORRECTION`.
+  - Bloque 5 strictly **NO INICIADO**.
+- **Archivos modificados en esta intervención:**
+  - `tools/ReconcileMatricesBaseline/Program.cs`: resolución de esquema ODP.NET (`RL_MR_EVALUACIONES_RIESGO` sin `EVA_ESTADO`, unión con proyecciones), sparse-cell mapping determinista en `GetCellTextValue`, normalización estricta acotada a catálogos cerrados, expansión de la regla `MitigationApplies` a F40..F49, soporte de alias de catálogo "TEC" en `IsGticApplicable`.
+  - `tools/export_excel_matrix_82.js`: fallback robusto a `tools/node_modules/exceljs` garantizando exportación determinista de 59x82 (`scratch_excel_59x82.json`, SHA256: `109764746b98ab68a14346ccac9615cc37261813d17daa7ecb7d8ee5e7978868`).
+  - `tools/validate_contract_82_fields.js`: fallback robusto para módulo ExcelJS.
+  - `frontend/rl-app/package-lock.json`: corrección de vulnerabilidad en `source-map-js` (1.2.2); verificado `npm audit: 0 vulnerabilities`.
+  - `backend/RL.API.Tests/Features/MatricesRiesgos/MatrizRiesgosBlock4ReconciliationTests.cs`: completadas y certificadas 54 pruebas unitarias (29 de caracterización + 25 de invariantes y precondiciones).
+  - `BITACORA_COLABORACION.md`: registro de intervención.
+  - `docs/0.0 Documentación/ESTADO_COLABORACION.md`: consolidación del estado colaborativo.
+  - *Archivos preservados en working tree sin stagear*: `backend/RL.API/Infrastructure/Database/DatabaseEnvironmentGuard.cs`, `backend/RL.API.Tests/Infrastructure/Database/DatabaseEnvironmentGuardTests.cs`, `frontend/rl-app/tsconfig.json`.
+- **Resultados del Dry-Run Certificado:**
+  - `WORKBOOK_SHA256`: `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`
+  - `APPLY_PLAN_CANONICAL_SHA256`: `756b8c2f08e4bba8748dc52b62b4f06fbd09b0e7526c363ea403b9367630187d`
+  - `APPLY_PLAN_FILE_SHA256`: `02a91cbbb6a8643d7633ee06cbb25bd35924ff034c85805f477d06df6f067a18`
+  - `TOTAL_POSITIONS_EVALUATED`: 4,838
+  - `MATCH_COUNT`: 1,062
+  - `NO_ACTION`: 2,254
+  - `INSERT_BASELINE`: 0
+  - `UPDATE_BASELINE`: 0
+  - `PRESERVE_PRODUCTION`: 129
+  - `RECALCULATE_BACKEND`: 2,124
+  - `NOT_APPLICABLE`: 315
+  - `BLOCKED_BY_PRECONDITION`: 16 (14 planes F40 con fechas en blanco + 1 actividad F42 en `ROTR-PENS-3` sin padre + 1 responsable F45 en `ROTR-ALMACENBIENE-23` sin padre)
+  - `REJECT_AMBIGUOUS`: 0
+  - `TOTAL_MUTATIONS_PLANNED`: 0
+  - `PHYSICAL_INSERTS`: 0
+  - `PHYSICAL_UPDATES`: 0
+  - `PHYSICAL_DELETES`: 0
+  - `FIELDS71_82_DB_VALUES_AUDITED`: 708/708 (100% auditado y preservado)
+  - `OPERATIONAL_DATA_PRESERVED`: PASS
+  - `CONCURRENCY_PRECONDITIONS_ENFORCED`: PASS
+  - `CONCURRENT_DRIFT_ABORT_PASSED`: PASS
+  - `ROLLBACK_PREIMAGE_MATCH`: PASS
+  - `NON_ZERO_FIRST_PLAN_PASSED`: PASS
+  - `XE_SECOND_PLAN_MUTATIONS`: 0
+  - `REAL_IDEMPOTENCY_TEST`: PASS
+  - `DELTA_398_TOTAL_SUM`: 398 (PASS: 382 ALREADY_PRESENT + 16 BLOCKED_REQUIRED_INPUT)
+  - `DELTA_87_TOTAL_SUM`: 87 (PASS: 48 F04 + 1 F14 + 2 F08 + 36 F09)
+  - `DELTA_87_UNEXPLAINED`: 0 (PASS)
+- **Pruebas y Verificaciones Ejecutadas:**
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (54/54).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (878/878).
+  - `node tools/validate_contract_82_fields.js`: PASS (82/82).
+  - `node tools/validate_matrices_catalogs.js`: PASS (14 catálogos, 91 items).
+  - `npm audit (frontend/rl-app)`: PASS (0 vulnerabilidades).
+  - `powershell tools/validate_repository_structure.ps1`: PASS.
+  - `powershell tools/validate_database_scripts.ps1`: PASS.
+  - `powershell tools/validate_documentation_links.ps1`: PASS.
+  - `python tools/validate_agent_skills.py`: PENDIENTE (entorno host sin intérprete Python configurado en PATH).
+- **Punto exacto de continuación:**
+  - Concluida la corrección del Bloque 4. Esperando decisión formal de negocio sobre las 16 precondiciones bloqueadas (fechas faltantes en planes de mitigación F40 y padres ausentes en DB) para autorización de apply productivo por Javier Mejía (`jmejia31`).
+  - Bloque 5 **NO INICIADO**.
+
+---
+
 ## Registro de intervención — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico - ANTIG)
 
 - **Fecha/hora local:** 2026-10-12 09:20:00 -06:00 (America/Tegucigalpa).

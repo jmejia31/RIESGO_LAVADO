@@ -1,43 +1,52 @@
-# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico - ANTIG) — 2026-10-12
+# Estado vigente — Bloque 4: Reconciliación y Recarga Controlada de Datos (Pase Correctivo Crítico #2 - ANTIG) — 2026-10-12
 
-- **Rama:** `desarrollo`; SHA inicial `e06545fe39b5f92050f1908107cc76a8fc2f3af3`.
-- **Estado General del Bloque 4:** `PREPARED + TESTED + DRY_RUN_CERTIFIED + PRODUCTION_APPLY_READY=YES`.
-- **Plan Anterior Invalidado:** El plan previo (`012a1a6e5ac0b682a33cb60b61de05e71dc1f1bfd46b5d2259bf0c7651adfda2`) queda formalmente rechazado e invalidado por violaciones de invariantes de negocio.
-- **Nuevo SHA-256 del Plan de Mutaciones Certificado:** `08a4e17f8a8410ed92f4bd317685730a22a2d61d8387ab6a5f529a1a9c049611`.
+- **Rama:** `desarrollo`; SHA inicial `0588b62259e3227017aea0c9879fb294d14f6a4b`.
+- **Estado General del Bloque 4:** `BLOCK4_STATUS=PENDING_CORRECTION` (`PRODUCTION_APPLY_READY=NO`, Razón: `16_ITEMS_BLOCKED_BY_PRECONDITION`).
+- **Plan Anterior Invalidado:** El plan previo (`08a4e17f8a8410ed92f4bd317685730a22a2d61d8387ab6a5f529a1a9c049611`) queda formalmente marcado como `CURRENT_PLAN_AUTHORIZATION_STATUS=INVALIDATED_FOR_APPLY_PENDING_CORRECTION`.
+- **Nuevo SHA-256 Canónico del Plan de Reconciliación:** `756b8c2f08e4bba8748dc52b62b4f06fbd09b0e7526c363ea403b9367630187d` (File SHA-256: `02a91cbbb6a8643d7633ee06cbb25bd35924ff034c85805f477d06df6f067a18`).
 - **Modo Operativo:** UPSERT Determinista por Código de Riesgo (`RIE_CODIGO`).
 - **Autorización Productiva:** `PRODUCTION_APPLY_AUTHORIZED=NO` (Detenido estrictamente antes del primer DML productivo). Cero escrituras en producción (`DATABASE_WRITES=0`).
 - **Fuente Oficial:** `Matrices de Riesgos.xlsx`, SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; 59 riesgos × 82 campos.
 - **Producción:** HPPROD1 (servicio `hpprod1`, esquema `RIESGO_LAVADO`) bajo `SET TRANSACTION READ ONLY` + `ROLLBACK`; cero escrituras en producción (`DATABASE_WRITES=0`).
-- **Simulación Local en Oracle XE:** Contenedor local `127.0.0.1:1521/XE`, réplica exacta del estado previo (100% paridad). Transacción global completada exitosamente.
-- **Idempotencia Certificada:** Segundo dry-run sobre estado post-apply en XE ejecutado con `SECOND_APPLY_MUTATIONS = 0` (Idempotencia 100% PASS).
+- **Simulación Local en Oracle XE:** Contenedor local `127.0.0.1:1521/XE`, réplica exacta del estado previo (100% paridad en las 12 entidades). Transacción global completada exitosamente.
+- **Idempotencia Certificada:** Segundo dry-run sobre estado post-apply en XE ejecutado con `XE_SECOND_PLAN_MUTATIONS = 0` (Idempotencia 100% PASS).
 - **Métricas del Plan (4,838 posiciones evaluadas):**
-  - `NO_ACTION`: 1,982
+  - `MATCH_COUNT`: 1,062
+  - `NO_ACTION`: 2,254
   - `INSERT_BASELINE`: 0
   - `UPDATE_BASELINE`: 0
-  - `PRESERVE_PRODUCTION`: 219 (Campos 4, 14, 39, 70 y 27 operacionales en F71-F82)
+  - `PRESERVE_PRODUCTION`: 129
   - `RECALCULATE_BACKEND`: 2,124 (34 campos de fórmula + 2 derivados delegados a Bloque 5)
-  - `NOT_APPLICABLE`: 513 (171 GTIC F17-19 en no-GTIC + 342 mitigaciones F44-51 sin MITIGAR)
+  - `NOT_APPLICABLE`: 315
+  - `BLOCKED_BY_PRECONDITION`: 16 (14 planes F40 con fechas en blanco + 1 actividad F42 en ROTR-PENS-3 sin padre + 1 responsable F45 en ROTR-ALMACENBIENE-23 sin padre)
   - `TOTAL_MUTATIONS_PLANNED`: 0
+  - `PHYSICAL_INSERTS`: 0
+  - `PHYSICAL_UPDATES`: 0
+  - `PHYSICAL_DELETES`: 0
+- **Deltas y Diagnósticos:**
+  - `DELTA_398_TOTAL_SUM`: 398 (PASS: 382 ALREADY_PRESENT + 16 BLOCKED_REQUIRED_INPUT)
+  - `DELTA_87_TOTAL_SUM`: 87 (PASS: 48 F04 + 1 F14 + 2 F08 + 36 F09)
+  - `DELTA_87_UNEXPLAINED`: 0 (PASS)
 - **Invariantes Certificadas:**
   - `ACCIDENTAL_NULL_OVERWRITES`: 0
   - `PREEXISTING_DUPLICATES`: 0
   - `NEW_DUPLICATES`: 0
-  - `SYNTHETIC_DEFAULTS`: 0 (Cero fechas inventadas; planes con fechas en blanco bloqueados como `ENTITY_INSERT_BLOCKED_REQUIRED_VALUE_MISSING`)
+  - `SYNTHETIC_DEFAULTS`: 0 (Cero fechas inventadas; planes con fechas en blanco bloqueados por precondición)
   - `SILENT_TRUNCATIONS`: 0 (Cero truncamientos silenciosos; fail-closed en longitudes Oracle)
   - `ROLLBACK_OPERATION_COUNT_MATCH`: PASS (0/0)
   - `FIELDS71_82_DB_VALUES_AUDITED`: 708/708 (100% auditado y preservado)
-  - `OPERATIONAL_71_82_PRESERVATION`: PASS
+  - `OPERATIONAL_DATA_PRESERVED`: PASS
   - `HARDCODED_CREDENTIALS_CURRENT_TREE`: 0 (PASS)
-- **Artefactos Certificados Fuera de Git:** `%TEMP%\RIESGO_LAVADO_BLOCK4_RECONCILIATION_20261012_151634_247` (10 archivos con manifiestos, planes, guardias y resultados de simulación).
 - **Pruebas Automatizadas:**
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (54/54).
+  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (878/878).
   - `node tools/validate_contract_82_fields.js`: PASS (82/82).
   - `node tools/validate_matrices_catalogs.js`: PASS (14 catálogos, 91 items).
-  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --filter MatrizRiesgosBlock4ReconciliationTests`: PASS (29/29).
-  - `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj`: PASS (853/853).
+  - `npm audit (frontend/rl-app)`: PASS (0 vulnerabilidades).
   - `powershell tools/validate_repository_structure.ps1`: PASS.
   - `powershell tools/validate_database_scripts.ps1`: PASS.
   - `powershell tools/validate_documentation_links.ps1`: PASS.
-- **Condición de Parada:** Detenido estrictamente en la compuerta única de autorización de producción (`PRODUCTION_APPLY_READY=YES`, `PRODUCTION_APPLY_AUTHORIZED=NO`). Bloque 5 **NO INICIADO**.
+- **Condición de Parada:** Detenido estrictamente en la compuerta única de autorización de producción (`PRODUCTION_APPLY_READY=NO`, `PRODUCTION_APPLY_AUTHORIZED=NO`, `BLOCK4_STATUS=PENDING`). Bloque 5 **NO INICIADO**.
 
 ---
 

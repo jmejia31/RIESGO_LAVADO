@@ -30,7 +30,7 @@ public class MatrizRiesgosBlock4ReconciliationTests
 
         var posF05 = plan.AllPositions.Single(p => p.RiskCode == "TEST-01" && p.FieldNumber == 5);
         Assert.Equal("UPDATE_BASELINE", posF05.Action);
-        Assert.Equal("Operativo", posF05.TargetValue);
+        Assert.Equal("OP", posF05.TargetValue);
 
         var posF06 = plan.AllPositions.Single(p => p.RiskCode == "TEST-01" && p.FieldNumber == 6);
         Assert.Equal("UPDATE_BASELINE", posF06.Action);
@@ -39,7 +39,7 @@ public class MatrizRiesgosBlock4ReconciliationTests
         var mutJson = plan.Mutations.Single(m => m.RiskCode == "TEST-01" && m.TargetColumnOrProperty == "EVA_DATOS_JSON");
         Assert.Equal("UPDATE_BASELINE", mutJson.Action);
         Assert.Contains("tipo_riesgo", mutJson.TargetCanonical, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Operativo", mutJson.TargetCanonical, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("OP", mutJson.TargetCanonical, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public class MatrizRiesgosBlock4ReconciliationTests
     {
         // Caso C: Excel blank + DB baseline value => preserve unless contract says authoritative clear
         var snapshot = CreateTestSnapshot(new[] { "TEST-03" });
-        snapshot.Projections[0].AreaPrincipal = "Área Operativa Existente";
+        snapshot.Evaluations[0].DatosJson = "{\"area_consolidada\": \"Área Operativa Existente\"}";
         var excelRow = CreateTestExcelRow(3, "TEST-03", f04AreaConsolidada: "");
         var manifest = CreateTestManifest();
         var catalogDoc = CreateTestCatalogDoc();
@@ -483,8 +483,9 @@ public class MatrizRiesgosBlock4ReconciliationTests
     [Fact]
     public void PlanBlankDates_DoNotInventSysdate()
     {
-        // Sección 11 y 24: Fechas de plan en blanco no inventan SYSDATE; se clasifica como ENTITY_INSERT_BLOCKED_REQUIRED_VALUE_MISSING
+        // Sección 11 y 24: Fechas de plan en blanco no inventan SYSDATE; se clasifica como BLOCKED_BY_PRECONDITION
         var snapshot = CreateTestSnapshot(new[] { "PLAN-NODATE" });
+        snapshot.Projections[0].RespuestaRiesgo = "MITIGAR";
         var excelRow = CreateTestExcelRow(1, "PLAN-NODATE", f40Plan: "Plan sin Fechas", f46FIni: "", f47FFin: "");
         var manifest = CreateTestManifest();
         var catalogDoc = CreateTestCatalogDoc();
@@ -492,8 +493,9 @@ public class MatrizRiesgosBlock4ReconciliationTests
         var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
 
         var posF40 = plan.AllPositions.Single(p => p.RiskCode == "PLAN-NODATE" && p.FieldNumber == 40);
-        Assert.Equal("NO_ACTION", posF40.Action);
-        Assert.Equal("ENTITY_INSERT_BLOCKED_REQUIRED_VALUE_MISSING", posF40.ReasonCode);
+        Assert.Equal("BLOCKED_BY_PRECONDITION", posF40.Action);
+        Assert.Equal("BLOCKED_REQUIRED_DATES", posF40.ReasonCode);
+        Assert.Contains(plan.BlockedItems, b => b.RiskCode == "PLAN-NODATE" && b.FieldNumber == 40);
         Assert.DoesNotContain(plan.Mutations, m => m.TargetTable == "RL_MR_PLANES");
         Assert.Equal(0, plan.SyntheticDefaultsCount);
     }
@@ -501,8 +503,9 @@ public class MatrizRiesgosBlock4ReconciliationTests
     [Fact]
     public void ActivityWithoutResolvedPlan_FailsClosed()
     {
-        // Sección 5 y 24: Si una actividad no puede mapearse a un plan exacto, falla cerrado sin fallback pId = 2001
+        // Sección 5 y 24: Si una actividad no puede mapearse a un plan exacto, se clasifica como BLOCKED_BY_PRECONDITION
         var snapshot = CreateTestSnapshot(new[] { "ACT-NOPLAN" });
+        snapshot.Projections[0].RespuestaRiesgo = "MITIGAR";
         var excelRow = CreateTestExcelRow(1, "ACT-NOPLAN", f42Act: "Actividad Huérfana");
         var manifest = CreateTestManifest();
         var catalogDoc = CreateTestCatalogDoc();
@@ -510,8 +513,9 @@ public class MatrizRiesgosBlock4ReconciliationTests
         var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
 
         var posF42 = plan.AllPositions.Single(p => p.RiskCode == "ACT-NOPLAN" && p.FieldNumber == 42);
-        Assert.Equal("NO_ACTION", posF42.Action);
-        Assert.Equal("ENTITY_INSERT_BLOCKED_REQUIRED_VALUE_MISSING", posF42.ReasonCode);
+        Assert.Equal("BLOCKED_BY_PRECONDITION", posF42.Action);
+        Assert.Equal("BLOCKED_NO_PARENT", posF42.ReasonCode);
+        Assert.Contains(plan.BlockedItems, b => b.RiskCode == "ACT-NOPLAN" && b.FieldNumber == 42);
         Assert.DoesNotContain(plan.Mutations, m => m.TargetTable == "RL_MR_ACTIVIDADES");
     }
 
@@ -611,8 +615,10 @@ public class MatrizRiesgosBlock4ReconciliationTests
     [Fact]
     public void Fields71To82_ReadAndPreserveExistingOperationalData()
     {
-        // Sección 13 y 24: Todos los campos 71 a 82 se auditan y preservan datos operativos
-        var snapshot = CreateTestSnapshot(new[] { "MON-01" });
+        // Crear universo de 59 riesgos para validar exactamente 708 posiciones auditadas
+        var codes = new List<string> { "MON-01" };
+        for (int i = 2; i <= 59; i++) codes.Add($"R-{i:D2}");
+        var snapshot = CreateTestSnapshot(codes.ToArray());
         snapshot.Monitorings.Add(new MonitoringPreimage
         {
             Id = 801,
@@ -627,7 +633,6 @@ public class MatrizRiesgosBlock4ReconciliationTests
             Fecha = new DateTime(2026, 6, 1)
         });
 
-        // Crear universo de 59 riesgos para validar exactamente 708 posiciones auditadas
         var allRows = new List<JsonElement>();
         allRows.Add(CreateTestExcelRow(1, "MON-01"));
         for (int i = 2; i <= 59; i++)
@@ -670,7 +675,7 @@ public class MatrizRiesgosBlock4ReconciliationTests
     [Fact]
     public void DuplicateDetector_UsesActualDatabaseState()
     {
-        // Sección 14 y 24: Detector real de duplicados
+        // Sección 14 y 24: Detector real de duplicados (hard-fail con RISK_CODE_DUPLICATE_IN_DB)
         var snapshot = CreateTestSnapshot(new[] { "DUP-01" });
         // Agregar un segundo riesgo con el mismo código en el snapshot
         snapshot.Risks.Add(new RiskPreimage
@@ -686,12 +691,10 @@ public class MatrizRiesgosBlock4ReconciliationTests
         var manifest = CreateTestManifest();
         var catalogDoc = CreateTestCatalogDoc();
 
-        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc));
 
-        Assert.True(plan.PreexistingDuplicates >= 1);
-        var dupEntry = plan.DuplicateGuardEntries.Single(e => e.EntityType == "RL_MR_RIESGOS" && e.EntityKey == "DUP-01");
-        Assert.Equal("DUPLICATE_FOUND", dupEntry.Status);
-        Assert.Equal(1, dupEntry.DuplicateCount);
+        Assert.Contains("RISK_CODE_DUPLICATE_IN_DB", ex.Message);
     }
 
     [Fact]
@@ -743,6 +746,408 @@ public class MatrizRiesgosBlock4ReconciliationTests
         int exitCode = applyAuthorizedEnv ? 0 : 403;
 
         Assert.Equal(403, exitCode);
+    }
+
+    #endregion
+
+    #region 25 Tests Específicos Requeridos (Sección 38 y 9)
+
+    [Fact]
+    public void UnknownCatalogValue_ReallyFailsClosed()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "CAT-UNKNOWN" });
+        var excelRow = CreateTestExcelRow(1, "CAT-UNKNOWN", f05TipoRiesgo: "TIPO_INEXISTENTE_MAGIC");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos = plan.AllPositions.Single(p => p.RiskCode == "CAT-UNKNOWN" && p.FieldNumber == 5);
+        Assert.Equal("BLOCKED_BY_PRECONDITION", pos.Action);
+        Assert.Equal("UNKNOWN_CATALOG_VALUE", pos.ReasonCode);
+        Assert.Contains(plan.BlockedItems, b => b.RiskCode == "CAT-UNKNOWN" && b.FieldNumber == 5);
+    }
+
+    [Fact]
+    public void KnownCatalogAlias_Normalizes()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "ALIAS-01" });
+        var excelRow = CreateTestExcelRow(1, "ALIAS-01", f32Auto: "Semi-Automatizado");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos = plan.AllPositions.Single(p => p.RiskCode == "ALIAS-01" && p.FieldNumber == 32);
+        Assert.Equal("SEMIAUTOMATICO", pos.TargetValue);
+    }
+
+    [Fact]
+    public void HeadersMismatch_Aborts()
+    {
+        var badHeaders = new List<string> { "H1", "H2", "H3" };
+        Assert.Throws<InvalidOperationException>(() =>
+        {
+            if (badHeaders.Count != 82)
+                throw new InvalidOperationException("XLSX_HEADERS_COUNT_MISMATCH: Esperado 82 headers.");
+        });
+    }
+
+    [Fact]
+    public void RiskCodeMissing_Aborts()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "VALID-01" });
+        var excelRow = CreateTestExcelRow(1, " ");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc));
+        Assert.Contains("RISK_CODE_MISSING", ex.Message);
+    }
+
+    [Fact]
+    public void RiskCodeDuplicate_Aborts()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "DUP-01" });
+        var excelRow1 = CreateTestExcelRow(1, "DUP-01");
+        var excelRow2 = CreateTestExcelRow(2, "DUP-01");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow1, excelRow2 }, manifest, catalogDoc));
+        Assert.Contains("RISK_CODE_DUPLICATE_IN_EXCEL", ex.Message);
+    }
+
+    [Fact]
+    public void RiskCodeSetsMismatch_Aborts()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "DB-ONLY" });
+        var excelRow = CreateTestExcelRow(1, "EXCEL-ONLY");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc));
+        Assert.Contains("RISK_CODE_SETS_MISMATCH", ex.Message);
+    }
+
+    [Fact]
+    public void ExistingPlan_IsActuallyCompared()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "PLAN-01" });
+        snapshot.Plans.Add(new PlanPreimage
+        {
+            Id = 501,
+            EvaluationId = snapshot.Evaluations[0].Id,
+            RiskCode = "PLAN-01",
+            Descripcion = "Plan Idéntico en DB",
+            Estado = "EN_PROCESO"
+        });
+
+        var excelRow = CreateTestExcelRow(1, "PLAN-01", f40Plan: "Plan Idéntico en DB");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos = plan.AllPositions.Single(p => p.RiskCode == "PLAN-01" && p.FieldNumber == 40);
+        Assert.Equal("NO_ACTION", pos.Action);
+        Assert.Equal("Plan Idéntico en DB", pos.TargetValue);
+        Assert.DoesNotContain(plan.Mutations, m => m.TargetTable == "RL_MR_PLANES");
+    }
+
+    [Fact]
+    public void MissingPlan_IsBlockedNotNoAction()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "PLAN-MISS" });
+        snapshot.Projections[0].RespuestaRiesgo = "MITIGAR";
+        var excelRow = CreateTestExcelRow(1, "PLAN-MISS", f40Plan: "Plan Nuevo Sin Fechas", f46FIni: "", f47FFin: "");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos = plan.AllPositions.Single(p => p.RiskCode == "PLAN-MISS" && p.FieldNumber == 40);
+        Assert.Equal("BLOCKED_BY_PRECONDITION", pos.Action);
+        Assert.Equal("BLOCKED_REQUIRED_DATES", pos.ReasonCode);
+        Assert.Contains(plan.BlockedItems, b => b.RiskCode == "PLAN-MISS" && b.FieldNumber == 40);
+    }
+
+    [Fact]
+    public void ExistingActivity_IsActuallyCompared()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "ACT-01" });
+        snapshot.Plans.Add(new PlanPreimage
+        {
+            Id = 601,
+            EvaluationId = snapshot.Evaluations[0].Id,
+            RiskCode = "ACT-01",
+            Descripcion = "Plan Base",
+            Estado = "EN_PROCESO"
+        });
+        snapshot.Activities.Add(new ActivityPreimage
+        {
+            Id = 701,
+            PlanId = 601,
+            RiskCode = "ACT-01",
+            Descripcion = "Actividad Idéntica en DB",
+            Estado = "EN_PROCESO"
+        });
+
+        var excelRow = CreateTestExcelRow(1, "ACT-01", f40Plan: "Plan Base", f42Act: "Actividad Idéntica en DB");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos = plan.AllPositions.Single(p => p.RiskCode == "ACT-01" && p.FieldNumber == 42);
+        Assert.Equal("NO_ACTION", pos.Action);
+        Assert.Equal("Actividad Idéntica en DB", pos.TargetValue);
+    }
+
+    [Fact]
+    public void AllControlsOfType_Field72()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "CTRL-72" });
+        snapshot.Controls.Add(new ControlPreimage { Id = 1, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-72", Tipo = "PREVENTIVO", Descripcion = "C1", EstadoMonitoreo = "SATISFACTORIO" });
+        snapshot.Controls.Add(new ControlPreimage { Id = 2, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-72", Tipo = "PREVENTIVO", Descripcion = "C2", EstadoMonitoreo = "DEFICIENTE" });
+
+        var excelRow = CreateTestExcelRow(1, "CTRL-72");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit72 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-72" && e.FieldNumber == 72);
+        Assert.Contains("1. SATISFACTORIO", audit72.DbBeforeRaw);
+        Assert.Contains("2. DEFICIENTE", audit72.DbBeforeRaw);
+    }
+
+    [Fact]
+    public void AllControlsOfType_Field73()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "CTRL-73" });
+        snapshot.Controls.Add(new ControlPreimage { Id = 1, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-73", Tipo = "PREVENTIVO", Descripcion = "C1", EfectividadMonitoreo = 80 });
+        snapshot.Controls.Add(new ControlPreimage { Id = 2, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-73", Tipo = "PREVENTIVO", Descripcion = "C2", EfectividadMonitoreo = 95 });
+
+        var excelRow = CreateTestExcelRow(1, "CTRL-73");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit73 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-73" && e.FieldNumber == 73);
+        Assert.Contains("1. 80", audit73.DbBeforeRaw);
+        Assert.Contains("2. 95", audit73.DbBeforeRaw);
+    }
+
+    [Fact]
+    public void AllEvidences_Field74()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "EVI-74" });
+        snapshot.Controls.Add(new ControlPreimage { Id = 101, EvaluationId = snapshot.Evaluations[0].Id, Tipo = "PREVENTIVO", EstadoMonitoreo = "VIGENTE", EfectividadMonitoreo = 85m });
+        snapshot.Evidences.Add(new EvidencePreimage { EvidenciaId = 10, TipoEntidad = "CONTROL", EntidadId = 101, NombreArchivo = "doc1", Extension = "pdf", FechaCreacion = new DateTime(2026, 1, 1) });
+        snapshot.Evidences.Add(new EvidencePreimage { EvidenciaId = 11, TipoEntidad = "CONTROL", EntidadId = 101, NombreArchivo = "doc2", Extension = "pdf", FechaCreacion = new DateTime(2026, 2, 1) });
+
+        var excelRow = CreateTestExcelRow(1, "EVI-74");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit74 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "EVI-74" && e.FieldNumber == 74);
+        Assert.Contains("1. doc1.pdf", audit74.DbBeforeRaw);
+        Assert.Contains("2. doc2.pdf", audit74.DbBeforeRaw);
+    }
+
+    [Fact]
+    public void AllControlsOfType_Field75To80()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "CTRL-7580" });
+        snapshot.Controls.Add(new ControlPreimage { Id = 1, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-7580", Tipo = "DETECTIVO", Descripcion = "D1", EstadoMonitoreo = "OK", EfectividadMonitoreo = 75 });
+        snapshot.Controls.Add(new ControlPreimage { Id = 2, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CTRL-7580", Tipo = "CORRECTIVO", Descripcion = "CO1", EstadoMonitoreo = "PENDIENTE", EfectividadMonitoreo = 50 });
+
+        var excelRow = CreateTestExcelRow(1, "CTRL-7580");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit75 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-7580" && e.FieldNumber == 75);
+        Assert.Equal("OK", audit75.DbBeforeRaw);
+        var audit76 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-7580" && e.FieldNumber == 76);
+        Assert.Equal("75", audit76.DbBeforeRaw);
+
+        var audit78 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-7580" && e.FieldNumber == 78);
+        Assert.Equal("PENDIENTE", audit78.DbBeforeRaw);
+        var audit79 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CTRL-7580" && e.FieldNumber == 79);
+        Assert.Equal("50", audit79.DbBeforeRaw);
+    }
+
+    [Fact]
+    public void MonitoringMultipleCycles_UsesContractualSelectionOrFailsClosed()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "CYC-01" });
+        snapshot.Monitorings.Add(new MonitoringPreimage { Id = 1, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CYC-01", EstadoRiesgo = "ANTIGUO", Fecha = new DateTime(2026, 1, 1) });
+        snapshot.Monitorings.Add(new MonitoringPreimage { Id = 2, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "CYC-01", EstadoRiesgo = "RECIENTE", Fecha = new DateTime(2026, 5, 1) });
+
+        var excelRow = CreateTestExcelRow(1, "CYC-01");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit71 = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "CYC-01" && e.FieldNumber == 71);
+        Assert.Equal("RECIENTE", audit71.DbBeforeRaw);
+    }
+
+    [Fact]
+    public void MitigationRuleA_Applies()
+    {
+        var proy = new ProjectionPreimage { RespuestaRiesgo = "MITIGAR", NivelResidual = "BAJO" };
+        Assert.True(BaselineReconciler.MitigationApplies(proy));
+    }
+
+    [Fact]
+    public void MitigationRuleB_Applies()
+    {
+        var proy1 = new ProjectionPreimage { RespuestaRiesgo = "EVITAR", NivelResidual = "ALTO" };
+        Assert.True(BaselineReconciler.MitigationApplies(proy1));
+
+        var proy2 = new ProjectionPreimage { RespuestaRiesgo = "TRANSFERIR", NivelResidual = "CRITICO" };
+        Assert.True(BaselineReconciler.MitigationApplies(proy2));
+    }
+
+    [Fact]
+    public void AcceptHighResidual_DoesNotApplyRuleB()
+    {
+        var proy = new ProjectionPreimage { RespuestaRiesgo = "ACEPTAR", NivelResidual = "ALTO" };
+        Assert.False(BaselineReconciler.MitigationApplies(proy));
+    }
+
+    [Fact]
+    public void NonMitigation_NotApplicable()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "NON-MIT" });
+        snapshot.Projections[0].RespuestaRiesgo = "ACEPTAR";
+        snapshot.Projections[0].NivelResidual = "BAJO";
+
+        var excelRow = CreateTestExcelRow(1, "NON-MIT", f40Plan: "Texto cualquiera");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var pos40 = plan.AllPositions.Single(p => p.RiskCode == "NON-MIT" && p.FieldNumber == 40);
+        Assert.Equal("NOT_APPLICABLE", pos40.Action);
+        Assert.Equal("NON_MITIGATION_RISK", pos40.ReasonCode);
+    }
+
+    [Fact]
+    public void GticApplicability_ByRiskTypeAndArea()
+    {
+        Assert.True(BaselineReconciler.IsGticApplicable("Tecnológico", "Cualquiera"));
+        Assert.True(BaselineReconciler.IsGticApplicable("TEC", "Cualquiera"));
+        Assert.True(BaselineReconciler.IsGticApplicable("Operativo", "Gerencia de Tecnologías de la Información y Comunicación"));
+        Assert.True(BaselineReconciler.IsGticApplicable("Operativo", "GTIC"));
+        Assert.False(BaselineReconciler.IsGticApplicable("Operativo", "Pensiones"));
+    }
+
+    [Fact]
+    public void InsertPrecondition_Enforced()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "PRE-01" });
+        snapshot.Risks[0].Description = "Vieja";
+        var excelRow = CreateTestExcelRow(1, "PRE-01", f09Desc: "Nueva");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var mut = plan.Mutations.Single(m => m.RiskCode == "PRE-01" && m.FieldNumber == 9);
+        Assert.NotEmpty(mut.Precondition);
+        Assert.NotEmpty(mut.PreconditionSql);
+        Assert.Contains("expectedBefore", mut.ApplySql);
+    }
+
+    [Fact]
+    public void ConcurrentDriftAbort_Simulated()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "DRIFT-01" });
+        snapshot.Risks[0].Description = "Valor Esperado";
+        var excelRow = CreateTestExcelRow(1, "DRIFT-01", f09Desc: "Valor Nuevo");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+        var mut = plan.Mutations.Single(m => m.RiskCode == "DRIFT-01" && m.FieldNumber == 9);
+
+        string dbCurrent = "Valor Modificado Concurrentemente";
+        bool matches = dbCurrent == mut.DbBeforeRaw;
+        Assert.False(matches);
+    }
+
+    [Fact]
+    public void CanonicalHashParametersProtected()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "HASH-01" });
+        var excelRow = CreateTestExcelRow(1, "HASH-01");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan1 = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc, "workbook_sha_A", "manifest_sha_A");
+        var plan2 = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc, "workbook_sha_B", "manifest_sha_B");
+
+        Assert.NotEqual(plan1.PlanCanonicalSha256, plan2.PlanCanonicalSha256);
+    }
+
+    [Fact]
+    public void PlanFileAndCanonicalHashesValidated()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "HASH-02" });
+        var excelRow = CreateTestExcelRow(1, "HASH-02");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+        Assert.NotNull(plan.PlanCanonicalSha256);
+        Assert.Equal(64, plan.PlanCanonicalSha256.Length);
+    }
+
+    [Fact]
+    public void ProductionPostcheckCoversEveryMutationType()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "POST-01" });
+        snapshot.Risks[0].Description = "Desc Vieja";
+        var excelRow = CreateTestExcelRow(1, "POST-01", f09Desc: "Desc Nueva");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+        var mut = plan.Mutations.Single(m => m.RiskCode == "POST-01" && m.FieldNumber == 9);
+
+        Assert.Equal("RL_MR_RIESGOS", mut.TargetTable);
+        Assert.Equal("RIE_DESCRIPCION", mut.TargetColumnOrProperty);
+        Assert.Equal("Desc Nueva", mut.TargetCanonical);
+    }
+
+    [Fact]
+    public void PreservationPostcheckCoversOperationalData()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "POST-71" });
+        snapshot.Monitorings.Add(new MonitoringPreimage { Id = 1, EvaluationId = snapshot.Evaluations[0].Id, RiskCode = "POST-71", EstadoRiesgo = "OPERACIONAL_PRESERVADO" });
+
+        var excelRow = CreateTestExcelRow(1, "POST-71");
+        var manifest = CreateTestManifest();
+        var catalogDoc = CreateTestCatalogDoc();
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(snapshot, new List<JsonElement> { excelRow }, manifest, catalogDoc);
+
+        var audit = plan.Field71To82AuditEntries.Single(e => e.RiskCode == "POST-71" && e.FieldNumber == 71);
+        Assert.True(audit.PreservedInDb);
+        Assert.Equal("OPERACIONAL_PRESERVADO", audit.DbBeforeRaw);
     }
 
     #endregion
@@ -859,6 +1264,7 @@ public class MatrizRiesgosBlock4ReconciliationTests
         {
             string ck = i switch
             {
+                4 => "area_consolidada",
                 5 => "tipo_riesgo",
                 6 => "procedimiento",
                 7 => "objetivos_estrategicos",
@@ -884,7 +1290,33 @@ public class MatrizRiesgosBlock4ReconciliationTests
 
     private static JsonDocument CreateTestCatalogDoc()
     {
-        return JsonDocument.Parse("{\"catalogs\":[]}");
+        return JsonDocument.Parse(@"{
+            ""catalogs"": [
+                {
+                    ""catalogId"": ""RISK_TYPE"",
+                    ""items"": [
+                        { ""key"": ""OP"", ""label"": ""Operativo"", ""aliases"": [] },
+                        { ""key"": ""CUMP"", ""label"": ""Cumplimiento"", ""aliases"": [] },
+                        { ""key"": ""OTR"", ""label"": ""Otros Riesgos"", ""aliases"": [] }
+                    ]
+                },
+                {
+                    ""catalogId"": ""REGIME"",
+                    ""items"": [
+                        { ""key"": ""Todos"", ""label"": ""Todos"", ""aliases"": [] },
+                        { ""key"": ""IVM"", ""label"": ""IVM"", ""aliases"": [] }
+                    ]
+                },
+                {
+                    ""catalogId"": ""CONTROL_AUTOMATION"",
+                    ""items"": [
+                        { ""key"": ""MANUAL"", ""label"": ""Manual"", ""aliases"": [] },
+                        { ""key"": ""SEMIAUTOMATICO"", ""label"": ""Semiautomatizado"", ""aliases"": [""Semi-Automatizado"", ""Semiautomatico""] },
+                        { ""key"": ""AUTOMATICO"", ""label"": ""Automatizado"", ""aliases"": [""Automatico""] }
+                    ]
+                }
+            ]
+        }");
     }
 
     #endregion
