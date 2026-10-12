@@ -455,8 +455,10 @@ public static class Program
         Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
         Console.WriteLine("PRODUCTION_APPLY_READY=NO");
         Console.WriteLine(mode.Equals("qualify-business-input", StringComparison.OrdinalIgnoreCase)
-            ? "BLOCK4_STATUS=PENDING_BUSINESS_INPUT"
-            : "BLOCK4_STATUS=PENDING_CORRECTION");
+            ? "BLOCK4_STATUS=DIAGNOSTIC_ONLY"
+            : mode.Equals("sample-dry-run", StringComparison.OrdinalIgnoreCase)
+                ? "BLOCK4_STATUS=RUNNING_REPRESENTATIVE_SAMPLE"
+                : "BLOCK4_STATUS=PENDING_CORRECTION");
         Console.WriteLine($"PREVIOUS_PLAN_SHA={PreviousInvalidatedPlanSha}");
         Console.WriteLine("CURRENT_PLAN_AUTHORIZATION_STATUS=INVALIDATED_FOR_APPLY_PENDING_CORRECTION\n");
 
@@ -619,6 +621,9 @@ public static class Program
             Console.WriteLine($"DATABASE_DEFAULTS_MISSING={rules.Evidence.Count(x => x.RuleId.StartsWith("DB_DEFAULT_", StringComparison.Ordinal) && !x.Verified)}");
             Console.WriteLine($"OUTPUT_PATH={Path.GetFullPath(outputDirectory)}");
             Console.WriteLine("BUSINESS_INPUT_REQUEST_READY=YES");
+            Console.WriteLine("BUSINESS_INPUT_215_REQUIRED=NO");
+            Console.WriteLine("BUSINESS_INPUT_215_STATUS=OBSOLETE_BY_SCOPE");
+            Console.WriteLine("BUSINESS_INPUT_COLLECTION_REQUIRED=NO");
             Console.WriteLine($"REQUEST_SHA256={qualificationHashes["block4_business_input_request.csv"]}");
             Console.WriteLine($"QUALIFICATION_SHA256={qualificationHashes["block4_business_input_qualification.csv"]}");
             Console.WriteLine($"SUMMARY_SHA256={qualificationHashes["block4_business_input_summary.json"]}");
@@ -628,7 +633,7 @@ public static class Program
             Console.WriteLine("PRODUCTION_APPLY_EXECUTED=NO");
             Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
             Console.WriteLine("PRODUCTION_APPLY_READY=NO");
-            Console.WriteLine("BLOCK4_STATUS=PENDING_BUSINESS_INPUT");
+            Console.WriteLine("BLOCK4_STATUS=DIAGNOSTIC_ONLY_OBSOLETE_BY_SCOPE");
             Console.WriteLine("BLOCK5_STATUS=NOT_STARTED");
             return 0;
         }
@@ -692,6 +697,14 @@ public static class Program
         Console.WriteLine($"DATABASE_TARGET_CLASS={(productionIdentityVerified ? "PRODUCTION" : "IDENTITY_MISMATCH")}");
         Console.WriteLine($"DB_IDENTITY_VERIFIED: Name={prodSnapshot.DatabaseName}, Service={prodSnapshot.ServiceName}, Instance={prodSnapshot.InstanceName}, Schema={prodSnapshot.CurrentSchema}, User={prodSnapshot.SessionUser}");
         if (!productionIdentityVerified) throw new InvalidOperationException("PRODUCTION_READ_ONLY_IDENTITY_MISMATCH: conexión no corresponde al perfil productivo esperado.");
+        if (mode.Equals("sample-dry-run", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("PRODUCTION_READ_ONLY_USED=YES");
+            Console.WriteLine("PRODUCTION_TRANSACTION_FINAL=ROLLBACK");
+            return await ExecuteRepresentativeSampleDryRunAsync(
+                repoRoot, args, runId, artifactDir, excelRows, excelHeaders, manifestFields,
+                catalogDoc, actualWorkbookSha, prodSnapshot, prodConnString, xeConnString);
+        }
         Console.WriteLine($"CONTROLS_PREIMAGE_COUNT={prodSnapshot.Controls.Count}");
         Console.WriteLine($"PLANS_PREIMAGE_COUNT={prodSnapshot.Plans.Count}");
         Console.WriteLine($"ACTIVITIES_PREIMAGE_COUNT={prodSnapshot.Activities.Count}");
@@ -1694,6 +1707,448 @@ public static class Program
 
     #region Motor Canónico de Reconciliación
 
+    private static async Task<int> ExecuteRepresentativeSampleDryRunAsync(
+        string repoRoot,
+        string[] args,
+        string runId,
+        string artifactDir,
+        List<JsonElement> workbookRows,
+        List<string> workbookHeaders,
+        List<JsonElement> manifestFields,
+        JsonDocument catalogDoc,
+        string workbookSha,
+        DatabaseSnapshot productionSnapshot,
+        string productionConnectionString,
+        string xeConnectionString)
+    {
+        string outputDir = Path.GetFullPath(GetOption(args, "--output-dir") ?? Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents", "RIESGO_LAVADO", "BLOCK4_SAMPLE_5"));
+        Directory.CreateDirectory(outputDir);
+        if (workbookRows.Count != 59 || workbookHeaders.Count != 82 || manifestFields.Count != 82 ||
+            workbookRows.Select(row => row.GetProperty("riskCode").GetString()?.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 59)
+            throw new InvalidOperationException("SAMPLE_REFERENCE_UNIVERSE_INVALID: expected 59 workbook risks, 59 unique codes and 82 headers.");
+
+        var creationRules = BusinessInputQualification.LoadVerifiedCreationRules(repoRoot);
+        if (!creationRules.AllVerified)
+            throw new InvalidOperationException("SAMPLE_CREATION_RULE_EVIDENCE_INVALID: creation rule evidence is stale or incomplete.");
+        await VerifyProductionBusinessInputDefaultsAsync(productionConnectionString, creationRules);
+
+        const string candidatePreimageSha = "SAMPLE_CANDIDATE_ONLY";
+        var candidates = new List<RepresentativeSampleCandidate>();
+
+        foreach (JsonElement row in workbookRows.OrderBy(row => row.GetProperty("riskNo").GetInt32()))
+        {
+            string code = row.GetProperty("riskCode").GetString()?.Trim() ?? "";
+            int riskNo = row.GetProperty("riskNo").GetInt32();
+            string f20 = GetCellTextValue(row, 20);
+            string f24 = GetCellTextValue(row, 24);
+            string f28 = GetCellTextValue(row, 28);
+            var sourceControls = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["PREVENTIVO"] = f20, ["DETECTIVO"] = f24, ["CORRECTIVO"] = f28
+            };
+            int riskId = productionSnapshot.Risks.SingleOrDefault(item => item.Code.Equals(code, StringComparison.OrdinalIgnoreCase)) is { } risk ? checked((int)risk.Id) : 0;
+            var activeEvaluations = productionSnapshot.Evaluations.Where(item => item.RiskCode.Equals(code, StringComparison.OrdinalIgnoreCase) && item.Active == 1).ToList();
+            long? evaluationId = activeEvaluations.Count == 1 ? activeEvaluations[0].Id : null;
+            int projectionCount = evaluationId.HasValue
+                ? productionSnapshot.Projections.Count(item => item.EvaluationId == evaluationId.Value && item.RiskCode.Equals(code, StringComparison.OrdinalIgnoreCase))
+                : 0;
+            var productionControls = evaluationId.HasValue
+                ? productionSnapshot.Controls.Where(item => item.EvaluationId == evaluationId.Value).ToList()
+                : new List<ControlPreimage>();
+            var sourceControlTypes = sourceControls
+                .Where(pair => !string.IsNullOrWhiteSpace(pair.Value) && !IsCanonicalNoControlSource(pair.Value))
+                .Select(pair => pair.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var representedControlTypes = sourceControlTypes.Where(type =>
+            {
+                string raw = sourceControls[type];
+                SourceItemsParseResult parsed = ParseSourceItems(raw);
+                return !parsed.IsAmbiguous && parsed.Items.Where(item => !IsEmptyOrNoHay(item)).All(sourceItem =>
+                    productionControls.Count(db => db.Tipo.Equals(type, StringComparison.OrdinalIgnoreCase) &&
+                        NormalizeControlText(db.Descripcion).Equals(NormalizeControlText(sourceItem), StringComparison.OrdinalIgnoreCase)) == 1);
+            }).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            bool sourceNoControl = sourceControls.Values.Any(IsCanonicalNoControlSource);
+            var profileParts = representedControlTypes.OrderBy(type => type, StringComparer.Ordinal).ToList();
+            if (sourceNoControl) profileParts.Add("NO_CONTROL");
+
+            string rejection = "";
+            PlanResult? oneRiskPlan = null;
+            try
+            {
+                oneRiskPlan = BuildReconciliationPlan(productionSnapshot, new List<JsonElement> { row }, manifestFields,
+                    catalogDoc, workbookSha, candidatePreimageSha, allowScopedRiskUniverse: true);
+                ApplyRepresentativeSampleScope(oneRiskPlan, workbookSha, candidatePreimageSha);
+            }
+            catch (Exception ex)
+            {
+                rejection = ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? ex.GetType().Name;
+            }
+
+            int blocked = oneRiskPlan?.BlockedItems.Count ?? 1;
+            int ambiguous = oneRiskPlan?.RejectAmbiguousCount ?? 1;
+            int mutationCount = oneRiskPlan?.Mutations.Count ?? 0;
+            bool prodExists = riskId > 0 && evaluationId.HasValue && projectionCount == 1;
+            bool safePlan = oneRiskPlan != null && prodExists && blocked == 0 && ambiguous == 0 &&
+                oneRiskPlan.PhysicalDeletesCount == 0 && oneRiskPlan.AccidentalNullOverwrites == 0 &&
+                oneRiskPlan.NewDuplicatesExpected == 0 && oneRiskPlan.SyntheticDefaultsCount == 0 &&
+                oneRiskPlan.SilentTruncationsCount == 0;
+            if (!prodExists && string.IsNullOrWhiteSpace(rejection))
+                rejection = $"production identity: risk={riskId > 0}; activeEvaluations={activeEvaluations.Count}; projections={projectionCount}";
+            else if (blocked > 0 && oneRiskPlan != null)
+                rejection = string.Join(";", oneRiskPlan.BlockedItems.Select(item => $"F{item.FieldNumber}:{item.ReasonCode}").Distinct().OrderBy(value => value, StringComparer.Ordinal));
+            else if (ambiguous > 0 && oneRiskPlan != null)
+                rejection = $"ambiguousCount={ambiguous}";
+            else if (!safePlan && string.IsNullOrWhiteSpace(rejection))
+                rejection = "sample safety guard failed";
+
+            int nonemptyFields = Enumerable.Range(1, 82).Count(field => !string.IsNullOrWhiteSpace(GetCellTextValue(row, field)));
+            var currentCounts = new
+            {
+                Controls = productionControls.Count,
+                Plans = evaluationId.HasValue ? productionSnapshot.Plans.Count(item => item.EvaluationId == evaluationId.Value) : 0,
+                Activities = evaluationId.HasValue ? productionSnapshot.Plans.Where(item => item.EvaluationId == evaluationId.Value)
+                    .SelectMany(item => productionSnapshot.Activities.Where(activity => activity.PlanId == item.Id)).Count() : 0,
+                Monitoring = evaluationId.HasValue ? productionSnapshot.Monitorings.Count(item => item.EvaluationId == evaluationId.Value) : 0
+            };
+            bool alertPresent = !string.IsNullOrWhiteSpace(GetCellTextValue(row, 70));
+            string response = GetCellTextValue(row, 39).Trim();
+            candidates.Add(new RepresentativeSampleCandidate
+            {
+                RiskCode = code,
+                RiskNo = riskNo,
+                Area = GetCellTextValue(row, 3).Trim(),
+                RiskType = GetCellTextValue(row, 5).Trim(),
+                SourceNonemptyFields = nonemptyFields,
+                ControlProfile = profileParts.Count > 0 ? string.Join(';', profileParts) : "NO_CONTROL",
+                PreventiveControlPresent = representedControlTypes.Contains("PREVENTIVO"),
+                DetectiveControlPresent = representedControlTypes.Contains("DETECTIVO"),
+                CorrectiveControlPresent = representedControlTypes.Contains("CORRECTIVO"),
+                ControlSourcePresent = sourceControlTypes.Count > 0,
+                UnrepresentedSourceControl = sourceControlTypes.Except(representedControlTypes, StringComparer.OrdinalIgnoreCase).Any(),
+                ResponseProfile = response,
+                AlertPresent = alertPresent,
+                PlanTextPresent = !string.IsNullOrWhiteSpace(GetCellTextValue(row, 40)),
+                ActivityTextPresent = !string.IsNullOrWhiteSpace(GetCellTextValue(row, 42)),
+                GticSourcePresent = Enumerable.Range(17, 3).Any(field => !string.IsNullOrWhiteSpace(GetCellTextValue(row, field))),
+                CurrentProductionExists = prodExists,
+                CurrentProductionControlCount = currentCounts.Controls,
+                CurrentProductionPlanCount = currentCounts.Plans,
+                CurrentProductionActivityCount = currentCounts.Activities,
+                CurrentProductionMonitoringCount = currentCounts.Monitoring,
+                HumanInputNeededCount = blocked,
+                BlockedCount = blocked,
+                AmbiguousCount = ambiguous,
+                PlannedMutationCount = mutationCount,
+                SampleEligible = safePlan,
+                RejectionReason = safePlan ? "" : rejection,
+                CurrentProductionState = $"RISK={(riskId > 0 ? "YES" : "NO")};EVAL={activeEvaluations.Count};PROJECTION={projectionCount};CONTROLS={currentCounts.Controls};PLANS={currentCounts.Plans};ACTIVITIES={currentCounts.Activities};MONITORING={currentCounts.Monitoring}",
+                CoverageSummary = string.Join(';', profileParts)
+            });
+        }
+
+        WriteRepresentativeCandidateCsv(Path.Combine(outputDir, "block4_sample_candidate_analysis.csv"), candidates);
+        IReadOnlyList<RepresentativeSampleCandidate> selected;
+        try
+        {
+            selected = RepresentativeSampleSelection.SelectFive(candidates);
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine("REFERENCE_UNIVERSE=59");
+            Console.WriteLine("SAMPLE_VALIDATION_UNIVERSE=0");
+            Console.WriteLine("MUTATION_SCOPE=0");
+            Console.WriteLine($"SAMPLE_ELIGIBLE_CANDIDATES={candidates.Count(candidate => candidate.SampleEligible)}");
+            Console.WriteLine($"ROP_CUMP_59_ELIGIBLE={candidates.Single(candidate => candidate.RiskCode.Equals(RepresentativeSampleSelection.AnchorRiskCode, StringComparison.OrdinalIgnoreCase)).SampleEligible}");
+            Console.WriteLine("SAMPLE_SELECTION_BLOCKED=YES");
+            Console.WriteLine("PRODUCTION_DML_EXECUTED=0");
+            Console.WriteLine("PRODUCTION_DDL_EXECUTED=0");
+            Console.WriteLine("PRODUCTION_APPLY_EXECUTED=NO");
+            Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
+            Console.WriteLine("PRODUCTION_APPLY_READY=NO");
+            Console.WriteLine("BLOCK5_STATUS=NOT_STARTED");
+            return 4;
+        }
+
+        var selectedSet = selected.Select(candidate => candidate.RiskCode).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var selectedRows = workbookRows.Where(row => selectedSet.Contains(row.GetProperty("riskCode").GetString()!.Trim()))
+            .OrderBy(row => row.GetProperty("riskNo").GetInt32()).ToList();
+        if (selectedRows.Count != RepresentativeSampleSelection.TargetSize || selectedRows.Select(row => row.GetProperty("riskCode").GetString()).Distinct(StringComparer.OrdinalIgnoreCase).Count() != RepresentativeSampleSelection.TargetSize)
+            throw new InvalidOperationException("SAMPLE_SELECTION_CARDINALITY_INVALID");
+
+        DatabaseSnapshot sampleSnapshot = FilterSnapshotToRiskCodes(productionSnapshot, selectedSet);
+        string samplePreimagePath = Path.Combine(outputDir, "sample_production_preimage.json");
+        File.WriteAllText(samplePreimagePath, JsonSerializer.Serialize(sampleSnapshot, new JsonSerializerOptions { WriteIndented = true }));
+        string preimageSha = ComputeFileSha256(samplePreimagePath);
+        var plan = BuildReconciliationPlan(productionSnapshot, selectedRows, manifestFields, catalogDoc,
+            workbookSha, preimageSha, allowScopedRiskUniverse: true);
+        ApplyRepresentativeSampleScope(plan, workbookSha, preimageSha);
+        if (plan.AllPositions.Any(position => !selectedSet.Contains(position.RiskCode)) || plan.Mutations.Any(mutation => !selectedSet.Contains(mutation.RiskCode)))
+            throw new InvalidOperationException("SAMPLE_SCOPE_LEAK_DETECTED");
+
+        WriteRepresentativeSelectionCsv(Path.Combine(outputDir, "block4_selected_sample_5.csv"), selected);
+        WriteRepresentativePlanArtifacts(outputDir, productionSnapshot, plan, candidates, selected);
+        Console.WriteLine("REFERENCE_UNIVERSE=59");
+        Console.WriteLine("REFERENCE_MATRIX_USAGE=FUNCTIONAL_REFERENCE");
+        Console.WriteLine("FULL_59_RISK_MIGRATION_REQUIRED=NO");
+        Console.WriteLine("MANDATORY_MIGRATION_RISKS=0");
+        Console.WriteLine("BUSINESS_INPUT_215_REQUIRED=NO");
+        Console.WriteLine("BUSINESS_INPUT_215_STATUS=OBSOLETE_BY_SCOPE");
+        Console.WriteLine("BUSINESS_INPUT_COLLECTION_REQUIRED=NO");
+        Console.WriteLine("DEMO_SAMPLE_TARGET=5");
+        Console.WriteLine("FINAL_MANUAL_TRAINING_RISK=1");
+        Console.WriteLine("SAMPLE_VALIDATION_UNIVERSE=5");
+        Console.WriteLine("MUTATION_SCOPE=5");
+        Console.WriteLine($"SAMPLE_CODES={string.Join(",", selected.Select(candidate => candidate.RiskCode))}");
+        Console.WriteLine($"SAMPLE_WITHOUT_BUSINESS_INPUT={selected.Count(candidate => candidate.SampleEligible)}/5");
+        Console.WriteLine($"SAMPLE_UNIQUE_CODES={selected.Select(candidate => candidate.RiskCode).Distinct(StringComparer.OrdinalIgnoreCase).Count()}/5");
+        Console.WriteLine($"SAMPLE_MUTATIONS={plan.Mutations.Count}");
+        Console.WriteLine($"SAMPLE_BLOCKERS={plan.BlockedItems.Count}");
+        Console.WriteLine($"SAMPLE_AMBIGUITIES={plan.RejectAmbiguousCount}");
+        Console.WriteLine($"SAMPLE_PREVENTIVE_CONTROL_CASES={selected.Count(candidate => candidate.CoverageKeys.Contains("CONTROL:PREVENTIVO"))}");
+        Console.WriteLine($"SAMPLE_DETECTIVE_CONTROL_CASES={selected.Count(candidate => candidate.CoverageKeys.Contains("CONTROL:DETECTIVO"))}");
+        Console.WriteLine($"SAMPLE_CORRECTIVE_CONTROL_CASES={selected.Count(candidate => candidate.CoverageKeys.Contains("CONTROL:CORRECTIVO"))}");
+        Console.WriteLine($"SAMPLE_NO_CONTROL_CASES={selected.Count(candidate => candidate.CoverageKeys.Contains("CONTROL:NO_CONTROL"))}");
+        Console.WriteLine($"SAMPLE_RESPONSE_TYPES={string.Join(";", selected.Select(candidate => candidate.ResponseProfile).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(value => value, StringComparer.Ordinal))}");
+        Console.WriteLine($"SAMPLE_ALERT_CASES={selected.Count(candidate => candidate.AlertPresent)}");
+        Console.WriteLine($"SAMPLE_PLAN_SOURCE_CASES={selected.Count(candidate => candidate.PlanTextPresent)}");
+        Console.WriteLine($"SAMPLE_ACTIVITY_SOURCE_CASES={selected.Count(candidate => candidate.ActivityTextPresent)}");
+        Console.WriteLine($"GTIC_SOURCE_COVERAGE={(candidates.Any(candidate => candidate.GticSourcePresent) ? "AVAILABLE" : "NOT_AVAILABLE_IN_REFERENCE_MATRIX")}");
+        Console.WriteLine($"SAMPLE_RISKS_FOUND_IN_PRODUCTION={selected.Count(candidate => candidate.CurrentProductionExists)}/5");
+        Console.WriteLine($"PRODUCTION_REFERENCE_RISKS={productionSnapshot.Risks.Count}");
+        var anchorProjection = productionSnapshot.Projections.SingleOrDefault(projection => projection.RiskCode.Equals(RepresentativeSampleSelection.AnchorRiskCode, StringComparison.OrdinalIgnoreCase));
+        Console.WriteLine($"ROP_CUMP_59_VRI={anchorProjection?.Vri.ToString(CultureInfo.InvariantCulture) ?? "UNAVAILABLE"}");
+        Console.WriteLine($"ROP_CUMP_59_VRR={anchorProjection?.Vrr.ToString(CultureInfo.InvariantCulture) ?? "UNAVAILABLE"}");
+        Console.WriteLine($"ROP_CUMP_59_PRODUCTION_LEVEL_RESIDUAL_RAW={anchorProjection?.NivelResidual ?? "UNAVAILABLE"}");
+        Console.WriteLine($"SAMPLE_MUTATIONS_PLANNED={plan.Mutations.Count}");
+        Console.WriteLine($"PREIMAGE_SHA256={preimageSha}");
+        Console.WriteLine($"PLAN_CANONICAL_SHA256={plan.PlanCanonicalSha256}");
+        Console.WriteLine($"PLAN_FILE_SHA256={plan.PlanFileSha256}");
+        Console.WriteLine($"ARTIFACT_DIR={outputDir}");
+
+        bool xePassed = true;
+        if (plan.Mutations.Count > 0)
+        {
+            var sim = await SimulateApplyOnOracleXeAsync(xeConnectionString, productionSnapshot, plan, selectedRows,
+                manifestFields, catalogDoc, workbookSha, preimageSha, allowScopedRiskUniverse: true);
+            xePassed = sim.FirstApplyPassed && sim.PostcheckPassed && sim.RollbackTestPassed &&
+                sim.RollbackPreimageMatch && sim.SecondApplyMutations == 0 && sim.PostcheckMismatches == 0;
+            Console.WriteLine($"XE_FIRST_MUTATIONS={sim.FirstApplyMutationsApplied}");
+            Console.WriteLine($"XE_SECOND_MUTATIONS={sim.SecondApplyMutations}");
+            Console.WriteLine($"XE_POSTCHECK={sim.PostcheckOperationsVerified}/{sim.FirstApplyMutationsApplied}");
+            Console.WriteLine($"XE_ROLLBACK_CONTENT_HASH_MATCH={(sim.RollbackTestPassed && sim.RollbackPreimageMatch ? "PASS" : "FAIL")}");
+            Console.WriteLine($"XE_IDEMPOTENCY={(sim.SecondApplyMutations == 0 ? "PASS" : "FAIL")}");
+        }
+        else
+        {
+            Console.WriteLine("XE_SIMULATION=NOT_REQUIRED_ZERO_MUTATIONS");
+            Console.WriteLine("XE_FIRST_MUTATIONS=0");
+            Console.WriteLine("XE_SECOND_MUTATIONS=0");
+            Console.WriteLine("XE_ROLLBACK=NOT_REQUIRED");
+            Console.WriteLine("XE_IDEMPOTENCY=PASS_ZERO_MUTATIONS");
+        }
+
+        int productionOutOfScope = productionSnapshot.Risks.Count >= RepresentativeSampleSelection.TargetSize
+            ? productionSnapshot.Risks.Count - RepresentativeSampleSelection.TargetSize : 0;
+        bool passed = plan.BlockedItems.Count == 0 && plan.RejectAmbiguousCount == 0 && plan.AccidentalNullOverwrites == 0 &&
+            plan.NewDuplicatesExpected == 0 && plan.PhysicalDeletesCount == 0 && xePassed;
+        Console.WriteLine($"PRESERVED_OUT_OF_SCOPE_RISKS={productionOutOfScope}");
+        Console.WriteLine($"PRODUCTION_DML_EXECUTED=0");
+        Console.WriteLine($"PRODUCTION_DDL_EXECUTED=0");
+        Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
+        Console.WriteLine("PRODUCTION_APPLY_EXECUTED=NO");
+        Console.WriteLine($"PRODUCTION_APPLY_READY={(passed && plan.Mutations.Count == 0 ? "NOT_REQUIRED" : passed ? "YES" : "NO")}");
+        Console.WriteLine($"BLOCK4_STATUS={(passed && plan.Mutations.Count == 0 ? "READY_FOR_CLOSURE_REVIEW" : passed ? "READY_FOR_SAMPLE_AUTHORIZATION" : "SAMPLE_SELECTION_BLOCKED")}");
+        Console.WriteLine("BLOCK5_STATUS=NOT_STARTED");
+        return passed ? 0 : 5;
+    }
+
+    private static DatabaseSnapshot FilterSnapshotToRiskCodes(DatabaseSnapshot source, IReadOnlySet<string> riskCodes)
+    {
+        var risks = source.Risks.Where(row => riskCodes.Contains(row.Code)).ToList();
+        var evaluations = source.Evaluations.Where(row => riskCodes.Contains(row.RiskCode)).ToList();
+        var evaluationIds = evaluations.Select(row => row.Id).ToHashSet();
+        var controls = source.Controls.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList();
+        var controlIds = controls.Select(row => row.Id).ToHashSet();
+        var plans = source.Plans.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList();
+        var planIds = plans.Select(row => row.Id).ToHashSet();
+        var activities = source.Activities.Where(row => planIds.Contains(row.PlanId)).ToList();
+        var activityIds = activities.Select(row => row.Id).ToHashSet();
+        var relatedIds = controlIds.Concat(planIds).Concat(activityIds).ToHashSet();
+        return new DatabaseSnapshot
+        {
+            RunId = source.RunId,
+            CapturedAtUtc = source.CapturedAtUtc,
+            DatabaseName = source.DatabaseName,
+            ServiceName = source.ServiceName,
+            InstanceName = source.InstanceName,
+            CurrentSchema = source.CurrentSchema,
+            SessionUser = source.SessionUser,
+            Risks = risks,
+            Evaluations = evaluations,
+            Projections = source.Projections.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList(),
+            Alerts = source.Alerts.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList(),
+            Controls = controls,
+            ControlEvaluations = source.ControlEvaluations.Where(row => controlIds.Contains(row.ControlId)).ToList(),
+            Plans = plans,
+            Activities = activities,
+            Monitorings = source.Monitorings.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList(),
+            Evidences = source.Evidences.Where(row => relatedIds.Contains(row.EntidadId)).ToList(),
+            Flujos = source.Flujos.Where(row => evaluationIds.Contains(row.EvaluationId)).ToList()
+        };
+    }
+
+    private static void ApplyRepresentativeSampleScope(PlanResult plan, string workbookSha, string preimageSha)
+    {
+        int[] optionalByScope = { 20, 24, 28, 40, 42, 44, 45, 46, 47, 48, 49, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82 };
+        var optionalSet = optionalByScope.ToHashSet();
+        var deferred = plan.BlockedItems.Where(item => optionalSet.Contains(item.FieldNumber)).ToList();
+        if (deferred.Count == 0) return;
+        var deferredKeys = deferred.Select(item => $"{item.RiskCode}|{item.FieldNumber}").ToHashSet(StringComparer.OrdinalIgnoreCase);
+        plan.BlockedItems.RemoveAll(item => deferredKeys.Contains($"{item.RiskCode}|{item.FieldNumber}"));
+        foreach (var position in plan.AllPositions.Where(position => deferredKeys.Contains($"{position.RiskCode}|{position.FieldNumber}") && position.Action == "BLOCKED_BY_PRECONDITION"))
+        {
+            position.Action = "SOURCE_PRESENT_NOT_IMPORTED";
+            position.ReasonCode = "SOURCE_PRESENT_NOT_IMPORTED_BY_SAMPLE_SCOPE";
+            position.TargetValue = position.DbValue;
+            position.Mutates = false;
+        }
+        foreach (var audit in plan.Field71To82AuditEntries.Where(audit => deferredKeys.Contains($"{audit.RiskCode}|{audit.FieldNumber}") && audit.Action == "BLOCKED_BY_PRECONDITION"))
+        {
+            audit.Action = "SOURCE_PRESENT_NOT_IMPORTED";
+            audit.Classification = "SOURCE_PRESENT_NOT_IMPORTED";
+            audit.PreservedInDb = !string.IsNullOrWhiteSpace(audit.DbBeforeRaw);
+        }
+        plan.PlanCanonicalSha256 = ComputeComprehensivePlanSha256(plan, workbookSha, preimageSha);
+        plan.PlanSha256 = plan.PlanCanonicalSha256;
+    }
+
+    private static bool IsCanonicalNoControlSource(string value)
+    {
+        SourceItemsParseResult parsed = ParseSourceItems(value);
+        return !parsed.IsAmbiguous && parsed.Items.Count == 1 && IsEmptyOrNoHay(parsed.Items[0]);
+    }
+
+    private static void WriteRepresentativeCandidateCsv(string path, IReadOnlyList<RepresentativeSampleCandidate> candidates)
+    {
+        var lines = new List<string>
+        {
+            "RISK_CODE,RISK_NO,AREA,TIPO_RIESGO,SOURCE_COMPLETENESS_SCORE,CONTROL_PROFILE,CONTROL_PREVENTIVO_PRESENT,CONTROL_DETECTIVO_PRESENT,CONTROL_CORRECTIVO_PRESENT,CONTROL_SOURCE_PRESENT,UNREPRESENTED_SOURCE_CONTROL,RESPONSE_PROFILE,ALERT_PRESENT,PLAN_TEXT_PRESENT,ACTIVITY_TEXT_PRESENT,GTIC_SOURCE_PRESENT,CURRENT_PROD_EXISTS,CURRENT_PROD_CONTROL_COUNT,CURRENT_PROD_PLAN_COUNT,CURRENT_PROD_ACTIVITY_COUNT,CURRENT_PROD_MONITORING_COUNT,HUMAN_INPUT_REQUIRED_TO_LOAD_SAFELY,SAMPLE_ELIGIBLE,REJECTION_REASON,SELECTION_SCORE"
+        };
+        lines.AddRange(candidates.OrderBy(candidate => candidate.RiskNo).Select(candidate => CsvLine(
+            candidate.RiskCode, candidate.RiskNo.ToString(CultureInfo.InvariantCulture), candidate.Area, candidate.RiskType,
+            candidate.SourceNonemptyFields.ToString(CultureInfo.InvariantCulture), candidate.ControlProfile,
+            BoolText(candidate.PreventiveControlPresent), BoolText(candidate.DetectiveControlPresent), BoolText(candidate.CorrectiveControlPresent),
+            BoolText(candidate.ControlSourcePresent), BoolText(candidate.UnrepresentedSourceControl), candidate.ResponseProfile,
+            BoolText(candidate.AlertPresent), BoolText(candidate.PlanTextPresent), BoolText(candidate.ActivityTextPresent), BoolText(candidate.GticSourcePresent),
+            BoolText(candidate.CurrentProductionExists), candidate.CurrentProductionControlCount.ToString(CultureInfo.InvariantCulture),
+            candidate.CurrentProductionPlanCount.ToString(CultureInfo.InvariantCulture), candidate.CurrentProductionActivityCount.ToString(CultureInfo.InvariantCulture),
+            candidate.CurrentProductionMonitoringCount.ToString(CultureInfo.InvariantCulture), candidate.HumanInputNeededCount.ToString(CultureInfo.InvariantCulture),
+            BoolText(candidate.SampleEligible), candidate.RejectionReason,
+            RepresentativeSampleSelection.GetSelectionScore(candidate).ToString(CultureInfo.InvariantCulture))));
+        File.WriteAllLines(path, lines, new UTF8Encoding(false));
+    }
+
+    private static void WriteRepresentativeSelectionCsv(string path, IReadOnlyList<RepresentativeSampleCandidate> selected)
+    {
+        var lines = new List<string> { "SAMPLE_ORDINAL,RISK_CODE,RISK_NO,AREA,TIPO_RIESGO,WHY_SELECTED,FUNCTIONAL_COVERAGE,SOURCE_LIMITATIONS,CURRENT_PROD_STATE,EXPECTED_MUTATIONS" };
+        var prior = new List<RepresentativeSampleCandidate>();
+        for (int index = 0; index < selected.Count; index++)
+        {
+            RepresentativeSampleCandidate candidate = selected[index];
+            string why = RepresentativeSampleSelection.ExplainSelection(candidate, prior);
+            string limitations = string.Join(";", new[]
+            {
+                candidate.PlanTextPresent ? "F40 source is reference-only; no plan rows are added from this historical matrix" : "",
+                candidate.ActivityTextPresent ? "F42 source is reference-only; no activity rows are added from this historical matrix" : "",
+                candidate.UnrepresentedSourceControl ? "some control source items are not represented by production and are deferred by sample scope" : "",
+                candidate.AlertPresent ? "F70 source is reference only; operational alert is not invented" : "",
+                candidate.GticSourcePresent ? "GTIC source present" : "F17-F19 blank in source"
+            }.Where(value => !string.IsNullOrWhiteSpace(value)));
+            lines.Add(CsvLine((index + 1).ToString(CultureInfo.InvariantCulture), candidate.RiskCode,
+                candidate.RiskNo.ToString(CultureInfo.InvariantCulture), candidate.Area, candidate.RiskType, why,
+                string.Join(';', candidate.CoverageKeys.OrderBy(value => value, StringComparer.Ordinal)), limitations,
+                candidate.CurrentProductionState, candidate.PlannedMutationCount.ToString(CultureInfo.InvariantCulture)));
+            prior.Add(candidate);
+        }
+        File.WriteAllLines(path, lines, new UTF8Encoding(false));
+    }
+
+    private static void WriteRepresentativePlanArtifacts(
+        string outputDir,
+        DatabaseSnapshot snapshot,
+        PlanResult plan,
+        IReadOnlyList<RepresentativeSampleCandidate> candidates,
+        IReadOnlyList<RepresentativeSampleCandidate> selected)
+    {
+        string planPath = Path.Combine(outputDir, "sample_reconciliation_plan_full.json");
+        File.WriteAllText(planPath, JsonSerializer.Serialize(plan, new JsonSerializerOptions { WriteIndented = true }));
+        plan.PlanFileSha256 = ComputeFileSha256(planPath);
+        File.WriteAllText(Path.Combine(outputDir, "sample_sealed_plan_manifest.json"), JsonSerializer.Serialize(new
+        {
+            planCanonicalSha = plan.PlanCanonicalSha256,
+            planFileSha = plan.PlanFileSha256,
+            workbookSha = plan.WorkbookSha256,
+            preimageSha256 = plan.PreimageManifestSha256,
+            engineVersion = plan.EngineVersion,
+            gitSha = plan.GitSha,
+            runId = plan.RunId,
+            mutationScope = plan.AllPositions.Select(position => position.RiskCode).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(code => code, StringComparer.Ordinal).ToArray()
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(Path.Combine(outputDir, "sample_reconciliation_plan_mutations.csv"),
+            string.Join(Environment.NewLine, new[] { "MUTATION_ID,RISK_CODE,FIELD_NUMBER,ACTION,TARGET_TABLE,TARGET_COLUMN,TARGET_CANONICAL" }
+                .Concat(plan.Mutations.Select(mutation => CsvLine(mutation.MutationId, mutation.RiskCode,
+                    mutation.FieldNumber.ToString(CultureInfo.InvariantCulture), mutation.Action, mutation.TargetTable,
+                    mutation.TargetColumnOrProperty, mutation.TargetCanonical)))), new UTF8Encoding(false));
+        File.WriteAllText(Path.Combine(outputDir, "sample_rollback_plan.json"), JsonSerializer.Serialize(plan.RollbackOperations, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(Path.Combine(outputDir, "sample_production_preimage_summary.json"), JsonSerializer.Serialize(new
+        {
+            snapshot.RunId, snapshot.CapturedAtUtc, snapshot.DatabaseName, snapshot.ServiceName, snapshot.InstanceName,
+            snapshot.CurrentSchema, snapshot.SessionUser,
+            ReferenceUniverseRisks = snapshot.Risks.Count,
+            SelectedSample = selected.Select(candidate => candidate.RiskCode).ToArray(),
+            ProductionRisks = selected.Count(candidate => candidate.CurrentProductionExists),
+            RelatedControls = selected.Sum(candidate => candidate.CurrentProductionControlCount),
+            RelatedPlans = selected.Sum(candidate => candidate.CurrentProductionPlanCount),
+            RelatedActivities = selected.Sum(candidate => candidate.CurrentProductionActivityCount),
+            RelatedMonitoring = selected.Sum(candidate => candidate.CurrentProductionMonitoringCount)
+        }, new JsonSerializerOptions { WriteIndented = true }));
+        var summary = new
+        {
+            runId = plan.RunId,
+            referenceUniverse = 59,
+            referenceMatrixUsage = "FUNCTIONAL_REFERENCE",
+            full59RiskMigrationRequired = false,
+            mandatoryMigrationRisks = 0,
+            businessInput215Required = false,
+            businessInput215Status = "OBSOLETE_BY_SCOPE",
+            businessInputCollectionRequired = false,
+            sampleTarget = RepresentativeSampleSelection.TargetSize,
+            finalManualTrainingRisk = 1,
+            sampleCodes = selected.Select(candidate => candidate.RiskCode).ToArray(),
+            candidates = candidates.Count,
+            eligibleCandidates = candidates.Count(candidate => candidate.SampleEligible),
+            sampleMutations = plan.Mutations.Count,
+            sampleBlockers = plan.BlockedItems.Count,
+            sampleAmbiguities = plan.RejectAmbiguousCount,
+            productionDmlExecuted = 0,
+            productionDdlExecuted = 0,
+            productionApplyExecuted = false,
+            productionApplyAuthorized = false,
+            block5Status = "NOT_STARTED"
+        };
+        string summaryPath = Path.Combine(outputDir, "block4_sample_summary.json");
+        File.WriteAllText(summaryPath, JsonSerializer.Serialize(summary, new JsonSerializerOptions { WriteIndented = true }));
+        var files = Directory.EnumerateFiles(outputDir, "*", SearchOption.TopDirectoryOnly)
+            .Where(file => !Path.GetFileName(file).Equals("SHA256SUMS.json", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(file => Path.GetFileName(file), StringComparer.Ordinal)
+            .ToDictionary(file => Path.GetFileName(file), ComputeFileSha256, StringComparer.Ordinal);
+        File.WriteAllText(Path.Combine(outputDir, "SHA256SUMS.json"), JsonSerializer.Serialize(files, new JsonSerializerOptions { WriteIndented = true }));
+    }
+
+    private static string BoolText(bool value) => value ? "YES" : "NO";
+
+    private static string CsvLine(params string[] values) => string.Join(",", values.Select(value => "\"" + (value ?? "").Replace("\"", "\"\"", StringComparison.Ordinal).Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n') + "\""));
+
     public static PlanResult BuildReconciliationPlan(
         DatabaseSnapshot snapshot,
         List<JsonElement> excelRows,
@@ -1701,7 +2156,8 @@ public static class Program
         JsonDocument catalogDoc,
         string workbookSha = ExpectedWorkbookSha256,
         string preimageManifestSha = "",
-        HistoricalDeltaSource? historicalDeltaSource = null)
+        HistoricalDeltaSource? historicalDeltaSource = null,
+        bool allowScopedRiskUniverse = false)
     {
         var plan = new PlanResult
         {
@@ -1735,7 +2191,9 @@ public static class Program
         }
 
         var missingInDb = excelCodes.Except(dbCodes, StringComparer.OrdinalIgnoreCase).ToList();
-        var missingInExcel = dbCodes.Except(excelCodes, StringComparer.OrdinalIgnoreCase).ToList();
+        var missingInExcel = allowScopedRiskUniverse
+            ? new List<string>()
+            : dbCodes.Except(excelCodes, StringComparer.OrdinalIgnoreCase).ToList();
         if (missingInDb.Count > 0 || missingInExcel.Count > 0)
         {
             throw new InvalidOperationException($"RISK_CODE_SETS_MISMATCH: Discrepancia de universos entre Excel y DB. Faltan en DB: {string.Join(", ", missingInDb)}; Faltan en Excel: {string.Join(", ", missingInExcel)}");
@@ -3471,7 +3929,8 @@ public static class Program
         JsonDocument catalogDoc,
         string workbookSha,
         string preimageManifestSha,
-        HistoricalDeltaSource? historicalDeltaSource = null)
+        HistoricalDeltaSource? historicalDeltaSource = null,
+        bool allowScopedRiskUniverse = false)
     {
         var result = new SimulationResult();
 
@@ -3521,7 +3980,7 @@ public static class Program
         try
         {
             var postXeSnapshot = await CaptureProductionPreimageAsync(xeConnString, "XE_POST_APPLY");
-            var secondPlan = BuildReconciliationPlan(postXeSnapshot, excelRows, manifestFields, catalogDoc, workbookSha, preimageManifestSha, historicalDeltaSource);
+            var secondPlan = BuildReconciliationPlan(postXeSnapshot, excelRows, manifestFields, catalogDoc, workbookSha, preimageManifestSha, historicalDeltaSource, allowScopedRiskUniverse);
             result.SecondApplyMutations = secondPlan.Mutations.Count;
             result.NonZeroFirstPlanPassed = result.FirstFixtureMutations > 0 && result.SecondApplyMutations == 0;
             var beforeByKey = plan.AllPositions.ToDictionary(p => p.PositionKey, StringComparer.OrdinalIgnoreCase);

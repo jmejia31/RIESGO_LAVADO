@@ -16,6 +16,70 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 public class MatrizRiesgosBlock4ReconciliationTests
 {
     [Fact]
+    public void RepresentativeSample_SelectsExactlyFiveAndKeepsAnchorWhenEligible()
+    {
+        var candidates = Enumerable.Range(1, 8).Select(index => new RepresentativeSampleCandidate
+        {
+            RiskCode = index == 1 ? "ROP-CUMP-59" : $"RISK-{index:D2}",
+            RiskNo = index,
+            ControlProfile = index switch
+            {
+                1 => "PREVENTIVO",
+                2 => "DETECTIVO",
+                3 => "CORRECTIVO",
+                4 => "NO_CONTROL",
+                _ => "PREVENTIVO;DETECTIVO"
+            },
+            ResponseProfile = index % 2 == 0 ? "MITIGAR" : "ACEPTAR",
+            AlertPresent = index == 6,
+            PlanTextPresent = index == 7,
+            ActivityTextPresent = index == 8,
+            SampleEligible = true,
+            PlannedMutationCount = index == 5 ? 1 : 0,
+            SourceNonemptyFields = index
+        }).ToList();
+
+        var selected = RepresentativeSampleSelection.SelectFive(candidates);
+
+        Assert.Equal(5, selected.Count);
+        Assert.Equal(5, selected.Select(candidate => candidate.RiskCode).Distinct(StringComparer.OrdinalIgnoreCase).Count());
+        Assert.Contains(selected, candidate => candidate.RiskCode == "ROP-CUMP-59");
+        Assert.Equal(selected, RepresentativeSampleSelection.SelectFive(candidates));
+    }
+
+    [Fact]
+    public void RepresentativeSample_ExcludesIneligibleCandidates()
+    {
+        var candidates = Enumerable.Range(1, 6).Select(index => new RepresentativeSampleCandidate
+        {
+            RiskCode = $"RISK-{index:D2}",
+            RiskNo = index,
+            SampleEligible = index != 6
+        }).ToList();
+
+        var selected = RepresentativeSampleSelection.SelectFive(candidates);
+
+        Assert.Equal(5, selected.Count);
+        Assert.DoesNotContain(selected, candidate => candidate.RiskCode == "RISK-06");
+    }
+
+    [Fact]
+    public void SampleScopedPlan_RestrictsPositionsToSelectedRiskAndRetainsFullDbReferenceUniverse()
+    {
+        var snapshot = CreateTestSnapshot(new[] { "SAMPLE-01", "OUT-OF-SCOPE-02" });
+        var selectedRow = CreateTestExcelRow(1, "SAMPLE-01");
+
+        var plan = BaselineReconciler.BuildReconciliationPlan(
+            snapshot, new List<JsonElement> { selectedRow }, CreateTestManifest(), CreateTestCatalogDoc(),
+            allowScopedRiskUniverse: true);
+
+        Assert.Equal(2, snapshot.Risks.Count);
+        Assert.Equal(82, plan.AllPositions.Count);
+        Assert.All(plan.AllPositions, position => Assert.Equal("SAMPLE-01", position.RiskCode));
+        Assert.DoesNotContain(plan.Mutations, mutation => mutation.RiskCode == "OUT-OF-SCOPE-02");
+    }
+
+    [Fact]
     public void MultilineControlParagraph_IsSingleControl()
     {
         var parsed = BaselineReconciler.ParseSourceItems("Validar expediente completo.\nEl responsable revisa los documentos.\nDejar constancia del resultado.");
