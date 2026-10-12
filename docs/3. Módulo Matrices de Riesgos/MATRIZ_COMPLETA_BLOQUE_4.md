@@ -6,6 +6,22 @@ El contrato funcional actual del Bloque 4 activa los campos institucionales 40�
 
 La pantalla **Mitigación** continúa administrando controles, planes y actividades. **Matriz completa** consulta una proyección agrupada y permanece de solo lectura. Bloque 5 no forma parte de esta entrega.
 
+## Alcance de datos de muestra del Bloque 4
+
+La matriz congelada de 59 riesgos es la referencia funcional completa para contrato, catálogos, cálculos, controles, mitigación, monitoreo y pruebas. No ordena una migración masiva: `FULL_59_RISK_MIGRATION_REQUIRED=NO` y `MANDATORY_MIGRATION_RISKS=0`. El pase de datos utiliza una muestra representativa de cinco riesgos, sin eliminar, desactivar ni recrear los otros registros productivos.
+
+La solicitud diagnóstica de 215 atributos humanos queda `OBSOLETE_BY_SCOPE`; no se entrega a negocio ni bloquea Bloque 4. El generador de qualification se conserva como herramienta de auditoría. Los datos históricos de planes/actividades y monitoreo que no sean aptos para una carga segura se documentan como referencia no importada; no se inventan fechas, responsables ni valores operacionales.
+
+Después de completar el módulo, la validación/capacitación final será la creación manual de un riesgo completo desde la UI y su lectura, edición y exportación. Ese escenario no forma parte de este pase.
+
+### Muestra certificada del pase de alcance
+
+El análisis de los 59 candidatos seleccionó, de forma determinista, `ROP-CUMP-59`, `ROTR-AFIL-1`, `ROP-CUMP-50`, `ROP-CUMP-55` y `ROTR-AFIL-2`. Los cinco existen en producción con una evaluación activa y una proyección cada uno. El plan de muestra produjo cero mutaciones, cero blockers y cero ambigüedades; por ello no se aplicó ni se necesitó simular DML en XE. Los otros 54 riesgos quedan preservados fuera del scope de muestra.
+
+La muestra contiene casos preventivos, detectivos, correctivos y “No hay”; respuestas Aceptar, Evitar, Mitigar y Transferir/Compartir; dos riesgos con señales de alerta y dos con texto fuente de planes/actividades. Los textos F40/F42 son referencia y no se insertan como datos operacionales sin sus atributos obligatorios autorizados. El workbook no contiene fuentes GTIC pobladas en F17–F19. RUN_ID `20261012_222048_228`; preimage SHA-256 `3dd71d39499f2e1f3873504ca357bdddef6a4d0041327c867da8fface4534088`; plan canónico SHA-256 `4d4b0b2315068e1e869dfb0db65d512721f3889e40b5eedf9c9873d94f3065a8`; plan file SHA-256 `180097b638b30bca3fe4f99dbb9e00d91f086047b52a6236a84af8c421d9e885`. Los artefactos completos permanecen fuera de Git en `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK4_SAMPLE_5`.
+
+La consulta HPPROD1 fue `READ ONLY` y finalizó con `ROLLBACK`; DML=0, DDL=0 y apply no autorizado ni ejecutado. El estado de este pase es `READY_FOR_CLOSURE_REVIEW`; no constituye autorización de recarga ni cierre funcional otorgado por negocio.
+
 | Campo | Etiqueta literal | Fuente / cálculo | Cardinalidad y persistencia | Superficie de edición / lectura |
 |---:|---|---|---|---|
 | 40 | Plan de Mitigación/Acciones Correctivas | `RL_MR_PLANES.PLA_DESCRIPCION` | Repetible por evaluación; un registro por plan | Mitigación / Matriz completa |
