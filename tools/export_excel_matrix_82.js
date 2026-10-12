@@ -100,7 +100,10 @@ async function exportExcel() {
     throw new Error(`ROP-CUMP-59 FIELD_03 must be read from workbook Column C as "Sección de Cumplimiento"; got "${field03 ?? ''}".`);
   }
 
-  const outputPath = path.join(repoRoot, 'scratch_excel_59x82.json');
+  const outputArgIndex = process.argv.indexOf('--output');
+  const outputPath = outputArgIndex >= 0 && process.argv[outputArgIndex + 1]
+    ? path.resolve(process.argv[outputArgIndex + 1])
+    : path.join(repoRoot, 'scratch_excel_59x82.json');
   fs.writeFileSync(outputPath, JSON.stringify({
     sourceHash: actualHash,
     sheet: 'Matriz Consolidada',

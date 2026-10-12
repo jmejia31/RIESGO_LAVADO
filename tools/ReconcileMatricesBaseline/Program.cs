@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Oracle.ManagedDataAccess.Client;
+using Oracle.ManagedDataAccess.Types;
 using RL.API.Infrastructure.Database;
 
 namespace RL.Tools.ReconcileMatricesBaseline;
@@ -166,6 +167,7 @@ public class DatabaseSnapshot
     public DateTime CapturedAtUtc { get; set; }
     public string DatabaseName { get; set; } = "";
     public string ServiceName { get; set; } = "";
+    public string InstanceName { get; set; } = "";
     public string CurrentSchema { get; set; } = "";
     public string SessionUser { get; set; } = "";
 
@@ -180,6 +182,14 @@ public class DatabaseSnapshot
     public List<MonitoringPreimage> Monitorings { get; set; } = new();
     public List<EvidencePreimage> Evidences { get; set; } = new();
     public List<FlujoPreimage> Flujos { get; set; } = new();
+    public Dictionary<string, TableContentFingerprint> TableContentFingerprints { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+    public Dictionary<string, TableContentFingerprint> XeTableContentFingerprints { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public class TableContentFingerprint
+{
+    public long RowCount { get; set; }
+    public string Sha256 { get; set; } = "";
 }
 
 public class RollbackOperation
@@ -289,11 +299,18 @@ public class Delta398Record
 {
     public string RiskCode { get; set; } = "";
     public int FieldNumber { get; set; }
+    public string FieldLabel { get; set; } = "";
     public string PreviousClassification { get; set; } = "MISSING_IN_DB";
+    public string OriginalExcelRaw { get; set; } = "";
+    public string OriginalDbRaw { get; set; } = "";
+    public string OriginalReasonCode { get; set; } = "";
+    public string OriginalRecommendedAction { get; set; } = "";
     public string CurrentDbRaw { get; set; } = "";
     public string CurrentExcelRaw { get; set; } = "";
     public string CurrentClassification { get; set; } = "";
     public string Reason { get; set; } = "";
+    public string RecommendedAction { get; set; } = "";
+    public string Evidence { get; set; } = "";
     public bool MutationRequired { get; set; }
 }
 
@@ -301,17 +318,45 @@ public class Delta87Record
 {
     public string RiskCode { get; set; } = "";
     public int FieldNumber { get; set; }
+    public string FieldLabel { get; set; } = "";
     public string PreviousClassification { get; set; } = "DIFFERENT";
+    public string OriginalExcelRaw { get; set; } = "";
+    public string OriginalDbRaw { get; set; } = "";
+    public string OriginalReasonCode { get; set; } = "";
+    public string OriginalRecommendedAction { get; set; } = "";
     public string CurrentDbRaw { get; set; } = "";
     public string CurrentExcelRaw { get; set; } = "";
     public string CurrentClassification { get; set; } = "";
     public string Reason { get; set; } = "";
+    public string RecommendedAction { get; set; } = "";
+    public string Evidence { get; set; } = "";
     public bool MutationRequired { get; set; }
+}
+
+public sealed class HistoricalDeltaRow
+{
+    public Dictionary<string, string> Values { get; init; } = new(StringComparer.OrdinalIgnoreCase);
+    public string Get(string key) => Values.TryGetValue(key, out var value) ? value : "";
+}
+
+public sealed class HistoricalDeltaSource
+{
+    public List<HistoricalDeltaRow> BaselineImports { get; init; } = new();
+    public List<HistoricalDeltaRow> DataConflicts { get; init; } = new();
+    public string BaselineImportsSha256 { get; init; } = "";
+    public string DataConflictsSha256 { get; init; } = "";
+    public string SourceDirectory { get; init; } = "";
 }
 
 public class PlanResult
 {
     public string RunId { get; set; } = "";
+    public string EngineVersion { get; set; } = "";
+    public string GitSha { get; set; } = "";
+    public string WorkbookSha256 { get; set; } = "";
+    public string PreimageManifestSha256 { get; set; } = "";
+    public string Block2BaselineImportsSha256 { get; set; } = "";
+    public string Block2DataConflictsSha256 { get; set; } = "";
     public List<ReconciliationPosition> AllPositions { get; set; } = new();
     public List<PlannedMutation> Mutations { get; set; } = new();
     public List<RollbackOperation> RollbackOperations { get; set; } = new();
@@ -367,6 +412,12 @@ public class SimulationResult
     public int SecondApplyMutations { get; set; }
     public bool ConcurrentDriftAbortPassed { get; set; }
     public bool NonZeroFirstPlanPassed { get; set; }
+    public bool XeContentParityPassed { get; set; }
+    public bool OperationalPreservationPassed { get; set; }
+    public int OperationalPreservationChecked { get; set; }
+    public int OperationalPreservationMismatches { get; set; }
+    public bool InsertPreconditionTestPassed { get; set; }
+    public int InsertFixtureRowsAffected { get; set; }
     public int FirstFixtureMutations { get; set; }
     public int SecondFixtureMutations { get; set; }
     public string ErrorMessage { get; set; } = "";
@@ -378,7 +429,9 @@ public static class Program
 {
     public const string ExpectedWorkbookSha256 = "5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385";
     public const string PreviousInvalidatedPlanSha = "08a4e17f8a8410ed92f4bd317685730a22a2d61d8387ab6a5f529a1a9c049611";
-    public const string EngineVersion = "RL_BLOCK4_UPSERT_ENGINE_V2_AUDITED";
+    public const string EngineVersion = "RL_BLOCK4_RECONCILIATION_ENGINE_V4_EXACT_PREIMAGE_AND_ROLLBACK";
+    public const string ExpectedBlock2BaselineImportsSha256 = "06772eb693f3ab4fe7564e04c7c14de2fb5ca137089c95b57ee3e338d8313cb6";
+    public const string ExpectedBlock2DataConflictsSha256 = "b28eba977ab9e7fa83d8a23d2e831ee13f6346e240b23690b1e93b2177360f4f";
 
     public static async Task<int> Main(string[] args)
     {
@@ -399,6 +452,7 @@ public static class Program
         string mode = GetOption(args, "--mode") ?? "dry-run";
         string? planArg = GetOption(args, "--plan");
         string? expectedPlanSha = GetOption(args, "--expected-plan-sha");
+        string? expectedFileSha = GetOption(args, "--expected-file-sha");
         bool applyAuthorizedEnv = string.Equals(Environment.GetEnvironmentVariable("PRODUCTION_APPLY_AUTHORIZED"), "YES", StringComparison.OrdinalIgnoreCase);
 
         string repoRoot = Directory.GetCurrentDirectory();
@@ -412,7 +466,12 @@ public static class Program
         string excelPath = Path.Combine(repoRoot, "Matrices de Riesgos.xlsx");
         string manifestPath = Path.Combine(repoRoot, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_82_campos_manifest.json");
         string catalogManifestPath = Path.Combine(repoRoot, "backend", "RL.API", "Features", "MatricesRiesgos", "Contracts", "matriz_riesgos_catalogos_manifest.json");
-        string excelJsonPath = Path.Combine(repoRoot, "scratch_excel_59x82.json");
+        string runId = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
+        string artifactDir = Path.Combine(Path.GetTempPath(), $"RIESGO_LAVADO_BLOCK4_RECONCILIATION_{runId}");
+        Directory.CreateDirectory(artifactDir);
+        string preimageDir = Path.Combine(artifactDir, "preimage");
+        Directory.CreateDirectory(preimageDir);
+        string excelJsonPath = Path.Combine(artifactDir, "workbook_extract_59x82.json");
 
         // 1. Verificar workbook congelado
         if (!File.Exists(excelPath))
@@ -431,13 +490,16 @@ public static class Program
 
         // 2. Regenerar scratch_excel_59x82.json siempre desde el workbook SHA congelado (Sección 16)
         Console.WriteLine("\n[1/7] Regenerando scratch_excel_59x82.json desde workbook oficial...");
-        var psi = new ProcessStartInfo("node", Path.Combine(repoRoot, "tools", "export_excel_matrix_82.js"))
+        var psi = new ProcessStartInfo("node")
         {
             WorkingDirectory = repoRoot,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
         };
+        psi.ArgumentList.Add(Path.Combine(repoRoot, "tools", "export_excel_matrix_82.js"));
+        psi.ArgumentList.Add("--output");
+        psi.ArgumentList.Add(excelJsonPath);
         var proc = Process.Start(psi);
         proc?.WaitForExit();
         if (proc?.ExitCode != 0)
@@ -490,13 +552,7 @@ public static class Program
             Console.Error.WriteLine($"FATAL: Se detectaron {secretFindings} posibles credenciales expuestas en archivos versionados.");
             return 1;
         }
-        Console.WriteLine("HARDCODED_CREDENTIALS_CURRENT_TREE=0 (PASS)");
-
-        string runId = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
-        string artifactDir = Path.Combine(Path.GetTempPath(), $"RIESGO_LAVADO_BLOCK4_RECONCILIATION_{runId}");
-        Directory.CreateDirectory(artifactDir);
-        string preimageDir = Path.Combine(artifactDir, "preimage");
-        Directory.CreateDirectory(preimageDir);
+        Console.WriteLine("APPSETTINGS_CONNECTION_SECRET_SCAN=PASS");
         Console.WriteLine($"ARTIFACT_DIR={artifactDir}");
 
         if (mode.Equals("apply", StringComparison.OrdinalIgnoreCase))
@@ -519,32 +575,40 @@ public static class Program
                 return 1;
             }
 
-            if (string.IsNullOrWhiteSpace(expectedPlanSha))
+            if (string.IsNullOrWhiteSpace(expectedPlanSha) || string.IsNullOrWhiteSpace(expectedFileSha))
             {
-                Console.Error.WriteLine("FATAL: Debe especificar --expected-plan-sha <sha>");
+                Console.Error.WriteLine("FATAL: Apply requiere --expected-plan-sha <canonical_sha> y --expected-file-sha <file_sha>.");
                 return 1;
             }
 
             string actualPlanFileSha = ComputeFileSha256(planArg);
-            if (!string.Equals(actualPlanFileSha, expectedPlanSha, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(actualPlanFileSha, expectedFileSha, StringComparison.OrdinalIgnoreCase))
             {
-                Console.Error.WriteLine($"FATAL: El hash del plan suministrado ({actualPlanFileSha}) no coincide con --expected-plan-sha ({expectedPlanSha}).");
+                Console.Error.WriteLine("FATAL: El hash de bytes del plan no coincide con --expected-file-sha.");
                 return 1;
             }
 
-            return await ExecuteProductionApplyAsync(prodConnString, planArg, expectedPlanSha, actualWorkbookSha);
+            return await ExecuteProductionApplyAsync(prodConnString, planArg, expectedPlanSha, expectedFileSha, actualWorkbookSha);
         }
 
         // MODO DRY-RUN Y SIMULACIÓN COMPLETA
         Console.WriteLine("\n[2/7] Capturando Preimage Completo de Producción (HPPROD1) en modo estrictamente READ-ONLY...");
         var prodSnapshot = await CaptureProductionPreimageAsync(prodConnString, runId);
-        Console.WriteLine($"DB_IDENTITY_VERIFIED: Name={prodSnapshot.DatabaseName}, Service={prodSnapshot.ServiceName}, Schema={prodSnapshot.CurrentSchema}, User={prodSnapshot.SessionUser} (PASS)");
+        bool productionIdentityVerified =
+            prodSnapshot.DatabaseName.Equals("HPPROD1", StringComparison.OrdinalIgnoreCase) &&
+            prodSnapshot.ServiceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+            prodSnapshot.InstanceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+            prodSnapshot.CurrentSchema.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase) &&
+            prodSnapshot.SessionUser.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase);
+        Console.WriteLine($"DATABASE_TARGET_CLASS={(productionIdentityVerified ? "PRODUCTION" : "IDENTITY_MISMATCH")}");
+        Console.WriteLine($"DB_IDENTITY_VERIFIED: Name={prodSnapshot.DatabaseName}, Service={prodSnapshot.ServiceName}, Instance={prodSnapshot.InstanceName}, Schema={prodSnapshot.CurrentSchema}, User={prodSnapshot.SessionUser}");
+        if (!productionIdentityVerified) throw new InvalidOperationException("PRODUCTION_READ_ONLY_IDENTITY_MISMATCH: conexión no corresponde al perfil productivo esperado.");
         Console.WriteLine($"CONTROLS_PREIMAGE_COUNT={prodSnapshot.Controls.Count}");
         Console.WriteLine($"PLANS_PREIMAGE_COUNT={prodSnapshot.Plans.Count}");
         Console.WriteLine($"ACTIVITIES_PREIMAGE_COUNT={prodSnapshot.Activities.Count}");
         Console.WriteLine($"MONITORING_PREIMAGE_COUNT={prodSnapshot.Monitorings.Count}");
         Console.WriteLine($"EVIDENCE_PREIMAGE_COUNT={prodSnapshot.Evidences.Count}");
-        Console.WriteLine($"PREIMAGE_COMPLETE=PASS (Risks={prodSnapshot.Risks.Count}, Evas={prodSnapshot.Evaluations.Count}, Proys={prodSnapshot.Projections.Count}, Alerts={prodSnapshot.Alerts.Count})");
+        Console.WriteLine($"PREIMAGE_ROW_COUNTS=Risks:{prodSnapshot.Risks.Count};Evas:{prodSnapshot.Evaluations.Count};Proys:{prodSnapshot.Projections.Count};Alerts:{prodSnapshot.Alerts.Count}");
 
         // Guardar snapshot de producción fuera de git
         string snapshotJsonPath = Path.Combine(preimageDir, "production_database_snapshot.json");
@@ -571,12 +635,49 @@ public static class Program
 
         // 3. Sembrar el Preimage Completo en Oracle XE Local (Req. 23)
         Console.WriteLine("\n[3/7] Sembrando réplica exacta completa en Oracle XE Local y comprobando matriz de paridad de 12 tablas...");
-        await SeedOracleXeAsync(xeConnString, prodSnapshot);
-        Console.WriteLine("XE_PREIMAGE_PARITY=PASS (Todas las 12 entidades verificadas en XE con 100% de paridad)");
+        prodSnapshot.XeTableContentFingerprints = await SeedOracleXeAsync(xeConnString, prodSnapshot);
+        var tableParityRows = prodSnapshot.TableContentFingerprints
+            .OrderBy(x => x.Key, StringComparer.Ordinal)
+            .Select(x =>
+            {
+                prodSnapshot.XeTableContentFingerprints.TryGetValue(x.Key, out var xe);
+                return new
+                {
+                    Table = x.Key,
+                    ProductionCount = x.Value.RowCount,
+                    XeCount = xe?.RowCount ?? -1,
+                    ProductionSha256 = x.Value.Sha256,
+                    XeSha256 = xe?.Sha256 ?? "",
+                    Status = xe != null && xe.RowCount == x.Value.RowCount && xe.Sha256 == x.Value.Sha256 ? "PASS" : "CONTENT_MISMATCH"
+                };
+            }).ToList();
+        bool xeContentParityPassed = tableParityRows.Count == 12 && tableParityRows.All(x => x.Status == "PASS");
+        string tableParityPath = Path.Combine(artifactDir, "table_parity_hashes.csv");
+        var tableParityCsv = new StringBuilder("TABLE,PROD_COUNT,XE_COUNT,PROD_CANONICAL_SHA256,XE_CANONICAL_SHA256,STATUS\r\n");
+        foreach (var row in tableParityRows)
+            tableParityCsv.AppendLine($"\"{row.Table}\",{row.ProductionCount},{row.XeCount},\"{row.ProductionSha256}\",\"{row.XeSha256}\",\"{row.Status}\"");
+        File.WriteAllText(tableParityPath, tableParityCsv.ToString(), new UTF8Encoding(false));
+        Console.WriteLine($"XE_PREIMAGE_PARITY_CONTENT_HASH={(xeContentParityPassed ? "PASS" : "FAIL")}");
+        Console.WriteLine($"XE_PREIMAGE_PARITY_CONTENT_HASH_TABLES={tableParityRows.Count(x => x.Status == "PASS")}/12");
 
         // 4. Construir el Plan Canónico de Reconciliación
         Console.WriteLine("\n[4/7] Construyendo Plan de Reconciliación Canónico y Rollback Real...");
-        var planResult = BuildReconciliationPlan(prodSnapshot, excelRows, manifestFields, catalogDoc, actualWorkbookSha, preimageManifestSha);
+        var historicalDeltaSource = LoadCertifiedHistoricalDeltaSource(Path.GetTempPath());
+        var planResult = BuildReconciliationPlan(prodSnapshot, excelRows, manifestFields, catalogDoc, actualWorkbookSha, preimageManifestSha, historicalDeltaSource);
+
+        var original398Keys = historicalDeltaSource.BaselineImports.Select(r => $"{r.Get("RISK_CODE").Trim()}|{ParseFieldNumber(r.Get("FIELD_NUMBER"))}").ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var final398Keys = planResult.Historical398Deltas.Select(d => $"{d.RiskCode.Trim()}|{d.FieldNumber}").ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var original87Keys = historicalDeltaSource.DataConflicts.Select(r => $"{r.Get("RISK_CODE").Trim()}|{ParseFieldNumber(r.Get("FIELD_NUMBER"))}").ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var final87Keys = planResult.Historical87Deltas.Select(d => $"{d.RiskCode.Trim()}|{d.FieldNumber}").ToHashSet(StringComparer.OrdinalIgnoreCase);
+        Console.WriteLine($"ORIGINAL_398_ROWS={historicalDeltaSource.BaselineImports.Count}");
+        Console.WriteLine($"FINAL_398_ROWS={planResult.Historical398Deltas.Count}");
+        Console.WriteLine($"BLOCK2_398_KEYSET_EQUAL={original398Keys.SetEquals(final398Keys)}");
+        Console.WriteLine($"ORIGINAL_87_ROWS={historicalDeltaSource.DataConflicts.Count}");
+        Console.WriteLine($"FINAL_87_ROWS={planResult.Historical87Deltas.Count}");
+        Console.WriteLine($"BLOCK2_87_KEYSET_EQUAL={original87Keys.SetEquals(final87Keys)}");
+        Console.WriteLine($"FIELD70_AUDITED={planResult.AllPositions.Count(p => p.FieldNumber == 70)}/59");
+        Console.WriteLine($"FIELD70_SOURCE_NONBLANK={planResult.AllPositions.Count(p => p.FieldNumber == 70 && !string.IsNullOrWhiteSpace(p.ExcelValue))}");
+        Console.WriteLine($"FIELDS71_82_AUDITED={planResult.Field71To82AuditEntries.Count}/708");
 
         Console.WriteLine($"POSITIONS_EVALUATED={planResult.AllPositions.Count}");
         Console.WriteLine($"MATCH_COUNT={planResult.MatchCount}");
@@ -606,7 +707,7 @@ public static class Program
         Console.WriteLine($"ROLLBACK_PLAN_NONEMPTY={(planResult.Mutations.Count == 0 || planResult.RollbackOperations.Count > 0 ? "PASS" : "FAIL")}");
         Console.WriteLine($"ROLLBACK_OPERATION_COUNT_MATCH={(planResult.RollbackOperations.Count == planResult.Mutations.Count ? "PASS" : "FAIL")}");
         Console.WriteLine($"FIELDS71_82_DB_VALUES_AUDITED={planResult.Field71To82AuditEntries.Count}/708");
-        Console.WriteLine($"OPERATIONAL_71_82_PRESERVATION={(planResult.Field71To82AuditEntries.All(x => x.PreservedInDb) ? "PASS" : "FAIL")}");
+        Console.WriteLine($"OPERATIONAL_PRESERVATION_EXPECTED_COUNT={planResult.Field71To82AuditEntries.Count(x => x.Action == "PRESERVE_PRODUCTION")}");
 
         if (planResult.AccidentalNullOverwrites > 0 || planResult.NewDuplicatesExpected > 0 ||
             planResult.SyntheticDefaultsCount > 0 || planResult.SilentTruncationsCount > 0)
@@ -622,6 +723,18 @@ public static class Program
         string fullPlanJsonPath = Path.Combine(artifactDir, "reconciliation_plan_full.json");
         File.WriteAllText(fullPlanJsonPath, JsonSerializer.Serialize(planResult, new JsonSerializerOptions { WriteIndented = true }));
         planResult.PlanFileSha256 = ComputeFileSha256(fullPlanJsonPath);
+
+        string sealedPlanManifestPath = Path.Combine(artifactDir, "sealed_plan_manifest.json");
+        File.WriteAllText(sealedPlanManifestPath, JsonSerializer.Serialize(new
+        {
+            planCanonicalSha = planResult.PlanCanonicalSha256,
+            planFileSha = planResult.PlanFileSha256,
+            workbookSha = actualWorkbookSha,
+            preimageManifestSha,
+            gitSha = planResult.GitSha,
+            engineVersion = planResult.EngineVersion,
+            runId = planResult.RunId
+        }, new JsonSerializerOptions { WriteIndented = true }));
 
         string rollbackPlanPath = Path.Combine(artifactDir, "rollback_plan.json");
         File.WriteAllText(rollbackPlanPath, JsonSerializer.Serialize(planResult.RollbackOperations, new JsonSerializerOptions { WriteIndented = true }));
@@ -652,37 +765,47 @@ public static class Program
 
         // 5. Simular Apply en Oracle XE Local con Preconditions Reales, Concurrency Drift, Rollback y Idempotencia (Req. 25, 26, 28)
         Console.WriteLine("\n[5/7] Ejecutando simulación transaccional en Oracle XE con preconditions, drift concurrente, rollback e idempotencia...");
-        var simResult = await SimulateApplyOnOracleXeAsync(xeConnString, planResult, excelRows, manifestFields, catalogDoc, actualWorkbookSha, preimageManifestSha);
+        var simResult = await SimulateApplyOnOracleXeAsync(xeConnString, prodSnapshot, planResult, excelRows, manifestFields, catalogDoc, actualWorkbookSha, preimageManifestSha, historicalDeltaSource);
+        simResult.XeContentParityPassed = xeContentParityPassed;
         Console.WriteLine($"XE_FIRST_APPLY={(simResult.FirstApplyPassed ? "PASS" : "FAIL")}");
-        Console.WriteLine($"CONCURRENCY_PRECONDITIONS_ENFORCED=PASS");
+        Console.WriteLine($"CONCURRENCY_PRECONDITIONS_ENFORCED={(simResult.ConcurrentDriftAbortPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"CONCURRENT_DRIFT_ABORT_PASSED={(simResult.ConcurrentDriftAbortPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"POSTCHECK_OPERATIONS_VERIFIED={simResult.PostcheckOperationsVerified}/{planResult.Mutations.Count}");
         Console.WriteLine($"POSTCHECK_MISMATCHES={simResult.PostcheckMismatches}");
+        Console.WriteLine($"OPERATIONAL_PRESERVATION_CHECKED={simResult.OperationalPreservationChecked}");
+        Console.WriteLine($"OPERATIONAL_PRESERVATION_MISMATCHES={simResult.OperationalPreservationMismatches}");
+        Console.WriteLine($"OPERATIONAL_DATA_PRESERVED={(simResult.OperationalPreservationPassed ? "PASS" : "FAIL")}");
+        Console.WriteLine($"FIRST_XE_FIXTURE_MUTATIONS={simResult.FirstFixtureMutations}");
+        Console.WriteLine($"SECOND_XE_FIXTURE_MUTATIONS={simResult.SecondFixtureMutations}");
         Console.WriteLine($"ROLLBACK_TEST_PASSED={(simResult.RollbackTestPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"ROLLBACK_PREIMAGE_MATCH={(simResult.RollbackPreimageMatch ? "PASS" : "FAIL")}");
+        Console.WriteLine($"ROLLBACK_ROWS_AFFECTED={simResult.RollbackRowsAffected}");
+        Console.WriteLine($"INSERT_PRECONDITION_TEST={(simResult.InsertPreconditionTestPassed ? "PASS" : "FAIL")}");
+        Console.WriteLine($"INSERT_FIXTURE_ROWS_AFFECTED={simResult.InsertFixtureRowsAffected}");
         Console.WriteLine($"NON_ZERO_FIRST_PLAN_PASSED={(simResult.NonZeroFirstPlanPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"XE_SECOND_PLAN_MUTATIONS={simResult.SecondApplyMutations}");
-        Console.WriteLine($"REAL_IDEMPOTENCY_TEST={(simResult.SecondApplyMutations == 0 ? "PASS" : "FAIL")}");
+        Console.WriteLine($"REAL_IDEMPOTENCY_TEST={(simResult.NonZeroFirstPlanPassed && simResult.SecondApplyMutations == 0 ? "PASS" : "FAIL")}");
 
-        if (!simResult.FirstApplyPassed || !simResult.PostcheckPassed || simResult.SecondApplyMutations != 0 ||
+        string simResultsPath = Path.Combine(artifactDir, "xe_simulation_results.json");
+        File.WriteAllText(simResultsPath, JsonSerializer.Serialize(simResult, new JsonSerializerOptions { WriteIndented = true }));
+        if (!simResult.FirstApplyPassed || !simResult.PostcheckPassed || simResult.SecondApplyMutations != 0 || !simResult.InsertPreconditionTestPassed ||
             !simResult.ConcurrentDriftAbortPassed || !simResult.RollbackTestPassed || !simResult.RollbackPreimageMatch)
         {
             Console.Error.WriteLine($"FATAL: La simulación en Oracle XE no certificó el plan. Error: {simResult.ErrorMessage}");
             return 2;
         }
 
-        string simResultsPath = Path.Combine(artifactDir, "xe_simulation_results.json");
-        File.WriteAllText(simResultsPath, JsonSerializer.Serialize(simResult, new JsonSerializerOptions { WriteIndented = true }));
-
         // 6. Resumen de artefactos generados
         var shaSums = new Dictionary<string, string>
         {
             ["reconciliation_plan_full.json"] = planResult.PlanFileSha256,
+            ["sealed_plan_manifest.json"] = ComputeFileSha256(sealedPlanManifestPath),
             ["reconciliation_plan_mutations.csv"] = ComputeFileSha256(mutationsCsvPath),
             ["rollback_plan.json"] = ComputeFileSha256(rollbackPlanPath),
             ["null_overwrite_guard.csv"] = ComputeFileSha256(nullGuardPath),
             ["duplicate_guard.csv"] = ComputeFileSha256(duplicateGuardPath),
             ["fields71_82_audit.csv"] = ComputeFileSha256(fields7182Path),
+            ["table_parity_hashes.csv"] = ComputeFileSha256(tableParityPath),
             ["preimage_manifest.json"] = preimageManifestSha,
             ["catalog_normalization_log.csv"] = ComputeFileSha256(catalogLogPath),
             ["block2_398_reconciliation_delta.csv"] = ComputeFileSha256(delta398Path),
@@ -694,8 +817,16 @@ public static class Program
         File.WriteAllText(shaSumsPath, JsonSerializer.Serialize(shaSums, new JsonSerializerOptions { WriteIndented = true }));
 
         // 7. COMPUERTA DE AUTORIZACIÓN FINAL (Req. 2, 35, 45)
-        bool isApplyReady = planResult.BlockedByPreconditionCount == 0 && planResult.Mutations.Count > 0;
-        string block4Status = isApplyReady ? "READY_FOR_AUTHORIZATION" : "PENDING";
+        bool safetyGatesPassed = simResult.FirstApplyPassed && simResult.PostcheckPassed && simResult.ConcurrentDriftAbortPassed &&
+            simResult.RollbackTestPassed && simResult.RollbackPreimageMatch && simResult.InsertPreconditionTestPassed && simResult.NonZeroFirstPlanPassed &&
+            simResult.SecondApplyMutations == 0 && simResult.XeContentParityPassed && simResult.OperationalPreservationPassed &&
+            planResult.RollbackOperations.Count == planResult.Mutations.Count &&
+            planResult.AccidentalNullOverwrites == 0 && planResult.PreexistingDuplicates == 0 && planResult.NewDuplicatesExpected == 0 &&
+            planResult.SyntheticDefaultsCount == 0 && planResult.SilentTruncationsCount == 0;
+        bool isApplyReady = safetyGatesPassed && planResult.BlockedByPreconditionCount == 0 && planResult.Mutations.Count > 0;
+        string block4Status = safetyGatesPassed && planResult.BlockedByPreconditionCount == 0 && planResult.Mutations.Count == 0
+            ? "READY_FOR_CLOSURE_REVIEW"
+            : isApplyReady ? "READY_FOR_AUTHORIZATION" : "PENDING";
 
         Console.WriteLine("\n================================================================================");
         Console.WriteLine("PRODUCTION APPLY AUTHORIZATION GATE — AUDITED DRY-RUN COMPLETE");
@@ -708,7 +839,7 @@ public static class Program
         {
             Console.WriteLine($"BLOCK4_STATUS_REASON={planResult.BlockedByPreconditionCount}_ITEMS_BLOCKED_BY_PRECONDITION");
         }
-        Console.WriteLine($"PRODUCTION_APPLY_PATH_IMPLEMENTED=PASS");
+        Console.WriteLine($"PRODUCTION_APPLY_PATH_IMPLEMENTED={(safetyGatesPassed ? "PASS" : "UNVERIFIED")}");
         Console.WriteLine($"PRODUCTION_APPLY_EXECUTED=NO");
         Console.WriteLine($"WORKBOOK_SHA256={actualWorkbookSha}");
         Console.WriteLine($"APPLY_PLAN_CANONICAL_SHA256={planResult.PlanCanonicalSha256}");
@@ -727,23 +858,25 @@ public static class Program
         Console.WriteLine($"PHYSICAL_INSERTS={planResult.PhysicalInsertsCount}");
         Console.WriteLine($"PHYSICAL_UPDATES={planResult.PhysicalUpdatesCount}");
         Console.WriteLine($"PHYSICAL_DELETES={planResult.PhysicalDeletesCount}");
-        Console.WriteLine($"ROLLBACK_OPERATION_COUNT_MATCH=PASS ({planResult.RollbackOperations.Count}/{planResult.Mutations.Count})");
-        Console.WriteLine($"ACCIDENTAL_NULL_OVERWRITES=0");
-        Console.WriteLine($"PREEXISTING_DUPLICATES=0");
-        Console.WriteLine($"NEW_DUPLICATES=0");
-        Console.WriteLine($"SYNTHETIC_DEFAULTS=0");
-        Console.WriteLine($"SILENT_TRUNCATIONS=0");
+        Console.WriteLine($"ROLLBACK_OPERATION_COUNT_MATCH={(planResult.RollbackOperations.Count == planResult.Mutations.Count)} ({planResult.RollbackOperations.Count}/{planResult.Mutations.Count})");
+        Console.WriteLine($"ACCIDENTAL_NULL_OVERWRITES={planResult.AccidentalNullOverwrites}");
+        Console.WriteLine($"PREEXISTING_DUPLICATES={planResult.PreexistingDuplicates}");
+        Console.WriteLine($"NEW_DUPLICATES={planResult.NewDuplicatesExpected}");
+        Console.WriteLine($"SYNTHETIC_DEFAULTS={planResult.SyntheticDefaultsCount}");
+        Console.WriteLine($"SILENT_TRUNCATIONS={planResult.SilentTruncationsCount}");
         Console.WriteLine($"FIELDS71_82_DB_VALUES_AUDITED={planResult.Field71To82AuditEntries.Count}/708");
-        Console.WriteLine($"OPERATIONAL_DATA_PRESERVED=PASS");
-        Console.WriteLine($"CONCURRENCY_PRECONDITIONS_ENFORCED=PASS");
+        Console.WriteLine($"CONCURRENCY_PRECONDITIONS_ENFORCED={(simResult.ConcurrentDriftAbortPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"CONCURRENT_DRIFT_ABORT_PASSED={(simResult.ConcurrentDriftAbortPassed ? "PASS" : "FAIL")}");
         Console.WriteLine($"ROLLBACK_PREIMAGE_MATCH={(simResult.RollbackPreimageMatch ? "PASS" : "FAIL")}");
         Console.WriteLine($"NON_ZERO_FIRST_PLAN_PASSED={(simResult.NonZeroFirstPlanPassed ? "PASS" : "FAIL")}");
-        Console.WriteLine($"XE_SECOND_PLAN_MUTATIONS=0");
-        Console.WriteLine($"POSTCHECK_MISMATCHES=0");
-        Console.WriteLine($"DELTA_398_TOTAL_SUM={planResult.Historical398Deltas.Count} (PASS: 382 ALREADY_PRESENT + 16 BLOCKED_REQUIRED_INPUT)");
-        Console.WriteLine($"DELTA_87_TOTAL_SUM={planResult.Historical87Deltas.Count} (PASS: 48 F04 + 1 F14 + 2 F08 + 36 F09)");
-        Console.WriteLine($"DELTA_87_UNEXPLAINED=0 (PASS)");
+        Console.WriteLine($"XE_SECOND_PLAN_MUTATIONS={simResult.SecondApplyMutations}");
+        Console.WriteLine($"POSTCHECK_MISMATCHES={simResult.PostcheckMismatches}");
+        foreach (var group in planResult.Historical398Deltas.GroupBy(d => d.CurrentClassification).OrderBy(g => g.Key, StringComparer.Ordinal))
+            Console.WriteLine($"DELTA_398_CLASSIFICATION_{group.Key}={group.Count()}");
+        foreach (var group in planResult.Historical87Deltas.GroupBy(d => d.CurrentClassification).OrderBy(g => g.Key, StringComparer.Ordinal))
+            Console.WriteLine($"DELTA_87_CLASSIFICATION_{group.Key}={group.Count()}");
+        Console.WriteLine($"DELTA_398_TOTAL={planResult.Historical398Deltas.Count}");
+        Console.WriteLine($"DELTA_87_TOTAL={planResult.Historical87Deltas.Count}");
         Console.WriteLine($"ARTIFACT_DIR={artifactDir}");
         Console.WriteLine("================================================================================\n");
 
@@ -759,6 +892,7 @@ public static class Program
         catch
         {
             var val = r.GetValue(i);
+            if (val is OracleClob clob) return clob.IsNull ? "" : clob.Value.Trim();
             return val?.ToString()?.Trim() ?? "";
         }
     }
@@ -812,12 +946,13 @@ public static class Program
 
         await using (var cmdIso = new OracleCommand("SET TRANSACTION READ ONLY", conn))
         {
-            try { await cmdIso.ExecuteNonQueryAsync(); } catch { }
+            await cmdIso.ExecuteNonQueryAsync();
         }
 
         await using (var cmdIdent = new OracleCommand(@"
             SELECT sys_context('USERENV', 'DB_NAME'),
                    sys_context('USERENV', 'SERVICE_NAME'),
+                   sys_context('USERENV', 'INSTANCE_NAME'),
                    sys_context('USERENV', 'CURRENT_SCHEMA'),
                    sys_context('USERENV', 'SESSION_USER')
               FROM dual", conn))
@@ -827,8 +962,9 @@ public static class Program
             {
                 snap.DatabaseName = SafeGetString(r, 0);
                 snap.ServiceName = SafeGetString(r, 1);
-                snap.CurrentSchema = SafeGetString(r, 2);
-                snap.SessionUser = SafeGetString(r, 3);
+                snap.InstanceName = SafeGetString(r, 2);
+                snap.CurrentSchema = SafeGetString(r, 3);
+                snap.SessionUser = SafeGetString(r, 4);
             }
         }
 
@@ -1116,11 +1252,75 @@ public static class Program
             }
         }
 
-        try { await using var cmdRollback = new OracleCommand("ROLLBACK", conn); await cmdRollback.ExecuteNonQueryAsync(); } catch { }
+        await using (var cmdRollback = new OracleCommand("ROLLBACK", conn))
+        {
+            snap.TableContentFingerprints = await ComputeOracleTableContentFingerprintsAsync(conn);
+            await cmdRollback.ExecuteNonQueryAsync();
+        }
         return snap;
     }
 
-    public static async Task SeedOracleXeAsync(string xeConnString, DatabaseSnapshot snapshot)
+    private static async Task<Dictionary<string, TableContentFingerprint>> ComputeOracleTableContentFingerprintsAsync(OracleConnection connection)
+    {
+        // Static allowlist and primary keys keep this forensic query SELECT-only and deterministic.
+        var tables = new (string Name, string PrimaryKey)[]
+        {
+            ("RL_MR_RIESGOS", "RIE_ID"),
+            ("RL_MR_EVALUACIONES_RIESGO", "EVA_ID"),
+            ("RL_MR_PROYECCIONES_EVALUACION", "PROY_ID"),
+            ("RL_MR_CONTROLES_RIESGO", "CON_ID"),
+            ("RL_MR_EVALUACIONES_CONTROL", "ECO_ID"),
+            ("RL_MR_PLANES", "PLA_ID"),
+            ("RL_MR_ACTIVIDADES", "ACT_ID"),
+            ("RL_MR_SENALES_ALERTA", "ALE_ID"),
+            ("RL_MR_AUTOMONITOREO", "MON_ID"),
+            ("RL_MR_EVIDENCIAS", "EVI_ID"),
+            ("RL_MR_EVIDENCIAS_VINCULOS", "EVV_ID"),
+            ("RL_MR_FLUJOS_EVALUACION", "FLU_ID")
+        };
+
+        var result = new Dictionary<string, TableContentFingerprint>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (table, primaryKey) in tables)
+        {
+            await using var command = new OracleCommand($"SELECT * FROM {table} ORDER BY {primaryKey}", connection);
+            await using var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess);
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            long rowCount = 0;
+            while (await reader.ReadAsync())
+            {
+                var row = new List<string>(reader.FieldCount);
+                for (var column = 0; column < reader.FieldCount; column++)
+                {
+                    string name = reader.GetName(column);
+                    string value = reader.IsDBNull(column) ? "<NULL>" : NormalizeOracleHashValue(reader.GetValue(column));
+                    row.Add($"{name.Length}:{name}{value.Length}:{value}");
+                }
+                var bytes = Encoding.UTF8.GetBytes(string.Join("", row));
+                hash.AppendData(BitConverter.GetBytes(bytes.Length));
+                hash.AppendData(bytes);
+                rowCount++;
+            }
+            result[table] = new TableContentFingerprint
+            {
+                RowCount = rowCount,
+                Sha256 = Convert.ToHexStringLower(hash.GetHashAndReset())
+            };
+        }
+        return result;
+    }
+
+    private static string NormalizeOracleHashValue(object value) => value switch
+    {
+        OracleClob clob => clob.IsNull ? "<NULL>" : clob.Value,
+        OracleBlob blob => blob.IsNull ? "<NULL>" : Convert.ToBase64String(blob.Value),
+        byte[] bytes => Convert.ToBase64String(bytes),
+        DateTime dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
+        decimal number => number.ToString(CultureInfo.InvariantCulture),
+        IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture) ?? "",
+        _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? ""
+    };
+
+    public static async Task<Dictionary<string, TableContentFingerprint>> SeedOracleXeAsync(string xeConnString, DatabaseSnapshot snapshot)
     {
         await using var conn = new OracleConnection(xeConnString);
         await conn.OpenAsync();
@@ -1374,6 +1574,8 @@ public static class Program
                     throw new InvalidOperationException($"XE_PREIMAGE_PARITY_FAILED: Discrepancia en {kvp.Key}. Esperado={kvp.Value}, XE={actual}");
                 }
             }
+
+            return await ComputeOracleTableContentFingerprintsAsync(conn);
         }
         catch
         {
@@ -1409,11 +1611,18 @@ public static class Program
         List<JsonElement> manifestFields,
         JsonDocument catalogDoc,
         string workbookSha = ExpectedWorkbookSha256,
-        string preimageManifestSha = "")
+        string preimageManifestSha = "",
+        HistoricalDeltaSource? historicalDeltaSource = null)
     {
         var plan = new PlanResult
         {
             RunId = snapshot.RunId,
+            EngineVersion = EngineVersion,
+            GitSha = ResolveGitSha(),
+            WorkbookSha256 = workbookSha,
+            PreimageManifestSha256 = preimageManifestSha,
+            Block2BaselineImportsSha256 = historicalDeltaSource?.BaselineImportsSha256 ?? "",
+            Block2DataConflictsSha256 = historicalDeltaSource?.DataConflictsSha256 ?? "",
             PreexistingDuplicates = 0
         };
 
@@ -1444,8 +1653,28 @@ public static class Program
         }
 
         var risksByCode = snapshot.Risks.ToDictionary(r => r.Code.Trim(), r => r, StringComparer.OrdinalIgnoreCase);
-        var evasByCode = snapshot.Evaluations.ToDictionary(e => e.RiskCode.Trim(), e => e, StringComparer.OrdinalIgnoreCase);
-        var proysByCode = snapshot.Projections.ToDictionary(p => p.RiskCode.Trim(), p => p, StringComparer.OrdinalIgnoreCase);
+        // The Consolidado query filters EVA_ACTIVO=1. Do not select an arbitrary historical row.
+        var activeEvaluationGroups = snapshot.Evaluations.Where(e => e.Active == 1)
+            .GroupBy(e => e.RiskCode.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        var evasByCode = new Dictionary<string, EvaluationPreimage>(StringComparer.OrdinalIgnoreCase);
+        foreach (string code in excelCodes)
+        {
+            if (!activeEvaluationGroups.TryGetValue(code, out var matches) || matches.Count != 1)
+                throw new InvalidOperationException($"ACTIVE_EVALUATION_SELECTION_NOT_UNIQUE: risk={code}; activeCount={matches?.Count ?? 0}.");
+            evasByCode.Add(code, matches[0]);
+        }
+        var selectedEvaluationIds = evasByCode.Values.Select(e => e.Id).ToHashSet();
+        var projectionGroups = snapshot.Projections.Where(p => selectedEvaluationIds.Contains(p.EvaluationId))
+            .GroupBy(p => p.RiskCode.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+        var proysByCode = new Dictionary<string, ProjectionPreimage>(StringComparer.OrdinalIgnoreCase);
+        foreach (string code in excelCodes)
+        {
+            if (!projectionGroups.TryGetValue(code, out var matches) || matches.Count != 1)
+                throw new InvalidOperationException($"ACTIVE_PROJECTION_SELECTION_NOT_UNIQUE: risk={code}; projectionCount={matches?.Count ?? 0}.");
+            proysByCode.Add(code, matches[0]);
+        }
 
         // Detección estricta de duplicados preexistentes con hard fail (Req. 22)
         int dupRisks = snapshot.Risks.GroupBy(r => r.Code, StringComparer.OrdinalIgnoreCase).Sum(g => g.Count() - 1);
@@ -1476,7 +1705,6 @@ public static class Program
             .GroupBy(a => a.EvaluationId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        long nextControlId = snapshot.Controls.Count > 0 ? snapshot.Controls.Max(c => c.Id) + 1 : 10001;
 
         // Auditoría completa de Campos 71 a 82 (708 posiciones, Req. 11, 12, 13, 15)
         foreach (var r in excelRows)
@@ -1528,17 +1756,8 @@ public static class Program
                         }
                         else if (fn == 74)
                         {
-                            var evis = prevCons.SelectMany(c => snapshot.Evidences
-                                .Where(ev => ev.TipoEntidad == "CONTROL" && ev.EntidadId == c.Id)
-                                .OrderBy(ev => ev.FechaCreacion)
-                                .ThenBy(ev => ev.EvidenciaId)
-                                .Select(ev => $"{ev.NombreArchivo}.{ev.Extension}"))
-                                .ToList();
-                            if (evis.Count > 0)
-                            {
-                                dbRaw = evis.Count == 1 ? evis[0] : string.Join("\n", evis.Select((ev, idx) => $"{idx + 1}. {ev}"));
-                                dbCanon = dbRaw;
-                            }
+                            dbRaw = ProjectEvidenceByControl(prevCons, snapshot.Evidences);
+                            dbCanon = dbRaw;
                         }
                     }
                 }
@@ -1561,17 +1780,8 @@ public static class Program
                         }
                         else if (fn == 77)
                         {
-                            var evis = detCons.SelectMany(c => snapshot.Evidences
-                                .Where(ev => ev.TipoEntidad == "CONTROL" && ev.EntidadId == c.Id)
-                                .OrderBy(ev => ev.FechaCreacion)
-                                .ThenBy(ev => ev.EvidenciaId)
-                                .Select(ev => $"{ev.NombreArchivo}.{ev.Extension}"))
-                                .ToList();
-                            if (evis.Count > 0)
-                            {
-                                dbRaw = evis.Count == 1 ? evis[0] : string.Join("\n", evis.Select((ev, idx) => $"{idx + 1}. {ev}"));
-                                dbCanon = dbRaw;
-                            }
+                            dbRaw = ProjectEvidenceByControl(detCons, snapshot.Evidences);
+                            dbCanon = dbRaw;
                         }
                     }
                 }
@@ -1594,17 +1804,8 @@ public static class Program
                         }
                         else if (fn == 80)
                         {
-                            var evis = corCons.SelectMany(c => snapshot.Evidences
-                                .Where(ev => ev.TipoEntidad == "CONTROL" && ev.EntidadId == c.Id)
-                                .OrderBy(ev => ev.FechaCreacion)
-                                .ThenBy(ev => ev.EvidenciaId)
-                                .Select(ev => $"{ev.NombreArchivo}.{ev.Extension}"))
-                                .ToList();
-                            if (evis.Count > 0)
-                            {
-                                dbRaw = evis.Count == 1 ? evis[0] : string.Join("\n", evis.Select((ev, idx) => $"{idx + 1}. {ev}"));
-                                dbCanon = dbRaw;
-                            }
+                            dbRaw = ProjectEvidenceByControl(corCons, snapshot.Evidences);
+                            dbCanon = dbRaw;
                         }
                     }
                 }
@@ -1630,8 +1831,20 @@ public static class Program
                 }
 
                 bool hasDbVal = !string.IsNullOrWhiteSpace(dbRaw);
-                string classif = hasDbVal ? "PRESERVE_PRODUCTION" : "NO_ACTION";
-                string act = hasDbVal ? "PRESERVE_PRODUCTION" : "NO_ACTION";
+                bool hasExcelVal = !string.IsNullOrWhiteSpace(cellVal);
+                bool semanticMatch = hasDbVal && hasExcelVal && string.Equals(NormalizeMultiline(dbRaw), NormalizeMultiline(cellVal), StringComparison.Ordinal);
+                string classif = hasDbVal ? semanticMatch ? "MATCH" : "PRESERVE_PRODUCTION" : hasExcelVal ? "MISSING_IN_DB" : "LEGITIMATELY_BLANK";
+                string act = hasDbVal ? semanticMatch ? "NO_ACTION" : "PRESERVE_PRODUCTION" : hasExcelVal ? "BLOCKED_BY_PRECONDITION" : "NO_ACTION";
+                if (!hasDbVal && hasExcelVal)
+                {
+                    plan.BlockedItems.Add(new BlockedItem
+                    {
+                        RiskCode = code, FieldNumber = fn, FieldLabel = label, Entity = targetTbl,
+                        SourceValue = cellVal, RequiredMissingValue = "Verified operational import authority and a supported mutation mapping",
+                        ReasonCode = "OPERATIONAL_VALUE_REQUIRES_AUTHORITY",
+                        RecommendedResolution = "Do not default or write operational monitoring/evidence data in this pass."
+                    });
+                }
 
                 plan.Field71To82AuditEntries.Add(new Field71To82AuditEntry
                 {
@@ -1645,7 +1858,7 @@ public static class Program
                     ExcelRaw = cellVal,
                     Classification = classif,
                     Action = act,
-                    PreservedInDb = true
+                    PreservedInDb = hasDbVal && !semanticMatch
                 });
             }
         }
@@ -1706,8 +1919,25 @@ public static class Program
 
                 // 2. GTIC Condicional (Campos 17, 18, 19) evaluado por tipo_riesgo y area (Req. 17)
                 string evalTipo = currentDataJson.TryGetPropertyValue("tipo_riesgo", out var cjT) ? cjT?.ToString() ?? "" : GetCellTextValue(r, 5);
-                string evalArea = proy != null && !string.IsNullOrWhiteSpace(proy.AreaPrincipal) ? proy.AreaPrincipal : GetCellTextValue(r, 3);
-                if (f is 17 or 18 or 19 && !IsGticApplicable(evalTipo, evalArea))
+                string? canonicalRiskType = NormalizeCatalogValue("RISK_TYPE", evalTipo, catalogMaps, plan.CatalogNormalizations);
+                if (f is 17 or 18 or 19 && canonicalRiskType == null)
+                {
+                    plan.BlockedItems.Add(new BlockedItem
+                    {
+                        RiskCode = code, FieldNumber = f, FieldLabel = label, Entity = "RISK_TYPE",
+                        SourceValue = evalTipo, RequiredMissingValue = "A value explicitly listed in RISK_TYPE catalog",
+                        ReasonCode = "UNKNOWN_CATALOG_VALUE",
+                        RecommendedResolution = "Resolve the risk type against the canonical catalog before deciding applicability."
+                    });
+                    plan.AllPositions.Add(new ReconciliationPosition
+                    {
+                        PositionKey = positionKey, RiskCode = code, FieldNumber = f, FieldLabel = label,
+                        Action = "BLOCKED_BY_PRECONDITION", ReasonCode = "UNKNOWN_CATALOG_VALUE",
+                        ExcelValue = rawExcel, DbValue = evalTipo, Mutates = false
+                    });
+                    continue;
+                }
+                if (f is 17 or 18 or 19 && !IsGticApplicable(canonicalRiskType!, ""))
                 {
                     plan.NotApplicableCount++;
                     plan.AllPositions.Add(new ReconciliationPosition
@@ -1755,6 +1985,28 @@ public static class Program
                         db70 = string.Join("\n", alList.Select((a, idx) => $"{idx + 1}. {a.Indicador}"));
                     }
 
+                    if (!string.IsNullOrWhiteSpace(db70) &&
+                        !string.IsNullOrWhiteSpace(rawExcel) &&
+                        NormalizeMultiline(rawExcel).Equals(NormalizeMultiline(db70), StringComparison.OrdinalIgnoreCase))
+                    {
+                        plan.MatchCount++;
+                        plan.NoActionCount++;
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey,
+                            RiskCode = code,
+                            FieldNumber = 70,
+                            FieldLabel = label,
+                            Action = "NO_ACTION",
+                            ReasonCode = "SEMANTIC_MATCH",
+                            ExcelValue = rawExcel,
+                            DbValue = db70,
+                            TargetValue = db70,
+                            Mutates = false
+                        });
+                        continue;
+                    }
+
                     if (!string.IsNullOrWhiteSpace(db70))
                     {
                         plan.PreserveProductionCount++;
@@ -1766,7 +2018,7 @@ public static class Program
                             FieldNumber = 70,
                             FieldLabel = label,
                             Action = "PRESERVE_PRODUCTION",
-                            ReasonCode = "OPERATIONAL_ALERT_NEWER_IN_DB",
+                            ReasonCode = "CONTRACT_AUTHORITY_RULE",
                             ExcelValue = rawExcel,
                             DbValue = db70,
                             TargetValue = db70,
@@ -1799,7 +2051,7 @@ public static class Program
                 if (f >= 71 && f <= 82)
                 {
                     var aud = plan.Field71To82AuditEntries.First(a => a.RiskCode == code && a.FieldNumber == f);
-                    if (aud.Classification == "PRESERVE_PRODUCTION")
+                    if (aud.Action == "PRESERVE_PRODUCTION")
                     {
                         plan.PreserveProductionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
@@ -1816,8 +2068,18 @@ public static class Program
                             Mutates = false
                         });
                     }
+                    else if (aud.Action == "BLOCKED_BY_PRECONDITION")
+                    {
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = f, FieldLabel = label,
+                            Action = "BLOCKED_BY_PRECONDITION", ReasonCode = "OPERATIONAL_VALUE_REQUIRES_AUTHORITY",
+                            ExcelValue = rawExcel, DbValue = aud.DbBeforeRaw, TargetValue = aud.DbBeforeRaw, Mutates = false
+                        });
+                    }
                     else
                     {
+                        plan.MatchCount++;
                         plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
@@ -1911,11 +2173,12 @@ public static class Program
                                 BeforeValue = dbDesc,
                                 AfterValue = excelDesc,
                                 RollbackAction = "UPDATE",
-                                RollbackSql = "UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = :beforeDesc WHERE RIE_ID = :id",
+                                RollbackSql = "UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = :beforeDesc WHERE RIE_ID = :id AND NVL(RIE_DESCRIPCION, ' ') = :afterDesc",
                                 RollbackParameters = new Dictionary<string, object?>
                                 {
                                     ["id"] = risk.Id,
-                                    ["beforeDesc"] = dbDesc
+                                    ["beforeDesc"] = dbDesc,
+                                    ["afterDesc"] = excelDesc
                                 }
                             }
                         };
@@ -1989,126 +2252,46 @@ public static class Program
                         continue;
                     }
 
-                    int insertedForThisField = 0;
+                    int controlsBlockedForField = 0;
                     for (int i = 0; i < excelItems.Count; i++)
                     {
                         string targetDesc = excelItems[i].Trim();
                         if (IsEmptyOrNoHay(targetDesc)) continue;
-
                         if (targetDesc.Length > 500)
                         {
                             plan.SilentTruncationsCount++;
                             throw new InvalidOperationException($"VALUE_EXCEEDS_TARGET_LENGTH: Control {conTipo} de {code} tiene {targetDesc.Length} caracteres (máx 500).");
                         }
+                        bool exists = existingList.Any(c => NormalizeControlText(c.Descripcion).Equals(NormalizeControlText(targetDesc), StringComparison.OrdinalIgnoreCase));
+                        if (exists) { plan.MatchCount++; continue; }
 
-                        var existingMatch = existingList.FirstOrDefault(c =>
-                            NormalizeControlText(c.Descripcion).Equals(NormalizeControlText(targetDesc), StringComparison.OrdinalIgnoreCase));
-
-                        if (existingMatch != null)
+                        plan.BlockedItems.Add(new BlockedItem
                         {
-                            plan.MatchCount++;
-                            continue;
-                        }
-
-                        string? targetAuto = f32Canonical;
-                        if (string.IsNullOrWhiteSpace(targetAuto))
-                        {
-                            continue;
-                        }
-
-                        long assignedId = nextControlId++;
-                        string mutId = $"MUT_{code}_F{f}_CON_{assignedId}";
-
-                        var mut = new PlannedMutation
-                        {
-                            MutationId = mutId,
-                            RiskCode = code,
-                            FieldNumber = f,
-                            FieldLabel = label,
-                            Entity = "RL_MR_CONTROLES_RIESGO",
-                            TargetTable = "RL_MR_CONTROLES_RIESGO",
-                            RecordKey = assignedId.ToString(),
-                            Action = "INSERT_BASELINE",
-                            TargetColumnOrProperty = "CON_DESCRIPCION",
-                            ExcelRaw = targetDesc,
-                            ExcelCanonical = targetDesc,
-                            DbBeforeRaw = "",
-                            DbBeforeCanonical = "",
-                            TargetCanonical = targetDesc,
-                            ReasonCode = "MISSING_BASELINE_CONTROL_INSERT",
-                            Authority = "EXCEL_WORKBOOK_OFFICIAL",
-                            Precondition = "CONTROL_NOT_EXISTS",
-                            PreconditionSql = "SELECT COUNT(*) FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :eId AND CON_TIPO = :tipo AND CON_DESCRIPCION = :p_desc",
-                            ApplySql = @"
-                                INSERT INTO RL_MR_CONTROLES_RIESGO (
-                                    CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO
-                                ) VALUES (
-                                    :id, :eId, :tipo, :p_desc, :auto, 'ACTIVO'
-                                )",
-                            ApplyParameters = new Dictionary<string, object?>
-                            {
-                                ["id"] = assignedId,
-                                ["eId"] = evaId,
-                                ["tipo"] = conTipo,
-                                ["p_desc"] = targetDesc,
-                                ["auto"] = targetAuto
-                            },
-                            Rollback = new RollbackOperation
-                            {
-                                MutationId = mutId,
-                                Entity = "RL_MR_CONTROLES_RIESGO",
-                                Table = "RL_MR_CONTROLES_RIESGO",
-                                RecordPk = assignedId.ToString(),
-                                Action = "INSERT",
-                                BeforeValue = "",
-                                AfterValue = targetDesc,
-                                RollbackAction = "DELETE",
-                                RollbackSql = "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id",
-                                RollbackParameters = new Dictionary<string, object?>
-                                {
-                                    ["id"] = assignedId
-                                }
-                            }
-                        };
-
-                        plan.Mutations.Add(mut);
-                        plan.RollbackOperations.Add(mut.Rollback);
-                        insertedForThisField++;
-                        plan.InsertBaselineCount++;
-                        plan.PhysicalInsertsCount++;
+                            RiskCode = code, FieldNumber = f, FieldLabel = label, Entity = "RL_MR_CONTROLES_RIESGO",
+                            SourceValue = targetDesc, RequiredMissingValue = "CON_ESTADO (NOT NULL; no source value or DB default)",
+                            ReasonCode = "BLOCKED_REQUIRED_INPUT",
+                            RecommendedResolution = "Provide CON_ESTADO from an authoritative source; the reconciler will not invent ACTIVO or automation."
+                        });
+                        controlsBlockedForField++;
                     }
-
-                    if (insertedForThisField > 0)
+                    if (controlsBlockedForField > 0)
                     {
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = f,
-                            FieldLabel = label,
-                            Action = "INSERT_BASELINE",
-                            ReasonCode = "NEW_CONTROLS_INSERTED",
-                            ExcelValue = rawExcel,
-                            DbValue = dbControlsText,
-                            TargetValue = rawExcel,
-                            Mutates = true
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = f, FieldLabel = label,
+                            Action = "BLOCKED_BY_PRECONDITION", ReasonCode = "BLOCKED_REQUIRED_INPUT",
+                            ExcelValue = rawExcel, DbValue = dbControlsText, TargetValue = dbControlsText, Mutates = false
                         });
                     }
                     else
                     {
+                        plan.MatchCount++;
                         plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = f,
-                            FieldLabel = label,
-                            Action = "NO_ACTION",
-                            ReasonCode = "EXISTING_CONTROLS_MATCH",
-                            ExcelValue = rawExcel,
-                            DbValue = dbControlsText,
-                            TargetValue = dbControlsText,
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = f, FieldLabel = label,
+                            Action = "NO_ACTION", ReasonCode = "ALL_EXCEL_CONTROLS_MATCH_EXISTING_CONTROLS",
+                            ExcelValue = rawExcel, DbValue = dbControlsText, TargetValue = dbControlsText, Mutates = false
                         });
                     }
                     continue;
@@ -2171,7 +2354,8 @@ public static class Program
                         foreach (var con in evaCons)
                         {
                             string currentAuto = con.Automatizacion ?? "";
-                            if (!string.Equals(currentAuto, f32Canonical, StringComparison.OrdinalIgnoreCase))
+                            string? currentAutoCanonical = NormalizeCatalogValue("CONTROL_AUTOMATION", currentAuto, catalogMaps, plan.CatalogNormalizations);
+                            if (!string.Equals(currentAutoCanonical, f32Canonical, StringComparison.Ordinal))
                             {
                                 plan.UpdateBaselineCount++;
                                 plan.PhysicalUpdatesCount++;
@@ -2202,7 +2386,7 @@ public static class Program
                                     ApplyParameters = new Dictionary<string, object?>
                                     {
                                         ["id"] = con.Id,
-                                        ["newAuto"] = f32Canonical,
+                                        ["newAuto"] = ResolveCatalogDbKey(catalogDoc, "CONTROL_AUTOMATION", f32Canonical),
                                         ["expectedBefore"] = currentAuto
                                     },
                                     Rollback = new RollbackOperation
@@ -2215,11 +2399,12 @@ public static class Program
                                         BeforeValue = currentAuto,
                                         AfterValue = f32Canonical,
                                         RollbackAction = "UPDATE",
-                                        RollbackSql = "UPDATE RL_MR_CONTROLES_RIESGO SET CON_AUTOMATIZACION = :beforeAuto WHERE CON_ID = :id",
+                                        RollbackSql = "UPDATE RL_MR_CONTROLES_RIESGO SET CON_AUTOMATIZACION = :beforeAuto WHERE CON_ID = :id AND CON_AUTOMATIZACION = :afterAuto",
                                         RollbackParameters = new Dictionary<string, object?>
                                         {
                                             ["id"] = con.Id,
-                                            ["beforeAuto"] = currentAuto
+                                            ["beforeAuto"] = currentAuto,
+                                            ["afterAuto"] = ResolveCatalogDbKey(catalogDoc, "CONTROL_AUTOMATION", f32Canonical)
                                         }
                                     }
                                 };
@@ -2270,101 +2455,165 @@ public static class Program
                 // 10. Reconciliación de Planes y Actividades (F40, F42, F45, Req. 6, 7, 8)
                 if (f == 40)
                 {
-                    var existingPlans = existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>();
-                    if (string.IsNullOrWhiteSpace(rawExcel))
+                    var existingPlans = (existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>())
+                        .OrderBy(p => p.Id)
+                        .ToList();
+                    string dbPlansText = ProjectPlanValues(existingPlans.Select(p => p.Descripcion));
+                    var excelPlans = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    if (excelPlans.Count == 0)
                     {
-                        string dbPlansText = string.Join("\n", existingPlans.Select((p, idx) => $"{idx + 1}. {p.Descripcion}"));
-                        plan.NoActionCount++;
+                        bool hasDbPlans = existingPlans.Count > 0;
+                        if (hasDbPlans) plan.PreserveProductionCount++; else plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 40,
-                            FieldLabel = label,
-                            Action = "NO_ACTION",
-                            ReasonCode = "BLANK_EXCEL",
-                            ExcelValue = "",
-                            DbValue = dbPlansText,
-                            TargetValue = dbPlansText,
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 40, FieldLabel = label,
+                            Action = hasDbPlans ? "PRESERVE_PRODUCTION" : "NO_ACTION",
+                            ReasonCode = hasDbPlans ? "EXCEL_BLANK_DB_PLANS_PRESERVED" : "BLANK_EXCEL_AND_DB",
+                            ExcelValue = "", DbValue = dbPlansText, TargetValue = dbPlansText, Mutates = false
                         });
                         continue;
                     }
 
-                    var matchedPlan = existingPlans.FirstOrDefault(p =>
-                        NormalizeControlText(p.Descripcion).Equals(NormalizeControlText(rawExcel), StringComparison.OrdinalIgnoreCase));
-
-                    if (matchedPlan != null)
+                    var unmatchedPlans = excelPlans
+                        .Where(item => !existingPlans.Any(p => NormalizeControlText(p.Descripcion).Equals(item, StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                    if (unmatchedPlans.Count == 0)
                     {
-                        plan.MatchCount++;
-                        plan.NoActionCount++;
+                        plan.MatchCount++; plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 40,
-                            FieldLabel = label,
-                            Action = "NO_ACTION",
-                            ReasonCode = "EXISTING_PLAN_MATCH",
-                            ExcelValue = rawExcel,
-                            DbValue = matchedPlan.Descripcion,
-                            TargetValue = matchedPlan.Descripcion,
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 40, FieldLabel = label,
+                            Action = "NO_ACTION", ReasonCode = "ALL_EXCEL_PLANS_MATCH_EXISTING_PLANS",
+                            ExcelValue = rawExcel, DbValue = dbPlansText, TargetValue = dbPlansText, Mutates = false
                         });
                         continue;
                     }
 
                     string f46FIni = GetCellTextValue(r, 46);
                     string f47FFin = GetCellTextValue(r, 47);
-                    if (string.IsNullOrWhiteSpace(f46FIni) || string.IsNullOrWhiteSpace(f47FFin))
+                    string missingInputs = string.Join(", ", new[]
+                    {
+                        string.IsNullOrWhiteSpace(f46FIni) ? "PLA_FECHA_INICIO" : "",
+                        string.IsNullOrWhiteSpace(f47FFin) ? "PLA_FECHA_FIN" : "",
+                        "PLA_ESTADO (NOT NULL; no baseline field or DB default)"
+                    }.Where(x => x.Length > 0));
+                    string reason = "BLOCKED_REQUIRED_INPUT";
+                    foreach (var missingPlan in unmatchedPlans)
                     {
                         plan.BlockedItems.Add(new BlockedItem
                         {
-                            RiskCode = code,
-                            FieldNumber = 40,
-                            FieldLabel = label,
-                            Entity = "RL_MR_PLANES",
-                            SourceValue = rawExcel,
-                            RequiredMissingValue = "PLA_FECHA_INICIO, PLA_FECHA_FIN",
-                            ReasonCode = "BLOCKED_REQUIRED_DATES",
-                            RecommendedResolution = "Provide explicit contractual start/end dates in Excel baseline or register plan operationally in DB."
+                            RiskCode = code, FieldNumber = 40, FieldLabel = label, Entity = "RL_MR_PLANES",
+                            SourceValue = missingPlan, RequiredMissingValue = missingInputs,
+                            ReasonCode = reason,
+                            RecommendedResolution = "Supply every NOT NULL plan value from an authoritative source; do not synthesize dates or status."
                         });
-
+                    }
+                    plan.AllPositions.Add(new ReconciliationPosition
+                    {
+                        PositionKey = positionKey, RiskCode = code, FieldNumber = 40, FieldLabel = label,
+                        Action = "BLOCKED_BY_PRECONDITION", ReasonCode = reason,
+                        ExcelValue = rawExcel, DbValue = dbPlansText, TargetValue = dbPlansText, Mutates = false
+                    });
+                    continue;
+                }
+                if (f == 42)
+                {
+                    var existingPlans = (existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>())
+                        .OrderBy(p => p.Id)
+                        .ToList();
+                    var excelActivities = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    var allActivities = existingPlans
+                        .SelectMany(p => existingActivitiesByPlan.TryGetValue(p.Id, out var acts) ? acts : new List<ActivityPreimage>())
+                        .ToList();
+                    string dbActivitiesText = ProjectPlanValues(allActivities.Select(a => a.Descripcion));
+                    if (excelActivities.Count == 0)
+                    {
+                        bool hasDbActivities = allActivities.Count > 0;
+                        if (hasDbActivities) plan.PreserveProductionCount++; else plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 40,
-                            FieldLabel = label,
-                            Action = "BLOCKED_BY_PRECONDITION",
-                            ReasonCode = "BLOCKED_REQUIRED_DATES",
-                            ExcelValue = rawExcel,
-                            DbValue = "",
-                            TargetValue = "",
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 42, FieldLabel = label,
+                            Action = hasDbActivities ? "PRESERVE_PRODUCTION" : "NO_ACTION",
+                            ReasonCode = hasDbActivities ? "EXCEL_BLANK_DB_ACTIVITIES_PRESERVED" : "BLANK_EXCEL_AND_DB",
+                            ExcelValue = "", DbValue = dbActivitiesText, TargetValue = dbActivitiesText, Mutates = false
                         });
                         continue;
                     }
-                }
 
-                if (f == 42)
-                {
-                    var existingPlans = existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>();
-                    if (string.IsNullOrWhiteSpace(rawExcel))
+                    var unresolvedActivities = new List<string>();
+                    bool ambiguousParent = false;
+                    foreach (var item in excelActivities)
                     {
-                        plan.NoActionCount++;
+                        var parents = allActivities
+                            .Where(a => NormalizeControlText(a.Descripcion).Equals(item, StringComparison.OrdinalIgnoreCase))
+                            .Select(a => a.PlanId).Distinct().ToList();
+                        if (parents.Count > 1) ambiguousParent = true;
+                        if (parents.Count != 1) unresolvedActivities.Add(item);
+                    }
+                    if (unresolvedActivities.Count == 0)
+                    {
+                        plan.MatchCount++; plan.NoActionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 42,
-                            FieldLabel = label,
-                            Action = "NO_ACTION",
-                            ReasonCode = "BLANK_EXCEL",
-                            ExcelValue = "",
-                            DbValue = "",
-                            TargetValue = "",
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 42, FieldLabel = label,
+                            Action = "NO_ACTION", ReasonCode = "ALL_ACTIVITIES_MATCH_WITH_UNIQUE_PLAN_PARENT",
+                            ExcelValue = rawExcel, DbValue = dbActivitiesText, TargetValue = dbActivitiesText, Mutates = false
+                        });
+                        continue;
+                    }
+
+                    if (ambiguousParent || (existingPlans.Count > 1 && allActivities.Count == 0))
+                    {
+                        plan.RejectAmbiguousCount++;
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 42, FieldLabel = label,
+                            Action = "REJECT_AMBIGUOUS", ReasonCode = "ACTIVITY_PARENT_NOT_UNIQUELY_RESOLVED",
+                            ExcelValue = rawExcel, DbValue = dbActivitiesText, TargetValue = dbActivitiesText, Mutates = false
+                        });
+                        continue;
+                    }
+
+                    string reason = existingPlans.Count == 0 ? "BLOCKED_NO_PARENT" : "BLOCKED_REQUIRED_INPUT";
+                    string missing = existingPlans.Count == 0
+                        ? "ACT_PLAN_ID (no persisted parent plan)"
+                        : "ACT_RESPONSABLE, ACT_FECHA_INICIO, ACT_FECHA_FIN, ACT_ESTADO (required columns without source values/defaults)";
+                    foreach (var item in unresolvedActivities)
+                    {
+                        plan.BlockedItems.Add(new BlockedItem
+                        {
+                            RiskCode = code, FieldNumber = 42, FieldLabel = label, Entity = "RL_MR_ACTIVIDADES",
+                            SourceValue = item, RequiredMissingValue = missing, ReasonCode = reason,
+                            RecommendedResolution = existingPlans.Count == 0
+                                ? "Resolve the exact parent plan before creating the activity."
+                                : "Supply all NOT NULL activity values from an authoritative source; do not synthesize them."
+                        });
+                    }
+                    plan.AllPositions.Add(new ReconciliationPosition
+                    {
+                        PositionKey = positionKey, RiskCode = code, FieldNumber = 42, FieldLabel = label,
+                        Action = "BLOCKED_BY_PRECONDITION", ReasonCode = reason,
+                        ExcelValue = rawExcel, DbValue = dbActivitiesText, TargetValue = dbActivitiesText, Mutates = false
+                    });
+                    continue;
+                }
+                if (f == 45)
+                {
+                    var existingPlans = (existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>())
+                        .OrderBy(p => p.Id)
+                        .ToList();
+                    string dbResponsibles = ProjectPlanValues(existingPlans.Select(p => p.Responsables));
+                    if (string.IsNullOrWhiteSpace(rawExcel))
+                    {
+                        bool hasOperationalValue = existingPlans.Any(p => !string.IsNullOrWhiteSpace(p.Responsables));
+                        string action = hasOperationalValue ? "PRESERVE_PRODUCTION" : "NO_ACTION";
+                        if (hasOperationalValue) plan.PreserveProductionCount++; else plan.NoActionCount++;
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Action = action,
+                            ReasonCode = hasOperationalValue ? "EXCEL_BLANK_DB_VALUE_PRESERVED" : "BLANK_EXCEL_AND_DB",
+                            ExcelValue = "", DbValue = dbResponsibles, TargetValue = dbResponsibles, Mutates = false
                         });
                         continue;
                     }
@@ -2373,133 +2622,101 @@ public static class Program
                     {
                         plan.BlockedItems.Add(new BlockedItem
                         {
-                            RiskCode = code,
-                            FieldNumber = 42,
-                            FieldLabel = label,
-                            Entity = "RL_MR_ACTIVIDADES",
-                            SourceValue = rawExcel,
-                            RequiredMissingValue = "ACT_PLAN_ID (Parent plan missing in DB)",
+                            RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Entity = "RL_MR_PLANES", SourceValue = rawExcel,
+                            RequiredMissingValue = "PLA_RESPONSABLES (Parent plan missing in DB)",
                             ReasonCode = "BLOCKED_NO_PARENT",
-                            RecommendedResolution = "Resolve and create parent mitigation plan in RL_MR_PLANES before importing activity."
+                            RecommendedResolution = "Resolve and create the corresponding plan before reconciling its responsible value."
                         });
-
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 42,
-                            FieldLabel = label,
-                            Action = "BLOCKED_BY_PRECONDITION",
-                            ReasonCode = "BLOCKED_NO_PARENT",
-                            ExcelValue = rawExcel,
-                            DbValue = "",
-                            TargetValue = "",
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Action = "BLOCKED_BY_PRECONDITION", ReasonCode = "BLOCKED_NO_PARENT",
+                            ExcelValue = rawExcel, DbValue = "", TargetValue = "", Mutates = false
                         });
                         continue;
+                    }
+
+                    var excelResponsibles = ParseMultilineItems(rawExcel).Select(NormalizeControlText).ToList();
+                    if (excelResponsibles.Count != existingPlans.Count)
+                    {
+                        plan.RejectAmbiguousCount++;
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Action = "REJECT_AMBIGUOUS", ReasonCode = "PLAN_RESPONSIBLE_CARDINALITY_MISMATCH",
+                            ExcelValue = rawExcel, DbValue = dbResponsibles, TargetValue = dbResponsibles, Mutates = false
+                        });
+                        continue;
+                    }
+
+                    bool allEqual = existingPlans.Select((p, i) => string.Equals(
+                        NormalizeControlText(p.Responsables ?? ""), excelResponsibles[i], StringComparison.OrdinalIgnoreCase)).All(x => x);
+                    if (allEqual)
+                    {
+                        plan.MatchCount++; plan.NoActionCount++;
+                        plan.AllPositions.Add(new ReconciliationPosition
+                        {
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Action = "NO_ACTION", ReasonCode = "PLAN_RESPONSIBLES_MATCH_BY_PLAN_ORDER",
+                            ExcelValue = rawExcel, DbValue = dbResponsibles, TargetValue = dbResponsibles, Mutates = false
+                        });
                     }
                     else
                     {
-                        var allActs = existingPlans.SelectMany(p => existingActivitiesByPlan.TryGetValue(p.Id, out var acts) ? acts : new List<ActivityPreimage>()).ToList();
-                        var matchedAct = allActs.FirstOrDefault(a => NormalizeControlText(a.Descripcion).Equals(NormalizeControlText(rawExcel), StringComparison.OrdinalIgnoreCase));
-                        if (matchedAct != null)
-                        {
-                            plan.MatchCount++;
-                            plan.NoActionCount++;
-                            plan.AllPositions.Add(new ReconciliationPosition
-                            {
-                                PositionKey = positionKey,
-                                RiskCode = code,
-                                FieldNumber = 42,
-                                FieldLabel = label,
-                                Action = "NO_ACTION",
-                                ReasonCode = "EXISTING_ACTIVITY_MATCH",
-                                ExcelValue = rawExcel,
-                                DbValue = matchedAct.Descripcion,
-                                TargetValue = matchedAct.Descripcion,
-                                Mutates = false
-                            });
-                            continue;
-                        }
-                    }
-                }
-
-                if (f == 45)
-                {
-                    var existingPlans = existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>();
-                    if (string.IsNullOrWhiteSpace(rawExcel))
-                    {
-                        plan.NoActionCount++;
+                        plan.PreserveProductionCount++;
                         plan.AllPositions.Add(new ReconciliationPosition
                         {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 45,
-                            FieldLabel = label,
-                            Action = "NO_ACTION",
-                            ReasonCode = "BLANK_EXCEL",
-                            ExcelValue = "",
-                            DbValue = "",
-                            TargetValue = "",
-                            Mutates = false
+                            PositionKey = positionKey, RiskCode = code, FieldNumber = 45, FieldLabel = label,
+                            Action = "PRESERVE_PRODUCTION", ReasonCode = "PLAN_RESPONSIBLES_DIFFERENCE_REQUIRES_REVIEW",
+                            ExcelValue = rawExcel, DbValue = dbResponsibles, TargetValue = dbResponsibles, Mutates = false
                         });
-                        continue;
                     }
-
-                    if (existingPlans.Count == 0)
-                    {
-                        plan.BlockedItems.Add(new BlockedItem
-                        {
-                            RiskCode = code,
-                            FieldNumber = 45,
-                            FieldLabel = label,
-                            Entity = "RL_MR_PLANES",
-                            SourceValue = rawExcel,
-                            RequiredMissingValue = "PLA_RESPONSABLES (Parent plan missing in DB)",
-                            ReasonCode = "BLOCKED_NO_PARENT",
-                            RecommendedResolution = "Parent plan does not exist in DB to assign responsables."
-                        });
-
-                        plan.AllPositions.Add(new ReconciliationPosition
-                        {
-                            PositionKey = positionKey,
-                            RiskCode = code,
-                            FieldNumber = 45,
-                            FieldLabel = label,
-                            Action = "BLOCKED_BY_PRECONDITION",
-                            ReasonCode = "BLOCKED_NO_PARENT",
-                            ExcelValue = rawExcel,
-                            DbValue = "",
-                            TargetValue = "",
-                            Mutates = false
-                        });
-                        continue;
-                    }
+                    continue;
                 }
-
                 if (f is 44 or 46 or 47 or 48 or 49)
                 {
                     var existingPlans = existingPlansByEva.TryGetValue(evaId, out var epList) ? epList : new List<PlanPreimage>();
                     string dbVal = "";
                     if (existingPlans.Count > 0)
                     {
-                        var p = existingPlans.OrderBy(x => x.Id).First();
-                        if (f == 44) dbVal = p.Avance.ToString("0.##", CultureInfo.InvariantCulture);
-                        else if (f == 46) dbVal = p.FechaInicio != DateTime.MinValue ? p.FechaInicio.ToString("yyyy-MM-dd") : "";
-                        else if (f == 47) dbVal = p.FechaFin != DateTime.MinValue ? p.FechaFin.ToString("yyyy-MM-dd") : "";
-                        else if (f == 48) dbVal = p.Recursos;
-                        else if (f == 49) dbVal = p.Presupuesto.ToString("0.##", CultureInfo.InvariantCulture);
+                        if (f == 44) dbVal = ProjectPlanValues(existingPlans.OrderBy(x => x.Id).Select(p => p.MonitoreoSeguimiento));
+                        else if (f == 46) dbVal = ProjectPlanValues(existingPlans.OrderBy(x => x.Id).Select(p => p.FechaInicio != DateTime.MinValue ? p.FechaInicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ""));
+                        else if (f == 47) dbVal = ProjectPlanValues(existingPlans.OrderBy(x => x.Id).Select(p => p.FechaFin != DateTime.MinValue ? p.FechaFin.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : ""));
+                        else if (f == 48) dbVal = ProjectPlanValues(existingPlans.OrderBy(x => x.Id).Select(p => p.Recursos));
+                        else if (f == 49) dbVal = ProjectPlanValues(existingPlans.OrderBy(x => x.Id).Select(p => p.Presupuesto.ToString("0.##", CultureInfo.InvariantCulture)));
                     }
 
-                    plan.NoActionCount++;
+                    bool excelBlank = string.IsNullOrWhiteSpace(rawExcel);
+                    bool databaseHasValue = !string.IsNullOrWhiteSpace(dbVal);
+                    bool semanticallyEqual = !excelBlank && string.Equals(NormalizeMultiline(rawExcel), NormalizeMultiline(dbVal), StringComparison.OrdinalIgnoreCase);
+                    bool missingTargetValue = !excelBlank && !databaseHasValue;
+                    string action = databaseHasValue && (excelBlank || !semanticallyEqual)
+                        ? "PRESERVE_PRODUCTION"
+                        : missingTargetValue ? "BLOCKED_BY_PRECONDITION" : "NO_ACTION";
+                    string reason = excelBlank
+                        ? databaseHasValue ? "EXCEL_BLANK_DB_VALUE_PRESERVED" : "BLANK_EXCEL_AND_DB"
+                        : semanticallyEqual ? "SEMANTIC_MATCH" : databaseHasValue ? "DB_PLAN_VALUE_REQUIRES_REVIEW" : "BASELINE_VALUE_REQUIRES_PERSISTENCE_MAPPING";
+                    if (action == "PRESERVE_PRODUCTION") plan.PreserveProductionCount++;
+                    else if (action == "NO_ACTION") plan.NoActionCount++;
+                    if (missingTargetValue)
+                    {
+                        plan.BlockedItems.Add(new BlockedItem
+                        {
+                            RiskCode = code, FieldNumber = f, FieldLabel = label, Entity = "RL_MR_PLANES",
+                            SourceValue = rawExcel, RequiredMissingValue = "Verified one-to-one plan mapping and guarded UPDATE implementation",
+                            ReasonCode = reason,
+                            RecommendedResolution = "Do not mark a nonempty workbook value as NO_ACTION while the persisted target is blank."
+                        });
+                    }
                     plan.AllPositions.Add(new ReconciliationPosition
                     {
                         PositionKey = positionKey,
                         RiskCode = code,
                         FieldNumber = f,
                         FieldLabel = label,
-                        Action = "NO_ACTION",
-                        ReasonCode = string.IsNullOrWhiteSpace(rawExcel) ? "BLANK_EXCEL" : "EXACT_MATCH",
+                        Action = action,
+                        ReasonCode = reason,
                         ExcelValue = rawExcel,
                         DbValue = dbVal,
                         TargetValue = dbVal,
@@ -2680,12 +2897,14 @@ public static class Program
                         BeforeValue = beforeJson,
                         AfterValue = newJson,
                         RollbackAction = "UPDATE",
-                        RollbackSql = "UPDATE RL_MR_EVALUACIONES_RIESGO SET EVA_DATOS_JSON = :beforeJson, EVA_VERSION_ROW = :beforeRow WHERE EVA_ID = :id",
+                        RollbackSql = "UPDATE RL_MR_EVALUACIONES_RIESGO SET EVA_DATOS_JSON = :beforeJson, EVA_VERSION_ROW = :beforeRow WHERE EVA_ID = :id AND EVA_VERSION_ROW = :afterRow AND EVA_DATOS_JSON = :afterJson",
                         RollbackParameters = new Dictionary<string, object?>
                         {
                             ["id"] = eva.Id,
                             ["beforeJson"] = beforeJson,
-                            ["beforeRow"] = expectedVersionRow
+                            ["beforeRow"] = expectedVersionRow,
+                            ["afterRow"] = expectedVersionRow + 1,
+                            ["afterJson"] = newJson
                         }
                     }
                 };
@@ -2697,9 +2916,24 @@ public static class Program
 
         // 12. Construir Detectores Reales de Duplicados y Null Overwrites
         BuildGuardEntries(snapshot, plan);
+        var forbiddenSyntheticValues = new HashSet<string>(new[] { "PENDIENTE", "MANUAL", "ACTIVO" }, StringComparer.OrdinalIgnoreCase);
+        plan.SyntheticDefaultsCount = plan.Mutations.Sum(m =>
+            Regex.Matches(m.ApplySql, @"\b(?:SYSDATE|SYSTIMESTAMP)\b", RegexOptions.IgnoreCase).Count +
+            Regex.Matches(m.ApplySql, @"'[^']+'", RegexOptions.IgnoreCase).Count +
+            m.ApplyParameters.Values.Count(v => v is string value && forbiddenSyntheticValues.Contains(value) &&
+                !string.Equals(value, m.ExcelRaw, StringComparison.Ordinal)));
+
+        int expectedPositionCount = excelRows.Count * 82;
+        int uniquePositionCount = plan.AllPositions.Select(p => p.PositionKey).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        int unclassifiedCount = plan.AllPositions.Count(p => string.IsNullOrWhiteSpace(p.Action) || string.IsNullOrWhiteSpace(p.PositionKey));
+        if (plan.AllPositions.Count != expectedPositionCount || uniquePositionCount != expectedPositionCount || unclassifiedCount > 0)
+            throw new InvalidOperationException($"AUDIT_UNIVERSE_INVALID: expected={expectedPositionCount}; actual={plan.AllPositions.Count}; unique={uniquePositionCount}; unclassified={unclassifiedCount}.");
 
         // 13. Construir Deltas Históricos 398 y 87
-        BuildHistoricalDeltas(plan, snapshot, excelRows);
+        if (historicalDeltaSource != null)
+        {
+            BuildHistoricalDeltas(plan, historicalDeltaSource);
+        }
 
         // 14. Hashes Finales del Plan (Canónico y Archivo)
         plan.PlanCanonicalSha256 = ComputeComprehensivePlanSha256(plan, workbookSha, preimageManifestSha);
@@ -2708,169 +2942,191 @@ public static class Program
         return plan;
     }
 
-    private static void BuildHistoricalDeltas(PlanResult plan, DatabaseSnapshot snapshot, List<JsonElement> excelRows)
+    public static HistoricalDeltaSource LoadCertifiedHistoricalDeltaSource(string tempRoot)
     {
-        // Delta 398: 382 ALREADY_PRESENT + 16 BLOCKED_REQUIRED_INPUT = 398
-        // 16 BLOCKED: 14 planes F40, 1 actividad F42, 1 responsable F45
-        foreach (var blk in plan.BlockedItems)
+        foreach (var directory in Directory.EnumerateDirectories(tempRoot, "RIESGO_LAVADO_BLOCK2_AUDIT_*", SearchOption.TopDirectoryOnly))
         {
-            plan.Historical398Deltas.Add(new Delta398Record
+            string importsPath = Path.Combine(directory, "baseline_import_candidates.csv");
+            string conflictsPath = Path.Combine(directory, "data_conflicts.csv");
+            if (!File.Exists(importsPath) || !File.Exists(conflictsPath)) continue;
+
+            string importsSha = ComputeFileSha256(importsPath);
+            string conflictsSha = ComputeFileSha256(conflictsPath);
+            if (!importsSha.Equals(ExpectedBlock2BaselineImportsSha256, StringComparison.OrdinalIgnoreCase) ||
+                !conflictsSha.Equals(ExpectedBlock2DataConflictsSha256, StringComparison.OrdinalIgnoreCase)) continue;
+
+            var imports = ReadCsvRecords(importsPath);
+            var conflicts = ReadCsvRecords(conflictsPath);
+            ValidateHistoricalDeltaSet(imports.Select(r => $"{r.Get("RISK_CODE")}|{ParseFieldNumber(r.Get("FIELD_NUMBER"))}"), 398, "BLOCK2_398_SOURCE");
+            ValidateHistoricalDeltaSet(conflicts.Select(r => $"{r.Get("RISK_CODE")}|{ParseFieldNumber(r.Get("FIELD_NUMBER"))}"), 87, "BLOCK2_87_SOURCE");
+            return new HistoricalDeltaSource
             {
-                RiskCode = blk.RiskCode,
-                FieldNumber = blk.FieldNumber,
-                PreviousClassification = "MISSING_IN_DB",
-                CurrentDbRaw = "",
-                CurrentExcelRaw = blk.SourceValue,
-                CurrentClassification = "BLOCKED_REQUIRED_INPUT",
-                Reason = blk.ReasonCode,
-                MutationRequired = false
-            });
+                BaselineImports = imports,
+                DataConflicts = conflicts,
+                BaselineImportsSha256 = importsSha,
+                DataConflictsSha256 = conflictsSha,
+                SourceDirectory = directory
+            };
         }
 
-        // 382 ALREADY_PRESENT:
-        // Controles existentes (52)
-        foreach (var c in snapshot.Controls)
-        {
-            int fn = c.Tipo == "PREVENTIVO" ? 20 : c.Tipo == "DETECTIVO" ? 24 : 28;
-            plan.Historical398Deltas.Add(new Delta398Record
-            {
-                RiskCode = c.RiskCode,
-                FieldNumber = fn,
-                PreviousClassification = "MISSING_IN_DB",
-                CurrentDbRaw = c.Descripcion,
-                CurrentExcelRaw = c.Descripcion,
-                CurrentClassification = "ALREADY_PRESENT",
-                Reason = "CONTROL_ALREADY_IN_DB",
-                MutationRequired = false
-            });
-        }
+        throw new FileNotFoundException("No se encontraron los CSV forenses originales de Bloque 2 con hashes SHA-256 certificados; no se generarán keysets sintéticos.");
+    }
 
-        // JSON properties ya presentes en DB (4 por riesgo = 236)
-        string[] jsonProps = { "tipo_riesgo", "procedimiento", "regimen_afectado", "transversalidad" };
-        int[] jsonFns = { 5, 6, 15, 16 };
-        foreach (var eva in snapshot.Evaluations)
+    private static List<HistoricalDeltaRow> ReadCsvRecords(string path)
+    {
+        string text = File.ReadAllText(path, Encoding.UTF8);
+        var records = new List<List<string>>();
+        var record = new List<string>();
+        var field = new StringBuilder();
+        bool quoted = false;
+        for (int i = 0; i < text.Length; i++)
         {
-            JsonObject jObj = new();
-            try { jObj = JsonNode.Parse(eva.DatosJson) as JsonObject ?? new JsonObject(); } catch { }
-            for (int i = 0; i < jsonProps.Length; i++)
+            char ch = text[i];
+            if (quoted)
             {
-                string val = jObj.TryGetPropertyValue(jsonProps[i], out var v) ? v?.ToString() ?? "" : "";
-                plan.Historical398Deltas.Add(new Delta398Record
-                {
-                    RiskCode = eva.RiskCode,
-                    FieldNumber = jsonFns[i],
-                    PreviousClassification = "MISSING_IN_DB",
-                    CurrentDbRaw = val,
-                    CurrentExcelRaw = val,
-                    CurrentClassification = "ALREADY_PRESENT",
-                    Reason = "JSON_PROPERTY_ALREADY_IN_DB",
-                    MutationRequired = false
-                });
+                if (ch == '"' && i + 1 < text.Length && text[i + 1] == '"') { field.Append('"'); i++; }
+                else if (ch == '"') quoted = false;
+                else field.Append(ch);
+                continue;
             }
+            if (ch == '"' && field.Length == 0) { quoted = true; continue; }
+            if (ch == ',') { record.Add(field.ToString()); field.Clear(); continue; }
+            if (ch is '\r' or '\n')
+            {
+                if (ch == '\r' && i + 1 < text.Length && text[i + 1] == '\n') i++;
+                record.Add(field.ToString()); field.Clear();
+                if (record.Any(v => v.Length > 0)) records.Add(record);
+                record = new List<string>();
+                continue;
+            }
+            field.Append(ch);
         }
+        if (quoted) throw new InvalidDataException($"CSV inválido: campo sin cierre de comillas en {Path.GetFileName(path)}.");
+        if (field.Length > 0 || record.Count > 0) { record.Add(field.ToString()); records.Add(record); }
+        if (records.Count < 2) throw new InvalidDataException($"CSV sin filas de datos: {Path.GetFileName(path)}.");
 
-        // Señales de alerta (94 ya presentes en DB para completar exactamente 382)
-        int alertsNeeded = 382 - 52 - (59 * 4); // 382 - 288 = 94
-        foreach (var al in snapshot.Alerts.Take(alertsNeeded))
+        var headers = records[0].Select(h => h.Trim().TrimStart('\uFEFF')).ToList();
+        return records.Skip(1).Select(values =>
         {
+            if (values.Count != headers.Count) throw new InvalidDataException($"CSV con cardinalidad de columnas inválida en {Path.GetFileName(path)}.");
+            return new HistoricalDeltaRow
+            {
+                Values = headers.Select((header, index) => new { header, value = values[index] })
+                    .ToDictionary(x => x.header, x => x.value, StringComparer.OrdinalIgnoreCase)
+            };
+        }).ToList();
+    }
+
+    private static void BuildHistoricalDeltas(PlanResult plan, HistoricalDeltaSource source)
+    {
+        var positions = plan.AllPositions
+            .GroupBy(p => $"{p.RiskCode}|{p.FieldNumber}", StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.Count() == 1 ? g.Single() : null, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var row in source.BaselineImports)
+        {
+            int field = ParseFieldNumber(row.Get("FIELD_NUMBER"));
+            var key = $"{row.Get("RISK_CODE").Trim()}|{field}";
+            positions.TryGetValue(key, out var current);
+            if (current == null) throw new InvalidOperationException($"BLOCK2_398_POSITION_NOT_UNIQUELY_MAPPED: {key}");
             plan.Historical398Deltas.Add(new Delta398Record
             {
-                RiskCode = al.RiskCode,
-                FieldNumber = 70,
+                RiskCode = row.Get("RISK_CODE"),
+                FieldNumber = field,
+                FieldLabel = row.Get("FIELD_LABEL"),
                 PreviousClassification = "MISSING_IN_DB",
-                CurrentDbRaw = al.Indicador,
-                CurrentExcelRaw = al.Indicador,
-                CurrentClassification = "ALREADY_PRESENT",
-                Reason = "OPERATIONAL_ALERT_ALREADY_IN_DB",
-                MutationRequired = false
+                OriginalExcelRaw = row.Get("EXCEL_VALUE"),
+                OriginalDbRaw = row.Get("CURRENT_DB_VALUE"),
+                OriginalReasonCode = row.Get("TARGET_POLICY"),
+                OriginalRecommendedAction = row.Get("NEXT_ACTION"),
+                CurrentDbRaw = current?.DbValue ?? "",
+                CurrentExcelRaw = current?.ExcelValue ?? "",
+                CurrentClassification = ClassifyHistoricalImport(current),
+                Reason = current?.ReasonCode ?? "POSITION_NOT_FOUND_IN_CURRENT_UNIVERSE",
+                RecommendedAction = current?.Action ?? "SOURCE_REVIEW_REQUIRED",
+                Evidence = current == null ? "NO_UNIQUE_CURRENT_POSITION" : $"POSITION_KEY={current.PositionKey};ACTION={current.Action};REASON={current.ReasonCode}",
+                MutationRequired = current?.Mutates ?? false
             });
         }
 
-        // Delta 87: 48 F04 + 1 F14 + 2 F08 + 36 F09 = 87 (UNEXPLAINED = 0)
-        // 48 F04 PRESERVE_OPERATIONAL
-        int f04Count = 0;
-        foreach (var r in excelRows)
+        foreach (var row in source.DataConflicts)
         {
-            string code = r.GetProperty("riskCode").GetString()!.Trim();
-            string rawF04 = GetCellTextValue(r, 4);
-            if (string.IsNullOrWhiteSpace(rawF04) && f04Count < 48)
-            {
-                plan.Historical87Deltas.Add(new Delta87Record
-                {
-                    RiskCode = code,
-                    FieldNumber = 4,
-                    PreviousClassification = "DIFFERENT",
-                    CurrentDbRaw = "OPERATIONAL_AREA_CONSOLIDADA",
-                    CurrentExcelRaw = "",
-                    CurrentClassification = "PRESERVE_OPERATIONAL",
-                    Reason = "EXCEL_BLANK_DB_HAS_OPERATIONAL_AREA",
-                    MutationRequired = false
-                });
-                f04Count++;
-            }
-        }
-
-        // 1 F14 PRESERVE_OPERATIONAL
-        plan.Historical87Deltas.Add(new Delta87Record
-        {
-            RiskCode = "ROTR-COMPRAS-18",
-            FieldNumber = 14,
-            PreviousClassification = "DIFFERENT",
-            CurrentDbRaw = "OPERATIONAL_VAL",
-            CurrentExcelRaw = "",
-            CurrentClassification = "PRESERVE_OPERATIONAL",
-            Reason = "EXCEL_BLANK_DB_HAS_OPERATIONAL_VALUE",
-            MutationRequired = false
-        });
-
-        // 2 F08 SEMANTIC_EQUAL
-        plan.Historical87Deltas.Add(new Delta87Record
-        {
-            RiskCode = "ROTR-AFIL-1",
-            FieldNumber = 8,
-            PreviousClassification = "DIFFERENT",
-            CurrentDbRaw = "Riesgo de Afiliación 1",
-            CurrentExcelRaw = "Riesgo de Afiliacion 1",
-            CurrentClassification = "SEMANTIC_EQUAL",
-            Reason = "ACCENT_OR_PUNCTUATION_INSENSITIVE_MATCH",
-            MutationRequired = false
-        });
-        plan.Historical87Deltas.Add(new Delta87Record
-        {
-            RiskCode = "ROTR-AFIL-2",
-            FieldNumber = 8,
-            PreviousClassification = "DIFFERENT",
-            CurrentDbRaw = "Riesgo de Afiliación 2",
-            CurrentExcelRaw = "Riesgo de Afiliacion 2",
-            CurrentClassification = "SEMANTIC_EQUAL",
-            Reason = "ACCENT_OR_PUNCTUATION_INSENSITIVE_MATCH",
-            MutationRequired = false
-        });
-
-        // 36 F09 SEMANTIC_EQUAL
-        foreach (var r in excelRows.Take(36))
-        {
-            string code = r.GetProperty("riskCode").GetString()!.Trim();
-            string desc = GetCellTextValue(r, 9);
+            int field = ParseFieldNumber(row.Get("FIELD_NUMBER"));
+            var key = $"{row.Get("RISK_CODE").Trim()}|{field}";
+            positions.TryGetValue(key, out var current);
+            if (current == null) throw new InvalidOperationException($"BLOCK2_87_POSITION_NOT_UNIQUELY_MAPPED: {key}");
             plan.Historical87Deltas.Add(new Delta87Record
             {
-                RiskCode = code,
-                FieldNumber = 9,
+                RiskCode = row.Get("RISK_CODE"),
+                FieldNumber = field,
+                FieldLabel = row.Get("FIELD_LABEL"),
                 PreviousClassification = "DIFFERENT",
-                CurrentDbRaw = desc,
-                CurrentExcelRaw = desc,
-                CurrentClassification = "SEMANTIC_EQUAL",
-                Reason = "TRIM_OR_CASING_MATCH",
-                MutationRequired = false
+                OriginalExcelRaw = row.Get("EXCEL_VALUE"),
+                OriginalDbRaw = row.Get("DB_VALUE"),
+                OriginalReasonCode = row.Get("REASON_CODE"),
+                OriginalRecommendedAction = row.Get("RECOMMENDED_ACTION"),
+                CurrentDbRaw = current?.DbValue ?? "",
+                CurrentExcelRaw = current?.ExcelValue ?? "",
+                CurrentClassification = ClassifyHistoricalConflict(current),
+                Reason = current?.ReasonCode ?? "POSITION_NOT_FOUND_IN_CURRENT_UNIVERSE",
+                RecommendedAction = current?.Action ?? "SOURCE_REVIEW_REQUIRED",
+                Evidence = current == null ? "NO_UNIQUE_CURRENT_POSITION" : $"POSITION_KEY={current.PositionKey};ACTION={current.Action};REASON={current.ReasonCode}",
+                MutationRequired = current?.Mutates ?? false
             });
+        }
+
+        ValidateHistoricalDeltaSet(plan.Historical398Deltas.Select(d => $"{d.RiskCode}|{d.FieldNumber}"), 398, "BLOCK2_398");
+        ValidateHistoricalDeltaSet(plan.Historical87Deltas.Select(d => $"{d.RiskCode}|{d.FieldNumber}"), 87, "BLOCK2_87");
+    }
+
+    private static int ParseFieldNumber(string value) =>
+        int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int fieldNumber) ? fieldNumber : 0;
+
+    private static void ValidateHistoricalDeltaSet(IEnumerable<string> keys, int expected, string name)
+    {
+        var values = keys.ToList();
+        int unique = values.Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        if (values.Count != expected || unique != expected)
+        {
+            throw new InvalidOperationException($"{name}_KEYSET_INVALID: rows={values.Count}; unique={unique}; expected={expected}.");
         }
     }
 
+    private static string ClassifyHistoricalImport(ReconciliationPosition? position)
+    {
+        if (position == null) return "OTHER_EXPLAINED";
+        return position.Action switch
+        {
+            "NO_ACTION" when !string.IsNullOrWhiteSpace(position.DbValue) => "ALREADY_PRESENT",
+            "NO_ACTION" => "OTHER_EXPLAINED",
+            "PRESERVE_PRODUCTION" => "PRESERVE_PRODUCTION",
+            "UPDATE_BASELINE" or "INSERT_BASELINE" => "STILL_MISSING_EXECUTABLE",
+            "BLOCKED_BY_PRECONDITION" => "BLOCKED_REQUIRED_INPUT",
+            "NOT_APPLICABLE" => "NOT_APPLICABLE",
+            _ => "OTHER_EXPLAINED"
+        };
+    }
+
+    private static string ClassifyHistoricalConflict(ReconciliationPosition? position)
+    {
+        if (position == null) return "OTHER_EXPLAINED";
+        return position.Action switch
+        {
+            "NO_ACTION" when position.ReasonCode.Contains("SEMANTIC", StringComparison.OrdinalIgnoreCase) || position.ReasonCode.Contains("MATCH", StringComparison.OrdinalIgnoreCase) => "SEMANTIC_EQUAL",
+            "NO_ACTION" => "OTHER_EXPLAINED",
+            "PRESERVE_PRODUCTION" => "PRESERVE_OPERATIONAL",
+            "UPDATE_BASELINE" or "INSERT_BASELINE" => "EXCEL_WINS",
+            "BLOCKED_BY_PRECONDITION" => "BLOCKED",
+            "NOT_APPLICABLE" => "NOT_APPLICABLE",
+            _ => "OTHER_EXPLAINED"
+        };
+    }
     private static void BuildGuardEntries(DatabaseSnapshot snapshot, PlanResult plan)
     {
         var risksByCode = snapshot.Risks.GroupBy(r => r.Code).ToList();
         foreach (var grp in risksByCode)
         {
+            plan.PreexistingDuplicates += Math.Max(0, grp.Count() - 1);
             plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
             {
                 EntityType = "RL_MR_RIESGOS",
@@ -2885,6 +3141,7 @@ public static class Program
         var controlsByEvaType = snapshot.Controls.GroupBy(c => $"{c.EvaluationId}_{c.Tipo}_{NormalizeControlText(c.Descripcion)}").ToList();
         foreach (var grp in controlsByEvaType)
         {
+            plan.PreexistingDuplicates += Math.Max(0, grp.Count() - 1);
             plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
             {
                 EntityType = "RL_MR_CONTROLES_RIESGO",
@@ -2893,6 +3150,42 @@ public static class Program
                 PostApplyExpectedCount = grp.Count(),
                 DuplicateCount = grp.Count() > 1 ? grp.Count() - 1 : 0,
                 Status = grp.Count() == 1 ? "PASS" : "DUPLICATE_FOUND"
+            });
+        }
+
+        foreach (var grp in snapshot.Plans.GroupBy(p => $"{p.EvaluationId}_{NormalizeControlText(p.Descripcion)}"))
+        {
+            int duplicates = Math.Max(0, grp.Count() - 1);
+            plan.PreexistingDuplicates += duplicates;
+            plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
+            {
+                EntityType = "RL_MR_PLANES", EntityKey = grp.Key,
+                PreexistingCount = grp.Count(), PostApplyExpectedCount = grp.Count(), DuplicateCount = duplicates,
+                Status = duplicates == 0 ? "PASS" : "DUPLICATE_FOUND"
+            });
+        }
+
+        foreach (var grp in snapshot.Activities.GroupBy(a => $"{a.PlanId}_{NormalizeControlText(a.Descripcion)}"))
+        {
+            int duplicates = Math.Max(0, grp.Count() - 1);
+            plan.PreexistingDuplicates += duplicates;
+            plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
+            {
+                EntityType = "RL_MR_ACTIVIDADES", EntityKey = grp.Key,
+                PreexistingCount = grp.Count(), PostApplyExpectedCount = grp.Count(), DuplicateCount = duplicates,
+                Status = duplicates == 0 ? "PASS" : "DUPLICATE_FOUND"
+            });
+        }
+
+        foreach (var grp in snapshot.Alerts.GroupBy(a => $"{a.EvaluationId}_{NormalizeControlText(a.Codigo)}_{NormalizeControlText(a.Indicador)}"))
+        {
+            int duplicates = Math.Max(0, grp.Count() - 1);
+            plan.PreexistingDuplicates += duplicates;
+            plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
+            {
+                EntityType = "RL_MR_SENALES_ALERTA", EntityKey = grp.Key,
+                PreexistingCount = grp.Count(), PostApplyExpectedCount = grp.Count(), DuplicateCount = duplicates,
+                Status = duplicates == 0 ? "PASS" : "DUPLICATE_FOUND"
             });
         }
 
@@ -2915,6 +3208,36 @@ public static class Program
                 PostApplyExpectedCount = grp.Count(),
                 DuplicateCount = grp.Count() > 1 ? grp.Count() - 1 : 0,
                 Status = grp.Count() == 1 ? "PASS" : "FAIL"
+            });
+        }
+
+        var insertedPlans = plan.Mutations.Where(m => m.TargetTable == "RL_MR_PLANES" && m.Action == "INSERT_BASELINE")
+            .GroupBy(m => $"{m.RiskCode}_{NormalizeControlText(m.TargetCanonical)}");
+        foreach (var grp in insertedPlans)
+        {
+            int expectedCount = grp.Count();
+            int duplicates = Math.Max(0, expectedCount - 1);
+            plan.NewDuplicatesExpected += duplicates;
+            plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
+            {
+                EntityType = "NEW_PLANNED_PLAN", EntityKey = grp.Key, PreexistingCount = 0,
+                PostApplyExpectedCount = expectedCount, DuplicateCount = duplicates,
+                Status = duplicates == 0 ? "PASS" : "FAIL"
+            });
+        }
+
+        var insertedActivities = plan.Mutations.Where(m => m.TargetTable == "RL_MR_ACTIVIDADES" && m.Action == "INSERT_BASELINE")
+            .GroupBy(m => $"{m.RecordKey}_{NormalizeControlText(m.TargetCanonical)}");
+        foreach (var grp in insertedActivities)
+        {
+            int expectedCount = grp.Count();
+            int duplicates = Math.Max(0, expectedCount - 1);
+            plan.NewDuplicatesExpected += duplicates;
+            plan.DuplicateGuardEntries.Add(new DuplicateGuardEntry
+            {
+                EntityType = "NEW_PLANNED_ACTIVITY", EntityKey = grp.Key, PreexistingCount = 0,
+                PostApplyExpectedCount = expectedCount, DuplicateCount = duplicates,
+                Status = duplicates == 0 ? "PASS" : "FAIL"
             });
         }
 
@@ -2941,38 +3264,67 @@ public static class Program
         }
     }
 
+    private static string ResolveGitSha()
+    {
+        var psi = new ProcessStartInfo("git")
+        {
+            WorkingDirectory = Directory.GetCurrentDirectory(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.ArgumentList.Add("rev-parse");
+        psi.ArgumentList.Add("HEAD");
+        using var process = Process.Start(psi) ?? throw new InvalidOperationException("GIT_SHA_UNAVAILABLE: no fue posible iniciar git.");
+        string sha = process.StandardOutput.ReadToEnd().Trim();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        if (process.ExitCode != 0 || !Regex.IsMatch(sha, "^[0-9a-fA-F]{40}$"))
+        {
+            throw new InvalidOperationException($"GIT_SHA_UNAVAILABLE: {error.Trim()}");
+        }
+        return sha.ToLowerInvariant();
+    }
+
+    public static string ComputeCanonicalPlanSha256(PlanResult plan)
+        => ComputeComprehensivePlanSha256(plan, plan.WorkbookSha256, plan.PreimageManifestSha256);
+
     private static string ComputeComprehensivePlanSha256(PlanResult plan, string workbookSha, string preimageManifestSha)
     {
         var payload = new
         {
+            plan.RunId,
             engineVersion = EngineVersion,
+            gitSha = plan.GitSha,
             workbookSha = workbookSha,
             preimageManifestSha = preimageManifestSha,
-            blockedItemsCount = plan.BlockedItems.Count,
+            plan.Block2BaselineImportsSha256,
+            plan.Block2DataConflictsSha256,
+            blockedItems = plan.BlockedItems.OrderBy(x => x.RiskCode, StringComparer.Ordinal).ThenBy(x => x.FieldNumber).Select(x => new
+            {
+                x.RiskCode, x.FieldNumber, x.FieldLabel, x.Entity, x.SourceValue,
+                x.RequiredMissingValue, x.ReasonCode, x.RecommendedResolution
+            }),
+            positions = plan.AllPositions.OrderBy(x => x.RiskCode, StringComparer.Ordinal).ThenBy(x => x.FieldNumber).Select(x => new
+            {
+                x.PositionKey, x.RiskCode, x.FieldNumber, x.FieldLabel, x.Action,
+                x.ReasonCode, x.ExcelValue, x.DbValue, x.TargetValue, x.Mutates
+            }),
             mutations = plan.Mutations.Select(m => new
             {
-                m.MutationId,
-                m.RiskCode,
-                m.TargetTable,
-                m.RecordKey,
-                m.TargetColumnOrProperty,
-                m.Action,
-                m.DbBeforeCanonical,
-                m.TargetCanonical,
-                m.Precondition,
-                m.ApplySql
-            }),
+                m.MutationId, m.RiskCode, m.FieldNumber, m.FieldLabel, m.Entity,
+                m.TargetTable, m.RecordKey, m.TargetColumnOrProperty, m.Action,
+                m.Authority, m.DbBeforeRaw, m.DbBeforeCanonical, m.ExcelRaw,
+                m.ExcelCanonical, m.TargetCanonical, m.ReasonCode, m.Precondition,
+                m.PreconditionSql, m.ApplySql,
+                applyParameters = new SortedDictionary<string, object?>(m.ApplyParameters, StringComparer.Ordinal)
+            }).ToList(),
             rollback = plan.RollbackOperations.Select(r => new
             {
-                r.MutationId,
-                r.Table,
-                r.RecordPk,
-                r.Action,
-                r.RollbackAction,
-                r.BeforeValue,
-                r.AfterValue,
-                r.RollbackSql
-            })
+                r.MutationId, r.Entity, r.Table, r.RecordPk, r.Action,
+                r.RollbackAction, r.BeforeValue, r.AfterValue, r.RollbackSql,
+                rollbackParameters = new SortedDictionary<string, object?>(r.RollbackParameters, StringComparer.Ordinal)
+            }).ToList()
         };
 
         string json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = false });
@@ -2986,12 +3338,14 @@ public static class Program
 
     public static async Task<SimulationResult> SimulateApplyOnOracleXeAsync(
         string xeConnString,
+        DatabaseSnapshot productionSnapshot,
         PlanResult plan,
         List<JsonElement> excelRows,
         List<JsonElement> manifestFields,
         JsonDocument catalogDoc,
         string workbookSha,
-        string preimageManifestSha)
+        string preimageManifestSha,
+        HistoricalDeltaSource? historicalDeltaSource = null)
     {
         var result = new SimulationResult();
 
@@ -3003,65 +3357,20 @@ public static class Program
             try
             {
                 int applied = 0;
-                foreach (var mut in plan.Mutations)
+                foreach (var mutation in plan.Mutations)
                 {
-                    await using var cmd = new OracleCommand(mut.ApplySql, conn) { Transaction = tx, BindByName = true };
-                    foreach (var kvp in mut.ApplyParameters)
-                    {
-                        cmd.Parameters.Add(new OracleParameter(kvp.Key, kvp.Value ?? DBNull.Value));
-                    }
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected != 1 && !mut.Action.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new InvalidOperationException($"PRECONDITION_FAILED on {mut.MutationId}: ROWS_AFFECTED was {rowsAffected}, expected 1.");
-                    }
-                    applied++;
+                    applied += await ApplyMutationAsync(conn, tx, mutation);
                 }
-
                 result.FirstApplyPassed = true;
                 result.FirstApplyMutationsApplied = applied;
+                result.FirstFixtureMutations = applied;
 
-                // Postcheck completo dentro de la transacción
                 int verified = 0;
                 int mismatches = 0;
-
-                foreach (var mut in plan.Mutations)
+                foreach (var mutation in plan.Mutations)
                 {
-                    if (mut.TargetTable == "RL_MR_RIESGOS" && mut.TargetColumnOrProperty == "RIE_DESCRIPCION")
-                    {
-                        await using var cmdCheck = new OracleCommand("SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS WHERE RIE_ID = :id", conn) { Transaction = tx, BindByName = true };
-                        cmdCheck.Parameters.Add(new OracleParameter("id", mut.ApplyParameters["id"]));
-                        string actualDesc = Convert.ToString(await cmdCheck.ExecuteScalarAsync()) ?? "";
-                        if (string.Equals(actualDesc, mut.TargetCanonical, StringComparison.Ordinal)) verified++; else mismatches++;
-                    }
-                    else if (mut.TargetTable == "RL_MR_EVALUACIONES_RIESGO" && mut.TargetColumnOrProperty == "EVA_DATOS_JSON")
-                    {
-                        await using var cmdCheck = new OracleCommand("SELECT EVA_DATOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :id", conn) { Transaction = tx, BindByName = true };
-                        cmdCheck.Parameters.Add(new OracleParameter("id", mut.ApplyParameters["id"]));
-                        string actualJson = Convert.ToString(await cmdCheck.ExecuteScalarAsync()) ?? "";
-                        if (!string.IsNullOrWhiteSpace(actualJson)) verified++; else mismatches++;
-                    }
-                    else if (mut.TargetTable == "RL_MR_CONTROLES_RIESGO" && mut.Action == "INSERT_BASELINE")
-                    {
-                        await using var cmdCheck = new OracleCommand("SELECT COUNT(*) FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id", conn) { Transaction = tx, BindByName = true };
-                        cmdCheck.Parameters.Add(new OracleParameter("id", mut.ApplyParameters["id"]));
-                        int count = Convert.ToInt32(await cmdCheck.ExecuteScalarAsync());
-                        if (count == 1) verified++; else mismatches++;
-                    }
-                    else if (mut.TargetTable == "RL_MR_CONTROLES_RIESGO" && mut.TargetColumnOrProperty == "CON_AUTOMATIZACION")
-                    {
-                        await using var cmdCheck = new OracleCommand("SELECT CON_AUTOMATIZACION FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id", conn) { Transaction = tx, BindByName = true };
-                        cmdCheck.Parameters.Add(new OracleParameter("id", mut.ApplyParameters["id"]));
-                        string actualAuto = Convert.ToString(await cmdCheck.ExecuteScalarAsync()) ?? "";
-                        if (string.Equals(actualAuto, mut.TargetCanonical, StringComparison.Ordinal)) verified++; else mismatches++;
-                    }
-                    else
-                    {
-                        verified++;
-                    }
+                    if (await VerifyMutationAsync(conn, tx, mutation)) verified++; else mismatches++;
                 }
-
                 result.PostcheckOperationsVerified = verified;
                 result.PostcheckMismatches = mismatches;
                 result.PostcheckPassed = mismatches == 0 && verified == plan.Mutations.Count;
@@ -3086,8 +3395,22 @@ public static class Program
         try
         {
             var postXeSnapshot = await CaptureProductionPreimageAsync(xeConnString, "XE_POST_APPLY");
-            var secondPlan = BuildReconciliationPlan(postXeSnapshot, excelRows, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
+            var secondPlan = BuildReconciliationPlan(postXeSnapshot, excelRows, manifestFields, catalogDoc, workbookSha, preimageManifestSha, historicalDeltaSource);
             result.SecondApplyMutations = secondPlan.Mutations.Count;
+            result.NonZeroFirstPlanPassed = result.FirstFixtureMutations > 0 && result.SecondApplyMutations == 0;
+            var beforeByKey = plan.AllPositions.ToDictionary(p => p.PositionKey, StringComparer.OrdinalIgnoreCase);
+            var afterByKey = secondPlan.AllPositions.ToDictionary(p => p.PositionKey, StringComparer.OrdinalIgnoreCase);
+            var preservePositions = plan.AllPositions.Where(p => p.Action == "PRESERVE_PRODUCTION").ToList();
+            result.OperationalPreservationChecked = preservePositions.Count;
+            result.OperationalPreservationMismatches = preservePositions.Count(p =>
+                !afterByKey.TryGetValue(p.PositionKey, out var after) ||
+                !string.Equals(p.DbValue, after.DbValue, StringComparison.Ordinal));
+            result.OperationalPreservationPassed = result.OperationalPreservationMismatches == 0 &&
+                plan.AllPositions.Count == secondPlan.AllPositions.Count &&
+                ComputeEntityFingerprint(productionSnapshot.Plans) == ComputeEntityFingerprint(postXeSnapshot.Plans) &&
+                ComputeEntityFingerprint(productionSnapshot.Activities) == ComputeEntityFingerprint(postXeSnapshot.Activities) &&
+                ComputeEntityFingerprint(productionSnapshot.Controls) == ComputeEntityFingerprint(postXeSnapshot.Controls) &&
+                ComputeEntityFingerprint(productionSnapshot.Evidences) == ComputeEntityFingerprint(postXeSnapshot.Evidences);
         }
         catch (Exception ex)
         {
@@ -3095,109 +3418,496 @@ public static class Program
             return result;
         }
 
-        // FASE 3: Simulación de Concurrency Drift Abort en XE (Req. 25)
+        // FASE 2B: Non-zero idempotency fixture applied to and recaptured from XE.
+        string? fixtureCode = null;
+        string? fixtureBefore = null;
+        string? fixtureTarget = null;
+        long fixtureRiskId = 0;
+        bool fixtureCommitted = false;
         try
         {
-            await using var connDrift = new OracleConnection(xeConnString);
-            await connDrift.OpenAsync();
-            await using var txDrift = connDrift.BeginTransaction();
-            try
+            var xeBefore = await CaptureProductionPreimageAsync(xeConnString, "XE_IDEMPOTENCY_FIXTURE_BEFORE");
+            fixtureCode = xeBefore.Risks.Select(r => r.Code).FirstOrDefault() ?? throw new InvalidOperationException("IDEMPOTENCY_FIXTURE_RISK_MISSING");
+            var sourceRisk = xeBefore.Risks.Single(r => r.Code == fixtureCode);
+            fixtureRiskId = sourceRisk.Id;
+            fixtureBefore = sourceRisk.Description;
+            fixtureTarget = $"BLOCK4_IDEMPOTENCY_{Guid.NewGuid():N}";
+            var fixture = new DatabaseSnapshot { RunId = "XE_IDEMPOTENCY_FIXTURE", CapturedAtUtc = DateTime.UtcNow };
+            fixture.Risks.Add(sourceRisk);
+            fixture.Evaluations.Add(xeBefore.Evaluations.Single(e => e.RiskCode == fixtureCode && e.Active == 1));
+            fixture.Projections.Add(xeBefore.Projections.Single(p => p.RiskCode == fixtureCode && p.EvaluationId == fixture.Evaluations[0].Id));
+            var fixtureCells = Enumerable.Range(1, 82).Select(field => (object)new
             {
-                // Modificar concurrentemente un registro para romper su precondición
-                await using var cmdMod = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = 'DRIFT_CONCURRENT' WHERE RIE_ID = 101", connDrift) { Transaction = txDrift };
-                await cmdMod.ExecuteNonQueryAsync();
-
-                // Intentar aplicar mutación con precondición esperada antigua
-                await using var cmdTest = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = 'NUEVO' WHERE RIE_ID = 101 AND RIE_DESCRIPCION = 'VALOR_ESPERADO_VIEJO'", connDrift) { Transaction = txDrift };
-                int rows = await cmdTest.ExecuteNonQueryAsync();
-                if (rows == 0)
-                {
-                    result.ConcurrentDriftAbortPassed = true;
-                }
+                fieldNumber = field,
+                textValue = field switch { 1 => "1", 2 => fixtureCode, 9 => fixtureTarget, _ => "" },
+                formula = "",
+                cachedResult = (object?)null
+            }).ToList();
+            using var fixtureRowDoc = JsonDocument.Parse(JsonSerializer.Serialize(new { riskNo = 1, riskCode = fixtureCode, cells = fixtureCells }));
+            var fixturePlan = BuildReconciliationPlan(fixture, new List<JsonElement> { fixtureRowDoc.RootElement }, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
+            if (fixturePlan.Mutations.Count != 1 || fixturePlan.Mutations[0].TargetColumnOrProperty != "RIE_DESCRIPCION")
+                throw new InvalidOperationException($"IDEMPOTENCY_FIXTURE_PLAN_INVALID: mutationCount={fixturePlan.Mutations.Count}.");
+            result.FirstFixtureMutations = fixturePlan.Mutations.Count;
+            await using (var connection = new OracleConnection(xeConnString))
+            {
+                await connection.OpenAsync();
+                await using var transaction = connection.BeginTransaction();
+                int affected = await ApplyMutationAsync(connection, transaction, fixturePlan.Mutations[0]);
+                if (affected != 1 || !await VerifyMutationAsync(connection, transaction, fixturePlan.Mutations[0]))
+                    throw new InvalidOperationException("IDEMPOTENCY_FIXTURE_FIRST_APPLY_FAILED");
+                await transaction.CommitAsync();
+                fixtureCommitted = true;
             }
-            finally
-            {
-                await txDrift.RollbackAsync();
-            }
-        }
-        catch
-        {
-            result.ConcurrentDriftAbortPassed = false;
-        }
-
-        // FASE 4: Prueba real de Rollback con verificación de preimagen en XE (Req. 26, 27)
-        try
-        {
-            await using var connRb = new OracleConnection(xeConnString);
-            await connRb.OpenAsync();
-            var countsBefore = await QueryTableCountsAsync(connRb);
-
-            await using (var txRb = connRb.BeginTransaction())
-            {
-                // Aplicar una mutación de prueba en fixture
-                await using var cmdMut = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = 'FIXTURE_MUTATED' WHERE RIE_ID = 101", connRb) { Transaction = txRb };
-                await cmdMut.ExecuteNonQueryAsync();
-
-                // Aplicar rollback
-                await using var cmdRb = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION = :beforeVal WHERE RIE_ID = 101", connRb) { Transaction = txRb };
-                cmdRb.Parameters.Add(new OracleParameter("beforeVal", "Riesgo de Afiliación"));
-                await cmdRb.ExecuteNonQueryAsync();
-
-                await txRb.CommitAsync();
-            }
-
-            var countsAfter = await QueryTableCountsAsync(connRb);
-            bool countsMatch = countsBefore.All(kv => countsAfter.TryGetValue(kv.Key, out int c) && c == kv.Value);
-            result.RollbackPreimageMatch = countsMatch;
-            result.RollbackTestPassed = countsMatch;
-        }
-        catch (Exception ex)
-        {
-            result.RollbackTestPassed = false;
-            result.ErrorMessage = $"Rollback test error: {ex.Message}";
-        }
-
-        // FASE 5: Prueba de Idempotencia con Mutaciones Iniciales No Nulas en Fixture (Req. 28)
-        try
-        {
-            // Creamos un snapshot con 1 mutación real para verificar que second plan es 0 tras apply
-            var fixtureSnapshot = new DatabaseSnapshot
-            {
-                RunId = "FIXTURE_IDEM",
-                CapturedAtUtc = DateTime.UtcNow
-            };
-            fixtureSnapshot.Risks.Add(new RiskPreimage { Id = 999, Code = "IDEM-TEST", Name = "Idem Test", Description = "Desc Vieja", Active = 1 });
-            fixtureSnapshot.Evaluations.Add(new EvaluationPreimage { Id = 1999, RiskId = 999, RiskCode = "IDEM-TEST", VersionId = 3, Active = 1, DatosJson = "{}", CalculosJson = "{}" });
-            fixtureSnapshot.Projections.Add(new ProjectionPreimage { Id = 2999, EvaluationId = 1999, RiskCode = "IDEM-TEST", AreaPrincipal = "Área", DuenoRiesgo = "Dueño", Vri = 3, NivelInherente = "BAJO", Vrr = 1, NivelResidual = "BAJO", RespuestaRiesgo = "EVITAR", EstadoEvaluacion = "APROBADA" });
-
-            var fixtureRow = JsonDocument.Parse("{\"riskNo\":1,\"riskCode\":\"IDEM-TEST\",\"cells\":[{\"fieldNumber\":9,\"textValue\":\"Desc Nueva\"}]}").RootElement;
-            var planFixture1 = BuildReconciliationPlan(fixtureSnapshot, new List<JsonElement> { fixtureRow }, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
-
-            result.FirstFixtureMutations = planFixture1.Mutations.Count;
-
-            // Simular apply en memoria actualizando el snapshot
-            fixtureSnapshot.Risks[0].Description = "Desc Nueva";
-            var planFixture2 = BuildReconciliationPlan(fixtureSnapshot, new List<JsonElement> { fixtureRow }, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
-
-            result.SecondFixtureMutations = planFixture2.Mutations.Count;
+            var xeAfter = await CaptureProductionPreimageAsync(xeConnString, "XE_IDEMPOTENCY_FIXTURE_AFTER");
+            var fixtureAfter = new DatabaseSnapshot { RunId = "XE_IDEMPOTENCY_FIXTURE_AFTER", CapturedAtUtc = DateTime.UtcNow };
+            fixtureAfter.Risks.Add(xeAfter.Risks.Single(r => r.Code == fixtureCode));
+            fixtureAfter.Evaluations.Add(xeAfter.Evaluations.Single(e => e.RiskCode == fixtureCode && e.Active == 1));
+            fixtureAfter.Projections.Add(xeAfter.Projections.Single(p => p.RiskCode == fixtureCode && p.EvaluationId == fixtureAfter.Evaluations[0].Id));
+            var fixturePlanAfter = BuildReconciliationPlan(fixtureAfter, new List<JsonElement> { fixtureRowDoc.RootElement }, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
+            result.SecondFixtureMutations = fixturePlanAfter.Mutations.Count;
             result.NonZeroFirstPlanPassed = result.FirstFixtureMutations > 0 && result.SecondFixtureMutations == 0;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"DEBUG_NON_ZERO_FIXTURE_EXCEPTION: {ex.GetType().Name}: {ex.Message}");
             result.NonZeroFirstPlanPassed = false;
+            result.ErrorMessage = $"XE non-zero idempotency fixture failed: {ex.Message}";
+        }
+        finally
+        {
+            if (fixtureCommitted && fixtureRiskId > 0 && fixtureBefore != null && fixtureTarget != null)
+            {
+                await using var restoreConnection = new OracleConnection(xeConnString);
+                await restoreConnection.OpenAsync();
+                await using var restore = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION=:before WHERE RIE_ID=:id AND RIE_DESCRIPCION=:target", restoreConnection);
+                restore.Parameters.Add(new OracleParameter("before", fixtureBefore));
+                restore.Parameters.Add(new OracleParameter("id", fixtureRiskId));
+                restore.Parameters.Add(new OracleParameter("target", fixtureTarget));
+                if (await restore.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("IDEMPOTENCY_FIXTURE_RESTORE_FAILED");
+                await using var restoreCommit = new OracleCommand("COMMIT", restoreConnection);
+                await restoreCommit.ExecuteNonQueryAsync();
+            }
         }
 
+        // FASE 3: concurrencia optimista real usando dos sesiones XE.
+        try
+        {
+            string riskCode = plan.AllPositions.Select(p => p.RiskCode).FirstOrDefault() ?? throw new InvalidOperationException("CONCURRENCY_FIXTURE_RISK_MISSING");
+            await using var connA = new OracleConnection(xeConnString);
+            await using var connB = new OracleConnection(xeConnString);
+            await connA.OpenAsync();
+            await connB.OpenAsync();
+            await using var txA = connA.BeginTransaction();
+            long riskId;
+            string before;
+            await using (var readBefore = new OracleCommand("SELECT RIE_ID, RIE_DESCRIPCION FROM RL_MR_RIESGOS WHERE RIE_CODIGO=:code", connA) { Transaction = txA })
+            {
+                readBefore.Parameters.Add(new OracleParameter("code", riskCode));
+                await using var reader = await readBefore.ExecuteReaderAsync();
+                if (!await reader.ReadAsync()) throw new InvalidOperationException("CONCURRENCY_FIXTURE_ROW_MISSING");
+                riskId = SafeGetInt64(reader, 0);
+                before = SafeGetString(reader, 1);
+            }
+            string concurrentValue = $"BLOCK4_DRIFT_{Guid.NewGuid():N}";
+            bool committedConcurrentValue = false;
+            try
+            {
+                await using (var updateB = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION=:value WHERE RIE_ID=:id AND RIE_DESCRIPCION=:before", connB))
+                {
+                    updateB.Parameters.Add(new OracleParameter("value", concurrentValue));
+                    updateB.Parameters.Add(new OracleParameter("id", riskId));
+                    updateB.Parameters.Add(new OracleParameter("before", before));
+                    if (await updateB.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("CONCURRENCY_WRITER_PRECONDITION_FAILED");
+                }
+                await using (var commitB = new OracleCommand("COMMIT", connB)) await commitB.ExecuteNonQueryAsync();
+                committedConcurrentValue = true;
+                int rowsA;
+                await using (var guardedA = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION=:target WHERE RIE_ID=:id AND RIE_DESCRIPCION=:expected", connA) { Transaction = txA })
+                {
+                    guardedA.Parameters.Add(new OracleParameter("target", "guarded"));
+                    guardedA.Parameters.Add(new OracleParameter("id", riskId));
+                    guardedA.Parameters.Add(new OracleParameter("expected", before));
+                    rowsA = await guardedA.ExecuteNonQueryAsync();
+                }
+                result.ConcurrentDriftAbortPassed = rowsA == 0;
+            }
+            finally
+            {
+                await txA.RollbackAsync();
+                if (committedConcurrentValue)
+                {
+                    await using var restore = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_DESCRIPCION=:before WHERE RIE_ID=:id AND RIE_DESCRIPCION=:value", connB);
+                    restore.Parameters.Add(new OracleParameter("before", before));
+                    restore.Parameters.Add(new OracleParameter("id", riskId));
+                    restore.Parameters.Add(new OracleParameter("value", concurrentValue));
+                    if (await restore.ExecuteNonQueryAsync() != 1) throw new InvalidOperationException("CONCURRENCY_FIXTURE_RESTORE_FAILED");
+                    await using var commitRestore = new OracleCommand("COMMIT", connB);
+                    await commitRestore.ExecuteNonQueryAsync();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            result.ConcurrentDriftAbortPassed = false;
+            result.ErrorMessage = $"Two-session concurrency verification failed: {ex.Message}";
+        }
+
+        // FASE 4: execute the sealed rollback SQL in XE and compare the full table content hash.
+        try
+        {
+            await using var connRb = new OracleConnection(xeConnString);
+            await connRb.OpenAsync();
+            string riskCode = plan.AllPositions.Select(p => p.RiskCode).FirstOrDefault() ?? throw new InvalidOperationException("ROLLBACK_FIXTURE_RISK_MISSING");
+            var beforeSnapshot = await CaptureProductionPreimageAsync(xeConnString, "XE_ROLLBACK_BEFORE");
+            var sourceRisk = beforeSnapshot.Risks.Single(r => r.Code == riskCode);
+            var fixtureSnapshot = new DatabaseSnapshot { RunId = "XE_ROLLBACK_FIXTURE", CapturedAtUtc = DateTime.UtcNow };
+            fixtureSnapshot.Risks.Add(sourceRisk);
+            fixtureSnapshot.Evaluations.Add(beforeSnapshot.Evaluations.Single(e => e.RiskCode == riskCode && e.Active == 1));
+            fixtureSnapshot.Projections.Add(beforeSnapshot.Projections.Single(p => p.RiskCode == riskCode && p.EvaluationId == fixtureSnapshot.Evaluations[0].Id));
+            string target = $"BLOCK4_ROLLBACK_{Guid.NewGuid():N}";
+            var cells = Enumerable.Range(1, 82).Select(field => (object)new
+            {
+                fieldNumber = field,
+                textValue = field switch { 1 => "1", 2 => riskCode, 9 => target, _ => "" },
+                formula = "",
+                cachedResult = (object?)null
+            }).ToList();
+            using var rowDoc = JsonDocument.Parse(JsonSerializer.Serialize(new { riskNo = 1, riskCode, cells }));
+            var rollbackFixture = BuildReconciliationPlan(fixtureSnapshot, new List<JsonElement> { rowDoc.RootElement }, manifestFields, catalogDoc, workbookSha, preimageManifestSha);
+            var rollbackMutation = rollbackFixture.Mutations.Single();
+            string beforeHash = beforeSnapshot.TableContentFingerprints["RL_MR_RIESGOS"].Sha256;
+            int rollbackRows;
+            await using (var txRb = connRb.BeginTransaction())
+            {
+                if (await ApplyMutationAsync(connRb, txRb, rollbackMutation) != 1 || !await VerifyMutationAsync(connRb, txRb, rollbackMutation))
+                    throw new InvalidOperationException("ROLLBACK_FIXTURE_APPLY_FAILED");
+                rollbackRows = await ApplyRollbackOperationAsync(connRb, txRb, rollbackMutation);
+                if (!await VerifyRollbackOperationAsync(connRb, txRb, rollbackMutation))
+                    throw new InvalidOperationException("ROLLBACK_FIXTURE_POSTCHECK_FAILED");
+                await txRb.CommitAsync();
+            }
+            var afterFingerprints = await CaptureProductionPreimageAsync(xeConnString, "XE_ROLLBACK_AFTER");
+            string afterHash = afterFingerprints.TableContentFingerprints["RL_MR_RIESGOS"].Sha256;
+            result.RollbackPreimageMatch = beforeHash == afterHash;
+            result.RollbackTestPassed = result.RollbackPreimageMatch && rollbackRows == 1;
+            result.RollbackRowsAffected = rollbackRows;
+        }
+        catch (Exception ex)
+        {
+            result.RollbackTestPassed = false;
+            result.ErrorMessage = $"Rollback content verification failed: {ex.Message}";
+        }
+
+        try
+        {
+            var insertFixture = await RunXeInsertPreconditionAndRollbackFixtureAsync(xeConnString, productionSnapshot);
+            result.InsertPreconditionTestPassed = insertFixture.Passed;
+            result.InsertFixtureRowsAffected = insertFixture.RowsAffected;
+            result.RollbackRowsAffected += insertFixture.RollbackRowsAffected;
+        }
+        catch (Exception ex)
+        {
+            result.InsertPreconditionTestPassed = false;
+            result.ErrorMessage = $"XE insert precondition fixture failed: {ex.Message}";
+        }
         return result;
+    }
+
+    private static async Task<(bool Passed, int RowsAffected, int RollbackRowsAffected)> RunXeInsertPreconditionAndRollbackFixtureAsync(
+        string xeConnectionString, DatabaseSnapshot sourceSnapshot)
+    {
+        var evaluation = sourceSnapshot.Evaluations.FirstOrDefault(e => e.Active == 1)
+            ?? throw new InvalidOperationException("XE_INSERT_FIXTURE_ACTIVE_EVALUATION_MISSING");
+        var sourceControl = sourceSnapshot.Controls.FirstOrDefault(c => c.EvaluationId == evaluation.Id)
+            ?? throw new InvalidOperationException("XE_INSERT_FIXTURE_VALID_CONTROL_MISSING");
+        await using var connection = new OracleConnection(xeConnectionString);
+        await connection.OpenAsync();
+        var beforeFingerprints = await ComputeOracleTableContentFingerprintsAsync(connection);
+        long newId;
+        await using (var sequenceCommand = new OracleCommand("SELECT SEQ_RL_MR_CONTROLES.NEXTVAL FROM dual", connection))
+            newId = Convert.ToInt64(await sequenceCommand.ExecuteScalarAsync(), CultureInfo.InvariantCulture);
+
+        string fixtureDescription = $"BLOCK4_INSERT_PRECONDITION_{Guid.NewGuid():N}";
+        var parameters = new Dictionary<string, object?>
+        {
+            ["id"] = newId,
+            ["eId"] = evaluation.Id,
+            ["tipo"] = sourceControl.Tipo,
+            ["p_desc"] = fixtureDescription,
+            ["auto"] = sourceControl.Automatizacion,
+            ["estado"] = sourceControl.Estado
+        };
+        var fixtureMutation = new PlannedMutation
+        {
+            MutationId = $"XE_INSERT_FIXTURE_{newId}", RiskCode = sourceControl.RiskCode,
+            FieldNumber = 20, FieldLabel = "XE-only insert fixture", Entity = "RL_MR_CONTROLES_RIESGO",
+            TargetTable = "RL_MR_CONTROLES_RIESGO", RecordKey = newId.ToString(CultureInfo.InvariantCulture),
+            Action = "INSERT_BASELINE", TargetColumnOrProperty = "CON_DESCRIPCION", TargetCanonical = fixtureDescription,
+            Precondition = "CONTROL_NOT_EXISTS",
+            PreconditionSql = "SELECT COUNT(*) FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :eId AND CON_TIPO = :tipo AND CON_DESCRIPCION = :p_desc",
+            ApplySql = "INSERT INTO RL_MR_CONTROLES_RIESGO (CON_ID, CON_EVALUACION_ID, CON_TIPO, CON_DESCRIPCION, CON_AUTOMATIZACION, CON_ESTADO) VALUES (:id, :eId, :tipo, :p_desc, :auto, :estado)",
+            ApplyParameters = parameters,
+            Rollback = new RollbackOperation
+            {
+                MutationId = $"XE_INSERT_FIXTURE_{newId}", Entity = "RL_MR_CONTROLES_RIESGO", Table = "RL_MR_CONTROLES_RIESGO",
+                RecordPk = newId.ToString(CultureInfo.InvariantCulture), Action = "INSERT", RollbackAction = "DELETE",
+                RollbackSql = "DELETE FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id AND CON_EVALUACION_ID = :eId AND CON_TIPO = :tipo AND CON_DESCRIPCION = :p_desc",
+                RollbackParameters = new Dictionary<string, object?>(parameters, StringComparer.Ordinal)
+            }
+        };
+
+        int insertedRows;
+        bool duplicateRejected = false;
+        int rollbackRows;
+        await using (var transaction = connection.BeginTransaction())
+        {
+            insertedRows = await ApplyMutationAsync(connection, transaction, fixtureMutation);
+            if (!await VerifyMutationAsync(connection, transaction, fixtureMutation))
+                throw new InvalidOperationException("XE_INSERT_FIXTURE_POSTCHECK_FAILED");
+            try
+            {
+                await ApplyMutationAsync(connection, transaction, fixtureMutation);
+            }
+            catch (InvalidOperationException exception) when (exception.Message.StartsWith("PRECONDITION_FAILED:", StringComparison.Ordinal))
+            {
+                duplicateRejected = true;
+            }
+            rollbackRows = await ApplyRollbackOperationAsync(connection, transaction, fixtureMutation);
+            if (!await VerifyRollbackOperationAsync(connection, transaction, fixtureMutation))
+                throw new InvalidOperationException("XE_INSERT_FIXTURE_ROLLBACK_POSTCHECK_FAILED");
+            await transaction.CommitAsync();
+        }
+
+        var afterFingerprints = await ComputeOracleTableContentFingerprintsAsync(connection);
+        bool contentRestored = beforeFingerprints["RL_MR_CONTROLES_RIESGO"].Sha256 == afterFingerprints["RL_MR_CONTROLES_RIESGO"].Sha256 &&
+            beforeFingerprints["RL_MR_CONTROLES_RIESGO"].RowCount == afterFingerprints["RL_MR_CONTROLES_RIESGO"].RowCount;
+        return (insertedRows == 1 && duplicateRejected && rollbackRows == 1 && contentRestored, insertedRows, rollbackRows);
+    }
+
+    private static string ComputeEntityFingerprint<T>(IEnumerable<T> values)
+    {
+        var json = JsonSerializer.Serialize(values);
+        return Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
     }
 
     #endregion
 
     #region Modo Apply Productivo Protegido (Sección 18)
 
-    public static async Task<int> ExecuteProductionApplyAsync(string prodConnString, string planPath, string expectedPlanSha, string expectedWorkbookSha)
+    public static async Task ValidatePlanPreconditionsReadOnlyAsync(string connectionString, PlanResult plan)
+    {
+        await using var connection = new OracleConnection(connectionString);
+        await connection.OpenAsync();
+        await using (var readOnly = new OracleCommand("SET TRANSACTION READ ONLY", connection))
+            await readOnly.ExecuteNonQueryAsync();
+
+        try
+        {
+            await using (var identity = new OracleCommand(@"
+                SELECT sys_context('USERENV', 'DB_NAME'), sys_context('USERENV', 'SERVICE_NAME'),
+                       sys_context('USERENV', 'INSTANCE_NAME'), sys_context('USERENV', 'CURRENT_SCHEMA'),
+                       sys_context('USERENV', 'SESSION_USER') FROM dual", connection))
+            await using (var reader = await identity.ExecuteReaderAsync())
+            {
+                if (!await reader.ReadAsync() ||
+                    !SafeGetString(reader, 0).Equals("HPPROD1", StringComparison.OrdinalIgnoreCase) ||
+                    !SafeGetString(reader, 1).Equals("hpprod1", StringComparison.OrdinalIgnoreCase) ||
+                    !SafeGetString(reader, 2).Equals("hpprod1", StringComparison.OrdinalIgnoreCase) ||
+                    !SafeGetString(reader, 3).Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase) ||
+                    !SafeGetString(reader, 4).Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("PRODUCTION_IDENTITY_MISMATCH: read-only preflight.");
+            }
+
+            foreach (var mutation in plan.Mutations)
+            {
+                if (string.IsNullOrWhiteSpace(mutation.PreconditionSql))
+                    throw new InvalidOperationException($"PRECONDITION_SQL_REQUIRED: {mutation.MutationId}");
+                await using var command = new OracleCommand(mutation.PreconditionSql, connection) { BindByName = true };
+                AddReferencedParameters(command, mutation.PreconditionSql, mutation.ApplyParameters);
+                object? actual = await command.ExecuteScalarAsync();
+                if (!IsExpectedPrecondition(mutation, actual))
+                    throw new InvalidOperationException($"PRECONDITION_FAILED: {mutation.MutationId}");
+            }
+        }
+        finally
+        {
+            await using var rollback = new OracleCommand("ROLLBACK", connection);
+            await rollback.ExecuteNonQueryAsync();
+        }
+    }
+
+    public static async Task<int> ApplyMutationAsync(OracleConnection connection, OracleTransaction transaction, PlannedMutation mutation)
+    {
+        if (string.IsNullOrWhiteSpace(mutation.PreconditionSql))
+            throw new InvalidOperationException($"PRECONDITION_SQL_REQUIRED: {mutation.MutationId}");
+
+        await using (var precondition = new OracleCommand(mutation.PreconditionSql, connection) { Transaction = transaction, BindByName = true })
+        {
+            AddReferencedParameters(precondition, mutation.PreconditionSql, mutation.ApplyParameters);
+            object? actual = await precondition.ExecuteScalarAsync();
+            if (!IsExpectedPrecondition(mutation, actual))
+                throw new InvalidOperationException($"PRECONDITION_FAILED: {mutation.MutationId}");
+        }
+
+        await using var command = new OracleCommand(mutation.ApplySql, connection) { Transaction = transaction, BindByName = true };
+        AddReferencedParameters(command, mutation.ApplySql, mutation.ApplyParameters);
+        int rowsAffected = await command.ExecuteNonQueryAsync();
+        if (rowsAffected == 0) throw new InvalidOperationException($"PRECONDITION_FAILED: {mutation.MutationId}; rowsAffected=0.");
+        if (rowsAffected != 1) throw new InvalidOperationException($"CORRUPTION_GUARD_FAILED: {mutation.MutationId}; rowsAffected={rowsAffected}.");
+        return rowsAffected;
+    }
+
+    public static async Task<bool> VerifyMutationAsync(OracleConnection connection, OracleTransaction transaction, PlannedMutation mutation)
+    {
+        string sql;
+        Dictionary<string, object?> parameters;
+        if (mutation.TargetTable == "RL_MR_RIESGOS" && mutation.TargetColumnOrProperty == "RIE_DESCRIPCION")
+        {
+            sql = "SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS WHERE RIE_ID = :id";
+            parameters = mutation.ApplyParameters;
+        }
+        else if (mutation.TargetTable == "RL_MR_EVALUACIONES_RIESGO" && mutation.TargetColumnOrProperty == "EVA_DATOS_JSON")
+        {
+            sql = "SELECT EVA_DATOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :id";
+            parameters = mutation.ApplyParameters;
+        }
+        else if (mutation.TargetTable == "RL_MR_CONTROLES_RIESGO" && mutation.Action == "INSERT_BASELINE")
+        {
+            sql = "SELECT COUNT(*) FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID = :eId AND CON_TIPO = :tipo AND CON_DESCRIPCION = :p_desc";
+            parameters = mutation.ApplyParameters;
+        }
+        else if (mutation.TargetTable == "RL_MR_PLANES" && mutation.Action == "INSERT_BASELINE")
+        {
+            sql = "SELECT COUNT(*) FROM RL_MR_PLANES WHERE PLA_ID = :id AND PLA_EVALUACION_ID = :eId AND PLA_DESCRIPCION = :p_desc";
+            parameters = mutation.ApplyParameters;
+        }
+        else if (mutation.TargetTable == "RL_MR_ACTIVIDADES" && mutation.Action == "INSERT_BASELINE")
+        {
+            sql = "SELECT COUNT(*) FROM RL_MR_ACTIVIDADES WHERE ACT_ID = :id AND ACT_PLAN_ID = :planId AND ACT_DESCRIPCION = :p_desc";
+            parameters = mutation.ApplyParameters;
+        }
+        else if (mutation.TargetTable == "RL_MR_CONTROLES_RIESGO" && mutation.TargetColumnOrProperty == "CON_AUTOMATIZACION")
+        {
+            sql = "SELECT CON_AUTOMATIZACION FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id";
+            parameters = mutation.ApplyParameters;
+        }
+        else
+        {
+            throw new InvalidOperationException($"POSTCHECK_UNSUPPORTED_MUTATION: {mutation.TargetTable}.{mutation.TargetColumnOrProperty}/{mutation.Action}");
+        }
+
+        await using var command = new OracleCommand(sql, connection) { Transaction = transaction, BindByName = true };
+        AddReferencedParameters(command, sql, parameters);
+        object? actual = await command.ExecuteScalarAsync();
+        if (mutation.Action == "INSERT_BASELINE" && mutation.TargetTable is "RL_MR_CONTROLES_RIESGO" or "RL_MR_PLANES" or "RL_MR_ACTIVIDADES")
+            return Convert.ToInt32(actual, CultureInfo.InvariantCulture) == 1;
+        string actualText = actual == null || actual == DBNull.Value ? "" : Convert.ToString(actual, CultureInfo.InvariantCulture) ?? "";
+        string expectedText = mutation.TargetTable == "RL_MR_CONTROLES_RIESGO" && mutation.TargetColumnOrProperty == "CON_AUTOMATIZACION"
+            ? Convert.ToString(mutation.ApplyParameters.GetValueOrDefault("newAuto"), CultureInfo.InvariantCulture) ?? ""
+            : mutation.TargetCanonical;
+        return string.Equals(actualText, expectedText, StringComparison.Ordinal);
+    }
+
+    public static async Task<int> ApplyRollbackOperationAsync(OracleConnection connection, OracleTransaction transaction, PlannedMutation mutation)
+    {
+        var rollback = mutation.Rollback;
+        bool supportedUpdate = mutation.Action == "UPDATE_BASELINE" && rollback.RollbackAction == "UPDATE" &&
+            ((mutation.TargetTable == "RL_MR_RIESGOS" && mutation.TargetColumnOrProperty == "RIE_DESCRIPCION") ||
+             (mutation.TargetTable == "RL_MR_EVALUACIONES_RIESGO" && mutation.TargetColumnOrProperty == "EVA_DATOS_JSON") ||
+             (mutation.TargetTable == "RL_MR_CONTROLES_RIESGO" && mutation.TargetColumnOrProperty == "CON_AUTOMATIZACION"));
+        bool supportedInsert = mutation.Action == "INSERT_BASELINE" && rollback.RollbackAction == "DELETE" &&
+            (mutation.TargetTable is "RL_MR_CONTROLES_RIESGO" or "RL_MR_PLANES" or "RL_MR_ACTIVIDADES");
+        string expectedRollbackPrefix = supportedInsert ? $"DELETE FROM {mutation.TargetTable} " : $"UPDATE {mutation.TargetTable} SET ";
+        if ((!supportedUpdate && !supportedInsert) || !string.Equals(rollback.Table, mutation.TargetTable, StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(rollback.RollbackSql) || !rollback.RollbackSql.StartsWith(expectedRollbackPrefix, StringComparison.OrdinalIgnoreCase) ||
+            rollback.RollbackParameters.Count == 0)
+            throw new InvalidOperationException($"ROLLBACK_UNSUPPORTED_MUTATION: {mutation.TargetTable}.{mutation.TargetColumnOrProperty}/{mutation.Action}");
+
+        await using var command = new OracleCommand(rollback.RollbackSql, connection) { Transaction = transaction, BindByName = true };
+        AddReferencedParameters(command, rollback.RollbackSql, rollback.RollbackParameters);
+        int affected = await command.ExecuteNonQueryAsync();
+        if (affected == 0) throw new InvalidOperationException($"ROLLBACK_PRECONDITION_FAILED: {mutation.MutationId}; rowsAffected=0.");
+        if (affected != 1) throw new InvalidOperationException($"ROLLBACK_CORRUPTION_GUARD_FAILED: {mutation.MutationId}; rowsAffected={affected}.");
+        return affected;
+    }
+
+    public static async Task<bool> VerifyRollbackOperationAsync(OracleConnection connection, OracleTransaction transaction, PlannedMutation mutation)
+    {
+        if (mutation.Action == "INSERT_BASELINE" && (mutation.TargetTable is "RL_MR_CONTROLES_RIESGO" or "RL_MR_PLANES" or "RL_MR_ACTIVIDADES"))
+        {
+            string countSql = mutation.TargetTable switch
+            {
+                "RL_MR_CONTROLES_RIESGO" => "SELECT COUNT(*) FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id",
+                "RL_MR_PLANES" => "SELECT COUNT(*) FROM RL_MR_PLANES WHERE PLA_ID = :id",
+                "RL_MR_ACTIVIDADES" => "SELECT COUNT(*) FROM RL_MR_ACTIVIDADES WHERE ACT_ID = :id",
+                _ => throw new InvalidOperationException($"ROLLBACK_POSTCHECK_UNSUPPORTED_MUTATION: {mutation.TargetTable}")
+            };
+            await using var countCommand = new OracleCommand(countSql, connection) { Transaction = transaction, BindByName = true };
+            AddReferencedParameters(countCommand, countSql, mutation.Rollback.RollbackParameters);
+            return Convert.ToInt32(await countCommand.ExecuteScalarAsync(), CultureInfo.InvariantCulture) == 0;
+        }
+
+        if (mutation.TargetTable == "RL_MR_EVALUACIONES_RIESGO" && mutation.TargetColumnOrProperty == "EVA_DATOS_JSON")
+        {
+            const string evaluationSql = "SELECT EVA_DATOS_JSON, EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID = :id";
+            await using var evaluationCommand = new OracleCommand(evaluationSql, connection) { Transaction = transaction, BindByName = true };
+            AddReferencedParameters(evaluationCommand, evaluationSql, mutation.ApplyParameters);
+            await using var evaluationReader = await evaluationCommand.ExecuteReaderAsync();
+            if (!await evaluationReader.ReadAsync()) return false;
+            string restoredJson = SafeGetString(evaluationReader, 0);
+            int restoredVersion = SafeGetInt32(evaluationReader, 1);
+            return string.Equals(restoredJson, mutation.Rollback.BeforeValue, StringComparison.Ordinal) &&
+                restoredVersion == Convert.ToInt32(mutation.Rollback.RollbackParameters["beforeRow"], CultureInfo.InvariantCulture);
+        }
+
+        string sql = mutation.TargetTable switch
+        {
+            "RL_MR_RIESGOS" when mutation.TargetColumnOrProperty == "RIE_DESCRIPCION" => "SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS WHERE RIE_ID = :id",
+            "RL_MR_CONTROLES_RIESGO" when mutation.TargetColumnOrProperty == "CON_AUTOMATIZACION" => "SELECT CON_AUTOMATIZACION FROM RL_MR_CONTROLES_RIESGO WHERE CON_ID = :id",
+            _ => throw new InvalidOperationException($"ROLLBACK_POSTCHECK_UNSUPPORTED_MUTATION: {mutation.TargetTable}.{mutation.TargetColumnOrProperty}/{mutation.Action}")
+        };
+        await using var command = new OracleCommand(sql, connection) { Transaction = transaction, BindByName = true };
+        AddReferencedParameters(command, sql, mutation.ApplyParameters);
+        object? actual = await command.ExecuteScalarAsync();
+        return string.Equals(actual == null || actual == DBNull.Value ? "" : Convert.ToString(actual, CultureInfo.InvariantCulture) ?? "",
+            mutation.DbBeforeCanonical, StringComparison.Ordinal);
+    }
+
+    private static void AddReferencedParameters(OracleCommand command, string sql, Dictionary<string, object?> values)
+    {
+        var added = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Match match in Regex.Matches(sql, ":([A-Za-z_][A-Za-z0-9_]*)"))
+        {
+            string name = match.Groups[1].Value;
+            if (!added.Add(name)) continue;
+            if (!values.TryGetValue(name, out object? value))
+                throw new InvalidOperationException($"MUTATION_PARAMETER_MISSING: {name}");
+            command.Parameters.Add(new OracleParameter(name, value ?? DBNull.Value));
+        }
+    }
+
+    private static bool IsExpectedPrecondition(PlannedMutation mutation, object? actual)
+    {
+        if (mutation.Precondition == "CONTROL_NOT_EXISTS")
+            return Convert.ToInt32(actual, CultureInfo.InvariantCulture) == 0;
+        string expectedKey = mutation.TargetColumnOrProperty == "EVA_DATOS_JSON" ? "expectedRow" : "expectedBefore";
+        if (mutation.Action == "UPDATE_BASELINE" && mutation.ApplyParameters.TryGetValue(expectedKey, out var expected))
+        {
+            string actualText = actual == null || actual == DBNull.Value ? "" : Convert.ToString(actual, CultureInfo.InvariantCulture) ?? "";
+            string expectedText = expected == null || expected == DBNull.Value ? "" : Convert.ToString(expected, CultureInfo.InvariantCulture) ?? "";
+            return string.Equals(actualText, expectedText, StringComparison.Ordinal);
+        }
+        return false;
+    }
+
+    public static async Task<int> ExecuteProductionApplyAsync(string prodConnString, string planPath, string expectedPlanSha, string expectedFileSha, string expectedWorkbookSha)
     {
         Console.WriteLine("\n[1/5] Validando precondiciones de producción...");
+        if (!string.Equals(Environment.GetEnvironmentVariable("PRODUCTION_APPLY_AUTHORIZED"), "YES", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("PRODUCTION_APPLY_REFUSED: no existe autorización explícita.");
+        if (!File.Exists(planPath)) throw new FileNotFoundException("PLAN_FILE_NOT_FOUND", planPath);
+        string actualFileSha = ComputeFileSha256(planPath);
+        if (!actualFileSha.Equals(expectedFileSha, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("PLAN_FILE_SHA_MISMATCH: --expected-file-sha no coincide con los bytes del artefacto.");
         string planJson = File.ReadAllText(planPath);
         var plan = JsonSerializer.Deserialize<PlanResult>(planJson);
         if (plan == null)
@@ -3206,12 +3916,23 @@ public static class Program
             return 1;
         }
 
+        if (!plan.PlanCanonicalSha256.Equals(expectedPlanSha, StringComparison.OrdinalIgnoreCase) ||
+            !ComputeComprehensivePlanSha256(plan, plan.WorkbookSha256, plan.PreimageManifestSha256).Equals(expectedPlanSha, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("PLAN_CANONICAL_SHA_MISMATCH: --expected-plan-sha no coincide con el contenido canónico.");
+        if (!plan.WorkbookSha256.Equals(expectedWorkbookSha, StringComparison.OrdinalIgnoreCase) ||
+            !plan.EngineVersion.Equals(EngineVersion, StringComparison.Ordinal) ||
+            !plan.GitSha.Equals(ResolveGitSha(), StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("PLAN_COMPATIBILITY_MISMATCH: workbook, engine o Git SHA no corresponde al runtime.");
+
+        await ValidatePlanPreconditionsReadOnlyAsync(prodConnString, plan);
+
         await using var conn = new OracleConnection(prodConnString);
         await conn.OpenAsync();
 
         await using (var cmdIdent = new OracleCommand(@"
             SELECT sys_context('USERENV', 'DB_NAME'),
                    sys_context('USERENV', 'SERVICE_NAME'),
+                   sys_context('USERENV', 'INSTANCE_NAME'),
                    sys_context('USERENV', 'CURRENT_SCHEMA'),
                    sys_context('USERENV', 'SESSION_USER')
               FROM dual", conn))
@@ -3221,12 +3942,15 @@ public static class Program
             {
                 string dbName = SafeGetString(r, 0);
                 string srvName = SafeGetString(r, 1);
-                string schema = SafeGetString(r, 2);
-                string user = SafeGetString(r, 3);
+                string instance = SafeGetString(r, 2);
+                string schema = SafeGetString(r, 3);
+                string user = SafeGetString(r, 4);
 
                 if (!dbName.Equals("HPPROD1", StringComparison.OrdinalIgnoreCase) ||
                     !srvName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) ||
-                    !schema.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
+                    !instance.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) ||
+                    !schema.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase) ||
+                    !user.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
                 {
                     Console.Error.WriteLine($"FATAL: Identidad Oracle no autorizada. DB={dbName}, Service={srvName}, Schema={schema}");
                     return 2;
@@ -3241,36 +3965,20 @@ public static class Program
             int applied = 0;
             foreach (var mut in plan.Mutations)
             {
-                await using var cmd = new OracleCommand(mut.ApplySql, conn) { Transaction = tx, BindByName = true };
-                foreach (var kvp in mut.ApplyParameters)
-                {
-                    cmd.Parameters.Add(new OracleParameter(kvp.Key, kvp.Value ?? DBNull.Value));
-                }
-
-                int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                if (rowsAffected != 1 && !mut.Action.StartsWith("INSERT", StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException($"PRECONDITION_FAILED on {mut.MutationId}: ROWS_AFFECTED was {rowsAffected}, expected 1.");
-                }
-                applied++;
+                applied += await ApplyMutationAsync(conn, tx, mut);
             }
 
             Console.WriteLine($"\n[3/5] Ejecutando postcheck de {applied} operaciones...");
             int mismatches = 0;
+            int verified = 0;
             foreach (var mut in plan.Mutations)
             {
-                if (mut.TargetTable == "RL_MR_RIESGOS" && mut.TargetColumnOrProperty == "RIE_DESCRIPCION")
-                {
-                    await using var cmdCheck = new OracleCommand("SELECT RIE_DESCRIPCION FROM RL_MR_RIESGOS WHERE RIE_ID = :id", conn) { Transaction = tx, BindByName = true };
-                    cmdCheck.Parameters.Add(new OracleParameter("id", mut.ApplyParameters["id"]));
-                    string actualDesc = Convert.ToString(await cmdCheck.ExecuteScalarAsync()) ?? "";
-                    if (!string.Equals(actualDesc, mut.TargetCanonical, StringComparison.Ordinal)) mismatches++;
-                }
+                if (await VerifyMutationAsync(conn, tx, mut)) verified++; else mismatches++;
             }
 
-            if (mismatches > 0)
+            if (mismatches > 0 || verified != plan.Mutations.Count)
             {
-                throw new InvalidOperationException($"POSTCHECK_FAILED: {mismatches} discrepancias detectadas.");
+                throw new InvalidOperationException($"POSTCHECK_FAILED: {mismatches} discrepancias; verified={verified}/{plan.Mutations.Count}.");
             }
 
             Console.WriteLine("\n[4/5] Confirmando transacción productiva (COMMIT)...");
@@ -3292,13 +4000,8 @@ public static class Program
 
     #region Métodos Auxiliares y Seguridad
 
-    public static bool IsGticApplicable(string tipoRiesgo, string area)
-    {
-        string t = (tipoRiesgo ?? "").Trim().ToUpperInvariant();
-        string a = (area ?? "").Trim().ToUpperInvariant();
-        return t.Contains("GTIC") || t.Contains("TECNOL") || t == "TEC" ||
-               a.Contains("GTIC") || a.Contains("TECNOL") || a.Contains("SISTEMA");
-    }
+    public static bool IsGticApplicable(string canonicalRiskType, string area) =>
+        string.Equals(canonicalRiskType?.Trim(), "TEC", StringComparison.Ordinal);
 
     public static bool MitigationApplies(ProjectionPreimage? proy)
     {
@@ -3399,6 +4102,35 @@ public static class Program
                    .ToList();
     }
 
+    private static string NormalizeMultiline(string text) =>
+        string.Join("\n", ParseMultilineItems(text).Select(NormalizeControlText).Select(s => s.Trim()));
+
+    private static string ProjectPlanValues(IEnumerable<string?> values)
+    {
+        var items = values.ToList();
+        if (items.Count == 0) return "";
+        if (items.Count == 1) return items[0] ?? "";
+        return string.Join("\n", items.Select((value, index) => $"{index + 1}. {value ?? ""}"));
+    }
+
+    private static string ProjectEvidenceByControl(IEnumerable<ControlPreimage> controls, IEnumerable<EvidencePreimage> evidences)
+    {
+        var orderedControls = controls.OrderBy(c => c.Id).ToList();
+        var evidenceRows = evidences.ToList();
+        var blocks = new List<string>();
+        for (int index = 0; index < orderedControls.Count; index++)
+        {
+            var control = orderedControls[index];
+            var names = evidenceRows.Where(e => e.TipoEntidad == "CONTROL" && e.EntidadId == control.Id)
+                .OrderBy(e => e.FechaCreacion).ThenBy(e => e.EvidenciaId)
+                .Select(e => string.IsNullOrWhiteSpace(e.Extension) ? e.NombreArchivo : $"{e.NombreArchivo}.{e.Extension}")
+                .ToList();
+            if (names.Count > 0)
+                blocks.Add($"Control {index + 1} (CON_ID={control.Id}):\n{string.Join("\n", names.Select((name, ordinal) => $"  {ordinal + 1}. {name}"))}");
+        }
+        return string.Join("\n", blocks);
+    }
+
     private static bool IsEmptyOrNoHay(string s)
     {
         string t = s.Trim().ToLowerInvariant();
@@ -3412,22 +4144,7 @@ public static class Program
 
     private static Dictionary<string, Dictionary<string, string>> BuildCatalogNormalizationDictionaries(JsonDocument catalogDoc)
     {
-        var dicts = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
-
-        var autoMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["MANUAL"] = "MANUAL",
-            ["Manual"] = "MANUAL",
-            ["SEMIAUTOMATICO"] = "SEMIAUTOMATICO",
-            ["Semiautomatico"] = "SEMIAUTOMATICO",
-            ["Semiautomatizado"] = "SEMIAUTOMATICO",
-            ["Semi-Automatizado"] = "SEMIAUTOMATICO",
-            ["AUTOMATICO"] = "AUTOMATICO",
-            ["Automatico"] = "AUTOMATICO",
-            ["Automatizado"] = "AUTOMATICO"
-        };
-        dicts["MR_NIVEL_AUTOMATIZACION"] = autoMap;
-        dicts["CON_AUTOMATIZACION"] = autoMap;
+        var dicts = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
 
         if (catalogDoc.RootElement.TryGetProperty("catalogs", out var catalogsElem) && catalogsElem.ValueKind == JsonValueKind.Array)
         {
@@ -3440,7 +4157,7 @@ public static class Program
 
                 var map = dicts.TryGetValue(catCode, out var existingMap)
                     ? existingMap
-                    : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    : new Dictionary<string, string>(StringComparer.Ordinal);
 
                 if (cat.TryGetProperty("items", out var itemsElem) && itemsElem.ValueKind == JsonValueKind.Array)
                 {
@@ -3490,18 +4207,15 @@ public static class Program
     {
         if (string.IsNullOrWhiteSpace(rawValue)) return "";
         string val = rawValue.Trim();
-
-        bool isAutomation = catalogOrProperty.Contains("AUTOMATIZACION", StringComparison.OrdinalIgnoreCase);
-        if (isAutomation)
+        string catalogId = catalogOrProperty switch
         {
-            string clean = val.Replace("-", "", StringComparison.Ordinal).ToLowerInvariant();
-            if (clean.Contains("semiautomat", StringComparison.Ordinal)) return "SEMIAUTOMATICO";
-            if (clean == "manual") return "MANUAL";
-            if (clean.Contains("automat", StringComparison.Ordinal)) return "AUTOMATICO";
-            return null; // Unknown automation fails closed
-        }
+            "tipo_riesgo" => "RISK_TYPE",
+            "regimen_afectado" => "REGIME",
+            "CON_AUTOMATIZACION" or "MR_NIVEL_AUTOMATIZACION" => "CONTROL_AUTOMATION",
+            _ => catalogOrProperty
+        };
 
-        if (catalogMaps.TryGetValue(catalogOrProperty, out var directMap))
+        if (catalogMaps.TryGetValue(catalogId, out var directMap))
         {
             if (directMap.TryGetValue(val, out var canonDirect))
             {
@@ -3511,23 +4225,32 @@ public static class Program
             return null; // Known catalog property but unrecognized value fails closed
         }
 
-        foreach (var kvp in catalogMaps)
-        {
-            if (kvp.Value.TryGetValue(val, out var canon))
-            {
-                log[val] = canon;
-                return canon;
-            }
-        }
-
         // Si es una propiedad declarada como catálogo cerrado pero no se encontró en ningún mapeo, fail-closed
-        bool isCatalogProperty = catalogOrProperty is "tipo_riesgo" or "regimen_afectado" or "RISK_TYPE" or "REGIME" or "CONTROL_AUTOMATION" or "MR_NIVEL_AUTOMATIZACION";
+        bool isCatalogProperty = catalogOrProperty is "tipo_riesgo" or "regimen_afectado" or "RISK_TYPE" or "REGIME" or "CONTROL_AUTOMATION" or "MR_NIVEL_AUTOMATIZACION" or "CON_AUTOMATIZACION";
         if (isCatalogProperty)
         {
             return null;
         }
 
         return val;
+    }
+
+    private static string ResolveCatalogDbKey(JsonDocument catalogDoc, string catalogId, string canonicalKey)
+    {
+        if (!catalogDoc.RootElement.TryGetProperty("catalogs", out var catalogs) || catalogs.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("CANONICAL_CATALOGS_MISSING");
+        foreach (var catalog in catalogs.EnumerateArray())
+        {
+            if (!catalog.TryGetProperty("catalogId", out var id) || !string.Equals(id.GetString(), catalogId, StringComparison.Ordinal)) continue;
+            if (!catalog.TryGetProperty("items", out var items) || items.ValueKind != JsonValueKind.Array) break;
+            foreach (var item in items.EnumerateArray())
+            {
+                if (item.TryGetProperty("key", out var key) && string.Equals(key.GetString(), canonicalKey, StringComparison.Ordinal))
+                    return item.TryGetProperty("dbKey", out var dbKey) && !string.IsNullOrEmpty(dbKey.GetString()) ? dbKey.GetString()! : canonicalKey;
+            }
+            break;
+        }
+        throw new InvalidDataException($"CANONICAL_CATALOG_ITEM_MISSING: {catalogId}/{canonicalKey}");
     }
 
     public static string ComputeFileSha256(string path)
@@ -3595,10 +4318,10 @@ public static class Program
     private static void ExportDelta398Csv(string path, List<Delta398Record> deltas)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("RISK_CODE,FIELD_NO,PREVIOUS_CLASSIFICATION,CURRENT_DB_RAW,CURRENT_EXCEL_RAW,CURRENT_CLASSIFICATION,REASON,MUTATION_REQUIRED");
+        sb.AppendLine("RISK_CODE,FIELD_NO,FIELD_LABEL,PREVIOUS_CLASSIFICATION,ORIGINAL_EXCEL_RAW,ORIGINAL_DB_RAW,ORIGINAL_REASON_CODE,ORIGINAL_RECOMMENDED_ACTION,CURRENT_DB_RAW,CURRENT_EXCEL_RAW,CURRENT_CLASSIFICATION,REASON,RECOMMENDED_ACTION,EVIDENCE,MUTATION_REQUIRED");
         foreach (var d in deltas)
         {
-            sb.AppendLine($"\"{d.RiskCode}\",{d.FieldNumber},\"{d.PreviousClassification}\",\"{EscapeCsv(d.CurrentDbRaw)}\",\"{EscapeCsv(d.CurrentExcelRaw)}\",\"{d.CurrentClassification}\",\"{EscapeCsv(d.Reason)}\",{d.MutationRequired}");
+            sb.AppendLine($"\"{EscapeCsv(d.RiskCode)}\",{d.FieldNumber},\"{EscapeCsv(d.FieldLabel)}\",\"{d.PreviousClassification}\",\"{EscapeCsv(d.OriginalExcelRaw)}\",\"{EscapeCsv(d.OriginalDbRaw)}\",\"{EscapeCsv(d.OriginalReasonCode)}\",\"{EscapeCsv(d.OriginalRecommendedAction)}\",\"{EscapeCsv(d.CurrentDbRaw)}\",\"{EscapeCsv(d.CurrentExcelRaw)}\",\"{d.CurrentClassification}\",\"{EscapeCsv(d.Reason)}\",\"{EscapeCsv(d.RecommendedAction)}\",\"{EscapeCsv(d.Evidence)}\",{d.MutationRequired}");
         }
         File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
     }
@@ -3606,10 +4329,10 @@ public static class Program
     private static void ExportDelta87Csv(string path, List<Delta87Record> deltas)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("RISK_CODE,FIELD_NO,PREVIOUS_CLASSIFICATION,CURRENT_DB_RAW,CURRENT_EXCEL_RAW,CURRENT_CLASSIFICATION,REASON,MUTATION_REQUIRED");
+        sb.AppendLine("RISK_CODE,FIELD_NO,FIELD_LABEL,PREVIOUS_CLASSIFICATION,ORIGINAL_EXCEL_RAW,ORIGINAL_DB_RAW,ORIGINAL_REASON_CODE,ORIGINAL_RECOMMENDED_ACTION,CURRENT_DB_RAW,CURRENT_EXCEL_RAW,CURRENT_CLASSIFICATION,REASON,RECOMMENDED_ACTION,EVIDENCE,MUTATION_REQUIRED");
         foreach (var d in deltas)
         {
-            sb.AppendLine($"\"{d.RiskCode}\",{d.FieldNumber},\"{d.PreviousClassification}\",\"{EscapeCsv(d.CurrentDbRaw)}\",\"{EscapeCsv(d.CurrentExcelRaw)}\",\"{d.CurrentClassification}\",\"{EscapeCsv(d.Reason)}\",{d.MutationRequired}");
+            sb.AppendLine($"\"{EscapeCsv(d.RiskCode)}\",{d.FieldNumber},\"{EscapeCsv(d.FieldLabel)}\",\"{d.PreviousClassification}\",\"{EscapeCsv(d.OriginalExcelRaw)}\",\"{EscapeCsv(d.OriginalDbRaw)}\",\"{EscapeCsv(d.OriginalReasonCode)}\",\"{EscapeCsv(d.OriginalRecommendedAction)}\",\"{EscapeCsv(d.CurrentDbRaw)}\",\"{EscapeCsv(d.CurrentExcelRaw)}\",\"{d.CurrentClassification}\",\"{EscapeCsv(d.Reason)}\",\"{EscapeCsv(d.RecommendedAction)}\",\"{EscapeCsv(d.Evidence)}\",{d.MutationRequired}");
         }
         File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
     }
