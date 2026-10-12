@@ -444,6 +444,7 @@ public static class Program
     public static async Task<int> Main(string[] args)
     {
         Console.OutputEncoding = Encoding.UTF8;
+        string mode = GetOption(args, "--mode") ?? "dry-run";
 
         // PARÁMETROS CRÍTICOS INICIALES EXIGIDOS POR PROTOCOLO
         Console.WriteLine("================================================================================");
@@ -453,11 +454,12 @@ public static class Program
         Console.WriteLine("================================================================================");
         Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
         Console.WriteLine("PRODUCTION_APPLY_READY=NO");
-        Console.WriteLine("BLOCK4_STATUS=PENDING_CORRECTION");
+        Console.WriteLine(mode.Equals("qualify-business-input", StringComparison.OrdinalIgnoreCase)
+            ? "BLOCK4_STATUS=PENDING_BUSINESS_INPUT"
+            : "BLOCK4_STATUS=PENDING_CORRECTION");
         Console.WriteLine($"PREVIOUS_PLAN_SHA={PreviousInvalidatedPlanSha}");
         Console.WriteLine("CURRENT_PLAN_AUTHORIZATION_STATUS=INVALIDATED_FOR_APPLY_PENDING_CORRECTION\n");
 
-        string mode = GetOption(args, "--mode") ?? "dry-run";
         string? planArg = GetOption(args, "--plan");
         string? expectedPlanSha = GetOption(args, "--expected-plan-sha");
         string? expectedFileSha = GetOption(args, "--expected-file-sha");
@@ -551,6 +553,85 @@ public static class Program
             return 1;
         }
         Console.WriteLine("UNIVERSE_VERIFIED=59 RISKS × 82 FIELDS (PASS)");
+
+        // Qualification is intentionally isolated from the apply/dry-run pipeline:
+        // it captures production in READ ONLY mode and never resolves or opens XE.
+        if (mode.Equals("qualify-business-input", StringComparison.OrdinalIgnoreCase))
+        {
+            string outputDirectory = GetOption(args, "--output-dir")
+                ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Documents", "RIESGO_LAVADO", "BLOCK4_BUSINESS_INPUT");
+            if (string.IsNullOrWhiteSpace(outputDirectory))
+                throw new InvalidOperationException("BUSINESS_INPUT_OUTPUT_DIRECTORY_UNRESOLVED");
+
+            var rules = BusinessInputQualification.LoadVerifiedCreationRules(repoRoot);
+            string productionConnection = ResolveProductionConnectionString(repoRoot);
+            await VerifyProductionBusinessInputDefaultsAsync(productionConnection, rules);
+            var qualificationSnapshot = await CaptureProductionPreimageAsync(productionConnection, runId);
+            bool qualificationIdentityVerified =
+                qualificationSnapshot.DatabaseName.Equals("HPPROD1", StringComparison.OrdinalIgnoreCase) &&
+                qualificationSnapshot.ServiceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+                qualificationSnapshot.InstanceName.Equals("hpprod1", StringComparison.OrdinalIgnoreCase) &&
+                qualificationSnapshot.CurrentSchema.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase) &&
+                qualificationSnapshot.SessionUser.Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine("MODE=qualify-business-input");
+            Console.WriteLine($"PRODUCTION_READ_ONLY_USED=YES");
+            Console.WriteLine($"DATABASE_TARGET_CLASS={(qualificationIdentityVerified ? "PRODUCTION" : "IDENTITY_MISMATCH")}");
+            Console.WriteLine($"DB_NAME={qualificationSnapshot.DatabaseName}");
+            Console.WriteLine($"SERVICE_NAME={qualificationSnapshot.ServiceName}");
+            Console.WriteLine($"INSTANCE_NAME={qualificationSnapshot.InstanceName}");
+            Console.WriteLine($"CURRENT_SCHEMA={qualificationSnapshot.CurrentSchema}");
+            Console.WriteLine($"SESSION_USER={qualificationSnapshot.SessionUser}");
+            if (!qualificationIdentityVerified)
+                throw new InvalidOperationException("PRODUCTION_READ_ONLY_IDENTITY_MISMATCH");
+
+            string gitSha = GetCurrentGitSha(repoRoot);
+            var qualification = BusinessInputQualification.Build(
+                excelRows, manifestFields, catalogDoc, qualificationSnapshot, rules,
+                runId, gitSha, actualWorkbookSha);
+            var qualificationHashes = BusinessInputQualification.WriteArtifacts(qualification, outputDirectory);
+            Console.WriteLine($"GENERATOR_GIT_SHA={gitSha}");
+            Console.WriteLine($"WORKBOOK_SHA=PASS:{actualWorkbookSha}");
+            Console.WriteLine($"HEADERS={qualification.HeaderCount}/82");
+            Console.WriteLine($"RISKS={qualification.RiskCount}");
+            Console.WriteLine($"UNIQUE_CODES={qualification.UniqueRiskCodeCount}");
+            Console.WriteLine($"RISKS_MATCHED={qualification.RisksMatched}/59");
+            Console.WriteLine($"EVALUATIONS_MATCHED={qualification.EvaluationsMatched}/59");
+            Console.WriteLine($"PROJECTIONS_MATCHED={qualification.ProjectionsMatched}/59");
+            Console.WriteLine($"CONTROL_SOURCE_CELLS={qualification.ControlSourceCells}");
+            Console.WriteLine($"CONTROL_SOURCE_ITEMS={qualification.ControlSourceItems}");
+            Console.WriteLine($"PREVENTIVE_ITEMS={qualification.PreventiveItems}");
+            Console.WriteLine($"DETECTIVE_ITEMS={qualification.DetectiveItems}");
+            Console.WriteLine($"CORRECTIVE_ITEMS={qualification.CorrectiveItems}");
+            Console.WriteLine($"PLAN_SOURCE_CELLS={qualification.PlanSourceCells}");
+            Console.WriteLine($"PLAN_SOURCE_ITEMS={qualification.PlanSourceItems}");
+            Console.WriteLine($"ACTIVITY_SOURCE_CELLS={qualification.ActivitySourceCells}");
+            Console.WriteLine($"ACTIVITY_SOURCE_ITEMS={qualification.ActivitySourceItems}");
+            Console.WriteLine($"PARSER_AMBIGUITIES={qualification.ParserAmbiguities}");
+            Console.WriteLine($"HUMAN_INPUT_ENTITIES={qualification.HumanInputEntities}");
+            Console.WriteLine($"HUMAN_INPUT_ATTRIBUTES={qualification.HumanInputAttributes}");
+            Console.WriteLine($"REQUEST_ROWS={qualification.RequestRows.Count}");
+            Console.WriteLine($"REQUEST_DUPLICATE_KEYS={qualification.DuplicateRequestKeys}");
+            Console.WriteLine($"REQUEST_EMPTY_KEYS={qualification.EmptyRequestKeys}");
+            Console.WriteLine($"REQUEST_NONEMPTY_RESPONSES={qualification.NonemptyBusinessResponses}");
+            Console.WriteLine($"UNEXPLAINED_QUALIFICATION_ROWS={qualification.UnexplainedQualificationRows}");
+            Console.WriteLine($"SYSTEM_CREATION_RULES_VERIFIED={(rules.AllVerified ? "PASS" : "FAIL")}");
+            Console.WriteLine("DATABASE_DEFAULTS_AUDITED=PASS");
+            Console.WriteLine($"DATABASE_DEFAULTS_MISSING={rules.Evidence.Count(x => x.RuleId.StartsWith("DB_DEFAULT_", StringComparison.Ordinal) && !x.Verified)}");
+            Console.WriteLine($"OUTPUT_PATH={Path.GetFullPath(outputDirectory)}");
+            Console.WriteLine("BUSINESS_INPUT_REQUEST_READY=YES");
+            Console.WriteLine($"REQUEST_SHA256={qualificationHashes["block4_business_input_request.csv"]}");
+            Console.WriteLine($"QUALIFICATION_SHA256={qualificationHashes["block4_business_input_qualification.csv"]}");
+            Console.WriteLine($"SUMMARY_SHA256={qualificationHashes["block4_business_input_summary.json"]}");
+            Console.WriteLine("SHA256SUMS_VERIFIED=PASS");
+            Console.WriteLine("PRODUCTION_DML_EXECUTED=0");
+            Console.WriteLine("PRODUCTION_DDL_EXECUTED=0");
+            Console.WriteLine("PRODUCTION_APPLY_EXECUTED=NO");
+            Console.WriteLine("PRODUCTION_APPLY_AUTHORIZED=NO");
+            Console.WriteLine("PRODUCTION_APPLY_READY=NO");
+            Console.WriteLine("BLOCK4_STATUS=PENDING_BUSINESS_INPUT");
+            Console.WriteLine("BLOCK5_STATUS=NOT_STARTED");
+            return 0;
+        }
 
         // Resuelve configuración segura y verifica ausencia de contraseñas hardcodeadas (Req. 36)
         var (prodConnString, xeConnString) = ResolveDatabaseConnectionStrings(repoRoot);
@@ -4112,6 +4193,127 @@ public static class Program
 
         Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
         return (prodConn, xeConn);
+    }
+
+    private static string ResolveProductionConnectionString(string repoRoot)
+    {
+        Environment.SetEnvironmentVariable("DATABASE_PROFILE", "PRODUCTION");
+        string appSettingsPath = Path.Combine(repoRoot, "backend", "RL.API", "appsettings.json");
+        var config = new ConfigurationBuilder()
+            .AddJsonFile(appSettingsPath, optional: true)
+            .AddUserSecrets<OracleDbContext>(optional: true)
+            .AddEnvironmentVariables()
+            .Build();
+        string? raw = config.GetConnectionString("OracleDB_Production")
+                   ?? config["ConnectionStrings:OracleDB_Production"]
+                   ?? config.GetConnectionString("OracleDB_Prod")
+                   ?? config.GetConnectionString("OracleDB");
+        if (string.IsNullOrWhiteSpace(raw))
+            throw new InvalidOperationException("PRODUCTION_CONNECTION_CONFIGURATION_MISSING");
+        return DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(raw, config);
+    }
+
+    private static async Task VerifyProductionBusinessInputDefaultsAsync(string connectionString, BusinessCreationRules rules)
+    {
+        var expected = new Dictionary<(string Table, string Column), string>
+        {
+            [("RL_MR_PLANES", "PLA_AVANCE")] = "0",
+            [("RL_MR_PLANES", "PLA_PRESUPUESTO")] = "0",
+            [("RL_MR_ACTIVIDADES", "ACT_AVANCE")] = "0"
+        };
+        var fallbacks = new Dictionary<(string Table, string Column), bool>
+        {
+            [("RL_MR_PLANES", "PLA_AVANCE")] = rules.PlanAdvanceCreateFlowVerified,
+            [("RL_MR_PLANES", "PLA_PRESUPUESTO")] = rules.PlanBudgetCreateFlowVerified,
+            [("RL_MR_ACTIVIDADES", "ACT_AVANCE")] = rules.ActivityAdvanceCreateFlowVerified
+        };
+        var actual = new Dictionary<(string Table, string Column), bool>();
+        await using var connection = new OracleConnection(connectionString);
+        await connection.OpenAsync();
+        await using (var beginReadOnly = new OracleCommand("SET TRANSACTION READ ONLY", connection))
+            await beginReadOnly.ExecuteNonQueryAsync();
+        try
+        {
+            await using (var identity = new OracleCommand(@"
+                SELECT sys_context('USERENV','DB_NAME'), sys_context('USERENV','SERVICE_NAME'),
+                       sys_context('USERENV','INSTANCE_NAME'), sys_context('USERENV','CURRENT_SCHEMA'),
+                       sys_context('USERENV','SESSION_USER') FROM dual", connection))
+            await using (var identityReader = await identity.ExecuteReaderAsync())
+            {
+                if (!await identityReader.ReadAsync()
+                    || !SafeGetString(identityReader, 0).Equals("HPPROD1", StringComparison.OrdinalIgnoreCase)
+                    || !SafeGetString(identityReader, 1).Equals("hpprod1", StringComparison.OrdinalIgnoreCase)
+                    || !SafeGetString(identityReader, 2).Equals("hpprod1", StringComparison.OrdinalIgnoreCase)
+                    || !SafeGetString(identityReader, 3).Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase)
+                    || !SafeGetString(identityReader, 4).Equals("RIESGO_LAVADO", StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidOperationException("PRODUCTION_READ_ONLY_IDENTITY_MISMATCH_BEFORE_DEFAULT_AUDIT");
+            }
+            await using var command = new OracleCommand(@"
+                SELECT TABLE_NAME, COLUMN_NAME, DATA_DEFAULT, NULLABLE
+                  FROM USER_TAB_COLUMNS
+                 WHERE (TABLE_NAME = 'RL_MR_PLANES' AND COLUMN_NAME IN ('PLA_AVANCE','PLA_PRESUPUESTO'))
+                    OR (TABLE_NAME = 'RL_MR_ACTIVIDADES' AND COLUMN_NAME = 'ACT_AVANCE')", connection);
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                string table = SafeGetString(reader, 0).Trim().ToUpperInvariant();
+                string column = SafeGetString(reader, 1).Trim().ToUpperInvariant();
+                string value = SafeGetString(reader, 2).Trim().Trim('(', ')', ' ', '\t', '\r', '\n');
+                string nullable = SafeGetString(reader, 3).Trim().ToUpperInvariant();
+                string defaultClass = value.Length == 0 ? "MISSING" : string.Equals(value, "0", StringComparison.Ordinal) ? "ZERO" : "OTHER";
+                Console.WriteLine($"DATABASE_DEFAULT_AUDIT={table}.{column};DEFAULT_CLASS={defaultClass};NOT_NULL={(nullable == "N" ? "YES" : "NO")}");
+                var key = (table, column);
+                if (!expected.TryGetValue(key, out string? expectedValue))
+                    throw new InvalidOperationException($"BUSINESS_INPUT_DATABASE_DEFAULT_UNEXPECTED_COLUMN:{table}.{column}");
+                bool verified = string.Equals(value, expectedValue, StringComparison.Ordinal) && nullable == "N";
+                actual[key] = verified;
+                expected.Remove(key);
+                if (!verified && !fallbacks[key])
+                    throw new InvalidOperationException($"BUSINESS_INPUT_DATABASE_DEFAULT_DRIFT:{table}.{column};DEFAULT_CLASS={defaultClass};NOT_NULL={(nullable == "N" ? "YES" : "NO")}");
+            }
+            foreach (var key in expected.Keys.ToArray())
+            {
+                actual[key] = false;
+                if (!fallbacks[key])
+                    throw new InvalidOperationException($"BUSINESS_INPUT_DATABASE_DEFAULT_MISSING:{key.Table}.{key.Column}");
+                Console.WriteLine($"DATABASE_DEFAULT_AUDIT={key.Table}.{key.Column};DEFAULT_CLASS=MISSING;NOT_NULL=UNVERIFIED;APPLICATION_CREATE_RULE=VERIFIED");
+            }
+            rules.PlanAdvanceDefaultVerified = actual.GetValueOrDefault(("RL_MR_PLANES", "PLA_AVANCE"));
+            rules.PlanBudgetDefaultVerified = actual.GetValueOrDefault(("RL_MR_PLANES", "PLA_PRESUPUESTO"));
+            rules.ActivityAdvanceDefaultVerified = actual.GetValueOrDefault(("RL_MR_ACTIVIDADES", "ACT_AVANCE"));
+            rules.Evidence = rules.Evidence.Select(item => item.RuleId switch
+            {
+                "DB_DEFAULT_PLA_AVANCE" => item with { Verified = rules.PlanAdvanceDefaultVerified, Notes = item.Notes + " Production dictionary confirms: " + rules.PlanAdvanceDefaultVerified },
+                "DB_DEFAULT_PLA_PRESUPUESTO" => item with { Verified = rules.PlanBudgetDefaultVerified, Notes = item.Notes + " Production dictionary confirms: " + rules.PlanBudgetDefaultVerified },
+                "DB_DEFAULT_ACT_AVANCE" => item with { Verified = rules.ActivityAdvanceDefaultVerified, Notes = item.Notes + " Production dictionary confirms: " + rules.ActivityAdvanceDefaultVerified },
+                _ => item
+            }).ToList();
+        }
+        finally
+        {
+            await using var rollback = new OracleCommand("ROLLBACK", connection);
+            await rollback.ExecuteNonQueryAsync();
+        }
+    }
+
+    private static string GetCurrentGitSha(string repoRoot)
+    {
+        var start = new ProcessStartInfo("git")
+        {
+            WorkingDirectory = repoRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        start.ArgumentList.Add("rev-parse");
+        start.ArgumentList.Add("HEAD");
+        using var process = Process.Start(start) ?? throw new InvalidOperationException("GIT_SHA_PROCESS_START_FAILED");
+        string output = process.StandardOutput.ReadToEnd().Trim();
+        string error = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        if (process.ExitCode != 0 || !Regex.IsMatch(output, "^[0-9a-f]{40}$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+            throw new InvalidOperationException($"GIT_SHA_UNAVAILABLE: {error.Trim()}");
+        return output.ToLowerInvariant();
     }
 
     private static string GetCellTextValue(JsonElement row, int fieldNumber)
