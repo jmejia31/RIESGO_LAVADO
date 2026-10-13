@@ -46,7 +46,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             string calculations = BuildCalculationsJson();
             await ExecuteAsync(connection, "INSERT INTO RL_MR_RIESGOS VALUES (:id,'ROP-CUMP-59','Fixture','Fixture risk',1,:usr,SYSDATE)", ("id",riskId),("usr",userId));
             await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO VALUES (:id,:risk,1,:answers,:calc,:fixtureDate,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("fixtureDate",baseDate),("usr",userId));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'Riesgo bajo','Riesgo no significativo','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("fixtureDate",baseDate));
+            // The legacy summary columns are VARCHAR2(20); canonical display labels come from EVA_CALCULOS_JSON.
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("fixtureDate",baseDate));
             foreach (long id in new[] { controlA, controlB, controlC })
             {
                 string type = id == controlC ? "DETECTIVO" : "PREVENTIVO";
@@ -106,6 +107,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             JsonElement fields = json.RootElement.GetProperty("datos").GetProperty("fields");
             Assert.Equal(82,fields.GetArrayLength());
             Assert.Equal(Enumerable.Range(1,82),fields.EnumerateArray().Select(field=>field.GetProperty("fieldNumber").GetInt32()));
+            Assert.Equal("Riesgo bajo", fields[12].GetProperty("value").GetString());
+            Assert.Equal("Riesgo no significativo", fields[37].GetProperty("value").GetString());
             foreach (int fieldNumber in new[] { 40,44,45,46,47,48,49 })
             {
                 JsonElement values = fields.EnumerateArray().Single(field=>field.GetProperty("fieldNumber").GetInt32()==fieldNumber).GetProperty("value");
