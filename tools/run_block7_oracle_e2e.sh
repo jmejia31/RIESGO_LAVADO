@@ -26,6 +26,9 @@ fi
 echo 'BLOCK7_ORACLE_TESTS_EXECUTED=1'
 echo 'BLOCK7_ORACLE_WRITE_INTEGRATION=PASS'
 
+host_project="$repo_root/tools/Block7OracleE2EHost/Block7OracleE2EHost.csproj"
+dotnet build "$host_project" --configuration Release
+
 api_log="${RUNNER_TEMP:-/tmp}/block7-e2e-api.log"
 api_dll="$repo_root/tools/Block7OracleE2EHost/bin/Release/net10.0/Block7OracleE2EHost.dll"
 if [[ ! -f "$api_dll" ]]; then

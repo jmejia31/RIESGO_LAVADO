@@ -76,7 +76,7 @@ async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluati
   });
 }
 
-test('Block 7 real browser persists draft through API and Oracle across reload/edit', async ({ page, request }) => {
+test('Block 7 real browser persists draft through API and Oracle across reload/edit', async ({ page, request }, testInfo) => {
   const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true';
   test.skip(!required, 'The real Oracle browser suite is enabled only in its disposable CI environment.');
 
@@ -208,6 +208,50 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   ]);
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
+
+  const blockNavigation = page.locator('nav[aria-label^="Bloques funcionales"]');
+  await expect(blockNavigation.getByRole('button')).toHaveCount(6);
+  const firstBlock = blockNavigation.getByRole('button').first();
+  await firstBlock.focus();
+  await page.keyboard.press('Enter');
+  await expect(firstBlock).toHaveAttribute('aria-current', 'step');
+
+  await page.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
+  await page.getByRole('button', { name: 'Ver Matriz completa' }).click();
+  const matrixDialog = page.locator('dialog[data-matrix-modal="complete"]');
+  await expect(matrixDialog).toBeVisible();
+  await expect(matrixDialog).toHaveAttribute('aria-modal', 'true');
+  await expect(matrixDialog).toHaveAttribute('aria-labelledby', 'titulo-modal-matriz-completa');
+  await expect(matrixDialog.getByRole('heading', { name: 'Matriz completa' })).toBeVisible();
+  await expect(matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' })).toBeVisible();
+  await expect(matrixDialog.locator('[data-matrix-plan]')).toHaveCount(2);
+  await expect(matrixDialog.locator('[data-control-type]')).toHaveCount(3);
+
+  const block5 = matrixDialog.locator('[data-matrix-block="5"]');
+  const details = block5.getByRole('button', { name: 'Mostrar detalle' });
+  await expect(details).toHaveAttribute('aria-expanded', 'false');
+  await details.click();
+  await expect(block5.getByRole('button', { name: 'Ocultar detalle' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(block5.locator('[data-matrix-field]')).toHaveCount(20);
+  await expect(block5.locator('input, select, textarea')).toHaveCount(0);
+
+  const responsiveSections = [
+    { block: '1', name: 'block1' },
+    { block: '2', name: 'block2-controls' },
+    { block: '4', name: 'block4-plans' },
+    { block: '5', name: 'block5-expanded' },
+  ];
+  for (const viewport of [{ width: 1280, height: 900, name: 'desktop' }, { width: 390, height: 844, name: 'mobile' }]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    for (const section of responsiveSections) {
+      const target = matrixDialog.locator(`[data-matrix-block="${section.block}"]`);
+      await expect(target).toBeVisible();
+      await target.screenshot({ path: testInfo.outputPath(`block7-${viewport.name}-${section.name}.png`) });
+    }
+  }
+
+  await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
 
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
