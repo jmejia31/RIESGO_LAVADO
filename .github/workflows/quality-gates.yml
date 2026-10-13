@@ -154,8 +154,10 @@ jobs:
           echo "$output" | grep -Eq 'Passed: *1'
           echo 'BLOCK7_ORACLE_WRITE_INTEGRATION=PASS'
 
-      - name: Start isolated Block 7 API host against the same Oracle XE
+      - name: Run Block 7 real Angular browser to API to Oracle E2E
+        working-directory: frontend/rl-app
         env:
+          CI: 'true'
           ASPNETCORE_ENVIRONMENT: E2E
           RL_BLOCK7_REAL_E2E_REQUIRED: 'true'
           DATABASE_PROFILE: LOCAL_XE
@@ -163,37 +165,36 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dotnet run --project tools/Block7OracleE2EHost/Block7OracleE2EHost.csproj --configuration Release > /tmp/block7-e2e-api.log 2>&1 &
-          echo $! > /tmp/block7-e2e-api.pid
+          api_log=/tmp/block7-e2e-api.log
+          dotnet run --project ../../tools/Block7OracleE2EHost/Block7OracleE2EHost.csproj --configuration Release > "$api_log" 2>&1 &
+          api_pid=$!
+          cleanup() {
+            kill "$api_pid" 2>/dev/null || true
+            wait "$api_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
           ready=false
           for attempt in $(seq 1 60); do
             if curl --silent --show-error --fail http://127.0.0.1:5043/__e2e/readyz >/dev/null; then
               ready=true
               break
             fi
-            if ! kill -0 "$(cat /tmp/block7-e2e-api.pid)" 2>/dev/null; then
-              cat /tmp/block7-e2e-api.log
+            if ! kill -0 "$api_pid" 2>/dev/null; then
+              cat "$api_log"
               exit 1
             fi
             sleep 2
           done
           if [ "$ready" != true ]; then
-            cat /tmp/block7-e2e-api.log
+            cat "$api_log"
             exit 1
           fi
           echo 'BLOCK7_REAL_API_ORACLE_READY=PASS'
 
-      - name: Run Block 7 real Angular browser to API to Oracle E2E
-        working-directory: frontend/rl-app
-        env:
-          CI: 'true'
-          RL_BLOCK7_REAL_E2E_REQUIRED: 'true'
-        shell: bash
-        run: |
-          set -o pipefail
           if ! output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts 2>&1 | tee /dev/stderr)"; then
             echo 'Block 7 Oracle API host diagnostics (secrets omitted):'
-            sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' /tmp/block7-e2e-api.log | tail -n 160
+            sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' "$api_log" | tail -n 160
             exit 1
           fi
           echo "$output" | grep -Eq '1 passed'
