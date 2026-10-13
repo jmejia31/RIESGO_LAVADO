@@ -234,7 +234,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         builder.Services.AddAuthorization();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
-        builder.Services.AddSingleton(new OracleDbContext(connectionString));
+        builder.Services.AddSingleton(new OracleDbContext(WithoutPooling(connectionString)));
         builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
         builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
         builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
@@ -390,7 +390,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 .AddScheme<AuthenticationSchemeOptions, Block6IntegrationAuthenticationHandler>("Block6Integration", _ => { });
             builder.Services.AddAuthorization();
             builder.Services.AddControllers().AddApplicationPart(typeof(InstitutionalProjectionController).Assembly);
-            builder.Services.AddSingleton(new OracleDbContext(connectionString));
+            builder.Services.AddSingleton(new OracleDbContext(WithoutPooling(connectionString)));
             builder.Services.AddSingleton<InstitutionalProjectionMapper>();
             builder.Services.AddScoped<IInstitutionalProjectionReadRepository, InstitutionalProjectionReadRepository>();
             builder.Services.AddScoped<IInstitutionalProjectionService, InstitutionalProjectionService>();
@@ -446,11 +446,20 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static OracleConnection CreateConnection(string connectionString)
     {
-        var connection = new OracleConnection(connectionString)
+        var connection = new OracleConnection(WithoutPooling(connectionString))
         {
             UseHourOffsetForUnsupportedTimezone = true
         };
         return connection;
+    }
+
+    private static string WithoutPooling(string connectionString)
+    {
+        var builder = new OracleConnectionStringBuilder(connectionString)
+        {
+            Pooling = false
+        };
+        return builder.ConnectionString;
     }
 
     private static async Task EnsureFixtureTablesAsync(OracleConnection connection)

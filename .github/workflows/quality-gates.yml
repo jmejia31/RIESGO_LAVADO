@@ -148,7 +148,7 @@ jobs:
         env:
           RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED: 'true'
           BLOCK7_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
-          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=false;
         run: ./tools/run_quality_gates.ps1
 
       - name: Validate compose configuration without secrets in repository
