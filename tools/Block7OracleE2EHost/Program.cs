@@ -162,7 +162,7 @@ public sealed class E2EAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
     }
 }
 
-public sealed class EmptyCalculationConfigurationProxy : DispatchProxy
+public class EmptyCalculationConfigurationProxy : DispatchProxy
 {
     protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
     {

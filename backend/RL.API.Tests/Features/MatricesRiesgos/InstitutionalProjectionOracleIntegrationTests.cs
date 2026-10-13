@@ -310,7 +310,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         }
     }
 
-    private sealed class EmptyCalculationConfigurationProxy : DispatchProxy
+    public class EmptyCalculationConfigurationProxy : DispatchProxy
     {
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
         {
