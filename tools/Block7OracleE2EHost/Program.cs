@@ -28,7 +28,10 @@ var guardConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Di
 }).Build();
 string connectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(configuredConnection, guardConfiguration);
 
-await using var oracle = new OracleConnection(connectionString);
+await using var oracle = new OracleConnection(connectionString)
+{
+    UseHourOffsetForUnsupportedTimezone = true
+};
 await oracle.OpenAsync();
 await EnsureFixtureAsync(oracle);
 long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000;

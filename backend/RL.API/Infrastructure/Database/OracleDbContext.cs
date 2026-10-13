@@ -15,5 +15,8 @@ public class OracleDbContext
     }
 
     public OracleConnection CreateConnection()
-        => new OracleConnection(_connectionString);
+        => new(_connectionString)
+        {
+            UseHourOffsetForUnsupportedTimezone = true
+        };
 }
