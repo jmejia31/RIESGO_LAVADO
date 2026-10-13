@@ -443,7 +443,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                 connection.Open();
                 return;
             }
-            catch (OracleException ex) when (ex.Number is 1033 or 1034 or 1089 or 1090 or 12514 or 12541 or 12543 or 12545 or 12547 or 12528)
+            catch (OracleException ex) when (ex.Number is 50000 or 1033 or 1034 or 1089 or 1090 or 12514 or 12541 or 12543 or 12545 or 12547 or 12528)
             {
                 last=ex;
                 await Task.Delay(TimeSpan.FromSeconds(5));
