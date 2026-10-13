@@ -191,7 +191,11 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts 2>&1 | tee /dev/stderr)"
+          if ! output="$(npm run e2e -- e2e/block7-oracle-real.spec.ts 2>&1 | tee /dev/stderr)"; then
+            echo 'Block 7 Oracle API host diagnostics (secrets omitted):'
+            sed -E 's/(Password|User Id)=([^; ]+)/\1=[REDACTED]/Ig' /tmp/block7-e2e-api.log | tail -n 160
+            exit 1
+          fi
           echo "$output" | grep -Eq '1 passed'
           echo 'BLOCK7_REAL_ORACLE_E2E_TESTS=1'
           echo 'BLOCK7_BROWSER_API_ORACLE_E2E=PASS'

@@ -178,8 +178,9 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await page.getByTitle('Editar evaluación').click();
   await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
   const projectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
-  expect(projectionResponse.ok()).toBeTruthy();
-  const projection = (await projectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos;
+  const projectionBody = await projectionResponse.text();
+  expect(projectionResponse.ok(), `Projection HTTP ${projectionResponse.status()}: ${projectionBody.slice(0, 1000)}`).toBeTruthy();
+  const projection = (JSON.parse(projectionBody) as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos;
   expect(projection.fields).toHaveLength(82);
   expect(projection.fields.find(field => field.fieldNumber === 41)?.value).toBe(2);
   expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(3);
