@@ -63,14 +63,14 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await InsertEvidenceAsync(connection,evidenceEarly,"early-id-later",baseDate.AddDays(1),controlA);
             await InsertEvidenceAsync(connection,evidenceOther,"other-control",baseDate,controlB);
 
-            // Characterize the same Oracle READ ONLY transaction model under a concurrent committed update.
+            // Characterize the same Oracle snapshot transaction under a concurrent committed update.
             await using (var readerConnection = CreateConnection(connectionString))
             await using (var writerConnection = CreateConnection(connectionString))
             {
                 await readerConnection.OpenAsync();
                 await writerConnection.OpenAsync();
-                await ExecuteAsync(readerConnection,"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
-                string before = await ReadRiskNameAsync(readerConnection,riskId);
+                await using OracleTransaction readerTransaction = readerConnection.BeginTransaction(System.Data.IsolationLevel.Serializable);
+                string before = await ReadRiskNameAsync(readerConnection,readerTransaction,riskId);
                 await using (OracleTransaction writerTransaction = writerConnection.BeginTransaction())
                 {
                     await using var update = new OracleCommand("UPDATE RL_MR_RIESGOS SET RIE_NOMBRE='Concurrent mutation' WHERE RIE_ID=:id",writerConnection){BindByName=true,Transaction=writerTransaction};
@@ -78,8 +78,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     Assert.Equal(1,await update.ExecuteNonQueryAsync());
                     await writerTransaction.CommitAsync();
                 }
-                try { Assert.Equal(before,await ReadRiskNameAsync(readerConnection,riskId)); }
-                finally { await ExecuteAsync(readerConnection,"ROLLBACK"); }
+                try { Assert.Equal(before,await ReadRiskNameAsync(readerConnection,readerTransaction,riskId)); }
+                finally { await readerTransaction.RollbackAsync(); }
                 await ExecuteAsync(writerConnection,"UPDATE RL_MR_RIESGOS SET RIE_NOMBRE='Fixture' WHERE RIE_ID=:id",("id",riskId));
             }
 
@@ -203,9 +203,9 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         await command.ExecuteNonQueryAsync();
     }
 
-    private static async Task<string> ReadRiskNameAsync(OracleConnection connection,long id)
+    private static async Task<string> ReadRiskNameAsync(OracleConnection connection,OracleTransaction transaction,long id)
     {
-        await using var command=new OracleCommand("SELECT RIE_NOMBRE FROM RL_MR_RIESGOS WHERE RIE_ID=:id",connection){BindByName=true};
+        await using var command=new OracleCommand("SELECT RIE_NOMBRE FROM RL_MR_RIESGOS WHERE RIE_ID=:id",connection){BindByName=true,Transaction=transaction};
         command.Parameters.Add(new OracleParameter("id",id));
         return Convert.ToString(await command.ExecuteScalarAsync(),System.Globalization.CultureInfo.InvariantCulture)!;
     }

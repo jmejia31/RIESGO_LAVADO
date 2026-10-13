@@ -1,6 +1,7 @@
 using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos.Contracts;
 using RL.API.Infrastructure.Database;
+using System.Data;
 
 namespace RL.API.Features.MatricesRiesgos.Persistence;
 
@@ -28,38 +29,37 @@ public sealed class InstitutionalProjectionReadRepository(OracleDbContext databa
         // ODP.NET retries with a numeric offset only when that server rejects the client region.
         connection.UseHourOffsetForUnsupportedTimezone = true;
         await connection.OpenAsync(cancellationToken);
-        // Oracle XE 11g did not preserve one snapshot across statements with READ ONLY in the
-        // concurrent characterization. SERIALIZABLE provides transaction-level read consistency;
-        // this repository issues SELECT statements only and always rolls the transaction back.
-        await ExecuteAsync(connection, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", cancellationToken);
+        // All query commands explicitly join this serializable transaction. The repository issues
+        // SELECT statements only and rolls back, providing one transaction-level Oracle snapshot.
+        await using OracleTransaction transaction = connection.BeginTransaction(IsolationLevel.Serializable);
         int queryCount = 0;
         try
         {
-            EvaluacionRiesgoDto? evaluation = await ReadEvaluationAsync(connection, evaluationId, cancellationToken);
+            EvaluacionRiesgoDto? evaluation = await ReadEvaluationAsync(connection, transaction, evaluationId, cancellationToken);
             queryCount++;
             if (evaluation is null) return null;
 
-            RiesgoDto? risk = await ReadRiskAsync(connection, evaluation.EvaRiesgoId, cancellationToken);
+            RiesgoDto? risk = await ReadRiskAsync(connection, transaction, evaluation.EvaRiesgoId, cancellationToken);
             queryCount++;
             if (risk is null) return null;
-            IReadOnlyList<RiesgoDto> allRisks = await ReadAllRisksAsync(connection, cancellationToken);
+            IReadOnlyList<RiesgoDto> allRisks = await ReadAllRisksAsync(connection, transaction, cancellationToken);
             queryCount++;
-            IReadOnlyList<ControlRiesgoDto> controls = await ReadControlsAsync(connection, evaluationId, cancellationToken);
+            IReadOnlyList<ControlRiesgoDto> controls = await ReadControlsAsync(connection, transaction, evaluationId, cancellationToken);
             queryCount++;
-            MitigacionBloque4Dto mitigation = await ReadPlansAsync(connection, evaluationId, cancellationToken);
+            MitigacionBloque4Dto mitigation = await ReadPlansAsync(connection, transaction, evaluationId, cancellationToken);
             queryCount++;
-            MatrizBloque6Dto monitoring = await ReadMonitoringAsync(connection, evaluationId, userId, cancellationToken);
+            MatrizBloque6Dto monitoring = await ReadMonitoringAsync(connection, transaction, evaluationId, userId, cancellationToken);
             queryCount += 4;
             return new(evaluation, risk, allRisks, controls, mitigation, monitoring, queryCount);
         }
         finally
         {
             // Oracle SET TRANSACTION READ ONLY is ended explicitly even when a query or cancellation fails.
-            await ExecuteAsync(connection, "ROLLBACK", CancellationToken.None);
+            await transaction.RollbackAsync(CancellationToken.None);
         }
     }
 
-    private static async Task<EvaluacionRiesgoDto?> ReadEvaluationAsync(OracleConnection connection, long id, CancellationToken token)
+    private static async Task<EvaluacionRiesgoDto?> ReadEvaluationAsync(OracleConnection connection, OracleTransaction transaction, long id, CancellationToken token)
     {
         const string sql = @"SELECT e.EVA_ID,e.EVA_RIESGO_ID,e.EVA_VERSION_ID,NVL(f.FLU_ESTADO,'BORRADOR'),
 e.EVA_DATOS_JSON,e.EVA_CALCULOS_JSON,p.PROY_VRI,CAST(NULL AS NUMBER),p.PROY_VRR,e.EVA_FECHA_REGISTRO,
@@ -69,7 +69,7 @@ LEFT JOIN RL_MR_PROYECCIONES_EVALUACION p ON p.PROY_EVALUACION_ID=e.EVA_ID
 LEFT JOIN (SELECT FLU_EVALUACION_ID,FLU_ESTADO FROM (SELECT FLU_EVALUACION_ID,FLU_ESTADO,
 ROW_NUMBER() OVER(PARTITION BY FLU_EVALUACION_ID ORDER BY FLU_FECHA DESC,FLU_ID DESC) RN FROM RL_MR_FLUJOS_EVALUACION) WHERE RN=1) f
 ON f.FLU_EVALUACION_ID=e.EVA_ID WHERE e.EVA_ID=:id";
-        await using OracleCommand command = CreateCommand(connection, sql, ("id", id));
+        await using OracleCommand command = CreateCommand(connection, transaction, sql, ("id", id));
         await using OracleDataReader reader = await command.ExecuteReaderAsync(token);
         if (!await reader.ReadAsync(token)) return null;
         return new EvaluacionRiesgoDto
@@ -82,18 +82,18 @@ ON f.FLU_EVALUACION_ID=e.EVA_ID WHERE e.EVA_ID=:id";
         };
     }
 
-    private static async Task<RiesgoDto?> ReadRiskAsync(OracleConnection connection, long id, CancellationToken token)
+    private static async Task<RiesgoDto?> ReadRiskAsync(OracleConnection connection, OracleTransaction transaction, long id, CancellationToken token)
     {
-        await using OracleCommand command = CreateCommand(connection,
+        await using OracleCommand command = CreateCommand(connection, transaction,
             "SELECT RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", id));
         await using OracleDataReader reader = await command.ExecuteReaderAsync(token);
         return await reader.ReadAsync(token) ? MapRisk(reader) : null;
     }
 
-    private static async Task<IReadOnlyList<RiesgoDto>> ReadAllRisksAsync(OracleConnection connection, CancellationToken token)
+    private static async Task<IReadOnlyList<RiesgoDto>> ReadAllRisksAsync(OracleConnection connection, OracleTransaction transaction, CancellationToken token)
     {
         const string sql = "SELECT RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION FROM RL_MR_RIESGOS ORDER BY RIE_ID";
-        await using OracleCommand command = CreateCommand(connection, sql);
+        await using OracleCommand command = CreateCommand(connection, transaction, sql);
         await using OracleDataReader reader = await command.ExecuteReaderAsync(token);
         var rows = new List<RiesgoDto>();
         while (await reader.ReadAsync(token)) rows.Add(MapRisk(reader));
@@ -107,10 +107,10 @@ ON f.FLU_EVALUACION_ID=e.EVA_ID WHERE e.EVA_ID=:id";
         RieUsrCreacion = reader.GetInt64(5), RieFechaCreacion = reader.GetDateTime(6)
     };
 
-    private static async Task<IReadOnlyList<ControlRiesgoDto>> ReadControlsAsync(OracleConnection connection, long evaluationId, CancellationToken token)
+    private static async Task<IReadOnlyList<ControlRiesgoDto>> ReadControlsAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, CancellationToken token)
     {
         const string sql = "SELECT CON_ID,CON_EVALUACION_ID,CON_TIPO,CON_DESCRIPCION,CON_AUTOMATIZACION,CON_ESTADO,CON_ESTADO_MONITOREO,CON_EFECTIVIDAD_MONITOREO FROM RL_MR_CONTROLES_RIESGO WHERE CON_EVALUACION_ID=:id ORDER BY CON_ID ASC";
-        await using OracleCommand command = CreateCommand(connection, sql, ("id", evaluationId));
+        await using OracleCommand command = CreateCommand(connection, transaction, sql, ("id", evaluationId));
         await using OracleDataReader reader = await command.ExecuteReaderAsync(token);
         var rows = new List<ControlRiesgoDto>();
         while (await reader.ReadAsync(token)) rows.Add(new()
@@ -122,14 +122,14 @@ ON f.FLU_EVALUACION_ID=e.EVA_ID WHERE e.EVA_ID=:id";
         return rows;
     }
 
-    private static async Task<MitigacionBloque4Dto> ReadPlansAsync(OracleConnection connection, long evaluationId, CancellationToken token)
+    private static async Task<MitigacionBloque4Dto> ReadPlansAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, CancellationToken token)
     {
         const string sql = @"SELECT p.PLA_ID,p.PLA_EVALUACION_ID,p.PLA_DESCRIPCION,p.PLA_AVANCE,p.PLA_PRESUPUESTO,
 p.PLA_FECHA_INICIO,p.PLA_FECHA_FIN,p.PLA_ESTADO,p.PLA_MONITOREO_SEGUIMIENTO,p.PLA_RESPONSABLES,p.PLA_RECURSOS,
 a.ACT_ID,a.ACT_PLAN_ID,a.ACT_DESCRIPCION,a.ACT_RESPONSABLE,a.ACT_AVANCE,a.ACT_FECHA_INICIO,a.ACT_FECHA_FIN,a.ACT_ESTADO
 FROM RL_MR_PLANES p LEFT JOIN RL_MR_ACTIVIDADES a ON a.ACT_PLAN_ID=p.PLA_ID
 WHERE p.PLA_EVALUACION_ID=:id ORDER BY p.PLA_ID ASC,a.ACT_ID ASC";
-        await using OracleCommand command = CreateCommand(connection, sql, ("id", evaluationId));
+        await using OracleCommand command = CreateCommand(connection, transaction, sql, ("id", evaluationId));
         await using OracleDataReader reader = await command.ExecuteReaderAsync(token);
         var plans = new List<PlanMitigacionDto>();
         var byId = new Dictionary<long, PlanMitigacionDto>();
@@ -153,20 +153,20 @@ WHERE p.PLA_EVALUACION_ID=:id ORDER BY p.PLA_ID ASC,a.ACT_ID ASC";
         return new() { CantidadAcciones=plans.Count, Planes=plans };
     }
 
-    private static async Task<MatrizBloque6Dto> ReadMonitoringAsync(OracleConnection connection, long evaluationId, long userId, CancellationToken token)
+    private static async Task<MatrizBloque6Dto> ReadMonitoringAsync(OracleConnection connection, OracleTransaction transaction, long evaluationId, long userId, CancellationToken token)
     {
         var alerts = new List<SenalAlertaDto>();
-        await using (OracleCommand command = CreateCommand(connection, "SELECT ALE_ID,ALE_EVALUACION_ID,ALE_CODIGO,ALE_INDICADOR,ALE_ESTADO,ALE_FECHA_DISPARO FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID=:id ORDER BY ALE_ID", ("id", evaluationId)))
+        await using (OracleCommand command = CreateCommand(connection, transaction, "SELECT ALE_ID,ALE_EVALUACION_ID,ALE_CODIGO,ALE_INDICADOR,ALE_ESTADO,ALE_FECHA_DISPARO FROM RL_MR_SENALES_ALERTA WHERE ALE_EVALUACION_ID=:id ORDER BY ALE_ID", ("id", evaluationId)))
         await using (OracleDataReader reader = await command.ExecuteReaderAsync(token))
             while (await reader.ReadAsync(token)) alerts.Add(new() { AleId=reader.GetInt64(0), AleEvaluacionId=reader.GetInt64(1), AleCodigo=reader.GetString(2), AleIndicador=reader.GetString(3), AleEstado=reader.GetString(4), AleFechaDisparo=reader.IsDBNull(5)?null:reader.GetDateTime(5) });
 
         string? state = null, area = null, ugr = null;
-        await using (OracleCommand command = CreateCommand(connection, "SELECT MON_ESTADO_RIESGO,MON_OBSERVACIONES_AREA,MON_OBSERVACIONES_UGR FROM (SELECT MON_ESTADO_RIESGO,MON_OBSERVACIONES_AREA,MON_OBSERVACIONES_UGR FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID=:id ORDER BY MON_FECHA DESC,MON_ID DESC) WHERE ROWNUM=1", ("id", evaluationId)))
+        await using (OracleCommand command = CreateCommand(connection, transaction, "SELECT MON_ESTADO_RIESGO,MON_OBSERVACIONES_AREA,MON_OBSERVACIONES_UGR FROM (SELECT MON_ESTADO_RIESGO,MON_OBSERVACIONES_AREA,MON_OBSERVACIONES_UGR FROM RL_MR_AUTOMONITOREO WHERE MON_EVALUACION_ID=:id ORDER BY MON_FECHA DESC,MON_ID DESC) WHERE ROWNUM=1", ("id", evaluationId)))
         await using (OracleDataReader reader = await command.ExecuteReaderAsync(token))
             if (await reader.ReadAsync(token)) { state=NullableText(reader,0); area=NullableText(reader,1); ugr=NullableText(reader,2); }
 
         var controls = new Dictionary<long, ControlMonitoreoMatrizDto>();
-        await using (OracleCommand command = CreateCommand(connection, @"SELECT c.CON_ID,c.CON_TIPO,c.CON_DESCRIPCION,c.CON_ESTADO_MONITOREO,c.CON_EFECTIVIDAD_MONITOREO,e.EVI_ID,e.EVI_NOMBRE_ARCHIVO,e.EVI_FECHA_CREACION
+        await using (OracleCommand command = CreateCommand(connection, transaction, @"SELECT c.CON_ID,c.CON_TIPO,c.CON_DESCRIPCION,c.CON_ESTADO_MONITOREO,c.CON_EFECTIVIDAD_MONITOREO,e.EVI_ID,e.EVI_NOMBRE_ARCHIVO,e.EVI_FECHA_CREACION
 FROM RL_MR_CONTROLES_RIESGO c LEFT JOIN RL_MR_EVIDENCIAS_VINCULOS v ON v.EVV_TIPO_ENTIDAD='CONTROL' AND v.EVV_ENTIDAD_ID=c.CON_ID
 LEFT JOIN RL_MR_EVIDENCIAS e ON e.EVI_ID=v.EVV_EVIDENCIA_ID WHERE c.CON_EVALUACION_ID=:id
 ORDER BY c.CON_ID ASC,e.EVI_FECHA_CREACION ASC,e.EVI_ID ASC", ("id", evaluationId)))
@@ -185,24 +185,18 @@ ORDER BY c.CON_ID ASC,e.EVI_FECHA_CREACION ASC,e.EVI_ID ASC", ("id", evaluationI
         }
 
         var capabilities = new HashSet<string>(StringComparer.Ordinal);
-        await using (OracleCommand command = CreateCommand(connection,"SELECT UCP_CAPACIDAD FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID=:userId AND UCP_ACTIVO=1",("userId",userId)))
+        await using (OracleCommand command = CreateCommand(connection, transaction,"SELECT UCP_CAPACIDAD FROM RL_USUARIO_CAPACIDADES WHERE UCP_USR_ID=:userId AND UCP_ACTIVO=1",("userId",userId)))
         await using (OracleDataReader reader = await command.ExecuteReaderAsync(token))
             while (await reader.ReadAsync(token)) capabilities.Add(reader.GetString(0));
         return new MatrizBloque6Dto { SenalesAlerta=alerts, EstadoRiesgo=state, ObservacionesArea=area, ObservacionesUgr=ugr,
             PuedeEditarObservacionesArea=capabilities.Contains("MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR"), PuedeEditarObservacionesUgr=capabilities.Contains("MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR"), Controles=controls.Values.ToArray() };
     }
 
-    private static OracleCommand CreateCommand(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
+    private static OracleCommand CreateCommand(OracleConnection connection, OracleTransaction transaction, string sql, params (string Name, object Value)[] parameters)
     {
-        var command = new OracleCommand(sql, connection) { BindByName=true };
+        var command = new OracleCommand(sql, connection) { BindByName=true, Transaction=transaction };
         foreach ((string name, object value) in parameters) command.Parameters.Add(new OracleParameter(name,value));
         return command;
-    }
-
-    private static async Task ExecuteAsync(OracleConnection connection, string sql, CancellationToken token)
-    {
-        await using OracleCommand command = new(sql, connection) { BindByName=true };
-        await command.ExecuteNonQueryAsync(token);
     }
 
     private static string? NullableText(OracleDataReader reader, int index) => reader.IsDBNull(index) ? null : reader.GetString(index);
