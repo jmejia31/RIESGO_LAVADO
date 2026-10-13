@@ -97,7 +97,9 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await page.getByRole('button', { name: 'Nueva evaluación' }).click();
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
-  await page.locator('#modal-selector-riesgo').selectOption(String(fixture.riskId));
+  const riskOption = page.locator('#modal-selector-riesgo option').filter({ hasText: fixture.riskCode }).last();
+  await expect(riskOption).toHaveCount(1);
+  await page.locator('#modal-selector-riesgo').selectOption({ label: (await riskOption.textContent())!.trim() });
   await page.getByLabel('Área principal').fill('Área Oracle Browser');
 
   const createResponsePromise = page.waitForResponse(response =>
