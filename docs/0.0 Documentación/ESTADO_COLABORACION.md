@@ -4,10 +4,10 @@
 - **Checkout:** `desarrollo`, inicio `e8ba67ee960bb39808f11ab9ab9e9995ad31327c`, inicialmente igual a `origin/desarrollo`. Los cambios locales ajenos y untracked enumerados en la bitácora quedaron sin stagear.
 - **Implementado:** endpoints de guardado/actualización de borrador parcial y preview de cálculo backend; edición en bloques; refresh del GET canónico tras writes estructurados; UI field contract validator; E2E Playwright parcial de creación y reload con API simulada.
 - **Verificado:** backend Release tests 955/955; frontend tests 846/846, build y lint en copia temporal aislada; `npm audit` sin vulnerabilidades; contract 82/82; catalogs 14/91 drift 0; UTF-8, estructura, scripts DB y enlaces PASS; Playwright corregido 22/22 PASS contra API simulada.
-- **CI inicial:** run `38453709129` en SHA `1379b5fe72d5d7d7ecb081ee6230ede663357608` pasó validadores, build y Oracle XE de Bloque 6, pero falló en tres E2E con selectores incompatibles con el wizard. El arreglo ahora está local y requiere commit/push y CI nuevo.
+- **CI inicial / corrección:** el run inicial `38453709129` en SHA `1379b5fe72d5d7d7ecb081ee6230ede663357608` falló en tres E2E con selectores incompatibles con el wizard. Corrección publicada en `6f87a85059bbf64dc926d437eccfacca7ce934d2`; Quality Gates `38455840579` terminó `completed/success` e incluyó E2E y Oracle XE de Bloque 6.
 - **Pendiente de cierre:** no hubo Oracle XE aislado local y CI actual no integra el POST/PUT de Bloque 7 ni el navegador con API+Oracle. Falta E2E real Create/Edit/Reload con Oracle, más certificación responsive/accesibilidad de errores inline/foco. No declarar la persistencia real ni `BLOCK7_STATUS=CLOSED` antes de cubrirlos.
 - **Seguridad:** producción no consultada; DML=0, DDL=0, apply=NO. No se modificó esquema ni se inició Bloque 8.
-- **Punto de continuación:** publicar el arreglo E2E y esperar su CI; integrar pruebas de borrador/preview con el harness Oracle XE efímero, conectar el recorrido Playwright a esa API, cerrar accesibilidad/responsive.
+- **Punto de continuación:** integrar pruebas de borrador/preview con el harness Oracle XE efímero, conectar el recorrido Playwright a esa API, cerrar accesibilidad/responsive y trigger GTIC si aparece una fuente autoritativa.
 
 ## Estado previo — Bloque 6B cerrado (COD) — 2026-10-13
 
