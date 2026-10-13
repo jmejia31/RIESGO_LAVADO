@@ -126,3 +126,29 @@ Verificación de esta intervención: 9/9 pruebas focalizadas, build Release, bac
 Artefactos fuera de Git: %USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK6_BACKEND_PROJECTION\20261013_102047_431.
 
 Quality Gates remoto: run 38430600015, commit 133b6a4621a76561b41397d93d036fe11374c0a9, completed/success. La conclusión CI valida el SHA publicado, no remueve los bloqueos de datos/modelo anteriores.
+
+## Addendum 6B — resolución del modelo y lectura consistente (2026-10-13)
+
+La intervención 6B corrige la proyección previa contra el DDL versionado. Las ordenaciones usan únicamente las identidades persistidas: controles `CON_ID ASC`, planes `PLA_ID ASC` y actividades `PLA_ID ASC, ACT_ID ASC`. No se añadieron columnas ni se modificó el esquema. El validador comprueba que el manifest no vuelva a ordenar por columnas inexistentes y conserva los ordinales de contrato 01–82.
+
+Los campos F40, F44–F49 se proyectan por plan, usando `PLAN_ORDINAL_INDEX` compartido. La API entrega objetos por plan con valor y estado, preserva un elemento vacío como `LEGIT_BLANK` y no cambia de posición los datos de otros planes. F41/F43 siguen siendo contadores; F42 conserva la numeración jerárquica según el mismo orden canónico.
+
+`InstitutionalProjectionService` usa ahora `InstitutionalProjectionReadRepository`, que abre una conexión Oracle, inicia `SET TRANSACTION READ ONLY`, realiza nueve consultas parametrizadas acotadas en esa misma sesión y ejecuta `ROLLBACK` al terminar o ante error/cancelación. La carga de controles/evidencias y planes/actividades es por conjuntos, sin consultas N+1. El DTO específico de evidencia lleva `EVI_FECHA_CREACION`, y la ordenación es `EVI_FECHA_CREACION ASC, EVI_ID ASC` (la columna está definida `NOT NULL` en el esquema versionado).
+
+F01 conserva el mapa histórico completo del workbook (59 códigos y ordinales 1–59). Para códigos nuevos, el read model carga todos los riesgos, incluidos inactivos, y calcula `59 + rango ascendente por RIE_ID` entre los códigos fuera del mapa. La inspección del repositorio no encontró hard-delete de riesgos; la baja es lógica por `RIE_ACTIVO`.
+
+### Verificación local fresca
+
+- `dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore`: PASS, 0 errores (warnings de analizadores existentes).
+- `dotnet test backend/RL.API.Tests/RL.API.Tests.csproj --configuration Release --no-build --no-restore`: 949/949, 0 fallos/omitidos.
+- Pruebas focalizadas de mapper, endpoint/contrato: 30/30.
+- `node tools/validate_contract_82_fields.js`: 82/82; cardinalidad por plan y orden de esquema PASS.
+- `node tools/validate_matrices_catalogs.js`: 14 catálogos / 91 elementos, drift 0.
+- Validadores de base de datos, estructura del repositorio, encoding UTF-8 y enlaces documentales: PASS.
+- No se pudo ejecutar localmente el test Oracle aislado porque Docker XE disponible está ligado a un esquema local existente; no se reutilizó ni alteró ese esquema. El workflow `Quality Gates` incorpora un contenedor Oracle XE desechable y ejecuta por separado `InstitutionalProjectionOracleIntegrationTests` con un esquema de fixture aislado. El resultado de CI aún es pendiente en este handoff; no se debe declarar `ORACLE_INTEGRATION=PASS` hasta recibirlo.
+
+La prueba de integración arranca Kestrel en loopback, llama el GET real, lee por el nuevo repositorio Oracle, serializa/deserializa los 82 campos y comprueba cardinalidad por plan, un blank alineado y orden de evidencias. El host de prueba usa un esquema de autenticación sintético con los claims del módulo, y atraviesa los filtros de autorización del endpoint; no carga ni debilita el middleware de autenticación de producción.
+
+No se consultó ni modificó producción. DML/DDL productivos=0, apply=NO. Esquema requerido=NO. Bloque 7 permanece NOT_STARTED. El estado del bloque se mantendrá pendiente hasta certificar la ejecución Oracle del CI y el SHA final publicado.
+
+La ejecución local de `tools/run_quality_gates.ps1` completó backend y cobertura (`949/949`), pero falló al iniciar Angular porque el `node_modules` compartido no contiene `@angular/build:unit-test`. No se ejecutó `npm install` ni se modificó esa dependencia compartida; el job CI remoto valida el frontend y la suite Oracle aislada.

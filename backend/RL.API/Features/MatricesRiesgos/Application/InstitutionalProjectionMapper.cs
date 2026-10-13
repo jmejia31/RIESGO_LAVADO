@@ -12,7 +12,8 @@ public sealed record InstitutionalProjectionSource(
     RiesgoDto Risk,
     IReadOnlyList<ControlRiesgoDto> Controls,
     MitigacionBloque4Dto Mitigation,
-    MatrizBloque6Dto Monitoring);
+    MatrizBloque6Dto Monitoring,
+    IReadOnlyList<RiesgoDto>? AllRisks = null);
 
 public sealed class InstitutionalProjectionException(string message) : InvalidOperationException(message);
 
@@ -39,8 +40,7 @@ public sealed class InstitutionalProjectionMapper
                 || plan.Actividades.Any(activity => activity.ActPlanId != plan.PlaId))
             || source.Mitigation.Planes.Select(plan => plan.PlaId).Distinct().Count() != source.Mitigation.Planes.Count)
             throw new InstitutionalProjectionException("La proyección contiene identidades de control, plan o actividad inconsistentes.");
-        if (!Ordinals.TryGetValue(source.Risk.RieCodigo, out int riskOrdinal))
-            throw new InstitutionalProjectionException($"El código '{source.Risk.RieCodigo}' no tiene ordinal institucional en el mapa certificado.");
+        int riskOrdinal = ResolveRiskOrdinal(source);
 
         Dictionary<string, JsonElement> answers = ReadObject(source.Evaluation.EvaDataJson, "EVA_DATOS_JSON");
         Dictionary<string, JsonElement> calculations = ReadObject(source.Evaluation.EvaDataCalcJson, "EVA_CALCULOS_JSON");
@@ -50,7 +50,10 @@ public sealed class InstitutionalProjectionMapper
             (object? value, string state) = ResolveValue(manifest, source, answers, calculations, riskOrdinal);
             if (value is null && state is not ("LEGIT_BLANK" or "LEGIT_FORMULA_BLANK" or "NOT_APPLICABLE" or "OPERATIONAL_PENDING" or "ABSENT_CONTROL_PROJECTED"))
                 throw new InstitutionalProjectionException($"F{manifest.Number:D2} terminó sin valor ni semántica de blank.");
-            fields.Add(new(manifest.Number, manifest.CanonicalKey, manifest.Label, ValueTypeOf(manifest.DataType), value, state, manifest.Source));
+            string valueType = manifest.Cardinality.StartsWith("ONE_TO_MANY", StringComparison.Ordinal)
+                ? $"COLLECTION<{ValueTypeOf(manifest.DataType)}>"
+                : ValueTypeOf(manifest.DataType);
+            fields.Add(new(manifest.Number, manifest.CanonicalKey, manifest.Label, valueType, value, state, manifest.Source));
         }
 
         if (fields.Count != 82 || fields.Select(field => field.FieldNumber).Distinct().Count() != 82
@@ -136,18 +139,24 @@ public sealed class InstitutionalProjectionMapper
         if (number == 41) return plans.Length == 0 && !mitigationApplies ? (null, "NOT_APPLICABLE") : (plans.Length, "VALUE");
         if (number == 43) return plans.Length == 0 && !mitigationApplies ? (null, "NOT_APPLICABLE") : (activities.Length, "VALUE");
         if (plans.Length == 0) return (null, mitigationApplies ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE");
+        InstitutionalPlanProjectionValueDto[] PlanValues(Func<PlanMitigacionDto, object?> selector) => plans
+            .Select((plan, index) =>
+            {
+                object? value = selector(plan);
+                return new InstitutionalPlanProjectionValueDto(index + 1, value, value is null ? "LEGIT_BLANK" : "VALUE");
+            }).ToArray();
         return number switch
         {
-            40 => (Enumerate(plans.Select(plan => Text(plan.PlaDescripcion))), "VALUE"),
+            40 => (PlanValues(plan => Text(plan.PlaDescripcion)), "VALUE"),
             42 => (string.Join(Environment.NewLine, plans.Select((plan, pi) => string.Join(Environment.NewLine,
                 plan.Actividades.OrderBy(activity => activity.ActId).Select((activity, ai) => $"{pi + 1}.{ai + 1} {Text(activity.ActDescripcion)}")))),
                 activities.Length == 0 ? "LEGIT_BLANK" : "VALUE"),
-            44 => Optional(Join(plans.Select(plan => plan.PlaMonitoreoSeguimiento)), "MITIGATION_PLAN"),
-            45 => ResolvePlanResponsibilities(plans),
-            46 => (plans.Select(plan => plan.PlaFechaInicio).ToArray(), "VALUE"),
-            47 => (plans.Select(plan => plan.PlaFechaFin).ToArray(), "VALUE"),
-            48 => Optional(Join(plans.Select(plan => plan.PlaRecursos)), "MITIGATION_PLAN"),
-            49 => (plans.Select(plan => plan.PlaPresupuesto).ToArray(), "VALUE"),
+            44 => (PlanValues(plan => OptionalPlanText(plan.PlaMonitoreoSeguimiento)), "VALUE"),
+            45 => (PlanValues(plan => OptionalPlanText(plan.PlaResponsables)), "VALUE"),
+            46 => (PlanValues(plan => plan.PlaFechaInicio), "VALUE"),
+            47 => (PlanValues(plan => plan.PlaFechaFin), "VALUE"),
+            48 => (PlanValues(plan => OptionalPlanText(plan.PlaRecursos)), "VALUE"),
+            49 => (PlanValues(plan => plan.PlaPresupuesto), "VALUE"),
             _ => throw new InstitutionalProjectionException($"F{number} no tiene resolver institucional.")
         };
     }
@@ -164,18 +173,25 @@ public sealed class InstitutionalProjectionMapper
         {
             0 => controls.Select(control => control.EstadoMonitoreo).ToArray(),
             1 => controls.Select(control => control.EfectividadMonitoreo?.ToString(CultureInfo.InvariantCulture)).ToArray(),
-            _ => controls.SelectMany(control => control.Evidencias.OrderBy(evidence => evidence.Id).Select(evidence => evidence.NombreArchivo)).ToArray()
+            _ => controls.SelectMany(control => control.Evidencias.OrderBy(evidence => evidence.FechaCreacion).ThenBy(evidence => evidence.Id).Select(evidence => evidence.NombreArchivo)).ToArray()
         };
         string? joined = Join(values);
         return joined is null ? (null, "OPERATIONAL_PENDING") : (Enumerate(joined.Split(Environment.NewLine)), "VALUE");
     }
 
-    private static (object? Value, string State) ResolvePlanResponsibilities(IReadOnlyList<PlanMitigacionDto> plans)
+    private static string? OptionalPlanText(string? value) => string.IsNullOrWhiteSpace(value) ? null : Text(value);
+
+    private static int ResolveRiskOrdinal(InstitutionalProjectionSource source)
     {
-        string?[] values = plans.Select(plan => string.IsNullOrWhiteSpace(plan.PlaResponsables) ? null : Text(plan.PlaResponsables)).ToArray();
-        string[] present = values.Select((value, index) => value is null ? null : $"{index + 1}. {value}")
-            .Where(value => value is not null).Cast<string>().ToArray();
-        return present.Length == 0 ? (null, "OPERATIONAL_PENDING") : (string.Join(Environment.NewLine, present), "VALUE");
+        if (Ordinals.TryGetValue(source.Risk.RieCodigo, out int legacyOrdinal)) return legacyOrdinal;
+        IReadOnlyList<RiesgoDto> risks = source.AllRisks
+            ?? throw new InstitutionalProjectionException("Para un código nuevo, el ordinal requiere el universo completo de riesgos persistidos.");
+        if (risks.Count(risk => risk.RieId == source.Risk.RieId && risk.RieCodigo == source.Risk.RieCodigo) != 1)
+            throw new InstitutionalProjectionException("El riesgo nuevo no aparece exactamente una vez en el universo de ordinales.");
+        RiesgoDto[] newRisks = risks.Where(risk => !Ordinals.ContainsKey(risk.RieCodigo)).OrderBy(risk => risk.RieId).ToArray();
+        int index = Array.FindIndex(newRisks, risk => risk.RieId == source.Risk.RieId && risk.RieCodigo == source.Risk.RieCodigo);
+        if (index < 0) throw new InstitutionalProjectionException($"El código '{source.Risk.RieCodigo}' no tiene ordinal institucional resoluble.");
+        return checked(Ordinals.Count + index + 1);
     }
 
     private static IReadOnlyList<ControlRiesgoDto> OrderedControls(InstitutionalProjectionSource source, string? type = null) =>
@@ -220,6 +236,8 @@ public sealed class InstitutionalProjectionMapper
     {
         if (!source.TryGetValue(key, out JsonElement element) || element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             return optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"Falta el valor requerido '{key}' para la proyección.");
+        if (element.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(element.GetString()))
+            return optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"El valor requerido '{key}' está vacío.");
         object? value = element.ValueKind switch
         {
             JsonValueKind.String => Text(element.GetString()),
@@ -284,6 +302,7 @@ public sealed class InstitutionalProjectionMapper
         if (manifest.SourceWorkbookSha256 != "5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385"
             || manifest.Entries.Length != 59
             || manifest.Entries.Select(entry => entry.RiskNo).Distinct().Count() != 59
+            || !manifest.Entries.Select(entry => entry.RiskNo).Order().SequenceEqual(Enumerable.Range(1, 59))
             || manifest.Entries.Select(entry => entry.RiskCode).Distinct(StringComparer.Ordinal).Count() != 59)
             throw new InvalidOperationException("El mapa de ordinales no coincide con la matriz institucional certificada.");
         return manifest.Entries.ToDictionary(entry => entry.RiskCode, entry => entry.RiskNo, StringComparer.Ordinal);
@@ -306,6 +325,7 @@ public sealed class InstitutionalProjectionMapper
         [JsonPropertyName("canonicalKey")] public string CanonicalKey { get; set; } = string.Empty;
         [JsonPropertyName("dataType")] public string DataType { get; set; } = string.Empty;
         [JsonPropertyName("source")] public string Source { get; set; } = string.Empty;
+        [JsonPropertyName("cardinality")] public string Cardinality { get; set; } = string.Empty;
         [JsonPropertyName("requiredness")] public string Requiredness { get; set; } = string.Empty;
         [JsonPropertyName("dbOrEntityMapping")] public string DbOrEntityMapping { get; set; } = string.Empty;
     }

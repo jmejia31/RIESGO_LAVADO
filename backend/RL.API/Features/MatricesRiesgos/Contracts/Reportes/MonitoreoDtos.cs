@@ -62,7 +62,7 @@ public sealed class ControlMonitoreoMatrizDto
     public IReadOnlyList<EvidenciaMatrizDto> Evidencias { get; init; } = Array.Empty<EvidenciaMatrizDto>();
 }
 
-public sealed record EvidenciaMatrizDto(long Id, string NombreArchivo);
+public sealed record EvidenciaMatrizDto(long Id, string NombreArchivo, DateTime FechaCreacion = default);
 
 public sealed class AutomonitoreoGuardarDto
 {

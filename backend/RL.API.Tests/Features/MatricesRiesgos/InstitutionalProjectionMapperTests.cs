@@ -58,21 +58,73 @@ public sealed class InstitutionalProjectionMapperTests
         Assert.Contains("2. Segundo", Assert.IsType<string>(result.Fields[19].Value));
         Assert.Equal(2, result.Fields[40].Value);
         Assert.Equal(3, result.Fields[42].Value);
-        Assert.Contains("2. P2", Assert.IsType<string>(result.Fields[39].Value));
+        InstitutionalPlanProjectionValueDto[] plans = Assert.IsType<InstitutionalPlanProjectionValueDto[]>(result.Fields[39].Value);
+        Assert.Equal(new[] { 1, 2 }, plans.Select(plan => plan.PlanOrdinalIndex));
+        Assert.Equal(new object?[] { "P1", "P2" }, plans.Select(plan => plan.Value));
         Assert.Contains("2.1 A3", Assert.IsType<string>(result.Fields[41].Value));
     }
 
     [Fact]
-    public void Map_FailsClosedForRiskCodeWithoutCertifiedOrdinal()
+    public void Map_AssignsDynamicOrdinalAfterLegacyMapAndIncludesInactiveRiskIds()
     {
         InstitutionalProjectionMapper mapper = new();
         InstitutionalProjectionSource source = CreateSource() with
         {
-            Risk = new RiesgoDto { RieCodigo = "UNMAPPED-RISK", RieNombre = "Risk", RieDescripcion = "Description" }
+            Risk = new RiesgoDto { RieId = 900, RieCodigo = "UNMAPPED-RISK", RieNombre = "Risk", RieDescripcion = "Description" },
+            AllRisks = [
+                new RiesgoDto { RieId = 900, RieCodigo = "UNMAPPED-RISK", RieNombre = "Risk", RieActivo = false },
+                new RiesgoDto { RieId = 901, RieCodigo = "ANOTHER-NEW", RieNombre = "Risk", RieActivo = true }
+            ]
         };
 
-        InstitutionalProjectionException exception = Assert.Throws<InstitutionalProjectionException>(() => mapper.Map(source));
-        Assert.Contains("no tiene ordinal institucional", exception.Message);
+        InstitutionalEvaluationProjectionDto result = mapper.Map(source);
+        Assert.Equal(60, result.Fields[0].Value);
+        InstitutionalProjectionSource later = source with { Risk = source.AllRisks![1] };
+        Assert.Equal(61, mapper.Map(later).Fields[0].Value);
+    }
+
+    [Fact]
+    public void Map_PreservesBlankPlanPositionsAcrossEveryPlanScopedField()
+    {
+        InstitutionalProjectionSource source = CreateSource() with
+        {
+            Mitigation = new MitigacionBloque4Dto { Planes = [
+                new PlanMitigacionDto { PlaId=10, PlaEvaluacionId=123, PlaDescripcion="A", PlaFechaInicio=new(2026,1,1), PlaFechaFin=new(2026,2,1), PlaResponsables="Equipo A", PlaMonitoreoSeguimiento=null, PlaRecursos="R1", PlaPresupuesto=100 },
+                new PlanMitigacionDto { PlaId=11, PlaEvaluacionId=123, PlaDescripcion="B", PlaFechaInicio=new(2026,3,1), PlaFechaFin=new(2026,4,1), PlaResponsables=null, PlaMonitoreoSeguimiento="Seguimiento B", PlaRecursos=null, PlaPresupuesto=200 }
+            ] }
+        };
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+        foreach (int number in new[] { 40, 44, 45, 46, 47, 48, 49 })
+        {
+            InstitutionalPlanProjectionValueDto[]? values = result.Fields[number - 1].Value as InstitutionalPlanProjectionValueDto[];
+            Assert.NotNull(values);
+            Assert.Equal(new[] { 1, 2 }, values!.Select(value => value.PlanOrdinalIndex));
+        }
+        var responsible = Assert.IsType<InstitutionalPlanProjectionValueDto[]>(result.Fields[44].Value);
+        Assert.Equal("Equipo A", responsible[0].Value);
+        Assert.Null(responsible[1].Value);
+        Assert.Equal("LEGIT_BLANK", responsible[1].State);
+    }
+
+    [Fact]
+    public void Map_FailsClosedWhenRequiredTextIsWhitespace()
+    {
+        InstitutionalProjectionSource source = CreateSource();
+        JsonObject answers = JsonNode.Parse(source.Evaluation.EvaDataJson)!.AsObject();
+        answers["area_principal"] = "   ";
+        source = source with
+        {
+            Evaluation = new EvaluacionRiesgoDto
+            {
+                EvaId = source.Evaluation.EvaId,
+                EvaRiesgoId = source.Evaluation.EvaRiesgoId,
+                EvaDataJson = answers.ToJsonString(),
+                EvaDataCalcJson = source.Evaluation.EvaDataCalcJson
+            }
+        };
+
+        InstitutionalProjectionException exception = Assert.Throws<InstitutionalProjectionException>(() => new InstitutionalProjectionMapper().Map(source));
+        Assert.Contains("está vacío", exception.Message);
     }
 
     [Theory]

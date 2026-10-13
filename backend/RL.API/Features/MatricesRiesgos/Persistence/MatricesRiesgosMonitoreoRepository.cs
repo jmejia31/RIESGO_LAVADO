@@ -183,13 +183,13 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
         await conn.OpenAsync();
         const string sql = @"
             SELECT c.CON_ID, c.CON_TIPO, c.CON_DESCRIPCION, c.CON_ESTADO_MONITOREO,
-                   c.CON_EFECTIVIDAD_MONITOREO, e.EVI_ID, e.EVI_NOMBRE_ARCHIVO
+                   c.CON_EFECTIVIDAD_MONITOREO, e.EVI_ID, e.EVI_NOMBRE_ARCHIVO, e.EVI_FECHA_CREACION
               FROM RL_MR_CONTROLES_RIESGO c
               LEFT JOIN RL_MR_EVIDENCIAS_VINCULOS v
                 ON v.EVV_TIPO_ENTIDAD = 'CONTROL' AND v.EVV_ENTIDAD_ID = c.CON_ID
               LEFT JOIN RL_MR_EVIDENCIAS e ON e.EVI_ID = v.EVV_EVIDENCIA_ID
              WHERE c.CON_EVALUACION_ID = :evaluacionId
-             ORDER BY c.CON_TIPO, c.CON_ID, v.EVV_ID";
+             ORDER BY c.CON_ID ASC, e.EVI_FECHA_CREACION ASC, e.EVI_ID ASC";
         await using (var cmd = Comando(sql, conn))
         {
             cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
@@ -205,7 +205,7 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
                         reader.IsDBNull(4) ? null : reader.GetDecimal(4), new List<EvidenciaMatrizDto>());
                     controles.Add(id, control);
                 }
-                if (!reader.IsDBNull(5)) control.evidencias.Add(new EvidenciaMatrizDto(reader.GetInt64(5), TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(6))));
+                if (!reader.IsDBNull(5)) control.evidencias.Add(new EvidenciaMatrizDto(reader.GetInt64(5), TextoVisibleUtf8Normalizer.Normalizar(reader.GetString(6)), reader.GetDateTime(7)));
             }
         }
 

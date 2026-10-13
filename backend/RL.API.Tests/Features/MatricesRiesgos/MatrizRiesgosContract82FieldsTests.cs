@@ -253,13 +253,13 @@ public class MatrizRiesgosContract82FieldsTests
     public void Manifest_RepeaterFieldsMustHaveExplicitProjectionRules()
     {
         var fields = LoadManifest();
-        var oneToManyNums = new[] { 20, 24, 28, 40, 42, 45, 70, 74, 77, 80 };
+        var oneToManyNums = new[] { 20, 24, 28, 40, 42, 44, 45, 46, 47, 48, 49, 70, 74, 77, 80 };
         var repeaters = fields.Where(f => oneToManyNums.Contains(f.number)).ToList();
 
-        Assert.Equal(10, repeaters.Count);
+        Assert.Equal(15, repeaters.Count);
         foreach (var r in repeaters)
         {
-            Assert.Equal("ONE_TO_MANY", r.cardinality);
+            Assert.Contains(r.cardinality, new[] { "ONE_TO_MANY", "ONE_TO_MANY_PER_PLAN" });
             Assert.False(string.IsNullOrWhiteSpace(r.projectionRule));
             Assert.False(string.IsNullOrWhiteSpace(r.orderingRule));
             Assert.False(string.IsNullOrWhiteSpace(r.displaySeparator));
@@ -276,7 +276,7 @@ public class MatrizRiesgosContract82FieldsTests
 
         Assert.Equal("INSTITUTIONAL_CODE_TO_NO_MAP", f01.ordinalSource);
         Assert.StartsWith("VIRTUAL_DERIVED", f01.ordinalPersistence);
-        Assert.Equal("FAIL_CLOSED", f01.ordinalFallback);
+        Assert.Equal("DYNAMIC_POST_BASELINE_RIE_ID_RANKING", f01.ordinalFallback);
         Assert.Contains("ORDINAL_UNRESOLVED", f01.ordinalUnresolvedBehavior);
         Assert.False(string.IsNullOrWhiteSpace(f01.ordinalProjection));
     }
@@ -304,9 +304,25 @@ public class MatrizRiesgosContract82FieldsTests
 
         Assert.Equal("NO_DEDUPLICATION_PER_PLAN (Se preserva la asignación específica de responsables por cada acción de mitigación; no se unifican ni descartan responsables entre distintos planes).", f45.deduplicationRule);
         Assert.DoesNotContain(" o ", f45.deduplicationRule);
-        Assert.Equal("PLAN_ORDINAL_INDEX (La clave de asociación es la tupla (PLA_ORDEN, PLA_ID)).", f45.deduplicationKey);
+        Assert.Equal("PLAN_ORDINAL_INDEX (posición de plan tras ORDER BY PLA_ID ASC; no deduplicar entre planes).", f45.deduplicationKey);
         Assert.False(string.IsNullOrWhiteSpace(f45.excelSerialization));
         Assert.False(string.IsNullOrWhiteSpace(f45.pdfSerialization));
+    }
+
+    [Fact]
+    public void Manifest_UsesExistingIdentityColumnsAndAlignedPlanCardinality()
+    {
+        var fields = LoadManifest();
+        string[] orderRules = fields.Select(field => field.orderingRule).ToArray();
+        Assert.DoesNotContain(orderRules, rule => System.Text.RegularExpressions.Regex.IsMatch(rule, @"ORDER BY [^(]*\b(CON_ORDEN|PLA_ORDEN|ACT_ORDEN)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+        Assert.Equal("ORDER BY CON_ID ASC", fields.Single(field => field.number == 20).orderingRule);
+        Assert.Equal("ORDER BY PLA_ID ASC, ACT_ID ASC", fields.Single(field => field.number == 42).orderingRule);
+        foreach (int number in new[] { 40, 44, 45, 46, 47, 48, 49 })
+        {
+            var field = fields.Single(item => item.number == number);
+            Assert.Contains(field.cardinality, new[] { "ONE_TO_MANY", "ONE_TO_MANY_PER_PLAN" });
+            Assert.Contains("PLA_ID ASC", field.orderingRule);
+        }
     }
 
     [Fact]

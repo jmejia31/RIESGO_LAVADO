@@ -13,3 +13,5 @@ public sealed record InstitutionalEvaluationProjectionDto(
     long EvaluationId,
     string RiskCode,
     IReadOnlyList<InstitutionalProjectionFieldDto> Fields);
+
+public sealed record InstitutionalPlanProjectionValueDto(int PlanOrdinalIndex, object? Value, string State);

@@ -15,7 +15,7 @@ const EXPECTED_CALCULATED = [
   50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69
 ];
 
-const ONE_TO_MANY_FIELDS = [20, 24, 28, 40, 42, 45, 70, 74, 77, 80];
+const ONE_TO_MANY_FIELDS = [20, 24, 28, 40, 42, 44, 45, 46, 47, 48, 49, 70, 74, 77, 80];
 
 async function validate() {
   const manifestPath = path.join(__dirname, '..', 'backend', 'RL.API', 'Features', 'MatricesRiesgos', 'Contracts', 'matriz_riesgos_82_campos_manifest.json');
@@ -175,8 +175,8 @@ async function validate() {
 
   for (const f of fields) {
     if (oneToManySet.has(f.number)) {
-      if (f.cardinality !== 'ONE_TO_MANY') {
-        console.error(`FAIL: Field ${f.number} expected cardinality ONE_TO_MANY, got ${f.cardinality}`);
+      if (f.cardinality !== 'ONE_TO_MANY' && f.cardinality !== 'ONE_TO_MANY_PER_PLAN') {
+        console.error(`FAIL: Field ${f.number} expected one-to-many cardinality, got ${f.cardinality}`);
         process.exit(1);
       }
       for (const attr of repeaterAttrs) {
@@ -206,12 +206,59 @@ async function validate() {
   const f01 = fields[0];
   if (f01.ordinalSource !== 'INSTITUTIONAL_CODE_TO_NO_MAP' ||
       !f01.ordinalPersistence.startsWith('VIRTUAL_DERIVED') ||
-      f01.ordinalFallback !== 'FAIL_CLOSED' ||
+      f01.ordinalFallback !== 'DYNAMIC_POST_BASELINE_RIE_ID_RANKING' ||
       !f01.ordinalUnresolvedBehavior || !f01.ordinalUnresolvedBehavior.includes('ORDINAL_UNRESOLVED')) {
-    console.error('FAIL: Field 01 ordinal semantics incomplete or not FAIL_CLOSED');
+    console.error('FAIL: Field 01 must preserve the legacy map and define deterministic post-baseline ranking');
     process.exit(1);
   }
-  console.log('FIELD_01_FAIL_CLOSED: PASS (ordinalSource=INSTITUTIONAL_CODE_TO_NO_MAP, persistence=VIRTUAL_DERIVED, fallback=FAIL_CLOSED)');
+  console.log('FIELD_01_DYNAMIC_ORDINAL: PASS (legacy map plus deterministic RIE_ID ranking)');
+
+  const ordinalMapPath = path.join(path.dirname(manifestPath), 'block6_risk_ordinal_map.json');
+  const ordinalMap = JSON.parse(fs.readFileSync(ordinalMapPath, 'utf8'));
+  const legacyOrdinals = ordinalMap.entries.map(entry => entry.riskNo).sort((a, b) => a - b);
+  if (ordinalMap.entries.length !== 59 || new Set(ordinalMap.entries.map(entry => entry.riskCode)).size !== 59 ||
+      legacyOrdinals.some((ordinal, index) => ordinal !== index + 1)) {
+    console.error('FAIL: Historical risk ordinal map must preserve the exact unique 1..59 sequence');
+    process.exit(1);
+  }
+  console.log('FIELD_01_LEGACY_COMPATIBILITY: PASS (59/59 exact historical ordinals)');
+
+  // 13a. Schema-aligned deterministic order and plan cardinality.
+  const impossibleOrderColumns = ['CON_ORDEN', 'PLA_ORDEN', 'ACT_ORDEN'];
+  const orderingText = fields.map(f => f.orderingRule || '').join(' ');
+  for (const column of impossibleOrderColumns) {
+    if (new RegExp(`ORDER BY [^(]*\\b${column}\\b`, 'i').test(orderingText)) {
+      console.error(`FAIL: Manifest references nonexistent order column ${column}`);
+      process.exit(1);
+    }
+  }
+  const schemaPath = path.join(__dirname, '..', 'database', '19_matrices_riesgos', 'transicion', '06_reconstruir_modelo_17_tablas.sql');
+  const schemaSql = fs.readFileSync(schemaPath, 'utf8');
+  if (impossibleOrderColumns.some(column => new RegExp(`\\b${column}\\b`, 'i').test(schemaSql)) ||
+      !/CON_ID NUMBER\(15\) NOT NULL/.test(schemaSql) || !/PLA_ID NUMBER\(15\) NOT NULL/.test(schemaSql) ||
+      !/ACT_ID NUMBER\(15\) NOT NULL/.test(schemaSql)) {
+    console.error('FAIL: Manifest ordering no longer aligns to the versioned persistent identity columns');
+    process.exit(1);
+  }
+  if (fields[19].orderingRule !== 'ORDER BY CON_ID ASC' ||
+      fields[23].orderingRule !== 'ORDER BY CON_ID ASC' ||
+      fields[27].orderingRule !== 'ORDER BY CON_ID ASC' ||
+      fields[39].orderingRule !== 'ORDER BY PLA_ID ASC (PLAN_ORDINAL_INDEX)' ||
+      fields[41].orderingRule !== 'ORDER BY PLA_ID ASC, ACT_ID ASC') {
+    console.error('FAIL: Canonical child ordering does not match persistent identities');
+    process.exit(1);
+  }
+  for (const n of [40, 44, 45, 46, 47, 48, 49]) {
+    const f = fields[n - 1];
+    if (!['ONE_TO_MANY', 'ONE_TO_MANY_PER_PLAN'].includes(f.cardinality) ||
+        !String(f.orderingRule).includes('PLA_ID ASC') ||
+        (n !== 40 && n !== 45 && !String(f.projectionRule).includes('PLAN_ORDINAL_INDEX'))) {
+      console.error(`FAIL: Plan-scoped field ${n} does not preserve aligned 0..N plan cardinality`);
+      process.exit(1);
+    }
+  }
+  console.log('MANIFEST_REFERENCES_EXISTING_SCHEMA: PASS (identity-based child ordering)');
+  console.log('PLAN_CARDINALITY_CONTRACT: PASS (F40/F44-F49 aligned by PLAN_ORDINAL_INDEX)');
 
   // 14. Mitigation Catalog Applicability Rule (Fields 40-49)
   for (let n = 40; n <= 49; n++) {

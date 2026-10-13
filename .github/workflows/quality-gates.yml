@@ -19,6 +19,19 @@ jobs:
     name: Validator, analyzers, build, tests, coverage, E2E and containers
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    services:
+      oracle:
+        image: gvenzl/oracle-xe:11.2.0.2-faststart
+        env:
+          ORACLE_PASSWORD: Block6-${{ github.run_id }}
+        ports:
+          - 1521:1521
+        options: >-
+          --health-cmd "healthcheck.sh"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+          --health-start-period 60s
 
     steps:
       - name: Checkout
@@ -111,6 +124,16 @@ jobs:
 
       - name: Build solution in Release
         run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
+
+      - name: Run Block 6 canonical projection against disposable Oracle XE
+        env:
+          RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED: 'true'
+          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=Block6-${{ github.run_id }};
+        run: >-
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
+          --configuration Release --no-build --no-restore
+          --filter FullyQualifiedName~InstitutionalProjectionOracleIntegrationTests
+          --logger "console;verbosity=normal"
 
       - name: Verify preinstalled Google Chrome
         shell: bash
