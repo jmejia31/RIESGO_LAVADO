@@ -306,6 +306,57 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     }
 
     [Fact]
+    public async Task ActualizarBorradorEvaluacion_VersionObsoleta_Retorna409SinPersistir()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out _, out _);
+        EvaluacionRiesgoDto persisted = EvaluacionBase();
+        persisted.EvaEstado = "BORRADOR";
+        persisted.EvaVersionRow = 2;
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(persisted));
+
+        EvaluacionRiesgoDto client = EvaluacionBase();
+        client.EvaVersionRow = 1;
+        ServiceResult result = await service.ActualizarBorradorEvaluacionAsync(client, 9, null);
+
+        Assert.Equal(409, result.StatusCode);
+        Assert.Contains("otra sesión", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(1, client.EvaVersionRow);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync)));
+    }
+
+    [Fact]
+    public async Task ActualizarBorradorEvaluacion_VersionActual_EnvíaAlRepositorioLaVersionEsperada()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);
+        EvaluacionRiesgoDto persisted = EvaluacionBase();
+        persisted.EvaEstado = "BORRADOR";
+        persisted.EvaVersionRow = 2;
+        persisted.EvaFechaEval = new DateTime(2026, 1, 1);
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerEvaluacionAsync), _ => Task.FromResult<EvaluacionRiesgoDto?>(persisted));
+        repo.On(nameof(IMatricesRiesgosRepository.ObtenerVersionFormularioAsync), _ => Task.FromResult<VersionFormularioDto?>(new()
+        {
+            VerId = 10, VerEstado = "PUBLISHED", VerVigente = true, VerJson = "{\"secciones\":[]}"
+        }));
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ => Task.FromResult(new FormularioValidationResult
+        {
+            ObligatoriosPendientes = { "campo_pendiente" }
+        }));
+        repo.On(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync), arguments =>
+        {
+            Assert.Equal(2, ((EvaluacionRiesgoDto)arguments[0]!).EvaVersionRow);
+            return Task.FromResult(true);
+        });
+
+        EvaluacionRiesgoDto client = EvaluacionBase();
+        client.EvaVersionRow = 2;
+        ServiceResult result = await service.ActualizarBorradorEvaluacionAsync(client, 9, null);
+
+        Assert.True(result.Success);
+        Assert.Equal(2, client.EvaVersionRow);
+        Assert.Single(repo.CallsTo(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync)));
+    }
+
+    [Fact]
     public async Task PrevisualizarCalculoEvaluacion_Valido_UsaRuntimeYNoPersiste()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);

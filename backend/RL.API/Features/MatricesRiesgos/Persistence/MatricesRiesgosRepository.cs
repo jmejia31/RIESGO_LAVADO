@@ -1084,7 +1084,7 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 regla.Version,
                 regla.AlgoritmoId);
             long evaluacionId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_EVALUACIONES");
-            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto, definicionVersion);
+            ProyeccionEvaluacion? proyeccion = IntentarConstruirProyeccion(dto, definicionVersion);
             string codigoRiesgo = await ObtenerCodigoRiesgoAsync(conn, trans, dto.EvaRiesgoId);
 
             const string sqlInsert = @"
@@ -1119,7 +1119,10 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
             cmdInsert.Parameters.Add(new OracleParameter("usuarioId", usuarioId));
             await cmdInsert.ExecuteNonQueryAsync();
 
-            await InsertarProyeccionAsync(conn, trans, evaluacionId, codigoRiesgo, proyeccion, "BORRADOR");
+            if (proyeccion is not null)
+            {
+                await InsertarProyeccionAsync(conn, trans, evaluacionId, codigoRiesgo, proyeccion, "BORRADOR");
+            }
             await InsertarFlujoAsync(conn, trans, evaluacionId, "BORRADOR", "Creación inicial", usuarioId);
             await _auditoriaRepository.RegistrarAsync(
                 conn,
@@ -1230,11 +1233,23 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                 throw new DBConcurrencyException($"No se pudo actualizar la evaluación {dto.EvaId} por un conflicto de concurrencia.");
             }
 
-            ProyeccionEvaluacion proyeccion = ConstruirProyeccion(dto, definicionVersion);
-            int actualizadas = await ActualizarProyeccionAsync(conn, trans, dto.EvaId, proyeccion);
-            if (actualizadas != 1)
+            ProyeccionEvaluacion? proyeccion = IntentarConstruirProyeccion(dto, definicionVersion);
+            if (proyeccion is null)
             {
-                throw new InvalidOperationException($"La evaluación {dto.EvaId} debe tener exactamente una proyección; se actualizaron {actualizadas}.");
+                await EliminarProyeccionAsync(conn, trans, dto.EvaId);
+            }
+            else
+            {
+                int actualizadas = await ActualizarProyeccionAsync(conn, trans, dto.EvaId, proyeccion);
+                if (actualizadas == 0)
+                {
+                    string codigoRiesgo = await ObtenerCodigoRiesgoAsync(conn, trans, dto.EvaRiesgoId);
+                    await InsertarProyeccionAsync(conn, trans, dto.EvaId, codigoRiesgo, proyeccion, "BORRADOR");
+                }
+                else if (actualizadas != 1)
+                {
+                    throw new InvalidOperationException($"La evaluación {dto.EvaId} debe tener exactamente una proyección; se actualizaron {actualizadas}.");
+                }
             }
 
             await _auditoriaRepository.RegistrarAsync(
@@ -2111,6 +2126,20 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         ValidarJson(dto.EvaDataCalcJson, nameof(dto.EvaDataCalcJson));
     }
 
+    private static ProyeccionEvaluacion? IntentarConstruirProyeccion(EvaluacionRiesgoDto dto, string definicionVersion)
+    {
+        if (!TieneCalculosSuficientesParaProyeccion(dto)) return null;
+
+        return ConstruirProyeccion(dto, definicionVersion);
+    }
+
+    internal static bool TieneCalculosSuficientesParaProyeccion(EvaluacionRiesgoDto dto)
+    {
+        Dictionary<string, JsonElement> calculados = MapearDiccionario(dto.EvaDataCalcJson);
+        return (dto.EvaVri ?? ObtenerEntero(calculados, "vri")).HasValue
+            && (dto.EvaVrr ?? ObtenerEntero(calculados, "vrr")).HasValue;
+    }
+
     private static ProyeccionEvaluacion ConstruirProyeccion(EvaluacionRiesgoDto dto, string definicionVersion)
     {
         Dictionary<string, JsonElement> respuestas = MapearDiccionario(dto.EvaDataJson);
@@ -2432,6 +2461,18 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         cmd.Parameters.Add(new OracleParameter("dueno", proyeccion.Dueno));
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
         return await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task EliminarProyeccionAsync(OracleConnection conn, OracleTransaction transaction, long evaluacionId)
+    {
+        const string sql = "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID = :evaluacionId";
+        await using var cmd = CrearComando(sql, conn, transaction);
+        cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+        int eliminadas = await cmd.ExecuteNonQueryAsync();
+        if (eliminadas > 1)
+        {
+            throw new InvalidOperationException($"La evaluación {evaluacionId} contiene más de una proyección.");
+        }
     }
 
     private static async Task<string> ObtenerEstadoActualAsync(

@@ -559,9 +559,11 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         if (dto.EvaRiesgoId != persisted.EvaRiesgoId)
             return ServiceResult.BadRequest("El riesgo asociado no puede cambiar durante la edición del borrador.");
 
+        if (dto.EvaVersionRow != persisted.EvaVersionRow)
+            return new ServiceResult(false, "La evaluación fue modificada por otra sesión. Recargue los datos antes de continuar.", 409);
+
         dto.EvaEstado = persisted.EvaEstado;
         dto.EvaActivo = persisted.EvaActivo;
-        dto.EvaVersionRow = persisted.EvaVersionRow;
         dto.EvaFechaEval = persisted.EvaFechaEval;
         dto.EvaUsrEval = persisted.EvaUsrEval;
 

@@ -3041,6 +3041,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   private obtenerMensajeError(error: unknown, mensaje: string): string {
     const respuesta = error as {
+      status?: number;
       error?: {
         detail?: string;
         mensaje?: string;
@@ -3049,6 +3050,10 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       };
     };
     const errorValidacion = Object.values(respuesta?.error?.errors ?? {}).flat().find(Boolean);
+
+    if (respuesta?.status === 409) {
+      return 'La evaluación fue modificada por otra sesión o usuario. Recargue los datos antes de continuar; sus cambios actuales siguen en pantalla.';
+    }
 
     return respuesta?.error?.detail
       || respuesta?.error?.mensaje

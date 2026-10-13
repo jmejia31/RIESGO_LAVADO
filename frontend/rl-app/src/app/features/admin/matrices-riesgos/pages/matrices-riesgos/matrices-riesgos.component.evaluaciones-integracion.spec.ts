@@ -118,6 +118,15 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
     expect(component.filtroEstado()).toBe('');
   });
 
+  it('presenta el conflicto 409 de borrador y conserva la captura visible', () => {
+    const mensaje = (component as unknown as { obtenerMensajeError: (error: unknown, fallback: string) => string })
+      .obtenerMensajeError({ status: 409, error: { detail: 'Conflicto de concurrencia.' } }, 'Error interno');
+
+    expect(mensaje).toContain('otra sesión o usuario');
+    expect(mensaje).toContain('sus cambios actuales siguen en pantalla');
+    expect(mensaje).not.toContain('Error interno');
+  });
+
   // 2. DOM SUPERIOR COMPLETO
   it('2. DOM Superior: existe #filtro-buscar, #filtro-estado y #filtro-registros-por-pagina con [10, 20, 50]', () => {
     const buscarEl = fixture.nativeElement.querySelector('#filtro-buscar');
