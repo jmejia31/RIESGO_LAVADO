@@ -111,6 +111,55 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   evaluation.data = { area_principal: 'Área Oracle Browser' };
   expect(evaluation.id).toBeGreaterThan(0);
 
+  const api = 'http://localhost:5043/api/matrices-riesgos/mitigacion';
+  for (const description of ['Control E2E A', 'Control E2E B']) {
+    const createdControl = await request.post(`${api}/controles`, {
+      data: { conEvaluacionId: evaluation.id, conTipo: 'PREVENTIVO', conDescripcion: description, conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' },
+    });
+    expect(createdControl.status(), await createdControl.text()).toBe(200);
+  }
+  const controlsResponse = await request.get(`${api}/evaluaciones/${evaluation.id}/controles`);
+  expect(controlsResponse.ok()).toBeTruthy();
+  const controls = (await controlsResponse.json() as { datos: Array<{ conDescripcion: string }> }).datos;
+  expect(controls.map(control => control.conDescripcion)).toEqual(['Control E2E A', 'Control E2E B']);
+  expect(controls.some(control => control.conDescripcion === 'No hay')).toBeFalsy();
+
+  const createPlan = async (description: string, owner: string, startDate: string, endDate: string, budget: number) => {
+    const response = await request.post(`${api}/planes`, {
+      data: {
+        plaEvaluacionId: evaluation.id, plaDescripcion: description, plaAvance: 0, plaPresupuesto: budget,
+        plaFechaInicio: startDate, plaFechaFin: endDate, plaEstado: 'PENDIENTE',
+        plaMonitoreoSeguimiento: `Seguimiento ${owner}`, plaResponsables: owner, plaRecursos: `Recursos ${owner}`,
+      },
+    });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json() as { datos: number }).datos;
+  };
+  const planA = await createPlan('Plan E2E A', 'Responsable A', '2026-01-01', '2026-02-28', 1000);
+  const planB = await createPlan('Plan E2E B', 'Responsable B', '2026-03-01', '2026-04-30', 2000);
+  const createActivity = async (planId: number, description: string, owner: string) => {
+    const response = await request.post(`${api}/actividades`, {
+      data: {
+        actPlanId: planId, actDescripcion: description, actResponsable: owner, actAvance: 0,
+        actFechaInicio: '2026-01-10', actFechaFin: '2026-01-20', actEstado: 'PENDIENTE',
+      },
+    });
+    expect(response.status(), await response.text()).toBe(200);
+  };
+  await createActivity(planA, 'Actividad E2E A1', 'Responsable A');
+  await createActivity(planA, 'Actividad E2E A2', 'Responsable A');
+  await createActivity(planB, 'Actividad E2E B1', 'Responsable B');
+  const plansResponse = await request.get(`${api}/evaluaciones/${evaluation.id}/planes`);
+  expect(plansResponse.ok()).toBeTruthy();
+  const plans = (await plansResponse.json() as { datos: Array<{ plaDescripcion: string; plaResponsables: string }> }).datos;
+  expect(plans.map(plan => [plan.plaDescripcion, plan.plaResponsables])).toEqual([
+    ['Plan E2E A', 'Responsable A'], ['Plan E2E B', 'Responsable B'],
+  ]);
+  const activitiesA = await request.get(`${api}/planes/${planA}/actividades`);
+  const activitiesB = await request.get(`${api}/planes/${planB}/actividades`);
+  expect((await activitiesA.json() as { datos: unknown[] }).datos).toHaveLength(2);
+  expect((await activitiesB.json() as { datos: unknown[] }).datos).toHaveLength(1);
+
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
   await page.getByTitle('Editar evaluación').click();
@@ -126,6 +175,14 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await page.reload();
   await page.getByTitle('Editar evaluación').click();
   await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+  const projectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  expect(projectionResponse.ok()).toBeTruthy();
+  const projection = (await projectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos;
+  expect(projection.fields).toHaveLength(82);
+  expect(projection.fields.find(field => field.fieldNumber === 41)?.value).toBe(2);
+  expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(3);
+  expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toContain('Responsable A');
+  expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toContain('Responsable B');
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
 });
