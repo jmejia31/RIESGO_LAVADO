@@ -204,15 +204,15 @@ public sealed class CatalogCalculationLookup : ICalculationLookup
     public string? ValidateUniqueValue(string catalogCode, string value)
     {
         if (!_catalogs.TryGetValue(catalogCode, out CatalogSnapshot? catalog) || !catalog.Active)
-            return $"El catÃ¡logo '{catalogCode}' no existe o estÃ¡ inactivo.";
+            return $"El catalogo '{catalogCode}' no existe o esta inactivo.";
         int matches = catalog.Elements.Count(element => element.Activo
             && (element.Codigo.Equals(value, StringComparison.OrdinalIgnoreCase)
                 || element.Valor.Equals(value, StringComparison.OrdinalIgnoreCase)));
         return matches switch
         {
-            0 => $"El valor '{value}' no existe en el catÃ¡logo '{catalogCode}'.",
+            0 => $"El valor '{value}' no existe en el catalogo '{catalogCode}'.",
             1 => null,
-            _ => $"El valor '{value}' es ambiguo en el catÃ¡logo '{catalogCode}'."
+            _ => $"El valor '{value}' es ambiguo en el catalogo '{catalogCode}'."
         };
     }
 }

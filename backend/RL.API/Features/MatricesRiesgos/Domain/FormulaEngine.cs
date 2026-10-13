@@ -201,7 +201,7 @@ public sealed class FormulaEngine
 
             if (!MatrizRiesgosCatalogoCanonico.EsValorValido("CONTROL_EFFECTIVENESS", label))
             {
-                errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, key, $"El valor '{label}' no estÃ¡ definido en el catÃ¡logo institucional de efectividad."));
+                errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, key, $"El valor '{label}' no esta definido en el catalogo institucional de efectividad."));
                 continue;
             }
 
