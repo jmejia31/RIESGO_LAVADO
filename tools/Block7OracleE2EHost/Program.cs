@@ -28,11 +28,7 @@ var guardConfiguration = new ConfigurationBuilder().AddInMemoryCollection(new Di
 }).Build();
 string connectionString = DatabaseEnvironmentGuard.ValidateAndResolveDevelopmentConnection(configuredConnection, guardConfiguration);
 
-await using var oracle = new OracleConnection(connectionString)
-{
-    UseHourOffsetForUnsupportedTimezone = true
-};
-await oracle.OpenAsync();
+await using var oracle = await OpenOracleWithRetryAsync(connectionString);
 await EnsureFixtureAsync(oracle);
 long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000;
 long riskId = stamp + 700_000_000;
@@ -87,6 +83,31 @@ app.MapGet("/readyz", async (OracleDbContext db, CancellationToken cancellationT
 });
 app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", definition = JsonDocument.Parse(definition).RootElement.Clone() }));
 await app.RunAsync();
+
+static async Task<OracleConnection> OpenOracleWithRetryAsync(string connectionString)
+{
+    OracleException? lastError = null;
+    for (int attempt = 1; attempt <= 6; attempt++)
+    {
+        var connection = new OracleConnection(connectionString)
+        {
+            UseHourOffsetForUnsupportedTimezone = true
+        };
+        try
+        {
+            await connection.OpenAsync();
+            return connection;
+        }
+        catch (OracleException ex) when (attempt < 6)
+        {
+            lastError = ex;
+            await connection.DisposeAsync();
+            await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+        }
+    }
+
+    throw new InvalidOperationException("Disposable Oracle XE did not accept the Block 7 browser fixture connection.", lastError);
+}
 
 static string CreateDefinition(string ruleCode) => JsonSerializer.Serialize(new
 {

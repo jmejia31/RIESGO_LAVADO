@@ -159,7 +159,7 @@ jobs:
           ASPNETCORE_ENVIRONMENT: E2E
           RL_BLOCK7_REAL_E2E_REQUIRED: 'true'
           DATABASE_PROFILE: LOCAL_XE
-          ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          ConnectionStrings__OracleDB_LocalXE: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
         shell: bash
         run: |
           set -euo pipefail
