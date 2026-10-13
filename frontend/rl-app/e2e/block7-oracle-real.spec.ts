@@ -205,4 +205,32 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   ]);
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
+
+  const pageB = await page.context().newPage();
+  await installNonCriticalFixtures(pageB, fixture, evaluation);
+  await pageB.goto('/matrices-riesgos');
+  await pageB.getByTitle('Editar evaluación').click();
+  await expect(pageB.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+
+  await page.getByLabel('Área principal').fill('Editor A');
+  const saveA = page.waitForResponse(response => response.request().method() === 'PUT'
+    && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
+  await page.getByRole('button', { name: 'Guardar borrador' }).click();
+  expect((await saveA).status()).toBe(200);
+
+  await pageB.getByLabel('Área principal').fill('Editor B stale');
+  const saveB = pageB.waitForResponse(response => response.request().method() === 'PUT'
+    && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
+  await pageB.getByRole('button', { name: 'Guardar borrador' }).click();
+  expect((await saveB).status()).toBe(409);
+  await expect(pageB.getByText(/modificada por otra sesión o usuario/i)).toBeVisible();
+  await expect(pageB.getByLabel('Área principal')).toHaveValue('Editor B stale');
+
+  const persisted = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  expect(persisted.ok()).toBeTruthy();
+  const persistedBody = (await persisted.json() as { datos: { evaVersionRow: number; evaDataJson: string } }).datos;
+  expect(persistedBody.evaVersionRow).toBe(3);
+  expect(persistedBody.evaDataJson).toContain('Editor A');
+  expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
+  await pageB.close();
 });
