@@ -1225,6 +1225,7 @@
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
+                    [validationError]="errorCampoEditor(campo)"
                     idPrefix="campo-edit"
                     (valorChange)="actualizarRespuesta(campo, $event)" />
                 }
@@ -1252,7 +1253,7 @@
               @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
                 <div class="grid gap-4 sm:grid-cols-2">
                   @for (campo of seccion.campos; track campo.clave) {
-                    <app-dynamic-field-renderer [campo]="campo" [valor]="valorRespuesta(campo)" [opcionesCatalogo]="opcionesCatalogo(campo)" idPrefix="campo-edit" (valorChange)="actualizarRespuesta(campo, $event)" />
+                    <app-dynamic-field-renderer [campo]="campo" [valor]="valorRespuesta(campo)" [opcionesCatalogo]="opcionesCatalogo(campo)" [validationError]="errorCampoEditor(campo)" idPrefix="campo-edit" (valorChange)="actualizarRespuesta(campo, $event)" />
                   }
                 </div>
               }
@@ -1500,6 +1501,7 @@
                     [campo]="campo"
                     [valor]="valorRespuesta(campo)"
                     [opcionesCatalogo]="opcionesCatalogo(campo)"
+                    [validationError]="errorCampoEditor(campo)"
                     idPrefix="campo-new"
                     [style.grid-column]="'span ' + (campo.anchoColumnas || 1) + ' / span ' + (campo.anchoColumnas || 1)"
                     [attr.data-evaluation-field]="campo.clave"

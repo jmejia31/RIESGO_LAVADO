@@ -261,6 +261,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly modalSeguimientoAbierto = signal<boolean>(false);
   readonly modalNuevaEvaluacionAbierto = signal<boolean>(false);
   readonly bloqueEvaluacionActual = signal<BloqueEvaluacion>(1);
+  readonly erroresValidacionBloque = signal<Record<string, string>>({});
   readonly bloqueMasAltoAlcanzado = signal<BloqueEvaluacion>(1);
   readonly proyeccionEvaluacion = signal<InstitutionalEvaluationProjectionDto | null>(null);
   readonly cargandoProyeccionEvaluacion = signal(false);
@@ -1404,6 +1405,14 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   actualizarRespuesta(campo: CampoFormulario, valor: ValorRespuestaFormulario): void {
     this.respuestas.update(actuales => ({ ...actuales, [campo.clave]: valor }));
+    const key = this.normalizarClaveContrato(campo.clave);
+    if (this.erroresValidacionBloque()[key]) {
+      this.erroresValidacionBloque.update(errors => {
+        const next = { ...errors };
+        delete next[key];
+        return next;
+      });
+    }
     this.cambiosSinGuardar.set(true);
     if (this.modalNuevaEvaluacionAbierto() || this.modalEditarAbierto()) {
       this.solicitarCalculoPreview();
@@ -1502,11 +1511,36 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
       && !this.esGTICCondicional(field.clave)
       && !this.tieneValor(this.respuestas()[field.clave]));
     if (faltantes.length > 0) {
-      this.mostrarError(`Complete los campos requeridos de ${this.tituloBloqueEvaluacion(bloque)} antes de continuar.`);
+      const errors = Object.fromEntries(faltantes.map(field => [
+        this.normalizarClaveContrato(field.clave),
+        `${field.etiqueta} es obligatorio.`
+      ]));
+      this.erroresValidacionBloque.set(errors);
+      this.mostrarError(`Revise ${faltantes.length} campo(s) requerido(s) de ${this.tituloBloqueEvaluacion(bloque)}.`);
+      const first = faltantes[0];
+      if (first) {
+        const prefix = this.modalNuevaEvaluacionAbierto() ? 'campo-new' : 'campo-edit';
+        const id = this.idCampoEditor(first.clave, prefix);
+        requestAnimationFrame(() => {
+          const control = document.getElementById(id)?.querySelector<HTMLElement>('input, select, textarea, button')
+            ?? document.getElementById(id);
+          control?.focus();
+        });
+      }
       return;
     }
 
+    this.erroresValidacionBloque.set({});
     this.guardarBorradorEvaluacion(bloque < 6);
+  }
+
+  errorCampoEditor(campo: CampoFormulario): string | null {
+    return this.erroresValidacionBloque()[this.normalizarClaveContrato(campo.clave)] ?? null;
+  }
+
+  private idCampoEditor(clave: string, prefix: 'campo-new' | 'campo-edit'): string {
+    const safe = clave.replace(/[^A-Za-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'sin-clave';
+    return `${prefix}-${safe}`;
   }
 
   private esGTICCondicional(clave: string): boolean {

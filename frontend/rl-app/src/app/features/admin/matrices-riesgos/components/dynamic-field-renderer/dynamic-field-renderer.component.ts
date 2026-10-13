@@ -39,6 +39,8 @@ export interface OpcionCampoRenderer {
         <fieldset [id]="idControl"
                   class="space-y-2"
                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                  [attr.aria-invalid]="validationError ? 'true' : null"
+                  [attr.aria-describedby]="validationError ? errorId : null"
                   [attr.data-field-key]="campo.clave">
           <legend class="block text-xs font-bold text-gray-700">
             {{ campo.etiqueta }}
@@ -55,6 +57,8 @@ export interface OpcionCampoRenderer {
                          [name]="idControl"
                          [value]="opcion.codigo"
                          [required]="campo.obligatorio"
+                         [attr.aria-invalid]="validationError ? 'true' : null"
+                         [attr.aria-describedby]="validationError ? errorId : null"
                          [disabled]="campo.soloLectura"
                          [ngModel]="valorEscalar"
                          (ngModelChange)="emitirSeleccion($event)" />
@@ -70,6 +74,8 @@ export interface OpcionCampoRenderer {
                    type="text"
                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none"
                    [required]="campo.obligatorio"
+                   [attr.aria-invalid]="validationError ? 'true' : null"
+                   [attr.aria-describedby]="validationError ? errorId : null"
                    [attr.aria-label]="campo.etiqueta + ' valor'"
                    [readOnly]="campo.soloLectura"
                    [value]="valorEscalar ?? ''"
@@ -80,6 +86,8 @@ export interface OpcionCampoRenderer {
         <fieldset [id]="idControl"
                   class="space-y-2"
                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                  [attr.aria-invalid]="validationError ? 'true' : null"
+                  [attr.aria-describedby]="validationError ? errorId : null"
                   [attr.data-field-key]="campo.clave">
           <legend class="block text-xs font-bold text-gray-700">
             {{ campo.etiqueta }}
@@ -93,6 +101,8 @@ export interface OpcionCampoRenderer {
                   <input type="checkbox"
                          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                          [id]="idOpcion(indice)"
+                         [attr.aria-invalid]="validationError ? 'true' : null"
+                         [attr.aria-describedby]="validationError ? errorId : null"
                          [disabled]="campo.soloLectura"
                          [checked]="opcionSeleccionada(opcion.codigo)"
                          (change)="alternarOpcion(opcion.codigo, $event)" />
@@ -118,6 +128,8 @@ export interface OpcionCampoRenderer {
                    type="text"
                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                    [required]="campo.obligatorio"
+                   [attr.aria-invalid]="validationError ? 'true' : null"
+                   [attr.aria-describedby]="validationError ? errorId : null"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
                    [readOnly]="campo.soloLectura"
                    [value]="valorEscalar ?? ''"
@@ -129,6 +141,8 @@ export interface OpcionCampoRenderer {
                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                    [required]="campo.obligatorio"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                   [attr.aria-invalid]="validationError ? 'true' : null"
+                   [attr.aria-describedby]="validationError ? errorId : null"
                    [readOnly]="campo.soloLectura"
                    [value]="valorEscalar ?? ''"
                    (input)="emitirNumero($any($event.target).value)" />
@@ -139,6 +153,8 @@ export interface OpcionCampoRenderer {
                    class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                    [required]="campo.obligatorio"
                    [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                   [attr.aria-invalid]="validationError ? 'true' : null"
+                   [attr.aria-describedby]="validationError ? errorId : null"
                    [readOnly]="campo.soloLectura"
                    [value]="valorEscalar ?? ''"
                    (input)="emitirTexto($any($event.target).value)" />
@@ -147,8 +163,10 @@ export interface OpcionCampoRenderer {
             <textarea [id]="idControl"
                       rows="3"
                       class="min-h-24 w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
-                      [required]="campo.obligatorio"
-                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                   [required]="campo.obligatorio"
+                   [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                   [attr.aria-invalid]="validationError ? 'true' : null"
+                   [attr.aria-describedby]="validationError ? errorId : null"
                       [readOnly]="campo.soloLectura"
                       [value]="valorEscalar ?? ''"
                       (input)="emitirTexto($any($event.target).value)"></textarea>
@@ -159,6 +177,8 @@ export interface OpcionCampoRenderer {
                       class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                       [required]="campo.obligatorio"
                       [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                      [attr.aria-invalid]="validationError ? 'true' : null"
+                      [attr.aria-describedby]="validationError ? errorId : null"
                       [disabled]="campo.soloLectura"
                       [value]="valorSeleccionSelectorFlexible"
                       (change)="cambiarSelectorFlexible($any($event.target).value)">
@@ -174,6 +194,8 @@ export interface OpcionCampoRenderer {
                        class="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                        [required]="campo.obligatorio"
                        [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                       [attr.aria-invalid]="validationError ? 'true' : null"
+                       [attr.aria-describedby]="validationError ? errorId : null"
                        [attr.aria-label]="campo.etiqueta + ' - valor manual'"
                        [readOnly]="campo.soloLectura"
                        [value]="valorManualSelectorFlexible"
@@ -187,6 +209,8 @@ export interface OpcionCampoRenderer {
                       class="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-800 shadow-sm focus:ring-2 focus:ring-ihss-600 focus:outline-none disabled:bg-gray-100 disabled:text-gray-500"
                       [required]="campo.obligatorio"
                       [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                      [attr.aria-invalid]="validationError ? 'true' : null"
+                      [attr.aria-describedby]="validationError ? errorId : null"
                       [disabled]="campo.soloLectura || opcionesDisponibles.length === 0"
                       [value]="valorEscalar ?? ''"
                       (change)="emitirSeleccion($any($event.target).value)">
@@ -207,6 +231,8 @@ export interface OpcionCampoRenderer {
                      class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                      [required]="campo.obligatorio"
                      [attr.aria-required]="campo.obligatorio ? 'true' : null"
+                     [attr.aria-invalid]="validationError ? 'true' : null"
+                     [attr.aria-describedby]="validationError ? errorId : null"
                      [disabled]="campo.soloLectura"
                      [checked]="valorBooleano"
                      (change)="emitirBooleano($any($event.target).checked)" />
@@ -237,6 +263,9 @@ export interface OpcionCampoRenderer {
           }
         }
       }
+      @if (validationError) {
+        <p class="text-xs font-medium text-red-700" role="alert" [id]="errorId">{{ validationError }}</p>
+      }
     </div>
   `
 })
@@ -252,6 +281,7 @@ export class DynamicFieldRendererComponent {
   @Input() opcionesCatalogo: ReadonlyArray<OpcionCampoRenderer> = [];
   @Input() modoLectura = false;
   @Input() idPrefix = 'campo';
+  @Input() validationError: string | null = null;
   @Output() readonly valorChange = new EventEmitter<ValorRespuestaFormulario>();
 
   get tipo(): TipoCampoRenderer {
@@ -272,6 +302,10 @@ export class DynamicFieldRendererComponent {
       .replace(/[^A-Za-z0-9_-]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'campo';
     return `${prefijo}-${clave}`;
+  }
+
+  get errorId(): string {
+    return `${this.idControl}-error`;
   }
 
   private modoManualSelectorFlexible = false;

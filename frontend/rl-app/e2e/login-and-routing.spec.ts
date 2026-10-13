@@ -476,6 +476,60 @@ test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({
   await expect(page.getByLabel('Área principal')).toHaveValue('Tecnología');
 });
 
+test('asocia el error requerido al control y enfoca el primer campo al continuar', async ({ page }) => {
+  await stubAuthenticatedMatrices(page);
+  await page.goto('/matrices-riesgos');
+  await page.getByRole('button', { name: 'Nueva evaluación' }).click();
+  await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
+  await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
+
+  const continueButton = page.getByRole('button', { name: /Continuar/ }).last();
+  await continueButton.click();
+
+  const area = page.getByLabel('Área principal');
+  await expect(area).toHaveAttribute('aria-invalid', 'true');
+  const describedBy = await area.getAttribute('aria-describedby');
+  expect(describedBy).toBeTruthy();
+  await expect(page.locator(`#${describedBy}`)).toContainText('Área principal es obligatorio.');
+  await expect(area).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Nueva Evaluación de Riesgo' })).toBeVisible();
+});
+
+test('el detalle de cálculo expone su estado expandido en el editor', async ({ page }) => {
+  await stubAuthenticatedMatrices(page);
+  await page.goto('/matrices-riesgos');
+  await page.getByTitle('Editar evaluación').first().click();
+  await page.getByRole('button', { name: '5. Cálculos Auxiliares y Verificaciones' }).click();
+
+  const disclosure = page.getByRole('button', { name: 'Mostrar detalle de cálculos' });
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+  await disclosure.click();
+  await expect(page.getByRole('button', { name: 'Ocultar detalle de cálculos' })).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('[data-matrix-field]').filter({ has: page.getByText(/Frecuencia Residual \(AUX\)/) })).toBeVisible();
+});
+
+test('el editor de evaluación no causa overflow horizontal en escritorio ni móvil', async ({ page }) => {
+  await stubAuthenticatedMatrices(page);
+  await page.goto('/matrices-riesgos');
+  await page.getByTitle('Editar evaluación').first().click();
+
+  for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    for (const block of [1, 2, 4, 5]) {
+      await page.getByRole('button', { name: new RegExp(`^${block}\\.`) }).click();
+      if (block === 5) {
+        const detail = page.getByRole('button', { name: 'Mostrar detalle de cálculos' });
+        if (await detail.isVisible()) await detail.click();
+      }
+      const widths = await page.evaluate(() => ({
+        documentWidth: document.documentElement.scrollWidth,
+        viewportWidth: document.documentElement.clientWidth
+      }));
+      expect(widths.documentWidth, `horizontal overflow at ${viewport.width}px in block ${block}`).toBeLessThanOrEqual(widths.viewportWidth);
+    }
+  }
+});
+
 test('consulta una evaluación existente y permite abrir su edición', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');

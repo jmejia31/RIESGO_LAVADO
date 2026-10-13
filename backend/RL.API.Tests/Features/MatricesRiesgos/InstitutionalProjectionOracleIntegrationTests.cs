@@ -1,6 +1,9 @@
 using System.Security.Claims;
+using System.Data;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,7 +19,10 @@ using Oracle.ManagedDataAccess.Client;
 using RL.API.Features.MatricesRiesgos;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
+using RL.API.Features.MatricesRiesgos.Domain;
 using RL.API.Features.MatricesRiesgos.Persistence;
+using RL.API.Features.Auditoria.Persistence;
+using RL.API.Shared.Results;
 using RL.API.Infrastructure.Database;
 using Xunit;
 
@@ -25,6 +31,291 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 /// <summary>Opt-in real Oracle integration test. CI runs it against a disposable Oracle XE service.</summary>
 public sealed class InstitutionalProjectionOracleIntegrationTests
 {
+    [Fact]
+    [Trait("Category", "Block7OracleIntegration")]
+    public async Task DraftEndpoints_CreateReadUpdatePreviewAndRejectStaleVersionAgainstOracle()
+    {
+        if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK7_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
+        string connectionString = Environment.GetEnvironmentVariable("BLOCK7_ORACLE_CONNECTION_STRING")
+            ?? throw new InvalidOperationException("BLOCK7_ORACLE_CONNECTION_STRING is required when Block 7 Oracle integration is mandatory.");
+
+        await using var seed = CreateConnection(connectionString);
+        await OpenWithRetryAsync(seed);
+        await EnsureFixtureTablesAsync(seed);
+        await EnsureBlock7FixtureObjectsAsync(seed);
+
+        long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 1_000_000_000;
+        long riskId = stamp + 710;
+        long versionId = stamp + 711;
+        const long userId = 987654;
+        const string ruleCode = "BLOCK7_ORACLE_FIXTURE";
+        string definition = JsonSerializer.Serialize(new
+        {
+            codigoFormulario = "BLOCK7_ORACLE_FIXTURE",
+            nombreFormulario = "Block 7 Oracle fixture",
+            reglaCalculo = new { codigo = ruleCode, version = "1" },
+            secciones = new[]
+            {
+                new
+                {
+                    clave = "captura",
+                    titulo = "Captura de prueba",
+                    campos = new object[]
+                    {
+                        new { clave = "area_principal", etiqueta = "Área", tipo = "texto", obligatorio = false },
+                        new { clave = "amenazas_gtic", etiqueta = "Amenazas", tipo = "texto-largo", obligatorio = false },
+                        new { clave = "vulnerabilidades_gtic", etiqueta = "Vulnerabilidades", tipo = "texto-largo", obligatorio = false },
+                        new { clave = "activos_informacion_gtic", etiqueta = "Activos de información", tipo = "texto-largo", obligatorio = false },
+                        new { clave = "frecuencia_inherente", etiqueta = "Frecuencia inherente", tipo = "numero", obligatorio = true },
+                        new { clave = "impacto_inherente", etiqueta = "Impacto inherente", tipo = "numero", obligatorio = true },
+                        new { clave = "controles_preventivo", etiqueta = "Efectividad preventiva", tipo = "numero", obligatorio = true },
+                        new { clave = "controles_detectivo", etiqueta = "Efectividad detectiva", tipo = "numero", obligatorio = true },
+                        new { clave = "controles_correctivo", etiqueta = "Efectividad correctiva", tipo = "numero", obligatorio = true },
+                        new { clave = "frecuencia_residual", etiqueta = "Frecuencia residual", tipo = "numero", obligatorio = true },
+                        new { clave = "impacto_residual", etiqueta = "Impacto residual", tipo = "numero", obligatorio = true }
+                    }
+                }
+            }
+        });
+        long evaluationId = 0;
+        try
+        {
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_RIESGOS VALUES (:id,:code,'Block 7 Oracle fixture','Disposable test risk',1,:usr,SYSDATE)", ("id", riskId), ("code", $"B7-{stamp}"), ("usr", userId));
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_ORACLE_FIXTURE',1,:json,RPAD('A',64,'A'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
+            await ExecuteAsync(seed, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Block 7 Oracle fixture','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
+
+            await using var app = await CreateBlock7ApiAsync(connectionString);
+            string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
+            using var http = new HttpClient { BaseAddress = new Uri(address) };
+
+            var create = new EvaluacionRiesgoDto
+            {
+                EvaRiesgoId = riskId,
+                EvaVersionId = versionId,
+                EvaDataJson = "{}",
+                EvaDataCalcJson = "{\"vri\":999,\"vrr\":999}",
+                EvaVri = 999,
+                EvaVrr = 999
+            };
+            using HttpResponseMessage created = await http.PostAsJsonAsync("/api/matrices-riesgos/evaluaciones/borrador", create);
+            Assert.Equal(System.Net.HttpStatusCode.OK, created.StatusCode);
+            using JsonDocument createdBody = JsonDocument.Parse(await created.Content.ReadAsStringAsync());
+            evaluationId = createdBody.RootElement.GetProperty("datos").GetInt64();
+            Assert.True(evaluationId > 0);
+            Assert.Equal(1, await ScalarIntAsync(seed,
+                "SELECT COUNT(*) FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id AND EVA_RIESGO_ID=:risk AND EVA_VERSION_ID=:version",
+                ("id", evaluationId), ("risk", riskId), ("version", versionId)));
+
+            using HttpResponseMessage readCreated = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            Assert.Equal(System.Net.HttpStatusCode.OK, readCreated.StatusCode);
+            EvaluacionRiesgoDto persisted = await ReadEvaluationAsync(readCreated);
+            Assert.Equal(riskId, persisted.EvaRiesgoId);
+            Assert.Equal(versionId, persisted.EvaVersionId);
+            Assert.Equal(1, persisted.EvaVersionRow);
+            Assert.Equal("BORRADOR", persisted.EvaEstado);
+            Assert.Equal("{}", persisted.EvaDataJson);
+            Assert.Equal("{}", persisted.EvaDataCalcJson);
+            Assert.Null(persisted.EvaVri);
+            Assert.Null(persisted.EvaVrr);
+            Assert.DoesNotContain("amenazas_gtic", persisted.EvaDataJson, StringComparison.Ordinal);
+
+            int auditBeforePreview = await ScalarIntAsync(seed, "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id", ("id", evaluationId.ToString()));
+            long flowBeforePreview = await ScalarLongAsync(seed, "SELECT COUNT(*) FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId));
+            string answersBeforePreview = await ScalarTextAsync(seed, "SELECT EVA_DATOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            string calculationsBeforePreview = await ScalarTextAsync(seed, "SELECT EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            long projectionsBeforePreview = await ScalarLongAsync(seed, "SELECT COUNT(*) FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId));
+            int versionBeforePreview = await ScalarIntAsync(seed, "SELECT EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+
+            var incompletePreview = new EvaluacionRiesgoDto { EvaId = evaluationId, EvaRiesgoId = riskId, EvaVersionId = versionId, EvaDataJson = "{}", EvaDataCalcJson = "{\"vri\":888}" };
+            using HttpResponseMessage incomplete = await http.PostAsJsonAsync("/api/matrices-riesgos/evaluaciones/calculo-preview", incompletePreview);
+            Assert.Equal(System.Net.HttpStatusCode.OK, incomplete.StatusCode);
+            using JsonDocument incompleteBody = JsonDocument.Parse(await incomplete.Content.ReadAsStringAsync());
+            Assert.False(incompleteBody.RootElement.GetProperty("datos").GetProperty("listo").GetBoolean());
+            Assert.NotEmpty(incompleteBody.RootElement.GetProperty("datos").GetProperty("obligatoriosPendientes").EnumerateArray());
+
+            var completeAnswers = new Dictionary<string, object>
+            {
+                ["area_principal"] = "Oracle test area",
+                ["frecuencia_inherente"] = 3,
+                ["impacto_inherente"] = 2,
+                ["controles_preventivo"] = 0,
+                ["controles_detectivo"] = 0,
+                ["controles_correctivo"] = 0,
+                ["frecuencia_residual"] = 3,
+                ["impacto_residual"] = 2
+            };
+            var completePreview = new EvaluacionRiesgoDto { EvaId = evaluationId, EvaRiesgoId = riskId, EvaVersionId = versionId, EvaDataJson = JsonSerializer.Serialize(completeAnswers), EvaDataCalcJson = "{\"vri\":999,\"vrr\":999}", EvaVri = 999, EvaVrr = 999 };
+            using HttpResponseMessage preview = await http.PostAsJsonAsync("/api/matrices-riesgos/evaluaciones/calculo-preview", completePreview);
+            Assert.Equal(System.Net.HttpStatusCode.OK, preview.StatusCode);
+            using JsonDocument previewBody = JsonDocument.Parse(await preview.Content.ReadAsStringAsync());
+            JsonElement previewResult = previewBody.RootElement.GetProperty("datos");
+            Assert.True(previewResult.GetProperty("listo").GetBoolean());
+            Assert.Equal(4, previewResult.GetProperty("evaVri").GetInt32());
+            Assert.Equal(4, previewResult.GetProperty("evaVrr").GetInt32());
+            Assert.DoesNotContain("999", previewResult.GetProperty("evaDataCalcJson").GetString(), StringComparison.Ordinal);
+
+            Assert.Equal(auditBeforePreview, await ScalarIntAsync(seed, "SELECT COUNT(*) FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id", ("id", evaluationId.ToString())));
+            Assert.Equal(flowBeforePreview, await ScalarLongAsync(seed, "SELECT COUNT(*) FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId)));
+            Assert.Equal(answersBeforePreview, await ScalarTextAsync(seed, "SELECT EVA_DATOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId)));
+            Assert.Equal(calculationsBeforePreview, await ScalarTextAsync(seed, "SELECT EVA_CALCULOS_JSON FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId)));
+            Assert.Equal(projectionsBeforePreview, await ScalarLongAsync(seed, "SELECT COUNT(*) FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId)));
+            Assert.Equal(versionBeforePreview, await ScalarIntAsync(seed, "SELECT EVA_VERSION_ROW FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId)));
+
+            persisted.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object>
+            {
+                ["area_principal"] = "Cliente A",
+                ["amenazas_gtic"] = "Amenaza indicada por usuario",
+                ["vulnerabilidades_gtic"] = "Vulnerabilidad indicada por usuario",
+                ["activos_informacion_gtic"] = "Activo indicado por usuario"
+            });
+            using HttpResponseMessage updateA = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", persisted);
+            Assert.Equal(System.Net.HttpStatusCode.OK, updateA.StatusCode);
+            using HttpResponseMessage readA = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            EvaluacionRiesgoDto afterA = await ReadEvaluationAsync(readA);
+            Assert.Equal(2, afterA.EvaVersionRow);
+            Assert.Contains("Cliente A", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Amenaza indicada por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
+
+            EvaluacionRiesgoDto staleClient = CopyEvaluation(persisted);
+            staleClient.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B" });
+            using HttpResponseMessage stale = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", staleClient);
+            Assert.Equal(System.Net.HttpStatusCode.Conflict, stale.StatusCode);
+            using HttpResponseMessage readAfterConflict = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            EvaluacionRiesgoDto afterConflict = await ReadEvaluationAsync(readAfterConflict);
+            Assert.Equal(2, afterConflict.EvaVersionRow);
+            Assert.Contains("Cliente A", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Amenaza indicada por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.DoesNotContain("Cliente B", afterConflict.EvaDataJson, StringComparison.Ordinal);
+
+            afterConflict.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B recargado" });
+            using HttpResponseMessage updateB = await http.PutAsJsonAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}/borrador", afterConflict);
+            Assert.Equal(System.Net.HttpStatusCode.OK, updateB.StatusCode);
+            using HttpResponseMessage readB = await http.GetAsync($"/api/matrices-riesgos/evaluaciones/{evaluationId}");
+            EvaluacionRiesgoDto afterB = await ReadEvaluationAsync(readB);
+            Assert.Equal(3, afterB.EvaVersionRow);
+            Assert.Contains("Cliente B recargado", afterB.EvaDataJson, StringComparison.Ordinal);
+
+            EvaluacionRiesgoDto manipulatedIdentity = CopyEvaluation(completePreview);
+            manipulatedIdentity.EvaRiesgoId = riskId + 1;
+            using HttpResponseMessage invalidIdentity = await http.PostAsJsonAsync("/api/matrices-riesgos/evaluaciones/calculo-preview", manipulatedIdentity);
+            Assert.Equal(System.Net.HttpStatusCode.BadRequest, invalidIdentity.StatusCode);
+        }
+        finally
+        {
+            if (evaluationId > 0)
+            {
+                await ExecuteAsync(seed, "DELETE FROM RL_AUDITORIA WHERE AUD_REGISTRO_ID=:id", ("id", evaluationId.ToString()));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_FLUJOS_EVALUACION WHERE FLU_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_PROYECCIONES_EVALUACION WHERE PROY_EVALUACION_ID=:id", ("id", evaluationId));
+                await ExecuteAsync(seed, "DELETE FROM RL_MR_EVALUACIONES_RIESGO WHERE EVA_ID=:id", ("id", evaluationId));
+            }
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_RIESGOS WHERE RIE_ID=:id", ("id", riskId));
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_REGLAS_CALCULO WHERE REG_CODIGO=:code", ("code", ruleCode));
+            await ExecuteAsync(seed, "DELETE FROM RL_MR_VERSIONES_FORMULARIO WHERE VER_ID=:id", ("id", versionId));
+        }
+    }
+
+    private static async Task<WebApplication> CreateBlock7ApiAsync(string connectionString)
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
+        builder.Services.AddAuthentication("Block7OracleIntegration")
+            .AddScheme<AuthenticationSchemeOptions, Block6IntegrationAuthenticationHandler>("Block7OracleIntegration", _ => { });
+        builder.Services.AddAuthorization();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddControllers().AddApplicationPart(typeof(MatricesRiesgosController).Assembly);
+        builder.Services.AddSingleton(new OracleDbContext(connectionString));
+        builder.Services.AddScoped<IAuditoriaRepository, AuditoriaRepository>();
+        builder.Services.AddScoped<IMatricesRiesgosRepository, MatricesRiesgosRepository>();
+        builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
+        builder.Services.AddScoped<IFormularioValidador, FormularioValidador>();
+        builder.Services.AddScoped<IMatricesRiesgoService, MatricesRiesgoService>();
+        builder.Services.AddScoped(_ => DispatchProxy.Create<ICalculoConfiguracionRepository, EmptyCalculationConfigurationProxy>());
+        builder.Services.AddScoped<DbDrivenCalculationRuntimeFactory>();
+        builder.Services.AddScoped<VersionedCalculationRuntimeService>();
+        builder.Services.AddScoped<MatricesRiesgosAppService>();
+        builder.Services.AddScoped<IMatricesRiesgosAppService>(services => services.GetRequiredService<MatricesRiesgosAppService>());
+        var app = builder.Build();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.MapControllers();
+        await app.StartAsync();
+        return app;
+    }
+
+    private static EvaluacionRiesgoDto CopyEvaluation(EvaluacionRiesgoDto source) => new()
+    {
+        EvaId = source.EvaId,
+        EvaRiesgoId = source.EvaRiesgoId,
+        EvaVersionId = source.EvaVersionId,
+        EvaEstado = source.EvaEstado,
+        EvaDataJson = source.EvaDataJson,
+        EvaDataCalcJson = source.EvaDataCalcJson,
+        EvaVri = source.EvaVri,
+        EvaEtp = source.EvaEtp,
+        EvaVrr = source.EvaVrr,
+        EvaFechaEval = source.EvaFechaEval,
+        EvaUsrEval = source.EvaUsrEval,
+        EvaVersionRow = source.EvaVersionRow,
+        EvaActivo = source.EvaActivo
+    };
+
+    private static async Task<EvaluacionRiesgoDto> ReadEvaluationAsync(HttpResponseMessage response)
+    {
+        using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return JsonSerializer.Deserialize<EvaluacionRiesgoDto>(body.RootElement.GetProperty("datos").GetRawText(),
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            ?? throw new InvalidOperationException("Oracle API returned an empty evaluation response.");
+    }
+
+    private static async Task<int> ScalarIntAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters) =>
+        checked((int)await ScalarLongAsync(connection, sql, parameters));
+
+    private static async Task<long> ScalarLongAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
+    {
+        await using var command = new OracleCommand(sql, connection) { BindByName = true };
+        foreach ((string name, object value) in parameters) command.Parameters.Add(new OracleParameter(name, value));
+        return Convert.ToInt64(await command.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    private static async Task<string> ScalarTextAsync(OracleConnection connection, string sql, params (string Name, object Value)[] parameters)
+    {
+        await using var command = new OracleCommand(sql, connection) { BindByName = true };
+        foreach ((string name, object value) in parameters) command.Parameters.Add(new OracleParameter(name, value));
+        return Convert.ToString(await command.ExecuteScalarAsync(), System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+    }
+
+    private static async Task EnsureBlock7FixtureObjectsAsync(OracleConnection connection)
+    {
+        string[] ddl =
+        [
+            "CREATE TABLE RL_MR_VERSIONES_FORMULARIO (VER_ID NUMBER(15) PRIMARY KEY,VER_FAMILIA_ID NUMBER(15),VER_CODIGO VARCHAR2(80),VER_VERSION NUMBER(10),VER_JSON CLOB,VER_HASH VARCHAR2(64),VER_ESTADO VARCHAR2(30),VER_VIGENTE NUMBER(1),VER_FECHA_INICIO DATE,VER_FECHA_FIN DATE,VER_FECHA_CREACION DATE,VER_USR_CREACION NUMBER(10))",
+            "CREATE TABLE RL_MR_REGLAS_CALCULO (REG_ID NUMBER(15) PRIMARY KEY,REG_CODIGO VARCHAR2(80),REG_VERSION VARCHAR2(20),REG_NOMBRE VARCHAR2(250),REG_ALGORITMO_ID VARCHAR2(100),REG_ACTIVA NUMBER(1))",
+            "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))"
+        ];
+        foreach (string sql in ddl)
+        {
+            try { await ExecuteAsync(connection, sql); }
+            catch (OracleException exception) when (exception.Number == 955) { }
+        }
+
+        foreach (string sequence in new[] { "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA" })
+        {
+            try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 100000000 INCREMENT BY 1 NOCACHE"); }
+            catch (OracleException exception) when (exception.Number == 955) { }
+        }
+    }
+
+    private sealed class EmptyCalculationConfigurationProxy : DispatchProxy
+    {
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            if (targetMethod?.Name == nameof(ICalculoConfiguracionRepository.ListarFormulaBindingsPorVersionFormularioAsync))
+                return Task.FromResult<IReadOnlyList<FormulaBindingDto>>(Array.Empty<FormulaBindingDto>());
+            throw new NotSupportedException($"The Block 7 Oracle fixture does not configure calculation metadata: {targetMethod?.Name}.");
+        }
+    }
+
     [Fact]
     [Trait("Category", "Block6OracleIntegration")]
     public async Task GetProjection_ReadsOneOracleSnapshotAndSerializesAligned82Fields()
@@ -45,7 +336,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             string answers = BuildAnswersJson();
             string calculations = BuildCalculationsJson();
             await ExecuteAsync(connection, "INSERT INTO RL_MR_RIESGOS VALUES (:id,'ROP-CUMP-59','Fixture','Fixture risk',1,:usr,SYSDATE)", ("id",riskId),("usr",userId));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO VALUES (:id,:risk,1,:answers,:calc,:fixtureDate,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("fixtureDate",baseDate),("usr",userId));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO (EVA_ID,EVA_RIESGO_ID,EVA_VERSION_ID,EVA_DATOS_JSON,EVA_CALCULOS_JSON,EVA_FECHA_REGISTRO,EVA_USR_REGISTRO,EVA_VERSION_ROW,EVA_ACTIVO) VALUES (:id,:risk,1,:answers,:calc,:fixtureDate,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("fixtureDate",baseDate),("usr",userId));
             // The legacy summary columns are VARCHAR2(20); canonical display labels come from EVA_CALCULOS_JSON.
             await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'BAJO','NO SIGNIFICATIVO','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("fixtureDate",baseDate));
             foreach (long id in new[] { controlA, controlB, controlC })
@@ -158,7 +449,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             "CREATE TABLE RL_MR_RIESGOS (RIE_ID NUMBER(15) PRIMARY KEY,RIE_CODIGO VARCHAR2(30),RIE_NOMBRE VARCHAR2(250),RIE_DESCRIPCION VARCHAR2(2000),RIE_ACTIVO NUMBER(1),RIE_USR_CREACION NUMBER(10),RIE_FECHA_CREACION DATE)",
             "CREATE TABLE RL_MR_EVALUACIONES_RIESGO (EVA_ID NUMBER(15) PRIMARY KEY,EVA_RIESGO_ID NUMBER(15),EVA_VERSION_ID NUMBER(15),EVA_DATOS_JSON CLOB,EVA_CALCULOS_JSON CLOB,EVA_FECHA_REGISTRO DATE,EVA_USR_REGISTRO NUMBER(10),EVA_VERSION_ROW NUMBER(10),EVA_ACTIVO NUMBER(1))",
             "CREATE TABLE RL_MR_PROYECCIONES_EVALUACION (PROY_ID NUMBER(15),PROY_EVALUACION_ID NUMBER(15),PROY_CODIGO_RIESGO VARCHAR2(30),PROY_AREA_PRINCIPAL VARCHAR2(100),PROY_VRI NUMBER(8,2),PROY_VRR NUMBER(8,2),PROY_NIVEL_INHERENTE VARCHAR2(20),PROY_NIVEL_RESIDUAL VARCHAR2(20),PROY_RESPUESTA_RIESGO VARCHAR2(50),PROY_ESTADO_EVALUACION VARCHAR2(30),PROY_DUENO_RIESGO VARCHAR2(150),PROY_FECHA_EVAL DATE)",
-            "CREATE TABLE RL_MR_FLUJOS_EVALUACION (FLU_ID NUMBER(15),FLU_EVALUACION_ID NUMBER(15),FLU_ESTADO VARCHAR2(30),FLU_FECHA DATE)",
+            "CREATE TABLE RL_MR_FLUJOS_EVALUACION (FLU_ID NUMBER(15),FLU_EVALUACION_ID NUMBER(15),FLU_ESTADO VARCHAR2(30),FLU_MOTIVO VARCHAR2(1000),FLU_USR_ID NUMBER(10),FLU_FECHA DATE)",
             "CREATE TABLE RL_MR_CONTROLES_RIESGO (CON_ID NUMBER(15) PRIMARY KEY,CON_EVALUACION_ID NUMBER(15),CON_TIPO VARCHAR2(30),CON_DESCRIPCION VARCHAR2(500),CON_AUTOMATIZACION VARCHAR2(30),CON_ESTADO VARCHAR2(20),CON_ESTADO_MONITOREO VARCHAR2(30),CON_EFECTIVIDAD_MONITOREO NUMBER(5,2))",
             "CREATE TABLE RL_MR_PLANES (PLA_ID NUMBER(15) PRIMARY KEY,PLA_EVALUACION_ID NUMBER(15),PLA_DESCRIPCION VARCHAR2(500),PLA_AVANCE NUMBER(5,2),PLA_PRESUPUESTO NUMBER(15,2),PLA_FECHA_INICIO DATE,PLA_FECHA_FIN DATE,PLA_ESTADO VARCHAR2(30),PLA_MONITOREO_SEGUIMIENTO VARCHAR2(1000),PLA_RESPONSABLES VARCHAR2(1000),PLA_RECURSOS VARCHAR2(1000))",
             "CREATE TABLE RL_MR_ACTIVIDADES (ACT_ID NUMBER(15) PRIMARY KEY,ACT_PLAN_ID NUMBER(15),ACT_DESCRIPCION VARCHAR2(500),ACT_RESPONSABLE VARCHAR2(150),ACT_AVANCE NUMBER(5,2),ACT_FECHA_INICIO DATE,ACT_FECHA_FIN DATE,ACT_ESTADO VARCHAR2(30))",
