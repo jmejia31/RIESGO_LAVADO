@@ -1,4 +1,17 @@
-# Estado vigente — Rescope de Bloque 4 a muestra representativa de cinco riesgos (COD) — 2026-10-12
+# Estado vigente — Auditoría de paridad matemática del Bloque 5 (COD) — 2026-10-13
+
+- **Bloques:** Bloques 1–4 permanecen cerrados. Bloque 5 está `BLOCKED_REFERENCE_RECALC_ENGINE`; Bloque 6 sigue `NOT_STARTED`.
+- **Identidad:** inicio rama `desarrollo`, `HEAD=origin/desarrollo=79bd3008fa688ed063798881d87c3aeff81b84ba`. Los cambios protegidos en los dos `DatabaseEnvironmentGuard` y `frontend/rl-app/tsconfig.json`, junto con los untracked, se preservaron.
+- **Fuente:** workbook original verificado antes/después con SHA-256 `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`; validador 82/82, 59 códigos únicos.
+- **Fórmulas:** el contrato declara 34 campos. En 2,006 posiciones 59×34, el XLSX contiene 1,742 celdas con fórmula y 264 sin fórmula fuente: seis columnas de efectividad aparecen formuladas en 15/59 filas. Las 59 fórmulas F33 no tienen valor cacheado. F50–F69: 1,180/1,180 celdas con fórmula y valores cacheados, sin recálculo independiente.
+- **Oráculo independiente:** Excel COM falla con `TYPE_E_LIBNOTREGISTERED` al abrir/consultar el workbook; no se encontró `EXCEL.EXE` ni LibreOffice instalado. No se instaló software. Los valores cacheados no se usaron como si fueran recálculo. Paridad 59×34: `NOT_CERTIFIED`.
+- **Implementación existente:** un evaluador DSL `FormulaEngine`, runtime versionado y 34 definiciones trazables ya existen. La intervención no duplicó el motor ni alteró fórmulas sin oráculo independiente. Queda por resolver el desacuerdo de ausencia total de controles: el test actual espera ETP vacío; el requerimiento de Bloque 5 indica cero para ausencia institucional.
+- **Artefactos:** RUN_ID `20261013_080930_577`, carpeta estable `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK5_CALCULATION_PARITY\20261013_080930_577`; 2,006 posiciones auditadas, 1,742 fórmulas fuente y 9 hashes verificados. Paridad marcada `NOT_EVALUATED`.
+- **Pruebas reproducidas:** Release build backend PASS; pruebas de fórmula/runtime 36/36; suite backend 915/915; contrato 82/82; catálogos 14/91; validadores de repositorio, DB y documentación PASS. Quality gate local completó backend y no pudo iniciar cobertura frontend por builder ausente en el `node_modules` compartido. En instalación aislada: `npm ci`, audit 0, lint/build y frontend 845/845 PASS. E2E no ejecutado.
+- **Seguridad:** producción no consultada ni modificada. `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, apply no ejecutado/no autorizado. No se inicia Bloque 6.
+- **Siguiente paso:** disponer de motor de recálculo independiente funcional, resolver las 264 posiciones sin fórmula fuente y la semántica de ausencia de controles; después ejecutar paridad completa y reevaluar estado.
+
+## Histórico inmediato — Rescope de Bloque 4 a muestra representativa de cinco riesgos (COD) — 2026-10-12
 
 - **Alcance vigente:** la matriz de 59 riesgos es referencia funcional y oráculo; no es una orden de migración masiva. `FULL_59_RISK_MIGRATION_REQUIRED=NO`; `MANDATORY_MIGRATION_RISKS=0`; `DEMO_SAMPLE_TARGET=5`.
 - **Inputs de negocio:** el request técnico de 215 atributos queda `OBSOLETE_BY_SCOPE`. No se solicita al cliente ni bloquea Bloque 4. El generador `qualify-business-input` se conserva como herramienta diagnóstica/audit.

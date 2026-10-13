@@ -96,3 +96,19 @@ No se requiere cambio de esquema. No se modificaron scripts SQL, fórmula DML ni
 - `SCHEMA_CHANGE_REQUIRED=NO`; los únicos cambios de dependencia son actualizaciones compatibles de pins/lockfile para restablecer `npm audit=0` sin `--force`.
 
 La bitácora y el estado colaborativo de esta intervención están en [`BITACORA_COLABORACION.md`](../../BITACORA_COLABORACION.md) y [`ESTADO_COLABORACION.md`](../0.0%20Documentación/ESTADO_COLABORACION.md). El Quality Gate del commit documental final se registra en el reporte de cierre para conservar la comprobación sobre su SHA exacto.
+
+## Auditoría de paridad matemática (2026-10-13)
+
+Esta auditoría separa la existencia del evaluador DSL y la traza de fórmulas de la paridad independiente requerida para cerrar Bloque 5. El código ya tiene `FormulaEngine`, `VersionedCalculationRuntimeService` y 34 definiciones en `InstitutionalFormulaDataset`; no se añadió un segundo motor.
+
+El workbook oficial conservó su SHA `5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385`. La extracción estructural de `Matriz Consolidada` generó 2,006 filas de auditoría para 59 riesgos × 34 campos, pero encontró 1,742 celdas con fórmula, no 2,006. Las otras 264 corresponden a seis salidas de efectividad de control presentes como fórmula sólo en 15 de 59 filas. No se atribuyó un resultado a una celda sin fórmula. Las 1,180 celdas F50–F69 contienen fórmulas; sus valores almacenados se registran como caché, no como recálculo. F33 tiene fórmula en las 59 filas y carece de valor cacheado en las 59.
+
+No hubo motor independiente disponible: la interfaz COM de Excel falla al abrir/consultar por `TYPE_E_LIBNOTREGISTERED`, no se encontró `EXCEL.EXE` ni LibreOffice. Por ello no se ejecutó `CalculateFullRebuild` y `REFERENCE_CASES_MATCH_EXCEL` queda sin certificar. No se modificó el workbook ni se instalaron herramientas.
+
+La prueba de paridad vigente cubre un fixture del motor, no 59 riesgos. Además, el test actual de ausencia total de controles espera ETP vacío, mientras el requerimiento de Bloque 5 define ausencia institucional como nivel 0/efectividad 0% y el cálculo sin control debe resolverse según la semántica oficial. Este punto sigue abierto para corrección respaldada por el oráculo.
+
+Evidencia fuera de Git: RUN_ID `20261013_080930_577` en `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK5_CALCULATION_PARITY\20261013_080930_577`. Incluye `block5_formula_source_audit.csv` (2,006 posiciones), `block5_formula_parity_59x34.csv` (sin resultados backend; `NOT_EVALUATED`), `block5_aux_50_69_parity.csv` (1,180 posiciones sin comparar), contadores, resúmenes y `SHA256SUMS.json` (9 hashes verificados).
+
+Validación de esta auditoría: build Release backend PASS; pruebas focales 36/36; backend 915/915; contrato 82/82; catálogos 14/91; validadores de estructura, DB y documentación PASS. El quality gate local pasó el backend y falló al iniciar cobertura frontend por falta del builder `@angular/build:unit-test` en el `node_modules` compartido. En una copia aislada del `HEAD`, frontend audit 0, lint/build PASS y 845/845 pruebas PASS. La suite E2E no se ejecutó. No hubo acceso a producción ni escrituras.
+
+**Estado vigente: `BLOCK5_STATUS=BLOCKED_REFERENCE_RECALC_ENGINE`.** No declarar paridad/cierre, no reabrir Bloques 1–4 y mantener Bloque 6 como `NOT_STARTED`.
