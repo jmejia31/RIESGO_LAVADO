@@ -124,3 +124,5 @@ Se agregó el endpoint de lectura GET /api/matrices-riesgos/evaluaciones/{evalua
 Verificación de esta intervención: 9/9 pruebas focalizadas, build Release, backend 945/945, contrato 82/82, catálogo 14/91 con drift 0, validadores de estructura/DB/UTF-8 y hashes de artefactos PASS. Quality Gates local completó backend y se detuvo porque falta el builder `@angular/build:unit-test` en las dependencias compartidas. Oracle XE no se ejecutó por no contar con instancia/conexión local aislada certificada. Producción no se consultó ni modificó; DML=0, DDL=0, apply=NO. Estado BLOCK6_STATUS=BLOCKED_DATA_MODEL_INCONSISTENCY; BLOCK7_STATUS=NOT_STARTED.
 
 Artefactos fuera de Git: %USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK6_BACKEND_PROJECTION\20261013_102047_431.
+
+Quality Gates remoto: run 38430600015, commit 133b6a4621a76561b41397d93d036fe11374c0a9, completed/success. La conclusión CI valida el SHA publicado, no remueve los bloqueos de datos/modelo anteriores.
