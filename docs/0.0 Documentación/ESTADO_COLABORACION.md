@@ -1,11 +1,12 @@
-# Estado vigente — Bloque 6B: resolución del data model y proyección 82/82 (COD) — 2026-10-13
+# Estado vigente — Bloque 6B: proyección institucional 82/82 cerrada (COD) — 2026-10-13
 
-- Estado inicial: `HEAD=origin/desarrollo=7ff2a6af09584fb081c4bac01da9dc41439e3f88`; rama `desarrollo`.
-- Cambios: manifest alineado con DDL real y cardinalidad por plan; F01 mantiene el mapa histórico y soporta códigos nuevos; el endpoint canónico usa un repositorio agregado Oracle `READ ONLY` con una conexión/transacción; las evidencias proyectan `EVI_FECHA_CREACION`; CI incorpora Oracle XE efímero y un GET real en Kestrel.
-- Verificación local: Release build solución 0 errores; backend 949/949; foco 30/30; contract 82/82; catálogo 14/91 drift 0; validadores DB/estructura/encoding/docs PASS. CI Oracle pendiente; no reutilizado el esquema local persistente.
-- Seguridad: producción no consultada ni modificada; DML=0, DDL=0, apply=NO; no se requieren cambios de esquema. Bloques 1–5 se mantienen cerrados; Bloque 7 NOT_STARTED.
-- Git: archivos ajenos preservados sin stage: `DatabaseEnvironmentGuard.cs`, sus pruebas, `frontend/rl-app/tsconfig.json` y untracked preexistentes. Commit/push/CI final pendientes.
-- Continuación exacta: validar diff, commit/push focalizado, esperar CI con la prueba Oracle; corregir si falla y sólo cerrar Bloque 6 si esa integración y quality gates terminan correctamente.
+- Resultado: `BLOCK6_STATUS=CLOSED`; `BLOCK7_STATUS=NOT_STARTED`. Los Bloques 1–5 se mantienen cerrados.
+- Código certificado en `desarrollo`: `4c1d30a42bf2f3f6f94b8fa9ebc2d27e55aea769`; Quality Gates run `38444275104` terminó `completed/success`, incluido el test Oracle XE y builds backend/frontend.
+- Contrato: 82/82 mappings, orden 01..82; F40 y F44–F49 alineados por ordinal de plan; F01 conserva ordinales históricos 1..59 y soporta códigos nuevos por ranking de todos los RIE_ID fuera del mapa. Sin columnas de orden inexistentes.
+- Lectura: repositorio agregado con una conexión, transacción explícita `Serializable`, nueve consultas parametrizadas, solo SELECT y ROLLBACK; evidencia por `EVI_FECHA_CREACION ASC, EVI_ID ASC`. Integración real confirmó HTTP 200, 82 campos y snapshot estable ante escritura concurrente.
+- Verificación local: build Release sin errores, backend 949/949, contrato 82/82, catálogos 14/91 con drift 0. CI validó Oracle XE, Quality Gates y contenedores. Artefactos y hashes verificados fuera de Git en `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK6_BACKEND_PROJECTION\20261013_111324_855`.
+- Seguridad: producción no se consultó ni modificó; DML=0, DDL=0, apply=NO; no se requiere cambio de esquema. Los cambios locales ajenos y untracked siguen preservados y fuera de staging.
+- Continuación: usar la proyección backend 82/82 como fuente institucional canónica. Bloque 7 permanece `NOT_STARTED`.
 ## Histórico inmediato — Rescope de Bloque 4 a muestra representativa de cinco riesgos (COD) — 2026-10-12
 
 - **Alcance vigente:** la matriz de 59 riesgos es referencia funcional y oráculo; no es una orden de migración masiva. `FULL_59_RISK_MIGRATION_REQUIRED=NO`; `MANDATORY_MIGRATION_RISKS=0`; `DEMO_SAMPLE_TARGET=5`.

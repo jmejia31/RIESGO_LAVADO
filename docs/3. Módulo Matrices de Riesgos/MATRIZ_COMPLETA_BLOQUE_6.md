@@ -166,3 +166,9 @@ La integracion Oracle (`38442658847`) tambien detecto que XE 11g permitio observ
 La repeticion `38443154383` mostro que emitir el comando SQL `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE` sin objeto de transaccion asociado seguia leyendo el dato concurrente. La implementacion usa ahora un objeto `OracleTransaction` explicito en nivel `Serializable` y enlaza las nueve consultas a el. El test usa dos transacciones/ conexiones independientes para caracterizarlo. Build y suite local backend PASS; la validacion real depende del siguiente CI XE.
 
 La ejecucion `38443834113` ya paso la prueba de snapshot concurrente en Oracle; el fallo restante fue una etiqueta incorrecta del fixture de calculos (F38 para VRR=1). Se ajusto el expected sintetico a `Riesgo no significativo`. No cambia reglas ni calculadora productiva.
+
+## Cierre verificado 6B
+
+El run `38444275104` termino `completed/success` para el codigo `4c1d30a42bf2f3f6f94b8fa9ebc2d27e55aea769`. Quality Gates incluye una prueba de integracion HTTP real contra Oracle XE desechable. Verifico respuesta 200, 82 campos en orden, cardinalidad/alineacion por plan, evidencia en orden fecha/EVI_ID y snapshot serializable estable ante escritura concurrente en otra sesion. La frontera de lectura tiene nueve consultas parametrizadas por conjuntos, una conexion y una transaccion explicita `Serializable`; solo SELECT y ROLLBACK.
+
+Build Release local sin errores, backend 949/949, contrato 82/82, catalogo 14/91 con drift 0. CI valido frontend, quality gates y ambos contenedores. Los artefactos/hash se encuentran fuera de Git en `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK6_BACKEND_PROJECTION\20261013_111324_855`. No se accedio a produccion ni se ejecuto DML/DDL/apply. No se requiere cambio de esquema. Estado: `BLOCK6_STATUS=CLOSED`, `BLOCK7_STATUS=NOT_STARTED`.
