@@ -137,7 +137,11 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
     ];
     foreach (string sql in ddl)
         try { await ExecuteAsync(connection, sql); } catch (OracleException exception) when (exception.Number == 955) { }
-    foreach (string sequence in new[] { "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA" })
+    foreach (string sequence in new[]
+    {
+        "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA",
+        "SEQ_RL_MR_CONTROLES", "SEQ_RL_MR_PLANES", "SEQ_RL_MR_ACTIVIDADES"
+    })
         try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 200000000 INCREMENT BY 1 NOCACHE"); } catch (OracleException exception) when (exception.Number == 955) { }
 }
 
