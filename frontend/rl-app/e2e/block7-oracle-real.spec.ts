@@ -181,8 +181,28 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(projection.fields).toHaveLength(82);
   expect(projection.fields.find(field => field.fieldNumber === 41)?.value).toBe(2);
   expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(3);
-  expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toContain('Responsable A');
-  expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toContain('Responsable B');
+  expect(projection.fields.find(field => field.fieldNumber === 40)?.value).toEqual([
+    { planOrdinalIndex: 1, value: 'Plan E2E A', state: 'VALUE' },
+    { planOrdinalIndex: 2, value: 'Plan E2E B', state: 'VALUE' },
+  ]);
+  expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toEqual([
+    { planOrdinalIndex: 1, value: 'Responsable A', state: 'VALUE' },
+    { planOrdinalIndex: 2, value: 'Responsable B', state: 'VALUE' },
+  ]);
+  for (const fieldNumber of [44, 46, 47, 48, 49]) {
+    expect(projection.fields.find(field => field.fieldNumber === fieldNumber)?.value).toMatchObject([
+      { planOrdinalIndex: 1 },
+      { planOrdinalIndex: 2 },
+    ]);
+  }
+  expect(projection.fields.find(field => field.fieldNumber === 44)?.value).toEqual([
+    { planOrdinalIndex: 1, value: 'Seguimiento Responsable A', state: 'VALUE' },
+    { planOrdinalIndex: 2, value: 'Seguimiento Responsable B', state: 'VALUE' },
+  ]);
+  expect(projection.fields.find(field => field.fieldNumber === 49)?.value).toEqual([
+    { planOrdinalIndex: 1, value: 1000, state: 'VALUE' },
+    { planOrdinalIndex: 2, value: 2000, state: 'VALUE' },
+  ]);
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
 });
