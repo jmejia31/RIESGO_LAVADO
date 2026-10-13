@@ -28,6 +28,19 @@ function Assert-Minimum {
     }
 }
 
+if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
+    if ([string]::IsNullOrWhiteSpace($env:BLOCK7_ORACLE_CONNECTION_STRING)) {
+        throw 'La certificacion Oracle/browser de Bloque 7 requiere la conexion Oracle XE desechable'
+    }
+
+    Write-Host '=== Certificacion real Bloque 7: Oracle + Browser/API ===' -ForegroundColor Cyan
+    $block7OracleScript = Join-Path $RepositoryRoot 'tools/run_block7_oracle_e2e.sh'
+    & bash $block7OracleScript
+    if ($LASTEXITCODE -ne 0) {
+        throw "La certificacion Oracle/browser del Bloque 7 fallo con codigo $LASTEXITCODE"
+    }
+}
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'
@@ -92,18 +105,6 @@ try {
         }
     }
 
-    if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
-        if ([string]::IsNullOrWhiteSpace($env:BLOCK7_ORACLE_CONNECTION_STRING)) {
-            throw 'La certificacion Oracle/browser de Bloque 7 requiere la conexion Oracle XE desechable'
-        }
-
-        Write-Host '=== Certificacion real Bloque 7: Oracle + Browser/API ===' -ForegroundColor Cyan
-        $block7OracleScript = Join-Path $RepositoryRoot 'tools/run_block7_oracle_e2e.sh'
-        & bash $block7OracleScript
-        if ($LASTEXITCODE -ne 0) {
-            throw "La certificacion Oracle/browser del Bloque 7 fallo con codigo $LASTEXITCODE"
-        }
-    }
 }
 finally {
     Pop-Location

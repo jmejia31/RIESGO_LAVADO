@@ -128,17 +128,6 @@ jobs:
       - name: Build solution in Release
         run: dotnet build RIESGO_LAVADO.sln --configuration Release --no-restore
 
-      - name: Run Block 6 canonical projection against disposable Oracle XE
-        env:
-          RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED: 'true'
-          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
-          TZ: UTC
-        run: >-
-          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
-          --configuration Release --no-build --no-restore
-          --filter FullyQualifiedName~InstitutionalProjectionOracleIntegrationTests
-          --logger "console;verbosity=normal"
-
       - name: Verify preinstalled Google Chrome
         shell: bash
         run: google-chrome --version
@@ -150,6 +139,17 @@ jobs:
           BLOCK7_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
           ConnectionStrings__OracleDB_LocalXE: Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=127.0.0.1)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=${{ github.run_id }}-Block6-CI;Pooling=false;
         run: ./tools/run_quality_gates.ps1
+
+      - name: Run Block 6 canonical projection against disposable Oracle XE
+        env:
+          RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED: 'true'
+          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
+          TZ: UTC
+        run: >-
+          dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
+          --configuration Release --no-build --no-restore
+          --filter FullyQualifiedName~InstitutionalProjectionOracleIntegrationTests
+          --logger "console;verbosity=normal"
 
       - name: Validate compose configuration without secrets in repository
         shell: bash
