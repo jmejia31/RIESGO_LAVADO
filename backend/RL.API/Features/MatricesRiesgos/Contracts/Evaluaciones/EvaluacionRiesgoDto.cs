@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace RL.API.Features.MatricesRiesgos.Contracts;
 
@@ -18,3 +19,11 @@ public sealed class EvaluacionRiesgoDto
     public int EvaVersionRow { get; set; } // Control de concurrencia optimista
     public bool EvaActivo { get; set; }
 }
+
+public sealed record CalculoPreviewEvaluacionDto(
+    bool Listo,
+    string? EvaDataCalcJson,
+    int? EvaVri,
+    decimal? EvaEtp,
+    int? EvaVrr,
+    IReadOnlyList<string> ObligatoriosPendientes);

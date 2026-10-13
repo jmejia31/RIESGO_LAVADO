@@ -146,6 +146,31 @@ export interface EvaluacionRiesgoDto {
   evaActivo: boolean;
 }
 
+export interface InstitutionalProjectionFieldDto {
+  fieldNumber: number;
+  fieldKey: string;
+  fieldLabel: string;
+  valueType: string;
+  value: unknown;
+  state: string;
+  source: string;
+}
+
+export interface InstitutionalEvaluationProjectionDto {
+  evaluationId: number;
+  riskCode: string;
+  fields: InstitutionalProjectionFieldDto[];
+}
+
+export interface CalculoPreviewEvaluacionDto {
+  listo: boolean;
+  evaDataCalcJson: string | null;
+  evaVri: number | null;
+  evaEtp: number | null;
+  evaVrr: number | null;
+  obligatoriosPendientes: string[];
+}
+
 export interface EvaluacionRiesgoResumenDto {
   evaId: number;
   evaRiesgoId: number;

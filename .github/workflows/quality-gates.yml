@@ -116,6 +116,9 @@ jobs:
           ./scripts/validation/validate_matrices_authorization_contract.ps1
           ./scripts/validation/validate_matrices_phase13_uat_contract.ps1
 
+      - name: Validate Block 7 frontend field contract
+        run: node tools/validate_block7_ui_contract.js
+
       - name: Validate exact matrices object inventory
         shell: pwsh
         run: |

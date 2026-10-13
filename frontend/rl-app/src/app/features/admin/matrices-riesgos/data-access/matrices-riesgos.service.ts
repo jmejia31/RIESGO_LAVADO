@@ -10,6 +10,8 @@ import {
   EvidenciaDto,
   EvidenciaPoliticaDto,
   EvaluacionRiesgoDto,
+  CalculoPreviewEvaluacionDto,
+  InstitutionalEvaluationProjectionDto,
   EvaluacionesPaginadasDto,
   FamiliaFormularioDto,
   FamiliasFormularioPaginadasDto,
@@ -342,6 +344,28 @@ export class MatricesRiesgosService {
   listarPlanes(evaluacionId: number): Observable<PlanMitigacionDto[]> {
     return this.http
       .get<ApiResponse<PlanMitigacionDto[]>>(`${this.apiUrl}/mitigacion/evaluaciones/${evaluacionId}/planes`)
+      .pipe(map(response => response.datos));
+  }
+
+  guardarBorradorEvaluacion(dto: EvaluacionRiesgoDto): Observable<number> {
+    return this.http
+      .post<ApiResponse<number>>(`${this.apiUrl}/evaluaciones/borrador`, dto, this.confirmado)
+      .pipe(map(response => response.datos));
+  }
+
+  actualizarBorradorEvaluacion(id: number, dto: EvaluacionRiesgoDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/evaluaciones/${id}/borrador`, dto, this.confirmado);
+  }
+
+  obtenerProyeccionInstitucional(id: number): Observable<InstitutionalEvaluationProjectionDto> {
+    return this.http
+      .get<ApiResponse<InstitutionalEvaluationProjectionDto>>(`${this.apiUrl}/evaluaciones/${id}/proyeccion-institucional`)
+      .pipe(map(response => response.datos));
+  }
+
+  previsualizarCalculoEvaluacion(dto: EvaluacionRiesgoDto): Observable<CalculoPreviewEvaluacionDto> {
+    return this.http
+      .post<ApiResponse<CalculoPreviewEvaluacionDto>>(`${this.apiUrl}/evaluaciones/calculo-preview`, dto, this.confirmado)
       .pipe(map(response => response.datos));
   }
 

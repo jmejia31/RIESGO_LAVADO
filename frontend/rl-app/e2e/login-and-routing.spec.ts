@@ -209,6 +209,21 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
     localStorage.setItem('token_expira', new Date(Date.now() + 3_600_000).toISOString());
   }, accessToken);
 
+  let persistedDraft: Record<string, unknown> | null = null;
+  const draftProjection = {
+    evaluationId: 301,
+    riskCode: 'R-502',
+    fields: Array.from({ length: 82 }, (_, index) => ({
+      fieldNumber: index + 1,
+      fieldKey: `field_${index + 1}`,
+      fieldLabel: `Field ${index + 1}`,
+      valueType: 'text',
+      value: null,
+      state: 'LEGIT_BLANK',
+      source: 'E2E_FIXTURE',
+    })),
+  };
+
   await page.route('**/api/matrices-riesgos/**', route => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
@@ -275,16 +290,39 @@ async function stubAuthenticatedMatrices(page: Page, fixture: { version?: unknow
           vrr: 4,
           nivelResidual: 'MODERADO',
           fechaEval: '2026-08-03T10:00:00Z'
-        }],
+        }, ...(persistedDraft ? [{
+          evaId: 301,
+          evaRiesgoId: 502,
+          riesgoCodigo: 'R-502',
+          riesgoNombre: 'Riesgo tecnológico',
+          evaVersionId: 10,
+          versionCodigo: 'FORM_MATRIZ_LAFT',
+          versionNumero: 3,
+          estado: 'BORRADOR',
+          fechaEval: '2026-08-03T10:00:00Z'
+        }] : [])],
         pagina: 1,
         registrosPorPagina: 10,
-        totalRegistros: 1,
+        totalRegistros: persistedDraft ? 2 : 1,
         totalPaginas: 1
       };
     } else if (/\/evaluaciones\/\d+$/.test(path) && method === 'GET') {
-      datos = evaluaciones[0];
+      datos = path.endsWith('/301')
+        ? persistedDraft ?? { ...evaluaciones[0], evaId: 301, evaRiesgoId: 502 }
+        : evaluaciones[0];
     } else if (/\/metodologia\/version\/\d+$/.test(path) && method === 'GET') {
       datos = metodologiaFormulario;
+    } else if (path.endsWith('/evaluaciones/borrador') && method === 'POST') {
+      const body = request.postDataJSON() as Record<string, unknown>;
+      persistedDraft = { ...body, evaId: 301 };
+      datos = 301;
+    } else if (/\/evaluaciones\/301\/borrador$/.test(path) && method === 'PUT') {
+      persistedDraft = request.postDataJSON() as Record<string, unknown>;
+      datos = null;
+    } else if (path.endsWith('/evaluaciones/calculo-preview') && method === 'POST') {
+      datos = { listo: true, evaDataCalcJson: '{}', evaVri: null, evaEtp: null, evaVrr: null, obligatoriosPendientes: [] };
+    } else if (path.endsWith('/evaluaciones/301/proyeccion-institucional') && method === 'GET') {
+      datos = draftProjection;
     } else if (path.endsWith('/evaluaciones') && method === 'POST') {
       datos = 201;
     } else if (/\/evaluaciones\/\d+$/.test(path) && method === 'PUT') {
@@ -396,7 +434,7 @@ test('abre Matrices de Riesgos con una sesión autenticada y contratos dinámico
   await expect(page.getByRole('button', { name: 'Nueva evaluación' })).toBeVisible();
 });
 
-test('crea una evaluación desde el modal y muestra el consolidado tipado', async ({ page }) => {
+test('crea y recarga un borrador parcial antes de avanzar por bloques', async ({ page }) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
 
@@ -407,24 +445,19 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
   await page.locator('#modal-selector-familia').selectOption('MATRIZ_RIESGOS_LAFT');
   await expect(page.getByText('Identificación del riesgo', { exact: true })).toBeVisible();
 
-  const guardar = page.getByRole('button', { name: 'Crear Evaluación' });
   const modalNuevaEvaluacion = page.locator('[data-modal="nueva-evaluacion"]');
   await expect(modalNuevaEvaluacion).toHaveClass(/modal-size-workspace/);
   await expect(modalNuevaEvaluacion.locator('.modal-body-scrollable')).toHaveCSS('overflow-y', 'auto');
-  await page.screenshot({ path: 'test-results/ui-form-final-d-nueva-evaluacion-1536x1024.png', fullPage: true });
-  await expect(guardar).toBeDisabled();
 
   await page.locator('#modal-selector-riesgo').selectOption({ label: 'R-502 — Riesgo tecnológico' });
   await page.getByLabel('Área principal').fill('Tecnología');
   await page.getByLabel('Dueño del riesgo').fill('Gerencia de Tecnología');
-  await expect(guardar).toBeEnabled();
-
-  const solicitudCreacion = page.waitForRequest(request =>
+  const saveRequest = page.waitForRequest(request =>
     request.method() === 'POST'
-      && new URL(request.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones')
+      && new URL(request.url()).pathname.endsWith('/api/matrices-riesgos/evaluaciones/borrador')
   );
-  await guardar.click();
-  const request = await solicitudCreacion;
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  const request = await saveRequest;
   const payload = request.postDataJSON();
   expect(payload.evaRiesgoId).toBe(502);
   expect(payload.evaVersionId).toBe(10);
@@ -432,14 +465,15 @@ test('crea una evaluación desde el modal y muestra el consolidado tipado', asyn
     area_principal: 'Tecnología',
     dueno_riesgo: 'Gerencia de Tecnología',
   });
+  expect(payload.evaDataCalcJson).toBe('{}');
 
-  await page.getByRole('tab', { name: 'Consolidado' }).click();
-  await expect(page.getByRole('heading', { name: 'Matriz consolidada' })).toBeVisible();
-  await expect(page.getByText('R-501', { exact: true })).toBeVisible();
-  await expect(page.getByText('Cumplimiento', { exact: true })).toBeVisible();
-  await expect(page.getByText('Riesgo bajo', { exact: true })).toBeVisible();
-
-  await page.screenshot({ path: 'test-results/evaluacion-modal-consolidado.png', fullPage: true });
+  await expect(page.getByRole('heading', { name: 'Editar Evaluación #301' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '2. Controles' })).toBeEnabled();
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Matrices de Riesgos' })).toBeVisible();
+  await page.getByTitle('Editar evaluación').last().click();
+  await expect(page.getByRole('heading', { name: 'Editar Evaluación #301' })).toBeVisible();
+  await expect(page.getByLabel('Área principal')).toHaveValue('Tecnología');
 });
 
 test('consulta una evaluación existente y permite abrir su edición', async ({ page }) => {

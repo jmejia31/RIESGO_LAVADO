@@ -63,6 +63,7 @@ describe('MatricesRiesgosComponent — evaluaciones: integración funcional', ()
       listarRiesgosPaginados: vi.fn().mockReturnValue(of({ items: [], pagina: 1, tamanoPagina: 200, totalRegistros: 0, totalPaginas: 0 })),
       listarEvaluaciones: vi.fn().mockReturnValue(of(crearPaginado(1, 10, 50, 5, 10))),
       obtenerEvaluacion: vi.fn().mockReturnValue(of({ evaId: 12, evaRiesgoId: 112, evaVersionId: 1, evaDataJson: '{}' })),
+      obtenerProyeccionInstitucional: vi.fn().mockReturnValue(of({ evaluationId: 12, riskCode: 'TEST', fields: [] })),
       metodologiaPorVersion: vi.fn().mockReturnValue(of({ versionFormularioId: 1, codigo: 'MATRIZ_RIESGOS_LAFT', version: 1, secciones: [] })),
       obtenerFamiliaFormularioPorId: vi.fn().mockReturnValue(of({ famId: 1 })),
       obtenerFormularioVigente: vi.fn().mockReturnValue(of(null)),

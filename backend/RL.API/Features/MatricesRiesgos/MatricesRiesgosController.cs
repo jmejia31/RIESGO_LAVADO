@@ -401,6 +401,53 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpPost("evaluaciones/borrador")]
+    [AuditRequired("Creación de borrador de evaluación de riesgo")]
+    public async Task<IActionResult> GuardarBorradorEvaluacion([FromBody] EvaluacionRiesgoDto dto)
+    {
+        try
+        {
+            return Responder(await _service.GuardarBorradorEvaluacionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al guardar borrador de evaluación.");
+            return Error500(ex);
+        }
+    }
+
+    [HttpPut("evaluaciones/{id:long}/borrador")]
+    [AuditRequired("Actualización de borrador de evaluación de riesgo")]
+    public async Task<IActionResult> ActualizarBorradorEvaluacion(long id, [FromBody] EvaluacionRiesgoDto dto)
+    {
+        if (id != dto.EvaId)
+            return BadRequest(new { success = false, mensaje = "El ID de la ruta no coincide con el ID del cuerpo." });
+
+        try
+        {
+            return Responder(await _service.ActualizarBorradorEvaluacionAsync(dto, ObtenerUsuarioId(), ObtenerIp()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar borrador de evaluación ID {Id}", id);
+            return Error500(ex);
+        }
+    }
+
+    [HttpPost("evaluaciones/calculo-preview")]
+    public async Task<IActionResult> PrevisualizarCalculoEvaluacion([FromBody] EvaluacionRiesgoDto dto)
+    {
+        try
+        {
+            return Responder(await _service.PrevisualizarCalculoEvaluacionAsync(dto));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al previsualizar el cálculo de evaluación.");
+            return Error500(ex);
+        }
+    }
+
     [HttpGet("familias/predeterminada")]
     public async Task<IActionResult> ObtenerFamiliaPredeterminada()
     {

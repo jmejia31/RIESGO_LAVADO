@@ -46,6 +46,33 @@ public sealed class FormularioValidadorTests
     }
 
     [Fact]
+    public async Task ValidarRespuestas_BorradorParcial_PermiteRequeridosPendientes()
+    {
+        var result = await _validador.ValidarRespuestasAsync(
+            "{}",
+            ConfigValida,
+            permitirObligatoriosPendientes: true);
+
+        Assert.True(result.Valido);
+        Assert.Empty(result.Errores);
+        Assert.Equal(new[] { "campo_texto" }, result.ObligatoriosPendientes);
+    }
+
+    [Fact]
+    public async Task ValidarRespuestas_BorradorParcial_SigueRechazandoDatosEstructuralmenteInvalidos()
+    {
+        var result = await _validador.ValidarRespuestasAsync(
+            """{"campo_num":"no-es-numero","campo_sucio":"no-permitido"}""",
+            ConfigValida,
+            permitirObligatoriosPendientes: true);
+
+        Assert.False(result.Valido);
+        Assert.Contains(result.Errores, error => error.Campo == "campo_num");
+        Assert.Contains(result.Errores, error => error.Campo == "campo_sucio");
+        Assert.Equal(new[] { "campo_texto" }, result.ObligatoriosPendientes);
+    }
+
+    [Fact]
     public async Task ValidarRespuestas_RespuestasValidas_RetornaOk()
     {
         var respuestas = @"{

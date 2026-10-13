@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
 import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/matrices-riesgos.models';
@@ -28,6 +28,8 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
+  @Input() evaluacionIdInicial: number | null = null;
+  @Output() persisted = new EventEmitter<void>();
 
   readonly resumen = signal<ResumenMatricesOperativoDto | null>(null);
   readonly alertas = signal<SenalAlertaDto[]>([]);
@@ -70,7 +72,11 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   monResultado = '';
 
   ngOnInit(): void {
-    this.cargarResumen();
+    if (this.evaluacionIdInicial && this.evaluacionIdInicial > 0) {
+      this.seleccionarEvaluacion(this.evaluacionIdInicial);
+    } else {
+      this.cargarResumen();
+    }
   }
 
   cargarResumen(): void {
@@ -139,6 +145,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.mensaje.set('Señal de alerta registrada correctamente.');
         this.cargarSeguimiento();
         this.cargarResumen();
+        this.persisted.emit();
       },
       error: error => this.finalizarGuardadoError(error, 'No se pudo registrar la señal de alerta.')
     });
@@ -153,6 +160,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.mensaje.set(`Alerta ${nuevoEstado === 'ACTIVO' ? 'activada' : 'inactivada'} correctamente.`);
         this.cargarSeguimiento();
         this.cargarResumen();
+        this.persisted.emit();
       },
       error: error => this.finalizarGuardadoError(error, 'No se pudo cambiar el estado de la alerta.')
     });
@@ -180,6 +188,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.mensaje.set('Automonitoreo registrado correctamente.');
         this.cargarSeguimiento();
         this.cargarResumen();
+        this.persisted.emit();
       },
       error: error => this.finalizarGuardadoError(error, 'No se pudo registrar el automonitoreo.')
     });

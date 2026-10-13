@@ -30,6 +30,9 @@ public interface IMatricesRiesgosAppService
     Task<ServiceResult<EvaluacionesPaginadasDto>> ListarEvaluacionesPaginadasAsync(ConsultaEvaluacionPaginadaDto filtro);
     Task<ServiceResult<long>> CrearEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
     Task<ServiceResult> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult<long>> GuardarBorradorEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> ActualizarBorradorEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip);
+    Task<ServiceResult<CalculoPreviewEvaluacionDto>> PrevisualizarCalculoEvaluacionAsync(EvaluacionRiesgoDto dto);
     Task<ServiceResult> TransicionarEstadoEvaluacionAsync(long evaId, string nuevoEstado, string? motivo, long usuarioId, string? ip);
     Task<ServiceResult<List<FlujoEvaluacionDto>>> ObtenerFlujosEvaluacionAsync(long evaId);
 

@@ -164,6 +164,15 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public Task<ServiceResult> ActualizarEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip) =>
         _inner.ActualizarEvaluacionAsync(dto, usuarioId, ip);
 
+    public Task<ServiceResult<long>> GuardarBorradorEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip) =>
+        _inner.GuardarBorradorEvaluacionAsync(dto, usuarioId, ip);
+
+    public Task<ServiceResult> ActualizarBorradorEvaluacionAsync(EvaluacionRiesgoDto dto, long usuarioId, string? ip) =>
+        _inner.ActualizarBorradorEvaluacionAsync(dto, usuarioId, ip);
+
+    public Task<ServiceResult<CalculoPreviewEvaluacionDto>> PrevisualizarCalculoEvaluacionAsync(EvaluacionRiesgoDto dto) =>
+        _inner.PrevisualizarCalculoEvaluacionAsync(dto);
+
     public Task<ServiceResult> TransicionarEstadoEvaluacionAsync(
         long evaId,
         string nuevoEstado,

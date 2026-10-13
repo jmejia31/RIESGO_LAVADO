@@ -28,6 +28,7 @@
     </div>
   }
 
+  @if (!evaluacionIdInicial) {
   <div class="max-w-xl">
     <label for="evaluacion-monitoreo" class="block text-sm font-semibold text-slate-700">Evaluación</label>
     <div class="mt-1">
@@ -42,6 +43,7 @@
         (valueChange)="seleccionarEvaluacion($event ?? 0)" />
     </div>
   </div>
+  }
 
   @if (evaluacionId > 0) {
     <div class="grid gap-5 xl:grid-cols-2">

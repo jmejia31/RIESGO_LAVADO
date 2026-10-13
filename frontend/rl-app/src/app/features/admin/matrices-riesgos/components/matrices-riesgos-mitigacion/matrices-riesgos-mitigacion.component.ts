@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { MatricesRiesgosService } from '../../data-access/matrices-riesgos.service';
@@ -27,11 +27,14 @@ import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions 
   templateUrl: './matrices-riesgos-mitigacion.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MatricesRiesgosMitigacionComponent {
+export class MatricesRiesgosMitigacionComponent implements OnChanges {
   private readonly service = inject(MatricesRiesgosService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   @Input() evaluaciones: Array<EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto> = [];
+  @Input() evaluacionIdInicial: number | null = null;
+  @Input() modo: 'completo' | 'controles' | 'planes' = 'completo';
+  @Output() persisted = new EventEmitter<void>();
 
   readonly controles = signal<ControlRiesgoDto[]>([]);
   readonly evaluacionesControl = signal<EvaluacionControlDto[]>([]);
@@ -111,6 +114,13 @@ export class MatricesRiesgosMitigacionComponent {
   actividadFechaInicio = this.hoy();
   actividadFechaFin = this.hoy();
   actividadEstado = 'PENDIENTE';
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['evaluacionIdInicial'] && this.evaluacionIdInicial && this.evaluacionIdInicial > 0
+      && this.evaluacionId !== this.evaluacionIdInicial) {
+      this.seleccionarEvaluacion(this.evaluacionIdInicial);
+    }
+  }
 
   seleccionarEvaluacion(valor: number | string): void {
     this.evaluacionId = Number(valor) || 0;
@@ -192,6 +202,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.mensaje.set(this.controlEditandoId > 0 ? 'Control actualizado correctamente.' : 'Control creado correctamente.');
         this.nuevoControl();
         this.cargarMitigacion();
+        this.persisted.emit();
       },
       error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar el control.')
     });
@@ -289,6 +300,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.mensaje.set(this.planEditandoId > 0 ? 'Plan actualizado correctamente.' : 'Plan creado correctamente.');
         this.nuevoPlan();
         this.cargarMitigacion();
+        this.persisted.emit();
       },
       error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar el plan de mitigación.')
     });
@@ -351,6 +363,7 @@ export class MatricesRiesgosMitigacionComponent {
         this.mensaje.set(this.actividadEditandoId > 0 ? 'Actividad actualizada correctamente.' : 'Actividad creada correctamente.');
         this.nuevaActividad();
         this.cargarActividades(this.planSeleccionadoId);
+        this.persisted.emit();
       },
       error: (error: unknown) => this.finalizarGuardadoError(error, 'No se pudo guardar la actividad.')
     });

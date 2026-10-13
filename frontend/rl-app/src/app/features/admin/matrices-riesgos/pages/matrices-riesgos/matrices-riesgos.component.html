@@ -1169,9 +1169,20 @@
             </p>
           </div>
            <button type="button" class="rounded-xl p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors" aria-label="Cerrar edición" title="Cerrar edición" (click)="cerrarModalEditar()">
-            <app-action-icon action="close"></app-action-icon>
+           <app-action-icon action="close"></app-action-icon>
           </button>
         </div>
+
+        <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
+          @for (bloque of bloquesEvaluacion; track bloque) {
+            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+              [class.border-blue-700]="bloqueEvaluacionActual() === bloque" [class.bg-blue-50]="bloqueEvaluacionActual() === bloque"
+              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > bloqueMasAltoAlcanzado()"
+              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null" (click)="irABloqueEvaluacion(bloque)">
+              {{ tituloBloqueEvaluacion(bloque) }}
+            </button>
+          }
+        </nav>
 
         @if (error(); as errorEdicion) {
           <div class="mx-5 mt-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert" aria-live="assertive" data-uat="feedback-edicion-error">
@@ -1200,8 +1211,11 @@
             </div>
             <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800">BORRADOR</span>
           </div>
+          @if (actualizandoCalculo()) { <p class="text-xs text-blue-700" role="status">Actualizando cálculo institucional…</p> }
+          @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
 
-          @for (seccion of seccionesModal(); track seccion.clave) {
+          @if (bloqueEvaluacionActual() === 1) {
+          @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
@@ -1217,17 +1231,80 @@
               </div>
             </section>
           }
+          }
+
+          @if (bloqueEvaluacionActual() === 2 && evaluacionSeleccionada(); as evaluation) {
+            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="controles" (persisted)="refrescarProyeccionEvaluacion()" />
+          }
+
+          @if (bloqueEvaluacionActual() === 3) {
+            <section class="space-y-4" aria-labelledby="titulo-bloque-residual">
+              <h4 id="titulo-bloque-residual" class="text-base font-bold text-slate-900">{{ tituloBloqueEvaluacion(3) }}</h4>
+              @if (cargandoProyeccionEvaluacion()) { <p role="status">Actualizando cálculo institucional…</p> }
+              <div class="grid gap-3 sm:grid-cols-2">
+                @for (campo of camposResidualMatriz; track campo.ordinal) {
+                  <article class="rounded-xl border border-slate-200 bg-slate-50 p-3" [attr.data-matrix-field]="campo.ordinal">
+                    <h5 class="text-xs font-semibold text-slate-600">{{ campo.label }}</h5>
+                    <p class="mt-1 break-words text-sm font-semibold text-slate-900">{{ valorProyeccion(campo.ordinal) ?? '' }}</p>
+                  </article>
+                }
+              </div>
+              @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
+                <div class="grid gap-4 sm:grid-cols-2">
+                  @for (campo of seccion.campos; track campo.clave) {
+                    <app-dynamic-field-renderer [campo]="campo" [valor]="valorRespuesta(campo)" [opcionesCatalogo]="opcionesCatalogo(campo)" idPrefix="campo-edit" (valorChange)="actualizarRespuesta(campo, $event)" />
+                  }
+                </div>
+              }
+            </section>
+          }
+
+          @if (bloqueEvaluacionActual() === 4 && evaluacionSeleccionada(); as evaluation) {
+            <app-matrices-riesgos-mitigacion [evaluacionIdInicial]="evaluation.evaId" modo="planes" (persisted)="refrescarProyeccionEvaluacion()" />
+          }
+
+          @if (bloqueEvaluacionActual() === 5) {
+            <section class="space-y-4" aria-labelledby="titulo-bloque-calculos">
+              <h4 id="titulo-bloque-calculos" class="text-base font-bold text-slate-900">{{ tituloBloqueEvaluacion(5) }}</h4>
+              <button type="button" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold" [attr.aria-expanded]="detalleCalculosExpandido()" [attr.aria-label]="detalleCalculosExpandido() ? 'Ocultar detalle de cálculos' : 'Mostrar detalle de cálculos'" [attr.title]="detalleCalculosExpandido() ? 'Ocultar detalle' : 'Mostrar detalle'" (click)="detalleCalculosExpandido.update(value => !value)">
+                {{ detalleCalculosExpandido() ? 'Ocultar detalle' : 'Mostrar detalle' }}
+              </button>
+              @if (detalleCalculosExpandido()) {
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  @for (campo of camposBloque5Matriz; track campo.ordinal) {
+                    <article class="rounded-xl border border-slate-200 bg-slate-50 p-3" [attr.data-matrix-field]="campo.ordinal">
+                      <h5 class="text-xs font-semibold text-slate-600">{{ campo.label }}</h5>
+                      <p class="mt-1 break-words font-mono text-sm text-slate-900">{{ valorProyeccion(campo.ordinal) ?? '' }}</p>
+                    </article>
+                  }
+                </div>
+              }
+            </section>
+          }
+
+          @if (bloqueEvaluacionActual() === 6) {
+            <section aria-labelledby="titulo-bloque-seguimiento">
+              <h4 id="titulo-bloque-seguimiento" class="mb-3 text-base font-bold text-slate-900">{{ tituloBloqueEvaluacion(6) }}</h4>
+              @if (evaluacionSeleccionada(); as evaluation) {
+                <app-matrices-riesgos-monitoreo-operativo [evaluacionIdInicial]="evaluation.evaId" (persisted)="refrescarProyeccionEvaluacion()" />
+              } @else {
+                <p class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">El seguimiento estará disponible después del primer guardado de la evaluación.</p>
+              }
+            </section>
+          }
         </div>
 
         <div class="modal-footer-institutional">
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar edición de evaluación" aria-label="Cancelar edición de evaluación" (click)="cerrarModalEditar()">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
-          <button type="button" title="Guardar cambios de evaluación" aria-label="Guardar cambios de evaluación"
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Atrás" aria-label="Atrás" [disabled]="guardando() || bloqueEvaluacionActual() <= 1" (click)="volverBloqueEvaluacion()"><app-action-icon action="back"></app-action-icon></button>
+          <button type="button" title="Continuar al siguiente bloque" aria-label="Continuar al siguiente bloque"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
-                  [disabled]="guardando() || !puedeGuardar()"
-                  (click)="guardarEvaluacion()">
-            <app-action-icon action="save"></app-action-icon>
+                  [disabled]="guardando()"
+                  (click)="continuarBloqueEvaluacion()">
+            <app-action-icon action="next"></app-action-icon>
           </button>
         </div>
       </div>
@@ -1252,6 +1329,8 @@
         </div>
 
         <div class="modal-body-scrollable space-y-6">
+          @if (actualizandoCalculo()) { <p class="text-xs text-blue-700" role="status">Actualizando cálculo institucional…</p> }
+          @if (errorCalculoPreview()) { <p class="text-xs text-red-700" role="alert">{{ errorCalculoPreview() }}</p> }
           @if (obtenerTransicionesValidas(evaluacionResumenSeleccionada()?.estado || '').length > 0) {
             <section class="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
               <h4 class="text-xs font-bold uppercase tracking-wider text-gray-700">Gestionar Transición de Estado</h4>
@@ -1324,6 +1403,16 @@
   @if (modalNuevaEvaluacionAbierto()) {
     <dialog open class="modal-backdrop-overlay" aria-modal="true" aria-labelledby="titulo-modal-nueva-eval">
       <div class="modal-container-card modal-size-workspace" data-modal="nueva-evaluacion">
+        <nav class="mx-5 mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Bloques funcionales de la evaluación">
+          @for (bloque of bloquesEvaluacion; track bloque) {
+            <button type="button" class="rounded-lg border px-3 py-2 text-left text-xs font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+              [class.border-blue-700]="bloqueEvaluacionActual() === bloque" [class.bg-blue-50]="bloqueEvaluacionActual() === bloque"
+              [class.border-slate-200]="bloqueEvaluacionActual() !== bloque" [disabled]="bloque > 1"
+              [attr.aria-current]="bloqueEvaluacionActual() === bloque ? 'step' : null">
+              {{ tituloBloqueEvaluacion(bloque) }}
+            </button>
+          }
+        </nav>
         <div class="modal-header-institutional">
           <div>
             <h3 id="titulo-modal-nueva-eval" class="text-base sm:text-lg font-bold text-gray-900">
@@ -1400,7 +1489,7 @@
             </div>
           }
 
-          @for (seccion of seccionesModal(); track seccion.clave) {
+          @for (seccion of seccionesDelBloqueActual(); track seccion.clave) {
             <section class="rounded-xl border border-gray-200 bg-white p-4 space-y-4" [attr.data-evaluation-section]="seccion.clave">
               <h4 class="text-sm font-bold text-ihss-900 border-b border-gray-100 pb-2">{{ seccion.titulo }}</h4>
 
@@ -1435,11 +1524,12 @@
           <button type="button" class="inline-flex h-9 w-9 items-center justify-center border border-gray-200 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors" title="Cancelar nueva evaluación" aria-label="Cancelar nueva evaluación" (click)="cerrarModalNuevaEvaluacion()">
             <app-action-icon action="cancel"></app-action-icon>
           </button>
-          <button type="button" title="Crear evaluación" aria-label="Crear evaluación"
+          <button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-300" title="Guardar borrador" aria-label="Guardar borrador" [disabled]="guardando()" (click)="guardarBorradorEvaluacion()"><app-action-icon action="save"></app-action-icon></button>
+          <button type="button" title="Continuar" aria-label="Continuar"
                   class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm disabled:opacity-50"
-                  [disabled]="guardando() || !puedeGuardar()"
-                  (click)="guardarEvaluacion()">
-                  <app-action-icon action="create"></app-action-icon>
+                  [disabled]="guardando()"
+                  (click)="continuarBloqueEvaluacion()">
+                  <app-action-icon action="next"></app-action-icon>
           </button>
         </div>
       </div>

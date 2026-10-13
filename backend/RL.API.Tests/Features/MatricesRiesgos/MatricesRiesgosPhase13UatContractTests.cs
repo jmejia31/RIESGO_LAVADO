@@ -36,7 +36,8 @@ public sealed class MatricesRiesgosPhase13UatContractTests
         foreach (Type controller in Controllers)
         {
             MethodInfo[] actions = controller.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
-            foreach (MethodInfo action in actions.Where(EsMutacionHttp))
+            foreach (MethodInfo action in actions.Where(action => EsMutacionHttp(action)
+                && action.Name != nameof(MatricesRiesgosController.PrevisualizarCalculoEvaluacion)))
             {
                 Assert.Contains(action.GetCustomAttributes(), a => a.GetType().Name == "AuditRequiredAttribute");
             }

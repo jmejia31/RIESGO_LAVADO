@@ -1,4 +1,14 @@
-# Estado vigente — Bloque 6B: proyección institucional 82/82 cerrada (COD) — 2026-10-13
+# Estado vigente — Bloque 7: edición de evaluación en seis bloques (COD) — 2026-10-13
+
+- **Estado:** `BLOCK7_STATUS=PENDING_CORRECTION`. Bloques 1–6 permanecen cerrados; Bloque 8 no iniciado.
+- **Checkout:** `desarrollo`, inicio `e8ba67ee960bb39808f11ab9ab9e9995ad31327c`, inicialmente igual a `origin/desarrollo`. Los cambios locales ajenos y untracked enumerados en la bitácora quedaron sin stagear.
+- **Implementado:** endpoints de guardado/actualización de borrador parcial y preview de cálculo backend; edición en bloques; refresh del GET canónico tras writes estructurados; UI field contract validator; E2E Playwright parcial de creación y reload con API simulada.
+- **Verificado:** backend Release tests 955/955; frontend tests 846/846, build y lint en copia temporal aislada; `npm audit` sin vulnerabilidades; contract 82/82; catalogs 14/91 drift 0; UTF-8, estructura, scripts DB y enlaces PASS; E2E simulado 1/1 PASS.
+- **Pendiente de cierre:** no hubo Oracle XE aislado local y CI actual no integra el POST/PUT de Bloque 7 ni el navegador con API+Oracle. Falta E2E real Create/Edit/Reload con Oracle, más certificación responsive/accesibilidad de errores inline/foco. No declarar la persistencia real ni `BLOCK7_STATUS=CLOSED` antes de cubrirlos.
+- **Seguridad:** producción no consultada; DML=0, DDL=0, apply=NO. No se modificó esquema ni se inició Bloque 8.
+- **Punto de continuación:** integrar pruebas de borrador/preview con el harness Oracle XE efímero, conectar el recorrido Playwright a esa API, cerrar accesibilidad/responsive y repetir Quality Gates/CI.
+
+## Estado previo — Bloque 6B cerrado (COD) — 2026-10-13
 
 - Resultado: `BLOCK6_STATUS=CLOSED`; `BLOCK7_STATUS=NOT_STARTED`. Los Bloques 1–5 se mantienen cerrados.
 - Código certificado en `desarrollo`: `4c1d30a42bf2f3f6f94b8fa9ebc2d27e55aea769`; Quality Gates run `38444275104` terminó `completed/success`, incluido el test Oracle XE y builds backend/frontend.

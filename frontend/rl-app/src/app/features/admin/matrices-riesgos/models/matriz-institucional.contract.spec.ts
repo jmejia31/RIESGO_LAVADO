@@ -98,6 +98,21 @@ describe('contrato canónico de la Matriz institucional', () => {
     expect(CATALOGO_RESPUESTA_RIESGO).toEqual(['EVITAR', 'MITIGAR', 'TRANSFERIR', 'ACEPTAR']);
   });
 
+  it('clasifica todos los campos de UI y conserva la partición funcional', () => {
+    const classification = MATRIX_FIELDS.map(field => ({
+      field: field.ordinal,
+      block: field.block,
+      uiMode: field.mode === 'COMPUTED' ? 'READ_ONLY'
+        : field.mode === 'REPEATER' ? 'REPEATER'
+          : field.mode === 'MONITORING' || field.mode === 'EVIDENCE' ? 'FOLLOW_UP_ONLY'
+            : field.mode === 'MASTER' ? 'SYSTEM'
+              : field.editable ? 'EDITABLE' : 'READ_ONLY'
+    }));
+    expect(classification).toHaveLength(82);
+    expect(classification.map(field => field.field)).toEqual(Array.from({ length: 82 }, (_, index) => index + 1));
+    expect(classification.every(field => field.uiMode.length > 0 && field.block >= 1 && field.block <= 6)).toBe(true);
+  });
+
   it('define exactamente los campos 70–82 con etiquetas institucionales y fuentes no workflow', () => {
     expect(MATRIX_BLOCK_6_FIELDS.map(field => field.ordinal)).toEqual(Array.from({ length: 13 }, (_, index) => index + 70));
     expect(MATRIX_BLOCK_6_FIELDS.map(field => field.label)).toEqual([

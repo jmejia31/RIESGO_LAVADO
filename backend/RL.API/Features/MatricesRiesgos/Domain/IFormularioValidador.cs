@@ -9,7 +9,10 @@ public interface IFormularioValidador
     /// Valida las respuestas capturadas por el usuario contra el esquema de configuración del formulario.
     /// Valida obligatoriedad, tipos de datos, regex y bloquea campos sucios no declarados.
     /// </summary>
-    Task<FormularioValidationResult> ValidarRespuestasAsync(string jsonRespuestas, string jsonConfigFormulario);
+    Task<FormularioValidationResult> ValidarRespuestasAsync(
+        string jsonRespuestas,
+        string jsonConfigFormulario,
+        bool permitirObligatoriosPendientes = false);
 
     /// <summary>
     /// Valida la definición persistida antes de permitir su publicación.
@@ -28,6 +31,7 @@ public sealed class FormularioValidationResult
 {
     public bool Valido => Errores.Count == 0;
     public List<FormularioValidationError> Errores { get; } = new();
+    public List<string> ObligatoriosPendientes { get; } = new();
 }
 
 public sealed class FormularioValidationError

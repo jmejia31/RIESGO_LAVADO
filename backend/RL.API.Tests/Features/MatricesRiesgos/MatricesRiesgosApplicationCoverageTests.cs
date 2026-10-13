@@ -255,6 +255,103 @@ public sealed class MatricesRiesgosApplicationCoverageTests
     }
 
     [Fact]
+    public async Task GuardarBorradorEvaluacion_Parcial_PersisteSinAceptarCalculosDelCliente()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);
+        PrepararVersionPublicada(repo);
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ =>
+        {
+            var resultado = new FormularioValidationResult();
+            resultado.ObligatoriosPendientes.Add("frecuencia_inherente");
+            return Task.FromResult(resultado);
+        });
+
+        EvaluacionRiesgoDto dto = EvaluacionBase();
+        dto.EvaDataCalcJson = """{"vri":999}""";
+        dto.EvaVri = 999;
+        dto.EvaVrr = 999;
+        repo.On(nameof(IMatricesRiesgosRepository.CrearEvaluacionAsync), args =>
+        {
+            var persisted = (EvaluacionRiesgoDto)args[0]!;
+            Assert.Equal("{}", persisted.EvaDataCalcJson);
+            Assert.Null(persisted.EvaVri);
+            Assert.Null(persisted.EvaEtp);
+            Assert.Null(persisted.EvaVrr);
+            return Task.FromResult(71L);
+        });
+
+        ServiceResult<long> result = await service.GuardarBorradorEvaluacionAsync(dto, 9, null);
+
+        Assert.True(result.Success);
+        Assert.Equal(71L, result.Data);
+    }
+
+    [Fact]
+    public async Task GuardarBorradorEvaluacion_EstructuraInvalida_NoPersiste()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);
+        PrepararVersionPublicada(repo);
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ =>
+        {
+            var resultado = new FormularioValidationResult();
+            resultado.Errores.Add(new FormularioValidationError("frecuencia_inherente", "Debe ser numérico."));
+            return Task.FromResult(resultado);
+        });
+
+        ServiceResult<long> result = await service.GuardarBorradorEvaluacionAsync(EvaluacionBase(), 9, null);
+
+        Assert.False(result.Success);
+        Assert.Equal(400, result.StatusCode);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CrearEvaluacionAsync)));
+    }
+
+    [Fact]
+    public async Task PrevisualizarCalculoEvaluacion_Valido_UsaRuntimeYNoPersiste()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        PrepararVersionPublicada(repo);
+        PrepararValidacionCorrecta(validador);
+        PrepararCalculoCorrecto(calculador);
+        EvaluacionRiesgoDto dto = EvaluacionBase();
+        dto.EvaId = 0;
+        dto.EvaDataCalcJson = """{"vri":999}""";
+        dto.EvaVri = 999;
+
+        ServiceResult<CalculoPreviewEvaluacionDto> result = await service.PrevisualizarCalculoEvaluacionAsync(dto);
+
+        Assert.True(result.Success);
+        Assert.True(result.Data!.Listo);
+        Assert.Equal(7, result.Data.EvaVri);
+        Assert.Equal(4, result.Data.EvaVrr);
+        Assert.NotEqual(dto.EvaDataCalcJson, result.Data.EvaDataCalcJson);
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CrearEvaluacionAsync)));
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.ActualizarEvaluacionAsync)));
+    }
+
+    [Fact]
+    public async Task PrevisualizarCalculoEvaluacion_ObligatoriosPendientes_NoCalculaNiPersiste()
+    {
+        MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out InterfaceStub calculador);
+        PrepararVersionPublicada(repo);
+        validador.On(nameof(IFormularioValidador.ValidarRespuestasAsync), _ =>
+        {
+            var validation = new FormularioValidationResult();
+            validation.ObligatoriosPendientes.Add("frecuencia_inherente");
+            return Task.FromResult(validation);
+        });
+        EvaluacionRiesgoDto dto = EvaluacionBase();
+        dto.EvaId = 0;
+
+        ServiceResult<CalculoPreviewEvaluacionDto> result = await service.PrevisualizarCalculoEvaluacionAsync(dto);
+
+        Assert.True(result.Success);
+        Assert.False(result.Data!.Listo);
+        Assert.Contains("frecuencia_inherente", result.Data.ObligatoriosPendientes);
+        Assert.Empty(calculador.CallsTo(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo)));
+        Assert.Empty(repo.CallsTo(nameof(IMatricesRiesgosRepository.CrearEvaluacionAsync)));
+    }
+
+    [Fact]
     public async Task CrearEvaluacion_RespuestasInvalidas_Retorna400ConDetalle()
     {
         MatricesRiesgosAppService service = CrearServicio(out InterfaceStub repo, out InterfaceStub validador, out _);

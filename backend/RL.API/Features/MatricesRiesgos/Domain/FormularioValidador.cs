@@ -186,7 +186,10 @@ public sealed class FormularioValidador : IFormularioValidador
         return false;
     }
 
-    public Task<FormularioValidationResult> ValidarRespuestasAsync(string jsonRespuestas, string jsonConfigFormulario)
+    public Task<FormularioValidationResult> ValidarRespuestasAsync(
+        string jsonRespuestas,
+        string jsonConfigFormulario,
+        bool permitirObligatoriosPendientes = false)
     {
         var result = new FormularioValidationResult();
 
@@ -231,7 +234,14 @@ public sealed class FormularioValidador : IFormularioValidador
                 // A. Validar obligatoriedad
                 if (metadatos.Obligatorio && esNuloOVacio)
                 {
-                    result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' es obligatorio."));
+                    if (permitirObligatoriosPendientes)
+                    {
+                        result.ObligatoriosPendientes.Add(campoId);
+                    }
+                    else
+                    {
+                        result.Errores.Add(new FormularioValidationError(campoId, $"El campo '{metadatos.Etiqueta}' es obligatorio."));
+                    }
                     continue;
                 }
 

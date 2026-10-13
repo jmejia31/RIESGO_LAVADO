@@ -490,6 +490,174 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
     }
 
+    public async Task<ServiceResult<long>> GuardarBorradorEvaluacionAsync(
+        EvaluacionRiesgoDto dto,
+        long usuarioId,
+        string? ip)
+    {
+        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(dto.EvaVersionId);
+        if (version is null || !version.VerEstado.Equals("PUBLISHED", StringComparison.OrdinalIgnoreCase) || !version.VerVigente)
+        {
+            return ServiceResult<long>.BadRequest("El borrador debe originarse en una versión publicada y vigente.");
+        }
+
+        FormularioValidationResult validacion = await _validador.ValidarRespuestasAsync(
+            dto.EvaDataJson,
+            version.VerJson,
+            permitirObligatoriosPendientes: true);
+        if (!validacion.Valido)
+        {
+            return ServiceResult<long>.BadRequest(FormatearErroresValidacion(validacion));
+        }
+
+        if (validacion.ObligatoriosPendientes.Count == 0)
+        {
+            ServiceResult? calculo = await ValidarYCalcularEvaluacionAsync(
+                dto,
+                version.VerJson,
+                version.VerId,
+                CrearContextoPresenciaControles(Array.Empty<ControlRiesgoDto>()));
+            if (calculo is not null)
+            {
+                return new ServiceResult<long>(false, null, calculo.Message, calculo.StatusCode);
+            }
+        }
+        else
+        {
+            dto.EvaDataCalcJson = "{}";
+            dto.EvaVri = null;
+            dto.EvaEtp = null;
+            dto.EvaVrr = null;
+        }
+
+        try
+        {
+            long id = await _repo.CrearEvaluacionAsync(dto, usuarioId, ip);
+            return ServiceResult<long>.Ok(id, "Borrador de evaluación guardado.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return ServiceResult<long>.BadRequest(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult<long>.BadRequest(ex.Message);
+        }
+    }
+
+    public async Task<ServiceResult> ActualizarBorradorEvaluacionAsync(
+        EvaluacionRiesgoDto dto,
+        long usuarioId,
+        string? ip)
+    {
+        EvaluacionRiesgoDto? persisted = await _repo.ObtenerEvaluacionAsync(dto.EvaId);
+        if (persisted is null) return ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId}.");
+        if (!persisted.EvaEstado.Equals("BORRADOR", StringComparison.OrdinalIgnoreCase))
+            return ServiceResult.BadRequest("Solo se pueden guardar borradores mientras la evaluación está en estado BORRADOR.");
+        if (dto.EvaVersionId != persisted.EvaVersionId)
+            return ServiceResult.BadRequest("La versión del formulario no puede cambiar durante la edición del borrador.");
+        if (dto.EvaRiesgoId != persisted.EvaRiesgoId)
+            return ServiceResult.BadRequest("El riesgo asociado no puede cambiar durante la edición del borrador.");
+
+        dto.EvaEstado = persisted.EvaEstado;
+        dto.EvaActivo = persisted.EvaActivo;
+        dto.EvaVersionRow = persisted.EvaVersionRow;
+        dto.EvaFechaEval = persisted.EvaFechaEval;
+        dto.EvaUsrEval = persisted.EvaUsrEval;
+
+        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(persisted.EvaVersionId);
+        if (version is null)
+            return ServiceResult.BadRequest("La versión del formulario asociada al borrador ya no está disponible.");
+
+        FormularioValidationResult validacion = await _validador.ValidarRespuestasAsync(
+            dto.EvaDataJson,
+            version.VerJson,
+            permitirObligatoriosPendientes: true);
+        if (!validacion.Valido) return ServiceResult.BadRequest(FormatearErroresValidacion(validacion));
+
+        if (validacion.ObligatoriosPendientes.Count == 0)
+        {
+            IReadOnlyDictionary<string, bool> controlPresence =
+                CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId));
+            ServiceResult? calculo = await ValidarYCalcularEvaluacionAsync(dto, version.VerJson, version.VerId, controlPresence);
+            if (calculo is not null) return calculo;
+        }
+        else
+        {
+            dto.EvaDataCalcJson = "{}";
+            dto.EvaVri = null;
+            dto.EvaEtp = null;
+            dto.EvaVrr = null;
+        }
+
+        try
+        {
+            bool updated = await _repo.ActualizarEvaluacionAsync(dto, usuarioId, ip);
+            return updated ? ServiceResult.Ok("Borrador actualizado.") : ServiceResult.NotFound($"No se encontró la evaluación con ID {dto.EvaId}.");
+        }
+        catch (DBConcurrencyException ex)
+        {
+            return new ServiceResult(false, ex.Message, 409);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return ServiceResult.BadRequest(ex.Message);
+        }
+    }
+
+    private static string FormatearErroresValidacion(FormularioValidationResult validacion)
+    {
+        var errores = validacion.Errores.Select(error => $"Campo '{error.Campo}': {error.Mensaje}");
+        return "Error de validación de respuestas:\n" + string.Join("\n", errores);
+    }
+
+    public async Task<ServiceResult<CalculoPreviewEvaluacionDto>> PrevisualizarCalculoEvaluacionAsync(EvaluacionRiesgoDto dto)
+    {
+        VersionFormularioDto? version = await _repo.ObtenerVersionFormularioAsync(dto.EvaVersionId);
+        if (version is null)
+            return ServiceResult<CalculoPreviewEvaluacionDto>.BadRequest("La versión seleccionada no existe.");
+
+        if (dto.EvaId > 0)
+        {
+            EvaluacionRiesgoDto? persisted = await _repo.ObtenerEvaluacionAsync(dto.EvaId);
+            if (persisted is null)
+                return ServiceResult<CalculoPreviewEvaluacionDto>.NotFound("No se encontró la evaluación para previsualizar el cálculo.");
+            if (persisted.EvaVersionId != dto.EvaVersionId || persisted.EvaRiesgoId != dto.EvaRiesgoId)
+                return ServiceResult<CalculoPreviewEvaluacionDto>.BadRequest("La identidad o versión de la evaluación no coincide con la persistida.");
+        }
+
+        FormularioValidationResult validacion = await _validador.ValidarRespuestasAsync(
+            dto.EvaDataJson,
+            version.VerJson,
+            permitirObligatoriosPendientes: true);
+        if (!validacion.Valido)
+            return ServiceResult<CalculoPreviewEvaluacionDto>.BadRequest(FormatearErroresValidacion(validacion));
+
+        if (validacion.ObligatoriosPendientes.Count > 0)
+        {
+            return ServiceResult<CalculoPreviewEvaluacionDto>.Ok(new(
+                false, null, null, null, null, validacion.ObligatoriosPendientes));
+        }
+
+        IReadOnlyDictionary<string, bool> presence = dto.EvaId > 0
+            ? CrearContextoPresenciaControles(await _controlsRepository.ListarControlesAsync(dto.EvaId))
+            : CrearContextoPresenciaControles(Array.Empty<ControlRiesgoDto>());
+        var copy = new EvaluacionRiesgoDto
+        {
+            EvaId = dto.EvaId,
+            EvaRiesgoId = dto.EvaRiesgoId,
+            EvaVersionId = dto.EvaVersionId,
+            EvaDataJson = dto.EvaDataJson,
+            EvaEstado = "BORRADOR"
+        };
+        ServiceResult? calculo = await ValidarYCalcularEvaluacionAsync(copy, version.VerJson, version.VerId, presence);
+        if (calculo is not null)
+            return new ServiceResult<CalculoPreviewEvaluacionDto>(false, null, calculo.Message, calculo.StatusCode);
+
+        return ServiceResult<CalculoPreviewEvaluacionDto>.Ok(new(
+            true, copy.EvaDataCalcJson, copy.EvaVri, copy.EvaEtp, copy.EvaVrr, Array.Empty<string>()));
+    }
+
     public async Task<ServiceResult> TransicionarEstadoEvaluacionAsync(
         long evaId,
         string nuevoEstado,

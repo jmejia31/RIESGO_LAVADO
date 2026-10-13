@@ -65,7 +65,7 @@ function visibleButtonText(body: string): string {
 
 function isNonActionControl(attrs: string, source: string, offset: number): boolean {
   const nearbyMarkup = source.slice(Math.max(0, offset - 500), offset);
-  return /role\s*=\s*["'](?:tab|combobox|option)["']|data-ui-bounded-select|data-ui-control\s*=\s*["'](?:navigation|selection)["']|\[?routerLink|inspector-group-toggle|id\s*=\s*["']tab-|catalog-record|seleccionar(?:Tab|Vista|Formula|Funcion|Parametro|Catalogo)\s*\(|cambiarTipo\s*\(|ordenarConsolidado\s*\(|cambiarPagina(?:Detalle|Consolidado|Familias)?\s*\(|paginaActual\.set\s*\(/i.test(attrs) || /<nav\b/i.test(nearbyMarkup);
+  return /aria-expanded|role\s*=\s*["'](?:tab|combobox|option)["']|data-ui-bounded-select|data-ui-control\s*=\s*["'](?:navigation|selection)["']|\[?routerLink|inspector-group-toggle|id\s*=\s*["']tab-|catalog-record|seleccionar(?:Tab|Vista|Formula|Funcion|Parametro|Catalogo)\s*\(|cambiarTipo\s*\(|ordenarConsolidado\s*\(|cambiarPagina(?:Detalle|Consolidado|Familias)?\s*\(|paginaActual\.set\s*\(/i.test(attrs) || /<nav\b/i.test(nearbyMarkup);
 }
 
 function isAction(attrs: string): boolean {
