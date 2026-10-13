@@ -28,7 +28,10 @@ public sealed class InstitutionalProjectionReadRepository(OracleDbContext databa
         // ODP.NET retries with a numeric offset only when that server rejects the client region.
         connection.UseHourOffsetForUnsupportedTimezone = true;
         await connection.OpenAsync(cancellationToken);
-        await ExecuteAsync(connection, "SET TRANSACTION READ ONLY", cancellationToken);
+        // Oracle XE 11g did not preserve one snapshot across statements with READ ONLY in the
+        // concurrent characterization. SERIALIZABLE provides transaction-level read consistency;
+        // this repository issues SELECT statements only and always rolls the transaction back.
+        await ExecuteAsync(connection, "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", cancellationToken);
         int queryCount = 0;
         try
         {

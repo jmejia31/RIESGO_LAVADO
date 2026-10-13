@@ -8720,3 +8720,7 @@ La certificación de desarrollo no afirma que se aplicó la migración. El artef
 - Verificacion local: `dotnet test ... --filter FullyQualifiedName~InstitutionalProjectionOracleIntegrationTests` compilo y paso 1/1; como no hay servicio XE local aislado, esta ejecucion local no activa la ruta opt-in Oracle. CI debe repetir la prueba con XE desechable.
 - Estado: `BLOCK6_STATUS=PENDING_CORRECTION`; run `38441561480` fallo en el seed Oracle y el nuevo SHA aun requiere Quality Gates. Produccion no se consulto ni modifico; DML=0, DDL=0, apply=NO. Los cambios locales ajenos y untracked siguen preservados y fuera del staging.
 - Continuacion: ejecutar validaciones, commit solo del fixture y handoff, push normal a `origin/desarrollo`; esperar CI y corregir cualquier fallo Oracle posterior antes de considerar cierre.
+
+## Continuacion Bloque 6B: consistencia transaccional Oracle (COD) - 2026-10-13 12:05 -06:00
+
+El CI `38442658847` verifico que el GET responde por Oracle, pero fallo en la caracterizacion concurrente: la segunda lectura de la misma sesion tras `SET TRANSACTION READ ONLY` vio `Concurrent mutation` en vez del snapshot inicial. Para garantizar consistencia entre sentencias en XE 11g, la frontera agregada ahora inicia `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`; el repositorio contiene exclusivamente SELECT, no ejecuta commit y finaliza con ROLLBACK aun ante error/cancelacion. La prueba concurrente conserva dos sesiones y requiere ver el valor anterior completo. Requiere CI Oracle nuevo; el estado sigue pendiente y no hubo produccion.

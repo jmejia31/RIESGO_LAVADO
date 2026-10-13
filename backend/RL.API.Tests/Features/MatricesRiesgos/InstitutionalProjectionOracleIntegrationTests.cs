@@ -69,7 +69,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             {
                 await readerConnection.OpenAsync();
                 await writerConnection.OpenAsync();
-                await ExecuteAsync(readerConnection,"SET TRANSACTION READ ONLY");
+                await ExecuteAsync(readerConnection,"SET TRANSACTION ISOLATION LEVEL SERIALIZABLE");
                 string before = await ReadRiskNameAsync(readerConnection,riskId);
                 await using (OracleTransaction writerTransaction = writerConnection.BeginTransaction())
                 {
