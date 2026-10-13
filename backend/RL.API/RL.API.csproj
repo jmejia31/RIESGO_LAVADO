@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\matriz_riesgos_catalogos_manifest.json" />
+    <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\matriz_riesgos_82_campos_manifest.json" />
+    <EmbeddedResource Include="Features\MatricesRiesgos\Contracts\block6_risk_ordinal_map.json" />
 
     <!-- Oracle -->
     <PackageReference Include="ExcelDataReader" Version="3.8.0" />

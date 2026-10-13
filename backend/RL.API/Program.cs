@@ -185,6 +185,8 @@ builder.Services.AddScoped<IMatricesRiesgosRepository, SafeMatricesRiesgosReposi
 builder.Services.AddScoped<IMatricesRiesgosGestionRepository, MatricesRiesgosGestionRepository>();
 builder.Services.AddScoped<IMatricesRiesgosMitigacionRepository, MatricesRiesgosMitigacionRepository>();
 builder.Services.AddScoped<IMatricesRiesgosMonitoreoRepository, MatricesRiesgosMonitoreoRepository>();
+builder.Services.AddSingleton<InstitutionalProjectionMapper>();
+builder.Services.AddScoped<IInstitutionalProjectionService, InstitutionalProjectionService>();
 builder.Services.AddScoped<ICalculoConfiguracionRepository, CalculoConfiguracionRepository>();
 builder.Services.AddScoped<DbDrivenCalculationRuntimeFactory>();
 builder.Services.AddScoped<VersionedCalculationRuntimeService>();

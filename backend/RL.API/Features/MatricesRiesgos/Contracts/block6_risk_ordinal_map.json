@@ -1,0 +1,241 @@
+{
+    "sourceWorkbookSha256":  "5c3fc00864947afe1e34d3d6ffdfc6da008eaa3c8f1c6c764161014d5ef9a385",
+    "entries":  [
+                    {
+                        "riskCode":  "ROTR-AFIL-1",
+                        "riskNo":  1
+                    },
+                    {
+                        "riskCode":  "ROTR-AFIL-2",
+                        "riskNo":  2
+                    },
+                    {
+                        "riskCode":  "ROTR-PENS-3",
+                        "riskNo":  3
+                    },
+                    {
+                        "riskCode":  "ROTR-PENS-4",
+                        "riskNo":  4
+                    },
+                    {
+                        "riskCode":  "ROTR-SUBS-5",
+                        "riskNo":  5
+                    },
+                    {
+                        "riskCode":  "ROTR-SUBS-6",
+                        "riskNo":  6
+                    },
+                    {
+                        "riskCode":  "ROTR-COMPRAS-7",
+                        "riskNo":  7
+                    },
+                    {
+                        "riskCode":  "ROTR-RRHH-8",
+                        "riskNo":  8
+                    },
+                    {
+                        "riskCode":  "ROTR-TESO-9",
+                        "riskNo":  9
+                    },
+                    {
+                        "riskCode":  "ROTR-PENS-10",
+                        "riskNo":  10
+                    },
+                    {
+                        "riskCode":  "ROTR-TESO-11",
+                        "riskNo":  11
+                    },
+                    {
+                        "riskCode":  "ROTR-PATRONAL-12",
+                        "riskNo":  12
+                    },
+                    {
+                        "riskCode":  "ROTR-IVM-13",
+                        "riskNo":  13
+                    },
+                    {
+                        "riskCode":  "ROTR-RRHH-14",
+                        "riskNo":  14
+                    },
+                    {
+                        "riskCode":  "ROTR-RRHH-15",
+                        "riskNo":  15
+                    },
+                    {
+                        "riskCode":  "ROTR-RRHH-16",
+                        "riskNo":  16
+                    },
+                    {
+                        "riskCode":  "ROTR-PATRONALCOMP-17",
+                        "riskNo":  17
+                    },
+                    {
+                        "riskCode":  "ROTR-COMPRAS-18",
+                        "riskNo":  18
+                    },
+                    {
+                        "riskCode":  "ROTR-RRHHTESORERI-19",
+                        "riskNo":  19
+                    },
+                    {
+                        "riskCode":  "ROTR-COMPRASTESOR-20",
+                        "riskNo":  20
+                    },
+                    {
+                        "riskCode":  "ROTR-COMPRASGAYF-21",
+                        "riskNo":  21
+                    },
+                    {
+                        "riskCode":  "ROTR-USIGTICTRANS-22",
+                        "riskNo":  22
+                    },
+                    {
+                        "riskCode":  "ROTR-ALMACENBIENE-23",
+                        "riskNo":  23
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-24",
+                        "riskNo":  24
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-25",
+                        "riskNo":  25
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRASRRHH-26",
+                        "riskNo":  26
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-27",
+                        "riskNo":  27
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-28",
+                        "riskNo":  28
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-29",
+                        "riskNo":  29
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-30",
+                        "riskNo":  30
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-31",
+                        "riskNo":  31
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-32",
+                        "riskNo":  32
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-33",
+                        "riskNo":  33
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-34",
+                        "riskNo":  34
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-35",
+                        "riskNo":  35
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-36",
+                        "riskNo":  36
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-37",
+                        "riskNo":  37
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-38",
+                        "riskNo":  38
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRASGTIC-39",
+                        "riskNo":  39
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-40",
+                        "riskNo":  40
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-41",
+                        "riskNo":  41
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-42",
+                        "riskNo":  42
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRAS-43",
+                        "riskNo":  43
+                    },
+                    {
+                        "riskCode":  "RCUMP-COMPRASCONTR-44",
+                        "riskNo":  44
+                    },
+                    {
+                        "riskCode":  "RCUMP-CONTROLPATRO-45",
+                        "riskNo":  45
+                    },
+                    {
+                        "riskCode":  "RCUMP-CONTROLPATRO-46",
+                        "riskNo":  46
+                    },
+                    {
+                        "riskCode":  "RCUMP-CONTROLPATRO-47",
+                        "riskNo":  47
+                    },
+                    {
+                        "riskCode":  "RCUMP-CONTROLPATRO-48",
+                        "riskNo":  48
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-49",
+                        "riskNo":  49
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-50",
+                        "riskNo":  50
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-51",
+                        "riskNo":  51
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-52",
+                        "riskNo":  52
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-53",
+                        "riskNo":  53
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-54",
+                        "riskNo":  54
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-55",
+                        "riskNo":  55
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-56",
+                        "riskNo":  56
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-57",
+                        "riskNo":  57
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-58",
+                        "riskNo":  58
+                    },
+                    {
+                        "riskCode":  "ROP-CUMP-59",
+                        "riskNo":  59
+                    }
+                ]
+}
