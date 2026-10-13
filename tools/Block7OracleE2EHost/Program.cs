@@ -73,7 +73,7 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapGet("/readyz", async (OracleDbContext db, CancellationToken cancellationToken) =>
+app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancellationToken) =>
 {
     await using var connection = db.CreateConnection();
     await connection.OpenAsync(cancellationToken);

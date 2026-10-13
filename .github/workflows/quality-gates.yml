@@ -167,7 +167,7 @@ jobs:
           echo $! > /tmp/block7-e2e-api.pid
           ready=false
           for attempt in $(seq 1 60); do
-            if curl --silent --show-error --fail http://127.0.0.1:5043/readyz >/dev/null; then
+            if curl --silent --show-error --fail http://127.0.0.1:5043/__e2e/readyz >/dev/null; then
               ready=true
               break
             fi
