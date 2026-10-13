@@ -114,7 +114,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(1, persisted.EvaVersionRow);
             Assert.Equal("BORRADOR", persisted.EvaEstado);
             Assert.Equal("{}", persisted.EvaDataJson);
-            Assert.Equal("{}", persisted.EvaDataCalcJson);
+            using (JsonDocument persistedCalculations = JsonDocument.Parse(persisted.EvaDataCalcJson))
+            {
+                JsonElement root = persistedCalculations.RootElement;
+                Assert.Equal("BLOCK7_ORACLE_FIXTURE", root.GetProperty("reglaCodigo").GetString());
+                Assert.NotEqual(999, root.TryGetProperty("vri", out JsonElement vri) ? vri.GetInt32() : (int?)null);
+                Assert.NotEqual(999, root.TryGetProperty("vrr", out JsonElement vrr) ? vrr.GetInt32() : (int?)null);
+            }
             Assert.Null(persisted.EvaVri);
             Assert.Null(persisted.EvaVrr);
             Assert.DoesNotContain("amenazas_gtic", persisted.EvaDataJson, StringComparison.Ordinal);
