@@ -508,7 +508,7 @@ test('el detalle de cálculo expone su estado expandido en el editor', async ({ 
   await expect(page.locator('[data-matrix-field]').filter({ has: page.getByText(/Frecuencia Residual \(AUX\)/) })).toBeVisible();
 });
 
-test('el editor de evaluación no causa overflow horizontal en escritorio ni móvil', async ({ page }) => {
+test('el editor de evaluación no causa overflow horizontal en escritorio ni móvil', async ({ page }, testInfo) => {
   await stubAuthenticatedMatrices(page);
   await page.goto('/matrices-riesgos');
   await page.getByTitle('Editar evaluación').first().click();
@@ -526,6 +526,9 @@ test('el editor de evaluación no causa overflow horizontal en escritorio ni mó
         viewportWidth: document.documentElement.clientWidth
       }));
       expect(widths.documentWidth, `horizontal overflow at ${viewport.width}px in block ${block}`).toBeLessThanOrEqual(widths.viewportWidth);
+      const device = viewport.width === 1280 ? 'desktop' : 'mobile';
+      const layout = block === 5 ? 'block5-expanded' : `block${block}`;
+      await page.screenshot({ path: testInfo.outputPath(`${device}-${layout}.png`), fullPage: true });
     }
   }
 });
