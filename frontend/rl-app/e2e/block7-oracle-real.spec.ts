@@ -87,7 +87,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   const criticalResponses = new Set<string>();
   page.on('response', response => {
     const url = new URL(response.url());
-    if (url.host !== '127.0.0.1:5043') return;
+    if (url.port !== '5043' || !['localhost', '127.0.0.1'].includes(url.hostname)) return;
     const key = `${response.request().method()} ${url.pathname}`;
     if (critical.some(pattern => pattern.test(key)) && response.status() < 500) criticalResponses.add(key.replace(/\/\d+(?=\/|$)/g, '/{id}'));
   });
