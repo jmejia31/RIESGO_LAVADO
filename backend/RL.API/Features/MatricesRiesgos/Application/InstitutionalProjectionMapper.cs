@@ -22,6 +22,8 @@ public sealed class InstitutionalProjectionMapper
 {
     private const string ContractResourceSuffix = "matriz_riesgos_82_campos_manifest.json";
     private const string OrdinalResourceSuffix = "block6_risk_ordinal_map.json";
+    private const string CalculationPendingState = "CALCULATION_PENDING";
+    private const string DraftInputPendingState = "OPERATIONAL_PENDING";
     private static readonly ProjectionManifestField[] Fields = LoadManifest();
     private static readonly IReadOnlyDictionary<string, int> Ordinals = LoadOrdinals();
 
@@ -48,7 +50,7 @@ public sealed class InstitutionalProjectionMapper
         foreach (ProjectionManifestField manifest in Fields)
         {
             (object? value, string state) = ResolveValue(manifest, source, answers, calculations, riskOrdinal);
-            if (value is null && state is not ("LEGIT_BLANK" or "LEGIT_FORMULA_BLANK" or "NOT_APPLICABLE" or "OPERATIONAL_PENDING" or "ABSENT_CONTROL_PROJECTED"))
+            if (value is null && state is not ("LEGIT_BLANK" or "LEGIT_FORMULA_BLANK" or "NOT_APPLICABLE" or "OPERATIONAL_PENDING" or "CALCULATION_PENDING" or "ABSENT_CONTROL_PROJECTED"))
                 throw new InstitutionalProjectionException($"F{manifest.Number:D2} terminó sin valor ni semántica de blank.");
             string valueType = manifest.Cardinality.StartsWith("ONE_TO_MANY", StringComparison.Ordinal)
                 ? $"COLLECTION<{ValueTypeOf(manifest.DataType)}>"
@@ -90,7 +92,7 @@ public sealed class InstitutionalProjectionMapper
         {
             string type = field.Number switch { 22 or 23 => "PREVENTIVO", 26 or 27 => "DETECTIVO", _ => "CORRECTIVO" };
             if (!OrderedControls(source, type).Any()) return (field.Number is 22 or 26 or 30 ? 0 : 0m, "ABSENT_CONTROL_PROJECTED");
-            return FromJson(calculations, JsonKey(field), optional: false);
+            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
         }
         if (field.Number == 32)
         {
@@ -100,16 +102,17 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number == 33)
         {
             if (OrderedControls(source).Count == 0 && !calculations.ContainsKey(JsonKey(field))) return (null, "LEGIT_FORMULA_BLANK");
-            return FromJson(calculations, JsonKey(field), optional: false);
+            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
         }
         if (field.Number == 39)
         {
-            (object? value, string state) = FromJson(answers, JsonKey(field), optional: false);
+            (object? value, string state) = FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, DraftInputPendingState));
+            if (value is null) return (null, state);
             try { return (MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("RISK_RESPONSE", Convert.ToString(value, CultureInfo.InvariantCulture)!), state); }
             catch (InvalidOperationException exception) { throw new InstitutionalProjectionException("La respuesta de riesgo no pertenece al catálogo institucional: " + exception.Message); }
         }
         if (field.Number is 40 or 41 or 42 or 43 or 44 or 45 or 46 or 47 or 48 or 49)
-            return ResolveMitigation(field.Number, source);
+            return ResolveMitigation(field.Number, source, answers);
         if (field.Number == 70)
         {
             string[] alerts = source.Monitoring.SenalesAlerta.Where(alert => alert.AleEstado.Equals("ACTIVO", StringComparison.OrdinalIgnoreCase))
@@ -123,22 +126,32 @@ public sealed class InstitutionalProjectionMapper
         if (field.Number is 81 or 82)
             return Optional(field.Number == 81 ? source.Monitoring.ObservacionesArea : source.Monitoring.ObservacionesUgr, "MONITORING");
         if (field.Source.Equals("EXCEL_FORMULA", StringComparison.Ordinal))
-            return FromJson(calculations, JsonKey(field), optional: false);
+            return FromJson(calculations, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, CalculationPendingState));
         if (field.Number is 17 or 18 or 19)
             return IsGtic(source, answers)
-                ? FromJson(answers, JsonKey(field), optional: false)
+                ? FromJson(answers, JsonKey(field), optional: false, missingDraftState: MissingDraftState(source, DraftInputPendingState))
                 : (null, "NOT_APPLICABLE");
-        return FromJson(answers, JsonKey(field), optional: field.Requiredness == "OPTIONAL");
+        return FromJson(answers, JsonKey(field), optional: field.Requiredness == "OPTIONAL",
+            field.Requiredness == "REQUIRED" ? MissingDraftState(source, DraftInputPendingState) : null);
     }
 
-    private static (object? Value, string State) ResolveMitigation(int number, InstitutionalProjectionSource source)
+    private static (object? Value, string State) ResolveMitigation(
+        int number,
+        InstitutionalProjectionSource source,
+        IReadOnlyDictionary<string, JsonElement> answers)
     {
         PlanMitigacionDto[] plans = source.Mitigation.Planes.OrderBy(plan => plan.PlaId).ToArray();
         ActividadPlanDto[] activities = plans.SelectMany(plan => plan.Actividades.OrderBy(activity => activity.ActId)).ToArray();
         bool mitigationApplies = MitigationApplies(source);
-        if (number == 41) return plans.Length == 0 && !mitigationApplies ? (null, "NOT_APPLICABLE") : (plans.Length, "VALUE");
-        if (number == 43) return plans.Length == 0 && !mitigationApplies ? (null, "NOT_APPLICABLE") : (activities.Length, "VALUE");
-        if (plans.Length == 0) return (null, mitigationApplies ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE");
+        bool responsePending = string.Equals(source.Evaluation.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase)
+            && (!answers.TryGetValue("respuesta_riesgo", out JsonElement response)
+                || response.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined
+                || response.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(response.GetString()));
+        if (number == 41) return plans.Length == 0 && !mitigationApplies
+            ? (null, responsePending ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE") : (plans.Length, "VALUE");
+        if (number == 43) return plans.Length == 0 && !mitigationApplies
+            ? (null, responsePending ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE") : (activities.Length, "VALUE");
+        if (plans.Length == 0) return (null, mitigationApplies || responsePending ? "OPERATIONAL_PENDING" : "NOT_APPLICABLE");
         InstitutionalPlanProjectionValueDto[] PlanValues(Func<PlanMitigacionDto, object?> selector) => plans
             .Select((plan, index) =>
             {
@@ -232,12 +245,15 @@ public sealed class InstitutionalProjectionMapper
         return values.TryGetValue(key, out JsonElement value) && value.TryGetInt32(out int parsed) ? parsed : null;
     }
 
-    private static (object? Value, string State) FromJson(IReadOnlyDictionary<string, JsonElement> source, string key, bool optional)
+    private static string? MissingDraftState(InstitutionalProjectionSource source, string pendingState) =>
+        string.Equals(source.Evaluation.EvaEstado, "BORRADOR", StringComparison.OrdinalIgnoreCase) ? pendingState : null;
+
+    private static (object? Value, string State) FromJson(IReadOnlyDictionary<string, JsonElement> source, string key, bool optional, string? missingDraftState = null)
     {
         if (!source.TryGetValue(key, out JsonElement element) || element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
-            return optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"Falta el valor requerido '{key}' para la proyección.");
+            return missingDraftState is not null ? (null, missingDraftState) : optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"Falta el valor requerido '{key}' para la proyección.");
         if (element.ValueKind == JsonValueKind.String && string.IsNullOrWhiteSpace(element.GetString()))
-            return optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"El valor requerido '{key}' está vacío.");
+            return missingDraftState is not null ? (null, missingDraftState) : optional ? (null, "LEGIT_BLANK") : throw new InstitutionalProjectionException($"El valor requerido '{key}' está vacío.");
         object? value = element.ValueKind switch
         {
             JsonValueKind.String => Text(element.GetString()),

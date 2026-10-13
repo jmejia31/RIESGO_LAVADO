@@ -127,6 +127,34 @@ public sealed class InstitutionalProjectionMapperTests
         Assert.Contains("está vacío", exception.Message);
     }
 
+    [Fact]
+    public void Map_ProjectsIncompleteDraftWithExplicitPendingStatesAcrossAll82Fields()
+    {
+        InstitutionalProjectionSource source = CreateSource() with
+        {
+            Evaluation = new EvaluacionRiesgoDto
+            {
+                EvaId = 123,
+                EvaRiesgoId = 456,
+                EvaEstado = "BORRADOR",
+                EvaDataJson = "{}",
+                EvaDataCalcJson = "{}"
+            }
+        };
+
+        InstitutionalEvaluationProjectionDto result = new InstitutionalProjectionMapper().Map(source);
+
+        Assert.Equal(Enumerable.Range(1, 82), result.Fields.Select(field => field.FieldNumber));
+        Assert.Equal("OPERATIONAL_PENDING", result.Fields[4].State);
+        Assert.Null(result.Fields[4].Value);
+        Assert.Equal("CALCULATION_PENDING", result.Fields[11].State);
+        Assert.Null(result.Fields[11].Value);
+        Assert.Equal("CALCULATION_PENDING", result.Fields[12].State);
+        Assert.Equal("OPERATIONAL_PENDING", result.Fields[38].State);
+        Assert.Equal("OPERATIONAL_PENDING", result.Fields[40].State);
+        Assert.Equal("LEGIT_FORMULA_BLANK", result.Fields[32].State);
+    }
+
     [Theory]
     [InlineData("Aceptar", 9, "NOT_APPLICABLE")]
     [InlineData("Evitar", 3, "NOT_APPLICABLE")]
