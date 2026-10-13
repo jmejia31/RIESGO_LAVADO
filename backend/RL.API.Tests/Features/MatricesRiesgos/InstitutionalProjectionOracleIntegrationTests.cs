@@ -175,6 +175,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(2, afterA.EvaVersionRow);
             Assert.Contains("Cliente A", afterA.EvaDataJson, StringComparison.Ordinal);
             Assert.Contains("Amenaza indicada por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Vulnerabilidad indicada por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Activo indicado por usuario", afterA.EvaDataJson, StringComparison.Ordinal);
 
             EvaluacionRiesgoDto staleClient = CopyEvaluation(persisted);
             staleClient.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B" });
@@ -185,6 +187,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             Assert.Equal(2, afterConflict.EvaVersionRow);
             Assert.Contains("Cliente A", afterConflict.EvaDataJson, StringComparison.Ordinal);
             Assert.Contains("Amenaza indicada por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Vulnerabilidad indicada por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
+            Assert.Contains("Activo indicado por usuario", afterConflict.EvaDataJson, StringComparison.Ordinal);
             Assert.DoesNotContain("Cliente B", afterConflict.EvaDataJson, StringComparison.Ordinal);
 
             afterConflict.EvaDataJson = JsonSerializer.Serialize(new Dictionary<string, object> { ["area_principal"] = "Cliente B recargado" });

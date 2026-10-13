@@ -364,7 +364,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                    PLA_MONITOREO_SEGUIMIENTO, PLA_RESPONSABLES, PLA_RECURSOS
               FROM RL_MR_PLANES
              WHERE PLA_EVALUACION_ID = :evaluacionId
-             ORDER BY PLA_ID DESC";
+             ORDER BY PLA_ID ASC";
         await using var cmd = Comando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
         var lista = new List<PlanMitigacionDto>();
