@@ -24,6 +24,9 @@ public sealed class InstitutionalProjectionReadRepository(OracleDbContext databa
     public async Task<InstitutionalProjectionSnapshot?> ReadAsync(long evaluationId, long userId, CancellationToken cancellationToken)
     {
         await using OracleConnection connection = database.CreateConnection();
+        // Oracle 11g XE can have an older timezone file than the ODP.NET client.
+        // ODP.NET retries with a numeric offset only when that server rejects the client region.
+        connection.UseHourOffsetForUnsupportedTimezone = true;
         await connection.OpenAsync(cancellationToken);
         await ExecuteAsync(connection, "SET TRANSACTION READ ONLY", cancellationToken);
         int queryCount = 0;

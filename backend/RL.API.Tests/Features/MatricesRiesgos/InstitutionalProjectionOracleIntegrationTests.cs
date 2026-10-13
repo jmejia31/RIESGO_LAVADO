@@ -32,7 +32,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         if (!string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)) return;
         string connectionString = Environment.GetEnvironmentVariable("BLOCK6_ORACLE_CONNECTION_STRING")
             ?? throw new InvalidOperationException("BLOCK6_ORACLE_CONNECTION_STRING is required for the isolated Block 6 Oracle test.");
-        await using var connection = new OracleConnection(connectionString);
+        await using var connection = CreateConnection(connectionString);
         await OpenWithRetryAsync(connection);
         await EnsureFixtureTablesAsync(connection);
         long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 1_000_000_000;
@@ -63,8 +63,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await InsertEvidenceAsync(connection,evidenceOther,"other-control",baseDate,controlB);
 
             // Characterize the same Oracle READ ONLY transaction model under a concurrent committed update.
-            await using (var readerConnection = new OracleConnection(connectionString))
-            await using (var writerConnection = new OracleConnection(connectionString))
+            await using (var readerConnection = CreateConnection(connectionString))
+            await using (var writerConnection = CreateConnection(connectionString))
             {
                 await readerConnection.OpenAsync();
                 await writerConnection.OpenAsync();
@@ -128,12 +128,25 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
     private static async Task OpenWithRetryAsync(OracleConnection connection)
     {
         Exception? last=null;
-        for (int attempt=0;attempt<36;attempt++)
+        for (int attempt=0;attempt<12;attempt++)
         {
             try { await connection.OpenAsync(); return; }
-            catch (OracleException ex) { last=ex; await Task.Delay(TimeSpan.FromSeconds(5)); }
+            catch (OracleException ex) when (ex.Number is 1033 or 1034 or 1089 or 1090 or 12514 or 12541 or 12543 or 12545 or 12547 or 12528)
+            {
+                last=ex;
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
         }
         throw new InvalidOperationException("Disposable Oracle XE did not become available for Block 6 integration.",last);
+    }
+
+    private static OracleConnection CreateConnection(string connectionString)
+    {
+        var connection = new OracleConnection(connectionString)
+        {
+            UseHourOffsetForUnsupportedTimezone = true
+        };
+        return connection;
     }
 
     private static async Task EnsureFixtureTablesAsync(OracleConnection connection)
