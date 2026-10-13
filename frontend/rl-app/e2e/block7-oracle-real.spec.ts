@@ -226,7 +226,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
   await pageB.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await saveB).status()).toBe(409);
-  await expect(pageB.getByText(/modificada por otra sesión o usuario/i)).toBeVisible();
+  await expect(pageB.getByText(/modificada por otra sesión o usuario/i).first()).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Editor B stale');
 
   const persisted = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
