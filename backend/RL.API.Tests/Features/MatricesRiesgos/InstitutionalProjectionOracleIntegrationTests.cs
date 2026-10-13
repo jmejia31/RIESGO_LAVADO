@@ -236,7 +236,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         {
             int n=field.GetProperty("number").GetInt32();
             if(n is not (12 or 13 or 22 or 23 or 26 or 27 or 30 or 31 or 33 or >=34 and <=38 or >=50 and <=69)) continue;
-            values[JsonKey(field)] = n switch { 13 or 34 or 38=>"Riesgo bajo",22 or 26 or 30=>"Razonable",12=>3,33=>0.63m,_=>1 };
+            values[JsonKey(field)] = n switch { 13 or 34=>"Riesgo bajo",38=>"Riesgo no significativo",22 or 26 or 30=>"Razonable",12=>3,33=>0.63m,_=>1 };
         }
         return JsonSerializer.Serialize(values);
     }
