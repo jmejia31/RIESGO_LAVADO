@@ -45,19 +45,19 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             string answers = BuildAnswersJson();
             string calculations = BuildCalculationsJson();
             await ExecuteAsync(connection, "INSERT INTO RL_MR_RIESGOS VALUES (:id,'ROP-CUMP-59','Fixture','Fixture risk',1,:usr,SYSDATE)", ("id",riskId),("usr",userId));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO VALUES (:id,:risk,1,:answers,:calc,:date,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("date",baseDate),("usr",userId));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'Riesgo bajo','Riesgo no significativo','Mitigar','BORRADOR','Owner',:date)", ("id",stamp+201),("eva",evaluationId),("date",baseDate));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_EVALUACIONES_RIESGO VALUES (:id,:risk,1,:answers,:calc,:fixtureDate,:usr,1,1)", ("id",evaluationId),("risk",riskId),("answers",answers),("calc",calculations),("fixtureDate",baseDate),("usr",userId));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_PROYECCIONES_EVALUACION VALUES (:id,:eva,'ROP-CUMP-59','Fixture Area',3,1,'Riesgo bajo','Riesgo no significativo','Mitigar','BORRADOR','Owner',:fixtureDate)", ("id",stamp+201),("eva",evaluationId),("fixtureDate",baseDate));
             foreach (long id in new[] { controlA, controlB, controlC })
             {
                 string type = id == controlC ? "DETECTIVO" : "PREVENTIVO";
                 await ExecuteAsync(connection, "INSERT INTO RL_MR_CONTROLES_RIESGO VALUES (:id,:eva,:type,:description,'MANUAL','ACTIVO',:monState,85)", ("id",id),("eva",evaluationId),("type",type),("description",$"Control {id}"),("monState","VIGENTE"));
             }
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_PLANES VALUES (:id,:eva,'Plan A',0,100,:start,:end,'PENDIENTE','Seguimiento A','Responsable A','Recursos A')", ("id",planA),("eva",evaluationId),("start",baseDate),("end",baseDate.AddMonths(1)));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_PLANES VALUES (:id,:eva,'Plan B',0,200,:start,:end,'PENDIENTE','Seguimiento B',NULL,'Recursos B')", ("id",planB),("eva",evaluationId),("start",baseDate.AddMonths(2)),("end",baseDate.AddMonths(3)));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad A','Persona A',0,:start,:end,'PENDIENTE')", ("id",activityA),("plan",planA),("start",baseDate),("end",baseDate.AddDays(10)));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad B','Persona B',0,:start,:end,'PENDIENTE')", ("id",activityB),("plan",planB),("start",baseDate.AddMonths(2)),("end",baseDate.AddMonths(2).AddDays(10)));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_SENALES_ALERTA VALUES (:id,:eva,'ALERTA','Indicador fixture','ACTIVO',:date)", ("id",stamp+550),("eva",evaluationId),("date",baseDate));
-            await ExecuteAsync(connection, "INSERT INTO RL_MR_AUTOMONITOREO VALUES (:id,:eva,'ALTO','VIGENTE','Fixture',:usr,'Area obs','UGR obs',:date)", ("id",stamp+560),("eva",evaluationId),("usr",userId),("date",baseDate));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_PLANES VALUES (:id,:eva,'Plan A',0,100,:startDate,:finishDate,'PENDIENTE','Seguimiento A','Responsable A','Recursos A')", ("id",planA),("eva",evaluationId),("startDate",baseDate),("finishDate",baseDate.AddMonths(1)));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_PLANES VALUES (:id,:eva,'Plan B',0,200,:startDate,:finishDate,'PENDIENTE','Seguimiento B',NULL,'Recursos B')", ("id",planB),("eva",evaluationId),("startDate",baseDate.AddMonths(2)),("finishDate",baseDate.AddMonths(3)));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad A','Persona A',0,:startDate,:finishDate,'PENDIENTE')", ("id",activityA),("plan",planA),("startDate",baseDate),("finishDate",baseDate.AddDays(10)));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_ACTIVIDADES VALUES (:id,:plan,'Actividad B','Persona B',0,:startDate,:finishDate,'PENDIENTE')", ("id",activityB),("plan",planB),("startDate",baseDate.AddMonths(2)),("finishDate",baseDate.AddMonths(2).AddDays(10)));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_SENALES_ALERTA VALUES (:id,:eva,'ALERTA','Indicador fixture','ACTIVO',:fixtureDate)", ("id",stamp+550),("eva",evaluationId),("fixtureDate",baseDate));
+            await ExecuteAsync(connection, "INSERT INTO RL_MR_AUTOMONITOREO VALUES (:id,:eva,'ALTO','VIGENTE','Fixture',:usr,'Area obs','UGR obs',:fixtureDate)", ("id",stamp+560),("eva",evaluationId),("usr",userId),("fixtureDate",baseDate));
             await InsertEvidenceAsync(connection,evidenceLate,"late-id-first",baseDate.AddDays(2),controlA);
             await InsertEvidenceAsync(connection,evidenceEarly,"early-id-later",baseDate.AddDays(1),controlA);
             await InsertEvidenceAsync(connection,evidenceOther,"other-control",baseDate,controlB);
@@ -174,7 +174,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
     private static async Task InsertEvidenceAsync(OracleConnection connection,long id,string name,DateTime date,long controlId)
     {
-        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS VALUES (:id,:name,:date)",("id",id),("name",name),("date",date));
+        await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS VALUES (:id,:name,:fixtureDate)",("id",id),("name",name),("fixtureDate",date));
         await ExecuteAsync(connection,"INSERT INTO RL_MR_EVIDENCIAS_VINCULOS VALUES (:link,:evi,'CONTROL',:control)",("link",id+1000),("evi",id),("control",controlId));
     }
 
