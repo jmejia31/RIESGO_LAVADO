@@ -39,6 +39,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         string connectionString = Environment.GetEnvironmentVariable("BLOCK7_ORACLE_CONNECTION_STRING")
             ?? throw new InvalidOperationException("BLOCK7_ORACLE_CONNECTION_STRING is required when Block 7 Oracle integration is mandatory.");
 
+        // Start this opt-in fixture with isolated ODP.NET pools.
+        OracleConnection.ClearAllPools();
         await using var seed = CreateConnection(connectionString);
         await OpenWithRetryAsync(seed);
         await EnsureFixtureTablesAsync(seed);
@@ -434,7 +436,13 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
         Exception? last=null;
         for (int attempt=0;attempt<12;attempt++)
         {
-            try { await connection.OpenAsync(); return; }
+            try
+            {
+                // ODP.NET's async pool acquisition has timed out before any SQL ran in CI.
+                // Keep this test-only bootstrap synchronous; application calls remain async.
+                connection.Open();
+                return;
+            }
             catch (OracleException ex) when (ex.Number is 1033 or 1034 or 1089 or 1090 or 12514 or 12541 or 12543 or 12545 or 12547 or 12528)
             {
                 last=ex;
