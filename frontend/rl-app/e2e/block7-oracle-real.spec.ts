@@ -236,4 +236,5 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(persistedBody.evaDataJson).toContain('Editor A');
   expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
   await pageB.close();
+  console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');
 });
