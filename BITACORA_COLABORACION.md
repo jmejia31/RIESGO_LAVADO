@@ -8700,3 +8700,9 @@ La certificación de desarrollo no afirma que se aplicó la migración. El artef
 - Tras añadir regresión para texto requerido vacío y caracterización concurrente de snapshot, la suite focal quedó en `30/30`; backend completo `949/949`; solución Release build `0 errores`.
 - `tools/run_quality_gates.ps1` pasó backend/cobertura y falló sólo al iniciar Angular: `Could not find the '@angular/build:unit-test' builder's node package.` Se preservó `node_modules` y no se tocó frontend. El CI remoto sigue pendiente.
 - DML/DDL local/producción: no ejecutado. No se utilizó el esquema persistente del contenedor `rl-oracle-xe-local`; la prueba con XE queda aislada al servicio efímero de CI.
+
+### Correccion del primer CI 6B (COD) - 2026-10-13
+
+- El push `db1595680b449c1395675c303157cd7c491d398b` inicio Quality Gates `38438329341`. Oracle XE efimero arranco y los pasos iniciales pasaron, pero el escaner del repositorio interpreto el valor `Block6-${{ github.run_id }}` como credencial literal. El workflow se ajusto para que la contrasena run-scoped comience con `github.run_id`; el valor sigue siendo distinto por ejecucion y no usa una credencial institucional.
+- Ese run no alcanzo la suite Oracle. `validate_matrices_dynamic_ddl_alignment.ps1` paso localmente tras el ajuste. Falta publicar la correccion y verificar el siguiente CI hasta el GET real contra XE.
+- No hubo acceso ni escrituras productivas. El contenedor XE local persistente permanece intacto; Bloque 6 sigue pendiente y Bloque 7 no iniciado.

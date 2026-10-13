@@ -23,7 +23,7 @@ jobs:
       oracle:
         image: gvenzl/oracle-xe:11.2.0.2-faststart
         env:
-          ORACLE_PASSWORD: Block6-${{ github.run_id }}
+          ORACLE_PASSWORD: ${{ github.run_id }}-Block6-CI
         ports:
           - 1521:1521
         options: >-
@@ -128,7 +128,7 @@ jobs:
       - name: Run Block 6 canonical projection against disposable Oracle XE
         env:
           RL_BLOCK6_ORACLE_INTEGRATION_REQUIRED: 'true'
-          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=Block6-${{ github.run_id }};
+          BLOCK6_ORACLE_CONNECTION_STRING: Data Source=127.0.0.1:1521/XE;User Id=system;Password=${{ github.run_id }}-Block6-CI;
         run: >-
           dotnet test backend/RL.API.Tests/RL.API.Tests.csproj
           --configuration Release --no-build --no-restore
