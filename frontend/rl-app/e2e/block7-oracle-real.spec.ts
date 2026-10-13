@@ -223,7 +223,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(matrixDialog).toHaveAttribute('aria-modal', 'true');
   await expect(matrixDialog).toHaveAttribute('aria-labelledby', 'titulo-modal-matriz-completa');
   await expect(matrixDialog.getByRole('heading', { name: 'Matriz completa' })).toBeVisible();
-  await expect(matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' })).toBeVisible();
+  await expect(matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first()).toBeVisible();
   await expect(matrixDialog.locator('[data-matrix-plan]')).toHaveCount(2);
   await expect(matrixDialog.locator('[data-control-type]')).toHaveCount(3);
 
@@ -251,7 +251,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
     }
   }
 
-  await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).click();
+  await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
