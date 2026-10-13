@@ -200,6 +200,21 @@ public sealed class CatalogCalculationLookup : ICalculationLookup
             ? FormulaValue.NumberValue(double.Parse(result, CultureInfo.InvariantCulture))
             : FormulaValue.TextValue(result);
     }
+
+    public string? ValidateUniqueValue(string catalogCode, string value)
+    {
+        if (!_catalogs.TryGetValue(catalogCode, out CatalogSnapshot? catalog) || !catalog.Active)
+            return $"El catÃ¡logo '{catalogCode}' no existe o estÃ¡ inactivo.";
+        int matches = catalog.Elements.Count(element => element.Activo
+            && (element.Codigo.Equals(value, StringComparison.OrdinalIgnoreCase)
+                || element.Valor.Equals(value, StringComparison.OrdinalIgnoreCase)));
+        return matches switch
+        {
+            0 => $"El valor '{value}' no existe en el catÃ¡logo '{catalogCode}'.",
+            1 => null,
+            _ => $"El valor '{value}' es ambiguo en el catÃ¡logo '{catalogCode}'."
+        };
+    }
 }
 
 public sealed record CalculationRuntimeLimits(int MaxFunctionDepth = 32, int MaxFunctionCalls = 256, int MaxDependencyDepth = 32);

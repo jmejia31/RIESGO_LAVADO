@@ -162,6 +162,8 @@ public sealed class FormulaEngine
             var values = new Dictionary<string, FormulaValue>(StringComparer.OrdinalIgnoreCase);
             if (responses.RootElement.ValueKind == JsonValueKind.Object)
                 foreach (JsonProperty property in responses.RootElement.EnumerateObject()) values[property.Name] = FormulaValue.FromJson(property.Value);
+            ValidateInstitutionalCatalogInputs(responses.RootElement, options, values, result.Errors);
+            if (result.Errors.Count > 0) return result;
             var formulas = new Dictionary<string, Node>(StringComparer.OrdinalIgnoreCase);
             foreach (Field field in fields.Values.Where(f => !string.IsNullOrWhiteSpace(f.Expression)))
             {
@@ -178,6 +180,38 @@ public sealed class FormulaEngine
         }
         catch (JsonException ex) { result.Errors.Add(new(FormulaErrorCode.FORMULA_SYNTAX_INVALID, "JSON", ex.Message)); }
         return result;
+    }
+
+    private static void ValidateInstitutionalCatalogInputs(
+        JsonElement responses,
+        FormulaRuntimeOptions options,
+        IDictionary<string, FormulaValue> values,
+        ICollection<FormulaDiagnostic> errors)
+    {
+        if (responses.ValueKind != JsonValueKind.Object || options.Lookup is not CatalogCalculationLookup lookup)
+            return;
+
+        foreach (string key in new[] { "escala_preventivo", "escala_detectivo", "escala_correctivo" })
+        {
+            if (!responses.TryGetProperty(key, out JsonElement value) || value.ValueKind != JsonValueKind.String)
+                continue;
+            string label = value.GetString()?.Trim() ?? string.Empty;
+            if (label.Length == 0)
+                continue;
+
+            if (!MatrizRiesgosCatalogoCanonico.EsValorValido("CONTROL_EFFECTIVENESS", label))
+            {
+                errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, key, $"El valor '{label}' no estÃ¡ definido en el catÃ¡logo institucional de efectividad."));
+                continue;
+            }
+
+            string canonicalLabel = MatrizRiesgosCatalogoCanonico.ObtenerEtiqueta("CONTROL_EFFECTIVENESS", label);
+            string? error = lookup.ValidateUniqueValue("CAT_EFECTIVIDAD_NIVEL", canonicalLabel);
+            if (error is not null)
+                errors.Add(new(FormulaErrorCode.FORMULA_REFERENCE_UNKNOWN, key, error));
+            else
+                values[key] = FormulaValue.TextValue(canonicalLabel);
+        }
     }
 
     public FormulaEvaluationResult EvaluateGoverned(

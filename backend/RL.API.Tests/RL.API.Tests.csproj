@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\RL.API\RL.API.csproj" />
     <ProjectReference Include="..\..\tools\ReconcileMatricesBaseline\ReconcileMatricesBaseline.csproj" />
+    <ProjectReference Include="..\..\tools\Block5WorkbookFormulaOracle\Block5WorkbookFormulaOracle.csproj" />
   </ItemGroup>
 
 </Project>
