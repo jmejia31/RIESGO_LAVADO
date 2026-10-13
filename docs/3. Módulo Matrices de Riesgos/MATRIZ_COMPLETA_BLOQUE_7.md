@@ -31,3 +31,9 @@
 - El trigger de GTIC permanece sin resolver en las fuentes institucionales revisadas; los campos 17–19 no se hacen obligatorios ni se inventan valores.
 
 No se declara `BLOCK7_STATUS=CLOSED` mientras permanezcan estos pendientes. Bloques 1–6 continúan cerrados; Bloque 8 no se inició. Producción no se consultó ni modificó: `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_APPLY_EXECUTED=NO`.
+
+## Seguimiento de CI y pruebas E2E
+
+- Quality Gates run `38453709129` (SHA `1379b5fe72d5d7d7ecb081ee6230ede663357608`) ejecutó con éxito validadores, analizadores, build Release y la integración Oracle XE de Bloque 6. Falló en tres E2E que todavía buscaban el formulario anterior: el botón "Guardar cambios", el botón "Crear evaluación" dentro del formulario y el campo F39 visible sin navegar al Bloque 3.
+- Se corrigió la navegación de edición para permitir acceso directo a cualquier bloque de una evaluación existente y se actualizaron los E2E al flujo de borrador/bloques. En copia frontend aislada pasaron tests 846/846, lint, build y las suites Playwright `login-and-routing.spec.ts` + `matrices-uat-integral.spec.ts`: 22/22.
+- El CI del cambio correctivo aún debe ejecutarse y concluir. Estas pruebas Playwright usan API simulada; no acreditan escritura real Oracle. Por ello se mantiene `BLOCK7_STATUS=PENDING_CORRECTION` hasta incorporar y pasar el E2E browser→API→Oracle y los gates de accesibilidad/responsive pendientes.

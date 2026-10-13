@@ -482,7 +482,7 @@ test('consulta una evaluación existente y permite abrir su edición', async ({ 
 
   await page.getByTitle('Editar evaluación').first().click();
   await expect(page.getByRole('heading', { name: 'Editar Evaluación' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Guardar borrador' })).toBeVisible();
 });
 test('smoke anti-regresion: Matrices no queda en blanco ni registra errores de runtime', async ({ page }) => {
   const pageErrors: string[] = [];
@@ -532,5 +532,5 @@ test('long form test-only valida robustez con un escenario representativo', asyn
   await expect(modal.locator('[data-evaluation-field="long_field_90"]')).toBeVisible();
   const metrics = await scroll.evaluate(element => ({ vertical: element.scrollHeight > element.clientHeight, horizontal: element.scrollWidth > element.clientWidth, top: element.scrollTop }));
   expect(metrics.vertical).toBe(true); expect(metrics.horizontal).toBe(false); expect(metrics.top).toBeGreaterThan(0);
-  await expect(modal.getByRole('button', { name: /crear evaluación/i })).toBeVisible();
+  await expect(modal.getByRole('button', { name: 'Guardar borrador' })).toBeVisible();
 });

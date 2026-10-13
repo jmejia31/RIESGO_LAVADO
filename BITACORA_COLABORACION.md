@@ -8750,3 +8750,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Cambios ajenos preservados fuera de staging:** `DatabaseEnvironmentGuard.cs`, `DatabaseEnvironmentGuardTests.cs`, `frontend/rl-app/tsconfig.json` y los untracked preexistentes bajo `.vscode/`, `artifacts/`, `scratch/`, archivos del cliente y `tools/package*.json`.
 - **Seguridad:** producción no consultada; DML=0, DDL=0, apply=NO; sin cambio de esquema. No se usó `reset`, `clean` ni `stash`.
 - **Estado/punto de continuación:** `BLOCK1..6=CLOSED`, `BLOCK7_STATUS=PENDING_CORRECTION`, `BLOCK8_STATUS=NOT_STARTED`. Añadir integración Oracle XE efímera para borrador y preview, conectar E2E real y cerrar los gates de accesibilidad/responsive; después repetir suite completa, publicar commit focalizado, esperar Quality Gates y actualizar el cierre.
+
+### Corrección E2E de Bloque 7 — COD — 2026-10-13 13:32 -06:00
+
+- El CI inicial `38453709129` (`1379b5fe72d5d7d7ecb081ee6230ede663357608`) pasó validaciones, analizadores, build y Oracle XE de Bloque 6; falló en 3 E2E por selectores atados al formulario anterior de una sola página. Se corrigió la navegación de edición para permitir abrir cualquier bloque y se adaptaron los selectores al guardado de borrador y la navegación por Bloque 3.
+- Verificación en copia aislada: frontend unit 846/846, lint y build PASS; Playwright de `login-and-routing.spec.ts` y `matrices-uat-integral.spec.ts`: 22/22 PASS. Las rutas API de estos Playwright están simuladas.
+- Pendientes sin cambio: integración de escritura draft/preview contra Oracle XE y E2E browser→API→Oracle; pruebas responsive 1280×900/390×844, accesibilidad inline/foco, conflicto de edición y trigger GTIC autoritativo. `BLOCK7_STATUS=PENDING_CORRECTION`; no hubo producción DML/DDL ni se inició Bloque 8.
+- Publicación/CI del arreglo: pendiente al registrar este apunte.

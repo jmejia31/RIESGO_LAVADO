@@ -1485,7 +1485,7 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   }
 
   irABloqueEvaluacion(bloque: BloqueEvaluacion): void {
-    if (bloque <= this.bloqueMasAltoAlcanzado()) {
+    if (this.evaluacionSeleccionada() || bloque <= this.bloqueMasAltoAlcanzado()) {
       this.bloqueEvaluacionActual.set(bloque);
     }
   }

@@ -1020,7 +1020,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
       });
     }
 
-    if (path.endsWith('/evaluaciones/20') && method === 'PUT') {
+    if (path.endsWith('/evaluaciones/20/borrador') && method === 'PUT') {
       updatePayloadReceived = req.postDataJSON();
       serverEvaVersionRow++;
       serverEvaDataJson = updatePayloadReceived.evaDataJson;
@@ -1045,6 +1045,29 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
       });
     }
 
+    if (path.endsWith('/evaluaciones/calculo-preview') && method === 'POST') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: {
+          listo: true,
+          evaDataCalcJson: JSON.stringify({ respuesta_riesgo: 'MITIGAR' }),
+          evaVri: 7,
+          evaEtp: 63,
+          evaVrr: 2,
+          obligatoriosPendientes: []
+        } })
+      });
+    }
+
+    if (path.endsWith('/evaluaciones/20/proyeccion-institucional') && method === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, datos: { evaluationId: 20, fields: [] } })
+      });
+    }
+
     return route.fallback();
   });
 
@@ -1060,6 +1083,9 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   const modalEditar = page.locator('dialog.modal-backdrop-overlay');
   await expect(modalEditar).toBeVisible();
   await expect(page.locator('#titulo-modal-editar')).toContainText('Editar Evaluación #20');
+
+  // La edición permite abrir directamente el bloque guardado que se desea corregir.
+  await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
 
   // C. Localizar el campo/selector “Respuesta al riesgo”
   const selectorRespuesta = page.locator('#campo-edit-respuesta_riesgo');
@@ -1082,13 +1108,13 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await expect(selectorRespuesta).toHaveValue('MITIGAR');
 
   // F. Guardar la evaluación mediante la UI real
-  const botonGuardar = page.getByRole('button', { name: 'Guardar cambios de evaluación' });
+  const botonGuardar = page.getByRole('button', { name: 'Guardar borrador' });
   await expect(botonGuardar).toBeEnabled();
   await botonGuardar.click();
 
   const feedbackExito = page.locator('[data-uat="feedback-edicion-exito"]');
   await expect(feedbackExito).toBeVisible();
-  await expect(feedbackExito).toContainText('guardados y verificados correctamente');
+  await expect(feedbackExito).toContainText('guardado y recargado desde el servidor');
 
   // G. Capturar/verificar la petición de actualización real
   expect(updatePayloadReceived).not.toBeNull();
@@ -1104,6 +1130,7 @@ test('BLOCK 3 campo 39 persiste Respuesta al riesgo después de guardar y reabri
   await expect(page.locator('#titulo-modal-editar')).toContainText('Editar Evaluación #20');
 
   // L. Verificar que el selector muestra la respuesta persistida: MITIGAR
+  await page.getByRole('button', { name: '3. Riesgo Residual y Respuesta' }).click();
   const selectorReabierto = page.locator('#campo-edit-respuesta_riesgo');
   await expect(selectorReabierto).toBeVisible();
   await expect(selectorReabierto).toHaveValue('MITIGAR');
