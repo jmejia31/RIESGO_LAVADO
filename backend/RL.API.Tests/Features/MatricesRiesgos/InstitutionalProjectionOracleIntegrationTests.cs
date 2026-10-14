@@ -75,7 +75,8 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
             await using var app = await CreateBlock7ApiAsync(connectionString);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
             using var http = new HttpClient { BaseAddress = new Uri(address) };
-            using HttpResponseMessage response = await http.GetAsync("/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20");
+            string fixtureSearch = Uri.EscapeDataString($"B8-{stamp}");
+            using HttpResponseMessage response = await http.GetAsync($"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20&buscar={fixtureSearch}");
             Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
             using JsonDocument body = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             JsonElement rows = body.RootElement.GetProperty("datos").GetProperty("items");
@@ -91,7 +92,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
             async Task<long[]> GetIdsByStateAsync(string state)
             {
-                using HttpResponseMessage filteredResponse = await http.GetAsync($"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20&estadoEvaluacion={state}");
+                using HttpResponseMessage filteredResponse = await http.GetAsync($"/api/matrices-riesgos/consolidado/paginado?pagina=1&tamanoPagina=20&estadoEvaluacion={state}&buscar={fixtureSearch}");
                 Assert.Equal(System.Net.HttpStatusCode.OK, filteredResponse.StatusCode);
                 using JsonDocument filteredBody = JsonDocument.Parse(await filteredResponse.Content.ReadAsStringAsync());
                 return filteredBody.RootElement.GetProperty("datos").GetProperty("items")
@@ -107,7 +108,7 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
 
             using var scope = app.Services.CreateScope();
             IMatricesRiesgosAppService service = scope.ServiceProvider.GetRequiredService<IMatricesRiesgosAppService>();
-            var export = await service.ObtenerConsolidadoParaExportacionAsync(new FiltroReporteMatricesDto());
+            var export = await service.ObtenerConsolidadoParaExportacionAsync(new FiltroReporteMatricesDto { Buscar = $"B8-{stamp}" });
             Assert.True(export.Success);
             Assert.Equal(allIds.Order(), export.Data!.Select(row => row.EvaluacionId).Order());
         }
