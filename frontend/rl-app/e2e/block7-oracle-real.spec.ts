@@ -312,7 +312,7 @@ test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidenc
   expect(monitoringProjectionResponse.ok(), await monitoringProjectionResponse.text()).toBeTruthy();
   const monitoringProjection = (await monitoringProjectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
   expect(monitoringProjection.find(field => field.fieldNumber === 70)?.value).toContain('Señal activa de prueba');
-  expect(monitoringProjection.find(field => field.fieldNumber === 71)?.value).toBe('MITIGADO');
+  expect(monitoringProjection.find(field => field.fieldNumber === 71)?.value).toBe('Mitigado');
   expect(monitoringProjection.find(field => field.fieldNumber === 72)?.value).toBe('1. SE_MANTIENE\n2. NO_SE_MANTIENE');
   expect(monitoringProjection.find(field => field.fieldNumber === 73)?.value).toBe('1. 65\n2. 66');
   expect(monitoringProjection.find(field => field.fieldNumber === 74)?.value).toBe('1. block9-evidence-preventive-a.pdf\n2. block9-evidence-preventive-b.pdf');
