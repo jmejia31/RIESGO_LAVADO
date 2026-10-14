@@ -1,12 +1,12 @@
-# Estado vigente — Bloques 1–9 cerrados (COD) — 2026-10-14 14:04 -06:00
+# Estado vigente — Bloques 1–9 cerrados; enmienda de tema dinámico certificada (COD) — 2026-10-14 15:09 -06:00
 
-- **Estado:** `BLOCK1_STATUS=CLOSED`, `BLOCK2_STATUS=CLOSED`, `BLOCK3_STATUS=CLOSED`, `BLOCK4_STATUS=CLOSED`, `BLOCK5_STATUS=CLOSED`, `BLOCK6_STATUS=CLOSED`, `BLOCK7_STATUS=CLOSED`, `BLOCK8_STATUS=CLOSED`, `BLOCK9_STATUS=CLOSED`, `NEXT_BLOCK_STATUS=NOT_STARTED`.
-- **Checkout/publicación:** rama `desarrollo`; código funcional de cierre `ea3631bd33af480363cc576efdf037f97f809ebf`; documentación de cierre `6a892e400c6a8bbb7a7ba42d209ce6823b68b907`. Quality Gates `38627608161` para el commit documental terminó `completed/success`; la bitácora final que registra ese resultado se publica en esta misma intervención y tendrá su propia ejecución CI.
-- **Bloque 9 — mitigación y monitoreo:** `F40–F49=10/10`, `F70–F82=13/13`; dos planes, cinco actividades y conteos backend `F41=2`, `F43=5`; alertas, automonitoreo, estados/efectividad por cuatro controles y evidencia real por control pasaron con Oracle XE desechable. Área y UGR mantienen columnas, capacidades y 403 directos independientes; RBAC, auditoría y proyección 82/82 PASS.
-- **Browser/Oracle:** Quality Gates `38625179428`, SHA `ea3631bd33af480363cc576efdf037f97f809ebf`, `completed/success`. Block7 Oracle write=1/1, browser Angular→API→Oracle=1/1, Block9 mitigación/monitoreo/evidencia/RBAC PASS, rutas críticas mocked=0; Block6 Oracle=3/3, Block8 Oracle=1/1; backend=965/965, frontend=858/858, Playwright=49 pasados.
-- **Carga de archivos transversal:** `InstitutionalFileUploadComponent` es el único uploader común y Monitoreo de Listas es la referencia visual. 5 superficies en 4 templates migradas (Listas, Monitoreo de Listas, Matrices y Configuración), excepciones=0, inputs crudos fuera del shared=0, texto canónico=1. Drag/drop, selector, teclado, accesibilidad y mobile PASS; el screenshot Matrix del CI fue descargado e inspeccionado.
-- **Validadores:** contrato canónico 82/82; catálogos 14/91, drift 0; UI Block7=82/82; responsabilidades Block8 PASS; contrato Block9 mappings 23/23 y checks 12/12; estándar global de carga PASS.
-- **Seguridad y workspace:** producción no consultada ni modificada; DML=0, DDL=0, apply=NO, esquema sin cambios, bypass de seguridad productiva=NO. Se preservan sin staging los cambios ajenos en `DatabaseEnvironmentGuard.cs`, sus tests y `frontend/rl-app/tsconfig.json`, y los untracked existentes.
+- **Estados:** BLOCK1–BLOCK9=CLOSED; NEXT_BLOCK_STATUS=NOT_STARTED. La enmienda de tema dinámico de modales forma parte del mismo Bloque 9 y no reabre los demás bloques.
+- **Publicación de código:** rama desarrollo; commit funcional `7180b0950142542356ba15a2d2d7de2b2ef529ae`, igual a `origin/desarrollo` en el run. Quality Gates `38636545241` para ese SHA terminó `completed/success` en 9m28s. El registro documental actual se publicará en un commit separado y su propio CI se verificará antes del handoff.
+- **Tema global:** `ConfigSistema.colorPrimario/colorSecundario` es la fuente única; `ConfiguracionService.aplicarTemaSistema` se comparte entre carga y guardado. IHSS dinámico 11/11, 22 modales cubiertos, dos shells legados migrados una sola vez, 52 confirmaciones SweetAlert dinámicas y 0 azules de marca fijos (3 informativos semánticos).
+- **CI y regresión:** backend=965/965, frontend=867/867, Block7 Oracle/browser=1/1, Block9 Oracle mitigación/monitoreo/RBAC/evidencias y browser real PASS (1 test de cada tipo), rutas críticas mocked=0; Block6 Oracle=3/3, Block8 Oracle=1/1; build, lint, audit, contenedores y publicación de screenshots PASS.
+- **Verificación local:** modal E2E=8/8, Matriz completa tema azul/rojo=1/1, uploader compartido=1/1; contrato=82/82, catálogos=14/91 drift=0, UI Block7, Block8, contrato Block9, estructura, DB, docs y UTF-8 PASS. `git diff --check` PASS.
+- **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_145000\modal-theme`; SHA256SUMS verificado.
+- **Seguridad/workspace:** producción no consultada ni modificada; DML=0, DDL=0, schema change=NO. Cambios ajenos de `DatabaseEnvironmentGuard`/tests, `tsconfig.json` y untracked preexistentes siguen preservados fuera de commits.
 
 ## Estado anterior — Bloque 8 cerrado (COD) — 2026-10-14 09:46 -06:00
 
@@ -2542,14 +2542,4 @@ Continuacion 6B (2026-10-13 12:19 -06:00): el run `38443834113` ya paso la consi
 
 - El run `38618732332` confirmó success de todos los gates; también mostró que una ejecución E2E posterior limpia `test-results`, así que no preservó el screenshot Matrix nombrado.
 - El E2E exporta ahora la captura a `RUNNER_TEMP/block9-browser-evidence` y el workflow sube esa carpeta junto a Playwright results. Falta verificar descarga y hashes del artifact en el CI actualizado.
-## Enmienda actual — tema global dinámico de modales dentro de Bloque 9 (COD) — 2026-10-14 14:54 -06:00
-
-- Bloques 1–9 conservan sus estados cerrados ya publicados; el alcance actual es una enmienda transversal de frontend del Bloque 9, sin reimplementar mitigación/monitoreo ni cambiar backend/esquema.
-- Precheck: rama `desarrollo`; inicio `5aafdca7ec4bb8a7b8afa1a7088bb5a4725f950d`, igual a `origin/desarrollo`. Los cambios actuales todavía requieren commit, publicación y Quality Gates del SHA final.
-- Fuente única: `ConfigSistema.colorPrimario/colorSecundario`; `ConfiguracionService.aplicarTemaSistema` sirve carga y guardado. Paleta IHSS dinámica 11/11; contraste de superficies modales WCAG AA; header/footer/cierre/foco dinámicos, body neutro, defaults centralizados y HEX inválido seguro.
-- Auditoría: 22 shells modales cubiertos; dos shells legados migrados al estándar canónico; cero overrides específicos; 51 opciones SweetAlert dinámicas; cero azul de marca fijo detectado y tres azules informativos semánticos conservados. Validadores nuevos se ejecutan en Quality Gates y en el gate local.
-- Evidencia local fresca: lint/build PASS, 867/867 pruebas frontend, npm audit 0 vulnerabilidades; modal E2E 8/8 y Matriz completa azul/rojo 1/1. Validadores contract 82/82, catálogo 14/91 drift 0, Block7 UI, Block8, Block9, estructura, DB y enlaces documentales PASS. Capturas/auditorías/hash: `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_145000\modal-theme`.
-- Seguridad: producción no consultada ni modificada; DML=0, DDL=0; los cambios ajenos de `DatabaseEnvironmentGuard`/tests, `tsconfig.json` y los untracked preexistentes siguen fuera de staging.
-- Continuación exacta: revisar/stagear sólo los paths de esta enmienda, commit y push normal a `origin/desarrollo`; observar el workflow Quality Gates de ese SHA y corregir cualquier fallo. Actualizar este estado con commit/run/conclusión real antes del handoff.
-
 # Estado vigente — Bloques 1–9 cerrados (COD) — 2026-10-14 14:04 -06:00

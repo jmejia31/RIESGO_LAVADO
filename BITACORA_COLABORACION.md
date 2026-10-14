@@ -1,3 +1,17 @@
+## Verificación CI de la enmienda de tema dinámico — Bloque 9 (COD)
+
+- **Fecha/hora local:** 2026-10-14 15:09 -06:00 (America/Tegucigalpa).
+- **Autor:** COD (Codex).
+- **Rama / SHA verificado:** `desarrollo` / `7180b0950142542356ba15a2d2d7de2b2ef529ae`; `HEAD=origin/desarrollo` al momento del registro.
+- **Quality Gates:** run `38636545241`, SHA `7180b0950142542356ba15a2d2d7de2b2ef529ae`, `completed/success` en 9m28s. Pasaron instalación/audit npm, analizadores, UTF-8, lint, validadores, build Release, suite integrada, Oracle XE Block6=3/3, Block8=1/1, contenedores y publicación de capturas.
+- **Resultados CI comprobados en logs:** backend=965/965; frontend=867/867; Block7 Oracle write=1/1 y browser real=1/1; Block9 Oracle mitigación/monitoreo/RBAC/evidencias PASS con 1 test Oracle y 1 browser real; rutas críticas sin mocks=0; Block6 Oracle=3/3; Block8 Oracle=1/1. Modal validator PASS (22 shells), tema dinámico PASS (11/11 tonos, 52 botones de confirmación dinámicos y 0 colores de marca azules fijos). El job publicó screenshots/traces de Block7.
+- **Advertencias no bloqueantes observadas:** avisos existentes de deprecación Node 20 y analyzers .NET; el run terminó success y no reportó fallo de test/build/gate.
+- **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_145000\modal-theme`; auditorías y capturas selladas en `SHA256SUMS.json`, `SHA256SUMS_VERIFIED=PASS`.
+- **Seguridad / workspace:** producción no se consultó ni modificó; DML=0, DDL=0. Los cambios ajenos de guard/tsconfig y los untracked preexistentes siguen preservados fuera del commit.
+- **Continuación:** actualizar el estado vivo y el documento de Bloque 9 con este resultado, publicar la documentación y verificar Quality Gates para el SHA documental antes del handoff.
+
+---
+
 ## Enmienda de tema dinámico global de modales — Bloque 9 (COD)
 
 - **Fecha/hora local:** 2026-10-14 14:54 -06:00 (America/Tegucigalpa).
