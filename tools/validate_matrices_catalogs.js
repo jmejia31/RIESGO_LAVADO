@@ -93,8 +93,12 @@ const manifestData = Object.fromEntries(catalogs.map(c => [c.catalogId, c.items.
   return item;
 })]));
 if (JSON.stringify(generated) !== JSON.stringify(manifestData)) fail('generated frontend catalog data must exactly match the canonical manifest');
-if (!resolver.includes('matriz_riesgos_catalogos_manifest.json') || !reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vri)')
-  || !reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vrr)') || !reportExport.includes('ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo)'))
+const exportsCanonicalRiskValues = reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vri)')
+  && reportExport.includes('ObtenerEtiquetaNivelRiesgo(fila.Vrr)')
+  || reportExport.includes('fila.Vri.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vri.Value)')
+  && reportExport.includes('fila.Vrr.HasValue ? MatrizRiesgosCatalogoCanonico.ObtenerEtiquetaNivelRiesgo(fila.Vrr.Value)');
+const exportsCanonicalRiskResponse = reportExport.includes('ObtenerEtiqueta("RISK_RESPONSE", fila.RespuestaRiesgo)');
+if (!resolver.includes('matriz_riesgos_catalogos_manifest.json') || !exportsCanonicalRiskValues || !exportsCanonicalRiskResponse)
   fail('backend Excel/PDF exports must resolve canonical risk/response labels through the manifest helper');
 if (!runtimeFactory.includes('CrearSnapshotNivelRiesgo') || !appService.includes('NormalizarRespuestaRiesgo(dto)')) fail('backend calculation/import alias consumers do not use canonical catalog rules');
 if (!frontendComponent.includes('canonicalRiskLevelLabel') || !frontendComponent.includes('canonicalRiskResponseLabel')

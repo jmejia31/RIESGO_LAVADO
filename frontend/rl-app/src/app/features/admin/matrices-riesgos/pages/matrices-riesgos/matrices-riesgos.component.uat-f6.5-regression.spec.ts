@@ -148,7 +148,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     );
     expect(service['obtenerEvaluacion']).toHaveBeenCalledTimes(2);
     expect(component.modalEditarAbierto()).toBe(true);
-    expect(component.mensaje()).toContain('guardados y verificados correctamente');
+    expect(component.mensajeEdicionEvaluacion()).toContain('guardados y verificados correctamente');
     expect(component.evaluacionSeleccionada()?.evaVersionRow).toBe(2);
     expect(component.respuestas()['area_principal']).toBe(valorActualizado);
 
@@ -168,7 +168,7 @@ describe('MatricesRiesgosComponent — regresiones UAT F6.5', () => {
     fixture.detectChanges();
 
     expect(component.modalEditarAbierto()).toBe(true);
-    expect(component.error()).toContain('no coincide con los cambios enviados');
+    expect(component.errorEdicionEvaluacion()).toContain('no coincide con los cambios enviados');
 
     const feedback = fixture.nativeElement.querySelector('[data-uat="feedback-edicion-error"]') as HTMLElement | null;
     expect(feedback).not.toBeNull();

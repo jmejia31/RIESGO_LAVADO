@@ -182,7 +182,7 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
                 VerId = 10,
                 VerEstado = "PUBLISHED",
                 VerVigente = true,
-                VerJson = "{\"secciones\":[]}"
+                VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"},{\"clave\":\"impacto_inherente\"}]}]}"
             }));
         PrepararValidacionCorrecta(validador);
         calculador.On(nameof(IMatricesRiesgoService.CalcularYValidarRiesgo), _ =>
@@ -223,7 +223,7 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
                 VerId = 10,
                 VerEstado = "PUBLISHED",
                 VerVigente = true,
-                VerJson = "{\"secciones\":[]}"
+                VerJson = "{\"secciones\":[{\"campos\":[{\"clave\":\"frecuencia_inherente\"},{\"clave\":\"impacto_inherente\"}]}]}"
             }));
         PrepararValidacionCorrecta(validador);
         PrepararCalculoCorrecto(calculador);
@@ -242,7 +242,7 @@ public sealed class MatricesRiesgosNewCodeCoverageTests
         ServiceResult result = await service.ActualizarEvaluacionAsync(dto, 9, null);
 
         Assert.False(result.Success);
-        Assert.Equal(409, result.StatusCode);
+        Assert.True(result.StatusCode == 409, result.Message);
     }
 
     /// <summary>

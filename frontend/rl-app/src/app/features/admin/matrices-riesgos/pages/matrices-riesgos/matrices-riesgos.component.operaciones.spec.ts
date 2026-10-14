@@ -263,7 +263,7 @@ obtenerConsolidado: vi.fn().mockReturnValue(of([])),
     component.editarEvaluacion(evaluacionResumen);
     component.actualizarRespuesta(component.seccionesModal()[0].campos[0], 'Cumplimiento actualizado');
     component.guardarEvaluacion();
-    expect(component.error()).toBe('Conflicto de version');
+    expect(component.errorEdicionEvaluacion()).toBe('Conflicto de version');
     expect(component.guardando()).toBe(false);
   });
 
