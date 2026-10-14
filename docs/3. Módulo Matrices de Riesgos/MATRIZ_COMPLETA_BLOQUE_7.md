@@ -1,60 +1,70 @@
-# Bloque 7 — Editor de evaluación en seis bloques
+# Bloque 7 — Editor de evaluaciones en seis bloques
 
-**Estado:** `BLOCK7_STATUS=PENDING_CORRECTION`
-**Última intervención:** COD — 2026-10-13, America/Tegucigalpa
-**Alcance:** crear y editar borradores desde el editor de Matrices de Riesgos, sin migración de los 59 casos de referencia y sin escrituras productivas.
+**Estado: `BLOCK7_STATUS=CLOSED`**
+**Cierre técnico COD:** 2026-10-13 19:17 -06:00
+**Rama:** `desarrollo`
+**Commit funcional certificado:** `d3c0766e30981f8101accb90bf812b490a3cebc5`
+**Quality Gates:** [run 38494209621](https://github.com/jmejia31/RIESGO_LAVADO/actions/runs/38494209621) — `completed / success`
+**Bloque 8:** `NOT_STARTED`
 
-## Implementación de esta intervención
+## Alcance certificado
 
-- Se conservó el modal de evaluación existente y se organizó su edición en seis bloques con rangos 01–19, 20–33, 34–39, 40–49, 50–69 y 70–82.
-- Se agregaron `POST /api/matrices-riesgos/evaluaciones/borrador` y `PUT /api/matrices-riesgos/evaluaciones/{id}/borrador`. Aceptan respuestas estructuralmente válidas con campos obligatorios aún pendientes; continúan rechazando valores inválidos y las identidades de riesgo o versión manipuladas. Los cálculos enviados por el cliente no se toman como autoridad.
-- Se agregó `POST /api/matrices-riesgos/evaluaciones/calculo-preview`, que reutiliza el runtime de cálculo del backend y no persiste. La UI solicita la vista previa con debounce y cancela la petición previa al editar otro valor.
-- Después de guardar, el editor vuelve a leer el detalle y la proyección institucional 82/82. Las escrituras de controles, planes, actividades y seguimiento notifican al editor para refrescar esa proyección. Las entidades repetibles continúan usando sus DTOs y endpoints estructurados existentes.
-- Se retiró la llamada de recálculo del frontend al cambiar una respuesta. Los campos calculados/sistema se vuelven de solo lectura a partir del contrato `MATRIX_FIELDS`; GTIC se mantiene opcional porque no se encontró una regla autoritativa para inferir su activación.
-- `tools/validate_block7_ui_contract.js` compara las 82 etiquetas visibles y los seis rangos con el manifest backend. El workflow de Quality Gates ejecutará este validador.
+El editor de evaluaciones existente trabaja en seis bloques funcionales y conserva la proyección institucional de lectura 01–82 como fuente backend. Crear y editar utiliza borradores parciales, validación por bloque, preview del motor backend, refresco después de guardar y DTOs estructurados para controles, planes y actividades. Los campos de sistema, calculados y derivados son de sólo lectura; la UI no contiene una segunda calculadora.
 
-## Evidencia ejecutada localmente
+La suite mock de Playwright se mantiene para regresión rápida. El cierre añade integración real contra el Oracle XE desechable del Quality Gates actual y un E2E específico con Angular/API reales. El log del run certifica `BLOCK7_ORACLE_WRITE_INTEGRATION=PASS`, `BLOCK7_BROWSER_API_ORACLE_E2E=PASS`, `BLOCK7_REAL_BROWSER_TESTS_EXECUTED=1` y `BLOCK7_CRITICAL_MATRIX_API_ROUTES_MOCKED=0`.
 
-- Release build del API: PASS.
-- Suite backend: 955/955 PASS.
-- Contract validator: 82/82 PASS.
-- Catalog validator: 14 catálogos / 91 elementos, drift 0.
-- Frontend aislado, fuera del checkout compartido: `npm ci`, build, lint y auditoría npm (0 vulnerabilidades) PASS; tests completos 846/846 PASS.
-- Playwright: el flujo de crear borrador parcial, continuar y recargar pasó contra respuestas de API simuladas. Esta prueba no ejecuta Oracle ni acredita persistencia de una API real.
-- Validadores de UTF-8, estructura del repositorio, scripts de base de datos y enlaces de documentación: PASS.
+## Contratos y bloques
 
-## Pendientes para el cierre
+| Bloque | Campos | Presentación y modo |
+| --- | --- | --- |
+| 1 | 01–19 | Identificación y riesgo inherente; F01 es de sistema, F12/F13 calculados y F17–F19 opcionales/condicionales. |
+| 2 | 20–33 | Controles estructurados por tipo; ausencia representada sin filas “No hay”. |
+| 3 | 34–39 | F34–F38 calculados y de sólo lectura; F39 usa la respuesta institucional. |
+| 4 | 40–49 | Planes y actividades estructurados, múltiples y asociados a su plan; F41/F43 son derivados. |
+| 5 | 50–69 | Detalle calculado, colapsable y sólo lectura. |
+| 6 | 70–82 | Seguimiento posterior; no es requisito para la creación inicial. |
 
-- El checkout no tiene Oracle XE aislado. El workflow actual ejecuta integración Oracle XE del GET de Bloque 6, no el POST/PUT de borradores ni el editor Playwright contra una API conectada a XE. Por tanto, `E2E_CREATE_EDIT_ORACLE` y `ORACLE_XE_OR_CI_INTEGRATION` para las escrituras de Bloque 7 siguen sin evidencia.
-- Falta una prueba de integración de los endpoints de borrador/preview contra el repositorio Oracle y un recorrido de navegador conectado a esa API.
-- No se certificaron aún pruebas de responsive 1280×900/390×844, accesibilidad de errores inline/foco, conflictos concurrentes de edición ni todos los estados de validación por bloque. La vista previa y navegación sí tienen pruebas unitarias/build, pero estos gates no se consideran cubiertos por ello.
-- El trigger de GTIC permanece sin resolver en las fuentes institucionales revisadas; los campos 17–19 no se hacen obligatorios ni se inventan valores.
+Las etiquetas y la partición UI se comparan con `matriz_riesgos_82_campos_manifest.json` mediante `tools/validate_block7_ui_contract.js` (`82/82`).
 
-No se declara `BLOCK7_STATUS=CLOSED` mientras permanezcan estos pendientes. Bloques 1–6 continúan cerrados; Bloque 8 no se inició. Producción no se consultó ni modificó: `PRODUCTION_DML_EXECUTED=0`, `PRODUCTION_DDL_EXECUTED=0`, `PRODUCTION_APPLY_EXECUTED=NO`.
+## Persistencia y cálculos
 
-## Seguimiento de CI y pruebas E2E
+- `POST /api/matrices-riesgos/evaluaciones/borrador` y `PUT /api/matrices-riesgos/evaluaciones/{id}/borrador` persistieron drafts parciales reales en Oracle XE y se leyeron de vuelta.
+- La actualización conserva la versión esperada del cliente. La prueba Oracle confirmó versión 1→2, rechazo de versión vieja con HTTP 409 sin pérdida de la escritura A, y recarga/guardado posterior hasta versión 3.
+- `POST /api/matrices-riesgos/evaluaciones/calculo-preview` pasó con datos incompletos y completos. Alterar la identidad devolvió 400. Las capturas antes/después de preview confirmaron cero cambios a evaluación, cálculos, proyección, flujo, auditoría y version row.
+- El motor canónico calculó los valores de prueba; valores de cálculo enviados manipulados no se conservaron como autoridad. No se modificaron las fórmulas del Bloque 5.
+- El navegador recargó la página y reconstruyó la evaluación por API. El caso real cubrió dos controles preventivos, dos planes con fechas/responsables/presupuestos distintos y tres actividades; la lectura posterior verificó estructura y ordinales de plan.
 
-- Quality Gates run `38453709129` (SHA `1379b5fe72d5d7d7ecb081ee6230ede663357608`) ejecutó con éxito validadores, analizadores, build Release y la integración Oracle XE de Bloque 6. Falló en tres E2E que todavía buscaban el formulario anterior: el botón "Guardar cambios", el botón "Crear evaluación" dentro del formulario y el campo F39 visible sin navegar al Bloque 3.
-- Se corrigió la navegación de edición para permitir acceso directo a cualquier bloque de una evaluación existente y se actualizaron los E2E al flujo de borrador/bloques. En copia frontend aislada pasaron tests 846/846, lint, build y las suites Playwright `login-and-routing.spec.ts` + `matrices-uat-integral.spec.ts`: 22/22.
-- El CI correctivo `38455840579` del SHA `6f87a85059bbf64dc926d437eccfacca7ce934d2` terminó `completed/success`, incluyendo los E2E corregidos y el harness Oracle XE de Bloque 6. Estas pruebas Playwright usan API simulada; no acreditan escritura real Oracle. Por ello se mantiene `BLOCK7_STATUS=PENDING_CORRECTION` hasta incorporar y pasar el E2E browser→API→Oracle y los gates de accesibilidad/responsive pendientes.
+## Accesibilidad y responsive
 
-## Continuacion Bloque 7B - correccion de version optimista y drafts parciales (COD) - 2026-10-13 14:09 -06:00
+El navegador comprobó navegación por teclado de los seis bloques, nombre accesible y cierre del diálogo de matriz, `aria-expanded` de Bloque 5 (`false → true`) y 20 campos 50–69 de sólo lectura. La suite Playwright de regresión con API simulada también verifica `aria-invalid`, relación `aria-describedby` y foco en el primer campo inválido.
 
-- Inicio: rama `desarrollo`, `HEAD=origin/desarrollo=306cd0430efb9718a5d3dacd8ee960c7f1107535`; `git pull --ff-only` quedo al dia. Se preservaron sin stage los cambios ajenos de `DatabaseEnvironmentGuard.cs`, sus pruebas, `frontend/rl-app/tsconfig.json` y todos los untracked previos.
-- El servicio de borradores ya no sustituye el `EvaVersionRow` esperado por el cliente. Ahora compara con la fila persistida y devuelve 409 con mensaje de recarga al detectar version obsoleta; el repositorio conserva `FOR UPDATE` y `WHERE EVA_VERSION_ROW = :versionRow`. Se agregaron dos pruebas de servicio para version obsoleta y version vigente.
-- Se corrigio un impedimento al draft parcial: la tabla de proyeccion resume valores calculados obligatorios, por lo que crear una fila resumen ficticia fallaba cuando el draft aun no tenia VRI/VRR. El repositorio ahora omite esa fila mientras faltan ambos resultados canonicos y la elimina si una edicion vuelve incompleto el draft; cuando ya existe calculo, conserva/crea el resumen dentro de la misma transaccion. Sin cambios DDL. Agregadas tres pruebas unitarias de elegibilidad de resumen.
-- El frontend mapea HTTP 409 a un mensaje de conflicto seguro que indica que la captura actual permanece en pantalla; una prueba unitaria lo verifica.
-- Verificado en esta intervencion: Release build de `RIESGO_LAVADO.sln` PASS, 0 errores; suite backend 960/960; frontend aislado `npm ci` (0 vulnerabilidades), 847/847, lint y build PASS; Playwright de regresion existente 45/45 PASS (suite con API mock; no es Oracle). Contrato 82/82; catalogos 14/91, drift 0; validador UI/manifest 82/82; UTF-8/mojibake PASS, 0 hallazgos; estructura (118 rutas, 1052 archivos), base de datos y enlaces (175 Markdown, 201 enlaces) PASS.
-- Quality gate local integrado ejecutado: backend/cobertura 960/960 PASS; la etapa frontend integrada fallo porque el `node_modules` compartido no contiene `@angular/build:unit-test`. El frontend completo paso en una copia aislada temporal; no se altero ni elimino `node_modules` compartido.
-- Oracle XE y el E2E Browser->API->Oracle NO se ejecutaron: `docker ps` no mostro contenedores y no estaban disponibles las variables de conexion/opt-in. El run historico `38456944058` valida el GET de Bloque 6, no escrituras de Bloque 7. Concurrencia Oracle, POST/PUT real, preview sin mutacion, E2E real, multi-control/multi-plan, a11y con browser assertions y medidas responsive siguen sin certificarse.
-- GTIC: se conserva el tratamiento opcional/condicional sin generar valores ni inferir trigger. El validator estatico sigue en 82/82; round-trip de valores GTIC no fue probado en API/Oracle real. No se declara `GTIC_GOVERNANCE=PASS` integral.
-- Artefactos externos: RUN_ID `20261013_140917_140`, `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK7_EVALUATION_FLOW\20261013_140917_140`; 4 archivos enumerados, hashes recalculados y verificados (`SHA256SUMS_VERIFIED=PASS`).
-- No se consulto ni escribio produccion: DML=0, DDL=0, apply=NO; no se cambio esquema ni se agrego bypass de autenticacion. `BLOCK7_STATUS=PENDING_CORRECTION`, `BLOCK8_STATUS=NOT_STARTED`. El cierre requiere integrar y pasar el harness Oracle de escrituras y el browser real, mas los gates de accesibilidad/responsive; seguir con integracion y CI sin reimplementar el editor.
+La suite real midió `scrollWidth <= clientWidth` en 1280×900 y 390×844 para Bloques 1, 2, 4 y 5 expandido. Resultado `HORIZONTAL_OVERFLOW=0`. Las ocho capturas de CI se conservaron fuera de Git en el directorio de auditoría de esta ejecución.
 
-### Seguimiento 7B - CI del arreglo y estado (2026-10-13)
+## GTIC
 
-- Commit `5e5069bd9557574a1742a84a00369741d6a36791` publicado; Quality Gates `38460737573` concluyo `completed/success`. Pasaron validadores, build, quality gates, E2E vigente y la integracion Oracle XE del GET canonico del Bloque 6.
-- La workflow aun no incluye pruebas de escritura de borradores/preview del Bloque 7 ni browser conectado a Oracle. No atribuir el CI como evidencia de esos gates. POST/PUT Oracle, preview sin mutacion, concurrencia real, browser create/edit/reload, multi-control/plan, accesibilidad browser, responsive y round-trip GTIC siguen pendientes.
-- Se corrigio la preservacion de `EvaVersionRow` enviada por cliente y la elegibilidad de la fila de resumen para drafts parciales; frontend informa 409 de forma segura. Verificaciones locales: backend 960/960, frontend aislado 847/847, Playwright existente 45/45, build/lint frontend aislados PASS. El gate integrado local frontend sigue bloqueado por `@angular/build:unit-test` ausente en dependencias compartidas.
-- GTIC no tiene trigger autoritativo identificado: F17-F19 permanecen opcionales/condicionales, no generan datos y no bloquean avance vacíos. No se certificó su round-trip Oracle.
-- Estado honesto: `BLOCK7_STATUS=PENDING_CORRECTION`; `BLOCK8_STATUS=NOT_STARTED`. Cero escrituras de producción y sin cambio de esquema. Para cerrar, agregar y pasar las pruebas opt-in Oracle write/browser real al workflow existente y completar a11y/responsive.
+`GTIC_TRIGGER_SOURCE=NOT_DEFINED_IN_AUTHORIZED_SOURCES`. F17–F19 permanecen `CONDITIONAL_OPTIONAL`: blanks permitidos, no bloquean continuar, no se infiere aplicabilidad y el sistema no genera valores. El test Oracle probó round-trip de blanks y valores GTIC introducidos por usuario. No se afirma una regla institucional de activación automática.
+
+## Verificación y CI
+
+El Quality Gates `38494209621` publicó estos resultados:
+
+- 1/1 integración opt-in de borrador/preview contra Oracle XE; no se omitió por falta de servicio.
+- 1/1 Playwright real Angular→API→Oracle→API→Browser, con rutas críticas de Matrices sin interceptar.
+- Backend: 959/959; frontend: 847/847; suite Playwright agregada del gate: 48 pasadas.
+- Contract UI: 82/82; catálogos: 14 catálogos / 91 elementos, drift 0.
+- Analyzers, build Release, lint frontend, `npm audit`, validadores, Oracle XE Bloque 6 y contenedores: PASS en el workflow.
+- El validador UTF-8 corrió en CI: PASS. No se agregaron cambios de esquema ni secretos.
+
+El E2E usa el service Oracle XE efímero que ya existía en Quality Gates. El host test-only se ejecuta en entorno E2E, con flag explícita y `DatabaseEnvironmentGuard` verificando perfil `LOCAL_XE`; no se alteró la autorización del API productivo. La suite Playwright mock se conserva.
+
+## Evidencia y límites
+
+Auditoría fuera de Git: `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK7_EVALUATION_FLOW\20261014_0119_38494209621`. Incluye resultados JSON, ocho capturas desktop/mobile, `SHA256SUMS.json` y verificación de hashes.
+
+Los controles, planes y actividades del E2E se escribieron a través de sus endpoints reales usando el API request de Playwright y luego se leyeron en el diálogo real; no se afirma que el test haya rellenado cada repeater del editor Angular. La integración se certificó en Oracle XE desechable, no en producción. El workbook de 59 riesgos se usó sólo como referencia; no se migraron riesgos.
+
+## Seguridad y estado
+
+`PRODUCTION_READ_ONLY_USED=NO` · `PRODUCTION_DML_EXECUTED=0` · `PRODUCTION_DDL_EXECUTED=0` · `PRODUCTION_APPLY_EXECUTED=NO` · `PRODUCTION_APPLY_AUTHORIZED=NO` · `SCHEMA_CHANGE_REQUIRED=NO` · `AUTH_PRODUCTION_BYPASS_ADDED=NO`.
+
+`BLOCK1_STATUS=CLOSED` · `BLOCK2_STATUS=CLOSED` · `BLOCK3_STATUS=CLOSED` · `BLOCK4_STATUS=CLOSED` · `BLOCK5_STATUS=CLOSED` · `BLOCK6_STATUS=CLOSED` · `BLOCK7_STATUS=CLOSED` · `BLOCK8_STATUS=NOT_STARTED`.

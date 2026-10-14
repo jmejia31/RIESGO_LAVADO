@@ -1,14 +1,14 @@
-# Estado vigente — Bloque 7: edición de evaluación en seis bloques (COD) — 2026-10-13
+# Estado vigente — Bloque 7 cerrado (COD) — 2026-10-13 19:17 -06:00
 
-- **Estado:** `BLOCK7_STATUS=PENDING_CORRECTION`. Bloques 1–6 permanecen cerrados; Bloque 8 no iniciado.
-- **Checkout:** `desarrollo`, inicio `e8ba67ee960bb39808f11ab9ab9e9995ad31327c`, inicialmente igual a `origin/desarrollo`. Los cambios locales ajenos y untracked enumerados en la bitácora quedaron sin stagear.
-- **Implementado:** endpoints de guardado/actualización de borrador parcial y preview de cálculo backend; edición en bloques; refresh del GET canónico tras writes estructurados; UI field contract validator; E2E Playwright parcial de creación y reload con API simulada.
-- **Verificado:** backend Release tests 955/955; frontend tests 846/846, build y lint en copia temporal aislada; `npm audit` sin vulnerabilidades; contract 82/82; catalogs 14/91 drift 0; UTF-8, estructura, scripts DB y enlaces PASS; Playwright corregido 22/22 PASS contra API simulada.
-- **CI inicial / corrección:** el run inicial `38453709129` en SHA `1379b5fe72d5d7d7ecb081ee6230ede663357608` falló en tres E2E con selectores incompatibles con el wizard. Corrección publicada en `6f87a85059bbf64dc926d437eccfacca7ce934d2`; Quality Gates `38455840579` terminó `completed/success` e incluyó E2E y Oracle XE de Bloque 6.
-- **Pendiente de cierre:** no hubo Oracle XE aislado local y CI actual no integra el POST/PUT de Bloque 7 ni el navegador con API+Oracle. Falta E2E real Create/Edit/Reload con Oracle, más certificación responsive/accesibilidad de errores inline/foco. No declarar la persistencia real ni `BLOCK7_STATUS=CLOSED` antes de cubrirlos.
-- **Seguridad:** producción no consultada; DML=0, DDL=0, apply=NO. No se modificó esquema ni se inició Bloque 8.
-- **Punto de continuación:** integrar pruebas de borrador/preview con el harness Oracle XE efímero, conectar el recorrido Playwright a esa API, cerrar accesibilidad/responsive y trigger GTIC si aparece una fuente autoritativa.
-
+- **Estado:** `BLOCK1_STATUS=CLOSED`, `BLOCK2_STATUS=CLOSED`, `BLOCK3_STATUS=CLOSED`, `BLOCK4_STATUS=CLOSED`, `BLOCK5_STATUS=CLOSED`, `BLOCK6_STATUS=CLOSED`, `BLOCK7_STATUS=CLOSED`, `BLOCK8_STATUS=NOT_STARTED`.
+- **Checkout:** rama `desarrollo`; inicio de esta continuación en `390bfbc19408a08a457704cd388afb8383d2207d`; cambios ajenos preservados sin stage. Código funcional certificado por Quality Gates `38494209621`, SHA `d3c0766e30981f8101accb90bf812b490a3cebc5`.
+- **Oracle:** 1/1 prueba opt-in pasó contra Oracle XE desechable. POST borrador parcial, GET/readback, PUT con versión optimista, stale update HTTP 409, preview incompleto/completo, preview sin mutación y round-trip GTIC se verificaron en API/Oracle real.
+- **Browser:** 1/1 suite Playwright real pasó con Angular/API reales y Oracle XE. `BLOCK7_CRITICAL_MATRIX_API_ROUTES_MOCKED=0`; create, reload, edit, controles/planes/actividades representativos, proyección 82/82, concurrencia browser 409, A11y y responsive pasaron.
+- **Quality Gates:** backend 959/959; frontend 847/847; Playwright agregado 48 pasadas; validador UI 82/82; catálogos 14/91, drift 0; Release build, lint, npm audit, UTF-8, Oracle de Bloque 6 y contenedores PASS. Run `38494209621` terminó `completed/success`.
+- **GTIC:** `GTIC_TRIGGER_SOURCE=NOT_DEFINED_IN_AUTHORIZED_SOURCES`; F17–F19 son condicionales/opcionales, blank permitido, no bloquean y no se generan valores. El test Oracle confirmó round-trip de blanks y valores suministrados por usuario; no se inventó trigger.
+- **Artefactos:** `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK7_EVALUATION_FLOW\20261014_0119_38494209621`; incluye JSON de auditoría, ocho capturas reales del run CI y hashes SHA-256 verificados.
+- **Seguridad:** producción no se consultó ni modificó; DML=0, DDL=0, apply=NO; cambio de esquema=NO; bypass auth=NO. Guard de base de datos y dependencias compartidas se preservaron.
+- **Publicación:** commits funcionales publicados a `origin/desarrollo`; el código del cierre está certificado en CI. La actualización documental acompaña el cierre.
 ## Estado previo — Bloque 6B cerrado (COD) — 2026-10-13
 
 - Resultado: `BLOCK6_STATUS=CLOSED`; `BLOCK7_STATUS=NOT_STARTED`. Los Bloques 1–5 se mantienen cerrados.
