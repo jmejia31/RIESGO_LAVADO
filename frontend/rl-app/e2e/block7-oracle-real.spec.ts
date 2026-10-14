@@ -215,16 +215,18 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
 
-  const blockNavigation = page.locator('nav[aria-label^="Bloques funcionales"]');
+  const blockNavigation = pageA.locator('nav[aria-label^="Bloques funcionales"]');
   await expect(blockNavigation.getByRole('button')).toHaveCount(6);
   const firstBlock = blockNavigation.getByRole('button').first();
   await firstBlock.focus();
-  await page.keyboard.press('Enter');
+  await pageA.keyboard.press('Enter');
   await expect(firstBlock).toHaveAttribute('aria-current', 'step');
 
-  await page.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
-  await page.getByRole('button', { name: 'Ver Matriz completa' }).click();
-  const matrixDialog = page.locator('dialog[data-matrix-modal="complete"]');
+  await pageA.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
+  const block4Read = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/evaluaciones/${evaluation.id}/bloque4`);
+  await pageA.getByRole('button', { name: 'Ver Matriz completa' }).click();
+  const matrixDialog = pageA.locator('dialog[data-matrix-modal="complete"]');
   await expect(matrixDialog).toBeVisible();
   await expect(matrixDialog).toHaveAttribute('aria-modal', 'true');
   await expect(matrixDialog).toHaveAttribute('aria-labelledby', 'titulo-modal-matriz-completa');
@@ -232,7 +234,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first()).toBeVisible();
   await expect(matrixDialog.locator('[data-matrix-plan]')).toHaveCount(2);
   await expect(matrixDialog.locator('[data-control-type="PREVENTIVO"]')).toHaveCount(4);
-  expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/mitigacion/evaluaciones/{id}/bloque4'))).toBeTruthy();
+  expect((await block4Read).status()).toBe(200);
 
   const block5 = matrixDialog.locator('[data-matrix-block="5"]');
   const details = block5.getByRole('button', { name: 'Mostrar detalle' });
@@ -249,8 +251,8 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
     { block: '5', name: 'block5-expanded' },
   ];
   for (const viewport of [{ width: 1280, height: 900, name: 'desktop' }, { width: 390, height: 844, name: 'mobile' }]) {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
-    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    await pageA.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expect.poll(() => pageA.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
     for (const section of responsiveSections) {
       const target = matrixDialog.locator(`[data-matrix-block="${section.block}"]`);
       await expect(target).toBeVisible();
@@ -259,6 +261,17 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   }
 
   await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
+
+  const concurrencyA = await page.context().newPage();
+  await installNonCriticalFixtures(concurrencyA, fixture, evaluation);
+  await concurrencyA.goto('/matrices-riesgos');
+  await expect(concurrencyA.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
+  await expect(concurrencyA.locator('button[title^="Editar evaluaci"]')).toBeVisible();
+  const concurrencyAEvaluationRead = concurrencyA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/evaluaciones/${evaluation.id}`);
+  await concurrencyA.locator('button[title^="Editar evaluaci"]').click();
+  expect((await concurrencyAEvaluationRead).status()).toBe(200);
+  await expect(concurrencyA.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
@@ -272,10 +285,10 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await expect(pageB.locator('dialog[aria-labelledby="titulo-modal-editar"]')).toBeVisible();
   await expect(pageB.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
 
-  await pageA.getByLabel('Área principal').fill('Editor A');
-  const saveA = pageA.waitForResponse(response => response.request().method() === 'PUT'
+  await concurrencyA.getByLabel('Área principal').fill('Editor A');
+  const saveA = concurrencyA.waitForResponse(response => response.request().method() === 'PUT'
     && /\/evaluaciones\/\d+\/borrador$/.test(new URL(response.url()).pathname));
-  await pageA.getByRole('button', { name: 'Guardar borrador' }).click();
+  await concurrencyA.getByRole('button', { name: 'Guardar borrador' }).click();
   expect((await saveA).status()).toBe(200);
 
   await pageB.getByLabel('Área principal').fill('Editor B stale');
@@ -292,7 +305,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(persistedBody.evaVersionRow).toBe(3);
   expect(persistedBody.evaDataJson).toContain('Editor A');
   expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
-  await pageA.close();
+  await concurrencyA.close();
   await pageB.close();
   console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');
 });
