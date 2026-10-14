@@ -255,6 +255,9 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
 
   await matrixDialog.getByRole('button', { name: 'Cerrar Matriz completa' }).first().click();
 
+  await page.getByTitle('Editar evaluación').click();
+  await expect(page.getByLabel('Área principal')).toHaveValue('Área Oracle editada');
+
   const pageB = await page.context().newPage();
   await installNonCriticalFixtures(pageB, fixture, evaluation);
   await pageB.goto('/matrices-riesgos');
