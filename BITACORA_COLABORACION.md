@@ -8895,3 +8895,10 @@ Continuation 6B (2026-10-13 12:19 -06:00): CI `38443834113` paso la caracterizac
 - **Documentos actualizados:** `docs/3. Módulo Matrices de Riesgos/MATRIZ_COMPLETA_BLOQUE_9.md` marca CLOSED y documenta el estándar transversal; `docs/0.0 Documentación/ESTADO_COLABORACION.md` registra Bloques 1–9 cerrados; `BITACORA_COLABORACION.md` mantiene esta cronología. El Quality Gates del commit documental aún debe ejecutarse antes del handoff.
 - **Artefactos fuera de Git:** `%USERPROFILE%\Documents\RIESGO_LAVADO\BLOCK9_MITIGATION_MONITORING\20261014_113000`; incluye inventario de superficies, auditorías F40–F49/F70–F82, RBAC, evidencias, conteos, resumen CI y capturas. `SHA256SUMS.json` se recalcula y verifica antes del cierre.
 - **Seguridad/Git:** producción no se consultó ni modificó; DML=0, DDL=0, apply=NO, cambio de esquema=NO y bypass productivo=NO. No se stagearon cambios locales ajenos ni archivos untracked preexistentes. Bloques 1–9 cerrados; siguiente bloque no iniciado.
+
+## Quality Gates de documentación Block9 (COD) — 2026-10-14 14:04 -06:00
+
+- El commit documental `6a892e400c6a8bbb7a7ba42d209ce6823b68b907` se publicó en `origin/desarrollo`; Quality Gates run `38627608161` terminó `completed/success` para ese SHA.
+- Logs de ese run confirmaron Block7 Oracle write 1/1, browser real 1/1, rutas Block9 críticas sin mocks, mitigación/monitoreo/evidencia/RBAC PASS, backend 965/965, frontend 858/858, Block6 Oracle 3/3, Block8 Oracle 1/1; Release build, lint, npm audit, validador global del uploader y contenedores pasaron.
+- E2E desplegó y ejerció Angular→API real→Oracle XE; el screenshot Matrix está en el artifact CI y en el paquete externo, revisado visualmente. `SHA256SUMS_VERIFIED=PASS` en 20 artefactos externos.
+- Esta entrada y el timestamp actualizado del estado vivo se publican en el commit final de bitácora. El Quality Gates del SHA de esa última actualización se verifica antes de cerrar el handoff.
