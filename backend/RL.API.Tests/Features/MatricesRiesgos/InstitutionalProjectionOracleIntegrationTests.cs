@@ -58,19 +58,19 @@ public sealed class InstitutionalProjectionOracleIntegrationTests
                     ("id", riskId), ("code", $"B8-{stamp}-{index}"), ("name", $"Block 8 risk {index}"), ("usr", userId));
 
             // Risk 1: separate evaluations across approval, draft, review and rejection states.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[0], flowIds[0], "APROBADA", t1, "R1-OLD", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[1], flowIds[1], "APROBADA", t2, "R1-LATEST-APPROVED", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[2], flowIds[2], "BORRADOR", t3, "R1-DRAFT", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[3], flowIds[3], "RECHAZADA", t3.AddDays(1), "R1-REJECTED", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[0], flowIds[0], "APROBADA", t1, $"B8-{stamp}-R1-OLD", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[1], flowIds[1], "APROBADA", t2, $"B8-{stamp}-R1-LATEST-APPROVED", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[2], flowIds[2], "BORRADOR", t3, $"B8-{stamp}-R1-DRAFT", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[0], evaluationIds[3], flowIds[3], "RECHAZADA", t3.AddDays(1), $"B8-{stamp}-R1-REJECTED", userId);
             // Risk 2: same approval timestamp; larger flow ID is the deterministic winner.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[4], flowIds[4], "APROBADA", tie, "R2-TIE-LOW", userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, "R2-TIE-HIGH", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[4], flowIds[4], "APROBADA", tie, $"B8-{stamp}-R2-TIE-LOW", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[1], evaluationIds[5], flowIds[5], "APROBADA", tie, $"B8-{stamp}-R2-TIE-HIGH", userId);
             // The last workflow event is authoritative for this evaluation.
-            await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, "R3-CLOSED", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[2], evaluationIds[6], flowIds[6], "APROBADA", t2, $"B8-{stamp}-R3-CLOSED", userId);
             await ExecuteAsync(seed, "INSERT INTO RL_MR_FLUJOS_EVALUACION VALUES (:id,:eva,'CERRADA','test',:usr,:eventDate)",
                 ("id", flowIds[7]), ("eva", evaluationIds[6]), ("usr", userId), ("eventDate", t3));
             await InsertDraftWithoutProjectionAsync(seed, riskIds[3], evaluationIds[7], t3.AddDays(2), userId);
-            await InsertConsolidatedFixtureAsync(seed, riskIds[3], evaluationIds[8], flowIds[8], "EN_REVISION", t3.AddDays(3), "R4-REVIEW", userId);
+            await InsertConsolidatedFixtureAsync(seed, riskIds[3], evaluationIds[8], flowIds[8], "EN_REVISION", t3.AddDays(3), $"B8-{stamp}-R4-REVIEW", userId);
 
             await using var app = await CreateBlock7ApiAsync(connectionString);
             string address = app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses.Single();
