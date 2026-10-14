@@ -118,7 +118,13 @@ export interface ControlMonitoreoMatrizDto {
   descripcion: string;
   estadoMonitoreo: string | null;
   efectividadMonitoreo: number | null;
-  evidencias: { id: number; nombreArchivo: string }[];
+  evidencias: { id: number; nombreArchivo: string; fechaCreacion?: string }[];
+}
+
+export interface ControlMonitoreoActualizarDto {
+  evaluacionId: number;
+  estadoMonitoreo: string | null;
+  efectividadMonitoreo: number | null;
 }
 
 export interface MatrizBloque6Dto {

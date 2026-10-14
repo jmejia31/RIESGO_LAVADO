@@ -193,6 +193,9 @@ public sealed class CachedMatricesRiesgosAppService : IMatricesRiesgosAppService
     public Task<ServiceResult> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip) =>
         _inner.VincularEvidenciaAsync(dto, usuarioId, ip);
 
+    public Task<ServiceResult> DesvincularEvidenciaAsync(DesvincularEvidenciaDto dto, long usuarioId, string? ip) =>
+        _inner.DesvincularEvidenciaAsync(dto, usuarioId, ip);
+
     public Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip) =>
         _inner.EliminarEvidenciaAsync(evidenciaId, usuarioId, ip);
 

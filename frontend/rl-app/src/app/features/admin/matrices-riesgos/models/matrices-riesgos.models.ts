@@ -228,6 +228,7 @@ export interface EvidenciaDto {
 
 export type TipoEntidadEvidencia = 'riesgo' | 'evaluacion' | 'control' | 'plan' | 'actividad' | 'alerta' | 'automonitoreo';
 export interface VincularEvidenciaDto { evidenciaId: number; tipoEntidad: TipoEntidadEvidencia; entidadId: number; }
+export interface DesvincularEvidenciaDto { evidenciaId: number; tipoEntidad: TipoEntidadEvidencia; entidadId: number; }
 
 export interface RiesgoReporteFila {
   riesgoId: number;

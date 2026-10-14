@@ -133,9 +133,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
                        CON_TIPO = :tipo,
                        CON_DESCRIPCION = :descripcion,
                        CON_AUTOMATIZACION = :automatizacion,
-                       CON_ESTADO = :estado,
-                       CON_ESTADO_MONITOREO = :estadoMonitoreo,
-                       CON_EFECTIVIDAD_MONITOREO = :efectividadMonitoreo
+                       CON_ESTADO = :estado
                  WHERE CON_ID = :id";
             await using var cmd = Comando(sql, conn, tx);
             cmd.Parameters.Add(new OracleParameter("evaluacionId", dto.ConEvaluacionId));
@@ -143,7 +141,6 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
             cmd.Parameters.Add(new OracleParameter("descripcion", dto.ConDescripcion.Trim()));
             cmd.Parameters.Add(new OracleParameter("automatizacion", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
             cmd.Parameters.Add(new OracleParameter("estado", dto.ConEstado.Trim().ToUpperInvariant()));
-            AddControlMonitoringParameters(cmd, dto);
             cmd.Parameters.Add(new OracleParameter("id", controlId));
             if (await cmd.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
             await AuditarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", controlId, "UPDATE", dto, usuarioId, ip);
@@ -218,12 +215,11 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
         public async Task<bool> UpdateControlAsync(long controlId, ControlRiesgoGuardarDto control)
         {
             const string sql = @"UPDATE RL_MR_CONTROLES_RIESGO
-                SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state,
-                    CON_ESTADO_MONITOREO=:estadoMonitoreo,CON_EFECTIVIDAD_MONITOREO=:efectividadMonitoreo
+                SET CON_TIPO=:type,CON_DESCRIPCION=:description,CON_AUTOMATIZACION=:automation,CON_ESTADO=:state
                 WHERE CON_ID=:id AND CON_EVALUACION_ID=:evaluationId";
             await using OracleCommand command = Comando(sql, _connection, _transaction);
             command.Parameters.Add(new OracleParameter("id", controlId));
-            AddControlParameters(command, control);
+            AddControlBaseParameters(command, control);
             return await command.ExecuteNonQueryAsync() == 1;
         }
 
@@ -288,13 +284,18 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
 
     private static void AddControlParameters(OracleCommand command, ControlRiesgoGuardarDto dto)
     {
+        AddControlBaseParameters(command, dto);
+        command.Parameters.Add(new OracleParameter("estadoMonitoreo", string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) ? DBNull.Value : TextoVisibleUtf8Normalizer.Normalizar(dto.ConEstadoMonitoreo.Trim())));
+        command.Parameters.Add(new OracleParameter("efectividadMonitoreo", dto.ConEfectividadMonitoreo.HasValue ? dto.ConEfectividadMonitoreo.Value : DBNull.Value));
+    }
+
+    private static void AddControlBaseParameters(OracleCommand command, ControlRiesgoGuardarDto dto)
+    {
         command.Parameters.Add(new OracleParameter("evaluationId", dto.ConEvaluacionId));
         command.Parameters.Add(new OracleParameter("type", dto.ConTipo.Trim().ToUpperInvariant()));
         command.Parameters.Add(new OracleParameter("description", dto.ConDescripcion.Trim()));
         command.Parameters.Add(new OracleParameter("automation", dto.ConAutomatizacion.Trim().ToUpperInvariant()));
         command.Parameters.Add(new OracleParameter("state", dto.ConEstado.Trim().ToUpperInvariant()));
-        command.Parameters.Add(new OracleParameter("estadoMonitoreo", string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) ? DBNull.Value : TextoVisibleUtf8Normalizer.Normalizar(dto.ConEstadoMonitoreo.Trim())));
-        command.Parameters.Add(new OracleParameter("efectividadMonitoreo", dto.ConEfectividadMonitoreo.HasValue ? dto.ConEfectividadMonitoreo.Value : DBNull.Value));
     }
 
     private static void AddControlMonitoringParameters(OracleCommand command, ControlRiesgoGuardarDto dto)
@@ -397,7 +398,7 @@ public sealed class MatricesRiesgosMitigacionRepository : IMatricesRiesgosMitiga
               LEFT JOIN RL_MR_PLANES p ON p.PLA_EVALUACION_ID = e.EVA_ID
               LEFT JOIN RL_MR_ACTIVIDADES a ON a.ACT_PLAN_ID = p.PLA_ID
              WHERE e.EVA_ID = :evaluacionId
-             ORDER BY p.PLA_ID DESC, a.ACT_ID";
+             ORDER BY p.PLA_ID ASC, a.ACT_ID ASC";
         await using var cmd = Comando(sql, conn);
         cmd.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
 

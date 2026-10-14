@@ -401,6 +401,18 @@ public sealed class MatricesRiesgosController : ControllerBase
         }
     }
 
+    [HttpDelete("evidencias/vinculos")]
+    [AuditRequired("Desvinculación de evidencia")]
+    public async Task<IActionResult> DesvincularEvidencia([FromBody] DesvincularEvidenciaDto dto)
+    {
+        try { return Responder(await _service.DesvincularEvidenciaAsync(dto, ObtenerUsuarioId(), ObtenerIp())); }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al desvincular la evidencia {EvidenciaId}.", dto.EvidenciaId);
+            return Error500(ex);
+        }
+    }
+
     [HttpPost("evaluaciones/borrador")]
     [AuditRequired("Creación de borrador de evaluación de riesgo")]
     public async Task<IActionResult> GuardarBorradorEvaluacion([FromBody] EvaluacionRiesgoDto dto)

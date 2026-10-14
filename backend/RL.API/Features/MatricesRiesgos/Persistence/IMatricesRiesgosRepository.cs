@@ -54,6 +54,7 @@ public interface IMatricesRiesgosRepository
     Task<long> RegistrarEvidenciaFisicaAsync(EvidenciaRegistroDto dto, long usuarioId);
     Task<EvidenciaDto?> ObtenerEvidenciaFisicaAsync(long evidenciaId);
     Task<bool> VincularEvidenciaAsync(VincularEvidenciaDto dto, long usuarioId, string? ip);
+    Task<bool> DesvincularEvidenciaAsync(DesvincularEvidenciaDto dto, long usuarioId, string? ip) => Task.FromException<bool>(new NotSupportedException("La desvinculación de evidencias no está implementada en este repositorio."));
     Task<ResultadoEliminacionEvidencia> EliminarEvidenciaSeguraAsync(long evidenciaId, Func<Task<bool>> eliminarArchivoFisico, long usuarioId, string? ip);
 
     Task<ReporteMatricesPaginadoDto> ObtenerConsolidadoPaginadoAsync(FiltroReporteMatricesDto filtro);

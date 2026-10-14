@@ -795,6 +795,19 @@ public sealed class MatricesRiesgosAppService : IMatricesRiesgosAppService
         }
     }
 
+    public async Task<ServiceResult> DesvincularEvidenciaAsync(DesvincularEvidenciaDto dto, long usuarioId, string? ip)
+    {
+        if (dto.EvidenciaId <= 0 || dto.EntidadId <= 0)
+            return ServiceResult.BadRequest("La evidencia y la entidad destino son obligatorias.");
+        try
+        {
+            return await _repo.DesvincularEvidenciaAsync(dto, usuarioId, ip)
+                ? ServiceResult.Ok("Evidencia desvinculada; el archivo se conserva para otros vínculos o eliminación segura si queda huérfano.")
+                : ServiceResult.NotFound("No existe el vínculo de evidencia indicado.");
+        }
+        catch (InvalidOperationException ex) { return ServiceResult.BadRequest(ex.Message); }
+    }
+
     public async Task<ServiceResult> EliminarEvidenciaAsync(long evidenciaId, long usuarioId, string? ip)
     {
         EvidenciaDto? evidencia = await _repo.ObtenerEvidenciaFisicaAsync(evidenciaId);

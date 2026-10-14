@@ -596,15 +596,9 @@
                               </div>
                             }
                           } @else if (field.ordinal === 81) {
-                            @if (block6.puedeEditarObservacionesArea) {
-                              <textarea class="w-full min-w-0 rounded-lg border border-slate-300 bg-white p-2" rows="4" maxlength="2000" aria-label="Observaciones del Área" [(ngModel)]="observacionesAreaDraft"></textarea>
-                              <button type="button" class="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-ihss-700 text-white disabled:opacity-50" title="Guardar Observaciones del Área" aria-label="Guardar Observaciones del Área" [disabled]="guardandoObservacion()" (click)="guardarObservacionBloque6('area')"><app-action-icon action="save"></app-action-icon></button>
-                            } @else { {{ block6.observacionesArea || '—' }} }
+                            {{ block6.observacionesArea || '—' }}
                           } @else if (field.ordinal === 82) {
-                            @if (block6.puedeEditarObservacionesUgr) {
-                              <textarea class="w-full min-w-0 rounded-lg border border-slate-300 bg-white p-2" rows="4" maxlength="2000" aria-label="Observaciones UGR" [(ngModel)]="observacionesUgrDraft"></textarea>
-                              <button type="button" class="mt-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-ihss-700 text-white disabled:opacity-50" title="Guardar Observaciones UGR" aria-label="Guardar Observaciones UGR" [disabled]="guardandoObservacion()" (click)="guardarObservacionBloque6('ugr')"><app-action-icon action="save"></app-action-icon></button>
-                            } @else { {{ block6.observacionesUgr || '—' }} }
+                            {{ block6.observacionesUgr || '—' }}
                           }
                         </dd>
                       </div>

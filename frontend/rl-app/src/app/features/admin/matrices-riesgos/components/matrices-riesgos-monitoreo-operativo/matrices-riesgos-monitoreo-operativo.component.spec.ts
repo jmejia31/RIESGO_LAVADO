@@ -53,6 +53,14 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
       obtenerResumenOperativo: vi.fn().mockReturnValue(of(resumen)),
       listarAlertas: vi.fn().mockReturnValue(of([alertaActiva, alertaInactiva])),
       listarAutomonitoreo: vi.fn().mockReturnValue(of([mon])),
+      obtenerBloque6: vi.fn().mockReturnValue(of({ senalesAlerta: [alertaActiva, alertaInactiva], estadoRiesgo: 'CONTROLADO', controles: [], observacionesArea: 'Área', observacionesUgr: 'UGR', puedeEditarObservacionesArea: true, puedeEditarObservacionesUgr: false })),
+      obtenerProyeccionInstitucional: vi.fn().mockReturnValue(of({})),
+      actualizarMonitoreoControl: vi.fn().mockReturnValue(of({ success: true })),
+      actualizarObservacionArea: vi.fn().mockReturnValue(of({ success: true })),
+      actualizarObservacionUgr: vi.fn().mockReturnValue(of({ success: true })),
+      cargarEvidencia: vi.fn().mockReturnValue(of({ eviId: 44 })),
+      vincularEvidencia: vi.fn().mockReturnValue(of({ success: true })),
+      desvincularEvidencia: vi.fn().mockReturnValue(of({ success: true })),
       crearAlerta: vi.fn().mockReturnValue(of(12)),
       cambiarEstadoAlerta: vi.fn().mockReturnValue(of({ success: true })),
       registrarAutomonitoreo: vi.fn().mockReturnValue(of(13))
@@ -99,6 +107,52 @@ describe('MatricesRiesgosMonitoreoOperativoComponent', () => {
     expect(component.alertas()).toHaveLength(2);
     expect(component.automonitoreos()).toHaveLength(1);
     expect(component.cargando()).toBe(false);
+  });
+
+  it('lee el snapshot F70-F82 y persiste el seguimiento posterior por control', () => {
+    const control = { controlId: 31, tipo: 'PREVENTIVO' as const, descripcion: 'Control test', estadoMonitoreo: null, efectividadMonitoreo: null, evidencias: [] };
+    service['obtenerBloque6'].mockReturnValue(of({
+      senalesAlerta: [alertaActiva], estadoRiesgo: 'MITIGADO', controles: [control],
+      observacionesArea: 'Area A', observacionesUgr: 'UGR A',
+      puedeEditarObservacionesArea: true, puedeEditarObservacionesUgr: false
+    }));
+    component.seleccionarEvaluacion(20);
+    expect(service['obtenerBloque6']).toHaveBeenCalledWith(20);
+    expect(component.bloque6()?.controles).toHaveLength(1);
+    expect(component.bloque6()?.puedeEditarObservacionesArea).toBe(true);
+    expect(component.bloque6()?.puedeEditarObservacionesUgr).toBe(false);
+
+    component.estadoMonitoreoDrafts[31] = 'SE_MANTIENE';
+    component.efectividadMonitoreoDrafts[31] = 85;
+    component.guardarMonitoreoControl(control);
+    expect(service['actualizarMonitoreoControl']).toHaveBeenCalledWith(31, {
+      evaluacionId: 20, estadoMonitoreo: 'SE_MANTIENE', efectividadMonitoreo: 85
+    });
+    expect(service['obtenerProyeccionInstitucional']).toHaveBeenCalledWith(20);
+  });
+
+  it('muestra la observación sin permiso como solo lectura y comunica 403 por separado', () => {
+    component.seleccionarEvaluacion(20);
+    component.observacionesUgr = 'intentado';
+    component.guardarObservacion('ugr');
+    expect(service['actualizarObservacionUgr']).not.toHaveBeenCalled();
+    expect(component.error()).toContain('No tiene permiso para editar Observaciones UGR');
+
+    service['actualizarObservacionArea'].mockReturnValue(throwError(() => ({ status: 403 })));
+    component.guardarObservacion('area');
+    expect(component.error()).toContain('No tiene permiso para editar Observaciones del Área');
+  });
+
+  it('sube y vincula la evidencia al control seleccionado antes de refrescar la proyección', () => {
+    component.seleccionarEvaluacion(20);
+    const control = { controlId: 31, tipo: 'PREVENTIVO' as const, descripcion: 'Control test', estadoMonitoreo: null, efectividadMonitoreo: null, evidencias: [] };
+    const input = { files: [new File(['pdf'], 'control.pdf', { type: 'application/pdf' })], value: 'selected' };
+    component.cargarEvidencia(control, { target: input } as unknown as Event);
+
+    expect(input.value).toBe('');
+    expect(service['cargarEvidencia']).toHaveBeenCalledWith(input.files[0]);
+    expect(service['vincularEvidencia']).toHaveBeenCalledWith({ evidenciaId: 44, tipoEntidad: 'control', entidadId: 31 });
+    expect(service['obtenerProyeccionInstitucional']).toHaveBeenCalledWith(20);
   });
 
   it('reinicia listas de seguimiento al deseleccionar o pasar id 0', () => {

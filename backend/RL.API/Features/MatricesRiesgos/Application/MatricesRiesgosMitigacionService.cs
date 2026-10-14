@@ -33,6 +33,8 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     // e INACTIVO como estado de ciclo de vida. No se aceptan estados arbitrarios.
     private static readonly HashSet<string> EstadosPlan = new(StringComparer.OrdinalIgnoreCase)
     { "PENDIENTE", "EN_PROCESO", "CERRADO", "VENCIDO", "INACTIVO" };
+    private static readonly HashSet<string> EstadosActividad = new(StringComparer.OrdinalIgnoreCase)
+    { "PENDIENTE", "EN_PROCESO", "FINALIZADA", "CANCELADA" };
 
     private readonly IMatricesRiesgosMitigacionRepository _repo;
 
@@ -62,6 +64,9 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
 
     public async Task<ServiceResult<long>> CrearControlAsync(ControlRiesgoGuardarDto dto, long usuarioId, string? ip)
     {
+        // El monitoreo posterior del control se modifica únicamente desde el flujo de Monitoreo.
+        dto.ConEstadoMonitoreo = null;
+        dto.ConEfectividadMonitoreo = null;
         string? error = ValidarControl(dto);
         if (error is not null) return ServiceResult<long>.BadRequest(error);
         NormalizarControl(dto);
@@ -79,6 +84,9 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     public async Task<ServiceResult> ActualizarControlAsync(long controlId, ControlRiesgoGuardarDto dto, long usuarioId, string? ip)
     {
         if (controlId <= 0) return ServiceResult.BadRequest("El ID del control es obligatorio.");
+        // Ignorar valores stale de clientes antiguos: PUT de control sólo edita datos base.
+        dto.ConEstadoMonitoreo = null;
+        dto.ConEfectividadMonitoreo = null;
         string? error = ValidarControl(dto);
         if (error is not null) return ServiceResult.BadRequest(error);
         NormalizarControl(dto);
@@ -289,8 +297,6 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (string.IsNullOrWhiteSpace(dto.ConDescripcion) || dto.ConDescripcion.Trim().Length > 500) return "La descripción del control es obligatoria y no puede exceder 500 caracteres.";
         if (TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConDescripcion)) return "La descripción del control contiene caracteres de codificación inválidos.";
         if (!EstadosControl.Contains(dto.ConEstado?.Trim() ?? string.Empty)) return "El estado del control debe ser ACTIVO o INACTIVO.";
-        if (!string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo) && (!MatrizRiesgosCatalogoCanonico.EsValorValido("MONITORING_CONTROL_STATUS", dto.ConEstadoMonitoreo) || TextoVisibleUtf8Normalizer.ContieneMojibake(dto.ConEstadoMonitoreo))) return "El estado de monitoreo debe pertenecer al catálogo institucional.";
-        if (!MatrizRiesgosCatalogoCanonico.EsPorcentajeEfectividadValido(dto.ConEfectividadMonitoreo)) return "La efectividad de monitoreo debe usar un porcentaje del catálogo institucional.";
         return null;
     }
 
@@ -298,8 +304,6 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
     {
         dto.ConTipo = MatrizRiesgosCatalogoCanonico.NormalizarClave("CONTROL_TYPE", dto.ConTipo);
         dto.ConAutomatizacion = MatrizRiesgosCatalogoCanonico.ObtenerClavePersistente("CONTROL_AUTOMATION", dto.ConAutomatizacion);
-        if (!string.IsNullOrWhiteSpace(dto.ConEstadoMonitoreo))
-            dto.ConEstadoMonitoreo = MatrizRiesgosCatalogoCanonico.ObtenerClavePersistente("MONITORING_CONTROL_STATUS", dto.ConEstadoMonitoreo);
     }
 
     private static string? ValidarPlan(PlanMitigacionGuardarDto dto)
@@ -329,7 +333,7 @@ public sealed class MatricesRiesgosMitigacionService : IMatricesRiesgosMitigacio
         if (string.IsNullOrWhiteSpace(dto.ActResponsable) || dto.ActResponsable.Trim().Length > 150) return "El responsable es obligatorio y no puede exceder 150 caracteres.";
         if (dto.ActAvance is < 0 or > 100) return "El avance de la actividad debe estar entre 0 y 100.";
         if (dto.ActFechaFin < dto.ActFechaInicio) return "La fecha final no puede ser anterior a la fecha inicial.";
-        if (string.IsNullOrWhiteSpace(dto.ActEstado) || dto.ActEstado.Trim().Length > 30) return "El estado de la actividad es obligatorio y no puede exceder 30 caracteres.";
+        if (!EstadosActividad.Contains(dto.ActEstado?.Trim() ?? string.Empty)) return "El estado de actividad debe ser PENDIENTE, EN_PROCESO, FINALIZADA o CANCELADA.";
         return null;
     }
 }

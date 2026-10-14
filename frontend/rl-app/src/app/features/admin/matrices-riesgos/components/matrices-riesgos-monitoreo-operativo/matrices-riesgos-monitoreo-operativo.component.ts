@@ -6,6 +6,9 @@ import { EvaluacionRiesgoDto, EvaluacionRiesgoResumenDto } from '../../models/ma
 import {
   AutomonitoreoDto,
   AutomonitoreoGuardarDto,
+  ControlMonitoreoActualizarDto,
+  ControlMonitoreoMatrizDto,
+  MatrizBloque6Dto,
   ResumenMatricesOperativoDto,
   SenalAlertaDto,
   SenalAlertaGuardarDto
@@ -14,7 +17,7 @@ import {
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
 import { normalizarMojibakeVisibleUtf8 } from '../../utils/text-encoding.util';
-import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
+import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 @Component({
   selector: 'app-matrices-riesgos-monitoreo-operativo',
@@ -34,6 +37,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   readonly resumen = signal<ResumenMatricesOperativoDto | null>(null);
   readonly alertas = signal<SenalAlertaDto[]>([]);
   readonly automonitoreos = signal<AutomonitoreoDto[]>([]);
+  readonly bloque6 = signal<MatrizBloque6Dto | null>(null);
   readonly cargando = signal(false);
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
@@ -42,6 +46,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   evaluacionId = 0;
   readonly estadosRiesgo = canonicalCatalogSelectOptions('MONITORING_RISK_STATUS');
   readonly estadosControl = canonicalCatalogSelectOptions('MONITORING_CONTROL_STATUS');
+  readonly efectividadesMonitoreoCatalogo = canonicalMonitoringEffectivenessOptions();
 
   obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
@@ -70,6 +75,10 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
   monEstadoRiesgo = '';
   monEstadoControles = '';
   monResultado = '';
+  observacionesArea = '';
+  observacionesUgr = '';
+  readonly estadoMonitoreoDrafts: Record<number, string> = {};
+  readonly efectividadMonitoreoDrafts: Record<number, number | null> = {};
 
   ngOnInit(): void {
     if (this.evaluacionIdInicial && this.evaluacionIdInicial > 0) {
@@ -90,6 +99,7 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
     this.evaluacionId = Number(valor) || 0;
     this.alertas.set([]);
     this.automonitoreos.set([]);
+    this.bloque6.set(null);
     this.error.set(null);
     this.mensaje.set(null);
     this.cdr.markForCheck();
@@ -105,13 +115,110 @@ export class MatricesRiesgosMonitoreoOperativoComponent implements OnInit {
         this.service.listarAutomonitoreo(this.evaluacionId).subscribe({
           next: automonitoreos => {
             this.automonitoreos.set(automonitoreos.map(item => ({ ...item, monEstadoRiesgo: normalizarMojibakeVisibleUtf8(item.monEstadoRiesgo), monEstadoContr: normalizarMojibakeVisibleUtf8(item.monEstadoContr), monResultado: normalizarMojibakeVisibleUtf8(item.monResultado) })));
-            this.cargando.set(false);
-            this.cdr.markForCheck();
+            this.cargarBloque6();
           },
           error: error => this.finalizarError(error, 'No se pudo cargar el automonitoreo.')
         });
       },
       error: error => this.finalizarError(error, 'No se pudieron cargar las señales de alerta.')
+    });
+  }
+
+  private cargarBloque6(): void {
+    this.service.obtenerBloque6(this.evaluacionId).subscribe({
+      next: datos => {
+        this.bloque6.set(datos);
+        this.alertas.set(datos.senalesAlerta.map(alerta => ({ ...alerta, aleIndicador: normalizarMojibakeVisibleUtf8(alerta.aleIndicador) })));
+        this.observacionesArea = datos.observacionesArea ?? '';
+        this.observacionesUgr = datos.observacionesUgr ?? '';
+        for (const control of datos.controles) {
+          this.estadoMonitoreoDrafts[control.controlId] = control.estadoMonitoreo ?? '';
+          this.efectividadMonitoreoDrafts[control.controlId] = control.efectividadMonitoreo;
+        }
+        this.cargando.set(false);
+        this.cdr.markForCheck();
+      },
+      error: error => this.finalizarError(error, 'No se pudo cargar el estado, controles y evidencias del Bloque 6.')
+    });
+  }
+
+  controlesDeTipo(controles: ControlMonitoreoMatrizDto[], tipo: string): ControlMonitoreoMatrizDto[] {
+    return controles.filter(control => control.tipo === tipo);
+  }
+
+  guardarMonitoreoControl(control: ControlMonitoreoMatrizDto): void {
+    const dto: ControlMonitoreoActualizarDto = {
+      evaluacionId: this.evaluacionId,
+      estadoMonitoreo: this.estadoMonitoreoDrafts[control.controlId]?.trim() || null,
+      efectividadMonitoreo: this.efectividadMonitoreoDrafts[control.controlId]
+    };
+    this.guardando.set(true);
+    this.service.actualizarMonitoreoControl(control.controlId, dto).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.mensaje.set('Seguimiento del control actualizado.');
+        this.cargarBloque6();
+        this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
+      },
+      error: error => this.finalizarGuardadoError(error, 'No se pudo actualizar el seguimiento del control.')
+    });
+  }
+
+  guardarObservacion(tipo: 'area' | 'ugr'): void {
+    const data = this.bloque6();
+    const permitido = tipo === 'area' ? data?.puedeEditarObservacionesArea : data?.puedeEditarObservacionesUgr;
+    if (!permitido) {
+      this.error.set(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
+      return;
+    }
+    this.guardando.set(true);
+    const request = tipo === 'area'
+      ? this.service.actualizarObservacionArea(this.evaluacionId, this.observacionesArea)
+      : this.service.actualizarObservacionUgr(this.evaluacionId, this.observacionesUgr);
+    request.subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.mensaje.set(`Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'} guardadas.`);
+        this.cargarBloque6();
+        this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
+      },
+      error: error => {
+        if ((error as { status?: number })?.status === 403) this.error.set(`No tiene permiso para editar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
+        else this.finalizarGuardadoError(error, `No se pudieron guardar Observaciones ${tipo === 'area' ? 'del Área' : 'UGR'}.`);
+      }
+    });
+  }
+
+  cargarEvidencia(control: ControlMonitoreoMatrizDto, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+    this.guardando.set(true);
+    this.service.cargarEvidencia(archivo).subscribe({
+      next: evidencia => this.service.vincularEvidencia({ evidenciaId: evidencia.eviId, tipoEntidad: 'control', entidadId: control.controlId }).subscribe({
+        next: () => {
+          this.guardando.set(false);
+          this.mensaje.set('Evidencia cargada y vinculada al control.');
+          this.cargarBloque6();
+          this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
+        },
+        error: error => this.finalizarGuardadoError(error, 'El archivo se cargó, pero no se pudo vincular al control.')
+      }),
+      error: error => this.finalizarGuardadoError(error, 'No se pudo cargar la evidencia.')
+    });
+  }
+
+  desvincularEvidencia(control: ControlMonitoreoMatrizDto, evidenciaId: number): void {
+    this.guardando.set(true);
+    this.service.desvincularEvidencia({ evidenciaId, tipoEntidad: 'control', entidadId: control.controlId }).subscribe({
+      next: () => {
+        this.guardando.set(false);
+        this.mensaje.set('Evidencia desvinculada. El archivo se conserva según su ciclo de vida.');
+        this.cargarBloque6();
+        this.service.obtenerProyeccionInstitucional(this.evaluacionId).subscribe({ next: () => this.persisted.emit(), error: error => this.finalizarGuardadoError(error, 'No se pudo confirmar la proyección institucional.') });
+      },
+      error: error => this.finalizarGuardadoError(error, 'No se pudo desvincular la evidencia.')
     });
   }
 

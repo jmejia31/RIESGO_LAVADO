@@ -51,6 +51,11 @@ public sealed class MatricesRiesgosMonitoreoController : ControllerBase
     public async Task<IActionResult> ActualizarObservacionUgr(long evaluacionId, [FromBody] ObservacionMonitoreoGuardarDto dto) =>
         Responder(await _service.ActualizarObservacionAsync(evaluacionId, false, dto, UsuarioId(), Ip()));
 
+    [HttpPut("controles/{controlId:long}")]
+    [AuditRequired("Actualización de seguimiento de control")]
+    public async Task<IActionResult> ActualizarMonitoreoControl(long controlId, [FromBody] ControlMonitoreoActualizarDto dto) =>
+        Responder(await _service.ActualizarMonitoreoControlAsync(controlId, dto, UsuarioId(), Ip()));
+
     [HttpPost("automonitoreo")]
     [AuditRequired("Registro de automonitoreo de evaluación")]
     public async Task<IActionResult> RegistrarAutomonitoreo([FromBody] AutomonitoreoGuardarDto dto) =>

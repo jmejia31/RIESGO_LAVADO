@@ -41,6 +41,13 @@ if ($env:RL_BLOCK7_ORACLE_BROWSER_CERTIFICATION_REQUIRED -eq 'true') {
     }
 }
 
+$block9ContractValidator = Join-Path $RepositoryRoot 'tools/validate_block9_mitigation_monitoring_contract.js'
+& node $block9ContractValidator
+if ($LASTEXITCODE -ne 0) {
+    throw "El contrato de Mitigacion/Monitoreo del Bloque 9 fallo con codigo $LASTEXITCODE"
+}
+Write-Host 'BLOCK9_CONTRACT_VALIDATOR=PASS'
+
 $backendProject = Join-Path $RepositoryRoot 'backend/RL.API.Tests/RL.API.Tests.csproj'
 $backendSettings = Join-Path $RepositoryRoot 'backend/RL.API.Tests/coverage.runsettings'
 $backendResults = Join-Path $RepositoryRoot 'backend/RL.API.Tests/TestResults/quality-gates'

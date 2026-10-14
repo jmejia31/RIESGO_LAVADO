@@ -16,7 +16,8 @@ using RL.API.Infrastructure.Database;
 
 const string requiredFlag = "RL_BLOCK7_REAL_E2E_REQUIRED";
 if (!string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "E2E", StringComparison.Ordinal)
-    || !string.Equals(Environment.GetEnvironmentVariable(requiredFlag), "true", StringComparison.OrdinalIgnoreCase))
+    || (!string.Equals(Environment.GetEnvironmentVariable(requiredFlag), "true", StringComparison.OrdinalIgnoreCase)
+        && !string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK9_REAL_E2E_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase)))
     throw new InvalidOperationException("Block 7 test host requires ASPNETCORE_ENVIRONMENT=E2E and the explicit real E2E flag.");
 
 string configuredConnection = Environment.GetEnvironmentVariable("ConnectionStrings__OracleDB_LocalXE")
@@ -34,12 +35,25 @@ long stamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 800_000_000;
 long riskId = stamp + 700_000_000;
 long versionId = stamp + 700_000_001;
 long userId = 987654;
+long areaOnlyUserId = stamp + 10;
+long ugrOnlyUserId = stamp + 11;
+long bothUserId = stamp + 12;
+long neitherUserId = stamp + 13;
 string riskCode = $"B7-E2E-{stamp}";
 string ruleCode = $"B7-E2E-RULE-{stamp}";
 string definition = CreateDefinition(ruleCode);
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_RIESGOS (RIE_ID,RIE_CODIGO,RIE_NOMBRE,RIE_DESCRIPCION,RIE_ACTIVO,RIE_USR_CREACION,RIE_FECHA_CREACION) VALUES (:id,:code,'Block 7 E2E risk','Disposable browser integration risk',1,:usr,SYSDATE)", ("id", riskId), ("code", riskCode), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_VERSIONES_FORMULARIO (VER_ID,VER_FAMILIA_ID,VER_CODIGO,VER_VERSION,VER_JSON,VER_HASH,VER_ESTADO,VER_VIGENTE,VER_FECHA_INICIO,VER_FECHA_FIN,VER_FECHA_CREACION,VER_USR_CREACION) VALUES (:id,1,'BLOCK7_E2E',1,:json,RPAD('B',64,'B'),'PUBLISHED',1,SYSDATE,NULL,SYSDATE,:usr)", ("id", versionId), ("json", definition), ("usr", userId));
 await ExecuteAsync(oracle, "INSERT INTO RL_MR_REGLAS_CALCULO (REG_ID,REG_CODIGO,REG_VERSION,REG_NOMBRE,REG_ALGORITMO_ID,REG_ACTIVA) VALUES (:id,:code,'1','Disposable browser rule','BLOCK7_LEGACY_TEST',1)", ("id", versionId), ("code", ruleCode));
+foreach (long id in new[] { userId, areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId })
+    await ExecuteAsync(oracle, "INSERT INTO RL_USUARIOS (USR_ID,USR_ACTIVO) VALUES (:id,1)", ("id", id));
+await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,'MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR',1)", ("id", areaOnlyUserId));
+await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,'MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR',1)", ("id", ugrOnlyUserId));
+foreach (string capability in new[] { "MATRICES_RIESGO_OBSERVACIONES_AREA_EDITAR", "MATRICES_RIESGO_OBSERVACIONES_UGR_EDITAR" })
+{
+    await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", bothUserId), ("capability", capability));
+    await ExecuteAsync(oracle, "INSERT INTO RL_USUARIO_CAPACIDADES (UCP_USR_ID,UCP_CAPACIDAD,UCP_ACTIVO) VALUES (:id,:capability,1)", ("id", userId), ("capability", capability));
+}
 await oracle.CloseAsync();
 
 var builder = WebApplication.CreateBuilder(args);
@@ -81,7 +95,26 @@ app.MapGet("/__e2e/readyz", async (OracleDbContext db, CancellationToken cancell
     _ = await command.ExecuteScalarAsync(cancellationToken);
     return Results.Ok(new { status = "ready" });
 });
-app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", definition = JsonDocument.Parse(definition).RootElement.Clone() }));
+app.MapGet("/__e2e/fixture", () => Results.Ok(new { riskId, riskCode, versionId, versionCode = "BLOCK7_E2E", areaOnlyUserId, ugrOnlyUserId, bothUserId, neitherUserId, definition = JsonDocument.Parse(definition).RootElement.Clone() }));
+app.MapGet("/__e2e/audit", async (OracleDbContext db, CancellationToken cancellationToken) =>
+{
+    await using var connection = db.CreateConnection();
+    await connection.OpenAsync(cancellationToken);
+    await using var command = new OracleCommand(@"SELECT AUD_TABLA, AUD_ACCION, COUNT(*)
+        FROM RL_AUDITORIA
+        WHERE AUD_USR_ID IN (:mainUser,:areaUser,:ugrUser,:bothUser,:neitherUser)
+          AND AUD_MODULO='MatricesRiesgos'
+        GROUP BY AUD_TABLA,AUD_ACCION ORDER BY AUD_TABLA,AUD_ACCION", connection) { BindByName = true };
+    command.Parameters.Add(new OracleParameter("mainUser", userId));
+    command.Parameters.Add(new OracleParameter("areaUser", areaOnlyUserId));
+    command.Parameters.Add(new OracleParameter("ugrUser", ugrOnlyUserId));
+    command.Parameters.Add(new OracleParameter("bothUser", bothUserId));
+    command.Parameters.Add(new OracleParameter("neitherUser", neitherUserId));
+    var entries = new List<object>();
+    await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+    while (await reader.ReadAsync(cancellationToken)) entries.Add(new { table = reader.GetString(0), action = reader.GetString(1), count = Convert.ToInt32(reader.GetValue(2)) });
+    return Results.Ok(entries);
+});
 await app.RunAsync();
 
 static async Task<OracleConnection> OpenOracleWithRetryAsync(string connectionString)
@@ -152,9 +185,10 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
         "CREATE TABLE RL_MR_ACTIVIDADES (ACT_ID NUMBER(15) PRIMARY KEY,ACT_PLAN_ID NUMBER(15),ACT_DESCRIPCION VARCHAR2(500),ACT_RESPONSABLE VARCHAR2(150),ACT_AVANCE NUMBER(5,2),ACT_FECHA_INICIO DATE,ACT_FECHA_FIN DATE,ACT_ESTADO VARCHAR2(30))",
         "CREATE TABLE RL_MR_SENALES_ALERTA (ALE_ID NUMBER(15) PRIMARY KEY,ALE_EVALUACION_ID NUMBER(15),ALE_CODIGO VARCHAR2(50),ALE_INDICADOR VARCHAR2(150),ALE_ESTADO VARCHAR2(30),ALE_FECHA_DISPARO DATE)",
         "CREATE TABLE RL_MR_AUTOMONITOREO (MON_ID NUMBER(15) PRIMARY KEY,MON_EVALUACION_ID NUMBER(15),MON_ESTADO_RIESGO VARCHAR2(30),MON_ESTADO_CONTR VARCHAR2(30),MON_RESULTADO VARCHAR2(1000),MON_USR_ID NUMBER(10),MON_OBSERVACIONES_AREA VARCHAR2(2000),MON_OBSERVACIONES_UGR VARCHAR2(2000),MON_FECHA DATE)",
-        "CREATE TABLE RL_MR_EVIDENCIAS (EVI_ID NUMBER(15) PRIMARY KEY,EVI_NOMBRE_ARCHIVO VARCHAR2(255),EVI_FECHA_CREACION DATE)",
-        "CREATE TABLE RL_MR_EVIDENCIAS_VINCULOS (EVV_ID NUMBER(15) PRIMARY KEY,EVV_EVIDENCIA_ID NUMBER(15),EVV_TIPO_ENTIDAD VARCHAR2(30),EVV_ENTIDAD_ID NUMBER(15))",
+        "CREATE TABLE RL_MR_EVIDENCIAS (EVI_ID NUMBER(15) PRIMARY KEY,EVI_NOMBRE_ARCHIVO VARCHAR2(255) NOT NULL,EVI_EXTENSION VARCHAR2(10) NOT NULL,EVI_TAMANO NUMBER(15) NOT NULL,EVI_HASH VARCHAR2(64) NOT NULL,EVI_RUTA VARCHAR2(500) NOT NULL,EVI_USR_CREACION NUMBER(10) NOT NULL,EVI_FECHA_CREACION DATE DEFAULT SYSDATE NOT NULL)",
+        "CREATE TABLE RL_MR_EVIDENCIAS_VINCULOS (EVV_ID NUMBER(15) PRIMARY KEY,EVV_EVIDENCIA_ID NUMBER(15),EVV_TIPO_ENTIDAD VARCHAR2(30),EVV_ENTIDAD_ID NUMBER(15),EVV_USR_CREACION NUMBER(10),EVV_FECHA_CREACION DATE DEFAULT SYSDATE)",
         "CREATE TABLE RL_USUARIO_CAPACIDADES (UCP_USR_ID NUMBER(10),UCP_CAPACIDAD VARCHAR2(80),UCP_ACTIVO NUMBER(1))",
+        "CREATE TABLE RL_USUARIOS (USR_ID NUMBER(10) PRIMARY KEY,USR_ACTIVO NUMBER(1))",
         "CREATE TABLE RL_MR_VERSIONES_FORMULARIO (VER_ID NUMBER(15) PRIMARY KEY,VER_FAMILIA_ID NUMBER(15),VER_CODIGO VARCHAR2(80),VER_VERSION NUMBER(10),VER_JSON CLOB,VER_HASH VARCHAR2(64),VER_ESTADO VARCHAR2(30),VER_VIGENTE NUMBER(1),VER_FECHA_INICIO DATE,VER_FECHA_FIN DATE,VER_FECHA_CREACION DATE,VER_USR_CREACION NUMBER(10))",
         "CREATE TABLE RL_MR_REGLAS_CALCULO (REG_ID NUMBER(15) PRIMARY KEY,REG_CODIGO VARCHAR2(80),REG_VERSION VARCHAR2(20),REG_NOMBRE VARCHAR2(250),REG_ALGORITMO_ID VARCHAR2(100),REG_ACTIVA NUMBER(1))",
         "CREATE TABLE RL_AUDITORIA (AUD_ID NUMBER(15) PRIMARY KEY,AUD_TABLA VARCHAR2(128),AUD_REGISTRO_ID VARCHAR2(100),AUD_ACCION VARCHAR2(80),AUD_DATOS_ANT CLOB,AUD_DATOS_NVO CLOB,AUD_USR_ID NUMBER(10),AUD_USR_EMAIL VARCHAR2(255),AUD_IP VARCHAR2(64),AUD_FECHA DATE,AUD_MODULO VARCHAR2(80))"
@@ -164,7 +198,8 @@ static async Task EnsureFixtureAsync(OracleConnection connection)
     foreach (string sequence in new[]
     {
         "SEQ_RL_MR_EVALUACIONES", "SEQ_RL_MR_PROYECCIONES", "SEQ_RL_MR_FLUJOS", "SEQ_RL_AUDITORIA",
-        "SEQ_RL_MR_CONTROLES", "SEQ_RL_MR_PLANES", "SEQ_RL_MR_ACTIVIDADES"
+        "SEQ_RL_MR_CONTROLES", "SEQ_RL_MR_PLANES", "SEQ_RL_MR_ACTIVIDADES", "SEQ_RL_MR_SENALES",
+        "SEQ_RL_MR_AUTOMONITOREO", "SEQ_RL_MR_EVIDENCIAS", "SEQ_RL_MR_EVI_VINCULOS"
     })
         try { await ExecuteAsync(connection, $"CREATE SEQUENCE {sequence} START WITH 200000000 INCREMENT BY 1 NOCACHE"); } catch (OracleException exception) when (exception.Number == 955) { }
 }
@@ -181,7 +216,18 @@ public sealed class E2EAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
 {
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "987654"), new Claim("modulos", "10")], Scheme.Name);
+        bool block9Enabled = string.Equals(Environment.GetEnvironmentVariable("RL_BLOCK9_REAL_E2E_REQUIRED"), "true", StringComparison.OrdinalIgnoreCase);
+        if (block9Enabled && string.Equals(Request.Headers["X-E2E-Unauthenticated"].FirstOrDefault(), "true", StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(AuthenticateResult.NoResult());
+        string userId = "987654";
+        if (block9Enabled
+            && long.TryParse(Request.Headers["X-E2E-User"].FirstOrDefault(), out long requestedUserId)
+            && requestedUserId > 0)
+            userId = requestedUserId.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string modules = block9Enabled && !string.IsNullOrWhiteSpace(Request.Headers["X-E2E-Modules"].FirstOrDefault())
+            ? Request.Headers["X-E2E-Modules"].FirstOrDefault()!
+            : "10";
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId), new Claim("modulos", modules)], Scheme.Name);
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
     }
 }

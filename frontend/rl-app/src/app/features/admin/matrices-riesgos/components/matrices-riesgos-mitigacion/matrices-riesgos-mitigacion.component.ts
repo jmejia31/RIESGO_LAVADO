@@ -18,7 +18,7 @@ import {
 
 import { ActionIconComponent } from '../../../../../shared/components/action-icon/action-icon.component';
 import { BoundedSelectComponent, BoundedSelectOption } from '../../../../../shared/components/bounded-select/bounded-select.component';
-import { canonicalCatalogSelectOptions, canonicalMonitoringEffectivenessOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
+import { canonicalCatalogSelectOptions } from '../../utils/matrices-riesgos-catalogos-canonicos';
 
 @Component({
   selector: 'app-matrices-riesgos-mitigacion',
@@ -48,8 +48,6 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
   evaluacionId = 0;
   readonly tiposControlCatalogo = canonicalCatalogSelectOptions('CONTROL_TYPE');
   readonly automatizacionesCatalogo = canonicalCatalogSelectOptions('CONTROL_AUTOMATION');
-  readonly estadosMonitoreoCatalogo = canonicalCatalogSelectOptions('MONITORING_CONTROL_STATUS');
-  readonly efectividadesMonitoreoCatalogo = canonicalMonitoringEffectivenessOptions();
 
   obtenerEstadoEvaluacion(evaluacion: EvaluacionRiesgoDto | EvaluacionRiesgoResumenDto): string {
     if ('evaEstado' in evaluacion && evaluacion.evaEstado) return evaluacion.evaEstado;
@@ -89,10 +87,14 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
     { valor: 'VENCIDO', texto: 'Vencido' },
     { valor: 'INACTIVO', texto: 'Inactivo' }
   ] as const;
+  readonly estadosActividad = [
+    { valor: 'PENDIENTE', texto: 'Pendiente' },
+    { valor: 'EN_PROCESO', texto: 'En proceso' },
+    { valor: 'FINALIZADA', texto: 'Finalizada' },
+    { valor: 'CANCELADA', texto: 'Cancelada' }
+  ] as const;
 
   controlEstado = 'ACTIVO';
-  estadoMonitoreoControl = '';
-  efectividadMonitoreoControl: number | null = null;
   efectividad = 0;
   comentarioEfectividad = '';
 
@@ -162,8 +164,6 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
     this.controlDescripcion = control.conDescripcion;
     this.controlAutomatizacion = control.conAutomatizacion;
     this.controlEstado = control.conEstado;
-    this.estadoMonitoreoControl = control.conEstadoMonitoreo ?? '';
-    this.efectividadMonitoreoControl = control.conEfectividadMonitoreo ?? null;
     this.cargarEvaluacionesControl(control.conId);
   }
 
@@ -173,8 +173,6 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
     this.controlDescripcion = '';
     this.controlAutomatizacion = 'MANUAL';
     this.controlEstado = 'ACTIVO';
-    this.estadoMonitoreoControl = '';
-    this.efectividadMonitoreoControl = null;
   }
 
   guardarControl(): void {
@@ -189,8 +187,8 @@ export class MatricesRiesgosMitigacionComponent implements OnChanges {
       conDescripcion: this.controlDescripcion.trim(),
       conAutomatizacion: this.controlAutomatizacion,
       conEstado: this.controlEstado.trim() || 'ACTIVO',
-      conEstadoMonitoreo: this.estadoMonitoreoControl.trim() || null,
-      conEfectividadMonitoreo: this.efectividadMonitoreoControl
+      conEstadoMonitoreo: null,
+      conEfectividadMonitoreo: null
     };
     this.guardando.set(true);
     const solicitud: Observable<unknown> = this.controlEditandoId > 0

@@ -119,6 +119,9 @@ jobs:
       - name: Validate Block 7 frontend field contract
         run: node tools/validate_block7_ui_contract.js
 
+      - name: Validate Block 9 mitigation and monitoring contract
+        run: node tools/validate_block9_mitigation_monitoring_contract.js
+
       - name: Validate exact matrices object inventory
         shell: pwsh
         run: |

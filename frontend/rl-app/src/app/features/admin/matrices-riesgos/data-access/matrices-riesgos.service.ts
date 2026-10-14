@@ -8,6 +8,7 @@ import {
   ConsultaEvaluacionPaginadaDto,
   CrearFamiliaFormularioDto,
   EvidenciaDto,
+  DesvincularEvidenciaDto,
   EvidenciaPoliticaDto,
   EvaluacionRiesgoDto,
   CalculoPreviewEvaluacionDto,
@@ -30,6 +31,7 @@ import {
   ActividadPlanGuardarDto,
   AutomonitoreoDto,
   AutomonitoreoGuardarDto,
+  ControlMonitoreoActualizarDto,
   MatrizBloque6Dto,
   ControlRiesgoDto,
   ControlRiesgoGuardarDto,
@@ -433,6 +435,10 @@ export class MatricesRiesgosService {
       .pipe(map(response => response.datos));
   }
 
+  actualizarMonitoreoControl(controlId: number, dto: ControlMonitoreoActualizarDto): Observable<ApiMessage> {
+    return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/controles/${controlId}`, dto, this.confirmado);
+  }
+
   actualizarObservacionArea(evaluacionId: number, texto: string): Observable<ApiMessage> {
     return this.http.put<ApiMessage>(`${this.apiUrl}/monitoreo/evaluaciones/${evaluacionId}/observaciones/area`, { texto }, this.confirmado);
   }
@@ -495,6 +501,10 @@ export class MatricesRiesgosService {
 
   vincularEvidencia(dto: VincularEvidenciaDto): Observable<ApiMessage> {
     return this.http.post<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, dto, this.confirmado);
+  }
+
+  desvincularEvidencia(dto: DesvincularEvidenciaDto): Observable<ApiMessage> {
+    return this.http.delete<ApiMessage>(`${this.apiUrl}/evidencias/vinculos`, { ...this.confirmado, body: dto });
   }
 
   eliminarEvidenciaHuerfana(id: number): Observable<ApiMessage> {

@@ -52,6 +52,13 @@ public sealed class ObservacionMonitoreoGuardarDto
     public string? Texto { get; set; }
 }
 
+public sealed class ControlMonitoreoActualizarDto
+{
+    public long EvaluacionId { get; set; }
+    public string? EstadoMonitoreo { get; set; }
+    public decimal? EfectividadMonitoreo { get; set; }
+}
+
 public sealed class ControlMonitoreoMatrizDto
 {
     public long ControlId { get; init; }

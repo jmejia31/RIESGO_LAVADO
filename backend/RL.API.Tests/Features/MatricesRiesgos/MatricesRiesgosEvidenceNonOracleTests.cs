@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using RL.API.Features.MatricesRiesgos.Application;
 using RL.API.Features.MatricesRiesgos.Contracts;
@@ -14,6 +15,18 @@ namespace RL.API.Tests.Features.MatricesRiesgos;
 
 public sealed class MatricesRiesgosEvidenceNonOracleTests
 {
+    [Fact]
+    public void EvidenciaDto_LeeElTipoEntidadComoCadenaJsonDelFrontend()
+    {
+        VincularEvidenciaDto dto = JsonSerializer.Deserialize<VincularEvidenciaDto>(
+            "{\"evidenciaId\":8,\"tipoEntidad\":\"control\",\"entidadId\":15}",
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+
+        Assert.Equal(TipoEntidadEvidencia.Control, dto.TipoEntidad);
+        Assert.Equal(8, dto.EvidenciaId);
+        Assert.Equal(15, dto.EntidadId);
+    }
+
     public static IEnumerable<object[]> DestinosPermitidos()
     {
         yield return new object[] { TipoEntidadEvidencia.Riesgo, "RL_MR_RIESGOS", "RIE_ID" };

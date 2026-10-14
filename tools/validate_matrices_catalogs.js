@@ -105,11 +105,14 @@ if (!frontendTests.includes('UnknownCatalogValue') || !residualTest.includes('Un
 const monitoringService = fs.readFileSync(path.join(apiRoot, 'Application', 'MatricesRiesgosMonitoreoService.cs'), 'utf8');
 const mitigationService = fs.readFileSync(path.join(apiRoot, 'Application', 'MatricesRiesgosMitigacionService.cs'), 'utf8');
 const monitoringUi = fs.readFileSync(path.join(frontendRoot, 'components', 'matrices-riesgos-monitoreo-operativo', 'matrices-riesgos-monitoreo-operativo.component.html'), 'utf8');
+const monitoringUiTs = fs.readFileSync(path.join(frontendRoot, 'components', 'matrices-riesgos-monitoreo-operativo', 'matrices-riesgos-monitoreo-operativo.component.ts'), 'utf8');
 const mitigationUi = fs.readFileSync(path.join(frontendRoot, 'components', 'matrices-riesgos-mitigacion', 'matrices-riesgos-mitigacion.component.html'), 'utf8');
 for (const marker of ['ObtenerClavePersistente("MONITORING_RISK_STATUS"', 'EsValorValido("MONITORING_CONTROL_STATUS"']) if (!monitoringService.includes(marker)) fail(`backend monitoring catalog validation missing ${marker}`);
-for (const marker of ['CONTROL_AUTOMATION', 'MONITORING_CONTROL_STATUS', 'EsPorcentajeEfectividadValido']) if (!mitigationService.includes(marker)) fail(`backend control catalog validation missing ${marker}`);
+for (const marker of ['CONTROL_AUTOMATION', 'MONITORING_CONTROL_STATUS']) if (!mitigationService.includes(marker)) fail(`backend control catalog validation missing ${marker}`);
+for (const marker of ['EsValorValido("MONITORING_CONTROL_STATUS"', 'EsPorcentajeEfectividadValido']) if (!monitoringService.includes(marker)) fail(`backend control monitoring validation missing ${marker}`);
 if (!monitoringUi.includes('estadosRiesgo') || !monitoringUi.includes('estadosControl') || monitoringUi.includes('id="mon-estado-riesgo" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" [(ngModel)]="monEstadoRiesgo"><input')) fail('monitoring status form must consume canonical select options');
-if (!mitigationUi.includes('automatizacionesCatalogo') || !mitigationUi.includes('estadosMonitoreoCatalogo') || !mitigationUi.includes('efectividadesMonitoreoCatalogo')) fail('control form must consume canonical control and monitoring catalogs');
+if (!mitigationUi.includes('automatizacionesCatalogo')) fail('control form must consume the canonical automation catalog');
+if (!monitoringUi.includes('estadosControl') || !monitoringUiTs.includes("canonicalMonitoringEffectivenessOptions()")) fail('monitoring form must consume canonical monitoring status and effectiveness catalogs');
 
 const frequency = get('FREQUENCY');
 const impact = get('IMPACT');

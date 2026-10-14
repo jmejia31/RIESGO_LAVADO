@@ -13,6 +13,7 @@ public interface IMatricesRiesgosMonitoreoService
     Task<ServiceResult<IReadOnlyList<AutomonitoreoDto>>> ListarAutomonitoreoAsync(long evaluacionId);
     Task<ServiceResult<MatrizBloque6Dto>> ObtenerBloque6Async(long evaluacionId, long usuarioId);
     Task<ServiceResult> ActualizarObservacionAsync(long evaluacionId, bool esArea, ObservacionMonitoreoGuardarDto dto, long usuarioId, string? ip);
+    Task<ServiceResult> ActualizarMonitoreoControlAsync(long controlId, ControlMonitoreoActualizarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<long>> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip);
     Task<ServiceResult<ResumenMatricesOperativoDto>> ObtenerResumenOperativoAsync();
 }
@@ -77,6 +78,22 @@ public sealed class MatricesRiesgosMonitoreoService : IMatricesRiesgosMonitoreoS
             return actualizado ? ServiceResult.Ok("Observación actualizada.") : ServiceResult.NotFound("No existe un registro de automonitoreo para la evaluación.");
         }
         catch (UnauthorizedAccessException ex) { return ServiceResult.Forbidden(ex.Message); }
+    }
+
+    public async Task<ServiceResult> ActualizarMonitoreoControlAsync(long controlId, ControlMonitoreoActualizarDto dto, long usuarioId, string? ip)
+    {
+        if (controlId <= 0 || dto.EvaluacionId <= 0) return ServiceResult.BadRequest("El control y la evaluación son obligatorios.");
+        if (!string.IsNullOrWhiteSpace(dto.EstadoMonitoreo)
+            && (!MatrizRiesgosCatalogoCanonico.EsValorValido("MONITORING_CONTROL_STATUS", dto.EstadoMonitoreo)
+                || TextoVisibleUtf8Normalizer.ContieneMojibake(dto.EstadoMonitoreo)))
+            return ServiceResult.BadRequest("El estado de monitoreo debe pertenecer al catálogo institucional.");
+        if (!MatrizRiesgosCatalogoCanonico.EsPorcentajeEfectividadValido(dto.EfectividadMonitoreo))
+            return ServiceResult.BadRequest("La efectividad de monitoreo debe estar entre 0 y 100.");
+        string? estado = string.IsNullOrWhiteSpace(dto.EstadoMonitoreo)
+            ? null
+            : MatrizRiesgosCatalogoCanonico.ObtenerClavePersistente("MONITORING_CONTROL_STATUS", dto.EstadoMonitoreo);
+        bool actualizado = await _repo.ActualizarMonitoreoControlAsync(controlId, dto.EvaluacionId, estado, dto.EfectividadMonitoreo, usuarioId, ip);
+        return actualizado ? ServiceResult.Ok("Seguimiento del control actualizado.") : ServiceResult.NotFound("El control no pertenece a la evaluación indicada.");
     }
 
     public async Task<ServiceResult<long>> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip)

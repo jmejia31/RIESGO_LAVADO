@@ -222,9 +222,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
   readonly bloque4MatrizError = signal<string | null>(null);
   readonly bloque6Matriz = signal<MatrizBloque6Dto | null>(null);
   readonly bloque6MatrizError = signal<string | null>(null);
-  observacionesAreaDraft = '';
-  observacionesUgrDraft = '';
-  readonly guardandoObservacion = signal(false);
   readonly bloque5DetalleExpandido = signal(false);
   readonly riesgoMaestroMatriz = signal<RiesgoDto | null>(null);
   readonly flujos = signal<FlujoEvaluacionDto[]>([]);
@@ -1982,8 +1979,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
                 puedeEditarObservacionesUgr: response?.puedeEditarObservacionesUgr === true
               } as MatrizBloque6Dto;
               this.bloque6Matriz.set(safe);
-              this.observacionesAreaDraft = safe.observacionesArea ?? '';
-              this.observacionesUgrDraft = safe.observacionesUgr ?? '';
             }
           },
           error: error => {
@@ -2164,26 +2159,6 @@ export class MatricesRiesgosComponent implements OnInit, OnDestroy {
 
   etiquetaRespuestaRiesgo(value: unknown): string {
     return canonicalRiskResponseLabel(value) ?? '—';
-  }
-
-  guardarObservacionBloque6(tipo: 'area' | 'ugr'): void {
-    const evaluacionId = this.evaluacionSeleccionada()?.evaId;
-    const data = this.bloque6Matriz();
-    if (!evaluacionId || !data || this.guardandoObservacion()) return;
-    const permitido = tipo === 'area' ? data.puedeEditarObservacionesArea : data.puedeEditarObservacionesUgr;
-    if (!permitido) return;
-    this.guardandoObservacion.set(true);
-    const texto = tipo === 'area' ? this.observacionesAreaDraft : this.observacionesUgrDraft;
-    const request = tipo === 'area'
-      ? this.service.actualizarObservacionArea(evaluacionId, texto)
-      : this.service.actualizarObservacionUgr(evaluacionId, texto);
-    request.subscribe({
-      next: () => this.service.obtenerBloque6(evaluacionId).subscribe({
-        next: response => { this.bloque6Matriz.set(response); this.observacionesAreaDraft = response.observacionesArea ?? ''; this.observacionesUgrDraft = response.observacionesUgr ?? ''; this.guardandoObservacion.set(false); },
-        error: error => { this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo confirmar la observación guardada.')); this.guardandoObservacion.set(false); }
-      }),
-      error: error => { this.bloque6MatrizError.set(this.obtenerMensajeError(error, 'No se pudo guardar la observación.')); this.guardandoObservacion.set(false); }
-    });
   }
 
   valorCampoBloque4(field: MatrixFieldContract, plan: PlanMitigacionDto): string {

@@ -1465,6 +1465,16 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
                     throw new KeyNotFoundException($"No se encontró la entidad {dto.TipoEntidad} con ID {dto.EntidadId}.");
             }
 
+            await using (var existente = CrearComando(@"SELECT COUNT(*) FROM RL_MR_EVIDENCIAS_VINCULOS
+                WHERE EVV_EVIDENCIA_ID=:evidenciaId AND EVV_TIPO_ENTIDAD=:tipo AND EVV_ENTIDAD_ID=:entidadId", conn, trans))
+            {
+                existente.Parameters.Add(new OracleParameter("evidenciaId", dto.EvidenciaId));
+                existente.Parameters.Add(new OracleParameter("tipo", dto.TipoEntidad.ToString().ToUpperInvariant()));
+                existente.Parameters.Add(new OracleParameter("entidadId", dto.EntidadId));
+                if (Convert.ToInt32(await existente.ExecuteScalarAsync()) > 0)
+                    throw new InvalidOperationException("La evidencia ya está vinculada a esta entidad.");
+            }
+
             long vinculoId = await ObtenerSiguienteSecuenciaAsync(conn, trans, "SEQ_RL_MR_EVI_VINCULOS");
             const string sqlInsert = @"
                 INSERT INTO RL_MR_EVIDENCIAS_VINCULOS (
@@ -1857,6 +1867,40 @@ public sealed class MatricesRiesgosRepository : IMatricesRiesgosRepository
         if (filtro.FechaInicio.HasValue) where.Append(" AND p.PROY_FECHA_EVAL >= :fechaInicio");
         if (filtro.FechaFin.HasValue) where.Append(" AND p.PROY_FECHA_EVAL < :fechaFinExclusiva");
         return where.ToString();
+    }
+
+    public async Task<bool> DesvincularEvidenciaAsync(DesvincularEvidenciaDto dto, long usuarioId, string? ip)
+    {
+        _ = ObtenerConsultaEntidadEvidencia(dto.TipoEntidad); // Reject enum values outside the supported entity set.
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var trans = conn.BeginTransaction();
+        try
+        {
+            long? linkId = null;
+            await using (var read = CrearComando(@"SELECT EVV_ID FROM RL_MR_EVIDENCIAS_VINCULOS
+                WHERE EVV_EVIDENCIA_ID=:evidenciaId AND EVV_TIPO_ENTIDAD=:tipo AND EVV_ENTIDAD_ID=:entidadId FOR UPDATE", conn, trans))
+            {
+                read.Parameters.Add(new OracleParameter("evidenciaId", dto.EvidenciaId));
+                read.Parameters.Add(new OracleParameter("tipo", dto.TipoEntidad.ToString().ToUpperInvariant()));
+                read.Parameters.Add(new OracleParameter("entidadId", dto.EntidadId));
+                object? value = await read.ExecuteScalarAsync();
+                if (value is not null && value != DBNull.Value) linkId = Convert.ToInt64(value);
+            }
+            if (!linkId.HasValue) { await trans.RollbackAsync(); return false; }
+
+            await using (var delete = CrearComando("DELETE FROM RL_MR_EVIDENCIAS_VINCULOS WHERE EVV_ID=:id", conn, trans))
+            {
+                delete.Parameters.Add(new OracleParameter("id", linkId.Value));
+                if (await delete.ExecuteNonQueryAsync() != 1) { await trans.RollbackAsync(); return false; }
+            }
+            await _auditoriaRepository.RegistrarAsync(conn, trans, "RL_MR_EVIDENCIAS_VINCULOS", linkId.Value.ToString(), "DELETE",
+                JsonSerializer.Serialize(new { dto.EvidenciaId, TipoEntidad = dto.TipoEntidad.ToString(), dto.EntidadId }), null,
+                usuarioId, null, ip, ModuloAuditoria);
+            await trans.CommitAsync();
+            return true;
+        }
+        catch { await trans.RollbackAsync(); throw; }
     }
 
     internal static string ConstruirFuenteConsolidado() => @"(

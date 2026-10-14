@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 
 namespace RL.API.Features.MatricesRiesgos.Contracts;
@@ -38,12 +39,20 @@ public sealed class EvidenciaUploadFormDto
     public long UsrId { get; set; }
 }
 
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TipoEntidadEvidencia
 {
     Riesgo, Evaluacion, Control, Plan, Actividad, Alerta, Automonitoreo
 }
 
 public sealed class VincularEvidenciaDto
+{
+    public long EvidenciaId { get; set; }
+    public TipoEntidadEvidencia TipoEntidad { get; set; }
+    public long EntidadId { get; set; }
+}
+
+public sealed class DesvincularEvidenciaDto
 {
     public long EvidenciaId { get; set; }
     public TipoEntidadEvidencia TipoEntidad { get; set; }

@@ -1,6 +1,6 @@
 import { expect, Page, test } from '@playwright/test';
 
-type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; definition: { secciones: Array<Record<string, unknown>> } };
+type Fixture = { riskId: number; riskCode: string; versionId: number; versionCode: string; areaOnlyUserId: number; ugrOnlyUserId: number; bothUserId: number; neitherUserId: number; definition: { secciones: Array<Record<string, unknown>> } };
 
 const critical = [
   /^POST \/api\/matrices-riesgos\/evaluaciones\/borrador$/,
@@ -13,6 +13,12 @@ const critical = [
   /^GET \/api\/matrices-riesgos\/mitigacion\/evaluaciones\/\d+\/bloque4$/,
   /^GET \/api\/matrices-riesgos\/mitigacion\/planes\/\d+\/actividades$/,
   /^POST \/api\/matrices-riesgos\/mitigacion\/(controles|planes|actividades)$/,
+  /^PUT \/api\/matrices-riesgos\/mitigacion\/(planes|actividades)\/\d+$/,
+  /^GET \/api\/matrices-riesgos\/monitoreo\/evaluaciones\/\d+\/(alertas|automonitoreo|bloque6)$/,
+  /^POST \/api\/matrices-riesgos\/monitoreo\/(alertas|automonitoreo)$/,
+  /^PUT \/api\/matrices-riesgos\/monitoreo\/(alertas\/\d+\/estado|controles\/\d+|evaluaciones\/\d+\/observaciones\/(area|ugr))$/,
+  /^POST \/api\/matrices-riesgos\/evidencias\/(cargar|vinculos)$/,
+  /^DELETE \/api\/matrices-riesgos\/evidencias\/(vinculos|\d+)$/,
 ];
 
 function unsignedTestToken(): string {
@@ -77,9 +83,11 @@ async function installNonCriticalFixtures(page: Page, fixture: Fixture, evaluati
   });
 }
 
-test('Block 7 real browser persists draft through API and Oracle across reload/edit', async ({ page, request }) => {
-  const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true';
-  test.skip(!required, 'The real Oracle browser suite is enabled only in its disposable CI environment.');
+test('Block 7/9 real browser certifies draft, mitigation, monitoring and evidence against Oracle', async ({ page, request }, testInfo) => {
+  const required = process.env['RL_BLOCK7_REAL_E2E_REQUIRED'] === 'true'
+    && process.env['RL_BLOCK9_REAL_E2E_REQUIRED'] === 'true';
+  test.skip(!required, 'The real Oracle browser suite requires the explicit Block 7 and Block 9 disposable CI opt-ins.');
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   const fixtureResponse = await request.get('http://127.0.0.1:5043/__e2e/fixture');
   expect(fixtureResponse.ok()).toBeTruthy();
@@ -115,16 +123,41 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(evaluation.id).toBeGreaterThan(0);
 
   const api = 'http://localhost:5043/api/matrices-riesgos/mitigacion';
+  const monitoring = 'http://localhost:5043/api/matrices-riesgos/monitoreo';
+  const evidenceApi = 'http://localhost:5043/api/matrices-riesgos/evidencias';
+  const unauthenticatedRead = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/bloque6`, { headers: { 'X-E2E-Unauthenticated': 'true' } });
+  expect(unauthenticatedRead.status()).toBe(401);
+  const moduleDeniedRead = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/bloque6`, { headers: { 'X-E2E-Modules': '9' } });
+  expect(moduleDeniedRead.status()).toBe(403);
+  const invalidFilename = await request.post(`${evidenceApi}/cargar`, { multipart: {
+    archivo: { name: '../block9-path-traversal.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\ninvalid path\n%%EOF') },
+  } });
+  expect(invalidFilename.status(), await invalidFilename.text()).toBe(400);
+  expect(await invalidFilename.text()).not.toMatch(/ORA-\d+|SELECT |INSERT |stack trace|connection string/i);
+  const controlIds: number[] = [];
   for (const description of ['Control E2E A', 'Control E2E B']) {
     const createdControl = await request.post(`${api}/controles`, {
       data: { conEvaluacionId: evaluation.id, conTipo: 'PREVENTIVO', conDescripcion: description, conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' },
     });
     expect(createdControl.status(), await createdControl.text()).toBe(200);
+    controlIds.push((await createdControl.json() as { datos: number }).datos);
+  }
+  const snapshotPreventiveOnly = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/bloque6`);
+  expect(snapshotPreventiveOnly.ok()).toBeTruthy();
+  const preventiveOnly = (await snapshotPreventiveOnly.json() as { datos: { controles: Array<{ tipo: string; descripcion: string }> } }).datos.controles;
+  expect(preventiveOnly).toHaveLength(2);
+  expect(preventiveOnly.every(control => control.tipo === 'PREVENTIVO' && control.descripcion !== 'No hay')).toBeTruthy();
+  for (const [type, description] of [['DETECTIVO', 'Control E2E Detectivo'], ['CORRECTIVO', 'Control E2E Correctivo']]) {
+    const createdControl = await request.post(`${api}/controles`, {
+      data: { conEvaluacionId: evaluation.id, conTipo: type, conDescripcion: description, conAutomatizacion: 'MANUAL', conEstado: 'ACTIVO' },
+    });
+    expect(createdControl.status(), await createdControl.text()).toBe(200);
+    controlIds.push((await createdControl.json() as { datos: number }).datos);
   }
   const controlsResponse = await request.get(`${api}/evaluaciones/${evaluation.id}/controles`);
   expect(controlsResponse.ok()).toBeTruthy();
   const controls = (await controlsResponse.json() as { datos: Array<{ conDescripcion: string }> }).datos;
-  expect(controls.map(control => control.conDescripcion)).toEqual(['Control E2E A', 'Control E2E B']);
+  expect(controls.map(control => control.conDescripcion)).toEqual(['Control E2E A', 'Control E2E B', 'Control E2E Detectivo', 'Control E2E Correctivo']);
   expect(controls.some(control => control.conDescripcion === 'No hay')).toBeFalsy();
 
   const createPlan = async (description: string, owner: string, startDate: string, endDate: string, budget: number) => {
@@ -140,6 +173,7 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   };
   const planA = await createPlan('Plan E2E A', 'Responsable A', '2026-01-01', '2026-02-28', 1000);
   const planB = await createPlan('Plan E2E B', 'Responsable B', '2026-03-01', '2026-04-30', 2000);
+  const activityIds: number[] = [];
   const createActivity = async (planId: number, description: string, owner: string) => {
     const response = await request.post(`${api}/actividades`, {
       data: {
@@ -148,20 +182,154 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
       },
     });
     expect(response.status(), await response.text()).toBe(200);
+    activityIds.push((await response.json() as { datos: number }).datos);
   };
   await createActivity(planA, 'Actividad E2E A1', 'Responsable A');
   await createActivity(planA, 'Actividad E2E A2', 'Responsable A');
   await createActivity(planB, 'Actividad E2E B1', 'Responsable B');
+  await createActivity(planB, 'Actividad E2E B2', 'Responsable B');
+  await createActivity(planB, 'Actividad E2E B3', 'Responsable B');
+  const planUpdate = await request.put(`${api}/planes/${planA}`, { data: {
+    plaEvaluacionId: evaluation.id, plaDescripcion: 'Plan E2E A actualizado', plaAvance: 10, plaPresupuesto: 1100,
+    plaFechaInicio: '2026-01-01', plaFechaFin: '2026-02-28', plaEstado: 'EN_PROCESO',
+    plaMonitoreoSeguimiento: 'Seguimiento Responsable A actualizado', plaResponsables: 'Responsable A', plaRecursos: 'Recursos A',
+  } });
+  expect(planUpdate.status(), await planUpdate.text()).toBe(200);
+  const activityUpdate = await request.put(`${api}/actividades/${activityIds[0]}`, { data: {
+    actPlanId: planA, actDescripcion: 'Actividad E2E A1 actualizada', actResponsable: 'Responsable A', actAvance: 25,
+    actFechaInicio: '2026-01-10', actFechaFin: '2026-01-20', actEstado: 'EN_PROCESO',
+  } });
+  expect(activityUpdate.status(), await activityUpdate.text()).toBe(200);
   const plansResponse = await request.get(`${api}/evaluaciones/${evaluation.id}/planes`);
   expect(plansResponse.ok()).toBeTruthy();
   const plans = (await plansResponse.json() as { datos: Array<{ plaDescripcion: string; plaResponsables: string }> }).datos;
   expect(plans.map(plan => [plan.plaDescripcion, plan.plaResponsables])).toEqual([
-    ['Plan E2E A', 'Responsable A'], ['Plan E2E B', 'Responsable B'],
+    ['Plan E2E A actualizado', 'Responsable A'], ['Plan E2E B', 'Responsable B'],
   ]);
   const activitiesA = await request.get(`${api}/planes/${planA}/actividades`);
   const activitiesB = await request.get(`${api}/planes/${planB}/actividades`);
-  expect((await activitiesA.json() as { datos: unknown[] }).datos).toHaveLength(2);
-  expect((await activitiesB.json() as { datos: unknown[] }).datos).toHaveLength(1);
+  const readActivitiesA = (await activitiesA.json() as { datos: Array<{ actDescripcion: string }> }).datos;
+  const readActivitiesB = (await activitiesB.json() as { datos: Array<{ actDescripcion: string }> }).datos;
+  expect(readActivitiesA.map(activity => activity.actDescripcion)).toEqual(['Actividad E2E A1 actualizada', 'Actividad E2E A2']);
+  expect(readActivitiesB.map(activity => activity.actDescripcion)).toEqual(['Actividad E2E B1', 'Actividad E2E B2', 'Actividad E2E B3']);
+
+  const alertResponse = await request.post(`${monitoring}/alertas`, { data: {
+    aleEvaluacionId: evaluation.id, aleCodigo: 'BLOCK9-E2E', aleIndicador: 'Señal Oracle E2E', aleEstado: 'ACTIVO',
+  } });
+  expect(alertResponse.status(), await alertResponse.text()).toBe(200);
+  const alertId = (await alertResponse.json() as { datos: number }).datos;
+  const duplicateAlert = await request.post(`${monitoring}/alertas`, { data: {
+    aleEvaluacionId: evaluation.id, aleCodigo: 'BLOCK9-E2E', aleIndicador: 'Duplicada', aleEstado: 'ACTIVO',
+  } });
+  expect(duplicateAlert.status(), await duplicateAlert.text()).toBe(400);
+  const deactivateAlert = await request.put(`${monitoring}/alertas/${alertId}/estado`, { data: { aleEstado: 'INACTIVO' } });
+  expect(deactivateAlert.status(), await deactivateAlert.text()).toBe(200);
+  const alertRead = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/alertas`);
+  expect((await alertRead.json() as { datos: Array<{ aleCodigo: string; aleEstado: string }> }).datos.find(alert => alert.aleCodigo === 'BLOCK9-E2E')?.aleEstado).toBe('INACTIVO');
+  const activeAlert = await request.post(`${monitoring}/alertas`, { data: {
+    aleEvaluacionId: evaluation.id, aleCodigo: 'BLOCK9-E2E-ACTIVE', aleIndicador: 'Señal activa de prueba', aleEstado: 'ACTIVO',
+  } });
+  expect(activeAlert.status(), await activeAlert.text()).toBe(200);
+
+  const monitorFirst = await request.post(`${monitoring}/automonitoreo`, { data: {
+    monEvaluacionId: evaluation.id, monEstadoRiesgo: 'VIGENTE', monEstadoContr: 'SE_MANTIENE', monResultado: 'Ciclo anterior de prueba',
+  } });
+  expect(monitorFirst.status(), await monitorFirst.text()).toBe(200);
+  const monitorLatest = await request.post(`${monitoring}/automonitoreo`, { data: {
+    monEvaluacionId: evaluation.id, monEstadoRiesgo: 'MITIGADO', monEstadoContr: 'NO_SE_MANTIENE', monResultado: 'Ciclo más reciente de prueba',
+  } });
+  expect(monitorLatest.status(), await monitorLatest.text()).toBe(200);
+  const monitorHistory = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/automonitoreo`);
+  expect((await monitorHistory.json() as { datos: Array<{ monEstadoRiesgo: string }> }).datos[0]?.monEstadoRiesgo).toBe('MITIGADO');
+
+  const monitoringStates = ['SE_MANTIENE', 'NO_SE_MANTIENE', 'SE_MANTIENE', 'NO_SE_MANTIENE'];
+  for (let index = 0; index < controlIds.length; index++) {
+    const update = await request.put(`${monitoring}/controles/${controlIds[index]}`, { data: {
+      evaluacionId: evaluation.id, estadoMonitoreo: monitoringStates[index], efectividadMonitoreo: 65 + index,
+    } });
+    expect(update.status(), await update.text()).toBe(200);
+  }
+
+  const areaOnlyHeaders = { 'X-E2E-User': String(fixture.areaOnlyUserId) };
+  const ugrOnlyHeaders = { 'X-E2E-User': String(fixture.ugrOnlyUserId) };
+  const bothHeaders = { 'X-E2E-User': String(fixture.bothUserId) };
+  const neitherHeaders = { 'X-E2E-User': String(fixture.neitherUserId) };
+  const block6For = async (headers: Record<string, string>) => {
+    const response = await request.get(`${monitoring}/evaluaciones/${evaluation.id}/bloque6`, { headers });
+    expect(response.status(), await response.text()).toBe(200);
+    return (await response.json() as { datos: { observacionesArea: string | null; observacionesUgr: string | null; puedeEditarObservacionesArea: boolean; puedeEditarObservacionesUgr: boolean; controles: Array<{ controlId: number; estadoMonitoreo: string | null; efectividadMonitoreo: number | null; evidencias: Array<{ id: number; nombreArchivo: string }> }> } }).datos;
+  };
+  const areaOnly = await block6For(areaOnlyHeaders);
+  expect([areaOnly.puedeEditarObservacionesArea, areaOnly.puedeEditarObservacionesUgr]).toEqual([true, false]);
+  const areaWrite = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/area`, { headers: areaOnlyHeaders, data: { texto: 'OBS-AREA-AREA-ONLY' } });
+  expect(areaWrite.status(), await areaWrite.text()).toBe(200);
+  const areaDeniedUgr = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/ugr`, { headers: areaOnlyHeaders, data: { texto: 'DENIED-AREA-TO-UGR' } });
+  expect(areaDeniedUgr.status(), await areaDeniedUgr.text()).toBe(403);
+  const ugrOnly = await block6For(ugrOnlyHeaders);
+  expect([ugrOnly.puedeEditarObservacionesArea, ugrOnly.puedeEditarObservacionesUgr]).toEqual([false, true]);
+  const ugrWrite = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/ugr`, { headers: ugrOnlyHeaders, data: { texto: 'OBS-UGR-UGR-ONLY' } });
+  expect(ugrWrite.status(), await ugrWrite.text()).toBe(200);
+  const ugrDeniedArea = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/area`, { headers: ugrOnlyHeaders, data: { texto: 'DENIED-UGR-TO-AREA' } });
+  expect(ugrDeniedArea.status(), await ugrDeniedArea.text()).toBe(403);
+  const bothArea = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/area`, { headers: bothHeaders, data: { texto: 'OBS-AREA-BOTH' } });
+  const bothUgr = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/ugr`, { headers: bothHeaders, data: { texto: 'OBS-UGR-BOTH' } });
+  expect(bothArea.status(), await bothArea.text()).toBe(200);
+  expect(bothUgr.status(), await bothUgr.text()).toBe(200);
+  const neither = await block6For(neitherHeaders);
+  expect([neither.puedeEditarObservacionesArea, neither.puedeEditarObservacionesUgr]).toEqual([false, false]);
+  const neitherArea = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/area`, { headers: neitherHeaders, data: { texto: 'DENIED-NEITHER-AREA' } });
+  const neitherUgr = await request.put(`${monitoring}/evaluaciones/${evaluation.id}/observaciones/ugr`, { headers: neitherHeaders, data: { texto: 'DENIED-NEITHER-UGR' } });
+  expect(neitherArea.status(), await neitherArea.text()).toBe(403);
+  expect(neitherUgr.status(), await neitherUgr.text()).toBe(403);
+
+  const uploadEvidence = async (name: string) => {
+    const upload = await request.post(`${evidenceApi}/cargar`, { multipart: {
+      archivo: { name, mimeType: 'application/pdf', buffer: Buffer.from(`%PDF-1.4\n${name}\n%%EOF`) },
+    } });
+    expect(upload.status(), await upload.text()).toBe(200);
+    const item = (await upload.json() as { datos: { eviId: number; eviHash: string } }).datos;
+    expect(item.eviHash).toMatch(/^[a-f0-9]{64}$/);
+    return item;
+  };
+  const evidenceItems: Array<{ eviId: number; eviHash: string }> = [];
+  for (const name of [
+    'block9-evidence-preventive-a.pdf', 'block9-evidence-preventive-b.pdf',
+    'block9-evidence-detective.pdf', 'block9-evidence-corrective.pdf',
+  ]) evidenceItems.push(await uploadEvidence(name));
+  for (let index = 0; index < evidenceItems.length; index++) {
+    const evidenceLink = await request.post(`${evidenceApi}/vinculos`, { data: { evidenciaId: evidenceItems[index].eviId, tipoEntidad: 'control', entidadId: controlIds[index] } });
+    expect(evidenceLink.status(), await evidenceLink.text()).toBe(200);
+  }
+  const linkedDelete = await request.delete(`${evidenceApi}/${evidenceItems[0].eviId}`);
+  expect(linkedDelete.status(), await linkedDelete.text()).toBe(400);
+  const block6 = await block6For(bothHeaders);
+  expect(block6.observacionesArea).toBe('OBS-AREA-BOTH');
+  expect(block6.observacionesUgr).toBe('OBS-UGR-BOTH');
+  expect(block6.controles).toHaveLength(4);
+  for (let index = 0; index < evidenceItems.length; index++)
+    expect(block6.controles.find(control => control.controlId === controlIds[index])?.evidencias.map(item => item.id)).toContain(evidenceItems[index].eviId);
+  const monitoringProjectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  expect(monitoringProjectionResponse.ok(), await monitoringProjectionResponse.text()).toBeTruthy();
+  const monitoringProjection = (await monitoringProjectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
+  expect(monitoringProjection.find(field => field.fieldNumber === 70)?.value).toContain('Señal activa de prueba');
+  expect(monitoringProjection.find(field => field.fieldNumber === 71)?.value).toBe('MITIGADO');
+  expect(monitoringProjection.find(field => field.fieldNumber === 72)?.value).toBe('1. SE_MANTIENE\n2. NO_SE_MANTIENE');
+  expect(monitoringProjection.find(field => field.fieldNumber === 73)?.value).toBe('1. 65\n2. 66');
+  expect(monitoringProjection.find(field => field.fieldNumber === 74)?.value).toBe('1. block9-evidence-preventive-a.pdf\n2. block9-evidence-preventive-b.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 75)?.value).toBe('1. SE_MANTIENE');
+  expect(monitoringProjection.find(field => field.fieldNumber === 76)?.value).toBe('1. 67');
+  expect(monitoringProjection.find(field => field.fieldNumber === 77)?.value).toBe('1. block9-evidence-detective.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 78)?.value).toBe('1. NO_SE_MANTIENE');
+  expect(monitoringProjection.find(field => field.fieldNumber === 79)?.value).toBe('1. 68');
+  expect(monitoringProjection.find(field => field.fieldNumber === 80)?.value).toBe('1. block9-evidence-corrective.pdf');
+  expect(monitoringProjection.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BOTH');
+  expect(monitoringProjection.find(field => field.fieldNumber === 82)?.value).toBe('OBS-UGR-BOTH');
+  for (let index = 0; index < evidenceItems.length; index++) {
+    const unlink = await request.delete(`${evidenceApi}/vinculos`, { data: { evidenciaId: evidenceItems[index].eviId, tipoEntidad: 'control', entidadId: controlIds[index] } });
+    expect(unlink.status(), await unlink.text()).toBe(200);
+    const orphanDelete = await request.delete(`${evidenceApi}/${evidenceItems[index].eviId}`);
+    expect(orphanDelete.status(), await orphanDelete.text()).toBe(200);
+  }
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Evaluaciones de Riesgo' })).toBeVisible();
@@ -189,9 +357,12 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   const projection = (JSON.parse(projectionBody) as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos;
   expect(projection.fields).toHaveLength(82);
   expect(projection.fields.find(field => field.fieldNumber === 41)?.value).toBe(2);
-  expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(3);
+  expect(projection.fields.find(field => field.fieldNumber === 43)?.value).toBe(5);
+  expect(projection.fields.find(field => field.fieldNumber === 42)?.value).toBe(
+    '1.1 Actividad E2E A1 actualizada\n1.2 Actividad E2E A2\n2.1 Actividad E2E B1\n2.2 Actividad E2E B2\n2.3 Actividad E2E B3',
+  );
   expect(projection.fields.find(field => field.fieldNumber === 40)?.value).toEqual([
-    { planOrdinalIndex: 1, value: 'Plan E2E A', state: 'VALUE' },
+    { planOrdinalIndex: 1, value: 'Plan E2E A actualizado', state: 'VALUE' },
     { planOrdinalIndex: 2, value: 'Plan E2E B', state: 'VALUE' },
   ]);
   expect(projection.fields.find(field => field.fieldNumber === 45)?.value).toEqual([
@@ -205,13 +376,23 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
     ]);
   }
   expect(projection.fields.find(field => field.fieldNumber === 44)?.value).toEqual([
-    { planOrdinalIndex: 1, value: 'Seguimiento Responsable A', state: 'VALUE' },
+    { planOrdinalIndex: 1, value: 'Seguimiento Responsable A actualizado', state: 'VALUE' },
     { planOrdinalIndex: 2, value: 'Seguimiento Responsable B', state: 'VALUE' },
   ]);
   expect(projection.fields.find(field => field.fieldNumber === 49)?.value).toEqual([
-    { planOrdinalIndex: 1, value: 1000, state: 'VALUE' },
+    { planOrdinalIndex: 1, value: 1100, state: 'VALUE' },
     { planOrdinalIndex: 2, value: 2000, state: 'VALUE' },
   ]);
+  expect(projection.fields.find(field => field.fieldNumber === 48)?.value).toEqual([
+    { planOrdinalIndex: 1, value: 'Recursos A', state: 'VALUE' },
+    { planOrdinalIndex: 2, value: 'Recursos Responsable B', state: 'VALUE' },
+  ]);
+  for (const fieldNumber of [46, 47]) {
+    const dates = projection.fields.find(field => field.fieldNumber === fieldNumber)?.value as Array<{ planOrdinalIndex: number; value: string }>;
+    expect(dates.map(item => [item.planOrdinalIndex, new Date(item.value).toISOString().slice(0, 10)])).toEqual(
+      fieldNumber === 46 ? [[1, '2026-01-01'], [2, '2026-03-01']] : [[1, '2026-02-28'], [2, '2026-04-30']],
+    );
+  }
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}/proyeccion-institucional'))).toBeTruthy();
   expect([...criticalResponses].some(value => value.startsWith('GET /api/matrices-riesgos/evaluaciones/{id}'))).toBeTruthy();
 
@@ -221,6 +402,35 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   await firstBlock.focus();
   await pageA.keyboard.press('Enter');
   await expect(firstBlock).toHaveAttribute('aria-current', 'step');
+
+  const mitigationBlock = blockNavigation.getByRole('button').nth(3);
+  const block4Read = pageA.waitForResponse(response => response.request().method() === 'GET'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/evaluaciones/${evaluation.id}/planes`);
+  await mitigationBlock.click();
+  expect((await block4Read).status()).toBe(200);
+  await expect(pageA.getByRole('heading', { name: 'Planes de mitigación' })).toBeVisible();
+  await pageA.screenshot({ path: testInfo.outputPath('mitigation-plans-desktop.png'), fullPage: true });
+  await pageA.getByRole('button', { name: 'Editar plan y actividades' }).first().click();
+  await expect(pageA.locator('#plan-descripcion')).toHaveValue('Plan E2E A actualizado');
+  const planUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/planes/${planA}`);
+  await pageA.getByRole('button', { name: 'Actualizar plan' }).click();
+  expect((await planUiSave).status()).toBe(200);
+  await expect(pageA.getByText('Plan actualizado correctamente.')).toBeVisible();
+  await pageA.getByRole('button', { name: 'Editar actividad' }).first().click();
+  await pageA.locator('#actividad-descripcion').fill('Actividad E2E A1 actualizada');
+  const activityUiSave = pageA.waitForResponse(response => response.request().method() === 'PUT'
+    && new URL(response.url()).pathname === `/api/matrices-riesgos/mitigacion/actividades/${activityIds[0]}`);
+  await pageA.getByRole('button', { name: 'Actualizar actividad' }).click();
+  expect((await activityUiSave).status()).toBe(200);
+  const browserProjectionResponse = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  expect(browserProjectionResponse.ok()).toBeTruthy();
+  const browserProjection = (await browserProjectionResponse.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
+  expect(browserProjection.find(field => field.fieldNumber === 41)?.value).toBe(2);
+  expect(browserProjection.find(field => field.fieldNumber === 43)?.value).toBe(5);
+  expect(browserProjection.find(field => field.fieldNumber === 42)?.value).toBe(
+    '1.1 Actividad E2E A1 actualizada\n1.2 Actividad E2E A2\n2.1 Actividad E2E B1\n2.2 Actividad E2E B2\n2.3 Actividad E2E B3',
+  );
 
   await pageA.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
   await expect(pageA.locator('#panel-evaluaciones [aria-label="Ver Matriz completa"]')).toHaveCount(0);
@@ -269,7 +479,49 @@ test('Block 7 real browser persists draft through API and Oracle across reload/e
   expect(persistedBody.evaVersionRow).toBe(3);
   expect(persistedBody.evaDataJson).toContain('Editor A');
   expect(persistedBody.evaDataJson).not.toContain('Editor B stale');
+
+  await pageA.locator('dialog[aria-labelledby="titulo-modal-editar"] button[aria-label^="Cerrar"]').click();
+  await pageA.getByRole('button', { name: 'Seguimiento de evaluación' }).click();
+  await expect(pageA.getByRole('heading', { name: /Seguimiento de Evaluación/ })).toBeVisible();
+  await expect(pageA.getByRole('heading', { name: 'Controles monitoreados y evidencias' })).toBeVisible();
+  await expect(pageA.getByText('Control E2E A', { exact: true })).toBeVisible();
+  await expect(pageA.getByLabel('Observaciones del Área')).toHaveValue('OBS-AREA-BOTH');
+  await expect(pageA.getByLabel('Observaciones UGR')).toHaveValue('OBS-UGR-BOTH');
+  await pageA.screenshot({ path: testInfo.outputPath('monitoring-area-ugr-desktop.png'), fullPage: true });
+  await pageA.getByLabel('Observaciones del Área').fill('OBS-AREA-BROWSER');
+  const saveArea = pageA.waitForResponse(response => response.request().method() === 'PUT'
+    && new URL(response.url()).pathname.endsWith(`/observaciones/area`));
+  await pageA.getByRole('button', { name: 'Guardar Observaciones del Área' }).click();
+  expect((await saveArea).status()).toBe(200);
+  await expect(pageA.getByLabel('Observaciones del Área')).toHaveValue('OBS-AREA-BROWSER');
+  const finalMonitoringProjection = await request.get(`http://localhost:5043/api/matrices-riesgos/evaluaciones/${evaluation.id}/proyeccion-institucional`);
+  const finalProjectionBody = (await finalMonitoringProjection.json() as { datos: { fields: Array<{ fieldNumber: number; value: unknown }> } }).datos.fields;
+  expect(finalProjectionBody.find(field => field.fieldNumber === 81)?.value).toBe('OBS-AREA-BROWSER');
+  expect(finalProjectionBody.find(field => field.fieldNumber === 82)?.value).toBe('OBS-UGR-BOTH');
+  const auditResponse = await request.get('http://localhost:5043/__e2e/audit');
+  expect(auditResponse.ok()).toBeTruthy();
+  const auditRows = await auditResponse.json() as Array<{ table: string; action: string; count: number }>;
+  for (const table of ['RL_MR_PLANES', 'RL_MR_ACTIVIDADES', 'RL_MR_SENALES_ALERTA', 'RL_MR_AUTOMONITOREO', 'RL_MR_CONTROLES_RIESGO', 'RL_MR_EVIDENCIAS_VINCULOS']) {
+    expect(auditRows.some(row => row.table === table && row.count > 0), `Missing audit for ${table}`).toBeTruthy();
+  }
+  const desktopOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(desktopOverflow).toBeLessThanOrEqual(0);
+  await pageA.setViewportSize({ width: 390, height: 844 });
+  await expect(pageA.getByLabel('Observaciones del Área')).toBeVisible();
+  await expect(pageA.getByLabel('Observaciones UGR')).toBeVisible();
+  await pageA.screenshot({ path: testInfo.outputPath('monitoring-mobile.png'), fullPage: true });
+  const mobileOverflow = await pageA.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(mobileOverflow).toBeLessThanOrEqual(0);
   await concurrencyA.close();
   await pageB.close();
   console.log('BLOCK7_MATRIX_API_ROUTES_MOCKED=0');
+  console.log('BLOCK9_CRITICAL_ROUTES_MOCKED=0');
+  console.log('BLOCK9_MITIGATION_CRUD=PASS');
+  console.log('BLOCK9_MONITORING_CRUD=PASS');
+  console.log('BLOCK9_EVIDENCE=PASS');
+  console.log('BLOCK9_RBAC=PASS');
+  console.log('BLOCK9_AREA_UGR_ISOLATION=PASS');
+  console.log('BLOCK9_AUDIT_TRAIL=PASS');
+  console.log('BLOCK9_PROJECTION_70_82=PASS');
+  console.log('BLOCK9_RESPONSIVE_1280_390=PASS');
 });

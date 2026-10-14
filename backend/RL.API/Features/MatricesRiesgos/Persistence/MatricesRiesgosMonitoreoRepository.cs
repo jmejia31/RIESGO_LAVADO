@@ -15,6 +15,7 @@ public interface IMatricesRiesgosMonitoreoRepository
     Task<IReadOnlyList<AutomonitoreoDto>> ListarAutomonitoreoAsync(long evaluacionId);
     Task<MatrizBloque6Dto> ObtenerBloque6Async(long evaluacionId, long usuarioId);
     Task<bool> ActualizarObservacionAsync(long evaluacionId, bool esArea, string? texto, long usuarioId, string? ip);
+    Task<bool> ActualizarMonitoreoControlAsync(long controlId, long evaluacionId, string? estado, decimal? efectividad, long usuarioId, string? ip);
     Task<long> RegistrarAutomonitoreoAsync(AutomonitoreoGuardarDto dto, long usuarioId, string? ip);
     Task<ResumenMatricesOperativoDto> ObtenerResumenOperativoAsync();
 }
@@ -270,6 +271,47 @@ public sealed class MatricesRiesgosMonitoreoRepository : IMatricesRiesgosMonitor
             await _auditoria.RegistrarAsync(conn, tx, "RL_MR_AUTOMONITOREO", monitoreoId.ToString(), "UPDATE",
                 JsonSerializer.Serialize(new { Campo = columna, Observacion = anterior }), JsonSerializer.Serialize(new { Campo = columna, Observacion = texto?.Trim() }),
                 usuarioId, null, ip, Modulo);
+            await tx.CommitAsync();
+            return true;
+        }
+        catch { await tx.RollbackAsync(); throw; }
+    }
+
+    public async Task<bool> ActualizarMonitoreoControlAsync(long controlId, long evaluacionId, string? estado, decimal? efectividad, long usuarioId, string? ip)
+    {
+        await using var conn = _db.CreateConnection();
+        await conn.OpenAsync();
+        await using var tx = conn.BeginTransaction();
+        try
+        {
+            string? estadoAnterior;
+            decimal? efectividadAnterior;
+            await using (var read = Comando(@"SELECT CON_ESTADO_MONITOREO, CON_EFECTIVIDAD_MONITOREO
+                FROM RL_MR_CONTROLES_RIESGO
+                WHERE CON_ID=:controlId AND CON_EVALUACION_ID=:evaluacionId FOR UPDATE", conn, tx))
+            {
+                read.Parameters.Add(new OracleParameter("controlId", controlId));
+                read.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+                await using var reader = await read.ExecuteReaderAsync();
+                if (!await reader.ReadAsync()) { await tx.RollbackAsync(); return false; }
+                estadoAnterior = reader.IsDBNull(0) ? null : reader.GetString(0);
+                efectividadAnterior = reader.IsDBNull(1) ? null : reader.GetDecimal(1);
+            }
+
+            await using (var update = Comando(@"UPDATE RL_MR_CONTROLES_RIESGO
+                SET CON_ESTADO_MONITOREO=:estado, CON_EFECTIVIDAD_MONITOREO=:efectividad
+                WHERE CON_ID=:controlId AND CON_EVALUACION_ID=:evaluacionId", conn, tx))
+            {
+                update.Parameters.Add(new OracleParameter("estado", string.IsNullOrWhiteSpace(estado) ? DBNull.Value : estado.Trim().ToUpperInvariant()));
+                update.Parameters.Add(new OracleParameter("efectividad", efectividad.HasValue ? efectividad.Value : DBNull.Value));
+                update.Parameters.Add(new OracleParameter("controlId", controlId));
+                update.Parameters.Add(new OracleParameter("evaluacionId", evaluacionId));
+                if (await update.ExecuteNonQueryAsync() != 1) { await tx.RollbackAsync(); return false; }
+            }
+
+            await _auditoria.RegistrarAsync(conn, tx, "RL_MR_CONTROLES_RIESGO", controlId.ToString(), "UPDATE_MONITOREO",
+                JsonSerializer.Serialize(new { Estado = estadoAnterior, Efectividad = efectividadAnterior }),
+                JsonSerializer.Serialize(new { Estado = estado, Efectividad = efectividad }), usuarioId, null, ip, Modulo);
             await tx.CommitAsync();
             return true;
         }
